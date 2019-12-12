@@ -59,6 +59,7 @@ class LabelServiceImpl @Autowired constructor(
      */
     override fun getAllLabel(type: Byte): Result<List<Label>?> {
         val atomLabelList = labelDao.getAllLabel(dslContext, type)?.map { labelDao.convert(it) }
+        atomLabelList?.sortBy { it.labelName }
         return Result(atomLabelList)
     }
 

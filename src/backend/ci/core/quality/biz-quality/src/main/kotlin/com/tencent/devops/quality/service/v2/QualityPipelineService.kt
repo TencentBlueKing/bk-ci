@@ -66,11 +66,11 @@ class QualityPipelineService @Autowired constructor(
             val lackElements = elementResult.second
 
             RulePipelineRange(
-                    it.key,
-                    pipelineNameMap[it.key] ?: "",
-                    pipelineElement.size,
-                    lackElements.map { ElementUtils.getElementCnName(it, projectId) },
-                    existElements
+                pipelineId = it.key,
+                pipelineName = pipelineNameMap[it.key] ?: "",
+                elementCount = pipelineElement.size,
+                lackPointElement = lackElements.map { ElementUtils.getElementCnName(it, projectId) },
+                existElement = existElements
             )
         }
     }
@@ -95,33 +95,39 @@ class QualityPipelineService @Autowired constructor(
         }
 
         // 剔除已删除的流水线
-        return templateElementsMap.entries.filter { templateNameMap.containsKey(it.key) }.filter { it.key in templateIds }.map {
-            val templateId = it.key
-            val templateElements = it.value.map { it.getAtomCode() to it.genTaskParams() }
+        return templateElementsMap.entries.filter { templateNameMap.containsKey(it.key) }.filter { it.key in templateIds }.map { entry ->
+            val templateId = entry.key
+            val templateElements = entry.value.map { it.getAtomCode() to it.genTaskParams() }
             // 获取原子信息
             val elementResult = getExistAndLackElements(projectId, checkElements, templateElements)
             val existElements = elementResult.first
             val lackElements = elementResult.second
             RuleTemplateRange(
-                    templateId,
-                    templateNameMap[it.key] ?: "",
-                    templateElements.size,
-                    lackElements.map { ElementUtils.getElementCnName(it, projectId) },
-                    existElements
+                templateId = templateId,
+                templateName = templateNameMap[templateId] ?: "",
+                elementCount = templateElements.size,
+                lackPointElement = lackElements.map { ElementUtils.getElementCnName(it, projectId) },
+                existElement = existElements
             )
         }
     }
 
-    private fun getExistAndLackElements(projectId: String, checkElements: List<String>, originElementList: List<Pair<String, Map<String, Any>>>): Pair<List<RangeExistElement>, Set<String>> {
+    private fun getExistAndLackElements(
+        projectId: String,
+        checkElements: List<String>,
+        originElementList: List<Pair<String, Map<String, Any>>>
+    ): Pair<List<RangeExistElement>, Set<String>> {
         val originElements = originElementList.map { it.first }
         val existElements = mutableListOf<RangeExistElement>()
         val codeccElement = originElementList.firstOrNull { it.first == LinuxPaasCodeCCScriptElement.classType }
         if (codeccElement != null) {
             val asynchronous = codeccElement.second["asynchronous"] as? Boolean
-            val e = RangeExistElement(LinuxPaasCodeCCScriptElement.classType,
-                        ElementUtils.getElementCnName(LinuxPaasCodeCCScriptElement.classType, projectId),
-                        1,
-                        mapOf("asynchronous" to (asynchronous ?: false)))
+            val e = RangeExistElement(
+                name = LinuxPaasCodeCCScriptElement.classType,
+                cnName = ElementUtils.getElementCnName(LinuxPaasCodeCCScriptElement.classType, projectId),
+                count = 1,
+                params = mapOf("asynchronous" to (asynchronous ?: false))
+            )
             existElements.add(e)
         }
 
@@ -130,13 +136,15 @@ class QualityPipelineService @Autowired constructor(
         // 找出流水线存在的指标原子，并统计个数
         val indicatorExistElement = checkElements.minus(lackElements) // 流水线对应的指标原子
         originElements.filter { it in indicatorExistElement }.groupBy { it }
-                .forEach { classType, tasks ->
-                    existElements.add(RangeExistElement(
-                            classType,
-                            ElementUtils.getElementCnName(classType, projectId),
-                            tasks.size
-                    ))
-                }
+            .forEach { (classType, tasks) ->
+                existElements.add(
+                    RangeExistElement(
+                        name = classType,
+                        cnName = ElementUtils.getElementCnName(classType, projectId),
+                        count = tasks.size
+                    )
+                )
+            }
         return Pair(existElements, lackElements)
     }
 }

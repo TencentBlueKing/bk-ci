@@ -1,10 +1,38 @@
+/*
+ * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ *
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ *
+ * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
+ *
+ * A copy of the MIT License is included in this file.
+ *
+ *
+ * Terms of the MIT License:
+ * ---------------------------------------------------
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
+ * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+ * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+ * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
 package com.tencent.devops.prebuild.service
 
 import com.tencent.devops.common.api.exception.OperationException
-import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.archive.element.ReportArchiveElement
 import com.tencent.devops.common.ci.CiBuildConfig
+import com.tencent.devops.common.ci.task.AbstractTask
+import com.tencent.devops.common.ci.task.CodeCCScanClientTask
 import com.tencent.devops.common.ci.yaml.CIBuildYaml
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
@@ -12,6 +40,7 @@ import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
+import com.tencent.devops.common.pipeline.element.SendRTXNotifyElement
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.VMBaseOS
 import com.tencent.devops.common.pipeline.pojo.element.Element
@@ -36,6 +65,7 @@ import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import com.tencent.devops.prebuild.pojo.PreProject
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
+import com.tencent.devops.process.pojo.Pipeline
 import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -73,28 +103,36 @@ class PreBuildService @Autowired constructor(
         agentId: ThirdPartyAgentStaticInfo
     ): BuildId {
         val userProject = getUserProjectId(userId)
-
-        val preProject = prebuildProjectDao.get(dslContext, preProjectId, userId, workspace)
-        val pipelineId = if (null == preProject || preProject.pipelineId.isNullOrBlank()) {
-            val model = createPipelineModel(userId, preProjectId, workspace, yaml, agentId)
-            val pipelineId = client.get(ServicePipelineResource::class).create(userId, userProject, model, channelCode).data!!.id
-            prebuildProjectDao.createOrUpdate(dslContext, preProjectId, getUserProjectId(userId), userId, yamlStr.trim(), pipelineId, workspace)
-            pipelineId
+        val pipeline = getPipelineByName(userId, preProjectId)
+        val model = createPipelineModel(userId, preProjectId, workspace, yaml, agentId)
+        val pipelineId = if (null == pipeline) {
+            client.get(ServicePipelineResource::class).create(userId, userProject, model, channelCode).data!!.id
         } else {
-            if (userId != preProject.owner) {
-                logger.error("No permission to operate, userId: $userId")
-                throw PermissionForbiddenException("用户${userId}没有操作权限")
-            }
-            val model = createPipelineModel(userId, preProjectId, workspace, yaml, agentId)
-            client.get(ServicePipelineResource::class).edit(userId, userProject, preProject.pipelineId, model, channelCode)
-            prebuildProjectDao.update(dslContext, preProjectId, workspace, userId, yamlStr.trim(), preProject.pipelineId)
-            preProject.pipelineId
+            client.get(ServicePipelineResource::class).edit(userId, userProject, pipeline.pipelineId, model, channelCode)
+            pipeline.pipelineId
         }
+        prebuildProjectDao.createOrUpdate(dslContext, preProjectId, userProject, userId, yamlStr.trim(), pipelineId, workspace)
+
         logger.info("pipelineId: $pipelineId")
 
         // 启动构建
         val buildId = client.get(ServiceBuildResource::class).manualStartup(userId, userProject, pipelineId, mapOf(), channelCode).data!!.id
         return BuildId(buildId)
+    }
+
+    private fun getPipelineByName(userId: String, preProjectId: String): Pipeline? {
+        try {
+            val pipelineList = client.get(ServicePipelineResource::class).list(userId, getUserProjectId(userId), 1, 1000).data!!.records
+            pipelineList.forEach {
+                if (it.pipelineName == preProjectId) {
+                    return it
+                }
+            }
+        } catch (e: Throwable) {
+            logger.error("List pipeline failed, exception:", e)
+        }
+
+        return null
     }
 
     fun shutDown(
@@ -132,6 +170,8 @@ class PreBuildService @Autowired constructor(
                         logger.info("install market atom: ${element.getAtomCode()}")
 //                        installMarketAtom(getUserProjectId(userId), userId, element.getAtomCode())
                     }
+
+                    addAssociateElement(it, elementList, userId, preProjectId)
                 }
                 val dispatchType = ThirdPartyAgentIDDispatchType(
                         displayName = agentInfo.agentId,
@@ -164,7 +204,34 @@ class PreBuildService @Autowired constructor(
             }
             stageList.add(Stage(containerList, "stage-${stageIndex + 3}"))
         }
-        return Model(preProjectId + "_" + System.currentTimeMillis(), "", stageList, emptyList(), false, userId)
+        return Model(preProjectId, "", stageList, emptyList(), false, userId)
+    }
+
+    private fun addAssociateElement(it: AbstractTask, elementList: MutableList<Element>, userId: String, preProjectId: String) {
+        if (it.getTaskType() == CodeCCScanClientTask.taskType) { // 如果yaml里面写的是codecc检查任务，则需要增加一个归档报告的插件
+            elementList.add(ReportArchiveElement(
+                    "reportArchive",
+                    null,
+                    null,
+                    "/tmp/codecc_$preProjectId/",
+                    "index.html",
+                    "PreBuild Report",
+                    true,
+                    setOf(userId),
+                    "【\${pipeline.name}】 #\${pipeline.build.num} PreBuild报告已归档"
+            ))
+            elementList.add(SendRTXNotifyElement(
+                    "sendRTXNotify",
+                    null,
+                    null,
+                    setOf(userId),
+                    "PreBuild流水线【\${pipeline.name}】 #\${pipeline.build.num} 构建完成通知",
+                    "PreBuild流水线【\${pipeline.name}】 #\${pipeline.build.num} 构建完成\n",
+                    false,
+                    null,
+                    true
+            ))
+        }
     }
 
     fun getBuildDetail(userId: String, preProjectId: String, buildId: String): Result<ModelDetail> {
@@ -285,12 +352,19 @@ class PreBuildService @Autowired constructor(
         preAgents.forEach {
             if (it.hostName == hostName) {
                 logger.info("Get user personal vm, hostName: $hostName")
+                if (it.ip != ip) { // IP 有变更
+                    prebuildPersonalMachineDao.updateIp(dslContext, userId, hostName, ip)
+                }
+
                 return it
             }
         }
         preAgents.forEach {
             if (it.ip == ip) {
                 logger.info("Get user personal vm, ip: $ip")
+                if (it.hostName != hostName) { // hostname 有变更
+                    prebuildPersonalMachineDao.updateHostname(dslContext, userId, hostName, ip)
+                }
                 return it
             }
         }
@@ -300,6 +374,7 @@ class PreBuildService @Autowired constructor(
 
     private fun getCiBuildConf(buildConf: PreBuildConfig): CiBuildConfig {
         return CiBuildConfig(
+                buildConf.codeCCSofwareClientImage,
                 buildConf.codeCCSofwarePath,
                 buildConf.registryHost,
                 buildConf.registryUserName,

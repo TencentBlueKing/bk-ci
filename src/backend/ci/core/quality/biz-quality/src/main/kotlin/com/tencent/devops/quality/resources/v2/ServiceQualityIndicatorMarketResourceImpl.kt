@@ -37,7 +37,11 @@ import org.springframework.beans.factory.annotation.Autowired
 class ServiceQualityIndicatorMarketResourceImpl @Autowired constructor(
     private val qualityIndicatorService: QualityIndicatorService
 ) : ServiceQualityIndicatorMarketResource {
-    override fun setTestIndicator(userId: String, atomCode: String, indicatorUpdateList: Collection<IndicatorUpdate>): Result<Int> {
+    override fun setTestIndicator(
+        userId: String,
+        atomCode: String,
+        indicatorUpdateList: Collection<IndicatorUpdate>
+    ): Result<Int> {
         return Result(qualityIndicatorService.setTestIndicator(userId, atomCode, indicatorUpdateList))
     }
 

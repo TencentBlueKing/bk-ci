@@ -43,6 +43,8 @@ import java.io.File
 class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
 
     override fun getFileDownloadUrls(
+        userId: String,
+        projectId: String,
         pipelineId: String,
         buildId: String,
         fileType: FileTypeEnum,
@@ -122,7 +124,7 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
         }
     }
 
-    override fun downloadCustomizeFile(uri: String, destPath: File) {
+    override fun downloadCustomizeFile(userId: String, projectId: String, uri: String, destPath: File) {
         val url = if (uri.startsWith("http://") || uri.startsWith("https://")) {
             uri
         } else {
@@ -132,7 +134,7 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
         download(request, destPath)
     }
 
-    override fun downloadPipelineFile(pipelineId: String, buildId: String, uri: String, destPath: File) {
+    override fun downloadPipelineFile(userId: String, projectId: String, pipelineId: String, buildId: String, uri: String, destPath: File) {
         val url = if (uri.startsWith("http://") || uri.startsWith("https://")) {
             uri
         } else {

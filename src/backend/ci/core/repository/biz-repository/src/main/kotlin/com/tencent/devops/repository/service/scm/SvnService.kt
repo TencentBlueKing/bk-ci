@@ -30,6 +30,7 @@ import com.tencent.devops.scm.code.svn.ISvnService
 import com.tencent.devops.scm.pojo.SvnFileInfo
 import com.tencent.devops.scm.pojo.enums.SvnFileType
 import org.slf4j.LoggerFactory
+import org.springframework.stereotype.Service
 import org.tmatesoft.svn.core.SVNDirEntry
 import org.tmatesoft.svn.core.SVNProperties
 import org.tmatesoft.svn.core.SVNURL
@@ -39,6 +40,7 @@ import org.tmatesoft.svn.core.auth.SVNSSHAuthentication
 import org.tmatesoft.svn.core.io.SVNRepositoryFactory
 import java.io.ByteArrayOutputStream
 
+@Service
 class SvnService : ISvnService {
 
     companion object {

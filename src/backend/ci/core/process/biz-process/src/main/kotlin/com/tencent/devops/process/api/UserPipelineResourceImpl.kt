@@ -39,6 +39,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.user.UserPipelineResource
 import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.engine.service.PipelineService
+import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.Permission
 import com.tencent.devops.process.pojo.Pipeline
 import com.tencent.devops.process.pojo.PipelineCopy
@@ -65,12 +66,17 @@ import org.springframework.beans.factory.annotation.Autowired
 class UserPipelineResourceImpl @Autowired constructor(
     private val pipelineService: PipelineService,
     private val pipelineGroupService: PipelineGroupService,
-    private val pipelineRemoteAuthService: PipelineRemoteAuthService
+    private val pipelineRemoteAuthService: PipelineRemoteAuthService,
+    private val pipelinePermissionService: PipelinePermissionService
 ) : UserPipelineResource {
 
     override fun hasCreatePermission(userId: String, projectId: String): Result<Boolean> {
         checkParam(userId, projectId)
-        return Result(pipelineService.hasCreatePipelinePermission(userId, projectId))
+        return Result(pipelinePermissionService.checkPipelinePermission(
+            userId = userId,
+            projectId = projectId,
+            permission = AuthPermission.CREATE
+        ))
     }
 
     override fun pipelineExist(userId: String, projectId: String, pipelineName: String): Result<Boolean> {
@@ -138,7 +144,15 @@ class UserPipelineResourceImpl @Autowired constructor(
             Permission.CREATE -> AuthPermission.CREATE
             Permission.LIST -> AuthPermission.LIST
         }
-        return Result(pipelineService.hasPermission(userId, projectId, pipelineId, bkAuthPermission))
+
+        return Result(
+            pipelinePermissionService.checkPipelinePermission(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                permission = bkAuthPermission
+            )
+        )
     }
 
     override fun copy(

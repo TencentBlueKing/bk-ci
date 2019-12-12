@@ -27,6 +27,7 @@
 package com.tencent.devops.process.service
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.Stage
@@ -46,6 +47,10 @@ import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
 import com.tencent.devops.process.engine.service.PipelineBuildService
 import com.tencent.devops.process.engine.service.PipelineService
 import com.tencent.devops.process.pojo.CheckImageInitPipelineResp
+import com.tencent.devops.process.pojo.setting.PipelineRunLockType
+import com.tencent.devops.process.pojo.setting.PipelineSetting
+import com.tencent.devops.process.pojo.setting.Subscription
+import com.tencent.devops.process.util.DateTimeUtils
 import com.tencent.devops.store.pojo.image.enums.ImageStatusEnum
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -54,6 +59,7 @@ import org.springframework.stereotype.Service
 @Service
 class CheckImageInitPipelineService @Autowired constructor(
     private val pipelineService: PipelineService,
+    private val pipelineSettingService: PipelineSettingService,
     private val buildService: PipelineBuildService
 ) {
     private val logger = LoggerFactory.getLogger(CheckImageInitPipelineService::class.java)
@@ -72,20 +78,96 @@ class CheckImageInitPipelineService @Autowired constructor(
         val imageName = checkImageInitPipelineReq.imageName
         val version = checkImageInitPipelineReq.version
         val imageType = checkImageInitPipelineReq.imageType
+        val registryUser = checkImageInitPipelineReq.registryUser
+        val registryPwd = checkImageInitPipelineReq.registryPwd
         // stage-1
         val stageFirstElement = ManualTriggerElement(id = "T-1-1-1")
         val stageFirstElements = listOf<Element>(stageFirstElement)
         val params = mutableListOf<BuildFormProperty>()
-        params.add(BuildFormProperty("imageCode", true, BuildFormPropertyType.STRING, imageCode, null, null,
-            null, null, null, null, null, null))
-        params.add(BuildFormProperty("imageName", true, BuildFormPropertyType.STRING, imageName, null, null,
-            null, null, null, null, null, null))
-        params.add(BuildFormProperty("version", true, BuildFormPropertyType.STRING, version, null, null,
-            null, null, null, null, null, null))
-        if (null != imageType) {
-            params.add(BuildFormProperty("imageType", true, BuildFormPropertyType.STRING, imageType, null, null,
-                null, null, null, null, null, null))
-        }
+        params.add(BuildFormProperty(
+            id = "imageCode",
+            required = true,
+            type = BuildFormPropertyType.STRING,
+            defaultValue = imageCode,
+            options = null,
+            desc = null,
+            repoHashId = null,
+            relativePath = null,
+            scmType = null,
+            containerType = null,
+            glob = null,
+            properties = null
+        ))
+        params.add(BuildFormProperty(
+            id = "imageName",
+            required = true,
+            type = BuildFormPropertyType.STRING,
+            defaultValue = imageName,
+            options = null,
+            desc = null,
+            repoHashId = null,
+            relativePath = null,
+            scmType = null,
+            containerType = null,
+            glob = null,
+            properties = null
+        ))
+        params.add(BuildFormProperty(
+            id = "version",
+            required = true,
+            type = BuildFormPropertyType.STRING,
+            defaultValue = version,
+            options = null,
+            desc = null,
+            repoHashId = null,
+            relativePath = null,
+            scmType = null,
+            containerType = null,
+            glob = null,
+            properties = null
+        ))
+        params.add(BuildFormProperty(
+            id = "imageType",
+            required = false,
+            type = BuildFormPropertyType.STRING,
+            defaultValue = "",
+            options = null,
+            desc = null,
+            repoHashId = null,
+            relativePath = null,
+            scmType = null,
+            containerType = null,
+            glob = null,
+            properties = null
+        ))
+        params.add(BuildFormProperty(
+            id = "registryUser",
+            required = false,
+            type = BuildFormPropertyType.STRING,
+            defaultValue = "",
+            options = null,
+            desc = null,
+            repoHashId = null,
+            relativePath = null,
+            scmType = null,
+            containerType = null,
+            glob = null,
+            properties = null
+        ))
+        params.add(BuildFormProperty(
+            id = "registryPwd",
+            required = false,
+            type = BuildFormPropertyType.STRING,
+            defaultValue = "",
+            options = null,
+            desc = null,
+            repoHashId = null,
+            relativePath = null,
+            scmType = null,
+            containerType = null,
+            glob = null,
+            properties = null
+        ))
         val stageFirstContainer = TriggerContainer(
             id = containerSeqId.toString(),
             name = "构建触发",
@@ -126,11 +208,37 @@ class CheckImageInitPipelineService @Autowired constructor(
         val stageSecondContainers = listOf<Container>(stageSecondContainer)
         val stageSecond = Stage(stageSecondContainers, "stage-2")
         val stages = mutableListOf(stageFirst, stageSecond)
-        val pipelineName = "im-$projectCode-$imageCode-${System.currentTimeMillis()}"
+        var pipelineName = "im-$projectCode-$imageCode-${System.currentTimeMillis()}"
+        if (pipelineName.toCharArray().size > 64) {
+            pipelineName = "im-" + projectCode.substring(0, Integer.min(9, projectCode.length)) + "-" + UUIDUtil.generate()
+        }
         val model = Model(pipelineName, pipelineName, stages)
         logger.info("model is:$model")
         // 保存流水线信息
         val pipelineId = pipelineService.createPipeline(userId, projectCode, model, ChannelCode.AM)
+        if (false == checkImageInitPipelineReq.sendNotify) {
+            // 不发送通知
+            val settingRecord = pipelineSettingService.getSetting(pipelineId)!!
+            val setting = PipelineSetting(
+                projectId = projectCode,
+                pipelineId = settingRecord.pipelineId,
+                pipelineName = pipelineName,
+                desc = settingRecord.desc,
+                runLockType = PipelineRunLockType.valueOf(settingRecord.runLockType),
+                successSubscription = Subscription(),
+                failSubscription = Subscription(),
+                labels = emptyList(),
+                waitQueueTimeMinute = DateTimeUtils.secondToMinute(settingRecord.waitQueueTimeSecond),
+                maxQueueSize = settingRecord.maxQueueSize
+            )
+            pipelineService.saveSetting(
+                userId = userId,
+                projectId = projectCode,
+                pipelineId = pipelineId,
+                setting = setting,
+                channelCode = ChannelCode.AM
+            )
+        }
         logger.info("createPipeline result is:$pipelineId")
         // 异步启动流水线
         val startParams = mutableMapOf<String, String>() // 启动参数
@@ -138,7 +246,11 @@ class CheckImageInitPipelineService @Autowired constructor(
         startParams["imageName"] = imageName
         startParams["version"] = version
         if (null != imageType)
-        startParams["imageType"] = imageType
+            startParams["imageType"] = imageType
+        if (null != registryUser)
+            startParams["registryUser"] = registryUser
+        if (null != registryPwd)
+            startParams["registryPwd"] = registryPwd
         var imageCheckStatus = ImageStatusEnum.CHECKING
         var buildId: String? = null
         try {

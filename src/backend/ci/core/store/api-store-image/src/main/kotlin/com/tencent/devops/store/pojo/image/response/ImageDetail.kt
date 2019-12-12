@@ -1,31 +1,7 @@
-/*
- * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
- *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
- *
- * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
- *
- * A copy of the MIT License is included in this file.
- *
- *
- * Terms of the MIT License:
- * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
- * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
- * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
- * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
- * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- */
 package com.tencent.devops.store.pojo.image.response
 
 import com.tencent.devops.store.pojo.common.StoreUserCommentInfo
+import com.tencent.devops.store.pojo.image.enums.ImageAgentTypeEnum
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -55,6 +31,12 @@ data class ImageDetail(
     @ApiModelProperty("镜像名称（兼容多种解析方式）", required = true)
     val name: String,
 
+    @ApiModelProperty("研发来源")
+    val rdType: String,
+
+    @ApiModelProperty("镜像适用的Agent类型")
+    var agentTypeScope: List<ImageAgentTypeEnum>,
+
     @ApiModelProperty("镜像logo", required = true)
     val logoUrl: String,
 
@@ -76,6 +58,9 @@ data class ImageDetail(
     @ApiModelProperty("下载量", required = true)
     val downloads: Int,
 
+    @ApiModelProperty("所属镜像分类ID", required = true)
+    val classifyId: String,
+
     @ApiModelProperty("所属镜像分类代码", required = true)
     val classifyCode: String,
 
@@ -91,6 +76,9 @@ data class ImageDetail(
     @ApiModelProperty("镜像仓库名称", required = true)
     val imageRepoName: String,
 
+    @ApiModelProperty("凭证Id", required = true)
+    val ticketId: String,
+
     @ApiModelProperty("镜像tag", required = true)
     val imageTag: String,
 
@@ -98,7 +86,7 @@ data class ImageDetail(
     val imageSize: String,
 
     @ApiModelProperty("镜像大小数值（字节）", required = true)
-    val imageSizeNum: Int,
+    val imageSizeNum: Long,
 
     @ApiModelProperty(
         "镜像状态，INIT：初始化|AUDITING：审核中|AUDIT_REJECT：审核驳回|RELEASED：已发布|GROUNDING_SUSPENSION：上架中止|UNDERCARRIAGED：已下架",
@@ -112,8 +100,11 @@ data class ImageDetail(
     @ApiModelProperty("Label数组", required = true)
     val labelList: List<Label>,
 
-    @ApiModelProperty("Category数组", required = true)
-    val categoryList: List<Category>,
+    @ApiModelProperty("范畴code", required = true)
+    val category: String,
+
+    @ApiModelProperty("范畴名称", required = true)
+    val categoryName: String,
 
     @ApiModelProperty("是否为最新版本镜像 true：最新 false：非最新", required = true)
     val latestFlag: Boolean,
@@ -161,10 +152,10 @@ data class ImageDetail(
     val modifier: String?,
 
     @ApiModelProperty("创建时间", required = true)
-    val createTime: Long?,
+    val createTime: Long,
 
     @ApiModelProperty("修改时间", required = true)
-    val updateTime: Long?,
+    val updateTime: Long,
 
     @ApiModelProperty("是否已安装", required = true)
     var isInstalled: Boolean? = null

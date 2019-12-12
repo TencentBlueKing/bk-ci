@@ -42,12 +42,26 @@ import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
 import com.tencent.devops.worker.common.api.ApiPriority
 import com.tencent.devops.worker.common.logger.LoggerService
+import com.tencent.devops.worker.common.logger.LoggerService.elementId
 import okhttp3.MediaType
 import okhttp3.RequestBody
 import java.io.File
 
 @ApiPriority(priority = 9)
 class TencentReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
+    private val bkrepoMetaDataPrefix = "X-BKREPO-META-"
+    private val bkrepoUid = "X-BKREPO-UID"
+    private val bkrepoOverride = "X-BKREPO-OVERWRITE"
+
+    fun isRepoGrey(): Boolean {
+        val path = "/ms/artifactory/api/build/artifactories/checkRepoGray"
+        val request = buildGet(path)
+        val resultData: Result<Boolean> = objectMapper.readValue(request(request, "Fail to record the agent shutdown events"))
+        if (resultData.isNotOk()) {
+            throw RuntimeException("检查仓库灰度失败, message: ${resultData.message}")
+        }
+        return resultData.data!!
+    }
 
     override fun getRootUrl(taskId: String): Result<String> {
         val path = "/ms/artifactory/api/build/artifactories/report/$taskId/root"
@@ -77,7 +91,7 @@ class TencentReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
         return objectMapper.readValue(responseContent)
     }
 
-    override fun uploadReport(file: File, taskId: String, relativePath: String, buildVariables: BuildVariables) {
+    private fun updateJfrogReport(file: File, taskId: String, relativePath: String, buildVariables: BuildVariables) {
         val url = StringBuilder("/report/result/$taskId/${relativePath.removePrefix("/")}")
         with(buildVariables) {
             url.append(";$ARCHIVE_PROPS_PROJECT_ID=${encodeProperty(projectId)}")
@@ -96,6 +110,41 @@ class TencentReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
         } catch (e: Exception) {
             LoggerService.addNormalLine(e.message ?: "")
             throw RuntimeException("report archive fail: $responseContent")
+        }
+    }
+
+    private fun updateBkRepoReport(file: File, taskId: String, relativePath: String, buildVariables: BuildVariables) {
+        val url = StringBuilder("/bkrepo/api/build/generic/${buildVariables.projectId}/report/${buildVariables.pipelineId}/${buildVariables.buildId}/$elementId/${relativePath.removePrefix("/")}")
+        val header = mutableMapOf<String, String>()
+        with(buildVariables) {
+            header[bkrepoMetaDataPrefix + ARCHIVE_PROPS_PROJECT_ID] = projectId
+            header[bkrepoMetaDataPrefix + ARCHIVE_PROPS_PIPELINE_ID] = pipelineId
+            header[bkrepoMetaDataPrefix + ARCHIVE_PROPS_BUILD_ID] = buildId
+            header[bkrepoMetaDataPrefix + ARCHIVE_PROPS_USER_ID] = variables[PIPELINE_START_USER_ID] ?: ""
+            header[bkrepoMetaDataPrefix + ARCHIVE_PROPS_BUILD_NO] = variables[PIPELINE_BUILD_NUM] ?: ""
+            header[bkrepoMetaDataPrefix + ARCHIVE_PROPS_SOURCE] = "pipeline"
+            header[bkrepoUid] = variables[PIPELINE_START_USER_ID] ?: ""
+            header[bkrepoOverride] = "true"
+        }
+
+        val request = buildPut(url.toString(), RequestBody.create(MediaType.parse("application/octet-stream"), file), header)
+        val responseContent = request(request, "上传自定义报告失败")
+        try {
+            val obj = JsonParser().parse(responseContent).asJsonObject
+            if (obj.has("code") && obj["code"].asString != "0") throw RuntimeException()
+        } catch (e: Exception) {
+            LoggerService.addNormalLine(e.message ?: "")
+            throw RuntimeException("report archive fail: $responseContent")
+        }
+    }
+
+    override fun uploadReport(file: File, taskId: String, relativePath: String, buildVariables: BuildVariables) {
+        if (isRepoGrey()) {
+            LoggerService.addNormalLine("user bkrepo: true")
+            updateBkRepoReport(file, taskId, relativePath, buildVariables)
+        } else {
+            LoggerService.addNormalLine("user bkrepo: false")
+            updateJfrogReport(file, taskId, relativePath, buildVariables)
         }
     }
 }
