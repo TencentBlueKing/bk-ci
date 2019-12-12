@@ -59,19 +59,22 @@ interface OpImageDataTransferResource {
         categoryCode: String?
     ): Result<Int>
 
-    @ApiOperation("清除已迁移数据特征记录")
+    @ApiOperation("按项目批量重新验证")
     @PUT
-    @Path("/clearFinishedSet")
-    fun clearFinishedSet(
+    @Path("/batchRecheckByProject")
+    fun batchRecheckByProject(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String
+        userId: String,
+        @ApiParam(value = "项目编码", required = true)
+        @QueryParam("projectCode")
+        projectCode: String
     ): Result<Int>
 
-    @ApiOperation("清除所有已迁移数据")
+    @ApiOperation("批量重新验证")
     @PUT
-    @Path("/clearAllImageData")
-    fun clearAllImageData(
+    @Path("/batchRecheckAll")
+    fun batchRecheckAll(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String
