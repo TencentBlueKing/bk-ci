@@ -442,7 +442,7 @@ elseif build_type == "MACOS" then
                 ngx.header["X-DEVOPS-BUILD-ID"] = obj.buildId
                 ngx.header["X-DEVOPS-AGENT-ID"] = obj.id
                 ngx.header["X-DEVOPS-VM-SID"] = obj.vmSeqId
-                ngx.header["X-DEVOPS-VM-NAME"] = ""
+                ngx.header["X-DEVOPS-VM-NAME"] = obj.id
                 ngx.header["X-DEVOPS-CHANNEL-CODE"] = ""
                 ngx.header["X-DEVOPS-AGENT-SECRET-KEY"] = obj.secretKey
                 return
