@@ -1,3 +1,6 @@
+USE devops_ci_dispatch;
+SET NAMES utf8mb4;
+
 DROP PROCEDURE IF EXISTS ci_dispatch_schema_update;
 
 DELIMITER <CI_UBF>
