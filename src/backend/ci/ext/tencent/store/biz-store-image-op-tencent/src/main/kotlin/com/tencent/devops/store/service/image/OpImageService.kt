@@ -168,7 +168,7 @@ class OpImageService @Autowired constructor(
         pageSize: Int?,
         interfaceName: String? = "Anon interface"
     ): Result<OpImageResp> {
-        logger.info("$interfaceName:list:Input($userId,$imageName,$imageSourceType,$processFlag,$classifyCode,$categoryCodes,$labelCodes,$sortType,$desc,$page,$pageSize)")
+        logger.info("$interfaceName:list:Input($userId,$imageName,$imageSourceType,$processFlag,$classifyCode,${categoryCodes?.size}$categoryCodes,${labelCodes?.size}$labelCodes,$sortType,$desc,$page,$pageSize)")
         val validPage = PageUtil.getValidPage(page)
         val validPageSize = pageSize ?: -1
 
