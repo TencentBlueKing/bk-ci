@@ -14,7 +14,7 @@
 
         <main class="store-main" v-show="!isLoading">
             <component :is="`${type}Info`" :detail="detail"></component>
-            <bk-tab type="currentType" :active="'des'" class="detail-tabs">
+            <bk-tab type="currentType" :active.sync="currentTab" class="detail-tabs">
                 <bk-tab-panel name="des" :label="$t('store.概述')" class="summary-tab">
                     <mavon-editor
                         :editable="false"
@@ -58,6 +58,9 @@
                     <p class="comments-more" v-if="!isLoadEnd && commentList.length > 0" @click="getComments(true)"> {{ $t('store.阅读更多内容') }} </p>
                     <p class="g-empty comment-empty" v-if="commentList.length <= 0"> {{ $t('store.空空如洗，快来评论一下吧！') }} </p>
                 </bk-tab-panel>
+                <bk-tab-panel name="yaml" label="YAML">
+                    <section class="plugin-yaml"></section>
+                </bk-tab-panel>
             </bk-tab>
             <transition name="atom-fade">
                 <commentDialog v-if="showComment" @freshComment="freshComment" @closeDialog="showComment = false" :name="detail.name" :code="detailCode" :id="detailId" :comment-id="commentInfo.commentId"></commentDialog>
@@ -76,6 +79,11 @@
     import atomInfo from '../../components/common/detail-info/atom'
     import templateInfo from '../../components/common/detail-info/template'
     import imageInfo from '../../components/common/detail-info/image'
+
+    import CodeMirror from 'codemirror'
+    import 'codemirror/mode/yaml/yaml'
+    import 'codemirror/lib/codemirror.css'
+    import 'codemirror/theme/3024-night.css'
 
     export default {
         components: {
@@ -122,6 +130,17 @@
                 showComment: false,
                 showInstallConfirm: false,
                 commentInfo: {},
+                codeEditor: {},
+                currentTab: 'des',
+                codeMirrorCon: {
+                    lineNumbers: true,
+                    tabMode: 'indent',
+                    mode: 'yaml',
+                    theme: '3024-night',
+                    autoRefresh: true,
+                    cursorBlinkRate: 0,
+                    readOnly: true
+                },
                 methodsGenerator: {
                     comment: {
                         atom: (postData) => this.requestAtomComments(postData),
@@ -151,7 +170,17 @@
             }
         },
 
-        created () {
+        watch: {
+            currentTab (val) {
+                if (val === 'yaml') {
+                    setTimeout(() => {
+                        this.codeEditor.refresh()
+                    }, 0)
+                }
+            }
+        },
+
+        mounted () {
             this.getDetail()
         },
         
@@ -171,7 +200,8 @@
                 'requestImage',
                 'requestImageComments',
                 'requestImageScoreDetail',
-                'getUserApprovalInfo'
+                'getUserApprovalInfo',
+                'getAtomYaml'
             ]),
 
             freshComment (comment) {
@@ -199,7 +229,7 @@
                 this.isLoading = true
                 const type = this.$route.params.type
                 const funObj = {
-                    atom: () => this.getAtomDetail(),
+                    atom: () => this.getAtomDetail().then(() => this.getAtomYamlApi()),
                     template: () => this.getTemplateDetail(),
                     ide: () => this.getIDEDetail(),
                     image: () => this.getImageDetail()
@@ -227,6 +257,15 @@
                     this.detail.downloads = atomStatic.downloads || 0
                     this.commentInfo = atomDetail.userCommentInfo || {}
                     this.$set(this.detail, 'approveStatus', (userAppInfo || {}).approveStatus)
+                })
+            },
+
+            getAtomYamlApi () {
+                const atomCode = this.detailCode
+                return this.getAtomYaml({ atomCode }).then((res) => {
+                    const ele = document.querySelector('.plugin-yaml')
+                    this.codeEditor = CodeMirror(ele, this.codeMirrorCon)
+                    this.codeEditor.setValue(res || '')
                 })
             },
 
@@ -320,6 +359,10 @@
 
 <style lang="scss" scoped>
     @import '@/assets/scss/conf.scss';
+    .plugin-yaml {
+        height: 400px;
+        background: black;
+    }
 
     .store-main {
         height: calc(100vh - 93px);
@@ -335,6 +378,13 @@
     .detail-tabs {
         margin: 49px auto 30px;
         width: 1200px;
+        /deep/ .CodeMirror {
+            font-family: Consolas, "Courier New", monospace;
+            line-height: 1.5;
+            margin-bottom: 20px;
+            padding: 10px;
+            height: auto;
+        }
         .summary-tab {
             overflow: hidden;
             min-height: 360px;
