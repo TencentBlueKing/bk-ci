@@ -26,7 +26,7 @@
 
 package com.tencent.devops.artifactory.service.artifactory
 
-import com.tencent.devops.artifactory.client.JFrogService
+import com.tencent.devops.artifactory.service.JFrogService
 import com.tencent.devops.artifactory.service.ReportService
 import com.tencent.devops.artifactory.util.JFrogUtil
 import org.slf4j.LoggerFactory

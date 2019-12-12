@@ -37,7 +37,12 @@ import org.springframework.beans.factory.annotation.Autowired
 class ExternalQualityResourceImpl @Autowired constructor(
     val hisMetadataService: QualityHisMetadataService
 ) : ExternalQualityResource {
-    override fun metadataCallback(projectId: String, pipelineId: String, buildId: String, callback: MetadataCallback): Result<String> {
+    override fun metadataCallback(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        callback: MetadataCallback
+    ): Result<String> {
         return Result(hisMetadataService.saveHisMetadata(projectId, pipelineId, buildId, callback))
     }
 }

@@ -79,29 +79,30 @@ class StoreWebsocketService @Autowired constructor(
 
     fun buildStoreMessage(atomId: String, userId: String): StoreWebsocketPush {
         val page = StoryPageBuild().buildPage(
-                buildPageInfo = BuildPageInfo(
-                        buildId = null,
-                        pipelineId = null,
-                        projectId = null,
-                        atomId = atomId
-                ))
+            buildPageInfo = BuildPageInfo(
+                buildId = null,
+                pipelineId = null,
+                projectId = null,
+                atomId = atomId
+            )
+        )
         logger.info("store websocket: page[$page], atomId:[$atomId]")
         return StoreWebsocketPush(
-                atomId = atomId,
-                userId = userId,
-                redisOperation = redisOperation,
-                page = page,
-                pushType = WebSocketType.STORE,
-                objectMapper = objectMapper,
-                notifyPost = NotifyPost(
-                        module = "store",
-                        level = NotityLevel.LOW_LEVEL.getLevel(),
-                        message = "",
-                        dealUrl = null,
-                        code = 200,
-                        webSocketType = WebSocketType.changWebType(WebSocketType.STORE),
-                        page = page
-                )
+            atomId = atomId,
+            userId = userId,
+            redisOperation = redisOperation,
+            page = page,
+            pushType = WebSocketType.STORE,
+            objectMapper = objectMapper,
+            notifyPost = NotifyPost(
+                module = "store",
+                level = NotityLevel.LOW_LEVEL.getLevel(),
+                message = "",
+                dealUrl = null,
+                code = 200,
+                webSocketType = WebSocketType.changWebType(WebSocketType.STORE),
+                page = page
+            )
         )
     }
 

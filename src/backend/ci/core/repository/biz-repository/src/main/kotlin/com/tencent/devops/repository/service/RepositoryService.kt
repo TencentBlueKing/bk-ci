@@ -46,7 +46,6 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.model.repository.tables.records.TRepositoryRecord
 import com.tencent.devops.process.api.service.ServiceBuildResource
-import com.tencent.devops.repository.dao.CommitDao
 import com.tencent.devops.repository.dao.RepositoryCodeGitDao
 import com.tencent.devops.repository.dao.RepositoryCodeGitLabDao
 import com.tencent.devops.repository.dao.RepositoryCodeSvnDao
@@ -60,8 +59,6 @@ import com.tencent.devops.repository.pojo.GithubRepository
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.RepositoryInfo
 import com.tencent.devops.repository.pojo.RepositoryInfoWithPermission
-import com.tencent.devops.repository.pojo.commit.CommitData
-import com.tencent.devops.repository.pojo.commit.CommitResponse
 import com.tencent.devops.repository.pojo.enums.GitAccessLevelEnum
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
@@ -92,7 +89,6 @@ class RepositoryService @Autowired constructor(
     private val repositoryCodeGitDao: RepositoryCodeGitDao,
     private val repositoryCodeGitLabDao: RepositoryCodeGitLabDao,
     private val repositoryGithubDao: RepositoryGithubDao,
-    private val commitDao: CommitDao,
     private val gitOauthService: IGitOauthService,
     private val gitService: IGitService,
     private val scmService: IScmService,
@@ -802,7 +798,7 @@ class RepositoryService @Autowired constructor(
         projectId: String,
         scmType: ScmType?
     ): List<RepositoryInfoWithPermission> {
-        val dbRecords = repositoryDao.listByProject(dslContext, projectId, scmType, null, 0, 9999)
+        val dbRecords = repositoryDao.listByProject(dslContext, projectId, scmType)
         val gitRepoIds = dbRecords.filter { it.type == "CODE_GIT" }.map { it.repositoryId }.toSet()
         val gitAuthMap = repositoryCodeGitDao.list(dslContext, gitRepoIds)?.map { it.repositoryId to it }?.toMap()
 
@@ -853,7 +849,7 @@ class RepositoryService @Autowired constructor(
         val count =
             repositoryDao.countByProject(
                 dslContext = dslContext,
-                projectId = projectId,
+                projectIds = setOf(projectId),
                 repositoryType = repositoryType,
                 aliasName = aliasName,
                 repositoryIds = hasListPermissionRepoList.toSet()
@@ -908,7 +904,7 @@ class RepositoryService @Autowired constructor(
 
         val count = repositoryDao.countByProject(
             dslContext = dslContext,
-            projectId = projectId,
+            projectIds = setOf(projectId),
             repositoryType = repositoryType,
             aliasName = null,
             repositoryIds = hasPermissionList.toSet()
@@ -936,7 +932,7 @@ class RepositoryService @Autowired constructor(
     }
 
     fun listByProject(
-        projectId: String,
+        projectIds: Collection<String>,
         repositoryType: ScmType?,
         offset: Int,
         limit: Int
@@ -944,7 +940,7 @@ class RepositoryService @Autowired constructor(
 
         val count = repositoryDao.countByProject(
             dslContext = dslContext,
-            projectId = projectId,
+            projectIds = projectIds,
             repositoryType = repositoryType,
             aliasName = null,
             repositoryIds = null
@@ -952,7 +948,7 @@ class RepositoryService @Autowired constructor(
         val repositoryRecordList =
             repositoryDao.listByProject(
                 dslContext = dslContext,
-                projectId = projectId,
+                projectIds = projectIds,
                 repositoryType = repositoryType,
                 repositoryIds = null,
                 offset = offset,
@@ -1353,71 +1349,7 @@ class RepositoryService @Autowired constructor(
         return true
     }
 
-    fun getCommit(buildId: String): List<CommitResponse> {
-        val commits = commitDao.getBuildCommit(dslContext, buildId)
-
-        val repos = repositoryDao.getRepoByIds(dslContext, commits?.map { it.repoId } ?: listOf())
-        val repoMap = repos?.map { it.repositoryId.toString() to it }?.toMap() ?: mapOf()
-
-        return commits?.map {
-            CommitData(
-                type = it.type,
-                pipelineId = it.pipelineId,
-                buildId = it.buildId,
-                commit = it.commit,
-                committer = it.committer,
-                commitTime = it.commitTime.timestampmilli(),
-                comment = it.comment,
-                repoId = it.repoId?.toString(),
-                repoName = it.repoName,
-                elementId = it.elementId
-            )
-        }?.groupBy { it.elementId }?.map {
-            val elementId = it.value[0].elementId
-            val repoId = it.value[0].repoId
-            CommitResponse(
-                name = (repoMap[repoId]?.aliasName ?: "unknown repo"),
-                elementId = elementId,
-                records = it.value.filter { idt -> idt.commit.isNotBlank() })
-        } ?: listOf()
-    }
-
-    fun addCommit(commits: List<CommitData>): Int {
-        return commitDao.addCommit(dslContext, commits).size
-    }
-
     companion object {
         private val logger = LoggerFactory.getLogger(RepositoryService::class.java)
-    }
-
-    fun getLatestCommit(
-        pipelineId: String,
-        elementId: String,
-        repositoryId: String,
-        repositoryType: RepositoryType?,
-        page: Int?,
-        pageSize: Int?
-    ): List<CommitData> {
-        val commitList = if (repositoryType == null || repositoryType == RepositoryType.ID) {
-            val repoId = HashUtil.decodeOtherIdToLong(repositoryId)
-            commitDao.getLatestCommitById(dslContext, pipelineId, elementId, repoId, page, pageSize) ?: return listOf()
-        } else {
-            commitDao.getLatestCommitByName(dslContext, pipelineId, elementId, repositoryId, page, pageSize)
-                ?: return listOf()
-        }
-        return commitList.map { data ->
-            CommitData(
-                type = data.type,
-                pipelineId = pipelineId,
-                buildId = data.buildId,
-                commit = data.commit,
-                committer = data.committer,
-                commitTime = data.commitTime.timestampmilli(),
-                comment = data.comment,
-                repoId = data.repoId.toString(),
-                repoName = null,
-                elementId = data.elementId
-            )
-        }
     }
 }

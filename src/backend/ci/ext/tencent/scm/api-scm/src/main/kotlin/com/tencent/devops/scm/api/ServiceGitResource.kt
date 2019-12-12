@@ -38,6 +38,7 @@ import com.tencent.devops.repository.pojo.git.GitMrReviewInfo
 import com.tencent.devops.repository.pojo.git.GitProjectInfo
 import com.tencent.devops.repository.pojo.git.UpdateGitProjectInfo
 import com.tencent.devops.repository.pojo.oauth.GitToken
+import com.tencent.devops.scm.pojo.CommitCheckRequest
 import com.tencent.devops.scm.pojo.GitRepositoryResp
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -353,4 +354,11 @@ interface ServiceGitResource {
         @QueryParam("token")
         token: String
     ): Result<GitMrChangeInfo>
+
+    @ApiOperation("添加Git Commit Check")
+    @POST
+    @Path("/addCommitCheck")
+    fun addCommitCheck(
+        request: CommitCheckRequest
+    ): Result<Boolean>
 }

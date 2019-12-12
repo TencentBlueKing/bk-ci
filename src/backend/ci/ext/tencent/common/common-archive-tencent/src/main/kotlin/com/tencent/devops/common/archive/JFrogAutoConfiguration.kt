@@ -78,7 +78,7 @@ class JFrogAutoConfiguration {
     )
 
     @Bean
-    @Profile("dev", "default", "nobuild_dev")
+    @Profile("dev", "default", "nobuild_dev", "local", "codecc_dev")
     fun jFrogConfigPropertiesDev(jFrogAllConfigProperties: JFrogAllConfigProperties) = JFrogConfigProperties(
             jFrogAllConfigProperties.devUrl,
             jFrogAllConfigProperties.devUsername,

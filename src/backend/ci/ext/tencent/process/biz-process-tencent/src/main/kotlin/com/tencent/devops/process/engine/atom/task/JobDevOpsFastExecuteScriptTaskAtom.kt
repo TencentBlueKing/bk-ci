@@ -262,7 +262,7 @@ class JobDevOpsFastExecuteScriptTaskAtom @Autowired constructor(
                     LogUtils.addRedLine(rabbitTemplate, buildId, "EnvId is not init", taskId, containerId, executeCount)
                     throw BuildTaskException(
                         errorType = ErrorType.USER,
-                        errorCode = ERROR_BUILD_TASK_ENV_ID_IS_NULL,
+                        errorCode = ERROR_BUILD_TASK_ENV_ID_IS_NULL.toInt(),
                         errorMsg = "EnvId is not init"
                     ) }
                 val targetNodeId = parseVariable(param.nodeId!!.joinToString(","), runVariables).split(",").toList()
@@ -273,7 +273,7 @@ class JobDevOpsFastExecuteScriptTaskAtom @Autowired constructor(
                     LogUtils.addRedLine(rabbitTemplate, buildId, "EnvId is not init", taskId, containerId, executeCount)
                     throw BuildTaskException(
                         errorType = ErrorType.USER,
-                        errorCode = ERROR_BUILD_TASK_ENV_ID_IS_NULL,
+                        errorCode = ERROR_BUILD_TASK_ENV_ID_IS_NULL.toInt(),
                         errorMsg = "EnvId is not init"
                     )
                 }
@@ -285,7 +285,7 @@ class JobDevOpsFastExecuteScriptTaskAtom @Autowired constructor(
                     LogUtils.addRedLine(rabbitTemplate, buildId, "EnvName is not init", taskId, containerId, executeCount)
                     throw BuildTaskException(
                         errorType = ErrorType.USER,
-                        errorCode = ERROR_BUILD_TASK_ENV_NAME_IS_NULL,
+                        errorCode = ERROR_BUILD_TASK_ENV_NAME_IS_NULL.toInt(),
                         errorMsg = "EnvName is not init"
                     ) }
                 val targetEnvName = parseVariable(param.envName!!.joinToString(","), runVariables).split(",").toList()
@@ -297,7 +297,7 @@ class JobDevOpsFastExecuteScriptTaskAtom @Autowired constructor(
                 return AtomResponse(
                     buildStatus = BuildStatus.FAILED,
                     errorType = ErrorType.USER,
-                    errorCode = AtomErrorCode.USER_INPUT_INVAILD,
+                    errorCode = AtomErrorCode.USER_INPUT_INVAILD.toInt(),
                     errorMsg = "Unsupported EnvType: $type"
                 )
             }
@@ -402,7 +402,7 @@ class JobDevOpsFastExecuteScriptTaskAtom @Autowired constructor(
             LogUtils.addRedLine(rabbitTemplate, buildId, "以下这些环境名称不存在,请重新修改流水线！$noExistsEnvNames", taskId, containerId, executeCount)
             throw BuildTaskException(
                 errorType = ErrorType.USER,
-                errorCode = ERROR_BUILD_TASK_ENV_NAME_NOT_EXISTS,
+                errorCode = ERROR_BUILD_TASK_ENV_NAME_NOT_EXISTS.toInt(),
                 errorMsg = "以下这些环境名称不存在,请重新修改流水线！$noExistsEnvNames"
             )
         }
@@ -420,7 +420,7 @@ class JobDevOpsFastExecuteScriptTaskAtom @Autowired constructor(
             LogUtils.addRedLine(rabbitTemplate, buildId, "用户没有操作这些环境的权限！环境ID：$noAuthEnvIds", taskId, containerId, executeCount)
             throw BuildTaskException(
                 errorType = ErrorType.USER,
-                errorCode = ERROR_BUILD_TASK_USER_ENV_NO_OP_PRI,
+                errorCode = ERROR_BUILD_TASK_USER_ENV_NO_OP_PRI.toInt(),
                 errorMsg = "用户没有操作这些环境的权限！环境ID：$noAuthEnvIds"
             )
         }
@@ -457,7 +457,7 @@ class JobDevOpsFastExecuteScriptTaskAtom @Autowired constructor(
                 )
                 throw BuildTaskException(
                     errorType = ErrorType.USER,
-                    errorCode = ERROR_BUILD_TASK_USER_ENV_ID_NOT_EXISTS,
+                    errorCode = ERROR_BUILD_TASK_USER_ENV_ID_NOT_EXISTS.toInt(),
                     errorMsg = "以下这些环境id不存在,请重新修改流水线！id：$noExistsEnvIds"
                 )
             }
@@ -482,7 +482,7 @@ class JobDevOpsFastExecuteScriptTaskAtom @Autowired constructor(
                 )
                 throw BuildTaskException(
                     errorType = ErrorType.USER,
-                    errorCode = ERROR_BUILD_TASK_USER_ENV_ID_NOT_EXISTS,
+                    errorCode = ERROR_BUILD_TASK_USER_ENV_ID_NOT_EXISTS.toInt(),
                     errorMsg = "以下这些节点id不存在,请重新修改流水线！id：$noExistsNodeIds"
                 )
             }

@@ -36,7 +36,7 @@ import com.tencent.devops.common.event.pojo.pipeline.IPipelineEvent
  *
  * @version 1.0
  */
-@Event(MQ.EXCHANGE_PIPELINE_SETTING_CHANGE_FANOUT, MQ.ROUTE_PIPELINE_SETTING_CHANGE)
+@Event(exchange = MQ.EXCHANGE_PIPELINE_SETTING_CHANGE_FANOUT)
 data class PipelineSettingChangeEvent(
     override val source: String,
     override val projectId: String,

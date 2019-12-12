@@ -41,6 +41,8 @@ import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.dispatch.utils.CommonUtils
 import com.tencent.devops.dispatch.utils.DockerHostDebugLock
 import com.tencent.devops.dispatch.utils.redis.RedisUtils
+import com.tencent.devops.store.pojo.image.exception.UnknownImageType
+import com.tencent.devops.store.pojo.image.response.ImageRepoInfo
 import com.tencent.devops.ticket.pojo.enums.CredentialType
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -84,29 +86,54 @@ class DockerHostDebugService @Autowired constructor(
         credentialId: String?
     ) {
         logger.info("Start docker debug  pipelineId:($pipelineId), projectId:($projectId), vmSeqId:($vmSeqId), imageName:($imageName), imageType:($imageType), imageCode:($imageCode), imageVersion:($imageVersion)")
-        val dockerImage = if (imageType == ImageType.THIRD) {
-            imageName!!
-        } else if (imageType == ImageType.BKSTORE) {
-            // 调商店接口获取镜像完整名称
-            storeImageService.getCompleteImageName(
+        var imageRepoInfo: ImageRepoInfo? = null
+        var finalCredentialId = credentialId
+        var credentialProject = projectId
+        if (imageType == ImageType.BKSTORE) {
+            imageRepoInfo = storeImageService.getImageRepoInfo(
                 userId = userId,
                 projectId = projectId,
                 imageCode = imageCode,
                 imageVersion = imageVersion,
                 defaultPrefix = dockerBuildImagePrefix
             )
-        } else {
-            when (imageName) {
-                DockerVersion.TLINUX1_2.value -> dockerBuildImagePrefix + TLINUX1_2_IMAGE
-                DockerVersion.TLINUX2_2.value -> dockerBuildImagePrefix + TLINUX2_2_IMAGE
-                else -> "$dockerBuildImagePrefix/bkdevops/$imageName"
+            if (imageRepoInfo.ticketId.isNotBlank()) {
+                finalCredentialId = imageRepoInfo.ticketId
+            }
+            credentialProject = imageRepoInfo.ticketProject
+            if (credentialProject.isBlank()) {
+                logger.warn("insertDebug:credentialProject is blank,pipelineId=$pipelineId, imageCode=$imageCode,imageVersion=$imageVersion,credentialId=$credentialId")
             }
         }
-        logger.info("Docker images is: $dockerImage")
+        val dockerImage = when (imageType) {
+            ImageType.THIRD -> imageName!!
+            ImageType.BKSTORE -> {
+                // 研发商店镜像一定含name与tag
+                if (imageRepoInfo!!.repoUrl.isBlank()) {
+                    // dockerhub镜像名称不带斜杠前缀
+                    imageRepoInfo.repoName + ":" + imageRepoInfo.repoTag
+                } else {
+                    // 无论蓝盾还是第三方镜像此处均需完整路径
+                    imageRepoInfo.repoUrl + "/" + imageRepoInfo.repoName + ":" + imageRepoInfo.repoTag
+                }
+            }
+            else -> when (imageName) {
+                DockerVersion.TLINUX1_2.value -> dockerBuildImagePrefix + TLINUX1_2_IMAGE
+                DockerVersion.TLINUX2_2.value -> dockerBuildImagePrefix + TLINUX2_2_IMAGE
+                else -> "$dockerBuildImagePrefix/$imageName"
+            }
+        }
+        logger.info("insertDebug:Docker images is: $dockerImage")
         var userName: String? = null
         var password: String? = null
-        if (imageType == ImageType.THIRD && !credentialId.isNullOrBlank()) {
-            val ticketsMap = CommonUtils.getCredential(client, projectId, credentialId!!, CredentialType.USERNAME_PASSWORD)
+        if (imageType == ImageType.THIRD && !finalCredentialId.isNullOrBlank()) {
+            val ticketsMap =
+                CommonUtils.getCredential(
+                    client = client,
+                    projectId = credentialProject,
+                    credentialId = finalCredentialId!!,
+                    type = CredentialType.USERNAME_PASSWORD
+                )
             userName = ticketsMap["v1"] as String
             password = ticketsMap["v2"] as String
         }
@@ -126,18 +153,25 @@ class DockerHostDebugService @Autowired constructor(
         }
 
         pipelineDockerDebugDao.insertDebug(
-            dslContext,
-            projectId,
-            pipelineId,
-            vmSeqId,
-            PipelineTaskStatus.QUEUE,
-            "",
-            dockerImage,
-            hostTag,
-            buildEnvStr,
-            userName,
-            password,
-            imageType = if (null == imageType) { ImageType.BKDEVOPS.type } else { imageType.type })
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            vmSeqId = vmSeqId,
+            status = PipelineTaskStatus.QUEUE,
+            token = "",
+            imageName = dockerImage,
+            hostTag = hostTag,
+            buildEnv = buildEnvStr,
+            registryUser = userName,
+            registryPwd = password,
+            imageType = when (imageType) {
+                null -> ImageType.BKDEVOPS.type
+                ImageType.THIRD -> imageType!!.type
+                ImageType.BKDEVOPS -> ImageType.BKDEVOPS.type
+                ImageType.BKSTORE -> imageRepoInfo!!.sourceType.type
+                else -> throw UnknownImageType("imageCode:$imageCode,imageVersion:$imageVersion,imageType:$imageType")
+            }
+        )
     }
 
     fun deleteDebug(pipelineId: String, vmSeqId: String): Result<Boolean> {
@@ -153,12 +187,17 @@ class DockerHostDebugService @Autowired constructor(
         if (null == debugTask) {
             logger.warn("The debug task not exists, pipelineId:$pipelineId, vmSeqId:$vmSeqId")
             val msg = redisUtils.getRedisDebugMsg(pipelineId, vmSeqId)
-            return Result(1, "登录调试失败,请检查镜像是否合法或重试。" + if (!msg.isNullOrBlank()) { "错误信息: $msg" } else { "" })
+            return Result(1, "登录调试失败,请检查镜像是否合法或重试。" + if (!msg.isNullOrBlank()) {
+                "错误信息: $msg"
+            } else {
+                ""
+            })
         }
 
         return Result(0, "success", ContainerInfo(debugTask.projectId, debugTask.pipelineId, debugTask.vmSeqId,
-                debugTask.status, debugTask.imageName, debugTask.containerId ?: "", debugTask.hostTag ?: "", "", debugTask.buildEnv,
-                debugTask.registryUser, debugTask.registryPwd, debugTask.imageType))
+            debugTask.status, debugTask.imageName, debugTask.containerId ?: "", debugTask.hostTag
+            ?: "", "", debugTask.buildEnv,
+            debugTask.registryUser, debugTask.registryPwd, debugTask.imageType))
     }
 
     fun startDebug(hostTag: String): Result<ContainerInfo>? {
@@ -185,7 +224,7 @@ class DockerHostDebugService @Autowired constructor(
                 logger.info("Start the docker debug (${debug.pipelineId}) seq(${debug.vmSeqId})")
                 pipelineDockerDebugDao.updateStatusAndTag(dslContext, debug.pipelineId, debug.vmSeqId, PipelineTaskStatus.RUNNING, hostTag)
                 return Result(0, "success", ContainerInfo(debug.projectId, debug.pipelineId, debug.vmSeqId, PipelineTaskStatus.RUNNING.status, debug.imageName,
-                        "", "", "", debug.buildEnv, debug.registryUser, debug.registryPwd, debug.imageType))
+                    "", "", "", debug.buildEnv, debug.registryUser, debug.registryPwd, debug.imageType))
             } else {
                 // 优先取设置了IP的任务（可能是固定构建机，也可能是上次用的构建机）
                 var debugTask = pipelineDockerDebugDao.getQueueDebugExcludeProj(dslContext, grayProjectSet, hostTag)
@@ -202,7 +241,7 @@ class DockerHostDebugService @Autowired constructor(
                 logger.info("Start the docker debug (${debug.pipelineId}) seq(${debug.vmSeqId})")
                 pipelineDockerDebugDao.updateStatusAndTag(dslContext, debug.pipelineId, debug.vmSeqId, PipelineTaskStatus.RUNNING, hostTag)
                 return Result(0, "success", ContainerInfo(debug.projectId, debug.pipelineId, debug.vmSeqId, PipelineTaskStatus.RUNNING.status, debug.imageName,
-                        "", "", "", debug.buildEnv, debug.registryUser, debug.registryPwd, debug.imageType))
+                    "", "", "", debug.buildEnv, debug.registryUser, debug.registryPwd, debug.imageType))
             }
         } finally {
             redisLock.unlock()
@@ -241,17 +280,17 @@ class DockerHostDebugService @Autowired constructor(
             val dockerHost = pipelineDockerHostDao.getHost(dslContext, debugTask.projectId)
             if (null != dockerHost) {
                 logger.info("DockerHost is not null, rollback failed, shutdown the build! projectId: ${debugTask.projectId}, " +
-                        "pipelineId: ${debugTask.pipelineId}, vmSeqId: ${debugTask.vmSeqId}")
+                    "pipelineId: ${debugTask.pipelineId}, vmSeqId: ${debugTask.vmSeqId}")
 
                 AlertUtils.doAlert(AlertLevel.HIGH, "Docker构建机启动调试异常", "固定的Docker构建机启动调试异常，IP：${dockerHost.hostIp}, " +
-                        "projectId: ${debugTask.projectId}, vmSeqId: ${debugTask.vmSeqId}")
+                    "projectId: ${debugTask.projectId}, vmSeqId: ${debugTask.vmSeqId}")
                 return Result(0, "Rollback task finished")
             }
 
             if (debugTask.status == PipelineTaskStatus.RUNNING.status) {
                 pipelineDockerDebugDao.updateStatusAndTag(dslContext, pipelineId, vmSeqId, PipelineTaskStatus.QUEUE, "")
                 AlertUtils.doAlert(AlertLevel.LOW, "Docker构建机启动调试异常", "Docker构建机启动调试异常，任务已重试，异常ip: ${debugTask.hostTag}, " +
-                        "projectId: ${debugTask.projectId}, vmSeqId: ${debugTask.vmSeqId}")
+                    "projectId: ${debugTask.projectId}, vmSeqId: ${debugTask.vmSeqId}")
             }
         } finally {
             redisLock.unlock()
@@ -272,7 +311,7 @@ class DockerHostDebugService @Autowired constructor(
             logger.info("End the docker debug(${debug.pipelineId}) seq(${debug.vmSeqId})")
             pipelineDockerDebugDao.deleteDebug(dslContext, debug.id)
             return Result(0, "success", ContainerInfo(debug.projectId, debug.pipelineId, debug.vmSeqId,
-                    debug.status, debug.imageName, debug.containerId, debug.hostTag, debug.token, debug.buildEnv, debug.registryUser, debug.registryPwd, debug.imageType))
+                debug.status, debug.imageName, debug.containerId, debug.hostTag, debug.token, debug.buildEnv, debug.registryUser, debug.registryPwd, debug.imageType))
         } finally {
             redisLock.unlock()
         }

@@ -73,4 +73,17 @@ class PrebuildPersonalVmDao {
                 .fetchAny()
         }
     }
+
+    fun get(
+        dslContext: DSLContext,
+        userId: String,
+        hostName: String
+    ): TPrebuildPersonalVmRecord? {
+        with(TPrebuildPersonalVm.T_PREBUILD_PERSONAL_VM) {
+            return dslContext.selectFrom(this)
+                    .where(OWNER.eq(userId))
+                    .and(VM_NAME.eq(hostName))
+                    .fetchAny()
+        }
+    }
 }

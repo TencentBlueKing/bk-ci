@@ -28,6 +28,8 @@ dependencies {
     compile project(":ext:tencent:store:biz-store-op")
     compile project(":ext:tencent:store:biz-store-ideatom")
     compile project(":ext:tencent:store:biz-store-tencent")
+    compile project(":ext:tencent:store:biz-store-image-tencent")
+    compile project(":ext:tencent:store:biz-store-image-op-tencent")
 }
 
 apply from: "$rootDir/task_spring_boot_package.gradle"

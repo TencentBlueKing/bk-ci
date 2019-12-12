@@ -27,6 +27,7 @@
 package com.tencent.devops.gitci.dao
 
 import com.tencent.devops.model.gitci.tables.TGitRequestEventNotBuild
+import com.tencent.devops.model.gitci.tables.records.TGitRequestEventNotBuildRecord
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
@@ -60,6 +61,17 @@ class GitRequestEventNotBuildDao {
             ).returning(ID)
             .fetchOne()
             return record.id
+        }
+    }
+
+    fun getByEventId(
+        dslContext: DSLContext,
+        eventId: Long
+    ): TGitRequestEventNotBuildRecord? {
+        with(TGitRequestEventNotBuild.T_GIT_REQUEST_EVENT_NOT_BUILD) {
+            return dslContext.selectFrom(this)
+                    .where(EVENT_ID.eq(eventId))
+                    .fetchOne()
         }
     }
 }

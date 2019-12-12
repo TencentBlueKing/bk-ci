@@ -33,8 +33,6 @@ dependencies {
     compile project(":ext:tencent:common:common-wechatwork")
     compile project(":core:common:common-auth:common-auth-api")
     compile project(":ext:tencent:common:common-auth:common-auth-tencent")
-    compile project(":core:common:common-pipeline")
-    compile project(":ext:tencent:common:common-pipeline-tencent")
     //compile project(":ext:tencent:common:common-archive:common-archive-jfrog")
     compile project(":core:plugin:codecc-plugin:common-codecc")
     compile project(":ext:tencent:common:common-job")

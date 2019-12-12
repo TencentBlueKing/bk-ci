@@ -29,9 +29,11 @@ package com.tencent.devops.project.service
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE_BG
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE_CENTER
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE_DEPARTMENT
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.OperationException
-import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.auth.api.BSAuthProjectApi
 import com.tencent.devops.common.auth.api.BkAuthProperties
@@ -47,7 +49,6 @@ import com.tencent.devops.common.web.mq.EXCHANGE_PAASCC_PROJECT_UPDATE_LOGO
 import com.tencent.devops.common.web.mq.ROUTE_PAASCC_PROJECT_CREATE
 import com.tencent.devops.common.web.mq.ROUTE_PAASCC_PROJECT_UPDATE
 import com.tencent.devops.common.web.mq.ROUTE_PAASCC_PROJECT_UPDATE_LOGO
-import com.tencent.devops.model.project.tables.records.TProjectRecord
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.jmx.api.ProjectJmxApi
@@ -70,6 +71,8 @@ import com.tencent.devops.project.pojo.tof.Response
 import com.tencent.devops.project.service.job.SynProjectService.Companion.ENGLISH_NAME_PATTERN
 import com.tencent.devops.project.service.s3.S3Service
 import com.tencent.devops.project.service.tof.TOFService
+import com.tencent.devops.project.util.ImageUtil.drawImage
+import com.tencent.devops.project.util.ProjectUtils
 import okhttp3.MediaType
 import okhttp3.Request
 import okhttp3.RequestBody
@@ -81,18 +84,11 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.dao.DuplicateKeyException
 import org.springframework.stereotype.Service
-import java.awt.AlphaComposite
-import java.awt.BasicStroke
-import java.awt.Color
-import java.awt.Font
-import java.awt.image.BufferedImage
 import java.io.File
 import java.io.InputStream
 import java.nio.file.Files
 import java.util.ArrayList
-import java.util.Random
 import java.util.regex.Pattern
-import javax.imageio.ImageIO
 import javax.ws.rs.NotFoundException
 
 @Service
@@ -180,12 +176,12 @@ class ProjectLocalService @Autowired constructor(
                 rabbitTemplate.convertAndSend(
                     EXCHANGE_PAASCC_PROJECT_CREATE,
                     ROUTE_PAASCC_PROJECT_CREATE, PaasCCCreateProject(
-                        userId = userId,
-                        accessToken = accessToken,
-                        projectId = projectId,
-                        retryCount = 0,
-                        projectCreateInfo = projectCreateInfo
-                    )
+                    userId = userId,
+                    accessToken = accessToken,
+                    projectId = projectId,
+                    retryCount = 0,
+                    projectCreateInfo = projectCreateInfo
+                )
                 )
                 success = true
                 return projectId
@@ -204,7 +200,7 @@ class ProjectLocalService @Autowired constructor(
         bgId: Long?,
         deptName: String?,
         centerName: String?,
-        interfaceName: String?
+        interfaceName: String? = "ProjectLocalService"
     ): List<String> {
         val startEpoch = System.currentTimeMillis()
         var success = false
@@ -223,11 +219,55 @@ class ProjectLocalService @Autowired constructor(
         }
     }
 
+    fun getProjectEnNamesByCenterId(
+        userId: String,
+        centerId: Long?,
+        interfaceName: String? = "ProjectLocalService"
+    ): List<String> {
+        val startEpoch = System.currentTimeMillis()
+        var success = false
+        try {
+            val list = projectDao.listByGroupId(
+                dslContext = dslContext,
+                bgId = null,
+                deptId = null,
+                centerId = centerId
+            )?.filter { it.enabled == null || it.enabled }?.map { it.englishName }?.toList() ?: emptyList()
+            success = true
+            return list
+        } finally {
+            jmxApi.execute("getProjectEnNamesByOrganization", System.currentTimeMillis() - startEpoch, success)
+            logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to list project EnNames,userName:$userId")
+        }
+    }
+
+    fun getProjectEnNamesByOrganization(
+        userId: String,
+        deptId: Long?,
+        centerName: String?,
+        interfaceName: String? = "ProjectLocalService"
+    ): List<String> {
+        val startEpoch = System.currentTimeMillis()
+        var success = false
+        try {
+            val list = projectDao.listByOrganization(
+                dslContext = dslContext,
+                deptId = deptId,
+                centerName = centerName
+            )?.filter { it.enabled == null || it.enabled }?.map { it.englishName }?.toList() ?: emptyList()
+            success = true
+            return list
+        } finally {
+            jmxApi.execute("getProjectEnNamesByOrganization", System.currentTimeMillis() - startEpoch, success)
+            logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to list project EnNames,userName:$userId")
+        }
+    }
+
     fun getOrCreatePreProject(userId: String, accessToken: String): ProjectVO {
         val projectCode = "_$userId"
         var userProjectRecord = projectDao.getByEnglishName(dslContext, projectCode)
         if (userProjectRecord != null) {
-            return packagingBean(userProjectRecord, setOf())
+            return ProjectUtils.packagingBean(userProjectRecord, setOf())
         }
 
         val projectCreateInfo = ProjectCreateInfo(
@@ -289,33 +329,33 @@ class ProjectLocalService @Autowired constructor(
                 }
                 val userDeptDetail = tofService.getUserDeptDetail(userId, "") // 获取用户机构信息                try {
                 try {
-                projectDao.create(
-                    dslContext = dslContext,
-                    userId = userId,
-                    logoAddress = logoAddress,
-                    projectCreateInfo = projectCreateInfo,
-                    userDeptDetail = userDeptDetail,
-                    projectId = projectId,
-                    channelCode = ProjectChannelCode.BS
-                )
-            } catch (e: DuplicateKeyException) {
-                logger.warn("Duplicate project $projectCreateInfo", e)
-                throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PROJECT_NAME_EXIST))
-            } catch (t: Throwable) {
-                logger.warn("Fail to create the project ($projectCreateInfo)", t)
-                deleteProjectFromAuth(projectId, accessToken)
-                throw t
-            }
+                    projectDao.create(
+                        dslContext = dslContext,
+                        userId = userId,
+                        logoAddress = logoAddress,
+                        projectCreateInfo = projectCreateInfo,
+                        userDeptDetail = userDeptDetail,
+                        projectId = projectId,
+                        channelCode = ProjectChannelCode.BS
+                    )
+                } catch (e: DuplicateKeyException) {
+                    logger.warn("Duplicate project $projectCreateInfo", e)
+                    throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PROJECT_NAME_EXIST))
+                } catch (t: Throwable) {
+                    logger.warn("Fail to create the project ($projectCreateInfo)", t)
+                    deleteProjectFromAuth(projectId, accessToken)
+                    throw t
+                }
 
                 rabbitTemplate.convertAndSend(
                     EXCHANGE_PAASCC_PROJECT_CREATE,
                     ROUTE_PAASCC_PROJECT_CREATE, PaasCCCreateProject(
-                        userId = userId,
-                        accessToken = accessToken,
-                        projectId = projectId,
-                        retryCount = 0,
-                        projectCreateInfo = projectCreateInfo
-                    )
+                    userId = userId,
+                    accessToken = accessToken,
+                    projectId = projectId,
+                    retryCount = 0,
+                    projectCreateInfo = projectCreateInfo
+                )
                 )
                 success = true
             } finally {
@@ -328,7 +368,7 @@ class ProjectLocalService @Autowired constructor(
         }
 
         userProjectRecord = projectDao.getByEnglishName(dslContext, projectCode)
-        return packagingBean(userProjectRecord!!, setOf())
+        return ProjectUtils.packagingBean(userProjectRecord!!, setOf())
     }
 
     fun getProjectByGroup(userId: String, bgName: String?, deptName: String?, centerName: String?): List<ProjectVO> {
@@ -339,7 +379,64 @@ class ProjectLocalService @Autowired constructor(
             val list = ArrayList<ProjectVO>()
             projectDao.listByGroup(dslContext, bgName, deptName, centerName).filter { it.enabled == null || it.enabled }
                 .map {
-                    list.add(packagingBean(it, grayProjectSet))
+                    list.add(ProjectUtils.packagingBean(it, grayProjectSet))
+                }
+            success = true
+            return list
+        } finally {
+            jmxApi.execute(PROJECT_LIST, System.currentTimeMillis() - startEpoch, success)
+            logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to list projects,userName:$userId")
+        }
+    }
+
+    fun getProjectByOrganizationId(
+        userId: String,
+        organizationType: String,
+        organizationId: Long,
+        deptName: String?,
+        centerName: String?,
+        interfaceName: String? = "ProjectLocalService"
+    ): List<ProjectVO> {
+        val startEpoch = System.currentTimeMillis()
+        var success = false
+        try {
+            val grayProjectSet = grayProjectSet()
+            val list = ArrayList<ProjectVO>()
+            val records = when (organizationType) {
+                AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE_BG -> {
+                    projectDao.listByOrganization(dslContext, organizationId, deptName, centerName)
+                }
+                AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE_DEPARTMENT -> {
+                    projectDao.listByOrganization(dslContext, organizationId, centerName)
+                }
+                AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE_CENTER -> {
+                    projectDao.listByGroupId(dslContext, null, null, organizationId)
+                }
+                else -> {
+                    null
+                }
+            }
+            records?.filter { it.enabled == null || it.enabled }
+                ?.map {
+                    list.add(ProjectUtils.packagingBean(it, grayProjectSet))
+                }
+            success = true
+            return list
+        } finally {
+            jmxApi.execute(PROJECT_LIST, System.currentTimeMillis() - startEpoch, success)
+            logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to list projects,userName:$userId")
+        }
+    }
+
+    fun getProjectByGroupId(userId: String, bgId: Long?, deptId: Long?, centerId: Long?): List<ProjectVO> {
+        val startEpoch = System.currentTimeMillis()
+        var success = false
+        try {
+            val grayProjectSet = grayProjectSet()
+            val list = ArrayList<ProjectVO>()
+            projectDao.listByGroupId(dslContext, bgId, deptId, centerId).filter { it.enabled == null || it.enabled }
+                .map {
+                    list.add(ProjectUtils.packagingBean(it, grayProjectSet))
                 }
             success = true
             return list
@@ -387,7 +484,7 @@ class ProjectLocalService @Autowired constructor(
 
     fun getByEnglishName(englishName: String): ProjectVO? {
         val record = projectDao.getByEnglishName(dslContext, englishName) ?: return null
-        return packagingBean(record, grayProjectSet())
+        return ProjectUtils.packagingBean(record, grayProjectSet())
     }
 
     fun getProjectUsers(accessToken: String, userId: String, projectCode: String): Result<List<String>?> {
@@ -433,12 +530,12 @@ class ProjectLocalService @Autowired constructor(
             rabbitTemplate.convertAndSend(
                 EXCHANGE_PAASCC_PROJECT_UPDATE,
                 ROUTE_PAASCC_PROJECT_UPDATE, PaasCCUpdateProject(
-                    userId = userId,
-                    accessToken = accessToken,
-                    projectId = projectId,
-                    retryCount = 0,
-                    projectUpdateInfo = projectUpdateInfo
-                )
+                userId = userId,
+                accessToken = accessToken,
+                projectId = projectId,
+                retryCount = 0,
+                projectUpdateInfo = projectUpdateInfo
+            )
             )
             success = true
         } catch (e: DuplicateKeyException) {
@@ -467,12 +564,12 @@ class ProjectLocalService @Autowired constructor(
                 rabbitTemplate.convertAndSend(
                     EXCHANGE_PAASCC_PROJECT_UPDATE_LOGO,
                     ROUTE_PAASCC_PROJECT_UPDATE_LOGO, PaasCCUpdateProjectLogo(
-                        userId = userId,
-                        accessToken = accessToken,
-                        projectId = project.projectId,
-                        retryCount = 0,
-                        projectUpdateLogoInfo = ProjectUpdateLogoInfo(logoAddress, userId)
-                    )
+                    userId = userId,
+                    accessToken = accessToken,
+                    projectId = project.projectId,
+                    retryCount = 0,
+                    projectUpdateLogoInfo = ProjectUpdateLogoInfo(logoAddress, userId)
+                )
                 )
                 return Result(ProjectLogo(logoAddress))
             } catch (e: Exception) {
@@ -499,7 +596,7 @@ class ProjectLocalService @Autowired constructor(
             projectDao.list(dslContext, projectIdList).filter {
                 includeDisable == true || it.enabled == null || it.enabled
             }.map {
-                list.add(packagingBean(it, grayProjectSet))
+                list.add(ProjectUtils.packagingBean(it, grayProjectSet))
             }
             success = true
             return list
@@ -507,62 +604,6 @@ class ProjectLocalService @Autowired constructor(
             jmxApi.execute(PROJECT_LIST, System.currentTimeMillis() - startEpoch, success)
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to list projects")
         }
-    }
-
-    private fun drawImage(logoStr: String): File {
-        val logoBackgroundColor = arrayOf("#FF5656", "#FFB400", "#30D878", "#3C96FF")
-        val max = logoBackgroundColor.size - 1
-        val min = 0
-        val random = Random()
-        val backgroundIndex = random.nextInt(max) % (max - min + 1) + min
-        val width = 128
-        val height = 128
-        // 创建BufferedImage对象
-        val bi = BufferedImage(width, height, BufferedImage.TYPE_INT_RGB)
-        // 获取Graphics2D
-        val g2d = bi.createGraphics()
-        // 设置透明度
-        g2d.composite = AlphaComposite.getInstance(AlphaComposite.SRC_ATOP, 1.0f)
-
-        when (backgroundIndex) {
-            0 -> {
-                g2d.background = Color.RED
-            }
-            1 -> {
-                g2d.background = Color.YELLOW
-            }
-            2 -> {
-                g2d.background = Color.GREEN
-            }
-            3 -> {
-                g2d.background = Color.BLUE
-            }
-        }
-        g2d.clearRect(0, 0, width, height)
-        g2d.color = Color.WHITE
-        g2d.stroke = BasicStroke(1.0f)
-        val font = Font("宋体", Font.PLAIN, 64)
-        g2d.font = font
-        val fontMetrics = g2d.fontMetrics
-        val heightAscent = fontMetrics.ascent
-
-        val context = g2d.fontRenderContext
-        val stringBounds = font.getStringBounds(logoStr, context)
-        val fontWidth = stringBounds.width.toFloat()
-
-        g2d.drawString(
-            logoStr,
-            (width / 2 - fontWidth / 2),
-            (height / 2 + heightAscent / 2).toFloat()
-        )
-        // 透明度设置 结束
-        g2d.composite = AlphaComposite.getInstance(AlphaComposite.SRC_OVER)
-        // 释放对象
-        g2d.dispose()
-        // 保存文件
-        val logo = Files.createTempFile("default_", ".png").toFile()
-        ImageIO.write(bi, "png", logo)
-        return logo
     }
 
     fun verifyUserProjectPermission(accessToken: String, projectCode: String, userId: String): Result<Boolean> {
@@ -600,55 +641,6 @@ class ProjectLocalService @Autowired constructor(
 
     private fun grayProjectSet() =
         (redisOperation.getSetMembers(gray.getGrayRedisKey()) ?: emptySet()).filter { !it.isBlank() }.toSet()
-
-    private fun packagingBean(tProjectRecord: TProjectRecord, grayProjectSet: Set<String>): ProjectVO {
-        return ProjectVO(
-            id = tProjectRecord.id,
-            projectId = tProjectRecord.projectId,
-            projectName = tProjectRecord.projectName,
-            englishName = tProjectRecord.englishName ?: "",
-            projectCode = tProjectRecord.englishName ?: "",
-            projectType = tProjectRecord.projectType ?: 0,
-            approvalStatus = tProjectRecord.approvalStatus ?: 0,
-            approvalTime = if (tProjectRecord.approvalTime == null) {
-                ""
-            } else {
-                DateTimeUtil.toDateTime(tProjectRecord.approvalTime, "yyyy-MM-dd'T'HH:mm:ssZ")
-            },
-            approver = tProjectRecord.approver ?: "",
-            bgId = tProjectRecord.bgId?.toString(),
-            bgName = tProjectRecord.bgName ?: "",
-            ccAppId = tProjectRecord.ccAppId ?: 0,
-            ccAppName = tProjectRecord.ccAppName ?: "",
-            centerId = tProjectRecord.centerId?.toString(),
-            centerName = tProjectRecord.centerName ?: "",
-            createdAt = DateTimeUtil.toDateTime(tProjectRecord.createdAt, "yyyy-MM-dd"),
-            creator = tProjectRecord.creator ?: "",
-            dataId = tProjectRecord.dataId ?: 0,
-            deployType = tProjectRecord.deployType ?: "",
-            deptId = tProjectRecord.deptId?.toString(),
-            deptName = tProjectRecord.deptName ?: "",
-            description = tProjectRecord.description ?: "",
-            extra = tProjectRecord.extra ?: "",
-            secrecy = tProjectRecord.isSecrecy,
-            helmChartEnabled = tProjectRecord.isHelmChartEnabled,
-            kind = tProjectRecord.kind,
-            logoAddr = tProjectRecord.logoAddr ?: "",
-            remark = tProjectRecord.remark ?: "",
-            updatedAt = if (tProjectRecord.updatedAt == null) {
-                ""
-            } else {
-                DateTimeUtil.toDateTime(tProjectRecord.updatedAt, "yyyy-MM-dd")
-            },
-            useBk = tProjectRecord.useBk,
-            enabled = tProjectRecord.enabled ?: true,
-            gray = grayProjectSet.contains(tProjectRecord.englishName),
-            hybridCcAppId = tProjectRecord.hybridCcAppId,
-            enableExternal = tProjectRecord.enableExternal,
-            enableIdc = tProjectRecord.enableIdc,
-            offlined = tProjectRecord.isOfflined
-        )
-    }
 
     private fun convertFile(inputStream: InputStream): File {
         val logo = Files.createTempFile("default_", ".png").toFile()
@@ -748,6 +740,50 @@ class ProjectLocalService @Autowired constructor(
             logger.error("Get project info error", e)
             throw RuntimeException("Get project info error: ${e.message}")
         }
+    }
+
+    fun createGitCIProject(userId: String, gitProjectId: Long): ProjectVO {
+        val projectCode = "git_$gitProjectId"
+        var gitCiProject = projectDao.getByEnglishName(dslContext, projectCode)
+        if (gitCiProject != null) {
+            return ProjectUtils.packagingBean(gitCiProject, setOf())
+        }
+
+        val projectCreateInfo = ProjectCreateInfo(
+            projectName = projectCode,
+            englishName = projectCode,
+            projectType = ProjectTypeEnum.SUPPORT_PRODUCT.index,
+            description = "git ci project for git projectId: $gitProjectId",
+            bgId = 0L,
+            bgName = "",
+            deptId = 0L,
+            deptName = "",
+            centerId = 0L,
+            centerName = "",
+            secrecy = false,
+            kind = 0
+        )
+
+        try {
+            // 随机生成图片
+            val logoFile = drawImage(projectCreateInfo.englishName.substring(0, 1).toUpperCase())
+            try {
+                // 发送服务器
+                val logoAddress = s3Service.saveLogo(logoFile, projectCreateInfo.englishName)
+                val userDeptDetail = tofService.getUserDeptDetail(userId, "") // 获取用户组织架构信息
+                projectDao.create(dslContext, userId, logoAddress, projectCreateInfo, userDeptDetail, projectCode, ProjectChannelCode.BS)
+            } finally {
+                if (logoFile.exists()) {
+                    logoFile.delete()
+                }
+            }
+        } catch (e: Throwable) {
+            logger.error("Create project failed,", e)
+            throw e
+        }
+
+        gitCiProject = projectDao.getByEnglishName(dslContext, projectCode)
+        return ProjectUtils.packagingBean(gitCiProject!!, setOf())
     }
 
     companion object {

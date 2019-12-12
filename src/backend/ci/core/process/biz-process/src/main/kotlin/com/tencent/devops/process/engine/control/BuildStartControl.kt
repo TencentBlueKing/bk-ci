@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStartBroadCastEvent
+import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
@@ -60,7 +61,7 @@ import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.service.BuildStartupParamService
 import com.tencent.devops.process.service.PipelineUserService
 import com.tencent.devops.process.service.ProjectOauthTokenService
-import com.tencent.devops.process.service.scm.ScmService
+import com.tencent.devops.process.service.scm.ScmProxyService
 import com.tencent.devops.process.utils.BUILD_NO
 import com.tencent.devops.process.utils.PIPELINE_BUILD_ID
 import com.tencent.devops.process.utils.PIPELINE_CREATE_USER
@@ -92,7 +93,7 @@ class BuildStartControl @Autowired constructor(
     private val projectOauthTokenService: ProjectOauthTokenService,
     private val buildDetailService: PipelineBuildDetailService,
     private val pipelineUserService: PipelineUserService,
-    private val scmService: ScmService,
+    private val scmProxyService: ScmProxyService,
     private val rabbitTemplate: RabbitTemplate
 ) {
     private val logger = LoggerFactory.getLogger(javaClass)!!
@@ -259,6 +260,13 @@ class BuildStartControl @Autowired constructor(
                         buildId = buildId,
                         startTime = buildInfo.startTime,
                         triggerType = buildInfo.trigger
+                    ), PipelineBuildStatusBroadCastEvent(
+                        source = source,
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        userId = userId,
+                        buildId = buildId,
+                        actionType = ActionType.START
                     )
                 )
             }
@@ -291,7 +299,12 @@ class BuildStartControl @Autowired constructor(
                     it.id to it.defaultValue
                 }
             }.toMap())
-            buildStartupParamService.addParam(buildId, JsonUtil.getObjectMapper().writeValueAsString(params))
+            buildStartupParamService.addParam(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                param = JsonUtil.getObjectMapper().writeValueAsString(params)
+            )
         }
     }
 
@@ -431,7 +444,7 @@ class BuildStartControl @Autowired constructor(
                     if (callScm) {
                         logger.info("[$pipelineId-${ele.id}] is start,get revision by scmService")
                         val latestRevision =
-                            scmService.recursiveFetchLatestRevision(
+                            scmProxyService.recursiveFetchLatestRevision(
                                 projectId,
                                 pipelineId,
                                 repositoryConfig,

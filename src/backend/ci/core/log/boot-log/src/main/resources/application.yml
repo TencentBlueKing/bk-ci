@@ -1,0 +1,9 @@
+spring:
+  application:
+    name: log${service-suffix}
+    desc: DevOps Log Service
+    version: 4.0
+    packageName: com.tencent.devops.log
+
+server:
+  port: 21914

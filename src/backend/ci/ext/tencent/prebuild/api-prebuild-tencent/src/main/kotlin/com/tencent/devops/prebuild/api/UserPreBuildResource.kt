@@ -29,17 +29,17 @@ package com.tencent.devops.prebuild.api
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ACCESS_TOKEN
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentStaticInfo
 import com.tencent.devops.log.model.pojo.QueryLogs
 import com.tencent.devops.plugin.codecc.pojo.CodeccCallback
 import com.tencent.devops.prebuild.pojo.HistoryResponse
-import com.tencent.devops.prebuild.pojo.InitPreProjectTask
-import com.tencent.devops.prebuild.pojo.PreProjectReq
 import com.tencent.devops.prebuild.pojo.UserProject
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import com.tencent.devops.prebuild.pojo.PreProject
-import com.tencent.devops.prebuild.pojo.UserNode
+import com.tencent.devops.prebuild.pojo.StartUpReq
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -71,34 +71,23 @@ interface UserPreBuildResource {
         accessToken: String
     ): Result<UserProject>
 
-    @ApiOperation("创建用户构建机")
+    @ApiOperation("初始化Agent")
     @POST
-    @Path("/project/userNode")
-    fun createUserNode(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String
-    ): Result<UserNode>
-
-    @ApiOperation("查询构建机")
-    @GET
-    @Path("/project/userNode/list")
-    fun listNode(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String
-    ): Result<List<UserNode>>
-
-    @ApiOperation("用户构建机上执行命令")
-    @POST
-    @Path("/project/userNode/execute")
-    fun executeCmdInNode(
+    @Path("/agent/init/{os}/{ip}/{hostName}")
+    fun getOrCreateAgent(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("command命令", required = true)
-        command: String
-    ): Result<Pair<Int, String>>
+        @ApiParam("操作系统类型", required = true)
+        @PathParam("os")
+        os: OS,
+        @ApiParam("IP", required = true)
+        @PathParam("ip")
+        ip: String,
+        @ApiParam("hostName", required = true)
+        @PathParam("hostName")
+        hostName: String
+    ): Result<ThirdPartyAgentStaticInfo>
 
     @ApiOperation("查询所有PreBuild项目")
     @GET
@@ -128,14 +117,11 @@ interface UserPreBuildResource {
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(value = "accessToken", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
-        accessToken: String,
         @ApiParam("preProjectId", required = true)
         @PathParam("preProjectId")
         preProjectId: String,
         @ApiParam("yaml文件", required = true)
-        yaml: String
+        startUpReq: StartUpReq
     ): Result<BuildId>
 
     @ApiOperation("手动停止流水线")
@@ -215,32 +201,6 @@ interface UserPreBuildResource {
         @PathParam(value = "buildId")
         buildId: String
     ): Result<CodeccCallback?>
-
-    @ApiOperation("初始化项目")
-    @POST
-    @Path("/init")
-    fun init(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam(value = "accessToken", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
-        accessToken: String,
-        @ApiParam("初始化请求", required = true)
-        req: PreProjectReq
-    ): Result<InitPreProjectTask>
-
-    @ApiOperation("获取初始化任务状态")
-    @GET
-    @Path("/init/{taskId}")
-    fun queryInitTaskStatus(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam("初始化任务ID", required = true)
-        @PathParam(value = "taskId")
-        taskId: String
-    ): Result<InitPreProjectTask>
 
     @ApiOperation("获取build蓝盾链接")
     @GET

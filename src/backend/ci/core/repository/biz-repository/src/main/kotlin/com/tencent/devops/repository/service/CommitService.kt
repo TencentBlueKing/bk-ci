@@ -84,6 +84,7 @@ class CommitService @Autowired constructor(
     }
 
     fun getLatestCommit(
+        projectId: String,
         pipelineId: String,
         elementId: String,
         repositoryId: String,
@@ -91,12 +92,12 @@ class CommitService @Autowired constructor(
         page: Int?,
         pageSize: Int?
     ): List<CommitData> {
-        val commitList = if (repositoryType == null || repositoryType == RepositoryType.ID) {
-            val repoId = HashUtil.decodeOtherIdToLong(repositoryId)
-            commitDao.getLatestCommitById(dslContext, pipelineId, elementId, repoId, page, pageSize) ?: return listOf()
+        val repoId = if (repositoryType == null || repositoryType == RepositoryType.ID) {
+            HashUtil.decodeOtherIdToLong(repositoryId)
         } else {
-            commitDao.getLatestCommitByName(dslContext, pipelineId, elementId, repositoryId, page, pageSize) ?: return listOf()
+            repositoryDao.getByName(dslContext, projectId, repositoryId).repositoryId
         }
+        val commitList = commitDao.getLatestCommitById(dslContext, pipelineId, elementId, repoId, page, pageSize) ?: return listOf()
         return commitList.map { data ->
             CommitData(
                 data.type,

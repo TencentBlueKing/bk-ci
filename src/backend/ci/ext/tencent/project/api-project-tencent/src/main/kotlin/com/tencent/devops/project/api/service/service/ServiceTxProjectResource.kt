@@ -28,6 +28,7 @@ package com.tencent.devops.project.api.service.service
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ACCESS_TOKEN
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BG_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_DEPT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ORGANIZATION_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
@@ -81,6 +82,45 @@ interface ServiceTxProjectResource {
     ): Result<List<ProjectVO>>
 
     @GET
+    @Path("/getProjectByOrganizationId")
+    @ApiOperation("根据组织架构查询所有项目")
+    fun getProjectByOrganizationId(
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @ApiParam(value = "组织类型", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE)
+        organizationType: String,
+        @ApiParam(value = "组织Id", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_ORGANIZATION_ID)
+        organizationId: Long,
+        @ApiParam("deptName", required = false)
+        @QueryParam("deptName")
+        deptName: String?,
+        @ApiParam("centerName", required = false)
+        @QueryParam("centerName")
+        centerName: String?
+    ): Result<List<ProjectVO>>
+
+    @GET
+    @Path("/getProjectByGroupId")
+    @ApiOperation("根据组织架构查询所有项目")
+    fun getProjectByGroupId(
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @ApiParam("bgId", required = false)
+        @QueryParam("bgId")
+        bgId: Long?,
+        @ApiParam("deptId", required = false)
+        @QueryParam("deptId")
+        deptId: Long?,
+        @ApiParam("centerId", required = false)
+        @QueryParam("centerId")
+        centerId: Long?
+    ): Result<List<ProjectVO>>
+
+    @GET
     @Path("/preBuild/userProject/{userId}")
     @ApiOperation("查询用户项目")
     fun getPreUserProject(
@@ -111,6 +151,33 @@ interface ServiceTxProjectResource {
     ): Result<List<String>>
 
     @GET
+    @Path("/enNames/dept")
+    @ApiOperation("查询用户项目")
+    fun getProjectEnNamesByDeptIdAndCenterName(
+        @ApiParam("用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @ApiParam("部门ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_DEPT_ID)
+        deptId: Long?,
+        @ApiParam("中心名称", required = true)
+        @QueryParam("centerName")
+        centerName: String?
+    ): Result<List<String>>
+
+    @GET
+    @Path("/enNames/center")
+    @ApiOperation("查询用户项目")
+    fun getProjectEnNamesByCenterId(
+        @ApiParam("用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @ApiParam("中心ID", required = true)
+        @QueryParam("centerId")
+        centerId: Long?
+    ): Result<List<String>>
+
+    @GET
 //    @Path("/preBuild/userProject/{userId}")
     @Path("/preBuild/userProject/userId/{userId}")
     @ApiOperation("查询用户项目")
@@ -133,6 +200,15 @@ interface ServiceTxProjectResource {
         @ApiParam(value = "项目信息", required = true)
         projectCreateInfo: ProjectCreateInfo
     ): Result<String>
+
+    @GET
+    @Path("/projects/{projectCode}/managers")
+    @ApiOperation(" 查询项目的管理员")
+    fun getProjectManagers(
+        @ApiParam("项目代码", required = true)
+        @PathParam("projectCode")
+        projectCode: String
+    ): Result<List<String>>
 
     @GET
     @Path("/{projectCode}/users/{userId}/verifyWithToken")
@@ -163,4 +239,16 @@ interface ServiceTxProjectResource {
         @QueryParam(AUTH_HEADER_DEVOPS_ORGANIZATION_ID)
         organizationId: Int
     ): Result<Boolean>
+
+    @POST
+    @Path("/gitci/{gitProjectId}/{userId}")
+    @ApiOperation("创建gitCI项目")
+    fun createGitCIProject(
+        @ApiParam("工蜂项目id", required = true)
+        @PathParam("gitProjectId")
+        gitProjectId: Long,
+        @ApiParam("用户名", required = true)
+        @PathParam("userId")
+        userId: String
+    ): Result<ProjectVO>
 }

@@ -26,13 +26,14 @@
 
 package com.tencent.devops.common.api.enums
 
-/**
- * deng
- * 2019-01-08
- * 老的代码库插件是通过代码库的ID来关联代码库的，
- * 新的通过代码库名称来关联
- */
 enum class RepositoryType {
     ID,
-    NAME
+    NAME;
+
+    companion object {
+        fun parseType(type: String?): RepositoryType {
+            if (type.isNullOrBlank()) return ID
+            return RepositoryType.valueOf(type!!)
+        }
+    }
 }

@@ -27,7 +27,7 @@
 package com.tencent.devops.gitci.pojo.git
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import com.tencent.devops.gitci.OBJECT_KIND_TAG_PUSH
+import com.tencent.devops.common.ci.OBJECT_KIND_TAG_PUSH
 
 /**
  * {
@@ -36,17 +36,17 @@ import com.tencent.devops.gitci.OBJECT_KIND_TAG_PUSH
  *   "after":"47f4f77f5428eed4e75f4d84d1b9089b38c5a34e",
  *   "ref":"refs/heads/test",
  *   "checkout_sha":"47f4f77f5428eed4e75f4d84d1b9089b38c5a34e",
- *   "user_name":"xxxx",
+ *   "user_name":"rdeng",
  *   "user_id":11648,
- *   "user_email":"xxxx@xxxx.com",
+ *   "user_email":"rdeng@tencent.com",
  *   "project_id":46619,
  *   "repository":{
  *    　"name":"maven-hello-world",
  *      "description":"",
- *      "homepage":"http://git.xxxx.com/xxxx/maven-hello-world",
- *      "git_http_url":"http://git.xxxx.com/xxxx/maven-hello-world.git",
- *      "git_ssh_url":"git@git.xxxx.com:xxxx/maven-hello-world.git",
- *      "url":"git@git.xxxx.com:xxxx/maven-hello-world.git",
+ *      "homepage":"http://git.code.oa.com/rdeng/maven-hello-world",
+ *      "git_http_url":"http://git.code.oa.com/rdeng/maven-hello-world.git",
+ *      "git_ssh_url":"git@git.code.oa.com:rdeng/maven-hello-world.git",
+ *      "url":"git@git.code.oa.com:rdeng/maven-hello-world.git",
  *      "visibility_level":0
  *    },
  *    "commits":[
@@ -54,10 +54,10 @@ import com.tencent.devops.gitci.OBJECT_KIND_TAG_PUSH
  *         "id":"47f4f77f5428eed4e75f4d84d1b9089b38c5a34e",
  *         "message":"Test webhook",
  *         "timestamp":"2018-03-16T06:50:11+0000",
- *         "url":"http://git.xxxx.com/xxxx/maven-hello-world/commit/47f4f77f5428eed4e75f4d84d1b9089b38c5a34e",
+ *         "url":"http://git.code.oa.com/rdeng/maven-hello-world/commit/47f4f77f5428eed4e75f4d84d1b9089b38c5a34e",
  *         "author":{
- *           "name":"xxxx",
- *           "email":"xxxx@xxxx.com"
+ *           "name":"rdeng",
+ *           "email":"rdeng@tencent.com"
  *         },
  *         "added":[
  *

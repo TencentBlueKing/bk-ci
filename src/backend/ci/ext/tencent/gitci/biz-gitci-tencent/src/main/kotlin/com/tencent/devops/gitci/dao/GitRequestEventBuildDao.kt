@@ -27,9 +27,11 @@
 package com.tencent.devops.gitci.dao
 
 import com.tencent.devops.gitci.pojo.BranchBuilds
+import com.tencent.devops.model.gitci.tables.TGitRequestEvent
 import com.tencent.devops.model.gitci.tables.TGitRequestEventBuild
 import com.tencent.devops.model.gitci.tables.records.TGitRequestEventBuildRecord
 import org.jooq.DSLContext
+import org.jooq.Record
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
@@ -136,6 +138,18 @@ class GitRequestEventBuildDao {
                     .where(BUILD_ID.eq(buildId))
                     .fetchOne()
         }
+    }
+
+    fun getEventByBuildId(
+        dslContext: DSLContext,
+        buildId: String
+    ): Record? {
+        val t1 = TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD.`as`("t1")
+        val t2 = TGitRequestEvent.T_GIT_REQUEST_EVENT.`as`("t2")
+        return dslContext.select(t2.OBJECT_KIND, t2.COMMIT_ID, t2.GIT_PROJECT_ID, t2.MERGE_REQUEST_ID, t2.DESCRIPTION, t2.EVENT)
+            .from(t2).leftJoin(t1).on(t1.EVENT_ID.eq(t2.ID))
+            .where(t1.BUILD_ID.eq(buildId))
+            .fetchOne()
     }
 
     fun getByEventIds(

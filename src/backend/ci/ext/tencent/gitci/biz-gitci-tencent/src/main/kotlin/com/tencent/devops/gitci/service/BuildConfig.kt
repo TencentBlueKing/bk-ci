@@ -32,6 +32,9 @@ import org.springframework.stereotype.Component
 @Component
 class BuildConfig {
 
+    @Value("\${codeCC.clientImage:#{null}}")
+    val codeCCSofwareClientImage: String? = null
+
     @Value("\${codeCC.softwarePath}")
     val codeCCSofwarePath: String? = null
 
@@ -48,13 +51,13 @@ class BuildConfig {
     val registryImage: String? = null
 
     @Value("\${devCloud.cpu}")
-    val cpu: Int = 32
+    val cpu: Int = 16
 
     @Value("\${devCloud.memory}")
-    val memory: String = "65535M"
+    val memory: String = "32767M"
 
     @Value("\${devCloud.disk}")
-    val disk: String = "500G"
+    val disk: String = "50G"
 
     @Value("\${devCloud.volume}")
     val volume: Int = 100

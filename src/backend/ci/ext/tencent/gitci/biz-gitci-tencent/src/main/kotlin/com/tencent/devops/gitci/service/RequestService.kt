@@ -33,8 +33,9 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.gitci.dao.GitCISettingDao
 import com.tencent.devops.gitci.dao.GitRequestEventBuildDao
 import com.tencent.devops.gitci.dao.GitRequestEventDao
+import com.tencent.devops.gitci.dao.GitRequestEventNotBuildDao
 import com.tencent.devops.gitci.pojo.GitCIBuildHistory
-// import com.tencent.devops.process.api.ServiceBuildResource
+import com.tencent.devops.gitci.pojo.enums.TriggerReason
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.pojo.BuildHistory
 import org.jooq.DSLContext
@@ -49,7 +50,8 @@ class RequestService @Autowired constructor(
     private val dslContext: DSLContext,
     private val gitCISettingDao: GitCISettingDao,
     private val gitRequestEventDao: GitRequestEventDao,
-    private val gitRequestEventBuildDao: GitRequestEventBuildDao
+    private val gitRequestEventBuildDao: GitRequestEventBuildDao,
+    private val gitRequestEventNotBuildDao: GitRequestEventNotBuildDao
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(RequestService::class.java)
@@ -84,6 +86,8 @@ class RequestService @Autowired constructor(
             logger.info("no build record, gitProjectId: $gitProjectId")
             val records = mutableListOf<GitCIBuildHistory>()
             gitRequestList.forEach {
+                val notBuildRecord = gitRequestEventNotBuildDao.getByEventId(dslContext, it.id!!)
+                it.description = notBuildRecord?.reason
                 records.add(GitCIBuildHistory(it, null))
             }
             return BuildHistoryPage(
@@ -103,6 +107,8 @@ class RequestService @Autowired constructor(
             logger.info("Get branch build history list return empty, gitProjectId: $gitProjectId")
             val records = mutableListOf<GitCIBuildHistory>()
             gitRequestList.forEach {
+                val notBuildRecord = gitRequestEventNotBuildDao.getByEventId(dslContext, it.id!!)
+                it.description = notBuildRecord?.reason
                 records.add(GitCIBuildHistory(it, null))
             }
             return BuildHistoryPage(
@@ -119,9 +125,12 @@ class RequestService @Autowired constructor(
         gitRequestList.forEach {
             val gitRequestEventBuild = gitRequestEventBuildDao.getByEventId(dslContext, it.id!!)
             if (null == gitRequestEventBuild) {
+                val notBuildRecord = gitRequestEventNotBuildDao.getByEventId(dslContext, it.id!!)
+                it.description = notBuildRecord?.reason
                 records.add(GitCIBuildHistory(it, null))
             } else {
                 val buildHistory = getBuildHistory(gitRequestEventBuild.buildId, buildHistoryList)
+                it.description = TriggerReason.TRIGGER_SUCCESS.name
                 records.add(GitCIBuildHistory(it, buildHistory))
             }
         }

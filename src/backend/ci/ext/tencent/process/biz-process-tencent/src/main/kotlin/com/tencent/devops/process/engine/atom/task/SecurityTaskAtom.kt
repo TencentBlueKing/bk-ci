@@ -34,6 +34,7 @@ import com.tencent.devops.common.archive.client.JfrogClient
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.element.SecurityElement
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.web.mq.alert.AlertLevel
 import com.tencent.devops.common.web.mq.alert.AlertUtils
@@ -42,10 +43,10 @@ import com.tencent.devops.plugin.api.ServiceFileResource
 import com.tencent.devops.plugin.pojo.security.UploadParams
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.IAtomTask
-import com.tencent.devops.process.pojo.AtomErrorCode
 import com.tencent.devops.process.engine.common.BS_ATOM_LOOP_TIMES
 import com.tencent.devops.process.engine.common.BS_ATOM_STATUS_REFRESH_DELAY_MILLS
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
+import com.tencent.devops.process.pojo.AtomErrorCode
 import com.tencent.devops.process.pojo.ErrorType
 import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
 import org.slf4j.LoggerFactory
@@ -60,7 +61,8 @@ import org.springframework.stereotype.Component
 @Scope(SCOPE_PROTOTYPE)
 class SecurityTaskAtom @Autowired constructor(
     private val client: Client,
-    private val rabbitTemplate: RabbitTemplate
+    private val rabbitTemplate: RabbitTemplate,
+    private val commonConfig: CommonConfig
 ) : IAtomTask<SecurityElement> {
 
     override fun getParamElement(task: PipelineBuildTask): SecurityElement {
@@ -73,8 +75,8 @@ class SecurityTaskAtom @Autowired constructor(
     @Value("\${security.isAlert}")
     private var isAlert: Boolean = true
 
-    @Value("\${gateway.url:#{null}}")
-    private val gatewayUrl: String? = null
+//    @Value("\${gateway.url:#{null}}")
+//    private val gatewayUrl: String? = null
 
     override fun execute(task: PipelineBuildTask, param: SecurityElement, runVariables: Map<String, String>): AtomResponse {
         val buildId = task.buildId
@@ -96,7 +98,7 @@ class SecurityTaskAtom @Autowired constructor(
         LogUtils.addLine(rabbitTemplate, buildId, "maxTimes: $maxTimes", taskId, task.containerHashId, task.executeCount ?: 1)
         LogUtils.addLine(rabbitTemplate, buildId, "isAlert: $isAlert", taskId, task.containerHashId, task.executeCount ?: 1)
 
-        val jfrogClient = JfrogClient(gatewayUrl ?: "", projectId, pipelineId, buildId)
+        val jfrogClient = JfrogClient(commonConfig.devopsHostGateway!!, projectId, pipelineId, buildId)
         val apkTaskIdMap = mutableMapOf<String, String>()
         val times = 1
         var fileConut = 0

@@ -1,5 +1,33 @@
+/*
+ * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ *
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ *
+ * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
+ *
+ * A copy of the MIT License is included in this file.
+ *
+ *
+ * Terms of the MIT License:
+ * ---------------------------------------------------
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
+ * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+ * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+ * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
 package com.tencent.devops.artifactory.util
 
+import com.tencent.bkrepo.repository.pojo.node.NodeDetail
+import com.tencent.bkrepo.repository.pojo.node.NodeInfo
 import com.tencent.devops.artifactory.pojo.FileChecksums
 import com.tencent.devops.artifactory.pojo.FileDetail
 import com.tencent.devops.artifactory.pojo.FileInfo
@@ -28,11 +56,11 @@ object RepoUtils {
         }
     }
 
-    fun isPipelineFile(fileInfo: com.tencent.bkrepo.generic.pojo.FileInfo): Boolean {
-        return fileInfo.repoName == PIPELINE_REPO
+    fun isPipelineFile(nodeInfo: NodeInfo): Boolean {
+        return nodeInfo.repoName == PIPELINE_REPO
     }
 
-    fun toFileInfo(fileInfo: com.tencent.bkrepo.generic.pojo.FileInfo): FileInfo {
+    fun toFileInfo(fileInfo: NodeInfo): FileInfo {
         val fullPath = refineFullPath(fileInfo)
         return FileInfo(
             name = fileInfo.name,
@@ -46,18 +74,34 @@ object RepoUtils {
         )
     }
 
-    fun toFileDetail(fileDetail: com.tencent.bkrepo.generic.pojo.FileDetail): FileDetail {
-        return FileDetail(
-            name = fileDetail.fileInfo.name,
-            path = fileDetail.fileInfo.path,
-            fullName = fileDetail.fileInfo.fullPath,
-            fullPath = fileDetail.fileInfo.fullPath,
-            size = fileDetail.fileInfo.size,
-            createdTime = LocalDateTime.parse(fileDetail.fileInfo.createdDate, DateTimeFormatter.ISO_DATE_TIME).timestamp(),
-            modifiedTime = LocalDateTime.parse(fileDetail.fileInfo.lastModifiedDate, DateTimeFormatter.ISO_DATE_TIME).timestamp(),
-            checksums = FileChecksums(fileDetail.fileInfo.sha256, "", ""),
-            meta = fileDetail.metadata // todo  元数据补充 pipelineName
+    fun toFileInfo(fileInfo: com.tencent.bkrepo.generic.pojo.FileInfo): FileInfo {
+        val fullPath = refineFullPath(fileInfo)
+        return FileInfo(
+            name = fileInfo.name,
+            fullName = fullPath,
+            path = fileInfo.path,
+            fullPath = fullPath,
+            size = if (fileInfo.folder) -1 else fileInfo.size,
+            folder = fileInfo.folder,
+            modifiedTime = LocalDateTime.parse(fileInfo.lastModifiedDate, DateTimeFormatter.ISO_DATE_TIME).timestamp(),
+            artifactoryType = ArtifactoryType.CUSTOM_DIR
         )
+    }
+
+    fun toFileDetail(nodeDetail: NodeDetail): FileDetail {
+        with(nodeDetail) {
+            return FileDetail(
+                name = nodeInfo.name,
+                path = nodeInfo.path,
+                fullName = nodeInfo.fullPath,
+                fullPath = nodeInfo.fullPath,
+                size = nodeInfo.size,
+                createdTime = LocalDateTime.parse(nodeInfo.createdDate, DateTimeFormatter.ISO_DATE_TIME).timestamp(),
+                modifiedTime = LocalDateTime.parse(nodeInfo.lastModifiedDate, DateTimeFormatter.ISO_DATE_TIME).timestamp(),
+                checksums = FileChecksums(nodeInfo.sha256, "", ""),
+                meta = mapOf() // todo  元数据补充 pipelineName
+            )
+        }
     }
 
     private fun refineFullPath(fileInfo: com.tencent.bkrepo.generic.pojo.FileInfo): String {
@@ -65,6 +109,14 @@ object RepoUtils {
             fileInfo.fullPath + "/"
         } else {
             fileInfo.fullPath
+        }
+    }
+
+    private fun refineFullPath(nodeInfo: NodeInfo): String {
+        return if (nodeInfo.folder && !nodeInfo.fullPath.endsWith("/")) {
+            nodeInfo.fullPath + "/"
+        } else {
+            nodeInfo.fullPath
         }
     }
 }

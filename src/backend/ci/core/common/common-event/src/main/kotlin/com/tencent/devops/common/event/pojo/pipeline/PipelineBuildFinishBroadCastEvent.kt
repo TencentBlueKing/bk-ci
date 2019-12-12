@@ -35,7 +35,7 @@ import com.tencent.devops.common.event.enums.ActionType
  * @author irwinsun
  * @version 1.0
  */
-@Event(MQ.EXCHANGE_PIPELINE_BUILD_FINISH_FANOUT, MQ.ROUTE_PIPELINE_BUILD_FINISH)
+@Event(exchange = MQ.EXCHANGE_PIPELINE_BUILD_FINISH_FANOUT)
 data class PipelineBuildFinishBroadCastEvent(
     override val source: String,
     override val projectId: String,
@@ -43,7 +43,7 @@ data class PipelineBuildFinishBroadCastEvent(
     override val userId: String,
     val buildId: String,
     val status: String,
-    override var actionType: ActionType = ActionType.REFRESH,
+    override var actionType: ActionType = ActionType.END,
     override var delayMills: Int = 0,
     val startTime: Long?,
     val endTime: Long?,

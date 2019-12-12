@@ -63,6 +63,8 @@ import java.nio.file.Paths
 class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
 
     override fun getFileDownloadUrls(
+        userId: String,
+        projectId: String,
         pipelineId: String,
         buildId: String,
         fileType: FileTypeEnum,

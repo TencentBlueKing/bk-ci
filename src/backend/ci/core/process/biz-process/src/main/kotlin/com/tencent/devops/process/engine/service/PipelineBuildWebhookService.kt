@@ -45,7 +45,7 @@ import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.plugin.api.pojo.GitCommitCheckEvent
 import com.tencent.devops.plugin.api.pojo.GithubPrEvent
-import com.tencent.devops.process.api.service.ServiceScmResource
+import com.tencent.devops.process.api.service.ServiceScmWebhookResource
 import com.tencent.devops.process.engine.service.code.GitWebHookMatcher
 import com.tencent.devops.process.engine.service.code.GithubWebHookMatcher
 import com.tencent.devops.process.engine.service.code.GitlabWebHookMatcher
@@ -81,6 +81,7 @@ import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_SOURCE_URL
 import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_TARGET_BRANCH
 import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_TARGET_URL
 import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_TYPE
+import com.tencent.devops.process.utils.PipelineVarUtil
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.scm.code.git.api.GITHUB_CHECK_RUNS_STATUS_IN_PROGRESS
@@ -364,18 +365,26 @@ class PipelineBuildWebhookService @Autowired constructor(
 
                 try {
                     val webhookCommit = WebhookCommit(
-                        userId,
-                        pipelineId,
-                        getStartParams(projectId, element, repo, matcher, variables, webHookParams, matchResult),
-                        repositoryConfig,
-                        matcher.getRepoName(),
-                        matcher.getRevision(),
-                        webHookParams.block,
-                        matcher.getEventType(),
-                        matcher.getCodeType()
+                        userId = userId,
+                        pipelineId = pipelineId,
+                        params = getStartParams(
+                            projectId = projectId,
+                            element = element,
+                            repo = repo,
+                            matcher = matcher,
+                            variables = variables,
+                            params = webHookParams,
+                            matchResult = matchResult
+                        ),
+                        repositoryConfig = repositoryConfig,
+                        repoName = matcher.getRepoName(),
+                        commitId = matcher.getRevision(),
+                        block = webHookParams.block,
+                        eventType = matcher.getEventType(),
+                        codeType = matcher.getCodeType()
                     )
                     val buildId =
-                        client.getGateway(ServiceScmResource::class).webhookCommit(projectId, webhookCommit).data
+                        client.getGateway(ServiceScmWebhookResource::class).webhookCommit(projectId, webhookCommit).data
 
                     logger.info("[$pipelineId]| webhook trigger(atom(${element.name}) of repo(${matcher.getRepoName()})) build($buildId)")
                 } catch (e: Exception) {
@@ -555,31 +564,31 @@ class PipelineBuildWebhookService @Autowired constructor(
                 val reviewers = gitScmService.getMergeRequestReviewersInfo(projectId, mrRequestId, repo)?.reviewers
 
                 startParams[PIPELINE_WEBHOOK_MR_ID] = mrRequestId!!
-                startParams[PIPELINE_WEBHOOK_MR_COMMITTER] = mrInfo!!.author.username
-                startParams[PIPELINE_WEBHOOK_SOURCE_BRANCH] = mrInfo.sourceBranch ?: ""
-                startParams[PIPELINE_WEBHOOK_TARGET_BRANCH] = mrInfo.targetBranch ?: ""
+                startParams[PIPELINE_WEBHOOK_MR_COMMITTER] = mrInfo?.author?.username ?: ""
+                startParams[PIPELINE_WEBHOOK_SOURCE_BRANCH] = mrInfo?.sourceBranch ?: ""
+                startParams[PIPELINE_WEBHOOK_TARGET_BRANCH] = mrInfo?.targetBranch ?: ""
 
-                startParams[BK_REPO_GIT_WEBHOOK_MR_AUTHOR] = mrInfo.author.username
+                startParams[BK_REPO_GIT_WEBHOOK_MR_AUTHOR] = mrInfo?.author?.username ?: ""
                 startParams[BK_REPO_GIT_WEBHOOK_MR_TARGET_URL] = matcher.getHookTargetUrl() ?: ""
                 startParams[BK_REPO_GIT_WEBHOOK_MR_SOURCE_URL] = matcher.getHookSourceUrl() ?: ""
-                startParams[BK_REPO_GIT_WEBHOOK_MR_TARGET_BRANCH] = mrInfo.targetBranch ?: ""
-                startParams[BK_REPO_GIT_WEBHOOK_MR_SOURCE_BRANCH] = mrInfo.sourceBranch ?: ""
-                startParams[BK_REPO_GIT_WEBHOOK_MR_CREATE_TIME] = mrInfo.createTime ?: ""
-                startParams[BK_REPO_GIT_WEBHOOK_MR_UPDATE_TIME] = mrInfo.updateTime ?: ""
+                startParams[BK_REPO_GIT_WEBHOOK_MR_TARGET_BRANCH] = mrInfo?.targetBranch ?: ""
+                startParams[BK_REPO_GIT_WEBHOOK_MR_SOURCE_BRANCH] = mrInfo?.sourceBranch ?: ""
+                startParams[BK_REPO_GIT_WEBHOOK_MR_CREATE_TIME] = mrInfo?.createTime ?: ""
+                startParams[BK_REPO_GIT_WEBHOOK_MR_UPDATE_TIME] = mrInfo?.updateTime ?: ""
                 startParams[BK_REPO_GIT_WEBHOOK_MR_CREATE_TIMESTAMP] =
-                    DateTimeUtils.zoneDateToTimestamp(mrInfo.createTime)
+                    DateTimeUtils.zoneDateToTimestamp(mrInfo?.createTime)
                 startParams[BK_REPO_GIT_WEBHOOK_MR_UPDATE_TIMESTAMP] =
-                    DateTimeUtils.zoneDateToTimestamp(mrInfo.updateTime)
-                startParams[BK_REPO_GIT_WEBHOOK_MR_ID] = mrInfo.mrId
-                startParams[BK_REPO_GIT_WEBHOOK_MR_NUMBER] = mrInfo.mrNumber
-                startParams[BK_REPO_GIT_WEBHOOK_MR_DESCRIPTION] = mrInfo.description ?: ""
-                startParams[BK_REPO_GIT_WEBHOOK_MR_TITLE] = mrInfo.title
-                startParams[BK_REPO_GIT_WEBHOOK_MR_ASSIGNEE] = mrInfo.assignee?.username ?: ""
+                    DateTimeUtils.zoneDateToTimestamp(mrInfo?.updateTime)
+                startParams[BK_REPO_GIT_WEBHOOK_MR_ID] = mrInfo?.mrId ?: ""
+                startParams[BK_REPO_GIT_WEBHOOK_MR_NUMBER] = mrInfo?.mrNumber ?: ""
+                startParams[BK_REPO_GIT_WEBHOOK_MR_DESCRIPTION] = mrInfo?.description ?: ""
+                startParams[BK_REPO_GIT_WEBHOOK_MR_TITLE] = mrInfo?.title ?: ""
+                startParams[BK_REPO_GIT_WEBHOOK_MR_ASSIGNEE] = mrInfo?.assignee?.username ?: ""
                 startParams[BK_REPO_GIT_WEBHOOK_MR_URL] = gitMrEvent.object_attributes.url
                 startParams[BK_REPO_GIT_WEBHOOK_MR_REVIEWERS] = reviewers?.joinToString(",") { it.username } ?: ""
-                startParams[BK_REPO_GIT_WEBHOOK_MR_MILESTONE] = mrInfo.milestone?.title ?: ""
-                startParams[BK_REPO_GIT_WEBHOOK_MR_MILESTONE_DUE_DATE] = mrInfo.milestone?.dueDate ?: ""
-                startParams[BK_REPO_GIT_WEBHOOK_MR_LABELS] = mrInfo.labels.joinToString(",")
+                startParams[BK_REPO_GIT_WEBHOOK_MR_MILESTONE] = mrInfo?.milestone?.title ?: ""
+                startParams[BK_REPO_GIT_WEBHOOK_MR_MILESTONE_DUE_DATE] = mrInfo?.milestone?.dueDate ?: ""
+                startParams[BK_REPO_GIT_WEBHOOK_MR_LABELS] = mrInfo?.labels?.joinToString(",") ?: ""
             }
 
             if (params.eventType == CodeEventType.TAG_PUSH) {
@@ -679,18 +688,20 @@ class PipelineBuildWebhookService @Autowired constructor(
 
         // 添加质量红线原子
         val fullModel = pipelineBuildQualityService.fillingRuleInOutElement(projectId, pipelineId, startParams, model)
+        // 兼容从旧v1版本下发过来的请求携带旧的变量命名
+        val params = startParams.map { (PipelineVarUtil.oldVarToNewVar(it.key) ?: it.key) to it.value }.toMap()
 
         try {
             val buildId = pipelineBuildService.startPipeline(
-                userId,
-                pipelineInfo,
-                StartType.WEB_HOOK,
-                startParams,
-                pipelineInfo.channelCode,
-                false,
-                fullModel,
-                pipelineInfo.version,
-                false
+                userId = userId,
+                readyToBuildPipelineInfo = pipelineInfo,
+                startType = StartType.WEB_HOOK,
+                startParams = params,
+                channelCode = pipelineInfo.channelCode,
+                isMobile = false,
+                model = fullModel,
+                signPipelineVersion = pipelineInfo.version,
+                frequencyLimit = false
             )
 
             when {

@@ -27,7 +27,7 @@
 package com.tencent.devops.artifactory.service.artifactory
 
 import com.tencent.devops.artifactory.client.JFrogApiService
-import com.tencent.devops.artifactory.client.JFrogService
+import com.tencent.devops.artifactory.service.JFrogService
 import com.tencent.devops.artifactory.service.CustomDirGsService
 import com.tencent.devops.artifactory.util.JFrogUtil
 import org.springframework.beans.factory.annotation.Autowired
