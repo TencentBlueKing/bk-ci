@@ -1467,7 +1467,8 @@ class PipelineBuildService(
         frequencyLimit: Boolean = true
     ): String {
 
-        val redisLock = RedisLock(redisOperation, "build:limit:${readyToBuildPipelineInfo.pipelineId}", 5L)
+        val pipelineId = readyToBuildPipelineInfo.pipelineId
+        val redisLock = RedisLock(redisOperation, "build:limit:$pipelineId", 5L)
         try {
             if (frequencyLimit && channelCode !in NO_LIMIT_CHANNEL && !redisLock.tryLock()) {
                 throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_START_BUILD_FREQUENT_LIMIT,
@@ -1479,7 +1480,7 @@ class PipelineBuildService(
 
             val fullModel = pipelineBuildQualityService.fillingRuleInOutElement(
                 projectId = readyToBuildPipelineInfo.projectId,
-                pipelineId = readyToBuildPipelineInfo.pipelineId,
+                pipelineId = pipelineId,
                 startParams = startParams,
                 model = model
             )
@@ -1490,7 +1491,7 @@ class PipelineBuildService(
 
             if (interceptResult.isNotOk()) {
                 // 发送排队失败的事件
-                logger.error("[${readyToBuildPipelineInfo.pipelineId}]|START_PIPELINE_$startType|流水线启动失败:[${interceptResult.message}]")
+                logger.error("[$pipelineId]|START_PIPELINE_$startType|流水线启动失败:[${interceptResult.message}]")
                 throw ErrorCodeException(
                     statusCode = Response.Status.NOT_FOUND.statusCode,
                     errorCode = interceptResult.status.toString(),
@@ -1538,13 +1539,13 @@ class PipelineBuildService(
             if (startParams.isNotEmpty()) {
                 buildStartupParamService.addParam(
                     projectId = readyToBuildPipelineInfo.projectId,
-                    pipelineId = readyToBuildPipelineInfo.pipelineId,
+                    pipelineId = pipelineId,
                     buildId = buildId,
                     param = JsonUtil.toJson(startParams)
                 )
             }
 
-            logger.info("[${readyToBuildPipelineInfo.pipelineId}]|START_PIPELINE|startType=$startType|startParams=$startParams")
+            logger.info("[$pipelineId]|START_PIPELINE|buildId=$buildId|startType=$startType|startParams=$startParams")
 
             return buildId
         } finally {
