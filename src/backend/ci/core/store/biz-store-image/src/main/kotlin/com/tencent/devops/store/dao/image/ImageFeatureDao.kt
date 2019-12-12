@@ -1,9 +1,11 @@
 package com.tencent.devops.store.dao.image
 
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.model.store.tables.TImage
 import com.tencent.devops.model.store.tables.TImageFeature
 import com.tencent.devops.model.store.tables.TStoreProjectRel
 import com.tencent.devops.model.store.tables.records.TImageFeatureRecord
+import com.tencent.devops.store.constant.StoreMessageCode.USER_IMAGE_NOT_EXIST
 import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_CODE
 import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
@@ -18,11 +20,18 @@ import java.time.LocalDateTime
 
 @Repository
 class ImageFeatureDao {
-    fun getImageFeature(dslContext: DSLContext, imageCode: String): TImageFeatureRecord? {
+    fun getImageFeature(dslContext: DSLContext, imageCode: String): TImageFeatureRecord {
         with(TImageFeature.T_IMAGE_FEATURE) {
-            return dslContext.selectFrom(this)
+            val record = dslContext.selectFrom(this)
                 .where(IMAGE_CODE.eq(imageCode))
                 .fetchOne()
+                ?: throw ErrorCodeException(
+                    statusCode = 400,
+                    errorCode = USER_IMAGE_NOT_EXIST,
+                    defaultMessage = "no imageFeature for imageCode=$imageCode",
+                    params = arrayOf(imageCode)
+                )
+            return record
         }
     }
 
