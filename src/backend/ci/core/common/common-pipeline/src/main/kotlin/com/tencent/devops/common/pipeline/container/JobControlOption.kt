@@ -35,6 +35,7 @@ import com.tencent.devops.common.pipeline.enums.JobRunCondition
  */
 data class JobControlOption(
     val enable: Boolean, // 是否启用Job
+    val prepareTimeout: Int? = 10, // Job准备环境的超时时间
     val timeout: Int?, // Job执行的超时时间
     val runCondition: JobRunCondition, // 运行条件
     val customVariables: List<NameAndValue>? = null, // 自定义变量

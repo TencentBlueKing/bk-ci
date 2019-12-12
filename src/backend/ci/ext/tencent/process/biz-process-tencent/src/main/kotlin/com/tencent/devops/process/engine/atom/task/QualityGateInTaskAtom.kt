@@ -136,7 +136,7 @@ class QualityGateInTaskAtom @Autowired constructor(
             logger.error("Fail to find quality gate intercept element")
             throw BuildTaskException(
                 errorType = ErrorType.USER,
-                errorCode = ERROR_BUILD_TASK_QUALITY_IN_INTERCEPT,
+                errorCode = ERROR_BUILD_TASK_QUALITY_IN_INTERCEPT.toInt(),
                 errorMsg = "Fail to find quality gate intercept element"
             )
         }

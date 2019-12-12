@@ -39,7 +39,6 @@ import org.slf4j.LoggerFactory
 import java.net.URLEncoder
 
 abstract class AbstractBuildResourceApi {
-    private val logger = LoggerFactory.getLogger(AbstractBuildResourceApi::class.java)
     private val grayProject = "grayproject"
 
     companion object {
@@ -70,13 +69,8 @@ abstract class AbstractBuildResourceApi {
             }
             return map
         }
+        private val logger = LoggerFactory.getLogger(AbstractBuildResourceApi::class.java)
     }
-
-//    protected val okHttpClient: OkHttpClient = okhttp3.OkHttpClient.Builder()
-//            .connectTimeout(5L, TimeUnit.SECONDS)
-//            .readTimeout(60L, TimeUnit.SECONDS)
-//            .writeTimeout(60L, TimeUnit.SECONDS)
-//            .build()
 
     protected val objectMapper = JsonUtil.getObjectMapper()
 
@@ -116,7 +110,10 @@ abstract class AbstractBuildResourceApi {
     }
 
     fun getJsonRequest(data: Any): RequestBody {
-        return RequestBody.create(MediaType.parse("application/json; charset=utf-8"), objectMapper.writeValueAsString(data))
+        return RequestBody.create(
+            MediaType.parse("application/json; charset=utf-8"),
+            objectMapper.writeValueAsString(data)
+        )
     }
 
     fun encode(parameter: String): String {

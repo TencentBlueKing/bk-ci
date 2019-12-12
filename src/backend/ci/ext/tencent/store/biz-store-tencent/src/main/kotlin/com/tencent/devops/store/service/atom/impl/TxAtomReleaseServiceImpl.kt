@@ -50,12 +50,16 @@ import com.tencent.devops.common.pipeline.pojo.AtomBaseInfo
 import com.tencent.devops.common.pipeline.pojo.AtomMarketInitPipelineReq
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.process.api.service.ServiceBuildResource
-import com.tencent.devops.process.api.service.ServicePipelineResource
+import com.tencent.devops.process.api.service.ServicePipelineInitResource
 import com.tencent.devops.repository.api.ServiceGitRepositoryResource
 import com.tencent.devops.repository.pojo.RepositoryInfo
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
 import com.tencent.devops.store.constant.StoreMessageCode
+import com.tencent.devops.store.dao.atom.MarketAtomBuildAppRelDao
+import com.tencent.devops.store.dao.atom.MarketAtomBuildInfoDao
+import com.tencent.devops.store.dao.common.StorePipelineBuildRelDao
+import com.tencent.devops.store.dao.common.StorePipelineRelDao
 import com.tencent.devops.store.pojo.atom.MarketAtomCreateRequest
 import com.tencent.devops.store.pojo.atom.enums.AtomPackageSourceTypeEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
@@ -65,6 +69,7 @@ import com.tencent.devops.store.service.atom.TxAtomReleaseService
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.cloud.context.config.annotation.RefreshScope
 import org.springframework.stereotype.Service
@@ -72,6 +77,18 @@ import org.springframework.stereotype.Service
 @Service
 @RefreshScope
 class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() {
+
+    @Autowired
+    lateinit var marketAtomBuildInfoDao: MarketAtomBuildInfoDao
+
+    @Autowired
+    lateinit var storePipelineRelDao: StorePipelineRelDao
+
+    @Autowired
+    lateinit var marketAtomBuildAppRelDao: MarketAtomBuildAppRelDao
+
+    @Autowired
+    lateinit var storePipelineBuildRelDao: StorePipelineBuildRelDao
 
     @Value("\${git.plugin.nameSpaceId}")
     private lateinit var pluginNameSpaceId: String
@@ -314,7 +331,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
                 atomBaseInfo,
                 buildEnv
             )
-            val atomMarketInitPipelineResp = client.get(ServicePipelineResource::class)
+            val atomMarketInitPipelineResp = client.get(ServicePipelineInitResource::class)
                 .initAtomMarketPipeline(userId, projectCode!!, atomMarketInitPipelineReq).data
             logger.info("the atomMarketInitPipelineResp is:$atomMarketInitPipelineResp")
             if (null != atomMarketInitPipelineResp) {

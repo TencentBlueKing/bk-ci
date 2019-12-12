@@ -54,7 +54,12 @@ interface ArchiveSDKApi : WorkerRestApiSDK {
      * @param uri 下载路径
      * @param destPath 下载后存放的文件
      */
-    fun downloadCustomizeFile(uri: String, destPath: File)
+    fun downloadCustomizeFile(
+        userId: String,
+        projectId: String,
+        uri: String,
+        destPath: File
+    )
 
     /**
      * 按流水线，构建ID来下载仓库中构件
@@ -63,7 +68,14 @@ interface ArchiveSDKApi : WorkerRestApiSDK {
      * @param uri 下载uri
      * @param destPath 下载后存放的文件
      */
-    fun downloadPipelineFile(pipelineId: String, buildId: String, uri: String, destPath: File)
+    fun downloadPipelineFile(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        uri: String,
+        destPath: File
+    )
 
     /**
      * 获取下载地址
@@ -74,6 +86,8 @@ interface ArchiveSDKApi : WorkerRestApiSDK {
      * @return 下载地址
      */
     fun getFileDownloadUrls(
+        userId: String,
+        projectId: String,
         pipelineId: String,
         buildId: String,
         fileType: FileTypeEnum,

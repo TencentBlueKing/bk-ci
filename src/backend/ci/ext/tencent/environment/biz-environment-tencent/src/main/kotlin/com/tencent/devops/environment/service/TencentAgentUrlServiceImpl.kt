@@ -29,27 +29,26 @@ package com.tencent.devops.environment.service
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.util.HashUtil
-import com.tencent.devops.environment.service.slave.SlaveGatewayService
+import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.model.environment.tables.records.TEnvironmentThirdpartyAgentRecord
-import org.springframework.beans.factory.annotation.Autowired
 
 /**
  * 腾讯内部旧版专用Agent下载链接生成服务
  */
-class TencentAgentUrlServiceImpl @Autowired constructor(
-    private val slaveGatewayService: SlaveGatewayService
+class TencentAgentUrlServiceImpl constructor(
+    private val commonConfig: CommonConfig
 ) : AgentUrlService {
 
     override fun genAgentInstallUrl(agentRecord: TEnvironmentThirdpartyAgentRecord): String {
-        val gw = slaveGatewayService.fixGateway(agentRecord.gateway)
+        val gw = genGateway(agentRecord)
         val agentHashId = HashUtil.encodeLongId(agentRecord.id)
-        return "$gw/external/agents/$agentHashId/install"
+        return "http://$gw/external/agents/$agentHashId/install"
     }
 
     override fun genAgentUrl(agentRecord: TEnvironmentThirdpartyAgentRecord): String {
-        val gw = slaveGatewayService.fixGateway(agentRecord.gateway)
+        val gw = genGateway(agentRecord)
         val agentHashId = HashUtil.encodeLongId(agentRecord.id)
-        return "$gw/external/agents/$agentHashId/agent"
+        return "http://$gw/external/agents/$agentHashId/agent"
     }
 
     override fun genAgentInstallScript(agentRecord: TEnvironmentThirdpartyAgentRecord): String {
@@ -59,5 +58,19 @@ class TencentAgentUrlServiceImpl @Autowired constructor(
         } else {
             ""
         }
+    }
+
+    override fun genGateway(agentRecord: TEnvironmentThirdpartyAgentRecord): String {
+        val gateway = if (agentRecord.gateway.isNullOrBlank())
+            commonConfig.devopsBuildGateway!!
+        else
+            agentRecord.gateway
+
+        return (when {
+            gateway.startsWith("http://") -> gateway.substring(7)
+            gateway.startsWith("https://") -> gateway.substring(8)
+            else -> gateway
+        }
+            ).removePrefix("/")
     }
 }

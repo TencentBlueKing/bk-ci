@@ -123,7 +123,7 @@ class ZhiyunInstanceMaintenanceTaskAtom @Autowired constructor(
                 LogUtils.addRedLine(rabbitTemplate, task.buildId, "织云操作失败,织云任务执行超时", task.taskId, task.containerHashId, task.executeCount ?: 1)
                 throw BuildTaskException(
                     errorType = ErrorType.SYSTEM,
-                    errorCode = ERROR_BUILD_TASK_ZHIYUN_FAIL,
+                    errorCode = ERROR_BUILD_TASK_ZHIYUN_FAIL.toInt(),
                     errorMsg = "织云操作失败,织云任务执行超时"
                 )
             }
@@ -163,7 +163,7 @@ class ZhiyunInstanceMaintenanceTaskAtom @Autowired constructor(
                 LogUtils.addRedLine(rabbitTemplate, task.buildId, "织云操作失败,织云返回错误信息：$msg", task.taskId, task.containerHashId, task.executeCount ?: 1)
                 throw BuildTaskException(
                     errorType = ErrorType.SYSTEM,
-                    errorCode = ERROR_BUILD_TASK_ZHIYUN_FAIL,
+                    errorCode = ERROR_BUILD_TASK_ZHIYUN_FAIL.toInt(),
                     errorMsg = "织云操作失败,织云返回错误信息：$msg"
                 )
             } else {
@@ -178,7 +178,7 @@ class ZhiyunInstanceMaintenanceTaskAtom @Autowired constructor(
                         LogUtils.addRedLine(rabbitTemplate, task.buildId, "织云操作失败,织云返回错误信息: errmsg：$errmsg, lastErrmsg: $lastErrmsg", task.taskId, task.containerHashId, task.executeCount ?: 1)
                         throw BuildTaskException(
                             errorType = ErrorType.SYSTEM,
-                            errorCode = ERROR_BUILD_TASK_ZHIYUN_FAIL,
+                            errorCode = ERROR_BUILD_TASK_ZHIYUN_FAIL.toInt(),
                             errorMsg = "织云操作失败,织云返回错误信息: errmsg：$errmsg, lastErrmsg: $lastErrmsg"
                         )
                     } else if (0 == status) {
@@ -212,7 +212,7 @@ class ZhiyunInstanceMaintenanceTaskAtom @Autowired constructor(
                 LogUtils.addRedLine(rabbitTemplate, task.buildId, "织云操作失败,织云返回错误信息：$msg", task.taskId, task.containerHashId, task.executeCount ?: 1)
                 throw BuildTaskException(
                     errorType = ErrorType.SYSTEM,
-                    errorCode = ERROR_BUILD_TASK_ZHIYUN_FAIL,
+                    errorCode = ERROR_BUILD_TASK_ZHIYUN_FAIL.toInt(),
                     errorMsg = "织云操作失败,织云返回错误信息：$msg"
                 )
             } else {
@@ -243,7 +243,7 @@ class ZhiyunInstanceMaintenanceTaskAtom @Autowired constructor(
                 LogUtils.addRedLine(rabbitTemplate, task.buildId, "织云操作失败,织云返回错误信息：$msg", task.taskId, task.containerHashId, task.executeCount ?: 1)
                 throw BuildTaskException(
                     errorType = ErrorType.SYSTEM,
-                    errorCode = ERROR_BUILD_TASK_ZHIYUN_FAIL,
+                    errorCode = ERROR_BUILD_TASK_ZHIYUN_FAIL.toInt(),
                     errorMsg = "织云操作失败,织云返回错误信息：$msg"
                 )
             } else {

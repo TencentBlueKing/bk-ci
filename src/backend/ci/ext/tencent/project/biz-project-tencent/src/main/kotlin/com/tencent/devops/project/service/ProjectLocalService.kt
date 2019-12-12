@@ -34,7 +34,6 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE_C
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE_DEPARTMENT
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.OperationException
-import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.auth.api.BSAuthProjectApi
 import com.tencent.devops.common.auth.api.BkAuthProperties
@@ -50,7 +49,6 @@ import com.tencent.devops.common.web.mq.EXCHANGE_PAASCC_PROJECT_UPDATE_LOGO
 import com.tencent.devops.common.web.mq.ROUTE_PAASCC_PROJECT_CREATE
 import com.tencent.devops.common.web.mq.ROUTE_PAASCC_PROJECT_UPDATE
 import com.tencent.devops.common.web.mq.ROUTE_PAASCC_PROJECT_UPDATE_LOGO
-import com.tencent.devops.model.project.tables.records.TProjectRecord
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.jmx.api.ProjectJmxApi
@@ -74,6 +72,7 @@ import com.tencent.devops.project.service.job.SynProjectService.Companion.ENGLIS
 import com.tencent.devops.project.service.s3.S3Service
 import com.tencent.devops.project.service.tof.TOFService
 import com.tencent.devops.project.util.ImageUtil.drawImage
+import com.tencent.devops.project.util.ProjectUtils
 import okhttp3.MediaType
 import okhttp3.Request
 import okhttp3.RequestBody
@@ -268,7 +267,7 @@ class ProjectLocalService @Autowired constructor(
         val projectCode = "_$userId"
         var userProjectRecord = projectDao.getByEnglishName(dslContext, projectCode)
         if (userProjectRecord != null) {
-            return packagingBean(userProjectRecord, setOf())
+            return ProjectUtils.packagingBean(userProjectRecord, setOf())
         }
 
         val projectCreateInfo = ProjectCreateInfo(
@@ -369,7 +368,7 @@ class ProjectLocalService @Autowired constructor(
         }
 
         userProjectRecord = projectDao.getByEnglishName(dslContext, projectCode)
-        return packagingBean(userProjectRecord!!, setOf())
+        return ProjectUtils.packagingBean(userProjectRecord!!, setOf())
     }
 
     fun getProjectByGroup(userId: String, bgName: String?, deptName: String?, centerName: String?): List<ProjectVO> {
@@ -380,7 +379,7 @@ class ProjectLocalService @Autowired constructor(
             val list = ArrayList<ProjectVO>()
             projectDao.listByGroup(dslContext, bgName, deptName, centerName).filter { it.enabled == null || it.enabled }
                 .map {
-                    list.add(packagingBean(it, grayProjectSet))
+                    list.add(ProjectUtils.packagingBean(it, grayProjectSet))
                 }
             success = true
             return list
@@ -419,7 +418,7 @@ class ProjectLocalService @Autowired constructor(
             }
             records?.filter { it.enabled == null || it.enabled }
                 ?.map {
-                    list.add(packagingBean(it, grayProjectSet))
+                    list.add(ProjectUtils.packagingBean(it, grayProjectSet))
                 }
             success = true
             return list
@@ -437,7 +436,7 @@ class ProjectLocalService @Autowired constructor(
             val list = ArrayList<ProjectVO>()
             projectDao.listByGroupId(dslContext, bgId, deptId, centerId).filter { it.enabled == null || it.enabled }
                 .map {
-                    list.add(packagingBean(it, grayProjectSet))
+                    list.add(ProjectUtils.packagingBean(it, grayProjectSet))
                 }
             success = true
             return list
@@ -485,7 +484,7 @@ class ProjectLocalService @Autowired constructor(
 
     fun getByEnglishName(englishName: String): ProjectVO? {
         val record = projectDao.getByEnglishName(dslContext, englishName) ?: return null
-        return packagingBean(record, grayProjectSet())
+        return ProjectUtils.packagingBean(record, grayProjectSet())
     }
 
     fun getProjectUsers(accessToken: String, userId: String, projectCode: String): Result<List<String>?> {
@@ -597,7 +596,7 @@ class ProjectLocalService @Autowired constructor(
             projectDao.list(dslContext, projectIdList).filter {
                 includeDisable == true || it.enabled == null || it.enabled
             }.map {
-                list.add(packagingBean(it, grayProjectSet))
+                list.add(ProjectUtils.packagingBean(it, grayProjectSet))
             }
             success = true
             return list
@@ -642,55 +641,6 @@ class ProjectLocalService @Autowired constructor(
 
     private fun grayProjectSet() =
         (redisOperation.getSetMembers(gray.getGrayRedisKey()) ?: emptySet()).filter { !it.isBlank() }.toSet()
-
-    private fun packagingBean(tProjectRecord: TProjectRecord, grayProjectSet: Set<String>): ProjectVO {
-        return ProjectVO(
-            id = tProjectRecord.id,
-            projectId = tProjectRecord.projectId,
-            projectName = tProjectRecord.projectName,
-            englishName = tProjectRecord.englishName ?: "",
-            projectCode = tProjectRecord.englishName ?: "",
-            projectType = tProjectRecord.projectType ?: 0,
-            approvalStatus = tProjectRecord.approvalStatus ?: 0,
-            approvalTime = if (tProjectRecord.approvalTime == null) {
-                ""
-            } else {
-                DateTimeUtil.toDateTime(tProjectRecord.approvalTime, "yyyy-MM-dd'T'HH:mm:ssZ")
-            },
-            approver = tProjectRecord.approver ?: "",
-            bgId = tProjectRecord.bgId?.toString(),
-            bgName = tProjectRecord.bgName ?: "",
-            ccAppId = tProjectRecord.ccAppId ?: 0,
-            ccAppName = tProjectRecord.ccAppName ?: "",
-            centerId = tProjectRecord.centerId?.toString(),
-            centerName = tProjectRecord.centerName ?: "",
-            createdAt = DateTimeUtil.toDateTime(tProjectRecord.createdAt, "yyyy-MM-dd"),
-            creator = tProjectRecord.creator ?: "",
-            dataId = tProjectRecord.dataId ?: 0,
-            deployType = tProjectRecord.deployType ?: "",
-            deptId = tProjectRecord.deptId?.toString(),
-            deptName = tProjectRecord.deptName ?: "",
-            description = tProjectRecord.description ?: "",
-            extra = tProjectRecord.extra ?: "",
-            secrecy = tProjectRecord.isSecrecy,
-            helmChartEnabled = tProjectRecord.isHelmChartEnabled,
-            kind = tProjectRecord.kind,
-            logoAddr = tProjectRecord.logoAddr ?: "",
-            remark = tProjectRecord.remark ?: "",
-            updatedAt = if (tProjectRecord.updatedAt == null) {
-                ""
-            } else {
-                DateTimeUtil.toDateTime(tProjectRecord.updatedAt, "yyyy-MM-dd")
-            },
-            useBk = tProjectRecord.useBk,
-            enabled = tProjectRecord.enabled ?: true,
-            gray = grayProjectSet.contains(tProjectRecord.englishName),
-            hybridCcAppId = tProjectRecord.hybridCcAppId,
-            enableExternal = tProjectRecord.enableExternal,
-            enableIdc = tProjectRecord.enableIdc,
-            offlined = tProjectRecord.isOfflined
-        )
-    }
 
     private fun convertFile(inputStream: InputStream): File {
         val logo = Files.createTempFile("default_", ".png").toFile()
@@ -796,22 +746,22 @@ class ProjectLocalService @Autowired constructor(
         val projectCode = "git_$gitProjectId"
         var gitCiProject = projectDao.getByEnglishName(dslContext, projectCode)
         if (gitCiProject != null) {
-            return packagingBean(gitCiProject, setOf())
+            return ProjectUtils.packagingBean(gitCiProject, setOf())
         }
 
         val projectCreateInfo = ProjectCreateInfo(
-                projectCode,
-                projectCode,
-                ProjectTypeEnum.SUPPORT_PRODUCT.index,
-                "git ci project for git projectId: $gitProjectId",
-                0L,
-                "",
-                0L,
-                "",
-                0L,
-                "",
-                false,
-                0
+            projectName = projectCode,
+            englishName = projectCode,
+            projectType = ProjectTypeEnum.SUPPORT_PRODUCT.index,
+            description = "git ci project for git projectId: $gitProjectId",
+            bgId = 0L,
+            bgName = "",
+            deptId = 0L,
+            deptName = "",
+            centerId = 0L,
+            centerName = "",
+            secrecy = false,
+            kind = 0
         )
 
         try {
@@ -833,7 +783,7 @@ class ProjectLocalService @Autowired constructor(
         }
 
         gitCiProject = projectDao.getByEnglishName(dslContext, projectCode)
-        return packagingBean(gitCiProject!!, setOf())
+        return ProjectUtils.packagingBean(gitCiProject!!, setOf())
     }
 
     companion object {
