@@ -145,6 +145,7 @@ class TOFService @Autowired constructor(
                 .headers(headers).post(taskBody.build()).build()
             OkhttpUtils.doHttp(taskRequest).use { response ->
                 responseBody = response.body()!!.string()
+                logger.info("post codecc email to tof with url, request, response: $url \n $params \n $responseBody")
                 if (!response.isSuccessful) {
                     // logger.error("[id--${headers["timestamp"]}]request >>>> $body")
                     logger.error(String.format("TOF error, post data response failure, url: %s, status code: %d, errorMsg: %s", url, response.code(), responseBody))
