@@ -85,7 +85,8 @@ class OpImageService @Autowired constructor(
         imageCreateRequest: ImageCreateRequest,
         checkLatest: Boolean = true,
         needAuth: Boolean = true,
-        sendCheckResultNotify: Boolean = true
+        sendCheckResultNotify: Boolean = true,
+        runCheckPipeline: Boolean = true
     ): Result<String> {
         logger.info("addImage accessToken is :$accessToken, userId is :$userId, imageCreateRequest is :$imageCreateRequest")
         val imageCode = imageCreateRequest.imageCode
@@ -140,7 +141,8 @@ class OpImageService @Autowired constructor(
                 publisher = imageCreateRequest.publisher
             ),
             checkLatest = checkLatest,
-            sendCheckResultNotify = sendCheckResultNotify
+            sendCheckResultNotify = sendCheckResultNotify,
+            runCheckPipeline = runCheckPipeline
         )
         logger.info("updateImageResult is :$updateImageResult")
         if (updateImageResult.isNotOk()) {

@@ -275,9 +275,11 @@ class OpImageDataTransferService @Autowired constructor(
 
             // 4.镜像标识生成
             var imageCode = ""
+            var imagesNum = 0
             if (opImageDao.countImageByRepoInfo(dslContext, imageRepoUrl, imageRepoName, null) > 0) {
                 // 复用已有的code
                 val records = opImageDao.getImagesByRepoInfo(dslContext, imageRepoUrl, imageRepoName, null)
+                imagesNum = records?.size ?: 0
                 imageCode = records!![0].imageCode
                 // 将已迁移完成的老版本镜像全部置为已发布
                 records.forEach { record ->
@@ -324,8 +326,12 @@ class OpImageDataTransferService @Autowired constructor(
                     classifyCode = realClassifyCode,
                     category = realCategoryCode,
                     agentTypeScope = agentTypeList,
-                    version = "1.0.0",
-                    releaseType = ReleaseTypeEnum.NEW,
+                    version = "1.0.$imagesNum",
+                    releaseType = if (imagesNum == 0) {
+                        ReleaseTypeEnum.NEW
+                    } else {
+                        ReleaseTypeEnum.COMPATIBILITY_FIX
+                    },
                     versionContent = "容器镜像商店上线，历史镜像数据自动生成",
                     imageSourceType = ImageType.BKDEVOPS,
                     imageRepoUrl = imageRepoUrl,
@@ -344,13 +350,15 @@ class OpImageDataTransferService @Autowired constructor(
                 checkLatest = false,
                 needAuth = false,
                 // 批量迁移不发送通知，避免打扰
-                sendCheckResultNotify = false
+                sendCheckResultNotify = false,
+                runCheckPipeline = false
             ).data
             logger.info("$interfaceName:transferImage:Inner:imageId=$imageId")
             logger.info("$interfaceName:transferImage:Output:Start validating")
             // 将项目所有管理员添加为镜像管理员
             val managers = client.get(ServiceTxProjectResource::class).getProjectManagers(projectCode).data
             if (managers != null) {
+                // 内部已做防重复处理
                 imageMemberService.add(
                     userId = creator,
                     storeMemberReq = StoreMemberReq(managers, StoreMemberTypeEnum.ADMIN, imageCode),
