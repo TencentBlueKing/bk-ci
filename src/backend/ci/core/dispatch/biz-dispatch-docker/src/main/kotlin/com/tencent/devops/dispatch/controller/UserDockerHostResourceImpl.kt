@@ -63,7 +63,7 @@ class UserDockerHostResourceImpl @Autowired constructor(
         checkParam(userId, debugStartParam.projectId, debugStartParam.pipelineId, debugStartParam.vmSeqId)
 
         if (!bkAuthPermissionApi.validateUserResourcePermission(userId, pipelineAuthServiceCode, AuthResourceType.PIPELINE_DEFAULT,
-                        debugStartParam.projectId, debugStartParam.pipelineId, AuthPermission.EDIT)) {
+                debugStartParam.projectId, debugStartParam.pipelineId, AuthPermission.EDIT)) {
             logger.info("用户($userId)无权限在工程(${debugStartParam.projectId})下编辑流水线(${debugStartParam.pipelineId})")
             throw PermissionForbiddenException("用户($userId)无权限在工程(${debugStartParam.projectId})下编辑流水线(${debugStartParam.pipelineId})")
         }
