@@ -4,6 +4,7 @@
   "description": "",
   "dependencies": {
     "clipboard": "^2.0.4",
+    "codemirror": "^5.49.2",
     "mavon-editor": "2.7.7"
   },
   "devDependencies": {

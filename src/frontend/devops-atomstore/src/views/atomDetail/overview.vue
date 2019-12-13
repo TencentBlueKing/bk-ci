@@ -152,7 +152,8 @@
 
                     return this.$store.dispatch('store/modifyRepoMemInfo', { atomCode, projectCode }).then((res) => {
                         if (res) {
-                            this.$set(this.codeForm, 'repositoryAuthorizer', this.userInfo.userName)
+                            this.codeForm.repositoryAuthorizer = this.userInfo.userName
+                            this.$store.dispatch('store/updateCurrentaAtom', { res: this.codeForm })
                             this.$bkMessage({ message: '重置授权成功', theme: 'success', limit: 1 })
                         }
                     })
