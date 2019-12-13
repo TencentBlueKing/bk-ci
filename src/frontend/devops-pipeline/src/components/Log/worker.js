@@ -43,7 +43,7 @@ onmessage = function (e) {
             const foldArr = data.foldIndexs || []
             const arr = foldArr.sort((a, b) => +a - +b)
             arr.forEach(x => foldListData({ startIndex: +x }))
-            postMessage({ type: 'completeInit', number: allListData.length })
+            postMessage({ type: 'completeInit', number: allListData.length, foldList })
             break
         case 'addListData':
             addListData(data)
@@ -54,7 +54,7 @@ onmessage = function (e) {
             break
         case 'foldListData':
             foldListData(data)
-            postMessage({ type: 'completeFold', number: allListData.length })
+            postMessage({ type: 'completeFold', number: allListData.length, foldList })
             break
         case 'resetData':
             allListData = []
@@ -67,6 +67,7 @@ onmessage = function (e) {
 function foldListData ({ startIndex }) {
     const currentItem = allListData[startIndex]
     let changeNum = 0
+    if (!currentItem || !currentItem.tagData) return
     if (!currentItem.tagData.list.length) {
         const subList = allListData.splice(startIndex + 1, currentItem.tagData.endIndex - startIndex)
         currentItem.tagData.list = subList
@@ -80,7 +81,6 @@ function foldListData ({ startIndex }) {
         changeNum = -currentItem.tagData.list.length
         currentItem.tagData.list = []
     }
-    currentItem.tagData.endIndex -= changeNum
     updateFoldList(startIndex, changeNum)
 }
 
@@ -89,17 +89,18 @@ function updateFoldList (startIndex, changeNum) {
         const currentData = x.data.tagData
         return x.index > startIndex && currentData.endIndex > startIndex + Math.abs(changeNum)
     }) || []
+
+    const needChangeAfterList = foldList.filter((x) => {
+        const currentData = x.data.tagData
+        return x.index < startIndex && currentData.endIndex > startIndex + Math.abs(changeNum)
+    }) || []
+
     needChangeAllList.forEach((item) => {
         const data = item.data || {}
         item.index -= changeNum
         data.tagData.endIndex -= changeNum
         data.tagData.startIndex -= changeNum
     })
-
-    const needChangeAfterList = foldList.filter((x) => {
-        const currentData = x.data.tagData
-        return x.index < startIndex && currentData.endIndex > startIndex
-    }) || []
 
     needChangeAfterList.forEach((item) => {
         const data = item.data || {}

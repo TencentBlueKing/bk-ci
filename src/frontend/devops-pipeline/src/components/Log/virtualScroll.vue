@@ -58,7 +58,7 @@
             return {
                 indexList: [],
                 listData: [],
-                flodIndexs: [],
+                foldList: [],
                 worker: {},
                 totalHeight: 0,
                 itemNumber: 0,
@@ -103,7 +103,7 @@
 
         methods: {
             resetData () {
-                this.flodIndexs = []
+                this.foldList = []
                 this.totalNumber = 0
                 this.setStatus()
                 this.worker.postMessage({ type: 'resetData' })
@@ -132,26 +132,40 @@
                 }
             },
 
-            foldListData ({ startIndex, endIndex, list }) {
+            foldListData (tagData) {
+                const { startIndex } = tagData
                 if (typeof startIndex !== 'undefined') {
                     const postData = {
                         type: 'foldListData',
                         startIndex
                     }
-                    if (list.length) {
-                        const index = this.flodIndexs.findIndex(x => x === startIndex)
-                        this.flodIndexs.splice(index, 1)
-                        this.flodIndexs = this.flodIndexs.map(x => {
-                            if (x < startIndex) return x
-                            else return x + list.length
-                        })
-                    } else {
-                        this.flodIndexs.push(startIndex)
-                        this.flodIndexs = this.flodIndexs.map(x => {
-                            if (x <= startIndex) return x
-                            else return x - endIndex + startIndex
-                        })
-                    }
+                    // let changeNum = endIndex - startIndex
+                    // if (list.length) changeNum = -list.length
+                    // else tagData.list = list
+
+                    // tagData.endIndex -= changeNum
+
+                    // const needChangeAllList = this.foldList.filter((x) => {
+                    //     const currentData = x.data.tagData
+                    //     return x.index > startIndex && currentData.endIndex > startIndex + Math.abs(changeNum)
+                    // }) || []
+                    // needChangeAllList.forEach((item) => {
+                    //     const data = item.data || {}
+                    //     item.index -= changeNum
+                    //     data.tagData.endIndex -= changeNum
+                    //     data.tagData.startIndex -= changeNum
+                    // })
+
+                    // const needChangeAfterList = this.foldList.filter((x) => {
+                    //     const currentData = x.data.tagData
+                    //     return x.index < startIndex && currentData.endIndex > startIndex
+                    // }) || []
+
+                    // needChangeAfterList.forEach((item) => {
+                    //     const data = item.data || {}
+                    //     data.tagData.endIndex -= changeNum
+                    // })
+
                     this.worker.postMessage(postData)
                 }
             },
@@ -263,6 +277,7 @@
                     switch (data.type) {
                         case 'completeInit':
                             this.totalNumber = data.number
+                            this.foldList = data.foldList
                             this.setStatus()
                             this.initLink()
                             break
@@ -275,6 +290,7 @@
                             const oldMapHeight = this.mapHeight
                             const oldVisHeight = this.visHeight
                             this.totalNumber = data.number
+                            this.foldList = data.foldList
                             this.setStatus()
                             this.getNumberChangeList({ oldNumber, oldItemNumber, oldMapHeight, oldVisHeight })
                             break
@@ -330,7 +346,6 @@
             },
 
             addListData (list, type, foldIndexs = []) {
-                if (type === 'initLog') this.flodIndexs = foldIndexs
                 const postData = { type, list, foldIndexs }
                 this.totalNumber += list.length
                 this.indexWidth = (Math.log10(this.totalNumber) + 1) * 7

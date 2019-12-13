@@ -222,7 +222,7 @@
             },
 
             copyLink (event) {
-                const { minMapTop, bottomScrollDis, flodIndexs } = this.$refs.scroll
+                const { minMapTop, bottomScrollDis, foldList } = this.$refs.scroll
                 const eleShare = document.querySelector('.share-icon')
                 const selection = window.getSelection()
                 const startParentNode = selection.anchorNode.parentNode
@@ -249,6 +249,12 @@
                 }
                 if (startShareIndex > endShareIndex) changeTemp()
                 if (startShareIndex === endShareIndex && startOffset > endOffset) changeTemp()
+
+                const flodIndexs = []
+                foldList.forEach((x) => {
+                    const currentData = x.data.tagData
+                    if (currentData.list.length) flodIndexs.push(x.index)
+                })
 
                 const url = this.getLinkUrl({
                     isStartFirst,
