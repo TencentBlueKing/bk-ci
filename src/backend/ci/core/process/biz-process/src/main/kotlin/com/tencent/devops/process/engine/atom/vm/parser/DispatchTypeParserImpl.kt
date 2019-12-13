@@ -52,6 +52,8 @@ class DispatchTypeParserImpl @Autowired constructor(
                 dispatchType.value = completeImageName
                 dispatchType.credentialId = imageRepoInfo.ticketId
                 dispatchType.credentialProject = imageRepoInfo.ticketProject
+                dispatchType.imagePublicFlag = imageRepoInfo.publicFlag
+                dispatchType.imageRDType = imageRepoInfo.rdType.name
             } else {
                 dispatchType.credentialProject = projectId
             }
