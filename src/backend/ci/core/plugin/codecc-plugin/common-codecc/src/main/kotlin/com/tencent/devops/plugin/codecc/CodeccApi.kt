@@ -79,6 +79,8 @@ open class CodeccApi constructor(
                     DevOpsToolParams("phpcs_standard", phpcsStandard ?: ""),
                     DevOpsToolParams("go_path", goPath ?: ""),
                     DevOpsToolParams("py_version", pyVersion ?: ""),
+                    DevOpsToolParams("ccn_threshold", ccnThreshold?.toString() ?: ""),
+                    DevOpsToolParams("needCodeContent", needCodeContent ?: ""),
                     DevOpsToolParams("eslint_rc", eslintRc ?: "")
                 )
             )
@@ -118,6 +120,8 @@ open class CodeccApi constructor(
                 DevOpsToolParams("phpcs_standard", phpcsStandard ?: ""),
                 DevOpsToolParams("go_path", goPath ?: ""),
                 DevOpsToolParams("py_version", pyVersion ?: ""),
+                DevOpsToolParams("ccn_threshold", ccnThreshold?.toString() ?: ""),
+                DevOpsToolParams("needCodeContent", needCodeContent ?: ""),
                 DevOpsToolParams("eslint_rc", eslintRc ?: "")
             )
             if (!element.projectBuildType.isNullOrBlank()) {
