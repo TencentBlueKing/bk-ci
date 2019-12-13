@@ -13,8 +13,8 @@
                         >
                         </bk-option>
                     </bk-select>
-                    <bk-button class="log-button" @click="showTime = !showTime">显示时间</bk-button>
-                    <a download :href="downLoadLink"><bk-button class="log-button">下载日志</bk-button></a>
+                    <button class="log-button" @click="showTime = !showTime">显示时间</button>
+                    <a download :href="downLoadLink"><button class="log-button">下载日志</button></a>
                 </p>
             </header>
 
@@ -430,8 +430,25 @@
                     .log-button {
                         color: #c2cade;
                         background: #2f363d;
-                        border-color: #444d56;
+                        border: 1px solid #444d56;
                         margin-right: 10px;
+                        height: 32px;
+                        line-height: 30px;
+                        display: inline-block;
+                        outline: none;
+                        cursor: pointer;
+                        white-space: nowrap;
+                        -webkit-appearance: none;
+                        padding: 0 15px;
+                        text-align: center;
+                        vertical-align: middle;
+                        font-size: 14px;
+                        border-radius: 2px;
+                        box-sizing: border-box;
+                        text-decoration: none;
+                        transition: background-color .3s ease;
+                        min-width: 68px;
+                        position: relative;
                         &:hover {
                             color: #fff;
                             background: #3f454a;
