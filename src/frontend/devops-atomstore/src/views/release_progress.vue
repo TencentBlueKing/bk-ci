@@ -282,7 +282,7 @@
                 },
                 sideSliderConfig: {
                     show: false,
-                    title: '查看日志',
+                    title: this.$t('store.查看日志'),
                     quickClose: true,
                     width: 820,
                     value: '',
