@@ -29,7 +29,7 @@ package com.tencent.devops.plugin.codecc.resources
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.plugin.codecc.CodeccApi
-import com.tencent.devops.plugin.codecc.api.UserCodeccResource
+import com.tencent.devops.plugin.api.UserCodeccResource
 import com.tencent.devops.plugin.codecc.pojo.CodeccCallback
 import com.tencent.devops.plugin.codecc.service.CodeccService
 import org.springframework.beans.factory.annotation.Autowired
