@@ -453,7 +453,7 @@ class PipelineService @Autowired constructor(
             if (checkPermission) {
                 pipelinePermissionService.modifyResource(projectId, pipelineId, model.name)
             }
-            pipelineGroupService.updatePipelineLabel(userId, pipelineId, model.labels)
+//            pipelineGroupService.updatePipelineLabel(userId, pipelineId, model.labels)
             pipelineUserService.update(pipelineId, userId)
             success = true
         } finally {
