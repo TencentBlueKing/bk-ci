@@ -99,7 +99,12 @@
                     <vuex-input :disabled="!editable" name="workspace" :value="container.dispatchType.workspace" :handle-change="changeBuildResource" :placeholder="$t('editPage.workspaceTips')" />
                 </form-field>
                 <form-field class="container-app-field" v-if="showDependencies" :label="$t('editPage.envDependency')">
-                    <container-app-selector :disabled="!editable" class="app-selector-item" v-if="!hasBuildEnv" app="" version="" :handle-change="handleContainerAppChange" :apps="apps"></container-app-selector>
+                    <container-app-selector :disabled="!editable" class="app-selector-item" v-if="!hasBuildEnv" app="" version=""
+                        :handle-change="handleContainerAppChange"
+                        :apps="apps"
+                        :remove-container-app="removeContainerApp"
+                        :add-container-app="containerAppList.length > 0 ? addContainerApp : null"
+                    ></container-app-selector>
                     <container-app-selector :disabled="!editable" v-else class="app-selector-item" v-for="(version, app) in container.buildEnv"
                         :key="app"
                         :app="app"
