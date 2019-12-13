@@ -366,7 +366,7 @@ class OpImageDataTransferService @Autowired constructor(
                     sendNotify = false
                 )
             }
-            //睡眠1s，规避mysql日期精度问题
+            // 睡眠1s，规避mysql日期精度问题
             Thread.sleep(1000)
             changedCount += 1
         }
