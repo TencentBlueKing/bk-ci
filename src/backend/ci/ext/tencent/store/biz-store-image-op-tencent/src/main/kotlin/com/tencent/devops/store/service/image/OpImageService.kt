@@ -237,7 +237,7 @@ class OpImageService @Autowired constructor(
             if (rdTypeRecord == null) {
                 rdTypeStr = ImageRDTypeEnum.THIRD_PARTY.name
             } else {
-                rdTypeStr = ImageRDTypeEnum.getImageRDType(rdTypeRecord.toInt())
+                rdTypeStr = ImageRDTypeEnum.getImageRDTypeStr(rdTypeRecord.toInt())
             }
             OpImageItem(
                 imageId = imageId,

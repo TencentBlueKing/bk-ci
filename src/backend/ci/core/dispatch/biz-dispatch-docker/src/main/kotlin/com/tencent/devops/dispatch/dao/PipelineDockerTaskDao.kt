@@ -30,6 +30,7 @@ import com.tencent.devops.common.api.pojo.Zone
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.model.dispatch.tables.TDispatchPipelineDockerTask
 import com.tencent.devops.model.dispatch.tables.records.TDispatchPipelineDockerTaskRecord
+import com.tencent.devops.store.pojo.image.enums.ImageRDTypeEnum
 import org.jooq.DSLContext
 import org.jooq.Field
 import org.jooq.Result
@@ -55,7 +56,9 @@ class PipelineDockerTaskDao {
         zone: String?,
         registryUser: String?,
         registryPwd: String?,
-        imageType: String?
+        imageType: String?,
+        imagePublicFlag: Boolean?,
+        imageRDType: ImageRDTypeEnum?
     ): Int {
         with(TDispatchPipelineDockerTask.T_DISPATCH_PIPELINE_DOCKER_TASK) {
             val now = LocalDateTime.now()
@@ -93,7 +96,10 @@ class PipelineDockerTaskDao {
                 ZONE,
                 REGISTRY_USER,
                 REGISTRY_PWD,
-                IMAGE_TYPE)
+                IMAGE_TYPE,
+                IMAGE_PUBLIC_FLAG,
+                IMAGE_RD_TYPE
+            )
                 .values(
                     projectId,
                     agentId,
@@ -110,7 +116,9 @@ class PipelineDockerTaskDao {
                     zone,
                     registryUser,
                     registryPwd,
-                    imageType
+                    imageType,
+                    imagePublicFlag,
+                    imageRDType?.type?.toByte()
                 )
                 .returning(ID)
                 .fetchOne().id
