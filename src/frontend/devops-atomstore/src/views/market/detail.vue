@@ -58,7 +58,7 @@
                     <p class="comments-more" v-if="!isLoadEnd && commentList.length > 0" @click="getComments(true)"> {{ $t('store.阅读更多内容') }} </p>
                     <p class="g-empty comment-empty" v-if="commentList.length <= 0"> {{ $t('store.空空如洗，快来评论一下吧！') }} </p>
                 </bk-tab-panel>
-                <bk-tab-panel name="yaml" label="YAML">
+                <bk-tab-panel name="yaml" :label="$t('store.yaml')" v-if="type === 'atom'">
                     <section class="plugin-yaml"></section>
                 </bk-tab-panel>
             </bk-tab>
