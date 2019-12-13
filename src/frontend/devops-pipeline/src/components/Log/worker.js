@@ -80,16 +80,30 @@ function foldListData ({ startIndex }) {
         changeNum = -currentItem.tagData.list.length
         currentItem.tagData.list = []
     }
+    currentItem.tagData.endIndex -= changeNum
     updateFoldList(startIndex, changeNum)
 }
 
 function updateFoldList (startIndex, changeNum) {
-    const needChangeList = foldList.filter(x => x.index > startIndex) || []
-    needChangeList.forEach((item) => {
+    const needChangeAllList = foldList.filter((x) => {
+        const currentData = x.data.tagData
+        return x.index > startIndex && currentData.endIndex > startIndex + Math.abs(changeNum)
+    }) || []
+    needChangeAllList.forEach((item) => {
         const data = item.data || {}
         item.index -= changeNum
         data.tagData.endIndex -= changeNum
         data.tagData.startIndex -= changeNum
+    })
+
+    const needChangeAfterList = foldList.filter((x) => {
+        const currentData = x.data.tagData
+        return x.index < startIndex && currentData.endIndex > startIndex
+    }) || []
+
+    needChangeAfterList.forEach((item) => {
+        const data = item.data || {}
+        data.tagData.endIndex -= changeNum
     })
 }
 
