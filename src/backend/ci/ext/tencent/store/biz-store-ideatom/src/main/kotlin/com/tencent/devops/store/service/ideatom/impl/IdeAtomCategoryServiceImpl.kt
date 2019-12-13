@@ -29,6 +29,7 @@ package com.tencent.devops.store.service.ideatom.impl
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.dao.ideatom.IdeAtomCategoryRelDao
 import com.tencent.devops.store.pojo.common.Category
+import com.tencent.devops.store.service.common.CategoryService
 import com.tencent.devops.store.service.common.StoreCommonService
 import com.tencent.devops.store.service.ideatom.IdeAtomCategoryService
 import org.jooq.DSLContext
@@ -40,8 +41,9 @@ import org.springframework.stereotype.Service
 class IdeAtomCategoryServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
     private val ideAtomCategoryRelDao: IdeAtomCategoryRelDao,
-    private val storeCommonService: StoreCommonService
+    private val categoryService: CategoryService
 ) : IdeAtomCategoryService {
+
     private val logger = LoggerFactory.getLogger(IdeAtomCategoryServiceImpl::class.java)
 
     /**
@@ -52,7 +54,7 @@ class IdeAtomCategoryServiceImpl @Autowired constructor(
         val ideAtomCategoryList = mutableListOf<Category>()
         val ideAtomCategoryRecords = ideAtomCategoryRelDao.getCategorysByIdeAtomId(dslContext, atomId) // 查询IDE插件范畴信息
         ideAtomCategoryRecords?.forEach {
-            storeCommonService.addCategoryToCategoryList(it, ideAtomCategoryList)
+            categoryService.addCategoryToCategoryList(it, ideAtomCategoryList)
         }
         return Result(ideAtomCategoryList)
     }

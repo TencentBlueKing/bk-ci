@@ -29,6 +29,7 @@ package com.tencent.devops.store.service.ideatom.impl
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.dao.ideatom.IdeAtomLabelRelDao
 import com.tencent.devops.store.pojo.common.Label
+import com.tencent.devops.store.service.common.LabelService
 import com.tencent.devops.store.service.common.StoreCommonService
 import com.tencent.devops.store.service.ideatom.IdeAtomLabelService
 import org.jooq.DSLContext
@@ -40,7 +41,7 @@ import org.springframework.stereotype.Service
 class IdeAtomLabelServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
     private val ideAtomLabelRelDao: IdeAtomLabelRelDao,
-    private val storeCommonService: StoreCommonService
+    private val labelService: LabelService
 ) : IdeAtomLabelService {
 
     private val logger = LoggerFactory.getLogger(IdeAtomLabelServiceImpl::class.java)
@@ -53,7 +54,7 @@ class IdeAtomLabelServiceImpl @Autowired constructor(
         val ideAtomLabelList = mutableListOf<Label>()
         val ideAtomLabelRecords = ideAtomLabelRelDao.getLabelsByAtomId(dslContext, atomId) // 查询IDE插件标签信息
         ideAtomLabelRecords?.forEach {
-            storeCommonService.addLabelToLabelList(it, ideAtomLabelList)
+            labelService.addLabelToLabelList(it, ideAtomLabelList)
         }
         return Result(ideAtomLabelList)
     }
