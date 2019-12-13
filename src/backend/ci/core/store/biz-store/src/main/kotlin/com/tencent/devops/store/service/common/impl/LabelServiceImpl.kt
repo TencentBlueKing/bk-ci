@@ -29,16 +29,27 @@ package com.tencent.devops.store.service.common.impl
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.UUIDUtil
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.dao.common.LabelDao
+import com.tencent.devops.store.pojo.common.KEY_CREATE_TIME
+import com.tencent.devops.store.pojo.common.KEY_LABEL_CODE
+import com.tencent.devops.store.pojo.common.KEY_LABEL_ID
+import com.tencent.devops.store.pojo.common.KEY_LABEL_NAME
+import com.tencent.devops.store.pojo.common.KEY_LABEL_TYPE
+import com.tencent.devops.store.pojo.common.KEY_UPDATE_TIME
 import com.tencent.devops.store.pojo.common.Label
 import com.tencent.devops.store.pojo.common.LabelRequest
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.common.LabelService
 import org.jooq.DSLContext
+import org.jooq.Record
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
 
 /**
  * 标签业务逻辑类
@@ -159,5 +170,27 @@ class LabelServiceImpl @Autowired constructor(
             labelDao.delete(context, id)
         }
         return Result(true)
+    }
+
+    /**
+     * 为标签集合添加标签
+     */
+    override fun addLabelToLabelList(it: Record, labelList: MutableList<Label>) {
+        val labelCode = it[KEY_LABEL_CODE] as String
+        val labelName = it[KEY_LABEL_NAME] as String
+        val labelLanName = MessageCodeUtil.getCodeLanMessage(
+            messageCode = "${StoreMessageCode.MSG_CODE_STORE_LABEL_PREFIX}$labelCode",
+            defaultMessage = labelName
+        )
+        labelList.add(
+            Label(
+                id = it[KEY_LABEL_ID] as String,
+                labelCode = labelCode,
+                labelName = labelLanName,
+                labelType = StoreTypeEnum.getStoreType((it[KEY_LABEL_TYPE] as Byte).toInt()),
+                createTime = (it[KEY_CREATE_TIME] as LocalDateTime).timestampmilli(),
+                updateTime = (it[KEY_UPDATE_TIME] as LocalDateTime).timestampmilli()
+            )
+        )
     }
 }
