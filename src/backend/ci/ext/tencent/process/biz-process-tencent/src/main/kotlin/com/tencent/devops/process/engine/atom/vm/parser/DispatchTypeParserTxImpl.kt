@@ -38,7 +38,7 @@ class DispatchTypeParserTxImpl @Autowired constructor(
                     if (dispatchType is DockerDispatchType) {
                         dispatchType.dockerBuildVersion = dispatchType.value.removePrefix("paas/")
                     } else if (dispatchType is PublicDevCloudDispathcType) {
-                        dispatchType.image = dispatchType.value.removePrefix("devcloud/")
+                        dispatchType.image = dispatchType.value.removePrefix("/")
                     } else if (dispatchType is IDCDispatchType) {
                         dispatchType.image = dispatchType.value.removePrefix("paas/")
                     }
