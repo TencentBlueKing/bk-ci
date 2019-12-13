@@ -40,7 +40,7 @@ data class LinuxPaasCodeCCScriptElement(
     @ApiModelProperty("状态", required = false)
     override var status: String? = null,
     @ApiModelProperty("脚本类型", required = true)
-    override var scriptType: BuildScriptType,
+    override var scriptType: BuildScriptType = BuildScriptType.SHELL,
     @ApiModelProperty("脚本内容", required = true)
     override var script: String = "",
     @ApiModelProperty("CodeCC Task Name", required = false, hidden = true)
@@ -52,11 +52,11 @@ data class LinuxPaasCodeCCScriptElement(
     @ApiModelProperty("是否异步", required = false)
     override var asynchronous: Boolean? = false,
     @ApiModelProperty("扫描类型（0：全量, 1：增量）", required = false)
-    override var scanType: String?,
+    override var scanType: String? = null,
     @ApiModelProperty("代码存放路径", required = false)
     override var path: String? = null,
     @ApiModelProperty("工程语言", required = true)
-    override var languages: List<ProjectLanguage>
+    override var languages: List<ProjectLanguage> = listOf()
 ) : LinuxCodeCCScriptElement(
     name,
     id,
@@ -82,4 +82,19 @@ data class LinuxPaasCodeCCScriptElement(
 
     override fun getClassType() =
         classType
+
+    constructor(): this(
+        name = "",
+        id = "",
+        status = null,
+        scriptType = BuildScriptType.SHELL,
+        script = "",
+        codeCCTaskName = "",
+        codeCCTaskCnName = "",
+        codeCCTaskId = "",
+        asynchronous = true,
+        scanType = "",
+        path = "",
+        languages = listOf()
+    )
 }

@@ -31,7 +31,6 @@ import com.tencent.devops.project.pojo.ServiceUpdateUrls
 import com.tencent.devops.project.pojo.service.OPPServiceVO
 import com.tencent.devops.project.pojo.service.ServiceCreateInfo
 import com.tencent.devops.project.pojo.service.ServiceListVO
-import com.tencent.devops.project.pojo.service.ServiceUrlUpdateInfo
 import com.tencent.devops.project.pojo.service.ServiceVO
 
 /**
@@ -71,7 +70,7 @@ interface UserProjectServiceService {
     /**
      * 批量跟新服务URL信息
      */
-    fun updateServiceUrlByBatch(userId: String, serviceUrlUpdateInfoList: List<ServiceUrlUpdateInfo>?): Result<Boolean>
+    fun updateServiceUrls(userId: String, serviceUpdateUrls: List<ServiceUpdateUrls>): Result<Int>
 
     /**
      * 读取指定服务的信息
@@ -82,6 +81,4 @@ interface UserProjectServiceService {
      * 同步将服务类别下的服务注册进来
      */
     fun syncService(userId: String, services: List<ServiceListVO>)
-
-    fun updateServiceUrls(userId: String, name: String, serviceUpdateUrls: ServiceUpdateUrls): Result<Boolean>
 }
