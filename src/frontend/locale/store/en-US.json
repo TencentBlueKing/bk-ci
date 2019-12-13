@@ -1,5 +1,6 @@
 {
     "store": "Store",
+    "yaml": "YAML Fragment",
     "成员名称": "Member Name",
     "该分类下暂无容器镜像": "No container image under this category",
     "发布容器镜像": "Release Container Image",
