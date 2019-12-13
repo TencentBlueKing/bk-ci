@@ -29,7 +29,7 @@ package com.tencent.devops.store.service.template.impl
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.dao.template.TemplateLabelRelDao
 import com.tencent.devops.store.pojo.common.Label
-import com.tencent.devops.store.service.common.StoreCommonService
+import com.tencent.devops.store.service.common.LabelService
 import com.tencent.devops.store.service.template.TemplateLabelService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -44,7 +44,7 @@ class TemplateLabelServiceImpl : TemplateLabelService {
     @Autowired
     private lateinit var templateLabelRelDao: TemplateLabelRelDao
     @Autowired
-    private lateinit var storeCommonService: StoreCommonService
+    private lateinit var labelService: LabelService
 
     private val logger = LoggerFactory.getLogger(TemplateLabelServiceImpl::class.java)
 
@@ -56,7 +56,7 @@ class TemplateLabelServiceImpl : TemplateLabelService {
         val templateLabelList = mutableListOf<Label>()
         val templateLabelRecords = templateLabelRelDao.getLabelsByTemplateId(dslContext, templateId) // 查询模板标签信息
         templateLabelRecords?.forEach {
-            storeCommonService.addLabelToLabelList(it, templateLabelList)
+            labelService.addLabelToLabelList(it, templateLabelList)
         }
         return Result(templateLabelList)
     }
