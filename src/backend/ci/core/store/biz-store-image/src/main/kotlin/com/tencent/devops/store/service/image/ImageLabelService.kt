@@ -3,7 +3,7 @@ package com.tencent.devops.store.service.image
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.dao.image.ImageLabelRelDao
 import com.tencent.devops.store.pojo.common.Label
-import com.tencent.devops.store.service.common.StoreCommonService
+import com.tencent.devops.store.service.common.LabelService
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -14,7 +14,7 @@ import org.springframework.stereotype.Service
 class ImageLabelService @Autowired constructor(
     private val dslContext: DSLContext,
     private val imageLabelRelDao: ImageLabelRelDao,
-    private val storeCommonService: StoreCommonService
+    private val labelService: LabelService
 ) {
     private val logger = LoggerFactory.getLogger(ImageLabelService::class.java)
 
@@ -26,7 +26,7 @@ class ImageLabelService @Autowired constructor(
         val imageLabelList = mutableListOf<Label>()
         val imageLabelRecords = imageLabelRelDao.getLabelsByImageId(dslContext, imageId) // 查询镜像标签信息
         imageLabelRecords?.forEach {
-            storeCommonService.addLabelToLabelList(it, imageLabelList)
+            labelService.addLabelToLabelList(it, imageLabelList)
         }
         return Result(imageLabelList)
     }

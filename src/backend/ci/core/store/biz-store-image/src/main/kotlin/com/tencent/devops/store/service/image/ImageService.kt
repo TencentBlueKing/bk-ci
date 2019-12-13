@@ -23,10 +23,6 @@ import com.tencent.devops.store.dao.common.StoreMemberDao
 import com.tencent.devops.store.dao.common.StoreProjectRelDao
 import com.tencent.devops.store.dao.common.StoreStatisticDao
 import com.tencent.devops.store.dao.image.Constants
-import com.tencent.devops.store.dao.image.Constants.KEY_CATEGORY_CODE
-import com.tencent.devops.store.dao.image.Constants.KEY_CLASSIFY_ID
-import com.tencent.devops.store.dao.image.Constants.KEY_CREATE_TIME
-import com.tencent.devops.store.dao.image.Constants.KEY_CREATOR
 import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_CODE
 import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_FEATURE_PUBLIC_FLAG
 import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_FEATURE_RECOMMEND_FLAG
@@ -42,10 +38,6 @@ import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_STATUS
 import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_SUMMARY
 import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_TAG
 import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_VERSION
-import com.tencent.devops.store.dao.image.Constants.KEY_MODIFIER
-import com.tencent.devops.store.dao.image.Constants.KEY_PUBLISHER
-import com.tencent.devops.store.dao.image.Constants.KEY_PUB_TIME
-import com.tencent.devops.store.dao.image.Constants.KEY_UPDATE_TIME
 import com.tencent.devops.store.dao.image.ImageAgentTypeDao
 import com.tencent.devops.store.dao.image.ImageCategoryRelDao
 import com.tencent.devops.store.dao.image.ImageDao
@@ -56,6 +48,14 @@ import com.tencent.devops.store.dao.image.MarketImageFeatureDao
 import com.tencent.devops.store.exception.image.CategoryNotExistException
 import com.tencent.devops.store.exception.image.ImageNotExistException
 import com.tencent.devops.store.pojo.common.HOTTEST
+import com.tencent.devops.store.pojo.common.KEY_CATEGORY_CODE
+import com.tencent.devops.store.pojo.common.KEY_CLASSIFY_ID
+import com.tencent.devops.store.pojo.common.KEY_CREATE_TIME
+import com.tencent.devops.store.pojo.common.KEY_CREATOR
+import com.tencent.devops.store.pojo.common.KEY_MODIFIER
+import com.tencent.devops.store.pojo.common.KEY_PUBLISHER
+import com.tencent.devops.store.pojo.common.KEY_PUB_TIME
+import com.tencent.devops.store.pojo.common.KEY_UPDATE_TIME
 import com.tencent.devops.store.pojo.common.LATEST
 import com.tencent.devops.store.pojo.common.MarketItem
 import com.tencent.devops.store.pojo.common.STORE_IMAGE_STATUS

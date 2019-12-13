@@ -30,7 +30,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.dao.atom.AtomLabelRelDao
 import com.tencent.devops.store.pojo.common.Label
 import com.tencent.devops.store.service.atom.AtomLabelService
-import com.tencent.devops.store.service.common.StoreCommonService
+import com.tencent.devops.store.service.common.LabelService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -45,7 +45,7 @@ import org.springframework.stereotype.Service
 class AtomLabelServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
     private val atomLabelRelDao: AtomLabelRelDao,
-    private val storeCommonService: StoreCommonService
+    private val labelService: LabelService
 ) : AtomLabelService {
 
     private val logger = LoggerFactory.getLogger(AtomLabelServiceImpl::class.java)
@@ -58,7 +58,7 @@ class AtomLabelServiceImpl @Autowired constructor(
         val atomLabelList = mutableListOf<Label>()
         val atomLabelRecords = atomLabelRelDao.getLabelsByAtomId(dslContext, atomId) // 查询插件标签信息
         atomLabelRecords?.forEach {
-            storeCommonService.addLabelToLabelList(it, atomLabelList)
+            labelService.addLabelToLabelList(it, atomLabelList)
         }
         return Result(atomLabelList)
     }
