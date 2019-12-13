@@ -61,6 +61,7 @@ import com.tencent.devops.dockerhost.pojo.DockerBuildParam
 import com.tencent.devops.dockerhost.pojo.DockerRunParam
 import com.tencent.devops.dockerhost.utils.CommonUtils
 import com.tencent.devops.dockerhost.utils.ENTRY_POINT_CMD
+import com.tencent.devops.store.pojo.image.enums.ImageRDTypeEnum
 import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
@@ -196,19 +197,23 @@ class DockerHostBuildService(
         try {
             val imageName = CommonUtils.normalizeImageName(dockerBuildInfo.imageName)
             // docker pull
-            try {
-                LocalImageCache.saveOrUpdate(imageName)
-                pullImage(
-                    imageType = dockerBuildInfo.imageType,
-                    imageName = dockerBuildInfo.imageName,
-                    registryUser = dockerBuildInfo.registryUser,
-                    registryPwd = dockerBuildInfo.registryPwd,
-                    buildId = dockerBuildInfo.buildId
-                )
-            } catch (t: Throwable) {
-                logger.warn("Fail to pull the image $imageName of build ${dockerBuildInfo.buildId}", t)
-                log(dockerBuildInfo.buildId, "拉取镜像失败，错误信息：${t.message}")
-                log(dockerBuildInfo.buildId, "尝试使用本地镜像启动...")
+            if (dockerBuildInfo.imagePublicFlag == true && dockerBuildInfo.imageRDType?.toLowerCase() == ImageRDTypeEnum.SELF_DEVELOPED.name.toLowerCase()) {
+                log(dockerBuildInfo.buildId, "自研公共镜像，不从仓库拉取，直接从本地启动...")
+            } else {
+                try {
+                    LocalImageCache.saveOrUpdate(imageName)
+                    pullImage(
+                        imageType = dockerBuildInfo.imageType,
+                        imageName = dockerBuildInfo.imageName,
+                        registryUser = dockerBuildInfo.registryUser,
+                        registryPwd = dockerBuildInfo.registryPwd,
+                        buildId = dockerBuildInfo.buildId
+                    )
+                } catch (t: Throwable) {
+                    logger.warn("Fail to pull the image $imageName of build ${dockerBuildInfo.buildId}", t)
+                    log(dockerBuildInfo.buildId, "拉取镜像失败，错误信息：${t.message}")
+                    log(dockerBuildInfo.buildId, "尝试使用本地镜像启动...")
+                }
             }
             // docker run
             val binds = DockerBindLoader.loadBinds(dockerBuildInfo)
@@ -410,7 +415,9 @@ class DockerHostBuildService(
                 wsInHost = true,
                 registryUser = dockerRunParam.registryUser,
                 registryPwd = dockerRunParam.registryPwd,
-                imageType = ImageType.THIRD.type
+                imageType = ImageType.THIRD.type,
+                imagePublicFlag = false,
+                imageRDType = null
             )
             // docker run
             val env = mutableListOf<String>()
