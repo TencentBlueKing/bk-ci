@@ -85,7 +85,8 @@ class OpImageService @Autowired constructor(
         imageCreateRequest: ImageCreateRequest,
         checkLatest: Boolean = true,
         needAuth: Boolean = true,
-        sendCheckResultNotify: Boolean = true
+        sendCheckResultNotify: Boolean = true,
+        runCheckPipeline: Boolean = true
     ): Result<String> {
         logger.info("addImage accessToken is :$accessToken, userId is :$userId, imageCreateRequest is :$imageCreateRequest")
         val imageCode = imageCreateRequest.imageCode
@@ -140,7 +141,8 @@ class OpImageService @Autowired constructor(
                 publisher = imageCreateRequest.publisher
             ),
             checkLatest = checkLatest,
-            sendCheckResultNotify = sendCheckResultNotify
+            sendCheckResultNotify = sendCheckResultNotify,
+            runCheckPipeline = runCheckPipeline
         )
         logger.info("updateImageResult is :$updateImageResult")
         if (updateImageResult.isNotOk()) {
@@ -285,7 +287,7 @@ class OpImageService @Autowired constructor(
     /**
      * 审核镜像
      */
-    fun approveImageWithoutNotify(userId: String, imageId: String, approveImageReq: ApproveImageReq): AuditTypeEnum {
+    fun approveImageWithoutNotify(userId: String, imageId: String, approveImageReq: ApproveImageReq, checkCurrentStatus: Boolean = true): AuditTypeEnum {
         // 参数校验
         // 判断镜像是否存在
         val image = imageDao.getImage(dslContext, imageId)
@@ -295,7 +297,7 @@ class OpImageService @Autowired constructor(
             )
         val oldStatus = image.imageStatus
         // 非待审核状态直接返回
-        if (oldStatus != ImageStatusEnum.AUDITING.status.toByte()) {
+        if (checkCurrentStatus && oldStatus != ImageStatusEnum.AUDITING.status.toByte()) {
             throw InvalidParamException(
                 message = "imageId=$imageId is not in approving state",
                 params = arrayOf(imageId)
@@ -411,6 +413,29 @@ class OpImageService @Autowired constructor(
             context,
             image.imageCode,
             JsonUtil.to(image.agentTypeScope, object : TypeReference<List<ImageAgentTypeEnum>>() {})
+        )
+    }
+
+    fun releaseImageDirectly(
+        context: DSLContext,
+        userId: String,
+        imageCode: String,
+        imageId: String
+    ) {
+        approveImageWithoutNotify(
+            userId = userId,
+            imageId = imageId,
+            approveImageReq = ApproveImageReq(
+                imageCode = imageCode,
+                publicFlag = false,
+                recommendFlag = true,
+                certificationFlag = false,
+                rdType = ImageRDTypeEnum.THIRD_PARTY,
+                weight = 1,
+                result = PASS,
+                message = "historyData数据迁移自动通过"
+            ),
+            checkCurrentStatus = false
         )
     }
 }
