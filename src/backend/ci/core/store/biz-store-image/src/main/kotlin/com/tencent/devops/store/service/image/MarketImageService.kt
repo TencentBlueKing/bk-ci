@@ -56,8 +56,20 @@ class MarketImageService @Autowired constructor(
                 false
             )
         } else {
-            // 只有处于验证中的镜像才允许改构建结束后的状态
-            if (ImageStatusEnum.CHECKING.status.toByte() == imageRecord.imageStatus) {
+            if (imageStatus == ImageStatusEnum.TESTING) {
+                // 只有处于验证中的镜像才允许改构建结束后的状态
+                // 若验证成功，只有处于验证中的镜像才更改状态
+                if (ImageStatusEnum.CHECKING.status.toByte() == imageRecord.imageStatus) {
+                    marketImageDao.updateImageStatusById(
+                        dslContext = dslContext,
+                        imageId = imageRecord.id,
+                        imageStatus = imageStatus.status.toByte(),
+                        userId = userId,
+                        msg = msg
+                    )
+                }
+            } else {
+                // 验证失败始终置于失败状态
                 marketImageDao.updateImageStatusById(
                     dslContext = dslContext,
                     imageId = imageRecord.id,
