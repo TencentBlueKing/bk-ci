@@ -35,10 +35,13 @@ import com.tencent.devops.common.auth.api.pojo.BkAuthGroupAndUserList
 import com.tencent.devops.common.auth.api.pojo.BkAuthProjectCodeAndId
 import com.tencent.devops.common.auth.api.pojo.BkAuthResponse
 import com.tencent.devops.common.auth.code.AuthServiceCode
+import okhttp3.MediaType
 import okhttp3.Request
+import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
+import java.lang.RuntimeException
 
 @Component
 class BSAuthProjectApi @Autowired constructor(
@@ -185,6 +188,39 @@ class BSAuthProjectApi @Autowired constructor(
             }
             return projectAvailableList
         }
+    }
+
+    override fun createProjectUser(
+        user: String,
+        serviceCode: AuthServiceCode,
+        projectCode: String,
+        role: String
+    ): Boolean {
+        var result = false
+        val accessToken = bsAuthTokenApi.getAccessToken(serviceCode)
+        val url = "${bkAuthProperties.url}/projects/$projectCode/roles/$role/users?accessToken=$accessToken"
+        val bodyJson = mutableMapOf<String, String>()
+        bodyJson.put("user_type", "rtx")
+        bodyJson.put("user_id", user)
+        val content = objectMapper.writeValueAsString(bodyJson)
+        val mediaType = MediaType.parse("application/json; charset=utf-8")
+        val body = RequestBody.create(mediaType, content)
+        val request = Request.Builder().url(url).post(body).build()
+
+        OkhttpUtils.doHttp(request).use{ response ->
+            val responseContent = response.body()!!.string()
+            if(!response.isSuccessful){
+                logger.error("create project user fail: user[$user], projectCode[$projectCode]")
+                throw RuntimeException()
+            }
+            val responseObject = objectMapper.readValue<BkAuthResponse<List<BkAuthProjectCodeAndId>>>(responseContent)
+            if(responseObject.code != 0){
+                logger.error("create project user fail: $responseObject")
+                throw RuntimeException()
+            }
+            result = true
+        }
+        return result
     }
 
     companion object {

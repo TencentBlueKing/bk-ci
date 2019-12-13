@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE_D
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
 import com.tencent.devops.project.pojo.ProjectCreateInfo
+import com.tencent.devops.project.pojo.ProjectCreateUserDTO
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.service.ProjectLocalService
@@ -178,5 +179,21 @@ class ServiceTxProjectResourceImpl @Autowired constructor(
 
     override fun createGitCIProject(gitProjectId: Long, userId: String): Result<ProjectVO> {
         return Result(projectLocalService.createGitCIProject(userId, gitProjectId))
+    }
+
+    override fun createProjectaUserByUser(
+        accessToken: String,
+        createUser: String,
+        createInfo: ProjectCreateUserDTO
+    ): Result<Boolean> {
+        return Result(projectLocalService.createUser2ProjectByUser(accessToken, createUser, createInfo.userId, createInfo.projectId))
+    }
+
+    override fun createProjectaUserByApp(
+        organizationType: String,
+        organizationId: Long,
+        createInfo: ProjectCreateUserDTO
+    ): Result<Boolean> {
+        return Result(projectLocalService.createUser2ProjectByApp(organizationType, organizationId, createInfo.userId, createInfo.projectId))
     }
 }

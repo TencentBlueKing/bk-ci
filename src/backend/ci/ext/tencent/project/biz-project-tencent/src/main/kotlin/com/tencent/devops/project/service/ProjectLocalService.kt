@@ -786,6 +786,59 @@ class ProjectLocalService @Autowired constructor(
         return ProjectUtils.packagingBean(gitCiProject!!, setOf())
     }
 
+    fun createUser2ProjectByUser(accessToken: String, createUser: String, userId: String, projectCode: String): Boolean{
+        logger.info("[createUser2ProjectByUser] createUser[$createUser] userId[$userId] projectCode[$projectCode]")
+        if(!verifyUserProjectPermission(accessToken, projectCode, createUser).data!!){
+            logger.error("$createUser not project[$projectCode] permission")
+            throw RuntimeException()
+        }
+
+        if(!bkAuthProjectApi.isProjectUser(createUser, bsPipelineAuthServiceCode, projectCode, BkAuthGroup.MANAGER)){
+            logger.error("$createUser is not manager for project[$projectCode]")
+            throw java.lang.RuntimeException()
+        }
+        return createUser2Project(userId, projectCode)
+    }
+
+    fun createUser2ProjectByApp(organizationType: String, organizationId: Long, userId: String, projectCode: String): Boolean{
+        logger.info("[createUser2ProjectByApp] organizationType[$organizationType], organizationId[$organizationId] userId[$userId] projectCode[$projectCode]")
+        var bgId: Long? = null
+        var deptId: Long? = null
+        var centerId: Long? = null
+        when(organizationType){
+            AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE_BG -> bgId = organizationId
+            AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE_DEPARTMENT -> deptId = organizationId
+            AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE_CENTER -> centerId = organizationId
+            else -> {
+                throw java.lang.RuntimeException()
+            }
+        }
+        val projectList = getProjectByGroupId(userId, bgId, deptId, centerId)
+        if(projectList.isEmpty()){
+            logger.error("organizationType[$organizationType] :organizationId[$organizationId]  not project[$projectCode] permission ")
+            throw  RuntimeException()
+        }
+
+        var isCreate = false
+        projectList.forEach { project->
+            if(project.projectName.equals(projectCode)){
+                isCreate = true
+                return@forEach
+            }
+        }
+        if(isCreate){
+            return createUser2Project(userId, projectCode)
+        } else{
+            logger.error("organizationType[$organizationType] :organizationId[$organizationId]  not project[$projectCode] permission ")
+            throw  RuntimeException()
+        }
+    }
+
+    private fun createUser2Project(userId: String, projectCode: String): Boolean{
+        logger.info("[createUser2Project]  userId[$userId] projectCode[$projectCode]")
+        return bkAuthProjectApi.createProjectUser(userId, bsPipelineAuthServiceCode, projectCode, BkAuthGroup.DEVELOPER.value)
+    }
+
     companion object {
         val logger = LoggerFactory.getLogger(this::class.java)
         const val PROJECT_LIST = "project_list"
