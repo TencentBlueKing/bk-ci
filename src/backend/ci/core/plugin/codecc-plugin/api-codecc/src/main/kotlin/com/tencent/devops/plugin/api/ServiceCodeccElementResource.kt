@@ -23,36 +23,35 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.project.api.service
 
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
-import com.tencent.devops.project.pojo.Result
-import com.tencent.devops.project.pojo.service.ServiceUrlUpdateInfo
+package com.tencent.devops.plugin.api
+
+import com.tencent.devops.common.api.annotation.ServiceInterface
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.plugin.codecc.pojo.CodeccElementData
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
-import javax.ws.rs.HeaderParam
-import javax.ws.rs.PUT
+import javax.ws.rs.GET
 import javax.ws.rs.Path
+import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["SERVICE_PROJECT_SERVICE"], description = "SERVICE-持续集成项目列表接口")
-@Path("/service/services")
+@Api(tags = ["SERVICE_CODECC_ELEMENT"])
+@Path("/service/codecc/element")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface ServiceProjectServiceResource {
+@ServiceInterface("plugin") // 指明接入到哪个微服务
+interface ServiceCodeccElementResource {
 
-    @PUT
-    @Path("/")
-    @ApiOperation("批量修改服务")
-    fun updateServiceUrlByBatch(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-        userId: String,
-        @ApiParam("修改服务的js和css连接", required = false)
-        serviceUrlUpdateInfoList: List<ServiceUrlUpdateInfo>?
-    ): Result<Boolean>
+    @ApiOperation("提供根据流水线构建id查询构建号（页面上展示用的）、构建时间、构建人等信息件")
+    @GET
+    @Path("/project/{projectId}/pipeline/{pipelineId}")
+    fun get(
+        @PathParam("projectId")
+        projectId: String,
+        @PathParam("pipelineId")
+        pipelineId: String
+    ): Result<CodeccElementData?>
 }
