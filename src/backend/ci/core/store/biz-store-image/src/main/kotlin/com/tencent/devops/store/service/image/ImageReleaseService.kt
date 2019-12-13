@@ -378,7 +378,7 @@ abstract class ImageReleaseService {
                     sendCheckResultNotify = sendCheckResultNotify
                 )
             } else {
-                //直接置为测试中状态
+                // 直接置为测试中状态
                 marketImageDao.updateImageStatusById(
                     dslContext = context,
                     imageId = imageId,
