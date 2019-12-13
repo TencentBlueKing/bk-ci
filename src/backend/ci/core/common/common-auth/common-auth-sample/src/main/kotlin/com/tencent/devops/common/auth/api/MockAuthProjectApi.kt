@@ -98,4 +98,13 @@ class MockAuthProjectApi constructor(
         }
         return projectCode2Code
     }
+
+    override fun createProjectUser(
+        user: String,
+        serviceCode: AuthServiceCode,
+        projectCode: String,
+        role: String
+    ): Boolean {
+        return true
+    }
 }
