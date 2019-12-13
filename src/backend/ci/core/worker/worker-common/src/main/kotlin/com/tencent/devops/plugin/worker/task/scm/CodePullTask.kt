@@ -45,7 +45,7 @@ abstract class CodePullTask constructor(private val scmType: ScmType) : ITask() 
             buildId = buildVariables.buildId,
             workspace = workspace,
             taskParams = taskParams,
-            variables = buildVariables.variables
+            variables = buildVariables.variablesWithType.map { it.key to it.value.toString() }.toMap()
         ).pullCode()
         if (env != null) {
             addEnv(env)

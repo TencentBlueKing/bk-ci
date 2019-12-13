@@ -75,6 +75,7 @@ import com.tencent.devops.common.pipeline.element.SendEmailNotifyElement
 import com.tencent.devops.common.pipeline.element.SendRTXNotifyElement
 import com.tencent.devops.common.pipeline.element.SendSmsNotifyElement
 import com.tencent.devops.common.pipeline.element.SendWechatNotifyElement
+import com.tencent.devops.common.pipeline.element.SensitiveScanElement
 import com.tencent.devops.common.pipeline.element.SpmDistributionElement
 import com.tencent.devops.common.pipeline.element.TclsAddVersionElement
 import com.tencent.devops.common.pipeline.element.TcmElement
@@ -151,7 +152,8 @@ class PluginElementSubTypeFetcher : ElementSubTypeFetcher {
             MetaFileScanElement.classType to MetaFileScanElement::class.java,
             Unity3dBuildElement.classType to Unity3dBuildElement::class.java,
             XcodeBuildElement.classType to XcodeBuildElement::class.java,
-            XcodeBuildElement2.classType to XcodeBuildElement2::class.java
+            XcodeBuildElement2.classType to XcodeBuildElement2::class.java,
+            SensitiveScanElement.classType to SensitiveScanElement::class.java
         )
     }
 }
