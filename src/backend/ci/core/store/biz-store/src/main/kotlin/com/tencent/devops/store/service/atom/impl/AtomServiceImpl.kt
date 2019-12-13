@@ -59,6 +59,12 @@ import com.tencent.devops.store.pojo.atom.PipelineAtom
 import com.tencent.devops.store.pojo.atom.enums.AtomCategoryEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomTypeEnum
+import com.tencent.devops.store.pojo.common.KEY_CREATE_TIME
+import com.tencent.devops.store.pojo.common.KEY_LABEL_CODE
+import com.tencent.devops.store.pojo.common.KEY_LABEL_ID
+import com.tencent.devops.store.pojo.common.KEY_LABEL_NAME
+import com.tencent.devops.store.pojo.common.KEY_LABEL_TYPE
+import com.tencent.devops.store.pojo.common.KEY_UPDATE_TIME
 import com.tencent.devops.store.pojo.common.Label
 import com.tencent.devops.store.pojo.common.STORE_ATOM_STATUS
 import com.tencent.devops.store.pojo.common.UnInstallReq
@@ -280,12 +286,12 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                 atomLabelRecords?.forEach {
                     atomLabelList.add(
                         Label(
-                            it["id"] as String,
-                            it["labelCode"] as String,
-                            it["labelName"] as String,
-                            StoreTypeEnum.getStoreType((it["labelType"] as Byte).toInt()),
-                            (it["createTime"] as LocalDateTime).timestampmilli(),
-                            (it["updateTime"] as LocalDateTime).timestampmilli()
+                            it[KEY_LABEL_ID] as String,
+                            it[KEY_LABEL_CODE] as String,
+                            it[KEY_LABEL_NAME] as String,
+                            StoreTypeEnum.getStoreType((it[KEY_LABEL_TYPE] as Byte).toInt()),
+                            (it[KEY_CREATE_TIME] as LocalDateTime).timestampmilli(),
+                            (it[KEY_UPDATE_TIME] as LocalDateTime).timestampmilli()
                         )
                     )
                 }

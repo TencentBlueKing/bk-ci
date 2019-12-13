@@ -50,6 +50,7 @@ import com.tencent.devops.store.dao.template.MarketTemplateDao
 import com.tencent.devops.store.dao.template.TemplateCategoryRelDao
 import com.tencent.devops.store.pojo.atom.MarketMainItemLabel
 import com.tencent.devops.store.pojo.common.HOTTEST
+import com.tencent.devops.store.pojo.common.KEY_CATEGORY_CODE
 import com.tencent.devops.store.pojo.common.LATEST
 import com.tencent.devops.store.pojo.common.MarketItem
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
@@ -469,7 +470,7 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
         val categoryRecords = templateCategoryRelDao.getCategorysByTemplateId(dslContext, template.id)
         val categoryCodeList = mutableListOf<String>()
         categoryRecords?.forEach {
-            categoryCodeList.add(it["categoryCode"] as String)
+            categoryCodeList.add(it[KEY_CATEGORY_CODE] as String)
         }
         val addMarketTemplateRequest = AddMarketTemplateRequest(
             projectCodeList = projectCodeList,
