@@ -3,6 +3,7 @@ package com.tencent.devops.store.service.image
 import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.DataConsistencyException
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
@@ -15,6 +16,7 @@ import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.model.store.tables.records.TImageRecord
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.store.constant.StoreMessageCode
+import com.tencent.devops.store.constant.StoreMessageCode.USER_IMAGE_VERSION_NOT_EXIST
 import com.tencent.devops.store.dao.common.BusinessConfigDao
 import com.tencent.devops.store.dao.common.CategoryDao
 import com.tencent.devops.store.dao.common.ClassifyDao
@@ -306,7 +308,7 @@ abstract class ImageService @Autowired constructor() {
                     id = it[KEY_IMAGE_ID] as String,
                     code = imageCode,
                     name = it[KEY_IMAGE_NAME] as String,
-                    rdType = ImageRDTypeEnum.getImageRDType((it[KEY_IMAGE_RD_TYPE] as Byte).toInt()),
+                    rdType = ImageRDTypeEnum.getImageRDTypeStr((it[KEY_IMAGE_RD_TYPE] as Byte?)?.toInt()),
                     imageSourceType = ImageType.getType(it[KEY_IMAGE_SOURCE_TYPE] as String).name,
                     imageSize = imageSize,
                     imageSizeNum = imageSizeNum,
@@ -655,6 +657,11 @@ abstract class ImageService @Autowired constructor() {
 
     fun getImageRepoInfoByRecord(imageRecord: Record): ImageRepoInfo {
         val id = imageRecord.get(KEY_IMAGE_ID) as String
+        val imageCode = imageRecord.get(KEY_IMAGE_CODE) as String
+        val imageFeature = imageFeatureDao.getImageFeature(dslContext, imageCode)
+        val publicFlag = imageFeature.publicFlag ?: false
+        // 默认第三方
+        val rdType = ImageRDTypeEnum.getImageRDType(imageFeature.imageType?.toInt() ?: 1)
         val sourceType = ImageType.getType(imageRecord.get(KEY_IMAGE_SOURCE_TYPE) as String)
         val repoUrl = imageRecord.get(KEY_IMAGE_REPO_URL) as String? ?: ""
         val repoName = imageRecord.get(KEY_IMAGE_REPO_NAME) as String? ?: ""
@@ -682,17 +689,40 @@ abstract class ImageService @Autowired constructor() {
                 repoName = cleanImageRepoName,
                 repoTag = cleanTag,
                 ticketId = ticketId,
-                ticketProject = ticketProject
+                ticketProject = ticketProject,
+                publicFlag = publicFlag,
+                rdType = rdType
             )
         }
     }
 
-    fun getImageDetailByCode(
+    fun getImageDetailByCodeAndVersion(
+        userId: String,
+        imageCode: String,
+        imageVersion: String?,
+        interfaceName: String? = "Anon interface"
+    ): ImageDetail {
+        logger.info("$interfaceName:getLatestImageDetailByCode:Input:($userId,$imageCode,$imageVersion)")
+        if (null == imageVersion) {
+            // 不传version默认返回最新版本
+            return getLatestImageDetailByCode(userId, imageCode, interfaceName)
+        } else {
+            val imageRecord =
+                imageDao.getImageByCodeAndVersion(dslContext, imageCode, imageVersion) ?: throw ErrorCodeException(
+                    errorCode = USER_IMAGE_VERSION_NOT_EXIST,
+                    defaultMessage = "image is null,imageCode=$imageCode, imageVersion=$imageVersion",
+                    params = arrayOf(imageCode, imageVersion)
+                )
+            return getImageDetail(userId, imageRecord)
+        }
+    }
+
+    fun getLatestImageDetailByCode(
         userId: String,
         imageCode: String,
         interfaceName: String? = "Anon interface"
     ): ImageDetail {
-        logger.info("$interfaceName:getImageDetailByCode:Input:($userId,$imageCode)")
+        logger.info("$interfaceName:getLatestImageDetailByCode:Input:($userId,$imageCode)")
         val imageRecord =
             imageDao.getLatestImageByCode(dslContext, imageCode) ?: throw InvalidParamException(
                 message = "image is null,imageCode=$imageCode",
@@ -835,7 +865,8 @@ abstract class ImageService @Autowired constructor() {
             imageSourceType = ImageType.getType(imageRecord.imageSourceType).name,
             imageRepoUrl = imageRecord.imageRepoUrl ?: "",
             imageRepoName = imageRecord.imageRepoName ?: "",
-            rdType = ImageRDTypeEnum.getImageRDType(imageFeatureRecord.imageType.toInt()),
+            rdType = ImageRDTypeEnum.getImageRDTypeStr(imageFeatureRecord.imageType?.toInt()),
+            weight = imageFeatureRecord.weight,
             agentTypeScope = agentTypeScope,
             ticketId = imageRecord.ticketId ?: "",
             imageTag = imageRecord.imageTag ?: "",
@@ -968,6 +999,11 @@ abstract class ImageService @Autowired constructor() {
         val imageRecord = imageDao.getImage(dslContext, imageId) ?: throw ImageNotExistException("imageId=$imageId")
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
+            val imageSize = try {
+                imageUpdateRequest.imageSize?.toInt()
+            } catch (ignore: Exception) {
+                null
+            }
             imageDao.updateImage(
                 dslContext = context,
                 imageId = imageId,
@@ -981,7 +1017,7 @@ abstract class ImageService @Autowired constructor() {
                     ticketId = imageUpdateRequest.ticketId,
                     imageStatus = null,
                     imageStatusMsg = null,
-                    imageSize = imageUpdateRequest.imageSize,
+                    imageSize = imageSize?.toString(),
                     imageTag = imageUpdateRequest.imageTag,
                     agentTypeList = imageUpdateRequest.agentTypeScope,
                     logoUrl = imageUpdateRequest.logoUrl,
