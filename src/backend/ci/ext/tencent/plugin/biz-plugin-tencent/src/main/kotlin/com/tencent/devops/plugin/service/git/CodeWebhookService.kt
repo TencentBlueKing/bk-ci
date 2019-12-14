@@ -47,14 +47,7 @@ import com.tencent.devops.plugin.dao.PluginGitCheckDao
 import com.tencent.devops.plugin.dao.PluginGithubCheckDao
 import com.tencent.devops.plugin.service.ScmService
 import com.tencent.devops.process.api.service.ServiceBuildResource
-import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
-import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_BLOCK
-import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_EVENT_TYPE
-import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_MR_ID
-import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_REPO
-import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_REPO_TYPE
-import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_REVISION
-import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_TYPE
+import com.tencent.devops.process.utils.*
 import com.tencent.devops.scm.code.git.api.GIT_COMMIT_CHECK_STATE_ERROR
 import com.tencent.devops.scm.code.git.api.GIT_COMMIT_CHECK_STATE_FAILURE
 import com.tencent.devops.scm.code.git.api.GIT_COMMIT_CHECK_STATE_PENDING
@@ -106,7 +99,11 @@ class CodeWebhookService @Autowired constructor(
             val pipelineId = event.pipelineId
 
             val commitId = variables[PIPELINE_WEBHOOK_REVISION]
-            val repositoryId = variables[PIPELINE_WEBHOOK_REPO]
+            var repositoryId = variables[PIPELINE_WEBHOOK_REPO]
+            if (repositoryId.isNullOrBlank()) {
+                // 兼容老的V1的
+                repositoryId = variables["hookRepo"]
+            }
             val repositoryType = RepositoryType.valueOf(variables[PIPELINE_WEBHOOK_REPO_TYPE] ?: RepositoryType.ID.name)
             if (commitId.isNullOrEmpty() || repositoryId.isNullOrEmpty()) {
                 logger.warn("Some variable is null or empty. commitId($commitId) repoHashId($repositoryId) repositoryType($repositoryType)")
