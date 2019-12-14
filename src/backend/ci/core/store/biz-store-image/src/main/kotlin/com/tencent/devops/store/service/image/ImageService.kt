@@ -602,7 +602,8 @@ abstract class ImageService @Autowired constructor() {
                     creator = it.get(KEY_CREATOR) as String,
                     modifier = it.get(KEY_MODIFIER) as String,
                     createTime = (it.get(KEY_CREATE_TIME) as LocalDateTime).timestampmilli(),
-                    updateTime = (it.get(KEY_UPDATE_TIME) as LocalDateTime).timestampmilli()
+                    updateTime = (it.get(KEY_UPDATE_TIME) as LocalDateTime).timestampmilli(),
+                    publicFlag = (it.get(KEY_IMAGE_FEATURE_PUBLIC_FLAG) as Boolean? ?: false)
                 )
             )
         }
