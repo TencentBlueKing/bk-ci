@@ -13,6 +13,7 @@ import com.tencent.devops.model.store.tables.records.TImageRecord
 import com.tencent.devops.store.dao.image.Constants.KEY_CREATE_TIME
 import com.tencent.devops.store.dao.image.Constants.KEY_CREATOR
 import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_CODE
+import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_FEATURE_PUBLIC_FLAG
 import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_ID
 import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_NAME
 import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_REPO_NAME
@@ -31,7 +32,7 @@ import com.tencent.devops.store.pojo.image.enums.ImageStatusEnum
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
-import org.jooq.Record14
+import org.jooq.Record15
 import org.jooq.Record4
 import org.jooq.Record9
 import org.jooq.Result
@@ -544,8 +545,9 @@ class ImageDao {
         imageName: String?,
         page: Int? = 1,
         pageSize: Int? = -1
-    ): Result<Record14<String, String, String, String, String, String, String, String, String, Byte, String, String, LocalDateTime, LocalDateTime>> {
+    ): Result<Record15<String, String, String, String, String, String, String, String, String, Byte, String, String, LocalDateTime, LocalDateTime, Boolean>>? {
         val tImage = TImage.T_IMAGE.`as`("tImage")
+        val tImageFeature = TImageFeature.T_IMAGE_FEATURE.`as`("tImageFeature")
         val tStoreMember = TStoreMember.T_STORE_MEMBER.`as`("tStoreMember")
         val conditions = generateGetMyImageConditions(tImage, userId, tStoreMember, imageName)
         val t = dslContext.select(tImage.IMAGE_CODE.`as`("imageCode"), tImage.CREATE_TIME.max().`as`("createTime"))
@@ -564,8 +566,11 @@ class ImageDao {
             tImage.CREATOR.`as`(KEY_CREATOR),
             tImage.MODIFIER.`as`(KEY_MODIFIER),
             tImage.CREATE_TIME.`as`(KEY_CREATE_TIME),
-            tImage.UPDATE_TIME.`as`(KEY_UPDATE_TIME)
+            tImage.UPDATE_TIME.`as`(KEY_UPDATE_TIME),
+            tImageFeature.PUBLIC_FLAG.`as`(KEY_IMAGE_FEATURE_PUBLIC_FLAG)
         ).from(tImage)
+            .join(tImageFeature)
+            .on(tImage.IMAGE_CODE.eq(tImageFeature.IMAGE_CODE))
             .join(t)
             .on(
                 tImage.IMAGE_CODE.eq(
