@@ -66,6 +66,8 @@ data class MyImage(
     val createTime: Long,
 
     @ApiModelProperty("修改时间", required = true)
-    val updateTime: Long
+    val updateTime: Long,
 
+    @ApiModelProperty("是否为公共镜像", required = true)
+    val publicFlag: Boolean
 )
