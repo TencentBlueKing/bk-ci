@@ -69,7 +69,6 @@ import com.tencent.devops.store.pojo.common.MarketItem
 import com.tencent.devops.store.pojo.common.STORE_IMAGE_STATUS
 import com.tencent.devops.store.pojo.common.VersionInfo
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
-import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.image.enums.CategoryTypeEnum
 import com.tencent.devops.store.pojo.image.enums.ImageAgentTypeEnum
@@ -80,7 +79,6 @@ import com.tencent.devops.store.pojo.image.enums.MarketImageSortTypeEnum
 import com.tencent.devops.store.pojo.image.exception.UnknownImageSourceType
 import com.tencent.devops.store.pojo.image.request.ImageBaseInfoUpdateRequest
 import com.tencent.devops.store.pojo.image.request.ImageFeatureUpdateRequest
-import com.tencent.devops.store.pojo.image.request.ImageUpdateRequest
 import com.tencent.devops.store.pojo.image.response.Category
 import com.tencent.devops.store.pojo.image.response.ImageDetail
 import com.tencent.devops.store.pojo.image.response.ImageRepoInfo
@@ -990,84 +988,6 @@ abstract class ImageService @Autowired constructor() {
             )!!.id
             imageCategoryRelDao.batchAdd(context, userId, imageId, listOf(categoryId))
         }
-    }
-
-    fun update(
-        userId: String,
-        imageId: String,
-        imageUpdateRequest: ImageUpdateRequest,
-        interfaceName: String? = "Anon interface"
-    ): Result<Boolean> {
-        val imageRecord = imageDao.getImage(dslContext, imageId) ?: throw ImageNotExistException("imageId=$imageId")
-        dslContext.transaction { configuration ->
-            val context = DSL.using(configuration)
-            val imageSize = try {
-                imageUpdateRequest.imageSize?.toInt()
-            } catch (ignore: Exception) {
-                null
-            }
-            imageDao.updateImage(
-                dslContext = context,
-                imageId = imageId,
-                imageUpdateBean = ImageDao.ImageUpdateBean(
-                    imageName = imageUpdateRequest.imageName,
-                    classifyId = imageUpdateRequest.classifyId,
-                    version = imageUpdateRequest.version,
-                    imageSourceType = imageUpdateRequest.imageSourceType,
-                    imageRepoUrl = imageUpdateRequest.imageRepoUrl,
-                    imageRepoName = imageUpdateRequest.imageRepoName,
-                    ticketId = imageUpdateRequest.ticketId,
-                    imageStatus = null,
-                    imageStatusMsg = null,
-                    imageSize = imageSize?.toString(),
-                    imageTag = imageUpdateRequest.imageTag,
-                    agentTypeList = imageUpdateRequest.agentTypeScope,
-                    logoUrl = imageUpdateRequest.logoUrl,
-                    icon = imageUpdateRequest.icon,
-                    summary = imageUpdateRequest.summary,
-                    description = imageUpdateRequest.description,
-                    publisher = imageUpdateRequest.publisher,
-                    // 是否为最新版本镜像只走发布和下架逻辑更新
-                    latestFlag = null,
-                    modifier = userId
-                )
-            )
-            imageFeatureDao.update(
-                dslContext = context,
-                imageCode = imageRecord.imageCode,
-                publicFlag = imageUpdateRequest.publicFlag,
-                recommendFlag = imageUpdateRequest.recommendFlag,
-                certificationFlag = imageUpdateRequest.certificationFlag,
-                rdType = imageUpdateRequest.rdType,
-                weight = imageUpdateRequest.weight,
-                modifier = userId
-            )
-            // 更新调试项目
-            val projectCode = imageUpdateRequest.projectCode
-            if (projectCode != null) {
-                storeProjectRelDao.updateUserStoreTestProject(dslContext, userId, projectCode, StoreProjectTypeEnum.TEST, imageRecord.imageCode, StoreTypeEnum.IMAGE)
-            }
-            // 更新范畴
-            val categoryIdList = imageUpdateRequest.categoryIdList
-            if (categoryIdList != null) {
-                saveImageCategoryByIds(
-                    context = context,
-                    userId = userId,
-                    imageId = imageId,
-                    categoryIdList = categoryIdList
-                )
-            }
-            // 更新标签
-            if (imageUpdateRequest.labelIdList != null) {
-                imageLabelService.updateImageLabels(
-                    dslContext = dslContext,
-                    userId = userId,
-                    imageId = imageId,
-                    labelIdList = imageUpdateRequest.labelIdList!!
-                )
-            }
-        }
-        return Result(true)
     }
 
     /**
