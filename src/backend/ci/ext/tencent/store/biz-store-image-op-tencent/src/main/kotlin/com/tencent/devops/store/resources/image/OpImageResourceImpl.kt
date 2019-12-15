@@ -47,7 +47,7 @@ class OpImageResourceImpl @Autowired constructor(
     }
 
     override fun updateImage(userId: String, imageId: String, imageUpdateRequest: ImageUpdateRequest): Result<Boolean> {
-        return imageService.update(
+        return opImageService.update(
             userId = userId,
             imageId = imageId,
             imageUpdateRequest = imageUpdateRequest,
