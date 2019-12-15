@@ -63,7 +63,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import sun.rmi.runtime.Log
 import java.io.IOException
 import java.sql.Date
 import java.text.SimpleDateFormat
@@ -970,7 +969,6 @@ class LogServiceV2 @Autowired constructor(
             queryLogs.logs.addAll(logs)
             if (logs.isEmpty()) queryLogs.status = LogStatus.EMPTY
             queryLogs.hasMore = size > logs.size
-
         } catch (ex: IndexNotFoundException) {
             logger.error("Query init logs failed because of IndexNotFoundException. buildId: $buildId", ex)
             queryLogs.status = LogStatus.CLEAN
