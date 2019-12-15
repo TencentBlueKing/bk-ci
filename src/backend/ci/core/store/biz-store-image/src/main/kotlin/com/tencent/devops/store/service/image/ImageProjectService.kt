@@ -970,7 +970,6 @@ class ImageProjectService @Autowired constructor(
         val categoryName = it.get(KEY_CATEGORY_NAME) as String?
         val publisher = it.get(KEY_PUBLISHER) as String
         val publicFlag = it.get(KEY_IMAGE_FEATURE_PUBLIC_FLAG) as Boolean
-        // 是否可安装
         val recommendFlag = it.get(KEY_IMAGE_FEATURE_RECOMMEND_FLAG) as Boolean
         val certificationFlag = it.get(KEY_IMAGE_FEATURE_CERTIFICATION_FLAG) as Boolean
         val modifier = it.get(KEY_MODIFIER) as String?
@@ -1002,7 +1001,8 @@ class ImageProjectService @Autowired constructor(
             flag = canInstallFlag,
             recommendFlag = recommendFlag,
             certificationFlag = certificationFlag,
-            isInstalled = installFlag,
+            // 公共镜像视为已安装
+            isInstalled = installFlag || publicFlag,
             modifier = modifier ?: "",
             updateTime = updateTime
         )
