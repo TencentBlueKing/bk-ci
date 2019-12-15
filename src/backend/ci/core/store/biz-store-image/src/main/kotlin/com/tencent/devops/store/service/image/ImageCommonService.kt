@@ -21,16 +21,21 @@ class ImageCommonService @Autowired constructor(
     ): MutableList<Byte> {
         val flag = storeProjectRelDao.isInitTestProjectCode(dslContext, imageCode, StoreTypeEnum.IMAGE, projectCode)
         logger.info("the isInitTestProjectCode flag is :$flag")
-        // 普通项目的查已发布和下架中的镜像
+        // 普通项目的查已发布、下架中、已下架的镜像
         var imageStatusList =
-            mutableListOf(ImageStatusEnum.RELEASED.status.toByte(), ImageStatusEnum.UNDERCARRIAGING.status.toByte())
+            mutableListOf(
+                ImageStatusEnum.RELEASED.status.toByte(),
+                ImageStatusEnum.UNDERCARRIAGING.status.toByte(),
+                ImageStatusEnum.UNDERCARRIAGED.status.toByte()
+            )
         if (flag) {
-            // 原生初始化项目有和申请镜像协作者指定的调试项目权查处于测试中、审核中、已发布和下架中的镜像
+            // 原生初始化项目有和申请镜像协作者指定的调试项目权查处于测试中、审核中、已发布、下架中、已下架的镜像
             imageStatusList = mutableListOf(
                 ImageStatusEnum.TESTING.status.toByte(),
                 ImageStatusEnum.AUDITING.status.toByte(),
                 ImageStatusEnum.RELEASED.status.toByte(),
-                ImageStatusEnum.UNDERCARRIAGING.status.toByte()
+                ImageStatusEnum.UNDERCARRIAGING.status.toByte(),
+                ImageStatusEnum.UNDERCARRIAGED.status.toByte()
             )
         }
         return imageStatusList
