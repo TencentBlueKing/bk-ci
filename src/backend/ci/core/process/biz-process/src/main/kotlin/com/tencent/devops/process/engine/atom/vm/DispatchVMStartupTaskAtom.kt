@@ -95,6 +95,24 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
         param: VMBuildContainer,
         runVariables: Map<String, String>
     ): AtomResponse {
+        // 设置Job区间起点
+        LogUtils.addRangeStartLine(
+            rabbitTemplate = rabbitTemplate,
+            buildId = task.buildId,
+            rangeName = task.containerHashId ?: task.containerId,
+            tag = task.containerHashId ?: "",
+            jobId = task.containerHashId,
+            executeCount = task.executeCount ?: 1
+        )
+        // 打印启动插件折叠起点
+        LogUtils.addFoldStartLine(
+            rabbitTemplate = rabbitTemplate,
+            buildId = task.buildId,
+            groupName = task.taskName,
+            tag = task.taskId ?: "",
+            jobId = task.containerHashId,
+            executeCount = task.executeCount ?: 1
+        )
         var status: BuildStatus = BuildStatus.FAILED
         try {
             status = execute(task, param)
@@ -115,6 +133,15 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
             )
             logger.warn("Fail to execute the task atom", ignored)
         } finally {
+            // 打印启动插件折叠终点
+            LogUtils.addFoldEndLine(
+                rabbitTemplate = rabbitTemplate,
+                buildId = task.buildId,
+                groupName = task.taskName,
+                tag = task.taskId ?: "",
+                jobId = task.containerHashId,
+                executeCount = task.executeCount ?: 1
+            )
             return AtomResponse(status)
         }
     }
@@ -125,9 +152,9 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
         val buildId = task.buildId
         val taskId = task.taskId
 
-// 构建环境容器序号ID
+        // 构建环境容器序号ID
         val vmSeqId = task.containerId
-// 预指定VM名称列表（逗号分割）
+        // 预指定VM名称列表（逗号分割）
         val vmNames = param.vmNames.joinToString(",")
 
         val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)
