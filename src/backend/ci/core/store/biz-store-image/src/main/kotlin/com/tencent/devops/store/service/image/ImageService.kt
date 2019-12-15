@@ -547,7 +547,7 @@ abstract class ImageService @Autowired constructor() {
             page = validPage,
             pageSize = validPageSize
         )
-        myImageRecords.forEach {
+        myImageRecords?.forEach {
             val imageCode = it.get(KEY_IMAGE_CODE) as String
             val projectCode = storeProjectRelDao.getInitProjectCodeByStoreCode(
                 dslContext = dslContext,
@@ -574,8 +574,9 @@ abstract class ImageService @Autowired constructor() {
         logger.info("$interfaceName:getMyImageList:Inner:projectList.size=${projectList.size}:$projectListIdsStr")
         // 封装结果返回
         val myImageList = ArrayList<MyImage>()
-        for (i in 0 until myImageRecords.size) {
-            val it = myImageRecords[i]
+        val end = myImageRecords?.size ?: 0
+        for (i in 0 until end) {
+            val it = myImageRecords!![i]
             val imageCode = myImageCodeList[i]
             val projectCode = projectCodeList[i]
             val projectV0 = projectList[i]
