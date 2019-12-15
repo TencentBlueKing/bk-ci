@@ -33,6 +33,7 @@ import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.EnvControlTaskType
 import com.tencent.devops.common.pipeline.pojo.element.Element
+import com.tencent.devops.log.utils.LogUtils
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.AtomUtils
 import com.tencent.devops.process.engine.atom.IAtomTask
@@ -40,6 +41,7 @@ import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.pojo.mq.PipelineBuildLessShutdownDispatchEvent
 import org.slf4j.LoggerFactory
+import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.config.ConfigurableBeanFactory
 import org.springframework.context.annotation.Scope
@@ -48,6 +50,7 @@ import org.springframework.stereotype.Component
 @Component
 @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 class DispatchBuildLessDockerShutdownTaskAtom @Autowired constructor(
+    private val rabbitTemplate: RabbitTemplate,
     private val pipelineEventDispatcher: PipelineEventDispatcher
 ) : IAtomTask<NormalContainer> {
     override fun getParamElement(task: PipelineBuildTask): NormalContainer {
@@ -77,6 +80,18 @@ class DispatchBuildLessDockerShutdownTaskAtom @Autowired constructor(
                 buildResult = true
             )
         )
+        // 设置Job日志区间终点
+        LogUtils.addRangeEndLine(
+            rabbitTemplate = rabbitTemplate,
+            buildId = task.buildId,
+            rangeName = task.containerHashId ?: task.containerId,
+            tag = task.containerHashId ?: "",
+            jobId = task.containerHashId,
+            executeCount = task.executeCount ?: 1
+        )
+        // 同步Job执行状态
+        LogUtils.stopLog(rabbitTemplate, buildId, task.containerHashId ?: "", task.containerHashId ?: "", task.executeCount)
+
         logger.info("[$buildId]|SHUTDOWN_VM|stageId=${task.stageId}|container=${task.containerId}|vmSeqId=$vmSeqId")
         return AtomResponse(BuildStatus.SUCCEED)
     }

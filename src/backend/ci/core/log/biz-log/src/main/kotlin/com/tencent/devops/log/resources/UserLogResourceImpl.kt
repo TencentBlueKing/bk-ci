@@ -107,7 +107,7 @@ class UserLogResourceImpl @Autowired constructor(
         jobId: String?,
         executeCount: Int?
     ): Result<QueryLogs> {
-        validateAuth(userId, projectId, pipelineId, buildId)
+//        validateAuth(userId, projectId, pipelineId, buildId)
         return logDispatcher.getAfterLogs(
                 projectId,
                 pipelineId,
