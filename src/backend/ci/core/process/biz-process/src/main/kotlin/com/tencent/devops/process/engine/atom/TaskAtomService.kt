@@ -231,7 +231,12 @@ class TaskAtomService @Autowired(required = false) constructor(
                 actionType = ActionType.END
             )
         )
-        LogUtils.stopLog(rabbitTemplate, task.buildId, task.taskId, task.containerHashId)
+        LogUtils.stopLog(
+            rabbitTemplate = rabbitTemplate,
+            buildId = task.buildId,
+            tag = task.taskId,
+            jobId = task.containerHashId
+        )
     }
 
     fun tryFinish(task: PipelineBuildTask, force: Boolean): AtomResponse {
