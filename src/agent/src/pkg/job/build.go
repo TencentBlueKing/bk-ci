@@ -143,7 +143,12 @@ func getBuild() (*api.ThirdPartyBuildInfo, error) {
 }
 
 func buildAgentJarPath() string {
-	return fmt.Sprintf("%s/%s", systemutil.GetWorkDir(), config.WorkAgentFile)
+	path := fmt.Sprintf("%s/%s", systemutil.GetWorkDir(), "worker-agent.jar")
+	if !fileutil.Exists(path) {
+		logs.Warn("worker-agent.jar not exist, use agent.jar")
+		path = fmt.Sprintf("%s/%s", systemutil.GetWorkDir(), "agent.jar")
+	}
+	return path
 }
 
 func runBuild(buildInfo *api.ThirdPartyBuildInfo) error {
