@@ -27,15 +27,19 @@ package com.tencent.devops.common.notify.utils
 
 import com.fasterxml.jackson.core.JsonProcessingException
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.notify.DesUtil
+import com.tencent.devops.common.notify.pojo.EmailNotifyPost
 import okhttp3.Headers
 import okhttp3.MediaType
+import okhttp3.MultipartBody
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import sun.misc.BASE64Decoder
 import java.util.Random
 
 @Service
@@ -54,6 +58,7 @@ class TOFService @Autowired constructor(
 
     private val okHttpClient = OkHttpClient()
     private val random = Random()
+    private val decoder = BASE64Decoder()
 
     fun post(url: String, postData: Any, tofConf: Map<String, String>): TOFResult {
 
@@ -92,6 +97,64 @@ class TOFService @Autowired constructor(
             if (result.Ret != 0 || result.ErrCode != 0) {
                 logger.error("[id--${headers["timestamp"]}]request >>>> $body")
                 logger.error("[id--${headers["timestamp"]}]response >>>>$responseBody")
+            }
+            return result
+        } catch (e: Throwable) {
+            logger.error(String.format("TOF error, server response serialize failure, url: %s, response: %s", url, responseBody), e)
+            return TOFResult("TOF error, server response serialize failure")
+        }
+    }
+
+    fun postCodeccEmailFormData(url: String, postData: EmailNotifyPost, tofConf: Map<String, String>): TOFResult {
+        val headers = generateHeaders(tofConf["sys-id"] ?: "", tofConf["app-key"] ?: "")
+        if (headers == null) {
+            logger.error(String.format("TOF error, generate signature failure, url: %s", url))
+            return TOFResult("TOF error, generate signature failure")
+        }
+
+        val params = mapOf("EmailType" to postData.emailType.toString(),
+            "To" to postData.to,
+            "CC" to postData.cc,
+            "Bcc" to postData.bcc,
+            "From" to postData.from,
+            "Content" to postData.content,
+            "Title" to postData.title,
+            "Priority" to postData.priority,
+            "BodyFormat" to postData.bodyFormat.toString())
+
+        val taskBody = MultipartBody.Builder()
+            .setType(MultipartBody.FORM)
+            .addFormDataPart("EmailType", params["EmailType"]!!)
+            .addFormDataPart("To", params["To"]!!)
+            .addFormDataPart("CC", params["CC"]!!)
+            .addFormDataPart("Bcc", params["Bcc"]!!)
+            .addFormDataPart("From", params["From"]!!)
+            .addFormDataPart("Content", params["Content"]!!)
+            .addFormDataPart("Title", params["Title"]!!)
+            .addFormDataPart("Priority", params["Priority"]!!)
+            .addFormDataPart("BodyFormat", params["BodyFormat"]!!)
+
+        postData.codeccAttachFileContent!!.forEach { key, value ->
+            val fileBody = RequestBody.create(MultipartBody.FORM, decoder.decodeBuffer(value))
+            taskBody.addFormDataPart("file", key, fileBody)
+        }
+
+        var responseBody = ""
+        try {
+            val taskRequest = Request.Builder().url(String.format("%s%s", tofConf["host"], "/api/v1/Message/SendMail"))
+                .headers(headers).post(taskBody.build()).build()
+            OkhttpUtils.doHttp(taskRequest).use { response ->
+                responseBody = response.body()!!.string()
+                logger.info("post codecc email to tof with url, request, response: $url \n $params \n $responseBody")
+                if (!response.isSuccessful) {
+                    // logger.error("[id--${headers["timestamp"]}]request >>>> $body")
+                    logger.error(String.format("TOF error, post data response failure, url: %s, status code: %d, errorMsg: %s", url, response.code(), responseBody))
+                    return TOFResult("TOF error, post data response failure")
+                }
+            }
+            val result = objectMapper.readValue(responseBody, TOFResult::class.java)
+            if (result.Ret != 0 || result.ErrCode != 0) {
+                logger.error("post email formData fail: $result")
             }
             return result
         } catch (e: Throwable) {

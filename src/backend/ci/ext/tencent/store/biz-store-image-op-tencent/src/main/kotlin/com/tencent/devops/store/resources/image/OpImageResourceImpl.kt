@@ -73,12 +73,13 @@ class OpImageResourceImpl @Autowired constructor(
         )
     }
 
-    override fun getImagesByCode(userId: String, imageCode: String, version: String?): Result<ImageDetail> {
+    override fun getImagesByCodeAndVersion(userId: String, imageCode: String, version: String?): Result<ImageDetail> {
         return Result(
-            imageService.getImageDetailByCode(
+            imageService.getImageDetailByCodeAndVersion(
                 userId = userId,
                 imageCode = imageCode,
-                interfaceName = "/op/pipeline/image/imageCodes/{imageCode},get"
+                imageVersion = version,
+                interfaceName = "/op/pipeline/image/imageCodes/{imageCode},version,get"
             )
         )
     }
@@ -115,21 +116,29 @@ class OpImageResourceImpl @Autowired constructor(
         imageSourceType: ImageType?,
         processFlag: Boolean?,
         classifyCode: String?,
-        categoryCodes: Set<String>?,
-        labelCodes: Set<String>?,
+        categoryCodes: String?,
+        labelCodes: String?,
         sortType: OpImageSortTypeEnum?,
         desc: Boolean?,
         page: Int?,
         pageSize: Int?
     ): Result<OpImageResp> {
+        var categoryCodesSet: Set<String>? = null
+        var labelCodesSet: Set<String>? = null
+        if (categoryCodes != null) {
+            categoryCodesSet = categoryCodes.trim().split(",").toSet()
+        }
+        if (labelCodes != null) {
+            labelCodesSet = labelCodes.trim().split(",").toSet()
+        }
         return opImageService.list(
             userId = userId,
             imageName = imageName,
             imageSourceType = imageSourceType,
             processFlag = processFlag,
             classifyCode = classifyCode,
-            categoryCodes = categoryCodes,
-            labelCodes = labelCodes,
+            categoryCodes = categoryCodesSet,
+            labelCodes = labelCodesSet,
             sortType = sortType ?: OpImageSortTypeEnum.updateTime,
             desc = desc,
             page = page,

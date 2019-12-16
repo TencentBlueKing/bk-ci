@@ -24,23 +24,29 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.project.resources
+package com.tencent.devops.plugin.worker.task.xcode.pojo
 
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.project.api.service.ServiceProjectServiceResource
-import com.tencent.devops.project.pojo.Result
-import com.tencent.devops.project.pojo.service.ServiceUrlUpdateInfo
-import com.tencent.devops.project.service.UserProjectServiceService
+enum class XcodeMethod(val type: String) {
+    DEVELOPMENT("development"),
+    ENTERPRISE("enterprise"),
+    APP_STORE("app-store"),
+    AD_HOC("ad-hoc"),
+    PACKAGE("package"),
+    DEVELOPMENT_ID("development-id"),
+    MAC_APP("mac-application");
 
-@RestResource
-class ServiceProjectServiceResourceImpl constructor(
-    private val userProjectServiceService: UserProjectServiceService
-) : ServiceProjectServiceResource {
-
-    override fun updateServiceUrlByBatch(
-        userId: String,
-        serviceUrlUpdateInfoList: List<ServiceUrlUpdateInfo>?
-    ): Result<Boolean> {
-        return userProjectServiceService.updateServiceUrlByBatch(userId, serviceUrlUpdateInfoList)
+    companion object {
+        fun parse(type: String): XcodeMethod {
+            when (type) {
+                DEVELOPMENT.type -> return DEVELOPMENT
+                ENTERPRISE.type -> return ENTERPRISE
+                APP_STORE.type -> return APP_STORE
+                AD_HOC.type -> return AD_HOC
+                PACKAGE.type -> return PACKAGE
+                DEVELOPMENT_ID.type -> return DEVELOPMENT_ID
+                MAC_APP.type -> return MAC_APP
+            }
+            return DEVELOPMENT
+        }
     }
 }
