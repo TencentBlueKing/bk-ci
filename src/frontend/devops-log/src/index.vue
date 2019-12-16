@@ -14,7 +14,7 @@
                         </bk-option>
                     </bk-select>
                     <button class="log-button" @click="showTime = !showTime">显示时间</button>
-                    <a download :href="downLoadLink"><button class="log-button">下载日志</button></a>
+                    <button class="log-button" @click="downLoad">下载日志</button>
                 </p>
             </header>
 
@@ -81,6 +81,9 @@
             downLoadLink: {
                 type: String
             },
+            downLoadName: {
+                type: String
+            },
             executeCount: {
                 type: Number,
                 default: 0
@@ -138,37 +141,33 @@
         },
 
         methods: {
-            // downLoad () {
-            //     const cookieArr = /backend_csrftoken=([^;]+);/.exec(document.cookie)
-            //     const currentCookie = cookieArr[1] || ''
-            //     fetch(this.downLoadLink, {
-            //         method: 'GET',
-            //         headers: {
-            //             'content-type': 'application/json',
-            //             'X-CSRFToken': currentCookie,
-            //             'withCredentials': true,
-            //             'Cookie': document.cookie
-            //         }
-            //     }).then((res) => {
-            //         if (res.status >= 200 && res.status < 300) {
-            //             return res
-            //         } else {
-            //             throw new Error(res.statusText)
-            //         }
-            //     }).then(res => res.blob()).then((blob) => {
-            //         const a = document.createElement('a')
-            //         const url = window.URL || window.webkitURL || window.moxURL
-            //         a.href = url.createObjectURL(blob)
-            //         a.download = `abc.txt`
-            //         document.body.appendChild(a)
-            //         a.click()
-            //         document.body.removeChild(a)
-            //     }).catch((err) => {
-            //         console.error(err.message || err)
-            //     }).finally(() => {
-            //         this.fileLoadPending = false
-            //     })
-            // },
+            downLoad () {
+                fetch(this.downLoadLink, {
+                    method: 'GET',
+                    headers: {
+                        'content-type': 'application/json'
+                    },
+                    credentials: 'include'
+                }).then((res) => {
+                    if (res.status >= 200 && res.status < 300) {
+                        return res
+                    } else {
+                        throw new Error(res.statusText)
+                    }
+                }).then(res => res.blob()).then((blob) => {
+                    const a = document.createElement('a')
+                    const url = window.URL || window.webkitURL || window.moxURL
+                    a.href = url.createObjectURL(blob)
+                    a.download = this.downLoadName + '.log'
+                    document.body.appendChild(a)
+                    a.click()
+                    document.body.removeChild(a)
+                }).catch((err) => {
+                    console.error(err.message || err)
+                }).finally(() => {
+                    this.fileLoadPending = false
+                })
+            },
 
             changeExecute (execute) {
                 if (this.currentExe === execute) return

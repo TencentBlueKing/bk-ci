@@ -1,5 +1,5 @@
 <template>
-    <section class="scroll-home" @mousewheel="handleWheel">
+    <section class="scroll-home" @mousewheel.prevent="handleWheel">
         <ul class="scroll-index scroll" :style="`top: ${-totalScrollHeight}px; width: ${indexWidth}px`">
             <li class="scroll-item" :style="`height: ${itemHeight}px; top: ${item.top}px`" v-for="(item) in indexList" :key="item">
                 {{item.value}}
@@ -15,8 +15,8 @@
             ><slot :data="item"></slot>
             </li>
         </ul>
-        <canvas class="min-nav" :style="`height: ${visHeight}px; width: ${visWidth / 10}px;right: ${visWidth / 100}px`" ref="minMap" @click="changeMinMap"></canvas>
-        <span class="min-nav-slide"
+        <canvas class="min-nav no-scroll" :style="`height: ${visHeight}px; width: ${visWidth / 10}px;right: ${visWidth / 100}px`" ref="minMap" @click="changeMinMap"></canvas>
+        <span class="min-nav-slide no-scroll"
             v-if="itemHeight * totalNumber > visHeight"
             :style="`height: ${visHeight / 8}px; width: ${visWidth / 10}px; top: ${minMapTop}px;right: ${visWidth / 100}px`"
             @mousedown="startNavMove(mapHeight - visHeight / 8)"
@@ -124,7 +124,8 @@
             initLink () {
                 const query = this.$route.query || {}
                 const minMapTop = query.minMapTop
-                if (typeof minMapTop !== 'undefined') {
+                const id = query.id
+                if (typeof minMapTop !== 'undefined' && id === this.id) {
                     this.minMapTop = +minMapTop
                     this.totalScrollHeight = this.minMapTop / (this.mapHeight - this.visHeight / 8) * (this.totalHeight - this.visHeight)
                     this.minNavTop = this.minMapTop * (this.visHeight - this.navHeight) / (this.mapHeight - this.visHeight / 8)
@@ -139,33 +140,6 @@
                         type: 'foldListData',
                         startIndex
                     }
-                    // let changeNum = endIndex - startIndex
-                    // if (list.length) changeNum = -list.length
-                    // else tagData.list = list
-
-                    // tagData.endIndex -= changeNum
-
-                    // const needChangeAllList = this.foldList.filter((x) => {
-                    //     const currentData = x.data.tagData
-                    //     return x.index > startIndex && currentData.endIndex > startIndex + Math.abs(changeNum)
-                    // }) || []
-                    // needChangeAllList.forEach((item) => {
-                    //     const data = item.data || {}
-                    //     item.index -= changeNum
-                    //     data.tagData.endIndex -= changeNum
-                    //     data.tagData.startIndex -= changeNum
-                    // })
-
-                    // const needChangeAfterList = this.foldList.filter((x) => {
-                    //     const currentData = x.data.tagData
-                    //     return x.index < startIndex && currentData.endIndex > startIndex
-                    // }) || []
-
-                    // needChangeAfterList.forEach((item) => {
-                    //     const data = item.data || {}
-                    //     data.tagData.endIndex -= changeNum
-                    // })
-
                     this.worker.postMessage(postData)
                 }
             },
@@ -203,7 +177,9 @@
             },
 
             handleWheel (data) {
-                if (this.isScrolling || this.itemHeight * this.totalNumber <= this.visHeight) return
+                const target = event.target
+                const classList = target.classList
+                if (this.isScrolling || this.itemHeight * this.totalNumber <= this.visHeight || (classList && classList.contains('no-scroll'))) return
 
                 // const deltaX = Math.max(-1, Math.min(1, (event.wheelDeltaX || -event.detail)))
                 // let bottomScrollLeft = this.bottomScrollDis + deltaX * 10
@@ -320,8 +296,7 @@
             },
 
             handleInitLink () {
-                const { bottomScrollDis, startShareIndex, endShareIndex, startOffset, endOffset, isStartFirst, isEndFirst, id } = this.$route.query
-                if (id !== this.id) return
+                const { bottomScrollDis, startShareIndex, endShareIndex, startOffset, endOffset, isStartFirst, isEndFirst } = this.$route.query
                 this.bottomScrollDis = +bottomScrollDis || 0
                 const list = document.querySelectorAll('.item-txt')
                 const selection = window.getSelection()

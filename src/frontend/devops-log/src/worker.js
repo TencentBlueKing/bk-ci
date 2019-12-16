@@ -81,6 +81,7 @@ function foldListData ({ startIndex }) {
         changeNum = -currentItem.tagData.list.length
         currentItem.tagData.list = []
     }
+    currentItem.tagData.endIndex -= changeNum
     updateFoldList(startIndex, changeNum)
 }
 

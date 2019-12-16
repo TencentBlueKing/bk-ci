@@ -48,6 +48,7 @@
                     :status="currentElement.status"
                     :id="currentElement.id"
                     :execute-count="currentElement.executeCount"
+                    :down-load-name="`${editingElementPos.stageIndex + 1}-${editingElementPos.containerIndex + 1}-${editingElementPos.elementIndex + 1}-${currentElement.name}`"
                     @changeExecute="changeExecute"
                     :link-url="linkUrl"
                     log-type="plugin"
@@ -63,6 +64,7 @@
                     :status="currentJob.status"
                     :id="currentJob.containerId"
                     :link-url="linkUrl"
+                    :down-load-name="`${editingElementPos.stageIndex + 1}-${editingElementPos.containerIndex + 1}-${currentJob.name}`"
                     log-type="job"
                     :down-load-link="downLoadJobLink"
                     @closeLog="closeLog"
@@ -83,11 +85,11 @@
     import outputOption from '@/components/outputOption'
     import ContainerPropertyPanel from '@/components/ContainerPropertyPanel/'
     import emptyTips from '@/components/devops/emptyTips'
-    import log from 'devops-log'
+    import log from '../../../../devops-log'
     import pipelineOperateMixin from '@/mixins/pipeline-operate-mixin'
     import pipelineConstMixin from '@/mixins/pipelineConstMixin'
     import { convertMStoStringByRule } from '@/utils/util'
-    console.log(log)
+
     export default {
         components: {
             stages,

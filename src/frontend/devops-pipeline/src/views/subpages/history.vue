@@ -22,7 +22,6 @@
 
 <script>
     import BuildHistoryTab from '@/components/BuildHistoryTab'
-    import PipelineLog from 'devops-log'
     import { mapGetters } from 'vuex'
     import showTooltip from '@/components/common/showTooltip'
     import TrendData from '@/components/trendData'
@@ -30,7 +29,6 @@
 
     export default {
         components: {
-            PipelineLog,
             BuildHistoryTab,
             showTooltip,
             TrendData

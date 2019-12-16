@@ -60,11 +60,6 @@
                         <span>{{ props.row.userId }}</span>
                     </p>
                 </template>
-                <template v-else-if="col.prop === 'entry'" v-slot="props">
-                    <p class="entry-link" @click.stop="showLog(props.row.id, props.row.buildNum, true)">
-                        {{ $t('history.completedLog') }}
-                    </p>
-                </template>
                 <template v-else-if="col.prop === 'remark'" v-slot="props">
                     <div class="remark-cell">
                         <span :class="{ 'remark-span': true, active: props.row.active }" :title="props.row.remark">
