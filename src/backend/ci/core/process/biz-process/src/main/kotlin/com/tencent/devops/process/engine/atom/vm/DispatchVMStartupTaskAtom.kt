@@ -125,9 +125,9 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
         val buildId = task.buildId
         val taskId = task.taskId
 
-// 构建环境容器序号ID
+        // 构建环境容器序号ID
         val vmSeqId = task.containerId
-// 预指定VM名称列表（逗号分割）
+        // 预指定VM名称列表（逗号分割）
         val vmNames = param.vmNames.joinToString(",")
 
         val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)
