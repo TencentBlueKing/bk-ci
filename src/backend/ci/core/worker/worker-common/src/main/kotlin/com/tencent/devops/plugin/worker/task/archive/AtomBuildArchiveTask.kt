@@ -27,6 +27,7 @@
 package com.tencent.devops.plugin.worker.task.archive
 
 import com.tencent.devops.common.pipeline.pojo.element.market.AtomBuildArchiveElement
+import com.tencent.devops.common.pipeline.utils.ParameterUtils
 import com.tencent.devops.process.pojo.AtomErrorCode
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
@@ -81,7 +82,7 @@ class AtomBuildArchiveTask : ITask() {
         val preCmd = buildTask.buildVariable!!["preCmd"]
         val target = buildTask.buildVariable!!["target"]
         val atomEnvResult = atomApi.getAtomEnv(buildVariables.projectId, atomCode, atomVersion)
-        val userId = buildVariables.variables[PIPELINE_START_USER_ID] ?: throw TaskExecuteException(
+        val userId = ParameterUtils.getListValueByKey(buildVariables.variablesWithType, PIPELINE_START_USER_ID) ?: throw TaskExecuteException(
             errorMsg = "user basic info error, please check environment.",
             errorType = ErrorType.SYSTEM,
             errorCode = AtomErrorCode.SYSTEM_SERVICE_ERROR
