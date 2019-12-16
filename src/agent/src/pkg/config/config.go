@@ -33,6 +33,7 @@ import (
 	"github.com/astaxie/beego/logs"
 	"io/ioutil"
 	"pkg/util/command"
+	"pkg/util/fileutil"
 	"pkg/util/systemutil"
 	"strconv"
 	"strings"
@@ -108,8 +109,14 @@ func DetectAgentVersion() string {
 }
 
 func DetectWorkerVersion() string {
+	workerFile := "worker-agent.jar"
+	if !fileutil.Exists(systemutil.GetWorkDir() + "/" + workerFile) {
+		logs.Warn("worker-agent.jar not exist, use agent.jar")
+		workerFile = "agent.jar"
+	}
+
 	output, err := command.RunCommand(GetJava(),
-		[]string{"-cp", "agent.jar", "com.tencent.devops.agent.AgentVersionKt"}, systemutil.GetWorkDir(), nil)
+		[]string{"-cp", workerFile, "com.tencent.devops.agent.AgentVersionKt"}, systemutil.GetWorkDir(), nil)
 
 	if err != nil {
 		logs.Warn("detect worker version failed: ", err.Error())
