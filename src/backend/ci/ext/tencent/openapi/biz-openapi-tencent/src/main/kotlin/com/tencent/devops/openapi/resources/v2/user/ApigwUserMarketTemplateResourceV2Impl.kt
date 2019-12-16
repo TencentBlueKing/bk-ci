@@ -23,47 +23,28 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.openapi.resources
+package com.tencent.devops.openapi.resources.v2.user
 
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.openapi.api.ApigwProjectResource
-import com.tencent.devops.project.api.service.ServiceProjectResource
-import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
-import com.tencent.devops.project.pojo.ProjectVO
-import com.tencent.devops.project.pojo.Result
+import com.tencent.devops.openapi.api.v2.user.ApigwUserMarketTemplateResourceV2
+import com.tencent.devops.store.api.template.ServiceTemplateResource
+import com.tencent.devops.store.pojo.template.InstallTemplateReq
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class ApigwProjectResourceImpl @Autowired constructor(private val client: Client) : ApigwProjectResource {
+class ApigwUserMarketTemplateResourceV2Impl @Autowired constructor(
+    private val client: Client
+) : ApigwUserMarketTemplateResourceV2 {
 
-    override fun getProjectByGroup(
-        userId: String,
-        bgName: String?,
-        deptName: String?,
-        centerName: String
-    ): Result<List<ProjectVO>> {
-        logger.info("Get  projects info by group ,userId:$userId,bgName:$bgName,deptName:$deptName,centerName:$centerName")
-        return client.get(ServiceTxProjectResource::class).getProjectByGroup(
-            userId = userId,
-            bgName = bgName,
-            deptName = deptName,
-            centerName = centerName
-        )
-    }
-
-    override fun getProject(userId: String, projectId: String): Result<ProjectVO?> {
-        logger.info("Get a project info ,projectId:$projectId")
-        return client.get(ServiceProjectResource::class).get(projectId)
-    }
-
-    override fun getProjectByUser(userId: String): Result<List<ProjectVO>> {
-        logger.info("Get user's project info ,userId:$userId")
-        return client.get(ServiceProjectResource::class).getProjectByUser(userId)
+    override fun installTemplateFromStore(userId: String, installTemplateReq: InstallTemplateReq): Result<Boolean> {
+        //可见与可安装鉴权在store服务marketTemplateService中已实现
+        return client.get(ServiceTemplateResource::class).installTemplate(userId, installTemplateReq)
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(ApigwProjectResourceImpl::class.java)
+        private val logger = LoggerFactory.getLogger(ApigwUserMarketTemplateResourceV2Impl::class.java)
     }
 }

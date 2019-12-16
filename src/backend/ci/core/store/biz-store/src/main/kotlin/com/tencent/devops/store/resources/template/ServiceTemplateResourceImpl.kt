@@ -27,8 +27,10 @@
 package com.tencent.devops.store.resources.template
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.template.ServiceTemplateResource
+import com.tencent.devops.store.pojo.template.InstallTemplateReq
 import com.tencent.devops.store.pojo.template.MarketTemplateResp
 import com.tencent.devops.store.service.template.MarketTemplateService
 import org.springframework.beans.factory.annotation.Autowired
@@ -37,20 +39,28 @@ import org.springframework.beans.factory.annotation.Autowired
 class ServiceTemplateResourceImpl @Autowired constructor(
     private val marketTemplateService: MarketTemplateService
 ) : ServiceTemplateResource {
+    override fun installTemplate(userId: String, installTemplateReq: InstallTemplateReq): Result<Boolean> {
+        //可见与可安装鉴权在marketTemplateService中实现
+        return marketTemplateService.installTemplate(
+            userId = userId,
+            channelCode = ChannelCode.BS,
+            installTemplateReq = installTemplateReq
+        )
+    }
 
     override fun list(userId: String): Result<MarketTemplateResp> {
         return Result(
             marketTemplateService.list(
-                userId.trim(),
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                1
+                userId = userId.trim(),
+                name = null,
+                classifyCode = null,
+                category = null,
+                labelCode = null,
+                score = null,
+                rdType = null,
+                sortType = null,
+                page = null,
+                pageSize = 1
             )
         )
     }

@@ -24,47 +24,21 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.api.template
+package com.tencent.devops.common.auth.api.pojo
 
-import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.pojo.template.InstallTemplateReq
-import com.tencent.devops.store.pojo.template.MarketTemplateResp
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
-import javax.ws.rs.Consumes
-import javax.ws.rs.GET
-import javax.ws.rs.HeaderParam
-import javax.ws.rs.POST
-import javax.ws.rs.Path
-import javax.ws.rs.Produces
-import javax.ws.rs.core.MediaType
+import com.fasterxml.jackson.annotation.JsonProperty
 
-@Api(tags = ["SERVICE_MARKET_TEMPLATE"], description = "服务端-模板")
-@Path("/service/market/template")
-@Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
-interface ServiceTemplateResource {
-
-    @ApiOperation("模版市场搜索模版")
-    @GET
-    @Path("/list/")
-    fun list(
-        @ApiParam("userId", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String
-    ): Result<MarketTemplateResp>
-
-
-    @ApiOperation("安装模板到项目")
-    @POST
-    @Path("/template/install")
-    fun installTemplate(
-        @ApiParam("userId", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam("安装模板到项目请求报文体", required = true)
-        installTemplateReq: InstallTemplateReq
-    ): Result<Boolean>
-}
+data class BkAuthPermissionGrantRequest(
+    @JsonProperty("project_code")
+    val projectCode: String,
+    @JsonProperty("service_code")
+    val serviceCode: String,
+    @JsonProperty("policy_code")
+    val policyCode: String,
+    @JsonProperty("resource_type")
+    val resourceType: String,
+    @JsonProperty("resource_code")
+    val resourceCode: String,
+    @JsonProperty("user_id_list")
+    val userIdList: List<String>
+)

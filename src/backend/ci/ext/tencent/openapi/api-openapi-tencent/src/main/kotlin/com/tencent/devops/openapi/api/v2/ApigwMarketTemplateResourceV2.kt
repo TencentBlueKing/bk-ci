@@ -23,48 +23,35 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-
-package com.tencent.devops.store.api.template
+package com.tencent.devops.openapi.api.v2
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.template.InstallTemplateReq
-import com.tencent.devops.store.pojo.template.MarketTemplateResp
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
-import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["SERVICE_MARKET_TEMPLATE"], description = "服务端-模板")
-@Path("/service/market/template")
+@Api(tags = ["OPEN_API_MARKET"], description = "OPEN-API-研发市场资源")
+@Path("/{apigw:apigw-user|apigw-app|apigw}/market")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface ServiceTemplateResource {
+interface ApigwMarketTemplateResourceV2 {
 
-    @ApiOperation("模版市场搜索模版")
-    @GET
-    @Path("/list/")
-    fun list(
-        @ApiParam("userId", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String
-    ): Result<MarketTemplateResp>
-
-
-    @ApiOperation("安装模板到项目")
+    @ApiOperation("安装研发商店模板到项目")
     @POST
-    @Path("/template/install")
-    fun installTemplate(
+    @Path("/template/installFromStore")
+    fun installTemplateFromStore(
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("安装模板到项目请求报文体", required = true)
+        @ApiParam("安装研发商店模板到项目请求报文体", required = true)
         installTemplateReq: InstallTemplateReq
     ): Result<Boolean>
 }

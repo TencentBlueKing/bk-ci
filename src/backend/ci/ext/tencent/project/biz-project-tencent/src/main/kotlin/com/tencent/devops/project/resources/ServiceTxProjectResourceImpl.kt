@@ -29,8 +29,13 @@ package com.tencent.devops.project.resources
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE_BG
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE_CENTER
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE_DEPARTMENT
+import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.common.auth.api.BSAuthPermissionApi
+import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
+import com.tencent.devops.project.pojo.AddManagerRequest
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result
@@ -41,10 +46,23 @@ import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ServiceTxProjectResourceImpl @Autowired constructor(
+    private val bsAuthPermissionApi: BSAuthPermissionApi,
     private val projectPermissionService: TxProjectPermissionService,
     private val projectLocalService: ProjectLocalService,
     private val projectMemberService: ProjectMemberService
 ) : ServiceTxProjectResource {
+    override fun addManagerForProject(userId: String, addManagerRequest: AddManagerRequest): Result<Boolean> {
+        return Result(bsAuthPermissionApi.addResourcePermissionForUsers(
+            projectCode = addManagerRequest.projectCode,
+            serviceCode = BSPipelineAuthServiceCode(),
+            permission = AuthPermission.MANAGE,
+            resourceType = AuthResourceType.PIPELINE_DEFAULT,
+            resourceCode = "*",
+            userIdList = addManagerRequest.managerList,
+            supplier = null
+        ))
+    }
+
     override fun getProjectEnNamesByCenterId(
         userId: String,
         centerId: Long?
@@ -138,8 +156,8 @@ class ServiceTxProjectResourceImpl @Autowired constructor(
     }
 
     // TODO
-    override fun create(userId: String, projectCreateInfo: ProjectCreateInfo): Result<String> {
-        return Result(projectLocalService.create(userId, "", projectCreateInfo))
+    override fun create(userId: String, accessToken: String, projectCreateInfo: ProjectCreateInfo): Result<String> {
+        return Result(projectLocalService.create(userId, accessToken, projectCreateInfo))
     }
 
     override fun getProjectManagers(
