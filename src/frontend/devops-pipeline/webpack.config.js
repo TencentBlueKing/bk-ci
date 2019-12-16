@@ -39,18 +39,6 @@ module.exports = (env, argv) => {
         entry: {
             pipeline: './src/main.js'
         },
-        loaders: [
-            {
-                test: /\.worker\.js$/,
-                use: {
-                    loader: 'worker-loader',
-                    options: {
-                        inline: true,
-                        fallback: false
-                    }
-                }
-            }
-        ],
         publicPath: '/pipeline/',
         dist: '/pipeline',
         port: 8006

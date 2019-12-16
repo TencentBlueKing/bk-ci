@@ -83,11 +83,11 @@
     import outputOption from '@/components/outputOption'
     import ContainerPropertyPanel from '@/components/ContainerPropertyPanel/'
     import emptyTips from '@/components/devops/emptyTips'
-    import log from '@/components/Log'
+    import log from 'devops-log'
     import pipelineOperateMixin from '@/mixins/pipeline-operate-mixin'
     import pipelineConstMixin from '@/mixins/pipelineConstMixin'
     import { convertMStoStringByRule } from '@/utils/util'
-
+    console.log(log)
     export default {
         components: {
             stages,

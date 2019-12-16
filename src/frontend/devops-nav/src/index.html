@@ -129,15 +129,43 @@
             }
         }
 
-        function setCookie(cname, cvalue, domain){
-            document.cookie = cname + "=" + cvalue + "; " + 'domain=' + domain + '; path=/';
+        function getCookie(cname) {
+            try {
+                var name = cname + "=";
+                var decodedCookie = decodeURIComponent(document.cookie);
+                var ca = decodedCookie.split(';');
+                for(var i = 0; i < ca.length; i++) {
+                    var c = ca[i];
+                    while (c.charAt(0) == ' ') {
+                        c = c.substring(1);
+                    }
+                    if (c.indexOf(name) == 0) {
+                        return c.substring(name.length, c.length);
+                    }
+                }
+                return '';
+            } catch (e) {
+                console.error('get cookie error', e.message)
+                return ''
+            }
         }
+
+        function setCookie(cname, cvalue, domain){
+            try {
+                document.cookie = cname + "=" + cvalue + "; " + 'domain=' + domain + '; path=/';
+            } catch (e) {
+                console.error('set cookie error', e.message)
+            }
+        }
+        
         
         window.setProjectIdCookie = function (projectId) {
             try {
-                setCookie(X_DEVOPS_PROJECT_ID, '', 'oa.com')
-                setCookie(X_DEVOPS_PROJECT_ID, projectId, 'oa.com')
-                window.GLOBAL_PID = projectId
+                if (projectId) {
+                    setCookie(X_DEVOPS_PROJECT_ID, '', 'oa.com')
+                    setCookie(X_DEVOPS_PROJECT_ID, projectId, 'oa.com')
+                    window.GLOBAL_PID = projectId
+                }
             } catch (e) {
                 console.warn('you have no project')
             }
@@ -170,7 +198,7 @@
             }
         }
 
-        var pathPid = matchPathProjectId() || localStorage.getItem('projectId')
+        var pathPid = matchPathProjectId() || getCookie(X_DEVOPS_PROJECT_ID)
         window.setProjectIdCookie(pathPid)
         
     </script>

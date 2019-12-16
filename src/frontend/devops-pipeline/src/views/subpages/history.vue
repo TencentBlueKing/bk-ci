@@ -22,7 +22,7 @@
 
 <script>
     import BuildHistoryTab from '@/components/BuildHistoryTab'
-    import PipelineLog from '@/components/Log'
+    import PipelineLog from 'devops-log'
     import { mapGetters } from 'vuex'
     import showTooltip from '@/components/common/showTooltip'
     import TrendData from '@/components/trendData'

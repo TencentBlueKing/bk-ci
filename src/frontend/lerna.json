@@ -10,7 +10,8 @@
     "devops-artifactory",
     "devops-turbo",
     "devops-vs",
-    "devops-quality"
+    "devops-quality",
+    "devops-log"
   ],
   "npmClient": "yarn",
   "version": "independent",

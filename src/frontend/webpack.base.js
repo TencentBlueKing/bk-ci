@@ -6,7 +6,7 @@ const CopyWebpackPlugin = require('copy-webpack-plugin')
 // const TerserPlugin = require('terser-webpack-plugin')
 // const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin
 
-module.exports = ({ entry, publicPath, dist, port = 8080, argv, env }) => {
+module.exports = ({ entry, output = {}, publicPath, dist, port = 8080, argv, env }) => {
     const isDev = argv.mode === 'development'
     const isMaster = process.env.NODE_ENV === 'master'
     const envDist = env && env.dist ? env.dist : 'frontend'
@@ -16,21 +16,22 @@ module.exports = ({ entry, publicPath, dist, port = 8080, argv, env }) => {
     return {
         entry,
         output: {
-            publicPath: `http://v2.dev.static.devops.oa.com${publicPath}`,
+            publicPath,
             chunkFilename: isMaster ? '[name].[chunkhash].js' : '[name].js',
             filename: isMaster ? '[name].[contentHash].min.js' : '[name].js',
-            path: buildDist
+            path: buildDist,
+            ...output
         },
         module: {
             rules: [
                 {
                     test: /\.vue$/,
-                    include: [path.resolve('src'), path.resolve('../node_modules/vue-echarts')],
+                    include: [path.resolve('src'), path.resolve('../node_modules/vue-echarts'), path.resolve('../devops-log')],
                     loader: 'vue-loader'
                 },
                 {
                     test: /\.js$/,
-                    include: [path.resolve('src'), path.resolve('../node_modules/vue-echarts')],
+                    include: [path.resolve('src'), path.resolve('../node_modules/vue-echarts'), path.resolve('../devops-log')],
                     use: [
                         {
                             loader: 'babel-loader'

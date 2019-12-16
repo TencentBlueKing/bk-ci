@@ -19,7 +19,7 @@
 
 <script>
     import webSocketMessage from '@/utils/webSocketMessage'
-    import PipelineLog from '@/components/Log'
+    import PipelineLog from 'devops-log'
     import BuildHistoryTable from '@/components/BuildHistoryTable/'
     import FilterBar from '@/components/BuildHistoryTable/FilterBar'
     import { BUILD_HISTORY_TABLE_DEFAULT_COLUMNS } from '@/utils/pipelineConst'
