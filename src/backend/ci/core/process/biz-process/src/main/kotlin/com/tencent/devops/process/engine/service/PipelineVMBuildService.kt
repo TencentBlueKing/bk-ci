@@ -116,6 +116,7 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
         redisOperation.delete(ContainerUtils.getContainerStartupKey(buildInfo.pipelineId, buildId, vmSeqId))
 
         val variables = pipelineRuntimeService.getAllVariable(buildId)
+        val variablesWithType = pipelineRuntimeService.getAllVariableWithType(buildId)
         val model = (buildDetailService.getBuildModel(buildId)
             ?: throw NotFoundException("Does not exist resource in the pipeline"))
         var vmId = 1
@@ -156,7 +157,7 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
                     )
                     return BuildVariables(
                         buildId, vmSeqId, vmName,
-                        buildInfo.projectId, buildInfo.pipelineId, variables, buildEnvs, it.containerId ?: ""
+                        buildInfo.projectId, buildInfo.pipelineId, variables, buildEnvs, it.containerId ?: "", variablesWithType
                     )
                 }
                 vmId++

@@ -109,10 +109,11 @@ open class MarketAtomTask : ITask() {
 
         cleanOutput(atomWorkspace)
 
-        val runtimeVariables = if (buildTask.buildVariable != null) {
-            buildVariables.variables.plus(buildTask.buildVariable!!)
+        val variablesMap = buildVariables.variablesWithType.map { it.key to it.value.toString() }.toMap()
+        var runtimeVariables = if (buildTask.buildVariable != null) {
+            variablesMap.plus(buildTask.buildVariable!!)
         } else {
-            buildVariables.variables
+            variablesMap
         }
 
         val command = StringBuilder()
@@ -300,7 +301,7 @@ open class MarketAtomTask : ITask() {
     private fun writeSdkEnv(workspace: File, buildTask: BuildTask, buildVariables: BuildVariables) {
         val inputFileFile = File(workspace, sdkFile)
         val sdkEnv: SdkEnv = when (BuildEnv.getBuildType()) {
-            BuildType.AGENT, BuildType.DOCKER -> {
+            BuildType.AGENT, BuildType.DOCKER, BuildType.MACOS -> {
                 SdkEnv(
                     buildType = BuildEnv.getBuildType(),
                     projectId = buildVariables.projectId,

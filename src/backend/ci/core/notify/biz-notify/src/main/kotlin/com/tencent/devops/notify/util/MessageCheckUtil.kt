@@ -73,7 +73,8 @@ object MessageCheckUtil {
     fun checkRtxMessage(message: RtxNotifyMessage) {
         checkTitle(message.title)
         checkBody(message.body)
-        checkReceivers(message.getReceivers())
+        //        群通知receiver可能为空
+        //        checkReceivers(message.getReceivers())
     }
 
     fun checkEmailMessage(message: EmailNotifyMessage) {
