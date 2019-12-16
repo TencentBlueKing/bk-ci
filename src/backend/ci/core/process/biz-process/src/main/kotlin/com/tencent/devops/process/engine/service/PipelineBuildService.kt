@@ -364,7 +364,7 @@ class PipelineBuildService(
             return startPipeline(
                 userId = userId,
                 readyToBuildPipelineInfo = readyToBuildPipelineInfo,
-                startType = StartType.toStartType(params[PIPELINE_START_TYPE]?.toString()?:""),
+                startType = StartType.toStartType(params[PIPELINE_START_TYPE]?.toString() ?: ""),
                 startParamsWithType = startParamsWithType,
                 channelCode = channelCode ?: ChannelCode.BS,
                 isMobile = isMobile,
