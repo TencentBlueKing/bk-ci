@@ -93,5 +93,70 @@ function _M:get_ticket(bk_ticket)
     return result.data
 end
 
+function _M:verfiy_permis(project_code, service_code, policy_code, resource_code, resource_type, user_id, access_token)
+    local requestBody = {
+        project_code = project_code,
+        service_code = service_code,
+        policy_code = policy_code,
+        resource_code = resource_code, 
+        resource_type = resource_type, 
+        user_id = user_id
+    }
+
+    -- ngx.log(ngx.ERR, "requestBody: ", logUtil:dump(requestBody))
+
+    --- 转换请求内容
+    local requestBodyJson = json.encode(requestBody)
+    if requestBodyJson == nil then
+        ngx.log(ngx.ERR, "failed to encode verfiy_permis request body: ", logUtil:dump(requestBody))
+        return false
+    end
+
+    --- 初始化HTTP连接
+    local httpc = http.new()
+    --- 开始连接
+    httpc:set_timeout(3000)
+    httpc:connect(config.oauth.ip, config.oauth.port)
+    --- 发送请求
+    local res, err = httpc:request({
+        path = "/permission/project/service/policy/resource/user/verfiy?access_token=" .. access_token,
+        method = "POST",
+        headers = {
+        ["Host"] = config.oauth.host,
+        ["Accept"] = "application/json",
+        ["Content-Type"] = "application/json",
+        },
+        body = requestBodyJson
+    })
+    --- 判断是否出错了
+    if not res then
+        ngx.log(ngx.ERR, "failed to request verfiy_permis: ", err)
+        return false
+    end
+    --- 判断返回的状态码是否是200
+    if res.status ~= 200 then
+        ngx.log(ngx.ERR, "failed to request verfiy_permis, status: ", res.status)
+        return false
+    end
+    --- 获取所有回复
+    local responseBody = res:read_body()
+    --- 设置HTTP保持连接
+    httpc:set_keepalive(60000, 5)
+    --- 转换JSON的返回数据为TABLE
+    local result = json.decode(responseBody)
+    --- 判断JSON转换是否成功
+    if result == nil then 
+        ngx.log(ngx.ERR, "failed to parse verfiy_permis response：", responseBody)
+        return false
+    end
+
+    --- 判断返回码
+    if result.code ~= 0 then
+        ngx.log(ngx.ERR, "invalid verfiy_permis: ", result.message)
+        return false
+    end
+    return true
+end
+
 
 return _M
