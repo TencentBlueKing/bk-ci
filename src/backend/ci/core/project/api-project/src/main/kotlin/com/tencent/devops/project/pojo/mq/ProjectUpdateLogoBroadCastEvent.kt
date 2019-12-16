@@ -24,10 +24,16 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":core:common:common-api")
-    compile project(":core:common:common-web")
-    compile project(":core:common:common-event")
-}
+package com.tencent.devops.project.pojo.mq
 
-apply from: "$rootDir/task_deploy_to_maven.gradle"
+import com.tencent.devops.common.event.annotation.Event
+import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
+
+@Event(exchange = MQ.EXCHANGE_PROJECT_UPDATE_LOGO_FANOUT)
+data class ProjectUpdateLogoBroadCastEvent(
+    override val userId: String,
+    override val projectId: String,
+    override var retryCount: Int = 0,
+    override var delayMills: Int = 0,
+    val logoAddr: String
+) : ProjectBroadCastEvent(userId, projectId, retryCount, delayMills)
