@@ -170,7 +170,9 @@ class DockerHostDebugService @Autowired constructor(
                 ImageType.BKDEVOPS -> ImageType.BKDEVOPS.type
                 ImageType.BKSTORE -> imageRepoInfo!!.sourceType.type
                 else -> throw UnknownImageType("imageCode:$imageCode,imageVersion:$imageVersion,imageType:$imageType")
-            }
+            },
+            imagePublicFlag = imageRepoInfo?.publicFlag,
+            imageRDType = imageRepoInfo?.rdType
         )
     }
 
