@@ -95,7 +95,7 @@ object Runner {
                                 LoggerService.elementId = buildTask.elementId!!
 
                                 // 开始Task执行
-                                LoggerService.addRangeStartLine(taskName)
+//                                LoggerService.addRangeStartLine(taskName)
                                 LoggerService.addFoldStartLine(taskName)
                                 taskDaemon.run()
 
@@ -162,7 +162,7 @@ object Runner {
                                 )
                             } finally {
                                 LoggerService.addFoldEndLine(taskName)
-                                LoggerService.addRangeEndLine(taskName)
+//                                LoggerService.addRangeEndLine(taskName)
                                 LoggerService.elementId = ""
                             }
                         }
@@ -228,7 +228,7 @@ object Runner {
         LoggerService.addNormalLine(Ansi().bold().a("Get build machine properties").reset().toString())
         LoggerService.addNormalLine(Ansi().bold().a("machine.current: ").reset().a(vmName).toString())
         System.getProperties().forEach { k, v ->
-            LoggerService.addNormalLine(Ansi().bold().a("$k: ").reset().a(v.toString()).toString())
+            LoggerService.addYellowLine("$k: $v")
         }
         LoggerService.addFoldEndLine("env_machine")
     }
@@ -242,7 +242,7 @@ object Runner {
         LoggerService.addNormalLine(Ansi().bold().a("Get build system properties").reset().toString())
         val envs = System.getenv()
         envs.forEach { (k, v) ->
-            LoggerService.addNormalLine(Ansi().bold().a("$k: ").reset().a(v).toString())
+            LoggerService.addYellowLine("$k: $v")
         }
         LoggerService.addFoldEndLine("env_system")
     }
