@@ -24,23 +24,24 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo
+package com.tencent.devops.common.pipeline.type.macos
 
-data class PipelineContainerDispatchInfo(
-    val containerId: String,
-    val pipelineId: String,
-    val pipelineVersion: Int,
-    val projectId: String,
-    val dispatchBuildType: String,
-    val dispatchValue: String,
-    val dispatchImageType: String?,
-    val dispatchCredentialId: String?,
-    val dispatchWorkspace: String?,
-    val dispatchAgentType: String?,
-    val dispatchSystemVersion: String?,
-    val dispatchXcodeVersion: String?
-) {
-    override fun toString(): String {
-        return "PipelineContainerDispatchInfo(containerId='$containerId', pipelineId='$pipelineId', pipelineVersion=$pipelineVersion, projectId='$projectId', dispatchBuildType='$dispatchBuildType', dispatchValue='$dispatchValue', dispatchImageType=$dispatchImageType, dispatchCredentialId=$dispatchCredentialId, dispatchWorkspace=$dispatchWorkspace, dispatchAgentType=$dispatchAgentType), dispatchSystemVersion=$dispatchSystemVersion, dispatchXcodeVersion=$dispatchXcodeVersion)"
+import com.fasterxml.jackson.annotation.JsonProperty
+import com.tencent.devops.common.api.util.EnvUtils
+import com.tencent.devops.common.pipeline.type.BuildType
+import com.tencent.devops.common.pipeline.type.DispatchRouteKeySuffix
+import com.tencent.devops.common.pipeline.type.DispatchType
+
+data class MacOSDispatchType(
+    @JsonProperty("value") var macOSEvn: String,
+    var systemVersion: String?,
+    var xcodeVersion: String?
+) : DispatchType("", DispatchRouteKeySuffix.MACOS) {
+    override fun replaceField(variables: Map<String, String>) {
+        systemVersion = EnvUtils.parseEnv(systemVersion!!, variables)
+        xcodeVersion = EnvUtils.parseEnv(xcodeVersion!!, variables)
+        macOSEvn = "$systemVersion:$xcodeVersion"
     }
+
+    override fun buildType() = BuildType.MACOS
 }

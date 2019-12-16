@@ -31,6 +31,7 @@ import com.tencent.devops.common.pipeline.type.DispatchType
 import com.tencent.devops.common.pipeline.type.devcloud.PublicDevCloudDispathcType
 import com.tencent.devops.common.pipeline.type.gitci.GitCIDispatchType
 import com.tencent.devops.common.pipeline.type.idc.IDCDispatchType
+import com.tencent.devops.common.pipeline.type.macos.MacOSDispatchType
 import com.tencent.devops.common.pipeline.type.pcg.PCGDispatchType
 
 class TencentDispatchSubTypeFetcher : DispatchSubTypeFetcher {
@@ -40,7 +41,8 @@ class TencentDispatchSubTypeFetcher : DispatchSubTypeFetcher {
             "THIRD_PARTY_PCG" to PCGDispatchType::class.java,
             "PUBLIC_DEVCLOUD" to PublicDevCloudDispathcType::class.java,
             "IDC" to IDCDispatchType::class.java,
-            "GIT_CI" to GitCIDispatchType::class.java
+            "GIT_CI" to GitCIDispatchType::class.java,
+            "MACOS" to MacOSDispatchType::class.java
         )
     }
 }

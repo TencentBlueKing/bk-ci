@@ -46,6 +46,7 @@ import com.tencent.devops.common.pipeline.type.devcloud.PublicDevCloudDispathcTy
 import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
 import com.tencent.devops.common.pipeline.type.exsi.ESXiDispatchType
 import com.tencent.devops.common.pipeline.type.idc.IDCDispatchType
+import com.tencent.devops.common.pipeline.type.macos.MacOSDispatchType
 import com.tencent.devops.common.pipeline.type.pcg.PCGDispatchType
 import com.tencent.devops.common.pipeline.type.tstack.TStackDispatchType
 import com.tencent.devops.process.dao.PipelineContainerDispatchDao
@@ -102,6 +103,8 @@ class PipelineContainerDispatchService @Autowired constructor(
                     var dispatchCredentialId: String? = null
                     var dispatchWorkspace: String? = null
                     var dispatchAgentType: String? = null
+                    var dispatchSystemVersion: String? = null
+                    var dispatchXcodeVersion: String? = null
                     when (container) {
                         is VMBuildContainer -> {
                             if (container.dispatchType == null) {
@@ -135,6 +138,11 @@ class PipelineContainerDispatchService @Autowired constructor(
                                     dispatchImageType = dispatchType.imageType?.name
                                     dispatchCredentialId = dispatchType.credentialId
                                 }
+                                is MacOSDispatchType -> {
+                                    val dispatchType = container.dispatchType as MacOSDispatchType
+                                    dispatchSystemVersion = dispatchType.systemVersion
+                                    dispatchXcodeVersion = dispatchType.xcodeVersion
+                                }
                                 else -> {
                                 }
                             }
@@ -151,7 +159,9 @@ class PipelineContainerDispatchService @Autowired constructor(
                             dispatchImageType = dispatchImageType,
                             dispatchCredentialId = dispatchCredentialId,
                             dispatchWorkspace = dispatchWorkspace,
-                            dispatchAgentType = dispatchAgentType
+                            dispatchAgentType = dispatchAgentType,
+                            dispatchSystemVersion = dispatchSystemVersion,
+                            dispatchXcodeVersion = dispatchXcodeVersion
                         )
                     )
                 }
@@ -290,6 +300,8 @@ class PipelineContainerDispatchService @Autowired constructor(
                     var dispatchCredentialId: String? = null
                     var dispatchWorkspace: String? = null
                     var dispatchAgentType: String? = null
+                    var dispatchSystemVersion: String? = null
+                    var dispatchXcodeVersion: String? = null
                     when (container) {
                         is VMBuildContainer -> {
                             if (container.dispatchType == null) {
@@ -331,6 +343,11 @@ class PipelineContainerDispatchService @Autowired constructor(
                                     dispatchImageType = dispatchType.imageType?.name
                                     dispatchCredentialId = dispatchType.credentialId
                                 }
+                                is MacOSDispatchType -> {
+                                    val dispatchType = container.dispatchType as MacOSDispatchType
+                                    dispatchSystemVersion = dispatchType.systemVersion
+                                    dispatchXcodeVersion = dispatchType.xcodeVersion
+                                }
                                 else -> {
                                     logger.info("$interfaceName:$projectId:$pipelineId:$pipelineVersion:warn:UnknownDispatchType, dispatchBuildType=$dispatchBuildType,dispatchValue=$dispatchValue:compatible")
                                 }
@@ -351,7 +368,9 @@ class PipelineContainerDispatchService @Autowired constructor(
                             dispatchImageType = dispatchImageType,
                             dispatchCredentialId = dispatchCredentialId,
                             dispatchWorkspace = dispatchWorkspace,
-                            dispatchAgentType = dispatchAgentType
+                            dispatchAgentType = dispatchAgentType,
+                            dispatchSystemVersion = dispatchSystemVersion,
+                            dispatchXcodeVersion = dispatchXcodeVersion
                         )
                     )
                 }

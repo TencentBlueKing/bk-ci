@@ -124,6 +124,8 @@ class PipelineContainerDispatchDao {
                 record.set(DISPATCH_CREDENTIAL_ID, it.dispatchCredentialId)
                 record.set(DISPATCH_WORKSPACE, it.dispatchWorkspace)
                 record.set(DISPATCH_AGENT_TYPE, it.dispatchAgentType)
+                record.set(DISPATCH_SYSTEM_VERSION, it.dispatchSystemVersion)
+                record.set(DISPATCH_XCODE_VERSION, it.dispatchXcodeVersion)
                 record
             }
             dslContext.batchInsert(recordList).execute()
