@@ -95,7 +95,6 @@ object Runner {
                                 LoggerService.elementId = buildTask.elementId!!
 
                                 // 开始Task执行
-//                                LoggerService.addRangeStartLine(taskName)
                                 LoggerService.addFoldStartLine(taskName)
                                 taskDaemon.run()
 
@@ -162,7 +161,6 @@ object Runner {
                                 )
                             } finally {
                                 LoggerService.addFoldEndLine(taskName)
-//                                LoggerService.addRangeEndLine(taskName)
                                 LoggerService.elementId = ""
                             }
                         }
@@ -224,9 +222,7 @@ object Runner {
      */
     private fun showMachineLog(vmName: String) {
         LoggerService.addNormalLine("")
-        LoggerService.addFoldStartLine("env_machine")
-        LoggerService.addNormalLine(Ansi().bold().a("Get build machine properties").reset().toString())
-        LoggerService.addNormalLine(Ansi().bold().a("machine.current: ").reset().a(vmName).toString())
+        LoggerService.addFoldStartLine("[Machine Environment Properties]")
         System.getProperties().forEach { k, v ->
             LoggerService.addYellowLine("$k: $v")
             logger.info("$k: $v")
@@ -239,14 +235,13 @@ object Runner {
      */
     private fun showSystemLog() {
         LoggerService.addNormalLine("")
-        LoggerService.addFoldStartLine("env_system")
-        LoggerService.addNormalLine(Ansi().bold().a("Get build system properties").reset().toString())
+        LoggerService.addFoldStartLine("[System Environment Properties]")
         val envs = System.getenv()
         envs.forEach { (k, v) ->
             LoggerService.addYellowLine("$k: $v")
             logger.info("$k: $v")
         }
-        LoggerService.addFoldEndLine("env_system")
+        LoggerService.addFoldEndLine("-----")
     }
 
     /**
@@ -254,13 +249,12 @@ object Runner {
      */
     private fun showRuntimeEnvs(variables: List<BuildParameters>) {
         LoggerService.addNormalLine("")
-        LoggerService.addFoldStartLine("env_user")
-        LoggerService.addNormalLine(Ansi().bold().a("Resolve the construction process parameter variable table").reset().toString())
+        LoggerService.addFoldStartLine("[Build Environment Properties]")
         variables.forEach { v ->
             if (v.valueType == BuildFormPropertyType.PASSWORD) {
-                LoggerService.addNormalLine(Ansi().bold().a("${v.key}: ").reset().a("******").toString())
+                LoggerService.addYellowLine(Ansi().a("${v.key}: ").reset().a("******").toString())
             } else {
-                LoggerService.addNormalLine(Ansi().bold().a("${v.key}: ").reset().a(v.value.toString()).toString())
+                LoggerService.addYellowLine(Ansi().a("${v.key}: ").reset().a(v.value.toString()).toString())
             }
             logger.info("${v.key}: ${v.value}")
         }
