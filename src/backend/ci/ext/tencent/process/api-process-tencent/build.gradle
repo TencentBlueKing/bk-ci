@@ -32,3 +32,5 @@ dependencies {
     compile project(":core:process:api-process")
     compile project(":ext:tencent:common:common-pipeline-tencent")
 }
+
+apply from: "$rootDir/task_deploy_to_maven.gradle"
