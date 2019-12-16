@@ -1,6 +1,6 @@
 <template>
     <article :class="{ 'metadata-list': true, 'left-render': isLeftRender }">
-        <div class="title">{{ $t('preview.metaData') }}</div>
+        <div class="title">{{ $t('metaData') }}</div>
         <div class="data-head">
             <div class="key-head">{{ $t('view.key')}}</div>
             <div class="value-head">{{ $t('view.value')}}</div>

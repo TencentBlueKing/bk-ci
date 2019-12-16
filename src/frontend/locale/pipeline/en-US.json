@@ -70,9 +70,12 @@
     "buildNum": "BuildNo.",
     "propertyBar": "Property",
     "pipelineNameInputTips": "Please enter a name for this pipeline within 40 letters",
+    "pipelineDesc": "Description",
     "pipelineDescInputTips": "Please describe this pipeline within 100 letters",
     "nameInputTips": "Please enter a name",
     "loadingTips": "Data is Loading, Please wait",
+    "metaData": "Meta Data",
+    "download": "Download",
     "timeMap": {
         "days": "days ",
         "hours": "h ",
@@ -198,7 +201,8 @@
         "badge": "Badge",
         "imgUrl": "Image url",
         "mdLink": "Markdown link",
-        "conCopySuc": "Copied successfully"
+        "conCopySuc": "Copied successfully",
+        "additionDesc": "Description"
     },
     "template": {
         "addTemplate": "Add",
@@ -388,7 +392,6 @@
         "skipTipsSuffix": " Close this option in plugins",
         "selectAll": "Select all",
         "selectNone": "Select none",
-        "metaData": "Meta data",
         "majorVersion": "Major version",
         "minorVersion": "Feature version",
         "fixVersion": "Fix version"
@@ -636,7 +639,7 @@
         "atomForm": {
             "hasExisted": "Already existed",
             "notFound": " No relevant staff found",
-            "namespaceNmae": "Name of namespace",
+            "namespaceName": "Name of namespace",
             "paramKey": "Parameter key",
             "paramValue": "Parameter value",
             "inputTips": "Please enter",
@@ -661,7 +664,12 @@
             "jobSettingTips": " The current task doesn't exist in the Job. Please go to Job Allocation Center to set it up",
             "gcloudSettingTips": " No available template for the current task. Please go to the Standard Operation & Maintenance system to set it up.",
             "slaveAbsPath": " The absolute path on the operating system of source server",
-            "createTurbo": " No task of speeding up compiling at the moment. Click to add a new task"
+            "createTurbo": " No task of speeding up compiling at the moment. Click to add a new task",
+            "ticketId": "Ticket ID",
+            "tclsId": "TCLS ID",
+            "serviceId": "Service ID",
+            "templateDownload": "Download",
+            "otherChoice": "Other Choice"
         }
     },
     "storeMap": {

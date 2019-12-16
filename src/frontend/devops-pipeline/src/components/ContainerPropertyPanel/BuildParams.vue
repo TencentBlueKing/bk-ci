@@ -111,7 +111,7 @@
                                         <vuex-input :disabled="disabled" :handle-change="(name, value) => handleUpdateParam(name, value, index)" name="glob" :data-vv-scope="`param-${param.id}`" :placeholder="$t('editPage.filterRuleTips')" :value="param.glob"></vuex-input>
                                     </bk-form-item>
 
-                                    <bk-form-item v-if="isArtifactoryParam(param.type)" :label="$t('history.metaData')" :is-error="errors.has(`param-${param.id}.properties`)" :error-msg="errors.first(`param-${param.id}.properties`)">
+                                    <bk-form-item v-if="isArtifactoryParam(param.type)" :label="$t('metaData')" :is-error="errors.has(`param-${param.id}.properties`)" :error-msg="errors.first(`param-${param.id}.properties`)">
                                         <key-value-normal :disabled="disabled" name="properties" :data-vv-scope="`param-${param.id}`" :is-metadata-var="true" :add-btn-text="$t('editPage.addMetaData')" :value="getProperties(param)" :handle-change="(name, value) => handleProperties(name, value, index)"></key-value-normal>
                                     </bk-form-item>
 

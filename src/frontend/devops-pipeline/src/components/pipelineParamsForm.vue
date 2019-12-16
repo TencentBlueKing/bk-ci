@@ -8,7 +8,7 @@
                 :label="param.id">
                 <section class="component-row">
                     <component :is="param.component" v-validate="{ required: param.required }" :handle-change="handleParamUpdate" v-bind="param" :disabled="disabled" style="width: 100%;"></component>
-                    <span class="meta-data" v-show="showMetadata(param.type, param.value)">{{ $t('preview.metaData') }}
+                    <span class="meta-data" v-show="showMetadata(param.type, param.value)">{{ $t('metaData') }}
                         <aside class="metadata-box">
                             <metadata-list :is-left-render="(index % 2) === 1" :path="param.type === 'ARTIFACTORY' ? param.value : ''"></metadata-list>
                         </aside>
