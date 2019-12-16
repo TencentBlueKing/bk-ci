@@ -1490,7 +1490,7 @@ class PipelineBuildService(
                                 LogUtils.addFoldEndLine(
                                     rabbitTemplate = rabbitTemplate,
                                     buildId = buildId,
-                                    tagName = "${e.name}-[$taskId]",
+                                    groupName = "${e.name}-[$taskId]",
                                     tag = taskId,
                                     jobId = containerId,
                                     executeCount = 1
