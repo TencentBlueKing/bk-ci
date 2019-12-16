@@ -83,15 +83,6 @@ class DispatchVMShutdownTaskAtom @Autowired constructor(
                 routeKeySuffix = param.dispatchType?.routeKeySuffix?.routeKeySuffix
             )
         )
-        // 设置Job日志区间终点
-        LogUtils.addRangeEndLine(
-            rabbitTemplate = rabbitTemplate,
-            buildId = task.buildId,
-            rangeName = task.containerHashId ?: task.containerId,
-            tag = task.containerHashId ?: "",
-            jobId = task.containerHashId,
-            executeCount = task.executeCount ?: 1
-        )
         // 同步Job执行状态
         LogUtils.stopLog(rabbitTemplate, buildId, task.containerHashId ?: "", task.containerHashId ?: "", task.executeCount)
 
