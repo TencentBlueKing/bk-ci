@@ -37,6 +37,11 @@ if ngx.var.access_type == 'build' or ngx.var.access_type == 'external' then
   access_util = require 'access_control_ip'
 end
 
+-- defect服务不做频率限制
+if ngx.var.service == 'report' then
+  access_util = nil
+end
+
 -- 限制访问频率
 if access_util then 
   local access_result,err = access_util:isAccess()
