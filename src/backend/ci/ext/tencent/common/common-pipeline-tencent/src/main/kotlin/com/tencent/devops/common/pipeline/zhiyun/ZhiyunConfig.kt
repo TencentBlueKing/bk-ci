@@ -35,18 +35,18 @@ import org.springframework.context.annotation.Configuration
 @Configuration
 class ZhiyunConfig {
 
-    @Value("\${zhiyun.url}")
+    @Value("\${zhiyun.url:}")
     val url: String = ""
 
-    @Value("\${zhiyun.caller}")
+    @Value("\${zhiyun.caller:}")
     val caller: String = ""
 
-    @Value("\${zhiyun.password}")
+    @Value("\${zhiyun.password:}")
     val password: String = ""
 
-    @Value("\${zhiyun.apiKey}")
+    @Value("\${zhiyun.apiKey:}")
     val apiKey: String = ""
 
-    @Value("\${zhiyun.esbUrl}")
+    @Value("\${zhiyun.esbUrl:}")
     val esbUrl: String = ""
 }
