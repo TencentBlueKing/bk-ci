@@ -47,7 +47,14 @@ import com.tencent.devops.plugin.dao.PluginGitCheckDao
 import com.tencent.devops.plugin.dao.PluginGithubCheckDao
 import com.tencent.devops.plugin.service.ScmService
 import com.tencent.devops.process.api.service.ServiceBuildResource
-import com.tencent.devops.process.utils.*
+import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
+import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_BLOCK
+import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_EVENT_TYPE
+import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_MR_ID
+import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_REPO
+import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_REPO_TYPE
+import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_REVISION
+import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_TYPE
 import com.tencent.devops.scm.code.git.api.GIT_COMMIT_CHECK_STATE_ERROR
 import com.tencent.devops.scm.code.git.api.GIT_COMMIT_CHECK_STATE_FAILURE
 import com.tencent.devops.scm.code.git.api.GIT_COMMIT_CHECK_STATE_PENDING
@@ -214,13 +221,13 @@ class CodeWebhookService @Autowired constructor(
     private fun addGitCommitCheck(event: GitCommitCheckEvent) {
         with(event) {
             logger.info(
-                    "Code web hook add commit check [projectId=$projectId, pipelineId=$pipelineId, buildId=$buildId, " +
-                            "repoHashId=$repositoryConfig, commitId=$commitId, state=$state, block=$block]"
+                "Code web hook add commit check [projectId=$projectId, pipelineId=$pipelineId, buildId=$buildId, " +
+                    "repoHashId=$repositoryConfig, commitId=$commitId, state=$state, block=$block]"
             )
 
             val buildHistoryResult = client.get(ServiceBuildResource::class).getBuildVars(
-                    userId = userId, projectId = projectId,
-                    pipelineId = pipelineId, buildId = buildId
+                userId = userId, projectId = projectId,
+                pipelineId = pipelineId, buildId = buildId
             )
 
             if (buildHistoryResult.isNotOk() || buildHistoryResult.data == null) {
@@ -268,20 +275,20 @@ class CodeWebhookService @Autowired constructor(
                     if (record == null) {
                         logger.info("Create pipeline git check record")
                         scmService.addGitCommitCheck(
-                                event,
-                                targetUrl,
-                                pipelineName,
-                                description
+                            event,
+                            targetUrl,
+                            pipelineName,
+                            description
                         )
                         pluginGitCheckDao.create(dslContext, pipelineId, buildNum.toInt(), repositoryConfig, commitId)
                     } else {
                         if (buildNum.toInt() >= record.buildNumber) {
                             logger.info("Update pipeline git check record")
                             scmService.addGitCommitCheck(
-                                    event,
-                                    targetUrl,
-                                    pipelineName,
-                                    description
+                                event,
+                                targetUrl,
+                                pipelineName,
+                                description
                             )
                             pluginGitCheckDao.update(dslContext, record.id, buildNum.toInt())
                         } else {
