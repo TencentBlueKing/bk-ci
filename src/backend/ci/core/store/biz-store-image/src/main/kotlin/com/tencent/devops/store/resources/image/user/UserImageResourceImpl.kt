@@ -122,7 +122,7 @@ class UserImageResourceImpl @Autowired constructor(
 
     override fun getImageDetailByCode(userId: String, imageCode: String): Result<ImageDetail> {
         return Result(
-            imageService.getImageDetailByCode(
+            imageService.getLatestImageDetailByCode(
                 userId = userId,
                 imageCode = imageCode,
                 interfaceName = "/user/market/image/imageCodes/{imageCode}"

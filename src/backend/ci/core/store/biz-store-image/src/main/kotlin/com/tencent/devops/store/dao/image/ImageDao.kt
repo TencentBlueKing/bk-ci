@@ -159,6 +159,15 @@ class ImageDao {
         }
     }
 
+    fun getImageByCodeAndVersion(dslContext: DSLContext, imageCode: String, imageVersion: String): TImageRecord? {
+        return with(TImage.T_IMAGE) {
+            val query = dslContext.selectFrom(this)
+                .where(IMAGE_CODE.eq(imageCode))
+                .and(VERSION.eq(imageVersion))
+            query.fetchOne()
+        }
+    }
+
     fun getLatestImageByCode(dslContext: DSLContext, imageCode: String): TImageRecord? {
         return with(TImage.T_IMAGE) {
             val query = dslContext.selectFrom(this)
