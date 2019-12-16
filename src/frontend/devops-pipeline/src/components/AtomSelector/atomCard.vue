@@ -39,7 +39,7 @@
                     :title="atom.tips"
                     :loading="isInstalling"
                     v-else-if="!atom.hasInstalled"
-                >{{ $t('install') }}
+                >{{ $t('editPage.install') }}
                 </bk-button>
                 <a v-if="atom.docsLink" target="_blank" class="atom-link" :href="atom.docsLink">{{ $t('newlist.knowMore') }}</a>
             </div>
