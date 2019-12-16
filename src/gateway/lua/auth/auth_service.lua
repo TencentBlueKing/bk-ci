@@ -38,4 +38,13 @@ if not isInServiceWhitelist then
   ngx.log(ngx.ERR, "client ip do not in service_ip_whitelist: ", err)
   ngx.exit(403)
 end 
+local userId = ""
+if ngx.var.http_x_soda_uid ~= nil and ngx.var.http_x_soda_uid ~= "" then
+  userId = ngx.var.http_x_soda_uid
+end
+
+if ngx.var.http_x_devops_uid ~= nil and ngx.var.http_x_devops_uid ~= "" then
+  userId = ngx.var.http_x_devops_uid
+end
+ngx.header["x-devops-uid"] = userId
 ngx.exit(200)

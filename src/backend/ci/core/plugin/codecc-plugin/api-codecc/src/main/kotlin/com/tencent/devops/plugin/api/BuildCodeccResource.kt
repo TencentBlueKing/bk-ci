@@ -24,7 +24,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.plugin.codecc.api
+package com.tencent.devops.plugin.api
 
 import com.tencent.devops.common.api.annotation.ServiceInterface
 import com.tencent.devops.common.api.enums.OSType

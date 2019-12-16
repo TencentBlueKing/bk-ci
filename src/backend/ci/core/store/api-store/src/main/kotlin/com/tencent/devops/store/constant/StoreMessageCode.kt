@@ -87,6 +87,7 @@ object StoreMessageCode {
     const val USER_IMAGE_UNKNOWN_SOURCE_TYPE = "2120307" // 研发商店：镜像原始来源类型未知：{0}
     const val USER_IMAGE_UNKNOWN_IMAGE_CATEGORY = "2120308" // 镜像范畴未知：{0}
     const val USER_IMAGE_NOT_EXIST = "2120309" // 镜像不存在：{0}
+    const val USER_IMAGE_VERSION_NOT_EXIST = "2120310" // 标识为{0}版本号为{1}的镜像不存在
 
     // store公共业务相关的错误提示
     const val USER_PRAISE_IS_INVALID = "2120901" // 研发商店：你已点赞过
