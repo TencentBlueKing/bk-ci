@@ -229,6 +229,7 @@ object Runner {
         LoggerService.addNormalLine(Ansi().bold().a("machine.current: ").reset().a(vmName).toString())
         System.getProperties().forEach { k, v ->
             LoggerService.addYellowLine("$k: $v")
+            logger.info("$k: $v")
         }
         LoggerService.addFoldEndLine("env_machine")
     }
@@ -243,6 +244,7 @@ object Runner {
         val envs = System.getenv()
         envs.forEach { (k, v) ->
             LoggerService.addYellowLine("$k: $v")
+            logger.info("$k: $v")
         }
         LoggerService.addFoldEndLine("env_system")
     }
@@ -260,6 +262,7 @@ object Runner {
             } else {
                 LoggerService.addNormalLine(Ansi().bold().a("${v.key}: ").reset().a(v.value.toString()).toString())
             }
+            logger.info("${v.key}: ${v.value}")
         }
         LoggerService.addFoldEndLine("env_user")
     }
