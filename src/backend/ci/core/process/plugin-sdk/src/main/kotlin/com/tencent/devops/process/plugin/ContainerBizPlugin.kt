@@ -24,21 +24,51 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.log.util
+package com.tencent.devops.process.plugin
+
+import com.tencent.devops.common.pipeline.container.Container
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 
 /**
- *
- * Powered By Tencent
+ * 对流水线的Container的业务处理扩展点
  */
-object Constants {
-    const val NUM_LINES_START = 60
-    const val NUM_LINES_END = 60
-    const val NUM_LINES_AROUND_TAGS = 2
+interface ContainerBizPlugin<T : Container> {
 
-    const val DEFAULT_PRIORITY_NOT_DELETED: Byte = 40
+    /**
+     * 取当前泛型Container的类
+     */
+    fun containerClass(): Class<T>
 
-    const val MAX_LINES = 10000
+    /**
+     * 创建Container后调用针对该Container的业务处理
+     * @param container Container泛型
+     * @param projectId 项目Code
+     * @param pipelineId 流水线Id
+     * @param pipelineName 流水线名称
+     * @param userId 操作人
+     * @param channelCode 渠道
+     */
+    fun afterCreate(
+        container: T,
+        projectId: String,
+        pipelineId: String,
+        pipelineName: String,
+        userId: String,
+        channelCode: ChannelCode = ChannelCode.BS
+    )
 
-    const val INDEX_LOG_STATUS = "index-log-status"
-    const val TYPE_LOG_STATUS = "type-log-status"
+    /**
+     * 删除Container之前调用的业务处理
+     * @param container Container泛型
+     * @param userId 操作人
+     * @param pipelineId 流水线ID
+     */
+    fun beforeDelete(container: T, userId: String, pipelineId: String?)
+
+    /**
+     * 检查Container是否符合自己的要求
+     * @param container container
+     * @param appearedCnt 出现次数
+     */
+    fun check(container: T, appearedCnt: Int)
 }
