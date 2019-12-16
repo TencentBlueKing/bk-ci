@@ -10,8 +10,27 @@ import org.springframework.beans.factory.annotation.Autowired
 class OpImageDataTransferResourceImpl @Autowired constructor(
     private val opImageDataTransferService: OpImageDataTransferService
 ) : OpImageDataTransferResource {
-    override fun clearAllImageData(userId: String): Result<Int> {
-        return Result(0)
+    override fun batchRecheckByProject(userId: String, projectCode: String): Result<Int> {
+        return Result(
+            0,
+            "ok",
+            opImageDataTransferService.batchRecheckByProject(
+                userId = userId,
+                projectCode = projectCode,
+                interfaceName = "/op/datatransfer/image/batchRecheckByProject,put"
+            )
+        )
+    }
+
+    override fun batchRecheckAll(userId: String): Result<Int> {
+        return Result(
+            0,
+            "ok",
+            opImageDataTransferService.batchRecheckAll(
+                userId = userId,
+                interfaceName = "/op/datatransfer/image/batchRecheckAll,put"
+            )
+        )
     }
 
     override fun initClassifyAndCategory(
@@ -31,17 +50,6 @@ class OpImageDataTransferResourceImpl @Autowired constructor(
                 categoryCode = categoryCode,
                 categoryName = categoryName,
                 interfaceName = "/op/datatransfer/image/initClassifyAndCategory,put"
-            )
-        )
-    }
-
-    override fun clearFinishedSet(userId: String): Result<Int> {
-        return Result(
-            0,
-            "ok",
-            opImageDataTransferService.clearFinishedSet(
-                userId = userId,
-                interfaceName = "/op/datatransfer/image/clearFinishedSet,put"
             )
         )
     }

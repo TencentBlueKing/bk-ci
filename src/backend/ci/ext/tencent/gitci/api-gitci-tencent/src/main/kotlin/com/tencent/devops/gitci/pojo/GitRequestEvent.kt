@@ -61,5 +61,7 @@ data class GitRequestEvent(
     @ApiModelProperty("EVENT")
     val event: String,
     @ApiModelProperty("DESCRIPTION")
-    var description: String?
+    var description: String?,
+    @ApiModelProperty("MR_TITLE")
+    var mrTitle: String?
 )
