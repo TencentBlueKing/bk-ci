@@ -46,7 +46,7 @@ class BkAuthPermissionApi constructor(
     private val authUtils: AuthUtils
 ) : AuthPermissionApi {
     override fun addResourcePermissionForUsers(projectCode: String, serviceCode: AuthServiceCode, permission: AuthPermission, resourceType: AuthResourceType, resourceCode: String, userIdList: List<String>, supplier: (() -> List<String>)?): Boolean {
-        //TODO:企业版暂不支持添加权限
+        // TODO:企业版暂不支持添加权限
         return true
     }
 
