@@ -29,6 +29,7 @@ package config
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	bconfig "github.com/astaxie/beego/config"
 	"github.com/astaxie/beego/logs"
 	"io/ioutil"
@@ -109,14 +110,8 @@ func DetectAgentVersion() string {
 }
 
 func DetectWorkerVersion() string {
-	workerFile := "worker-agent.jar"
-	if !fileutil.Exists(systemutil.GetWorkDir() + "/" + workerFile) {
-		logs.Warn("worker-agent.jar not exist, use agent.jar")
-		workerFile = "agent.jar"
-	}
-
 	output, err := command.RunCommand(GetJava(),
-		[]string{"-cp", workerFile, "com.tencent.devops.agent.AgentVersionKt"}, systemutil.GetWorkDir(), nil)
+		[]string{"-cp", BuildAgentJarPath(), "com.tencent.devops.agent.AgentVersionKt"}, systemutil.GetWorkDir(), nil)
 
 	if err != nil {
 		logs.Warn("detect worker version failed: ", err.Error())
@@ -126,6 +121,15 @@ func DetectWorkerVersion() string {
 	logs.Info("worker version: ", string(output))
 
 	return strings.TrimSpace(string(output))
+}
+
+func BuildAgentJarPath() string {
+	path := fmt.Sprintf("%s/%s", systemutil.GetWorkDir(), "worker-agent.jar")
+	if !fileutil.Exists(path) {
+		logs.Warn("worker-agent.jar not exist, use agent.jar")
+		path = fmt.Sprintf("%s/%s", systemutil.GetWorkDir(), "agent.jar")
+	}
+	return path
 }
 
 func LoadAgentConfig() error {
