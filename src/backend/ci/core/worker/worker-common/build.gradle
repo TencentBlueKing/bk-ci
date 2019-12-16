@@ -34,6 +34,7 @@ dependencies {
     compile project(":core:dockerhost:api-dockerhost")
     compile project(":core:common:common-log")
     compile project(":core:common:common-archive")
+    compile project(":core:common:common-pipeline")
     compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
     compile "org.jetbrains.kotlin:kotlin-reflect"
     compile "org.apache.commons:commons-exec"

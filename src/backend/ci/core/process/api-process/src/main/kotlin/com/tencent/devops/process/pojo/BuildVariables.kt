@@ -26,6 +26,7 @@
 
 package com.tencent.devops.process.pojo
 
+import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.store.pojo.app.BuildEnv
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
@@ -47,5 +48,7 @@ data class BuildVariables(
     @ApiModelProperty("系统环境变量", required = false)
     val buildEnvs: List<BuildEnv>,
     @ApiModelProperty("container或者job的id", required = false)
-    val containerId: String
+    val containerId: String,
+    @ApiModelProperty("参数类型集合", required = false)
+    val variablesWithType: List<BuildParameters>
 )
