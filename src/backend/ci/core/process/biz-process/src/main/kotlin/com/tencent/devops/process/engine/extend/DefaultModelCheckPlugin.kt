@@ -80,9 +80,6 @@ class DefaultModelCheckPlugin constructor(val client: Client) : ModelCheckPlugin
                 val cCnt = containerCnt.computeIfPresent(c.getClassType()) { _, oldValue -> oldValue + 1 }
                     ?: containerCnt.computeIfAbsent(c.getClassType()) { 1 } // 第一次时出现1次
                 ContainerBizRegistrar.getPlugin(c)?.check(c, cCnt)
-                if (c.elements.isEmpty()) {
-                    throw ErrorCodeException(defaultMessage = "Job需要至少有一个任务插件", errorCode = ProcessMessageCode.ERROR_PIPELINE_JOB_NEED_TASK)
-                }
                 c.elements.forEach { e ->
                     val eCnt = elementCnt.computeIfPresent(e.getAtomCode()) { _, oldValue -> oldValue + 1 }
                         ?: elementCnt.computeIfAbsent(e.getAtomCode()) { 1 } // 第一次时出现1次
