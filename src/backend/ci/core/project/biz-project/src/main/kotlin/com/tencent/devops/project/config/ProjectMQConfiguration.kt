@@ -24,27 +24,32 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.pojo.common
+package com.tencent.devops.project.config
 
-import com.tencent.devops.store.pojo.common.enums.BusinessEnum
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
+import org.springframework.amqp.core.FanoutExchange
+import org.springframework.amqp.rabbit.connection.ConnectionFactory
+import org.springframework.amqp.rabbit.core.RabbitAdmin
+import org.springframework.boot.autoconfigure.AutoConfigureOrder
+import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
+import org.springframework.core.Ordered
 
-/**
- * @Description
- * @Date 2019/12/1
- * @Version 1.0
- */
-@ApiModel("业务配置请求报文")
-data class BusinessConfigRequest(
-    @ApiModelProperty("业务", required = true)
-    val business: BusinessEnum,
-    @ApiModelProperty("业务特性", required = true)
-    val feature: String,
-    @ApiModelProperty("业务特性取值", required = true)
-    val businessValue: String,
-    @ApiModelProperty("配置值", required = true)
-    val configValue: String,
-    @ApiModelProperty("描述", required = true)
-    val description: String?
-)
+@Configuration
+@ConditionalOnWebApplication
+@AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
+class ProjectMQConfiguration {
+
+    @Bean
+    fun rabbitAdmin(connectionFactory: ConnectionFactory): RabbitAdmin {
+        return RabbitAdmin(connectionFactory)
+    }
+
+    @Bean
+    fun projectCreateExchange(): FanoutExchange {
+        val fanoutExchange = FanoutExchange(MQ.EXCHANGE_PROJECT_CREATE_FANOUT, true, false)
+        fanoutExchange.isDelayed = true
+        return fanoutExchange
+    }
+}
