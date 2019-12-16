@@ -34,13 +34,11 @@ import com.tencent.devops.common.pipeline.type.DispatchType
 
 data class MacOSDispatchType(
     @JsonProperty("value") var macOSEvn: String,
-    var systemVersion: String?,
-    var xcodeVersion: String?
-) : DispatchType("", DispatchRouteKeySuffix.MACOS) {
+    var systemVersion: String? = "",
+    var xcodeVersion: String? = ""
+) : DispatchType("$systemVersion:$xcodeVersion", DispatchRouteKeySuffix.MACOS) {
     override fun replaceField(variables: Map<String, String>) {
-        systemVersion = EnvUtils.parseEnv(systemVersion!!, variables)
-        xcodeVersion = EnvUtils.parseEnv(xcodeVersion!!, variables)
-        macOSEvn = "$systemVersion:$xcodeVersion"
+        macOSEvn = EnvUtils.parseEnv(macOSEvn, variables)
     }
 
     override fun buildType() = BuildType.MACOS
