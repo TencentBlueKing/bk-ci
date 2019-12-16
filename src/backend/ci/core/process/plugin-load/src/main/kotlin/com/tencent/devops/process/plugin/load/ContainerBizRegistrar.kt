@@ -24,21 +24,26 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.log.util
+package com.tencent.devops.process.plugin.load
 
-/**
- *
- * Powered By Tencent
- */
-object Constants {
-    const val NUM_LINES_START = 60
-    const val NUM_LINES_END = 60
-    const val NUM_LINES_AROUND_TAGS = 2
+import com.tencent.devops.common.pipeline.container.Container
+import com.tencent.devops.process.plugin.ContainerBizPlugin
+import org.slf4j.LoggerFactory
+import java.util.concurrent.ConcurrentHashMap
 
-    const val DEFAULT_PRIORITY_NOT_DELETED: Byte = 40
+object ContainerBizRegistrar {
 
-    const val MAX_LINES = 10000
+    private val logger = LoggerFactory.getLogger(ContainerBizRegistrar::class.java)
 
-    const val INDEX_LOG_STATUS = "index-log-status"
-    const val TYPE_LOG_STATUS = "type-log-status"
+    private val containerPluginMaps = ConcurrentHashMap<String, ContainerBizPlugin<*>>()
+
+    fun register(containerBizPlugin: ContainerBizPlugin<out Container>) {
+        logger.info("[REGISTER]| ${containerBizPlugin.javaClass} for ${containerBizPlugin.containerClass()}")
+        containerPluginMaps[containerBizPlugin.containerClass().canonicalName] = containerBizPlugin
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    fun <T : Container> getPlugin(container: T): ContainerBizPlugin<T>? {
+        return containerPluginMaps[container::class.qualifiedName] as ContainerBizPlugin<T>?
+    }
 }

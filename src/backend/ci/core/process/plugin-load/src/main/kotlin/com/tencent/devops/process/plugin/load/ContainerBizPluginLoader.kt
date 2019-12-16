@@ -24,21 +24,34 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.log.util
+package com.tencent.devops.process.plugin.load
 
-/**
- *
- * Powered By Tencent
- */
-object Constants {
-    const val NUM_LINES_START = 60
-    const val NUM_LINES_END = 60
-    const val NUM_LINES_AROUND_TAGS = 2
+import com.tencent.devops.common.pipeline.container.Container
+import com.tencent.devops.process.plugin.ContainerBizPlugin
+import com.tencent.devops.process.plugin.annotation.ContainerBiz
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.config.BeanPostProcessor
+import org.springframework.core.annotation.AnnotationUtils
+import org.springframework.stereotype.Component
 
-    const val DEFAULT_PRIORITY_NOT_DELETED: Byte = 40
+@Component
+class ContainerBizPluginLoader : BeanPostProcessor {
 
-    const val MAX_LINES = 10000
+    private val logger = LoggerFactory.getLogger(ContainerBizPluginLoader::class.java)
 
-    const val INDEX_LOG_STATUS = "index-log-status"
-    const val TYPE_LOG_STATUS = "type-log-status"
+    override fun postProcessBeforeInitialization(bean: Any?, p1: String?): Any {
+        return bean!!
+    }
+
+    override fun postProcessAfterInitialization(bean: Any?, p1: String?): Any {
+        val containerBiz = AnnotationUtils.findAnnotation(bean!!::class.java, ContainerBiz::class.java)
+        if (containerBiz != null) {
+            if (bean is ContainerBizPlugin<out Container>) {
+                ContainerBizRegistrar.register(bean)
+            } else {
+                logger.warn("${bean::class.java} is not match for $containerBiz")
+            }
+        }
+        return bean
+    }
 }

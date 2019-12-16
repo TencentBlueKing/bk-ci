@@ -24,21 +24,14 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.log.util
+package com.tencent.devops.process.plugin.annotation
+
+import org.springframework.stereotype.Component
 
 /**
- *
- * Powered By Tencent
+ *  Container业务注解
  */
-object Constants {
-    const val NUM_LINES_START = 60
-    const val NUM_LINES_END = 60
-    const val NUM_LINES_AROUND_TAGS = 2
-
-    const val DEFAULT_PRIORITY_NOT_DELETED: Byte = 40
-
-    const val MAX_LINES = 10000
-
-    const val INDEX_LOG_STATUS = "index-log-status"
-    const val TYPE_LOG_STATUS = "type-log-status"
-}
+@Target(AnnotationTarget.CLASS, AnnotationTarget.FILE)
+@Retention(AnnotationRetention.RUNTIME)
+@Component
+annotation class ContainerBiz
