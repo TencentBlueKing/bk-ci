@@ -329,12 +329,6 @@ class PipelineBuildService(
                         }
                     }
                 }
-
-                params[PIPELINE_RETRY_COUNT] = if (params[PIPELINE_RETRY_COUNT] != null) {
-                    params[PIPELINE_RETRY_COUNT].toString().toInt() + 1
-                } else {
-                    1
-                }
             } else {
                 // 完整构建重试
                 try {
@@ -345,12 +339,15 @@ class PipelineBuildService(
                 } catch (e: Exception) {
                     logger.warn("Fail to get the startup param for the build($buildId)", e)
                 }
-                // 假如之前构建有原子级重试，则清除掉。因为整个流水线重试的是一个新的构建了(buildId)。
-                params.remove(PIPELINE_RETRY_COUNT)
+            }
+
+            params[PIPELINE_RETRY_COUNT] = if (params[PIPELINE_RETRY_COUNT] != null) {
+                params[PIPELINE_RETRY_COUNT].toString().toInt() + 1
+            } else {
+                1
             }
 
             params[PIPELINE_START_USER_ID] = userId
-            params[PIPELINE_START_TYPE] = StartType.MANUAL.name
             params[PIPELINE_RETRY_BUILD_ID] = buildId
 
             val readyToBuildPipelineInfo =
@@ -362,17 +359,12 @@ class PipelineBuildService(
                         params = arrayOf(buildId))
 
             val startParamsWithType = mutableListOf<BuildParameters>()
-            params.forEach { t, u -> startParamsWithType.add(
-                BuildParameters(
-                    t,
-                    u
-                )
-            ) }
+            params.forEach { (t, u) -> startParamsWithType.add(BuildParameters(key = t, value = u)) }
 
             return startPipeline(
                 userId = userId,
                 readyToBuildPipelineInfo = readyToBuildPipelineInfo,
-                startType = StartType.MANUAL,
+                startType = StartType.toStartType(params[PIPELINE_START_TYPE]?.toString() ?: ""),
                 startParamsWithType = startParamsWithType,
                 channelCode = channelCode ?: ChannelCode.BS,
                 isMobile = isMobile,
@@ -1498,7 +1490,7 @@ class PipelineBuildService(
                                 LogUtils.addFoldEndLine(
                                     rabbitTemplate = rabbitTemplate,
                                     buildId = buildId,
-                                    tagName = "${e.name}-[$taskId]",
+                                    groupName = "${e.name}-[$taskId]",
                                     tag = taskId,
                                     jobId = containerId,
                                     executeCount = 1

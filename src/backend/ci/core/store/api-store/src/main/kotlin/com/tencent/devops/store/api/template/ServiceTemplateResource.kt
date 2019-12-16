@@ -56,7 +56,6 @@ interface ServiceTemplateResource {
         userId: String
     ): Result<MarketTemplateResp>
 
-
     @ApiOperation("安装模板到项目")
     @POST
     @Path("/template/install")
