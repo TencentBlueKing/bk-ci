@@ -69,6 +69,7 @@ import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.enums.CodePullStrategy
 import com.tencent.devops.common.pipeline.enums.GitPullModeType
 import com.tencent.devops.gitci.client.ScmClient
+import com.tencent.devops.gitci.utils.GitCIParameterUtils
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.pojo.BuildId
@@ -90,7 +91,8 @@ class GitCIBuildService @Autowired constructor(
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
     private val gitServicesConfDao: GitCIServicesConfDao,
     private val buildConfig: BuildConfig,
-    private val objectMapper: ObjectMapper
+    private val objectMapper: ObjectMapper,
+    private val gitCIParameterUtils: GitCIParameterUtils
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(GitCIBuildService::class.java)
@@ -176,8 +178,6 @@ class GitCIBuildService @Autowired constructor(
 
         // 其他的stage
         yaml.stages!!.forEachIndexed { stageIndex, stage ->
-
-            val nowStageIndex = stageIndex + stageList.size - 1
             val containerList = mutableListOf<Container>()
             stage.stage.forEachIndexed { jobIndex, job ->
                 val elementList = mutableListOf<Element>()
@@ -186,14 +186,14 @@ class GitCIBuildService @Autowired constructor(
                     // 构建环境容器每个job的第一个插件都是拉代码
                     elementList.add(createGitCodeElement(event, gitProjectConf))
                     makeElementList(job, elementList, gitProjectConf, event.userId)
-                    addVmBuildContainer(job, elementList, containerList, nowStageIndex, jobIndex)
+                    addVmBuildContainer(job, elementList, containerList, jobIndex)
                 } else if (job.job.type == NORMAL_JOB) {
                     makeElementList(job, elementList, gitProjectConf, event.userId)
                     addNormalContainer(elementList, containerList)
                 }
             }
 
-            stageList.add(Stage(containerList, "stage-$nowStageIndex"))
+            stageList.add(Stage(containerList, "stage-$stageIndex"))
         }
         return Model("git_" + gitProjectConf.gitProjectId + "_" + System.currentTimeMillis(), "", stageList, emptyList(), false, event.userId)
     }
@@ -216,16 +216,17 @@ class GitCIBuildService @Autowired constructor(
         ))
     }
 
-    private fun addVmBuildContainer(job: Job, elementList: List<Element>, containerList: MutableList<Container>, nowStageIndex: Int, jobIndex: Int) {
+    private fun addVmBuildContainer(job: Job, elementList: List<Element>, containerList: MutableList<Container>, jobIndex: Int) {
         val containerPool =
             if (job.job.pool?.container == null) {
                 Pool(buildConfig.registryImage, Credential("", ""))
             } else {
                 Pool(job.job.pool!!.container, Credential(job.job.pool!!.credential?.user ?: "", job.job.pool!!.credential?.password ?: ""))
             }
+
         val vmContainer = VMBuildContainer(
             id = null,
-            name = job.job.name ?: "stage$nowStageIndex-${jobIndex + 1}",
+            name = "Job_${jobIndex + 1} " + (job.job.name ?: ""),
             elements = elementList,
             status = null,
             startEpoch = null,
@@ -387,11 +388,12 @@ class GitCIBuildService @Autowired constructor(
     private fun createPipelineParams(gitProjectConf: GitRepositoryConf, yaml: CIBuildYaml): List<BuildFormProperty> {
         val result = mutableListOf<BuildFormProperty>()
         gitProjectConf.env?.forEach {
+            val value = gitCIParameterUtils.encrypt(it.value)
             result.add(BuildFormProperty(
                     it.name,
                     false,
-                    BuildFormPropertyType.STRING,
-                    it.value,
+                    BuildFormPropertyType.PASSWORD,
+                    value,
                     null,
                     null,
                     null,

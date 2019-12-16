@@ -55,7 +55,8 @@ class GitRequestEventDao {
                     MERGE_REQUEST_ID,
                     EVENT,
                     CREATE_TIME,
-                    DESCRIPTION
+                    DESCRIPTION,
+                    MR_TITLE
                 ).values(
                     event.objectKind,
                     event.operationKind,
@@ -71,7 +72,8 @@ class GitRequestEventDao {
                     event.mergeRequestId,
                     event.event,
                     LocalDateTime.now(),
-                    event.description
+                    event.description,
+                    event.mrTitle
             ).returning(ID)
             .fetchOne()
             return record.id
@@ -104,7 +106,8 @@ class GitRequestEventDao {
                         record.totalCommitCount,
                         record.mergeRequestId,
                         "", // record.event,
-                        record.description
+                        record.description,
+                        record.mrTitle
                 )
             }
         }
@@ -139,7 +142,8 @@ class GitRequestEventDao {
                             it.totalCommitCount,
                             it.mergeRequestId,
                             "", // record.event,
-                            it.description
+                            it.description,
+                            it.mrTitle
                         )
                 )
             }

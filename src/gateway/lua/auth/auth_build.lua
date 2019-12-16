@@ -138,6 +138,7 @@ if build_type == "AGENT" then
                 ngx.header["X-DEVOPS-VM-SID"] = obj.vmSeqId
                 ngx.header["X-DEVOPS-VM-NAME"] = obj.vmName
                 ngx.header["X-DEVOPS-CHANNEL-CODE"] = obj.channelCode
+                ngx.header["X-DEVOPS-AGENT-SECRET-KEY"] = reqSecretKey
                 ngx.exit(200)
                 return
             end
@@ -247,6 +248,7 @@ elseif build_type == "DOCKER" then
                 ngx.header["X-DEVOPS-VM-SID"] = obj.vmSeqId
                 ngx.header["X-DEVOPS-VM-NAME"] = obj.vmName
                 ngx.header["X-DEVOPS-CHANNEL-CODE"] = obj.channelCode
+                ngx.header["X-DEVOPS-AGENT-SECRET-KEY"] = reqSecretKey
                 ngx.exit(200)
                 return
             end
@@ -356,12 +358,97 @@ elseif build_type == "PLUGIN_AGENT" then
                 ngx.header["X-DEVOPS-VM-SID"] = obj.vmSeqId
                 ngx.header["X-DEVOPS-VM-NAME"] = obj.vmName
                 ngx.header["X-DEVOPS-CHANNEL-CODE"] = obj.channelCode
+                ngx.header["X-DEVOPS-AGENT-SECRET-KEY"] = reqSecretKey
                 ngx.exit(200)
                 return
             end
         end
     end
 
+elseif build_type == "MACOS" then
+    -- --- 公共构建机
+    -- if build_type == "WORKER" then 
+    --- 构建机IP验证
+    local client_ip, err = ipUtil:clientIp()
+    if not client_ip then
+        ngx.log(ngx.ERR, "failed to get client ip: ", err)
+        ngx.exit(500)
+        return
+    end
+    --- redis获取IP对应的buildID
+    local red = redisUtil:new()
+    if not red then
+        ngx.log(ngx.ERR, "failed to new redis ", err)
+        ngx.exit(500)
+        return
+    else
+        --- 获取对应的buildId
+        local redRes, err = red:get("devops_macos_" .. client_ip)
+        --- 将redis连接放回pool中
+        local ok, err = red:set_keepalive(config.redis.max_idle_time, config.redis.pool_size)
+        if not ok then
+            ngx.say("failed to set keepalive: ", err)
+        end
+        --- 处理获取到的buildID
+        if not redRes then
+            ngx.log(ngx.ERR, "failed to get redis result: ", err)
+            ngx.exit(500)
+            return
+        else
+            if redRes == ngx.null then
+                ngx.log(ngx.ERR, "client ip: ", client_ip)
+                ngx.log(ngx.ERR, "redis result is null: ")
+                ngx.exit(500)
+                return
+            else
+                local obj = cjson.decode(redRes)
+                -- parameter check
+                if obj.projectId == nil then
+                    ngx.log(ngx.ERR, "projectId is null: ")
+                end
+
+                -- atom替换projectId
+                if ngx.var.service_code == "atom" then
+                    if obj.atoms ~= nil then
+                        local atom_projectid = obj.atoms[ngx.var.atom_code]
+                        if atom_projectid ~= nil then
+                            obj.projectId = atom_projectid
+                        end
+                    end
+                end
+
+                if obj.pipelineId == nil then
+                    ngx.log(ngx.ERR, "pipelineId is null: ")
+                end
+
+                if obj.buildId == nil then
+                    ngx.log(ngx.ERR, "buildId is null: ")
+                end
+
+                if obj.vmSeqId == nil then
+                    ngx.log(ngx.ERR, "vmSeqId is null: ")
+                end
+
+                if obj.secretKey == nil then
+                    ngx.log(ngx.ERR, "secretKey is null: ")
+                end
+
+                if obj.id == nil then
+                    ngx.log(ngx.ERR, "id is null: ")
+                end
+
+                ngx.header["X-DEVOPS-PROJECT-ID"] = obj.projectId
+                ngx.header["X-DEVOPS-PIPELINE-ID"] = obj.pipelineId
+                ngx.header["X-DEVOPS-BUILD-ID"] = obj.buildId
+                ngx.header["X-DEVOPS-AGENT-ID"] = obj.id
+                ngx.header["X-DEVOPS-VM-SID"] = obj.vmSeqId
+                ngx.header["X-DEVOPS-VM-NAME"] = obj.id
+                ngx.header["X-DEVOPS-CHANNEL-CODE"] = ""
+                ngx.header["X-DEVOPS-AGENT-SECRET-KEY"] = obj.secretKey
+                return
+            end
+        end
+    end
 
 else
     -- --- 公共构建机
@@ -448,6 +535,7 @@ else
                 ngx.header["X-DEVOPS-VM-SID"] = obj.vmSeqId
                 ngx.header["X-DEVOPS-VM-NAME"] = obj.vmName
                 ngx.header["X-DEVOPS-CHANNEL-CODE"] = obj.channelCode
+                ngx.header["X-DEVOPS-AGENT-SECRET-KEY"] = ""
                 ngx.exit(200)
                 return
             end
