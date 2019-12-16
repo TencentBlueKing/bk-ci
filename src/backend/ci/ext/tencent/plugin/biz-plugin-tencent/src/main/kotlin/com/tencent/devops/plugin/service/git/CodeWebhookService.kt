@@ -221,13 +221,15 @@ class CodeWebhookService @Autowired constructor(
     private fun addGitCommitCheck(event: GitCommitCheckEvent) {
         with(event) {
             logger.info(
-                    "Code web hook add commit check [projectId=$projectId, pipelineId=$pipelineId, buildId=$buildId, " +
-                            "repoHashId=$repositoryConfig, commitId=$commitId, state=$state, block=$block]"
+                "Code web hook add commit check [projectId=$projectId, pipelineId=$pipelineId, buildId=$buildId, " +
+                    "repoHashId=$repositoryConfig, commitId=$commitId, state=$state, block=$block]"
             )
 
             val buildHistoryResult = client.get(ServiceBuildResource::class).getBuildVars(
-                    userId = userId, projectId = projectId,
-                    pipelineId = pipelineId, buildId = buildId
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId
             )
 
             if (buildHistoryResult.isNotOk() || buildHistoryResult.data == null) {
@@ -275,20 +277,20 @@ class CodeWebhookService @Autowired constructor(
                     if (record == null) {
                         logger.info("Create pipeline git check record")
                         scmService.addGitCommitCheck(
-                                event,
-                                targetUrl,
-                                pipelineName,
-                                description
+                            event = event,
+                            targetUrl = targetUrl,
+                            context = pipelineName,
+                            description = description
                         )
                         pluginGitCheckDao.create(dslContext, pipelineId, buildNum.toInt(), repositoryConfig, commitId)
                     } else {
                         if (buildNum.toInt() >= record.buildNumber) {
                             logger.info("Update pipeline git check record")
                             scmService.addGitCommitCheck(
-                                    event,
-                                    targetUrl,
-                                    pipelineName,
-                                    description
+                                event = event,
+                                targetUrl = targetUrl,
+                                context = pipelineName,
+                                description = description
                             )
                             pluginGitCheckDao.update(dslContext, record.id, buildNum.toInt())
                         } else {
@@ -366,8 +368,10 @@ class CodeWebhookService @Autowired constructor(
         )
 
         val buildHistoryResult = client.get(ServiceBuildResource::class).getBuildVars(
-            userId = userId, projectId = projectId,
-            pipelineId = pipelineId, buildId = buildId
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId
         )
 
         if (buildHistoryResult.isNotOk() || buildHistoryResult.data == null) {
@@ -405,39 +409,39 @@ class CodeWebhookService @Autowired constructor(
                 val record = pluginGithubCheckDao.getOrNull(dslContext, pipelineId, repositoryConfig, commitId)
                 if (record == null) {
                     val result = scmService.addGithubCheckRuns(
-                        projectId,
-                        repositoryConfig,
-                        name,
-                        commitId,
-                        detailUrl,
-                        pipelineId,
-                        status,
-                        startedAt?.atZone(ZoneId.systemDefault())?.format(DateTimeFormatter.ISO_INSTANT),
-                        conclusion,
-                        completedAt?.atZone(ZoneId.systemDefault())?.format(DateTimeFormatter.ISO_INSTANT)
+                        projectId = projectId,
+                        repositoryConfig = repositoryConfig,
+                        name = name,
+                        commitId = commitId,
+                        detailUrl = detailUrl,
+                        externalId = pipelineId,
+                        status = status,
+                        startedAt = startedAt?.atZone(ZoneId.systemDefault())?.format(DateTimeFormatter.ISO_INSTANT),
+                        conclusion = conclusion,
+                        completedAt = completedAt?.atZone(ZoneId.systemDefault())?.format(DateTimeFormatter.ISO_INSTANT)
                     )
                     pluginGithubCheckDao.create(
-                        dslContext,
-                        pipelineId,
-                        buildNum.toInt(),
-                        repositoryConfig,
-                        commitId,
-                        result.id
+                        dslContext = dslContext,
+                        pipelineId = pipelineId,
+                        buildNumber = buildNum.toInt(),
+                        repositoryConfig = repositoryConfig,
+                        commitId = commitId,
+                        checkRunId = result.id
                     )
                 } else {
                     if (buildNum.toInt() >= record.buildNumber) {
                         scmService.updateGithubCheckRuns(
-                            record.checkRunId,
-                            projectId,
-                            repositoryConfig,
-                            name,
-                            commitId,
-                            detailUrl,
-                            pipelineId,
-                            status,
-                            startedAt?.atZone(ZoneId.systemDefault())?.format(DateTimeFormatter.ISO_INSTANT),
-                            conclusion,
-                            completedAt?.atZone(ZoneId.systemDefault())?.format(DateTimeFormatter.ISO_INSTANT)
+                            checkRunId = record.checkRunId,
+                            projectId = projectId,
+                            repositoryConfig = repositoryConfig,
+                            name = name,
+                            commitId = commitId,
+                            detailUrl = detailUrl,
+                            externalId = pipelineId,
+                            status = status,
+                            startedAt = startedAt?.atZone(ZoneId.systemDefault())?.format(DateTimeFormatter.ISO_INSTANT),
+                            conclusion = conclusion,
+                            completedAt = completedAt?.atZone(ZoneId.systemDefault())?.format(DateTimeFormatter.ISO_INSTANT)
                         )
                         pluginGithubCheckDao.update(dslContext, record.id, buildNum.toInt())
                     } else {
