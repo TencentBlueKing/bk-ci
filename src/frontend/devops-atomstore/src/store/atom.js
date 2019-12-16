@@ -27,6 +27,13 @@ const Vue = window.Vue
 const vue = new Vue()
 
 export const actions = {
+    /**
+     * 获取插件yaml
+     */
+    getAtomYaml ({ commit }, { atomCode }) {
+        return vue.$ajax.get(`${prefix}/user/market/atoms/${atomCode}/yml/detail`)
+    },
+
     modifyAtomDetail ({ commit }, { atomCode, data }) {
         return vue.$ajax.put(`${prefix}/user/pipeline/atom/baseInfo/atoms/${atomCode}`, data)
     },
