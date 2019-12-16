@@ -34,6 +34,7 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.RepoGray
 import com.tencent.devops.common.web.RestResource
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import javax.ws.rs.core.Response
 
 @RestResource
@@ -43,6 +44,10 @@ class ExternalReportResourceImpl @Autowired constructor(
     val redisOperation: RedisOperation,
     val repoGray: RepoGray
 ) : ExternalReportResource {
+
+    @Value("\${artifactory.report.email.suffix:#{null}}")
+    private var suffix: String? = null
+
     override fun get(
         projectId: String,
         pipelineId: String,
@@ -50,33 +55,17 @@ class ExternalReportResourceImpl @Autowired constructor(
         elementId: String,
         path: String
     ): Response {
-        if (path.endsWith(".js") ||
-            path.endsWith(".css") ||
-            path.endsWith(".tff") ||
-            path.endsWith(".bmp") ||
-            path.endsWith(".jpg") ||
-            path.endsWith(".png") ||
-            path.endsWith(".tif") ||
-            path.endsWith(".gif") ||
-            path.endsWith(".pcx") ||
-            path.endsWith(".tga") ||
-            path.endsWith(".exif") ||
-            path.endsWith(".fpx") ||
-            path.endsWith(".svg") ||
-            path.endsWith(".psd") ||
-            path.endsWith(".cdr") ||
-            path.endsWith(".pcd") ||
-            path.endsWith(".dxf") ||
-            path.endsWith(".ufo") ||
-            path.endsWith(".eps") ||
-            path.endsWith(".ai") ||
-            path.endsWith(".raw") ||
-            path.endsWith(".wmf") ||
-            path.endsWith(".webp")
-        ) {
-        } else {
-            throw ParamBlankException("Invalid file sufix.")
+        if (suffix != null) {
+            val indexOf = path.lastIndexOf(".")
+            if (indexOf == -1) {
+                throw ParamBlankException("Invalid file suffix without '.'")
+            }
+            val pathSuffix = path.substring(indexOf + 1) + ";"
+            if (suffix!!.lastIndexOf(pathSuffix) == -1) {
+                throw ParamBlankException("Invalid file suffix.")
+            }
         }
+
         if (projectId.isBlank()) {
             throw ParamBlankException("Invalid projectId")
         }
