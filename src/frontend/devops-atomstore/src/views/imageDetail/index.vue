@@ -48,12 +48,6 @@
                                         selectId: ['imageMemberManage'],
                                         name: this.$t('成员管理'),
                                         icon: ''
-                                    },
-                                    {
-                                        id: 'imageVisibleRange',
-                                        selectId: ['imageVisibleRange'],
-                                        name: this.$t('可见范围'),
-                                        icon: ''
                                     }
                                 ]
                             }
