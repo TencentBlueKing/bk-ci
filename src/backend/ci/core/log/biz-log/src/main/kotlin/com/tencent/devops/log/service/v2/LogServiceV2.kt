@@ -147,9 +147,26 @@ class LogServiceV2 @Autowired constructor(
             val type = indexAndType.type
             if (keywordsStr == null || keywordsStr.isBlank()) {
                 val result = if (isAnalysis) {
-                    doQueryByKeywords(buildId, index, type, 1, defaultKeywords, tag, jobId, executeCount)
+                    doQueryByKeywords(
+                        buildId = buildId,
+                        index = index,
+                        type = type,
+                        start = 1,
+                        keywords = defaultKeywords,
+                        tag = tag,
+                        jobId = jobId,
+                        executeCount = executeCount
+                    )
                 } else {
-                    doQueryInitLogs(buildId, index, type, defaultKeywords, tag, jobId, executeCount)
+                    doQueryInitLogs(
+                        buildId = buildId,
+                        index = index,
+                        type = type,
+                        keywords = defaultKeywords,
+                        tag = tag,
+                        jobId = jobId,
+                        executeCount = executeCount
+                    )
                 }
                 success = logStatusSuccess(result.status)
                 return result
@@ -255,15 +272,15 @@ class LogServiceV2 @Autowired constructor(
                     doQueryByKeywords(buildId, index, type, start, defaultKeywords, tag, jobId, executeCount)
                 } else
                     doQueryMoreLogsAfterLine(
-                        buildId,
-                        index,
-                        type,
-                        start,
-                        !isAnalysis,
-                        defaultKeywords,
-                        tag,
-                        jobId,
-                        executeCount
+                        buildId = buildId,
+                        index = index,
+                        type = type,
+                        start = start,
+                        wholeQuery = !isAnalysis,
+                        keywords = defaultKeywords,
+                        tag = tag,
+                        jobId = jobId,
+                        executeCount = executeCount
                     )
                 success = logStatusSuccess(result.status)
                 return result
@@ -932,9 +949,24 @@ class LogServiceV2 @Autowired constructor(
         val queryLogs = QueryLogs(buildId, logStatus)
 
         try {
-            val size = getLogSize(index, type, buildId, tag, jobId, executeCount)
+            val size = getLogSize(
+                index = index,
+                type = type,
+                buildId = buildId,
+                tag = tag,
+                jobId = jobId,
+                executeCount = executeCount
+            )
             if (size == 0L) return queryLogs
-            val logRange = getLogRange(buildId, index, type, tag, jobId, executeCount, size)
+            val logRange = getLogRange(
+                buildId = buildId,
+                index = index,
+                type = type,
+                tag = tag,
+                jobId = jobId,
+                executeCount = executeCount,
+                size = size
+            )
             logger.info("[$index|$type|$buildId|$tag|$jobId|$executeCount] getOriginLogs with range: $logRange")
 
             val startTime = System.currentTimeMillis()
@@ -1176,16 +1208,16 @@ class LogServiceV2 @Autowired constructor(
                 }
                 if (logs[logs.size - 1].lineNo < logRange.second) {
                     logs.add(
-                            genLogMsgThereIsMore(
-                                    "soda_more",
-                                    java.lang.Long.MAX_VALUE,
-                                    logRange.second - logs[logs.size - 1].lineNo,
-                                    logs[logs.size - 1].lineNo + 1,
-                                    logRange.second,
-                                    tag,
-                                    jobId,
-                                    executeCount
-                            )
+                        genLogMsgThereIsMore(
+                            tagPrefix = "soda_more",
+                            timeStamp = java.lang.Long.MAX_VALUE,
+                            numMore = logRange.second - logs[logs.size - 1].lineNo,
+                            start = logs[logs.size - 1].lineNo + 1,
+                            end = logRange.second,
+                            tag = tag,
+                            jobId = jobId,
+                            executeCount = executeCount
+                        )
                     )
                 }
             }
@@ -1196,16 +1228,17 @@ class LogServiceV2 @Autowired constructor(
                 val (lineNo1) = logs[i]
                 if (lineNo1 > lineNo + 1) {
                     logs.add(
-                            i, genLogMsgThereIsMore(
-                            "soda_more",
-                            timestamp,
-                            lineNo1 - lineNo - 1,
-                            lineNo + 1,
-                            lineNo1 - 1,
-                            tag,
-                            jobId,
-                            executeCount
-                    )
+                        index = i,
+                        element = genLogMsgThereIsMore(
+                            tagPrefix = "soda_more",
+                            timeStamp = timestamp,
+                            numMore = lineNo1 - lineNo - 1,
+                            start = lineNo + 1,
+                            end = lineNo1 - 1,
+                            tag = tag,
+                            jobId = jobId,
+                            executeCount = executeCount
+                        )
                     )
                 }
             }

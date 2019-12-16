@@ -81,7 +81,13 @@ class DispatchBuildLessDockerShutdownTaskAtom @Autowired constructor(
             )
         )
         // 同步Job执行状态
-        LogUtils.stopLog(rabbitTemplate, buildId, task.containerHashId ?: "", task.containerHashId ?: "", task.executeCount)
+        LogUtils.stopLog(
+            rabbitTemplate = rabbitTemplate,
+            buildId = buildId,
+            tag = task.containerHashId ?: "",
+            jobId = task.containerHashId ?: "",
+            executeCount = task.executeCount
+        )
 
         logger.info("[$buildId]|SHUTDOWN_VM|stageId=${task.stageId}|container=${task.containerId}|vmSeqId=$vmSeqId")
         return AtomResponse(BuildStatus.SUCCEED)
