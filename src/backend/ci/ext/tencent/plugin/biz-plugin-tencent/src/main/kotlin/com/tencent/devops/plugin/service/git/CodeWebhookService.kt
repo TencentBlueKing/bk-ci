@@ -106,7 +106,11 @@ class CodeWebhookService @Autowired constructor(
             val pipelineId = event.pipelineId
 
             val commitId = variables[PIPELINE_WEBHOOK_REVISION]
-            val repositoryId = variables[PIPELINE_WEBHOOK_REPO]
+            var repositoryId = variables[PIPELINE_WEBHOOK_REPO]
+            if (repositoryId.isNullOrBlank()) {
+                // 兼容老的V1的
+                repositoryId = variables["hookRepo"]
+            }
             val repositoryType = RepositoryType.valueOf(variables[PIPELINE_WEBHOOK_REPO_TYPE] ?: RepositoryType.ID.name)
             if (commitId.isNullOrEmpty() || repositoryId.isNullOrEmpty()) {
                 logger.warn("Some variable is null or empty. commitId($commitId) repoHashId($repositoryId) repositoryType($repositoryType)")

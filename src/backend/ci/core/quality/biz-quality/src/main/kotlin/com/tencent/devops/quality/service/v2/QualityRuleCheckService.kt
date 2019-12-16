@@ -33,7 +33,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxPaasCodeCCScriptElement
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.notify.api.service.ServiceNotifyResource
-import com.tencent.devops.plugin.codecc.api.ServiceCodeccElementResource
+import com.tencent.devops.plugin.api.ServiceCodeccElementResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.quality.api.v2.pojo.QualityHisMetadata
@@ -383,10 +383,10 @@ class QualityRuleCheckService @Autowired constructor(
                 return ""
             }
             if (record.detail.isNullOrBlank()) {
-                "<a target='_blank' href='${HomeHostUtil.innerServerHost()}/console/codecc/$projectId/procontrol/prodesc?proj_id=$taskId&projectId=$projectId'>查看详情</a>"
+                "<a target='_blank' href='${HomeHostUtil.innerServerHost()}/console/codecc/$projectId/task/$taskId/detail'>查看详情</a>"
             } else {
-                val detail = codeccToolUrlPathMap[record.detail!!] ?: "procontrol/multidefectmanage"
-                "<a target='_blank' href='${HomeHostUtil.innerServerHost()}/console/codecc/$projectId/$detail?proj_id=$taskId&toolName=${record.detail}&projectId=$projectId'>查看详情</a>"
+                val detail = codeccToolUrlPathMap[record.detail!!] ?: "defect/lint"
+                "<a target='_blank' href='${HomeHostUtil.innerServerHost()}/console/codecc/$projectId/task/$taskId/$detail/${record.detail}/list'>查看详情</a>"
             }
         } else {
             record.logPrompt ?: ""

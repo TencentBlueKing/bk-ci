@@ -37,6 +37,11 @@ if ngx.var.access_type == 'build' or ngx.var.access_type == 'external' then
   access_util = require 'access_control_ip'
 end
 
+-- defect服务不做频率限制
+if ngx.var.service == 'report' then
+  access_util = nil
+end
+
 -- 限制访问频率
 if access_util then 
   local access_result,err = access_util:isAccess()
@@ -77,11 +82,11 @@ end
 
 
 -- 获取灰度设置
-local devops_gray = ngx.var.gray
+local devops_gray = grayUtil:get_gray()
 
 -- ngx.log(ngx.ERR, "devops_gray:", devops_gray )
 local ns_config = nil
-if devops_gray ~= "true" then
+if devops_gray ~= true then
   ns_config = config.ns
   -- ngx.log(ngx.ERR, "ns_config" )
 else

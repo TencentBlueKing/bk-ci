@@ -91,6 +91,4 @@ function _M:get_ticket(bk_token)
     -- ngx.log(ngx.ERR, "access user‘s rtx :", result.data.user_id)
     return result.data
 end
-
-
 return _M

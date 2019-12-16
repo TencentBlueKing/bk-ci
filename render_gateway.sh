@@ -4,7 +4,7 @@ mkdir -p ${WORKSPACE}/ci/gateway
 cp -r ${WORKSPACE}/src/gateway/* ${WORKSPACE}/ci/gateway
 cd ${WORKSPACE}/scripts/
 # cp -rf ci_env_local.properties ci_env.properties
-cp -rf bkenv.properties ci_env.properties
+cp -rf ci_env_local.properties ci_env.properties
 sh ./render_ci -m ci ../support-files/templates/*
 cd ${WORKSPACE}/ci/gateway
 cp -rf ./static-tencent/* ./static
