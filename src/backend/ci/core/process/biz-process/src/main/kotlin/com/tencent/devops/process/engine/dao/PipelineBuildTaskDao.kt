@@ -127,7 +127,8 @@ class PipelineBuildTaskDao @Autowired constructor(private val objectMapper: Obje
                     TOTAL_TIME,
                     ERROR_TYPE,
                     ERROR_CODE,
-                    ERROR_MSG
+                    ERROR_MSG,
+                    CONTAINER_HASH_ID
                 )
                     .values(
                         buildTask.projectId,
@@ -157,7 +158,8 @@ class PipelineBuildTaskDao @Autowired constructor(private val objectMapper: Obje
                         },
                         buildTask.errorType?.ordinal,
                         buildTask.errorCode,
-                        buildTask.errorMsg
+                        buildTask.errorMsg,
+                        buildTask.containerHashId
                     )
             }).execute()
         }
