@@ -142,18 +142,9 @@ func getBuild() (*api.ThirdPartyBuildInfo, error) {
 	return buildInfo, nil
 }
 
-func buildAgentJarPath() string {
-	path := fmt.Sprintf("%s/%s", systemutil.GetWorkDir(), "worker-agent.jar")
-	if !fileutil.Exists(path) {
-		logs.Warn("worker-agent.jar not exist, use agent.jar")
-		path = fmt.Sprintf("%s/%s", systemutil.GetWorkDir(), "agent.jar")
-	}
-	return path
-}
-
 func runBuild(buildInfo *api.ThirdPartyBuildInfo) error {
 	workDir := systemutil.GetWorkDir()
-	agentJarPath := buildAgentJarPath()
+	agentJarPath := config.BuildAgentJarPath()
 	if !fileutil.Exists(agentJarPath) {
 		errorMsg := fmt.Sprintf("missing %s, please check agent installation.", config.WorkAgentFile)
 		logs.Error(errorMsg)
@@ -187,7 +178,7 @@ func runBuild(buildInfo *api.ThirdPartyBuildInfo) error {
 			"-Ddevops.slave.agent.role=devops.slave.agent.role.slave",
 			"-Dbuild.type=AGENT",
 			"-jar",
-			buildAgentJarPath(),
+			config.BuildAgentJarPath(),
 			getEncodedBuildInfo(buildInfo)}
 		pid, err := command.StartProcess(startCmd, args, workDir, goEnv, runUser)
 		if err != nil {
@@ -246,7 +237,7 @@ func writeStartBuildAgentScript(buildInfo *api.ThirdPartyBuildInfo) (string, err
 		"fi",
 		fmt.Sprintf("cd %s", systemutil.GetWorkDir()),
 		fmt.Sprintf("%s -Ddevops.slave.agent.start.file=%s -Dbuild.type=AGENT -Ddevops.slave.agent.role=devops.slave.agent.role.slave -jar %s %s",
-			config.GetJava(), scriptFile, buildAgentJarPath(), getEncodedBuildInfo(buildInfo)),
+			config.GetJava(), scriptFile, config.BuildAgentJarPath(), getEncodedBuildInfo(buildInfo)),
 	}
 	scriptContent := strings.Join(lines, "\n")
 
