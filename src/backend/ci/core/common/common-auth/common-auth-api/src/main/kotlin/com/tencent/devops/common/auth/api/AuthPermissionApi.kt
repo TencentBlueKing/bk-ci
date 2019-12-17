@@ -113,6 +113,17 @@ interface AuthPermissionApi {
         supplier: (() -> List<String>)? = null
     ): Map<AuthPermission, List<String>>
 
+    fun addResourcePermissionForUsers(
+        userId: String,
+        projectCode: String,
+        serviceCode: AuthServiceCode,
+        permission: AuthPermission,
+        resourceType: AuthResourceType,
+        resourceCode: String,
+        userIdList: List<String>,
+        supplier: (() -> List<String>)?
+    ): Boolean
+}
     /**
      * 添加用户指定权限
      * @param user 用户ID
@@ -129,4 +140,3 @@ interface AuthPermissionApi {
         projectCode: String,
         permissions: Set<AuthPermission>
     ): Boolean
-}
