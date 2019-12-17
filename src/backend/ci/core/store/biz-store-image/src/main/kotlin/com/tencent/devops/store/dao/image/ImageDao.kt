@@ -63,6 +63,7 @@ import org.jooq.Record4
 import org.jooq.Record9
 import org.jooq.Result
 import org.jooq.impl.DSL
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
@@ -89,6 +90,8 @@ class ImageDao {
         val latestFlag: Boolean?,
         val modifier: String?
     )
+
+    private val logger = LoggerFactory.getLogger(ImageDao::class.java)
 
     fun countByName(
         dslContext: DSLContext,
@@ -231,10 +234,11 @@ class ImageDao {
             tImage.TICKET_ID.`as`(Constants.KEY_IMAGE_TICKET_ID),
             tStoreProjectRel.PROJECT_CODE.`as`(Constants.KEY_IMAGE_INIT_PROJECT)
         ).from(tImage).join(tStoreProjectRel).on(tImage.IMAGE_CODE.eq(tStoreProjectRel.STORE_CODE))
-        return baseStep.where(conditions)
+        val finalStep = baseStep.where(conditions)
             .orderBy(tImage.VERSION.desc())
             .limit(1)
-            .fetchOne()
+        logger.info(finalStep.getSQL(true))
+        return finalStep.fetchOne()
     }
 
     fun getImage(dslContext: DSLContext, imageCode: String, version: String): TImageRecord? {
