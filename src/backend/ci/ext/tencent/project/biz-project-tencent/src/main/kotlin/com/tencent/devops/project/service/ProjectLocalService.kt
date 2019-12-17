@@ -834,9 +834,10 @@ class ProjectLocalService @Autowired constructor(
         }
     }
 
-    private fun createUser2Project(userId: String, projectCode: String): Boolean{
-        logger.info("[createUser2Project]  userId[$userId] projectCode[$projectCode]")
-        return bkAuthProjectApi.createProjectUser(userId, bsPipelineAuthServiceCode, projectCode, BkAuthGroup.DEVELOPER.value)
+    private fun createUser2Project(userId: String, projectId: String): Boolean{
+        logger.info("[createUser2Project]  userId[$userId] projectCode[$projectId]")
+        val projectInfo = projectDao.getByEnglishName(dslContext, projectId) ?: throw RuntimeException()
+        return bkAuthProjectApi.createProjectUser(userId, bsPipelineAuthServiceCode, projectInfo.projectId, BkAuthGroup.DEVELOPER.value)
     }
 
     companion object {
