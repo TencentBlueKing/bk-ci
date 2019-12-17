@@ -39,6 +39,7 @@ import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.ProjectDao
+import com.tencent.devops.project.dispatch.ProjectDispatcher
 import com.tencent.devops.project.jmx.api.ProjectJmxApi
 import com.tencent.devops.project.jmx.api.ProjectJmxApi.Companion.PROJECT_LIST
 import com.tencent.devops.project.pojo.ProjectCreateInfo
@@ -46,6 +47,9 @@ import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.enums.ProjectValidateType
+import com.tencent.devops.project.pojo.mq.ProjectCreateBroadCastEvent
+import com.tencent.devops.project.pojo.mq.ProjectUpdateBroadCastEvent
+import com.tencent.devops.project.pojo.mq.ProjectUpdateLogoBroadCastEvent
 import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.project.service.ProjectPermissionService
 import com.tencent.devops.project.service.ProjectService
@@ -54,6 +58,7 @@ import com.tencent.devops.project.util.ProjectUtils
 import com.tencent.devops.project.util.exception.ProjectNotExistException
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.jooq.DSLContext
+import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.dao.DuplicateKeyException
@@ -69,7 +74,8 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
     private val projectJmxApi: ProjectJmxApi,
     private val redisOperation: RedisOperation,
     private val gray: Gray,
-    private val client: Client
+    private val client: Client,
+    private val projectDispatcher: ProjectDispatcher
 ) : ProjectService {
 
     override fun validate(validateType: ProjectValidateType, name: String, projectId: String?) {
@@ -153,7 +159,15 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 groupName = ""
             )
             try {
-                projectDao.create(dslContext, userId, logoAddress, projectCreateInfo, userDeptDetail, projectId)
+                dslContext.transaction { configuration ->
+                    val context = DSL.using(configuration)
+                    projectDao.create(context, userId, logoAddress, projectCreateInfo, userDeptDetail, projectId)
+                    projectDispatcher.dispatch(ProjectCreateBroadCastEvent(
+                        userId = userId,
+                        projectId = projectId,
+                        projectInfo = projectCreateInfo
+                    ))
+                }
             } catch (e: DuplicateKeyException) {
                 logger.warn("Duplicate project $projectCreateInfo", e)
                 throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PROJECT_NAME_EXIST))
@@ -184,11 +198,19 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         var success = false
         try {
             try {
-                projectDao.update(dslContext, userId, projectId, projectUpdateInfo)
-                projectPermissionService.modifyResource(
-                    projectCode = projectUpdateInfo.englishName,
-                    projectName = projectUpdateInfo.projectName
-                )
+                dslContext.transaction { configuration ->
+                    val context = DSL.using(configuration)
+                    projectDao.update(context, userId, projectId, projectUpdateInfo)
+                    projectPermissionService.modifyResource(
+                        projectCode = projectUpdateInfo.englishName,
+                        projectName = projectUpdateInfo.projectName
+                    )
+                    projectDispatcher.dispatch(ProjectUpdateBroadCastEvent(
+                        userId = userId,
+                        projectId = projectId,
+                        projectInfo = projectUpdateInfo
+                    ))
+                }
             } catch (e: DuplicateKeyException) {
                 logger.warn("Duplicate project $projectUpdateInfo", e)
                 throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PROJECT_NAME_EXIST))
@@ -335,7 +357,15 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 if (result.isNotOk()) {
                     return Result(result.status, result.message, false)
                 }
-                projectDao.updateLogoAddress(dslContext, userId, projectId, result.data!!)
+                dslContext.transaction { configuration ->
+                    val context = DSL.using(configuration)
+                    projectDao.updateLogoAddress(context, userId, projectId, result.data!!)
+                    projectDispatcher.dispatch(ProjectUpdateLogoBroadCastEvent(
+                        userId = userId,
+                        projectId = projectId,
+                        logoAddr = result.data!!
+                    ))
+                }
             } catch (e: Exception) {
                 logger.warn("fail update projectLogo", e)
                 throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.UPDATE_LOGO_FAIL))

@@ -36,9 +36,12 @@ import com.tencent.devops.project.ProjectInfoResponse
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dao.ProjectLabelRelDao
+import com.tencent.devops.project.dispatch.ProjectDispatcher
 import com.tencent.devops.project.pojo.OpGrayProject
 import com.tencent.devops.project.pojo.OpProjectUpdateInfoRequest
+import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.Result
+import com.tencent.devops.project.pojo.mq.ProjectUpdateBroadCastEvent
 import com.tencent.devops.project.service.OpProjectService
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -52,7 +55,8 @@ abstract class AbsOpProjectServiceImpl @Autowired constructor(
     private val projectDao: ProjectDao,
     private val projectLabelRelDao: ProjectLabelRelDao,
     private val redisOperation: RedisOperation,
-    private val gray: Gray
+    private val gray: Gray,
+    private val projectDispatcher: ProjectDispatcher
 ) : OpProjectService {
 
     override fun listGrayProject(): Result<OpGrayProject> {
@@ -110,6 +114,25 @@ abstract class AbsOpProjectServiceImpl @Autowired constructor(
                     projectId,
                     labelIdList!!
             )
+            projectDispatcher.dispatch(ProjectUpdateBroadCastEvent(
+                userId = userId,
+                projectId = projectId,
+                projectInfo = ProjectUpdateInfo(
+                    projectName = projectInfoRequest.projectName,
+                    projectType = projectInfoRequest.projectType,
+                    bgId = projectInfoRequest.bgId,
+                    bgName = projectInfoRequest.bgName,
+                    centerId = projectInfoRequest.centerId,
+                    centerName = projectInfoRequest.centerName,
+                    deptId = projectInfoRequest.deptId,
+                    deptName = projectInfoRequest.deptName,
+                    description = dbProjectRecord.description ?: "",
+                    englishName = dbProjectRecord.englishName,
+                    ccAppId = projectInfoRequest.ccAppId,
+                    ccAppName = projectInfoRequest.cc_app_name,
+                    kind = projectInfoRequest.kind
+                )
+            ))
         }
         return if (!flag) {
             0 // 更新操作
