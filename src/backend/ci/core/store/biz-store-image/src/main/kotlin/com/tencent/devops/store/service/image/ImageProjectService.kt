@@ -1,3 +1,29 @@
+/*
+ * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ *
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ *
+ * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
+ *
+ * A copy of the MIT License is included in this file.
+ *
+ *
+ * Terms of the MIT License:
+ * ---------------------------------------------------
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
+ * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+ * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+ * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
 package com.tencent.devops.store.service.image
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
@@ -970,7 +996,6 @@ class ImageProjectService @Autowired constructor(
         val categoryName = it.get(KEY_CATEGORY_NAME) as String?
         val publisher = it.get(KEY_PUBLISHER) as String
         val publicFlag = it.get(KEY_IMAGE_FEATURE_PUBLIC_FLAG) as Boolean
-        // 是否可安装
         val recommendFlag = it.get(KEY_IMAGE_FEATURE_RECOMMEND_FLAG) as Boolean
         val certificationFlag = it.get(KEY_IMAGE_FEATURE_CERTIFICATION_FLAG) as Boolean
         val modifier = it.get(KEY_MODIFIER) as String?
@@ -1002,7 +1027,8 @@ class ImageProjectService @Autowired constructor(
             flag = canInstallFlag,
             recommendFlag = recommendFlag,
             certificationFlag = certificationFlag,
-            isInstalled = installFlag,
+            // 公共镜像视为已安装
+            isInstalled = installFlag || publicFlag,
             modifier = modifier ?: "",
             updateTime = updateTime
         )
@@ -1012,14 +1038,13 @@ class ImageProjectService @Autowired constructor(
      * 安装镜像到项目
      */
     fun installImage(
-        accessToken: String,
         userId: String,
         projectCodeList: ArrayList<String>,
         imageCode: String,
         channelCode: ChannelCode,
         interfaceName: String? = "Anon interface"
     ): Result<Boolean> {
-        logger.info("$interfaceName:installImage:Input:($accessToken,$userId,$projectCodeList,$imageCode)")
+        logger.info("$interfaceName:installImage:Input:($userId,$projectCodeList,$imageCode)")
         // 判断镜像标识是否合法
         val image = marketImageDao.getLatestImageByCode(dslContext, imageCode)
             ?: throw ImageNotExistException("imageCode=$imageCode")
@@ -1029,7 +1054,6 @@ class ImageProjectService @Autowired constructor(
             userId = userId,
             storeCode = image.imageCode,
             storeType = StoreTypeEnum.IMAGE,
-            accessToken = accessToken,
             projectCodeList = projectCodeList
         )
         if (validateInstallResult.isNotOk()) {
@@ -1037,7 +1061,6 @@ class ImageProjectService @Autowired constructor(
         }
         logger.info("$interfaceName:installImage:Inner:image.id=${image.id},imageFeature.publicFlag=${imageFeature.publicFlag}")
         return storeProjectService.installStoreComponent(
-            accessToken = accessToken,
             userId = userId,
             projectCodeList = projectCodeList,
             storeId = image.id,
