@@ -1166,3 +1166,23 @@ table tr:hover {
 .bk-dialog-title {
 	word-wrap:break-word;
 }
+
+.staff-selector {
+    .bk-selector-list {
+        position: absolute;
+        top: calc(100% + 5px);
+        left: 0;
+        right: 0;
+        box-shadow: 0 0 1px 1px rgba(0,0,0,.1);
+        border-radius: 2px;
+        background-color: #fff;
+        z-index: 100;
+        overflow-y: hidden;
+        .outside-ul {
+            padding: 0;
+        }
+        .bk-selector-list-item .text {
+            line-height: 42px;
+        }
+    }
+}
