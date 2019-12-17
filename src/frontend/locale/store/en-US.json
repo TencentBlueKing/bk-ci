@@ -1,5 +1,7 @@
 {
     "store": "Store",
+    "该插件不推荐使用": "This plugin is not recommended",
+    "该镜像不推荐使用": "This image is not recommended",
     "yaml": "YAML Fragment",
     "成员名称": "Member Name",
     "该分类下暂无容器镜像": "No container image under this category",
