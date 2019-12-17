@@ -163,5 +163,4 @@ class AtomArchiveResourceApi : AbstractBuildResourceApi(), AtomArchiveSDKApi {
         val responseContent = request(request, "获取插件开发语言相关的环境变量信息失败")
         return objectMapper.readValue(responseContent)
     }
-
 }
