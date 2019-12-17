@@ -26,7 +26,7 @@
                         <div class="bk-form-content">
                             <div class="atom-select-entry">
                                 <template v-if="atom">
-                                    <span :title="atom.name" class="atom-selected-name">{{ atom.name }}</span>
+                                    <span :title="atom.recommendFlag === false ? $t('editPage.notRecomendPlugin') : atom.name" :class="[{ 'not-recommend': atom.recommendFlag === false }, 'atom-selected-name']">{{ atom.name }}</span>
                                     <bk-button theme="primary" class="atom-select-btn reselect-btn" :disabled="!editable" @click.stop="toggleAtomSelectorPopup(true)">{{ $t('editPage.reSelect') }}</bk-button>
                                 </template>
                                 <template v-else-if="!atomCode">
