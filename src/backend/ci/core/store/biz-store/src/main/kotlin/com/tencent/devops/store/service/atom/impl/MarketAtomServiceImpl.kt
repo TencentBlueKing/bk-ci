@@ -560,7 +560,6 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
             return MessageCodeUtil.generateResponseDataObject(StoreMessageCode.USER_INSTALL_ATOM_CODE_IS_INVALID, false)
         }
         return storeProjectService.installStoreComponent(
-            accessToken = accessToken,
             userId = userId,
             projectCodeList = installAtomReq.projectCode,
             storeId = atom.id,
@@ -731,7 +730,12 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                 val description = if (label?.toString().isNullOrBlank()) {
                     if (text?.toString().isNullOrBlank()) {
                         desc
-                    } else { text } } else { label }
+                    } else {
+                        text
+                    }
+                } else {
+                    label
+                }
                 val type = paramValueMap["type"]
                 val required = paramValueMap["required"]
                 val defaultValue = paramValueMap["default"]

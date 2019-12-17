@@ -62,7 +62,7 @@ data class ProjectCreateInfo(
     val centerName: String,
     @ApiModelProperty("是否保密")
     // @get:JsonProperty("is_secrecy")
-    var secrecy: Boolean,
+    var secrecy: Boolean = false,
     @ApiModelProperty("kind")
-    val kind: Int
+    val kind: Int = 0
 )
