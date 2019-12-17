@@ -81,15 +81,11 @@ class SubPipelineStartUpService(
     ): Result<ProjectBuildId> {
         val project = if (callPipelineId.isNotEmpty()) { callProjectId } else { projectId }
 
-        logger.info("callPipelineStartup: $projectId | $parentPipelineId | $buildId | $callPipelineId | $taskId | $runMode")
+        logger.info("callPipelineStartup: $project | $callProjectId | $projectId | $parentPipelineId | $buildId | $callPipelineId | $taskId | $runMode")
 
         // 获取构建任务
         val task = pipelineRuntimeService.getBuildTask(buildId, taskId)
                 ?: return MessageCodeUtil.generateResponseDataObject(ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID.toString(), arrayOf(buildId))
-
-        logger.info("task: $task")
-
-        logger.info("callPipelineStartup: $project | $parentPipelineId | $buildId | $callPipelineId | $taskId | $runMode")
 
         // 通过 runVariables获取 userId 和 channelCode
         val runVariables = pipelineRuntimeService.getAllVariable(buildId)
