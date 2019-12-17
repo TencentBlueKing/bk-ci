@@ -127,7 +127,8 @@ class PipelineBuildTaskDao @Autowired constructor(private val objectMapper: Obje
                     TOTAL_TIME,
                     ERROR_TYPE,
                     ERROR_CODE,
-                    ERROR_MSG
+                    ERROR_MSG,
+                    CONTAINER_HASH_ID
                 )
                     .values(
                         buildTask.projectId,
@@ -157,7 +158,8 @@ class PipelineBuildTaskDao @Autowired constructor(private val objectMapper: Obje
                         },
                         buildTask.errorType?.ordinal,
                         buildTask.errorCode,
-                        buildTask.errorMsg
+                        buildTask.errorMsg,
+                        buildTask.containerHashId
                     )
             }).execute()
         }
@@ -303,12 +305,7 @@ class PipelineBuildTaskDao @Autowired constructor(private val objectMapper: Obje
         }
     }
 
-    fun updateTaskParam(
-        dslContext: DSLContext,
-        buildId: String,
-        taskId: String,
-        taskParam: String
-    ): Int {
+    fun updateTaskParam(dslContext: DSLContext, buildId: String, taskId: String, taskParam: String): Int {
         with(T_PIPELINE_BUILD_TASK) {
             return dslContext.update(this)
                 .set(TASK_PARAMS, taskParam)
