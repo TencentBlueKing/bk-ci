@@ -28,6 +28,7 @@ package com.tencent.devops.worker.common.api.atom
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.process.pojo.BuildVariables
+import com.tencent.devops.store.pojo.atom.AtomDevLanguageEnvVar
 import com.tencent.devops.store.pojo.atom.AtomEnv
 import com.tencent.devops.store.pojo.atom.AtomEnvRequest
 import com.tencent.devops.store.pojo.common.SensitiveConfResp
@@ -60,4 +61,7 @@ interface AtomArchiveSDKApi : WorkerRestApiSDK {
     fun uploadAtom(file: File, destPath: String, buildVariables: BuildVariables)
 
     fun downloadAtom(atomFilePath: String, file: File)
+
+    fun getAtomDevLanguageEnvVars(language: String, buildHostType: String, buildHostOs: String): Result<List<AtomDevLanguageEnvVar>?>
+
 }
