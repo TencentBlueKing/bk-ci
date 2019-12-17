@@ -210,7 +210,7 @@ open class MarketAtomTask : ITask() {
             atomSensitiveConfMap[it.fieldName] = it.fieldValue
         }
         val atomSensitiveDataMap = mapOf("bkSensitiveConfInfo" to atomSensitiveConfMap)
-        writeInputFile(atomWorkspace, variables.plus(atomParams).plus(atomSensitiveDataMap))
+        writeInputFile(atomWorkspace, variables.plus(atomSensitiveDataMap))
 
         writeSdkEnv(atomWorkspace, buildTask, buildVariables)
 
@@ -334,7 +334,7 @@ open class MarketAtomTask : ITask() {
     private fun writeSdkEnv(workspace: File, buildTask: BuildTask, buildVariables: BuildVariables) {
         val inputFileFile = File(workspace, sdkFile)
         val sdkEnv: SdkEnv = when (BuildEnv.getBuildType()) {
-            BuildType.AGENT, BuildType.TSTACK_AGENT, BuildType.DOCKER, BuildType.DOCKER_HOST -> {
+            BuildType.AGENT, BuildType.TSTACK_AGENT, BuildType.DOCKER, BuildType.DOCKER_HOST, BuildType.MACOS -> {
                 SdkEnv(
                     buildType = BuildEnv.getBuildType(),
                     projectId = buildVariables.projectId,
