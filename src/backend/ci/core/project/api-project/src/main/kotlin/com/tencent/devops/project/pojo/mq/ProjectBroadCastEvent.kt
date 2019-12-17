@@ -24,27 +24,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.pojo.common
+package com.tencent.devops.project.pojo.mq
 
-import com.tencent.devops.store.pojo.common.enums.BusinessEnum
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.common.event.annotation.Event
+import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 
-/**
- * @Description
- * @Date 2019/12/1
- * @Version 1.0
- */
-@ApiModel("业务配置请求报文")
-data class BusinessConfigRequest(
-    @ApiModelProperty("业务", required = true)
-    val business: BusinessEnum,
-    @ApiModelProperty("业务特性", required = true)
-    val feature: String,
-    @ApiModelProperty("业务特性取值", required = true)
-    val businessValue: String,
-    @ApiModelProperty("配置值", required = true)
-    val configValue: String,
-    @ApiModelProperty("描述", required = true)
-    val description: String?
+@Event(exchange = MQ.EXCHANGE_PROJECT_CREATE_FANOUT)
+abstract class ProjectBroadCastEvent(
+    open val userId: String,
+    open val projectId: String,
+    open var retryCount: Int,
+    open var delayMills: Int
 )
