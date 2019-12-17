@@ -114,6 +114,7 @@ interface AuthPermissionApi {
     ): Map<AuthPermission, List<String>>
 
     fun addResourcePermissionForUsers(
+        userId: String,
         projectCode: String,
         serviceCode: AuthServiceCode,
         permission: AuthPermission,
