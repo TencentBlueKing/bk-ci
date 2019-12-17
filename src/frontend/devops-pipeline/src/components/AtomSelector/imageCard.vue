@@ -4,7 +4,7 @@
             <img :src="card.logoUrl" class="info-pic">
             <p class="info-main">
                 <span class="main-name">
-                    <span :class="{ 'not-recommend': card.recommendFlag === false }" :title="card.recommendFlag === false ? $t('store.该镜像不推荐使用') : ''">{{card.name}}</span>
+                    <span :class="{ 'not-recommend': card.recommendFlag === false }" :title="card.recommendFlag === false ? $t('editPage.notRecomendImage') : ''">{{card.name}}</span>
                     <span :title="$t('editPage.officialCertification')" class="icon-title">
                         <logo class="bk-icon" name="LDImage" size="13" v-if="card.certificationFlag" />
                     </span>
