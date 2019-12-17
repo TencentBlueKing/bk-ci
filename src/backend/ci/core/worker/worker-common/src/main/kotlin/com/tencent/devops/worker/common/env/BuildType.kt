@@ -30,10 +30,7 @@ enum class BuildType {
     WORKER,
     AGENT,
     MACOS,
-    DOCKER,
-    PLUGIN_AGENT,
-    DOCKER_HOST,
-    TSTACK_AGENT;
+    DOCKER;
 
     companion object {
         fun contains(env: String): Boolean {
