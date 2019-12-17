@@ -29,6 +29,8 @@ class StoreImageService @Autowired constructor(
     fun getImageRepoInfo(
         userId: String,
         projectId: String,
+        pipelineId: String,
+        buildId: String,
         imageCode: String?,
         imageVersion: String?,
         defaultPrefix: String?
@@ -48,7 +50,9 @@ class StoreImageService @Autowired constructor(
                 userId = userId,
                 projectCode = projectId,
                 imageCode = imageCode,
-                imageVersion = imageVersion
+                imageVersion = imageVersion,
+                pipelineId = pipelineId,
+                buildId = buildId
             )
         return result.data!!
     }

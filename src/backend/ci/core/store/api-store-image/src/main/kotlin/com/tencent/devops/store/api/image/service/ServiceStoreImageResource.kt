@@ -12,6 +12,7 @@ import javax.ws.rs.HeaderParam
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["SERVICE_MARKET_IMAGE"], description = "SERVICE-研发商店-镜像")
@@ -49,6 +50,12 @@ interface ServiceStoreImageResource {
         imageCode: String,
         @ApiParam("镜像版本", required = false)
         @PathParam("imageVersion")
-        imageVersion: String?
+        imageVersion: String?,
+        @ApiParam("流水线Id", required = true)
+        @QueryParam("pipelineId")
+        pipelineId: String?,
+        @ApiParam("构建Id", required = true)
+        @QueryParam("buildId")
+        buildId: String?
     ): Result<ImageRepoInfo>
 }

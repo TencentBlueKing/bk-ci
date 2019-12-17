@@ -32,12 +32,16 @@ class ServiceImageResourceImpl @Autowired constructor(
         userId: String,
         projectCode: String,
         imageCode: String,
-        imageVersion: String?
+        imageVersion: String?,
+        pipelineId: String?,
+        buildId: String?
     ): Result<ImageRepoInfo> {
         return Result(
             imageService.getImageRepoInfoByCodeAndVersion(
                 userId = userId,
                 projectCode = projectCode,
+                pipelineId = pipelineId,
+                buildId = buildId,
                 imageCode = imageCode,
                 imageVersion = imageVersion,
                 interfaceName = "/image/imageCodes/{imageCode}/imageVersions/{imageVersion}"
