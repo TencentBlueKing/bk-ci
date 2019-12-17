@@ -162,6 +162,8 @@ class TaskAtomService @Autowired(required = false) constructor(
         val isEnvControl = elementType == EnvControlTaskType.NORMAL.name || elementType == EnvControlTaskType.VM.name
 
         try {
+            val isEnvControl = elementType == EnvControlTaskType.NORMAL.name || elementType == EnvControlTaskType.VM.name
+
             // 更新状态
             pipelineRuntimeService.updateTaskStatus(
                 buildId = task.buildId,

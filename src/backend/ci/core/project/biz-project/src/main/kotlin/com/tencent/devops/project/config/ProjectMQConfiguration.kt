@@ -24,25 +24,32 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":core:quality:api-quality")
+package com.tencent.devops.project.config
 
-    compile project(":core:quality:model-quality")
+import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
+import org.springframework.amqp.core.FanoutExchange
+import org.springframework.amqp.rabbit.connection.ConnectionFactory
+import org.springframework.amqp.rabbit.core.RabbitAdmin
+import org.springframework.boot.autoconfigure.AutoConfigureOrder
+import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
+import org.springframework.core.Ordered
 
-    compile project(":core:process:api-process")
+@Configuration
+@ConditionalOnWebApplication
+@AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
+class ProjectMQConfiguration {
 
-    compile project(":core:common:common-service")
-    compile project(":core:common:common-auth:common-auth-api")
-    compile project(":core:common:common-db")
-    compile project(":core:common:common-client")
+    @Bean
+    fun rabbitAdmin(connectionFactory: ConnectionFactory): RabbitAdmin {
+        return RabbitAdmin(connectionFactory)
+    }
 
-    compile project(":core:plugin:codecc-plugin:common-codecc")
-    compile project(":core:plugin:codecc-plugin:api-codecc")
-
-    compile project(":core:notify:api-notify")
-
-    compile project(":core:project:api-project")
-    compile project(":core:common:common-archive")
+    @Bean
+    fun projectCreateExchange(): FanoutExchange {
+        val fanoutExchange = FanoutExchange(MQ.EXCHANGE_PROJECT_CREATE_FANOUT, true, false)
+        fanoutExchange.isDelayed = true
+        return fanoutExchange
+    }
 }
-
-apply from: "$rootDir/task_deploy_to_maven.gradle"
