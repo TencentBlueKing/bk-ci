@@ -40,6 +40,7 @@ import com.tencent.devops.process.pojo.ErrorType
 import com.tencent.devops.process.pojo.report.enums.ReportTypeEnum
 import com.tencent.devops.store.pojo.atom.AtomEnv
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
+import com.tencent.devops.store.pojo.common.enums.BuildHostTypeEnum
 import com.tencent.devops.worker.common.WORKSPACE_ENV
 import com.tencent.devops.worker.common.api.ApiFactory
 import com.tencent.devops.worker.common.api.atom.AtomArchiveSDKApi
@@ -47,6 +48,7 @@ import com.tencent.devops.worker.common.api.quality.QualityGatewaySDKApi
 import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.env.BuildEnv
 import com.tencent.devops.worker.common.env.BuildType
+import com.tencent.devops.worker.common.env.PluginAgentEnv
 import com.tencent.devops.worker.common.exception.TaskExecuteException
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.task.ITask
@@ -57,6 +59,7 @@ import com.tencent.devops.worker.common.utils.ShellUtil
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.nio.file.Files
+import java.nio.file.Paths
 
 /**
  * 构建脚本任务
@@ -109,7 +112,7 @@ open class MarketAtomTask : ITask() {
 
         cleanOutput(atomWorkspace)
 
-        val runtimeVariables = if (buildTask.buildVariable != null) {
+        var runtimeVariables = if (buildTask.buildVariable != null) {
             buildVariables.variables.plus(buildTask.buildVariable!!)
         } else {
             buildVariables.variables
@@ -139,7 +142,7 @@ open class MarketAtomTask : ITask() {
                 if (buildTask.type == MarketBuildAtomElement.classType) {
                     atomParams[name] = EnvUtils.parseEnv(value.toString(), systemVariables)
                 } else {
-                    atomParams[name] = value.toString()
+                    atomParams[name] = JsonUtil.toJson(value)
                 }
             }
         } catch (e: Throwable) {
@@ -150,6 +153,24 @@ open class MarketAtomTask : ITask() {
                 errorCode = AtomErrorCode.SYSTEM_WORKER_LOADING_ERROR
             )
         }
+
+        val bkWorkspacePath =
+            if (buildTask.type != MarketBuildAtomElement.classType) {
+                // 无构建环境插件的workspace取临时文件的路径
+                atomWorkspace.canonicalPath
+            } else {
+                workspace.canonicalPath
+            }
+        runtimeVariables = runtimeVariables.plus(Pair("bkWorkspace", Paths.get(bkWorkspacePath).normalize().toString()))
+        val atomStatus = atomData.atomStatus
+        val testVersionFlag = if (AtomStatusEnum.TESTING.name == atomStatus) {
+            "Y"
+        } else {
+            "N"
+        }
+        runtimeVariables = runtimeVariables.plus(Pair("testVersionFlag", testVersionFlag)) // 设置是否是测试版本的标识
+        val variables = runtimeVariables.plus(atomParams)
+        logger.info("atomCode is:$atomCode ,variables is:$variables")
 
         atomParams["bkWorkspace"] =
             if (buildTask.type != MarketBuildAtomElement.classType) {
@@ -188,17 +209,17 @@ open class MarketAtomTask : ITask() {
             atomSensitiveConfMap[it.fieldName] = it.fieldValue
         }
         val atomSensitiveDataMap = mapOf("bkSensitiveConfInfo" to atomSensitiveConfMap)
-        writeInputFile(atomWorkspace, runtimeVariables.plus(atomParams).plus(atomSensitiveDataMap))
+        writeInputFile(atomWorkspace, variables.plus(atomParams).plus(atomSensitiveDataMap))
 
         writeSdkEnv(atomWorkspace, buildTask, buildVariables)
 
         val javaFile = getJavaFile()
         val environment = runtimeVariables.plus(
             mapOf(
-                DIR_ENV to atomWorkspace.absolutePath,
+                DIR_ENV to atomWorkspace.canonicalPath,
                 INPUT_ENV to inputFile,
                 OUTPUT_ENV to outputFile,
-                JAVA_PATH_ENV to javaFile.absolutePath
+                JAVA_PATH_ENV to javaFile.canonicalPath
             )
         )
 
@@ -208,7 +229,19 @@ open class MarketAtomTask : ITask() {
             atomExecuteFile = downloadAtomExecuteFile(atomData.pkgPath, atomWorkspace)
 
             checkSha1(atomExecuteFile, atomData.shaContent!!)
-
+            val buildHostType = if (BuildEnv.isThirdParty()) BuildHostTypeEnum.THIRD else BuildHostTypeEnum.PUBLIC
+            val atomDevLanguageEnvVarsResult = atomApi.getAtomDevLanguageEnvVars(
+                atomData.language!!, buildHostType.name, AgentEnv.getOS().name)
+            logger.info("atomCode is:$atomCode ,atomDevLanguageEnvVarsResult is:$atomDevLanguageEnvVarsResult")
+            val atomDevLanguageEnvVars = atomDevLanguageEnvVarsResult.data
+            val systemEnvVariables = mutableMapOf(
+                "PROJECT_ID" to buildVariables.projectId,
+                "BUILD_ID" to buildVariables.buildId,
+                "VM_SEQ_ID" to buildVariables.vmSeqId
+            )
+            atomDevLanguageEnvVars?.forEach {
+                systemEnvVariables[it.envKey] = it.envValue
+            }
             val preCmds = mutableListOf<String>()
             if (!atomData.preCmd.isNullOrBlank()) {
                 if (atomData.preCmd!!.contains(Regex("^\\s*\\[[\\w\\s\\S\\W]*\\]\\s*$"))) {
@@ -300,7 +333,7 @@ open class MarketAtomTask : ITask() {
     private fun writeSdkEnv(workspace: File, buildTask: BuildTask, buildVariables: BuildVariables) {
         val inputFileFile = File(workspace, sdkFile)
         val sdkEnv: SdkEnv = when (BuildEnv.getBuildType()) {
-            BuildType.AGENT, BuildType.DOCKER, BuildType.MACOS -> {
+            BuildType.AGENT, BuildType.TSTACK_AGENT, BuildType.DOCKER, BuildType.DOCKER_HOST -> {
                 SdkEnv(
                     buildType = BuildEnv.getBuildType(),
                     projectId = buildVariables.projectId,
@@ -320,6 +353,17 @@ open class MarketAtomTask : ITask() {
                     buildId = buildTask.buildId,
                     vmSeqId = buildTask.vmSeqId,
                     gateway = AgentEnv.getGateway()
+                )
+            }
+            BuildType.PLUGIN_AGENT -> {
+                SdkEnv(
+                    buildType = BuildEnv.getBuildType(),
+                    projectId = buildVariables.projectId,
+                    agentId = PluginAgentEnv.getAgentId(),
+                    secretKey = PluginAgentEnv.getAgentSecretKey(),
+                    buildId = buildTask.buildId,
+                    vmSeqId = buildTask.vmSeqId,
+                    gateway = PluginAgentEnv.getGateway()
                 )
             }
         }

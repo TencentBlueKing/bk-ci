@@ -38,6 +38,7 @@ import com.tencent.devops.worker.common.api.utils.ThirdPartyAgentBuildInfoUtils
 import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.env.BuildEnv
 import com.tencent.devops.worker.common.env.BuildType
+import com.tencent.devops.worker.common.env.PluginAgentEnv
 import com.tencent.devops.worker.common.logger.LoggerService
 import io.undertow.util.StatusCodes
 import okhttp3.Headers
@@ -155,7 +156,20 @@ abstract class AbstractBuildResourceApi : WorkerRestApiSDK {
         private const val WRITE_TIMEOUT = 60L
         private val retryCodes = arrayOf(502, 503)
         val logger = LoggerFactory.getLogger(AbstractBuildResourceApi::class.java)
-        private val gateway = AgentEnv.getGateway()
+        private val gateway: String by lazy {
+            when (BuildEnv.getBuildType()) {
+                BuildType.WORKER, BuildType.AGENT, BuildType.TSTACK_AGENT, BuildType.DOCKER, BuildType.DOCKER_HOST -> {
+                    AgentEnv.getGateway()
+                }
+//                BuildType.DOCKER, BuildType.DOCKER_HOST -> {
+//                    DockerEnv.getGatway()
+//                }
+                BuildType.PLUGIN_AGENT -> {
+                    PluginAgentEnv.getGateway()
+                }
+            }
+        }
+
 
         private val buildArgs: Map<String, String> by lazy {
             initBuildArgs()
@@ -179,6 +193,16 @@ abstract class AbstractBuildResourceApi : WorkerRestApiSDK {
                     map[AUTH_HEADER_DEVOPS_PROJECT_ID] = AgentEnv.getProjectId()
                     map[AUTH_HEADER_DEVOPS_AGENT_ID] = AgentEnv.getAgentId()
                     map[AUTH_HEADER_DEVOPS_AGENT_SECRET_KEY] = AgentEnv.getAgentSecretKey()
+                }
+                BuildType.DOCKER_HOST -> {
+                    // Nothing to do
+                }
+                BuildType.PLUGIN_AGENT -> {
+                    map[AUTH_HEADER_DEVOPS_BUILD_TYPE] = BuildType.PLUGIN_AGENT.name
+                    map[AUTH_HEADER_DEVOPS_AGENT_ID] = PluginAgentEnv.getAgentId()
+                    map[AUTH_HEADER_DEVOPS_AGENT_SECRET_KEY] = PluginAgentEnv.getAgentSecretKey()
+                }
+                else -> {
                 }
             }
             logger.info("Get the request header - $map")
