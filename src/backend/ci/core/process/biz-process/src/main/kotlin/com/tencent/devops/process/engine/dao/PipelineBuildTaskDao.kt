@@ -305,12 +305,7 @@ class PipelineBuildTaskDao @Autowired constructor(private val objectMapper: Obje
         }
     }
 
-    fun updateTaskParam(
-        dslContext: DSLContext,
-        buildId: String,
-        taskId: String,
-        taskParam: String
-    ): Int {
+    fun updateTaskParam(dslContext: DSLContext, buildId: String, taskId: String, taskParam: String): Int {
         with(T_PIPELINE_BUILD_TASK) {
             return dslContext.update(this)
                 .set(TASK_PARAMS, taskParam)

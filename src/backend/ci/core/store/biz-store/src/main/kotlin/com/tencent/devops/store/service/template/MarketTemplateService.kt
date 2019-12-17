@@ -92,7 +92,6 @@ interface MarketTemplateService {
      * 安装模板到项目
      */
     fun installTemplate(
-        accessToken: String,
         userId: String,
         channelCode: ChannelCode,
         installTemplateReq: InstallTemplateReq
