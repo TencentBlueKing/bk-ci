@@ -28,6 +28,7 @@ package com.tencent.devops.openapi.resources.v2
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.v2.ApigwProjectResourceV2
 import com.tencent.devops.openapi.service.v2.ApigwProjectService
+import com.tencent.devops.project.pojo.ProjectCreateUserDTO
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result
 import org.slf4j.LoggerFactory
@@ -52,6 +53,22 @@ class ApigwProjectResourceV2Impl @Autowired constructor(
             centerName = centerName,
             interfaceName = "/v2/projects/getProjectByOrganizationId"
         ))
+    }
+
+    override fun createProjectUserByUser(
+        createUserId: String,
+        accessToken: String,
+        createInfo: ProjectCreateUserDTO
+    ): Result<Boolean?> {
+        return Result(apigwProjectService.createProjectUserByUser(createUserId, accessToken, createInfo))
+    }
+
+    override fun createProjectaUserByApp(
+        organizationType: String,
+        organizationId: Long,
+        createInfo: ProjectCreateUserDTO
+    ): Result<Boolean?> {
+        return Result(apigwProjectService.createProjectUserByApp(organizationType, organizationId, createInfo))
     }
 
     companion object {

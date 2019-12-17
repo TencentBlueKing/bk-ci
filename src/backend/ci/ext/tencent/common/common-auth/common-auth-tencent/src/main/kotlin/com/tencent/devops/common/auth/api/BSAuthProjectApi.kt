@@ -198,7 +198,7 @@ class BSAuthProjectApi @Autowired constructor(
     ): Boolean {
         var result = false
         val accessToken = bsAuthTokenApi.getAccessToken(serviceCode)
-        val url = "${bkAuthProperties.url}/projects/$projectCode/roles/$role/users?accessToken=$accessToken"
+        val url = "${bkAuthProperties.url}/projects/$projectCode/roles/$role/users?access_token=$accessToken"
         val bodyJson = mutableMapOf<String, String>()
         bodyJson.put("user_type", "rtx")
         bodyJson.put("user_id", user)

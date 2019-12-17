@@ -25,10 +25,12 @@
  */
 package com.tencent.devops.openapi.api.v2
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ACCESS_TOKEN
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ORGANIZATION_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.project.pojo.ProjectCreateUserDTO
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result
 import io.swagger.annotations.Api
@@ -37,6 +39,7 @@ import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
+import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
@@ -68,4 +71,31 @@ interface ApigwProjectResourceV2 {
         @QueryParam("centerName")
         centerName: String?
     ): Result<List<ProjectVO>?>
+
+    @POST
+    @Path("{projectId}/createByUser")
+    @ApiOperation("添加指定用户到指定项目用户组")
+    fun createProjectUserByUser(
+        @ApiParam(value = "执行用户Id", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        createUserId: String,
+        @ApiParam(value = "accessToken", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
+        accessToken: String,
+        @ApiParam("添加信息", required = true)
+        createInfo: ProjectCreateUserDTO
+    ): Result<Boolean?>
+
+    @POST
+    @Path("/createUserByApp")
+    fun createProjectaUserByApp(
+        @ApiParam("组织类型", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE)
+        organizationType: String,
+        @ApiParam("组织Id", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_ORGANIZATION_ID)
+        organizationId: Long,
+        @ApiParam("添加信息", required = true)
+        createInfo: ProjectCreateUserDTO
+    ): Result<Boolean?>
 }
