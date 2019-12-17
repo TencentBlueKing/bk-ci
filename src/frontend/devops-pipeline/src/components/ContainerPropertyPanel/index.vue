@@ -22,7 +22,7 @@
                 </div>
             </form-field>
 
-            <form v-if="isVmContainer(container)" v-bkloading="{ isLoading: !apps || !containerModalId || isHandleHistory }">
+            <form v-if="isVmContainer(container)" v-bkloading="{ isLoading: !apps || !containerModalId || isLoadingImage }">
                 <form-field :label="$t('editPage.resourceType')">
                     <selector
                         :disabled="!editable"
@@ -47,7 +47,7 @@
                     <span class="bk-form-help" v-if="isPublicResourceType">{{ $t('editPage.publicResTips') }}</span>
                 </form-field>
 
-                <form-field :label="$t('editPage.image')" v-if="['DOCKER', 'IDC', 'PUBLIC_DEVCLOUD'].includes(buildResourceType) && !isHandleHistory" :required="true" :is-error="errors.has(&quot;buildImageVersion&quot;) || errors.has(&quot;buildResource&quot;)" :error-msg="$t('editPage.imageErrMgs')">
+                <form-field :label="$t('editPage.image')" v-if="['DOCKER', 'IDC', 'PUBLIC_DEVCLOUD'].includes(buildResourceType) && !isLoadingImage" :required="true" :is-error="errors.has(&quot;buildImageVersion&quot;) || errors.has(&quot;buildResource&quot;)" :error-msg="$t('editPage.imageErrMgs')">
                     <enum-input
                         name="imageType"
                         :list="imageTypeList"
@@ -58,7 +58,7 @@
 
                     <section v-if="buildImageType === 'BKSTORE'" class="bk-image">
                         <section class="image-name">
-                            <span :class="[{ disable: !editable }, 'image-named']" :title="buildImageName">{{buildImageName || $t('editPage.chooseImage')}}</span>
+                            <span :class="[{ disable: !editable }, { 'not-recommend': imageRecommend === false }, 'image-named']" :title="imageRecommend === false ? $t('editPage.notRecomendImage') : buildImageName">{{buildImageName || $t('editPage.chooseImage')}}</span>
                             <bk-button theme="primary" @click.stop="chooseImage" :disabled="!editable">{{buildImageCode ? $t('editPage.reElection') : $t('editPage.select')}}</bk-button>
                         </section>
                         <bk-select @change="changeImageVersion" :value="buildImageVersion" searchable class="image-tag" :loading="isVersionLoading" :disabled="!editable" v-validate.initial="&quot;required&quot;" name="buildImageVersion">
@@ -163,7 +163,7 @@
             </div>
 
             <image-selector :is-show.sync="showImageSelector"
-                v-if="['DOCKER', 'IDC', 'PUBLIC_DEVCLOUD'].includes(buildResourceType) && !isHandleHistory"
+                v-if="['DOCKER', 'IDC', 'PUBLIC_DEVCLOUD'].includes(buildResourceType) && !isLoadingImage"
                 :code="buildImageCode"
                 :build-resource-type="buildResourceType"
                 @choose="choose"
@@ -217,7 +217,8 @@
             return {
                 showImageSelector: false,
                 isVersionLoading: false,
-                isHandleHistory: false,
+                isLoadingImage: false,
+                imageRecommend: true,
                 imageTypeList: [
                     {
                         label: this.$t('editPage.fromList'),
@@ -401,13 +402,20 @@
                 if (/\$\{/.test(this.buildResource)) {
                     this.changeBuildResource('imageType', 'THIRD')
                 } else {
-                    this.isHandleHistory = true
+                    this.isLoadingImage = true
                     this.requestImageHistory({ agentType: this.buildResourceType, value: this.buildResource }).then((res) => {
                         const data = res.data || {}
                         this.changeBuildResource('imageType', 'BKSTORE')
                         if (data.code) this.choose(data)
-                    }).catch((err) => this.$showTips({ theme: 'error', message: err.message || err })).finally(() => (this.isHandleHistory = false))
+                    }).catch((err) => this.$showTips({ theme: 'error', message: err.message || err })).finally(() => (this.isLoadingImage = false))
                 }
+            }
+            if (['DOCKER', 'IDC', 'PUBLIC_DEVCLOUD'].includes(this.buildResourceType) && this.buildImageCode) {
+                this.isLoadingImage = true
+                this.requestImageDetail({ code: this.buildImageCode }).then((res) => {
+                    const data = res.data || {}
+                    this.imageRecommend = data.recommendFlag
+                }).catch((err) => this.$showTips({ theme: 'error', message: err.message || err })).finally(() => (this.isLoadingImage = false))
             }
             if (this.container.dispatchType && this.container.dispatchType.imageCode) {
                 this.getVersionList(this.container.dispatchType.imageCode)
@@ -425,10 +433,12 @@
             ]),
             ...mapActions('pipelines', [
                 'requestImageVersionlist',
-                'requestImageHistory'
+                'requestImageHistory',
+                'requestImageDetail'
             ]),
 
             changeResourceType (name, val) {
+                this.imageRecommend = true
                 this.changeBuildResource('imageVersion', '')
                 this.changeBuildResource('value', '')
                 this.changeBuildResource('imageCode', '')
@@ -446,6 +456,7 @@
             },
 
             choose (card) {
+                this.imageRecommend = card.recommendFlag
                 this.changeBuildResource('imageCode', card.code)
                 this.changeBuildResource('imageName', card.name)
                 return this.getVersionList(card.code).then(() => {
@@ -643,6 +654,9 @@
                 width: 44%;
                 display: flex;
                 align-items: center;
+                .not-recommend {
+                    text-decoration: line-through;
+                }
                 .image-named {
                     border: 1px solid #c4c6cc;
                     flex: 1;
