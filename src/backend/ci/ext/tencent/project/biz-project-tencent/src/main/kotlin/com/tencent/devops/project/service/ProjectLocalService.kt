@@ -35,6 +35,9 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE_D
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthPermissionApi
+import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.BSAuthProjectApi
 import com.tencent.devops.common.auth.api.BkAuthProperties
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
@@ -101,6 +104,7 @@ class ProjectLocalService @Autowired constructor(
     private val tofService: TOFService,
     private val redisOperation: RedisOperation,
     private val bkAuthProjectApi: BSAuthProjectApi,
+    private val bkAuthPermissionApi: AuthPermissionApi,
     private val bkAuthProperties: BkAuthProperties,
     private val bsPipelineAuthServiceCode: BSPipelineAuthServiceCode,
     private val gray: Gray,
@@ -846,9 +850,17 @@ class ProjectLocalService @Autowired constructor(
             throw RuntimeException()
         }
         val projectInfo = projectDao.getByEnglishName(dslContext, projectId) ?: throw RuntimeException()
-
         permissionList.forEach {
-            //TODO:循环调用添加权限接口
+            bkAuthPermissionApi.addResourcePermissionForUsers(
+                userId = userId,
+                projectCode = projectId,
+                permission = AuthPermission.VIEW,
+                serviceCode = bsPipelineAuthServiceCode,
+                resourceType = AuthResourceType.PIPELINE_DEFAULT,
+                resourceCode = AuthResourceType.PIPELINE_DEFAULT.value,
+                userIdList = emptyList(),
+                supplier = null
+            )
         }
 
         return true
