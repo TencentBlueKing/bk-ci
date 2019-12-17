@@ -203,6 +203,7 @@ class BSAuthProjectApi @Autowired constructor(
         bodyJson.put("user_type", "rtx")
         bodyJson.put("user_id", user)
         val content = objectMapper.writeValueAsString(bodyJson)
+        logger.info("createProjectUser: url[$url], body:[$content]")
         val mediaType = MediaType.parse("application/json; charset=utf-8")
         val body = RequestBody.create(mediaType, content)
         val request = Request.Builder().url(url).post(body).build()
