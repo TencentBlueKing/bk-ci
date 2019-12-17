@@ -55,7 +55,8 @@ class BSAuthPermissionApi @Autowired constructor(
     private val bsAuthTokenApi: BSAuthTokenApi,
     private val jmxAuthApi: JmxAuthApi
 ) : AuthPermissionApi {
-    override fun addResourcePermissionForUsers(projectCode: String, serviceCode: AuthServiceCode, permission: AuthPermission, resourceType: AuthResourceType, resourceCode: String, userIdList: List<String>, supplier: (() -> List<String>)?): Boolean {
+    override fun addResourcePermissionForUsers(userId: String, projectCode: String, serviceCode: AuthServiceCode, permission: AuthPermission, resourceType: AuthResourceType, resourceCode: String, userIdList: List<String>, supplier: (() -> List<String>)?): Boolean {
+        logger.info("addResourcePermissionForUsers:Input($userId,$projectCode,$serviceCode,${permission.name},${resourceType.name},$resourceCode,$userIdList)")
         val epoch = System.currentTimeMillis()
         var success = false
         try {
@@ -96,7 +97,9 @@ class BSAuthPermissionApi @Autowired constructor(
                     logger.error("Fail to grant user permission. $responseContent")
                     throw RemoteServiceException("Fail to grant user permission")
                 }
-                return responseObject.code == 0
+                val result = responseObject.code == 0
+                logger.info("addResourcePermissionForUsers:Input($userId,$projectCode,$serviceCode,${permission.name},${resourceType.name},$resourceCode,$userIdList)->Output($result)")
+                return result
             }
         } finally {
             jmxAuthApi.execute(LIST_USER_RESOURCE, System.currentTimeMillis() - epoch, success)
