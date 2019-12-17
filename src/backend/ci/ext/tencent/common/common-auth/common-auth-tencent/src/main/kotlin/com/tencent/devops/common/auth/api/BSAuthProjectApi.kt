@@ -30,6 +30,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.auth.api.pojo.BKAuthProjectRolesResources
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroupAndUserList
 import com.tencent.devops.common.auth.api.pojo.BkAuthProjectCodeAndId
@@ -222,6 +223,29 @@ class BSAuthProjectApi @Autowired constructor(
             result = true
         }
         return result
+    }
+
+    override fun getProjectRoles(
+        serviceCode: AuthServiceCode,
+        projectCode: String,
+        projectId: String
+    ): List<BKAuthProjectRolesResources> {
+        val accessToken = bsAuthTokenApi.getAccessToken(serviceCode)
+        val url = "${bkAuthProperties.url}/projects/$projectCode/roles?access_token=$accessToken"
+        val request = Request.Builder().url(url).get().build()
+        OkhttpUtils.doHttp(request).use{ response ->
+            val responseContent = response.body()!!.string()
+            if(!response.isSuccessful){
+                logger.error("get project roles fail: projectCode[$projectCode]")
+                throw RuntimeException()
+            }
+            val responseObject = objectMapper.readValue<BkAuthResponse<List<BKAuthProjectRolesResources>>>(responseContent)
+            if(responseObject.code != 0){
+                logger.error("create project user fail: $responseObject")
+                throw RuntimeException()
+            }
+            return responseObject.data ?: emptyList()
+        }
     }
 
     companion object {

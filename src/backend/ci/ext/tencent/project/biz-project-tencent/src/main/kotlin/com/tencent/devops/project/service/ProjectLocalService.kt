@@ -834,11 +834,40 @@ class ProjectLocalService @Autowired constructor(
         }
     }
 
+    fun createPipelinePermission(createUser: String, projectId : String, userId: String, permissionList: List<String>): Boolean{
+
+        if(!bkAuthProjectApi.isProjectUser(createUser,bsPipelineAuthServiceCode, projectId, BkAuthGroup.MANAGER)){
+            logger.info("createPipelinePermission createUser is not project manager")
+            throw RuntimeException()
+        }
+
+        if(!bkAuthProjectApi.isProjectUser(userId,bsPipelineAuthServiceCode, projectId, BkAuthGroup.MANAGER)){
+            logger.info("createPipelinePermission userId is not project manager")
+            throw RuntimeException()
+        }
+        val projectInfo = projectDao.getByEnglishName(dslContext, projectId) ?: throw RuntimeException()
+
+        permissionList.forEach {
+            //TODO:循环调用添加权限接口
+        }
+
+        return true
+    }
+
     private fun createUser2Project(userId: String, projectId: String): Boolean{
         logger.info("[createUser2Project]  userId[$userId] projectCode[$projectId]")
         val projectInfo = projectDao.getByEnglishName(dslContext, projectId) ?: throw RuntimeException()
-        return bkAuthProjectApi.createProjectUser(userId, bsPipelineAuthServiceCode, projectInfo.projectId, BkAuthGroup.DEVELOPER.value)
+        val roleList = bkAuthProjectApi.getProjectRoles(bsPipelineAuthServiceCode, projectId, projectInfo.projectName)
+        var roleId: String? = null
+        roleList.forEach {
+            if(it.roleName.equals(BkAuthGroup.DEVELOPER.value)){
+                roleId = it.roleId.toString()
+                return@forEach
+            }
+        }
+        return bkAuthProjectApi.createProjectUser(userId, bsPipelineAuthServiceCode, projectInfo.projectId, roleId!!)
     }
+
 
     companion object {
         val logger = LoggerFactory.getLogger(this::class.java)
