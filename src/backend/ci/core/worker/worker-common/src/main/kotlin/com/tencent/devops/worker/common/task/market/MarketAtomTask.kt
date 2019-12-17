@@ -48,7 +48,6 @@ import com.tencent.devops.worker.common.api.quality.QualityGatewaySDKApi
 import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.env.BuildEnv
 import com.tencent.devops.worker.common.env.BuildType
-import com.tencent.devops.worker.common.env.PluginAgentEnv
 import com.tencent.devops.worker.common.exception.TaskExecuteException
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.task.ITask
@@ -334,7 +333,7 @@ open class MarketAtomTask : ITask() {
     private fun writeSdkEnv(workspace: File, buildTask: BuildTask, buildVariables: BuildVariables) {
         val inputFileFile = File(workspace, sdkFile)
         val sdkEnv: SdkEnv = when (BuildEnv.getBuildType()) {
-            BuildType.AGENT, BuildType.TSTACK_AGENT, BuildType.DOCKER, BuildType.DOCKER_HOST, BuildType.MACOS -> {
+            BuildType.AGENT, BuildType.DOCKER, BuildType.MACOS -> {
                 SdkEnv(
                     buildType = BuildEnv.getBuildType(),
                     projectId = buildVariables.projectId,
@@ -354,17 +353,6 @@ open class MarketAtomTask : ITask() {
                     buildId = buildTask.buildId,
                     vmSeqId = buildTask.vmSeqId,
                     gateway = AgentEnv.getGateway()
-                )
-            }
-            BuildType.PLUGIN_AGENT -> {
-                SdkEnv(
-                    buildType = BuildEnv.getBuildType(),
-                    projectId = buildVariables.projectId,
-                    agentId = PluginAgentEnv.getAgentId(),
-                    secretKey = PluginAgentEnv.getAgentSecretKey(),
-                    buildId = buildTask.buildId,
-                    vmSeqId = buildTask.vmSeqId,
-                    gateway = PluginAgentEnv.getGateway()
                 )
             }
         }
