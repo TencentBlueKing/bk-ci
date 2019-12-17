@@ -112,10 +112,11 @@ open class MarketAtomTask : ITask() {
 
         cleanOutput(atomWorkspace)
 
+        val variablesMap = buildVariables.variablesWithType.map { it.key to it.value.toString() }.toMap()
         var runtimeVariables = if (buildTask.buildVariable != null) {
-            buildVariables.variables.plus(buildTask.buildVariable!!)
+            variablesMap.plus(buildTask.buildVariable!!)
         } else {
-            buildVariables.variables
+            variablesMap
         }
 
         val command = StringBuilder()
