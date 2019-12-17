@@ -36,7 +36,10 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class ApigwMarketTemplateResourceImpl @Autowired constructor(private val client: Client) : ApigwMarketTemplateResource {
+class ApigwMarketTemplateResourceImpl @Autowired constructor(
+    private val client: Client
+) : ApigwMarketTemplateResource {
+
     override fun list(userId: String): Result<List<MarketItem?>> {
         logger.info("get user'd market template, user($userId)")
         val marketTemplateResp = client.get(ServiceTemplateResource::class).list(userId)
