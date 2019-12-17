@@ -26,6 +26,7 @@
 
 package com.tencent.devops.common.auth.api
 
+import com.tencent.devops.common.auth.api.pojo.BKAuthProjectRolesResources
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroupAndUserList
 import com.tencent.devops.common.auth.code.AuthServiceCode
@@ -97,5 +98,5 @@ interface AuthProjectApi {
      * @param projectCode 项目编码
      * @param projectId 项目id
      */
-    fun getProjectRoles(serviceCode: AuthServiceCode, projectCode: String, projectId: String): List<String>
+    fun getProjectRoles(serviceCode: AuthServiceCode, projectCode: String, projectId: String): List<BKAuthProjectRolesResources>
 }
