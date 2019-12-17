@@ -124,19 +124,4 @@ interface AuthPermissionApi {
         supplier: (() -> List<String>)?
     ): Boolean
 }
-    /**
-     * 添加用户指定权限
-     * @param user 用户ID
-     * @param serviceCode 服务模块代码
-     * @param resourceType 资源类型
-     * @param projectCode projectCode英文id
-     * @param permissions 权限类型(多种)
-     * @return 是否添加成功
-     */
-    fun createUserPermissions(
-        user: String,
-        serviceCode: AuthServiceCode,
-        resourceType: AuthResourceType,
-        projectCode: String,
-        permissions: Set<AuthPermission>
-    ): Boolean
+
