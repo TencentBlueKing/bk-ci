@@ -319,21 +319,26 @@ class BSAuthPermissionApi @Autowired constructor(
         val requestBody = RequestBody.create(mediaType, content)
         val request = Request.Builder().url(url).post(requestBody).build()
         logger.info("addResourcePermissionForUsers before call")
-        OkhttpUtils.doHttp(request).use { response->
-            val responseContent = response.body()!!.toString()
-            logger.info("addResourcePermissionForUsers after call, responseContentp[$responseContent]")
-            if(!response.isSuccessful){
-                logger.error("createUserPermissions fail : user[$userId], projectCode[$projectCode]")
-                throw RuntimeException()
+        try {
+            OkhttpUtils.doHttp(request).use { response ->
+                val responseContent = response.body()!!.toString()
+                logger.info("addResourcePermissionForUsers after call, responseContentp[$responseContent]")
+                if (!response.isSuccessful) {
+                    logger.error("createUserPermissions fail : user[$userId], projectCode[$projectCode]")
+                    throw RuntimeException()
+                }
+                val responseObject =
+                    objectMapper.readValue<BkAuthResponse<String>>(responseContent)
+                if (responseObject.code != 0) {
+                    logger.error("createUserPermissions fail : user[$userId], projectCode[$projectCode], message:${responseObject}")
+                    throw RuntimeException()
+                }
+                result = true
             }
-            val responseObject =
-                objectMapper.readValue<BkAuthResponse<String>>(responseContent)
-            if(responseObject.code != 0){
-                logger.error("createUserPermissions fail : user[$userId], projectCode[$projectCode], message:${responseObject}")
-                throw RuntimeException()
-            }
-            result = true
+        }catch (e: Exception){
+            logger.error(e.message)
         }
+
         return result
     }
 
