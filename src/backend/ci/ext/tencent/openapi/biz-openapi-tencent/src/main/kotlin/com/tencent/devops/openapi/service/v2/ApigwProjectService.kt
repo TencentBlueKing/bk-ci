@@ -28,6 +28,7 @@ package com.tencent.devops.openapi.service.v2
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ORGANIZATION_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.project.api.pojo.PipelinePermissionInfo
 import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
 import com.tencent.devops.project.pojo.ProjectCreateUserDTO
 import com.tencent.devops.project.pojo.ProjectVO
@@ -73,7 +74,7 @@ class ApigwProjectService(
         createUserId: String,
         accessToken: String,
         createInfo: ProjectCreateUserDTO
-    ): Boolean?{
+    ): Boolean? {
         logger.info("createProjectUserByUser:createUserId[$createUserId],accessToken[$accessToken],createInfo[$createInfo]")
         return client.get(ServiceTxProjectResource::class).createProjectaUserByUser(createUserId, accessToken, createInfo).data
     }
@@ -82,8 +83,17 @@ class ApigwProjectService(
         organizationType: String,
         organizationId: Long,
         createInfo: ProjectCreateUserDTO
-    ): Boolean?{
+    ): Boolean? {
         logger.info("createProjectUserByApp:organizationType[$organizationType],organizationId[$organizationId],createInfo[$createInfo]")
         return client.get(ServiceTxProjectResource::class).createProjectaUserByApp(organizationType, organizationId, createInfo).data
+    }
+
+    fun createPipelinePermission(
+        createUserId: String,
+        accessToken: String,
+        createInfo: PipelinePermissionInfo
+    ): Boolean? {
+        logger.info("createPipelinePermission:createUserId[$createUserId],accessToken[$accessToken],createInfo[$createInfo]")
+        return client.get(ServiceTxProjectResource::class).createUserPipelinePermission(createUserId, accessToken, createInfo).data
     }
 }
