@@ -29,8 +29,10 @@ package com.tencent.devops.worker.common.env
 enum class BuildType {
     WORKER,
     AGENT,
-    MACOS,
-    DOCKER;
+    PLUGIN_AGENT,
+    DOCKER,
+    DOCKER_HOST,
+    TSTACK_AGENT;
 
     companion object {
         fun contains(env: String): Boolean {
