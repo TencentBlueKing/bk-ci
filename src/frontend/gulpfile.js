@@ -7,7 +7,8 @@ const argv = yargs.alias({
     'dist': 'd',
     'env': 'e',
     'lsVersion': 'l',
-    'type': 't'
+    'type': 't',
+    'scope': 's'
 }).default({
     'dist': 'frontend',
     'env': 'master',
@@ -19,7 +20,7 @@ const argv = yargs.alias({
     'lsVersion': 'localStorage version',
     'type': 'bkdevops version 【ee | tencent】'
 }).argv
-const { dist, env, lsVersion, type } = argv
+const { dist, env, lsVersion, type, scope } = argv
 
 
 const svgSpriteConfig = {
@@ -28,7 +29,7 @@ const svgSpriteConfig = {
     }
 };
 
-
+console.log(scope)
 function taskGenerator(type) {
     return () => {
         return src(`./svg-sprites/${type}/*.svg`)
@@ -50,7 +51,7 @@ task('pipeline', series([taskGenerator('pipeline'), renameSvg('pipeline')]))
 task('copy', () => src(['common-lib/**'], { 'base': '.' }).pipe(dest(`${dist}/`)))
 task('build', cb => {
     const spinner = new Ora('building bk-ci frontend project').start()
-    require('child_process').exec(`yarn build:${env} -- -- --env.dist=${dist} --env.version=${type} --env.lsVersion=${lsVersion}`, {
+    require('child_process').exec(`lerna run public:${env} --scope=devops-{${scope}} -- --env.dist=${dist} --env.version=${type} --env.lsVersion=${lsVersion}`, {
         maxBuffer: 5000 * 1024
     }, (err, res) => {
         if (err) {
