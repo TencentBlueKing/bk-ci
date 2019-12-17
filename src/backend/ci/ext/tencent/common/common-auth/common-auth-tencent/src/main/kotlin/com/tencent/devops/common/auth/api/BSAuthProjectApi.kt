@@ -215,7 +215,7 @@ class BSAuthProjectApi @Autowired constructor(
                 logger.error("create project user fail: user[$user], projectCode[$projectCode]")
                 throw RuntimeException()
             }
-            val responseObject = objectMapper.readValue<BkAuthResponse<List<String>>>(responseContent)
+            val responseObject = objectMapper.readValue<BkAuthResponse<String>>(responseContent)
             if(responseObject.code != 0){
                 logger.error("create project user fail: $responseObject")
                 throw RuntimeException()

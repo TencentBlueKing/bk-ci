@@ -839,14 +839,14 @@ class ProjectLocalService @Autowired constructor(
     }
 
     fun createPipelinePermission(createUser: String, projectId : String, userId: String, permissionList: List<String>): Boolean{
-
+        logger.info("createPipelinePermission createUser[$createUser] projectId[$projectId] userId[$userId] permissionList[$permissionList]")
         if(!bkAuthProjectApi.isProjectUser(createUser,bsPipelineAuthServiceCode, projectId, BkAuthGroup.MANAGER)){
-            logger.info("createPipelinePermission createUser is not project manager")
+            logger.info("createPipelinePermission createUser is not project manager,createUser[$createUser] projectId[$projectId]")
             throw RuntimeException()
         }
 
         if(!bkAuthProjectApi.isProjectUser(userId,bsPipelineAuthServiceCode, projectId, BkAuthGroup.MANAGER)){
-            logger.info("createPipelinePermission userId is not project manager")
+            logger.info("createPipelinePermission userId is not project manager,userId[$userId] projectId[$projectId]")
             throw RuntimeException()
         }
         val projectInfo = projectDao.getByEnglishName(dslContext, projectId) ?: throw RuntimeException()
