@@ -298,6 +298,7 @@ include ":ext:tencent:plugin:boot-plugin-tencent"
 include ":ext:tencent:worker"
 include ":ext:tencent:worker:worker-agent"
 include ":ext:tencent:worker:worker-api-tencent"
+include ":ext:tencent:worker:worker-plugin-tencent"
 
 include ":ext:tencent:experience"
 include ":ext:tencent:experience:api-experience-tencent"

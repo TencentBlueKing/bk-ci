@@ -386,7 +386,7 @@ class QualityRuleCheckService @Autowired constructor(
                 "<a target='_blank' href='${HomeHostUtil.innerServerHost()}/console/codecc/$projectId/task/$taskId/detail'>查看详情</a>"
             } else {
                 val detail = codeccToolUrlPathMap[record.detail!!] ?: "defect/lint"
-                "<a target='_blank' href='${HomeHostUtil.innerServerHost()}/console/codecc/$projectId/task/$taskId/$detail/PYLINT/list'>查看详情</a>"
+                "<a target='_blank' href='${HomeHostUtil.innerServerHost()}/console/codecc/$projectId/task/$taskId/$detail/${record.detail}/list'>查看详情</a>"
             }
         } else {
             record.logPrompt ?: ""
