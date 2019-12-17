@@ -29,8 +29,9 @@ package com.tencent.devops.worker.common.env
 enum class BuildType {
     WORKER,
     AGENT,
-    PLUGIN_AGENT,
+    MACOS,
     DOCKER,
+    PLUGIN_AGENT,
     DOCKER_HOST,
     TSTACK_AGENT;
 
