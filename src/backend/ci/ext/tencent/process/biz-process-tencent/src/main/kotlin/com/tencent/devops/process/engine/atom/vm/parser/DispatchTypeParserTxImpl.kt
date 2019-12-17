@@ -38,7 +38,7 @@ class DispatchTypeParserTxImpl @Autowired constructor(
                     if (dispatchType is DockerDispatchType) {
                         dispatchType.dockerBuildVersion = dispatchType.value.removePrefix("paas/")
                     } else if (dispatchType is PublicDevCloudDispathcType) {
-                        dispatchType.image = dispatchType.value.removePrefix("devcloud/")
+                        dispatchType.image = dispatchType.value.removePrefix("/")
                     } else if (dispatchType is IDCDispatchType) {
                         dispatchType.image = dispatchType.value.removePrefix("paas/")
                     }
@@ -59,6 +59,12 @@ class DispatchTypeParserTxImpl @Autowired constructor(
                     dispatchType.value = "bkdevops/" + dispatchType.value
                 } else {
                     // TLINUX1.2/2.2需要后续做特殊映射
+                }
+                // DevCloud镜像历史数据特殊处理
+                if (dispatchType is PublicDevCloudDispathcType) {
+                    if (dispatchType.image != null) {
+                        dispatchType.image = "devcloud/" + dispatchType.image!!.removePrefix("/")
+                    }
                 }
             }
             logger.info("DispatchTypeParserTxImpl:AfterTransfer:dispatchType=(${JsonUtil.toJson(dispatchType)})")
