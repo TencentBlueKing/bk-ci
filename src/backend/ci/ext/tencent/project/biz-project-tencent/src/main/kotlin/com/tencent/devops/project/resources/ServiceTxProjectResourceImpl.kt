@@ -53,7 +53,7 @@ class ServiceTxProjectResourceImpl @Autowired constructor(
 ) : ServiceTxProjectResource {
     override fun addManagerForProject(userId: String, addManagerRequest: AddManagerRequest): Result<Boolean> {
         return Result(bsAuthPermissionApi.addResourcePermissionForUsers(
-            userId=userId,
+            userId = userId,
             projectCode = addManagerRequest.projectCode,
             serviceCode = BSPipelineAuthServiceCode(),
             permission = AuthPermission.MANAGE,
