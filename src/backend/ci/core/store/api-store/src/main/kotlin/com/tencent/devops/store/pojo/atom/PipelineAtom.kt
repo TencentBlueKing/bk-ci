@@ -91,5 +91,7 @@ data class PipelineAtom(
     @ApiModelProperty("自定义扩展容器前端表单属性字段的Json串", required = false)
     val props: Map<String, Any>?,
     @ApiModelProperty("预留字段（设置规则等信息的json串）", required = false)
-    val data: Map<String, Any>?
+    val data: Map<String, Any>?,
+    @ApiModelProperty("是否推荐标识 true：推荐，false：不推荐", required = false)
+    val recommendFlag: Boolean? = null
 )
