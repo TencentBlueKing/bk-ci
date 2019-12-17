@@ -201,6 +201,7 @@
                 'requestImageComments',
                 'requestImageScoreDetail',
                 'getUserApprovalInfo',
+                'requestImageCategorys',
                 'getAtomYaml'
             ]),
 
@@ -229,7 +230,7 @@
                 this.isLoading = true
                 const type = this.$route.params.type
                 const funObj = {
-                    atom: () => this.getAtomDetail().then(() => this.getAtomYamlApi()),
+                    atom: () => this.getAtomDetail(),
                     template: () => this.getTemplateDetail(),
                     ide: () => this.getIDEDetail(),
                     image: () => this.getImageDetail()
@@ -250,22 +251,17 @@
                 return Promise.all([
                     this.requestAtom({ atomCode }),
                     this.requestAtomStatistic({ atomCode }),
-                    this.getUserApprovalInfo(atomCode)
-                ]).then(([atomDetail, atomStatic, userAppInfo]) => {
+                    this.getUserApprovalInfo(atomCode),
+                    this.getAtomYaml({ atomCode })
+                ]).then(([atomDetail, atomStatic, userAppInfo, yaml]) => {
                     this.detail = atomDetail || {}
                     this.detailId = atomDetail.atomId
                     this.detail.downloads = atomStatic.downloads || 0
                     this.commentInfo = atomDetail.userCommentInfo || {}
                     this.$set(this.detail, 'approveStatus', (userAppInfo || {}).approveStatus)
-                })
-            },
-
-            getAtomYamlApi () {
-                const atomCode = this.detailCode
-                return this.getAtomYaml({ atomCode }).then((res) => {
                     const ele = document.querySelector('.plugin-yaml')
                     this.codeEditor = CodeMirror(ele, this.codeMirrorCon)
-                    this.codeEditor.setValue(res || '')
+                    this.codeEditor.setValue(yaml || '')
                 })
             },
 
@@ -293,11 +289,18 @@
             getImageDetail () {
                 const imageCode = this.detailCode
 
-                return this.requestImage({ imageCode }).then((res) => {
+                return Promise.all([
+                    this.requestImageCategorys(),
+                    this.requestImage({ imageCode })
+                ]).then(([categorys, res]) => {
                     this.detail = res || {}
                     this.detailId = res.imageId
                     this.detail.name = res.imageName
                     this.commentInfo = res.userCommentInfo || {}
+
+                    const currentCategory = categorys.find((x) => (x.categoryCode === res.category))
+                    const setting = currentCategory.settings || {}
+                    this.detail.needInstallToProject = setting.needInstallToProject
                 })
             },
 

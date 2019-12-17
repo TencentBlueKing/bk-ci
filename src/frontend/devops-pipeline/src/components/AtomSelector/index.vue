@@ -387,6 +387,9 @@
             right: -6px;
             top: 136px;
         }
+        .not-recommend {
+            text-decoration: line-through;
+        }
         .atom-selector-header {
             position: relative;
             height: 36px;
