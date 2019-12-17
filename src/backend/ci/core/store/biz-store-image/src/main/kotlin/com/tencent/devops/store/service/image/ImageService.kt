@@ -673,7 +673,7 @@ abstract class ImageService @Autowired constructor() {
         imageVersion: String?,
         interfaceName: String? = "Anon interface"
     ): ImageRepoInfo {
-        logger.info("$interfaceName:getImageRepoInfoByCodeAndVersion:Input:($userId,$projectCode,$imageCode,$imageVersion)")
+        logger.info("$interfaceName:getImageRepoInfoByCodeAndVersion:Input:($userId,$projectCode,$pipelineId,$buildId,$imageCode,$imageVersion)")
         // 区分是否为调试项目
         val imageStatusList = imageCommonService.generateImageStatusList(imageCode, projectCode)
         val imageRecord =
@@ -683,7 +683,7 @@ abstract class ImageService @Autowired constructor() {
                 imageStatusSet = imageStatusList.toSet(),
                 baseVersion = imageVersion?.replace("*", "")
             )
-        if (null == imageRecord) {
+        val imageRepoInfo = if (null == imageRecord) {
             // 运行时异常情况兜底，通知管理员
             val titleParams = mutableMapOf<String, String>()
             titleParams["userId"] = userId
@@ -700,10 +700,14 @@ abstract class ImageService @Autowired constructor() {
                 // 通知失败不应影响执行
                 logger.error("$interfaceName:getImageRepoInfoByCodeAndVersion:sendImageExecuteNullToManagers fail", e)
             }
-            return getDefaultImageRepoInfo()
+            getDefaultImageRepoInfo()
         } else {
-            return getImageRepoInfoByRecord(imageRecord)
+            getImageRepoInfoByRecord(imageRecord)
         }
+        with(imageRepoInfo) {
+            logger.info("getImageRepoInfoByCodeAndVersion:Output($sourceType,$repoUrl,$repoName,$repoTag,$ticketId,$ticketProject)")
+        }
+        return imageRepoInfo
     }
 
     @Value("\${store.defaultImageSourceType}")
@@ -761,7 +765,6 @@ abstract class ImageService @Autowired constructor() {
             StoreMessageCode.USER_IMAGE_UNKNOWN_SOURCE_TYPE
         )
         else {
-            logger.info("getImageRepoInfoByRecord:Output($sourceType,$cleanImageRepoUrl,$cleanImageRepoName,$cleanTag,$ticketId,$ticketProject)")
             return ImageRepoInfo(
                 sourceType = sourceType,
                 repoUrl = cleanImageRepoUrl,
