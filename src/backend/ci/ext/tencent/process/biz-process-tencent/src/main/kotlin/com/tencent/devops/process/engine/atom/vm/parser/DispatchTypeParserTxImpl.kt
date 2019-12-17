@@ -60,6 +60,12 @@ class DispatchTypeParserTxImpl @Autowired constructor(
                 } else {
                     // TLINUX1.2/2.2需要后续做特殊映射
                 }
+                // DevCloud镜像历史数据特殊处理
+                if (dispatchType is PublicDevCloudDispathcType) {
+                    if (dispatchType.image != null) {
+                        dispatchType.image = "devcloud/" + dispatchType.image!!.removePrefix("/")
+                    }
+                }
             }
             logger.info("DispatchTypeParserTxImpl:AfterTransfer:dispatchType=(${JsonUtil.toJson(dispatchType)})")
         } else {
