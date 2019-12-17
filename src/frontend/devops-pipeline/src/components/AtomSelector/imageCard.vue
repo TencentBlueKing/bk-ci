@@ -4,7 +4,7 @@
             <img :src="card.logoUrl" class="info-pic">
             <p class="info-main">
                 <span class="main-name">
-                    {{card.name}}
+                    <span :class="{ 'not-recommend': card.recommendFlag === false }" :title="card.recommendFlag === false ? $t('store.该镜像不推荐使用') : ''">{{card.name}}</span>
                     <span :title="$t('editPage.officialCertification')" class="icon-title">
                         <logo class="bk-icon" name="LDImage" size="13" v-if="card.certificationFlag" />
                     </span>
@@ -196,6 +196,9 @@
                 line-height: 19px;
                 font-weight: bold;
                 margin-bottom: 2px;
+                .not-recommend {
+                    text-decoration: line-through;
+                }
                 .bk-icon {
                     margin-left: 4px;
                 }
