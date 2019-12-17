@@ -24,27 +24,34 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.pojo.common
+package com.tencent.devops.process.plugin.load
 
-import com.tencent.devops.store.pojo.common.enums.BusinessEnum
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.common.pipeline.container.Container
+import com.tencent.devops.process.plugin.ContainerBizPlugin
+import com.tencent.devops.process.plugin.annotation.ContainerBiz
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.config.BeanPostProcessor
+import org.springframework.core.annotation.AnnotationUtils
+import org.springframework.stereotype.Component
 
-/**
- * @Description
- * @Date 2019/12/1
- * @Version 1.0
- */
-@ApiModel("业务配置请求报文")
-data class BusinessConfigRequest(
-    @ApiModelProperty("业务", required = true)
-    val business: BusinessEnum,
-    @ApiModelProperty("业务特性", required = true)
-    val feature: String,
-    @ApiModelProperty("业务特性取值", required = true)
-    val businessValue: String,
-    @ApiModelProperty("配置值", required = true)
-    val configValue: String,
-    @ApiModelProperty("描述", required = true)
-    val description: String?
-)
+@Component
+class ContainerBizPluginLoader : BeanPostProcessor {
+
+    private val logger = LoggerFactory.getLogger(ContainerBizPluginLoader::class.java)
+
+    override fun postProcessBeforeInitialization(bean: Any?, p1: String?): Any {
+        return bean!!
+    }
+
+    override fun postProcessAfterInitialization(bean: Any?, p1: String?): Any {
+        val containerBiz = AnnotationUtils.findAnnotation(bean!!::class.java, ContainerBiz::class.java)
+        if (containerBiz != null) {
+            if (bean is ContainerBizPlugin<out Container>) {
+                ContainerBizRegistrar.register(bean)
+            } else {
+                logger.warn("${bean::class.java} is not match for $containerBiz")
+            }
+        }
+        return bean
+    }
+}
