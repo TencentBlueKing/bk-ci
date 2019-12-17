@@ -24,25 +24,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":core:quality:api-quality")
+package com.tencent.devops.project.pojo.mq
 
-    compile project(":core:quality:model-quality")
+import com.tencent.devops.common.event.annotation.Event
+import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 
-    compile project(":core:process:api-process")
-
-    compile project(":core:common:common-service")
-    compile project(":core:common:common-auth:common-auth-api")
-    compile project(":core:common:common-db")
-    compile project(":core:common:common-client")
-
-    compile project(":core:plugin:codecc-plugin:common-codecc")
-    compile project(":core:plugin:codecc-plugin:api-codecc")
-
-    compile project(":core:notify:api-notify")
-
-    compile project(":core:project:api-project")
-    compile project(":core:common:common-archive")
-}
-
-apply from: "$rootDir/task_deploy_to_maven.gradle"
+@Event(exchange = MQ.EXCHANGE_PROJECT_CREATE_FANOUT)
+abstract class ProjectBroadCastEvent(
+    open val userId: String,
+    open val projectId: String,
+    open var retryCount: Int,
+    open var delayMills: Int
+)
