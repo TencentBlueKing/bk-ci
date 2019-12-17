@@ -130,14 +130,12 @@ class LogServiceDispatcher @Autowired constructor(
         executeCount: Int?
     ): Result<QueryLogs> {
             return Result(
-                logServiceV2.queryMoreLogsAfterLine(
-                    buildId,
-                    start,
-                    isAnalysis ?: false,
-                    queryKeywords,
-                    tag,
-                    jobId,
-                        executeCount
+                logServiceV2.queryMoreOriginLogsAfterLine(
+                    buildId = buildId,
+                    start = start,
+                    tag = tag,
+                    jobId = jobId,
+                    executeCount = executeCount
                 )
             )
     }

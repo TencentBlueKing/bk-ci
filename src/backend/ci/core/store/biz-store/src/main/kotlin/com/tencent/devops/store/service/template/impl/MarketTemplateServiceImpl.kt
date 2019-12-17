@@ -432,8 +432,8 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
     /**
      * 安装模板到项目
      */
-    override fun installTemplate(accessToken: String, userId: String, channelCode: ChannelCode, installTemplateReq: InstallTemplateReq): Result<Boolean> {
-        logger.info("installTemplate accessToken is: $accessToken, userId is: $userId")
+    override fun installTemplate(userId: String, channelCode: ChannelCode, installTemplateReq: InstallTemplateReq): Result<Boolean> {
+        logger.info("installTemplate userId is: $userId")
         logger.info("installTemplate channelCode is: $channelCode, installTemplateReq is: $installTemplateReq")
         val templateCode = installTemplateReq.templateCode
         val projectCodeList = installTemplateReq.projectCodeList
@@ -454,7 +454,6 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
             userId = userId,
             storeCode = template.templateCode,
             storeType = StoreTypeEnum.TEMPLATE,
-            accessToken = accessToken,
             projectCodeList = projectCodeList,
             channelCode = channelCode
         )
@@ -487,7 +486,6 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
         copyQualityRule(userId, templateCode, projectCodeList, addMarketTemplateResult.data ?: mapOf())
 
         return storeProjectService.installStoreComponent(
-            accessToken = accessToken,
             userId = userId,
             projectCodeList = projectCodeList,
             storeId = template.id,

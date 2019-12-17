@@ -24,44 +24,51 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.resources.template
+package com.tencent.devops.process.plugin
 
-import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.enums.ChannelCode
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.store.api.template.ServiceTemplateResource
-import com.tencent.devops.store.pojo.template.InstallTemplateReq
-import com.tencent.devops.store.pojo.template.MarketTemplateResp
-import com.tencent.devops.store.service.template.MarketTemplateService
-import org.springframework.beans.factory.annotation.Autowired
 
-@RestResource
-class ServiceTemplateResourceImpl @Autowired constructor(
-    private val marketTemplateService: MarketTemplateService
-) : ServiceTemplateResource {
-    override fun installTemplate(userId: String, installTemplateReq: InstallTemplateReq): Result<Boolean> {
-        // 可见与可安装鉴权在marketTemplateService中实现
-        return marketTemplateService.installTemplate(
-            userId = userId,
-            channelCode = ChannelCode.BS,
-            installTemplateReq = installTemplateReq
-        )
-    }
+/**
+ * 对流水线的Container的业务处理扩展点
+ */
+interface ContainerBizPlugin<T : Container> {
 
-    override fun list(userId: String): Result<MarketTemplateResp> {
-        return Result(
-            marketTemplateService.list(
-                userId = userId.trim(),
-                name = null,
-                classifyCode = null,
-                category = null,
-                labelCode = null,
-                score = null,
-                rdType = null,
-                sortType = null,
-                page = null,
-                pageSize = 1
-            )
-        )
-    }
+    /**
+     * 取当前泛型Container的类
+     */
+    fun containerClass(): Class<T>
+
+    /**
+     * 创建Container后调用针对该Container的业务处理
+     * @param container Container泛型
+     * @param projectId 项目Code
+     * @param pipelineId 流水线Id
+     * @param pipelineName 流水线名称
+     * @param userId 操作人
+     * @param channelCode 渠道
+     */
+    fun afterCreate(
+        container: T,
+        projectId: String,
+        pipelineId: String,
+        pipelineName: String,
+        userId: String,
+        channelCode: ChannelCode = ChannelCode.BS
+    )
+
+    /**
+     * 删除Container之前调用的业务处理
+     * @param container Container泛型
+     * @param userId 操作人
+     * @param pipelineId 流水线ID
+     */
+    fun beforeDelete(container: T, userId: String, pipelineId: String?)
+
+    /**
+     * 检查Container是否符合自己的要求
+     * @param container container
+     * @param appearedCnt 出现次数
+     */
+    fun check(container: T, appearedCnt: Int)
 }
