@@ -845,7 +845,7 @@ class ProjectLocalService @Autowired constructor(
             throw RuntimeException()
         }
 
-        if(!bkAuthProjectApi.isProjectUser(userId,bsPipelineAuthServiceCode, projectId, BkAuthGroup.MANAGER)){
+        if(!bkAuthProjectApi.isProjectUser(userId,bsPipelineAuthServiceCode, projectId)){
             logger.info("createPipelinePermission userId is not project manager,userId[$userId] projectId[$projectId]")
             throw RuntimeException()
         }
