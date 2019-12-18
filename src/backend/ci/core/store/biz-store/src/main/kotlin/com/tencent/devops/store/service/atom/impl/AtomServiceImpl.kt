@@ -295,6 +295,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                         )
                     )
                 }
+                val atomFeature = atomFeatureDao.getAtomFeature(dslContext, atomCode)
                 PipelineAtom(
                     id = pipelineAtomRecord.id,
                     name = pipelineAtomRecord.name,
@@ -323,7 +324,8 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                     buildLessRunFlag = pipelineAtomRecord.buildLessRunFlag,
                     weight = pipelineAtomRecord.weight,
                     props = atomDao.convertString(pipelineAtomRecord.props),
-                    data = atomDao.convertString(pipelineAtomRecord.data)
+                    data = atomDao.convertString(pipelineAtomRecord.data),
+                    recommendFlag = atomFeature?.recommendFlag
                 )
             }
         )
