@@ -30,6 +30,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.project.dao.ProjectDao
+import com.tencent.devops.project.dispatch.ProjectDispatcher
 import com.tencent.devops.project.jmx.api.ProjectJmxApi
 import com.tencent.devops.project.service.ProjectPermissionService
 import org.jooq.DSLContext
@@ -44,8 +45,9 @@ class ProjectServiceImpl @Autowired constructor(
     projectJmxApi: ProjectJmxApi,
     redisOperation: RedisOperation,
     gray: Gray,
-    client: Client
-) : AbsProjectServiceImpl(projectPermissionService, dslContext, projectDao, projectJmxApi, redisOperation, gray, client) {
+    client: Client,
+    projectDispatcher: ProjectDispatcher
+) : AbsProjectServiceImpl(projectPermissionService, dslContext, projectDao, projectJmxApi, redisOperation, gray, client, projectDispatcher) {
 
     override fun updateUsableStatus(userId: String, projectId: String, enabled: Boolean) {
         TODO("not implemented") // To change body of created functions use File | Settings | File Templates.
