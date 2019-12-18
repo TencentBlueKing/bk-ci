@@ -94,7 +94,6 @@ class SubPipelineStartUpService(
         if (!pipelinePermissionService.checkPipelinePermission(userId = userId, projectId = project, pipelineId = callPipelineId, permission = AuthPermission.EXECUTE))
             throw PermissionForbiddenException("用户$userId 无权在工程$project 下运行流水线$callPipelineId")
 
-
         logger.info("runVariables: $runVariables")
         val channelCode = ChannelCode.valueOf(runVariables[PIPELINE_START_CHANNEL]
                 ?: return MessageCodeUtil.generateResponseDataObject(ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID.toString(), arrayOf(buildId)))
