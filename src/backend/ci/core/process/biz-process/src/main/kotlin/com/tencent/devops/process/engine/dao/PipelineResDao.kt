@@ -122,22 +122,6 @@ class PipelineResDao @Autowired constructor(private val objectMapper: ObjectMapp
         }
     }
 
-    fun updateModelByCodeccData(dslContext: DSLContext, pipelineId: String, model: Model) {
-        with(T_PIPELINE_RESOURCE) {
-            dslContext.transactionResult { configuration ->
-                val context = DSL.using(configuration)
-                val record = context.selectFrom(this)
-                    .where(PIPELINE_ID.eq(pipelineId)).orderBy(VERSION.desc())
-                    .limit(0, 1)
-                    .fetchOne() ?: return@transactionResult null
-                val modelString = objectMapper.writeValueAsString(model)
-                dslContext.update(this).set(MODEL, modelString)
-                    .where(PIPELINE_ID.eq(pipelineId))
-                    .and(VERSION.eq(record.version)).execute()
-            }
-        }
-    }
-
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineResDao::class.java)
     }
