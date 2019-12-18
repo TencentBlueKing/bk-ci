@@ -106,7 +106,8 @@ open class LinuxCodeCCScriptElement(
     var occheckToolSetId: String? = null,
     var gociLintToolSetId: String? = null,
     var woodpeckerToolSetId: String? = null,
-    var horuspyToolSetId: String? = null
+    var horuspyToolSetId: String? = null,
+    var pinpointToolSetId: String? = null
 ) : Element(name, id, status) {
 
     companion object {
