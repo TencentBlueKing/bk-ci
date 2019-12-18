@@ -555,7 +555,12 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
                 actionType = ActionType.END
             )
         )
-        LogUtils.stopLog(rabbitTemplate, buildId, result.elementId, result.containerId ?: "")
+        LogUtils.stopLog(
+            rabbitTemplate = rabbitTemplate,
+            buildId = buildId,
+            tag = result.elementId,
+            jobId = result.containerId ?: ""
+        )
     }
 
     /**
