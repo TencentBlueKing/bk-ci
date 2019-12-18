@@ -794,12 +794,12 @@ class ProjectLocalService @Autowired constructor(
         logger.info("[createUser2ProjectByUser] createUser[$createUser] userId[$userId] projectCode[$projectCode]")
         if(!verifyUserProjectPermission(accessToken, projectCode, createUser).data!!){
             logger.error("$createUser not project[$projectCode] permission")
-            throw OperationException()
+            throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PEM_CHECK_FAIL))
         }
 
         if(!bkAuthProjectApi.isProjectUser(createUser, bsPipelineAuthServiceCode, projectCode, BkAuthGroup.MANAGER)){
             logger.error("$createUser is not manager for project[$projectCode]")
-            throw OperationException()
+            throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.NOT_MANAGER))
         }
         return createUser2Project(userId, projectCode)
     }
@@ -814,13 +814,13 @@ class ProjectLocalService @Autowired constructor(
             AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE_DEPARTMENT -> deptId = organizationId
             AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE_CENTER -> centerId = organizationId
             else -> {
-                throw OperationException()
+                throw OperationException((MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.ORG_TYPE_ERROR)))
             }
         }
         val projectList = getProjectByGroupId(userId, bgId, deptId, centerId)
         if(projectList.isEmpty()){
             logger.error("organizationType[$organizationType] :organizationId[$organizationId]  not project[$projectCode] permission ")
-            throw  OperationException()
+            throw  OperationException((MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.ORG_NOT_PROJECT)))
         }
 
         var isCreate = false
@@ -834,7 +834,7 @@ class ProjectLocalService @Autowired constructor(
             return createUser2Project(userId, projectCode)
         } else{
             logger.error("organizationType[$organizationType] :organizationId[$organizationId]  not project[$projectCode] permission ")
-            throw  OperationException()
+            throw  OperationException((MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.ORG_NOT_PROJECT)))
         }
     }
 
@@ -842,14 +842,14 @@ class ProjectLocalService @Autowired constructor(
         logger.info("createPipelinePermission createUser[$createUser] projectId[$projectId] userId[$userId] permissionList[$permissionList]")
         if(!bkAuthProjectApi.isProjectUser(createUser,bsPipelineAuthServiceCode, projectId, BkAuthGroup.MANAGER)){
             logger.info("createPipelinePermission createUser is not project manager,createUser[$createUser] projectId[$projectId]")
-            throw OperationException()
+            throw  OperationException((MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.NOT_MANAGER)))
         }
 
         if(!bkAuthProjectApi.isProjectUser(userId,bsPipelineAuthServiceCode, projectId, null)){
             logger.info("createPipelinePermission userId is not project manager,userId[$userId] projectId[$projectId]")
-            throw OperationException()
+            throw  OperationException((MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.USER_NOT_PROJECT_USER)))
         }
-        val projectInfo = projectDao.getByEnglishName(dslContext, projectId) ?: throw RuntimeException()
+        val projectInfo = projectDao.getByEnglishName(dslContext, projectId) ?: throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PROJECT_NOT_EXIST))
         permissionList.forEach {
             bkAuthPermissionApi.addResourcePermissionForUsers(
                 userId = userId,
