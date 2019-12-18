@@ -25,6 +25,7 @@ module.exports = class BundleWebpackPlugin {
       const dist = props.dist || '.'
       const bundleName = props.bundleName || 'assets_bundle'
       this.SERVICE_ASSETS_JSON_PATH = path.join(__dirname, '..', dist, `${bundleName}.json`)
+      this.SERVICE_ASSETS_DIR = path.dirname(this.SERVICE_ASSETS_JSON_PATH)
     }
 
     apply(compiler) {
@@ -32,7 +33,7 @@ module.exports = class BundleWebpackPlugin {
         'BundleWebpackPlugin',
         (compilation, callback) => {
           console.log('This is an example plugin!');
-          const { SERVICE_ASSETS_JSON_PATH } = this
+          const { SERVICE_ASSETS_JSON_PATH, SERVICE_ASSETS_DIR } = this
           const entryNames = Array.from(compilation.compilation.entrypoints.keys())    
           const extensionRegexp = /\.(css|js|mjs)(\?|$)/;
           const entryPointPublicPathMap = {}
@@ -76,7 +77,9 @@ module.exports = class BundleWebpackPlugin {
             ...json,
             ...assetsMap
           }
-
+          if (!fs.existsSync(SERVICE_ASSETS_DIR)) {
+            fs.mkdirSync(SERVICE_ASSETS_DIR)
+          }
           fs.writeFileSync(SERVICE_ASSETS_JSON_PATH, JSON.stringify(json))
           
           callback();

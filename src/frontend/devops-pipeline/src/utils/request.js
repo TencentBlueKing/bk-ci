@@ -42,12 +42,13 @@ function isAbsoluteURL (url = '') {
 }
 
 request.interceptors.request.use(config => {
+    console.log(config)
     const url = isAbsoluteURL(config.url) ? new window.URL(config.url) : {
         host: config.baseURL,
         pathname: config.url
     }
 
-    if (/(devops|gw\.open)\.oa\.com$/i.test(url.host) || !/(\/?ms\/backend|\/?backend)\//i.test(url.pathname)) {
+    if (/(devops|gw\.open)\.oa\.com$/i.test(url.host) && !/(\/?ms\/backend|\/?backend)\//i.test(url.pathname)) {
         const routePid = getCurrentPid()
         return {
             ...config,
