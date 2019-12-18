@@ -302,7 +302,8 @@ class BSAuthPermissionApi @Autowired constructor(
     ): Boolean {
         var result = false
         val accessToken = bsAuthTokenApi.getAccessToken(serviceCode)
-        val url = "${bkAuthProperties.url}/permission/project/service/policy/resource/users/grant?access_token=$accessToken"
+        val url =
+            "${bkAuthProperties.url}/permission/project/service/policy/resource/users/grant?access_token=$accessToken"
         val userList = mutableListOf<String>()
         userList.add(userId)
         val grantRequest = BkAuthPermissionsGrantRequest(
@@ -319,31 +320,24 @@ class BSAuthPermissionApi @Autowired constructor(
         val requestBody = RequestBody.create(mediaType, content)
         val request = Request.Builder().url(url).post(requestBody).build()
         logger.info("addResourcePermissionForUsers before call")
-        try {
-            OkhttpUtils.doHttp(request).use { response ->
-                val responseContent = response.body()!!.string()
-                logger.info("addResourcePermissionForUsers after call, responseContentp[$responseContent]")
-                if (!response.isSuccessful) {
-                    logger.error("createUserPermissions fail : user[$userId], projectCode[$projectCode]")
-                    throw RuntimeException()
-                }
-                val responseObject =
-                    objectMapper.readValue<BkAuthResponse<String>>(responseContent)
-                logger.info("addResourcePermissionForUsers responseObject[$responseObject]")
-                if (responseObject.code != 0) {
-                    logger.error("createUserPermissions fail : user[$userId], projectCode[$projectCode], message:${responseObject}")
-                    throw RuntimeException()
-                }
-                result = true
+        OkhttpUtils.doHttp(request).use { response ->
+            val responseContent = response.body()!!.string()
+            if (!response.isSuccessful) {
+                logger.error("createUserPermissions fail : user[$userId], projectCode[$projectCode]")
+                throw RemoteServiceException("add Resource Permission remote fail")
             }
-        }catch (e: Exception){
-            logger.error(e.message)
+            val responseObject =
+                objectMapper.readValue<BkAuthResponse<String>>(responseContent)
+            logger.info("addResourcePermissionForUsers responseObject[$responseObject]")
+            if (responseObject.code != 0) {
+                logger.error("createUserPermissions fail : user[$userId], projectCode[$projectCode], message:${responseObject}")
+                throw RemoteServiceException("add Resource Permission remote fail,message:${responseObject}")
+            }
+            result = true
         }
 
         return result
     }
-
-
 
     companion object {
         private val logger = LoggerFactory.getLogger(BSAuthPermissionApi::class.java)

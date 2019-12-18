@@ -213,12 +213,12 @@ class BSAuthProjectApi @Autowired constructor(
             val responseContent = response.body()!!.string()
             if(!response.isSuccessful){
                 logger.error("create project user fail: user[$user], projectCode[$projectCode]")
-                throw RuntimeException()
+                throw RemoteServiceException("create project user fail: user[$user], projectCode[$projectCode]")
             }
             val responseObject = objectMapper.readValue<BkAuthResponse<String>>(responseContent)
             if(responseObject.code != 0){
                 logger.error("create project user fail: $responseObject")
-                throw RuntimeException()
+                throw RemoteServiceException("create project user fail: $responseObject")
             }
             result = true
         }
@@ -237,12 +237,12 @@ class BSAuthProjectApi @Autowired constructor(
             val responseContent = response.body()!!.string()
             if(!response.isSuccessful){
                 logger.error("get project roles fail: projectCode[$projectCode]")
-                throw RuntimeException()
+                throw RemoteServiceException("get project roles fail: projectCode[$projectCode]")
             }
             val responseObject = objectMapper.readValue<BkAuthResponse<List<BKAuthProjectRolesResources>>>(responseContent)
             if(responseObject.code != 0){
-                logger.error("create project user fail: $responseObject")
-                throw RuntimeException()
+                logger.error("get project role fail: $responseObject")
+                throw RemoteServiceException("get project role fail: $responseObject")
             }
             return responseObject.data ?: emptyList()
         }
