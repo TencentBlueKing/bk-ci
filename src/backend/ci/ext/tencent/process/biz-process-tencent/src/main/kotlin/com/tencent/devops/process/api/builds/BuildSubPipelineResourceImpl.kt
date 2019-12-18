@@ -51,7 +51,8 @@ class BuildSubPipelineResourceImpl @Autowired constructor(
         runMode: String,
         values: Map<String, String>
     ): Result<ProjectBuildId> {
-        return subPipeService.callPipelineStartup(projectId, parentPipelineId, buildId, callProjectId, callPipelineId, atomCode, taskId, runMode, values)
+        return subPipeService.callPipelineStartup(projectId = projectId, parentPipelineId = parentPipelineId, buildId = buildId,
+                callProjectId = callProjectId, callPipelineId = callPipelineId, atomCode = atomCode, taskId = taskId, runMode = runMode, values = values)
     }
 
     override fun callPipelineStartup(
@@ -69,7 +70,8 @@ class BuildSubPipelineResourceImpl @Autowired constructor(
     }
 
     override fun getSubPipelineStatus(projectId: String, pipelineId: String, buildId: String): Result<SubPipelineStatus> {
-        var status = Result(buildService.getBuildDetail(projectId, pipelineId, buildId, ChannelCode.BS, ChannelCode.isNeedAuth(ChannelCode.BS)))
+        var status = Result(buildService.getBuildDetail(projectId = projectId, pipelineId = pipelineId, buildId = buildId,
+                channelCode = ChannelCode.BS, checkPermission = ChannelCode.isNeedAuth(ChannelCode.BS)))
                 .data?.status
         if (status == null)
             status = "ERROR"
