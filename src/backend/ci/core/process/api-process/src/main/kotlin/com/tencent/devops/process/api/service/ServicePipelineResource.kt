@@ -115,7 +115,7 @@ interface ServicePipelineResource {
         channelCode: ChannelCode
     ): Result<Model>
 
-    @ApiOperation("获取流水线编排")
+    @ApiOperation("获取流水线基本信息")
     @GET
     @Path("/{projectId}/{pipelineId}/getPipelineInfo")
     fun getPipelineInfo(
