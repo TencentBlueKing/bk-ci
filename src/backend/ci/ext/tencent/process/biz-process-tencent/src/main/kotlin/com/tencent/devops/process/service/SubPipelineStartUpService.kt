@@ -39,7 +39,6 @@ import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAto
 import com.tencent.devops.common.pipeline.pojo.element.SubPipelineCallElement
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
-import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.service.PipelineBuildService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
@@ -84,7 +83,7 @@ class SubPipelineStartUpService(
         runMode: String,
         values: Map<String, String>
     ): Result<ProjectBuildId> {
-        val project = if (callProjectId.isNotEmpty()) { callProjectId } else { projectId }
+        val project = if (callProjectId.isNotBlank()) { callProjectId } else { projectId }
 
         // 通过 runVariables获取 userId 和 channelCode
         val runVariables = pipelineRuntimeService.getAllVariable(buildId)
