@@ -201,7 +201,7 @@ class SubPipelineStartUpService(
      * @param pipelineId 流水线ID
      */
     fun subpipManualStartupInfo(userId: String, projectId: String, pipelineId: String): Result<List<SubPipelineStartUpInfo>> {
-        if (pipelineId.isEmpty())
+        if (pipelineId.isBlank() || projectId.isBlank())
             return Result(ArrayList())
         val result = buildService.buildManualStartupInfo(userId, projectId, pipelineId, ChannelCode.BS)
         val parameter = ArrayList<SubPipelineStartUpInfo>()
