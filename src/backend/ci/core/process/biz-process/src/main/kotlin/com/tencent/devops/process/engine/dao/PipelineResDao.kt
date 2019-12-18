@@ -31,9 +31,11 @@ import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.model.process.Tables.T_PIPELINE_RESOURCE
 import com.tencent.devops.model.process.tables.records.TPipelineResourceRecord
 import org.jooq.DSLContext
+import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Repository
+import java.time.LocalDateTime
 
 @Repository
 class PipelineResDao @Autowired constructor(private val objectMapper: ObjectMapper) {
@@ -41,6 +43,7 @@ class PipelineResDao @Autowired constructor(private val objectMapper: ObjectMapp
     fun create(
         dslContext: DSLContext,
         pipelineId: String,
+        creator: String,
         version: Int,
         model: Model
     ) {
@@ -51,11 +54,15 @@ class PipelineResDao @Autowired constructor(private val objectMapper: ObjectMapp
                 this,
                 PIPELINE_ID,
                 VERSION,
-                MODEL
+                MODEL,
+                CREATOR,
+                CREATE_TIME
             )
-                .values(pipelineId, version, modelString)
+                .values(pipelineId, version, modelString, creator, LocalDateTime.now())
                 .onDuplicateKeyUpdate()
                 .set(MODEL, modelString)
+                .set(CREATOR, creator)
+                .set(CREATE_TIME, LocalDateTime.now())
                 .execute()
         }
     }
@@ -112,6 +119,22 @@ class PipelineResDao @Autowired constructor(private val objectMapper: ObjectMapp
             dslContext.deleteFrom(this)
                 .where(PIPELINE_ID.eq(pipelineId))
                 .execute()
+        }
+    }
+
+    fun updateModelByCodeccData(dslContext: DSLContext, pipelineId: String, model: Model) {
+        with(T_PIPELINE_RESOURCE) {
+            dslContext.transactionResult { configuration ->
+                val context = DSL.using(configuration)
+                val record = context.selectFrom(this)
+                    .where(PIPELINE_ID.eq(pipelineId)).orderBy(VERSION.desc())
+                    .limit(0, 1)
+                    .fetchOne() ?: return@transactionResult null
+                val modelString = objectMapper.writeValueAsString(model)
+                dslContext.update(this).set(MODEL, modelString)
+                    .where(PIPELINE_ID.eq(pipelineId))
+                    .and(VERSION.eq(record.version)).execute()
+            }
         }
     }
 
