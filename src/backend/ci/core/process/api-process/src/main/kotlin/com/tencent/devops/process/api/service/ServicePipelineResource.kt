@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.pojo.Pipeline
 import com.tencent.devops.process.pojo.PipelineId
 import com.tencent.devops.process.pojo.pipeline.SimplePipeline
@@ -113,6 +114,21 @@ interface ServicePipelineResource {
         @QueryParam("channelCode")
         channelCode: ChannelCode
     ): Result<Model>
+
+    @ApiOperation("获取流水线编排")
+    @GET
+    @Path("/{projectId}/{pipelineId}/getPipelineInfo")
+    fun getPipelineInfo(
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @ApiParam("渠道号，默认为DS", required = false)
+        @QueryParam("channelCode")
+        channelCode: ChannelCode?
+    ): Result<PipelineInfo?>
 
     @ApiOperation("删除流水线编排")
     @DELETE
