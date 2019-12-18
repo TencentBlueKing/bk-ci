@@ -383,10 +383,10 @@ class QualityRuleCheckService @Autowired constructor(
                 return ""
             }
             if (record.detail.isNullOrBlank()) {
-                "<a target='_blank' href='${HomeHostUtil.innerServerHost()}/console/codecc/$projectId/procontrol/prodesc?proj_id=$taskId&projectId=$projectId'>查看详情</a>"
+                "<a target='_blank' href='${HomeHostUtil.innerServerHost()}/console/codecc/$projectId/task/$taskId/detail'>查看详情</a>"
             } else {
-                val detail = codeccToolUrlPathMap[record.detail!!] ?: "procontrol/multidefectmanage"
-                "<a target='_blank' href='${HomeHostUtil.innerServerHost()}/console/codecc/$projectId/$detail?proj_id=$taskId&toolName=${record.detail}&projectId=$projectId'>查看详情</a>"
+                val detail = codeccToolUrlPathMap[record.detail!!] ?: "defect/lint"
+                "<a target='_blank' href='${HomeHostUtil.innerServerHost()}/console/codecc/$projectId/task/$taskId/$detail/${record.detail}/list'>查看详情</a>"
             }
         } else {
             record.logPrompt ?: ""

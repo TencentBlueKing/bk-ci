@@ -79,7 +79,7 @@ open class CodeccApi constructor(
                     DevOpsToolParams("phpcs_standard", phpcsStandard ?: ""),
                     DevOpsToolParams("go_path", goPath ?: ""),
                     DevOpsToolParams("py_version", pyVersion ?: ""),
-                    DevOpsToolParams("ccn_threshold", ccnThreshold?.toString() ?: ""),
+                    DevOpsToolParams("ccn_threshold", ccnThreshold ?: ""),
                     DevOpsToolParams("needCodeContent", needCodeContent ?: ""),
                     DevOpsToolParams("eslint_rc", eslintRc ?: "")
                 )
@@ -120,7 +120,7 @@ open class CodeccApi constructor(
                 DevOpsToolParams("phpcs_standard", phpcsStandard ?: ""),
                 DevOpsToolParams("go_path", goPath ?: ""),
                 DevOpsToolParams("py_version", pyVersion ?: ""),
-                DevOpsToolParams("ccn_threshold", ccnThreshold?.toString() ?: ""),
+                DevOpsToolParams("ccn_threshold", ccnThreshold ?: ""),
                 DevOpsToolParams("needCodeContent", needCodeContent ?: ""),
                 DevOpsToolParams("eslint_rc", eslintRc ?: "")
             )
@@ -170,12 +170,11 @@ open class CodeccApi constructor(
             AUTH_HEADER_DEVOPS_USER_ID to userId,
             AUTH_HEADER_DEVOPS_PROJECT_ID to projectId
         )
-        val body = mapOf<String, String>()
         val result = taskExecution(
-            body = body,
-            path = getRuleSetsPath,
+            body = mapOf(),
+            path = getRuleSetsPath.replace("{toolName}", toolName),
             headers = headers,
-            method = "POST"
+            method = "GET"
         )
         return objectMapper.readValue(result)
     }
@@ -218,11 +217,11 @@ open class CodeccApi constructor(
         val request = builder.build()
 
         OkhttpUtils.doHttp(request).use { response ->
+            val responseBody = response.body()!!.string()
             if (!response.isSuccessful) {
-                logger.warn("Fail to execute($path) task($body) because of ${response.message()}")
+                logger.warn("Fail to execute($path) task($body) because of ${response.message()} with response: $responseBody")
                 throw RemoteServiceException("Fail to invoke codecc request")
             }
-            val responseBody = response.body()!!.string()
             logger.info("Get the task response body - $responseBody")
             return responseBody
         }
@@ -295,6 +294,7 @@ open class CodeccApi constructor(
             if (!gociLintToolSetId.isNullOrBlank()) map["GOCILINT"] = gociLintToolSetId!!
             if (!woodpeckerToolSetId.isNullOrBlank()) map["WOODPECKER_SENSITIVE"] = woodpeckerToolSetId!!
             if (!horuspyToolSetId.isNullOrBlank()) map["HORUSPY"] = horuspyToolSetId!!
+            if (!pinpointToolSetId.isNullOrBlank()) map["PINPOINT"] = pinpointToolSetId!!
         }
         return map
     }
