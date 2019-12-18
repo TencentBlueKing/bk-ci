@@ -294,7 +294,12 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         classifyList?.forEach {
             val classifyCode = it["classifyCode"] as String
             if (classifyCode != "trigger") {
-                labelInfoList.add(MarketMainItemLabel(classifyCode, it["classifyName"] as String))
+                val classifyName = it["classifyName"] as String
+                val classifyLanName = MessageCodeUtil.getCodeLanMessage(
+                    messageCode = "${StoreMessageCode.MSG_CODE_STORE_CLASSIFY_PREFIX}$classifyCode",
+                    defaultMessage = classifyName
+                )
+                labelInfoList.add(MarketMainItemLabel(classifyCode, classifyLanName))
                 futureList.add(
                     doList(
                         userId = userId,
@@ -459,14 +464,20 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
             val labelList = atomLabelService.getLabelsByAtomId(atomId).data // 查找标签列表
             val userCommentInfo = storeCommentService.getStoreUserCommentInfo(userId, atomCode, StoreTypeEnum.ATOM)
             val atomEnvInfoRecord = marketAtomEnvInfoDao.getMarketAtomEnvInfoByAtomId(dslContext, atomId)
+            val classifyCode = record["classifyCode"] as? String
+            val classifyName = record["classifyName"] as? String
+            val classifyLanName = MessageCodeUtil.getCodeLanMessage(
+                messageCode = "${StoreMessageCode.MSG_CODE_STORE_CLASSIFY_PREFIX}$classifyCode",
+                defaultMessage = classifyName
+            )
             Result(
                 AtomVersion(
                     atomId = atomId,
                     atomCode = atomCode,
                     name = record["name"] as String,
                     logoUrl = record["logoUrl"] as? String,
-                    classifyCode = record["classifyCode"] as? String,
-                    classifyName = record["classifyName"] as? String,
+                    classifyCode = classifyCode,
+                    classifyName = classifyLanName,
                     category = AtomCategoryEnum.getAtomCategory((record["category"] as Byte).toInt()),
                     docsLink = record["docsLink"] as? String,
                     htmlTemplateVersion = htmlTemplateVersion,
@@ -560,7 +571,6 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
             return MessageCodeUtil.generateResponseDataObject(StoreMessageCode.USER_INSTALL_ATOM_CODE_IS_INVALID, false)
         }
         return storeProjectService.installStoreComponent(
-            accessToken = accessToken,
             userId = userId,
             projectCodeList = installAtomReq.projectCode,
             storeId = atom.id,
@@ -731,7 +741,12 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                 val description = if (label?.toString().isNullOrBlank()) {
                     if (text?.toString().isNullOrBlank()) {
                         desc
-                    } else { text } } else { label }
+                    } else {
+                        text
+                    }
+                } else {
+                    label
+                }
                 val type = paramValueMap["type"]
                 val required = paramValueMap["required"]
                 val defaultValue = paramValueMap["default"]

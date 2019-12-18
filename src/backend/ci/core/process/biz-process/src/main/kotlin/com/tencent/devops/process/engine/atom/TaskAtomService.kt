@@ -31,8 +31,8 @@ import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatch
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildTaskFinishBroadCastEvent
-import com.tencent.devops.common.log.Ansi
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.pipeline.enums.EnvControlTaskType
 import com.tencent.devops.common.pipeline.utils.SkipElementUtils
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.log.utils.LogUtils
@@ -63,6 +63,8 @@ class TaskAtomService @Autowired(required = false) constructor(
     fun start(task: PipelineBuildTask): AtomResponse {
         val startTime = System.currentTimeMillis()
         val elementType = task.taskType
+        val isEnvControl = elementType == EnvControlTaskType.NORMAL.name || elementType == EnvControlTaskType.VM.name
+
         jmxElements.execute(elementType)
         var atomResponse = AtomResponse(BuildStatus.FAILED)
         val logTagName = task.taskName + "-[" + task.taskId + "]"
@@ -71,11 +73,16 @@ class TaskAtomService @Autowired(required = false) constructor(
             pipelineRuntimeService.updateTaskStatus(task.buildId, task.taskId, task.starter, BuildStatus.RUNNING)
             pipelineBuildDetailService.taskStart(task.buildId, task.taskId)
             val executeCount = task.executeCount ?: 1
-            LogUtils.addFoldStartLine(rabbitTemplate, task.buildId, logTagName, task.taskId, task.containerHashId, executeCount)
-            LogUtils.addLine(
-                rabbitTemplate, task.buildId, Ansi().bold()
-                    .a("Start Element").reset().toString(), task.taskId, task.containerHashId, executeCount
-            )
+            if (!isEnvControl) {
+                LogUtils.addFoldStartLine(
+                    rabbitTemplate = rabbitTemplate,
+                    buildId = task.buildId,
+                    groupName = logTagName,
+                    tag = task.taskId,
+                    jobId = task.containerHashId,
+                    executeCount = executeCount
+                )
+            }
             val runVariables = pipelineRuntimeService.getAllVariable(task.buildId)
 
             atomResponse = if (task.isSkip(runVariables)) { // 跳过
@@ -153,6 +160,8 @@ class TaskAtomService @Autowired(required = false) constructor(
         errorMsg: String?
     ) {
         try {
+            val isEnvControl = elementType == EnvControlTaskType.NORMAL.name || elementType == EnvControlTaskType.VM.name
+
             // 更新状态
             pipelineRuntimeService.updateTaskStatus(
                 buildId = task.buildId,
@@ -186,10 +195,16 @@ class TaskAtomService @Autowired(required = false) constructor(
                 errorCode = errorCode,
                 errorMsg = errorMsg
             )
-            LogUtils.addFoldEndLine(
-                rabbitTemplate, task.buildId, logTagName,
-                task.taskId, task.containerHashId, task.executeCount ?: 1
-            )
+            if (!isEnvControl) {
+                LogUtils.addFoldEndLine(
+                    rabbitTemplate = rabbitTemplate,
+                    buildId = task.buildId,
+                    groupName = logTagName,
+                    tag = task.taskId,
+                    jobId = task.containerHashId,
+                    executeCount = task.executeCount ?: 1
+                )
+            }
             if (BuildStatus.isFailure(status)) {
                 jmxElements.fail(elementType)
             }
@@ -218,7 +233,12 @@ class TaskAtomService @Autowired(required = false) constructor(
                 actionType = ActionType.END
             )
         )
-        LogUtils.stopLog(rabbitTemplate, task.buildId, task.taskId, task.containerHashId)
+        LogUtils.stopLog(
+            rabbitTemplate = rabbitTemplate,
+            buildId = task.buildId,
+            tag = task.taskId,
+            jobId = task.containerHashId
+        )
     }
 
     fun tryFinish(task: PipelineBuildTask, force: Boolean): AtomResponse {
@@ -309,6 +329,13 @@ class TaskAtomService @Autowired(required = false) constructor(
                 )
             }
         }
+        LogUtils.stopLog(
+            rabbitTemplate = rabbitTemplate,
+            buildId = task.buildId,
+            tag = task.taskId,
+            jobId = task.containerHashId,
+            executeCount = task.executeCount ?: 1
+        )
     }
 
     private fun PipelineBuildTask.isSkip(variables: Map<String, String>): Boolean {
