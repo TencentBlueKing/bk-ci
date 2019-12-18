@@ -40,6 +40,7 @@ import com.tencent.devops.store.dao.image.Constants.KEY_CREATE_TIME
 import com.tencent.devops.store.dao.image.Constants.KEY_CREATOR
 import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_CODE
 import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_FEATURE_PUBLIC_FLAG
+import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_FEATURE_RECOMMEND_FLAG
 import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_ID
 import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_NAME
 import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_REPO_NAME
@@ -59,7 +60,7 @@ import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.jooq.Record15
-import org.jooq.Record4
+import org.jooq.Record5
 import org.jooq.Record9
 import org.jooq.Result
 import org.jooq.impl.DSL
@@ -69,6 +70,8 @@ import java.time.LocalDateTime
 
 @Repository
 class ImageDao {
+    private val logger = LoggerFactory.getLogger(ImageDao::class.java)
+
     data class ImageUpdateBean constructor(
         val imageName: String?,
         val classifyId: String?,
@@ -820,12 +823,13 @@ class ImageDao {
 
     fun listByRepoNameAndTag(
         dslContext: DSLContext,
-        userId: String,
+        projectId: String,
         repoName: String?,
         tag: String?
-    ): Result<Record4<String, String, String, String>>? {
+    ): Result<Record5<String, String, String, String, Boolean>>? {
         val tImage = TImage.T_IMAGE.`as`("tImage")
         val tImageFeature = TImageFeature.T_IMAGE_FEATURE.`as`("tImageFeature")
+        val tStoreProjectRel = TStoreProjectRel.T_STORE_PROJECT_REL.`as`("tStoreProjectRel")
         val conditions = mutableListOf<Condition>()
         if (!repoName.isNullOrBlank()) {
             conditions.add(tImage.IMAGE_REPO_NAME.eq(repoName))
@@ -833,22 +837,27 @@ class ImageDao {
         if (!tag.isNullOrBlank()) {
             conditions.add(tImage.IMAGE_TAG.eq(tag))
         }
-        // 用户自己发布的（测试、审核、已发布）+公共的（已发布）
+        conditions.add(tStoreProjectRel.STORE_TYPE.eq(StoreTypeEnum.IMAGE.type.toByte()))
+        // 用户自己发布的（测试、审核、已发布、下架中、已下架）+公共的（已发布、下架中、已下架）
         val query = dslContext.select(
             tImage.ID.`as`(KEY_IMAGE_ID),
             tImage.IMAGE_CODE.`as`(KEY_IMAGE_CODE),
             tImage.IMAGE_NAME.`as`(KEY_IMAGE_NAME),
-            tImage.VERSION.`as`(KEY_IMAGE_VERSION)
+            tImage.VERSION.`as`(KEY_IMAGE_VERSION),
+            tImageFeature.RECOMMEND_FLAG.`as`(KEY_IMAGE_FEATURE_RECOMMEND_FLAG)
         ).from(tImage)
             .join(tImageFeature).on(tImage.IMAGE_CODE.eq(tImageFeature.IMAGE_CODE))
+            .join(tStoreProjectRel).on(tImage.IMAGE_CODE.eq(tStoreProjectRel.STORE_CODE))
             .where(conditions)
-            .and(tImage.CREATOR.eq(userId))
+            .and(tStoreProjectRel.PROJECT_CODE.eq(projectId))
             .and(
                 tImage.IMAGE_STATUS.`in`(
                     setOf(
                         ImageStatusEnum.RELEASED.status.toByte(),
                         ImageStatusEnum.TESTING.status.toByte(),
-                        ImageStatusEnum.AUDITING.status.toByte()
+                        ImageStatusEnum.AUDITING.status.toByte(),
+                        ImageStatusEnum.UNDERCARRIAGING.status.toByte(),
+                        ImageStatusEnum.UNDERCARRIAGED.status.toByte()
                     )
                 )
             )
@@ -857,20 +866,23 @@ class ImageDao {
                     tImage.ID.`as`(KEY_IMAGE_ID),
                     tImage.IMAGE_CODE.`as`(KEY_IMAGE_CODE),
                     tImage.IMAGE_NAME.`as`(KEY_IMAGE_NAME),
-                    tImage.VERSION.`as`(KEY_IMAGE_VERSION)
+                    tImage.VERSION.`as`(KEY_IMAGE_VERSION),
+                    tImageFeature.RECOMMEND_FLAG.`as`(KEY_IMAGE_FEATURE_RECOMMEND_FLAG)
                 ).from(tImage)
                     .join(tImageFeature).on(tImage.IMAGE_CODE.eq(tImageFeature.IMAGE_CODE))
                     .where(conditions)
-                    .and(tImage.CREATOR.notEqual(userId))
                     .and(tImageFeature.PUBLIC_FLAG.eq(true))
                     .and(
                         tImage.IMAGE_STATUS.`in`(
                             setOf(
-                                ImageStatusEnum.RELEASED.status.toByte()
+                                ImageStatusEnum.RELEASED.status.toByte(),
+                                ImageStatusEnum.UNDERCARRIAGING.status.toByte(),
+                                ImageStatusEnum.UNDERCARRIAGED.status.toByte()
                             )
                         )
                     )
             )
+        logger.info(query.getSQL(true))
         return query.fetch()
     }
 }
