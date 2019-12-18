@@ -46,7 +46,7 @@ import org.springframework.beans.factory.annotation.Autowired
 class ServicePipelineResourceImpl @Autowired constructor(
     private val pipelineService: PipelineService,
     private val pipelineRepositoryService: PipelineRepositoryService
-    ) : ServicePipelineResource {
+) : ServicePipelineResource {
     override fun status(userId: String, projectId: String, pipelineId: String): Result<Pipeline?> {
         checkParams(userId, projectId, pipelineId)
         return Result(pipelineService.getSinglePipelineStatus(userId, projectId, pipelineId))
