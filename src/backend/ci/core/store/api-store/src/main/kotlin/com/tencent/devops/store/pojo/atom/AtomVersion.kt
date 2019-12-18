@@ -98,5 +98,7 @@ data class AtomVersion(
     @ApiModelProperty("项目可视范围,PRIVATE:私有 LOGIN_PUBLIC:登录用户开源")
     val visibilityLevel: String?,
     @ApiModelProperty("插件代码库不开源原因")
-    val privateReason: String?
+    val privateReason: String?,
+    @ApiModelProperty("是否推荐标识 true：推荐，false：不推荐", required = false)
+    val recommendFlag: Boolean? = null
 )
