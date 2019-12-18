@@ -27,27 +27,20 @@
 package com.tencent.devops.store.service.image
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.api.util.timestampmilli
-import com.tencent.devops.store.dao.image.Constants.KEY_CREATE_TIME
-import com.tencent.devops.store.dao.image.Constants.KEY_LABEL_CODE
-import com.tencent.devops.store.dao.image.Constants.KEY_LABEL_ID
-import com.tencent.devops.store.dao.image.Constants.KEY_LABEL_NAME
-import com.tencent.devops.store.dao.image.Constants.KEY_LABEL_TYPE
-import com.tencent.devops.store.dao.image.Constants.KEY_UPDATE_TIME
 import com.tencent.devops.store.dao.image.ImageLabelRelDao
 import com.tencent.devops.store.pojo.common.Label
-import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.service.common.LabelService
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.time.LocalDateTime
 
 @Service
 class ImageLabelService @Autowired constructor(
     private val dslContext: DSLContext,
-    private val imageLabelRelDao: ImageLabelRelDao
+    private val imageLabelRelDao: ImageLabelRelDao,
+    private val labelService: LabelService
 ) {
     private val logger = LoggerFactory.getLogger(ImageLabelService::class.java)
 
@@ -59,16 +52,7 @@ class ImageLabelService @Autowired constructor(
         val imageLabelList = mutableListOf<Label>()
         val imageLabelRecords = imageLabelRelDao.getLabelsByImageId(dslContext, imageId) // 查询镜像标签信息
         imageLabelRecords?.forEach {
-            imageLabelList.add(
-                Label(
-                    id = it[KEY_LABEL_ID] as String,
-                    labelCode = it[KEY_LABEL_CODE] as String,
-                    labelName = it[KEY_LABEL_NAME] as String,
-                    labelType = StoreTypeEnum.getStoreType((it[KEY_LABEL_TYPE] as Byte).toInt()),
-                    createTime = (it[KEY_CREATE_TIME] as LocalDateTime).timestampmilli(),
-                    updateTime = (it[KEY_UPDATE_TIME] as LocalDateTime).timestampmilli()
-                )
-            )
+            labelService.addLabelToLabelList(it, imageLabelList)
         }
         return Result(imageLabelList)
     }
