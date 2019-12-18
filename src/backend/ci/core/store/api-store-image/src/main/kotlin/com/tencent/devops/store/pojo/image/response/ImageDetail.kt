@@ -26,6 +26,7 @@
 
 package com.tencent.devops.store.pojo.image.response
 
+import com.tencent.devops.store.pojo.common.Label
 import com.tencent.devops.store.pojo.common.StoreUserCommentInfo
 import com.tencent.devops.store.pojo.image.enums.ImageAgentTypeEnum
 import io.swagger.annotations.ApiModel
