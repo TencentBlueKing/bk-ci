@@ -64,6 +64,7 @@ import org.jooq.Record5
 import org.jooq.Record9
 import org.jooq.Result
 import org.jooq.impl.DSL
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
