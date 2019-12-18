@@ -116,7 +116,7 @@ open class LinuxPassCodeCCInput(
     @ApiModelProperty("go语言WORKSPACE下相对路径", required = false)
     val goPath: String? = null,
     @ApiModelProperty("圈复杂度阈值", required = false)
-    val ccnThreshold: Int? = null,
+    val ccnThreshold: String? = null,
     @ApiModelProperty("是否隐藏代码内容，字符串的false和true", required = false)
     val needCodeContent: String? = null
 ) : AbstractInput()

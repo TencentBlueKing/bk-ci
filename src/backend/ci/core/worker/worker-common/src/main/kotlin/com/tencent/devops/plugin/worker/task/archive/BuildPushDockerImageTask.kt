@@ -102,7 +102,7 @@ class BuildPushDockerImageTask : ITask() {
 
             logger.info("Start to build the docker images.")
             val command = CommandFactory.create(BuildScriptType.SHELL.name)
-            val runtimeVariables = buildVariables.variables
+            val runtimeVariables = buildVariables.variablesWithType.map { it.key to it.value.toString() }.toMap()
             command.execute(buildId, loginScript, taskParams, runtimeVariables, projectId, workspace, buildVariables.buildEnvs)
 
             LoggerService.addNormalLine("Start to build the docker image. imageName:$imageName; imageTag:$imageTag")

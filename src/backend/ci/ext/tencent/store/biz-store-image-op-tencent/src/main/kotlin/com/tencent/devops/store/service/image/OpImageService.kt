@@ -9,6 +9,7 @@ import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.model.store.tables.records.TImageRecord
 import com.tencent.devops.store.dao.OpImageDao
+import com.tencent.devops.store.dao.common.StoreProjectRelDao
 import com.tencent.devops.store.dao.common.StoreReleaseDao
 import com.tencent.devops.store.dao.image.Constants
 import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_CODE
@@ -26,6 +27,7 @@ import com.tencent.devops.store.dao.image.ImageCategoryRelDao
 import com.tencent.devops.store.dao.image.ImageDao
 import com.tencent.devops.store.dao.image.ImageFeatureDao
 import com.tencent.devops.store.dao.image.MarketImageDao
+import com.tencent.devops.store.exception.image.ImageNotExistException
 import com.tencent.devops.store.pojo.common.Category
 import com.tencent.devops.store.pojo.common.KEY_CATEGORY_CODE
 import com.tencent.devops.store.pojo.common.KEY_CATEGORY_ICON_URL
@@ -45,6 +47,7 @@ import com.tencent.devops.store.pojo.common.PASS
 import com.tencent.devops.store.pojo.common.REJECT
 import com.tencent.devops.store.pojo.common.StoreReleaseCreateRequest
 import com.tencent.devops.store.pojo.common.enums.AuditTypeEnum
+import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.image.enums.CategoryTypeEnum
 import com.tencent.devops.store.pojo.image.enums.ImageAgentTypeEnum
@@ -52,6 +55,7 @@ import com.tencent.devops.store.pojo.image.enums.ImageRDTypeEnum
 import com.tencent.devops.store.pojo.image.enums.ImageStatusEnum
 import com.tencent.devops.store.pojo.image.request.ApproveImageReq
 import com.tencent.devops.store.pojo.image.request.ImageCreateRequest
+import com.tencent.devops.store.pojo.image.request.ImageUpdateRequest
 import com.tencent.devops.store.pojo.image.request.MarketImageRelRequest
 import com.tencent.devops.store.pojo.image.request.MarketImageUpdateRequest
 import com.tencent.devops.store.pojo.image.request.OpImageSortTypeEnum
@@ -70,10 +74,13 @@ class OpImageService @Autowired constructor(
     private val imageDao: ImageDao,
     private val marketImageDao: MarketImageDao,
     private val opImageDao: OpImageDao,
+    private val imageLabelService: ImageLabelService,
+    private val storeProjectRelDao: StoreProjectRelDao,
     private val imageFeatureDao: ImageFeatureDao,
     private val imageAgentTypeDao: ImageAgentTypeDao,
     private val imageCategoryRelDao: ImageCategoryRelDao,
     private val storeReleaseDao: StoreReleaseDao,
+    private val imageService: ImageService,
     private val imageNotifyService: ImageNotifyService,
     private val imageReleaseService: ImageReleaseService
 ) {
@@ -86,7 +93,8 @@ class OpImageService @Autowired constructor(
         imageCreateRequest: ImageCreateRequest,
         checkLatest: Boolean = true,
         needAuth: Boolean = true,
-        sendCheckResultNotify: Boolean = true
+        sendCheckResultNotify: Boolean = true,
+        runCheckPipeline: Boolean = true
     ): Result<String> {
         logger.info("addImage accessToken is :$accessToken, userId is :$userId, imageCreateRequest is :$imageCreateRequest")
         val imageCode = imageCreateRequest.imageCode
@@ -141,7 +149,8 @@ class OpImageService @Autowired constructor(
                 publisher = imageCreateRequest.publisher
             ),
             checkLatest = checkLatest,
-            sendCheckResultNotify = sendCheckResultNotify
+            sendCheckResultNotify = sendCheckResultNotify,
+            runCheckPipeline = runCheckPipeline
         )
         logger.info("updateImageResult is :$updateImageResult")
         if (updateImageResult.isNotOk()) {
@@ -152,6 +161,88 @@ class OpImageService @Autowired constructor(
             )
         }
         return Result(data = imageId)
+    }
+
+    fun update(
+        userId: String,
+        imageId: String,
+        imageUpdateRequest: ImageUpdateRequest,
+        interfaceName: String? = "Anon interface"
+    ): Result<Boolean> {
+        val imageRecord = imageDao.getImage(dslContext, imageId) ?: throw ImageNotExistException("imageId=$imageId")
+        dslContext.transaction { configuration ->
+            val context = DSL.using(configuration)
+            val imageSize = try {
+                imageUpdateRequest.imageSize?.toInt()
+            } catch (ignore: Exception) {
+                null
+            }
+            imageDao.updateImage(
+                dslContext = context,
+                imageId = imageId,
+                imageUpdateBean = ImageDao.ImageUpdateBean(
+                    imageName = imageUpdateRequest.imageName,
+                    classifyId = imageUpdateRequest.classifyId,
+                    version = imageUpdateRequest.version,
+                    imageSourceType = imageUpdateRequest.imageSourceType,
+                    imageRepoUrl = imageUpdateRequest.imageRepoUrl,
+                    imageRepoName = imageUpdateRequest.imageRepoName,
+                    ticketId = imageUpdateRequest.ticketId,
+                    imageStatus = null,
+                    imageStatusMsg = null,
+                    imageSize = imageSize?.toString(),
+                    imageTag = imageUpdateRequest.imageTag,
+                    agentTypeList = imageUpdateRequest.agentTypeScope,
+                    logoUrl = imageUpdateRequest.logoUrl,
+                    icon = imageUpdateRequest.icon,
+                    summary = imageUpdateRequest.summary,
+                    description = imageUpdateRequest.description,
+                    publisher = imageUpdateRequest.publisher,
+                    // 是否为最新版本镜像只走发布和下架逻辑更新
+                    latestFlag = null,
+                    modifier = userId
+                )
+            )
+            imageFeatureDao.update(
+                dslContext = context,
+                imageCode = imageRecord.imageCode,
+                publicFlag = imageUpdateRequest.publicFlag,
+                recommendFlag = imageUpdateRequest.recommendFlag,
+                certificationFlag = imageUpdateRequest.certificationFlag,
+                rdType = imageUpdateRequest.rdType,
+                weight = imageUpdateRequest.weight,
+                modifier = userId
+            )
+            // 更新调试项目
+            val projectCode = imageUpdateRequest.projectCode
+            if (projectCode != null) {
+                storeProjectRelDao.updateUserStoreTestProject(dslContext, userId, projectCode, StoreProjectTypeEnum.TEST, imageRecord.imageCode, StoreTypeEnum.IMAGE)
+            }
+            // 若更新已发布、下架中、已下架版本，需要更新最终agentType
+            if (imageRecord.imageStatus in setOf(ImageStatusEnum.RELEASED, ImageStatusEnum.UNDERCARRIAGING, ImageStatusEnum.UNDERCARRIAGED).map { it.status.toByte() }) {
+                saveImageAgentTypeToFeature(dslContext, imageRecord.imageCode, imageUpdateRequest.agentTypeScope)
+            }
+            // 更新范畴
+            val categoryIdList = imageUpdateRequest.categoryIdList
+            if (categoryIdList != null) {
+                imageService.saveImageCategoryByIds(
+                    context = context,
+                    userId = userId,
+                    imageId = imageId,
+                    categoryIdList = categoryIdList
+                )
+            }
+            // 更新标签
+            if (imageUpdateRequest.labelIdList != null) {
+                imageLabelService.updateImageLabels(
+                    dslContext = dslContext,
+                    userId = userId,
+                    imageId = imageId,
+                    labelIdList = imageUpdateRequest.labelIdList!!
+                )
+            }
+        }
+        return Result(true)
     }
 
     fun list(
@@ -285,7 +376,7 @@ class OpImageService @Autowired constructor(
     /**
      * 审核镜像
      */
-    fun approveImageWithoutNotify(userId: String, imageId: String, approveImageReq: ApproveImageReq): AuditTypeEnum {
+    fun approveImageWithoutNotify(userId: String, imageId: String, approveImageReq: ApproveImageReq, checkCurrentStatus: Boolean = true): AuditTypeEnum {
         // 参数校验
         // 判断镜像是否存在
         val image = imageDao.getImage(dslContext, imageId)
@@ -295,7 +386,7 @@ class OpImageService @Autowired constructor(
             )
         val oldStatus = image.imageStatus
         // 非待审核状态直接返回
-        if (oldStatus != ImageStatusEnum.AUDITING.status.toByte()) {
+        if (checkCurrentStatus && oldStatus != ImageStatusEnum.AUDITING.status.toByte()) {
             throw InvalidParamException(
                 message = "imageId=$imageId is not in approving state",
                 params = arrayOf(imageId)
@@ -411,6 +502,29 @@ class OpImageService @Autowired constructor(
             context,
             image.imageCode,
             JsonUtil.to(image.agentTypeScope, object : TypeReference<List<ImageAgentTypeEnum>>() {})
+        )
+    }
+
+    fun releaseImageDirectly(
+        context: DSLContext,
+        userId: String,
+        imageCode: String,
+        imageId: String
+    ) {
+        approveImageWithoutNotify(
+            userId = userId,
+            imageId = imageId,
+            approveImageReq = ApproveImageReq(
+                imageCode = imageCode,
+                publicFlag = false,
+                recommendFlag = true,
+                certificationFlag = false,
+                rdType = ImageRDTypeEnum.THIRD_PARTY,
+                weight = 1,
+                result = PASS,
+                message = "historyData数据迁移自动通过"
+            ),
+            checkCurrentStatus = false
         )
     }
 }
