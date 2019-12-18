@@ -187,7 +187,7 @@ class SubPipelineStartUpService(
 
                     if (element is MarketBuildLessAtomElement) {
                         val map = element.data
-                        val msg = map["input"] as? Map<*,  *> ?: return@element
+                        val msg = map["input"] as? Map<*, *> ?: return@element
                         val subPip = msg["subPip"]
                         val subPro = if (msg["projectId"].toString().isBlank())projectId else msg["projectId"]
                         val exist = HashSet(currentExistPipelines)
