@@ -79,9 +79,9 @@ class SubPipelineStartUpService(
         runMode: String,
         values: Map<String, String>
     ): Result<ProjectBuildId> {
-        val project = if (callPipelineId.isNotEmpty()) { callProjectId } else { projectId }
+        val project = if (callProjectId.isNotEmpty()) { callProjectId } else { projectId }
 
-        logger.info("callPipelineStartup: $project | ${callProjectId == ""} | $projectId | $parentPipelineId | $buildId | $callPipelineId | $taskId | $runMode")
+        logger.info("callPipelineStartup: $project | ${callProjectId == ""} | ${callProjectId.isNotEmpty()} | $projectId | $parentPipelineId | $buildId | $callPipelineId | $taskId | $runMode")
 
         // 通过 runVariables获取 userId 和 channelCode
         val runVariables = pipelineRuntimeService.getAllVariable(buildId)
