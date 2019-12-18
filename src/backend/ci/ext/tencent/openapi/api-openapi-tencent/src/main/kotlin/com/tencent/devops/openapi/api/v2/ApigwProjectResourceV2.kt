@@ -75,7 +75,7 @@ interface ApigwProjectResourceV2 {
     ): Result<List<ProjectVO>?>
 
     @POST
-    @Path("{projectId}/createByUser")
+    @Path("/{projectId}/createByUser")
     @ApiOperation("添加指定用户到指定项目用户组")
     fun createProjectUserByUser(
         @ApiParam(value = "执行用户Id", required = true)
