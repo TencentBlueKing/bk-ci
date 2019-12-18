@@ -30,7 +30,6 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.dao.ideatom.IdeAtomCategoryRelDao
 import com.tencent.devops.store.pojo.common.Category
 import com.tencent.devops.store.service.common.CategoryService
-import com.tencent.devops.store.service.common.StoreCommonService
 import com.tencent.devops.store.service.ideatom.IdeAtomCategoryService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory

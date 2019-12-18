@@ -30,7 +30,6 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.dao.ideatom.IdeAtomLabelRelDao
 import com.tencent.devops.store.pojo.common.Label
 import com.tencent.devops.store.service.common.LabelService
-import com.tencent.devops.store.service.common.StoreCommonService
 import com.tencent.devops.store.service.ideatom.IdeAtomLabelService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
