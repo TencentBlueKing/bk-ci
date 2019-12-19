@@ -34,7 +34,6 @@ md5 = require("resty.md5")
 arrayUtil = require("util.array_util")
 cookieUtil = require("util.cookie_util")
 grayUtil = require("util.gray_util")
-itloginUtil = require("util.itlogin_util")
 urlUtil = require("util.url_util")
 
 math.randomseed(os.time())
