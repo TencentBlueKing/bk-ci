@@ -86,11 +86,6 @@ config = {
     user = "__INFLUXDB_USERNAME__",
     password = "__INFLUXDB_PASSWORD__"
   },
-  itlogin = {
-    ip = "__BKCI_ITLOGIN_IP__",
-    port = "__BKCI_ITLOGIN_PORT__",
-    host = "__BKCI_ITLOGIN_HOST__"
-  },
   bkrepo = {
     domain = "__BKREPO_HOST__"
   }
