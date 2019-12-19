@@ -680,9 +680,13 @@ abstract class ImageService @Autowired constructor() {
             titleParams["imageCode"] = imageCode
             titleParams["imageVersion"] = imageVersion ?: ""
             val bodyParams = mutableMapOf<String, String>()
-            titleParams["pipelineId"] = pipelineId ?: ""
-            titleParams["buildId"] = buildId ?: ""
-            titleParams["url"] = buildResultBaseUrl.removeSuffix("/") + "/$projectCode/$pipelineId/$buildId"
+            bodyParams["userId"] = userId
+            bodyParams["projectCode"] = projectCode
+            bodyParams["imageCode"] = imageCode
+            bodyParams["imageVersion"] = imageVersion ?: ""
+            bodyParams["pipelineId"] = pipelineId ?: ""
+            bodyParams["buildId"] = buildId ?: ""
+            bodyParams["url"] = buildResultBaseUrl.removeSuffix("/") + "/$projectCode/$pipelineId/$buildId"
             try {
                 supportService.sendImageExecuteNullToManagers(titleParams, bodyParams)
             } catch (e: Exception) {
