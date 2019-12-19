@@ -453,7 +453,7 @@ class PipelineService @Autowired constructor(
             if (checkPermission) {
                 pipelinePermissionService.modifyResource(projectId, pipelineId, model.name)
             }
-            pipelineGroupService.updatePipelineLabel(userId, pipelineId, model.labels)
+//            pipelineGroupService.updatePipelineLabel(userId, pipelineId, model.labels)
             pipelineUserService.update(pipelineId, userId)
             success = true
         } finally {
@@ -1332,19 +1332,6 @@ class PipelineService @Autowired constructor(
         watch.stop()
         logger.info("getPipelineNameByIds|[$projectId]|watch=$watch")
         return map
-    }
-
-    fun getBuildNoByBuildIds(projectId: String, pipelineId: String, buildIds: Set<String>): Map<String, Int> {
-        if (buildIds.isEmpty()) return mapOf()
-        if (projectId.isBlank()) return mapOf()
-        if (pipelineId.isBlank()) return mapOf()
-
-        val watch = StopWatch()
-        watch.start("s_r_list_b_bs")
-        val result = pipelineRuntimeService.listBuildInfoByBuildIds(buildIds)
-        watch.stop()
-        logger.info("getBuildNoByBuildIds|[$projectId]|$pipelineId|size=${buildIds.size}|result=${result.size}|watch=$watch")
-        return result
     }
 
     fun getBuildNoByByPair(buildIds: Set<String>): Map<String, String> {
