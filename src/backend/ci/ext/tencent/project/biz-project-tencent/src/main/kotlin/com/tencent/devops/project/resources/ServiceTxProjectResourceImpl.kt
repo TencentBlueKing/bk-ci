@@ -197,11 +197,20 @@ class ServiceTxProjectResourceImpl @Autowired constructor(
         return Result(projectLocalService.createUser2ProjectByApp(organizationType, organizationId, createInfo.userId, createInfo.projectId))
     }
 
-    override fun createUserPipelinePermission(
+    override fun createUserPipelinePermissionByUser(
         accessToken: String,
         createUser: String,
         createInfo: PipelinePermissionInfo
     ): Result<Boolean> {
-        return Result(projectLocalService.createPipelinePermission(createUser, createInfo.projectId, createInfo.userId, createInfo.permissionList))
+        return Result(projectLocalService.createPipelinePermission(createUser, createInfo.projectId, createInfo.userId, createInfo.permission, createInfo.resourceType))
+    }
+
+    override fun createUserPipelinePermissionByApp(
+        organizationType: String,
+        organizationId: Long,
+        createInfo: PipelinePermissionInfo
+    ): Result<Boolean> {
+        // TODO:此处先临时支持流水线的权限
+        return Result(projectLocalService.createPipelinePermissionByApp(organizationType, organizationId, createInfo.userId, createInfo.projectId, createInfo.permission, "pipeline"))
     }
 }

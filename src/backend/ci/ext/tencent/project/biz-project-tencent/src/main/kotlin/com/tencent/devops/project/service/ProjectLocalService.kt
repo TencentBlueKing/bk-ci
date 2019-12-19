@@ -834,8 +834,8 @@ class ProjectLocalService @Autowired constructor(
         }
     }
 
-    fun createPipelinePermission(createUser: String, projectId: String, userId: String, permissionList: List<String>): Boolean {
-        logger.info("createPipelinePermission createUser[$createUser] projectId[$projectId] userId[$userId] permissionList[$permissionList]")
+    fun createPipelinePermission(createUser: String, projectId: String, userId: String, permission: String, resourceType: String): Boolean {
+        logger.info("createPipelinePermission createUser[$createUser] projectId[$projectId] userId[$userId] permissionList[$permission]")
         if (!bkAuthProjectApi.isProjectUser(createUser, bsPipelineAuthServiceCode, projectId, BkAuthGroup.MANAGER)) {
             logger.info("createPipelinePermission createUser is not project manager,createUser[$createUser] projectId[$projectId]")
             throw OperationException((MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.NOT_MANAGER)))
@@ -845,21 +845,58 @@ class ProjectLocalService @Autowired constructor(
             logger.info("createPipelinePermission userId is not project manager,userId[$userId] projectId[$projectId]")
             throw OperationException((MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.USER_NOT_PROJECT_USER)))
         }
-        val projectInfo = projectDao.getByEnglishName(dslContext, projectId) ?: throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PROJECT_NOT_EXIST))
-        permissionList.forEach {
-            bkAuthPermissionApi.addResourcePermissionForUsers(
-                userId = userId,
-                projectCode = projectId,
-                permission = AuthPermission.VIEW,
-                serviceCode = bsPipelineAuthServiceCode,
-                resourceType = AuthResourceType.PIPELINE_DEFAULT,
-                resourceCode = AuthResourceType.PIPELINE_DEFAULT.value,
-                userIdList = emptyList(),
-                supplier = null
-            )
-        }
 
-        return true
+        return createPermission(userId, projectId, permission, resourceType, bsPipelineAuthServiceCode)
+    }
+
+    fun createPipelinePermissionByApp(organizationType: String, organizationId: Long, userId: String, projectId: String, permission: String, resourceType: String): Boolean {
+        logger.info("[createPipelinePermissionByApp] organizationType[$organizationType], organizationId[$organizationId] userId[$userId] projectCode[$projectId], permission[$permission]")
+        var bgId: Long? = null
+        var deptId: Long? = null
+        var centerId: Long? = null
+        when (organizationType) {
+            AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE_BG -> bgId = organizationId
+            AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE_DEPARTMENT -> deptId = organizationId
+            AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE_CENTER -> centerId = organizationId
+            else -> {
+                throw OperationException((MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.ORG_TYPE_ERROR)))
+            }
+        }
+        val projectList = getProjectByGroupId(userId, bgId, deptId, centerId)
+        if (projectList.isEmpty()) {
+            logger.error("organizationType[$organizationType] :organizationId[$organizationId]  not project[$projectId] permission ")
+            throw OperationException((MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.ORG_NOT_PROJECT)))
+        }
+        var isCreate = false
+        projectList.forEach { project ->
+            if (project.projectCode.equals(projectId)) {
+                isCreate = true
+                return@forEach
+            }
+        }
+        if (!isCreate) {
+            throw OperationException((MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.USER_NOT_PROJECT_USER)))
+        }
+        // TODO:此处bsPipelineAuthServiceCode 也需写成配置化
+        return createPermission(userId, projectId, permission, resourceType, bsPipelineAuthServiceCode)
+    }
+
+    private fun createPermission(userId: String, projectId: String, permission: String, resourceType: String, authServiceCode: AuthServiceCode): Boolean {
+        projectDao.getByEnglishName(dslContext, projectId) ?: throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PROJECT_NOT_EXIST))
+
+        val authPermission = AuthPermission.get(permission)
+        val authResourceType = AuthResourceType.get(resourceType)
+
+        return bkAuthPermissionApi.addResourcePermissionForUsers(
+            userId = userId,
+            projectCode = projectId,
+            permission = authPermission,
+            serviceCode = authServiceCode,
+            resourceType = authResourceType,
+            resourceCode = authResourceType.value,
+            userIdList = emptyList(),
+            supplier = null
+        )
     }
 
     private fun createUser2Project(userId: String, projectId: String): Boolean {

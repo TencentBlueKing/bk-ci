@@ -71,12 +71,20 @@ class ApigwProjectResourceV2Impl @Autowired constructor(
         return Result(apigwProjectService.createProjectUserByApp(organizationType, organizationId, createInfo))
     }
 
-    override fun createUserPipelinePermission(
+    override fun createUserPipelinePermissionByUser(
         accessToken: String,
         createUser: String,
         createInfo: PipelinePermissionInfo
     ): Result<Boolean?> {
-        return Result(apigwProjectService.createPipelinePermission(createUser, accessToken, createInfo))
+        return Result(apigwProjectService.createPipelinePermissionByUser(createUser, accessToken, createInfo))
+    }
+
+    override fun createUserPipelinePermissionByApp(
+        organizationType: String,
+        organizationId: Long,
+        createInfo: PipelinePermissionInfo
+    ): Result<Boolean?> {
+        return Result(apigwProjectService.createPipelinePermissionByApp(organizationType, organizationId, createInfo))
     }
 
     companion object {
