@@ -28,11 +28,23 @@ class DispatchTypeParserTxImpl @Autowired constructor(
 
     private val logger = LoggerFactory.getLogger(DispatchTypeParserTxImpl::class.java)
 
-    override fun parse(userId: String, projectId: String, dispatchType: DispatchType) {
+    override fun parse(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        dispatchType: DispatchType
+    ) {
         if (dispatchType is StoreDispatchType) {
             if (dispatchType.imageType == ImageType.BKSTORE) {
                 // 一般性处理
-                commonDispatchTypeParser.parse(userId, projectId, dispatchType)
+                commonDispatchTypeParser.parse(
+                    userId = userId,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    buildId = buildId,
+                    dispatchType = dispatchType
+                )
                 // 腾讯内部版专有处理
                 if (dispatchType.imageType == ImageType.BKDEVOPS) {
                     if (dispatchType is DockerDispatchType) {
