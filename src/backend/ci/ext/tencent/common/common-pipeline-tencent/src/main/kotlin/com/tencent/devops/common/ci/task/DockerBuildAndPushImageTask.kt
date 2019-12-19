@@ -60,7 +60,7 @@ data class DockerBuildAndPushImageTask(
             dockerFilePath = inputs.dockerFilePath,
             dockerBuildArgs = inputs.dockerBuildArgs,
             dockerBuildHosts = inputs.dockerBuildHosts,
-            sourceRepoItemsStr =  convertRepoItem(inputs.sourceRepoItems),
+            sourceRepoItemsStr = convertRepoItem(inputs.sourceRepoItems),
             targetRepoItemStr = convertRepoItem(listOf(inputs.targetRepoItem!!))
         )
 
