@@ -51,7 +51,7 @@ object CookieUtil {
 
             for (cookieItem in cookieArr) {
                 val cookieItemArr = cookieItem.split("=".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
-                if (cookieItemArr[0] == name) {
+                if (cookieItemArr.isNotEmpty() && cookieItemArr[0] == name) {
                     value = cookieItemArr[1]
                     break
                 }

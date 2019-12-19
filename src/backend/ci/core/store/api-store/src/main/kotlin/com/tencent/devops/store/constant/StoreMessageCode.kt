@@ -44,8 +44,9 @@ package com.tencent.devops.store.constant
  */
 object StoreMessageCode {
 
-    const val MSG_CODE_STORE_CLASSIFY_PREFIX = "MSG_CODE_STORE_CLASSIFY_PREFIX_" // 研发商店插件分类国际化前缀
-    const val MSG_CODE_STORE_CATEGORY_PREFIX = "MSG_CODE_STORE_CATEGORY_PREFIX_" // 研发商店插件分类国际化前缀
+    const val MSG_CODE_STORE_CLASSIFY_PREFIX = "MSG_CODE_STORE_CLASSIFY_PREFIX_" // 研发商店插分类国际化前缀
+    const val MSG_CODE_STORE_CATEGORY_PREFIX = "MSG_CODE_STORE_CATEGORY_PREFIX_" // 研发商店范畴国际化前缀
+    const val MSG_CODE_STORE_LABEL_PREFIX = "MSG_CODE_STORE_LABEL_PREFIX_" // 研发商店标签国际化前缀
     // 插件相关的错误提示
     const val USER_QUERY_ATOM_PERMISSION_IS_INVALID = "2120001" // 研发商店：没有插件的查看权限
     const val USER_QUERY_PROJECT_PERMISSION_IS_INVALID = "2120002" // 研发商店：没有项目的查看权限
