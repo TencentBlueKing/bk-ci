@@ -172,7 +172,13 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
         val dispatchType = getDispatchType(projectId, pipelineId, buildId, param, param.baseOS)
 
         // 处理dispatchType中的BKSTORE镜像信息
-        dispatchTypeParser.parse(task.starter, task.projectId, dispatchType)
+        dispatchTypeParser.parse(
+            userId = task.starter,
+            projectId = task.projectId,
+            pipelineId = task.pipelineId,
+            buildId = task.buildId,
+            dispatchType = dispatchType
+        )
 
         dispatchType.replaceVariable(pipelineRuntimeService.getAllVariable(buildId))
 
