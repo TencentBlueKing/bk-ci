@@ -110,5 +110,4 @@ class MockAuthPermissionApi : AuthPermissionApi {
         }
         return mock
     }
-
 }
