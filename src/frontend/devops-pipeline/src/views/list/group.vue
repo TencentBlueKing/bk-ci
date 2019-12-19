@@ -272,7 +272,7 @@
             deleteGroup (groupIndex) {
                 // const name = this.tagGroupList[groupIndex].name
                 const { $store } = this
-                const content = this.$t('deleteReason')
+                const content = this.$t('group.deleteReason')
                 navConfirm({ type: 'warning', content })
                     .then(async () => {
                         try {

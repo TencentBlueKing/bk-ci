@@ -46,9 +46,9 @@
                                     @click.prevent="gotoPage(service)"
                                 >
                                     {{ serviceName(service.name) }}
-                                    <span
+                                    <!-- <span
                                         class="service-id"
-                                    >{{ serviceId(service.name) }}</span>
+                                    >{{ serviceId(service.name) }}</span> -->
                                 </a>
                             </li>
                         </ul>

@@ -414,7 +414,7 @@
             async submit () {
                 if (!this.pipelineNameList.length) {
                     this.$showTips({
-                        message: this.$t('submitErrTips'),
+                        message: this.$t('template.submitErrTips'),
                         theme: 'error'
                     })
                 } else {

@@ -16,12 +16,13 @@
                             :id="option.classifyCode"
                             :name="option.classifyName"
                             :placeholder="$t('store.请选择分类')"
+                            @click.native="chooseImageName(option)"
                         >
                         </bk-option>
                     </bk-select>
                 </bk-form-item>
                 <bk-form-item class="wt660" :label="$t('store.标签')" property="labelIdList">
-                    <bk-select v-model="form.labelIdList" searchable multiple show-select-all>
+                    <bk-select v-model="form.labelIdList" searchable multiple show-select-all @selected="chooseLabel">
                         <bk-option v-for="(option, index) in labelList"
                             :key="index"
                             :id="option.id"
@@ -111,6 +112,15 @@
                 'requestUpdateImageInfo'
             ]),
 
+            chooseImageName (option) {
+                this.form.classifyName = option.classifyName
+                this.form.classifyId = option.id
+            },
+
+            chooseLabel (ids) {
+                this.form.labelList = this.labelList.filter((x) => ids.includes(x.id)) || []
+            },
+
             hackData () {
                 this.form.labelIdList = this.form.labelList.map(label => label.id)
                 this.form.description = this.form.description || this.$t('store.imageMdDesc')
@@ -144,6 +154,7 @@
                         data: this.form
                     }
                     this.requestUpdateImageInfo(postData).then(() => {
+                        this.$store.dispatch('store/updateCurrentImage', this.form)
                         this.$bkMessage({ message: this.$t('store.修改成功'), theme: 'success' })
                         this.$router.push({ name: 'imageDetail' })
                     }).catch((err) => this.$bkMessage({ message: err.message || err, theme: 'error' })).finally(() => {

@@ -5,17 +5,17 @@
     >
         <div
             class="devops-locale-switcher-entry"
-            @click="toggleList"
+            @click="toggleLocale"
         >
             <icon
-                :name="$i18n.locale"
+                name="locale"
                 size="20"
             />
             <span>{{ localeLabel }}</span>
-            <i class="bk-icon icon-down-shape" />
+            <!-- <i class="bk-icon icon-down-shape" /> -->
         </div>
 
-        <ul
+        <!-- <ul
             v-show="showLocaleList"
             class="devops-locale-switcher-list"
         >
@@ -30,7 +30,7 @@
                 />
                 {{ item.label }}
             </li>
-        </ul>
+        </ul> -->
     </div>
 </template>
 
@@ -54,16 +54,22 @@
             this.showLocaleList = !this.showLocaleList
         }
 
-        switchLocale (locale) {
+        toggleLocale () {
+            let locale = 'zh-CN'
+            try {
+                locale = this.$i18n.locale === 'en-US' ? 'zh-CN' : 'en-US'
+            } catch (e) {
+                // catch
+            }
             // @ts-ignore
             this.$setLocale(locale)
-            this.$nextTick(this.hideList)
+            location.reload()
+            // this.$nextTick(this.hideList)
         }
 
         get localeLabel (): string {
             // @ts-ignore
-            const curLocale = this.$localeList.find(locale => locale.key === this.$i18n.locale)
-            return curLocale ? curLocale.label : this.$i18n.locale
+            return this.$i18n.locale === 'en-US' ? '中文' : 'English'
         }
     }
 </script>
@@ -97,7 +103,7 @@
             border-radius: 2px;
             box-shadow: 0 3px 6px rgba(51, 60, 72, 0.12);
             top: 53px;
-            right: 130px;
+            right: 250px;
             cursor: default;
             &:after {
                 position: absolute;

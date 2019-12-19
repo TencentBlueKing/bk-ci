@@ -7,7 +7,7 @@
                 <i class="right-arrow banner-arrow"></i>
                 <span class="banner-des back-home" @click="toImageList"> {{ $t('store.工作台') }} </span>
                 <i class="right-arrow banner-arrow"></i>
-                <span class="banner-des">{{$t('store.上架/升级镜像')}}（{{imageDetail.imageName}}）</span>
+                <span class="banner-des">{{$t('store.上架/升级镜像')}}（{{imageDetail.imageCode}}）</span>
             </p>
             <a class="title-work" target="_blank" href="http://iwiki.oa.com/pages/viewpage.action?pageId=22118721"> {{ $t('store.镜像指引') }} </a>
         </h3>
@@ -113,7 +113,7 @@
                 currentPipelineId: '',
                 sideSliderConfig: {
                     show: false,
-                    title: '查看日志',
+                    title: this.$t('store.查看日志'),
                     quickClose: true,
                     width: 820,
                     value: '',
@@ -276,7 +276,7 @@
     }
 </script>
 
-<style lang="scss" scope>
+<style lang="scss" scoped>
     @import '@/assets/scss/conf.scss';
     .image-progress-home {
         min-height: 100%;
@@ -444,10 +444,10 @@
         }
     }
 
-    .bk-sideslider-wrapper {
+    /deep/ .bk-sideslider-wrapper {
         top: 0;
         padding-bottom: 0;
-            .bk-sideslider-content {
+        .bk-sideslider-content {
             height: calc(100% - 50px);
         }
     }

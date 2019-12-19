@@ -13,7 +13,6 @@
                 const navConf = {
                     icon: 'ticket',
                     title: this.$t('ticket.credentialManage'),
-                    url: `${DOCS_URL_PREFIX}/${this.$t('allService')}/${this.$t('ticket.credentialManage')}/summary.html`,
                     menu: [
                         {
                             id: 'credentialList',

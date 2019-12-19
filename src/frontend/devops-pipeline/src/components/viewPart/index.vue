@@ -29,12 +29,12 @@
                         <span v-if="row.artifactoryType === 'PIPELINE'">{{ $t('details.pipelineRepo') }}</span>
                     </div>
                     <div class="table-part-item part-item-handler">
-                        <i @click.stop="gotoArtifactory" class="bk-icon icon-position-shape handler-btn" :title="$t('editPage.toArtifactory')"></i>
+                        <i @click.stop="gotoArtifactory" class="bk-icon icon-position-shape handler-btn" :title="$t('editPage.atomForm.toArtifactory')"></i>
                         <i class="bk-icon icon-new-download handler-btn" v-if="hasPermission" :title="$t('download')"
                             @click="requestUrl(row, 'download')"></i>
-                        <i class="bk-icon icon-tree-module-shape handler-btn" v-if="hasPermission && isMof && isWindows && isApkOrIpa(row)" :title="$t('editPage.mofDownload')"
+                        <i class="bk-icon icon-tree-module-shape handler-btn" v-if="hasPermission && isMof && isWindows && isApkOrIpa(row)" :title="$t('details.mofDownload')"
                             @click="requestUrl(row, 'download', null, 'MoF')"></i>
-                        <span class="handler-btn-tool copy" v-if="row.artifactoryType === 'PIPELINE'" :title="$t('editPage.saveToCustom')" @click="copyToCustom(row)">
+                        <span class="handler-btn-tool copy" v-if="row.artifactoryType === 'PIPELINE'" :title="$t('details.saveToCustom')" @click="copyToCustom(row)">
                             <Logo class="icon-copy" name="copy" size="15"></Logo>
                         </span>
                         <span class="handler-btn-tool qrcode"
@@ -104,12 +104,12 @@
                                 </ul>
                             </div>
                         </tab-panel>
-                        <tab-panel name="metaDate" :title="$t('details.metaData')" v-if="!lastClickItem.folder">
+                        <tab-panel name="metaDate" :title="$t('metaData')" v-if="!lastClickItem.folder">
                             <table class="bk-table has-thead-bordered has-table-striped" v-if="Object.keys(sideSliderConfig.data.meta).length">
                                 <thead>
                                     <tr>
-                                        <th>{{ $t('key') }}</th>
-                                        <th>{{ $t('value') }}</th>
+                                        <th>{{ $t('view.key') }}</th>
+                                        <th>{{ $t('view.value') }}</th>
                                     </tr>
                                 </thead>
                                 <tbody>

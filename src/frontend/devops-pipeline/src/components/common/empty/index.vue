@@ -1,12 +1,19 @@
 <template>
     <div class="paas-ci-empty">
         <p class="code-check-title" v-if="isCodeCheck">{{ emptyTitle }}</p>
-        <img :src="calcSrc" :alt="$t('noData')" class="empty-pic">
+        <div class="empty-pic-box">
+            <img :src="calcSrc" :alt="calcAlt">
+            <p class="empty-pic-desc">
+                <slot>
+                    {{ calcAlt }}
+                </slot>
+            </p>
+        </div>
     </div>
 </template>
 
 <script>
-    import noData from '@/images/no_data.png'
+    import noData from '@/images/box.png'
     import noResult from '@/images/no_result.png'
 
     export default {
@@ -60,11 +67,14 @@
             font-size: 15px;
             font-weight: 600;
         }
-        .empty-pic {
+        .empty-pic-box {
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
+        }
+        .empty-pic-desc {
+            text-align: center;
         }
     }
 </style>

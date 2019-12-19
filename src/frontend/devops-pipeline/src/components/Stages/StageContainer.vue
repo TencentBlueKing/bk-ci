@@ -195,6 +195,8 @@
                         projectId: projectId,
                         pipelineId: pipelineId,
                         vmSeqId,
+                        imageCode: this.container.dispatchType && this.container.dispatchType.imageCode,
+                        imageVersion: this.container.dispatchType && this.container.dispatchType.imageVersion,
                         imageName: this.container.dispatchType && this.container.dispatchType.value ? this.container.dispatchType.value : this.container.dockerBuildVersion,
                         buildEnv: this.container.buildEnv,
                         imageType: this.container.dispatchType && this.container.dispatchType.imageType ? this.container.dispatchType.imageType : 'BKDEVOPS',

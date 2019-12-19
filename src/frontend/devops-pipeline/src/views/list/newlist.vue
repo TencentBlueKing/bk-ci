@@ -715,7 +715,7 @@
                                         handler: 'resume-pipeline'
                                     },
                                     {
-                                        text: this.$t('teminate'),
+                                        text: this.$t('terminate'),
                                         handler: 'terminate-pipeline'
                                     }
                                 ]
@@ -967,13 +967,13 @@
 
                 this.$store.dispatch('pipelines/saveAsTemplate', { projectId, postData }).then(({ id }) => {
                     this.saveAsCancelHandler()
-                    this.$showTips({ message: this.$t('saveAsTempSuc'), theme: 'success' })
+                    this.$showTips({ message: this.$t('newlist.saveAsTempSuc'), theme: 'success' })
                     this.$router.push({
                         name: 'templateEdit',
                         params: { templateId: id }
                     })
                 }).catch((err) => {
-                    const message = err.message || this.$t('saveAsTempFail')
+                    const message = err.message || this.$t('newlist.saveAsTempFail')
                     this.$showTips({ message, theme: 'error' })
                 })
             },
@@ -1111,7 +1111,7 @@
                     const footer = [
                         {
                             upperText: copyItem.feConfig.footer[0].upperText,
-                            lowerText: this.$t('newlist.totalAtomNume'),
+                            lowerText: this.$t('newlist.totalAtomNums'),
                             handler: this.goEditPipeline
                         },
                         {

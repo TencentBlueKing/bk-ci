@@ -63,8 +63,9 @@
                     :style="{ left: item.left }"
                 >{{ item.label }}</span>
                 <div class="bkdevops-button">
-                    <router-link
-                        :to="{ name: &quot;quickstart&quot; }"
+                    <a
+                        :href="`${DOCS_URL_PREFIX}/x/kJKj`"
+                        target="_blank"
                     >
                         <bk-button
                             theme="primary"
@@ -72,7 +73,7 @@
                         >
                             {{ $t('accessGuide') }}
                         </bk-button>
-                    </router-link>
+                    </a>
                 </div>
             </div>
 
@@ -112,7 +113,7 @@
                 <p>
                     {{ $t("bkdevopsDesc") }}
                     <a
-                        :href="DOCS_URL_PREFIX"
+                        :href="`${DOCS_URL_PREFIX}/display/DevOps`"
                         class="more"
                         target="_blank"
                     >{{ $t("learnMore") }}</a>
@@ -123,7 +124,7 @@
                 <p>
                     {{ $t("bkdevopsWay") }}
                     <a
-                        :href="`${DOCS_URL_PREFIX}/所有服务/流水线/什么是流水线/summary.html`"
+                        :href="`${DOCS_URL_PREFIX}/x/RY6j`"
                         target="_blank"
                         class="more"
                     >{{ $t("learnMore") }}</a>
@@ -210,7 +211,7 @@
             return urlJoin('/console/', link)
         }
 
-        serviceName (name): string {
+        serviceName (name = ''): string {
             const charPos = name.indexOf('(')
             return charPos > -1 ? name.slice(0, charPos) : name
         }

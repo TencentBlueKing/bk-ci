@@ -4,6 +4,8 @@ import { updateRecentVisitServiceList, urlJoin, getServiceAliasByPath, importScr
 
 import compilePath from '../utils/pathExp'
 import request from '../utils/request'
+import * as cookie from 'js-cookie'
+
 
 // 404
 // const None = () => import('../views/None.vue')
@@ -20,7 +22,7 @@ const QuickStart = () => import('../views/QuickStart.vue')
 
 const ProjectManage = () => import('../views/ProjectManage.vue')
 
-const Docs = () => import('../views/Docs.vue')
+// const Docs = () => import('../views/Docs.vue')
 
 const Maintaining = () => import('../views/503.vue')
 
@@ -82,15 +84,6 @@ const routes = [
                 component: Maintaining
             }
         ]
-    },
-    {
-        path: '/console/docs',
-        name: 'docs',
-        component: Docs,
-        meta: {
-            showProjectList: false,
-            showNav: false
-        }
     }
 ]
 
@@ -108,7 +101,6 @@ const createRouter = (store: any, dynamicLoadModule: any, i18n: any) => {
 
     if (isAmdModule(window.currentPage)) {
         const serviceAlias = getServiceAliasByPath(window.currentPage.link_new)
-        dynamicLoadModule(serviceAlias, i18n.locale)
         loadedModule = {
             [serviceAlias]: true
         }
@@ -126,8 +118,8 @@ const createRouter = (store: any, dynamicLoadModule: any, i18n: any) => {
         }
         
         const { css_url, js_url } = currentPage
-        
         if (isAmdModule(currentPage) && !loadedModule[serviceAlias]) {
+            loadedModule[serviceAlias] = true
             store.dispatch('toggleModuleLoading', true)
             Promise.all([
                 importStyle(css_url, document.head),
@@ -145,24 +137,18 @@ const createRouter = (store: any, dynamicLoadModule: any, i18n: any) => {
                 router.addRoutes(dynamicRoutes)
                 setTimeout(() => {
                     store.dispatch('toggleModuleLoading', false)
-                }, 0)
+                }, 100)
+                goNext(to, store, next)
             })
-            loadedModule[serviceAlias] = true
-        }
-        const newPath = initProjectId(to, store)
-
-        // @ts-ignore
-        window.setProjectIdCookie(getProjectId(store, to.params))
-        
-        if (to.path !== newPath) {
-            next({
-                path: newPath,
-                query: to.query,
-                hash: to.hash
+            goNext(to, store, next)
+        } else if (isAmdModule(currentPage) && loadedModule[serviceAlias]) {
+            dynamicLoadModule(serviceAlias, i18n.locale).then(() => {
+                goNext(to, store, next)    
             })
         } else {
-            next()
+            goNext(to, store, next)
         }
+            
     })
 
     router.afterEach(route => {
@@ -227,8 +213,14 @@ function parseOS (): string {
 }
 
 function getProjectId (store, params): string {
-    const projectId = localStorage.getItem('projectId') || store.getters.enableProjectList[0].projectCode
-    return String(params.projectId) !== '0' && params.projectId ? params.projectId : projectId
+    try {
+        const cookiePid = cookie.get(X_DEVOPS_PROJECT_ID)
+        const projectId = window.GLOBAL_PID || cookiePid || localStorage.getItem('projectId') || store.getters.enableProjectList[0].projectCode
+        return String(params.projectId) !== '0' && params.projectId ? params.projectId : projectId
+    } catch (e) {
+        return ''
+    }
+    
 }
 
 function initProjectId (to, store): string {
@@ -241,11 +233,26 @@ function initProjectId (to, store): string {
             ...params,
             projectId
         } : params
-        
         return matched.length ? compilePath(lastMatched.path)(options) : to.path
     } catch (e) {
         console.log(e)
         return to.path
+    }
+}
+
+function goNext(to, store, next) {
+    const newPath = initProjectId(to, store)
+
+    // @ts-ignore
+    window.setProjectIdCookie(getProjectId(store, to.params))
+    if (to.path !== newPath) {
+        next({
+            path: newPath,
+            query: to.query,
+            hash: to.hash
+        })
+    } else {
+        next()
     }
 }
 export default createRouter

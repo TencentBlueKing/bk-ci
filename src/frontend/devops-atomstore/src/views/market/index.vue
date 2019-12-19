@@ -103,7 +103,7 @@
                         res = bkLocale.$t('store.IDE插件')
                         break
                     case 'image':
-                        res = bkLocale.$t('store.镜像')
+                        res = bkLocale.$t('store.容器镜像')
                         break
                     default:
                         res = bkLocale.$t('store.流水线插件')
@@ -178,15 +178,15 @@
             },
 
             'filterData.pipeType': {
-                handler () {
-                    this.getClassifys()
+                handler (val) {
+                    this.getClassifys(val)
                 },
                 immediate: true
             }
         },
 
         created () {
-            if (VERSION_TYPE === 'ee') this.storeTypes.pop()
+            if (VERSION_TYPE === 'ee') this.storeTypes.splice(2, 1)
         },
 
         methods: {
@@ -274,7 +274,8 @@
             },
 
             setClassifyValue (key) {
-                const categories = this.categories[1] || {}
+                let categories = this.categories[2] || {}
+                if (this.filterData.pipeType === 'atom') categories = this.categories[1] || {}
                 const selected = (categories.children || []).find((category) => category.classifyCode === key) || {}
                 this.filterData.classifyValue = selected.classifyValue
                 this.filterData.classifyKey = 'classifyCode'
@@ -294,14 +295,14 @@
                 else this.$router.push({ name: 'atomHome', query: { pipeType } })
             },
 
-            getClassifys () {
+            getClassifys (val) {
                 const fun = {
                     atom: () => this.getAtomClassifys(),
                     template: () => this.getTemplateClassifys(),
                     ide: () => this.getIDEClassifys(),
                     image: () => this.getImageClassifys()
                 }
-                const type = this.$route.query.pipeType || 'atom'
+                const type = val || 'atom'
                 const method = fun[type]
                 method().then((arr) => {
                     const query = this.$route.query || {}

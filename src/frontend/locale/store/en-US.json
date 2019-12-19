@@ -1,5 +1,9 @@
 {
     "store": "Store",
+    "yaml": "YAML Fragment",
+    "成员名称": "Member Name",
+    "该分类下暂无容器镜像": "No container image under this category",
+    "发布容器镜像": "Release Container Image",
     "构建中": "Building",
     "构建失败": "Build Failure",
     "上架中止": "Suspended",
@@ -28,6 +32,7 @@
     "适用Job类型发生变更，发布类型请选择非兼容式升级，避免影响已有流水线的使用。": "Job types supported have changed, please select non-compatible upgrade for release type, so as to avoid affecting the use of existing pipelines.",
     "需要选择编译环境": "Need to choose the compilation environment",
     "适用Job类型：": "Environment:",
+    "适用Job类型": "Environment",
     "请选择成员": "Please select members",
     "若列表中找不到用户，请先将其添加为插件所属调试项目的成员": "If a user is not found in the list, please add it as a member of the debugging project to which the plugin belongs.",
     "工蜂OAUTH": "工蜂OAUTH",
@@ -416,7 +421,7 @@
     "关联成功": "Successfully linked",
     "容器镜像": "Docker Image",
     "imageMdDesc": "### Introduction\n\n### Usage\n\n### Notes\n\n### License",
-    "是必填项，请填写以后重试": "Is required, please fill in and try again later",
+    "输入不正确，请确认修改后再试": "Incorrect input, please confirm and try again",
     "Devnet 物理机": "Devnet Physical Machine",
     "请输入源镜像Tag，如 enterprise-6.0.3": "Please enter the source image tag, such as enterprise-6.0.3",
     "请输入源镜像名称，如 XXX/XXXX": "Please enter a image name, such as XXX/XXXX",
@@ -495,5 +500,6 @@
     "年": "year",
     "月": "month",
     "日": "day",
-    "适用机器类型：": "Machine"
+    "适用机器类型：": "Machine",
+    "editLogo": "Edit"
 }

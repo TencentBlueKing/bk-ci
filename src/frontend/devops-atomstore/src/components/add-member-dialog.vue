@@ -18,7 +18,7 @@
             <div class="add-member-content">
                 <form class="bk-form add-member-form g-form-radio" onsubmit="return false">
                     <div class="bk-form-item member-form-item is-required" v-if="VERSION === 'ee'">
-                        <label class="bk-label"> {{ $t('store.成员名称：') }} </label>
+                        <label class="bk-label"> {{ $t('store.成员名称') }} </label>
                         <div class="bk-form-content member-item-content">
                             <bk-input type="text" :placeholder="$t('store.请输入成员名称')"
                                 name="memberName"
@@ -31,22 +31,25 @@
                             <div v-if="errors.has('memberName')" class="error-tips"> {{ $t('store.成员名称不能为空') }} </div>
                         </div>
                     </div>
-                    <div class="bk-form-content member-item-content" v-else>
-                        <bk-select
-                            searchable
-                            multiple
-                            show-select-all
-                            v-model="memberForm.list"
-                            @selected="selectMember"
-                        >
-                            <bk-option v-for="(option, index) in memberList"
-                                :key="index"
-                                :id="option.id"
-                                :name="option.name">
-                            </bk-option>
-                        </bk-select>
-                        <div class="prompt-tips"> {{ $t('store.若列表中找不到用户，请先将其添加为插件所属调试项目的成员') }} </div>
-                        <div class="error-tips" v-if="nameError"> {{ $t('store.成员名称不能为空') }}</div>
+                    <div class="bk-form-item member-form-item is-required" v-else>
+                        <label class="bk-label"> {{ $t('store.成员名称') }} </label>
+                        <div class="bk-form-content member-item-content">
+                            <bk-select
+                                searchable
+                                multiple
+                                show-select-all
+                                v-model="memberForm.list"
+                                @selected="selectMember"
+                            >
+                                <bk-option v-for="(option, index) in memberList"
+                                    :key="index"
+                                    :id="option.id"
+                                    :name="option.name">
+                                </bk-option>
+                            </bk-select>
+                            <div class="prompt-tips"> {{ $t('store.若列表中找不到用户，请先将其添加为插件所属调试项目的成员') }} </div>
+                            <div class="error-tips" v-if="nameError"> {{ $t('store.成员名称不能为空') }}</div>
+                        </div>
                     </div>
                     <div class="bk-form-item member-form-item is-required">
                         <label class="bk-label"> {{ $t('store.角色：') }} </label>
@@ -123,17 +126,11 @@
                     this.memberForm.list = []
                     this.memberForm.type = 'ADMIN'
                 }
-            },
-
-            currentAtom (newVal) {
-                if (newVal) {
-                    this.getMemberList()
-                }
             }
         },
 
         created () {
-            if (this.currentAtom && this.currentAtom.projectCode) {
+            if (this.projectCode) {
                 this.getMemberList()
             }
         },
@@ -141,7 +138,7 @@
             async getMemberList () {
                 try {
                     const res = await this.$store.dispatch('store/requestProjectMember', {
-                        projectCode: this.currentAtom.projectCode
+                        projectCode: this.projectCode
                     })
                     this.memberList.splice(0, this.memberList.length)
                     if (res) {
@@ -240,7 +237,7 @@
             display: flex;
             .permission-name {
                 margin-left: 16px;
-                padding: 4px 6px;
+                padding: 0px 6px;
                 border: 1px solid $borderColor;
                 border-radius: 22px;
                 font-size: 12px;

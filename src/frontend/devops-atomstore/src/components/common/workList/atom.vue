@@ -41,12 +41,12 @@
                     <span class="atom-status-icon fail" v-if="props.row.atomStatus === 'GROUNDING_SUSPENSION'"></span>
                     <span class="atom-status-icon obtained" v-if="props.row.atomStatus === 'AUDIT_REJECT' || props.row.atomStatus === 'UNDERCARRIAGED'"></span>
                     <span class="atom-status-icon bk-icon icon-initialize" v-if="props.row.atomStatus === 'INIT'"></span>
-                    <span>{{ atomStatusList[props.row.atomStatus] }}</span>
+                    <span>{{ $t(atomStatusList[props.row.atomStatus]) }}</span>
                 </template>
             </bk-table-column>
             <bk-table-column :label="$t('store.修改人')" prop="modifier"></bk-table-column>
             <bk-table-column :label="$t('store.修改时间')" prop="updateTime" width="150"></bk-table-column>
-            <bk-table-column :label="$t('store.操作')" width="200" class-name="handler-btn">
+            <bk-table-column :label="$t('store.操作')" width="240" class-name="handler-btn">
                 <template slot-scope="props">
                     <span class="upgrade-btn"
                         v-if="props.row.atomStatus === 'GROUNDING_SUSPENSION' || props.row.atomStatus === 'AUDIT_REJECT' || props.row.atomStatus === 'RELEASED'"

@@ -4,8 +4,6 @@
             <parameter-input class="input-com" @updateValue="(newValue) => updateValue(parameter, newValue, 'key')" :param-values="paramValues" :url-query="parameter.keyUrlQuery" :multiple="parameter.keyMultiple" :value="parameter.key" :disabled="parameter.keyDisable" :type="parameter.keyType" :list-type="parameter.keyListType" :url="parameter.keyUrl" :list="parameter.keyList"></parameter-input>
             <span class="input-seg">=</span>
             <parameter-input class="input-com" @updateValue="(newValue) => updateValue(parameter, newValue, 'value')" :param-values="paramValues" :url-query="parameter.valueUrlQuery" :multiple="parameter.valueMultiple" :value="parameter.value" :disabled="parameter.valueDisable" :type="parameter.valueType" :list-type="parameter.valueListType" :url="parameter.valueUrl" :list="parameter.valueList"></parameter-input>
-            <i class="bk-icon icon-minus-circle" v-if="param.hasAddButton" @click="minusClick(index)"></i>
-            <i class="bk-icon icon-plus-circle" v-if="param.hasAddButton" @click="addClick(parameter, index)"></i>
         </li>
     </ul>
 </template>
@@ -63,25 +61,13 @@
         methods: {
             initData () {
                 if (this.param.paramType === 'list') {
-                    const list = this.atomValue[this.name] || this.param.parameters || []
+                    const list = this.param.parameters || []
                     this.parameters = [...list]
                     this.setValue()
                     return
                 }
 
                 this.addParams()
-            },
-
-            addClick (parameter, index) {
-                const newData = JSON.parse(JSON.stringify(parameter))
-                Object.assign(newData, { key: '', value: '' })
-                this.parameters.splice(index + 1, 0, newData)
-                this.handleChange(this.name, [...this.parameters])
-            },
-
-            minusClick (index) {
-                this.parameters.splice(index, 1)
-                this.handleChange(this.name, [...this.parameters])
             },
 
             addParams () {
@@ -112,7 +98,8 @@
             },
 
             setValue () {
-                const values = this.atomValue[this.name] || []
+                let values = this.atomValue[this.name] || []
+                if (!Array.isArray(values)) values = JSON.parse(values)
                 const defaultValues = this.param.default || []
 
                 this.parameters.forEach((param) => {
@@ -121,11 +108,17 @@
                     const defaultValue = defaultValues.find(x => x.key === key) || {}
                     param.value = value.value || defaultValue.value || param.value
                 })
+                this.updateParameters()
             },
 
             updateValue (parameter, newValue, type) {
                 parameter[type] = newValue
-                this.handleChange(this.name, [...this.parameters])
+                this.updateParameters()
+            },
+
+            updateParameters () {
+                const res = this.parameters.map((x) => ({ key: x.key, value: x.value }))
+                this.handleChange(this.name, String(JSON.stringify(res)))
             }
         }
     }

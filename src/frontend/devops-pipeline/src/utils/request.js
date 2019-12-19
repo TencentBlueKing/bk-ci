@@ -46,8 +46,7 @@ request.interceptors.request.use(config => {
         host: config.baseURL,
         pathname: config.url
     }
-
-    if (/(devops|gw\.open)\.oa\.com$/i.test(url.host) || !/(\/?ms\/backend|\/?backend)\//i.test(url.pathname)) {
+    if (/(devops|gw\.open)\.oa\.com(\/ms)?$/i.test(url.host) && !/(\/?ms\/backend|\/?backend)\//i.test(url.pathname)) {
         const routePid = getCurrentPid()
         return {
             ...config,

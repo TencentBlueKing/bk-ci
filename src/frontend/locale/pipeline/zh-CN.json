@@ -70,9 +70,12 @@
     "buildNum": "构建号",
     "propertyBar": "属性栏",
     "pipelineNameInputTips": "请输入流水线名称,不超过40个字符",
+    "pipelineDesc": "描述",
     "pipelineDescInputTips": "请输入100字符以内的描述内容",
     "nameInputTips": "请输入名称",
     "loadingTips": "数据加载中，请稍候",
+    "metaData": "元数据",
+    "download": "下载",
     "timeMap": {
         "days": "天",
         "hours": "小时",
@@ -198,7 +201,8 @@
         "badge": "徽章",
         "imgUrl": "图片url",
         "mdLink": "markdown链接",
-        "conCopySuc": "内容复制成功"
+        "conCopySuc": "内容复制成功",
+        "additionDesc": "其他描述"
     },
     "template": {
         "addTemplate": "新建模板",
@@ -388,7 +392,6 @@
         "skipTipsSuffix": "插件中关闭该选项",
         "selectAll": "全选",
         "selectNone": "全不选",
-        "metaData": "元数据",
         "majorVersion": "主版本",
         "minorVersion": "特性版本",
         "fixVersion": "修正版本"
@@ -457,9 +460,10 @@
         }
     },
     "editPage": {
-        "provideInfo": "由 {0} 提供，{1} 修改于 {2}",
+        "image": "镜像",
+        "provideInfo": "{0} 提供，{1} 修改于 {2}",
         "officialCertification": "官方认证",
-        "thirdImageHolder": "请输入Image，如Java：11.0.5",
+        "thirdImageHolder": "请输入镜像，如Java：11.0.5",
         "by": "由",
         "devnet": "Devnet 物理机",
         "onlySupport": "仅支持",
@@ -471,15 +475,15 @@
         "store": "研发商店",
         "unInstalled": "未安装",
         "installed": "已安装",
-        "unRecomReason": "不建议使用的 CI 镜像，后续将下架。此类 CI 镜像一般都已提供替换用的 CI 镜像，请使用新镜像",
+        "unRecomReason": "不建议使用的容器镜像，后续将下架。此类容器镜像一般都已提供替换用的容器镜像，请使用新容器镜像",
         "unRecommend": "不推荐使用",
         "enterSearch": "输入后回车搜索",
-        "selectImage": "请选择一个CI镜像",
+        "selectImage": "请选择一个容器镜像",
         "addCredentials": "添加相应凭据",
         "fromHand": "手动输入",
         "fromList": "从列表选择",
         "reElection": "重选",
-        "chooseImage": "待选择镜像",
+        "chooseImage": "请选择容器镜像",
         "imageErrMgs": "字段不能为空",
         "imageSource": "镜像源",
         "devopsImg": "蓝盾自有镜像",
@@ -488,6 +492,7 @@
         "saving": "正在保存",
         "selectJob": "请选择Job类型",
         "insert": "插入",
+        "append": "添加",
         "prepareEnv": "准备构建环境中",
         "copyJob": "复制job",
         "copyJobFail": "复制job失败",
@@ -634,7 +639,7 @@
         "atomForm": {
             "hasExisted": "已存在",
             "notFound": "未找到相关人员",
-            "namespaceNmae": "namespace名称",
+            "namespaceName": "namespace名称",
             "paramKey": "参数key",
             "paramValue": "参数value",
             "inputTips": "请输入",
@@ -659,7 +664,12 @@
             "jobSettingTips": "当前业务不存在Job作业，请前往Job作业平台配置",
             "gcloudSettingTips": "当前业务不存在持续集成模板，请前往标准运维系统配置",
             "slaveAbsPath": "源服务器操作系统上的绝对路径",
-            "createTurbo": "暂无编译加速任务，点击去新建任务"
+            "createTurbo": "暂无编译加速任务，点击去新建任务",
+            "ticketId": "凭证ID",
+            "tclsId": "tcls业务ID",
+            "serviceId": "业务ID",
+            "templateDownload": "模板下载",
+            "otherChoice": "其他选项"
         }
     },
     "storeMap": {

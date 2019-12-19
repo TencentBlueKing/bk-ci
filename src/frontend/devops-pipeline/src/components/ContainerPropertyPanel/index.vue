@@ -22,7 +22,7 @@
                 </div>
             </form-field>
 
-            <form v-if="isVmContainer(container)" v-bkloading="{ isLoading: !apps || !containerModalId }">
+            <form v-if="isVmContainer(container)" v-bkloading="{ isLoading: !apps || !containerModalId || isHandleHistory }">
                 <form-field :label="$t('editPage.resourceType')">
                     <selector
                         :disabled="!editable"
@@ -44,10 +44,10 @@
                             </div>
                         </template>
                     </selector>
-                    <span class="bk-form-help" v-if="isPublicResourceType">{{ $t('editPage.publicResTips') }}<a target="_blank" :href="`${DOCS_URL_PREFIX}/所有服务/流水线/用户指南/publicBuild.html`">{{ $t('editPage.seeMore') }}</a></span>
+                    <span class="bk-form-help" v-if="isPublicResourceType">{{ $t('editPage.publicResTips') }}</span>
                 </form-field>
 
-                <form-field label="image" v-if="['DOCKER', 'IDC', 'PUBLIC_DEVCLOUD'].includes(buildResourceType)" :required="true" :is-error="errors.has(&quot;buildImageVersion&quot;) || errors.has(&quot;buildResource&quot;)" :error-msg="$t('editPage.imageErrMgs')">
+                <form-field :label="$t('editPage.image')" v-if="['DOCKER', 'IDC', 'PUBLIC_DEVCLOUD'].includes(buildResourceType) && !isHandleHistory" :required="true" :is-error="errors.has(&quot;buildImageVersion&quot;) || errors.has(&quot;buildResource&quot;)" :error-msg="$t('editPage.imageErrMgs')">
                     <enum-input
                         name="imageType"
                         :list="imageTypeList"
@@ -158,6 +158,7 @@
             </div>
 
             <image-selector :is-show.sync="showImageSelector"
+                v-if="['DOCKER', 'IDC', 'PUBLIC_DEVCLOUD'].includes(buildResourceType) && !isHandleHistory"
                 :code="buildImageCode"
                 :build-resource-type="buildResourceType"
                 @choose="choose"
@@ -209,9 +210,9 @@
         },
         data () {
             return {
-                DOCS_URL_PREFIX,
                 showImageSelector: false,
                 isVersionLoading: false,
+                isHandleHistory: false,
                 imageTypeList: [
                     {
                         label: this.$t('editPage.fromList'),
@@ -391,15 +392,16 @@
                     agentType: 'ID'
                 }))
             }
-            if (['DOCKER', 'IDC', 'PUBLIC_DEVCLOUD'].includes(this.buildResourceType) && !this.buildImageCode) {
+            if (['DOCKER', 'IDC', 'PUBLIC_DEVCLOUD'].includes(this.buildResourceType) && !this.buildImageCode && this.buildImageType !== 'THIRD') {
                 if (/\$\{/.test(this.buildResource)) {
                     this.changeBuildResource('imageType', 'THIRD')
                 } else {
-                    this.changeBuildResource('imageType', 'BKSTORE')
+                    this.isHandleHistory = true
                     this.requestImageHistory({ agentType: this.buildResourceType, value: this.buildResource }).then((res) => {
-                        this.changeBuildResource('imageCode', res.code)
-                        this.changeBuildResource('imageName', res.name)
-                    }).catch((err) => this.$showTips({ theme: 'error', message: err.message || err }))
+                        const data = res.data || {}
+                        this.changeBuildResource('imageType', 'BKSTORE')
+                        if (data.code) this.choose(data)
+                    }).catch((err) => this.$showTips({ theme: 'error', message: err.message || err })).finally(() => (this.isHandleHistory = false))
                 }
             }
             if (this.container.dispatchType && this.container.dispatchType.imageCode) {
@@ -550,6 +552,8 @@
                                 projectId: this.projectId,
                                 pipelineId: this.pipelineId,
                                 vmSeqId,
+                                imageCode: this.buildImageCode,
+                                imageVersion: this.buildImageVersion,
                                 imageName: this.buildResource,
                                 buildEnv: this.container.buildEnv,
                                 imageType: this.buildImageType,

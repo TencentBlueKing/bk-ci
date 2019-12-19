@@ -11,7 +11,7 @@
                     <div class="info-title"> {{ $t('store.版本列表') }} </div>
                     <button class="bk-button bk-primary"
                         type="button"
-                        :disabled="upgradeStatus.indexOf(versionList[0].imageStatus) === -1"
+                        :disabled="upgradeStatus.indexOf((versionList[0] || {}).imageStatus) === -1"
                         @click="$router.push({ name: 'editImage', params: { imageId: versionList[0].imageId } })"
                     > {{ $t('store.新增版本') }} </button>
                 </div>
@@ -117,7 +117,7 @@
             },
 
             statusFormatter (row, column, cellValue, index) {
-                return imageStatusList[cellValue]
+                return this.$t(imageStatusList[cellValue])
             },
 
             convertTime (row, column, cellValue, index) {

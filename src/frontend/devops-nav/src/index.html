@@ -80,9 +80,8 @@
         var GW_URL_PREFIX = '__HTTP_SCHEMA__://__BKCI_FQDN__/ms'     // api接口前缀
         var WS_URL_PREFIX = '__HTTP_SCHEMA__://__BKCI_FQDN__/'
         var PERM_URL_PREFIX = '__HTTP_SCHEMA__://__PAAS_FQDN__:__PAAS_HTTPS_PORT__/o/bk_iam_app' // EE PERM URL PREFIX
-        var DOCS_URL_PREFIX = 'https://bk.tencent.com/docs/ci'  // 文档中心域名
         var LOGIN_SERVICE_URL = 'http://login.o.oa.com'  // 登录域名前缀
-        var DOCS_URL_PREFIX = 'http://docs.devops.oa.com'  // 文档中心域名
+        var DOCS_URL_PREFIX = 'http://iwiki.oa.com'  // 文档中心域名
         var DEVOPS_LS_VERSION = '<%- htmlWebpackPlugin.options.DEVOPS_LS_VERSION%>'
         var ENTERPRISE_VERSION = false
     </script>
@@ -222,12 +221,27 @@
                     var mod = children[j].link_new.replace(/^\/?(\w+)\S*/, '$1')
                     var serviceTitle = children[j].name.replace(/\(\S+?\)/, '')
                     if (children[j].inject_type === 'amd') {
-                        children[j].js_url = children[j].js_url.replace('http://dev.static.devops.oa.com', WEBSITE_URL)
-                        children[j].css_url = children[j].css_url.replace('http://dev.static.devops.oa.com', WEBSITE_URL)
+                        // children[j].js_url = children[j].js_url.replace('http://static.devops.oa.com', WEBSITE_URL).replace(/^(http:\/\/\S+?\/\S+?\/\S+?\.)(\S+?)(css|js)$/i, '$1$3')
+                        // children[j].css_url = children[j].css_url.replace('http://static.devops.oa.com', WEBSITE_URL).replace(/^(http:\/\/\S+?\/\S+?\/\S+?\.)(\S+?)(css|js)$/i, '$1$3')
                     } else {
-                        children[j].iframe_url = children[j].iframe_url.replace('http://dev.static.devops.oa.com', WEBSITE_URL)
+                        children[j].iframe_url = children[j].iframe_url.replace('http://static.devops.oa.com', WEBSITE_URL)
+                    }
+                    
+                    if (children[j].name.indexOf('CodeCC') > -1) {  // 临时兼容正式环境灰度
+                        children[j] = Object.assign(children[j], {
+                            "link_new" : "/codecc/0",
+                            "iframe_url" : "http://v2.codecc.oa.com/codecc/",
+                            "project_id_type" : "path",
+                        })
                     }
 
+                    if (children[j].name.indexOf('WeTest') > -1) { // hack wetest
+                        children[j] = Object.assign(children[j], {
+                            iframe_url: 'https://wetest.oa.com/devops/console',
+                            link_new: '/wetest/0/pipeline?group=bk_devops',
+                            inject_type: "iframe"
+                        })
+                    }
                     serviceMap[mod] = children[j]
                     if (children[j].inject_type === 'iframe') {
                         iframeRoutes.push({
@@ -340,8 +354,6 @@
                 var allServices = window.getLsCacheItem('allServices')
                 var userInfo = window.getLsCacheItem('userInfo')
                 
-                
-
                 fetchData().then(response => {
                     resolve(response)
                 }).catch(e => {
@@ -410,7 +422,6 @@
         }
         
         function handleVisibilityChange () {
-            console.log(document.hidden, window.GLOBAL_PID)
             if (!document.hidden && window.GLOBAL_PID) {
                 window.setProjectIdCookie(window.GLOBAL_PID)
             }
@@ -424,5 +435,7 @@
             document.removeEventListener('visibilitychange', handleVisibilityChange, false);
         }
     </script>
+
+    <script async src="https://yzf.qq.com/xv/web/static/chat_sdk/yzf_chat.min.js"></script>
 </body>
 </html>

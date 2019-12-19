@@ -35,7 +35,7 @@
                 sideMenuNav: {
                     icon: 'artifactory',
                     title: VERSION_TYPE === 'tencent' ? '版本仓库' : '制品库',
-                    url: `${DOCS_URL_PREFIX}/所有服务/版本仓库/summary.html`
+                    url: `${DOCS_URL_PREFIX}/x/6xYLAQ`
                 },
                 baseObj: {
                     icon: 'icon-folder',
