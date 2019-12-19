@@ -821,7 +821,7 @@ class ProjectLocalService @Autowired constructor(
 
         var isCreate = false
         projectList.forEach { project ->
-            if (project.projectName.equals(projectCode)) {
+            if (project.projectCode.equals(projectCode)) {
                 isCreate = true
                 return@forEach
             }
