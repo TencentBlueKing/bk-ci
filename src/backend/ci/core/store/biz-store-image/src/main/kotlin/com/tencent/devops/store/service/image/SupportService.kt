@@ -27,7 +27,7 @@ class SupportService @Autowired constructor(
         logoUrl: String
     ): String? {
         try {
-            val iconData = client.get(ServiceImageManageResource::class).compressImage(logoUrl!!, 18, 18).data
+            val iconData = client.get(ServiceImageManageResource::class).compressImage(logoUrl, 18, 18).data
             logger.info("the iconData is :$iconData")
             return iconData
         } catch (e: Exception) {
