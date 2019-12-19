@@ -101,4 +101,14 @@ class MockAuthPermissionApi : AuthPermissionApi {
         }
         return mock
     }
+
+    override fun createUserPermissions(
+        user: String,
+        serviceCode: AuthServiceCode,
+        resourceType: AuthResourceType,
+        projectCode: String,
+        permissions: Set<AuthPermission>
+    ): Boolean {
+        return true
+    }
 }
