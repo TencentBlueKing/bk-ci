@@ -165,7 +165,7 @@ class QualityRuleCheckService @Autowired constructor(
 
             // 遍历项目下所有拦截规则
             val ruleList = ruleService.serviceListRuleByPosition(projectId, buildCheckParams.position)
-            val metadataList = qualityHisMetadataService.serviceGetHisMetadata(buildId)
+            val metadataList = lazyGetHisMetadata(buildId)
             logger.info("Rule metadata serviceList for build(${buildCheckParams.buildId}):\n metadataList=$metadataList")
 
             ruleList.filter { rule ->
@@ -202,6 +202,13 @@ class QualityRuleCheckService @Autowired constructor(
             logger.info("end check pipeline($pipelineId) build($buildId) task(${buildCheckParams.taskId})")
             return RuleCheckResult(allPass, allEnd, auditTimeOutMinutes * 60, resultList)
         }
+    }
+
+    // codecc回调数据是异步的，为空临时加个等待
+    private fun lazyGetHisMetadata(buildId: String): List<QualityHisMetadata> {
+        val result = qualityHisMetadataService.serviceGetHisMetadata(buildId)
+        if (result.isEmpty()) Thread.sleep(5000)
+        return result
     }
 
     private fun checkPostHandle(
