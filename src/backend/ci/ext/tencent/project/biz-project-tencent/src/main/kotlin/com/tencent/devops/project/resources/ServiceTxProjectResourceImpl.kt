@@ -183,11 +183,10 @@ class ServiceTxProjectResourceImpl @Autowired constructor(
     }
 
     override fun createProjectaUserByUser(
-        accessToken: String,
         createUser: String,
         createInfo: ProjectCreateUserDTO
     ): Result<Boolean> {
-        return Result(projectLocalService.createUser2ProjectByUser(accessToken, createUser, createInfo.userId, createInfo.projectId))
+        return Result(projectLocalService.createUser2ProjectByUser(createUser, createInfo.userId, createInfo.projectId))
     }
 
     override fun createProjectaUserByApp(

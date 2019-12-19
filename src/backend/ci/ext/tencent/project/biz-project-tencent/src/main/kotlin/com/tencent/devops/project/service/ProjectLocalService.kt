@@ -790,12 +790,8 @@ class ProjectLocalService @Autowired constructor(
         return ProjectUtils.packagingBean(gitCiProject!!, setOf())
     }
 
-    fun createUser2ProjectByUser(accessToken: String, createUser: String, userId: String, projectCode: String): Boolean {
+    fun createUser2ProjectByUser(createUser: String, userId: String, projectCode: String): Boolean {
         logger.info("[createUser2ProjectByUser] createUser[$createUser] userId[$userId] projectCode[$projectCode]")
-        if (!verifyUserProjectPermission(accessToken, projectCode, createUser).data!!) {
-            logger.error("$createUser not project[$projectCode] permission")
-            throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PEM_CHECK_FAIL))
-        }
 
         if (!bkAuthProjectApi.isProjectUser(createUser, bsPipelineAuthServiceCode, projectCode, BkAuthGroup.MANAGER)) {
             logger.error("$createUser is not manager for project[$projectCode]")

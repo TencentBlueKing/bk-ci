@@ -68,11 +68,10 @@ class ApigwProjectService(
 
     fun createProjectUserByUser(
         createUserId: String,
-        accessToken: String,
         createInfo: ProjectCreateUserDTO
     ): Boolean? {
-        logger.info("createProjectUserByUser:createUserId[$createUserId],accessToken[$accessToken],createInfo[$createInfo]")
-        return client.get(ServiceTxProjectResource::class).createProjectaUserByUser(createUserId, accessToken, createInfo).data
+        logger.info("createProjectUserByUser:createUserId[$createUserId],createInfo[$createInfo]")
+        return client.get(ServiceTxProjectResource::class).createProjectaUserByUser(createUserId, createInfo).data
     }
 
     fun createProjectUserByApp(

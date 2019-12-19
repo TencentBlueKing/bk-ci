@@ -81,9 +81,6 @@ interface ApigwProjectResourceV2 {
         @ApiParam(value = "执行用户Id", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         createUserId: String,
-        @ApiParam(value = "accessToken", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
-        accessToken: String,
         @ApiParam("添加信息", required = true)
         createInfo: ProjectCreateUserDTO
     ): Result<Boolean?>

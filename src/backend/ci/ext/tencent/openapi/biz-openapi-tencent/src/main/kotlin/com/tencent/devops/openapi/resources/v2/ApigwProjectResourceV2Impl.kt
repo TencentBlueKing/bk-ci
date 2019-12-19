@@ -58,10 +58,9 @@ class ApigwProjectResourceV2Impl @Autowired constructor(
 
     override fun createProjectUserByUser(
         createUserId: String,
-        accessToken: String,
         createInfo: ProjectCreateUserDTO
     ): Result<Boolean?> {
-        return Result(apigwProjectService.createProjectUserByUser(createUserId, accessToken, createInfo))
+        return Result(apigwProjectService.createProjectUserByUser(createUserId, createInfo))
     }
 
     override fun createProjectaUserByApp(
