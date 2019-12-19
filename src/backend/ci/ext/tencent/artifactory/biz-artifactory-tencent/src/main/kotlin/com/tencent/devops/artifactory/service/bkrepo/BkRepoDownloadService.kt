@@ -161,7 +161,10 @@ class BkRepoDownloadService @Autowired constructor(
         buildId: String,
         artifactoryType: ArtifactoryType,
         path: String,
-        ttl: Int?
+        ttl: Int?,
+        crossProjectId: String?,
+        crossPipineId: String?,
+        crossBuildNo: String?
     ): List<String> {
         logger.info("getThirdPartyDownloadUrl, projectId: $projectId, pipelineId: $pipelineId, buildId: $buildId, " +
             "artifactoryType: $artifactoryType, path: $path, ttl: $ttl")

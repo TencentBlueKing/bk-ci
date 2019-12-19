@@ -105,7 +105,16 @@ interface BuildArtifactoryResource {
         artifactoryType: ArtifactoryType,
         @ApiParam("路径", required = true)
         @QueryParam("path")
-        path: String
+        path: String,
+        @ApiParam("项目ID", required = true)
+        @QueryParam("projectId")
+        crossProjectId: String?,
+        @ApiParam("流水线ID", required = true)
+        @QueryParam("pipelineId")
+        crossPipineId: String?,
+        @ApiParam("构建No", required = true)
+        @QueryParam("buildNo")
+        crossBuildNo: String?
     ): Result<List<FileDetail>>
 
     @ApiOperation("获取文件第三方下载链接")
@@ -129,7 +138,16 @@ interface BuildArtifactoryResource {
         path: String,
         @ApiParam("有效时间(s)", required = true)
         @QueryParam("ttl")
-        ttl: Int?
+        ttl: Int?,
+        @ApiParam("项目ID", required = true)
+        @QueryParam("projectId")
+        crossProjectId: String?,
+        @ApiParam("流水线ID", required = true)
+        @QueryParam("pipelineId")
+        crossPipineId: String?,
+        @ApiParam("构建No", required = true)
+        @QueryParam("buildNo")
+        crossBuildNo: String?
     ): Result<List<String>>
 
     @ApiOperation("获取文件下载url")

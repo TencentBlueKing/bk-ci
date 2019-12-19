@@ -64,7 +64,10 @@ interface RepoService {
         pipelineId: String,
         buildId: String,
         artifactoryType: ArtifactoryType,
-        argPath: String
+        argPath: String,
+        crossProjectId: String?,
+        crossPipineId: String?,
+        crossBuildNo: String?
     ): List<FileDetail>
 
     fun getOwnFileList(userId: String, projectId: String, offset: Int, limit: Int): Pair<Long, List<FileInfo>>
