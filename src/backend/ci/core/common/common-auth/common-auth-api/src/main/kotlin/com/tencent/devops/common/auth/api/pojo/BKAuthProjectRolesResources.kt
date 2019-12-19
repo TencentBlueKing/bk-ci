@@ -2,7 +2,7 @@ package com.tencent.devops.common.auth.api.pojo
 
 import com.fasterxml.jackson.annotation.JsonProperty
 
-data class BKAuthProjectRolesResources (
+data class BKAuthProjectRolesResources(
     @JsonProperty("display_name")
     val displayName: String,
     @JsonProperty("role_id")
