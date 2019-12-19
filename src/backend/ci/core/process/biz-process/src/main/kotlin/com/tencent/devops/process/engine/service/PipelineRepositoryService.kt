@@ -109,7 +109,14 @@ class PipelineRepositoryService constructor(
         // 生成流水线ID,新流水线以p-开头，以区分以前旧数据
         val pipelineId = signPipelineId ?: pipelineIdGenerator.getNextId()
 
-        val modelTasks = initModel(model, projectId, pipelineId, userId, create, channelCode)
+        val modelTasks = initModel(
+            model = model,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            userId = userId,
+            create = create,
+            channelCode = channelCode
+        )
 
         val buildNo = (model.stages[0].containers[0] as TriggerContainer).buildNo
         val container = model.stages[0].containers[0] as TriggerContainer
@@ -127,29 +134,29 @@ class PipelineRepositoryService constructor(
 
         return if (!create) {
             update(
-                projectId,
-                pipelineId,
-                userId,
-                model,
-                canManualStartup,
-                canElementSkip,
-                buildNo,
-                modelTasks,
-                channelCode
+                projectId = projectId,
+                pipelineId = pipelineId,
+                userId = userId,
+                model = model,
+                canManualStartup = canManualStartup,
+                canElementSkip = canElementSkip,
+                buildNo = buildNo,
+                modelTasks = modelTasks,
+                channelCode = channelCode
             )
         } else {
             val version = 1
             create(
-                projectId,
-                pipelineId,
-                version,
-                model,
-                userId,
-                channelCode,
-                canManualStartup,
-                canElementSkip,
-                buildNo,
-                modelTasks
+                projectId = projectId,
+                pipelineId = pipelineId,
+                version = version,
+                model = model,
+                userId = userId,
+                channelCode = channelCode,
+                canManualStartup = canManualStartup,
+                canElementSkip = canElementSkip,
+                buildNo = buildNo,
+                modelTasks = modelTasks
             )
         }
     }
@@ -175,9 +182,27 @@ class PipelineRepositoryService constructor(
         model.stages.forEachIndexed { index, s ->
             s.id = "stage-${index + 1}"
             if (index == 0) { // 在流程模型中初始化触发类容器
-                initTriggerContainer(s, containerSeqId, projectId, pipelineId, model, userId, modelTasks, channelCode)
+                initTriggerContainer(
+                    stage = s,
+                    containerSeqId = containerSeqId,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    model = model,
+                    userId = userId,
+                    modelTasks = modelTasks,
+                    channelCode = channelCode
+                )
             } else {
-                initOtherContainer(s, projectId, containerSeqId, userId, pipelineId, model, modelTasks, channelCode)
+                initOtherContainer(
+                    stage = s,
+                    projectId = projectId,
+                    containerSeqId = containerSeqId,
+                    userId = userId,
+                    pipelineId = pipelineId,
+                    model = model,
+                    modelTasks = modelTasks,
+                    channelCode = channelCode
+                )
             }
         }
 
@@ -185,7 +210,7 @@ class PipelineRepositoryService constructor(
     }
 
     private fun initTriggerContainer(
-        s: Stage,
+        stage: Stage,
         containerSeqId: AtomicInteger,
         projectId: String,
         pipelineId: String,
@@ -194,14 +219,14 @@ class PipelineRepositoryService constructor(
         modelTasks: MutableSet<PipelineModelTask>,
         channelCode: ChannelCode
     ) {
-        if (s.containers.size != 1) {
-            logger.warn("The trigger stage contain more than one container (${s.containers.size})")
+        if (stage.containers.size != 1) {
+            logger.warn("The trigger stage contain more than one container (${stage.containers.size})")
             throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ILLEGAL_PIPELINE_MODEL_JSON,
                 defaultMessage = "非法的流水线编排"
             )
         }
-        val c = (s.containers.getOrNull(0) ?: throw ErrorCodeException(
+        val c = (stage.containers.getOrNull(0) ?: throw ErrorCodeException(
             errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NEED_JOB,
             defaultMessage = "第一阶段的环境不能为空"
         )) as TriggerContainer
@@ -254,7 +279,7 @@ class PipelineRepositoryService constructor(
                 PipelineModelTask(
                     projectId = projectId,
                     pipelineId = pipelineId,
-                    stageId = s.id!!,
+                    stageId = stage.id!!,
                     containerId = c.id!!,
                     taskId = e.id!!,
                     taskSeq = ++taskSeq,
@@ -270,7 +295,7 @@ class PipelineRepositoryService constructor(
     }
 
     private fun initOtherContainer(
-        s: Stage,
+        stage: Stage,
         projectId: String,
         containerSeqId: AtomicInteger,
         userId: String,
@@ -279,13 +304,13 @@ class PipelineRepositoryService constructor(
         modelTasks: MutableSet<PipelineModelTask>,
         channelCode: ChannelCode
     ) {
-        if (s.containers.isEmpty()) {
+        if (stage.containers.isEmpty()) {
             throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NEED_JOB,
                 defaultMessage = "阶段的环境不能为空"
             )
         }
-        s.containers.forEach { c ->
+        stage.containers.forEach { c ->
 
             if (c is TriggerContainer) {
                 return@forEach
@@ -334,7 +359,7 @@ class PipelineRepositoryService constructor(
                     PipelineModelTask(
                         projectId = projectId,
                         pipelineId = pipelineId,
-                        stageId = s.id!!,
+                        stageId = stage.id!!,
                         containerId = c.id!!,
                         taskId = e.id!!,
                         taskSeq = ++taskSeq,
@@ -378,7 +403,13 @@ class PipelineRepositoryService constructor(
                 canElementSkip = canElementSkip,
                 taskCount = taskCount
             )
-            pipelineResDao.create(transactionContext, pipelineId, version, model)
+            pipelineResDao.create(
+                dslContext = transactionContext,
+                pipelineId = pipelineId,
+                creator = userId,
+                version = version,
+                model = model
+            )
             if (model.instanceFromTemplate == null ||
                 !model.instanceFromTemplate!!
             ) {
@@ -409,14 +440,20 @@ class PipelineRepositoryService constructor(
         }
 
         pipelineEventDispatcher.dispatch(
-            PipelineCreateEvent("create_pipeline", projectId, pipelineId, userId, buildNo),
+            PipelineCreateEvent(
+                source = "create_pipeline",
+                projectId = projectId,
+                pipelineId = pipelineId,
+                userId = userId,
+                buildNo = buildNo
+            ),
             PipelineModelAnalysisEvent(
-                "create_pipeline",
-                projectId,
-                pipelineId,
-                userId,
-                JsonUtil.toJson(model),
-                channelCode.name
+                source = "create_pipeline",
+                projectId = projectId,
+                pipelineId = pipelineId,
+                userId = userId,
+                model = JsonUtil.toJson(model),
+                channelCode = channelCode.name
             )
         )
         return pipelineId
@@ -437,32 +474,47 @@ class PipelineRepositoryService constructor(
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
             val version = pipelineInfoDao.update(
-                transactionContext,
-                pipelineId,
-                userId,
-                true,
-                null,
-                null,
-                canManualStartup,
-                canElementSkip,
-                buildNo,
-                taskCount
+                dslContext = transactionContext,
+                pipelineId = pipelineId,
+                userId = userId,
+                updateVersion = true,
+                pipelineName = null,
+                pipelineDesc = null,
+                manualStartup = canManualStartup,
+                canElementSkip = canElementSkip,
+                buildNo = buildNo,
+                taskCount = taskCount
             )
-            pipelineResDao.create(transactionContext, pipelineId, version, model)
-            pipelineModelTaskDao.deletePipelineTasks(transactionContext, projectId, pipelineId)
+            pipelineResDao.create(
+                dslContext = transactionContext,
+                pipelineId = pipelineId,
+                creator = userId,
+                version = version,
+                model = model
+            )
+            pipelineModelTaskDao.deletePipelineTasks(
+                dslContext = transactionContext,
+                projectId = projectId,
+                pipelineId = pipelineId
+            )
             pipelineModelTaskDao.batchSave(transactionContext, modelTasks)
-//            pipelineSettingDao.updateSetting(transactionContext, pipelineId, model.name, model.desc ?: "")
         }
 
         pipelineEventDispatcher.dispatch(
-            PipelineUpdateEvent("update_pipeline", projectId, pipelineId, userId, buildNo),
+            PipelineUpdateEvent(
+                source = "update_pipeline",
+                projectId = projectId,
+                pipelineId = pipelineId,
+                userId = userId,
+                buildNo = buildNo
+            ),
             PipelineModelAnalysisEvent(
-                "update_pipeline",
-                projectId,
-                pipelineId,
-                userId,
-                JsonUtil.toJson(model),
-                channelCode.name
+                source = "update_pipeline",
+                projectId = projectId,
+                pipelineId = pipelineId,
+                userId = userId,
+                model = JsonUtil.toJson(model),
+                channelCode = channelCode.name
             )
         )
         return pipelineId
@@ -519,19 +571,19 @@ class PipelineRepositoryService constructor(
                 }
 
                 pipelineInfoDao.softDelete(
-                    transactionContext,
-                    projectId,
-                    pipelineId,
-                    deleteName,
-                    userId,
-                    channelCode
+                    dslContext = transactionContext,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    changePipelineName = deleteName,
+                    userId = userId,
+                    channelCode = channelCode
                 )
                 // 同时要对Setting中的name做设置
                 pipelineSettingDao.updateSetting(
-                    transactionContext,
-                    pipelineId,
-                    deleteName,
-                    "DELETE BY $userId in $deleteTime"
+                    dslContext = transactionContext,
+                    pipelineId = pipelineId,
+                    name = deleteName,
+                    desc = "DELETE BY $userId in $deleteTime"
                 )
             }
 
@@ -576,7 +628,12 @@ class PipelineRepositoryService constructor(
         filterDelete: Boolean = true
     ): Map<String, String> {
         val listInfoByPipelineIds =
-            pipelineInfoDao.listInfoByPipelineIds(dslContext, projectId, pipelineIds, filterDelete)
+            pipelineInfoDao.listInfoByPipelineIds(
+                dslContext = dslContext,
+                projectId = projectId,
+                pipelineIds = pipelineIds,
+                filterDelete = filterDelete
+            )
         return listInfoByPipelineIds.map {
             it.pipelineId to it.pipelineName
         }.toMap()
@@ -588,7 +645,12 @@ class PipelineRepositoryService constructor(
         filterDelete: Boolean = true
     ): Map<String, String> {
         val listInfoByPipelineName =
-            pipelineInfoDao.listInfoByPipelineName(dslContext, projectId, pipelineNames, filterDelete)
+            pipelineInfoDao.listInfoByPipelineName(
+                dslContext = dslContext,
+                projectId = projectId,
+                pipelineNames = pipelineNames,
+                filterDelete = filterDelete
+            )
         return listInfoByPipelineName.map {
             it.pipelineName to it.pipelineId
         }.toMap()
@@ -639,7 +701,7 @@ class PipelineRepositoryService constructor(
                         return@element
                     }
                     val exist = HashSet<String>(currentExistPipelines)
-                    checkSubpipeline(projectId, subpipelineId, exist)
+                    checkSubpipeline(projectId = projectId, pipelineId = subpipelineId, existPipelines = exist)
                     existPipelines.addAll(exist)
                 }
             }
@@ -654,15 +716,15 @@ class PipelineRepositoryService constructor(
         val t = pipelineSettingDao.getSetting(dslContext, pipelineId)
         return if (t != null) {
             PipelineSetting(
-                t.projectId,
-                t.pipelineId,
-                t.name,
-                t.desc,
-                PipelineRunLockType.valueOf(t.runLockType),
-                Subscription(), Subscription(),
-                emptyList(),
-                t.waitQueueTimeSecond / 60,
-                t.maxQueueSize
+                projectId = t.projectId,
+                pipelineId = t.pipelineId,
+                pipelineName = t.name,
+                desc = t.desc,
+                runLockType = PipelineRunLockType.valueOf(t.runLockType),
+                successSubscription = Subscription(), failSubscription = Subscription(),
+                labels = emptyList(),
+                waitQueueTimeMinute = t.waitQueueTimeSecond / 60,
+                maxQueueSize = t.maxQueueSize
             )
         } else null
     }
@@ -732,7 +794,12 @@ class PipelineRepositoryService constructor(
     }
 
     fun countByPipelineIds(projectId: String, channelCode: ChannelCode, pipelineIds: List<String>): Int {
-        return pipelineInfoDao.countByPipelineIds(dslContext, projectId, channelCode, pipelineIds)
+        return pipelineInfoDao.countByPipelineIds(
+            dslContext = dslContext,
+            projectId = projectId,
+            channelCode = channelCode,
+            pipelineIds = pipelineIds
+        )
     }
 
     companion object {

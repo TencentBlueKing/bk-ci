@@ -33,6 +33,8 @@ import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
+import com.tencent.devops.process.engine.pojo.PipelineInfo
+import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineService
 import com.tencent.devops.process.pojo.Pipeline
 import com.tencent.devops.process.pojo.PipelineId
@@ -42,7 +44,8 @@ import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ServicePipelineResourceImpl @Autowired constructor(
-    private val pipelineService: PipelineService
+    private val pipelineService: PipelineService,
+    private val pipelineRepositoryService: PipelineRepositoryService
 ) : ServicePipelineResource {
     override fun status(userId: String, projectId: String, pipelineId: String): Result<Pipeline?> {
         checkParams(userId, projectId, pipelineId)
@@ -86,6 +89,12 @@ class ServicePipelineResourceImpl @Autowired constructor(
     override fun get(userId: String, projectId: String, pipelineId: String, channelCode: ChannelCode): Result<Model> {
         checkParams(userId, projectId, pipelineId)
         return Result(pipelineService.getPipeline(userId, projectId, pipelineId, channelCode, false))
+    }
+
+    override fun getPipelineInfo(projectId: String, pipelineId: String, channelCode: ChannelCode?): Result<PipelineInfo?> {
+        checkProjectId(projectId)
+        checkPipelineId(pipelineId)
+        return Result(pipelineRepositoryService.getPipelineInfo(projectId, pipelineId))
     }
 
     override fun delete(
