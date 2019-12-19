@@ -43,8 +43,8 @@
                     projectId: this.projectId
                 })
                 this.curProject = res
-                this.handleUpdateElement('ccAppId', this.curProject.ccAppId)
-                this.hasAppId = this.curProject.ccAppId
+                this.handleUpdateElement('ccAppId', this.curProject.cc_app_id)
+                this.hasAppId = this.curProject.cc_app_id
                 this.isOpenBcs = this.curProject.kind === 1 || this.curProject.kind === 2
                 if (this.hasAppId && this.isOpenBcs) {
                     this.newModel = this.atomPropsModel

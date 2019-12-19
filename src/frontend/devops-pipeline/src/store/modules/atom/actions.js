@@ -96,7 +96,15 @@ export default {
     setPipelineContainer ({ commit }, { oldContainers, containers }) {
         commit(SET_PIPELINE_CONTAINER, { oldContainers, containers })
     },
-
+    /**
+     * 根据projectcode获取项目详情
+     */
+    requestProjectDetail: async ({ commit }, { projectId }) => {
+        return request.get(`project/api/user/projects/${projectId}/`).then(response => {
+            // Object.assign(response.data, { ccAppName: response.ccAppName })
+            return response.data
+        })
+    },
     requestTemplate: async ({ commit, dispatch }, { projectId, templateId, version }) => {
         try {
             const url = version ? `/${PROCESS_API_URL_PREFIX}/user/templates/projects/${projectId}/templates/${templateId}?version=${version}` : `/${PROCESS_API_URL_PREFIX}/user/templates/projects/${projectId}/templates/${templateId}`

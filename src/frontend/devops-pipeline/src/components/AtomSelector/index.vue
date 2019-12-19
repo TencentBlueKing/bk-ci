@@ -41,7 +41,7 @@
                             :element-index="elementIndex"
                         ></unrecommend>
                         <div class="empty-atom-list" v-if="atomTree[classify].children.length === 0">
-                            <img src="../../images/no_result.png" />
+                            <empty-tips type="no-result"></empty-tips>
                         </div>
                     </bk-tab-panel>
                 </bk-tab>
@@ -87,7 +87,7 @@
                         :element-index="elementIndex"
                     ></unrecommend>
                     <div class="empty-atom-list" v-if="searchResultEmpty">
-                        <img src="../../images/no_result.png" />
+                        <empty-tips type="no-result"></empty-tips>
                     </div>
                 </section>
             </div>
@@ -99,6 +99,7 @@
     import { mapGetters, mapActions, mapState } from 'vuex'
     import atomCard from './atomCard'
     import unrecommend from './unRecommend'
+    import EmptyTips from '../common/empty'
 
     const RD_STORE_CODE = 'rdStore'
 
@@ -106,7 +107,8 @@
         name: 'atom-selector',
         components: {
             atomCard,
-            unrecommend
+            unrecommend,
+            EmptyTips
         },
         props: {
             container: {
