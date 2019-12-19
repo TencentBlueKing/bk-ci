@@ -4,6 +4,8 @@ import { updateRecentVisitServiceList, urlJoin, getServiceAliasByPath, importScr
 
 import compilePath from '../utils/pathExp'
 import request from '../utils/request'
+import * as cookie from 'js-cookie'
+
 
 // 404
 // const None = () => import('../views/None.vue')
@@ -212,7 +214,8 @@ function parseOS (): string {
 
 function getProjectId (store, params): string {
     try {
-        const projectId = window.GLOBAL_PID || localStorage.getItem('projectId') || store.getters.enableProjectList[0].projectCode
+        const cookiePid = cookie.get(X_DEVOPS_PROJECT_ID)
+        const projectId = window.GLOBAL_PID || cookiePid || localStorage.getItem('projectId') || store.getters.enableProjectList[0].projectCode
         return String(params.projectId) !== '0' && params.projectId ? params.projectId : projectId
     } catch (e) {
         return ''

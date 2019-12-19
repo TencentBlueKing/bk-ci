@@ -422,7 +422,6 @@
         }
         
         function handleVisibilityChange () {
-            console.log(document.hidden, window.GLOBAL_PID)
             if (!document.hidden && window.GLOBAL_PID) {
                 window.setProjectIdCookie(window.GLOBAL_PID)
             }
