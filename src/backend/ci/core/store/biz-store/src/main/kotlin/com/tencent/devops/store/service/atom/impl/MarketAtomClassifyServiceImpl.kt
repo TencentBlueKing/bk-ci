@@ -28,6 +28,8 @@ package com.tencent.devops.store.service.atom.impl
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.timestampmilli
+import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.dao.atom.AtomDao
 import com.tencent.devops.store.dao.atom.MarketAtomClassifyDao
 import com.tencent.devops.store.pojo.atom.MarketAtomClassify
@@ -68,6 +70,10 @@ class MarketAtomClassifyServiceImpl @Autowired constructor() : MarketAtomClassif
             val id = it["id"] as String
             val classifyCode = it["classifyCode"] as String
             val classifyName = it["classifyName"] as String
+            val classifyLanName = MessageCodeUtil.getCodeLanMessage(
+                messageCode = "${StoreMessageCode.MSG_CODE_STORE_CLASSIFY_PREFIX}$classifyCode",
+                defaultMessage = classifyName
+            )
             val atomNum = it["atomNum"] as? Int
             val createTime = it["createTime"] as LocalDateTime
             val updateTime = it["updateTime"] as LocalDateTime
@@ -75,7 +81,7 @@ class MarketAtomClassifyServiceImpl @Autowired constructor() : MarketAtomClassif
                 MarketAtomClassify(
                     id,
                     classifyCode,
-                    classifyName,
+                    classifyLanName,
                     atomNum ?: 0,
                     createTime.timestampmilli(),
                     updateTime.timestampmilli()
