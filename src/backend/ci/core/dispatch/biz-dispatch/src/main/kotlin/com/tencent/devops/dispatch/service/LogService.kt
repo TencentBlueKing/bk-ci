@@ -45,7 +45,7 @@ class LogService @Autowired constructor(private val rabbitTemplate: RabbitTempla
      */
     fun stopLog(buildId: String): Boolean {
         try {
-            LogUtils.stopLog(rabbitTemplate, buildId, "", null)
+            LogUtils.stopLog(rabbitTemplate = rabbitTemplate, buildId = buildId, tag = "", jobId = null)
         } catch (e: Exception) {
             logger.error("Fail to stop log status of build($buildId)", e)
         }

@@ -29,6 +29,7 @@ package com.tencent.devops.store.service.common
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.common.Label
 import com.tencent.devops.store.pojo.common.LabelRequest
+import org.jooq.Record
 
 /**
  * 标签业务逻辑类
@@ -62,4 +63,9 @@ interface LabelService {
      * 根据id删除标签信息
      */
     fun deleteLabel(id: String): Result<Boolean>
+
+    /**
+     * 为标签集合添加标签
+     */
+    fun addLabelToLabelList(it: Record, labelList: MutableList<Label>)
 }

@@ -27,24 +27,24 @@
 package com.tencent.devops.store.service.template.impl
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.store.dao.template.TemplateLabelRelDao
 import com.tencent.devops.store.pojo.common.Label
-import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.service.common.LabelService
 import com.tencent.devops.store.service.template.TemplateLabelService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.time.LocalDateTime
 
 @Service
 class TemplateLabelServiceImpl : TemplateLabelService {
 
     @Autowired
-    lateinit var dslContext: DSLContext
+    private lateinit var dslContext: DSLContext
     @Autowired
-    lateinit var templateLabelRelDao: TemplateLabelRelDao
+    private lateinit var templateLabelRelDao: TemplateLabelRelDao
+    @Autowired
+    private lateinit var labelService: LabelService
 
     private val logger = LoggerFactory.getLogger(TemplateLabelServiceImpl::class.java)
 
@@ -56,16 +56,7 @@ class TemplateLabelServiceImpl : TemplateLabelService {
         val templateLabelList = mutableListOf<Label>()
         val templateLabelRecords = templateLabelRelDao.getLabelsByTemplateId(dslContext, templateId) // 查询模板标签信息
         templateLabelRecords?.forEach {
-            templateLabelList.add(
-                Label(
-                    id = it["id"] as String,
-                    labelCode = it["labelCode"] as String,
-                    labelName = it["labelName"] as String,
-                    labelType = StoreTypeEnum.getStoreType((it["labelType"] as Byte).toInt()),
-                    createTime = (it["createTime"] as LocalDateTime).timestampmilli(),
-                    updateTime = (it["updateTime"] as LocalDateTime).timestampmilli()
-                )
-            )
+            labelService.addLabelToLabelList(it, templateLabelList)
         }
         return Result(templateLabelList)
     }
