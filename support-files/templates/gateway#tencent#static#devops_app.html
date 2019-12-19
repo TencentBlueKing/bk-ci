@@ -25,8 +25,8 @@
             }
         }
 
-        var apkUrl = 'https://dev.bkdevops.qq.com/app/download/devops_app_dev.apk'
-        var plistUrl = 'https://dev.bkdevops.qq.com/app/download/devops_app_dev.plist'
+        var apkUrl = 'https://__BKCI_EXTERNAL_HOST__/app/download/devops_app.apk'
+        var plistUrl = 'https://__BKCI_EXTERNAL_HOST__/app/download/devops_app.plist'
         var platform = detectDevice()
         if (platform === 'ios') {
             location.href = 'itms-services://?action=download-manifest&url=' + plistUrl

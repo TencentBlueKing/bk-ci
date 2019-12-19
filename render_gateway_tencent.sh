@@ -9,3 +9,4 @@ cd ${WORKSPACE}/scripts/
 # cp -rf ci_env_local.properties ci_env.properties
 cp -rf ci_env_local.properties ci_env.properties
 sh ./render_ci -m ci ../support-files/templates/*
+cp -rf ${WORKSPACE}/ci/gateway/tencent/* ${WORKSPACE}/ci/gateway/core/
