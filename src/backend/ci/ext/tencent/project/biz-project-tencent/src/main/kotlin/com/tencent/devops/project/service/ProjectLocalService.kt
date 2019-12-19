@@ -35,6 +35,9 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE_D
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthPermissionApi
+import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.BSAuthProjectApi
 import com.tencent.devops.common.auth.api.BkAuthProperties
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
@@ -101,6 +104,7 @@ class ProjectLocalService @Autowired constructor(
     private val tofService: TOFService,
     private val redisOperation: RedisOperation,
     private val bkAuthProjectApi: BSAuthProjectApi,
+    private val bkAuthPermissionApi: AuthPermissionApi,
     private val bkAuthProperties: BkAuthProperties,
     private val bsPipelineAuthServiceCode: BSPipelineAuthServiceCode,
     private val gray: Gray,
@@ -784,6 +788,92 @@ class ProjectLocalService @Autowired constructor(
 
         gitCiProject = projectDao.getByEnglishName(dslContext, projectCode)
         return ProjectUtils.packagingBean(gitCiProject!!, setOf())
+    }
+
+    fun createUser2ProjectByUser(createUser: String, userId: String, projectCode: String): Boolean {
+        logger.info("[createUser2ProjectByUser] createUser[$createUser] userId[$userId] projectCode[$projectCode]")
+
+        if (!bkAuthProjectApi.isProjectUser(createUser, bsPipelineAuthServiceCode, projectCode, BkAuthGroup.MANAGER)) {
+            logger.error("$createUser is not manager for project[$projectCode]")
+            throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.NOT_MANAGER))
+        }
+        return createUser2Project(userId, projectCode)
+    }
+
+    fun createUser2ProjectByApp(organizationType: String, organizationId: Long, userId: String, projectCode: String): Boolean {
+        logger.info("[createUser2ProjectByApp] organizationType[$organizationType], organizationId[$organizationId] userId[$userId] projectCode[$projectCode]")
+        var bgId: Long? = null
+        var deptId: Long? = null
+        var centerId: Long? = null
+        when (organizationType) {
+            AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE_BG -> bgId = organizationId
+            AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE_DEPARTMENT -> deptId = organizationId
+            AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE_CENTER -> centerId = organizationId
+            else -> {
+                throw OperationException((MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.ORG_TYPE_ERROR)))
+            }
+        }
+        val projectList = getProjectByGroupId(userId, bgId, deptId, centerId)
+        if (projectList.isEmpty()) {
+            logger.error("organizationType[$organizationType] :organizationId[$organizationId]  not project[$projectCode] permission ")
+            throw OperationException((MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.ORG_NOT_PROJECT)))
+        }
+
+        var isCreate = false
+        projectList.forEach { project ->
+            if (project.projectCode.equals(projectCode)) {
+                isCreate = true
+                return@forEach
+            }
+        }
+        if (isCreate) {
+            return createUser2Project(userId, projectCode)
+        } else {
+            logger.error("organizationType[$organizationType] :organizationId[$organizationId]  not project[$projectCode] permission ")
+            throw OperationException((MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.ORG_NOT_PROJECT)))
+        }
+    }
+
+    fun createPipelinePermission(createUser: String, projectId: String, userId: String, permissionList: List<String>): Boolean {
+        logger.info("createPipelinePermission createUser[$createUser] projectId[$projectId] userId[$userId] permissionList[$permissionList]")
+        if (!bkAuthProjectApi.isProjectUser(createUser, bsPipelineAuthServiceCode, projectId, BkAuthGroup.MANAGER)) {
+            logger.info("createPipelinePermission createUser is not project manager,createUser[$createUser] projectId[$projectId]")
+            throw OperationException((MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.NOT_MANAGER)))
+        }
+
+        if (!bkAuthProjectApi.isProjectUser(userId, bsPipelineAuthServiceCode, projectId, null)) {
+            logger.info("createPipelinePermission userId is not project manager,userId[$userId] projectId[$projectId]")
+            throw OperationException((MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.USER_NOT_PROJECT_USER)))
+        }
+        val projectInfo = projectDao.getByEnglishName(dslContext, projectId) ?: throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PROJECT_NOT_EXIST))
+        permissionList.forEach {
+            bkAuthPermissionApi.addResourcePermissionForUsers(
+                userId = userId,
+                projectCode = projectId,
+                permission = AuthPermission.VIEW,
+                serviceCode = bsPipelineAuthServiceCode,
+                resourceType = AuthResourceType.PIPELINE_DEFAULT,
+                resourceCode = AuthResourceType.PIPELINE_DEFAULT.value,
+                userIdList = emptyList(),
+                supplier = null
+            )
+        }
+
+        return true
+    }
+
+    private fun createUser2Project(userId: String, projectId: String): Boolean {
+        logger.info("[createUser2Project]  userId[$userId] projectCode[$projectId]")
+        val projectInfo = projectDao.getByEnglishName(dslContext, projectId) ?: throw RuntimeException()
+        val roleList = bkAuthProjectApi.getProjectRoles(bsPipelineAuthServiceCode, projectId, projectInfo.projectName)
+        var roleId: String? = null
+        roleList.forEach {
+            if (it.roleName.equals(BkAuthGroup.DEVELOPER.value)) {
+                roleId = it.roleId.toString()
+                return@forEach
+            }
+        }
+        return bkAuthProjectApi.createProjectUser(userId, bsPipelineAuthServiceCode, projectInfo.projectId, roleId!!)
     }
 
     companion object {

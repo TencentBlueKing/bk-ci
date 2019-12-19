@@ -26,7 +26,9 @@
 package com.tencent.devops.openapi.service.v2
 
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.project.api.pojo.PipelinePermissionInfo
 import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
+import com.tencent.devops.project.pojo.ProjectCreateUserDTO
 import com.tencent.devops.project.pojo.ProjectVO
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -62,5 +64,31 @@ class ApigwProjectService(
             deptName = deptName?.trim(),
             centerName = centerName?.trim()
         ).data
+    }
+
+    fun createProjectUserByUser(
+        createUserId: String,
+        createInfo: ProjectCreateUserDTO
+    ): Boolean? {
+        logger.info("createProjectUserByUser:createUserId[$createUserId],createInfo[$createInfo]")
+        return client.get(ServiceTxProjectResource::class).createProjectUserByUser(createUserId, createInfo).data
+    }
+
+    fun createProjectUserByApp(
+        organizationType: String,
+        organizationId: Long,
+        createInfo: ProjectCreateUserDTO
+    ): Boolean? {
+        logger.info("createProjectUserByApp:organizationType[$organizationType],organizationId[$organizationId],createInfo[$createInfo]")
+        return client.get(ServiceTxProjectResource::class).createProjectUserByApp(organizationType, organizationId, createInfo).data
+    }
+
+    fun createPipelinePermission(
+        createUserId: String,
+        accessToken: String,
+        createInfo: PipelinePermissionInfo
+    ): Boolean? {
+        logger.info("createPipelinePermission:createUserId[$createUserId],accessToken[$accessToken],createInfo[$createInfo]")
+        return client.get(ServiceTxProjectResource::class).createUserPipelinePermission(createUserId, accessToken, createInfo).data
     }
 }
