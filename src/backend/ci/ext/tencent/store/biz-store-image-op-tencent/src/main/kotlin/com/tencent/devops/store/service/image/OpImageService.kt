@@ -12,15 +12,6 @@ import com.tencent.devops.store.dao.OpImageDao
 import com.tencent.devops.store.dao.common.StoreProjectRelDao
 import com.tencent.devops.store.dao.common.StoreReleaseDao
 import com.tencent.devops.store.dao.image.Constants
-import com.tencent.devops.store.dao.image.Constants.KEY_CATEGORY_CODE
-import com.tencent.devops.store.dao.image.Constants.KEY_CATEGORY_ICON_URL
-import com.tencent.devops.store.dao.image.Constants.KEY_CATEGORY_ID
-import com.tencent.devops.store.dao.image.Constants.KEY_CATEGORY_NAME
-import com.tencent.devops.store.dao.image.Constants.KEY_CATEGORY_TYPE
-import com.tencent.devops.store.dao.image.Constants.KEY_CLASSIFY_CODE
-import com.tencent.devops.store.dao.image.Constants.KEY_CLASSIFY_NAME
-import com.tencent.devops.store.dao.image.Constants.KEY_CREATE_TIME
-import com.tencent.devops.store.dao.image.Constants.KEY_CREATOR
 import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_CODE
 import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_FEATURE_PUBLIC_FLAG
 import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_FEATURE_RECOMMEND_FLAG
@@ -31,10 +22,6 @@ import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_RD_TYPE
 import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_SOURCE_TYPE
 import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_STATUS
 import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_VERSION
-import com.tencent.devops.store.dao.image.Constants.KEY_MODIFIER
-import com.tencent.devops.store.dao.image.Constants.KEY_PUB_TIME
-import com.tencent.devops.store.dao.image.Constants.KEY_UPDATE_TIME
-import com.tencent.devops.store.dao.image.Constants.KEY_VERSION_LOG_CONTENT
 import com.tencent.devops.store.dao.image.ImageAgentTypeDao
 import com.tencent.devops.store.dao.image.ImageCategoryRelDao
 import com.tencent.devops.store.dao.image.ImageDao
@@ -42,6 +29,20 @@ import com.tencent.devops.store.dao.image.ImageFeatureDao
 import com.tencent.devops.store.dao.image.MarketImageDao
 import com.tencent.devops.store.exception.image.ImageNotExistException
 import com.tencent.devops.store.pojo.common.Category
+import com.tencent.devops.store.pojo.common.KEY_CATEGORY_CODE
+import com.tencent.devops.store.pojo.common.KEY_CATEGORY_ICON_URL
+import com.tencent.devops.store.pojo.common.KEY_CATEGORY_ID
+import com.tencent.devops.store.pojo.common.KEY_CATEGORY_NAME
+import com.tencent.devops.store.pojo.common.KEY_CATEGORY_TYPE
+import com.tencent.devops.store.pojo.common.KEY_CLASSIFY_CODE
+import com.tencent.devops.store.pojo.common.KEY_CLASSIFY_NAME
+import com.tencent.devops.store.pojo.common.KEY_CREATE_TIME
+import com.tencent.devops.store.pojo.common.KEY_CREATOR
+import com.tencent.devops.store.pojo.common.KEY_MODIFIER
+import com.tencent.devops.store.pojo.common.KEY_PUBLISHER
+import com.tencent.devops.store.pojo.common.KEY_PUB_TIME
+import com.tencent.devops.store.pojo.common.KEY_UPDATE_TIME
+import com.tencent.devops.store.pojo.common.KEY_VERSION_LOG_CONTENT
 import com.tencent.devops.store.pojo.common.PASS
 import com.tencent.devops.store.pojo.common.REJECT
 import com.tencent.devops.store.pojo.common.StoreReleaseCreateRequest
@@ -324,11 +325,10 @@ class OpImageService @Autowired constructor(
                 ImageAgentTypeEnum.getImageAgentType(it.get(Constants.KEY_IMAGE_AGENT_TYPE) as String)!!
             } ?: emptyList()
             val rdTypeRecord = it.get(KEY_IMAGE_RD_TYPE) as Byte?
-            var rdTypeStr: String
-            if (rdTypeRecord == null) {
-                rdTypeStr = ImageRDTypeEnum.THIRD_PARTY.name
+            val rdTypeStr = if (rdTypeRecord == null) {
+                ImageRDTypeEnum.THIRD_PARTY.name
             } else {
-                rdTypeStr = ImageRDTypeEnum.getImageRDTypeStr(rdTypeRecord.toInt())
+                ImageRDTypeEnum.getImageRDTypeStr(rdTypeRecord.toInt())
             }
             OpImageItem(
                 imageId = imageId,
@@ -348,7 +348,7 @@ class OpImageService @Autowired constructor(
                 classifyName = it.get(KEY_CLASSIFY_NAME) as String,
                 category = category?.categoryCode ?: "",
                 categoryName = category?.categoryName ?: "",
-                publisher = it.get(Constants.KEY_PUBLISHER) as String?,
+                publisher = it.get(KEY_PUBLISHER) as String?,
                 pubTime = (it.get(KEY_PUB_TIME) as LocalDateTime?)?.timestampmilli(),
                 pubDescription = it.get(KEY_VERSION_LOG_CONTENT) as String?,
                 latestFlag = it.get(KEY_IMAGE_LATEST_FLAG) as Boolean,
