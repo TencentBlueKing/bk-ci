@@ -55,6 +55,7 @@ import com.tencent.devops.store.dao.common.StoreStatisticDao
 import com.tencent.devops.store.dao.template.MarketTemplateDao
 import com.tencent.devops.store.dao.template.TemplateCategoryRelDao
 import com.tencent.devops.store.pojo.atom.MarketMainItemLabel
+import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.common.HOTTEST
 import com.tencent.devops.store.pojo.common.KEY_CATEGORY_CODE
 import com.tencent.devops.store.pojo.common.LATEST
@@ -545,8 +546,8 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
                         marketAtomDao.getLatestAtomByCode(dslContext, atomCode) // 兼容历史存量原子插件的情况
                     }
                     logger.info("the atomRecord is:$atomRecord")
-                    if (null == atomRecord) {
-                        return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_INVALID, arrayOf(atomCode))
+                    if (null == atomRecord || atomRecord.deleteFlag || atomRecord.atomStatus != AtomStatusEnum.RELEASED.status.toByte()) {
+                        return MessageCodeUtil.generateResponseDataObject(StoreMessageCode.USER_TEMPLATE_ATOM_IS_INVALID, arrayOf(atomCode))
                     }
                     invalidAtomList = generateUserAtomInvalidVisibleAtom(atomCode, userId, atomRecord, element)
                     if (!atomRecord.defaultFlag) needInstallAtomMap[atomCode] = atomRecord
