@@ -106,13 +106,13 @@ interface BuildArtifactoryResource {
         @ApiParam("路径", required = true)
         @QueryParam("path")
         path: String,
-        @ApiParam("项目ID", required = true)
+        @ApiParam("项目ID", required = false)
         @QueryParam("projectId")
         crossProjectId: String?,
-        @ApiParam("流水线ID", required = true)
+        @ApiParam("流水线ID", required = false)
         @QueryParam("pipelineId")
         crossPipineId: String?,
-        @ApiParam("构建No", required = true)
+        @ApiParam("构建No", required = false)
         @QueryParam("buildNo")
         crossBuildNo: String?
     ): Result<List<FileDetail>>
@@ -139,13 +139,13 @@ interface BuildArtifactoryResource {
         @ApiParam("有效时间(s)", required = true)
         @QueryParam("ttl")
         ttl: Int?,
-        @ApiParam("项目ID", required = true)
+        @ApiParam("项目ID", required = false)
         @QueryParam("projectId")
         crossProjectId: String?,
-        @ApiParam("流水线ID", required = true)
+        @ApiParam("流水线ID", required = false)
         @QueryParam("pipelineId")
         crossPipineId: String?,
-        @ApiParam("构建No", required = true)
+        @ApiParam("构建No", required = false)
         @QueryParam("buildNo")
         crossBuildNo: String?
     ): Result<List<String>>
