@@ -11,7 +11,7 @@
                 @load="onLoad"
             />
         </div>
-        <atom-output :element="element" :atom-props-model="atomPropsModel"></atom-output>
+        <atom-output :element="element" :atom-props-model="atomPropsModel" :set-parent-validate="() => {}"></atom-output>
     </section>
 </template>
 
@@ -30,10 +30,19 @@
                 newModel: {},
                 loading: true,
                 iframeHeight: '300px',
-                src: 'http://dev.nav.oa.com:8002?projectId=t1'
+                src1: 'http://dev.nav.oa.com:8002?projectId=t1'
+            }
+        },
+        computed: {
+            atomVersion () {
+                return '1.0.0'
+            },
+            src () {
+                return `${PERM_URL_PIRFIX}/bk-plugin-fe/CodeccCheckAtom/${this.atomVersion}/index.html?projectId=${this.$route.params.projectId}`
             }
         },
         mounted () {
+            console.log(this.atomPropsModel, this.element, 343)
             window.addEventListener('message', this.receiveMsgFromIframe)
         },
         methods: {

@@ -351,7 +351,7 @@
                 return Array.isArray(this.atomVersionList) && this.atomVersionList.length > 0
             },
             AtomComponent () {
-                if (this.atomCode === 'ddtestatomdev') {
+                if (this.atomCode === 'ddtestatomdev' || this.atomCode === 'CodeccCheckAtom') {
                     return RemoteAtom
                 }
                 if (this.isNewAtomTemplate(this.atom.htmlTemplateVersion)) {
