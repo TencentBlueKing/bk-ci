@@ -159,7 +159,6 @@
             .offline-atom-form,
             .relate-template-form {
                 margin: 30px 50px 20px 28px;
-                height: 100%;
             }
             .bk-label {
                 width: 97px;

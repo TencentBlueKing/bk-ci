@@ -1,5 +1,6 @@
 {
     "store": "Store",
+    "若有特殊原因无法开源，请联系蓝盾助手（务必联系蓝盾助手，自行修改工蜂项目配置会失效，每次升级插件时将根据插件配置自动刷新)": "If there is a special reason that cannot open source, please contact Blue Shield Assistant (be sure to contact Blue Shield Assistant, modify project on Git configuration by yourself will be invalidated, and every time you upgrade the plugin, it will automatically refresh according to the plugin configuration）",
     "该插件不推荐使用": "This plugin is not recommended",
     "该镜像不推荐使用": "This image is not recommended",
     "yaml": "YAML Fragment",

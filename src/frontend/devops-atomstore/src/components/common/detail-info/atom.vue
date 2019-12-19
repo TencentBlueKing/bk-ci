@@ -7,7 +7,7 @@
                 <h5 :title="isPublicTitle" @click="goToCode" :class="{ 'not-public': !isPublic }">
                     <icon v-if="isPublic" class="detail-img" name="color-git-code" size="16" />
                     <icon v-else class="detail-img" name="gray-git-code" size="16" style="fill:#9E9E9E" />
-                    <span>{{ $t('store.工蜂') }}</span>
+                    <span class="approve-msg">{{ $t('store.工蜂') }}</span>
                 </h5>
                 <template v-if="!isEnterprise && userInfo.type !== 'ADMIN' && detail.htmlTemplateVersion !== '1.0'">
                     <h5 :title="approveMsg" :class="[{ 'not-public': approveMsg !== $t('store.协作') }]" @click="cooperation">

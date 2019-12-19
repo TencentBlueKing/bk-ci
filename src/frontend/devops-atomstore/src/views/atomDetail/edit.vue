@@ -65,7 +65,7 @@
                         <label class="bk-label"> {{ $t('store.是否开源') }} </label>
                         <div class="bk-form-content atom-item-content">
                             <bk-radio-group v-model="atomForm.visibilityLevel" class="radio-group">
-                                <bk-radio :value="entry.value" v-for="(entry, key) in isOpenSource" :key="key" @click.native="changeOpenSource">{{entry.label}}</bk-radio>
+                                <bk-radio :disabled="entry.disable" :title="entry.title" :value="entry.value" v-for="(entry, key) in isOpenSource" :key="key" @click.native="changeOpenSource">{{entry.label}}</bk-radio>
                             </bk-radio-group>
                             <div v-if="formErrors.openSourceError" class="error-tips"> {{ $t('store.字段有误，请重新选择') }} </div>
                         </div>
@@ -168,8 +168,8 @@
                 showlogoDialog: false,
                 selectedUrl: '',
                 isOpenSource: [
-                    { label: '是', value: 'LOGIN_PUBLIC' },
-                    { label: '否', value: 'PRIVATE' }
+                    { label: this.$t('store.是'), value: 'LOGIN_PUBLIC' },
+                    { label: this.$t('store.否'), value: 'PRIVATE', disable: true, title: this.$t('store.若有特殊原因无法开源，请联系蓝盾助手（务必联系蓝盾助手，自行修改工蜂项目配置会失效，每次升级插件时将根据插件配置自动刷新）') }
                 ]
             }
         },
