@@ -124,7 +124,10 @@ object CodeccRepoHelper {
 
         // 新的拉代码插件接入模式
         val newRepoTaskIds = buildTask.buildVariable?.filter { it.key.startsWith("bk_repo_taskId_") }?.values
-        newRepoTaskIds?.forEach { taskId ->
+        newRepoTaskIds?.filter {taskId ->
+            val containerId = buildTask.buildVariable!!["bk_repo_container_id_$taskId"]
+            containerId.isNullOrBlank() || containerId == codeccTask.containerId
+        }?.forEach { taskId ->
             val repoConfigType = buildTask.buildVariable!!["bk_repo_config_type_$taskId"]
             val repoType = buildTask.buildVariable!!["bk_repo_type_$taskId"]!!
             val localPath = buildTask.buildVariable!!["bk_repo_local_path_$taskId"] ?: ""
