@@ -6,7 +6,7 @@
                 id="atom-iframe"
                 ref="iframeEle"
                 allowfullscreen
-                height="300px"
+                :height="iframeHeight"
                 :src="src"
                 @load="onLoad"
             />
@@ -29,7 +29,8 @@
             return {
                 newModel: {},
                 loading: true,
-                src: 'http://dev.nav.oa.com:8001?projectId=t1'
+                iframeHeight: '300px',
+                src: 'http://dev.nav.oa.com:8002?projectId=t1'
             }
         },
         mounted () {
@@ -51,7 +52,7 @@
                 } else if (e.data.isError) {
                     console.log(e.data)
                 } else if (e.data.iframeHeight) {
-                    console.log(e.data)
+                    this.iframeHeight = parseInt(e.data.iframeHeight)
                 }
             }
         }
