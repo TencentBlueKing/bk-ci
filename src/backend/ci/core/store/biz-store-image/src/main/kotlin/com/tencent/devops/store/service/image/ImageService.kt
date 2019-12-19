@@ -43,21 +43,12 @@ import com.tencent.devops.model.store.tables.records.TImageRecord
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.constant.StoreMessageCode.USER_IMAGE_VERSION_NOT_EXIST
-import com.tencent.devops.store.dao.common.BusinessConfigDao
 import com.tencent.devops.store.dao.common.CategoryDao
 import com.tencent.devops.store.dao.common.ClassifyDao
 import com.tencent.devops.store.dao.common.StoreMemberDao
 import com.tencent.devops.store.dao.common.StoreProjectRelDao
 import com.tencent.devops.store.dao.common.StoreStatisticDao
 import com.tencent.devops.store.dao.image.Constants
-import com.tencent.devops.store.dao.image.Constants.KEY_CATEGORY_CODE
-import com.tencent.devops.store.dao.image.Constants.KEY_CATEGORY_ICON_URL
-import com.tencent.devops.store.dao.image.Constants.KEY_CATEGORY_ID
-import com.tencent.devops.store.dao.image.Constants.KEY_CATEGORY_NAME
-import com.tencent.devops.store.dao.image.Constants.KEY_CATEGORY_TYPE
-import com.tencent.devops.store.dao.image.Constants.KEY_CLASSIFY_ID
-import com.tencent.devops.store.dao.image.Constants.KEY_CREATE_TIME
-import com.tencent.devops.store.dao.image.Constants.KEY_CREATOR
 import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_CODE
 import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_FEATURE_PUBLIC_FLAG
 import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_FEATURE_RECOMMEND_FLAG
@@ -73,42 +64,39 @@ import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_STATUS
 import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_SUMMARY
 import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_TAG
 import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_VERSION
-import com.tencent.devops.store.dao.image.Constants.KEY_LABEL_CODE
-import com.tencent.devops.store.dao.image.Constants.KEY_LABEL_ID
-import com.tencent.devops.store.dao.image.Constants.KEY_LABEL_NAME
-import com.tencent.devops.store.dao.image.Constants.KEY_LABEL_TYPE
-import com.tencent.devops.store.dao.image.Constants.KEY_MODIFIER
-import com.tencent.devops.store.dao.image.Constants.KEY_PUBLISHER
-import com.tencent.devops.store.dao.image.Constants.KEY_PUB_TIME
-import com.tencent.devops.store.dao.image.Constants.KEY_UPDATE_TIME
 import com.tencent.devops.store.dao.image.ImageAgentTypeDao
 import com.tencent.devops.store.dao.image.ImageCategoryRelDao
 import com.tencent.devops.store.dao.image.ImageDao
 import com.tencent.devops.store.dao.image.ImageFeatureDao
-import com.tencent.devops.store.dao.image.ImageLabelRelDao
 import com.tencent.devops.store.dao.image.ImageVersionLogDao
 import com.tencent.devops.store.dao.image.MarketImageDao
 import com.tencent.devops.store.dao.image.MarketImageFeatureDao
 import com.tencent.devops.store.exception.image.CategoryNotExistException
 import com.tencent.devops.store.exception.image.ImageNotExistException
+import com.tencent.devops.store.pojo.common.HOTTEST
+import com.tencent.devops.store.pojo.common.KEY_CATEGORY_CODE
+import com.tencent.devops.store.pojo.common.KEY_CLASSIFY_ID
+import com.tencent.devops.store.pojo.common.KEY_CREATE_TIME
+import com.tencent.devops.store.pojo.common.KEY_CREATOR
+import com.tencent.devops.store.pojo.common.KEY_MODIFIER
+import com.tencent.devops.store.pojo.common.KEY_PUBLISHER
+import com.tencent.devops.store.pojo.common.KEY_PUB_TIME
+import com.tencent.devops.store.pojo.common.KEY_UPDATE_TIME
+import com.tencent.devops.store.pojo.common.LATEST
 import com.tencent.devops.store.pojo.common.MarketItem
 import com.tencent.devops.store.pojo.common.STORE_IMAGE_STATUS
 import com.tencent.devops.store.pojo.common.VersionInfo
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import com.tencent.devops.store.pojo.image.enums.CategoryTypeEnum
 import com.tencent.devops.store.pojo.image.enums.ImageAgentTypeEnum
 import com.tencent.devops.store.pojo.image.enums.ImageRDTypeEnum
 import com.tencent.devops.store.pojo.image.enums.ImageStatusEnum
-import com.tencent.devops.store.pojo.image.enums.LabelTypeEnum
 import com.tencent.devops.store.pojo.image.enums.MarketImageSortTypeEnum
 import com.tencent.devops.store.pojo.image.exception.UnknownImageSourceType
 import com.tencent.devops.store.pojo.image.request.ImageBaseInfoUpdateRequest
 import com.tencent.devops.store.pojo.image.request.ImageFeatureUpdateRequest
-import com.tencent.devops.store.pojo.image.response.Category
 import com.tencent.devops.store.pojo.image.response.ImageDetail
 import com.tencent.devops.store.pojo.image.response.ImageRepoInfo
-import com.tencent.devops.store.pojo.image.response.Label
 import com.tencent.devops.store.pojo.image.response.MarketImageItem
 import com.tencent.devops.store.pojo.image.response.MarketImageMain
 import com.tencent.devops.store.pojo.image.response.MarketImageResp
@@ -141,8 +129,6 @@ abstract class ImageService @Autowired constructor() {
     @Autowired
     lateinit var categoryDao: CategoryDao
     @Autowired
-    lateinit var businessConfigDao: BusinessConfigDao
-    @Autowired
     lateinit var imageFeatureDao: ImageFeatureDao
     @Autowired
     lateinit var imageAgentTypeDao: ImageAgentTypeDao
@@ -152,8 +138,6 @@ abstract class ImageService @Autowired constructor() {
     lateinit var marketImageDao: MarketImageDao
     @Autowired
     lateinit var marketImageFeatureDao: MarketImageFeatureDao
-    @Autowired
-    lateinit var imageLabelRelDao: ImageLabelRelDao
     @Autowired
     lateinit var storeMemberDao: StoreMemberDao
     @Autowired
@@ -176,9 +160,13 @@ abstract class ImageService @Autowired constructor() {
     @Autowired
     lateinit var imageLabelService: ImageLabelService
     @Autowired
+    lateinit var imageCategoryService: ImageCategoryService
+    @Autowired
     lateinit var client: Client
+
     @Value("\${store.baseImageDocsLink}")
     private lateinit var baseImageDocsLink: String
+
     private val logger = LoggerFactory.getLogger(ImageService::class.java)
 
     fun getImageVersionListByCode(
@@ -467,13 +455,10 @@ abstract class ImageService @Autowired constructor() {
         // 获取用户组织架构
         val userDeptList = storeUserService.getUserDeptList(userId)
         logger.info("$interfaceName:mainPageList:Inner:userDeptList=$userDeptList")
-
-        val latestLabel = MessageCodeUtil.getMessageByLocale("最新", "Latest")
-        val hottestLabel = MessageCodeUtil.getMessageByLocale("最热", "Hottest")
         result.add(
             MarketImageMain(
-                key = "latest",
-                label = latestLabel,
+                key = LATEST,
+                label = MessageCodeUtil.getCodeLanMessage(LATEST),
                 records = doList(
                     userId = userId,
                     userDeptList = userDeptList,
@@ -494,8 +479,8 @@ abstract class ImageService @Autowired constructor() {
         )
         result.add(
             MarketImageMain(
-                key = "hottest",
-                label = hottestLabel,
+                key = HOTTEST,
+                label = MessageCodeUtil.getCodeLanMessage(HOTTEST),
                 records = doList(
                     userId = userId,
                     userDeptList = userDeptList,
@@ -518,10 +503,14 @@ abstract class ImageService @Autowired constructor() {
         classifyList.forEach {
             val classifyCode = it.classifyCode
             if (classifyCode != "trigger") {
+                val classifyLanName = MessageCodeUtil.getCodeLanMessage(
+                    messageCode = "${StoreMessageCode.MSG_CODE_STORE_CLASSIFY_PREFIX}$classifyCode",
+                    defaultMessage = it.classifyName
+                )
                 result.add(
                     MarketImageMain(
                         key = classifyCode,
-                        label = it.classifyName,
+                        label = classifyLanName,
                         records = doList(
                             userId = userId,
                             userDeptList = userDeptList,
@@ -787,7 +776,7 @@ abstract class ImageService @Autowired constructor() {
                 storeId = imageId,
                 storeType = StoreTypeEnum.IMAGE.type.toByte()
             )
-        val classifyRecord = classifyDao.getClassify(dslContext, imageRecord.classifyId)
+        val classifyRecord = classifyService.getClassify(imageRecord.classifyId).data
         val imageFeatureRecord = imageFeatureDao.getImageFeature(dslContext, imageRecord.imageCode)
             ?: throw InvalidParamException("imageFeature is null,imageCode=${imageRecord.imageCode}")
         val imageVersionLog = imageVersionLogDao.getLatestImageVersionLogByImageId(dslContext, imageId)?.get(0)
@@ -810,37 +799,10 @@ abstract class ImageService @Autowired constructor() {
             releaseFlag = true
         }
         // 查LabelList
-        val labelList = ArrayList<Label>()
-        val records = imageLabelRelDao.getLabelsByImageId(dslContext, imageId)
-        records?.forEach {
-            labelList.add(
-                Label(
-                    id = it[KEY_LABEL_ID] as String,
-                    labelCode = it[KEY_LABEL_CODE] as String,
-                    labelName = it[KEY_LABEL_NAME] as String,
-                    labelType = LabelTypeEnum.getLabelType((it[KEY_LABEL_TYPE] as Byte).toInt()),
-                    createTime = (it[KEY_CREATE_TIME] as LocalDateTime).timestampmilli(),
-                    updateTime = (it[KEY_UPDATE_TIME] as LocalDateTime).timestampmilli()
-                )
-            )
-        }
-        labelList.sortedBy { it.labelName }
+        val labelList = imageLabelService.getLabelsByImageId(imageId).data
+        labelList?.sortedBy { it.labelName }
         // 查CategoryList
-        val categoryList = ArrayList<Category>()
-        val categoryRecords = imageCategoryRelDao.getCategorysByImageId(dslContext, imageId)
-        categoryRecords?.forEach {
-            categoryList.add(
-                Category(
-                    id = it[KEY_CATEGORY_ID] as String,
-                    categoryCode = it[KEY_CATEGORY_CODE] as String,
-                    categoryName = it[KEY_CATEGORY_NAME] as String,
-                    categoryType = CategoryTypeEnum.getCategoryType((it[KEY_CATEGORY_TYPE] as Byte).toInt()),
-                    iconUrl = (it[KEY_CATEGORY_ICON_URL] as String?) ?: "",
-                    createTime = (it[KEY_CREATE_TIME] as LocalDateTime).timestampmilli(),
-                    updateTime = (it[KEY_UPDATE_TIME] as LocalDateTime).timestampmilli()
-                )
-            )
-        }
+        val categoryList = imageCategoryService.getCategorysByImageId(imageId).data
         // 查UserCommentInfo
         val userCommentInfo = storeCommentService.getStoreUserCommentInfo(
             userId = userId,
@@ -865,7 +827,7 @@ abstract class ImageService @Autowired constructor() {
                 ImageAgentTypeEnum.getImageAgentType(it.get(Constants.KEY_IMAGE_AGENT_TYPE) as String)!!
             } ?: emptyList()
         }
-        val category = if (categoryList.isNotEmpty()) {
+        val category = if (null != categoryList && categoryList.isNotEmpty()) {
             categoryList[0]
         } else {
             null
@@ -900,7 +862,7 @@ abstract class ImageService @Autowired constructor() {
             imageSizeNum = imageSizeNum,
             imageStatus = ImageStatusEnum.getImageStatus(imageRecord.imageStatus.toInt()),
             description = imageRecord.description ?: "",
-            labelList = labelList,
+            labelList = labelList ?: listOf(),
             category = category?.categoryCode ?: "",
             categoryName = category?.categoryName ?: "",
             latestFlag = imageRecord.latestFlag,

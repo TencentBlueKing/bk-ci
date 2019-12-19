@@ -56,39 +56,47 @@ class TimerTriggerElementBizPlugin constructor(
         userId: String,
         channelCode: ChannelCode
     ) {
+        val crontabExpressions = mutableSetOf<String>()
+        logger.info("[$pipelineId]|$userId| Timer trigger [${element.name}] enable=${element.isElementEnable()}")
         if (element.isElementEnable()) {
-            logger.info("[$projectId|$pipelineId|$pipelineName|$userId|${element.name}] Timer trigger element after create")
-            val crontabExpressions = mutableSetOf<String>()
+
             val eConvertExpressions = element.convertExpressions()
             if (eConvertExpressions.isEmpty()) {
-                throw ErrorCodeException(defaultMessage = "定时触发器的定时参数不合法",
-                    errorCode = ProcessMessageCode.ILLEGAL_TIMER_CRONTAB)
+                throw ErrorCodeException(
+                    defaultMessage = "定时触发器的定时参数不合法",
+                    errorCode = ProcessMessageCode.ILLEGAL_TIMER_CRONTAB
+                )
             }
             eConvertExpressions.forEach { cron ->
                 if (!CronExpression.isValidExpression(cron)) {
-                    throw ErrorCodeException(defaultMessage = "定时触发器的定时参数[$cron]不合法",
+                    throw ErrorCodeException(
+                        defaultMessage = "定时触发器的定时参数[$cron]不合法",
                         errorCode = ProcessMessageCode.ILLEGAL_TIMER_CRONTAB,
-                        params = arrayOf(cron))
+                        params = arrayOf(cron)
+                    )
                 }
             }
             crontabExpressions.addAll(eConvertExpressions)
-            if (crontabExpressions.isNotEmpty()) {
-                val result = pipelineTimerService.saveTimer(
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    userId = userId,
-                    crontabExpressions = crontabExpressions,
-                    channelCode = channelCode
+        }
+
+        if (crontabExpressions.isNotEmpty()) {
+            val result = pipelineTimerService.saveTimer(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                userId = userId,
+                crontabExpressions = crontabExpressions,
+                channelCode = channelCode
+            )
+            logger.info("[$pipelineId]|$userId| Update pipeline timer|crontab=$crontabExpressions")
+            if (result.isNotOk()) {
+                throw ErrorCodeException(
+                    defaultMessage = "定时触发器的定时参数不合法",
+                    errorCode = ProcessMessageCode.ILLEGAL_TIMER_CRONTAB
                 )
-                logger.info("[$pipelineId]| update pipeline timer|crontab=$crontabExpressions")
-                if (result.isNotOk()) {
-                    throw ErrorCodeException(defaultMessage = "定时触发器的定时参数不合法",
-                        errorCode = ProcessMessageCode.ILLEGAL_TIMER_CRONTAB)
-                }
-            } else {
-                pipelineTimerService.deleteTimer(pipelineId, userId)
-                logger.info("[$pipelineId]| delete pipeline timer|crontab=empty")
             }
+        } else {
+            pipelineTimerService.deleteTimer(pipelineId, userId)
+            logger.info("[$pipelineId]|$userId| Delete pipeline timer")
         }
     }
 
