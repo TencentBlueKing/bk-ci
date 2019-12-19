@@ -41,6 +41,7 @@ import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_NO_PARAM_IN_JOB_CONDITION
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_NO_PUBLIC_WINDOWS_BUILDER
+import com.tencent.devops.process.plugin.load.ContainerBizRegistrar
 import com.tencent.devops.process.plugin.load.ElementBizRegistrar
 import org.slf4j.LoggerFactory
 
@@ -67,6 +68,7 @@ class DefaultModelCheckPlugin constructor(val client: Client) : ModelCheckPlugin
         )) as TriggerContainer
 
         val elementCnt = mutableMapOf<String, Int>()
+        val containerCnt = mutableMapOf<String, Int>()
         model.stages.forEach { s ->
             if (s.containers.isEmpty()) {
                 throw ErrorCodeException(
@@ -75,13 +77,13 @@ class DefaultModelCheckPlugin constructor(val client: Client) : ModelCheckPlugin
                 )
             }
             s.containers.forEach { c ->
-                if (c.elements.isEmpty()) {
-                    throw ErrorCodeException(defaultMessage = "Job需要至少有一个任务插件", errorCode = ProcessMessageCode.ERROR_PIPELINE_JOB_NEED_TASK)
-                }
+                val cCnt = containerCnt.computeIfPresent(c.getClassType()) { _, oldValue -> oldValue + 1 }
+                    ?: containerCnt.computeIfAbsent(c.getClassType()) { 1 } // 第一次时出现1次
+                ContainerBizRegistrar.getPlugin(c)?.check(c, cCnt)
                 c.elements.forEach { e ->
-                    val cnt = elementCnt.computeIfPresent(e.getAtomCode()) { _, oldValue -> oldValue + 1 }
+                    val eCnt = elementCnt.computeIfPresent(e.getAtomCode()) { _, oldValue -> oldValue + 1 }
                         ?: elementCnt.computeIfAbsent(e.getAtomCode()) { 1 } // 第一次时出现1次
-                    ElementBizRegistrar.getPlugin(e)?.check(e, cnt)
+                    ElementBizRegistrar.getPlugin(e)?.check(e, eCnt)
                 }
             }
         }

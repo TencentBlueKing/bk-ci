@@ -30,6 +30,7 @@ import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.model.store.tables.TLabel
 import com.tencent.devops.model.store.tables.records.TLabelRecord
+import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.pojo.common.Label
 import com.tencent.devops.store.pojo.common.LabelRequest
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
@@ -112,12 +113,15 @@ class LabelDao {
 
     fun convert(record: TLabelRecord): Label {
         with(record) {
-            val labelLanName = MessageCodeUtil.getCodeLanMessage(labelCode)
+            // 标签信息名称没有配置国际化信息则取标签表里面的名称
+            val labelLanName = MessageCodeUtil.getCodeLanMessage(
+                messageCode = "${StoreMessageCode.MSG_CODE_STORE_LABEL_PREFIX}$labelCode",
+                defaultMessage = labelName
+            )
             return Label(
                 id = id,
                 labelCode = labelCode,
-                // 标签信息名称没有配置国际化信息则取标签表里面的名称
-                labelName = if (labelLanName == labelCode) labelName else labelLanName,
+                labelName = labelLanName,
                 labelType = StoreTypeEnum.getStoreType(type.toInt()),
                 createTime = createTime.timestampmilli(),
                 updateTime = updateTime.timestampmilli()
