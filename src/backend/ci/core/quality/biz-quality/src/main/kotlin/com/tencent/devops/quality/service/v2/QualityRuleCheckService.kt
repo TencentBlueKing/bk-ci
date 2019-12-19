@@ -204,11 +204,14 @@ class QualityRuleCheckService @Autowired constructor(
         }
     }
 
-    // codecc回调数据是异步的，为空临时加个等待
+    // codecc回调数据是异步的，为空加个等待
     private fun lazyGetHisMetadata(buildId: String): List<QualityHisMetadata> {
-        val result = qualityHisMetadataService.serviceGetHisMetadata(buildId)
-        if (result.isEmpty()) Thread.sleep(5000)
-        return result
+        for (i in setOf(1, 5, 3, 7)) {
+            val result = qualityHisMetadataService.serviceGetHisMetadata(buildId)
+            if (result.isNotEmpty()) return result
+            Thread.sleep(i * 1000L)
+        }
+        return listOf()
     }
 
     private fun checkPostHandle(
