@@ -229,7 +229,7 @@ class ArtifactoryService @Autowired constructor(
         var targetProjectId = projectId
         var targetPipelineId = pipelineId
         var targetBuildId = buildId
-        if (crossProjectId.isNullOrBlank()) {
+        if (!crossProjectId.isNullOrBlank()) {
             val lastModifyUser = client.get(ServicePipelineResource::class)
                 .getPipelineInfo(projectId, pipelineId, null).data!!.lastModifyUser
 
@@ -261,8 +261,8 @@ class ArtifactoryService @Autowired constructor(
         val pathArray = regex.split(argPath)
 
         val repoPathPrefix = JFrogUtil.getRepoPath()
-        val pipelinePathPrefix = "/" + JFrogUtil.getPipelinePathPrefix(projectId).removePrefix(repoPathPrefix)
-        val customDirPathPrefix = "/" + JFrogUtil.getCustomDirPathPrefix(projectId).removePrefix(repoPathPrefix)
+        val pipelinePathPrefix = "/" + JFrogUtil.getPipelinePathPrefix(targetProjectId).removePrefix(repoPathPrefix)
+        val customDirPathPrefix = "/" + JFrogUtil.getCustomDirPathPrefix(targetProjectId).removePrefix(repoPathPrefix)
         val ret = mutableListOf<FileDetail>()
 
         pathArray.forEach { path ->
