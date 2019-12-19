@@ -49,7 +49,7 @@
     
     <div class="wrapper" id="showContent">
         <div class="container">
-            <img class="logo" src="https://bkdevops.qq.com/app/download/devops_app.png" alt="蓝盾Devops平台logo">
+            <img class="logo" src="https://__BKCI_EXTERNAL_HOST__/app/download/devops_app.png" alt="蓝盾Devops平台logo">
             <p class="tips">假如没有弹出安装提示<br />请通过其他浏览器打开本页面</p>
             <a id="btn_install" class="downloadbtn" href="javascript:download();">立即安装蓝盾DevOps移动版</a>
             <p class="warning">公司内部信息，请勿转发！</p>
@@ -70,8 +70,8 @@
             }
         }
         function download() {
-            var apkUrl = 'https://bkdevops.qq.com/app/download/devops_app.apk'
-            var plistUrl = 'https://bkdevops.qq.com/app/download/devops_app.plist'
+            var apkUrl = 'https://__BKCI_EXTERNAL_HOST__/app/download/devops_app.apk'
+            var plistUrl = 'https://__BKCI_EXTERNAL_HOST__/app/download/devops_app.plist'
             var platform = detectDevice()
             if (platform === 'ios') {
                 location.href = 'itms-services://?action=download-manifest&url=' + plistUrl

@@ -49,7 +49,7 @@
 </div>
 <div class="wrapper" style="display:none;" id="showContent">
 	<div class="container">
-		<img class="logo" src="https://bkdevops.qq.com/app/download/devops_app.png" alt="蓝盾DevOps平台logo">
+		<img class="logo" src="https://__BKCI_EXTERNAL_HOST__/app/download/devops_app.png" alt="蓝盾DevOps平台logo">
 		<p class="tips">请通过蓝盾DevOps移动版访问内部体验<br>假如页面没有自动跳转，请先安装蓝盾DevOps移动版</p>
 		<a id="btn_install" class="downloadbtn" href="javascript:download();">立即安装蓝盾DevOps移动版</a>
 		<p class="tipstxt">假如页面能自动跳转，请忽略此页面</p>
@@ -61,10 +61,10 @@
 	download = function() {
 		var terminal = getTerminal();
 		if (terminal == 1) {
-			window.location.href="https://bkdevops.qq.com/app/download/devops_app.apk";
+			window.location.href="https://__BKCI_EXTERNAL_HOST__/app/download/devops_app.apk";
 		}
 		if (terminal == 2 || terminal == 3) {
-			window.location.href="https://bkdevops.qq.com/app/download/devops_app_download.html";
+			window.location.href="https://__BKCI_EXTERNAL_HOST__/app/download/devops_app_download.html";
 		}
 
 	}

@@ -97,7 +97,15 @@ config = {
   prebuild = {
     domain = "__BKCI_PREBUILD_FQDN__",
     port = "__BKCI_PREBUILD_PORT__"
-  }
+  },
+  dayuHost = "__BKCI_DAYU_URL__",
+  externalHost = "__BKCI_EXTERNAL_HOST__",
+  logoHost = "__BKCI_LOGO_HOST__",
+  dcloudHost = "__BKCI_DCLOUD_HOST__",
+  mirrorsHost = "__BKCI_MIRRORS_FQDN__",
+  buglyHost = "__BKCI_BULGY_HOST__",
+  wechatWorkHost = "__BKCI_WECHART_WORK_HOST__",
+  docsUrl = "__BKCI_DOCS_URL__"
 }
   
 require("init_common")
