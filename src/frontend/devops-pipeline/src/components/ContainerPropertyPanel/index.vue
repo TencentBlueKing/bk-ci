@@ -33,8 +33,8 @@
                         <template>
                             <div class="bk-selector-create-item cursor-pointer" @click.stop.prevent="addThridSlave">
                                 <i class="bk-icon icon-plus-circle"></i>
-                                <span class="text">{{ $t('editPage.addThirdSlave') }}/span>
-                                </span></div>
+                                <span class="text">{{ $t('editPage.addThirdSlave') }}</span>
+                            </div>
                         </template>
                     </selector>
                 </form-field>
@@ -49,7 +49,7 @@
                     </enum-input>
                 </form-field>
 
-                <form-field :label="$t('editPage.assignResource')" v-if="!isPublicResourceType && containerModalId" :required="true" :is-error="errors.has(&quot;buildResource&quot;)" :error-msg="errors.first(&quot;buildResource&quot;)" :desc="buildResourceType === &quot;THIRD_PARTY_AGENT_ENV&quot; ? this.$t('editPage.thirdSlaveTips') : &quot;&quot;">
+                <form-field :label="$t('editPage.assignResource')" v-if="!isPublicResourceType && containerModalId && buildResourceType !== 'MACOS'" :required="true" :is-error="errors.has(&quot;buildResource&quot;)" :error-msg="errors.first(&quot;buildResource&quot;)" :desc="buildResourceType === &quot;THIRD_PARTY_AGENT_ENV&quot; ? this.$t('editPage.thirdSlaveTips') : &quot;&quot;">
                     <container-env-node :disabled="!editable"
                         :os="container.baseOS"
                         :container-id="containerModalId"
@@ -65,6 +65,29 @@
                         name="buildResource"
                     />
                 </form-field>
+
+                <template v-if="buildResourceType === 'MACOS'">
+                    <form-field :label="$t('editPage.macSystemVersion')" :required="true">
+                        <bk-select :value="systemVersion" searchable>
+                            <bk-option v-for="item in systemVersionList"
+                                :key="item"
+                                :id="item"
+                                :name="item"
+                                @click.native="chooseMacSystem(item)">
+                            </bk-option>
+                        </bk-select>
+                    </form-field>
+                    <form-field :label="$t('editPage.xcodeVersion')" :required="true">
+                        <bk-select :value="xcodeVersion" searchable>
+                            <bk-option v-for="item in xcodeVersionList"
+                                :key="item"
+                                :id="item"
+                                :name="item"
+                                @click.native="chooseXcode(item)">
+                            </bk-option>
+                        </bk-select>
+                    </form-field>
+                </template>
 
                 <form-field :label="$t('editPage.imageTicket')" v-if="(buildResourceType === 'DOCKER') && buildImageType === 'THIRD'">
                     <request-selector v-bind="imageCredentialOption" :disabled="!editable" name="credentialId" :value="buildImageCreId" :handle-change="changeBuildResource"></request-selector>
@@ -186,7 +209,10 @@
                         label: this.$t('editPage.thirdImg'),
                         value: 'THIRD'
                     }
-                ]
+                ],
+                isLoadingMac: false,
+                xcodeVersionList: [],
+                systemVersionList: []
             }
         },
         computed: {
@@ -274,6 +300,12 @@
                     return ''
                 }
             },
+            xcodeVersion () {
+                return this.container.dispatchType.xcodeVersion
+            },
+            systemVersion () {
+                return this.container.dispatchType.systemVersion
+            },
             buildResource () {
                 return this.container.dispatchType.value
             },
@@ -350,6 +382,14 @@
                 'updateContainer',
                 'togglePropertyPanel'
             ]),
+            chooseMacSystem (item) {
+                this.handleContainerChange('systemVersion', item)
+                this.handleContainerChange('value', `${this.systemVersion}:${this.xcodeVersion}`)
+            },
+            chooseXcode (item) {
+                this.handleContainerChange('xcodeVersion', item)
+                this.handleContainerChange('value', `${this.systemVersion}:${this.xcodeVersion}`)
+            },
             setContainerValidate (addErrors, removeErrors) {
                 const { errors } = this
 
