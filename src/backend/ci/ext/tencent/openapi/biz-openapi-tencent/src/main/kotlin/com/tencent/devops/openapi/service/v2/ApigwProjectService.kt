@@ -71,7 +71,7 @@ class ApigwProjectService(
         createInfo: ProjectCreateUserDTO
     ): Boolean? {
         logger.info("createProjectUserByUser:createUserId[$createUserId],createInfo[$createInfo]")
-        return client.get(ServiceTxProjectResource::class).createProjectaUserByUser(createUserId, createInfo).data
+        return client.get(ServiceTxProjectResource::class).createProjectUserByUser(createUserId, createInfo).data
     }
 
     fun createProjectUserByApp(
@@ -80,7 +80,7 @@ class ApigwProjectService(
         createInfo: ProjectCreateUserDTO
     ): Boolean? {
         logger.info("createProjectUserByApp:organizationType[$organizationType],organizationId[$organizationId],createInfo[$createInfo]")
-        return client.get(ServiceTxProjectResource::class).createProjectaUserByApp(organizationType, organizationId, createInfo).data
+        return client.get(ServiceTxProjectResource::class).createProjectUserByApp(organizationType, organizationId, createInfo).data
     }
 
     fun createPipelinePermission(

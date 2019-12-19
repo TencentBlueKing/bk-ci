@@ -257,7 +257,7 @@ interface ServiceTxProjectResource {
 
     @POST
     @Path("/createUserByUser")
-    fun createProjectaUserByUser(
+    fun createProjectUserByUser(
         @ApiParam("执行人Id", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         createUser: String,
@@ -267,7 +267,7 @@ interface ServiceTxProjectResource {
 
     @POST
     @Path("/createUserByApp")
-    fun createProjectaUserByApp(
+    fun createProjectUserByApp(
         @ApiParam("组织类型", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE)
         organizationType: String,
