@@ -1,10 +1,10 @@
 <template>
-    <article class="log-home" v-if="show">
+    <article class="log-home">
         <section class="log-main">
             <header class="log-head">
                 <span class="log-title"><status-icon :status="status"></status-icon>{{ title }}</span>
                 <p class="log-buttons">
-                    <bk-select v-if="executeCount !== 1" placeholder="重试次数" class="log-execute">
+                    <bk-select v-if="![0, 1].includes(+executeCount)" placeholder="重试次数" class="log-execute">
                         <bk-option v-for="execute in executeCount"
                             :key="execute"
                             :id="execute"
@@ -70,10 +70,6 @@
         },
 
         props: {
-            show: {
-                type: Boolean,
-                default: false
-            },
             isInit: {
                 type: Boolean,
                 default: false
@@ -179,9 +175,10 @@
             shareMove (event) {
                 if (!this.isShareMove) return
                 let curTarget = event.target
-                if (!curTarget.classList.contains('item-txt')) curTarget = curTarget.parentNode
-                if (curTarget.className && curTarget.classList.contains('item-txt')) {
-                    const top = curTarget.parentNode.style.top.slice(0, -2)
+                if (curTarget.classList.contains('selection-color') && !curTarget.classList.contains('item-txt')) curTarget = curTarget.parentNode.parentNode
+                if (curTarget.classList.contains('item-txt')) curTarget = curTarget.parentNode
+                if (curTarget.className && curTarget.classList.contains('scroll-item')) {
+                    const top = curTarget.style.top.slice(0, -2)
                     if (this.startShareIndex === -1) this.startShareIndex = top
                     this.endShareIndex = top
                 }

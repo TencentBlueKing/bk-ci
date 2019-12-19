@@ -71,7 +71,23 @@ function foldListData ({ startIndex }) {
     if (!currentItem.tagData.list.length) {
         const subList = allListData.splice(startIndex + 1, currentItem.tagData.endIndex - startIndex)
         currentItem.tagData.list = subList
+        currentItem.tagData.containList = []
         changeNum = currentItem.tagData.endIndex - startIndex
+
+        const containChangeList = foldList.filter((x) => {
+            const currentData = x.data.tagData
+            return x.index > startIndex && currentData.endIndex < currentItem.tagData.endIndex
+        }) || []
+
+        containChangeList.forEach((item) => {
+            const data = item.data || {}
+            item.index -= startIndex
+            data.tagData.endIndex -= startIndex
+            data.tagData.startIndex -= startIndex
+            const index = foldList.findIndex(x => x === item)
+            foldList.splice(index, 1)
+            currentItem.tagData.containList.push(item)
+        })
     } else {
         for (let index = 0; index < currentItem.tagData.list.length;) {
             const someList = currentItem.tagData.list.slice(index, index + 10000)
@@ -82,18 +98,28 @@ function foldListData ({ startIndex }) {
         currentItem.tagData.list = []
     }
     currentItem.tagData.endIndex -= changeNum
-    updateFoldList(startIndex, changeNum)
+    updateFoldList(startIndex, currentItem.tagData.endIndex + changeNum, changeNum)
+    if (currentItem.tagData.containList.length && changeNum < 0) {
+        currentItem.tagData.containList.forEach((item) => {
+            const data = item.data || {}
+            item.index += startIndex
+            data.tagData.endIndex += startIndex
+            data.tagData.startIndex += startIndex
+            foldList.push(item)
+        })
+        currentItem.tagData.containList = []
+    }
 }
 
-function updateFoldList (startIndex, changeNum) {
+function updateFoldList (startIndex, endIndex, changeNum) {
     const needChangeAllList = foldList.filter((x) => {
         const currentData = x.data.tagData
-        return x.index > startIndex && currentData.endIndex > startIndex + Math.abs(changeNum)
+        return x.index > startIndex && currentData.endIndex > endIndex
     }) || []
 
     const needChangeAfterList = foldList.filter((x) => {
         const currentData = x.data.tagData
-        return x.index < startIndex && currentData.endIndex > startIndex + Math.abs(changeNum)
+        return x.index < startIndex && currentData.endIndex > endIndex
     }) || []
 
     needChangeAllList.forEach((item) => {

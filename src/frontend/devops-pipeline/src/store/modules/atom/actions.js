@@ -369,12 +369,12 @@ export default {
 
     // 第一次拉取日志
     getInitLog ({ commit }, { projectId, pipelineId, buildId, tag, jobId }) {
-        return request.get(`${AJAX_URL_PIRFIX}/${LOG_API_URL_PREFIX}/user/logs/${projectId}/${pipelineId}/${buildId}${tag ? '?tag=' + tag : '?jobId=' + jobId}`)
+        return request.get(`${AJAX_URL_PIRFIX}/${LOG_API_URL_PREFIX}/user/logs/${projectId}/${pipelineId}/${buildId}${tag ? '?tag=' + tag : ''}`)
     },
 
     // 第一次拉取日志
     getAfterLog ({ commit }, { projectId, pipelineId, buildId, tag, jobId, lineNo }) {
-        return request.get(`${AJAX_URL_PIRFIX}/${LOG_API_URL_PREFIX}/user/logs/${projectId}/${pipelineId}/${buildId}/after?start=${lineNo}&${tag ? 'tag=' + tag : 'jobId=' + jobId}`)
+        return request.get(`${AJAX_URL_PIRFIX}/${LOG_API_URL_PREFIX}/user/logs/${projectId}/${pipelineId}/${buildId}/after?start=${lineNo}&${tag ? 'tag=' + tag : ''}`)
     },
 
     // 建立拉取完整日志ws

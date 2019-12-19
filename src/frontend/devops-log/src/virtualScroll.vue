@@ -306,8 +306,12 @@
                 if (!start || !end) return
                 const startElement = start.children[+isStartFirst]
                 const endElement = end.children[+isEndFirst]
-                range.setStart(startElement.childNodes[0], +startOffset)
-                range.setEnd(endElement.childNodes[0], +endOffset)
+                let startRange = +startOffset
+                let endRange = +endOffset
+                if (startRange > startElement.childNodes[0].length) startRange = startElement.childNodes[0].length
+                if (endRange > endElement.childNodes[0].length) endRange = endElement.childNodes[0].length
+                range.setStart(startElement.childNodes[0], startRange)
+                range.setEnd(endElement.childNodes[0], endRange)
                 selection.removeAllRanges()
                 selection.addRange(range)
             },

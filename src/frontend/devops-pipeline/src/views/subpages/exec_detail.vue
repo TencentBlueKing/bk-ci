@@ -42,8 +42,7 @@
         </template>
         <template v-if="editingElementPos && execDetail">
             <template v-if="showLog">
-                <log :show="showLog"
-                    :is-init="isInitLog"
+                <log :is-init="isInitLog"
                     :title="currentElement.name"
                     :status="currentElement.status"
                     :id="currentElement.id"
@@ -51,27 +50,37 @@
                     :down-load-name="`${editingElementPos.stageIndex + 1}-${editingElementPos.containerIndex + 1}-${editingElementPos.elementIndex + 1}-${currentElement.name}`"
                     @changeExecute="changeExecute"
                     :link-url="linkUrl"
-                    log-type="plugin"
                     :down-load-link="downLoadPluginLink"
                     @closeLog="closeLog"
+                    log-type="plugin"
                     ref="log"
                 />
             </template>
             <template v-else-if="showContainerPanel">
-                <log :show="showContainerPanel"
-                    :is-init="isInitLog"
-                    :title="currentJob.name"
-                    :status="currentJob.status"
-                    :id="currentJob.containerId"
-                    :link-url="linkUrl"
-                    :down-load-name="`${editingElementPos.stageIndex + 1}-${editingElementPos.containerIndex + 1}-${currentJob.name}`"
-                    log-type="job"
-                    :down-load-link="downLoadJobLink"
-                    @closeLog="closeLog"
-                    ref="log"
-                >
-                </log>
+                <container-property-panel
+                    :title="sidePanelConfig.title"
+                    :container-index="editingElementPos.containerIndex"
+                    :stage-index="editingElementPos.stageIndex"
+                    :stages="execDetail.model.stages"
+                    :editable="false"
+                />
             </template>
+        </template>
+
+        <template v-if="execDetail">
+            <log v-if="showCompleteLog"
+                :is-init="isInitLog"
+                :title="execDetail.pipelineName"
+                :status="execDetail.status"
+                :id="execDetail.id"
+                :link-url="linkUrl"
+                :down-load-name="execDetail.pipelineName"
+                :down-load-link="downLoadAllLink"
+                @closeLog="closeLog"
+                log-type="all"
+                ref="log"
+            >
+            </log>
         </template>
     </section>
 </template>
@@ -137,13 +146,14 @@
                 'execDetail',
                 'editingElementPos',
                 'isPropertyPanelVisible',
+                'isShowCompleteLog',
                 'fetchingAtomList'
             ]),
             ...mapState([
                 'fetchError'
             ]),
-            downLoadJobLink () {
-                return `${AJAX_URL_PIRFIX}/log/api/user/logs/${this.$route.params.projectId}/${this.$route.params.pipelineId}/${this.execDetail.id}/download?jobId=${this.currentJob.containerId}`
+            downLoadAllLink () {
+                return `${AJAX_URL_PIRFIX}/log/api/user/logs/pipelinedebug/${this.$route.params.pipelineId}/${this.execDetail.id}/download`
             },
             downLoadPluginLink () {
                 return `${AJAX_URL_PIRFIX}/log/api/user/logs/${this.$route.params.projectId}/${this.$route.params.pipelineId}/${this.execDetail.id}/download?tag=${this.currentElement.id}`
@@ -193,10 +203,15 @@
                     })
                 }
             },
+            showCompleteLog () {
+                const { isShowCompleteLog, $route: { params } } = this
+                const res = isShowCompleteLog && params.buildNo
+                if (res) this.initAllLog()
+                return res
+            },
             showContainerPanel () {
                 const { editingElementPos } = this
                 const res = typeof editingElementPos.containerIndex !== 'undefined'
-                if (res) this.initJobLog()
                 return res
             },
             currentJob () {
@@ -276,7 +291,7 @@
                 const logType = query.logType
                 const id = query.id
                 if (logType === 'plugin') this.showElementLog(id)
-                if (logType === 'job') this.showJobLog(id)
+                if (logType === 'all') this.showAllLog(id)
             },
             'routerParams.buildNo': {
                 handler (val, oldVal) {
@@ -361,30 +376,19 @@
                 this.openLogApi()
             },
 
-            showJobLog (id) {
-                let conIndex
-                const staIndex = this.execDetail.model.stages.findIndex(stage => {
-                    conIndex = stage.containers.findIndex(container => {
-                        return container.containerId === id
-                    })
-                    return conIndex > -1
-                })
+            showAllLog () {
                 this.togglePropertyPanel({
                     isShow: true,
-                    editingElementPos: {
-                        stageIndex: staIndex,
-                        containerIndex: conIndex
-                    }
+                    isComplete: true
                 })
             },
 
-            initJobLog () {
+            initAllLog () {
                 const route = this.$route.params || {}
                 this.logPostData = {
                     projectId: route.projectId,
                     pipelineId: route.pipelineId,
-                    buildId: this.execDetail.id,
-                    jobId: this.currentJob.containerId
+                    buildId: this.execDetail.id
                 }
                 this.openLogApi()
             },
