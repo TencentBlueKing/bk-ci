@@ -27,6 +27,9 @@
 package com.tencent.devops.store.service.template.impl
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.pipeline.Model
+import com.tencent.devops.common.pipeline.pojo.element.Element
+import com.tencent.devops.model.store.tables.records.TAtomRecord
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.template.SampleMarketTemplateService
 import org.slf4j.LoggerFactory
@@ -61,8 +64,18 @@ class SampleMarketTemplateServiceImpl : SampleMarketTemplateService, MarketTempl
         }
     }
 
-    override fun validateUserTemplateAtomVisibleDept(userId: String, templateCode: String): Result<Boolean> {
-        logger.info("validateUserTemplateAtomVisibleDept userId: $userId，templateCode: $templateCode")
+    override fun generateUserAtomInvalidVisibleAtom(
+        atomCode: String,
+        userId: String,
+        atomRecord: TAtomRecord,
+        element: Element
+    ): List<String> {
+        // 开源版没有可见范围的概念，没有因为可见范围而无效的插件
+        return emptyList()
+    }
+
+    override fun validateTempleAtomVisible(templateCode: String, templateModel: Model): Result<Boolean> {
+        // 开源版没有可见范围的概念，没有因为可见范围而无效的插件
         return Result(true)
     }
 }
