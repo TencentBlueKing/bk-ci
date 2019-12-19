@@ -686,7 +686,7 @@ abstract class ImageService @Autowired constructor() {
             bodyParams["imageVersion"] = imageVersion ?: ""
             bodyParams["pipelineId"] = pipelineId ?: ""
             bodyParams["buildId"] = buildId ?: ""
-            bodyParams["url"] = buildResultBaseUrl.removeSuffix("/") + "/$projectCode/$pipelineId/$buildId"
+            bodyParams["url"] = buildResultBaseUrl.removeSuffix("/") + "/$projectCode/$pipelineId/detail/$buildId"
             try {
                 supportService.sendImageExecuteNullToManagers(titleParams, bodyParams)
             } catch (e: Exception) {
