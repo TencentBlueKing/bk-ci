@@ -47,7 +47,6 @@ import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
-import java.lang.RuntimeException
 
 @Component
 class BSAuthPermissionApi @Autowired constructor(
@@ -330,8 +329,8 @@ class BSAuthPermissionApi @Autowired constructor(
                 objectMapper.readValue<BkAuthResponse<String>>(responseContent)
             logger.info("addResourcePermissionForUsers responseObject[$responseObject]")
             if (responseObject.code != 0) {
-                logger.error("createUserPermissions fail : user[$userId], projectCode[$projectCode], message:${responseObject}")
-                throw RemoteServiceException("add Resource Permission remote fail,message:${responseObject}")
+                logger.error("createUserPermissions fail : user[$userId], projectCode[$projectCode], message:$responseObject")
+                throw RemoteServiceException("add Resource Permission remote fail,message:$responseObject")
             }
             result = true
         }

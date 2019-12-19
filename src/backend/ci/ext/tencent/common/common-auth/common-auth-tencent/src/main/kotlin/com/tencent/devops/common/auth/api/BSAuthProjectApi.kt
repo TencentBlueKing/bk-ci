@@ -42,7 +42,6 @@ import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
-import java.lang.RuntimeException
 
 @Component
 class BSAuthProjectApi @Autowired constructor(
@@ -209,14 +208,14 @@ class BSAuthProjectApi @Autowired constructor(
         val body = RequestBody.create(mediaType, content)
         val request = Request.Builder().url(url).post(body).build()
 
-        OkhttpUtils.doHttp(request).use{ response ->
+        OkhttpUtils.doHttp(request).use { response ->
             val responseContent = response.body()!!.string()
-            if(!response.isSuccessful){
+            if (!response.isSuccessful) {
                 logger.error("create project user fail: user[$user], projectCode[$projectCode]")
                 throw RemoteServiceException("create project user fail: user[$user], projectCode[$projectCode]")
             }
             val responseObject = objectMapper.readValue<BkAuthResponse<String>>(responseContent)
-            if(responseObject.code != 0){
+            if (responseObject.code != 0) {
                 logger.error("create project user fail: $responseObject")
                 throw RemoteServiceException("create project user fail: $responseObject")
             }
@@ -233,14 +232,14 @@ class BSAuthProjectApi @Autowired constructor(
         val accessToken = bsAuthTokenApi.getAccessToken(serviceCode)
         val url = "${bkAuthProperties.url}/projects/$projectCode/roles?access_token=$accessToken"
         val request = Request.Builder().url(url).get().build()
-        OkhttpUtils.doHttp(request).use{ response ->
+        OkhttpUtils.doHttp(request).use { response ->
             val responseContent = response.body()!!.string()
-            if(!response.isSuccessful){
+            if (!response.isSuccessful) {
                 logger.error("get project roles fail: projectCode[$projectCode]")
                 throw RemoteServiceException("get project roles fail: projectCode[$projectCode]")
             }
             val responseObject = objectMapper.readValue<BkAuthResponse<List<BKAuthProjectRolesResources>>>(responseContent)
-            if(responseObject.code != 0){
+            if (responseObject.code != 0) {
                 logger.error("get project role fail: $responseObject")
                 throw RemoteServiceException("get project role fail: $responseObject")
             }
