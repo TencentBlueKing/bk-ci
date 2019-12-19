@@ -35,6 +35,5 @@ data class ProjectUpdateLogoBroadCastEvent(
     override val projectId: String,
     override var retryCount: Int = 0,
     override var delayMills: Int = 0,
-    val logoAddr: String,
-    val accessToken: String
+    val logoAddr: String
 ) : ProjectBroadCastEvent(userId, projectId, retryCount, delayMills)

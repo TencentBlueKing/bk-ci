@@ -91,7 +91,6 @@ interface AuthProjectApi {
      */
     fun createProjectUser(user: String, serviceCode: AuthServiceCode, projectCode: String, role: String): Boolean
 
-
     /**
      * 添加用户到指定项目特定分组
      * @param serviceCode 服务类型，比如PIPELINE

@@ -34,6 +34,7 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Repository
+import java.time.LocalDateTime
 
 @Repository
 class PipelineResDao @Autowired constructor(private val objectMapper: ObjectMapper) {
@@ -41,6 +42,7 @@ class PipelineResDao @Autowired constructor(private val objectMapper: ObjectMapp
     fun create(
         dslContext: DSLContext,
         pipelineId: String,
+        creator: String,
         version: Int,
         model: Model
     ) {
@@ -51,11 +53,15 @@ class PipelineResDao @Autowired constructor(private val objectMapper: ObjectMapp
                 this,
                 PIPELINE_ID,
                 VERSION,
-                MODEL
+                MODEL,
+                CREATOR,
+                CREATE_TIME
             )
-                .values(pipelineId, version, modelString)
+                .values(pipelineId, version, modelString, creator, LocalDateTime.now())
                 .onDuplicateKeyUpdate()
                 .set(MODEL, modelString)
+                .set(CREATOR, creator)
+                .set(CREATE_TIME, LocalDateTime.now())
                 .execute()
         }
     }

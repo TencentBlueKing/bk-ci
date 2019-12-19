@@ -29,6 +29,13 @@ package com.tencent.devops.store.dao.template
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.model.store.tables.TCategory
 import com.tencent.devops.model.store.tables.TTemplateCategoryRel
+import com.tencent.devops.store.pojo.common.KEY_CATEGORY_CODE
+import com.tencent.devops.store.pojo.common.KEY_CATEGORY_ICON_URL
+import com.tencent.devops.store.pojo.common.KEY_CATEGORY_ID
+import com.tencent.devops.store.pojo.common.KEY_CATEGORY_NAME
+import com.tencent.devops.store.pojo.common.KEY_CATEGORY_TYPE
+import com.tencent.devops.store.pojo.common.KEY_CREATE_TIME
+import com.tencent.devops.store.pojo.common.KEY_UPDATE_TIME
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.jooq.Result
@@ -44,13 +51,13 @@ class TemplateCategoryRelDao {
         val a = TCategory.T_CATEGORY.`as`("a")
         val b = TTemplateCategoryRel.T_TEMPLATE_CATEGORY_REL.`as`("b")
         return dslContext.select(
-            a.ID.`as`("id"),
-            a.CATEGORY_CODE.`as`("categoryCode"),
-            a.CATEGORY_NAME.`as`("categoryName"),
-            a.ICON_URL.`as`("iconUrl"),
-            a.TYPE.`as`("categoryType"),
-            a.CREATE_TIME.`as`("createTime"),
-            a.UPDATE_TIME.`as`("updateTime")
+            a.ID.`as`(KEY_CATEGORY_ID),
+            a.CATEGORY_CODE.`as`(KEY_CATEGORY_CODE),
+            a.CATEGORY_NAME.`as`(KEY_CATEGORY_NAME),
+            a.ICON_URL.`as`(KEY_CATEGORY_ICON_URL),
+            a.TYPE.`as`(KEY_CATEGORY_TYPE),
+            a.CREATE_TIME.`as`(KEY_CREATE_TIME),
+            a.UPDATE_TIME.`as`(KEY_UPDATE_TIME)
         ).from(a).join(b).on(a.ID.eq(b.CATEGORY_ID))
             .where(b.TEMPLATE_ID.eq(templateId))
             .fetch()
