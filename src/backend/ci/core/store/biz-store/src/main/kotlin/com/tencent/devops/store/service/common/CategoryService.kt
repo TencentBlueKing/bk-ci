@@ -29,6 +29,7 @@ package com.tencent.devops.store.service.common
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.common.Category
 import com.tencent.devops.store.pojo.common.CategoryRequest
+import org.jooq.Record
 
 /**
  * 范畴业务逻辑类
@@ -62,4 +63,9 @@ interface CategoryService {
      * 根据id删除范畴信息
      */
     fun deleteCategory(id: String): Result<Boolean>
+
+    /**
+     * 为范畴集合添加范畴
+     */
+    fun addCategoryToCategoryList(it: Record, categoryList: MutableList<Category>)
 }
