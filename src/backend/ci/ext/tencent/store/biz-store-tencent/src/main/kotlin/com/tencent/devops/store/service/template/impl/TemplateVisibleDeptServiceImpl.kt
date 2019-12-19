@@ -38,13 +38,9 @@ import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.dao.atom.AtomDao
 import com.tencent.devops.store.dao.atom.MarketAtomDao
 import com.tencent.devops.store.dao.common.StoreDeptRelDao
-import com.tencent.devops.store.dao.common.StoreMemberDao
-import com.tencent.devops.store.dao.common.StoreProjectRelDao
 import com.tencent.devops.store.dao.template.MarketTemplateDao
 import com.tencent.devops.store.pojo.common.DeptInfo
-import com.tencent.devops.store.pojo.common.enums.DeptStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import com.tencent.devops.store.service.common.StoreUserService
 import com.tencent.devops.store.service.common.StoreVisibleDeptService
 import com.tencent.devops.store.service.template.TemplateVisibleDeptService
 import org.jooq.DSLContext
@@ -64,10 +60,7 @@ class TemplateVisibleDeptServiceImpl @Autowired constructor(
     private val marketTemplateDao: MarketTemplateDao,
     private val marketAtomDao: MarketAtomDao,
     private val atomDao: AtomDao,
-    private val storeProjectRelDao: StoreProjectRelDao,
-    private val storeMemberDao: StoreMemberDao,
-    private val storeVisibleDeptService: StoreVisibleDeptService,
-    private val storeUserService: StoreUserService
+    private val storeVisibleDeptService: StoreVisibleDeptService
 ) : TemplateVisibleDeptService {
 
     private val logger = LoggerFactory.getLogger(TemplateVisibleDeptServiceImpl::class.java)
@@ -83,102 +76,6 @@ class TemplateVisibleDeptServiceImpl @Autowired constructor(
             return validateResult
         }
         return storeVisibleDeptService.addVisibleDept(userId, templateCode, deptInfos, StoreTypeEnum.TEMPLATE)
-    }
-
-    override fun validateUserTemplateAtomVisibleDept(userId: String, templateCode: String, projectCode: String?): Result<Boolean> {
-        logger.info("the userId is :$userId,templateCode is :$templateCode")
-        val templateModelResult = getTemplateModel(templateCode)
-        logger.info("the templateModelResult is :$templateModelResult")
-        if (templateModelResult.isNotOk()) {
-            // 抛出错误提示
-            return Result(templateModelResult.status, templateModelResult.message ?: "")
-        }
-        val templateModel = templateModelResult.data
-        logger.info("the templateModel is :$templateModel")
-        if (null == templateModel) {
-            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
-        }
-        val userDeptIdList = storeUserService.getUserDeptList(userId) // 获取用户的机构ID信息
-        val invalidAtomList = mutableListOf<String>()
-        val needInstallAtomList = mutableMapOf<String, String>()
-        val stageList = templateModel.stages
-        stageList.forEach {
-            val containerList = it.containers
-            containerList.forEach {
-                val elementList = it.elements
-                elementList.forEach {
-                    // 判断用户的组织架构是否在原子插件的可见范围之内
-                    val atomCode = it.getAtomCode()
-                    val atomVersion = it.version
-                    logger.info("the atomCode is:$atomCode，atomVersion is:$atomVersion")
-                    val atomRecord = if (atomVersion.isNotEmpty()) {
-                        atomDao.getPipelineAtom(dslContext, atomCode, atomVersion.replace("*", ""))
-                    } else {
-                        marketAtomDao.getLatestAtomByCode(dslContext, atomCode) // 兼容历史存量原子插件的情况
-                    }
-                    logger.info("the atomRecord is:$atomRecord")
-                    if (null == atomRecord) {
-                        return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_INVALID, arrayOf(atomCode))
-                    }
-                    val atomDeptRelRecords = storeDeptRelDao.batchList(dslContext, listOf(atomCode), StoreTypeEnum.ATOM.type.toByte())
-                    logger.info("the atomCode is :$atomCode,atomDeptRelRecords is :$atomDeptRelRecords")
-                    val isAtomMember = storeMemberDao.isStoreMember(dslContext, userId, atomCode, StoreTypeEnum.ATOM.type.toByte())
-                    logger.info("the isAtomMember is:$isAtomMember")
-                    // 如果插件是默认插件，则无需校验与模板的可见范围
-                    if ((!atomRecord.defaultFlag) || (null != atomDeptRelRecords && atomDeptRelRecords.size > 0)) {
-                        var flag = false
-                        if (isAtomMember) {
-                            flag = true
-                        } else {
-                            atomDeptRelRecords?.forEach deptEach@{
-                                val atomDeptId = it.deptId
-                                if (userDeptIdList.contains(atomDeptId)) {
-                                    flag = true // 用户在原子插件的可见范围内
-                                    return@deptEach
-                                } else {
-                                    // 判断该原子的可见范围是否设置了全公司可见
-                                    val parentDeptInfoList = client.get(ServiceProjectOrganizationResource::class).getParentDeptInfos(atomDeptId.toString(), 1).data
-                                    logger.info("the parentDeptInfoList is:$parentDeptInfoList")
-                                    if (null != parentDeptInfoList && parentDeptInfoList.isEmpty()) {
-                                        // 没有上级机构说明设置的可见范围是全公司
-                                        flag = true // 用户在原子插件的可见范围内
-                                        return@deptEach
-                                    }
-                                }
-                            }
-                        }
-
-                        logger.info("the flag is:$flag")
-                        if (!flag) {
-                            invalidAtomList.add(it.name)
-                        }
-                    }
-
-                    if (!atomRecord.defaultFlag) needInstallAtomList[atomCode] = it.name
-                }
-            }
-        }
-        if (invalidAtomList.isNotEmpty()) {
-            // 存在用户不在原子插件的可见范围内的插件，给出错误提示
-            return MessageCodeUtil.generateResponseDataObject(StoreMessageCode.USER_ATOM_VISIBLE_DEPT_IS_INVALID, arrayOf(JsonUtil.toJson(invalidAtomList)), false)
-        }
-
-        if (projectCode != null) {
-            // 判断插件是否已安装
-            val installedList = storeProjectRelDao.getInstalledComponent(dslContext, projectCode, StoreTypeEnum.ATOM.type.toByte())?.map { it["STORE_CODE"] as String }
-            needInstallAtomList.forEach {
-                if (!installedList!!.contains(it.key)) {
-                    invalidAtomList.add(it.value)
-                }
-            }
-            if (invalidAtomList.isNotEmpty()) {
-                // 存在未安装的插件
-                return MessageCodeUtil.generateResponseDataObject(StoreMessageCode.USER_TEMPLATE_ATOM_NOT_INSTALLED, arrayOf(JsonUtil.toJson(invalidAtomList)), false)
-            }
-        }
-
-        val templateDeptInfos = storeVisibleDeptService.getVisibleDept(templateCode, StoreTypeEnum.TEMPLATE, DeptStatusEnum.APPROVED).data?.deptInfos
-        return validateTemplateVisibleDept(templateModel = templateModel, deptInfos = templateDeptInfos)
     }
 
     private fun getTemplateModel(templateCode: String): Result<Model?> {
@@ -199,7 +96,7 @@ class TemplateVisibleDeptServiceImpl @Autowired constructor(
     }
 
     override fun validateTemplateVisibleDept(templateCode: String, deptInfos: List<DeptInfo>?): Result<Boolean> {
-        logger.info("the templateCode is :$templateCode,deptInfos is :$deptInfos")
+        logger.info("validateTemplateVisibleDept templateCode is :$templateCode,deptInfos is :$deptInfos")
         val templateModelResult = getTemplateModel(templateCode)
         logger.info("the templateModelResult is :$templateModelResult")
         if (templateModelResult.isNotOk()) {
@@ -214,18 +111,18 @@ class TemplateVisibleDeptServiceImpl @Autowired constructor(
         return validateTemplateVisibleDept(templateModel, deptInfos)
     }
 
-    private fun validateTemplateVisibleDept(templateModel: Model, deptInfos: List<DeptInfo>?): Result<Boolean> {
-        logger.info("the templateModel is :$templateModel,deptInfos is :$deptInfos")
+    override fun validateTemplateVisibleDept(templateModel: Model, deptInfos: List<DeptInfo>?): Result<Boolean> {
+        logger.info("validateTemplateVisibleDept templateModel is :$templateModel,deptInfos is :$deptInfos")
         val invalidAtomList = mutableListOf<String>()
         val stageList = templateModel.stages
-        stageList.forEach {
-            val containerList = it.containers
-            containerList.forEach {
-                val elementList = it.elements
-                elementList.forEach {
-                    // 判断原子的可见范围是否在模板的可见范围之内
-                    val atomCode = it.getAtomCode()
-                    val atomVersion = it.version
+        stageList.forEach { stage ->
+            val containerList = stage.containers
+            containerList.forEach { container ->
+                val elementList = container.elements
+                elementList.forEach { element ->
+                    // 判断插件的可见范围是否在模板的可见范围之内
+                    val atomCode = element.getAtomCode()
+                    val atomVersion = element.version
                     logger.info("the atomCode is:$atomCode，atomVersion is:$atomVersion")
                     val atomRecord = if (atomVersion.isNotEmpty()) {
                         atomDao.getPipelineAtom(dslContext, atomCode, atomVersion.replace("*", ""))
@@ -239,20 +136,20 @@ class TemplateVisibleDeptServiceImpl @Autowired constructor(
                     val atomDeptRelRecords = storeDeptRelDao.batchList(dslContext, listOf(atomCode), StoreTypeEnum.ATOM.type.toByte())
                     logger.info("the atomCode is :$atomCode,atomDeptRelRecords is :$atomDeptRelRecords")
                     // 如果插件是默认插件，则无需校验与模板的可见范围
-                    if ((!atomRecord.defaultFlag) || (null != atomDeptRelRecords && atomDeptRelRecords.size > 0)) {
+                    if (!atomRecord.defaultFlag) {
                         var flag = false
-                        atomDeptRelRecords?.forEach deptEach@{
-                            logger.info("the begin atomDeptId is:${it.deptId}")
-                            val atomDeptId = it.deptId
+                        atomDeptRelRecords?.forEach deptEach@{ deptRel ->
+                            logger.info("the begin atomDeptId is:${deptRel.deptId}")
+                            val atomDeptId = deptRel.deptId
                             logger.info("atomDeptId is:$atomDeptId")
-                            val atomDeptName = it.deptName
+                            val atomDeptName = deptRel.deptName
                             val atomDepts = atomDeptName.split("/")
                             val atomDeptSize = atomDepts.size
                             logger.info("atomDeptSize is:$atomDeptSize")
-                            deptInfos?.forEach {
-                                val templateDeptId = it.deptId
+                            deptInfos?.forEach { dept ->
+                                val templateDeptId = dept.deptId
                                 logger.info("templateDeptId is:$templateDeptId")
-                                val templateDeptName = it.deptName
+                                val templateDeptName = dept.deptName
                                 val templateDepts = templateDeptName.split("/")
                                 val templateDeptSize = templateDepts.size
                                 logger.info("templateDeptSize is:$templateDeptSize")
@@ -277,11 +174,11 @@ class TemplateVisibleDeptServiceImpl @Autowired constructor(
                                 }
                             }
                         }
-                        // 判断每个原子下的可见范围是否都在模板的可见范围之内
+                        // 判断每个插件下的可见范围是否都在模板的可见范围之内
                         logger.info("the flag is:$flag")
                         if (!flag) {
                             logger.info("template dept visible is large than atom")
-                            invalidAtomList.add(it.name)
+                            invalidAtomList.add(element.name)
                         }
                     }
                 }
