@@ -14,11 +14,6 @@ import com.tencent.devops.model.store.tables.TStoreDeptRel
 import com.tencent.devops.model.store.tables.TStoreProjectRel
 import com.tencent.devops.model.store.tables.TStoreStatisticsTotal
 import com.tencent.devops.model.store.tables.records.TImageRecord
-import com.tencent.devops.store.dao.image.Constants.KEY_CATEGORY_CODE
-import com.tencent.devops.store.dao.image.Constants.KEY_CATEGORY_NAME
-import com.tencent.devops.store.dao.image.Constants.KEY_CLASSIFY_ID
-import com.tencent.devops.store.dao.image.Constants.KEY_CREATE_TIME
-import com.tencent.devops.store.dao.image.Constants.KEY_CREATOR
 import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_AGENT_TYPE_SCOPE
 import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_CODE
 import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_FEATURE_CERTIFICATION_FLAG
@@ -37,11 +32,16 @@ import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_SOURCE_TYPE
 import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_SUMMARY
 import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_TAG
 import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_VERSION
-import com.tencent.devops.store.dao.image.Constants.KEY_MODIFIER
-import com.tencent.devops.store.dao.image.Constants.KEY_PUBLISHER
-import com.tencent.devops.store.dao.image.Constants.KEY_PUB_TIME
-import com.tencent.devops.store.dao.image.Constants.KEY_UPDATE_TIME
 import com.tencent.devops.store.exception.image.ClassifyNotExistException
+import com.tencent.devops.store.pojo.common.KEY_CATEGORY_CODE
+import com.tencent.devops.store.pojo.common.KEY_CATEGORY_NAME
+import com.tencent.devops.store.pojo.common.KEY_CLASSIFY_ID
+import com.tencent.devops.store.pojo.common.KEY_CREATE_TIME
+import com.tencent.devops.store.pojo.common.KEY_CREATOR
+import com.tencent.devops.store.pojo.common.KEY_MODIFIER
+import com.tencent.devops.store.pojo.common.KEY_PUBLISHER
+import com.tencent.devops.store.pojo.common.KEY_PUB_TIME
+import com.tencent.devops.store.pojo.common.KEY_UPDATE_TIME
 import com.tencent.devops.store.pojo.common.enums.ApproveStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
@@ -206,7 +206,7 @@ class MarketImageDao @Autowired constructor(
             tImage.ID.`as`(KEY_IMAGE_ID),
             tImage.IMAGE_CODE.`as`(KEY_IMAGE_CODE),
             tImage.IMAGE_NAME.`as`(KEY_IMAGE_NAME),
-            tImageFeature.IMAGE_TYPE.`as`(Constants.KEY_IMAGE_RD_TYPE),
+            tImageFeature.IMAGE_TYPE.`as`(KEY_IMAGE_RD_TYPE),
             tImage.IMAGE_SOURCE_TYPE.`as`(KEY_IMAGE_SOURCE_TYPE),
             tImage.IMAGE_SIZE.`as`(KEY_IMAGE_SIZE),
             tImage.CLASSIFY_ID.`as`(KEY_CLASSIFY_ID),
