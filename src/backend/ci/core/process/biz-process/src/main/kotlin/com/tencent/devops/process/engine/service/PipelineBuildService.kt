@@ -593,12 +593,14 @@ class PipelineBuildService(
             startParams[PIPELINE_START_PARENT_BUILD_TASK_ID] = parentTaskId
             // 子流水线的调用不受频率限制
             val startParamsWithType = mutableListOf<BuildParameters>()
-            startParams.forEach { t, u -> startParamsWithType.add(
-                BuildParameters(
-                    t,
-                    u
+            startParams.forEach { t, u ->
+                startParamsWithType.add(
+                    BuildParameters(
+                        t,
+                        u
+                    )
                 )
-            ) }
+            }
 
             val subBuildId = startPipeline(
                 userId = readyToBuildPipelineInfo.lastModifyUser,
@@ -666,12 +668,14 @@ class PipelineBuildService(
             }
             // 子流水线的调用不受频率限制
             val startParamsWithType = mutableListOf<BuildParameters>()
-            startParams.forEach { t, u -> startParamsWithType.add(
-                BuildParameters(
-                    t,
-                    u
+            startParams.forEach { t, u ->
+                startParamsWithType.add(
+                    BuildParameters(
+                        t,
+                        u
+                    )
                 )
-            ) }
+            }
 
             return startPipeline(
                 userId = userId,
@@ -909,11 +913,11 @@ class PipelineBuildService(
         channelCode: ChannelCode,
         checkPermission: Boolean
     ): ModelDetail {
-
         return buildDetailService.get(buildId) ?: throw ErrorCodeException(
             statusCode = Response.Status.NOT_FOUND.statusCode,
-        errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS,
-        defaultMessage = "流水线编排不存在")
+            errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS,
+            defaultMessage = "流水线编排不存在"
+        )
     }
 
     fun getBuildDetailByBuildNo(
