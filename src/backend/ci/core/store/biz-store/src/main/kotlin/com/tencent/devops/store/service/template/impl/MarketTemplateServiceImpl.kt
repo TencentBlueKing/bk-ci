@@ -515,7 +515,7 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
         )
     }
 
-    private fun validateUserTemplateAtomVisibleDept(userId: String, templateCode: String, projectCodeList: List<String>?): Result<Boolean> {
+    override fun validateUserTemplateAtomVisibleDept(userId: String, templateCode: String, projectCodeList: List<String>?): Result<Boolean> {
         logger.info("validateUserTemplateAtomVisibleDept userId is :$userId,templateCode is :$templateCode,projectCodeList is :$projectCodeList")
         val templateModelResult = templateModelService.getTemplateModel(templateCode)
         logger.info("the templateModelResult is :$templateModelResult")
