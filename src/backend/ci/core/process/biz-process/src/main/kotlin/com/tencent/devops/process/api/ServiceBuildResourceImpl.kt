@@ -118,7 +118,7 @@ class ServiceBuildResourceImpl @Autowired constructor(
         )
     }
 
-        override fun retry(userId: String, projectId: String, pipelineId: String, buildId: String, taskId: String?, channelCode: ChannelCode): Result<BuildId> {
+    override fun retry(userId: String, projectId: String, pipelineId: String, buildId: String, taskId: String?, channelCode: ChannelCode): Result<BuildId> {
         checkUserId(userId)
         checkParam(projectId, pipelineId)
         if (buildId.isBlank()) {
@@ -337,6 +337,14 @@ class ServiceBuildResourceImpl @Autowired constructor(
             vmInfo = vmInfo
         )
         return Result(true)
+    }
+
+    override fun getSingleHistoryBuild(projectId: String, pipelineId: String, buildNum: String, channelCode: ChannelCode?): Result<BuildHistory?> {
+        val history = buildService.getSingleHistoryBuild(
+            projectId, pipelineId,
+            buildNum.toInt(), channelCode ?: ChannelCode.BS
+        )
+        return Result(history)
     }
 
     override fun workerBuildFinish(
