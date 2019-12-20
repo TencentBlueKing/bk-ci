@@ -24,9 +24,9 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.pojo.atom.enums
+package com.tencent.devops.common.api.enums
 
 enum class FrontendTypeEnum {
-    NORMAL,  // 官方提供一般典型的UI方式
+    NORMAL,  // 官方提供典型的插件UI配置方式
     SPECIAL  // 定制插件UI方式
 }

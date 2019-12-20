@@ -26,6 +26,7 @@
 
 package com.tencent.devops.repository.service.scm
 
+import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.repository.pojo.enums.GitAccessLevelEnum
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
@@ -70,7 +71,8 @@ interface IGitService {
         sampleProjectPath: String?,
         namespaceId: Int?,
         visibilityLevel: VisibilityLevelEnum?,
-        tokenType: TokenTypeEnum
+        tokenType: TokenTypeEnum,
+        frontendType: FrontendTypeEnum? = null
     ): Result<GitRepositoryResp?>
 
     fun addGitProjectMember(
