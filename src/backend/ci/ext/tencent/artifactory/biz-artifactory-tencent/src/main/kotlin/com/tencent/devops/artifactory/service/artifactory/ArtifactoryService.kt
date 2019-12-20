@@ -236,7 +236,7 @@ class ArtifactoryService @Autowired constructor(
             targetProjectId = crossProjectId!!
             if (artifactoryType == ArtifactoryType.CUSTOM_DIR &&
                 !authProjectApi.getProjectUsers(artifactoryAuthServiceCode, targetProjectId).contains(lastModifyUser)) {
-                throw BadRequestException("用户（$lastModifyUser) 没有项目（${targetProjectId}）下载权限)")
+                throw BadRequestException("用户（$lastModifyUser) 没有项目（$targetProjectId）下载权限)")
             }
             if (artifactoryType == ArtifactoryType.PIPELINE) {
                 targetPipelineId = crossPipineId ?: throw BadRequestException("Invalid Parameter pipelineId")
