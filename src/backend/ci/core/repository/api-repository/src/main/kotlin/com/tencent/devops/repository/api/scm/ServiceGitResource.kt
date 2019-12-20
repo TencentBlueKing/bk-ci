@@ -216,7 +216,7 @@ interface ServiceGitResource {
         @ApiParam(value = "token类型 0：oauth 1:privateKey", required = true)
         @QueryParam("tokenType")
         tokenType: TokenTypeEnum,
-        @ApiParam(value = "项目可视范围", required = false)
+        @ApiParam(value = "前端UI渲染方式", required = false)
         @QueryParam("frontendType")
         frontendType: FrontendTypeEnum?
     ): Result<GitRepositoryResp?>
