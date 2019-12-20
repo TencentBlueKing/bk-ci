@@ -24,29 +24,9 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.pojo.atom
+package com.tencent.devops.common.api.enums
 
-import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
-import com.tencent.devops.common.api.enums.FrontendTypeEnum
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
-
-@ApiModel("插件市场工作台-新增插件请求报文体")
-data class MarketAtomCreateRequest(
-    @ApiModelProperty("项目编码", required = true)
-    var projectCode: String,
-    @ApiModelProperty("插件代码", required = true)
-    var atomCode: String,
-    @ApiModelProperty("插件名称", required = true)
-    var name: String,
-    @ApiModelProperty("开发语言", required = true)
-    var language: String,
-    @ApiModelProperty("认证方式", required = false)
-    val authType: String? = null,
-    @ApiModelProperty(value = "项目可视范围", required = false)
-    val visibilityLevel: VisibilityLevelEnum? = null,
-    @ApiModelProperty(value = "插件代码库不开源原因", required = false)
-    val privateReason: String? = null,
-    @ApiModelProperty(value = "前端UI渲染方式", required = false)
-    val frontendType: FrontendTypeEnum? = null
-)
+enum class FrontendTypeEnum {
+    NORMAL,  // 官方提供典型的插件UI配置方式
+    SPECIAL  // 定制插件UI方式
+}
