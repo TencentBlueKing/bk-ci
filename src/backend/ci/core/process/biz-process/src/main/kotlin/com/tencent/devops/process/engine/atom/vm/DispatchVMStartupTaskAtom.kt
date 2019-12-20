@@ -68,6 +68,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.config.ConfigurableBeanFactory
 import org.springframework.context.annotation.Scope
 import org.springframework.stereotype.Component
+import javax.xml.bind.Element
 
 /**
  *
@@ -377,7 +378,8 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
             userId: String
         ): PipelineBuildTask {
 
-            // 防止
+            val taskParams = container.genTaskParams()
+            taskParams["elements"] = emptyList<Element>() // elements可能过多导致存储问题
             return PipelineBuildTask(
                 projectId = projectId,
                 pipelineId = pipelineId,
@@ -392,7 +394,7 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
                 taskType = EnvControlTaskType.VM.name,
                 taskAtom = AtomUtils.parseAtomBeanName(DispatchVMStartupTaskAtom::class.java),
                 status = BuildStatus.QUEUE,
-                taskParams = container.genTaskParams(),
+                taskParams = taskParams,
                 executeCount = 1,
                 starter = userId,
                 approver = null,
