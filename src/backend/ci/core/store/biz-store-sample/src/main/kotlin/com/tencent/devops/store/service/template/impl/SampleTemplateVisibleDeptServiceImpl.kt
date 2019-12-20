@@ -30,7 +30,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.common.DeptInfo
 import com.tencent.devops.store.service.template.TemplateVisibleDeptService
 
-class SampleTemplateVisibleDeptServiceImpl: TemplateVisibleDeptService {
+class SampleTemplateVisibleDeptServiceImpl : TemplateVisibleDeptService {
     override fun addVisibleDept(userId: String, templateCode: String, deptInfos: List<DeptInfo>): Result<Boolean> {
         return Result(true)
     }
