@@ -275,19 +275,20 @@ class ArtifactoryDownloadService @Autowired constructor(
             }
             if (artifactoryType == ArtifactoryType.PIPELINE) {
                 targetPipelineId = crossPipineId ?: throw BadRequestException("Invalid Parameter pipelineId")
-                targetBuildId = client.get(ServiceBuildResource::class).getSingleHistoryBuild(
-                    targetProjectId,
-                    targetPipelineId,
-                    crossBuildNo ?: throw BadRequestException("Invalid Parameter buildNo"),
-                    ChannelCode.BS
-                ).data!!.id
-
                 pipelineService.validatePermission(
                     lastModifyUser,
                     targetProjectId,
                     targetPipelineId,
                     AuthPermission.DOWNLOAD,
-                    "用户($lastModifyUser)在项目($crossProjectId)下没有流水线${crossPipineId}下载构建权限")
+                    "用户($lastModifyUser)在项目($crossProjectId)下没有流水线($crossPipineId)下载构建权限")
+
+                val targetBuild = client.get(ServiceBuildResource::class).getSingleHistoryBuild(
+                    targetProjectId,
+                    targetPipelineId,
+                    crossBuildNo ?: throw BadRequestException("Invalid Parameter buildNo"),
+                    ChannelCode.BS
+                ).data
+                targetBuildId = (targetBuild ?: throw BadRequestException("构建不存在($crossBuildNo)")).id
             }
         }
         logger.info("targetProjectId: $targetProjectId, targetPipelineId: $targetPipelineId, targetBuildId: $targetBuildId")

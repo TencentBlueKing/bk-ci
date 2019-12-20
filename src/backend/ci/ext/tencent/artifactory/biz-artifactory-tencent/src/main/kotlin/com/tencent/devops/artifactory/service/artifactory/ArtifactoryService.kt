@@ -28,7 +28,6 @@ package com.tencent.devops.artifactory.service.artifactory
 
 import com.tencent.devops.artifactory.client.JFrogAQLService
 import com.tencent.devops.artifactory.client.JFrogApiService
-import com.tencent.devops.artifactory.service.JFrogService
 import com.tencent.devops.artifactory.pojo.AppFileInfo
 import com.tencent.devops.artifactory.pojo.CopyToCustomReq
 import com.tencent.devops.artifactory.pojo.Count
@@ -41,6 +40,7 @@ import com.tencent.devops.artifactory.pojo.FilePipelineInfo
 import com.tencent.devops.artifactory.pojo.FolderSize
 import com.tencent.devops.artifactory.pojo.Property
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
+import com.tencent.devops.artifactory.service.JFrogService
 import com.tencent.devops.artifactory.service.PipelineService
 import com.tencent.devops.artifactory.service.RepoService
 import com.tencent.devops.artifactory.service.pojo.JFrogAQLFileInfo
@@ -240,19 +240,20 @@ class ArtifactoryService @Autowired constructor(
             }
             if (artifactoryType == ArtifactoryType.PIPELINE) {
                 targetPipelineId = crossPipineId ?: throw BadRequestException("Invalid Parameter pipelineId")
-                targetBuildId = client.get(ServiceBuildResource::class).getSingleHistoryBuild(
-                    targetProjectId,
-                    targetPipelineId,
-                    crossBuildNo ?: throw BadRequestException("Invalid Parameter buildNo"),
-                    ChannelCode.BS
-                ).data!!.id
-
                 pipelineService.validatePermission(
                     lastModifyUser,
                     targetProjectId,
                     targetPipelineId,
                     AuthPermission.DOWNLOAD,
-                    "用户($lastModifyUser)在项目($crossProjectId)下没有流水线${crossPipineId}下载构建权限")
+                    "用户($lastModifyUser)在项目($crossProjectId)下没有流水线($crossPipineId)下载构建权限")
+
+                val targetBuild = client.get(ServiceBuildResource::class).getSingleHistoryBuild(
+                    targetProjectId,
+                    targetPipelineId,
+                    crossBuildNo ?: throw BadRequestException("Invalid Parameter buildNo"),
+                    ChannelCode.BS
+                ).data
+                targetBuildId = (targetBuild ?: throw BadRequestException("构建不存在($crossBuildNo)")).id
             }
         }
         logger.info("targetProjectId: $targetProjectId, targetPipelineId: $targetPipelineId, targetBuildId: $targetBuildId")
