@@ -180,12 +180,12 @@ class ProjectLocalService @Autowired constructor(
                 rabbitTemplate.convertAndSend(
                     EXCHANGE_PAASCC_PROJECT_CREATE,
                     ROUTE_PAASCC_PROJECT_CREATE, PaasCCCreateProject(
-                    userId = userId,
-                    accessToken = accessToken,
-                    projectId = projectId,
-                    retryCount = 0,
-                    projectCreateInfo = projectCreateInfo
-                )
+                        userId = userId,
+                        accessToken = accessToken,
+                        projectId = projectId,
+                        retryCount = 0,
+                        projectCreateInfo = projectCreateInfo
+                    )
                 )
                 success = true
                 return projectId
@@ -354,12 +354,12 @@ class ProjectLocalService @Autowired constructor(
                 rabbitTemplate.convertAndSend(
                     EXCHANGE_PAASCC_PROJECT_CREATE,
                     ROUTE_PAASCC_PROJECT_CREATE, PaasCCCreateProject(
-                    userId = userId,
-                    accessToken = accessToken,
-                    projectId = projectId,
-                    retryCount = 0,
-                    projectCreateInfo = projectCreateInfo
-                )
+                        userId = userId,
+                        accessToken = accessToken,
+                        projectId = projectId,
+                        retryCount = 0,
+                        projectCreateInfo = projectCreateInfo
+                    )
                 )
                 success = true
             } finally {
@@ -534,12 +534,12 @@ class ProjectLocalService @Autowired constructor(
             rabbitTemplate.convertAndSend(
                 EXCHANGE_PAASCC_PROJECT_UPDATE,
                 ROUTE_PAASCC_PROJECT_UPDATE, PaasCCUpdateProject(
-                userId = userId,
-                accessToken = accessToken,
-                projectId = projectId,
-                retryCount = 0,
-                projectUpdateInfo = projectUpdateInfo
-            )
+                    userId = userId,
+                    accessToken = accessToken,
+                    projectId = projectId,
+                    retryCount = 0,
+                    projectUpdateInfo = projectUpdateInfo
+                )
             )
             success = true
         } catch (e: DuplicateKeyException) {
@@ -568,12 +568,12 @@ class ProjectLocalService @Autowired constructor(
                 rabbitTemplate.convertAndSend(
                     EXCHANGE_PAASCC_PROJECT_UPDATE_LOGO,
                     ROUTE_PAASCC_PROJECT_UPDATE_LOGO, PaasCCUpdateProjectLogo(
-                    userId = userId,
-                    accessToken = accessToken,
-                    projectId = project.projectId,
-                    retryCount = 0,
-                    projectUpdateLogoInfo = ProjectUpdateLogoInfo(logoAddress, userId)
-                )
+                        userId = userId,
+                        accessToken = accessToken,
+                        projectId = project.projectId,
+                        retryCount = 0,
+                        projectUpdateLogoInfo = ProjectUpdateLogoInfo(logoAddress, userId)
+                    )
                 )
                 return Result(ProjectLogo(logoAddress))
             } catch (e: Exception) {
@@ -775,7 +775,15 @@ class ProjectLocalService @Autowired constructor(
                 // 发送服务器
                 val logoAddress = s3Service.saveLogo(logoFile, projectCreateInfo.englishName)
                 val userDeptDetail = tofService.getUserDeptDetail(userId, "") // 获取用户组织架构信息
-                projectDao.create(dslContext, userId, logoAddress, projectCreateInfo, userDeptDetail, projectCode, ProjectChannelCode.BS)
+                projectDao.create(
+                    dslContext,
+                    userId,
+                    logoAddress,
+                    projectCreateInfo,
+                    userDeptDetail,
+                    projectCode,
+                    ProjectChannelCode.BS
+                )
             } finally {
                 if (logoFile.exists()) {
                     logoFile.delete()
@@ -800,7 +808,12 @@ class ProjectLocalService @Autowired constructor(
         return createUser2Project(userId, projectCode)
     }
 
-    fun createUser2ProjectByApp(organizationType: String, organizationId: Long, userId: String, projectCode: String): Boolean {
+    fun createUser2ProjectByApp(
+        organizationType: String,
+        organizationId: Long,
+        userId: String,
+        projectCode: String
+    ): Boolean {
         logger.info("[createUser2ProjectByApp] organizationType[$organizationType], organizationId[$organizationId] userId[$userId] projectCode[$projectCode]")
         var bgId: Long? = null
         var deptId: Long? = null
@@ -834,7 +847,13 @@ class ProjectLocalService @Autowired constructor(
         }
     }
 
-    fun createPipelinePermission(createUser: String, projectId: String, userId: String, permission: String, resourceType: String): Boolean {
+    fun createPipelinePermission(
+        createUser: String,
+        projectId: String,
+        userId: String,
+        permission: String,
+        resourceType: String
+    ): Boolean {
         logger.info("createPipelinePermission createUser[$createUser] projectId[$projectId] userId[$userId] permissionList[$permission]")
         if (!bkAuthProjectApi.isProjectUser(createUser, bsPipelineAuthServiceCode, projectId, BkAuthGroup.MANAGER)) {
             logger.info("createPipelinePermission createUser is not project manager,createUser[$createUser] projectId[$projectId]")
@@ -849,11 +868,22 @@ class ProjectLocalService @Autowired constructor(
         return createPermission(userId, projectId, permission, resourceType, bsPipelineAuthServiceCode)
     }
 
-    fun createPipelinePermissionByApp(organizationType: String, organizationId: Long, userId: String, projectId: String, permission: String, resourceType: String): Boolean {
+    fun createPipelinePermissionByApp(
+        organizationType: String,
+        organizationId: Long,
+        userId: String,
+        projectId: String,
+        permission: String,
+        resourceType: String
+    ): Boolean {
         logger.info("[createPipelinePermissionByApp] organizationType[$organizationType], organizationId[$organizationId] userId[$userId] projectCode[$projectId], permission[$permission]")
         var bgId: Long? = null
         var deptId: Long? = null
         var centerId: Long? = null
+        if (!bkAuthProjectApi.isProjectUser(userId, bsPipelineAuthServiceCode, projectId, null)) {
+            logger.info("createPipelinePermission userId is not project manager,userId[$userId] projectId[$projectId]")
+            throw OperationException((MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.USER_NOT_PROJECT_USER)))
+        }
         when (organizationType) {
             AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE_BG -> bgId = organizationId
             AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE_DEPARTMENT -> deptId = organizationId
@@ -881,8 +911,15 @@ class ProjectLocalService @Autowired constructor(
         return createPermission(userId, projectId, permission, resourceType, bsPipelineAuthServiceCode)
     }
 
-    private fun createPermission(userId: String, projectId: String, permission: String, resourceType: String, authServiceCode: AuthServiceCode): Boolean {
-        projectDao.getByEnglishName(dslContext, projectId) ?: throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PROJECT_NOT_EXIST))
+    private fun createPermission(
+        userId: String,
+        projectId: String,
+        permission: String,
+        resourceType: String,
+        authServiceCode: AuthServiceCode
+    ): Boolean {
+        projectDao.getByEnglishName(dslContext, projectId)
+            ?: throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PROJECT_NOT_EXIST))
 
         val authPermission = AuthPermission.get(permission)
         val authResourceType = AuthResourceType.get(resourceType)
