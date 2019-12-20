@@ -296,6 +296,7 @@ open class CodeccApi constructor(
             if (!horuspyToolSetId.isNullOrBlank()) map["HORUSPY"] = horuspyToolSetId!!
             if (!pinpointToolSetId.isNullOrBlank()) map["PINPOINT"] = pinpointToolSetId!!
         }
+
         return map
     }
 
