@@ -30,6 +30,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.google.gson.JsonParser
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.RepositoryMessageCode
+import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.HashUtil
@@ -340,7 +341,8 @@ class GitService @Autowired constructor(
         sampleProjectPath: String?,
         namespaceId: Int?,
         visibilityLevel: VisibilityLevelEnum?,
-        tokenType: TokenTypeEnum
+        tokenType: TokenTypeEnum,
+        frontendType: FrontendTypeEnum?
     ): Result<GitRepositoryResp?> {
         logger.info("createGitRepository userId is:$userId,token is:$token, repositoryName is:$repositoryName, sampleProjectPath is:$sampleProjectPath")
         logger.info("createGitRepository  namespaceId is:$namespaceId, visibilityLevel is:$visibilityLevel, tokenType is:$tokenType")
@@ -393,7 +395,8 @@ class GitService @Autowired constructor(
         token: String,
         tokenType: TokenTypeEnum,
         repositoryName: String,
-        atomRepositoryUrl: String
+        atomRepositoryUrl: String,
+        frontendType: FrontendTypeEnum?
     ): Result<Boolean> {
         logger.info("initRepositoryInfo userId is:$userId,sampleProjectPath is:$sampleProjectPath,atomRepositoryUrl is:$atomRepositoryUrl")
         logger.info("initRepositoryInfo token is:$token,tokenType is:$tokenType,repositoryName is:$repositoryName")
@@ -413,6 +416,14 @@ class GitService @Autowired constructor(
             val atomGitFileDir = File(atomFileDir, ".git")
             if (atomGitFileDir.exists()) {
                 FileSystemUtils.deleteRecursively(atomGitFileDir)
+            }
+            // 如果用户选的是自定义UI方式开发插件，则需要初始化UI开发脚手架
+            if(FrontendTypeEnum.SPECIAL == frontendType) {
+                val atomFrontendFileDir = File(atomFileDir, "bk-frontend")
+                if (!atomFrontendFileDir.exists()){
+                    atomFrontendFileDir.mkdirs()
+                }
+
             }
             // 3、重新生成git信息
             CommonScriptUtils.execute("git init", atomFileDir)

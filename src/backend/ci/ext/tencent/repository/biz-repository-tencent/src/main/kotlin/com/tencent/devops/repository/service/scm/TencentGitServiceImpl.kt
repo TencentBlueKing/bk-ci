@@ -26,6 +26,7 @@
 
 package com.tencent.devops.repository.service.scm
 
+import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.repository.pojo.enums.GitAccessLevelEnum
@@ -108,7 +109,8 @@ class TencentGitServiceImpl @Autowired constructor(val client: Client) : IGitSer
         sampleProjectPath: String?,
         namespaceId: Int?,
         visibilityLevel: VisibilityLevelEnum?,
-        tokenType: TokenTypeEnum
+        tokenType: TokenTypeEnum,
+        frontendType: FrontendTypeEnum?
     ): Result<GitRepositoryResp?> {
         return client.getScm(ServiceGitResource::class).createGitCodeRepository(
             userId = userId,
@@ -117,7 +119,8 @@ class TencentGitServiceImpl @Autowired constructor(val client: Client) : IGitSer
             sampleProjectPath = sampleProjectPath,
             namespaceId = namespaceId,
             visibilityLevel = visibilityLevel,
-            tokenType = tokenType
+            tokenType = tokenType,
+            frontendType = frontendType
         )
     }
 
