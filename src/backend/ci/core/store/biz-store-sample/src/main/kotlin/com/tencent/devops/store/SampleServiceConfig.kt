@@ -39,6 +39,7 @@ import com.tencent.devops.store.service.container.impl.SampleContainerServiceImp
 import com.tencent.devops.store.service.template.impl.SampleMarketTemplateServiceImpl
 import com.tencent.devops.store.service.template.impl.SampleTemplateNotifyServiceImpl
 import com.tencent.devops.store.service.template.impl.SampleTemplateReleaseServiceImpl
+import com.tencent.devops.store.service.template.impl.SampleTemplateVisibleDeptServiceImpl
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
@@ -83,4 +84,7 @@ class SampleServiceConfig {
 
     @Bean
     fun storeLogoService() = SampleStoreLogoServiceImpl()
+
+    @Bean
+    fun templateVisibleDeptService() = SampleTemplateVisibleDeptServiceImpl()
 }
