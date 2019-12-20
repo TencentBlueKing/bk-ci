@@ -93,6 +93,8 @@ class DockerHostDebugService @Autowired constructor(
             imageRepoInfo = storeImageService.getImageRepoInfo(
                 userId = userId,
                 projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = null,
                 imageCode = imageCode,
                 imageVersion = imageVersion,
                 defaultPrefix = dockerBuildImagePrefix
