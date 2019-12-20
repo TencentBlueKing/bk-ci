@@ -7,12 +7,12 @@
                 <i class="right-arrow banner-arrow"></i>
                 <span class="banner-des"> {{ $t('工作台') }} </span>
             </p>
-            <template v-if="tabList[currentTab].showMore">
-                <icon name="work-manage" size="20" class="work-more" @click.native="showMore = !showMore" />
-                <section class="more-list" v-if="showMore" v-clickoutside="closeShowMore">
+            <section v-if="tabList[currentTab].showMore" class="banner-more">
+                <icon name="work-manage" size="20" class="work-more" />
+                <section class="more-list">
                     <a :href="more.link" v-for="more in tabList[currentTab].moreList" :key="more.name" target="_blank">{{ more.name }}</a>
                 </section>
-            </template>
+            </section>
             <a class="title-work" target="_blank" :href="tabList[currentTab].link" v-else>{{ tabList[currentTab].name }}</a>
         </h3>
         <div class="atomstore-list-content">
@@ -29,7 +29,6 @@
 </template>
 
 <script>
-    import clickoutside from '@/directives/clickoutside'
     import { getQueryString } from '@/utils/index'
     import atomList from '@/components/common/workList/atom'
     import templateList from '@/components/common/workList/template'
@@ -44,14 +43,9 @@
             imageList
         },
 
-        directives: {
-            clickoutside
-        },
-
         data () {
             return {
                 currentTab: 'atom',
-                showMore: false,
                 tabList: {
                     atom: {
                         tabName: this.$t('流水线插件'),
@@ -90,12 +84,6 @@
                 this.$router.push({
                     name: 'atomHome'
                 })
-            },
-
-            closeShowMore () {
-                const target = event.target || {}
-                const href = target.href || {}
-                if (href.animVal !== '#work-manage' && !target.classList.contains('work-more')) this.showMore = false
             }
         }
     }
@@ -106,19 +94,30 @@
     
     .atom-list-wrapper {
         height: 100%;
+        .banner-more {
+            height: 20px;
+            &:hover .more-list {
+                display: block;
+            }
+        }
         .work-more {
             margin-right: 30px;
             cursor: pointer;
         }
         .more-list {
+            display: none;
+            transition: display 200ms;
             position: absolute;
             z-index: 500;
             right: 30px;
-            top: 50px;
+            top: 40px;
             background: $white;
             border: 1px solid $borderWeightColor;
             border-radius: 2px;
             box-shadow: 0 3px 6px rgba(51, 60, 72, 0.12);
+            &:hover {
+                display: block;
+            }
             &::before {
                 content: '';
                 position: absolute;
