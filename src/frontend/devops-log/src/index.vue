@@ -4,7 +4,7 @@
             <header class="log-head">
                 <span class="log-title"><status-icon :status="status"></status-icon>{{ title }}</span>
                 <p class="log-buttons">
-                    <bk-select v-if="![0, 1].includes(+executeCount)" placeholder="重试次数" class="log-execute">
+                    <bk-select v-if="![0, 1].includes(+executeCount)" :placeholder="language('重试次数')" class="log-execute">
                         <bk-option v-for="execute in executeCount"
                             :key="execute"
                             :id="execute"
@@ -13,8 +13,8 @@
                         >
                         </bk-option>
                     </bk-select>
-                    <button class="log-button" @click="showTime = !showTime">显示时间</button>
-                    <button class="log-button" @click="downLoad">下载日志</button>
+                    <button class="log-button" @click="showTime = !showTime">{{ language('显示时间') }}</button>
+                    <button class="log-button" @click="downLoad">{{ language('下载日志') }}</button>
                 </p>
             </header>
 
@@ -41,6 +41,7 @@
 <script>
     import virtualScroll from './virtualScroll'
     import statusIcon from './status'
+    import language from './locale'
 
     function prezero (num) {
         num = Number(num)
@@ -137,6 +138,8 @@
         },
 
         methods: {
+            language,
+
             downLoad () {
                 fetch(this.downLoadLink, {
                     method: 'GET',
@@ -418,7 +421,7 @@
             }
             .log-head {
                 line-height: 52px;
-                margin: 16px 20px;
+                padding: 10px 20px 8px;
                 border-bottom: 1px solid;
                 border-bottom-color: #2b2b2b;
                 display: flex;
@@ -511,6 +514,7 @@
         font-size: 12px;
         line-height: 16px;
         margin-left: 10px;
+        margin-top: 16px;
         .item-txt {
             position: relative;
             padding: 0 5px;

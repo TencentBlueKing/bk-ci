@@ -35,13 +35,14 @@
             @mousedown="startBottomMove"
         >
         </span>
-        <p class="list-empty" v-if="!$parent.isInit && totalNumber <= 0">日志内容为空</p>
+        <p class="list-empty" v-if="!$parent.isInit && totalNumber <= 0">{{ language('日志内容为空') }}</p>
     </section>
 </template>
 
 <script>
     // eslint-disable-next-line
     const Worker = require('worker-loader!./worker.js')
+    import language from './locale'
 
     export default {
         props: {
@@ -102,6 +103,8 @@
         },
 
         methods: {
+            language,
+
             resetData () {
                 this.foldList = []
                 this.totalNumber = 0

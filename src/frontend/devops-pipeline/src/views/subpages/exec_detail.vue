@@ -419,19 +419,22 @@
 
             handleLogRes (res) {
                 res = res.data || {}
-                const lastLog = res.logs[res.logs.length - 1] || { lineNo: 0 }
-                this.logPostData.lineNo = +lastLog.lineNo + 1
+                const logs = res.logs || []
+                const lastLog = logs[logs.length - 1] || {}
+                const lastLogNo = lastLog.lineNo || this.handleLogRes.lineNo || -1
+                this.handleLogRes.lineNo = lastLogNo
+                this.logPostData.lineNo = +lastLogNo + 1
                 if (res.finished) {
                     if (res.hasMore) {
                         this.isInitLog = false
-                        this.$refs.log.addLogData(res.logs)
+                        this.$refs.log.addLogData(logs)
                         this.getAfterLogApi(100)
                     } else {
-                        this.$refs.log.addLogData(res.logs, true)
+                        this.$refs.log.addLogData(logs, true)
                         this.isInitLog = false
                     }
                 } else {
-                    this.$refs.log.addLogData(res.logs)
+                    this.$refs.log.addLogData(logs)
                     this.isInitLog = false
                     this.getAfterLogApi(1000)
                 }
@@ -441,6 +444,8 @@
                 this.getAfterLogApi.id = setTimeout(() => {
                     this.getAfterLog(this.logPostData).then((res) => {
                         this.handleLogRes(res)
+                    }).catch((err) => {
+                        this.$bkMessage({ theme: 'error', message: err.message || err })
                     })
                 }, mis)
             },
@@ -448,6 +453,7 @@
             closeLog () {
                 this.showLog = false
                 this.openLogApi.hasOpen = false
+                this.handleLogRes.lineNo = -1
                 clearTimeout(this.getAfterLogApi.id)
             }
         }
