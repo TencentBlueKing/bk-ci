@@ -68,7 +68,7 @@
 
                 <template v-if="buildResourceType === 'MACOS'">
                     <form-field :label="$t('editPage.macSystemVersion')" :required="true">
-                        <bk-select :value="systemVersion" searchable>
+                        <bk-select :value="systemVersion" searchable :loading="isLoadingMac">
                             <bk-option v-for="item in systemVersionList"
                                 :key="item"
                                 :id="item"
@@ -78,7 +78,7 @@
                         </bk-select>
                     </form-field>
                     <form-field :label="$t('editPage.xcodeVersion')" :required="true">
-                        <bk-select :value="xcodeVersion" searchable>
+                        <bk-select :value="xcodeVersion" searchable :loading="isLoadingMac">
                             <bk-option v-for="item in xcodeVersionList"
                                 :key="item"
                                 :id="item"
@@ -376,19 +376,31 @@
                     agentType: 'ID'
                 }))
             }
+            this.getMacOsData()
         },
         methods: {
             ...mapActions('atom', [
                 'updateContainer',
-                'togglePropertyPanel'
+                'togglePropertyPanel',
+                'getMacSysVersion',
+                'getMacXcodeVersion'
             ]),
+            getMacOsData () {
+                this.isLoadingMac = true
+                Promise.all([this.getMacSysVersion(), this.getMacXcodeVersion()]).then(([sysVersion, xcodeVersion]) => {
+                    this.xcodeVersionList = xcodeVersion.data || []
+                    this.systemVersionList = sysVersion.data || []
+                }).catch((err) => {
+                    this.$bkMessage({ message: (err.message || err), theme: 'error' })
+                }).finally(() => (this.isLoadingMac = false))
+            },
             chooseMacSystem (item) {
-                this.handleContainerChange('systemVersion', item)
-                this.handleContainerChange('value', `${this.systemVersion}:${this.xcodeVersion}`)
+                this.changeBuildResource('systemVersion', item)
+                this.changeBuildResource('value', `${this.systemVersion}:${this.xcodeVersion}`)
             },
             chooseXcode (item) {
-                this.handleContainerChange('xcodeVersion', item)
-                this.handleContainerChange('value', `${this.systemVersion}:${this.xcodeVersion}`)
+                this.changeBuildResource('xcodeVersion', item)
+                this.changeBuildResource('value', `${this.systemVersion}:${this.xcodeVersion}`)
             },
             setContainerValidate (addErrors, removeErrors) {
                 const { errors } = this
