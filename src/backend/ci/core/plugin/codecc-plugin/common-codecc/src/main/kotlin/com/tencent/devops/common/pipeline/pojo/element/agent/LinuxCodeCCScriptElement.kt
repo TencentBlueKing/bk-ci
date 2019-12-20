@@ -154,5 +154,4 @@ open class LinuxCodeCCScriptElement(
         woodpeckerToolSetId = null,
         horuspyToolSetId = null
     )
-
 }
