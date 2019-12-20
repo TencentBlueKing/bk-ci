@@ -332,6 +332,8 @@
         "nameNullTips": "流水线名称不能为空",
         "retrySuc": "重试成功",
         "retryFail": "重试失败",
+        "rebuildSuc": "rebuild成功",
+        "rebuildFail": "rebuild失败",
         "stopSuc": "终止成功",
         "stopFail": "终止失败"
     },

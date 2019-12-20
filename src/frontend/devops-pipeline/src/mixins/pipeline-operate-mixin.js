@@ -393,7 +393,7 @@ export default {
                 })
 
                 if (res.id) {
-                    message = this.$t('subpage.retrySuc')
+                    message = this.$t('subpage.rebuildSuc')
                     theme = 'success'
                     if (goDetail) {
                         this.$router.replace({
@@ -407,7 +407,7 @@ export default {
                     }
                     this.$emit('update-table')
                 } else {
-                    message = this.$t('subpage.retryFail')
+                    message = this.$t('subpage.rebuildFail')
                     theme = 'error'
                 }
             } catch (err) {
