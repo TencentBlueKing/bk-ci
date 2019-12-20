@@ -26,30 +26,19 @@
 
 package com.tencent.devops.store
 
-import com.tencent.devops.common.client.Client
-import com.tencent.devops.store.dao.atom.AtomDao
-import com.tencent.devops.store.dao.atom.MarketAtomDao
-import com.tencent.devops.store.dao.common.StoreDeptRelDao
-import com.tencent.devops.store.dao.common.StoreMemberDao
-import com.tencent.devops.store.dao.common.StoreProjectRelDao
-import com.tencent.devops.store.dao.template.MarketTemplateDao
 import com.tencent.devops.store.service.atom.impl.TxAtomCooperationServiceImpl
 import com.tencent.devops.store.service.atom.impl.TxAtomMemberServiceImpl
 import com.tencent.devops.store.service.atom.impl.TxAtomNotifyServiceImpl
 import com.tencent.devops.store.service.atom.impl.TxAtomReleaseServiceImpl
 import com.tencent.devops.store.service.atom.impl.TxAtomServiceImpl
 import com.tencent.devops.store.service.atom.impl.TxMarketAtomServiceImpl
-import com.tencent.devops.store.service.common.StoreUserService
-import com.tencent.devops.store.service.common.StoreVisibleDeptService
 import com.tencent.devops.store.service.common.impl.TxStoreLogoServiceImpl
 import com.tencent.devops.store.service.common.impl.TxStoreNotifyServiceImpl
 import com.tencent.devops.store.service.common.impl.TxStoreUserServiceImpl
 import com.tencent.devops.store.service.container.impl.TxContainerServiceImpl
-import com.tencent.devops.store.service.template.impl.TemplateVisibleDeptServiceImpl
 import com.tencent.devops.store.service.template.impl.TxMarketTemplateServiceImpl
 import com.tencent.devops.store.service.template.impl.TxTemplateNotifyServiceImpl
 import com.tencent.devops.store.service.template.impl.TxTemplateReleaseServiceImpl
-import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -95,20 +84,4 @@ class TencentServiceConfig @Autowired constructor() {
 
     @Bean
     fun storeLogoService() = TxStoreLogoServiceImpl()
-
-    @Bean
-    fun templateVisibleDeptService(
-        @Autowired dslContext: DSLContext,
-        @Autowired client: Client,
-        @Autowired storeDeptRelDao: StoreDeptRelDao,
-        @Autowired marketTemplateDao: MarketTemplateDao,
-        @Autowired marketAtomDao: MarketAtomDao,
-        @Autowired atomDao: AtomDao,
-        @Autowired storeProjectRelDao: StoreProjectRelDao,
-        @Autowired storeMemberDao: StoreMemberDao,
-        @Autowired storeVisibleDeptService: StoreVisibleDeptService,
-        @Autowired storeUserService: StoreUserService
-    ) = TemplateVisibleDeptServiceImpl(
-        dslContext, client, storeDeptRelDao, marketTemplateDao, marketAtomDao, atomDao, storeProjectRelDao, storeMemberDao, storeVisibleDeptService, storeUserService
-    )
 }
