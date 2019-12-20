@@ -274,11 +274,11 @@ class ArtifactoryDownloadService @Autowired constructor(
                 throw BadRequestException("用户（$lastModifyUser) 没有项目（${targetProjectId}）下载权限)")
             }
             if (artifactoryType == ArtifactoryType.PIPELINE) {
-                targetPipelineId = crossPipineId ?: throw BadRequestException("Invalid Parameter projectId")
+                targetPipelineId = crossPipineId ?: throw BadRequestException("Invalid Parameter pipelineId")
                 targetBuildId = client.get(ServiceBuildResource::class).getSingleHistoryBuild(
                     targetProjectId,
                     targetPipelineId,
-                    crossBuildNo ?: throw BadRequestException("Invalid Parameter buildId"),
+                    crossBuildNo ?: throw BadRequestException("Invalid Parameter buildNo"),
                     ChannelCode.BS
                 ).data!!.id
 
