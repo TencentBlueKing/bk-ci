@@ -286,7 +286,7 @@ open class CodeccApi constructor(
             if (!pylintToolSetId.isNullOrBlank()) map["PYLINT"] = pylintToolSetId!!
             if (!gometalinterToolSetId.isNullOrBlank()) map["GOML"] = gometalinterToolSetId!!
             if (!checkstyleToolSetId.isNullOrBlank()) map["CHECKSTYLE"] = checkstyleToolSetId!!
-            if (!styleCopToolSetId.isNullOrBlank()) map["STYLECOP"] = styleCopToolSetId!!
+            if (!stylecopToolSetId.isNullOrBlank()) map["STYLECOP"] = stylecopToolSetId!!
             if (!detektToolSetId.isNullOrBlank()) map["DETEKT"] = detektToolSetId!!
             if (!phpcsToolSetId.isNullOrBlank()) map["PHPCS"] = phpcsToolSetId!!
             if (!sensitiveToolSetId.isNullOrBlank()) map["SENSITIVE"] = sensitiveToolSetId!!
@@ -296,6 +296,7 @@ open class CodeccApi constructor(
             if (!horuspyToolSetId.isNullOrBlank()) map["HORUSPY"] = horuspyToolSetId!!
             if (!pinpointToolSetId.isNullOrBlank()) map["PINPOINT"] = pinpointToolSetId!!
         }
+
         return map
     }
 
