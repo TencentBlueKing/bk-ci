@@ -26,6 +26,7 @@
 
 package com.tencent.devops.common.auth.api
 
+import com.tencent.devops.common.auth.api.pojo.BKAuthProjectRolesResources
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroupAndUserList
 import com.tencent.devops.common.auth.code.AuthServiceCode
@@ -80,4 +81,21 @@ interface AuthProjectApi {
      * @param group 项目组角色
      */
     fun isProjectUser(user: String, serviceCode: AuthServiceCode, projectCode: String, group: BkAuthGroup?): Boolean
+
+    /**
+     * 添加用户到指定项目特定分组
+     * @param user 目标用户id
+     * @param serviceCode 服务类型，比如PIPELINE
+     * @param projectCode 项目编码
+     * @param role 用户组角色
+     */
+    fun createProjectUser(user: String, serviceCode: AuthServiceCode, projectCode: String, role: String): Boolean
+
+    /**
+     * 添加用户到指定项目特定分组
+     * @param serviceCode 服务类型，比如PIPELINE
+     * @param projectCode 项目编码
+     * @param projectId 项目id
+     */
+    fun getProjectRoles(serviceCode: AuthServiceCode, projectCode: String, projectId: String): List<BKAuthProjectRolesResources>
 }

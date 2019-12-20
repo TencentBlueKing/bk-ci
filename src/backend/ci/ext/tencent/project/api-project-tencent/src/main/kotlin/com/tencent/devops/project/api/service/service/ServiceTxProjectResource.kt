@@ -32,8 +32,10 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_DEPT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ORGANIZATION_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
+import com.tencent.devops.project.api.pojo.PipelinePermissionInfo
 import com.tencent.devops.project.pojo.AddManagerRequest
 import com.tencent.devops.project.pojo.ProjectCreateInfo
+import com.tencent.devops.project.pojo.ProjectCreateUserDTO
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result
 import io.swagger.annotations.Api
@@ -265,5 +267,41 @@ interface ServiceTxProjectResource {
         userId: String,
         @ApiParam("管理员", required = true)
         addManagerRequest: AddManagerRequest
+    ): Result<Boolean>
+
+    @POST
+    @Path("/createUserByUser")
+    fun createProjectUserByUser(
+        @ApiParam("执行人Id", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        createUser: String,
+        @ApiParam("添加信息", required = true)
+        createInfo: ProjectCreateUserDTO
+    ): Result<Boolean>
+
+    @POST
+    @Path("/createUserByApp")
+    fun createProjectUserByApp(
+        @ApiParam("组织类型", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE)
+        organizationType: String,
+        @ApiParam("组织Id", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_ORGANIZATION_ID)
+        organizationId: Long,
+        @ApiParam("添加信息", required = true)
+        createInfo: ProjectCreateUserDTO
+    ): Result<Boolean>
+
+    @POST
+    @Path("/create/permission")
+    fun createUserPipelinePermission(
+        @ApiParam("AccessToken", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
+        accessToken: String,
+        @ApiParam("执行人Id", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        createUser: String,
+        @ApiParam("添加信息", required = true)
+        createInfo: PipelinePermissionInfo
     ): Result<Boolean>
 }

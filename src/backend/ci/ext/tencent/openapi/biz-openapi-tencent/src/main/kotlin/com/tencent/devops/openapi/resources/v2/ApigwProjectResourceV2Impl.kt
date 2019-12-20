@@ -29,8 +29,10 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.v2.ApigwProjectResourceV2
 import com.tencent.devops.openapi.service.v2.ApigwProjectService
+import com.tencent.devops.project.api.pojo.PipelinePermissionInfo
 import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
 import com.tencent.devops.project.pojo.ProjectCreateInfo
+import com.tencent.devops.project.pojo.ProjectCreateUserDTO
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result
 import org.slf4j.LoggerFactory
@@ -62,6 +64,29 @@ class ApigwProjectResourceV2Impl @Autowired constructor(
             centerName = centerName,
             interfaceName = "/v2/projects/getProjectByOrganizationId"
         ))
+    }
+
+    override fun createProjectUserByUser(
+        createUserId: String,
+        createInfo: ProjectCreateUserDTO
+    ): Result<Boolean?> {
+        return Result(apigwProjectService.createProjectUserByUser(createUserId, createInfo))
+    }
+
+    override fun createProjectaUserByApp(
+        organizationType: String,
+        organizationId: Long,
+        createInfo: ProjectCreateUserDTO
+    ): Result<Boolean?> {
+        return Result(apigwProjectService.createProjectUserByApp(organizationType, organizationId, createInfo))
+    }
+
+    override fun createUserPipelinePermission(
+        accessToken: String,
+        createUser: String,
+        createInfo: PipelinePermissionInfo
+    ): Result<Boolean?> {
+        return Result(apigwProjectService.createPipelinePermission(createUser, accessToken, createInfo))
     }
 
     companion object {

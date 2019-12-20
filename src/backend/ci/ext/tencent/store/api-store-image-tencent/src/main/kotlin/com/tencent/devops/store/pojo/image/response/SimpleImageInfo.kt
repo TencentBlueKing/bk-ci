@@ -17,5 +17,8 @@ data class SimpleImageInfo(
     val name: String,
 
     @ApiModelProperty("镜像版本", required = true)
-    val version: String
+    val version: String,
+
+    @ApiModelProperty("是否推荐", required = true)
+    val recommendFlag: Boolean
 )
