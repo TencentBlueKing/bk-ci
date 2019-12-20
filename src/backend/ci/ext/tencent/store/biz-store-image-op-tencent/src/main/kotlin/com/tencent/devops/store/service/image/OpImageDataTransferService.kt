@@ -308,11 +308,20 @@ class OpImageDataTransferService @Autowired constructor(
             }
             // 5.镜像名称生成
             val index = it.repo!!.lastIndexOf("/")
-            val imageName = if (-1 != index) {
+            var imageName = if (-1 != index) {
                 it.repo!!.substring(index + 1)
             } else {
                 it.repo
             }
+            // 重复处理
+            var imageNameNum = 0
+            var tempImageName = imageName
+            while (imageDao.countByName(dslContext, tempImageName) > 0) {
+                logger.warn("$interfaceName:transferImage:Inner:imageName $tempImageName already exists")
+                imageNameNum += 1
+                tempImageName = imageName + "_$imageNameNum"
+            }
+            imageName = tempImageName
             // 6.调OP新增镜像接口
             // image字段是含repoUrl、repoName、tag的完整字段
             logger.info("$interfaceName:transferImage:Inner:ImageCreateRequest($creator,$projectCode,$imageName,$imageCode,${it.image},${it.repo},$imageTag)")
