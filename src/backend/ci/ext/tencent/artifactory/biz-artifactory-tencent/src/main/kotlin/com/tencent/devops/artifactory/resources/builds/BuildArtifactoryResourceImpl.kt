@@ -68,6 +68,7 @@ class BuildArtifactoryResourceImpl @Autowired constructor(
             Result(FileInfoPage(0L, 1, -1, result.second, result.first))
         }
     }
+
     override fun check(projectId: String, artifactoryType: ArtifactoryType, path: String): Result<Boolean> {
         checkParam(projectId, path)
         return if (repoGray.isGray(projectId, redisOperation)) {
@@ -105,11 +106,42 @@ class BuildArtifactoryResourceImpl @Autowired constructor(
         }
     }
 
-    override fun getPropertiesByRegex(projectId: String, pipelineId: String, buildId: String, artifactoryType: ArtifactoryType, path: String): Result<List<FileDetail>> {
+    override fun getPropertiesByRegex(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        artifactoryType: ArtifactoryType,
+        path: String,
+        crossProjectId: String?,
+        crossPipineId: String?,
+        crossBuildNo: String?
+    ): Result<List<FileDetail>> {
         return if (repoGray.isGray(projectId, redisOperation)) {
-            Result(bkRepoService.getPropertiesByRegex(projectId, pipelineId, buildId, artifactoryType, path))
+            Result(
+                bkRepoService.getPropertiesByRegex(
+                    projectId,
+                    pipelineId,
+                    buildId,
+                    artifactoryType,
+                    path,
+                    crossProjectId,
+                    crossPipineId,
+                    crossBuildNo
+                )
+            )
         } else {
-            Result(artifactoryService.getPropertiesByRegex(projectId, pipelineId, buildId, artifactoryType, path))
+            Result(
+                artifactoryService.getPropertiesByRegex(
+                    projectId,
+                    pipelineId,
+                    buildId,
+                    artifactoryType,
+                    path,
+                    crossProjectId,
+                    crossPipineId,
+                    crossBuildNo
+                )
+            )
         }
     }
 
@@ -119,13 +151,40 @@ class BuildArtifactoryResourceImpl @Autowired constructor(
         buildId: String,
         artifactoryType: ArtifactoryType,
         path: String,
-        ttl: Int?
+        ttl: Int?,
+        crossProjectId: String?,
+        crossPipineId: String?,
+        crossBuildNo: String?
     ): Result<List<String>> {
         checkParam(projectId, path)
         return if (repoGray.isGray(projectId, redisOperation)) {
-            Result(bkRepoDownloadService.getThirdPartyDownloadUrl(projectId, pipelineId, buildId, artifactoryType, path, ttl))
+            Result(
+                bkRepoDownloadService.getThirdPartyDownloadUrl(
+                    projectId,
+                    pipelineId,
+                    buildId,
+                    artifactoryType,
+                    path,
+                    ttl,
+                    crossProjectId,
+                    crossPipineId,
+                    crossBuildNo
+                )
+            )
         } else {
-            Result(artifactoryDownloadService.getThirdPartyDownloadUrl(projectId, pipelineId, buildId, artifactoryType, path, ttl))
+            Result(
+                artifactoryDownloadService.getThirdPartyDownloadUrl(
+                    projectId,
+                    pipelineId,
+                    buildId,
+                    artifactoryType,
+                    path,
+                    ttl,
+                    crossProjectId,
+                    crossPipineId,
+                    crossBuildNo
+                )
+            )
         }
     }
 
