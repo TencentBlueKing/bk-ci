@@ -123,7 +123,7 @@ object CodeccUtils {
     private fun doCoverityCommand(codeccExecuteConfig: CodeccExecuteConfig): String {
         val workspace = codeccExecuteConfig.workspace
         val taskParams = codeccExecuteConfig.buildTask.params ?: mapOf()
-        val script = URLDecoder.decode(taskParams["script"] ?: "", "UTF-8")
+        val script = taskParams["script"] ?: ""
         val scriptType = codeccExecuteConfig.scriptType
         val scriptFile = ShellUtil.getCommandFile(
             script = script,
