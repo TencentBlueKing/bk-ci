@@ -30,7 +30,6 @@ import com.tencent.devops.model.log.tables.TLogIndicesV2
 import com.tencent.devops.model.log.tables.records.TLogIndicesV2Record
 import org.jooq.DSLContext
 import org.jooq.Result
-import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
 import sun.misc.MessageUtils.where
@@ -86,28 +85,13 @@ class IndexDaoV2 {
     fun updateLastLineNum(
         dslContext: DSLContext,
         buildId: String,
-        size: Int
-    ): Long? {
+        latestLineNum: Long
+    ): Int {
         with(TLogIndicesV2.T_LOG_INDICES_V2) {
-            return dslContext.transactionResult { configuration ->
-                val context = DSL.using(configuration)
-                val record = context.selectFrom(this)
-                    .where(BUILD_ID.eq(buildId))
-                    .forUpdate()
-                    .fetchOne() ?: return@transactionResult null
-                if (record.lastLineNum == null || record.lastLineNum <= 0L) {
-                    record.lastLineNum = 1L
-                }
-                val result = record.lastLineNum + size
-                val updated = context.update(this)
-                    .set(LAST_LINE_NUM, result)
-                    .where(BUILD_ID.eq(buildId))
-                    .execute()
-                if (updated != 1) {
-                    logger.warn("[$buildId|$size|$result|$updated] Fail to update the build last line num")
-                }
-                record.lastLineNum
-            }
+            return dslContext.update(this)
+                .set(LAST_LINE_NUM, latestLineNum)
+                .where(BUILD_ID.eq(buildId))
+                .execute()
         }
     }
 
