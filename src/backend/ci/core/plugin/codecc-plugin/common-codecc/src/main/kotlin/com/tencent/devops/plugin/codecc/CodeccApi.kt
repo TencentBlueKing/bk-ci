@@ -81,7 +81,8 @@ open class CodeccApi constructor(
                     DevOpsToolParams("py_version", pyVersion ?: ""),
                     DevOpsToolParams("ccn_threshold", ccnThreshold ?: ""),
                     DevOpsToolParams("needCodeContent", needCodeContent ?: ""),
-                    DevOpsToolParams("eslint_rc", eslintRc ?: "")
+                    DevOpsToolParams("eslint_rc", eslintRc ?: ""),
+                    DevOpsToolParams("buildCommand", script)
                 )
             )
             if (!element.projectBuildType.isNullOrBlank()) {
