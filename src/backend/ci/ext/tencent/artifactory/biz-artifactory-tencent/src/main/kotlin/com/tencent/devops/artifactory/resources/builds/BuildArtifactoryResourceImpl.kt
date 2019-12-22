@@ -33,7 +33,7 @@ import com.tencent.devops.artifactory.pojo.FileInfo
 import com.tencent.devops.artifactory.pojo.FileInfoPage
 import com.tencent.devops.artifactory.pojo.Property
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
-import com.tencent.devops.artifactory.service.BkRepoDownloadService
+import com.tencent.devops.artifactory.service.bkrepo.BkRepoDownloadService
 import com.tencent.devops.artifactory.service.artifactory.ArtifactoryDownloadService
 import com.tencent.devops.artifactory.service.artifactory.ArtifactoryService
 import com.tencent.devops.artifactory.service.bkrepo.BkRepoService
@@ -68,6 +68,7 @@ class BuildArtifactoryResourceImpl @Autowired constructor(
             Result(FileInfoPage(0L, 1, -1, result.second, result.first))
         }
     }
+
     override fun check(projectId: String, artifactoryType: ArtifactoryType, path: String): Result<Boolean> {
         checkParam(projectId, path)
         return if (repoGray.isGray(projectId, redisOperation)) {
