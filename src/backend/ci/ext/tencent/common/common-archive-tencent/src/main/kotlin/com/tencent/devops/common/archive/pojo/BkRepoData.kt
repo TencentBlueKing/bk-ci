@@ -24,18 +24,10 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":core:common:common-web")
-    compile ("com.tencent.bkrepo:api-generic:0.1.0-SNAPSHOT") {
-        exclude group: "org.springframework.boot", module: "spring-boot-starter-json"
-        exclude group: "org.springframework.boot", module: "spring-boot-configuration-processor"
-        exclude group: "org.springframework.cloud", module: "spring-cloud-starter-openfeign"
-        changing(true)
-    }
-    compile ("com.tencent.bkrepo:api-repository:0.1.0-SNAPSHOT") {
-        exclude group: "org.springframework.boot", module: "spring-boot-starter-json"
-        exclude group: "org.springframework.boot", module: "spring-boot-configuration-processor"
-        exclude group: "org.springframework.cloud", module: "spring-cloud-starter-openfeign"
-        changing(true)
-    }
-}
+package com.tencent.devops.common.archive.pojo
+
+data class BkRepoData(
+    var code: Int,
+    var message: String?,
+    var data: List<BkRepoFile>
+)

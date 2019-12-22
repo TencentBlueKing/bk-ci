@@ -31,6 +31,7 @@ package com.tencent.devops.process.engine.atom.task
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.archive.client.BkRepoClient
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.job.JobClient
@@ -82,7 +83,8 @@ class JobDevOpsFastPushFileTaskAtom @Autowired constructor(
     private val pipelineUserService: PipelineUserService,
     private val rabbitTemplate: RabbitTemplate,
     private val redisOperation: RedisOperation,
-    private val repoGray: RepoGray
+    private val repoGray: RepoGray,
+    private val bkRepoClient: BkRepoClient
 ) : IAtomTask<JobDevOpsFastPushFileElement> {
     override fun getParamElement(task: PipelineBuildTask): JobDevOpsFastPushFileElement {
         return JsonUtil.mapTo(task.taskParams, JobDevOpsFastPushFileElement::class.java)
@@ -173,6 +175,7 @@ class JobDevOpsFastPushFileTaskAtom @Autowired constructor(
         runVariables: Map<String, String>,
         isCustom: Boolean = false
     ): BuildStatus {
+        val user = task.starter
         val buildId = task.buildId
         val projectId = task.projectId
         val pipelineId = task.pipelineId
@@ -192,14 +195,13 @@ class JobDevOpsFastPushFileTaskAtom @Autowired constructor(
             it.trim().removePrefix("/").removePrefix("./")
         }.forEach { path ->
             if (isRepoGray) {
-                val fileList = matchBkRepoFile(path, projectId, pipelineId, buildId, isCustom)
+                val fileList = bkRepoClient.matchBkRepoFile(path, projectId, pipelineId, buildId, isCustom)
                 val repoName = if (isCustom) "custom" else "pipeline"
                 fileList.forEach { bkrepoFile ->
                     LogUtils.addLine(rabbitTemplate, buildId, "匹配到文件：(${bkrepoFile.displayPath})", taskId, containerId, executeCount)
                     count++
-                    val url = "$gatewayUrl/bkrepo/api/service/generic/$projectId/$repoName/${bkrepoFile.fullPath}"
                     val destFile = File(destPath, File(bkrepoFile.displayPath).name)
-                    OkhttpUtils.downloadFile(url, destFile, mapOf("X-BKREPO-UID" to "admin")) // todo user
+                    bkRepoClient.downloadFile(user, projectId, repoName, bkrepoFile.fullPath, destFile)
                     localFileList.add(destFile.absolutePath)
                     logger.info("save file : ${destFile.canonicalPath} (${destFile.length()})")
                 }
@@ -597,60 +599,6 @@ class JobDevOpsFastPushFileTaskAtom @Autowired constructor(
         return result
     }
 
-    fun matchBkRepoFile(
-        srcPath: String,
-        projectId: String,
-        pipelineId: String,
-        buildId: String,
-        isCustom: Boolean
-    ): List<BkRepoFile> {
-        val result = mutableListOf<BkRepoFile>()
-        val bkRepoData = getAllBkRepoFiles(projectId, pipelineId, buildId, isCustom)
-        val matcher = FileSystems.getDefault().getPathMatcher("glob:$srcPath")
-        val pipelinePathPrefix = "/$pipelineId/$buildId/"
-        bkRepoData.data?.forEach { bkrepoFile ->
-            val repoPath = if (isCustom) {
-                bkrepoFile.fullPath.removePrefix("/")
-            } else {
-                bkrepoFile.fullPath.removePrefix(pipelinePathPrefix)
-            }
-            if (matcher.matches(Paths.get(repoPath))) {
-                bkrepoFile.displayPath = repoPath
-                result.add(bkrepoFile)
-            }
-        }
-        return result
-    }
-
-    private fun getAllBkRepoFiles(projectId: String, pipelineId: String, buildId: String, isCustom: Boolean): BkRepoData {
-        logger.info("getAllBkrepoFiles, projectId: $projectId, pipelineId: $pipelineId, buildId: $buildId, isCustom: $isCustom")
-        var url = if (isCustom) {
-            "$gatewayUrl/bkrepo/api/service/generic/list/$projectId/custom?includeFolder=true&deep=true"
-        } else {
-            "$gatewayUrl/bkrepo/api/service/generic/list/$projectId/pipeline/$pipelineId/$buildId?includeFolder=true&deep=true"
-        }
-        val request = Request.Builder()
-            .url(url)
-            .header("X-BKREPO-UID", "admin") // todo user
-            .get()
-            .build()
-
-        // 获取所有的文件和文件夹
-        OkhttpUtils.doHttp(request).use { response ->
-            val responseBody = response.body()!!.string()
-            if (!response.isSuccessful) {
-                logger.error("get bkrepo files fail: $responseBody")
-                throw RuntimeException("构建分发获取文件失败")
-            }
-            try {
-                return JsonUtil.getObjectMapper().readValue(responseBody, BkRepoData::class.java)
-            } catch (e: Exception) {
-                logger.error("get bkrepo files fail: $responseBody")
-                throw RuntimeException("构建分发获取文件失败")
-            }
-        }
-    }
-
     // 获取所有的文件和文件夹
     private fun getAllFiles(projectId: String, pipelineId: String, buildId: String, isCustom: Boolean): JfrogFilesData {
 
@@ -702,18 +650,5 @@ class JobDevOpsFastPushFileTaskAtom @Autowired constructor(
         val folder: Boolean,
         @JsonProperty(required = false)
         val sha1: String = ""
-    )
-
-    data class BkRepoFile(
-        val fullPath: String,
-        var displayPath: String?,
-        val size: Long,
-        val folder: Boolean
-    )
-
-    data class BkRepoData(
-        var code: Int,
-        var message: String?,
-        var data: List<BkRepoFile>
     )
 }

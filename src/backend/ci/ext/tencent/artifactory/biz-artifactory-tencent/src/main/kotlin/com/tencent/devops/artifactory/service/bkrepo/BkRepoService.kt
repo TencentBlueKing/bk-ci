@@ -27,7 +27,6 @@
 package com.tencent.devops.artifactory.service.bkrepo
 
 import com.tencent.bkrepo.repository.pojo.node.NodeInfo
-import com.tencent.devops.artifactory.client.BkRepoClient
 import com.tencent.devops.artifactory.pojo.AppFileInfo
 import com.tencent.devops.artifactory.pojo.CopyToCustomReq
 import com.tencent.devops.artifactory.pojo.Count
@@ -45,6 +44,7 @@ import com.tencent.devops.artifactory.util.PathUtils
 import com.tencent.devops.artifactory.util.RepoUtils
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.timestamp
+import com.tencent.devops.common.archive.client.BkRepoClient
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_PIPELINE_ID
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_PIPELINE_NAME
 import com.tencent.devops.common.archive.pojo.ArtifactorySearchParam

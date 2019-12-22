@@ -29,13 +29,16 @@ package com.tencent.devops.process.engine.atom.task
 import com.google.gson.JsonParser
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.archive.client.BkRepoClient
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
+import com.tencent.devops.common.pipeline.element.ComDistributionElement
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.config.CommonConfig
+import com.tencent.devops.common.service.gray.RepoGray
 import com.tencent.devops.log.utils.LogUtils
 import com.tencent.devops.process.bkjob.ClearJobTempFileEvent
-import com.tencent.devops.common.pipeline.element.ComDistributionElement
-import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.IAtomTask
 import com.tencent.devops.process.engine.atom.defaultFailAtomResponse
@@ -70,7 +73,10 @@ class ComDistributeTaskAtom @Autowired constructor(
     private val rabbitTemplate: RabbitTemplate,
     private val pipelineUserService: PipelineUserService,
     private val client: Client,
-    private val commonConfig: CommonConfig
+    private val commonConfig: CommonConfig,
+    private val repoGray: RepoGray,
+    private val redisOperation: RedisOperation,
+    private val bkRepoClient: BkRepoClient
 ) : IAtomTask<ComDistributionElement> {
 
     override fun getParamElement(task: PipelineBuildTask): ComDistributionElement {
@@ -169,23 +175,27 @@ class ComDistributeTaskAtom @Autowired constructor(
         runVariables: Map<String, String>,
         param: ComDistributionElement
     ): BuildStatus {
-        val searchUrl = "${commonConfig.devopsHostGateway}/jfrog/api/service/search/aql"
+        val user = task.starter
         val buildId = task.buildId
         val pipelineId = task.pipelineId
         val taskId = task.taskId
         val containerId = task.containerHashId
         val executeCount = task.executeCount ?: 1
         val workspace = java.nio.file.Files.createTempDirectory("${DigestUtils.md5Hex("$buildId-$taskId")}_").toFile()
-        val localFileList = mutableListOf<String>()
+        val isRepoGray = repoGray.isGray(projectId, redisOperation)
+        if (isRepoGray) {
+            LogUtils.addLine(rabbitTemplate, buildId, "use bkrepo: $isRepoGray", taskId, containerId, executeCount)
+        }
 
+        val localFileList = mutableListOf<String>()
         var userId = task.starter
         val appId = client.get(ServiceProjectResource::class).get(task.projectId).data?.ccAppId?.toInt()
-        ?: run {
-            LogUtils.addLine(rabbitTemplate, task.buildId, "找不到绑定业务ID/can not found business ID", task.taskId,
-                containerId, executeCount
-            )
-            return BuildStatus.FAILED
-        }
+            ?: run {
+                LogUtils.addLine(rabbitTemplate, task.buildId, "找不到绑定业务ID/can not found business ID", task.taskId,
+                    containerId, executeCount
+                )
+                return BuildStatus.FAILED
+            }
         val isCustom = param.customize
         val regexPathsStr = parseVariable(param.regexPaths, runVariables)
         var count = 0
@@ -195,35 +205,49 @@ class ComDistributeTaskAtom @Autowired constructor(
             val targetPathStr = parseVariable(param.targetPath, runVariables)
 
             regexPathsStr.split(",").forEach { regex ->
-                val requestBody = getRequestBody(regex.trim(), isCustom)
-                LogUtils.addLine(
-                    rabbitTemplate,
-                    buildId,
-                    "requestBody:" + requestBody.removePrefix("items.find(").removeSuffix(")"),
-                    taskId,
-                    containerId,
-                    executeCount
-                )
-
-                val request = Request.Builder()
-                    .url(searchUrl)
-                    .post(RequestBody.create(MediaType.parse("text/plain; charset=utf-8"), requestBody))
-                    .build()
-
-                OkhttpUtils.doHttp(request).use { response ->
-                    val body = response.body()!!.string()
-
-                    val results = praser.parse(body).asJsonObject["results"].asJsonArray
-                    for (i in 0 until results.size()) {
+                if (isRepoGray) {
+                    val fileList = bkRepoClient.matchBkRepoFile(regex, projectId, pipelineId, buildId, isCustom)
+                    val repoName = if (isCustom) "custom" else "pipeline"
+                    fileList.forEach { bkrepoFile ->
+                        LogUtils.addLine(rabbitTemplate, buildId, "匹配到文件：(${bkrepoFile.displayPath})", taskId, containerId, executeCount)
                         count++
-                        val obj = results[i].asJsonObject
-                        val path = getPath(obj["path"].asString, obj["name"].asString, isCustom)
-                        val url = getUrl(path, isCustom)
-
-                        val destFile = File(workspace, obj["name"].asString)
-                        OkhttpUtils.downloadFile(url, destFile)
+                        val destFile = File(workspace, File(bkrepoFile.displayPath).name)
+                        bkRepoClient.downloadFile(user, projectId, repoName, bkrepoFile.fullPath, destFile)
                         localFileList.add(destFile.absolutePath)
                         logger.info("save file : ${destFile.canonicalPath} (${destFile.length()})")
+                    }
+                } else {
+                    val requestBody = getRequestBody(regex.trim(), isCustom)
+                    LogUtils.addLine(
+                        rabbitTemplate,
+                        buildId,
+                        "requestBody:" + requestBody.removePrefix("items.find(").removeSuffix(")"),
+                        taskId,
+                        containerId,
+                        executeCount
+                    )
+
+                    val searchUrl = "${commonConfig.devopsHostGateway}/jfrog/api/service/search/aql"
+                    val request = Request.Builder()
+                        .url(searchUrl)
+                        .post(RequestBody.create(MediaType.parse("text/plain; charset=utf-8"), requestBody))
+                        .build()
+
+                    OkhttpUtils.doHttp(request).use { response ->
+                        val body = response.body()!!.string()
+
+                        val results = praser.parse(body).asJsonObject["results"].asJsonArray
+                        for (i in 0 until results.size()) {
+                            count++
+                            val obj = results[i].asJsonObject
+                            val path = getPath(obj["path"].asString, obj["name"].asString, isCustom)
+                            val url = getUrl(path, isCustom)
+
+                            val destFile = File(workspace, obj["name"].asString)
+                            OkhttpUtils.downloadFile(url, destFile)
+                            localFileList.add(destFile.absolutePath)
+                            logger.info("save file : ${destFile.canonicalPath} (${destFile.length()})")
+                        }
                     }
                 }
             }
