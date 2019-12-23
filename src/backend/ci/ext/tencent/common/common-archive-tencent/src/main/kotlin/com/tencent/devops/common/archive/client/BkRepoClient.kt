@@ -45,6 +45,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.archive.pojo.BkRepoData
 import com.tencent.devops.common.archive.pojo.BkRepoFile
+import com.tencent.devops.common.service.config.CommonConfig
 import okhttp3.MediaType
 import okhttp3.MultipartBody
 import okhttp3.Request
@@ -61,16 +62,15 @@ import java.nio.file.Paths
 import javax.ws.rs.NotFoundException
 
 class BkRepoClient @Autowired constructor(
-    private val objectMapper: ObjectMapper
+    private val objectMapper: ObjectMapper,
+    private val commonConfig: CommonConfig
 ) {
-    @Value("\${gateway.url:#{null}}")
-    private var gatewayUrl: String? = null
 
     private fun getGatewaytUrl(): String {
-        return if (gatewayUrl!!.startsWith("http://")) {
-            gatewayUrl!!
+        return if (commonConfig.devopsHostGateway!!.startsWith("http://")) {
+            commonConfig.devopsHostGateway!!
         } else {
-            "http://${gatewayUrl!!}"
+            "http://${commonConfig.devopsHostGateway!!}"
         }
     }
 
