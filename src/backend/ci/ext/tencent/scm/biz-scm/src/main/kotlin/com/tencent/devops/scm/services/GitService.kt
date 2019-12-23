@@ -382,7 +382,15 @@ class GitService @Autowired constructor(
                 addGitProjectMember(listOf(userId), nameSpaceName, GitAccessLevelEnum.MASTER, token, tokenType)
                 if (!sampleProjectPath.isNullOrBlank()) {
                     // 把样例工程代码添加到用户的仓库
-                    initRepositoryInfo(userId, sampleProjectPath!!, token, tokenType, repositoryName, atomRepositoryUrl as String)
+                    initRepositoryInfo(
+                        userId = userId,
+                        sampleProjectPath = sampleProjectPath!!,
+                        token = token,
+                        tokenType = tokenType,
+                        repositoryName = repositoryName,
+                        atomRepositoryUrl = atomRepositoryUrl as String,
+                        frontendType = frontendType
+                    )
                 }
             }
             return Result(GitRepositoryResp(nameSpaceName, atomRepositoryUrl as String))
@@ -423,7 +431,13 @@ class GitService @Autowired constructor(
                 if (!atomFrontendFileDir.exists()){
                     atomFrontendFileDir.mkdirs()
                 }
-
+                CommonScriptUtils.execute("git clone ${credentialSetter.getCredentialUrl("http://git.code.oa.com/devops-frontend/devops-remote-atom.git")}", atomFrontendFileDir)
+                val frontendProjectDir = atomFrontendFileDir.listFiles()?.firstOrNull()
+                logger.info("initRepositoryInfo frontendProjectDir is:${frontendProjectDir?.absolutePath}")
+                val frontendGitFileDir = File(frontendProjectDir, ".git")
+                if (frontendGitFileDir.exists()) {
+                    FileSystemUtils.deleteRecursively(frontendGitFileDir)
+                }
             }
             // 3、重新生成git信息
             CommonScriptUtils.execute("git init", atomFileDir)

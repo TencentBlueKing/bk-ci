@@ -124,16 +124,17 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
         // 远程调工蜂接口创建代码库
         try {
             val createGitRepositoryResult = client.get(ServiceGitRepositoryResource::class).createGitCodeRepository(
-                userId,
-                marketAtomCreateRequest.projectCode,
-                atomCode,
-                marketAtomBuildInfoDao.getAtomBuildInfoByLanguage(
+                userId = userId,
+                projectCode = marketAtomCreateRequest.projectCode,
+                repositoryName = atomCode,
+                sampleProjectPath = marketAtomBuildInfoDao.getAtomBuildInfoByLanguage(
                     dslContext,
                     marketAtomCreateRequest.language
                 ).sampleProjectPath,
-                pluginNameSpaceId.toInt(),
-                marketAtomCreateRequest.visibilityLevel,
-                TokenTypeEnum.PRIVATE_KEY
+                namespaceId = pluginNameSpaceId.toInt(),
+                visibilityLevel = marketAtomCreateRequest.visibilityLevel,
+                tokenType = TokenTypeEnum.PRIVATE_KEY,
+                frontendType = marketAtomCreateRequest.frontendType
             )
             logger.info("the createGitRepositoryResult is :$createGitRepositoryResult")
             if (createGitRepositoryResult.isOk()) {
