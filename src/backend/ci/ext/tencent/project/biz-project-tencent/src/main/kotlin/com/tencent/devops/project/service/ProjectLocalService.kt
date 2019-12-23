@@ -349,12 +349,12 @@ class ProjectLocalService @Autowired constructor(
                 rabbitTemplate.convertAndSend(
                     EXCHANGE_PAASCC_PROJECT_CREATE,
                     ROUTE_PAASCC_PROJECT_CREATE, PaasCCCreateProject(
-                        userId = userId,
-                        accessToken = accessToken,
-                        projectId = projectId,
-                        retryCount = 0,
-                        projectCreateInfo = projectCreateInfo
-                    )
+                    userId = userId,
+                    accessToken = accessToken,
+                    projectId = projectId,
+                    retryCount = 0,
+                    projectCreateInfo = projectCreateInfo
+                )
                 )
                 success = true
             } finally {
@@ -765,13 +765,13 @@ class ProjectLocalService @Autowired constructor(
                 val logoAddress = s3Service.saveLogo(logoFile, projectCreateInfo.englishName)
                 val userDeptDetail = tofService.getUserDeptDetail(userId, "") // 获取用户组织架构信息
                 projectDao.create(
-                    dslContext,
-                    userId,
-                    logoAddress,
-                    projectCreateInfo,
-                    userDeptDetail,
-                    projectCode,
-                    ProjectChannelCode.BS
+                    dslContext = dslContext,
+                    userId = userId,
+                    logoAddress = logoAddress,
+                    projectCreateInfo = projectCreateInfo,
+                    userDeptDetail = userDeptDetail,
+                    projectId = projectCode,
+                    channelCode = ProjectChannelCode.BS
                 )
             } finally {
                 if (logoFile.exists()) {

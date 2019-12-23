@@ -46,7 +46,11 @@ class ApigwProjectResourceV2Impl @Autowired constructor(
 
     override fun create(userId: String, accessToken: String, projectCreateInfo: ProjectCreateInfo): Result<String> {
         logger.info("v2/projects/newProject:create:Input($userId,$accessToken,$projectCreateInfo)")
-        return client.get(ServiceTxProjectResource::class).create(userId, accessToken, projectCreateInfo)
+        return client.get(ServiceTxProjectResource::class).create(
+            userId = userId,
+            accessToken = accessToken,
+            projectCreateInfo = projectCreateInfo
+        )
     }
 
     override fun getProjectByOrganizationId(
@@ -56,14 +60,16 @@ class ApigwProjectResourceV2Impl @Autowired constructor(
         deptName: String?,
         centerName: String?
     ): Result<List<ProjectVO>?> {
-        return Result(apigwProjectService.getListByOrganizationId(
-            userId = userId,
-            organizationType = organizationType,
-            organizationId = organizationId,
-            deptName = deptName,
-            centerName = centerName,
-            interfaceName = "/v2/projects/getProjectByOrganizationId"
-        ))
+        return Result(
+            apigwProjectService.getListByOrganizationId(
+                userId = userId,
+                organizationType = organizationType,
+                organizationId = organizationId,
+                deptName = deptName,
+                centerName = centerName,
+                interfaceName = "/v2/projects/getProjectByOrganizationId"
+            )
+        )
     }
 
     override fun createProjectUserByUser(
@@ -78,7 +84,13 @@ class ApigwProjectResourceV2Impl @Autowired constructor(
         organizationId: Long,
         createInfo: ProjectCreateUserDTO
     ): Result<Boolean?> {
-        return Result(apigwProjectService.createProjectUserByApp(organizationType, organizationId, createInfo))
+        return Result(
+            apigwProjectService.createProjectUserByApp(
+                organizationType = organizationType,
+                organizationId = organizationId,
+                createInfo = createInfo
+            )
+        )
     }
 
     override fun createUserPipelinePermissionByUser(
@@ -86,7 +98,13 @@ class ApigwProjectResourceV2Impl @Autowired constructor(
         createUser: String,
         createInfo: PipelinePermissionInfo
     ): Result<Boolean?> {
-        return Result(apigwProjectService.createPipelinePermissionByUser(createUser, accessToken, createInfo))
+        return Result(
+            apigwProjectService.createPipelinePermissionByUser(
+                createUserId = createUser,
+                accessToken = accessToken,
+                createInfo = createInfo
+            )
+        )
     }
 
     override fun createUserPipelinePermissionByApp(
@@ -94,7 +112,13 @@ class ApigwProjectResourceV2Impl @Autowired constructor(
         organizationId: Long,
         createInfo: PipelinePermissionInfo
     ): Result<Boolean?> {
-        return Result(apigwProjectService.createPipelinePermissionByApp(organizationType, organizationId, createInfo))
+        return Result(
+            apigwProjectService.createPipelinePermissionByApp(
+                organizationType = organizationType,
+                organizationId = organizationId,
+                createInfo = createInfo
+            )
+        )
     }
 
     companion object {
