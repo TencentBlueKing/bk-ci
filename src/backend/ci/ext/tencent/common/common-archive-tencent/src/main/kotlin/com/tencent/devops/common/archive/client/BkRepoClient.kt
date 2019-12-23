@@ -67,7 +67,7 @@ class BkRepoClient @Autowired constructor(
     private var gatewayUrl: String? = null
 
     private fun getGatewaytUrl(): String {
-        return if(gatewayUrl!!.startsWith("http://")){
+        return if (gatewayUrl!!.startsWith("http://")) {
             gatewayUrl!!
         } else {
             "http://${gatewayUrl!!}"
@@ -490,7 +490,7 @@ class BkRepoClient @Autowired constructor(
         }
     }
 
-    fun downloadFile(user: String, projectId: String, repoName: String, fullPath: String, destFile: File){
+    fun downloadFile(user: String, projectId: String, repoName: String, fullPath: String, destFile: File) {
         val url = "${getGatewaytUrl()}/bkrepo/api/service/generic/$projectId/$repoName/${fullPath.removePrefix("/")}"
         OkhttpUtils.downloadFile(url, destFile, mapOf("X-BKREPO-UID" to user))
     }
@@ -508,8 +508,6 @@ class BkRepoClient @Autowired constructor(
             "downloadUser: $downloadUser, ttl: $ttl, directed: $directed")
         throw OperationException("TODO")
     }
-
-
 
     companion object {
         private val logger = LoggerFactory.getLogger(this::class.java)
