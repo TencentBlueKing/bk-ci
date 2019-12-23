@@ -23,13 +23,14 @@
                         <a href="/console/pm" target="_blank"><i class="bk-icon icon-plus-circle" /> {{ $t('新建项目') }} </a>
                     </div>
                 </big-select>
+                <p class="template-tip" v-if="type === 'template'">{{ $t('store.若模版中有未安装的插件，将自动安装') }}</p>
                 <div v-if="installError" class="error-tips"> {{ $t('项目不能为空') }} </div>
                 <div class="form-footer">
                     <button class="bk-button bk-primary" type="button" @click="confirm"> {{ $t('安装') }} </button>
                     <button class="bk-button bk-default" type="button" @click="toBack"> {{ $t('取消') }} </button>
                 </div>
                 <section v-if="installedProject.length">
-                    <p class="project-title">该{{ isInstallAtom ? $t('流水线插件') : $t('模板') }} {{ $t('已安装至以下项目：') }} </p>
+                    <p class="project-title">该{{ type|typeFilter }}{{ $t('已安装至以下项目：') }} </p>
                     <table class="bk-table project-table">
                         <thead>
                         </thead>
@@ -70,7 +71,7 @@
                         res = bkLocale.$t('流水线模板')
                         break
                     default:
-                        res = bkLocale.$t('镜像')
+                        res = bkLocale.$t('容器镜像')
                         break
                 }
                 return res
@@ -236,9 +237,14 @@
                         const subHeader = h('p', {
                             style: {
                                 textAlign: 'left',
-                                padding: '20px 30px 0'
+                                'text-overflow': 'ellipsis',
+                                'white-space': 'nowrap',
+                                'overflow': 'hidden'
+                            },
+                            attrs: {
+                                title: err.message || err
                             }
-                        }, err.message ? err.message : err)
+                        }, err.message || err)
 
                         this.$bkInfo({
                             type: 'error',
@@ -337,6 +343,9 @@
             padding: 20px 0 40px;
             height: calc(100% - 50px);
             overflow: auto;
+            .template-tip {
+                margin-top: 10px;
+            }
             .sub-view-port,
             .install-success-tips {
                 margin: 20px auto;
