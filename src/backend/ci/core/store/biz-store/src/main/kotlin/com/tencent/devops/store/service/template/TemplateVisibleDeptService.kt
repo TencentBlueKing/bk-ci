@@ -24,19 +24,23 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.worker.common.utils
+package com.tencent.devops.store.service.template
 
-fun getEnvironmentPathPrefix(): String {
-    val os = System.getProperty("os.name")
-    if (os.isNullOrEmpty()) {
-        return ENVIRONMENT_LINUX_PATH_PREFIX
-    }
-    if (os.startsWith("mac", true)) {
-        return ENVIRONMENT_MAC_PATH_PREFIX
-    }
-    return ENVIRONMENT_LINUX_PATH_PREFIX
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.store.pojo.common.DeptInfo
+
+/**
+ * 模板可见范围逻辑类
+ * since: 2019-01-08
+ */
+interface TemplateVisibleDeptService {
+
+    /**
+     * 设置模板可见范围
+     */
+    fun addVisibleDept(userId: String, templateCode: String, deptInfos: List<DeptInfo>): Result<Boolean>
+
+    fun validateUserTemplateAtomVisibleDept(userId: String, templateCode: String, projectCode: String?): Result<Boolean>
+
+    fun validateTemplateVisibleDept(templateCode: String, deptInfos: List<DeptInfo>?): Result<Boolean>
 }
-
-private const val ENVIRONMENT_LINUX_PATH_PREFIX = "/data/bkdevops/apps/"
-
-private const val ENVIRONMENT_MAC_PATH_PREFIX = "/Users/bkdevops/apps/"
