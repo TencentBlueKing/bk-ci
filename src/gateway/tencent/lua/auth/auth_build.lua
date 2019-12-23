@@ -139,6 +139,8 @@ if build_type == "AGENT" then
                 ngx.header["X-DEVOPS-VM-NAME"] = obj.vmName
                 ngx.header["X-DEVOPS-CHANNEL-CODE"] = obj.channelCode
                 ngx.header["X-DEVOPS-AGENT-SECRET-KEY"] = reqSecretKey
+                ngx.header["X-DEVOPS-SYSTEM-VERSION"] = ""
+                ngx.header["X-DEVOPS-XCODE-VERSION"] = ""
                 ngx.exit(200)
                 return
             end
@@ -249,6 +251,8 @@ elseif build_type == "DOCKER" then
                 ngx.header["X-DEVOPS-VM-NAME"] = obj.vmName
                 ngx.header["X-DEVOPS-CHANNEL-CODE"] = obj.channelCode
                 ngx.header["X-DEVOPS-AGENT-SECRET-KEY"] = reqSecretKey
+                ngx.header["X-DEVOPS-SYSTEM-VERSION"] = ""
+                ngx.header["X-DEVOPS-XCODE-VERSION"] = ""
                 ngx.exit(200)
                 return
             end
@@ -359,6 +363,8 @@ elseif build_type == "PLUGIN_AGENT" then
                 ngx.header["X-DEVOPS-VM-NAME"] = obj.vmName
                 ngx.header["X-DEVOPS-CHANNEL-CODE"] = obj.channelCode
                 ngx.header["X-DEVOPS-AGENT-SECRET-KEY"] = reqSecretKey
+                ngx.header["X-DEVOPS-SYSTEM-VERSION"] = ""
+                ngx.header["X-DEVOPS-XCODE-VERSION"] = ""
                 ngx.exit(200)
                 return
             end
@@ -437,6 +443,14 @@ elseif build_type == "MACOS" then
                     ngx.log(ngx.ERR, "id is null: ")
                 end
 
+                if obj.secretKey == nil then
+                    ngx.log(ngx.ERR, "systemVersion is null: ")
+                end
+
+                if obj.xcodeVersion == nil then
+                    ngx.log(ngx.ERR, "xcodeVersion is null: ")
+                end
+
                 ngx.header["X-DEVOPS-PROJECT-ID"] = obj.projectId
                 ngx.header["X-DEVOPS-PIPELINE-ID"] = obj.pipelineId
                 ngx.header["X-DEVOPS-BUILD-ID"] = obj.buildId
@@ -445,6 +459,8 @@ elseif build_type == "MACOS" then
                 ngx.header["X-DEVOPS-VM-NAME"] = obj.id
                 ngx.header["X-DEVOPS-CHANNEL-CODE"] = ""
                 ngx.header["X-DEVOPS-AGENT-SECRET-KEY"] = obj.secretKey
+                ngx.header["X-DEVOPS-SYSTEM-VERSION"] = obj.systemVersion
+                ngx.header["X-DEVOPS-XCODE-VERSION"] = obj.xcodeVersion
                 return
             end
         end
@@ -536,6 +552,8 @@ else
                 ngx.header["X-DEVOPS-VM-NAME"] = obj.vmName
                 ngx.header["X-DEVOPS-CHANNEL-CODE"] = obj.channelCode
                 ngx.header["X-DEVOPS-AGENT-SECRET-KEY"] = ""
+                ngx.header["X-DEVOPS-SYSTEM-VERSION"] = ""
+                ngx.header["X-DEVOPS-XCODE-VERSION"] = ""
                 ngx.exit(200)
                 return
             end
