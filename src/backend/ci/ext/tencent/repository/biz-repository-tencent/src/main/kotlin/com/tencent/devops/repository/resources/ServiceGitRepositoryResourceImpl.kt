@@ -26,6 +26,7 @@
 
 package com.tencent.devops.repository.resources
 
+import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
@@ -49,8 +50,26 @@ class ServiceGitRepositoryResourceImpl @Autowired constructor(
     private val repositoryUserService: RepositoryUserService
 ) : ServiceGitRepositoryResource {
 
-    override fun createGitCodeRepository(userId: String, projectCode: String?, repositoryName: String, sampleProjectPath: String?, namespaceId: Int?, visibilityLevel: VisibilityLevelEnum?, tokenType: TokenTypeEnum): Result<RepositoryInfo?> {
-        return repositoryService.createGitCodeRepository(userId, projectCode, repositoryName, sampleProjectPath, namespaceId, visibilityLevel, tokenType)
+    override fun createGitCodeRepository(
+        userId: String,
+        projectCode: String?,
+        repositoryName: String,
+        sampleProjectPath: String?,
+        namespaceId: Int?,
+        visibilityLevel: VisibilityLevelEnum?,
+        tokenType: TokenTypeEnum,
+        frontendType: FrontendTypeEnum?
+    ): Result<RepositoryInfo?> {
+        return repositoryService.createGitCodeRepository(
+            userId = userId,
+            projectCode = projectCode,
+            repositoryName = repositoryName,
+            sampleProjectPath = sampleProjectPath,
+            namespaceId = namespaceId,
+            visibilityLevel = visibilityLevel,
+            tokenType = tokenType,
+            frontendType = frontendType
+        )
     }
 
     override fun updateGitCodeRepositoryByProjectName(userId: String, projectName: String, updateGitProjectInfo: UpdateGitProjectInfo, tokenType: TokenTypeEnum): Result<Boolean> {
