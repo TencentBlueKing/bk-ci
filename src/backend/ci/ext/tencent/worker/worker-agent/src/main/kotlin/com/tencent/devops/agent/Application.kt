@@ -43,6 +43,7 @@ import com.tencent.devops.worker.common.env.BuildType
 import com.tencent.devops.worker.common.task.TaskFactory
 import java.io.File
 import java.lang.RuntimeException
+import com.tencent.devops.worker.common.utils.ExecutorUtil.runCommand
 
 fun main(args: Array<String>) {
     ElementSubTypeRegisterLoader.registerElementForJsonUtil()
@@ -90,6 +91,8 @@ fun main(args: Array<String>) {
                 .header("X-DEVOPS-BUILD-TYPE", "MACOS")
                 .get()
                 .build()
+
+            var xcodeVersion = ""
             do {
                 try {
                     OkhttpUtils.doHttp(request).use { resp ->
@@ -98,12 +101,14 @@ fun main(args: Array<String>) {
                         System.out.println("resoCode: $resoCode;responseStr:$responseStr")
                         if(resoCode == 200) {
                             val response: Map<String, String> = jacksonObjectMapper().readValue(responseStr)
+
                             // 将变量写入到property当中
                             response.forEach { (key, value) ->
                                 when(key) {
                                     "agentId" -> System.setProperty("devops.agent.id",value)
                                     "secretKey" -> System.setProperty("devops.agent.secret.key",value)
                                     "projectId" -> System.setProperty("devops.project.id",value)
+                                    "xcodeVersion" -> xcodeVersion = value
                                     else -> null
                                 }
                             }
@@ -121,6 +126,28 @@ fun main(args: Array<String>) {
 
             } while (!startBuild)
             System.out.println("Start to run.")
+
+            System.out.println("Start to select xcode.")
+            // 选择XCODE版本
+            val xcodePath = "/Applications/Xcode_$xcodeVersion.app"
+            val xcodeFile = File(xcodePath)
+            // 当指定XCode版本存在的时候，切换xcode
+            if(xcodeFile.exists() && xcodeFile.isDirectory) {
+                // 删除软链
+                val rmCommand = "sudo rm /Applications/Xcode.app"
+                runCommand(rmCommand, rmCommand)
+                // 新建软链
+                val lnCommand = "sudo ln -s /Applications/Xcode_$xcodeVersion.app  Xcode.app"
+                runCommand(lnCommand, lnCommand)
+                // 选择xcode
+                val selectCommand = "sudo xcode-select -s /Applications/Xcode.app/Contents/Developer/"
+                runCommand(selectCommand, selectCommand)
+                System.out.println("End to select xcode:select Xcode_$xcodeVersion.app.")
+            }else {
+                System.out.println("End to select xcode:nothing to do.")
+            }
+
+
             Runner.run(object : WorkspaceInterface {
                 override fun getWorkspace(variables: Map<String, String>, pipelineId: String): File {
                     val workspace = System.getProperty("devops_workspace")
