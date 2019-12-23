@@ -47,6 +47,10 @@ class RedisOperation(private val redisTemplate: RedisTemplate<String, String>) {
         return value
     }
 
+    fun increment(key: String, incr: Long): Long? {
+        return redisTemplate.opsForValue().increment(key, incr)
+    }
+
     fun set(key: String, value: String, expiredInSecond: Long? = null, expired: Boolean? = true) {
         return if (expired == false) {
             redisTemplate.opsForValue().set(key, value)
