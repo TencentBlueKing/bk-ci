@@ -286,8 +286,8 @@ open class CodeccApi constructor(
             if (!eslintToolSetId.isNullOrBlank()) map["ESLINT"] = eslintToolSetId!!
             if (!pylintToolSetId.isNullOrBlank()) map["PYLINT"] = pylintToolSetId!!
             if (!gometalinterToolSetId.isNullOrBlank()) map["GOML"] = gometalinterToolSetId!!
-            if (!checkstyleToolSetId.isNullOrBlank()) map["CHECKSTYLE"] = checkstyleToolSetId!!
-            if (!stylecopToolSetId.isNullOrBlank()) map["STYLECOP"] = stylecopToolSetId!!
+            if (!checkStyleToolSetId.isNullOrBlank()) map["CHECKSTYLE"] = checkStyleToolSetId!!
+            if (!styleCopToolSetId.isNullOrBlank()) map["STYLECOP"] = styleCopToolSetId!!
             if (!detektToolSetId.isNullOrBlank()) map["DETEKT"] = detektToolSetId!!
             if (!phpcsToolSetId.isNullOrBlank()) map["PHPCS"] = phpcsToolSetId!!
             if (!sensitiveToolSetId.isNullOrBlank()) map["SENSITIVE"] = sensitiveToolSetId!!
