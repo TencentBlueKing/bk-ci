@@ -130,9 +130,9 @@
                         item: ['cpplintToolSetId']
                     },
                     {
-                        id: 'checkstyleToolSetId',
+                        id: 'checkStyleToolSetId',
                         name: 'Checkstyle',
-                        item: ['checkstyleToolSetId']
+                        item: ['checkStyleToolSetId']
                     },
                     {
                         id: 'eslintRc',
@@ -140,9 +140,9 @@
                         item: ['eslintRc', 'eslintToolSetId']
                     },
                     {
-                        id: 'stylecopToolSetId',
+                        id: 'styleCopToolSetId',
                         name: 'StyleCop',
-                        item: ['stylecopToolSetId']
+                        item: ['styleCopToolSetId']
                     },
                     {
                         id: 'goPath',
@@ -360,14 +360,14 @@
                     this.newModel.cpplintToolSetId.hidden = true
                 }
                 if (value.filter(item => item === 'CHECKSTYLE').length > 0) {
-                    this.newModel.checkstyleToolSetId.hidden = false
+                    this.newModel.checkStyleToolSetId.hidden = false
                 } else {
-                    this.newModel.checkstyleToolSetId.hidden = true
+                    this.newModel.checkStyleToolSetId.hidden = true
                 }
                 if (value.filter(item => item === 'STYLECOP').length > 0) {
-                    this.newModel.stylecopToolSetId.hidden = false
+                    this.newModel.styleCopToolSetId.hidden = false
                 } else {
-                    this.newModel.stylecopToolSetId.hidden = true
+                    this.newModel.styleCopToolSetId.hidden = true
                 }
                 if (value.filter(item => item === 'DETEKT').length > 0) {
                     this.newModel.detektToolSetId.hidden = false
