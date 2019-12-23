@@ -56,4 +56,11 @@ class BuildEnvironmentResourceImpl @Autowired constructor(
     override fun listRawByEnvNames(projectId: String, buildId: String, envNames: List<String>): Result<List<EnvWithPermission>> {
         return jobService.listRawByEnvNames(projectId, buildId, envNames)
     }
+
+    override fun listUsableServerEnvsByLastUpdateUser(
+        projectId: String,
+        pipelineId: String
+    ): Result<List<EnvWithPermission>> {
+        return jobService.listUsableServerEnvsByLastUpdateUser(projectId, pipelineId)
+    }
 }
