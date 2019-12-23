@@ -102,6 +102,7 @@ class PipelineEvent(
 )
 
 class BuildEvent(
+    val buildId: String,
     val pipelineId: String,
     val pipelineName: String,
     val userId: String,
