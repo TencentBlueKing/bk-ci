@@ -54,12 +54,6 @@ import java.util.concurrent.TimeUnit
 
 @TaskClassType(classTypes = [IosSJTYSignElement.classType])
 class SJTYSignTask : ITask() {
-
-    companion object {
-        private val IP_LIST = if (AgentEnv.isProd()) listOf("9.30.7.110", "9.30.7.46")
-        else listOf("9.30.7.110", "9.30.7.46")
-    }
-
     private val iosSignApi = IOSSignApi()
 
     override fun execute(
@@ -97,9 +91,8 @@ class SJTYSignTask : ITask() {
                 }
 //                val gatewayDomain = System.getProperty("soda.gateway", "gw.devops.oa.com")
                 val gatewayDomain = AgentEnv.getGateway()
-                val newSignMethod = gatewayDomain.contains("devgw")
                 files.forEach { file ->
-                    uploadIpa(file, buildVariables, newSignMethod, gatewayDomain, repoType, customPath, certId)
+                    uploadIpa(file, buildVariables, gatewayDomain, repoType, customPath, certId)
                 }
             }
         }
@@ -108,7 +101,6 @@ class SJTYSignTask : ITask() {
     private fun uploadIpa(
         file: File,
         buildVariables: BuildVariables,
-        newSignMethod: Boolean,
         gatewayDomain: String,
         repoType: Int,
         customPath: String?,
@@ -124,58 +116,8 @@ class SJTYSignTask : ITask() {
         // 重试2次
         while (isException && remain > 0) {
             try {
-                if (newSignMethod) {
-                    iosSignApi.uploadIpa(file, props, repoType, customPath, certId, 2) // p12Id=1为深圳科技
-                    return // 成功退出
-                } else {
-                    IP_LIST.shuffled().forEach { ip ->
-                        val url =
-                            "http://$ip/upload?projectId=${buildVariables.projectId}&pipelineId=${buildVariables.pipelineId}&" +
-                                "buildId=${buildVariables.buildId}&size=${file.length()}&md5=${FileUtil.getMD5(file)}&" +
-                                "env=${AgentEnv.getEnv().name.toLowerCase()}&properties=$props&repoType=$repoType&customPath=$customPath&certId=$certId&p12Id=2"
-                        val fileBody = RequestBody.create(MediaType.parse("application/octet-stream"), file)
-                        val requestBody = MultipartBody.Builder()
-                            .setType(MultipartBody.FORM)
-                            .addFormDataPart("file", file.name, fileBody)
-                            .build()
-                        val request = Request.Builder()
-                            .url(url)
-                            .post(requestBody)
-                            .build()
-
-                        val timeout = (1 + file.length() / 1024 / 1024 / 1024) * 14 // 每G给14分钟，再增加14分钟做签名。
-                        val okHttpClient = OkHttpClient.Builder()
-                            .connectTimeout(100, TimeUnit.SECONDS)
-                            .writeTimeout(timeout, TimeUnit.MINUTES)
-                            .readTimeout(timeout, TimeUnit.MINUTES)
-                            .build()
-
-                        okHttpClient.newCall(request).execute().use { response ->
-                            val data = response.body()!!.string().trim()
-                            if (data != "success") {
-                                LoggerService.addRedLine("response data: $data")
-                            } else {
-                                LoggerService.addNormalLine("response data: $data")
-                            }
-
-                            if (!response.isSuccessful || data != "success") {
-                                LoggerService.addRedLine("enterprise sign ($file) fail in ip(${SecurityUtil.encrypt(ip)})")
-                                throw TaskExecuteException(
-                                    errorMsg = "enterprise sign ($file) fail in ip(${SecurityUtil.encrypt(ip)})",
-                                    errorType = ErrorType.USER,
-                                    errorCode = AtomErrorCode.USER_INPUT_INVAILD
-                                )
-                            } else {
-                                LoggerService.addNormalLine(
-                                    "enterprise sign successfully ($file)  in ip(${SecurityUtil.encrypt(
-                                        ip
-                                    )})"
-                                )
-                                return
-                            }
-                        }
-                    }
-                }
+                iosSignApi.uploadIpa(file, props, repoType, customPath, certId, 2) // p12Id=1为深圳科技
+                return // 成功退出
             } catch (e: Exception) {
                 // 异常情况打印尝试日志
                 remain--
