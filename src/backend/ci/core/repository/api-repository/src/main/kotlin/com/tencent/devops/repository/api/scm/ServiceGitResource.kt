@@ -104,7 +104,13 @@ interface ServiceGitResource {
         userId: String,
         @ApiParam("仓库ID", required = true)
         @QueryParam("repository")
-        repository: String
+        repository: String,
+        @ApiParam("第几页", required = true)
+        @QueryParam("page")
+        page: Int?,
+        @ApiParam("每页数据条数", required = true)
+        @QueryParam("pageSize")
+        pageSize: Int?
     ): Result<List<GitBranch>>
 
     @ApiOperation("获取用户所有git TAG")
