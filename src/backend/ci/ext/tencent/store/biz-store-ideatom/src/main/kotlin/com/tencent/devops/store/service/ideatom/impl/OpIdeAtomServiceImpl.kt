@@ -596,7 +596,8 @@ class OpIdeAtomServiceImpl @Autowired constructor(
                 sampleProjectPath = null,
                 namespaceId = idePluginNameSpaceId.toInt(),
                 visibilityLevel = ideAtomCreateRequest.visibilityLevel,
-                tokenType = TokenTypeEnum.PRIVATE_KEY
+                tokenType = TokenTypeEnum.PRIVATE_KEY,
+                frontendType = null
             )
             logger.info("the createGitRepositoryResult is :$createGitRepositoryResult")
             if (createGitRepositoryResult.isOk()) {
