@@ -211,17 +211,7 @@
                 showImageSelector: false,
                 isVersionLoading: false,
                 isLoadingImage: false,
-                imageRecommend: true,
-                imageTypeList: [
-                    {
-                        label: this.$t('editPage.fromList'),
-                        value: 'BKSTORE'
-                    },
-                    {
-                        label: this.$t('editPage.fromHand'),
-                        value: 'THIRD'
-                    }
-                ]
+                imageRecommend: true
             }
         },
         computed: {
@@ -258,6 +248,12 @@
                         isShow: value
                     })
                 }
+            },
+            imageTypeList () {
+                return [
+                    { label: this.$t('editPage.fromList'), value: 'BKSTORE' },
+                    { label: this.$t('editPage.fromHand'), value: 'THIRD', hidden: this.buildResourceType === 'PUBLIC_DEVCLOUD' }
+                ]
             },
             appEnvs () {
                 return this.getAppEnvs(this.container.baseOS)
