@@ -28,6 +28,7 @@ package com.tencent.devops.repository.service
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.RepositoryMessageCode
+import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import com.tencent.devops.common.api.enums.RepositoryConfig
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.enums.ScmType
@@ -124,10 +125,11 @@ class RepositoryService @Autowired constructor(
         sampleProjectPath: String?,
         namespaceId: Int?,
         visibilityLevel: VisibilityLevelEnum?,
-        tokenType: TokenTypeEnum
+        tokenType: TokenTypeEnum,
+        frontendType: FrontendTypeEnum?
     ): Result<RepositoryInfo?> {
         logger.info("createGitRepository userId is:$userId,projectCode is:$projectCode, repositoryName is:$repositoryName, sampleProjectPath is:$sampleProjectPath")
-        logger.info("createGitRepository  namespaceId is:$namespaceId, visibilityLevel is:$visibilityLevel, tokenType is:$tokenType")
+        logger.info("createGitRepository namespaceId is:$namespaceId, visibilityLevel is:$visibilityLevel, tokenType is:$tokenType, frontendType is:$frontendType")
         val getGitTokenResult = getGitToken(tokenType, userId)
         if (getGitTokenResult.isNotOk()) {
             return Result(status = getGitTokenResult.status, message = getGitTokenResult.message ?: "")
@@ -143,7 +145,8 @@ class RepositoryService @Autowired constructor(
                 sampleProjectPath = sampleProjectPath,
                 namespaceId = namespaceId,
                 visibilityLevel = visibilityLevel,
-                tokenType = tokenType
+                tokenType = tokenType,
+                frontendType = frontendType
             )
             logger.info("createGitCodeRepository gitRepositoryRespResult is :$gitRepositoryRespResult")
             if (gitRepositoryRespResult.isOk()) {
