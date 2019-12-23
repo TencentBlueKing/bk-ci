@@ -112,10 +112,12 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.cloud.context.config.annotation.RefreshScope
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 import kotlin.math.ceil
 
+@RefreshScope
 @Service
 abstract class ImageService @Autowired constructor() {
     @Autowired
@@ -155,6 +157,8 @@ abstract class ImageService @Autowired constructor() {
     lateinit var storeMemberService: StoreMemberService
     @Autowired
     lateinit var classifyService: ClassifyService
+    @Autowired
+    lateinit var supportService: SupportService
     @Autowired
     lateinit var marketImageStatisticService: MarketImageStatisticService
     @Autowired
@@ -646,14 +650,19 @@ abstract class ImageService @Autowired constructor() {
         return getImageDetail(userId, imageRecord)
     }
 
+    @Value("\${store.buildResultBaseUrl}")
+    private lateinit var buildResultBaseUrl: String
+
     fun getImageRepoInfoByCodeAndVersion(
         userId: String,
         projectCode: String,
+        pipelineId: String?,
+        buildId: String?,
         imageCode: String,
         imageVersion: String?,
         interfaceName: String? = "Anon interface"
     ): ImageRepoInfo {
-        logger.info("$interfaceName:getImageRepoInfoByCodeAndVersion:Input:($userId,$projectCode,$imageCode,$imageVersion)")
+        logger.info("$interfaceName:getImageRepoInfoByCodeAndVersion:Input:($userId,$projectCode,$pipelineId,$buildId,$imageCode,$imageVersion)")
         // 区分是否为调试项目
         val imageStatusList = imageCommonService.generateImageStatusList(imageCode, projectCode)
         val imageRecord =
@@ -663,11 +672,63 @@ abstract class ImageService @Autowired constructor() {
                 imageStatusSet = imageStatusList.toSet(),
                 baseVersion = imageVersion?.replace("*", "")
             )
-                ?: throw InvalidParamException(
-                    message = "image is null,projectCode=$projectCode,imageCode=$imageCode,imageVersion=$imageVersion",
-                    params = arrayOf(imageCode, imageVersion ?: "")
-                )
-        return getImageRepoInfoByRecord(imageRecord)
+        val imageRepoInfo = if (null == imageRecord) {
+            // 运行时异常情况兜底，通知管理员
+            val titleParams = mutableMapOf<String, String>()
+            titleParams["userId"] = userId
+            titleParams["projectCode"] = projectCode
+            titleParams["imageCode"] = imageCode
+            titleParams["imageVersion"] = imageVersion ?: ""
+            val bodyParams = mutableMapOf<String, String>()
+            bodyParams["userId"] = userId
+            bodyParams["projectCode"] = projectCode
+            bodyParams["imageCode"] = imageCode
+            bodyParams["imageVersion"] = imageVersion ?: ""
+            bodyParams["pipelineId"] = pipelineId ?: ""
+            bodyParams["buildId"] = buildId ?: ""
+            bodyParams["url"] = buildResultBaseUrl.removeSuffix("/") + "/$projectCode/$pipelineId/detail/$buildId"
+            try {
+                supportService.sendImageExecuteNullToManagers(titleParams, bodyParams)
+            } catch (e: Exception) {
+                // 通知失败不应影响执行
+                logger.error("$interfaceName:getImageRepoInfoByCodeAndVersion:sendImageExecuteNullToManagers fail", e)
+            }
+            getDefaultImageRepoInfo()
+        } else {
+            getImageRepoInfoByRecord(imageRecord)
+        }
+        with(imageRepoInfo) {
+            logger.info("getImageRepoInfoByCodeAndVersion:Output($sourceType,$repoUrl,$repoName,$repoTag,$ticketId,$ticketProject)")
+        }
+        return imageRepoInfo
+    }
+
+    @Value("\${store.defaultImageSourceType}")
+    private lateinit var defaultImageSourceType: String
+    @Value("\${store.defaultImageRepoUrl}")
+    private lateinit var defaultImageRepoUrl: String
+    @Value("\${store.defaultImageRepoName}")
+    private lateinit var defaultImageRepoName: String
+    @Value("\${store.defaultImageTag}")
+    private lateinit var defaultImageTag: String
+    @Value("\${store.defaultTicketId}")
+    private lateinit var defaultTicketId: String
+    @Value("\${store.defaultTicketProject}")
+    private lateinit var defaultTicketProject: String
+    @Value("\${store.defaultImageRDType}")
+    private lateinit var defaultImageRDType: String
+
+    fun getDefaultImageRepoInfo(): ImageRepoInfo {
+        return ImageRepoInfo(
+            sourceType = ImageType.getType(defaultImageSourceType),
+            repoUrl = defaultImageRepoUrl,
+            repoName = defaultImageRepoName,
+            repoTag = defaultImageTag,
+            ticketId = defaultTicketId,
+            ticketProject = defaultTicketProject,
+            publicFlag = true,
+            rdType = ImageRDTypeEnum.getImageRDTypeByName(defaultImageRDType)
+        )
     }
 
     fun getImageRepoInfoByRecord(imageRecord: Record): ImageRepoInfo {
@@ -697,7 +758,6 @@ abstract class ImageService @Autowired constructor() {
             StoreMessageCode.USER_IMAGE_UNKNOWN_SOURCE_TYPE
         )
         else {
-            logger.info("getImageRepoInfoByRecord:Output($sourceType,$cleanImageRepoUrl,$cleanImageRepoName,$cleanTag,$ticketId,$ticketProject)")
             return ImageRepoInfo(
                 sourceType = sourceType,
                 repoUrl = cleanImageRepoUrl,

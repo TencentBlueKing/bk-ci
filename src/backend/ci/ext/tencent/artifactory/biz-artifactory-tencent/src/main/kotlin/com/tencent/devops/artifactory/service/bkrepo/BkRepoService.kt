@@ -57,7 +57,6 @@ import java.nio.file.Paths
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import javax.ws.rs.NotFoundException
-import kotlin.String as String1
 
 @Service
 class BkRepoService @Autowired constructor(
@@ -66,38 +65,38 @@ class BkRepoService @Autowired constructor(
     val bkRepoClient: BkRepoClient
 ) : RepoService {
 
-    override fun list(userId: String1, projectId: String1, artifactoryType: ArtifactoryType, path: String1): List<FileInfo> {
+    override fun list(userId: String, projectId: String, artifactoryType: ArtifactoryType, path: String): List<FileInfo> {
         logger.info("list, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType, path: $path")
         return bkRepoClient.listFile(userId, projectId, RepoUtils.getRepoByType(artifactoryType), path, includeFolders = true, deep = false).map {
             RepoUtils.toFileInfo(it)
         }
     }
 
-    override fun show(userId: String1, projectId: String1, artifactoryType: ArtifactoryType, path: String1): FileDetail {
+    override fun show(userId: String, projectId: String, artifactoryType: ArtifactoryType, path: String): FileDetail {
         logger.info("show, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType, path: $path")
         val normalizedPath = PathUtils.checkAndNormalizeAbsPath(path)
-        val fileDetail = bkRepoClient.getFileDetail("", projectId, RepoUtils.getRepoByType(ArtifactoryType.CUSTOM_DIR), normalizedPath)
+        val fileDetail = bkRepoClient.getFileDetail("", projectId, RepoUtils.getRepoByType(artifactoryType), normalizedPath)
             ?: throw NotFoundException("文件不存在")
 
         return RepoUtils.toFileDetail(fileDetail)
     }
 
-    override fun folderSize(userId: String1, projectId: String1, artifactoryType: ArtifactoryType, path: String1): FolderSize {
+    override fun folderSize(userId: String, projectId: String, artifactoryType: ArtifactoryType, path: String): FolderSize {
         logger.info("folderSize, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType, path: $path")
         val sizeInfo = bkRepoClient.getFileSize(userId, projectId, RepoUtils.getRepoByType(artifactoryType), path)
         return FolderSize(sizeInfo.size)
     }
 
-    override fun setDockerProperties(projectId: String1, imageName: String1, tag: String1, properties: Map<String1, String1>) {
-        logger.info("setDockerProperties, projectId: $projectId, imageName: $imageName, String: $String1, properties: $properties")
+    override fun setDockerProperties(projectId: String, imageName: String, tag: String, properties: Map<String, String>) {
+        logger.info("setDockerProperties, projectId: $projectId, imageName: $imageName, String: $String, properties: $properties")
         throw OperationException("not supported")
     }
 
     override fun setProperties(
-        projectId: String1,
+        projectId: String,
         artifactoryType: ArtifactoryType,
-        argPath: String1,
-        properties: Map<String1, String1>
+        argPath: String,
+        properties: Map<String, String>
     ) {
         logger.info("setProperties, projectId: $projectId, artifactoryType: $artifactoryType, argPath: $argPath, properties: $properties")
         if (properties.isEmpty()) {
@@ -108,7 +107,7 @@ class BkRepoService @Autowired constructor(
         bkRepoClient.setMetadata("admin", projectId, RepoUtils.getRepoByType(artifactoryType), path, properties)
     }
 
-    override fun getProperties(projectId: String1, artifactoryType: ArtifactoryType, path: String1): List<Property> {
+    override fun getProperties(projectId: String, artifactoryType: ArtifactoryType, path: String): List<Property> {
         logger.info("getProperties, projectId: $projectId, artifactoryType: $artifactoryType, path: $path")
         val normalizedPath = PathUtils.checkAndNormalizeAbsPath(path)
         val matadataMap = bkRepoClient.listMetadata("", projectId, RepoUtils.getRepoByType(artifactoryType), normalizedPath)
@@ -125,34 +124,39 @@ class BkRepoService @Autowired constructor(
     }
 
     override fun getPropertiesByRegex(
-        projectId: String1,
-        pipelineId: String1,
-        buildId: String1,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
         artifactoryType: ArtifactoryType,
-        argPath: String1
+        argPath: String,
+        crossProjectId: String?,
+        crossPipineId: String?,
+        crossBuildNo: String?
     ): List<FileDetail> {
-        logger.info("getPropertiesByRegex, projectId: $projectId, pipelineId: $pipelineId, buildId: $buildId, artifactoryType: $artifactoryType, argPath: $argPath")
+        logger.info("getPropertiesByRegex, projectId: $projectId, pipelineId: $pipelineId, buildId: $buildId, " +
+            "artifactoryType: $artifactoryType, argPath: $argPath, crossProjectId: $crossProjectId, " +
+            "crossPipineId: $crossPipineId, crossBuildNo: $crossBuildNo")
         // todo 实现
         throw OperationException("not implemented")
     }
 
-    override fun getOwnFileList(userId: String1, projectId: String1, offset: Int, limit: Int): Pair<Long, List<FileInfo>> {
+    override fun getOwnFileList(userId: String, projectId: String, offset: Int, limit: Int): Pair<Long, List<FileInfo>> {
         logger.info("getOwnFileList, userId: $userId, projectId: $projectId, offset: $offset, limit: $limit")
         // not support
         return Pair(LocalDateTime.now().timestamp(), listOf())
     }
 
-    override fun getBuildFileList(userId: String1, projectId: String1, pipelineId: String1, buildId: String1): List<AppFileInfo> {
+    override fun getBuildFileList(userId: String, projectId: String, pipelineId: String, buildId: String): List<AppFileInfo> {
         logger.info("getBuildFileList, userId: $userId, projectId: $projectId, pipelineId: $pipelineId, buildId: $buildId")
         // todo 实现
         return listOf()
     }
 
     override fun getFilePipelineInfo(
-        userId: String1,
-        projectId: String1,
+        userId: String,
+        projectId: String,
         artifactoryType: ArtifactoryType,
-        path: String1
+        path: String
     ): FilePipelineInfo {
         logger.info("getFilePipelineInfo, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType, path: $path")
         val normalizedPath = PathUtils.checkAndNormalizeAbsPath(path)
@@ -166,7 +170,7 @@ class BkRepoService @Autowired constructor(
         return FilePipelineInfo(pipelineId!!, pipelineName)
     }
 
-    override fun show(projectId: String1, artifactoryType: ArtifactoryType, path: String1): FileDetail {
+    override fun show(projectId: String, artifactoryType: ArtifactoryType, path: String): FileDetail {
         logger.info("show, projectId: $projectId, artifactoryType: $artifactoryType, path: $path")
         val normalizedPath = PathUtils.checkAndNormalizeAbsPath(path)
         val fileDetail = bkRepoClient.getFileDetail("", projectId, RepoUtils.getRepoByType(artifactoryType), normalizedPath)
@@ -175,7 +179,7 @@ class BkRepoService @Autowired constructor(
         return RepoUtils.toFileDetail(fileDetail)
     }
 
-    override fun check(projectId: String1, artifactoryType: ArtifactoryType, path: String1): Boolean {
+    override fun check(projectId: String, artifactoryType: ArtifactoryType, path: String): Boolean {
         logger.info("check, projectId: $projectId, artifactoryType: $artifactoryType, path: $path")
         bkRepoClient.getFileDetail("", projectId, RepoUtils.getRepoByType(ArtifactoryType.CUSTOM_DIR), path)
             ?: return false
@@ -183,15 +187,15 @@ class BkRepoService @Autowired constructor(
     }
 
     fun transferFileInfo(
-        projectId: String1,
+        projectId: String,
         fileList: List<NodeInfo>,
-        pipelineHasPermissionList: List<String1>,
+        pipelineHasPermissionList: List<String>,
         checkPermission: Boolean = true
     ): List<FileInfo> {
         val startTimestamp = System.currentTimeMillis()
         try {
-            val pipelineIdList = mutableListOf<String1>()
-            val buildIdList = mutableListOf<String1>()
+            val pipelineIdList = mutableListOf<String>()
+            val buildIdList = mutableListOf<String>()
             fileList.forEach {
                 if (it.repoName == RepoUtils.PIPELINE_REPO) {
                     pipelineIdList.add(pipelineService.getPipelineId(it.path))
@@ -204,7 +208,7 @@ class BkRepoService @Autowired constructor(
             val fileInfoList = mutableListOf<FileInfo>()
             fileList.forEach {
 
-//                var appVersion: String? = null
+                //                var appVersion: String? = null
 //                val properties = it.properties!!.map { itp ->
 //                    if (itp.key == "appVersion") {
 //                        appVersion = itp.value ?: ""
@@ -263,12 +267,12 @@ class BkRepoService @Autowired constructor(
         }
     }
 
-    override fun createDockerUser(projectId: String1): DockerUser {
+    override fun createDockerUser(projectId: String): DockerUser {
         logger.info("createDockerUser, projectId: $projectId")
         throw OperationException("Not Supported")
     }
 
-    override fun listCustomFiles(projectId: String1, condition: CustomFileSearchCondition): List<String1> {
+    override fun listCustomFiles(projectId: String, condition: CustomFileSearchCondition): List<String> {
         logger.info("listCustomFiles, projectId: $projectId, condition: $condition")
         val allFiles = bkRepoClient.searchFile(
             "",
@@ -302,7 +306,7 @@ class BkRepoService @Autowired constructor(
         return matchedFiles.toSet().toList().sortedByDescending { it.lastModifiedDate }.map { it.path }
     }
 
-    override fun copyToCustom(userId: String1, projectId: String1, pipelineId: String1, buildId: String1, copyToCustomReq: CopyToCustomReq) {
+    override fun copyToCustom(userId: String, projectId: String, pipelineId: String, buildId: String, copyToCustomReq: CopyToCustomReq) {
         if (copyToCustomReq.files.isEmpty()) {
             throw OperationException("invalid request")
         }
@@ -326,7 +330,7 @@ class BkRepoService @Autowired constructor(
         }
     }
 
-    override fun acrossProjectCopy(projectId: String1, artifactoryType: ArtifactoryType, path: String1, targetProjectId: String1, targetPath: String1): Count {
+    override fun acrossProjectCopy(projectId: String, artifactoryType: ArtifactoryType, path: String, targetProjectId: String, targetPath: String): Count {
         bkRepoClient.copy(
             "",
             projectId,
@@ -339,20 +343,20 @@ class BkRepoService @Autowired constructor(
         return Count(-1) // todo 返回拷贝文件个数
     }
 
-    fun getFileDownloadUrl(param: ArtifactorySearchParam): List<String1> {
+    fun getFileDownloadUrl(param: ArtifactorySearchParam): List<String> {
         logger.info("getFileDownloadUrl, param: $param")
         // todo
         throw OperationException("not implemented")
     }
 
     fun externalDownloadUrl(
-        userId: String1,
-        projectId: String1,
+        userId: String,
+        projectId: String,
         artifactoryType: ArtifactoryType,
-        path: String1,
+        path: String,
         ttl: Int,
         directed: Boolean
-    ): String1 {
+    ): String {
         logger.info("externalDownloadUrl, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType, " +
             "path: $path, ttl: $ttl, directed: $directed")
 
@@ -368,13 +372,13 @@ class BkRepoService @Autowired constructor(
     }
 
     fun internalDownloadUrl(
-        userId: String1,
-        projectId: String1,
+        userId: String,
+        projectId: String,
         artifactoryType: ArtifactoryType,
-        path: String1,
+        path: String,
         ttl: Int,
         directed: Boolean
-    ): String1 {
+    ): String {
         logger.info("internalDownloadUrl, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType, " +
             "path: $path, ttl: $ttl, directed: $directed")
         // todo

@@ -47,7 +47,7 @@ class OpImageResourceImpl @Autowired constructor(
     }
 
     override fun updateImage(userId: String, imageId: String, imageUpdateRequest: ImageUpdateRequest): Result<Boolean> {
-        return imageService.update(
+        return opImageService.update(
             userId = userId,
             imageId = imageId,
             imageUpdateRequest = imageUpdateRequest,
@@ -73,12 +73,13 @@ class OpImageResourceImpl @Autowired constructor(
         )
     }
 
-    override fun getImagesByCode(userId: String, imageCode: String, version: String?): Result<ImageDetail> {
+    override fun getImagesByCodeAndVersion(userId: String, imageCode: String, version: String?): Result<ImageDetail> {
         return Result(
-            imageService.getImageDetailByCode(
+            imageService.getImageDetailByCodeAndVersion(
                 userId = userId,
                 imageCode = imageCode,
-                interfaceName = "/op/pipeline/image/imageCodes/{imageCode},get"
+                imageVersion = version,
+                interfaceName = "/op/pipeline/image/imageCodes/{imageCode},version,get"
             )
         )
     }

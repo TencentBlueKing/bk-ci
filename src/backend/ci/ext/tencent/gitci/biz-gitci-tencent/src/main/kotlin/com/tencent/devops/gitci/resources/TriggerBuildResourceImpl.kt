@@ -57,7 +57,7 @@ class TriggerBuildResourceImpl @Autowired constructor(
             val (validate, message) = gitCIRequestService.validateCIBuildYaml(yaml)
             if (!validate) {
                 logger.error("Validate yaml failed, message: $message")
-                return Result(1, "Invalid yaml", message)
+                return Result(1, "Invalid yaml: $message", message)
             }
             gitCIRequestService.createCIBuildYaml(yaml)
         } catch (e: Throwable) {

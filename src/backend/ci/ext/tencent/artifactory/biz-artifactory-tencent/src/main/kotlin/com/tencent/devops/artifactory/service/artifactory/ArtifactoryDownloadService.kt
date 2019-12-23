@@ -28,12 +28,12 @@ package com.tencent.devops.artifactory.service.artifactory
 
 import com.tencent.devops.artifactory.client.JFrogAQLService
 import com.tencent.devops.artifactory.client.JFrogApiService
-import com.tencent.devops.artifactory.service.JFrogService
 import com.tencent.devops.artifactory.dao.TokenDao
 import com.tencent.devops.artifactory.pojo.DownloadUrl
 import com.tencent.devops.artifactory.pojo.Url
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.artifactory.pojo.enums.Platform
+import com.tencent.devops.artifactory.service.JFrogService
 import com.tencent.devops.artifactory.service.PipelineService
 import com.tencent.devops.artifactory.service.RepoDownloadService
 import com.tencent.devops.artifactory.service.pojo.FileShareInfo
@@ -48,11 +48,16 @@ import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_BUILD_ID
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_PIPELINE_ID
 import com.tencent.devops.common.archive.shorturl.ShortUrlApi
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.BSAuthProjectApi
+import com.tencent.devops.common.auth.code.BSRepoAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.notify.enums.EnumEmailFormat
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.notify.api.service.ServiceNotifyResource
 import com.tencent.devops.notify.pojo.EmailNotifyMessage
+import com.tencent.devops.process.api.service.ServiceBuildResource
+import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -76,7 +81,9 @@ class ArtifactoryDownloadService @Autowired constructor(
     private val jFrogService: JFrogService,
     private val jFrogApiService: JFrogApiService,
     private val jFrogAQLService: JFrogAQLService,
-    private val jFrogPropertiesApi: JFrogPropertiesApi
+    private val jFrogPropertiesApi: JFrogPropertiesApi,
+    private val authProjectApi: BSAuthProjectApi,
+    private val artifactoryAuthServiceCode: BSRepoAuthServiceCode
 ) : RepoDownloadService {
     private val regex = Pattern.compile(",|;")
 
@@ -230,7 +237,8 @@ class ArtifactoryDownloadService @Autowired constructor(
 
         val days = ttl / (3600 * 24)
         val title = EmailUtil.getShareEmailTitle(userId, fileName, 1)
-        val body = EmailUtil.getShareEmailBody(projectName, title, userId, days, listOf(FileShareInfo(fileName, jFrogDetail.checksums?.md5 ?: "", projectName, downloadUrl)))
+        val body = EmailUtil.getShareEmailBody(projectName, title, userId, days, listOf(FileShareInfo(fileName, jFrogDetail.checksums?.md5
+            ?: "", projectName, downloadUrl)))
         val receivers = downloadUsers.split(",").toSet()
         receivers.forEach {
             if (it.startsWith("g_")) throw BadRequestException("Invalid download users")
@@ -240,9 +248,52 @@ class ArtifactoryDownloadService @Autowired constructor(
         client.get(ServiceNotifyResource::class).sendEmailNotify(emailNotifyMessage)
     }
 
-    override fun getThirdPartyDownloadUrl(projectId: String, pipelineId: String, buildId: String, artifactoryType: ArtifactoryType, argPath: String, ttl: Int?): List<String> {
-        val pathArray = regex.split(argPath)
+    override fun getThirdPartyDownloadUrl(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        artifactoryType: ArtifactoryType,
+        argPath: String,
+        ttl: Int?,
+        crossProjectId: String?,
+        crossPipineId: String?,
+        crossBuildNo: String?
+    ): List<String> {
+        logger.info("getThirdPartyDownloadUrl, projectId: $projectId, pipelineId: $pipelineId, buildId: $buildId" +
+            ", artifactoryType: $artifactoryType, argPath: $argPath, crossProjectId: $crossProjectId, ttl: $ttl" +
+            ", crossPipineId: $crossPipineId, crossBuildNo: $crossBuildNo")
+        var targetProjectId = projectId
+        var targetPipelineId = pipelineId
+        var targetBuildId = buildId
+        if (!crossProjectId.isNullOrBlank()) {
+            val lastModifyUser = client.get(ServicePipelineResource::class)
+                .getPipelineInfo(projectId, pipelineId, null).data!!.lastModifyUser
+            targetProjectId = crossProjectId!!
+            if (artifactoryType == ArtifactoryType.CUSTOM_DIR &&
+                !authProjectApi.getProjectUsers(artifactoryAuthServiceCode, targetProjectId).contains(lastModifyUser)) {
+                throw BadRequestException("用户（$lastModifyUser) 没有项目（$targetProjectId）下载权限)")
+            }
+            if (artifactoryType == ArtifactoryType.PIPELINE) {
+                targetPipelineId = crossPipineId ?: throw BadRequestException("Invalid Parameter pipelineId")
+                pipelineService.validatePermission(
+                    lastModifyUser,
+                    targetProjectId,
+                    targetPipelineId,
+                    AuthPermission.DOWNLOAD,
+                    "用户($lastModifyUser)在项目($crossProjectId)下没有流水线($crossPipineId)下载构建权限")
 
+                val targetBuild = client.get(ServiceBuildResource::class).getSingleHistoryBuild(
+                    targetProjectId,
+                    targetPipelineId,
+                    crossBuildNo ?: throw BadRequestException("Invalid Parameter buildNo"),
+                    ChannelCode.BS
+                ).data
+                targetBuildId = (targetBuild ?: throw BadRequestException("构建不存在($crossBuildNo)")).id
+            }
+        }
+        logger.info("targetProjectId: $targetProjectId, targetPipelineId: $targetPipelineId, targetBuildId: $targetBuildId")
+
+        val pathArray = regex.split(argPath)
         val repoPathPrefix = JFrogUtil.getRepoPath()
         val jFrogFileInfoList = mutableListOf<JFrogAQLFileInfo>()
 
@@ -251,9 +302,9 @@ class ArtifactoryDownloadService @Autowired constructor(
             val realPath = if (path.startsWith("/")) normalizedPath else "/$normalizedPath"
 
             val pathPrefix = if (artifactoryType == ArtifactoryType.PIPELINE) {
-                "/" + JFrogUtil.getPipelinePathPrefix(projectId).removePrefix(repoPathPrefix) + "$pipelineId/$buildId/" + JFrogUtil.getParentFolder(realPath).removePrefix("/")
+                "/" + JFrogUtil.getPipelinePathPrefix(targetProjectId).removePrefix(repoPathPrefix) + "$targetPipelineId/$targetBuildId/" + JFrogUtil.getParentFolder(realPath).removePrefix("/")
             } else {
-                "/" + JFrogUtil.getCustomDirPathPrefix(projectId).removePrefix(repoPathPrefix) + JFrogUtil.getParentFolder(realPath).removePrefix("/")
+                "/" + JFrogUtil.getCustomDirPathPrefix(targetProjectId).removePrefix(repoPathPrefix) + JFrogUtil.getParentFolder(realPath).removePrefix("/")
             }
             val fileName = JFrogUtil.getFileName(path)
 
@@ -264,13 +315,13 @@ class ArtifactoryDownloadService @Autowired constructor(
         }
 
         logger.info("Match file list: $jFrogFileInfoList")
-        val fileInfoList = artifactoryService.transferJFrogAQLFileInfo(projectId, jFrogFileInfoList, emptyList(), false)
+        val fileInfoList = artifactoryService.transferJFrogAQLFileInfo(targetProjectId, jFrogFileInfoList, emptyList(), false)
         logger.info("Transfer file list: $fileInfoList")
 
         val filePathList = fileInfoList.map {
-            JFrogUtil.getRealPath(projectId, artifactoryType, it.fullPath)
+            JFrogUtil.getRealPath(targetProjectId, artifactoryType, it.fullPath)
         }
-        return jFrogApiService.batchThirdPartyDownloadUrl(filePathList, ttl ?: 24*3600).map { it.value }
+        return jFrogApiService.batchThirdPartyDownloadUrl(filePathList, ttl ?: 24 * 3600).map { it.value }
     }
 
     private fun makeEmailNotifyMessage(title: String, body: String, receivers: Set<String>): EmailNotifyMessage {

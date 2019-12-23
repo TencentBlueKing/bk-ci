@@ -159,6 +159,8 @@ class TaskAtomService @Autowired(required = false) constructor(
         errorCode: Int?,
         errorMsg: String?
     ) {
+        val isEnvControl = elementType == EnvControlTaskType.NORMAL.name || elementType == EnvControlTaskType.VM.name
+
         try {
             val isEnvControl = elementType == EnvControlTaskType.NORMAL.name || elementType == EnvControlTaskType.VM.name
 
