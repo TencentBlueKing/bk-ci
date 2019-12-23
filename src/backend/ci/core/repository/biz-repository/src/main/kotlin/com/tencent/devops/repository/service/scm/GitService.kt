@@ -30,6 +30,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.google.gson.JsonParser
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.RepositoryMessageCode
+import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
@@ -277,7 +278,8 @@ class GitService @Autowired constructor(
         sampleProjectPath: String?,
         namespaceId: Int?,
         visibilityLevel: VisibilityLevelEnum?,
-        tokenType: TokenTypeEnum
+        tokenType: TokenTypeEnum,
+        frontendType: FrontendTypeEnum?
     ): Result<GitRepositoryResp?> {
         logger.info("createGitRepository userId is:$userId,token is:$token, repositoryName is:$repositoryName, sampleProjectPath is:$sampleProjectPath")
         logger.info("createGitRepository  namespaceId is:$namespaceId, visibilityLevel is:$visibilityLevel, tokenType is:$tokenType")
@@ -319,12 +321,13 @@ class GitService @Autowired constructor(
                 if (!sampleProjectPath.isNullOrBlank()) {
                     // 把样例工程代码添加到用户的仓库
                     initRepositoryInfo(
-                        userId,
-                        sampleProjectPath!!,
-                        token,
-                        tokenType,
-                        repositoryName,
-                        atomRepositoryUrl as String
+                        userId = userId,
+                        sampleProjectPath = sampleProjectPath!!,
+                        token = token,
+                        tokenType = tokenType,
+                        repositoryName = repositoryName,
+                        atomRepositoryUrl = atomRepositoryUrl as String,
+                        frontendType = frontendType
                     )
                 }
             }
@@ -338,7 +341,8 @@ class GitService @Autowired constructor(
         token: String,
         tokenType: TokenTypeEnum,
         repositoryName: String,
-        atomRepositoryUrl: String
+        atomRepositoryUrl: String,
+        frontendType: FrontendTypeEnum?
     ): Result<Boolean> {
         logger.info("initRepositoryInfo userId is:$userId,sampleProjectPath is:$sampleProjectPath,atomRepositoryUrl is:$atomRepositoryUrl")
         logger.info("initRepositoryInfo token is:$token,tokenType is:$tokenType,repositoryName is:$repositoryName")
@@ -351,10 +355,7 @@ class GitService @Autowired constructor(
             } else {
                 CodeGitUsernameCredentialSetter(gitPublicAccount, gitPublicSecret)
             }
-            CommonScriptUtils.execute(
-                "git clone ${credentialSetter.getCredentialUrl(sampleProjectPath)}",
-                atomTmpWorkspace
-            )
+            CommonScriptUtils.execute("git clone ${credentialSetter.getCredentialUrl(sampleProjectPath)}", atomTmpWorkspace)
             // 2、删除下载下来示例工程的git信息
             val atomFileDir = atomTmpWorkspace.listFiles()?.firstOrNull()
             logger.info("initRepositoryInfo atomFileDir is:${atomFileDir?.absolutePath}")
@@ -362,13 +363,24 @@ class GitService @Autowired constructor(
             if (atomGitFileDir.exists()) {
                 FileSystemUtils.deleteRecursively(atomGitFileDir)
             }
+            // 如果用户选的是自定义UI方式开发插件，则需要初始化UI开发脚手架
+            if (FrontendTypeEnum.SPECIAL == frontendType) {
+                val atomFrontendFileDir = File(atomFileDir, "bk-frontend")
+                if (!atomFrontendFileDir.exists()) {
+                    atomFrontendFileDir.mkdirs()
+                }
+                CommonScriptUtils.execute("git clone ${credentialSetter.getCredentialUrl("http://git.code.oa.com/devops-frontend/devops-remote-atom.git")}", atomFrontendFileDir)
+                val frontendProjectDir = atomFrontendFileDir.listFiles()?.firstOrNull()
+                logger.info("initRepositoryInfo frontendProjectDir is:${frontendProjectDir?.absolutePath}")
+                val frontendGitFileDir = File(frontendProjectDir, ".git")
+                if (frontendGitFileDir.exists()) {
+                    FileSystemUtils.deleteRecursively(frontendGitFileDir)
+                }
+            }
             // 3、重新生成git信息
             CommonScriptUtils.execute("git init", atomFileDir)
             // 4、添加远程仓库
-            CommonScriptUtils.execute(
-                "git remote add origin ${credentialSetter.getCredentialUrl(atomRepositoryUrl)}",
-                atomFileDir
-            )
+            CommonScriptUtils.execute("git remote add origin ${credentialSetter.getCredentialUrl(atomRepositoryUrl)}", atomFileDir)
             // 5、给文件添加git信息
             CommonScriptUtils.execute("git config user.email \"$gitPublicEmail\"", atomFileDir)
             CommonScriptUtils.execute("git config user.name \"$gitPublicAccount\"", atomFileDir)
@@ -386,7 +398,6 @@ class GitService @Autowired constructor(
         }
         return Result(true)
     }
-
     override fun addGitProjectMember(
         userIdList: List<String>,
         repoName: String,
