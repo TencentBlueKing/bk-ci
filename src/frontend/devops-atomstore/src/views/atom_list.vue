@@ -7,7 +7,13 @@
                 <i class="right-arrow banner-arrow"></i>
                 <span class="banner-des"> {{ $t('store.工作台') }} </span>
             </p>
-            <a class="title-work" target="_blank" :href="tabList[currentTab].link">{{ tabList[currentTab].name }}</a>
+            <section v-if="tabList[currentTab].showMore" class="banner-more">
+                <icon name="work-manage" size="20" class="work-more" />
+                <section class="more-list">
+                    <a :href="more.link" v-for="more in tabList[currentTab].moreList" :key="more.name" target="_blank">{{ more.name }}</a>
+                </section>
+            </section>
+            <a class="title-work" target="_blank" :href="tabList[currentTab].link" v-else>{{ tabList[currentTab].name }}</a>
         </h3>
         <div class="atomstore-list-content">
             <bk-tab :active.sync="currentTab" type="unborder-card">
@@ -27,6 +33,8 @@
     import atomList from '@/components/common/workList/atom'
     import templateList from '@/components/common/workList/template'
     import imageList from '@/components/common/workList/image'
+    let currentProjectCode = localStorage.getItem('projectId')
+    if (!currentProjectCode) currentProjectCode = (window.projectList[0] || {}).projectCode
 
     export default {
         components: {
@@ -39,7 +47,14 @@
             return {
                 currentTab: 'atom',
                 tabList: {
-                    atom: { name: this.$t('store.插件指引'), tabName: this.$t('store.流水线插件'), link: 'http://iwiki.oa.com/pages/viewpage.action?pageId=15008942' },
+                    atom: {
+                        tabName: this.$t('store.流水线插件'),
+                        showMore: true,
+                        moreList: [
+                            { name: this.$t('store.插件指引'), link: 'http://iwiki.oa.com/pages/viewpage.action?pageId=15008942' },
+                            { name: this.$t('store.debugTask'), link: `/console/pipeline/${currentProjectCode}/atomDebug` }
+                        ]
+                    },
                     template: { name: this.$t('store.模版指引'), tabName: this.$t('store.流水线模板'), link: 'http://iwiki.oa.com/pages/viewpage.action?pageId=15008944' },
                     image: { name: this.$t('store.镜像指引'), tabName: this.$t('store.容器镜像'), link: 'http://iwiki.oa.com/pages/viewpage.action?pageId=22118721' }
                 }
@@ -79,6 +94,59 @@
     
     .atom-list-wrapper {
         height: 100%;
+        .banner-more {
+            height: 20px;
+            &:hover .more-list {
+                display: block;
+            }
+        }
+        .work-more {
+            margin-right: 30px;
+            cursor: pointer;
+        }
+        .more-list {
+            display: none;
+            transition: display 200ms;
+            position: absolute;
+            z-index: 500;
+            right: 30px;
+            top: 40px;
+            background: $white;
+            border: 1px solid $borderWeightColor;
+            border-radius: 2px;
+            box-shadow: 0 3px 6px rgba(51, 60, 72, 0.12);
+            &:hover {
+                display: block;
+            }
+            &::before {
+                content: '';
+                position: absolute;
+                right: 2px;
+                top: -6px;
+                width: 10px;
+                height: 10px;
+                transform: rotate(45deg);
+                background: $white;
+                border-top: 1px solid $borderWeightColor;
+                border-left: 1px solid $borderWeightColor;
+            }
+            a {
+                display: block;
+                min-width: 88px;
+                line-height: 32px;
+                border-bottom: 1px solid $borderWeightColor;
+                padding: 0 14px;
+                color: $fontWeightColor;
+                white-space: nowrap;
+                cursor: pointer;
+                &:hover {
+                    color: $primaryColor;
+                }
+                &:last-child {
+                    border: 0;
+                }
+            }
+        }
         .atomstore-list-content {
             padding: 8px 25px 25px;
             height: calc(100% - 50px);
@@ -159,7 +227,6 @@
             .offline-atom-form,
             .relate-template-form {
                 margin: 30px 50px 20px 28px;
-                height: 100%;
             }
             .bk-label {
                 width: 97px;

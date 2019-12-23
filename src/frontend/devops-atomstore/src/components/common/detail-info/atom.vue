@@ -3,16 +3,16 @@
         <img class="detail-pic atom-logo" :src="detail.logoUrl || defaultUrl">
         <hgroup class="detail-info-group">
             <h3 class="title-with-img">
-                {{detail.name}}
+                <span :class="{ 'not-recommend': detail.recommendFlag === false }" :title="detail.recommendFlag === false ? $t('store.该插件不推荐使用') : ''">{{detail.name}}</span>
                 <h5 :title="isPublicTitle" @click="goToCode" :class="{ 'not-public': !isPublic }">
                     <icon v-if="isPublic" class="detail-img" name="color-git-code" size="16" />
                     <icon v-else class="detail-img" name="gray-git-code" size="16" style="fill:#9E9E9E" />
-                    <span>{{ $t('store.工蜂') }}</span>
+                    <span class="approve-msg">{{ $t('store.工蜂') }}</span>
                 </h5>
                 <template v-if="!isEnterprise && userInfo.type !== 'ADMIN' && detail.htmlTemplateVersion !== '1.0'">
                     <h5 :title="approveMsg" :class="[{ 'not-public': approveMsg !== $t('store.协作') }]" @click="cooperation">
                         <icon class="detail-img" name="cooperation" size="16" />
-                        <span>{{approveMsg}}</span>
+                        <span class="approve-msg">{{approveMsg}}</span>
                     </h5>
                 </template>
             </h3>
@@ -356,10 +356,13 @@
         .title-with-img {
             display: flex;
             align-items: center;
+            .not-recommend {
+                text-decoration: line-through;
+            }
             h5 {
                 cursor: pointer;
             }
-            span {
+            .approve-msg {
                 margin-left: -2px;
                 font-size: 14px;
                 color: $fontLightGray;

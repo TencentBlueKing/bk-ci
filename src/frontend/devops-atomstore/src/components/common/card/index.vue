@@ -1,7 +1,7 @@
 <template>
     <router-link :to="{ name: 'details', params: { code: atom.code, type: $route.query.pipeType || 'atom' } }" class="card-home">
         <img class="card-pic atom-logo" :src="atom.logoUrl || defaultUrl">
-        <p class="card-name text-overflow">{{ atom.name }}</p>
+        <p :class="[{ 'not-recommend': atom.recommendFlag === false }, 'card-name', 'text-overflow']">{{ atom.name }}</p>
         <h5 class="card-detail">
             <span class="text-overflow">{{ atom.publisher }}</span>
             <span>{{ atom.downloads }} <i class="bk-icon icon-heat-2"></i></span>
@@ -59,6 +59,9 @@
         cursor: pointer;
         &:hover {
             box-shadow: 0 3px 8px 0 rgba(60, 150, 255, 0.2), 0 0 0 1px rgba(60, 150, 255, 0.08);
+        }
+        .not-recommend {
+            text-decoration: line-through;
         }
         .card-pic {
             margin: 17px 73px 4px;
