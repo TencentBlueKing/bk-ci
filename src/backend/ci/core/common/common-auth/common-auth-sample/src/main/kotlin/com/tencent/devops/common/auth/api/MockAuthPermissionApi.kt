@@ -29,6 +29,18 @@ package com.tencent.devops.common.auth.api
 import com.tencent.devops.common.auth.code.AuthServiceCode
 
 class MockAuthPermissionApi : AuthPermissionApi {
+    override fun addResourcePermissionForUsers(
+        userId: String,
+        projectCode: String,
+        serviceCode: AuthServiceCode,
+        permission: AuthPermission,
+        resourceType: AuthResourceType,
+        resourceCode: String,
+        userIdList: List<String>,
+        supplier: (() -> List<String>)?
+    ): Boolean {
+        return true
+    }
 
     override fun validateUserResourcePermission(
         user: String,

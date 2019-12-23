@@ -51,14 +51,12 @@ import com.tencent.devops.repository.pojo.CodeGitlabRepository
 import com.tencent.devops.repository.pojo.CodeSvnRepository
 import com.tencent.devops.repository.pojo.GithubRepository
 import com.tencent.devops.worker.common.api.ApiFactory
-import com.tencent.devops.worker.common.api.process.BuildSDKApi
 import com.tencent.devops.worker.common.api.process.BuildTaskSDKApi
 import com.tencent.devops.worker.common.exception.TaskExecuteException
 import com.tencent.devops.worker.common.utils.CredentialUtils
 
 object CodeccRepoHelper {
 
-    private val pipelineApi = ApiFactory.create(BuildSDKApi::class)
     private val pipelineTaskApi = ApiFactory.create(BuildTaskSDKApi::class)
     private val repoElementTypes = setOf(
         CodeSvnElement.classType,
@@ -126,7 +124,10 @@ object CodeccRepoHelper {
 
         // 新的拉代码插件接入模式
         val newRepoTaskIds = buildTask.buildVariable?.filter { it.key.startsWith("bk_repo_taskId_") }?.values
-        newRepoTaskIds?.forEach { taskId ->
+        newRepoTaskIds?.filter { taskId ->
+            val containerId = buildTask.buildVariable!!["bk_repo_container_id_$taskId"]
+            containerId.isNullOrBlank() || containerId == codeccTask.containerId
+        }?.forEach { taskId ->
             val repoConfigType = buildTask.buildVariable!!["bk_repo_config_type_$taskId"]
             val repoType = buildTask.buildVariable!!["bk_repo_type_$taskId"]!!
             val localPath = buildTask.buildVariable!!["bk_repo_local_path_$taskId"] ?: ""

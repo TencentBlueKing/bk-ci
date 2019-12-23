@@ -9,7 +9,22 @@ import com.tencent.devops.model.store.tables.TImageFeature
 import com.tencent.devops.model.store.tables.TImageLabelRel
 import com.tencent.devops.model.store.tables.TImageVersionLog
 import com.tencent.devops.model.store.tables.TLabel
+import com.tencent.devops.model.store.tables.TStoreProjectRel
+import com.tencent.devops.model.store.tables.records.TImageRecord
 import com.tencent.devops.store.dao.image.Constants
+import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_CODE
+import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_ID
+import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_STATUS
+import com.tencent.devops.store.pojo.common.KEY_CLASSIFY_CODE
+import com.tencent.devops.store.pojo.common.KEY_CLASSIFY_NAME
+import com.tencent.devops.store.pojo.common.KEY_CREATE_TIME
+import com.tencent.devops.store.pojo.common.KEY_CREATOR
+import com.tencent.devops.store.pojo.common.KEY_MODIFIER
+import com.tencent.devops.store.pojo.common.KEY_PUBLISHER
+import com.tencent.devops.store.pojo.common.KEY_PUB_TIME
+import com.tencent.devops.store.pojo.common.KEY_UPDATE_TIME
+import com.tencent.devops.store.pojo.common.KEY_VERSION_LOG_CONTENT
+import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.image.enums.ImageStatusEnum
 import com.tencent.devops.store.pojo.image.request.OpImageSortTypeEnum
@@ -17,6 +32,7 @@ import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.jooq.Record2
+import org.jooq.Record3
 import org.jooq.Result
 import org.jooq.SelectHavingStep
 import org.jooq.impl.DSL
@@ -51,7 +67,7 @@ class OpImageDao @Autowired constructor() {
         // 查找每组imageCode最新的记录
         val tmp = dslContext.select(
             tImage.IMAGE_CODE.`as`(Constants.KEY_IMAGE_CODE),
-            tImage.CREATE_TIME.max().`as`(Constants.KEY_CREATE_TIME)
+            tImage.CREATE_TIME.max().`as`(KEY_CREATE_TIME)
         ).from(tImage).groupBy(tImage.IMAGE_CODE)
         val t = dslContext.select(tImage.IMAGE_CODE.`as`(Constants.KEY_IMAGE_CODE), tImage.IMAGE_STATUS.`as`(Constants.KEY_IMAGE_STATUS))
             .from(tImage).join(tmp)
@@ -59,7 +75,7 @@ class OpImageDao @Autowired constructor() {
                 tImage.IMAGE_CODE.eq(tmp.field(Constants.KEY_IMAGE_CODE, String::class.java)).and(
                     tImage.CREATE_TIME.eq(
                         tmp.field(
-                            Constants.KEY_CREATE_TIME, LocalDateTime::class.java
+                            KEY_CREATE_TIME, LocalDateTime::class.java
                         )
                     )
                 )
@@ -132,7 +148,7 @@ class OpImageDao @Autowired constructor() {
         // 查找每组imageCode最新的记录
         val tmp = dslContext.select(
             tImage.IMAGE_CODE.`as`(Constants.KEY_IMAGE_CODE),
-            tImage.CREATE_TIME.max().`as`(Constants.KEY_CREATE_TIME)
+            tImage.CREATE_TIME.max().`as`(KEY_CREATE_TIME)
         ).from(tImage).groupBy(tImage.IMAGE_CODE)
         val t = dslContext.select(tImage.IMAGE_CODE.`as`(Constants.KEY_IMAGE_CODE), tImage.IMAGE_STATUS.`as`(Constants.KEY_IMAGE_STATUS))
             .from(tImage).join(tmp)
@@ -140,7 +156,7 @@ class OpImageDao @Autowired constructor() {
                 tImage.IMAGE_CODE.eq(tmp.field(Constants.KEY_IMAGE_CODE, String::class.java)).and(
                     tImage.CREATE_TIME.eq(
                         tmp.field(
-                            Constants.KEY_CREATE_TIME, LocalDateTime::class.java
+                            KEY_CREATE_TIME, LocalDateTime::class.java
                         )
                     )
                 )
@@ -162,20 +178,20 @@ class OpImageDao @Autowired constructor() {
             tImage.IMAGE_SOURCE_TYPE.`as`(Constants.KEY_IMAGE_SOURCE_TYPE),
             tImage.VERSION.`as`(Constants.KEY_IMAGE_VERSION),
             tImage.IMAGE_STATUS.`as`(Constants.KEY_IMAGE_STATUS),
-            tClassify.CLASSIFY_CODE.`as`(Constants.KEY_CLASSIFY_CODE),
-            tClassify.CLASSIFY_NAME.`as`(Constants.KEY_CLASSIFY_NAME),
-            tImage.PUBLISHER.`as`(Constants.KEY_PUBLISHER),
-            tImage.PUB_TIME.`as`(Constants.KEY_PUB_TIME),
-            tImageVersionLog.CONTENT.`as`(Constants.KEY_VERSION_LOG_CONTENT),
+            tClassify.CLASSIFY_CODE.`as`(KEY_CLASSIFY_CODE),
+            tClassify.CLASSIFY_NAME.`as`(KEY_CLASSIFY_NAME),
+            tImage.PUBLISHER.`as`(KEY_PUBLISHER),
+            tImage.PUB_TIME.`as`(KEY_PUB_TIME),
+            tImageVersionLog.CONTENT.`as`(KEY_VERSION_LOG_CONTENT),
             tImage.LATEST_FLAG.`as`(Constants.KEY_IMAGE_LATEST_FLAG),
             tImageFeature.PUBLIC_FLAG.`as`(Constants.KEY_IMAGE_FEATURE_PUBLIC_FLAG),
             tImageFeature.RECOMMEND_FLAG.`as`(Constants.KEY_IMAGE_FEATURE_RECOMMEND_FLAG),
             tImageFeature.WEIGHT.`as`(Constants.KEY_IMAGE_FEATURE_WEIGHT),
             tImageFeature.IMAGE_TYPE.`as`(Constants.KEY_IMAGE_RD_TYPE),
-            tImage.CREATOR.`as`(Constants.KEY_CREATOR),
-            tImage.CREATE_TIME.`as`(Constants.KEY_CREATE_TIME),
-            tImage.MODIFIER.`as`(Constants.KEY_MODIFIER),
-            tImage.UPDATE_TIME.`as`(Constants.KEY_UPDATE_TIME)
+            tImage.CREATOR.`as`(KEY_CREATOR),
+            tImage.CREATE_TIME.`as`(KEY_CREATE_TIME),
+            tImage.MODIFIER.`as`(KEY_MODIFIER),
+            tImage.UPDATE_TIME.`as`(KEY_UPDATE_TIME)
         ).from(tImage)
             .join(tImageFeature)
             .on(tImage.IMAGE_CODE.eq(tImageFeature.IMAGE_CODE))
@@ -262,10 +278,73 @@ class OpImageDao @Autowired constructor() {
                     ImageStatusEnum.UNDERCARRIAGING.status.toByte(),
                     ImageStatusEnum.UNDERCARRIAGED.status.toByte()
                 )
-                conditions.add(t.field(Constants.KEY_IMAGE_STATUS).`in`(imageStatusList))
+                conditions.add(t.field(KEY_IMAGE_STATUS).`in`(imageStatusList))
             }
         }
         return conditions
+    }
+
+    fun listAllImages(dslContext: DSLContext): Result<Record3<String, String, Byte>>? {
+        val tImage = TImage.T_IMAGE.`as`("tImage")
+        return dslContext.select(
+            tImage.ID.`as`(KEY_IMAGE_ID),
+            tImage.IMAGE_CODE.`as`(KEY_IMAGE_CODE),
+            tImage.IMAGE_STATUS.`as`(KEY_IMAGE_STATUS)
+        ).from(tImage)
+            .where(tImage.DELETE_FLAG.eq(false))
+            .fetch()
+    }
+
+    fun listProjectImages(dslContext: DSLContext, projectCode: String): Result<Record3<String, String, Byte>>? {
+        val tStoreProjectRel = TStoreProjectRel.T_STORE_PROJECT_REL.`as`("tStoreProjectRel")
+        val tImage = TImage.T_IMAGE.`as`("tImage")
+        return dslContext.select(
+            tImage.ID.`as`(KEY_IMAGE_ID),
+            tImage.IMAGE_CODE.`as`(KEY_IMAGE_CODE),
+            tImage.IMAGE_STATUS.`as`(KEY_IMAGE_STATUS)
+        ).from(tStoreProjectRel).join(tImage)
+            .on(tStoreProjectRel.STORE_CODE.eq(tImage.IMAGE_CODE))
+            .where(tStoreProjectRel.STORE_TYPE.eq(StoreTypeEnum.IMAGE.type.toByte()))
+            .and(tStoreProjectRel.TYPE.eq(StoreProjectTypeEnum.TEST.type.toByte()))
+            .and(tStoreProjectRel.PROJECT_CODE.eq(projectCode))
+            .and(tImage.DELETE_FLAG.eq(false))
+            .fetch()
+    }
+
+    fun countImageByRepoInfo(dslContext: DSLContext, repoUrl: String?, repoName: String?, tag: String?): Int {
+        val tImage = TImage.T_IMAGE.`as`("tImage")
+        val conditions = mutableListOf<Condition>()
+        conditions.add(tImage.DELETE_FLAG.eq(false))
+        if (repoUrl != null) {
+            conditions.add(tImage.IMAGE_REPO_URL.eq(repoUrl))
+        }
+        if (repoName != null) {
+            conditions.add(tImage.IMAGE_REPO_NAME.eq(repoName))
+        }
+        if (tag != null) {
+            conditions.add(tImage.IMAGE_TAG.eq(tag))
+        }
+        return dslContext.selectCount().from(tImage)
+            .where(conditions)
+            .fetchOne(0, Int::class.java)
+    }
+
+    fun getImagesByRepoInfo(dslContext: DSLContext, repoUrl: String?, repoName: String?, tag: String?): Result<TImageRecord>? {
+        val tImage = TImage.T_IMAGE.`as`("tImage")
+        val conditions = mutableListOf<Condition>()
+        conditions.add(tImage.DELETE_FLAG.eq(false))
+        if (repoUrl != null) {
+            conditions.add(tImage.IMAGE_REPO_URL.eq(repoUrl))
+        }
+        if (repoName != null) {
+            conditions.add(tImage.IMAGE_REPO_NAME.eq(repoName))
+        }
+        if (tag != null) {
+            conditions.add(tImage.IMAGE_TAG.eq(tag))
+        }
+        return dslContext.selectFrom(tImage)
+            .where(conditions)
+            .fetch()
     }
 
     private val logger = LoggerFactory.getLogger(OpImageDao::class.java)

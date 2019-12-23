@@ -63,6 +63,9 @@ class LinuxCodeCCScriptTask : ITask() {
         )
         LoggerService.addNormalLine("buildVariables coverityConfig: $coverityConfig")
 
+        // 第三方机器初始化
+        CodeccEnvHelper.thirdInit(coverityConfig)
+
         // 先写入codecc任务
         CodeccEnvHelper.saveTask(buildVariables)
 

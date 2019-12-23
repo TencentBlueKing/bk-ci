@@ -28,6 +28,7 @@ package com.tencent.devops.process.engine.service
 
 import com.fasterxml.jackson.core.JsonParseException
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.PipelineAlreadyExistException
 import com.tencent.devops.common.api.model.SQLLimit
 import com.tencent.devops.common.api.model.SQLPage
@@ -37,6 +38,7 @@ import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
@@ -74,6 +76,7 @@ import com.tencent.devops.process.service.view.PipelineViewService
 import com.tencent.devops.process.utils.PIPELINE_VIEW_ALL_PIPELINES
 import com.tencent.devops.process.utils.PIPELINE_VIEW_FAVORITE_PIPELINES
 import com.tencent.devops.process.utils.PIPELINE_VIEW_MY_PIPELINES
+import com.tencent.devops.store.api.common.ServiceStoreResource
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.jooq.Result
@@ -104,7 +107,8 @@ class PipelineService @Autowired constructor(
     private val modelCheckPlugin: ModelCheckPlugin,
     private val pipelineBuildDao: PipelineBuildDao,
     private val authPermissionApi: AuthPermissionApi,
-    private val pipelineAuthServiceCode: PipelineAuthServiceCode
+    private val pipelineAuthServiceCode: PipelineAuthServiceCode,
+    private val client: Client
 ) {
 
     companion object {
@@ -166,6 +170,16 @@ class PipelineService @Autowired constructor(
                     errorCode = ProcessMessageCode.ERROR_PIPELINE_NAME_EXISTS,
                     defaultMessage = "流水线名称已被使用"
                 )
+            }
+
+            // 检查用户是否有插件的使用权限
+            if (model.srcTemplateId != null) {
+                val srcTemplateId = model.srcTemplateId as String
+                val validateRet = client.get(ServiceStoreResource::class)
+                    .validateUserTemplateAtomVisibleDept(userId, srcTemplateId, projectId)
+                if (validateRet.isNotOk()) {
+                    throw OperationException(validateRet.message ?: "模版下存在无权限的插件")
+                }
             }
 
             var pipelineId: String? = null
@@ -453,7 +467,7 @@ class PipelineService @Autowired constructor(
             if (checkPermission) {
                 pipelinePermissionService.modifyResource(projectId, pipelineId, model.name)
             }
-            pipelineGroupService.updatePipelineLabel(userId, pipelineId, model.labels)
+//            pipelineGroupService.updatePipelineLabel(userId, pipelineId, model.labels)
             pipelineUserService.update(pipelineId, userId)
             success = true
         } finally {
@@ -1332,19 +1346,6 @@ class PipelineService @Autowired constructor(
         watch.stop()
         logger.info("getPipelineNameByIds|[$projectId]|watch=$watch")
         return map
-    }
-
-    fun getBuildNoByBuildIds(projectId: String, pipelineId: String, buildIds: Set<String>): Map<String, Int> {
-        if (buildIds.isEmpty()) return mapOf()
-        if (projectId.isBlank()) return mapOf()
-        if (pipelineId.isBlank()) return mapOf()
-
-        val watch = StopWatch()
-        watch.start("s_r_list_b_bs")
-        val result = pipelineRuntimeService.listBuildInfoByBuildIds(buildIds)
-        watch.stop()
-        logger.info("getBuildNoByBuildIds|[$projectId]|$pipelineId|size=${buildIds.size}|result=${result.size}|watch=$watch")
-        return result
     }
 
     fun getBuildNoByByPair(buildIds: Set<String>): Map<String, String> {

@@ -27,8 +27,10 @@
 package com.tencent.devops.process.service
 
 import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.EnvUtils
+import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.enums.ChannelCode
@@ -40,6 +42,7 @@ import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.service.PipelineBuildService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
+import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.pipeline.ProjectBuildId
 import com.tencent.devops.process.pojo.pipeline.StartUpInfo
 import com.tencent.devops.process.pojo.pipeline.SubPipelineStartUpInfo
@@ -52,7 +55,8 @@ import org.springframework.stereotype.Service
 class SubPipelineStartUpService(
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val pipelineRuntimeService: PipelineRuntimeService,
-    private val buildService: PipelineBuildService
+    private val buildService: PipelineBuildService,
+    private val pipelinePermissionService: PipelinePermissionService
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(SubPipelineStartUpService::class.java)
@@ -79,20 +83,17 @@ class SubPipelineStartUpService(
         runMode: String,
         values: Map<String, String>
     ): Result<ProjectBuildId> {
-        val project = if (callPipelineId.isNotEmpty()) { callProjectId } else { projectId }
-
-        logger.info("callPipelineStartup: $projectId | $parentPipelineId | $buildId | $callPipelineId | $taskId | $runMode")
-
-        // 获取构建任务
-        val task = pipelineRuntimeService.getBuildTask(buildId, taskId)
-                ?: return MessageCodeUtil.generateResponseDataObject(ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID.toString(), arrayOf(buildId))
-
-        logger.info("task: $task")
-
-        logger.info("callPipelineStartup: $project | $parentPipelineId | $buildId | $callPipelineId | $taskId | $runMode")
+        val project = if (callProjectId.isNotBlank()) { callProjectId } else { projectId }
 
         // 通过 runVariables获取 userId 和 channelCode
         val runVariables = pipelineRuntimeService.getAllVariable(buildId)
+        val userId = runVariables.getValue(PIPELINE_START_USER_ID)
+
+        logger.info("callPipelineStartup: $userId | $project | $callProjectId | $projectId | $parentPipelineId | $buildId | $callPipelineId | $taskId | $runMode")
+
+        if (!pipelinePermissionService.checkPipelinePermission(userId = userId, projectId = project, pipelineId = callPipelineId, permission = AuthPermission.EXECUTE))
+            throw PermissionForbiddenException("用户$userId 无权在工程$project 下运行流水线$callPipelineId")
+
         logger.info("runVariables: $runVariables")
         val channelCode = ChannelCode.valueOf(runVariables[PIPELINE_START_CHANNEL]
                 ?: return MessageCodeUtil.generateResponseDataObject(ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID.toString(), arrayOf(buildId)))
@@ -115,7 +116,7 @@ class SubPipelineStartUpService(
         }
 
         val subBuildId = buildService.subpipelineStartup(
-                userId = runVariables.getValue(PIPELINE_START_USER_ID),
+                userId = userId,
                 startType = StartType.PIPELINE,
                 projectId = project,
                 parentPipelineId = parentPipelineId,
@@ -188,7 +189,8 @@ class SubPipelineStartUpService(
                         val map = element.data
                         val msg = map["input"] as? Map<*, *> ?: return@element
                         val subPip = msg["subPip"]
-                        val subPro = msg["projectId"]
+                        logger.info("callPipelineStartup: ${msg["projectId"]} $projectId")
+                        val subPro = if (msg["projectId"] == null || msg["projectId"].toString().isBlank())projectId else msg["projectId"]
                         val exist = HashSet(currentExistPipelines)
                         checkSubpipeline(atomCode, subPro as String, subPip as String, exist)
                         existPipelines.addAll(exist)
@@ -209,7 +211,7 @@ class SubPipelineStartUpService(
      * @param pipelineId 流水线ID
      */
     fun subpipManualStartupInfo(userId: String, projectId: String, pipelineId: String): Result<List<SubPipelineStartUpInfo>> {
-        if (pipelineId.isEmpty())
+        if (pipelineId.isBlank() || projectId.isBlank())
             return Result(ArrayList())
         val result = buildService.buildManualStartupInfo(userId, projectId, pipelineId, ChannelCode.BS)
         val parameter = ArrayList<SubPipelineStartUpInfo>()

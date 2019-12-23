@@ -9,15 +9,21 @@ import com.tencent.devops.image.api.ServiceImageResource
 import com.tencent.devops.image.pojo.DockerTag
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
+import com.tencent.devops.store.dao.OpImageDao
 import com.tencent.devops.store.dao.common.CategoryDao
 import com.tencent.devops.store.dao.common.ClassifyDao
+import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_CODE
+import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_ID
+import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_STATUS
 import com.tencent.devops.store.dao.image.ImageDao
+import com.tencent.devops.store.dao.image.ImageFeatureDao
 import com.tencent.devops.store.pojo.common.ClassifyRequest
 import com.tencent.devops.store.pojo.common.StoreMemberReq
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreMemberTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.image.enums.ImageAgentTypeEnum
+import com.tencent.devops.store.pojo.image.enums.ImageStatusEnum
 import com.tencent.devops.store.pojo.image.request.ImageCreateRequest
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -32,10 +38,13 @@ class OpImageDataTransferService @Autowired constructor(
     private val client: Client,
     private val dslContext: DSLContext,
     private val imageDao: ImageDao,
+    private val imageFeatureDao: ImageFeatureDao,
+    private val opImageDao: OpImageDao,
     private val classifyDao: ClassifyDao,
     private val categoryDao: CategoryDao,
     private val opImageService: OpImageService,
-    private val imageMemberService: ImageMemberService
+    private val imageMemberService: ImageMemberService,
+    private val imageReleaseService: ImageReleaseService
 ) {
     companion object {
         const val CLASSIFYCODE_OTHER = "OTHER"
@@ -126,20 +135,60 @@ class OpImageDataTransferService @Autowired constructor(
     }
 
     /**
-     * 清空已迁移数据记录，释放内存
+     * 以项目为单位批量重新验证
      */
-    fun clearFinishedSet(
+    fun batchRecheckByProject(
         userId: String,
+        projectCode: String,
         interfaceName: String? = "Anon interface"
     ): Int {
+        logger.info("$interfaceName:batchRecheckByProject:Input($userId,$projectCode)")
         // 0.鉴权：管理员才有权限操作
         if (!imageAdminUsers.contains(userId.trim())) {
             throw PermissionForbiddenException("Permission Denied,userId=$userId")
         }
-        val size = finishedSet.size
-        logger.info("$interfaceName:clearFinishedSet:finishedSet.size=$size")
-        finishedSet.clear()
-        return size
+        val records = opImageDao.listProjectImages(dslContext, projectCode)
+        var count = 0
+        records?.forEach { it ->
+            val imageId = it.get(KEY_IMAGE_ID) as String
+            val imageCode = it.get(KEY_IMAGE_CODE) as String
+            val imageStatus = ((it.get(KEY_IMAGE_STATUS) as Byte?)?.toInt() ?: 0)
+            logger.info("$interfaceName:batchRecheckByProject:$projectCode:($imageCode,$imageId,$imageStatus)")
+            if (imageStatus == ImageStatusEnum.CHECK_FAIL.status) {
+                logger.info("$interfaceName:batchRecheckByProject:$projectCode:($imageCode,$imageId,$imageStatus)recheck")
+                imageReleaseService.recheckWithoutValidate(context = dslContext, userId = userId, imageId = imageId)
+                count++
+            }
+        }
+        return count
+    }
+
+    /**
+     * 重新验证所有验证失败的镜像
+     */
+    fun batchRecheckAll(
+        userId: String,
+        interfaceName: String? = "Anon interface"
+    ): Int {
+        logger.info("$interfaceName:batchRecheckAll:Input($userId)")
+        // 0.鉴权：管理员才有权限操作
+        if (!imageAdminUsers.contains(userId.trim())) {
+            throw PermissionForbiddenException("Permission Denied,userId=$userId")
+        }
+        val records = opImageDao.listAllImages(dslContext)
+        var count = 0
+        records?.forEach { it ->
+            val imageId = it.get(KEY_IMAGE_ID) as String
+            val imageCode = it.get(KEY_IMAGE_CODE) as String
+            val imageStatus = ((it.get(KEY_IMAGE_STATUS) as Byte?)?.toInt() ?: 0)
+            logger.info("$interfaceName:batchRecheckAll:($imageCode,$imageId,$imageStatus)")
+            if (imageStatus == ImageStatusEnum.CHECK_FAIL.status) {
+                logger.info("$interfaceName:batchRecheckAll:($imageCode,$imageId,$imageStatus)recheck")
+                imageReleaseService.recheckWithoutValidate(context = dslContext, userId = userId, imageId = imageId)
+                count++
+            }
+        }
+        return count
     }
 
     /**
@@ -201,32 +250,63 @@ class OpImageDataTransferService @Autowired constructor(
         imageList: List<DockerTag>,
         interfaceName: String? = "Anon interface"
     ): Int {
+        imageList.sortedBy { it.created }
         var changedCount = 0
+        // 2.调project接口获取项目负责人信息
+        val projectInfo =
+            client.get(ServiceProjectResource::class).listByProjectCode(setOf(projectCode)).data?.get(0)
+                ?: throw DataConsistencyException(
+                    srcData = "projectCode=$projectCode",
+                    targetData = "projectDetail",
+                    message = "Fail to get projectDetail by projectCode($projectCode)"
+                )
+        val creator = projectInfo.creator ?: "system"
         imageList?.forEach loop@{
-            val recordFeature = Triple(projectCode, it.image ?: "", it.modified ?: "")
-            logger.info("$interfaceName:transferImage:Inner:Start to transefer:($projectCode,${it.image})")
-            if (finishedSet.contains(recordFeature)) {
-                logger.info("$interfaceName:transferImage:Inner:already transfered:($projectCode,${it.image})")
+            val imageRepoUrl = it.image!!.split("/")[0]
+            val imageRepoName = it.repo!!
+            // 3.获取tag
+            val imageTag = it.tag ?: "latest"
+            logger.warn("$interfaceName:transferImage:Inner:processing image:($imageRepoUrl,$imageRepoName,$imageTag)")
+            if (opImageDao.countImageByRepoInfo(dslContext, imageRepoUrl, imageRepoName, imageTag) > 0) {
+                // 该条数据已迁移过，不再处理
+                logger.warn("$interfaceName:transferImage:Inner:already processed:$imageRepoUrl/$imageRepoName:$imageTag")
                 return@loop
-            } else {
-                finishedSet.add(recordFeature)
-                ++changedCount
             }
-            // 2.调project接口获取项目负责人信息
-            val projectInfo =
-                client.get(ServiceProjectResource::class).listByProjectCode(setOf(projectCode)).data?.get(0)
-                    ?: throw DataConsistencyException(
-                        srcData = "projectCode=$projectCode",
-                        targetData = "projectDetail",
-                        message = "Fail to get projectDetail by projectCode($projectCode)"
-                    )
-            val creator = projectInfo.creator
-            // 3.镜像名称生成
-            val fromProjectClassify = classifyDao.getClassifyByCode(
-                dslContext = dslContext,
-                classifyCode = realClassifyCode,
-                type = StoreTypeEnum.IMAGE
-            )
+
+            // 4.镜像标识生成
+            var imageCode = ""
+            var imagesNum = 0
+            if (opImageDao.countImageByRepoInfo(dslContext, imageRepoUrl, imageRepoName, null) > 0) {
+                // 复用已有的code
+                val records = opImageDao.getImagesByRepoInfo(dslContext, imageRepoUrl, imageRepoName, null)
+                imagesNum = records?.size ?: 0
+                imageCode = records!![0].imageCode
+                // 将已迁移完成的老版本镜像全部置为已发布
+                records.forEach { record ->
+                    logger.info("$interfaceName:transferImage:release existed image(${record.id},${record.imageCode},${record.version},${record.imageRepoUrl},${record.imageRepoName},${record.imageTag})")
+                    if (record.imageStatus != ImageStatusEnum.RELEASED.status.toByte()) {
+                        opImageService.releaseImageDirectly(
+                            context = dslContext,
+                            userId = creator,
+                            imageCode = record.imageCode,
+                            imageId = record.id
+                        )
+                    }
+                }
+            } else {
+                // 生成code
+                imageCode = it.repo!!.removePrefix("/").removeSuffix("/").replace("paas/bkdevops/", "").replace("/", "_")
+                // 重复处理
+                var imageCodeNum = 0
+                var tempImageCode = imageCode
+                while (imageFeatureDao.countByCode(dslContext, tempImageCode) > 0) {
+                    logger.warn("$interfaceName:transferImage:Inner:imageCode $tempImageCode already exists")
+                    imageCodeNum += 1
+                    tempImageCode = imageCode + "_$imageCodeNum"
+                }
+                imageCode = tempImageCode
+            }
+            // 5.镜像名称生成
             val index = it.repo!!.lastIndexOf("/")
             var imageName = if (-1 != index) {
                 it.repo!!.substring(index + 1)
@@ -238,29 +318,10 @@ class OpImageDataTransferService @Autowired constructor(
             var tempImageName = imageName
             while (imageDao.countByName(dslContext, tempImageName) > 0) {
                 logger.warn("$interfaceName:transferImage:Inner:imageName $tempImageName already exists")
-                if (imageDao.countByNameAndClassifyId(dslContext, tempImageName, fromProjectClassify!!.id) > 0) {
-                    // 该条数据已迁移过，不再处理
-                    logger.warn("$interfaceName:transferImage:Inner:imageName $tempImageName already processed")
-                    return@loop
-                }
                 imageNameNum += 1
                 tempImageName = imageName + "_$imageNameNum"
             }
             imageName = tempImageName
-            // 4.获取tag
-            val imageTag = it.tag ?: "latest"
-            // 5.镜像标识生成
-            var imageCode =
-                it.repo!!.removePrefix("/").removeSuffix("/").replace("paas/bkdevops/", "").replace("/", "_")
-            // 重复处理
-            var imageCodeNum = 0
-            var tempImageCode = imageCode
-            while (imageDao.countByCode(dslContext, tempImageCode) > 0) {
-                logger.warn("$interfaceName:transferImage:Inner:imageCode $tempImageCode already exists")
-                imageCodeNum += 1
-                tempImageCode = imageCode + "_$imageCodeNum"
-            }
-            imageCode = tempImageCode
             // 6.调OP新增镜像接口
             // image字段是含repoUrl、repoName、tag的完整字段
             logger.info("$interfaceName:transferImage:Inner:ImageCreateRequest($creator,$projectCode,$imageName,$imageCode,${it.image},${it.repo},$imageTag)")
@@ -274,12 +335,16 @@ class OpImageDataTransferService @Autowired constructor(
                     classifyCode = realClassifyCode,
                     category = realCategoryCode,
                     agentTypeScope = agentTypeList,
-                    version = "1.0.0",
-                    releaseType = ReleaseTypeEnum.NEW,
+                    version = "1.0.$imagesNum",
+                    releaseType = if (imagesNum == 0) {
+                        ReleaseTypeEnum.NEW
+                    } else {
+                        ReleaseTypeEnum.COMPATIBILITY_FIX
+                    },
                     versionContent = "容器镜像商店上线，历史镜像数据自动生成",
                     imageSourceType = ImageType.BKDEVOPS,
-                    imageRepoUrl = it.image!!.split("/")[0],
-                    imageRepoName = it.repo!!,
+                    imageRepoUrl = imageRepoUrl,
+                    imageRepoName = imageRepoName,
                     ticketId = null,
                     imageTag = imageTag,
                     logoUrl = "http://radosgw.open.oa.com/paas_backend/ieod/prod/file/png/random_15755397330026456632033301754111.png?v=1575539733",
@@ -294,15 +359,25 @@ class OpImageDataTransferService @Autowired constructor(
                 checkLatest = false,
                 needAuth = false,
                 // 批量迁移不发送通知，避免打扰
-                sendCheckResultNotify = false
+                sendCheckResultNotify = false,
+                runCheckPipeline = false
             ).data
             logger.info("$interfaceName:transferImage:Inner:imageId=$imageId")
             logger.info("$interfaceName:transferImage:Output:Start validating")
             // 将项目所有管理员添加为镜像管理员
             val managers = client.get(ServiceTxProjectResource::class).getProjectManagers(projectCode).data
             if (managers != null) {
-                imageMemberService.add(creator, StoreMemberReq(managers, StoreMemberTypeEnum.ADMIN, imageCode), StoreTypeEnum.IMAGE)
+                // 内部已做防重复处理
+                imageMemberService.add(
+                    userId = creator,
+                    storeMemberReq = StoreMemberReq(managers, StoreMemberTypeEnum.ADMIN, imageCode),
+                    storeType = StoreTypeEnum.IMAGE,
+                    sendNotify = false
+                )
             }
+            // 睡眠1s，规避mysql日期精度问题
+            Thread.sleep(1000)
+            changedCount += 1
         }
         return changedCount
     }

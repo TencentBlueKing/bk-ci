@@ -32,6 +32,7 @@ import com.tencent.devops.common.web.mq.EXCHANGE_PAASCC_PROJECT_UPDATE
 import com.tencent.devops.common.web.mq.ROUTE_PAASCC_PROJECT_UPDATE
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dao.ProjectLabelRelDao
+import com.tencent.devops.project.dispatch.ProjectDispatcher
 import com.tencent.devops.project.pojo.OpGrayProject
 import com.tencent.devops.project.pojo.OpProjectUpdateInfoRequest
 import com.tencent.devops.project.pojo.PaasCCUpdateProject
@@ -49,8 +50,9 @@ class OpProjectServiceImpl @Autowired constructor(
     private val projectLabelRelDao: ProjectLabelRelDao,
     private val rabbitTemplate: RabbitTemplate,
     private val redisOperation: RedisOperation,
-    private val gray: Gray
-) : AbsOpProjectServiceImpl(dslContext, projectDao, projectLabelRelDao, redisOperation, gray) {
+    private val gray: Gray,
+    private val projectDispatcher: ProjectDispatcher
+) : AbsOpProjectServiceImpl(dslContext, projectDao, projectLabelRelDao, redisOperation, gray, projectDispatcher) {
     override fun listGrayProject(): Result<OpGrayProject> {
         return super.listGrayProject()
     }
@@ -63,29 +65,29 @@ class OpProjectServiceImpl @Autowired constructor(
         val count = super.updateProjectFromOp(userId, accessToken, projectInfoRequest)
         val dbProjectRecord = projectDao.get(dslContext, projectInfoRequest.projectId)
         rabbitTemplate.convertAndSend(
-                EXCHANGE_PAASCC_PROJECT_UPDATE,
-                ROUTE_PAASCC_PROJECT_UPDATE, PaasCCUpdateProject(
-                userId = userId,
-                accessToken = accessToken,
-                projectId = projectInfoRequest.projectId,
-                retryCount = 0,
-                projectUpdateInfo = ProjectUpdateInfo(
-                        projectName = projectInfoRequest.projectName,
-                        projectType = projectInfoRequest.projectType,
-                        bgId = projectInfoRequest.bgId,
-                        bgName = projectInfoRequest.bgName,
-                        centerId = projectInfoRequest.centerId,
-                        centerName = projectInfoRequest.centerName,
-                        deptId = projectInfoRequest.deptId,
-                        deptName = projectInfoRequest.deptName,
-                        description = dbProjectRecord!!.description ?: "",
-                        englishName = dbProjectRecord!!.englishName,
-                        ccAppId = projectInfoRequest.ccAppId,
-                        ccAppName = projectInfoRequest.cc_app_name,
-                        kind = projectInfoRequest.kind
+            EXCHANGE_PAASCC_PROJECT_UPDATE,
+            ROUTE_PAASCC_PROJECT_UPDATE, PaasCCUpdateProject(
+            userId = userId,
+            accessToken = accessToken,
+            projectId = projectInfoRequest.projectId,
+            retryCount = 0,
+            projectUpdateInfo = ProjectUpdateInfo(
+                projectName = projectInfoRequest.projectName,
+                projectType = projectInfoRequest.projectType,
+                bgId = projectInfoRequest.bgId,
+                bgName = projectInfoRequest.bgName,
+                centerId = projectInfoRequest.centerId,
+                centerName = projectInfoRequest.centerName,
+                deptId = projectInfoRequest.deptId,
+                deptName = projectInfoRequest.deptName,
+                description = dbProjectRecord!!.description ?: "",
+                englishName = dbProjectRecord!!.englishName,
+                ccAppId = projectInfoRequest.ccAppId,
+                ccAppName = projectInfoRequest.cc_app_name,
+                kind = projectInfoRequest.kind
 //                        secrecy = projectInfoRequest.secrecyFlag
-                )
             )
+        )
         )
         return count
     }
