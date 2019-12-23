@@ -83,12 +83,21 @@ class ApigwProjectService(
         return client.get(ServiceTxProjectResource::class).createProjectUserByApp(organizationType, organizationId, createInfo).data
     }
 
-    fun createPipelinePermission(
+    fun createPipelinePermissionByUser(
         createUserId: String,
         accessToken: String,
         createInfo: PipelinePermissionInfo
     ): Boolean? {
         logger.info("createPipelinePermission:createUserId[$createUserId],accessToken[$accessToken],createInfo[$createInfo]")
-        return client.get(ServiceTxProjectResource::class).createUserPipelinePermission(createUserId, accessToken, createInfo).data
+        return client.get(ServiceTxProjectResource::class).createUserPipelinePermissionByUser(createUserId, accessToken, createInfo).data
+    }
+
+    fun createPipelinePermissionByApp(
+        organizationType: String,
+        organizationId: Long,
+        createInfo: PipelinePermissionInfo
+    ): Boolean? {
+        logger.info("createPipelinePermission:organizationType[$organizationType],organizationId[$organizationId],createInfo[$createInfo]")
+        return client.get(ServiceTxProjectResource::class).createUserPipelinePermissionByApp(organizationType, organizationId, createInfo).data
     }
 }
