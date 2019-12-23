@@ -53,7 +53,6 @@ import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.utils.ShellUtil
 import org.slf4j.LoggerFactory
 import java.io.File
-import java.net.URLDecoder
 import kotlin.math.max
 
 /**
