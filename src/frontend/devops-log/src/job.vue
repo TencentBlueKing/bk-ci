@@ -268,10 +268,7 @@
             overflow: hidden;
             transition-property: transform, opacity;
             transition: transform 200ms cubic-bezier(.165,.84,.44,1), opacity 100ms cubic-bezier(.215,.61,.355,1);
-            background: black;
-            /deep/ .bk-loading {
-                background: black !important;
-            }
+            background: #1e1e1e;
             .log-head {
                 line-height: 52px;
                 margin: 16px 20px;

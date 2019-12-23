@@ -329,7 +329,7 @@
         bottom: 0;
         height: calc(100% - 84px);
         width: 100%;
-        background: black;
+        background: #1e1e1e;
         z-index: 100;
         .lds-ring {
             display: inline-block;
@@ -415,10 +415,7 @@
             overflow: hidden;
             transition-property: transform, opacity;
             transition: transform 200ms cubic-bezier(.165,.84,.44,1), opacity 100ms cubic-bezier(.215,.61,.355,1);
-            background: black;
-            /deep/ .bk-loading {
-                background: black !important;
-            }
+            background: #1e1e1e;
             .log-head {
                 line-height: 52px;
                 padding: 10px 20px 8px;
@@ -434,7 +431,7 @@
                     line-height: 30px;
                     .log-button {
                         color: #c2cade;
-                        background: #2f363d;
+                        background: #222529;
                         border: 1px solid #444d56;
                         margin-right: 10px;
                         height: 32px;
@@ -456,7 +453,7 @@
                         position: relative;
                         &:hover {
                             color: #fff;
-                            background: #3f454a;
+                            background: #292c2d;
                         }
                     }
                     .log-execute {

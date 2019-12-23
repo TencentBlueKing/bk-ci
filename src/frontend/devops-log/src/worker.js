@@ -204,7 +204,7 @@ function getListData ({ totalScrollHeight, itemHeight, itemNumber, canvasHeight,
         if (currentItem.color) canvasContext.font = `normal normal bold ${itemHeight / 8}px Consolas`
         else canvasContext.font = `normal normal normal ${itemHeight / 8}px Consolas`
         canvasContext.fillStyle = currentColor.replace(/rgba\((.+),(.+),(.+),(.)\)/, (rgba, r, g, b, a) => `rgba(${b},${g},${r},${a})`)
-        canvasContext.fillText(currentItem.message, 0, ((i - minMapStartIndex + 1) * itemHeight / 8))
+        canvasContext.fillText(currentItem.message, 3, ((i - minMapStartIndex + 1) * itemHeight / 8))
     }
     const offscreenBitMap = offscreenCanvas.transferToImageBitmap()
 

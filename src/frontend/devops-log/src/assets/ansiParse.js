@@ -88,7 +88,7 @@ function ansiparse (str) {
 
 ansiparse.foregroundColors = {
     '30': 'rgba(0,0,0,1)',
-    '31': 'rgba(246,222,84,1)',
+    '31': 'rgba(247,49,49,1)',
     '32': 'rgba(127,202,84,1)',
     '33': 'rgba(246,222,84,1)',
     '34': 'rgba(0,0,255,1)',
@@ -100,7 +100,7 @@ ansiparse.foregroundColors = {
 
 ansiparse.backgroundColors = {
     '40': 'rgba(0,0,0,1)',
-    '41': 'rgba(246,222,84,1)',
+    '41': 'rgba(247,49,49,1)',
     '42': 'rgba(127,202,84,1)',
     '43': 'rgba(246,222,84,1)',
     '44': 'rgba(0,0,255,1)',

@@ -15,6 +15,7 @@
             ><slot :data="item"></slot>
             </li>
         </ul>
+        <span class="min-nav min-map" :style="`height: ${visHeight}px; right: ${visWidth * 11 / 100}px`"></span>
         <canvas class="min-nav no-scroll" :style="`height: ${visHeight}px; width: ${visWidth / 10}px;right: ${visWidth / 100}px`" ref="minMap" @click="changeMinMap"></canvas>
         <span class="min-nav-slide no-scroll"
             v-if="itemHeight * totalNumber > visHeight"
@@ -511,6 +512,10 @@
             &:hover + span {
                 background: rgba(121, 121, 121, 0.4);
             }
+        }
+        .min-map {
+            width: 6px;
+            box-shadow: #000000 -6px 0 6px -6px inset;
         }
         .min-nav-slide {
             position: absolute;
