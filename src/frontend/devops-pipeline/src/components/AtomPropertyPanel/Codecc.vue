@@ -3,7 +3,7 @@
         <div class="bk-form bk-form-vertical">
             <div v-if="isThirdParty && container.baseOS === 'LINUX'" class="slave-tips">
                 <p class="slave-tips-title">如果非root账号启动agent, 请使用root帐号登录构建机运行以下命令：</p>
-                <p class="code-backgroud">mkdir -p /data/codecc_software<br>mount -t nfs -o nolock {{ CODECC_SOFWARE_URL }}:/data/codecc_software /data/codecc_software</p>
+                <p class="code-backgroud">mkdir -p /data/codecc_software<br>mount -t nfs -o {{ CODECC_SOFWARE_URL }}:/data/codecc_software /data/codecc_software</p>
             </div>
             <template v-for="(obj, key) in commonModel[&quot;row&quot;]">
                 <form-field v-if="!obj.hidden" :key="key" :desc="obj.desc" :required="obj.required" :label="obj.label" :is-error="errors.has(key)" :error-msg="errors.first(key)">
@@ -65,6 +65,7 @@
         mixins: [atomMixin, validMixins],
         data () {
             return {
+                CODECC_SOFWARE_URL: CODECC_SOFWARE_URL,
                 newModel: {},
                 task: {},
                 elementId: '',
