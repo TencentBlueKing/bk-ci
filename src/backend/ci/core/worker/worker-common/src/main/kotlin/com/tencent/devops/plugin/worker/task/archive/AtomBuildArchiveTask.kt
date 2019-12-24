@@ -36,7 +36,6 @@ import com.tencent.devops.process.pojo.ErrorType
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import com.tencent.devops.store.pojo.atom.AtomEnvRequest
 import com.tencent.devops.worker.common.api.ApiFactory
-import com.tencent.devops.worker.common.api.archive.ArchiveSDKApi
 import com.tencent.devops.worker.common.api.atom.AtomArchiveSDKApi
 import com.tencent.devops.worker.common.exception.TaskExecuteException
 import com.tencent.devops.worker.common.logger.LoggerService
@@ -50,8 +49,6 @@ import java.nio.file.Paths
 class AtomBuildArchiveTask : ITask() {
 
     private val atomApi = ApiFactory.create(AtomArchiveSDKApi::class)
-
-    private val archiveApi = ApiFactory.create(ArchiveSDKApi::class)
 
     override fun execute(buildTask: BuildTask, buildVariables: BuildVariables, workspace: File) {
         val taskParams = buildTask.params ?: mapOf()
@@ -89,10 +86,9 @@ class AtomBuildArchiveTask : ITask() {
             fileList.forEach {
                 val relativePath = baseFileDirPath.relativize(Paths.get(it.canonicalPath)).toString()
                 val fileSeparator = System.getProperty("file.separator")
-                archiveApi.uploadCustomize(
+                atomApi.uploadAtomFile(
                     file = it,
-                    destPath = JFrogUtil.getAtomFrontendFileBasePath() + frontendDestPath + fileSeparator + relativePath,
-                    buildVariables = buildVariables
+                    destPath = JFrogUtil.getAtomFrontendFileBasePath() + frontendDestPath + fileSeparator + relativePath
                 )
             }
         }
