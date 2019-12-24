@@ -40,6 +40,7 @@ import com.tencent.devops.worker.common.exception.TaskExecuteException
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.task.ITask
 import com.tencent.devops.worker.common.task.TaskClassType
+import com.tencent.devops.worker.common.utils.ArchiveUtils
 import java.io.File
 
 @TaskClassType(classTypes = [AtomBuildArchiveElement.classType])
@@ -69,18 +70,33 @@ class AtomBuildArchiveTask : ITask() {
             )
         }
 
-        val atomCode = buildTask.buildVariable!!["atomCode"] ?: throw TaskExecuteException(
+        val frontendFilePath = taskParams["frontendFilePath"]
+        // 判断是否是自定义UI类型的插件，如果是则需要把前端文件上传至仓库的路径
+        if (null != frontendFilePath){
+            val frontendDestPath = taskParams["frontendDestPath"] ?: throw TaskExecuteException(
+                errorMsg = "param [frontendDestPath] is empty",
+                errorType = ErrorType.SYSTEM,
+                errorCode = AtomErrorCode.SYSTEM_SERVICE_ERROR
+            )
+            val files = ArchiveUtils.matchFiles(workspace, frontendFilePath.trim())
+            files.forEach {
+                atomApi.uploadAtom(it, frontendDestPath, buildVariables)
+            }
+        }
+
+        val buildVariable = buildTask.buildVariable
+        val atomCode = buildVariable!!["atomCode"] ?: throw TaskExecuteException(
             errorMsg = "need atomCode param",
             errorType = ErrorType.SYSTEM,
             errorCode = AtomErrorCode.SYSTEM_SERVICE_ERROR
         )
-        val atomVersion = buildTask.buildVariable!!["version"] ?: throw TaskExecuteException(
+        val atomVersion = buildVariable["version"] ?: throw TaskExecuteException(
             errorMsg = "need version param",
             errorType = ErrorType.SYSTEM,
             errorCode = AtomErrorCode.SYSTEM_SERVICE_ERROR
         )
-        val preCmd = buildTask.buildVariable!!["preCmd"]
-        val target = buildTask.buildVariable!!["target"]
+        val preCmd = buildVariable["preCmd"]
+        val target = buildVariable["target"]
         val atomEnvResult = atomApi.getAtomEnv(buildVariables.projectId, atomCode, atomVersion)
         val userId = ParameterUtils.getListValueByKey(buildVariables.variablesWithType, PIPELINE_START_USER_ID) ?: throw TaskExecuteException(
             errorMsg = "user basic info error, please check environment.",
