@@ -133,16 +133,20 @@ fun main(args: Array<String>) {
             val xcodeFile = File(xcodePath)
             // 当指定XCode版本存在的时候，切换xcode
             if(xcodeFile.exists() && xcodeFile.isDirectory) {
-                // 删除软链
-                val rmCommand = "sudo rm /Applications/Xcode.app"
-                runCommand(rmCommand, rmCommand)
-                // 新建软链
-                val lnCommand = "sudo ln -s /Applications/Xcode_$xcodeVersion.app  Xcode.app"
-                runCommand(lnCommand, lnCommand)
-                // 选择xcode
-                val selectCommand = "sudo xcode-select -s /Applications/Xcode.app/Contents/Developer/"
-                runCommand(selectCommand, selectCommand)
-                System.out.println("End to select xcode:select Xcode_$xcodeVersion.app.")
+                try {
+                    // 删除软链
+                    val rmCommand = "sudo rm /Applications/Xcode.app"
+                    runCommand(rmCommand, rmCommand)
+                    // 新建软链
+                    val lnCommand = "sudo ln -s /Applications/Xcode_$xcodeVersion.app  Xcode.app"
+                    runCommand(lnCommand, lnCommand)
+                    // 选择xcode
+                    val selectCommand = "sudo xcode-select -s /Applications/Xcode.app/Contents/Developer/"
+                    runCommand(selectCommand, selectCommand)
+                    System.out.println("End to select xcode:select Xcode_$xcodeVersion.app.")
+                }catch( e:Exception) {
+                    System.out.println("End to select xcode with error: $e")
+                }
             }else {
                 System.out.println("End to select xcode:nothing to do.")
             }
