@@ -49,9 +49,9 @@ class BuildFileResourceImpl @Autowired constructor(private val archiveFileServic
     }
 
     override fun archiveFile(
-        projectCode: String,
-        pipelineId: String,
-        buildId: String,
+        projectCode: String?,
+        pipelineId: String?,
+        buildId: String?,
         fileType: FileTypeEnum,
         customFilePath: String?,
         inputStream: InputStream,
