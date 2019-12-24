@@ -29,5 +29,6 @@ package com.tencent.devops.artifactory.pojo.enums
 enum class FileTypeEnum(val fileType: String) {
     BK_ARCHIVE("bk-archive"), // 根据每次构建有独立的存储
     BK_CUSTOM("bk-custom"), // 指定了自定义路径的归档类型，会覆盖
-    BK_REPORT("bk-report")
+    BK_REPORT("bk-report"), // 报告产出物
+    BK_PLUGIN_FE("bk-plugin-fe") // 插件自定义UI前端文件
 }
