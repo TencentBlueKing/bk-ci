@@ -43,9 +43,11 @@ import org.springframework.core.Ordered
 @ConditionalOnWebApplication
 @AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
 class BkRepoAutoConfiguration {
+
     @Bean
     @Primary
-    fun bkRepoClient(@Autowired objectMapper: ObjectMapper,
+    fun bkRepoClient(
+        @Autowired objectMapper: ObjectMapper,
         @Autowired commonConfig: CommonConfig
     ) = BkRepoClient(objectMapper, commonConfig)
 }
