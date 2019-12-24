@@ -78,6 +78,7 @@ object StoreMessageCode {
     const val USER_TEMPLATE_ATOM_NOT_INSTALLED = "2120204" // 研发商店：模版下的插件{0}尚未安装，请先安装后再使用
     const val USER_TEMPLATE_RELEASED = "2120205" // 研发商店：模版{0}已发布到商店，请先下架再删除
     const val USER_TEMPLATE_USED = "2120206" // 研发商店：模版{0}已安装到其他项目下使用，请勿移除
+    const val USER_TEMPLATE_ATOM_IS_INVALID = "2120207" // 研发商店：模版下的插件{0}不可用，请联系模板发布者
 
     const val USER_IMAGE_VERSION_IS_NOT_FINISH = "2120301" // 研发商店：镜像{0}的{1}版本发布未结束，请稍后再试
     const val USER_IMAGE_VERSION_IS_INVALID = "2120302" // 研发商店：镜像升级的版本号{0}错误，应为{1}
