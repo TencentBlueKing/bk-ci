@@ -648,17 +648,17 @@ class ProjectDao {
     ): Result<TProjectRecord> {
         with(TProject.T_PROJECT) {
             val conditions = generateQueryProjectCondition(
-                    projectName,
-                    englishName,
-                    projectType,
-                    isSecrecy,
-                    creator,
-                    approver,
-                    approvalStatus,
-                    grayFlag,
-                    repoGrayFlag,
-                    grayNames,
-                    repoGrayNames
+                    projectName = projectName,
+                    englishName = englishName,
+                    projectType = projectType,
+                    isSecrecy = isSecrecy,
+                    creator = creator,
+                    approver = approver,
+                    approvalStatus = approvalStatus,
+                    grayFlag = grayFlag,
+                    repoGrayFlag = repoGrayFlag,
+                    grayNames = grayNames,
+                    repoGrayNames = repoGrayNames
             )
             return dslContext.selectFrom(this).where(conditions).orderBy(CREATED_AT.desc()).limit(offset, limit).fetch()
         }
@@ -770,17 +770,17 @@ class ProjectDao {
     ): Int {
         with(TProject.T_PROJECT) {
             val conditions = generateQueryProjectCondition(
-                    projectName,
-                    englishName,
-                    projectType,
-                    isSecrecy,
-                    creator,
-                    approver,
-                    approvalStatus,
-                    grayFlag,
-                    repoGrayFlag,
-                    grayNames,
-                    repoGrayNames
+                    projectName = projectName,
+                    englishName = englishName,
+                    projectType = projectType,
+                    isSecrecy = isSecrecy,
+                    creator = creator,
+                    approver = approver,
+                    approvalStatus = approvalStatus,
+                    grayFlag = grayFlag,
+                    repoGrayFlag = repoGrayFlag,
+                    grayNames = grayNames,
+                    repoGrayNames = repoGrayNames
             )
             return dslContext.selectCount().from(this).where(conditions).fetchOne(0, kotlin.Int::class.java)
         }
