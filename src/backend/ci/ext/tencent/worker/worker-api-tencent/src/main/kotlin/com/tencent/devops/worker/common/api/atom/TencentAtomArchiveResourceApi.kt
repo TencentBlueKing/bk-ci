@@ -151,7 +151,7 @@ class TencentAtomArchiveResourceApi : AbstractBuildResourceApi(), AtomArchiveSDK
         }
     }
 
-    override fun uploadAtomFile(file: File, destPath: String) {
+    override fun uploadAtomFile(file: File, fileType: FileTypeEnum, destPath: String) {
         // 过滤掉用../尝试遍历上层目录的操作
         val purePath = purePath(destPath).toString()
         val fileName = file.name
@@ -159,7 +159,7 @@ class TencentAtomArchiveResourceApi : AbstractBuildResourceApi(), AtomArchiveSDK
         LoggerService.addNormalLine("upload file >>> $path")
 
         val url =
-            "/ms/artifactory/api/build/artifactories/file/archive?fileType=${FileTypeEnum.BK_CUSTOM}&customFilePath=$purePath"
+            "/ms/artifactory/api/build/artifactories/file/archive?fileType=$fileType&customFilePath=$purePath"
         val fileBody = RequestBody.create(MultipartFormData, file)
         val requestBody = MultipartBody.Builder()
             .setType(MultipartBody.FORM)
