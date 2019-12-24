@@ -82,6 +82,20 @@ abstract class AbsOpProjectServiceImpl @Autowired constructor(
         return true
     }
 
+    override fun setRepoGrayProject(projectCodeList: List<String>, operateFlag: Int): Boolean {
+        logger.info("the projectCodeList is: $projectCodeList,operateFlag is:$operateFlag")
+        for (item in projectCodeList) {
+            if (1 == operateFlag) {
+                redisOperation.addSetValue(repoGray.getRepoGrayRedisKey(), item)
+            } else if (2 == operateFlag) {
+                redisOperation.removeSetMember(repoGray.getRepoGrayRedisKey(), item)
+            }
+        }
+        val projectCodeSet = grayProjectSet()
+        logger.info("the set projectSet is: $projectCodeSet")
+        return true
+    }
+
     override fun updateProjectFromOp(userId: String, accessToken: String, projectInfoRequest: OpProjectUpdateInfoRequest): Int {
         logger.info("the projectInfoRequest is: $projectInfoRequest")
         val projectId = projectInfoRequest.projectId

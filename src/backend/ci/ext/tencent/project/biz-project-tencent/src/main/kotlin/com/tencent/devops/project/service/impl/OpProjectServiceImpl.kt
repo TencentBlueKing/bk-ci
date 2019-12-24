@@ -63,6 +63,10 @@ class OpProjectServiceImpl @Autowired constructor(
         return super.setGrayProject(projectCodeList, operateFlag)
     }
 
+    override fun setRepoGrayProject(projectCodeList: List<String>, operateFlag: Int): Boolean {
+        return super.setRepoGrayProject(projectCodeList, operateFlag)
+    }
+
     override fun updateProjectFromOp(userId: String, accessToken: String, projectInfoRequest: OpProjectUpdateInfoRequest): Int {
         val count = super.updateProjectFromOp(userId, accessToken, projectInfoRequest)
         val dbProjectRecord = projectDao.get(dslContext, projectInfoRequest.projectId)

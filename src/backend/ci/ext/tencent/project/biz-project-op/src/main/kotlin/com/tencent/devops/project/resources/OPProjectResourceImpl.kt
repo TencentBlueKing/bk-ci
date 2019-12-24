@@ -56,6 +56,10 @@ class OPProjectResourceImpl @Autowired constructor(
         return Result(data = opProjectService.setGrayProject(projectGraySetRequest.projectCodeList, projectGraySetRequest.operateFlag))
     }
 
+    override fun setRepoGrayProject(projectGraySetRequest: OpProjectGraySetRequest): Result<Boolean> {
+        return Result(data = opProjectService.setRepoGrayProject(projectGraySetRequest.projectCodeList, projectGraySetRequest.operateFlag))
+    }
+
     override fun updateProject(userId: String, accessToken: String, projectInfoRequest: OpProjectUpdateInfoRequest): Result<Int> {
         return Result(data = opProjectService.updateProjectFromOp(userId, accessToken, projectInfoRequest))
     }
