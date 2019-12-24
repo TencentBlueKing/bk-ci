@@ -450,13 +450,14 @@
             background: url('./assets/png/empty.png') center no-repeat;
             background-size: contain;
             height: 80px;
-            width: 80px;
+            width: 220px;
             box-sizing: border-box;
             transform: translate(-50%, -50%);
             text-align: center;
             top: 45%;
             left: 50%;
-            padding-top: 100px;
+            padding-top: 80px;
+            line-height: 21px;
         }
         .scroll-index {
             text-align: right;
