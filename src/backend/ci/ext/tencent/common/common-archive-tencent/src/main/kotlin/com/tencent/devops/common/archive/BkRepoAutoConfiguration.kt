@@ -24,26 +24,28 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.artifactory.service
+package com.tencent.devops.common.archive
 
-import com.tencent.devops.artifactory.pojo.DownloadUrl
-import com.tencent.devops.artifactory.pojo.Url
-import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.tencent.devops.common.archive.client.BkRepoClient
+import com.tencent.devops.common.service.config.CommonConfig
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.autoconfigure.AutoConfigureOrder
+import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
+import org.springframework.context.annotation.Primary
+import org.springframework.context.annotation.PropertySource
+import org.springframework.core.Ordered
 
-interface RepoDownloadService {
-    fun getDownloadUrl(token: String): DownloadUrl
-
-    fun serviceGetExternalDownloadUrl(userId: String, projectId: String, artifactoryType: ArtifactoryType, argPath: String, ttl: Int, directed: Boolean = false): Url
-
-    fun serviceGetInnerDownloadUrl(userId: String, projectId: String, artifactoryType: ArtifactoryType, argPath: String, ttl: Int, directed: Boolean = false): Url
-
-    fun getDownloadUrl(userId: String, projectId: String, artifactoryType: ArtifactoryType, argPath: String): Url
-
-    fun getIoaUrl(userId: String, projectId: String, artifactoryType: ArtifactoryType, argPath: String): Url
-
-    fun getExternalUrl(userId: String, projectId: String, artifactoryType: ArtifactoryType, argPath: String): Url
-
-    fun shareUrl(userId: String, projectId: String, artifactoryType: ArtifactoryType, argPath: String, ttl: Int, downloadUsers: String)
-
-    fun getThirdPartyDownloadUrl(projectId: String, pipelineId: String, buildId: String, artifactoryType: ArtifactoryType, argPath: String, ttl: Int?, crossProjectId: String?, crossPipineId: String?, crossBuildId: String?): List<String>
+@Configuration
+@PropertySource("classpath:/common-jfrog.properties")
+@ConditionalOnWebApplication
+@AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
+class BkRepoAutoConfiguration {
+    @Bean
+    @Primary
+    fun bkRepoClient(@Autowired objectMapper: ObjectMapper,
+        @Autowired commonConfig: CommonConfig
+    ) = BkRepoClient(objectMapper, commonConfig)
 }

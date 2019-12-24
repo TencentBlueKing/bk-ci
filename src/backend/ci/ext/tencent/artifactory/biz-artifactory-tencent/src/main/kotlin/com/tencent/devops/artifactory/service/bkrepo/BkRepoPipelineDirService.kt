@@ -26,13 +26,13 @@
 
 package com.tencent.devops.artifactory.service.bkrepo
 
-import com.tencent.devops.artifactory.client.BkRepoClient
 import com.tencent.devops.artifactory.pojo.FileDetail
 import com.tencent.devops.artifactory.pojo.FileInfo
 import com.tencent.devops.artifactory.service.PipelineDirService
 import com.tencent.devops.artifactory.service.PipelineService
 import com.tencent.devops.artifactory.util.PathUtils
 import com.tencent.devops.artifactory.util.RepoUtils
+import com.tencent.devops.common.archive.client.BkRepoClient
 import com.tencent.devops.common.archive.pojo.JFrogFileInfo
 import com.tencent.devops.common.auth.api.AuthPermission
 import org.slf4j.LoggerFactory
