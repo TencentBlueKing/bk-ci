@@ -135,10 +135,10 @@ fun main(args: Array<String>) {
             if(xcodeFile.exists() && xcodeFile.isDirectory) {
                 try {
                     // 删除软链
-                    val rmCommand = "sudo rm /Applications/Xcode.app"
+                    val rmCommand = "sudo rm -rf /Applications/Xcode.app"
                     runCommand(rmCommand, rmCommand)
                     // 新建软链
-                    val lnCommand = "sudo ln -s /Applications/Xcode_$xcodeVersion.app  Xcode.app"
+                    val lnCommand = "sudo ln -s /Applications/Xcode_$xcodeVersion.app  /Applications/Xcode.app"
                     runCommand(lnCommand, lnCommand)
                     // 选择xcode
                     val selectCommand = "sudo xcode-select -s /Applications/Xcode.app/Contents/Developer/"
