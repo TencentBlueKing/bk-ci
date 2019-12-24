@@ -12,7 +12,7 @@
                 <template v-if="col.prop === 'buildNum'" v-slot="props">
                     <span class="build-num-status">
                         <router-link :class="{ [props.row.status]: true }" style="line-height: 42px;" :to="getArchiveUrl(props.row)">#{{ props.row.buildNum }}</router-link>
-                        <i v-if="retryable(props.row)" :title="$t('retry')" class="bk-icon icon-retry" @click.stop="retry(props.row.id)" />
+                        <i v-if="retryable(props.row)" title="rebuild" class="bk-icon icon-retry" @click.stop="retry(props.row.id)" />
                         <i v-else-if="props.row.status === 'QUEUE' || props.row.status === 'RUNNING' || !props.row.endTime" :title="$t('history.stopBuild')" @click.stop="stopExecute(props.row.id)"
                             :class="{
                                 'bk-icon': true,
@@ -252,7 +252,7 @@
                 return this.$refs.remarkPopup && this.$refs.remarkPopup[activeRemarkIndex] && this.$refs.remarkPopup[activeRemarkIndex].instance
             },
             retryable (row) {
-                return row.pipelineVersion === this.currentPipelineVersion && ['QUEUE', 'SUCCEED', 'RUNNING'].indexOf(row.status) < 0
+                return ['QUEUE', 'RUNNING'].indexOf(row.status) < 0
             },
             async handleRemarkChange (row) {
                 try {
@@ -424,12 +424,12 @@
                     })
 
                     if (res.id) {
-                        message = this.$t('subpage.retrySuc')
+                        message = this.$t('subpage.rebuildSuc')
                         theme = 'success'
 
                         this.$emit('update-table')
                     } else {
-                        message = this.$t('subpage.retryFail')
+                        message = this.$t('subpage.rebuildFail')
                         theme = 'error'
                     }
                 } catch (err) {
