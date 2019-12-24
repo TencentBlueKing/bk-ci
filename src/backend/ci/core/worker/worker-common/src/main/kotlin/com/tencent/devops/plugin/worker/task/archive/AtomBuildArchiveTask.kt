@@ -26,7 +26,7 @@
 
 package com.tencent.devops.plugin.worker.task.archive
 
-import com.tencent.devops.common.archive.util.JFrogUtil
+import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
 import com.tencent.devops.common.pipeline.pojo.element.market.AtomBuildArchiveElement
 import com.tencent.devops.common.pipeline.utils.ParameterUtils
 import com.tencent.devops.process.pojo.AtomErrorCode
@@ -88,7 +88,8 @@ class AtomBuildArchiveTask : ITask() {
                 val fileSeparator = System.getProperty("file.separator")
                 atomApi.uploadAtomFile(
                     file = it,
-                    destPath = JFrogUtil.getAtomFrontendFileBasePath() + frontendDestPath + fileSeparator + relativePath
+                    fileType = FileTypeEnum.BK_PLUGIN_FE,
+                    destPath = frontendDestPath + fileSeparator + relativePath
                 )
             }
         }

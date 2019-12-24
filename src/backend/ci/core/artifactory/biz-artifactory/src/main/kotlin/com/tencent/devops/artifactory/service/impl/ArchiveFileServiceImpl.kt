@@ -329,11 +329,13 @@ abstract class ArchiveFileServiceImpl : ArchiveFileService {
         buildId: String?
     ): Result<String> {
         val destPathBuilder = StringBuilder(getBasePath()).append(fileType.fileType).append(fileSeparator)
-        if (!projectId.isNullOrBlank()) {
-            destPathBuilder.append(projectId).append(fileSeparator)
+        if (FileTypeEnum.BK_PLUGIN_FE != fileType) {
+            if (!projectId.isNullOrBlank()) {
+                destPathBuilder.append(projectId).append(fileSeparator)
+            }
         }
 
-        if (FileTypeEnum.BK_CUSTOM == fileType) {
+        if (FileTypeEnum.BK_CUSTOM == fileType || FileTypeEnum.BK_PLUGIN_FE == fileType) {
             if (customFilePath == null) {
                 return MessageCodeUtil.generateResponseDataObject(
                     CommonMessageCode.PARAMETER_IS_NULL,
