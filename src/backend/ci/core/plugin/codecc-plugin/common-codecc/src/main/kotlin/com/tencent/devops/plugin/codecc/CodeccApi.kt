@@ -81,7 +81,8 @@ open class CodeccApi constructor(
                     DevOpsToolParams("py_version", pyVersion ?: ""),
                     DevOpsToolParams("ccn_threshold", ccnThreshold ?: ""),
                     DevOpsToolParams("needCodeContent", needCodeContent ?: ""),
-                    DevOpsToolParams("eslint_rc", eslintRc ?: "")
+                    DevOpsToolParams("eslint_rc", eslintRc ?: ""),
+                    DevOpsToolParams("SHELL", script)
                 )
             )
             if (!element.projectBuildType.isNullOrBlank()) {
@@ -122,7 +123,8 @@ open class CodeccApi constructor(
                 DevOpsToolParams("py_version", pyVersion ?: ""),
                 DevOpsToolParams("ccn_threshold", ccnThreshold ?: ""),
                 DevOpsToolParams("needCodeContent", needCodeContent ?: ""),
-                DevOpsToolParams("eslint_rc", eslintRc ?: "")
+                DevOpsToolParams("eslint_rc", eslintRc ?: ""),
+                DevOpsToolParams("SHELL", script)
             )
             if (!element.projectBuildType.isNullOrBlank()) {
                 devopsToolParams.add(DevOpsToolParams("PROJECT_BUILD_TYPE", projectBuildType!!))
@@ -285,8 +287,8 @@ open class CodeccApi constructor(
             if (!eslintToolSetId.isNullOrBlank()) map["ESLINT"] = eslintToolSetId!!
             if (!pylintToolSetId.isNullOrBlank()) map["PYLINT"] = pylintToolSetId!!
             if (!gometalinterToolSetId.isNullOrBlank()) map["GOML"] = gometalinterToolSetId!!
-            if (!checkstyleToolSetId.isNullOrBlank()) map["CHECKSTYLE"] = checkstyleToolSetId!!
-            if (!stylecopToolSetId.isNullOrBlank()) map["STYLECOP"] = stylecopToolSetId!!
+            if (!checkStyleToolSetId.isNullOrBlank()) map["CHECKSTYLE"] = checkStyleToolSetId!!
+            if (!styleCopToolSetId.isNullOrBlank()) map["STYLECOP"] = styleCopToolSetId!!
             if (!detektToolSetId.isNullOrBlank()) map["DETEKT"] = detektToolSetId!!
             if (!phpcsToolSetId.isNullOrBlank()) map["PHPCS"] = phpcsToolSetId!!
             if (!sensitiveToolSetId.isNullOrBlank()) map["SENSITIVE"] = sensitiveToolSetId!!
@@ -296,7 +298,6 @@ open class CodeccApi constructor(
             if (!horuspyToolSetId.isNullOrBlank()) map["HORUSPY"] = horuspyToolSetId!!
             if (!pinpointToolSetId.isNullOrBlank()) map["PINPOINT"] = pinpointToolSetId!!
         }
-
         return map
     }
 
