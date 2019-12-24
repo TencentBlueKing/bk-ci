@@ -369,10 +369,10 @@ export default {
     },
 
     getMacSysVersion () {
-        return request.get(`${MACOS_API_URL_PREFIX}/user/systemVersion`)
+        return request.get(`${MACOS_API_URL_PREFIX}/user/systemVersions`)
     },
 
     getMacXcodeVersion () {
-        return request.get(`${MACOS_API_URL_PREFIX}/user/xcodeVersion`)
+        return request.get(`${MACOS_API_URL_PREFIX}/user/xcodeVersions`)
     }
 }
