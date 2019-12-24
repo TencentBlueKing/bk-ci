@@ -53,6 +53,9 @@
             },
             id: {
                 type: String
+            },
+            currentExe: {
+                type: Number
             }
         },
 
@@ -129,7 +132,8 @@
                 const query = this.$route.query || {}
                 const minMapTop = query.minMapTop
                 const id = query.id
-                if (typeof minMapTop !== 'undefined' && id === this.id) {
+                const currentExe = +query.currentExe
+                if (typeof minMapTop !== 'undefined' && id === this.id && currentExe === +this.currentExe) {
                     this.minMapTop = +minMapTop
                     this.totalScrollHeight = this.minMapTop / (this.mapHeight - this.visHeight / 8) * (this.totalHeight - this.visHeight)
                     this.minNavTop = this.minMapTop * (this.visHeight - this.navHeight) / (this.mapHeight - this.visHeight / 8)
@@ -229,6 +233,7 @@
                 let height = this.itemHeight * (index + 1)
                 if (height <= 0) height = 0
                 else if (height >= this.totalHeight - this.visHeight) height = this.totalHeight - this.visHeight
+                if (this.totalHeight <= this.visHeight) height = 0
                 this.minMapTop = height / (this.totalHeight - this.visHeight) * (this.mapHeight - this.visHeight / 8)
                 this.minNavTop = height / (this.totalHeight - this.visHeight) * (this.visHeight - this.navHeight)
                 this.getListData(height)
@@ -485,7 +490,7 @@
             .scroll-item {
                 min-width: 100%;
                 &:hover {
-                    background: #282828;
+                    background: #333030;
                 }
             }
         }

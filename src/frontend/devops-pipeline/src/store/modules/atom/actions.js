@@ -368,31 +368,17 @@ export default {
     },
 
     // 第一次拉取日志
-    getInitLog ({ commit }, { projectId, pipelineId, buildId, tag, jobId }) {
-        return request.get(`${AJAX_URL_PIRFIX}/${LOG_API_URL_PREFIX}/user/logs/${projectId}/${pipelineId}/${buildId}${tag ? '?tag=' + tag : ''}`)
+    getInitLog ({ commit }, { projectId, pipelineId, buildId, tag, currentExe }) {
+        let url = `${AJAX_URL_PIRFIX}/${LOG_API_URL_PREFIX}/user/logs/${projectId}/${pipelineId}/${buildId}`
+        if (tag || currentExe) url += '?'
+        if (tag) url += `tag=${tag}`
+        if (tag && currentExe) url += '&'
+        if (currentExe) url += `executeCount=${currentExe}`
+        return request.get(url)
     },
 
     // 第一次拉取日志
-    getAfterLog ({ commit }, { projectId, pipelineId, buildId, tag, jobId, lineNo }) {
-        return request.get(`${AJAX_URL_PIRFIX}/${LOG_API_URL_PREFIX}/user/logs/${projectId}/${pipelineId}/${buildId}/after?start=${lineNo}&${tag ? 'tag=' + tag : ''}`)
-    },
-
-    // 建立拉取完整日志ws
-    buildInitWs ({ commit }, { projectId, pipelineId, buildId, tag, jobId, lineNo, payLoad }) {
-        return request.get(`${AJAX_URL_PIRFIX}/${LOG_API_URL_PREFIX}/user/logs/${projectId}/${pipelineId}/${buildId}/push/after?lineNo=${lineNo}&sessionId=${payLoad.sessionId}&${tag ? 'tag=' + tag : 'jobId=' + jobId}`)
-    },
-
-    // 建立日志WS连接
-    buildLogWs ({ commit }, { projectId, pipelineId, buildId, lineNo, tag, payLoad, jobId }) {
-        let url = `${LOG_API_URL_PREFIX}/user/logs/${projectId}/${pipelineId}/${buildId}/push/job?lineNo=${lineNo}&sessionId=${payLoad.sessionId}&jobId=${jobId}`
-        if (tag) url = `${LOG_API_URL_PREFIX}/user/logs/${projectId}/${pipelineId}/${buildId}/push/tag?lineNo=${lineNo}&sessionId=${payLoad.sessionId}&tag=${tag}`
-        return request.get(url)
-    },
-
-    // 关闭日志WS连接
-    stopLogWs ({ commit }, { projectId, pipelineId, buildId, tag, payLoad, jobId }) {
-        let url = `${LOG_API_URL_PREFIX}/user/logs/${projectId}/${pipelineId}/${buildId}/stop/job?sessionId=${payLoad.sessionId}&jobId=${jobId}`
-        if (tag) url = `${LOG_API_URL_PREFIX}/user/logs/${projectId}/${pipelineId}/${buildId}/stop/tag?sessionId=${payLoad.sessionId}&tag=${tag}`
-        return request.get(url)
+    getAfterLog ({ commit }, { projectId, pipelineId, buildId, tag, currentExe, lineNo }) {
+        return request.get(`${AJAX_URL_PIRFIX}/${LOG_API_URL_PREFIX}/user/logs/${projectId}/${pipelineId}/${buildId}/after?start=${lineNo}${currentExe ? '&executeCount=' + currentExe : ''}${tag ? '&tag=' + tag : ''}`)
     }
 }

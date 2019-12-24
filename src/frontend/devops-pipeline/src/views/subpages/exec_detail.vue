@@ -385,21 +385,27 @@
 
             initAllLog () {
                 const route = this.$route.params || {}
+                const query = this.$route.query || {}
+                const currentExe = query.id === this.execDetail.id ? query.currentExe : 1
                 this.logPostData = {
                     projectId: route.projectId,
                     pipelineId: route.pipelineId,
-                    buildId: this.execDetail.id
+                    buildId: this.execDetail.id,
+                    currentExe
                 }
                 this.openLogApi()
             },
 
             initLog () {
                 const route = this.$route.params || {}
+                const query = this.$route.query || {}
+                const currentExe = query.id === this.currentElement.id ? query.currentExe : 1
                 this.logPostData = {
                     projectId: route.projectId,
                     pipelineId: route.pipelineId,
                     buildId: this.execDetail.id,
-                    tag: this.currentElement.id
+                    tag: this.currentElement.id,
+                    currentExe
                 }
                 this.openLogApi()
             },

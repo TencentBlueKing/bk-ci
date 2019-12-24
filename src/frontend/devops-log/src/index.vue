@@ -4,7 +4,7 @@
             <header class="log-head">
                 <span class="log-title"><status-icon :status="status"></status-icon>{{ title }}</span>
                 <p class="log-buttons">
-                    <bk-select v-if="![0, 1].includes(+executeCount)" :placeholder="language('重试次数')" class="log-execute">
+                    <bk-select v-if="![0, 1].includes(+executeCount)" :placeholder="language('重试次数')" class="log-execute" :value="currentExe" :clearable="false">
                         <bk-option v-for="execute in executeCount"
                             :key="execute"
                             :id="execute"
@@ -18,7 +18,7 @@
                 </p>
             </header>
 
-            <virtual-scroll class="log-scroll" ref="scroll" :id="id">
+            <virtual-scroll class="log-scroll" ref="scroll" :id="id" :currentExe="currentExe">
                 <template slot-scope="item">
                     <span class="item-txt selection-color"
                         v-if="!isInit"
@@ -129,6 +129,11 @@
             const mainEle = document.querySelector('.log-main')
             this.offsetLeft = mainEle.offsetLeft
             this.offsetTop = mainEle.offsetTop
+
+            const query = this.$route.query || {}
+            const minMapTop = query.minMapTop
+            const id = query.id
+            if (id === this.id) this.currentExe = query.currentExe
         },
 
         beforeDestroy () {
@@ -267,7 +272,8 @@
                     bottomScrollDis,
                     showTime: this.showTime,
                     flodIndexs,
-                    logType: this.logType
+                    logType: this.logType,
+                    currentExe: this.currentExe
                 })
                 const input = document.createElement('input')
                 document.body.appendChild(input)
@@ -460,9 +466,13 @@
                         width: 100px;
                         margin-right: 10px;
                         color: #c2cade;
-                        background: #2f363d;
+                        background: #222529;
                         border-color: #444d56;
                         font-size: 14px;
+                        &:hover {
+                            color: #fff;
+                            background: #292c2d;
+                        }
                     }
                 }
                 .log-title {
