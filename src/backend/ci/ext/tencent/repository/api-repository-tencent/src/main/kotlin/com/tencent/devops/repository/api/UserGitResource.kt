@@ -31,6 +31,9 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.repository.pojo.AuthorizeResult
 import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
+import com.tencent.devops.scm.code.git.api.GitBranch
+import com.tencent.devops.scm.code.git.api.GitTag
+import com.tencent.devops.scm.pojo.Project
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -63,6 +66,57 @@ interface UserGitResource {
         @QueryParam("repoHashId")
         repoHashId: String?
     ): Result<AuthorizeResult>
+
+    @ApiOperation("根据用户ID, 通过oauth方式获取项目")
+    @GET
+    @Path("/getProjectList")
+    fun getProjectList(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "第几页", required = false)
+        @QueryParam("page")
+        page: Int?,
+        @ApiParam(value = "每页条数", required = false)
+        @QueryParam("pageSize")
+        pageSize: Int?
+    ): Result<List<Project>>
+
+    @ApiOperation("根据用户ID, 通过oauth方式获取项目分支")
+    @GET
+    @Path("/getBranch")
+    fun getBranch(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "仓库标识", required = true)
+        @QueryParam("repository")
+        repository: String,
+        @ApiParam(value = "第几页", required = false)
+        @QueryParam("page")
+        page: Int?,
+        @ApiParam(value = "每页条数", required = false)
+        @QueryParam("pageSize")
+        pageSize: Int?
+    ): Result<List<GitBranch>>
+
+    @ApiOperation("根据用户ID, 通过oauth方式获取项目Tag")
+    @GET
+    @Path("/getTag")
+    fun getTag(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "仓库标识", required = true)
+        @QueryParam("repository")
+        repository: String,
+        @ApiParam(value = "第几页", required = false)
+        @QueryParam("page")
+        page: Int?,
+        @ApiParam(value = "每页条数", required = false)
+        @QueryParam("pageSize")
+        pageSize: Int?
+    ): Result<List<GitTag>>
 
     @ApiOperation("删除用户的token ID")
     @DELETE
