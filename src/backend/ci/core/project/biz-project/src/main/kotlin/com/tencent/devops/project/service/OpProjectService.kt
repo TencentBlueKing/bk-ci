@@ -55,7 +55,7 @@ interface OpProjectService {
         grayFlag: Boolean
     ): Result<Map<String, Any?>?>
 
-    fun getProjectListV2(
+    fun getProjectList(
         projectName: String?,
         englishName: String?,
         projectType: Int?,

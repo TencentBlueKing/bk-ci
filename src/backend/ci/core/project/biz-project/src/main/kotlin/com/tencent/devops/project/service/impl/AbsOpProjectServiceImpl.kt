@@ -208,7 +208,7 @@ abstract class AbsOpProjectServiceImpl @Autowired constructor(
         return Result(dataObj)
     }
 
-    override fun getProjectListV2(projectName: String?, englishName: String?, projectType: Int?, isSecrecy: Boolean?, creator: String?, approver: String?, approvalStatus: Int?, offset: Int, limit: Int, grayFlag: Boolean, repoGrayFlag: Boolean): Result<Map<String, Any?>?> {
+    override fun getProjectList(projectName: String?, englishName: String?, projectType: Int?, isSecrecy: Boolean?, creator: String?, approver: String?, approvalStatus: Int?, offset: Int, limit: Int, grayFlag: Boolean, repoGrayFlag: Boolean): Result<Map<String, Any?>?> {
         val dataObj = mutableMapOf<String, Any?>()
 
         val grayProject = if (grayFlag) {

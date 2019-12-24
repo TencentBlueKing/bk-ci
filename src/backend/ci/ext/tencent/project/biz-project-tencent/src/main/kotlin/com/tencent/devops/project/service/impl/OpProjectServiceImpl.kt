@@ -102,8 +102,8 @@ class OpProjectServiceImpl @Autowired constructor(
         return super.getProjectList(projectName, englishName, projectType, isSecrecy, creator, approver, approvalStatus, offset, limit, grayFlag)
     }
 
-    override fun getProjectListV2(projectName: String?, englishName: String?, projectType: Int?, isSecrecy: Boolean?, creator: String?, approver: String?, approvalStatus: Int?, offset: Int, limit: Int, grayFlag: Boolean, repoGrayFlag: Boolean): Result<Map<String, Any?>?> {
-        return super.getProjectListV2(projectName, englishName, projectType, isSecrecy, creator, approver, approvalStatus, offset, limit, grayFlag, repoGrayFlag)
+    override fun getProjectList(projectName: String?, englishName: String?, projectType: Int?, isSecrecy: Boolean?, creator: String?, approver: String?, approvalStatus: Int?, offset: Int, limit: Int, grayFlag: Boolean, repoGrayFlag: Boolean): Result<Map<String, Any?>?> {
+        return super.getProjectList(projectName, englishName, projectType, isSecrecy, creator, approver, approvalStatus, offset, limit, grayFlag, repoGrayFlag)
     }
 
     override fun getProjectCount(projectName: String?, englishName: String?, projectType: Int?, isSecrecy: Boolean?, creator: String?, approver: String?, approvalStatus: Int?, grayFlag: Boolean): Result<Int> {

@@ -130,8 +130,8 @@ interface OPProjectResource {
 
     @ApiOperation("获取项目信息列表，支持筛选仓库灰度")
     @GET
-    @Path("/list/projectV2")
-    fun getProjectListV2(
+    @Path("/list/repoGrayProject")
+    fun getProjectList(
         @ApiParam(value = "项目名称", required = false)
         @QueryParam(value = "project_name")
         projectName: String?,
