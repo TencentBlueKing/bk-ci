@@ -60,6 +60,8 @@ interface AtomArchiveSDKApi : WorkerRestApiSDK {
 
     fun uploadAtom(file: File, destPath: String, buildVariables: BuildVariables)
 
+    fun uploadAtomFile(file: File, destPath: String)
+
     fun downloadAtom(atomFilePath: String, file: File)
 
     fun getAtomDevLanguageEnvVars(language: String, buildHostType: String, buildHostOs: String): Result<List<AtomDevLanguageEnvVar>?>
