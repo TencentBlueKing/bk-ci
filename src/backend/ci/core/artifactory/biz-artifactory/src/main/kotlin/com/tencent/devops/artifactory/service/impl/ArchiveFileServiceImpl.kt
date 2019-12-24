@@ -289,9 +289,9 @@ abstract class ArchiveFileServiceImpl : ArchiveFileService {
 
     override fun archiveFile(
         userId: String,
-        projectId: String,
-        pipelineId: String,
-        buildId: String,
+        projectId: String?,
+        pipelineId: String?,
+        buildId: String?,
         fileType: FileTypeEnum,
         customFilePath: String?,
         inputStream: InputStream,
