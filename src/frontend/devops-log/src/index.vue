@@ -133,7 +133,7 @@
             const query = this.$route.query || {}
             const minMapTop = query.minMapTop
             const id = query.id
-            if (id === this.id) this.currentExe = query.currentExe
+            if (id === this.id) this.currentExe = +query.currentExe
         },
 
         beforeDestroy () {

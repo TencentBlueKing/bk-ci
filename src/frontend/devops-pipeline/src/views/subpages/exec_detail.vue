@@ -156,7 +156,7 @@
                 return `${AJAX_URL_PIRFIX}/log/api/user/logs/pipelinedebug/${this.$route.params.pipelineId}/${this.execDetail.id}/download`
             },
             downLoadPluginLink () {
-                return `${AJAX_URL_PIRFIX}/log/api/user/logs/${this.$route.params.projectId}/${this.$route.params.pipelineId}/${this.execDetail.id}/download?tag=${this.currentElement.id}`
+                return `${AJAX_URL_PIRFIX}/log/api/user/logs/${this.$route.params.projectId}/${this.$route.params.pipelineId}/${this.execDetail.id}/download?tag=${this.currentElement.id}&executeCount=${this.logPostData.currentExe}`
             },
             panels () {
                 return [{
@@ -370,9 +370,9 @@
             },
 
             changeExecute (currentExe) {
+                this.logPostData.currentExe = currentExe
                 this.openLogApi.hasOpen = false
                 clearTimeout(this.getAfterLogApi.id)
-                this.logPostData.currentExe = currentExe
                 this.openLogApi()
             },
 
@@ -384,9 +384,10 @@
             },
 
             initAllLog () {
+                if (this.openLogApi.hasOpen) return
                 const route = this.$route.params || {}
                 const query = this.$route.query || {}
-                const currentExe = query.id === this.execDetail.id ? query.currentExe : 1
+                const currentExe = query.id === this.execDetail.id ? +query.currentExe : 1
                 this.logPostData = {
                     projectId: route.projectId,
                     pipelineId: route.pipelineId,
@@ -397,9 +398,10 @@
             },
 
             initLog () {
+                if (this.openLogApi.hasOpen) return
                 const route = this.$route.params || {}
                 const query = this.$route.query || {}
-                const currentExe = query.id === this.currentElement.id ? query.currentExe : 1
+                const currentExe = query.id === this.currentElement.id ? +query.currentExe : 1
                 this.logPostData = {
                     projectId: route.projectId,
                     pipelineId: route.pipelineId,
@@ -430,17 +432,20 @@
                 const lastLogNo = lastLog.lineNo || this.handleLogRes.lineNo || -1
                 this.handleLogRes.lineNo = lastLogNo
                 this.logPostData.lineNo = +lastLogNo + 1
+                const logEle = this.$refs.log
+                if (!logEle) return
+
                 if (res.finished) {
                     if (res.hasMore) {
                         this.isInitLog = false
-                        this.$refs.log.addLogData(logs)
+                        logEle.addLogData(logs)
                         this.getAfterLogApi(100)
                     } else {
-                        this.$refs.log.addLogData(logs, true)
+                        logEle.addLogData(logs, true)
                         this.isInitLog = false
                     }
                 } else {
-                    this.$refs.log.addLogData(logs)
+                    logEle.addLogData(logs)
                     this.isInitLog = false
                     this.getAfterLogApi(1000)
                 }
