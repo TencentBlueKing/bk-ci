@@ -27,35 +27,41 @@
 package com.tencent.devops.common.archive.client
 
 import com.google.gson.JsonParser
-import com.tencent.devops.common.archive.pojo.ArtifactorySearchParam
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.archive.pojo.ArtifactorySearchParam
+import com.tencent.devops.common.service.config.CommonConfig
 import okhttp3.MediaType
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Value
 import java.io.File
 import java.nio.file.Paths
 
-class JfrogService {
-
+class JfrogService constructor(
+    private val commonConfig: CommonConfig
+) {
     companion object {
         private val logger = LoggerFactory.getLogger(JfrogService::class.java)
     }
 
-    @Value("\${gateway.url:#{null}}")
-    private var gatewayUrl: String? = null
+    private fun getGatewaytUrl(): String {
+        return if (commonConfig.devopsHostGateway!!.startsWith("http://")) {
+            commonConfig.devopsHostGateway!!
+        } else {
+            "http://${commonConfig.devopsHostGateway!!}"
+        }
+    }
 
     // 从仓库匹配到所有文件
     fun getFileDownloadUrl(params: ArtifactorySearchParam): List<String> {
-        val searchUrl = "http://$gatewayUrl/jfrog/api/service/search/aql"
+        val searchUrl = "${getGatewaytUrl()}/jfrog/api/service/search/aql"
         val requestBody = getRequestBody(params)
         logger.info("search url: $searchUrl")
         logger.info("requestBody:" + requestBody.removePrefix("items.find(").removeSuffix(")"))
         val request = Request.Builder()
-                .url(searchUrl)
-                .post(RequestBody.create(MediaType.parse("text/plain; charset=utf-8"), requestBody))
-                .build()
+            .url(searchUrl)
+            .post(RequestBody.create(MediaType.parse("text/plain; charset=utf-8"), requestBody))
+            .build()
 
         val fileUrls = mutableListOf<String>()
         OkhttpUtils.doHttp(request).use { response ->
@@ -75,14 +81,14 @@ class JfrogService {
 
     // 从仓库匹配到所有文件
     fun matchFiles(params: ArtifactorySearchParam): List<String> {
-        val searchUrl = "http://$gatewayUrl/jfrog/api/service/search/aql"
+        val searchUrl = "${getGatewaytUrl()}/jfrog/api/service/search/aql"
         val requestBody = getRequestBody(params)
         logger.info("search url: $searchUrl")
         logger.info("requestBody:" + requestBody.removePrefix("items.find(").removeSuffix(")"))
         val request = Request.Builder()
-                .url(searchUrl)
-                .post(RequestBody.create(MediaType.parse("text/plain; charset=utf-8"), requestBody))
-                .build()
+            .url(searchUrl)
+            .post(RequestBody.create(MediaType.parse("text/plain; charset=utf-8"), requestBody))
+            .build()
 
         val files = mutableListOf<String>()
         OkhttpUtils.doHttp(request).use { response ->
@@ -101,14 +107,14 @@ class JfrogService {
 
     // 从仓库下载文件到指定目录
     fun downloadFile(params: ArtifactorySearchParam, destPath: String): List<File> {
-        val searchUrl = "http://$gatewayUrl/jfrog/api/service/search/aql"
+        val searchUrl = "${getGatewaytUrl()}/jfrog/api/service/search/aql"
         val requestBody = getRequestBody(params)
         logger.info("search url: $searchUrl")
         logger.info("requestBody:" + requestBody.removePrefix("items.find(").removeSuffix(")"))
         val request = Request.Builder()
-                .url(searchUrl)
-                .post(RequestBody.create(MediaType.parse("text/plain; charset=utf-8"), requestBody))
-                .build()
+            .url(searchUrl)
+            .post(RequestBody.create(MediaType.parse("text/plain; charset=utf-8"), requestBody))
+            .build()
 
         val files = mutableListOf<File>()
         OkhttpUtils.doHttp(request).use { response ->
@@ -144,9 +150,9 @@ class JfrogService {
     // 获取jfrog传回的url
     private fun getUrl(realPath: String, isCustom: Boolean): String {
         return if (isCustom) {
-            "http://$gatewayUrl/jfrog/storage/service/custom/$realPath"
+            "${getGatewaytUrl()}/jfrog/storage/service/custom/$realPath"
         } else {
-            "http://$gatewayUrl/jfrog/storage/service/archive/$realPath"
+            "${getGatewaytUrl()}/jfrog/storage/service/archive/$realPath"
         }
     }
 
@@ -158,17 +164,17 @@ class JfrogService {
             return if (custom) {
                 val path = Paths.get("bk-custom/$projectId$parent").normalize().toString()
                 "items.find(\n" +
-                        "    {\n" +
-                        "        \"repo\":{\"\$eq\":\"generic-local\"}, \"path\":{\"\$eq\":\"$path\"}, \"name\":{\"\$match\":\"$child\"}\n" +
-                        "    }\n" +
-                        ")"
+                    "    {\n" +
+                    "        \"repo\":{\"\$eq\":\"generic-local\"}, \"path\":{\"\$eq\":\"$path\"}, \"name\":{\"\$match\":\"$child\"}\n" +
+                    "    }\n" +
+                    ")"
             } else {
                 val path = Paths.get("bk-archive/$projectId/$pipelineId/$buildId$parent").normalize().toString()
                 "items.find(\n" +
-                        "    {\n" +
-                        "        \"repo\":{\"\$eq\":\"generic-local\"}, \"path\":{\"\$eq\":\"$path\"}, \"name\":{\"\$match\":\"$child\"}\n" +
-                        "    }\n" +
-                        ")"
+                    "    {\n" +
+                    "        \"repo\":{\"\$eq\":\"generic-local\"}, \"path\":{\"\$eq\":\"$path\"}, \"name\":{\"\$match\":\"$child\"}\n" +
+                    "    }\n" +
+                    ")"
             }
         }
     }

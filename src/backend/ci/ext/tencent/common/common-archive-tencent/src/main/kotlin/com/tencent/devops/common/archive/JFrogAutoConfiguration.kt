@@ -32,6 +32,7 @@ import com.tencent.devops.common.archive.api.JFrogExecutionApi
 import com.tencent.devops.common.archive.api.JFrogPropertiesApi
 import com.tencent.devops.common.archive.api.JFrogStorageApi
 import com.tencent.devops.common.archive.client.JfrogService
+import com.tencent.devops.common.service.config.CommonConfig
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
 import org.springframework.context.annotation.Bean
@@ -103,5 +104,5 @@ class JFrogAutoConfiguration {
 
     @Bean
     @Primary
-    fun jFrogService() = JfrogService()
+    fun jFrogService(commonConfig: CommonConfig) = JfrogService(commonConfig)
 }
