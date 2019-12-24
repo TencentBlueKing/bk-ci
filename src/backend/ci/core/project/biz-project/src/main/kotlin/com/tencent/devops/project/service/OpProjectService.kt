@@ -53,6 +53,20 @@ interface OpProjectService {
         grayFlag: Boolean
     ): Result<Map<String, Any?>?>
 
+    fun getProjectListV2(
+        projectName: String?,
+        englishName: String?,
+        projectType: Int?,
+        isSecrecy: Boolean?,
+        creator: String?,
+        approver: String?,
+        approvalStatus: Int?,
+        offset: Int,
+        limit: Int,
+        grayFlag: Boolean,
+        repoGrayFlag: Boolean
+    ): Result<Map<String, Any?>?>
+
     fun getProjectCount(
         projectName: String?,
         englishName: String?,
