@@ -31,7 +31,7 @@ import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("项目信息响应信息体")
-data class ProjectInfoResponseV2(
+data class ProjectInfoResponseRepoGray(
         @JsonProperty(value = "project_id", required = true)
         @ApiModelProperty("项目ID")
         val projectId: String,

@@ -34,7 +34,7 @@ import com.tencent.devops.common.service.gray.RepoGray
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.model.project.tables.records.TProjectRecord
 import com.tencent.devops.project.ProjectInfoResponse
-import com.tencent.devops.project.ProjectInfoResponseV2
+import com.tencent.devops.project.ProjectInfoResponseRepoGray
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dao.ProjectLabelRelDao
@@ -253,12 +253,12 @@ abstract class AbsOpProjectServiceImpl @Autowired constructor(
                 grayNames = grayProject,
                 repoGrayNames = repoGrayProject
         )
-        val dataList = mutableListOf<ProjectInfoResponseV2>()
+        val dataList = mutableListOf<ProjectInfoResponseRepoGray>()
         val grayProjectSet = grayProjectSet()
         val repoGrayProjectSet = repoGrayProjectSet()
         for (i in projectInfos.indices) {
             val projectData = projectInfos[i]
-            val projectInfo = getProjectInfoResponseV2(projectData, grayProjectSet, repoGrayProjectSet)
+            val projectInfo = getProjectInfoResponseRepoGray(projectData, grayProjectSet, repoGrayProjectSet)
             dataList.add(projectInfo)
         }
         dataObj["projectList"] = dataList
@@ -322,8 +322,8 @@ abstract class AbsOpProjectServiceImpl @Autowired constructor(
         )
     }
 
-    private fun getProjectInfoResponseV2(projectData: TProjectRecord, grayProjectSet: Set<String>, repoProjectSet: Set<String>): ProjectInfoResponseV2 {
-        return ProjectInfoResponseV2(
+    private fun getProjectInfoResponseRepoGray(projectData: TProjectRecord, grayProjectSet: Set<String>, repoProjectSet: Set<String>): ProjectInfoResponseRepoGray {
+        return ProjectInfoResponseRepoGray(
                 projectId = projectData.projectId,
                 projectName = projectData.projectName,
                 projectEnglishName = projectData.englishName,
