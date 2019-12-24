@@ -223,7 +223,7 @@ abstract class AbsOpProjectServiceImpl @Autowired constructor(
             null
         }
 
-        val projectInfos = projectDao.getProjectListV2(
+        val projectInfos = projectDao.getProjectList(
                 dslContext = dslContext,
                 projectName = projectName,
                 englishName = englishName,
@@ -239,7 +239,7 @@ abstract class AbsOpProjectServiceImpl @Autowired constructor(
                 grayNames = grayProject,
                 repoGrayNames = repoGrayProject
         )
-        val totalCount = projectDao.getProjectCountV2(
+        val totalCount = projectDao.getProjectCount(
                 dslContext = dslContext,
                 projectName = projectName,
                 englishName = englishName,

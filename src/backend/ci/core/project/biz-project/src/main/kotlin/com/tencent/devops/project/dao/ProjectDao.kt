@@ -547,7 +547,7 @@ class ProjectDao {
         return conditions
     }
 
-    private fun TProject.generateQueryProjectConditionV2(
+    private fun TProject.generateQueryProjectCondition(
             projectName: String?,
             englishName: String?,
             projectType: Int?,
@@ -630,7 +630,7 @@ class ProjectDao {
         }
     }
 
-    fun getProjectListV2(
+    fun getProjectList(
             dslContext: DSLContext,
             projectName: String?,
             englishName: String?,
@@ -647,7 +647,7 @@ class ProjectDao {
             repoGrayNames: Set<String>?
     ): Result<TProjectRecord> {
         with(TProject.T_PROJECT) {
-            val conditions = generateQueryProjectConditionV2(
+            val conditions = generateQueryProjectCondition(
                     projectName,
                     englishName,
                     projectType,
@@ -754,7 +754,7 @@ class ProjectDao {
         }
     }
 
-    fun getProjectCountV2(
+    fun getProjectCount(
             dslContext: DSLContext,
             projectName: String?,
             englishName: String?,
@@ -769,7 +769,7 @@ class ProjectDao {
             repoGrayNames: Set<String>?
     ): Int {
         with(TProject.T_PROJECT) {
-            val conditions = generateQueryProjectConditionV2(
+            val conditions = generateQueryProjectCondition(
                     projectName,
                     englishName,
                     projectType,
