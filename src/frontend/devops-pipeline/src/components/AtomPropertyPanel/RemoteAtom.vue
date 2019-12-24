@@ -7,7 +7,7 @@
                 ref="iframeEle"
                 allowfullscreen
                 :height="iframeHeight"
-                :src="src1"
+                :src="src"
                 @load="onLoad"
             />
         </div>
