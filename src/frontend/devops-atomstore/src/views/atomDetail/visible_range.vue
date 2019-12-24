@@ -21,7 +21,7 @@
                     @select="select"
                     @select-all="selectAll"
                 >
-                    <bk-table-column type="selection" width="60" align="center"></bk-table-column>
+                    <bk-table-column type="selection" width="70" align="center"></bk-table-column>
                     <bk-table-column :label="$t('store.可见对象')" prop="deptName"></bk-table-column>
                     <bk-table-column :label="$t('store.状态')">
                         <template slot-scope="props">
