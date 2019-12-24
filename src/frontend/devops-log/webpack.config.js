@@ -17,14 +17,23 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-export const FETCH_ERROR = 'FETCH_ERROR'
+const webpackBaseConfig = require('../webpack.base')
 
-export const BACKEND_API_URL_PREFIX = 'backend'
-export const PROCESS_API_URL_PREFIX = 'process/api'
-export const REPOSITORY_API_URL_PREFIX = 'repository/api'
-export const ENVIRONMENT_API_URL_PREFIX = 'environment/api'
-export const ARTIFACTORY_API_URL_PREFIX = 'artifactory/api'
-export const QUALITY_API_URL_PREFIX = 'quality/api'
-export const STORE_API_URL_PREFIX = 'store/api'
-export const PLUGIN_API_URL_PREFIX = 'plugin/api'
-export const LOG_API_URL_PREFIX = 'log/api'
+module.exports = (env, argv) => {    
+    const config = webpackBaseConfig({
+        env,
+        argv,
+        entry: {
+            log: './index.js'
+        },
+        output: {
+            library: 'ci-log',
+            libraryTarget: 'umd',
+        },
+        publicPath: '/common-lib/log/',
+        dist: '/common-lib/log',
+        port: 8006
+    })
+    config.plugins.pop()
+    return config
+}

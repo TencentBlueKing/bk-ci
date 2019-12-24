@@ -70,7 +70,7 @@
                         res = bkLocale.$t('store.流水线模板')
                         break
                     default:
-                        res = bkLocale.$t('store.镜像')
+                        res = bkLocale.$t('store.容器镜像')
                         break
                 }
                 return res

@@ -4,7 +4,7 @@
         <hgroup class="detail-info-group">
             <h3 class="title-with-img">
                 <span :class="{ 'not-recommend': detail.recommendFlag === false }" :title="detail.recommendFlag === false ? $t('store.该插件不推荐使用') : ''">{{detail.name}}</span>
-                <h5 :title="isPublicTitle" @click="goToCode" :class="{ 'not-public': !isPublic }">
+                <h5 :title="isPublicTitle" @click="goToCode" :class="{ 'not-public': !isPublic }" v-if="!isEnterprise">
                     <icon v-if="isPublic" class="detail-img" name="color-git-code" size="16" />
                     <icon v-else class="detail-img" name="gray-git-code" size="16" style="fill:#9E9E9E" />
                     <span class="approve-msg">{{ $t('store.工蜂') }}</span>
