@@ -304,7 +304,10 @@ abstract class ArchiveFileServiceImpl : ArchiveFileService {
         if (result.isNotOk()) {
             return result
         }
-        val destPath = result.data + fileSeparator + disposition.fileName
+        var destPath = result.data!!
+        if (!destPath.endsWith(disposition.fileName)) {
+            destPath = result.data + fileSeparator + disposition.fileName
+        }
         val props: Map<String, String?>? = mapOf("pipelineId" to pipelineId, "buildId" to buildId)
         return uploadFile(
             userId = userId,
