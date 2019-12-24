@@ -277,8 +277,8 @@ interface OPProjectResource {
     @PUT
     @Path("/setRepoGrayProject")
     fun setRepoGrayProject(
-            @ApiParam(value = "灰度项目设置请求实体", required = true)
-            projectGraySetRequest: OpProjectGraySetRequest
+        @ApiParam(value = "灰度项目设置请求实体", required = true)
+        projectGraySetRequest: OpProjectGraySetRequest
     ): Result<Boolean>
 
 //    @ApiOperation("灰度项目设置")

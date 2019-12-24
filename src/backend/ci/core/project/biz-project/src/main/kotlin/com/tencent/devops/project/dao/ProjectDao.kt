@@ -548,17 +548,17 @@ class ProjectDao {
     }
 
     private fun TProject.generateQueryProjectCondition(
-            projectName: String?,
-            englishName: String?,
-            projectType: Int?,
-            isSecrecy: Boolean?,
-            creator: String?,
-            approver: String?,
-            approvalStatus: Int?,
-            grayFlag: Boolean,
-            repoGrayFlag: Boolean,
-            grayNames: Set<String>?,
-            repoGrayNames: Set<String>?
+        projectName: String?,
+        englishName: String?,
+        projectType: Int?,
+        isSecrecy: Boolean?,
+        creator: String?,
+        approver: String?,
+        approvalStatus: Int?,
+        grayFlag: Boolean,
+        repoGrayFlag: Boolean,
+        grayNames: Set<String>?,
+        repoGrayNames: Set<String>?
     ): MutableList<Condition> {
         val conditions = mutableListOf<Condition>()
         if (!StringUtils.isEmpty(projectName)) conditions.add(
@@ -631,20 +631,20 @@ class ProjectDao {
     }
 
     fun getProjectList(
-            dslContext: DSLContext,
-            projectName: String?,
-            englishName: String?,
-            projectType: Int?,
-            isSecrecy: Boolean?,
-            creator: String?,
-            approver: String?,
-            approvalStatus: Int?,
-            offset: Int,
-            limit: Int,
-            grayFlag: Boolean,
-            repoGrayFlag: Boolean,
-            grayNames: Set<String>?,
-            repoGrayNames: Set<String>?
+        dslContext: DSLContext,
+        projectName: String?,
+        englishName: String?,
+        projectType: Int?,
+        isSecrecy: Boolean?,
+        creator: String?,
+        approver: String?,
+        approvalStatus: Int?,
+        offset: Int,
+        limit: Int,
+        grayFlag: Boolean,
+        repoGrayFlag: Boolean,
+        grayNames: Set<String>?,
+        repoGrayNames: Set<String>?
     ): Result<TProjectRecord> {
         with(TProject.T_PROJECT) {
             val conditions = generateQueryProjectCondition(
@@ -755,18 +755,18 @@ class ProjectDao {
     }
 
     fun getProjectCount(
-            dslContext: DSLContext,
-            projectName: String?,
-            englishName: String?,
-            projectType: Int?,
-            isSecrecy: Boolean?,
-            creator: String?,
-            approver: String?,
-            approvalStatus: Int?,
-            grayFlag: Boolean,
-            repoGrayFlag: Boolean,
-            grayNames: Set<String>?,
-            repoGrayNames: Set<String>?
+        dslContext: DSLContext,
+        projectName: String?,
+        englishName: String?,
+        projectType: Int?,
+        isSecrecy: Boolean?,
+        creator: String?,
+        approver: String?,
+        approvalStatus: Int?,
+        grayFlag: Boolean,
+        repoGrayFlag: Boolean,
+        grayNames: Set<String>?,
+        repoGrayNames: Set<String>?
     ): Int {
         with(TProject.T_PROJECT) {
             val conditions = generateQueryProjectCondition(
