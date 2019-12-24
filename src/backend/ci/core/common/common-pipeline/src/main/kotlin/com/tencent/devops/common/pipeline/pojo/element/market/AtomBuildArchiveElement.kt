@@ -40,8 +40,12 @@ data class AtomBuildArchiveElement(
     override var status: String? = null,
     @ApiModelProperty("插件发布包所在相对路径", required = true)
     val filePath: String = "\${filePath}",
-    @ApiModelProperty("目标", required = false)
-    val destPath: String = "\${atomCode}/\${version}/\${packageName}"
+    @ApiModelProperty("插件发布包上传至仓库的目标路径", required = true)
+    val destPath: String = "\${atomCode}/\${version}/\${packageName}",
+    @ApiModelProperty("插件自定义UI前端文件所在相对路径", required = false)
+    val frontendFilePath: String? = "\${BK_CI_CUSTOM_FRONTEND_DIST_PATH}",
+    @ApiModelProperty("插件自定义UI前端文件上传至仓库的目标路径", required = false)
+    val frontendDestPath: String? = "\${atomCode}/\${version}"
 ) : Element(name, id, status) {
 
     companion object {
