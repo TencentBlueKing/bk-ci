@@ -72,15 +72,15 @@ interface BuildFileResource {
     @Path("/file/archive")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     fun archiveFile(
-        @ApiParam("projectCode", required = true)
+        @ApiParam("projectCode", required = false)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
-        projectCode: String,
-        @ApiParam("pipelineId", required = true)
+        projectCode: String?,
+        @ApiParam("pipelineId", required = false)
         @HeaderParam(AUTH_HEADER_DEVOPS_PIPELINE_ID)
-        pipelineId: String,
-        @ApiParam("buildId", required = true)
+        pipelineId: String?,
+        @ApiParam("buildId", required = false)
         @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
-        buildId: String,
+        buildId: String?,
         @ApiParam("文件类型", required = true)
         @QueryParam("fileType")
         fileType: FileTypeEnum,
