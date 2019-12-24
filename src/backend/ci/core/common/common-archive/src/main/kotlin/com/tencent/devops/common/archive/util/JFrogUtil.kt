@@ -58,6 +58,10 @@ object JFrogUtil {
         return "generic-local/bk-plugin/task/${removePrefix(relativePath)}"
     }
 
+    fun getAtomFrontendFileBasePath(): String {
+        return "generic-local/bk-plugin-fe/"
+    }
+
     private fun removePrefix(relativePath: String): String {
         return relativePath.removePrefix("/")
     }

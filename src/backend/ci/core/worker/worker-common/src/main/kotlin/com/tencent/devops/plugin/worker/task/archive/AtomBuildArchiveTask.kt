@@ -26,6 +26,7 @@
 
 package com.tencent.devops.plugin.worker.task.archive
 
+import com.tencent.devops.common.archive.util.JFrogUtil
 import com.tencent.devops.common.pipeline.pojo.element.market.AtomBuildArchiveElement
 import com.tencent.devops.common.pipeline.utils.ParameterUtils
 import com.tencent.devops.process.pojo.AtomErrorCode
@@ -35,6 +36,7 @@ import com.tencent.devops.process.pojo.ErrorType
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import com.tencent.devops.store.pojo.atom.AtomEnvRequest
 import com.tencent.devops.worker.common.api.ApiFactory
+import com.tencent.devops.worker.common.api.archive.ArchiveSDKApi
 import com.tencent.devops.worker.common.api.atom.AtomArchiveSDKApi
 import com.tencent.devops.worker.common.exception.TaskExecuteException
 import com.tencent.devops.worker.common.logger.LoggerService
@@ -42,11 +44,14 @@ import com.tencent.devops.worker.common.task.ITask
 import com.tencent.devops.worker.common.task.TaskClassType
 import com.tencent.devops.worker.common.utils.ArchiveUtils
 import java.io.File
+import java.nio.file.Paths
 
 @TaskClassType(classTypes = [AtomBuildArchiveElement.classType])
 class AtomBuildArchiveTask : ITask() {
 
     private val atomApi = ApiFactory.create(AtomArchiveSDKApi::class)
+
+    private val archiveApi = ApiFactory.create(ArchiveSDKApi::class)
 
     override fun execute(buildTask: BuildTask, buildVariables: BuildVariables, workspace: File) {
         val taskParams = buildTask.params ?: mapOf()
@@ -72,15 +77,23 @@ class AtomBuildArchiveTask : ITask() {
 
         val frontendFilePath = taskParams["frontendFilePath"]
         // 判断是否是自定义UI类型的插件，如果是则需要把前端文件上传至仓库的路径
-        if (null != frontendFilePath){
+        if (null != frontendFilePath) {
             val frontendDestPath = taskParams["frontendDestPath"] ?: throw TaskExecuteException(
                 errorMsg = "param [frontendDestPath] is empty",
                 errorType = ErrorType.SYSTEM,
                 errorCode = AtomErrorCode.SYSTEM_SERVICE_ERROR
             )
-            val files = ArchiveUtils.matchFiles(workspace, frontendFilePath.trim())
-            files.forEach {
-                atomApi.uploadAtom(it, frontendDestPath, buildVariables)
+            val baseFile = File(workspace, frontendFilePath)
+            val baseFileDirPath = Paths.get(baseFile.canonicalPath)
+            val fileList = ArchiveUtils.recursiveGetFiles(baseFile)
+            fileList.forEach {
+                val relativePath = baseFileDirPath.relativize(Paths.get(it.canonicalPath)).toString()
+                val fileSeparator = System.getProperty("file.separator")
+                archiveApi.uploadCustomize(
+                    file = it,
+                    destPath = JFrogUtil.getAtomFrontendFileBasePath() + frontendDestPath + fileSeparator + relativePath,
+                    buildVariables = buildVariables
+                )
             }
         }
 
