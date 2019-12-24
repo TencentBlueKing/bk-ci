@@ -69,7 +69,7 @@ class OPProjectResourceImpl @Autowired constructor(
     }
 
     override fun getProjectList(projectName: String?, englishName: String?, projectType: Int?, isSecrecy: Boolean?, creator: String?, approver: String?, approvalStatus: Int?, offset: Int, limit: Int, grayFlag: Boolean, repoGrayFlag: Boolean, request: HttpServletRequest): Result<Map<String, Any?>?> {
-        return opProjectService.getProjectList(projectName, englishName, projectType, isSecrecy, creator, approver, approvalStatus, offset, limit, grayFlag, repoGrayFlag)
+        return opProjectService.getProjectList(projectName = projectName, englishName = englishName, projectType = projectType, isSecrecy = isSecrecy, creator = creator, approver = approver, approvalStatus = approvalStatus, offset = offset, limit = limit, grayFlag = grayFlag, repoGrayFlag = repoGrayFlag)
     }
 
     override fun getProjectCount(projectName: String?, englishName: String?, projectType: Int?, isSecrecy: Boolean?, creator: String?, approver: String?, approvalStatus: Int?, grayFlag: Boolean): Result<Int> {
