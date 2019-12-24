@@ -24,26 +24,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.service.template.impl
+package com.tencent.devops.store.service.template
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.pojo.common.DeptInfo
-import com.tencent.devops.store.service.template.TemplateVisibleDeptService
+import com.tencent.devops.common.pipeline.Model
 
-class SampleTemplateVisibleDeptServiceImpl : TemplateVisibleDeptService {
-    override fun addVisibleDept(userId: String, templateCode: String, deptInfos: List<DeptInfo>): Result<Boolean> {
-        return Result(true)
-    }
+interface TemplateModelService {
 
-    override fun validateUserTemplateAtomVisibleDept(
-        userId: String,
-        templateCode: String,
-        projectCode: String?
-    ): Result<Boolean> {
-        return Result(true)
-    }
-
-    override fun validateTemplateVisibleDept(templateCode: String, deptInfos: List<DeptInfo>?): Result<Boolean> {
-        return Result(true)
-    }
+    /**
+     * 根据模板代码查询模板模型
+     */
+    fun getTemplateModel(templateCode: String): Result<Model?>
 }
