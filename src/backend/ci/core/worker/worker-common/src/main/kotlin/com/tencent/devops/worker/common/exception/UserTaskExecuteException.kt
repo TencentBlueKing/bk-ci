@@ -24,25 +24,13 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.repository.service.scm
+package com.tencent.devops.worker.common.exception
 
-import com.tencent.devops.repository.pojo.AuthorizeResult
-import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
-import com.tencent.devops.repository.pojo.oauth.GitToken
-import com.tencent.devops.scm.code.git.api.GitBranch
-import com.tencent.devops.scm.code.git.api.GitTag
-import com.tencent.devops.scm.pojo.Project
-import javax.ws.rs.core.Response
+import com.tencent.devops.process.pojo.AtomErrorCode.USER_DEFAULT_ERROR
+import com.tencent.devops.process.pojo.ErrorType
 
-interface IGitOauthService {
-    fun getProject(userId: String, projectId: String, repoHashId: String?): AuthorizeResult
-    fun getProjectList(userId: String, page: Int?, pageSize: Int?): List<Project>
-    fun getBranch(userId: String, repository: String, page: Int?, pageSize: Int?): List<GitBranch>
-    fun getTag(userId: String, repository: String, page: Int?, pageSize: Int?): List<GitTag>
-    fun isOAuth(userId: String, redirectUrlType: RedirectUrlTypeEnum?, atomCode: String? = null): AuthorizeResult
-    fun gitCallback(code: String, state: String): Response
-    fun checkAndGetAccessToken(buildId: String, userId: String): GitToken?
-    fun getAccessToken(userId: String): GitToken?
-    fun saveAccessToken(userId: String, tGitToken: GitToken): Int
-    fun deleteToken(userId: String): Int
-}
+class UserTaskExecuteException(
+    val errorMsg: String,
+    val errorType: ErrorType = ErrorType.USER,
+    val errorCode: Int = USER_DEFAULT_ERROR
+) : Throwable(errorMsg)
