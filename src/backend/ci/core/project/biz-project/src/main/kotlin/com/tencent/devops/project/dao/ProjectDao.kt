@@ -562,20 +562,20 @@ class ProjectDao {
     ): MutableList<Condition> {
         val conditions = mutableListOf<Condition>()
         if (!StringUtils.isEmpty(projectName)) conditions.add(
-            PROJECT_NAME.like(
-                "%" + URLDecoder.decode(
-                    projectName,
-                    "UTF-8"
-                ) + "%"
-            )
+                PROJECT_NAME.like(
+                        "%" + URLDecoder.decode(
+                                projectName,
+                                "UTF-8"
+                        ) + "%"
+                )
         )
         if (!StringUtils.isEmpty(englishName)) conditions.add(
-            ENGLISH_NAME.like(
-                "%" + URLDecoder.decode(
-                    englishName,
-                    "UTF-8"
-                ) + "%"
-            )
+                ENGLISH_NAME.like(
+                        "%" + URLDecoder.decode(
+                                englishName,
+                                "UTF-8"
+                        ) + "%"
+                )
         )
         if (!StringUtils.isEmpty(projectType)) conditions.add(PROJECT_TYPE.eq(projectType))
         if (!StringUtils.isEmpty(isSecrecy)) conditions.add(IS_SECRECY.eq(isSecrecy))
@@ -648,17 +648,17 @@ class ProjectDao {
     ): Result<TProjectRecord> {
         with(TProject.T_PROJECT) {
             val conditions = generateQueryProjectCondition(
-                projectName,
-                englishName,
-                projectType,
-                isSecrecy,
-                creator,
-                approver,
-                approvalStatus,
-                grayFlag,
-                repoGrayFlag,
-                grayNames,
-                repoGrayNames
+                    projectName,
+                    englishName,
+                    projectType,
+                    isSecrecy,
+                    creator,
+                    approver,
+                    approvalStatus,
+                    grayFlag,
+                    repoGrayFlag,
+                    grayNames,
+                    repoGrayNames
             )
             return dslContext.selectFrom(this).where(conditions).orderBy(CREATED_AT.desc()).limit(offset, limit).fetch()
         }
