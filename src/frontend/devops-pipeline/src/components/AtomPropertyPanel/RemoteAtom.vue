@@ -7,7 +7,7 @@
                 ref="iframeEle"
                 allowfullscreen
                 :height="iframeHeight"
-                :src="src"
+                :src="src1"
                 @load="onLoad"
             />
         </div>
@@ -45,6 +45,11 @@
             console.log(this.atomPropsModel, this.element, 343)
             window.addEventListener('message', this.receiveMsgFromIframe)
         },
+        destroyed () {
+            setTimeout(() => {
+                window.removeEventListener('message', this.receiveMsgFromIframe)
+            }, 1000)
+        },
         methods: {
             onLoad () {
                 this.loading = false
@@ -53,13 +58,12 @@
             },
             receiveMsgFromIframe (e) {
                 if (location.href.indexOf(e.origin) === 0) return
-                console.log(e.data, 'top')
+                // console.log(e, e.data, 'top1')
                 if (!e.data) return
                 if (e.data.atomValue) {
-                    // Vue.set(this.element.data, 'input', e.data.atomValue)
-                    this.handleUpdateWholeAtomInput(e.data.atomValue)
-                } else if (e.data.isError) {
-                    console.log(e.data)
+                    this.$nextTick(this.handleUpdateWholeAtomInput(e.data.atomValue))
+                } else if (e.data.isError !== undefined) {
+                    this.handleUpdateElement('isError', e.data.isError)
                 } else if (e.data.iframeHeight) {
                     this.iframeHeight = parseInt(e.data.iframeHeight)
                 }
