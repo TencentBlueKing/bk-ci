@@ -40,6 +40,8 @@ import com.tencent.devops.repository.pojo.git.GitProjectInfo
 import com.tencent.devops.repository.pojo.git.UpdateGitProjectInfo
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.scm.api.ServiceGitResource
+import com.tencent.devops.scm.code.git.api.GitBranch
+import com.tencent.devops.scm.code.git.api.GitTag
 import com.tencent.devops.scm.pojo.CommitCheckRequest
 import com.tencent.devops.scm.pojo.GitRepositoryResp
 import com.tencent.devops.scm.services.GitService
@@ -97,6 +99,18 @@ class ServiceGitResourceImpl @Autowired constructor(
 
     override fun getProject(accessToken: String, userId: String): Result<List<Project>> {
         return Result(gitService.getProject(accessToken, userId))
+    }
+
+    override fun getProjectList(accessToken: String, userId: String, page: Int?, pageSize: Int?): Result<List<Project>> {
+        return Result(gitService.getProjectList(accessToken, userId, page, pageSize))
+    }
+
+    override fun getBranch(accessToken: String, userId: String, repository: String, page: Int?, pageSize: Int?): Result<List<GitBranch>> {
+        return Result(gitService.getBranch(accessToken, userId, repository, page, pageSize))
+    }
+
+    override fun getTag(accessToken: String, userId: String, repository: String, page: Int?, pageSize: Int?): Result<List<GitTag>> {
+        return Result(gitService.getTag(accessToken, userId, repository, page, pageSize))
     }
 
     override fun refreshToken(userId: String, accessToken: GitToken): Result<GitToken> {

@@ -39,6 +39,8 @@ import com.tencent.devops.repository.pojo.git.GitProjectInfo
 import com.tencent.devops.repository.pojo.git.UpdateGitProjectInfo
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.scm.api.ServiceGitResource
+import com.tencent.devops.scm.code.git.api.GitBranch
+import com.tencent.devops.scm.code.git.api.GitTag
 import com.tencent.devops.scm.pojo.GitRepositoryResp
 import com.tencent.devops.scm.pojo.Project
 import org.springframework.beans.factory.annotation.Autowired
@@ -52,6 +54,18 @@ class TencentGitServiceImpl @Autowired constructor(val client: Client) : IGitSer
 
     override fun getProject(accessToken: String, userId: String): List<Project> {
         return client.getScm(ServiceGitResource::class).getProject(accessToken, userId).data ?: emptyList()
+    }
+
+    override fun getProjectList(accessToken: String, userId: String, page: Int?, pageSize: Int?): List<Project> {
+        return client.getScm(ServiceGitResource::class).getProjectList(accessToken = accessToken, userId = userId, page = page, pageSize = pageSize).data ?: emptyList()
+    }
+
+    override fun getBranch(accessToken: String, userId: String, repository: String, page: Int?, pageSize: Int?): List<GitBranch> {
+        return client.getScm(ServiceGitResource::class).getBranch(accessToken = accessToken, userId = userId, repository = repository, page = page, pageSize = pageSize).data ?: emptyList()
+    }
+
+    override fun getTag(accessToken: String, userId: String, repository: String, page: Int?, pageSize: Int?): List<GitTag> {
+        return client.getScm(ServiceGitResource::class).getTag(accessToken = accessToken, userId = userId, repository = repository, page = page, pageSize = pageSize).data ?: emptyList()
     }
 
     override fun refreshToken(userId: String, accessToken: GitToken): GitToken {
