@@ -66,7 +66,7 @@ interface OpProjectService {
 
     fun synProject(
         projectCode: String,
-        isRefresh: Boolean?= false
+        isRefresh: Boolean?= true
     ): Result<Boolean>
 
     fun synProjectInit(): Result<List<String>>
