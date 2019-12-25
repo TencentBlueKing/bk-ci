@@ -28,5 +28,18 @@ package com.tencent.devops.common.api.enums
 
 enum class FrontendTypeEnum(val typeVersion: String) {
     NORMAL("1.1"),  // 官方提供典型的插件UI配置方式
-    SPECIAL("1.2")  // 定制插件UI方式
+    SPECIAL("1.2");  // 定制插件UI方式
+
+
+    companion object {
+
+        fun getFrontendTypeObj(typeVersion: String): FrontendTypeEnum? {
+            values().forEach { enumObj ->
+                if (enumObj.typeVersion == typeVersion) {
+                    return enumObj
+                }
+            }
+            return null
+        }
+    }
 }
