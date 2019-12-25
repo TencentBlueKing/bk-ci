@@ -262,6 +262,7 @@ open class MarketAtomTask : ITask() {
         atomParams: MutableMap<String, String>,
         inputTemplate: Map<String, Map<String, Any>>
     ) {
+        LoggerService.addNormalLine("=====================================================================")
         LoggerService.addNormalLine("Task           :${atomData.atomName}")
         if (!atomData.summary.isNullOrBlank()) {
             LoggerService.addNormalLine("Description    :${atomData.summary}")
@@ -269,8 +270,9 @@ open class MarketAtomTask : ITask() {
         LoggerService.addNormalLine("Version        :${atomData.version}")
         LoggerService.addNormalLine("Author         :${atomData.creator}")
         if (!atomData.docsLink.isNullOrBlank()) {
-            LoggerService.addNormalLine("Help           :[More Information](${atomData.docsLink}) ")
+            LoggerService.addNormalLine("Help           : <a href=\"${atomData.docsLink})\">More Information</a>")
         }
+        LoggerService.addNormalLine("=====================================================================")
 
         val atomStatus = AtomStatusEnum.getAtomStatus(atomData.atomStatus)
         if (atomStatus == AtomStatusEnum.UNDERCARRIAGED) {
