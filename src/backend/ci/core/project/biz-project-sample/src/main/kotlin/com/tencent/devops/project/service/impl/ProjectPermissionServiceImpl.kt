@@ -100,7 +100,13 @@ class ProjectPermissionServiceImpl @Autowired constructor(
         )
     }
 
-    override fun createResources(userId: String, projectList: List<ResourceRegisterInfo>): String {
+    override fun createResources(
+        userId: String,
+        accessToken: String?,
+        resourceRegisterInfo: ResourceRegisterInfo
+    ): String {
+        val projectList = mutableListOf<ResourceRegisterInfo>()
+        projectList.add(resourceRegisterInfo)
         authResourceApi.batchCreateResource(
             serviceCode = projectAuthServiceCode,
             resourceType = AuthResourceType.PROJECT,
@@ -110,4 +116,5 @@ class ProjectPermissionServiceImpl @Autowired constructor(
         )
         return ""
     }
+
 }
