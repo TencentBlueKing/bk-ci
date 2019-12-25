@@ -39,7 +39,8 @@ class QualityGateOutElementBizPlugin : ElementBizPlugin<QualityGateOutElement> {
         pipelineId: String,
         pipelineName: String,
         userId: String,
-        channelCode: ChannelCode
+        channelCode: ChannelCode,
+        create: Boolean
     ) {
     }
 
