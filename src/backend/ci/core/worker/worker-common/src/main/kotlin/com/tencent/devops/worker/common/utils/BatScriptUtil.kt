@@ -48,7 +48,14 @@ object BatScriptUtil {
 
     private val logger = LoggerFactory.getLogger(BatScriptUtil::class.java)
     private val specialKey = listOf<String>()
-    private val specialValue = listOf("\n", "\r", "<", ">", "|", "=")
+    private val specialValue = listOf("\n", "\r")
+    private val escapeValue = mapOf(
+        "&" to "^&",
+        "<" to "^<",
+        ">" to "^>",
+        "|" to "^|",
+        "\"" to "\\\""
+    )
 
     fun execute(
         script: String,
@@ -78,11 +85,7 @@ object BatScriptUtil {
                 .filter { !specialEnv(it.key, it.value) }
                 .forEach { (name, value) ->
                     // 特殊保留字符转义
-                    val clean = value.replace("\"", "\\\"")
-                        .replace("&", "^&")
-                        .replace("<", "^<")
-                        .replace(">", "^>")
-                        .replace("|", "^|")
+                    val clean = escapeEnv(value)
                     command.append("set $name=\"$clean\"\r\n") // 双引号防止变量值有空格而意外截断定义
                     command.append("set $name=%$name:~1,-1%\r\n") // 去除双引号，防止被程序读到有双引号的变量值
                 }
@@ -119,5 +122,13 @@ object BatScriptUtil {
             }
         }
         return false
+    }
+
+    private fun escapeEnv(value: String): String {
+        var result = value
+        escapeValue.forEach { (k, v) ->
+            result = result.replace(k, v)
+        }
+        return result
     }
 }
