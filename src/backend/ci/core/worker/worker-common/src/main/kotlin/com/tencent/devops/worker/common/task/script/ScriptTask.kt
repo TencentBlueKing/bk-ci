@@ -39,7 +39,6 @@ import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.task.ITask
 import com.tencent.devops.worker.common.task.script.bat.WindowsScriptTask
 import com.tencent.devops.worker.common.utils.ArchiveUtils
-import com.tencent.devops.worker.common.utils.ShellUtil
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.net.URLDecoder
@@ -73,9 +72,8 @@ open class ScriptTask : ITask() {
         val runtimeVariables = buildVariables.variables
         val projectId = buildVariables.projectId
 
-        ENV_FILES.forEach {
-            cleanScriptEnv(workspace, it)
-        }
+        ScriptEnvUtils.cleanEnv(buildId, workspace)
+
         val variables = if (buildTask.buildVariable == null) {
             runtimeVariables
         } else {
@@ -108,9 +106,7 @@ open class ScriptTask : ITask() {
             )
         } finally {
             // 成功失败都写入环境变量
-            ENV_FILES.forEach {
-                addEnv(readScriptEnv(workspace, it))
-            }
+            addEnv(ScriptEnvUtils.getEnv(buildId, workspace))
         }
 
         // 设置质量红线指标信息
@@ -119,7 +115,7 @@ open class ScriptTask : ITask() {
 
     private fun setGatewayValue(workspace: File) {
         try {
-            val gatewayFile = File(workspace, ShellUtil.GATEWAY_FILE)
+            val gatewayFile = File(workspace, ScriptEnvUtils.getQualityGatewayEnvFile())
             if (!gatewayFile.exists()) return
             val data = gatewayFile.readLines().map {
                 val key = it.split("=").getOrNull(0) ?: throw TaskExecuteException(
@@ -148,38 +144,7 @@ open class ScriptTask : ITask() {
         }
     }
 
-    private fun cleanScriptEnv(workspace: File, file: String) {
-        val scriptFile = File(workspace, file)
-        if (!scriptFile.exists()) {
-            return
-        }
-        // Clean the script env
-        scriptFile.writeText("")
-    }
-
-    private fun readScriptEnv(workspace: File, file: String): Map<String, String> {
-        val f = File(workspace, file)
-        if (!f.exists()) {
-            return mapOf()
-        }
-        if (f.isDirectory) {
-            return mapOf()
-        }
-
-        val lines = f.readLines()
-        if (lines.isEmpty()) {
-            return mapOf()
-        }
-        // KEY-VALUE
-        return lines.filter { it.contains("=") }.map {
-            val split = it.split("=", ignoreCase = false, limit = 2)
-            split[0].trim() to split[1].trim()
-        }.toMap()
-    }
-
     companion object {
         private val logger = LoggerFactory.getLogger(ScriptTask::class.java)
-
-        private val ENV_FILES = arrayOf("result.log", "result.ini")
     }
 }

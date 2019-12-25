@@ -28,6 +28,7 @@ package com.tencent.devops.project.service.impl
 
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.Gray
+import com.tencent.devops.common.service.gray.RepoGray
 import com.tencent.devops.common.web.mq.EXCHANGE_PAASCC_PROJECT_UPDATE
 import com.tencent.devops.common.web.mq.ROUTE_PAASCC_PROJECT_UPDATE
 import com.tencent.devops.project.dao.ProjectDao
@@ -51,14 +52,19 @@ class OpProjectServiceImpl @Autowired constructor(
     private val rabbitTemplate: RabbitTemplate,
     private val redisOperation: RedisOperation,
     private val gray: Gray,
+    private val repoGray: RepoGray,
     private val projectDispatcher: ProjectDispatcher
-) : AbsOpProjectServiceImpl(dslContext, projectDao, projectLabelRelDao, redisOperation, gray, projectDispatcher) {
+) : AbsOpProjectServiceImpl(dslContext, projectDao, projectLabelRelDao, redisOperation, gray, repoGray, projectDispatcher) {
     override fun listGrayProject(): Result<OpGrayProject> {
         return super.listGrayProject()
     }
 
     override fun setGrayProject(projectCodeList: List<String>, operateFlag: Int): Boolean {
         return super.setGrayProject(projectCodeList, operateFlag)
+    }
+
+    override fun setRepoGrayProject(projectCodeList: List<String>, operateFlag: Int): Boolean {
+        return super.setRepoGrayProject(projectCodeList, operateFlag)
     }
 
     override fun updateProjectFromOp(userId: String, accessToken: String, projectInfoRequest: OpProjectUpdateInfoRequest): Int {
@@ -94,6 +100,10 @@ class OpProjectServiceImpl @Autowired constructor(
 
     override fun getProjectList(projectName: String?, englishName: String?, projectType: Int?, isSecrecy: Boolean?, creator: String?, approver: String?, approvalStatus: Int?, offset: Int, limit: Int, grayFlag: Boolean): Result<Map<String, Any?>?> {
         return super.getProjectList(projectName, englishName, projectType, isSecrecy, creator, approver, approvalStatus, offset, limit, grayFlag)
+    }
+
+    override fun getProjectList(projectName: String?, englishName: String?, projectType: Int?, isSecrecy: Boolean?, creator: String?, approver: String?, approvalStatus: Int?, offset: Int, limit: Int, grayFlag: Boolean, repoGrayFlag: Boolean): Result<Map<String, Any?>?> {
+        return super.getProjectList(projectName, englishName, projectType, isSecrecy, creator, approver, approvalStatus, offset, limit, grayFlag, repoGrayFlag)
     }
 
     override fun getProjectCount(projectName: String?, englishName: String?, projectType: Int?, isSecrecy: Boolean?, creator: String?, approver: String?, approvalStatus: Int?, grayFlag: Boolean): Result<Int> {

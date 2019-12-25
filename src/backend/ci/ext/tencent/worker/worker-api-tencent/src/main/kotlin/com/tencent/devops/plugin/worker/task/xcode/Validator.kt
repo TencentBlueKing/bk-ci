@@ -61,7 +61,7 @@ object Validator {
 
     private fun getIphoneosSdk(workspace: File, buildVariables: BuildVariables): String {
 
-        val result = ShellUtil.execute("xcodebuild -showsdks", workspace, buildVariables.buildEnvs, emptyMap())
+        val result = ShellUtil.execute(buildVariables.buildId, "xcodebuild -showsdks", workspace, buildVariables.buildEnvs, emptyMap())
 
         val matcher = Pattern.compile("iOS\\s*(\\S*)\\s*(\\S*)\\s*-sdk\\s*(iphoneos\\S*)").matcher(result)
         val resultSdk = if (matcher.find()) matcher.group(3).removeSuffix("iOS") else ""

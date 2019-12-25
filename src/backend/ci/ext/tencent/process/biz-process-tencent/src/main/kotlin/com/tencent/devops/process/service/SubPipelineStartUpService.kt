@@ -48,6 +48,7 @@ import com.tencent.devops.process.pojo.pipeline.StartUpInfo
 import com.tencent.devops.process.pojo.pipeline.SubPipelineStartUpInfo
 import com.tencent.devops.process.utils.PIPELINE_START_CHANNEL
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
+import com.tencent.devops.process.utils.PipelineVarUtil
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
@@ -87,7 +88,7 @@ class SubPipelineStartUpService(
 
         // 通过 runVariables获取 userId 和 channelCode
         val runVariables = pipelineRuntimeService.getAllVariable(buildId)
-        val userId = runVariables.getValue(PIPELINE_START_USER_ID)
+        val userId = runVariables[PIPELINE_START_USER_ID] ?: runVariables[PipelineVarUtil.newVarToOldVar(PIPELINE_START_USER_ID)] ?: "null"
 
         logger.info("callPipelineStartup: $userId | $project | $callProjectId | $projectId | $parentPipelineId | $buildId | $callPipelineId | $taskId | $runMode")
 

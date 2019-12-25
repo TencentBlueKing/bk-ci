@@ -40,6 +40,7 @@ import com.tencent.devops.worker.common.api.utils.ThirdPartyAgentBuildInfoUtils
 import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.env.BuildEnv
 import com.tencent.devops.worker.common.env.BuildType
+import com.tencent.devops.worker.common.exception.UserTaskExecuteException
 import com.tencent.devops.worker.common.logger.LoggerService
 import java.io.File
 
@@ -201,7 +202,7 @@ object CodeccParamsHelper {
         return if (scriptType == BuildScriptType.SHELL) {
             val shareCoverityFile = LinuxCodeccConstants.getCovPyFile()
             if (!shareCoverityFile.exists()) {
-                throw RuntimeException("The coverity file (${shareCoverityFile.canonicalPath}) is not exist")
+                throw UserTaskExecuteException("The coverity file (${shareCoverityFile.canonicalPath}) is not exist")
             }
             val localCoverityFile = File(codeccWorkspace, shareCoverityFile.name)
             shareCoverityFile.copyTo(localCoverityFile, true)
@@ -215,7 +216,7 @@ object CodeccParamsHelper {
         return if (scriptType == BuildScriptType.SHELL) {
             val shareToolFile = LinuxCodeccConstants.getToolPyFile()
             if (AgentEnv.getOS() != OSType.MAC_OS && !shareToolFile.exists()) {
-                throw RuntimeException("The mutli tool file (${shareToolFile.canonicalPath}) is not exist")
+                throw UserTaskExecuteException("The mutli tool file (${shareToolFile.canonicalPath}) is not exist")
             }
             val localToolFile = File(codeccWorkspace, shareToolFile.name)
             shareToolFile.copyTo(localToolFile, true)
