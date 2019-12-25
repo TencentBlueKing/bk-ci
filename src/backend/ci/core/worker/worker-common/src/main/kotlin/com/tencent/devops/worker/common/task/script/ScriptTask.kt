@@ -95,10 +95,10 @@ open class ScriptTask : ITask() {
         } catch (t: Throwable) {
             logger.warn("Fail to run the script task", t)
             if (!archiveFileIfExecFail.isNullOrBlank()) {
-                LoggerService.addYellowLine("脚本执行失败， 归档${archiveFileIfExecFail}文件")
+                LoggerService.addRedLine("脚本执行失败， 归档${archiveFileIfExecFail}文件")
                 val count = ArchiveUtils.archivePipelineFiles(archiveFileIfExecFail!!, workspace, buildVariables)
                 if (count == 0) {
-                    LoggerService.addYellowLine("脚本执行失败之后没有匹配到任何待归档文件")
+                    LoggerService.addRedLine("脚本执行失败之后没有匹配到任何待归档文件")
                 }
             }
             throw TaskExecuteException(
