@@ -82,10 +82,10 @@ interface OpProjectService {
 
     fun synProject(
         projectCode: String,
-        isRefresh: Boolean?= true
+        isRefresh: Boolean? = true
     ): Result<Boolean>
 
     fun synProjectInit(
-        isRefresh: Boolean?= true
+        isRefresh: Boolean? = true
     ): Result<List<String>>
 }
