@@ -28,6 +28,7 @@ package com.tencent.devops.worker.common.utils
 
 import com.tencent.devops.worker.common.CommonEnv
 import com.tencent.devops.worker.common.WORKSPACE_ENV
+import com.tencent.devops.worker.common.task.script.ScriptEnvUtils
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.nio.charset.Charset
@@ -44,11 +45,20 @@ object BatScriptUtil {
         "    echo %~1=%~2 >>%file_save_dir%\r\n" +
         "    set %~1=%~2\r\n" +
         "    goto:eof\r\n"
-    private const val GATEWAY_FILE = "gatewayValueFile.ini"
 
     private val logger = LoggerFactory.getLogger(BatScriptUtil::class.java)
+    private val specialKey = listOf<String>()
+    private val specialValue = listOf("\n", "\r")
+    private val escapeValue = mapOf(
+        "&" to "^&",
+        "<" to "^<",
+        ">" to "^>",
+        "|" to "^|",
+        "\"" to "\\\""
+    )
 
     fun execute(
+        buildId: String,
         script: String,
         runtimeVariables: Map<String, String>,
         dir: File,
@@ -72,15 +82,11 @@ object BatScriptUtil {
                 .append("set DEVOPS_BUILD_SCRIPT_FILE=${file.absolutePath}\r\n")
                 .append("\r\n")
 
-            // FIXME: 需要处理 |和= 号可能造成的问题
             runtimeVariables.plus(CommonEnv.getCommonEnv())
+                .filter { !specialEnv(it.key, it.value) }
                 .forEach { (name, value) ->
                     // 特殊保留字符转义
-                    val clean = value.replace("\"", "\\\"")
-                        .replace("&", "^&")
-                        .replace("<", "^<")
-                        .replace(">", "^>")
-                        .replace("|", "^|")
+                    val clean = escapeEnv(value)
                     command.append("set $name=\"$clean\"\r\n") // 双引号防止变量值有空格而意外截断定义
                     command.append("set $name=%$name:~1,-1%\r\n") // 去除双引号，防止被程序读到有双引号的变量值
                 }
@@ -89,18 +95,41 @@ object BatScriptUtil {
                 .append("\r\n")
                 .append("exit")
                 .append("\r\n")
-                .append(setEnv.replace("##resultFile##", File(dir, "result.log").absolutePath))
-                .append(setGateValue.replace("##gateValueFile##", File(dir, GATEWAY_FILE).canonicalPath))
+                .append(setEnv.replace("##resultFile##", File(dir, ScriptEnvUtils.getEnvFile(buildId)).absolutePath))
+                .append(setGateValue.replace("##gateValueFile##", File(dir, ScriptEnvUtils.getQualityGatewayEnvFile()).canonicalPath))
 
             val charset = Charset.defaultCharset()
             logger.info("The default charset is $charset")
 
             file.writeText(command.toString(), charset)
-            logger.info("start to run windows script")
+            logger.info("start to run windows script - ($command)")
             return CommandLineUtils.execute("cmd.exe /C \"${file.canonicalPath}\"", dir, true, prefix)
         } catch (e: Throwable) {
             logger.warn("Fail to execute bat script $script", e)
             throw e
         }
+    }
+
+    private fun specialEnv(key: String, value: String): Boolean {
+        specialKey.forEach {
+            if (key.contains(it)) {
+                return true
+            }
+        }
+
+        specialValue.forEach {
+            if (value.contains(it)) {
+                return true
+            }
+        }
+        return false
+    }
+
+    private fun escapeEnv(value: String): String {
+        var result = value
+        escapeValue.forEach { (k, v) ->
+            result = result.replace(k, v)
+        }
+        return result
     }
 }

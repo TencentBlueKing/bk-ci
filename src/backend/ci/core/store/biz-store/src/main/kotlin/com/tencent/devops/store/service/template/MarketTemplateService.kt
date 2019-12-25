@@ -98,6 +98,15 @@ interface MarketTemplateService {
     ): Result<Boolean>
 
     /**
+     * 校验用户、模板和插件的可见范围
+     */
+    fun validateUserTemplateAtomVisibleDept(
+        userId: String,
+        templateCode: String,
+        projectCodeList: List<String>?
+    ): Result<Boolean>
+
+    /**
      * 获取工作台模版列表
      */
     fun getMyTemplates(
