@@ -26,6 +26,7 @@
 
 package com.tencent.devops.dockerhost.services
 
+import com.github.dockerjava.api.DockerClient
 import com.github.dockerjava.api.exception.NotFoundException
 import com.github.dockerjava.api.model.AuthConfig
 import com.github.dockerjava.api.model.AuthConfigurations
@@ -66,6 +67,7 @@ import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import java.io.File
+import java.io.IOException
 import java.nio.file.Paths
 import java.util.Date
 import javax.annotation.PostConstruct
@@ -284,6 +286,7 @@ class DockerHostBuildService(
         elementId: String?,
         outer: Boolean
     ): Pair<Boolean, String?> {
+        lateinit var dockerClient: DockerClient
         try {
             val repoAddr = dockerBuildParam.repoAddr
             val userName = dockerBuildParam.userName
@@ -296,7 +299,7 @@ class DockerHostBuildService(
                 .withRegistryPassword(password)
                 .build()
 
-            val dockerCli = DockerClientBuilder.getInstance(config).build()
+            dockerClient = DockerClientBuilder.getInstance(config).build()
             val authConfig = AuthConfig()
                 .withUsername(userName)
                 .withPassword(password)
@@ -331,7 +334,7 @@ class DockerHostBuildService(
 
             logger.info("Build docker image, workspace: $workspace, buildDir:$buildDir, dockerfile: $dockerfilePath")
             logger.info("Build docker image, imageNameTag: $imageNameTag")
-            val step = dockerCli.buildImageCmd().withNoCache(true)
+            val step = dockerClient.buildImageCmd().withNoCache(true)
                 .withPull(true)
                 .withBuildAuthConfigs(authConfigurations)
                 .withBaseDirectory(baseDirectory)
@@ -344,7 +347,7 @@ class DockerHostBuildService(
                 .awaitImageId()
 
             logger.info("Build image success, now push to repo, image name and tag: $imageNameTag")
-            dockerCli.pushImageCmd(imageNameTag)
+            dockerClient.pushImageCmd(imageNameTag)
                 .withAuthConfig(authConfig)
                 .exec(MyPushImageResultCallback(buildId, elementId, dockerHostBuildApi))
                 .awaitCompletion()
@@ -374,6 +377,12 @@ class DockerHostBuildService(
                 ""
             }
             return Pair(false, e.message + if (cause.isBlank()) "" else " cause:【$cause】")
+        } finally {
+            try {
+                dockerClient.close()
+            } catch (e: IOException) {
+                logger.error("docker client close exception: ${e.message}")
+            }
         }
     }
 
