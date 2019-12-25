@@ -18,7 +18,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 ]]
 
 config = {
-  evn = "__BKCI_ENV__",
+  env = "__BKCI_ENV__",
   static_dir = "__INSTALL_PATH__/__MODULE__/frontend",
   static_dir_gray = "__INSTALL_PATH__/__MODULE__/frontend-gray",
   docs_dir = "__INSTALL_PATH__/__MODULE__/docs",
