@@ -122,6 +122,7 @@ class Builder(private val argument: Argument) {
 
         try {
             ShellUtil.execute(
+                buildId = buildVariables.buildId,
                 script = buildCommand,
                 dir = workspace,
                 buildEnvs = buildVariables.buildEnvs,

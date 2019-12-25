@@ -70,7 +70,7 @@ class PipelineSettingService @Autowired constructor(
         }
         val isExist = isPipelineExist(setting.projectId, setting.pipelineId, setting.pipelineName)
         if (isExist) throw PipelineAlreadyExistException("流水线(${setting.pipelineName})已经存在")
-        pipelineGroupService.updatePipelineLabel(userId, setting.pipelineId, setting.labels)
+//        pipelineGroupService.updatePipelineLabel(userId, setting.pipelineId, setting.labels)
         pipelineInfoDao.update(dslContext, setting.pipelineId, userId, false, setting.pipelineName, setting.desc)
         val id = pipelineSettingDao.saveSetting(dslContext, setting).toString()
         if (checkPermission) {

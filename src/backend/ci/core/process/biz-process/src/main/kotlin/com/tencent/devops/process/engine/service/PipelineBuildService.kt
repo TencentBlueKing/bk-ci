@@ -283,7 +283,7 @@ class PipelineBuildService(
                     defaultMessage = "构建任务${buildId}不存在",
                     params = arrayOf(buildId))
 
-            if (!BuildStatus.isFailure(buildInfo.status)) {
+            if (!BuildStatus.isFinish(buildInfo.status)) {
                 throw ErrorCodeException(
                     errorCode = ProcessMessageCode.ERROR_DUPLICATE_BUILD_RETRY_ACT,
                     defaultMessage = "重试已经启动，忽略重复的请求"
@@ -329,12 +329,6 @@ class PipelineBuildService(
                         }
                     }
                 }
-
-                params[PIPELINE_RETRY_COUNT] = if (params[PIPELINE_RETRY_COUNT] != null) {
-                    params[PIPELINE_RETRY_COUNT].toString().toInt() + 1
-                } else {
-                    1
-                }
             } else {
                 // 完整构建重试
                 try {
@@ -345,12 +339,15 @@ class PipelineBuildService(
                 } catch (e: Exception) {
                     logger.warn("Fail to get the startup param for the build($buildId)", e)
                 }
-                // 假如之前构建有原子级重试，则清除掉。因为整个流水线重试的是一个新的构建了(buildId)。
-                params.remove(PIPELINE_RETRY_COUNT)
+            }
+
+            params[PIPELINE_RETRY_COUNT] = if (params[PIPELINE_RETRY_COUNT] != null) {
+                params[PIPELINE_RETRY_COUNT].toString().toInt() + 1
+            } else {
+                1
             }
 
             params[PIPELINE_START_USER_ID] = userId
-            params[PIPELINE_START_TYPE] = StartType.MANUAL.name
             params[PIPELINE_RETRY_BUILD_ID] = buildId
 
             val readyToBuildPipelineInfo =
@@ -362,17 +359,12 @@ class PipelineBuildService(
                         params = arrayOf(buildId))
 
             val startParamsWithType = mutableListOf<BuildParameters>()
-            params.forEach { t, u -> startParamsWithType.add(
-                BuildParameters(
-                    t,
-                    u
-                )
-            ) }
+            params.forEach { (t, u) -> startParamsWithType.add(BuildParameters(key = t, value = u)) }
 
             return startPipeline(
                 userId = userId,
                 readyToBuildPipelineInfo = readyToBuildPipelineInfo,
-                startType = StartType.MANUAL,
+                startType = StartType.toStartType(params[PIPELINE_START_TYPE]?.toString() ?: ""),
                 startParamsWithType = startParamsWithType,
                 channelCode = channelCode ?: ChannelCode.BS,
                 isMobile = isMobile,
@@ -601,12 +593,14 @@ class PipelineBuildService(
             startParams[PIPELINE_START_PARENT_BUILD_TASK_ID] = parentTaskId
             // 子流水线的调用不受频率限制
             val startParamsWithType = mutableListOf<BuildParameters>()
-            startParams.forEach { t, u -> startParamsWithType.add(
-                BuildParameters(
-                    t,
-                    u
+            startParams.forEach { t, u ->
+                startParamsWithType.add(
+                    BuildParameters(
+                        t,
+                        u
+                    )
                 )
-            ) }
+            }
 
             val subBuildId = startPipeline(
                 userId = readyToBuildPipelineInfo.lastModifyUser,
@@ -674,12 +668,14 @@ class PipelineBuildService(
             }
             // 子流水线的调用不受频率限制
             val startParamsWithType = mutableListOf<BuildParameters>()
-            startParams.forEach { t, u -> startParamsWithType.add(
-                BuildParameters(
-                    t,
-                    u
+            startParams.forEach { t, u ->
+                startParamsWithType.add(
+                    BuildParameters(
+                        t,
+                        u
+                    )
                 )
-            ) }
+            }
 
             return startPipeline(
                 userId = userId,
@@ -917,11 +913,11 @@ class PipelineBuildService(
         channelCode: ChannelCode,
         checkPermission: Boolean
     ): ModelDetail {
-
         return buildDetailService.get(buildId) ?: throw ErrorCodeException(
             statusCode = Response.Status.NOT_FOUND.statusCode,
-        errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS,
-        defaultMessage = "流水线编排不存在")
+            errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS,
+            defaultMessage = "流水线编排不存在"
+        )
     }
 
     fun getBuildDetailByBuildNo(
@@ -1498,7 +1494,7 @@ class PipelineBuildService(
                                 LogUtils.addFoldEndLine(
                                     rabbitTemplate = rabbitTemplate,
                                     buildId = buildId,
-                                    tagName = "${e.name}-[$taskId]",
+                                    groupName = "${e.name}-[$taskId]",
                                     tag = taskId,
                                     jobId = containerId,
                                     executeCount = 1

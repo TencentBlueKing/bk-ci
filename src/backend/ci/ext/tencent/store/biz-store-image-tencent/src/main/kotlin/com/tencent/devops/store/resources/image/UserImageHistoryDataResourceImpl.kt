@@ -42,12 +42,14 @@ class UserImageHistoryDataResourceImpl @Autowired constructor(
 ) : UserImageHistoryDataResource {
     override fun tranferHistoryImage(
         userId: String,
+        projectId: String,
         agentType: ImageAgentTypeEnum,
         value: String?
     ): Result<SimpleImageInfo> {
         return Result(
             imageHistoryDataService.tranferHistoryImage(
                 userId = userId,
+                projectId = projectId,
                 agentType = agentType,
                 value = value,
                 interfaceName = "/user/market/history/transfer"

@@ -44,12 +44,20 @@ class LogStatusDaoV2 {
         finish: Boolean
     ) {
         with(TLogStatusV2.T_LOG_STATUS_V2) {
-            dslContext.insertInto(this,
-                BUILD_ID, TAG, EXECUTE_COUNT, FINISHED)
-                .values(buildId, tag ?: "", executeCount ?: 1, finish)
-                .onDuplicateKeyUpdate()
-                .set(FINISHED, finish)
-                .execute()
+            dslContext.insertInto(
+                this,
+                BUILD_ID,
+                TAG,
+                JOB_ID,
+                EXECUTE_COUNT,
+                FINISHED
+            ).values(
+                buildId,
+                tag ?: "",
+                jobId,
+                executeCount ?: 1,
+                finish
+            ).onDuplicateKeyUpdate().set(FINISHED, finish).execute()
         }
     }
 

@@ -26,6 +26,7 @@
 
 package com.tencent.devops.common.ci.task
 
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.tencent.devops.common.ci.CiBuildConfig
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import io.swagger.annotations.ApiModel
@@ -73,13 +74,14 @@ data class DockerBuildAndPushImageTask(
         )
     }
 
-    private fun convertRepoItem(repoItems: List<DockerRepoItem>?): List<Map<String, String>>? {
-        return repoItems?.map {
+    private fun convertRepoItem(repoItems: List<DockerRepoItem>?): String? {
+        val obj = repoItems?.map {
             mapOf(
                 "key" to it.url,
                 "value" to "${encode(it.username, "utf8")}:${encode(it.password, "utf8")}"
             )
-        }
+        } ?: listOf()
+        return jacksonObjectMapper().writeValueAsString(obj)
     }
 }
 
@@ -108,8 +110,8 @@ data class DockerBuildAndPushImageConvertInput(
     val dockerBuildArgs: String? = null,
     val dockerBuildHosts: String? = null,
 
-    val sourceRepoItemsStr: List<Map<String, String>>? = null,
-    val targetRepoItemStr: List<Map<String, String>>? = null
+    val sourceRepoItemsStr: String? = null,
+    val targetRepoItemStr: String? = null
 )
 
 data class DockerRepoItem(

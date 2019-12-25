@@ -28,17 +28,29 @@ class DispatchTypeParserTxImpl @Autowired constructor(
 
     private val logger = LoggerFactory.getLogger(DispatchTypeParserTxImpl::class.java)
 
-    override fun parse(userId: String, projectId: String, dispatchType: DispatchType) {
+    override fun parse(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        dispatchType: DispatchType
+    ) {
         if (dispatchType is StoreDispatchType) {
             if (dispatchType.imageType == ImageType.BKSTORE) {
                 // 一般性处理
-                commonDispatchTypeParser.parse(userId, projectId, dispatchType)
+                commonDispatchTypeParser.parse(
+                    userId = userId,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    buildId = buildId,
+                    dispatchType = dispatchType
+                )
                 // 腾讯内部版专有处理
                 if (dispatchType.imageType == ImageType.BKDEVOPS) {
                     if (dispatchType is DockerDispatchType) {
                         dispatchType.dockerBuildVersion = dispatchType.value.removePrefix("paas/")
                     } else if (dispatchType is PublicDevCloudDispathcType) {
-                        dispatchType.image = dispatchType.value.removePrefix("devcloud/")
+                        dispatchType.image = dispatchType.value.removePrefix("/")
                     } else if (dispatchType is IDCDispatchType) {
                         dispatchType.image = dispatchType.value.removePrefix("paas/")
                     }
@@ -59,6 +71,12 @@ class DispatchTypeParserTxImpl @Autowired constructor(
                     dispatchType.value = "bkdevops/" + dispatchType.value
                 } else {
                     // TLINUX1.2/2.2需要后续做特殊映射
+                }
+                // DevCloud镜像历史数据特殊处理
+                if (dispatchType is PublicDevCloudDispathcType) {
+                    if (dispatchType.image != null) {
+                        dispatchType.image = "devcloud/" + dispatchType.image!!.removePrefix("/")
+                    }
                 }
             }
             logger.info("DispatchTypeParserTxImpl:AfterTransfer:dispatchType=(${JsonUtil.toJson(dispatchType)})")

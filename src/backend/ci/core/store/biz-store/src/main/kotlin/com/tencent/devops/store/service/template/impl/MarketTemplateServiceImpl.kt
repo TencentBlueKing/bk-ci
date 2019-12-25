@@ -29,11 +29,15 @@ package com.tencent.devops.store.service.template.impl
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.model.store.tables.records.TAtomRecord
 import com.tencent.devops.model.store.tables.records.TTemplateRecord
 import com.tencent.devops.process.api.template.ServiceTemplateResource
 import com.tencent.devops.process.pojo.template.AddMarketTemplateRequest
@@ -42,6 +46,8 @@ import com.tencent.devops.project.api.service.ServiceUserResource
 import com.tencent.devops.quality.api.v2.ServiceQualityRuleResource
 import com.tencent.devops.quality.api.v2.pojo.request.CopyRuleRequest
 import com.tencent.devops.store.constant.StoreMessageCode
+import com.tencent.devops.store.dao.atom.AtomDao
+import com.tencent.devops.store.dao.atom.MarketAtomDao
 import com.tencent.devops.store.dao.common.ClassifyDao
 import com.tencent.devops.store.dao.common.StoreMemberDao
 import com.tencent.devops.store.dao.common.StoreProjectRelDao
@@ -49,7 +55,9 @@ import com.tencent.devops.store.dao.common.StoreStatisticDao
 import com.tencent.devops.store.dao.template.MarketTemplateDao
 import com.tencent.devops.store.dao.template.TemplateCategoryRelDao
 import com.tencent.devops.store.pojo.atom.MarketMainItemLabel
+import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.common.HOTTEST
+import com.tencent.devops.store.pojo.common.KEY_CATEGORY_CODE
 import com.tencent.devops.store.pojo.common.LATEST
 import com.tencent.devops.store.pojo.common.MarketItem
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
@@ -70,6 +78,7 @@ import com.tencent.devops.store.service.template.MarketTemplateService
 import com.tencent.devops.store.service.template.MarketTemplateStatisticService
 import com.tencent.devops.store.service.template.TemplateCategoryService
 import com.tencent.devops.store.service.template.TemplateLabelService
+import com.tencent.devops.store.service.template.TemplateModelService
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -90,6 +99,10 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
     lateinit var classifyDao: ClassifyDao
     @Autowired
     lateinit var templateCategoryRelDao: TemplateCategoryRelDao
+    @Autowired
+    lateinit var marketAtomDao: MarketAtomDao
+    @Autowired
+    lateinit var atomDao: AtomDao
     @Autowired
     lateinit var storeStatisticDao: StoreStatisticDao
     @Autowired
@@ -113,6 +126,8 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
     lateinit var storeMemberService: StoreMemberService
     @Autowired
     lateinit var classifyService: ClassifyService
+    @Autowired
+    lateinit var templateModelService: TemplateModelService
     @Autowired
     lateinit var client: Client
 
@@ -257,10 +272,14 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
                 desc = true, page = page, pageSize = pageSize
             )
         )
-        val classifyList = classifyDao.getAllClassify(dslContext, 1)
+        val classifyList = classifyDao.getAllClassify(dslContext, StoreTypeEnum.TEMPLATE.type.toByte())
         classifyList.forEach {
             val classifyCode = it.classifyCode
-            labelInfoList.add(MarketMainItemLabel(classifyCode, it.classifyName))
+            val classifyLanName = MessageCodeUtil.getCodeLanMessage(
+                messageCode = "${StoreMessageCode.MSG_CODE_STORE_CLASSIFY_PREFIX}$classifyCode",
+                defaultMessage = it.classifyName
+            )
+            labelInfoList.add(MarketMainItemLabel(classifyCode, classifyLanName))
             futureList.add(
                 doList(
                     userId = userId,
@@ -348,7 +367,7 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
 
     private fun getTemplateDetail(templateRecord: TTemplateRecord, userId: String): Result<TemplateDetail?> {
         val templateCode = templateRecord.templateCode
-        val templateClassifyRecord = classifyDao.getClassify(dslContext, templateRecord.classifyId)
+        val templateClassify = classifyService.getClassify(templateRecord.classifyId).data
         val templateStatisticRecord = storeStatisticDao.getStatisticByStoreCode(
             dslContext = dslContext,
             storeCode = templateCode,
@@ -373,8 +392,8 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
             templateCode = templateCode,
             templateName = templateRecord.templateName,
             logoUrl = templateRecord.logoUrl,
-            classifyCode = templateClassifyRecord?.classifyCode,
-            classifyName = templateClassifyRecord?.classifyName,
+            classifyCode = templateClassify?.classifyCode,
+            classifyName = templateClassify?.classifyName,
             downloads = downloads ?: 0,
             score = String.format("%.1f", avgScore).toDouble(),
             summary = templateRecord.summary,
@@ -400,7 +419,7 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
         logger.info("to delete, userId: $userId | templateCode: $templateCode")
         val type = StoreTypeEnum.TEMPLATE.type.toByte()
         val isOwner = storeMemberDao.isStoreAdmin(dslContext, userId, templateCode, type)
-        if (! isOwner) {
+        if (!isOwner) {
             return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED, arrayOf(templateCode))
         }
 
@@ -432,8 +451,8 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
     /**
      * 安装模板到项目
      */
-    override fun installTemplate(accessToken: String, userId: String, channelCode: ChannelCode, installTemplateReq: InstallTemplateReq): Result<Boolean> {
-        logger.info("installTemplate accessToken is: $accessToken, userId is: $userId")
+    override fun installTemplate(userId: String, channelCode: ChannelCode, installTemplateReq: InstallTemplateReq): Result<Boolean> {
+        logger.info("installTemplate userId is: $userId")
         logger.info("installTemplate channelCode is: $channelCode, installTemplateReq is: $installTemplateReq")
         val templateCode = installTemplateReq.templateCode
         val projectCodeList = installTemplateReq.projectCodeList
@@ -443,7 +462,7 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
             return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_INVALID, arrayOf(templateCode), false)
         }
         // 校验用户是否在模板下插件的可见范围之内和模板的可见范围是否都在其下面的插件可见范围之内
-        val validateResult = validateUserTemplateAtomVisibleDept(userId, templateCode)
+        val validateResult = validateUserTemplateAtomVisibleDept(userId, templateCode, projectCodeList)
         if (validateResult.isNotOk()) {
             // 抛出错误提示
             return Result(validateResult.status, validateResult.message ?: "")
@@ -454,7 +473,6 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
             userId = userId,
             storeCode = template.templateCode,
             storeType = StoreTypeEnum.TEMPLATE,
-            accessToken = accessToken,
             projectCodeList = projectCodeList,
             channelCode = channelCode
         )
@@ -465,7 +483,7 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
         val categoryRecords = templateCategoryRelDao.getCategorysByTemplateId(dslContext, template.id)
         val categoryCodeList = mutableListOf<String>()
         categoryRecords?.forEach {
-            categoryCodeList.add(it["categoryCode"] as String)
+            categoryCodeList.add(it[KEY_CATEGORY_CODE] as String)
         }
         val addMarketTemplateRequest = AddMarketTemplateRequest(
             projectCodeList = projectCodeList,
@@ -487,7 +505,6 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
         copyQualityRule(userId, templateCode, projectCodeList, addMarketTemplateResult.data ?: mapOf())
 
         return storeProjectService.installStoreComponent(
-            accessToken = accessToken,
             userId = userId,
             projectCodeList = projectCodeList,
             storeId = template.id,
@@ -498,7 +515,91 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
         )
     }
 
-    abstract fun validateUserTemplateAtomVisibleDept(userId: String, templateCode: String): Result<Boolean>
+    override fun validateUserTemplateAtomVisibleDept(userId: String, templateCode: String, projectCodeList: List<String>?): Result<Boolean> {
+        logger.info("validateUserTemplateAtomVisibleDept userId is :$userId,templateCode is :$templateCode,projectCodeList is :$projectCodeList")
+        val templateModelResult = templateModelService.getTemplateModel(templateCode)
+        logger.info("the templateModelResult is :$templateModelResult")
+        if (templateModelResult.isNotOk()) {
+            // 抛出错误提示
+            return Result(templateModelResult.status, templateModelResult.message ?: "")
+        }
+        val templateModel = templateModelResult.data
+        logger.info("the templateModel is :$templateModel")
+        if (null == templateModel) {
+            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
+        }
+        var invalidAtomList = emptyList<String>()
+        val needInstallAtomMap = mutableMapOf<String, TAtomRecord>()
+        val stageList = templateModel.stages
+        stageList.forEach { stage ->
+            val containerList = stage.containers
+            containerList.forEach { container ->
+                val elementList = container.elements
+                elementList.forEach { element ->
+                    // 判断用户的组织架构是否在原子插件的可见范围之内
+                    val atomCode = element.getAtomCode()
+                    val atomVersion = element.version
+                    logger.info("the atomCode is:$atomCode，atomVersion is:$atomVersion")
+                    val atomRecord = if (atomVersion.isNotEmpty()) {
+                        atomDao.getPipelineAtom(dslContext, atomCode, atomVersion.replace("*", ""))
+                    } else {
+                        marketAtomDao.getLatestAtomByCode(dslContext, atomCode) // 兼容历史存量原子插件的情况
+                    }
+                    logger.info("the atomRecord is:$atomRecord")
+                    if (null == atomRecord || atomRecord.deleteFlag || atomRecord.atomStatus != AtomStatusEnum.RELEASED.status.toByte()) {
+                        return MessageCodeUtil.generateResponseDataObject(StoreMessageCode.USER_TEMPLATE_ATOM_IS_INVALID, arrayOf(atomCode))
+                    }
+                    invalidAtomList = generateUserAtomInvalidVisibleAtom(atomCode, userId, atomRecord, element)
+                    if (!atomRecord.defaultFlag) needInstallAtomMap[atomCode] = atomRecord
+                }
+            }
+        }
+        if (invalidAtomList.isNotEmpty()) {
+            // 存在用户不在插件的可见范围内的插件，给出错误提示
+            return MessageCodeUtil.generateResponseDataObject(StoreMessageCode.USER_ATOM_VISIBLE_DEPT_IS_INVALID, arrayOf(JsonUtil.toJson(invalidAtomList)), false)
+        }
+        val validateTempleAtomVisibleResult = validateTempleAtomVisible(templateCode, templateModel)
+        if (validateTempleAtomVisibleResult.isNotOk()) {
+            return validateTempleAtomVisibleResult
+        }
+        if (projectCodeList != null && projectCodeList.isNotEmpty()) {
+            logger.info("the needInstallAtomList is:$needInstallAtomMap")
+            // 判断插件是否已安装
+            projectCodeList.forEach { projectCode ->
+                needInstallAtomMap.forEach {
+                    val atomCode = it.key
+                    val atomRecord = it.value
+                    val installFlag = storeProjectRelDao.isInstalledByProject(
+                        dslContext = dslContext,
+                        projectCode = projectCode,
+                        storeCode = atomCode,
+                        storeType = StoreTypeEnum.ATOM.type.toByte()
+                    )
+                    if (!installFlag) {
+                        return storeProjectService.installStoreComponent(
+                            userId = userId,
+                            projectCodeList = arrayListOf(projectCode),
+                            storeId = atomRecord.id,
+                            storeCode = atomRecord.atomCode,
+                            storeType = StoreTypeEnum.ATOM,
+                            publicFlag = atomRecord.defaultFlag,
+                            channelCode = ChannelCode.BS
+                        )
+                    }
+                }
+            }
+        }
+        return Result(true)
+    }
+
+    abstract fun generateUserAtomInvalidVisibleAtom(
+        atomCode: String,
+        userId: String,
+        atomRecord: TAtomRecord,
+        element: Element
+    ): List<String>
+
+    abstract fun validateTempleAtomVisible(templateCode: String, templateModel: Model): Result<Boolean>
 
     private fun copyQualityRule(userId: String, templateCode: String, projectCodeList: Collection<String>, projectTemplateMap: Map<String, String>) {
         try {
@@ -562,7 +663,7 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
     override fun judgeTemplateExistByIdAndCode(templateId: String, templateCode: String): Result<Boolean> {
         logger.info("the templateId is:$templateId, templateCode is:$templateCode")
         val count = marketTemplateDao.countByIdAndCode(dslContext, templateId, templateCode)
-        if (count<1) {
+        if (count < 1) {
             return MessageCodeUtil.generateResponseDataObject(
                 CommonMessageCode.PARAMETER_IS_INVALID,
                 arrayOf("templateId:$templateId,templateCode:$templateCode"),

@@ -30,6 +30,7 @@ package com.tencent.devops.store.service.image
 
 import com.tencent.devops.common.pipeline.enums.DockerVersion
 import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_CODE
+import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_FEATURE_RECOMMEND_FLAG
 import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_NAME
 import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_VERSION
 import com.tencent.devops.store.dao.image.ImageDao
@@ -52,11 +53,12 @@ class ImageHistoryDataService @Autowired constructor(
      */
     fun tranferHistoryImage(
         userId: String,
+        projectId: String,
         agentType: ImageAgentTypeEnum,
         value: String?,
         interfaceName: String? = "Anon Interface"
     ): SimpleImageInfo {
-        logger.info("$interfaceName:tranferHistoryImage:Input($userId,$agentType,$value)")
+        logger.info("$interfaceName:tranferHistoryImage:Input($userId,$projectId,$agentType,$value)")
         var realImageNameTag = when (agentType) {
             ImageAgentTypeEnum.DOCKER, ImageAgentTypeEnum.IDC -> {
                 if (value == DockerVersion.TLINUX1_2.value) {
@@ -81,7 +83,7 @@ class ImageHistoryDataService @Autowired constructor(
         }
         val imageRecords = imageDao.listByRepoNameAndTag(
             dslContext = dslContext,
-            userId = userId,
+            projectId = projectId,
             repoName = repoName,
             tag = tag
         )
@@ -90,14 +92,16 @@ class ImageHistoryDataService @Autowired constructor(
             return SimpleImageInfo(
                 code = imageRecords[0].get(KEY_IMAGE_CODE) as String,
                 name = imageRecords[0].get(KEY_IMAGE_NAME) as String,
-                version = imageRecords[0].get(KEY_IMAGE_VERSION) as String
+                version = imageRecords[0].get(KEY_IMAGE_VERSION) as String,
+                recommendFlag = imageRecords[0].get(KEY_IMAGE_FEATURE_RECOMMEND_FLAG) as Boolean
             )
         } else {
             // 不存在这样的镜像
             return SimpleImageInfo(
                 code = "",
                 name = "",
-                version = ""
+                version = "",
+                recommendFlag = false
             )
         }
     }

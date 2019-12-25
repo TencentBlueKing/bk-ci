@@ -24,16 +24,17 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.artifactory.service
+package com.tencent.devops.artifactory.service.bkrepo
 
-import com.tencent.devops.artifactory.client.BkRepoClient
 import com.tencent.devops.artifactory.pojo.FileInfo
 import com.tencent.devops.artifactory.pojo.Property
 import com.tencent.devops.artifactory.pojo.SearchProps
-import com.tencent.devops.artifactory.service.bkrepo.BkRepoService
+import com.tencent.devops.artifactory.service.PipelineService
+import com.tencent.devops.artifactory.service.RepoSearchService
 import com.tencent.devops.artifactory.util.RepoUtils
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.timestamp
+import com.tencent.devops.common.archive.client.BkRepoClient
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_FILE_NAME
 import com.tencent.devops.common.auth.api.AuthPermission
 import org.slf4j.LoggerFactory
