@@ -125,6 +125,7 @@ object CodeccUtils {
         val script = taskParams["script"] ?: ""
         val scriptType = codeccExecuteConfig.scriptType
         val scriptFile = ShellUtil.getCommandFile(
+            buildId = codeccExecuteConfig.buildTask.buildId,
             script = script,
             dir = workspace,
             buildEnvs = codeccExecuteConfig.buildVariables.buildEnvs,
@@ -190,6 +191,7 @@ object CodeccUtils {
         val variables =
             codeccExecuteConfig.buildVariables.variables.plus(codeccExecuteConfig.buildTask.buildVariable ?: mapOf())
         return ShellUtil.execute(
+            buildId = codeccExecuteConfig.buildTask.buildId,
             script = list.joinToString(" "),
             dir = workspace,
             buildEnvs = codeccExecuteConfig.buildVariables.buildEnvs,
@@ -258,6 +260,7 @@ object CodeccUtils {
         val variables =
             codeccExecuteConfig.buildVariables.variables.plus(codeccExecuteConfig.buildTask.buildVariable ?: mapOf())
         return ShellUtil.execute(
+            buildId = codeccExecuteConfig.buildTask.buildId,
             script = list.joinToString(" "),
             dir = workspace,
             buildEnvs = codeccExecuteConfig.buildVariables.buildEnvs,
