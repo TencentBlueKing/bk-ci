@@ -321,7 +321,6 @@ class ReportArchiveServiceTaskAtom @Autowired constructor(
             }
         }
 
-
         var reportEmail: ReportEmail? = null
         if (enableEmail && emailTitle.isNotBlank() && emailReceivers.isNotBlank()) {
             val receivers = regex.split(emailReceivers).toSet()

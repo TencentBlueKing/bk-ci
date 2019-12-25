@@ -200,7 +200,6 @@ class OpenStatePushFileTaskAtom @Autowired constructor(
                     pathPattern = path,
                     destPath = destPath.canonicalPath
                 )
-
             } else {
                 jfrogService.downloadFile(
                     ArtifactorySearchParam(
