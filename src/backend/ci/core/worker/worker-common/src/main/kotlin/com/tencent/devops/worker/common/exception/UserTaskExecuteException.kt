@@ -24,21 +24,13 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.service.gray
+package com.tencent.devops.worker.common.exception
 
-import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.process.pojo.AtomErrorCode.USER_DEFAULT_ERROR
+import com.tencent.devops.process.pojo.ErrorType
 
-class RepoGray {
-    companion object {
-        const val repoGrayRedisKey = "project:setting:repoGray"
-    }
-
-    fun isGray(projectId: String, redisOperation: RedisOperation): Boolean {
-        return grayProjectSet(redisOperation).contains(projectId)
-    }
-
-    fun grayProjectSet(redisOperation: RedisOperation) =
-        (redisOperation.getSetMembers(repoGrayRedisKey) ?: emptySet()).filter { !it.isBlank() }.toSet()
-
-    fun getRepoGrayRedisKey() = repoGrayRedisKey
-}
+class UserTaskExecuteException(
+    val errorMsg: String,
+    val errorType: ErrorType = ErrorType.USER,
+    val errorCode: Int = USER_DEFAULT_ERROR
+) : Throwable(errorMsg)

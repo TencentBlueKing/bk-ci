@@ -27,20 +27,12 @@
 package com.tencent.devops.store.service.template
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.pojo.common.DeptInfo
+import com.tencent.devops.common.pipeline.Model
 
-/**
- * 模板可见范围逻辑类
- * since: 2019-01-08
- */
-interface TemplateVisibleDeptService {
+interface TemplateModelService {
 
     /**
-     * 设置模板可见范围
+     * 根据模板代码查询模板模型
      */
-    fun addVisibleDept(userId: String, templateCode: String, deptInfos: List<DeptInfo>): Result<Boolean>
-
-    fun validateUserTemplateAtomVisibleDept(userId: String, templateCode: String, projectCode: String?): Result<Boolean>
-
-    fun validateTemplateVisibleDept(templateCode: String, deptInfos: List<DeptInfo>?): Result<Boolean>
+    fun getTemplateModel(templateCode: String): Result<Model?>
 }
