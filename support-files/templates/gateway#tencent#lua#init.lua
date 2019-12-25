@@ -105,7 +105,8 @@ config = {
   mirrorsHost = "__BKCI_MIRRORS_FQDN__",
   buglyHost = "__BKCI_BULGY_HOST__",
   wechatWorkHost = "__BKCI_WECHART_WORK_HOST__",
-  docsUrl = "__BKCI_DOCS_URL__"
+  docsUrl = "__BKCI_DOCS_URL__",
+  apigwUrl = "__BKCI_APIGW_URL__"
 }
   
 require("init_common")
