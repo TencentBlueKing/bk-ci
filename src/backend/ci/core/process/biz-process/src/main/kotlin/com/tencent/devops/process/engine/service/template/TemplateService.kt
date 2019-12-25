@@ -1306,7 +1306,8 @@ class TemplateService @Autowired constructor(
             labels = labels
         )
 
-        val instanceModel = pipelineResDao.getLatestVersionModelString(dslContext, pipelineId) as Model
+        val instanceModelStr = pipelineResDao.getLatestVersionModelString(dslContext, pipelineId)
+        val instanceModel = objectMapper.readValue(instanceModelStr, Model::class.java)
         var codeCCTaskId: String? = null
         var codeCCTaskCnName: String?  = null
         var codeCCTaskName: String?  = null
