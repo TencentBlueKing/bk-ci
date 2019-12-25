@@ -161,6 +161,7 @@ object Runner {
                                 )
                             } finally {
                                 LoggerService.addFoldEndLine(taskName)
+                                LoggerService.addNormalLine("")
                                 LoggerService.elementId = ""
                             }
                         }
