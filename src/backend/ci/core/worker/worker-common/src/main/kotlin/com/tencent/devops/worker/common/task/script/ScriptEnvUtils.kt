@@ -50,14 +50,12 @@ object ScriptEnvUtils {
 
     private fun cleanScriptEnv(workspace: File, file: String) {
         val scriptFile = File(workspace, file)
-        if (!scriptFile.exists()) {
-            if (!scriptFile.mkdirs()) {
-                logger.warn("Fail to create the file - (${scriptFile.absolutePath})")
-            }
-            return
+        if (scriptFile.exists()) {
+            scriptFile.delete()
         }
-        // Clean the script env
-        scriptFile.writeText("")
+        if (!scriptFile.createNewFile()) {
+            logger.warn("Fail to create the file - (${scriptFile.absolutePath})")
+        }
     }
 
     private fun readScriptEnv(workspace: File, file: String): Map<String, String> {
