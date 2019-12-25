@@ -47,6 +47,6 @@ data class MarketAtomCreateRequest(
     val visibilityLevel: VisibilityLevelEnum? = null,
     @ApiModelProperty(value = "插件代码库不开源原因", required = false)
     val privateReason: String? = null,
-    @ApiModelProperty(value = "前端UI渲染方式", required = false)
-    val frontendType: FrontendTypeEnum? = null
+    @ApiModelProperty(value = "前端UI渲染方式", required = true)
+    val frontendType: FrontendTypeEnum = FrontendTypeEnum.NORMAL
 )
