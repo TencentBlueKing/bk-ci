@@ -298,7 +298,8 @@ class ReportArchiveServiceTaskAtom @Autowired constructor(
                 errorType = ErrorType.USER,
                 errorCode = ERROR_BUILD_TASK_IDX_FILE_NOT_EXITS.toInt(),
                 errorMsg = "Index file not exist"
-            ) }
+            )
+        }
         LogUtils.addLine(rabbitTemplate, buildId, "入口文件检测完成", taskId, containerId, executeCount)
 
         var indexFileContent = indexFile.readBytes().toString(Charset.defaultCharset())
@@ -308,7 +309,7 @@ class ReportArchiveServiceTaskAtom @Autowired constructor(
         // 获取项目下的所有文件，并上传到版本仓库
         val allFileList = recursiveGetFiles(localDirFile)
         val count = allFileList.size
-        if(isRepoGray){
+        if (isRepoGray) {
             allFileList.forEach { file ->
                 val relativePath = localDirFilePath.relativize(Paths.get(file.canonicalPath)).toString()
                 bkRepoClient.uploadLocalFile(userId, projectId, "report", "$projectId/$buildId/$taskId/$relativePath", file)

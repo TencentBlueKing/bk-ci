@@ -57,33 +57,33 @@ class JFrogAutoConfiguration {
     @Bean
     @Profile("prod", "nobuild_prod", "nobuild_prod_gray")
     fun jFrogConfigPropertiesProd(jFrogAllConfigProperties: JFrogAllConfigProperties) = JFrogConfigProperties(
-            jFrogAllConfigProperties.prodUrl,
-            jFrogAllConfigProperties.prodUsername,
-            jFrogAllConfigProperties.prodPassword
+        jFrogAllConfigProperties.prodUrl,
+        jFrogAllConfigProperties.prodUsername,
+        jFrogAllConfigProperties.prodPassword
     )
 
     @Bean
     @Profile("test", "nobuild_test", "nobuild_test_gray")
     fun jFrogConfigPropertiesTest(jFrogAllConfigProperties: JFrogAllConfigProperties) = JFrogConfigProperties(
-            jFrogAllConfigProperties.testUrl,
-            jFrogAllConfigProperties.testUsername,
-            jFrogAllConfigProperties.testPassword
+        jFrogAllConfigProperties.testUrl,
+        jFrogAllConfigProperties.testUsername,
+        jFrogAllConfigProperties.testPassword
     )
 
     @Bean
     @Profile("exp")
     fun jFrogConfigPropertiesExp(jFrogAllConfigProperties: JFrogAllConfigProperties) = JFrogConfigProperties(
-            jFrogAllConfigProperties.devUrl,
-            jFrogAllConfigProperties.devUsername,
-            jFrogAllConfigProperties.devPassword
+        jFrogAllConfigProperties.devUrl,
+        jFrogAllConfigProperties.devUsername,
+        jFrogAllConfigProperties.devPassword
     )
 
     @Bean
     @Profile("dev", "default", "nobuild_dev", "local", "codecc_dev")
     fun jFrogConfigPropertiesDev(jFrogAllConfigProperties: JFrogAllConfigProperties) = JFrogConfigProperties(
-            jFrogAllConfigProperties.devUrl,
-            jFrogAllConfigProperties.devUsername,
-            jFrogAllConfigProperties.devPassword
+        jFrogAllConfigProperties.devUrl,
+        jFrogAllConfigProperties.devUsername,
+        jFrogAllConfigProperties.devPassword
     )
 
     @Bean
@@ -95,12 +95,12 @@ class JFrogAutoConfiguration {
     @Bean
     @Primary
     fun jFrogExecutionApi(jFrogConfigProperties: JFrogConfigProperties, objectMapper: ObjectMapper): JFrogExecutionApi =
-            JFrogExecutionApi(jFrogConfigProperties, objectMapper)
+        JFrogExecutionApi(jFrogConfigProperties, objectMapper)
 
     @Bean
     @Primary
     fun jFrogPropertiesApi(jFrogConfigProperties: JFrogConfigProperties, objectMapper: ObjectMapper): JFrogPropertiesApi =
-            JFrogPropertiesApi(jFrogConfigProperties, objectMapper)
+        JFrogPropertiesApi(jFrogConfigProperties, objectMapper)
 
     @Bean
     @Primary

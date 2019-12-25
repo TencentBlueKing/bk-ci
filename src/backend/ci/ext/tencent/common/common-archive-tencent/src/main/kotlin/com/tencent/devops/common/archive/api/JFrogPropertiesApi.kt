@@ -46,10 +46,10 @@ class JFrogPropertiesApi constructor(
     fun getProperties(path: String): Map<String, List<String>> {
         val url = "$baseUrl/api/storage/$path?properties"
         val request = Request.Builder()
-                .url(url)
-                .header("Authorization", credential)
-                .get()
-                .build()
+            .url(url)
+            .header("Authorization", credential)
+            .get()
+            .build()
 
         OkhttpUtils.doHttp(request).use { response ->
             val responseContent = response.body()!!.string()
@@ -73,10 +73,10 @@ class JFrogPropertiesApi constructor(
         val recursiveInt = if (recursive) 1 else 0
         val url = "$baseUrl/api/storage/$path?properties=${encodeProperties(properties)}&recursive=$recursiveInt"
         val request = Request.Builder()
-                .url(url)
-                .header("Authorization", credential)
-                .put(RequestBody.create(MediaType.parse("application/json"), ""))
-                .build()
+            .url(url)
+            .header("Authorization", credential)
+            .put(RequestBody.create(MediaType.parse("application/json"), ""))
+            .build()
         OkhttpUtils.doHttp(request).use { response ->
             val responseContent = response.body()!!.string()
             if (!response.isSuccessful) {
@@ -92,10 +92,10 @@ class JFrogPropertiesApi constructor(
         val recursiveInt = if (recursive) 1 else 0
         val url = "$baseUrl/api/storage/$path?properties=${propertyKeys.joinToString(",")}&recursive=$recursiveInt"
         val request = Request.Builder()
-                .url(url)
-                .header("Authorization", credential)
-                .delete()
-                .build()
+            .url(url)
+            .header("Authorization", credential)
+            .delete()
+            .build()
         OkhttpUtils.doHttp(request).use { response ->
             val responseContent = response.body()!!.string()
             if (!response.isSuccessful) {
@@ -124,9 +124,9 @@ class JFrogPropertiesApi constructor(
 
     private fun encodeProperty(str: String): String {
         return str.replace(",", "%5C,")
-                .replace("\\", "%5C\\")
-                .replace("|", "%5C|")
-                .replace("=", "%5C=")
+            .replace("\\", "%5C\\")
+            .replace("|", "%5C|")
+            .replace("=", "%5C=")
     }
 
     companion object {
