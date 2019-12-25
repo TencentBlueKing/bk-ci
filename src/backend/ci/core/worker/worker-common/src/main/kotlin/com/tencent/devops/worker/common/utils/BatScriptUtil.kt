@@ -47,6 +47,8 @@ object BatScriptUtil {
     private const val GATEWAY_FILE = "gatewayValueFile.ini"
 
     private val logger = LoggerFactory.getLogger(BatScriptUtil::class.java)
+    private val specialKey = listOf<String>()
+    private val specialValue = listOf("\n", "\r", "<", ">", "|", "=")
 
     fun execute(
         script: String,
@@ -72,8 +74,8 @@ object BatScriptUtil {
                 .append("set DEVOPS_BUILD_SCRIPT_FILE=${file.absolutePath}\r\n")
                 .append("\r\n")
 
-            // FIXME: 需要处理 |和= 号可能造成的问题
             runtimeVariables.plus(CommonEnv.getCommonEnv())
+                .filter { !specialEnv(it.key, it.value) }
                 .forEach { (name, value) ->
                     // 特殊保留字符转义
                     val clean = value.replace("\"", "\\\"")
@@ -96,11 +98,26 @@ object BatScriptUtil {
             logger.info("The default charset is $charset")
 
             file.writeText(command.toString(), charset)
-            logger.info("start to run windows script")
+            logger.info("start to run windows script - ($command)")
             return CommandLineUtils.execute("cmd.exe /C \"${file.canonicalPath}\"", dir, true, prefix)
         } catch (e: Throwable) {
             logger.warn("Fail to execute bat script $script", e)
             throw e
         }
+    }
+
+    private fun specialEnv(key: String, value: String): Boolean {
+        specialKey.forEach {
+            if (key.contains(it)) {
+                return true
+            }
+        }
+
+        specialValue.forEach {
+            if (value.contains(it)) {
+                return true
+            }
+        }
+        return false
     }
 }
