@@ -563,15 +563,15 @@ class ProjectDao {
     ): Result<TProjectRecord> {
         with(TProject.T_PROJECT) {
             val conditions = generateQueryProjectCondition(
-                projectName,
-                englishName,
-                projectType,
-                isSecrecy,
-                creator,
-                approver,
-                approvalStatus,
-                grayFlag,
-                englishNames
+                projectName = projectName,
+                englishName = englishName,
+                projectType = projectType,
+                isSecrecy = isSecrecy,
+                creator = creator,
+                approver = approver,
+                approvalStatus = approvalStatus,
+                grayFlag = grayFlag,
+                englishNames = englishNames
             )
             return dslContext.selectFrom(this).where(conditions).orderBy(CREATED_AT.desc()).limit(offset, limit).fetch()
         }
