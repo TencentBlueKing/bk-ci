@@ -1,5 +1,5 @@
 <template>
-    <section class="scroll-home" @mousewheel.prevent="handleWheel">
+    <section class="scroll-home" @mousewheel.prevent="handleWheel" @DOMMouseScroll.prevent="handleWheel">
         <ul class="scroll-index scroll" :style="`top: ${-totalScrollHeight}px; width: ${indexWidth}px`">
             <li class="scroll-item" :style="`height: ${itemHeight}px; top: ${item.top}px`" v-for="(item) in indexList" :key="item">
                 {{item.value}}
@@ -198,7 +198,7 @@
                 const classList = target.classList
                 if (this.isScrolling || (classList && classList.contains('no-scroll'))) return
 
-                let isVerticalScroll = event.wheelDeltaX !== undefined ? Math.abs(event.wheelDeltaY) > Math.abs(event.wheelDeltaX) : event.axis === 2
+                const isVerticalScroll = event.wheelDeltaX !== undefined ? Math.abs(event.wheelDeltaY) > Math.abs(event.wheelDeltaX) : event.axis === 2
                 if (isVerticalScroll) this.handleVerticalScroll(event)
                 else this.handleHorizontalScroll(event)
             },
@@ -206,8 +206,8 @@
             handleHorizontalScroll (event) {
                 if (this.bottomScrollWidth >= this.mainWidth) return
 
-                const deltaX = Math.max(-1, Math.min(1, (event.wheelDeltaX || -event.detail)))
-                let bottomScrollLeft = this.bottomScrollDis + deltaX * 10
+                const deltaX = -Math.max(-1, Math.min(1, (event.wheelDeltaX || -event.detail)))
+                let bottomScrollLeft = this.bottomScrollDis + deltaX * 4
                 if (bottomScrollLeft <= 0) bottomScrollLeft = 0
                 if (bottomScrollLeft + this.bottomScrollWidth >= this.mainWidth) bottomScrollLeft = this.mainWidth - this.bottomScrollWidth
                 this.bottomScrollDis = bottomScrollLeft
@@ -312,7 +312,7 @@
 
             getNumberChangeList ({ oldNumber, oldItemNumber, oldMapHeight, oldVisHeight }) {
                 let minMapTop = this.minMapTop * (oldNumber - oldItemNumber) / ((oldMapHeight - oldVisHeight / 8) || 1) / ((this.totalNumber - this.itemNumber) || 1) * (this.mapHeight - this.visHeight / 8)
-                let totalScrollHeight = minMapTop / (this.mapHeight - this.visHeight / 8) * (this.totalHeight - this.visHeight)
+                let totalScrollHeight = minMapTop / ((this.mapHeight - this.visHeight / 8) || 1) * (this.totalHeight - this.visHeight)
                 if (minMapTop <= 0) {
                     minMapTop = 0
                     totalScrollHeight = 0
@@ -321,7 +321,7 @@
                     totalScrollHeight = this.totalHeight - this.visHeight
                 }
                 this.minMapTop = minMapTop
-                this.minNavTop = this.minMapTop * (this.visHeight - this.navHeight) / (this.mapHeight - this.visHeight / 8)
+                this.minNavTop = this.minMapTop * (this.visHeight - this.navHeight) / ((this.mapHeight - this.visHeight / 8) || 1)
                 this.getListData(totalScrollHeight)
             },
 

@@ -156,7 +156,7 @@ function addListData ({ list }) {
 }
 
 function getListData ({ totalScrollHeight, itemHeight, itemNumber, canvasHeight, canvasWidth, minMapTop, totalHeight, mapHeight, type }) {
-    const realHeight = minMapTop / (mapHeight - canvasHeight / 8) * (totalHeight - canvasHeight)
+    const realHeight = minMapTop / ((mapHeight - canvasHeight / 8) || 1) * (totalHeight - canvasHeight)
     let startIndex = Math.floor(realHeight / itemHeight)
     const endIndex = startIndex + itemNumber
     startIndex = startIndex > 0 ? startIndex - 1 : 0
