@@ -39,6 +39,8 @@ data class PipelineAtom(
     val name: String,
     @ApiModelProperty("插件代码", required = true)
     val atomCode: String,
+    @ApiModelProperty("版本号", required = true)
+    val version: String,
     @ApiModelProperty("插件大类（插件市场发布的插件分为有marketBuild：构建环境和marketBuildLess：无构建环境）", required = true)
     val classType: String,
     @ApiModelProperty("插件logo", required = false)

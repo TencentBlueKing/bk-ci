@@ -300,6 +300,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                     id = pipelineAtomRecord.id,
                     name = pipelineAtomRecord.name,
                     atomCode = pipelineAtomRecord.atomCode,
+                    version = pipelineAtomRecord.version,
                     classType = pipelineAtomRecord.classType,
                     logoUrl = pipelineAtomRecord.logoUrl,
                     icon = pipelineAtomRecord.icon,
