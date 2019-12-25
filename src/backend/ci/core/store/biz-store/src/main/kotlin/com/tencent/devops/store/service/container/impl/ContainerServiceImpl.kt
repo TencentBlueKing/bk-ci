@@ -134,7 +134,7 @@ abstract class ContainerServiceImpl @Autowired constructor() : ContainerService 
             logger.info("Get the os - (${it.os})")
             val queryAllFlag = type == null && os == null // 是否查所有容器信息标识
             val typeList = mutableListOf<ContainerBuildType>()
-            BuildType.values().forEach { type ->
+            BuildType.values().filter { type -> type.visable == true }.forEach { type ->
                 if ((containerOS == null || type.osList.contains(containerOS)) && buildTypeEnable(type, projectCode)) {
                         typeList.add(ContainerBuildType(type.name, type.value, type.enableApp, !clickable(type, projectCode)))
                 }
