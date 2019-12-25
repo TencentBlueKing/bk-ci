@@ -187,6 +187,8 @@ object PipelineVarUtil {
         "hookTargetUrl" to PIPELINE_WEBHOOK_TARGET_URL,
         "hookBlock" to PIPELINE_WEBHOOK_BLOCK,
         "hookType" to PIPELINE_WEBHOOK_TYPE,
+        "hookRepo" to PIPELINE_WEBHOOK_REPO,
+        "hookRepoType" to PIPELINE_WEBHOOK_REPO_TYPE,
         "hookEventType" to PIPELINE_WEBHOOK_EVENT_TYPE,
         "bk_hookMergeRequestId" to PIPELINE_WEBHOOK_MR_ID,
         "bk_hookMergeRequest_committer" to PIPELINE_WEBHOOK_MR_COMMITTER,
