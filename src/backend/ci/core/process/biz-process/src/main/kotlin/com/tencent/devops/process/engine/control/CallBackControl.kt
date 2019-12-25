@@ -126,6 +126,7 @@ class CallBackControl @Autowired constructor(
         val stages = parseModel(modelDetail.model)
 
         val buildEvent = BuildEvent(
+            buildId = buildId,
             pipelineId = modelDetail.pipelineId,
             pipelineName = modelDetail.pipelineName,
             userId = modelDetail.userId,
