@@ -508,22 +508,36 @@ class BkRepoClient @Autowired constructor(
         OkhttpUtils.downloadFile(url, destFile, mapOf("X-BKREPO-UID" to userId))
     }
 
-    fun downloadFileByPattern(
-        user: String,
+    fun listFileByRegex(
+        userId: String,
+        projectId: String,
+        repoName: String,
+        path: String,
+        regex: String
+    ): List<FileInfo> {
+        logger.info("listFileByRegex, userId: $userId, projectId: $projectId, repoName: $repoName, path: $path, regex: $regex")
+        val matcher = FileSystems.getDefault().getPathMatcher("glob:$regex")
+        return listFile(userId, projectId, repoName, path, includeFolders = false, deep = true).filter {
+            matcher.matches(Paths.get(it.fullPath.removePrefix("$path")))
+        }
+    }
+
+    fun listFileByPattern(
+        userId: String,
         projectId: String,
         pipelineId: String,
         buildId: String,
         repoName: String,
-        pathPattern: String,
-        destPath: String
-    ): List<File> {
-        val fileList = if (pathPattern.endsWith("/")) { // 下载目录下文件
+        pathPattern: String
+    ): List<FileInfo> {
+        logger.info("listFileByPattern, userId: $userId, projectId: $projectId, pipelineId: $pipelineId, buildId: $buildId, repoName: $repoName, pathPattern: $pathPattern")
+        return if (pathPattern.endsWith("/")) {
             val path = if (repoName == "pipeline") {
                 "$pipelineId/$buildId/${pathPattern.removeSuffix("/")}"
             } else {
                 pathPattern.removeSuffix("/")
             }
-            listFile(user, projectId, repoName, path, includeFolders = false, deep = false)
+            listFile(userId, projectId, repoName, path, includeFolders = false, deep = false)
         } else {
             val f = File(pathPattern)
             val path = if (f.parent.isNullOrBlank()) {
@@ -541,10 +555,29 @@ class BkRepoClient @Autowired constructor(
             }
             val regex = f.name
             val matcher = FileSystems.getDefault().getPathMatcher("glob:$regex")
-            listFile(user, projectId, repoName, path, includeFolders = false, deep = false).filter {
+            listFile(userId, projectId, repoName, path, includeFolders = false, deep = false).filter {
                 matcher.matches(Paths.get(it.name))
             }
         }
+    }
+
+    fun downloadFileByPattern(
+        user: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        repoName: String,
+        pathPattern: String,
+        destPath: String
+    ): List<File> {
+        val fileList = listFileByPattern(
+            user,
+            projectId,
+            pipelineId,
+            buildId,
+            repoName,
+            pathPattern
+        )
         logger.info("match files: ${fileList.map { it.fullPath }}")
 
         val destFiles = mutableListOf<File>()

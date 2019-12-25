@@ -330,17 +330,49 @@ class BkRepoService @Autowired constructor(
         }
     }
 
+    private fun parsePipeineIdAndBuildId(path: String): Pair<String, String> {
+        val splits = path.removePrefix("/").split("/")
+        return Pair(splits[0], splits[1])
+    }
+
     override fun acrossProjectCopy(projectId: String, artifactoryType: ArtifactoryType, path: String, targetProjectId: String, targetPath: String): Count {
-        bkRepoClient.copy(
-            "",
-            projectId,
-            RepoUtils.getRepoByType(artifactoryType),
-            path,
-            targetProjectId,
-            RepoUtils.getRepoByType(artifactoryType),
-            targetPath
-        )
-        return Count(-1) // todo 返回拷贝文件个数
+        val normalizeSrcPath = PathUtils.normalize(path)
+        val srcFiles = if (artifactoryType == ArtifactoryType.PIPELINE) {
+            val pipeineIdAndBuildId = parsePipeineIdAndBuildId(normalizeSrcPath)
+            val pipelineId = pipeineIdAndBuildId.first
+            val buildId = pipeineIdAndBuildId.second
+            val pathPrefix = "/$pipelineId/$buildId/"
+            bkRepoClient.listFileByRegex(
+                "",
+                projectId,
+                RepoUtils.PIPELINE_REPO,
+                pathPrefix,
+                normalizeSrcPath.removePrefix(pathPrefix)
+            ).map { it.fullPath }
+        } else {
+            bkRepoClient.listFileByRegex(
+                "",
+                projectId,
+                RepoUtils.PIPELINE_REPO,
+                "/",
+                normalizeSrcPath.removePrefix("/")
+            ).map { it.fullPath }
+        }
+        logger.info("match files: $srcFiles")
+
+        val destPathFolder = "/share/$projectId/${PathUtils.normalize(targetPath).removePrefix("/")}"
+        srcFiles.forEach { srcFile ->
+            bkRepoClient.copy(
+                "",
+                projectId,
+                if (artifactoryType == ArtifactoryType.PIPELINE) RepoUtils.PIPELINE_REPO else RepoUtils.CUSTOM_REPO,
+                srcFile,
+                targetProjectId,
+                RepoUtils.CUSTOM_REPO,
+                destPathFolder
+            )
+        }
+        return Count(srcFiles.size)
     }
 
     fun getFileDownloadUrl(param: ArtifactorySearchParam): List<String> {
