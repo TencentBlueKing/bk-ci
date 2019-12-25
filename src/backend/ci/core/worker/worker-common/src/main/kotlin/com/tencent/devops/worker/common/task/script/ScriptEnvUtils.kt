@@ -79,6 +79,4 @@ object ScriptEnvUtils {
             split[0].trim() to split[1].trim()
         }.toMap()
     }
-
-
 }
