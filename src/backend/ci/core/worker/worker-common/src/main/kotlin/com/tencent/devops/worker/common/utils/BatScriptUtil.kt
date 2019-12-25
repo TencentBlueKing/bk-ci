@@ -28,6 +28,7 @@ package com.tencent.devops.worker.common.utils
 
 import com.tencent.devops.worker.common.CommonEnv
 import com.tencent.devops.worker.common.WORKSPACE_ENV
+import com.tencent.devops.worker.common.task.script.ScriptEnvUtils
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.nio.charset.Charset
@@ -44,7 +45,6 @@ object BatScriptUtil {
         "    echo %~1=%~2 >>%file_save_dir%\r\n" +
         "    set %~1=%~2\r\n" +
         "    goto:eof\r\n"
-    private const val GATEWAY_FILE = "gatewayValueFile.ini"
 
     private val logger = LoggerFactory.getLogger(BatScriptUtil::class.java)
     private val specialKey = listOf<String>()
@@ -58,6 +58,7 @@ object BatScriptUtil {
     )
 
     fun execute(
+        buildId: String,
         script: String,
         runtimeVariables: Map<String, String>,
         dir: File,
@@ -94,8 +95,8 @@ object BatScriptUtil {
                 .append("\r\n")
                 .append("exit")
                 .append("\r\n")
-                .append(setEnv.replace("##resultFile##", File(dir, "result.log").absolutePath))
-                .append(setGateValue.replace("##gateValueFile##", File(dir, GATEWAY_FILE).canonicalPath))
+                .append(setEnv.replace("##resultFile##", File(dir, ScriptEnvUtils.getEnvFile(buildId)).absolutePath))
+                .append(setGateValue.replace("##gateValueFile##", File(dir, ScriptEnvUtils.getQualityGatewayEnvFile()).canonicalPath))
 
             val charset = Charset.defaultCharset()
             logger.info("The default charset is $charset")
