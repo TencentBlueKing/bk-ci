@@ -8,7 +8,7 @@
         </ul>
         <ul class="scroll scroll-main" :style="`top: ${-totalScrollHeight}px;width: ${mainWidth}px; left: ${indexWidth}px`">
             <li :class="[{ 'pointer': item.tagData }, 'scroll-item']"
-                :style="`height: ${itemHeight}px; top: ${item.top}px; left: ${-bottomScrollDis * mainWidth / bottomScrollWidth}px; width: ${(mainWidth - bottomScrollWidth) * mainWidth / bottomScrollWidth + mainWidth}px`"
+                :style="`height: ${itemHeight}px; top: ${item.top}px; left: ${-bottomScrollDis * (itemWidth - mainWidth) / (mainWidth - bottomScrollWidth) }px; width: ${itemWidth}px`"
                 v-for="item in listData"
                 :key="item.top + item.value"
                 @click="foldListData(item.tagData || {})"
@@ -65,6 +65,7 @@
                 listData: [],
                 foldList: [],
                 worker: {},
+                offscreenCanvas: {},
                 totalHeight: 0,
                 itemNumber: 0,
                 totalNumber: 0,
@@ -81,6 +82,7 @@
                 bottomScrollWidth: Infinity,
                 bottomScrollDis: 0,
                 indexWidth: 0,
+                itemWidth: 0,
                 isScrolling: false,
                 isBottomMove: false
             }
@@ -163,6 +165,13 @@
                 this.$refs.minNav.width = this.visWidth / 100 * dpr
                 this.$refs.minNav.height = this.visHeight * dpr
                 this.$refs.minNav.getContext('2d').setTransform(dpr, 0, 0, dpr, 0, 0)
+
+                this.offscreenCanvas = document.createElement('canvas')
+                this.offscreenCanvas.width = this.visWidth / 10
+                this.offscreenCanvas.height = this.visHeight
+                const canvasContext = this.offscreenCanvas.getContext('2d')
+                canvasContext.fillStyle = '#fff'
+                canvasContext.font = `normal normal normal ${this.itemHeight / 8}px Consolas`
             },
 
             initEvent () {
@@ -184,16 +193,28 @@
                 })
             },
 
-            handleWheel (data) {
+            handleWheel (event) {
                 const target = event.target
                 const classList = target.classList
-                if (this.isScrolling || this.itemHeight * this.totalNumber <= this.visHeight || (classList && classList.contains('no-scroll'))) return
+                if (this.isScrolling || (classList && classList.contains('no-scroll'))) return
 
-                // const deltaX = Math.max(-1, Math.min(1, (event.wheelDeltaX || -event.detail)))
-                // let bottomScrollLeft = this.bottomScrollDis + deltaX * 10
-                // if (bottomScrollLeft <= 0) bottomScrollLeft = 0
-                // if (bottomScrollLeft + this.bottomScrollWidth >= this.mainWidth) bottomScrollLeft = this.mainWidth - this.bottomScrollWidth
-                // this.bottomScrollDis = bottomScrollLeft
+                let isVerticalScroll = event.wheelDeltaX !== undefined ? Math.abs(event.wheelDeltaY) > Math.abs(event.wheelDeltaX) : event.axis === 2
+                if (isVerticalScroll) this.handleVerticalScroll(event)
+                else this.handleHorizontalScroll(event)
+            },
+
+            handleHorizontalScroll (event) {
+                if (this.bottomScrollWidth >= this.mainWidth) return
+
+                const deltaX = Math.max(-1, Math.min(1, (event.wheelDeltaX || -event.detail)))
+                let bottomScrollLeft = this.bottomScrollDis + deltaX * 10
+                if (bottomScrollLeft <= 0) bottomScrollLeft = 0
+                if (bottomScrollLeft + this.bottomScrollWidth >= this.mainWidth) bottomScrollLeft = this.mainWidth - this.bottomScrollWidth
+                this.bottomScrollDis = bottomScrollLeft
+            },
+
+            handleVerticalScroll (event) {
+                if (this.itemHeight * this.totalNumber <= this.visHeight) return
 
                 const deltaY = Math.max(-1, Math.min(1, (event.wheelDeltaY || -event.detail)))
                 let dis = deltaY * -(this.itemHeight * 3)
@@ -327,9 +348,21 @@
 
             drawList (data) {
                 Object.assign(this, data)
+                const minMapList = data.minMapList || []
+                const canvasContext = this.offscreenCanvas.getContext('2d')
+                canvasContext.clearRect(0, 0, this.visWidth / 10, this.visHeight)
+                for (let index = 0; index < minMapList.length; index++) {
+                    const currentItem = minMapList[index]
+                    const currentColor = currentItem.color || 'rgba(255,255,255,1)'
+                    if (currentItem.color) canvasContext.font = `normal normal bold ${this.itemHeight / 8}px Consolas`
+                    else canvasContext.font = `normal normal normal ${this.itemHeight / 8}px Consolas`
+                    canvasContext.fillStyle = currentColor
+                    canvasContext.fillText(currentItem.message, 3, ((index + 1)* this.itemHeight / 8))
+                }
+
                 const context = this.$refs.minMap.getContext('2d')
                 context.clearRect(0, 0, this.visWidth / 10, this.visHeight)
-                context.drawImage(data.offscreenBitMap, 0, 0)
+                context.drawImage(this.offscreenCanvas, 0, 0)
                 this.isScrolling = false
             },
 
@@ -339,10 +372,35 @@
                 this.indexWidth = (Math.log10(this.totalNumber) + 1) * 7
                 list.forEach((item) => {
                     const width = this.mainWidth / (item.message.length * 6.8) * this.mainWidth
-                    if (width < this.bottomScrollWidth && width < this.mainWidth) this.bottomScrollWidth = width
+                    if (width < (this.addListData.tempWidth || Infinity) && width < this.mainWidth) {
+                        const textWidth = this.getTextWidth(item.message)
+                        let bottomScrollWidth = this.mainWidth / textWidth * this.mainWidth
+                        if (bottomScrollWidth < 100) bottomScrollWidth = 100
+                        this.itemWidth = textWidth
+                        this.bottomScrollWidth = bottomScrollWidth
+                        this.addListData.tempWidth = width
+                    }
                 })
                 this.setStatus()
                 this.worker.postMessage(postData)
+            },
+
+            getTextWidth (text) {
+                const lDiv = document.createElement('div')
+                document.body.appendChild(lDiv)
+                lDiv.style.fontFamily = "Consolas, 'Courier New', monospace"
+                lDiv.style.fontSize = "12px"
+                lDiv.style.height = "16px"
+                lDiv.style.position = "fixed"
+                lDiv.style.wordBreak = 'keep-all'
+                lDiv.style.whiteSpace = 'nowrap'
+                lDiv.style.fontWeight = 'normal'
+                lDiv.style.letterSpacing = '0px'
+                lDiv.style.opacity = 0
+                lDiv.innerHTML = text
+                const res = lDiv.clientWidth + 100
+                document.body.removeChild(lDiv)
+                return res
             },
 
             setStatus () {
