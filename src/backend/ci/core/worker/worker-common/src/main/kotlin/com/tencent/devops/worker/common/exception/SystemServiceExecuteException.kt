@@ -24,23 +24,13 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.service.template
+package com.tencent.devops.worker.common.exception
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.pojo.common.DeptInfo
+import com.tencent.devops.process.pojo.AtomErrorCode.SYSTEM_SERVICE_ERROR
+import com.tencent.devops.process.pojo.ErrorType
 
-/**
- * 模板可见范围逻辑类
- * since: 2019-01-08
- */
-interface TemplateVisibleDeptService {
-
-    /**
-     * 设置模板可见范围
-     */
-    fun addVisibleDept(userId: String, templateCode: String, deptInfos: List<DeptInfo>): Result<Boolean>
-
-    fun validateUserTemplateAtomVisibleDept(userId: String, templateCode: String, projectCode: String?): Result<Boolean>
-
-    fun validateTemplateVisibleDept(templateCode: String, deptInfos: List<DeptInfo>?): Result<Boolean>
-}
+class SystemServiceExecuteException(
+    val errorMsg: String,
+    val errorType: ErrorType = ErrorType.SYSTEM,
+    val errorCode: Int = SYSTEM_SERVICE_ERROR
+) : Throwable(errorMsg)

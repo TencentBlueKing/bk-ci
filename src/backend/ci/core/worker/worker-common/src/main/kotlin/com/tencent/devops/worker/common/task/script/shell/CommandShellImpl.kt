@@ -44,6 +44,6 @@ class CommandShellImpl() : ICommand {
         continueNoneZero: Boolean
     ) {
         val realCommand = parseTemplate(buildId, script, taskParam.plus(runtimeVariables))
-        ShellUtil.execute(realCommand, dir, buildEnvs, runtimeVariables, continueNoneZero)
+        ShellUtil.execute(buildId, realCommand, dir, buildEnvs, runtimeVariables, continueNoneZero)
     }
 }

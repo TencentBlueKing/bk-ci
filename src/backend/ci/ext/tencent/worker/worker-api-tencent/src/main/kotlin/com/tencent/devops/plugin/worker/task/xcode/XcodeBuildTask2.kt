@@ -120,6 +120,7 @@ class XcodeBuildTask2 : ITask() {
         // 列出scheme
         LoggerService.addNormalLine("show all scheme:")
         ShellUtil.execute(
+            buildId = buildVariables.buildId,
             script = "xcodebuild -list -project $projectBuildStr",
             dir = workspace,
             buildEnvs = buildVariables.buildEnvs,
@@ -238,6 +239,7 @@ class XcodeBuildTask2 : ITask() {
 
     private fun switchXCode() {
         ShellUtil.execute(
+            buildId = buildVariables.buildId,
             script = "sudo /usr/bin/xcode-select --switch \${XCODE_HOME}",
             dir = workspace,
             buildEnvs = buildVariables.buildEnvs,
@@ -247,6 +249,7 @@ class XcodeBuildTask2 : ITask() {
 
     private fun showSdks() {
         val result = ShellUtil.execute(
+            buildId = buildVariables.buildId,
             script = "xcodebuild -showsdks",
             dir = workspace,
             buildEnvs = buildVariables.buildEnvs,
@@ -260,6 +263,7 @@ class XcodeBuildTask2 : ITask() {
 
     private fun clean() {
         ShellUtil.execute(
+            buildId = buildVariables.buildId,
             script = "xcodebuild clean $projectBuildStr -scheme $scheme -sdk $sdk",
             dir = workspace,
             buildEnvs = buildVariables.buildEnvs,
@@ -270,6 +274,7 @@ class XcodeBuildTask2 : ITask() {
     private fun build() {
         if (configuration.isNotEmpty()) {
             ShellUtil.execute(
+                buildId = buildVariables.buildId,
                 script = "xcodebuild build $projectBuildStr -scheme $scheme -configuration $configuration -sdk $sdk",
                 dir = workspace,
                 buildEnvs = buildVariables.buildEnvs,
@@ -277,6 +282,7 @@ class XcodeBuildTask2 : ITask() {
             )
         } else {
             ShellUtil.execute(
+                buildVariables.buildId,
                 script = "xcodebuild build $projectBuildStr -scheme $scheme -sdk $sdk",
                 dir = workspace,
                 buildEnvs = buildVariables.buildEnvs,
@@ -290,6 +296,7 @@ class XcodeBuildTask2 : ITask() {
         val codeSignIdentify = "" // iPhone Developer: junchi he (22AYX4B947)
         if (configuration.isNotEmpty())
             ShellUtil.execute(
+                buildId = buildVariables.buildId,
                 script = "xcodebuild archive $projectBuildStr -scheme $scheme " +
                     "-configuration $configuration -archivePath \"$archivePath\" CODE_SIGN_IDENTITY=\"$codeSignIdentify\" " +
                     "PROVISIONING_PROFILE=\"$uuid\" DEVELOPMENT_TEAM=$teamId -sdk $sdk",
@@ -298,6 +305,7 @@ class XcodeBuildTask2 : ITask() {
                 runtimeVariables = emptyMap()
             )
         else ShellUtil.execute(
+            buildId = buildVariables.buildId,
             script = "xcodebuild archive $projectBuildStr -scheme $scheme " +
                 "-archivePath \"$archivePath\" CODE_SIGN_IDENTITY=\"$codeSignIdentify\" " +
                 "PROVISIONING_PROFILE=\"$uuid\" DEVELOPMENT_TEAM=$teamId -sdk $sdk",
@@ -312,6 +320,7 @@ class XcodeBuildTask2 : ITask() {
         val plistFile = generatePlist(certId) // ipa.plist
 
         ShellUtil.execute(
+            buildId = buildVariables.buildId,
             script = "xcodebuild -exportArchive -archivePath $archivePath -exportPath $ipaPath -exportOptionsPlist $plistFile",
             dir = workspace,
             buildEnvs = buildVariables.buildEnvs,

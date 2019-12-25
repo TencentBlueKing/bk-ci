@@ -24,26 +24,30 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.service.template.impl
+package com.tencent.devops.common.archive
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.pojo.common.DeptInfo
-import com.tencent.devops.store.service.template.TemplateVisibleDeptService
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.tencent.devops.common.archive.client.BkRepoClient
+import com.tencent.devops.common.service.config.CommonConfig
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.autoconfigure.AutoConfigureOrder
+import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
+import org.springframework.context.annotation.Primary
+import org.springframework.context.annotation.PropertySource
+import org.springframework.core.Ordered
 
-class SampleTemplateVisibleDeptServiceImpl : TemplateVisibleDeptService {
-    override fun addVisibleDept(userId: String, templateCode: String, deptInfos: List<DeptInfo>): Result<Boolean> {
-        return Result(true)
-    }
+@Configuration
+@PropertySource("classpath:/common-jfrog.properties")
+@ConditionalOnWebApplication
+@AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
+class BkRepoAutoConfiguration {
 
-    override fun validateUserTemplateAtomVisibleDept(
-        userId: String,
-        templateCode: String,
-        projectCode: String?
-    ): Result<Boolean> {
-        return Result(true)
-    }
-
-    override fun validateTemplateVisibleDept(templateCode: String, deptInfos: List<DeptInfo>?): Result<Boolean> {
-        return Result(true)
-    }
+    @Bean
+    @Primary
+    fun bkRepoClient(
+        @Autowired objectMapper: ObjectMapper,
+        @Autowired commonConfig: CommonConfig
+    ) = BkRepoClient(objectMapper, commonConfig)
 }
