@@ -33,9 +33,7 @@ import com.tencent.devops.common.pipeline.ElementSubTypeRegisterLoader
 import com.tencent.devops.worker.common.BUILD_TYPE
 import com.tencent.devops.worker.common.Runner
 import com.tencent.devops.common.api.util.OkhttpUtils
-import okhttp3.MediaType
 import okhttp3.Request
-import okhttp3.RequestBody
 import com.tencent.devops.worker.common.WorkspaceInterface
 import com.tencent.devops.worker.common.api.ApiFactory
 import com.tencent.devops.worker.common.env.AgentEnv
@@ -81,7 +79,7 @@ fun main(args: Array<String>) {
             })
         }
         BuildType.MACOS.name -> {
-            var startBuild:Boolean = false
+            var startBuild: Boolean = false
             val gateyway = AgentEnv.getGateway()
             val url = "http://$gateyway/dispatch-macos/gw/build/macos/startBuild"
             System.out.println("url:$url")
@@ -99,31 +97,30 @@ fun main(args: Array<String>) {
                         val resoCode = resp.code()
                         val responseStr = resp.body()!!.string()
                         System.out.println("resoCode: $resoCode;responseStr:$responseStr")
-                        if(resoCode == 200) {
+                        if (resoCode == 200) {
                             val response: Map<String, String> = jacksonObjectMapper().readValue(responseStr)
 
                             // 将变量写入到property当中
                             response.forEach { (key, value) ->
-                                when(key) {
-                                    "agentId" -> System.setProperty("devops.agent.id",value)
-                                    "secretKey" -> System.setProperty("devops.agent.secret.key",value)
-                                    "projectId" -> System.setProperty("devops.project.id",value)
+                                when (key) {
+                                    "agentId" -> System.setProperty("devops.agent.id", value)
+                                    "secretKey" -> System.setProperty("devops.agent.secret.key", value)
+                                    "projectId" -> System.setProperty("devops.project.id", value)
                                     "xcodeVersion" -> xcodeVersion = value
                                     else -> null
                                 }
                             }
                             startBuild = true
-                        }else {
+                        } else {
                             System.out.println("There is no build for this macos,sleep for 5s.")
                         }
                     }
                     if (!startBuild) {
                         Thread.sleep(5000)
                     }
-                } catch (e:Exception) {
+                } catch (e: Exception) {
                     System.out.println("Failed to connect to devops server.")
                 }
-
             } while (!startBuild)
             System.out.println("Start to run.")
 
@@ -132,7 +129,7 @@ fun main(args: Array<String>) {
             val xcodePath = "/Applications/Xcode_$xcodeVersion.app"
             val xcodeFile = File(xcodePath)
             // 当指定XCode版本存在的时候，切换xcode
-            if(xcodeFile.exists() && xcodeFile.isDirectory) {
+            if (xcodeFile.exists() && xcodeFile.isDirectory) {
                 try {
                     // 删除软链
                     val rmCommand = "sudo rm -rf /Applications/Xcode.app"
@@ -144,13 +141,12 @@ fun main(args: Array<String>) {
                     val selectCommand = "sudo xcode-select -s /Applications/Xcode.app/Contents/Developer/"
                     runCommand(selectCommand, selectCommand)
                     System.out.println("End to select xcode:select Xcode_$xcodeVersion.app.")
-                }catch( e:Exception) {
+                } catch (e: Exception) {
                     System.out.println("End to select xcode with error: $e")
                 }
-            }else {
+            } else {
                 System.out.println("End to select xcode:nothing to do.")
             }
-
 
             Runner.run(object : WorkspaceInterface {
                 override fun getWorkspace(variables: Map<String, String>, pipelineId: String): File {
