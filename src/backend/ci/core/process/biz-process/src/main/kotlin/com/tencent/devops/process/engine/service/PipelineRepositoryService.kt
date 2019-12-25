@@ -190,7 +190,8 @@ class PipelineRepositoryService constructor(
                     model = model,
                     userId = userId,
                     modelTasks = modelTasks,
-                    channelCode = channelCode
+                    channelCode = channelCode,
+                    create = create
                 )
             } else {
                 initOtherContainer(
@@ -201,7 +202,8 @@ class PipelineRepositoryService constructor(
                     pipelineId = pipelineId,
                     model = model,
                     modelTasks = modelTasks,
-                    channelCode = channelCode
+                    channelCode = channelCode,
+                    create = create
                 )
             }
         }
@@ -217,7 +219,8 @@ class PipelineRepositoryService constructor(
         model: Model,
         userId: String,
         modelTasks: MutableSet<PipelineModelTask>,
-        channelCode: ChannelCode
+        channelCode: ChannelCode,
+        create: Boolean
     ) {
         if (stage.containers.size != 1) {
             logger.warn("The trigger stage contain more than one container (${stage.containers.size})")
@@ -272,7 +275,8 @@ class PipelineRepositoryService constructor(
                 pipelineId = pipelineId,
                 pipelineName = model.name,
                 userId = userId,
-                channelCode = channelCode
+                channelCode = channelCode,
+                create = create
             )
 
             modelTasks.add(
@@ -302,7 +306,8 @@ class PipelineRepositoryService constructor(
         pipelineId: String,
         model: Model,
         modelTasks: MutableSet<PipelineModelTask>,
-        channelCode: ChannelCode
+        channelCode: ChannelCode,
+        create: Boolean
     ) {
         if (stage.containers.isEmpty()) {
             throw ErrorCodeException(
@@ -353,7 +358,7 @@ class PipelineRepositoryService constructor(
                 }
 
                 // 补偿动作--未来拆分出来，针对复杂的东西异步处理
-                ElementBizRegistrar.getPlugin(e)?.afterCreate(e, projectId, pipelineId, model.name, userId, channelCode)
+                ElementBizRegistrar.getPlugin(e)?.afterCreate(e, projectId, pipelineId, model.name, userId, channelCode, create)
 
                 modelTasks.add(
                     PipelineModelTask(
