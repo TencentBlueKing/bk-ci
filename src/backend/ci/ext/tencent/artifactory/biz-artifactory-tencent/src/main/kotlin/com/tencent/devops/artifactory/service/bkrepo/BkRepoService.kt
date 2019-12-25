@@ -336,6 +336,7 @@ class BkRepoService @Autowired constructor(
     }
 
     override fun acrossProjectCopy(projectId: String, artifactoryType: ArtifactoryType, path: String, targetProjectId: String, targetPath: String): Count {
+        logger.info("acrossProjectCopy, projectId: $projectId, artifactoryType: $artifactoryType, path: $path, targetProjectId: $targetProjectId, targetPath: $targetPath")
         val normalizeSrcPath = PathUtils.normalize(path)
         val srcFiles = if (artifactoryType == ArtifactoryType.PIPELINE) {
             val pipeineIdAndBuildId = parsePipeineIdAndBuildId(normalizeSrcPath)
@@ -353,7 +354,7 @@ class BkRepoService @Autowired constructor(
             bkRepoClient.listFileByRegex(
                 "",
                 projectId,
-                RepoUtils.PIPELINE_REPO,
+                RepoUtils.CUSTOM_REPO,
                 "/",
                 normalizeSrcPath.removePrefix("/")
             ).map { it.fullPath }

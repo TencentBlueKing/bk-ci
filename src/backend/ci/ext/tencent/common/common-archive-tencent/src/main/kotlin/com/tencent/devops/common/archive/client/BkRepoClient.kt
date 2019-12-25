@@ -159,6 +159,7 @@ class BkRepoClient @Autowired constructor(
         includeFolders: Boolean = false,
         deep: Boolean = false
     ): List<FileInfo> {
+        logger.info("listFile, userId: $userId, projectId: $projectId, repoName: $repoName, path: $path, includeFolders: $includeFolders, deep: $deep")
         val url = "${getGatewaytUrl()}/bkrepo/api/service/generic/list/$projectId/$repoName/$path?deep=$deep&includeFolder=$includeFolders"
         val request = Request.Builder()
             .url(url)
@@ -194,6 +195,7 @@ class BkRepoClient @Autowired constructor(
         page: Int,
         pageSize: Int
     ): Page<NodeInfo> {
+        logger.info("searchFile, userId: $userId, repoNames: $repoNames, filePaterns: $filePaterns, metadatas: $metadatas, page: $page, pageSize: $pageSize")
         val url = "${getGatewaytUrl()}/bkrepo/api/service/generic/search"
         val requestData = FileSearchRequest(
             projectId = projectId,
