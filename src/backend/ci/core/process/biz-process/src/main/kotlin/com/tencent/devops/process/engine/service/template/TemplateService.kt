@@ -56,7 +56,6 @@ import com.tencent.devops.common.pipeline.pojo.element.agent.CodeGitElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.CodeSvnElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.GithubElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxPaasCodeCCScriptElement
-import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxScriptElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeSVNWebHookTriggerElement
@@ -1288,7 +1287,7 @@ class TemplateService @Autowired constructor(
     /**
      *  实例内有codeccId则用实例内的数据
      */
-    private fun  getInstanceModel(
+    private fun getInstanceModel(
         pipelineId: String,
         templateModel: Model,
         pipelineName: String,
@@ -1296,7 +1295,7 @@ class TemplateService @Autowired constructor(
         param: List<BuildFormProperty>?,
         instanceFromTemplate: Boolean,
         labels: List<String>? = null
-    ): Model{
+    ): Model {
         var model = pipelineService.instanceModel(
             templateModel = templateModel,
             pipelineName = pipelineName,
@@ -1309,13 +1308,13 @@ class TemplateService @Autowired constructor(
         val instanceModelStr = pipelineResDao.getLatestVersionModelString(dslContext, pipelineId)
         val instanceModel = objectMapper.readValue(instanceModelStr, Model::class.java)
         var codeCCTaskId: String? = null
-        var codeCCTaskCnName: String?  = null
-        var codeCCTaskName: String?  = null
+        var codeCCTaskCnName: String? = null
+        var codeCCTaskName: String? = null
 
-        instanceModel.stages.forEach { stage->
-            stage.containers.forEach {  container->
-                container.elements.forEach { element->
-                    if(element is LinuxPaasCodeCCScriptElement){
+        instanceModel.stages.forEach { stage ->
+            stage.containers.forEach { container ->
+                container.elements.forEach { element ->
+                    if (element is LinuxPaasCodeCCScriptElement) {
                         codeCCTaskId = element.codeCCTaskId
                         codeCCTaskCnName = element.codeCCTaskCnName
                         codeCCTaskName = element.codeCCTaskName
@@ -1324,11 +1323,11 @@ class TemplateService @Autowired constructor(
                 }
             }
         }
-        if(codeCCTaskId != null){
-            model.stages.forEach { stage->
-                stage.containers.forEach {  container->
-                    container.elements.forEach { element->
-                        if( element is LinuxPaasCodeCCScriptElement){
+        if (codeCCTaskId != null) {
+            model.stages.forEach { stage ->
+                stage.containers.forEach { container ->
+                    container.elements.forEach { element ->
+                        if (element is LinuxPaasCodeCCScriptElement) {
                             element.codeCCTaskId = codeCCTaskId
                             element.codeCCTaskName = codeCCTaskName
                             element.codeCCTaskCnName = codeCCTaskCnName
