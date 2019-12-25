@@ -1316,7 +1316,7 @@ class TemplateService @Autowired constructor(
                 container.elements.forEach { element->
                     if(element is LinuxPaasCodeCCScriptElement){
                         codeCCTaskId = element.codeCCTaskId
-                        codeCCTaskCnName = element.codeCCTaskCnName,
+                        codeCCTaskCnName = element.codeCCTaskCnName
                         codeCCTaskName = element.codeCCTaskName
                         return@forEach
                     }
