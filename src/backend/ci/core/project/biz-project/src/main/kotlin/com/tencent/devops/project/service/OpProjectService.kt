@@ -69,5 +69,7 @@ interface OpProjectService {
         isRefresh: Boolean?= true
     ): Result<Boolean>
 
-    fun synProjectInit(): Result<List<String>>
+    fun synProjectInit(
+        isRefresh: Boolean?= true
+    ): Result<List<String>>
 }
