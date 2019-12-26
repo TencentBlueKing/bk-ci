@@ -47,7 +47,6 @@ import com.tencent.devops.common.archive.pojo.BkRepoData
 import com.tencent.devops.common.archive.pojo.BkRepoFile
 import com.tencent.devops.common.service.config.CommonConfig
 import okhttp3.MediaType
-import okhttp3.MultipartBody
 import okhttp3.Request
 import okhttp3.RequestBody
 import okio.BufferedSink
@@ -160,6 +159,7 @@ class BkRepoClient @Autowired constructor(
         includeFolders: Boolean = false,
         deep: Boolean = false
     ): List<FileInfo> {
+        logger.info("listFile, userId: $userId, projectId: $projectId, repoName: $repoName, path: $path, includeFolders: $includeFolders, deep: $deep")
         val url = "${getGatewaytUrl()}/bkrepo/api/service/generic/list/$projectId/$repoName/$path?deep=$deep&includeFolder=$includeFolders"
         val request = Request.Builder()
             .url(url)
@@ -195,6 +195,7 @@ class BkRepoClient @Autowired constructor(
         page: Int,
         pageSize: Int
     ): Page<NodeInfo> {
+        logger.info("searchFile, userId: $userId, repoNames: $repoNames, filePaterns: $filePaterns, metadatas: $metadatas, page: $page, pageSize: $pageSize")
         val url = "${getGatewaytUrl()}/bkrepo/api/service/generic/search"
         val requestData = FileSearchRequest(
             projectId = projectId,
@@ -232,7 +233,7 @@ class BkRepoClient @Autowired constructor(
     }
 
     fun uploadFile(userId: String, projectId: String, repoName: String, path: String, inputStream: InputStream) {
-        logger.info("upload file, projectId: $projectId, repoName: $repoName, path: $path")
+        logger.info("uploadFile, projectId: $projectId, repoName: $repoName, path: $path")
         val url = "${getGatewaytUrl()}/bkrepo/api/service/generic/$projectId/$repoName/$path"
         val requestBody = object : RequestBody() {
             override fun writeTo(sink: BufferedSink?) {
@@ -241,21 +242,35 @@ class BkRepoClient @Autowired constructor(
             }
 
             override fun contentType(): MediaType? {
-                return MediaType.parse("text/plain")
+                return MediaType.parse("application/octet-stream")
             }
         }
-        val formBody = MultipartBody.Builder()
-            .setType(MultipartBody.FORM)
-            .addFormDataPart("file", "filename", requestBody)
-            .build()
         val request = Request.Builder()
             .url(url)
             // .header("Authorization", makeCredential())
             .header(AUTH_HEADER_USER_ID, userId)
-            .post(formBody).build()
+            .put(requestBody).build()
         OkhttpUtils.doHttp(request).use { response ->
             if (!response.isSuccessful) {
                 logger.error("upload file  failed, repoName: $repoName, path: $path, responseContent: ${response.body()!!.string()}")
+                throw RuntimeException("upload file failed")
+            }
+        }
+    }
+
+    fun uploadLocalFile(userId: String, projectId: String, repoName: String, path: String, file: File) {
+        logger.info("uploadLocalFile, projectId: $projectId, repoName: $repoName, path: $path, localFile: ${file.canonicalPath}")
+        val url = "${getGatewaytUrl()}/bkrepo/api/service/generic/$projectId/$repoName/${path.removePrefix("/")}"
+        val request = Request.Builder()
+            .url(url)
+            // .header("Authorization", makeCredential())
+            .header(AUTH_HEADER_USER_ID, userId)
+            .header(BK_REPO_OVERRIDE, "true")
+            .put(RequestBody.create(MediaType.parse("application/octet-stream"), file))
+            .build()
+        OkhttpUtils.doHttp(request).use { response ->
+            if (!response.isSuccessful) {
+                logger.error("upload file failed, repoName: $repoName, path: $path, responseContent: ${response.body()!!.string()}")
                 throw RuntimeException("upload file failed")
             }
         }
@@ -393,7 +408,7 @@ class BkRepoClient @Autowired constructor(
         val request = Request.Builder()
             .url(url)
             // .header("Authorization", makeCredential())
-            .header(AUTH_HEADER_USER_ID, "admin")
+            .header(AUTH_HEADER_USER_ID, userId)
             .get()
             .build()
         OkhttpUtils.doHttp(request).use { response ->
@@ -420,7 +435,7 @@ class BkRepoClient @Autowired constructor(
         val url = "${getGatewaytUrl()}/bkrepo/api/service/generic/$projectId/$repoName/$path"
         val request = Request.Builder()
             .url(url)
-            .header(AUTH_HEADER_USER_ID, "admin")
+            .header(AUTH_HEADER_USER_ID, userId)
             // .header("Authorization", makeCredential())
             .get()
             .build()
@@ -436,6 +451,7 @@ class BkRepoClient @Autowired constructor(
     }
 
     fun matchBkRepoFile(
+        userId: String,
         srcPath: String,
         projectId: String,
         pipelineId: String,
@@ -443,7 +459,7 @@ class BkRepoClient @Autowired constructor(
         isCustom: Boolean
     ): List<BkRepoFile> {
         val result = mutableListOf<BkRepoFile>()
-        val bkRepoData = getAllBkRepoFiles(projectId, pipelineId, buildId, isCustom)
+        val bkRepoData = getAllBkRepoFiles(userId, projectId, pipelineId, buildId, isCustom)
         val matcher = FileSystems.getDefault().getPathMatcher("glob:$srcPath")
         val pipelinePathPrefix = "/$pipelineId/$buildId/"
         bkRepoData.data?.forEach { bkrepoFile ->
@@ -460,7 +476,7 @@ class BkRepoClient @Autowired constructor(
         return result
     }
 
-    private fun getAllBkRepoFiles(projectId: String, pipelineId: String, buildId: String, isCustom: Boolean): BkRepoData {
+    private fun getAllBkRepoFiles(userId: String, projectId: String, pipelineId: String, buildId: String, isCustom: Boolean): BkRepoData {
         logger.info("getAllBkrepoFiles, projectId: $projectId, pipelineId: $pipelineId, buildId: $buildId, isCustom: $isCustom")
         var url = if (isCustom) {
             "${getGatewaytUrl()}/bkrepo/api/service/generic/list/$projectId/custom?includeFolder=true&deep=true"
@@ -469,7 +485,7 @@ class BkRepoClient @Autowired constructor(
         }
         val request = Request.Builder()
             .url(url)
-            .header("X-BKREPO-UID", "admin") // todo user
+            .header("X-BKREPO-UID", userId)
             .get()
             .build()
 
@@ -489,9 +505,91 @@ class BkRepoClient @Autowired constructor(
         }
     }
 
-    fun downloadFile(user: String, projectId: String, repoName: String, fullPath: String, destFile: File) {
+    fun downloadFile(userId: String, projectId: String, repoName: String, fullPath: String, destFile: File) {
         val url = "${getGatewaytUrl()}/bkrepo/api/service/generic/$projectId/$repoName/${fullPath.removePrefix("/")}"
-        OkhttpUtils.downloadFile(url, destFile, mapOf("X-BKREPO-UID" to user))
+        OkhttpUtils.downloadFile(url, destFile, mapOf("X-BKREPO-UID" to userId))
+    }
+
+    fun listFileByRegex(
+        userId: String,
+        projectId: String,
+        repoName: String,
+        path: String,
+        regex: String
+    ): List<FileInfo> {
+        logger.info("listFileByRegex, userId: $userId, projectId: $projectId, repoName: $repoName, path: $path, regex: $regex")
+        val matcher = FileSystems.getDefault().getPathMatcher("glob:$regex")
+        return listFile(userId, projectId, repoName, path, includeFolders = false, deep = true).filter {
+            matcher.matches(Paths.get(it.fullPath.removePrefix("$path")))
+        }
+    }
+
+    fun listFileByPattern(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        repoName: String,
+        pathPattern: String
+    ): List<FileInfo> {
+        logger.info("listFileByPattern, userId: $userId, projectId: $projectId, pipelineId: $pipelineId, buildId: $buildId, repoName: $repoName, pathPattern: $pathPattern")
+        return if (pathPattern.endsWith("/")) {
+            val path = if (repoName == "pipeline") {
+                "$pipelineId/$buildId/${pathPattern.removeSuffix("/")}"
+            } else {
+                pathPattern.removeSuffix("/")
+            }
+            listFile(userId, projectId, repoName, path, includeFolders = false, deep = false)
+        } else {
+            val f = File(pathPattern)
+            val path = if (f.parent.isNullOrBlank()) {
+                if (repoName == "pipeline") {
+                    "$pipelineId/$buildId"
+                } else {
+                    ""
+                }
+            } else {
+                if (repoName == "pipeline") {
+                    "$pipelineId/$buildId/${f.parent}"
+                } else {
+                    f.parent
+                }
+            }
+            val regex = f.name
+            val matcher = FileSystems.getDefault().getPathMatcher("glob:$regex")
+            listFile(userId, projectId, repoName, path, includeFolders = false, deep = false).filter {
+                matcher.matches(Paths.get(it.name))
+            }
+        }
+    }
+
+    fun downloadFileByPattern(
+        user: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        repoName: String,
+        pathPattern: String,
+        destPath: String
+    ): List<File> {
+        val fileList = listFileByPattern(
+            user,
+            projectId,
+            pipelineId,
+            buildId,
+            repoName,
+            pathPattern
+        )
+        logger.info("match files: ${fileList.map { it.fullPath }}")
+
+        val destFiles = mutableListOf<File>()
+        fileList.forEach {
+            val destFile = File(destPath, it.name)
+            downloadFile(user, projectId, repoName, it.fullPath, destFile)
+            destFiles.add(destFile)
+            logger.info("save file : ${destFile.canonicalPath} (${destFile.length()})")
+        }
+        return destFiles
     }
 
     fun externalDownloadUrl(
@@ -510,5 +608,8 @@ class BkRepoClient @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(this::class.java)
+        private const val METADATA_PREFIX = "X-BKREPO-META-"
+        // private const val BK_REPO_UID = "X-BKREPO-UID"
+        private const val BK_REPO_OVERRIDE = "X-BKREPO-OVERWRITE"
     }
 }

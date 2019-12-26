@@ -37,4 +37,8 @@ object PathUtils {
         }
         return normalizePath
     }
+
+    fun normalize(relativePath: String): String {
+        return Paths.get(relativePath).normalize().toString()
+    }
 }

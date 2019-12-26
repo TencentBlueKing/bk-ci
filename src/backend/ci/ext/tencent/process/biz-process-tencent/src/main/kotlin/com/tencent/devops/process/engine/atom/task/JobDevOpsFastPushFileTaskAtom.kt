@@ -175,7 +175,7 @@ class JobDevOpsFastPushFileTaskAtom @Autowired constructor(
         runVariables: Map<String, String>,
         isCustom: Boolean = false
     ): BuildStatus {
-        val user = task.starter
+        val userId = task.starter
         val buildId = task.buildId
         val projectId = task.projectId
         val pipelineId = task.pipelineId
@@ -195,13 +195,13 @@ class JobDevOpsFastPushFileTaskAtom @Autowired constructor(
             it.trim().removePrefix("/").removePrefix("./")
         }.forEach { path ->
             if (isRepoGray) {
-                val fileList = bkRepoClient.matchBkRepoFile(path, projectId, pipelineId, buildId, isCustom)
+                val fileList = bkRepoClient.matchBkRepoFile(userId, path, projectId, pipelineId, buildId, isCustom)
                 val repoName = if (isCustom) "custom" else "pipeline"
                 fileList.forEach { bkrepoFile ->
                     LogUtils.addLine(rabbitTemplate, buildId, "匹配到文件：(${bkrepoFile.displayPath})", taskId, containerId, executeCount)
                     count++
                     val destFile = File(destPath, File(bkrepoFile.displayPath).name)
-                    bkRepoClient.downloadFile(user, projectId, repoName, bkrepoFile.fullPath, destFile)
+                    bkRepoClient.downloadFile(userId, projectId, repoName, bkrepoFile.fullPath, destFile)
                     localFileList.add(destFile.absolutePath)
                     logger.info("save file : ${destFile.canonicalPath} (${destFile.length()})")
                 }
