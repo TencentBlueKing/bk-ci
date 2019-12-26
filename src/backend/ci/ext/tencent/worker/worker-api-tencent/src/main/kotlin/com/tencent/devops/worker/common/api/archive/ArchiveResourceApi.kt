@@ -26,6 +26,7 @@
 
 package com.tencent.devops.worker.common.api.archive
 
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.google.gson.JsonParser
 import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
@@ -312,8 +313,14 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
         }
     }
 
+    /*
+     * 此处绑定了jfrog的plugin实现接口，用于给用户颁发临时密钥用于docker push
+     */
     override fun dockerBuildCredential(projectId: String): Map<String, String> {
-        return hashMapOf()
+        val path = "/dockerbuild/credential"
+        val request = buildGet(path)
+        val responseContent = request(request, "获取凭证信息失败")
+        return jacksonObjectMapper().readValue(responseContent)
     }
 
     private fun setProps(file: File, url: StringBuilder) {
