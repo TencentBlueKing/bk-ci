@@ -198,11 +198,11 @@ class GitOauthService @Autowired constructor(
         return gitTokenDao.getAccessToken(dslContext, userId)?.map {
             with(TRepositoryGtiToken.T_REPOSITORY_GTI_TOKEN) {
                 GitToken(
-                    AESUtil.decrypt(aesKey!!, it.get(ACCESS_TOKEN)),
-                    AESUtil.decrypt(aesKey!!, it.get(REFRESH_TOKEN)),
-                    it.get(TOKEN_TYPE),
-                    it.get(EXPIRES_IN),
-                    it.get(CREATE_TIME).timestampmilli()
+                    accessToken = AESUtil.decrypt(aesKey!!, it.get(ACCESS_TOKEN)),
+                    refreshToken = AESUtil.decrypt(aesKey!!, it.get(REFRESH_TOKEN)),
+                    tokenType = it.get(TOKEN_TYPE),
+                    expiresIn = it.get(EXPIRES_IN),
+                    createTime = it.get(CREATE_TIME).timestampmilli()
                 )
             }
         }
