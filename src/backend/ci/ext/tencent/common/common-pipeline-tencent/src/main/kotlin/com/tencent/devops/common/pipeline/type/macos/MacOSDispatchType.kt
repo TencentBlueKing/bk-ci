@@ -24,13 +24,22 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":core:common:common-api")
-    compile project(":core:common:common-scm")
-    compile project(":core:common:common-web")
-    compile project(":core:common:common-scm")
-    compile project(":core:process:api-process")
-    compile project(":ext:tencent:common:common-pipeline-tencent")
-}
+package com.tencent.devops.common.pipeline.type.macos
 
-apply from: "$rootDir/task_deploy_to_maven.gradle"
+import com.fasterxml.jackson.annotation.JsonProperty
+import com.tencent.devops.common.api.util.EnvUtils
+import com.tencent.devops.common.pipeline.type.BuildType
+import com.tencent.devops.common.pipeline.type.DispatchRouteKeySuffix
+import com.tencent.devops.common.pipeline.type.DispatchType
+
+data class MacOSDispatchType(
+    @JsonProperty("value") var macOSEvn: String,
+    var systemVersion: String? = "",
+    var xcodeVersion: String? = ""
+) : DispatchType("$systemVersion:$xcodeVersion", DispatchRouteKeySuffix.MACOS) {
+    override fun replaceField(variables: Map<String, String>) {
+        macOSEvn = EnvUtils.parseEnv(macOSEvn, variables)
+    }
+
+    override fun buildType() = BuildType.MACOS
+}
