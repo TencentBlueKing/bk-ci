@@ -97,4 +97,7 @@ class GitConfig {
 
     @Value("\${scm.external.tGit.apiUrl:}")
     val tGitApiUrl: String = ""
+
+    @Value("\${scm.git.frontendSampleProjectUrl:}")
+    val frontendSampleProjectUrl: String = ""
 }
