@@ -31,6 +31,7 @@ import com.tencent.devops.model.repository.tables.records.TRepositoryGtiTokenRec
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
+import java.time.LocalDateTime
 
 @Repository
 class GitTokenDao {
@@ -50,20 +51,23 @@ class GitTokenDao {
                 ACCESS_TOKEN,
                 REFRESH_TOKEN,
                 TOKEN_TYPE,
-                EXPIRES_IN
+                EXPIRES_IN,
+                CREATE_TIME
             )
                 .values(
                     userId,
                     token.accessToken,
                     token.refreshToken,
                     token.tokenType,
-                    token.expiresIn
+                    token.expiresIn,
+                    LocalDateTime.now()
                 )
                 .onDuplicateKeyUpdate()
                 .set(ACCESS_TOKEN, token.accessToken)
                 .set(REFRESH_TOKEN, token.refreshToken)
                 .set(TOKEN_TYPE, token.tokenType)
                 .set(EXPIRES_IN, token.expiresIn)
+                .set(CREATE_TIME, LocalDateTime.now())
                 .execute()
         }
     }
