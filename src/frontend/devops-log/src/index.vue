@@ -24,7 +24,7 @@
                         v-if="!isInit"
                     >
                         <span class="item-time selection-color">{{(showTime ? item.data.timestamp : '')|timeFilter}}</span>
-                        <span class="selection-color" :style="`color: ${item.data.color};font-weight: ${item.data.fontWeight}`" v-html="item.data.value"></span>
+                        <span class="selection-color" :style="`color: ${item.data.color};font-weight: ${item.data.fontWeight}`" v-html="valuefilter(item.data.value)"></span>
                     </span>
                 </template>
             </virtual-scroll>
@@ -144,6 +144,10 @@
 
         methods: {
             language,
+
+            valuefilter (val) {
+                return val.replace(/\s/g, '&nbsp;').replace(/<a&nbsp;/g, '<a ')
+            },
 
             downLoad () {
                 fetch(this.downLoadLink, {
