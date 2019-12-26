@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE_D
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.BSAuthPermissionApi
+import com.tencent.devops.common.auth.api.pojo.BKAuthProjectRolesResources
 import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.project.api.pojo.PipelinePermissionInfo
@@ -226,7 +227,9 @@ class ServiceTxProjectResourceImpl @Autowired constructor(
         return Result(projectLocalService.createUser2ProjectByUser(
             createUser = createUser,
             userId = createInfo.userId,
-            projectCode = createInfo.projectId
+            projectCode = createInfo.projectId,
+            roleId = createInfo.roleId,
+            roleName = createInfo.roleName
         ))
     }
 
@@ -239,7 +242,9 @@ class ServiceTxProjectResourceImpl @Autowired constructor(
             organizationType = organizationType,
             organizationId = organizationId,
             userId = createInfo.userId,
-            projectCode = createInfo.projectId
+            projectCode = createInfo.projectId,
+            roleId = createInfo.roleId,
+            roleName = createInfo.roleName
         ))
     }
 
@@ -253,7 +258,8 @@ class ServiceTxProjectResourceImpl @Autowired constructor(
             projectId = createInfo.projectId,
             userId = createInfo.userId,
             permission = createInfo.permission,
-            resourceType = createInfo.resourceType
+            resourceType = createInfo.resourceType,
+            resourceTypeCode = createInfo.resourceTypeCode
         ))
     }
 
@@ -269,7 +275,16 @@ class ServiceTxProjectResourceImpl @Autowired constructor(
             userId = createInfo.userId,
             projectId = createInfo.projectId,
             permission = createInfo.permission,
-            resourceType = "pipeline"
+            resourceType = "pipeline",
+            resourceTypeCode = createInfo.resourceTypeCode
+        ))
+    }
+
+    override fun getProjectRoles(projectCode: String, organizationType: String, organizationId: Long): Result<List<BKAuthProjectRolesResources>> {
+        return Result(projectLocalService.getProjectRole(
+            organizationType = organizationType,
+            organizationId = organizationId,
+            projectId = projectCode
         ))
     }
 }
