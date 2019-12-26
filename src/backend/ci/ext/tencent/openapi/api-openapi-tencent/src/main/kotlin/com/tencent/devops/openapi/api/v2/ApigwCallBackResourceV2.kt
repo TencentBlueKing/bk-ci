@@ -49,7 +49,7 @@ import javax.ws.rs.core.MediaType
 interface ApigwCallBackResourceV2 {
 
     @ApiOperation("创建callback回调")
-    @GET
+    @POST
     @Path("/projects/{projectId}")
     fun create(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
