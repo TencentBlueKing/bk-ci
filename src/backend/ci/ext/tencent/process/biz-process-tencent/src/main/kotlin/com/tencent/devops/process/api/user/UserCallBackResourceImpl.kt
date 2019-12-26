@@ -52,19 +52,18 @@ class UserCallBackResourceImpl @Autowired constructor(
             throw InvalidParamException("URL param is invalid.")
         }
 
-        val urlEncode = URLEncoder.encode(url, "UTF-8")
         val callBackUrl = when (region) {
             CallBackNetWorkRegionType.IDC -> url
             CallBackNetWorkRegionType.OSS -> {
                 if (gatewayIDCProxy.isNotBlank()) {
-                    "$gatewayIDCProxy/proxy-oss?url=$urlEncode"
+                    "$gatewayIDCProxy/proxy-oss?url=$url"
                 } else {
                     url
                 }
             }
             CallBackNetWorkRegionType.DEVNET -> {
                 if (gatewayIDCProxy.isNotBlank()) {
-                    "$gatewayIDCProxy/proxy-devnet?url=$urlEncode"
+                    "$gatewayIDCProxy/proxy-devnet?url=$url"
                 } else {
                     url
                 }
