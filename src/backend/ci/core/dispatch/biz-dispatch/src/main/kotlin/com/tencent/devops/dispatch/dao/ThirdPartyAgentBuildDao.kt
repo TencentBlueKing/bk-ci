@@ -73,7 +73,6 @@ class ThirdPartyAgentBuildDao {
             if (preRecord != null) { // 支持更新，让用户进行步骤重试时继续能使用
                 return dslContext.update(this)
                     .set(WORKSPACE, thirdPartyAgentWorkspace)
-                    .set(CREATED_TIME, now)
                     .set(UPDATED_TIME, now)
                     .set(STATUS, PipelineTaskStatus.QUEUE.status)
                     .where(ID.eq(preRecord.id)).execute()
