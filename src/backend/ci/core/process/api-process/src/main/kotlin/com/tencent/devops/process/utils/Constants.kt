@@ -216,6 +216,13 @@ object PipelineVarUtil {
     }
 
     /**
+     * 从新变量前缀的变量中查出并增加旧变量前缀的变量
+     */
+    fun fillOldVarPrefixTurning(vars: MutableMap<String, String>, replace: Boolean = false) {
+        prefixTurning(newPrefixMappingOld, vars, replace)
+    }
+
+    /**
      * 旧变量转新变量
      */
     fun replaceOldByNewVar(vars: MutableMap<String, String>) {
