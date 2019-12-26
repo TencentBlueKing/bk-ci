@@ -106,6 +106,7 @@
             document.removeEventListener('mousemove', this.minNavMove)
             document.removeEventListener('mouseup', this.moveEnd)
             window.removeEventListener('resize', this.resize)
+            window.removeEventListener('keydown', this.quickHorizontalMove)
         },
 
         methods: {
@@ -178,6 +179,7 @@
                 document.addEventListener('mousemove', this.minNavMove)
                 document.addEventListener('mouseup', this.moveEnd)
                 window.addEventListener('resize', this.resize)
+                window.addEventListener('keydown', this.quickHorizontalMove)
             },
 
             resize (event) {
@@ -191,6 +193,14 @@
                     this.totalScrollHeight = this.minMapTop / (this.mapHeight - this.visHeight / 8) * (this.totalHeight - this.visHeight)
                     this.getListData()
                 })
+            },
+
+            quickHorizontalMove (event) {
+                if (['ArrowLeft', 'ArrowRight'].includes(event.code)) {
+                    let wheelDeltaX = -0.5
+                    if (event.code === 'ArrowLeft') wheelDeltaX = 0.5
+                    this.handleHorizontalScroll({ wheelDeltaX })
+                }
             },
 
             handleWheel (event) {
