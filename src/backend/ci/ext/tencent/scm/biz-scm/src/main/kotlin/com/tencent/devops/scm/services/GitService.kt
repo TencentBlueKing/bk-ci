@@ -71,6 +71,7 @@ import org.springframework.util.StringUtils
 import java.io.File
 import java.net.URLDecoder
 import java.net.URLEncoder
+import java.nio.charset.Charset
 import java.nio.file.Files
 import java.text.MessageFormat
 import java.time.LocalDateTime
@@ -431,7 +432,7 @@ class GitService @Autowired constructor(
                 if (!atomFrontendFileDir.exists()){
                     atomFrontendFileDir.mkdirs()
                 }
-                CommonScriptUtils.execute("git clone ${credentialSetter.getCredentialUrl("http://git.code.oa.com/devops-frontend/devops-remote-atom.git")}", atomFrontendFileDir)
+                CommonScriptUtils.execute("git clone ${credentialSetter.getCredentialUrl(gitConfig.frontendSampleProjectUrl)}", atomFrontendFileDir)
                 val frontendProjectDir = atomFrontendFileDir.listFiles()?.firstOrNull()
                 logger.info("initRepositoryInfo frontendProjectDir is:${frontendProjectDir?.absolutePath}")
                 val frontendGitFileDir = File(frontendProjectDir, ".git")
@@ -440,6 +441,18 @@ class GitService @Autowired constructor(
                 }
                 FileSystemUtils.copyRecursively(frontendProjectDir, atomFrontendFileDir)
                 FileSystemUtils.deleteRecursively(frontendProjectDir)
+            }
+            // 把task.json中的atomCode修改成用户对应的
+            val taskJsonFile = File(atomFileDir, "task.json")
+            if (taskJsonFile.exists()) {
+                val taskJsonStr = taskJsonFile.readText(Charset.forName("UTF-8"))
+                val taskJsonMap = JsonUtil.toMap(taskJsonStr).toMutableMap()
+                taskJsonMap["atomCode"] = repositoryName
+                val deleteFlag = taskJsonFile.delete()
+                if (deleteFlag) {
+                    taskJsonFile.createNewFile()
+                    taskJsonFile.writeText(JsonUtil.toJson(taskJsonMap), Charset.forName("UTF-8"))
+                }
             }
             // 3、重新生成git信息
             CommonScriptUtils.execute("git init", atomFileDir)
@@ -450,7 +463,7 @@ class GitService @Autowired constructor(
             CommonScriptUtils.execute("git config user.name \"$gitPublicAccount\"", atomFileDir)
             CommonScriptUtils.execute("git add .", atomFileDir)
             // 6、提交本地文件
-            CommonScriptUtils.execute("git commit -m \"init\"", atomFileDir)
+            CommonScriptUtils.execute("git commit -m init", atomFileDir)
             // 7、提交代码到远程仓库
             CommonScriptUtils.execute("git push origin master", atomFileDir)
             logger.info("initRepositoryInfo finish")
