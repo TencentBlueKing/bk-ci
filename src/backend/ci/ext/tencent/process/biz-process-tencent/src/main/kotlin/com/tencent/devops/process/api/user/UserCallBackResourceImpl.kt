@@ -46,7 +46,7 @@ class UserCallBackResourceImpl @Autowired constructor(
             throw OperationException((MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.NOT_MANAGER)))
         }
         // 验证url的合法性
-        val regex = Regex("^(?=^.{3,255}\$)(http(s)?:\\/\\/)?(www\\.)?[a-zA-Z0-9][-a-zA-Z0-9]{0,62}(\\.[a-zA-Z0-9][-a-zA-Z0-9]{0,62})+(:\\d+)*(\\/\\w+\\.\\w+)*([\\?&]\\w+=\\w*)*\$", RegexOption.IGNORE_CASE)
+        val regex = Regex("(https?|ftp|file)://[-A-Za-z0-9+&@#/%?=~_|!:,.;]+[-A-Za-z0-9+&@#/%=~_|]", RegexOption.IGNORE_CASE)
         val regexResult = url.matches(regex)
         if (!regexResult) {
             throw InvalidParamException("URL param is invalid.")
