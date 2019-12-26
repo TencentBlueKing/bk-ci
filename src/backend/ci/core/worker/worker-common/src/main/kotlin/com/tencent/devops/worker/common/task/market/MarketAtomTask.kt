@@ -270,7 +270,7 @@ open class MarketAtomTask : ITask() {
         LoggerService.addNormalLine("Version        :${atomData.version}")
         LoggerService.addNormalLine("Author         :${atomData.creator}")
         if (!atomData.docsLink.isNullOrBlank()) {
-            LoggerService.addNormalLine("Help           : <a href=\"${atomData.docsLink})\">More Information</a>")
+            LoggerService.addNormalLine("Help           : <a target=\"_blank\" href=\"${atomData.docsLink})\">More Information</a>")
         }
         LoggerService.addNormalLine("=====================================================================")
 
