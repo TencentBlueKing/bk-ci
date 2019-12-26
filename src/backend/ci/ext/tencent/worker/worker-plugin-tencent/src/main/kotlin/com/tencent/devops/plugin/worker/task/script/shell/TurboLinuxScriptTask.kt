@@ -32,7 +32,7 @@ import com.tencent.devops.worker.common.task.TaskClassType
 import com.tencent.devops.worker.common.task.script.ScriptTask
 
 @TaskClassType(classTypes = [LinuxScriptElement.classType], priority = 999)
-class TurboLinuxScriptTask: ScriptTask() {
+class TurboLinuxScriptTask : ScriptTask() {
     init {
         CommonEnv.addCommonEnv(mapOf("PATH" to "/data/bkdevops/apps/turbo/1.0:\$PATH"))
     }
