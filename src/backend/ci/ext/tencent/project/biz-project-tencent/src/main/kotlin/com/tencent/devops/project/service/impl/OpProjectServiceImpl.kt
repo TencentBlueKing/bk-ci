@@ -72,7 +72,15 @@ class OpProjectServiceImpl @Autowired constructor(
     private val repoGray: RepoGray,
     private val projectPermissionService: ProjectPermissionService,
     private val bsPipelineAuthServiceCode: AuthServiceCode
-) : AbsOpProjectServiceImpl(dslContext, projectDao, projectLabelRelDao, redisOperation, gray, repoGray, projectDispatcher) {
+) : AbsOpProjectServiceImpl(
+    dslContext,
+    projectDao,
+    projectLabelRelDao,
+    redisOperation,
+    gray,
+    repoGray,
+    projectDispatcher
+) {
 
     private final val REDIS_PROJECT_KEY = "BK:PROJECT:INFO:"
 
@@ -241,6 +249,8 @@ class OpProjectServiceImpl @Autowired constructor(
         excludeName.add("CODE_")
         excludeName.add("git_")
 
+        val failList = mutableListOf<String>()
+
         while (isContinue) {
             val SQLLimit = PageUtil.convertPageSizeToSQLLimit(page, limit)
             logger.info("synProject page: $page")
@@ -274,15 +284,21 @@ class OpProjectServiceImpl @Autowired constructor(
             }
             for (i in projectInfos.indices) {
                 val projectData = projectInfos[i]
-                val isSyn = synProject(projectData.englishName, isRefresh)
-                if (isSyn.data!!) {
-                    logger.info("project ${projectData.englishName} need syn authCenter or Paas")
-                    synProject.add(projectData.englishName)
+                try {
+                    val isSyn = synProject(projectData.englishName, isRefresh)
+                    if (isSyn.data!!) {
+                        logger.info("project ${projectData.englishName} need syn authCenter or Paas")
+                        synProject.add(projectData.englishName)
+                    }
+                } catch (ex: Exception) {
+                    logger.warn("syn project fail: errorMsg:[$ex]")
+                    failList.add(projectData.englishName)
                 }
             }
             page++
         }
         val endTime = System.currentTimeMillis()
+        logger.warn("syn fail list: $failList")
         logger.info("syn project time: ${endTime - startTime}, syn project count: ${synProject.size} ")
         return Result(synProject)
     }
