@@ -191,7 +191,7 @@ class GitOauthService @Autowired constructor(
 
     private fun isTokenExpire(accessToken: GitToken): Boolean {
         // 提前半个小时刷新token
-        return (accessToken.createTime ?: 0) + accessToken.expiresIn * 1000  - 1800 * 1000 <= System.currentTimeMillis()
+        return (accessToken.createTime ?: 0) + accessToken.expiresIn * 1000 - 1800 * 1000 <= System.currentTimeMillis()
     }
 
     private fun doGetAccessToken(userId: String): GitToken? {
