@@ -71,6 +71,15 @@
             ...mapState([
                 'fetchError'
             ]),
+            projectId () {
+                return this.$route.params.projectId
+            },
+            pipelineId () {
+                return this.$route.params.pipelineId
+            },
+            longProjectId () {
+                return this.curProject && this.curProject.projectId ? this.curProject.projectId : ''
+            },
             currentTab () {
                 return this.$route.params.tab || 'pipeline'
             },
@@ -142,8 +151,7 @@
             '$route.params.pipelineId': function (pipelineId, oldId) {
                 this.init()
             },
-            longProjectId (longProjectId) {
-                this.longProjectId = longProjectId
+            longProjectId () {
                 this.getRoleList()
             },
             pipeline (val) {
