@@ -24,10 +24,16 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.agent
+package com.tencent.devops.plugin.worker.task.script.shell
 
-const val AGENT_VERSION = 10.8
+import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxScriptElement
+import com.tencent.devops.worker.common.CommonEnv
+import com.tencent.devops.worker.common.task.TaskClassType
+import com.tencent.devops.worker.common.task.script.ScriptTask
 
-fun main(argv: Array<String>) {
-    println(AGENT_VERSION)
+@TaskClassType(classTypes = [LinuxScriptElement.classType], priority = 999)
+class TurboLinuxScriptTask: ScriptTask() {
+    init {
+        CommonEnv.addCommonEnv(mapOf("PATH" to "/data/bkdevops/apps/turbo/1.0:\$PATH"))
+    }
 }
