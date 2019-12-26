@@ -27,6 +27,7 @@
 package com.tencent.devops.plugin.api
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_BUILD_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_PIPELINE_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_PROJECT_ID
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.environment.pojo.EnvWithPermission
@@ -85,5 +86,17 @@ interface BuildEnvironmentResource {
         buildId: String,
         @ApiParam("环境名称(s)", required = true)
         envNames: List<String>
+    ): Result<List<EnvWithPermission>>
+
+    @ApiOperation("获取流水线最后修改用户有权限使用的环境列表")
+    @GET
+    @Path("/listPipelineUsableServerEnvs")
+    fun listUsableServerEnvsByLastUpdateUser(
+        @ApiParam("项目ID", required = true)
+        @HeaderParam(AUTH_HEADER_PROJECT_ID)
+        projectId: String,
+        @ApiParam("构建ID", required = true)
+        @HeaderParam(AUTH_HEADER_PIPELINE_ID)
+        pipelineId: String
     ): Result<List<EnvWithPermission>>
 }
