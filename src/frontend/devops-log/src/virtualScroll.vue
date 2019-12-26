@@ -197,8 +197,8 @@
 
             quickHorizontalMove (event) {
                 if (['ArrowLeft', 'ArrowRight'].includes(event.code)) {
-                    let wheelDeltaX = -0.5
-                    if (event.code === 'ArrowLeft') wheelDeltaX = 0.5
+                    let wheelDeltaX = -1
+                    if (event.code === 'ArrowLeft') wheelDeltaX = 1
                     this.handleHorizontalScroll({ wheelDeltaX })
                 }
             },
