@@ -79,4 +79,13 @@ interface OpProjectService {
         approvalStatus: Int?,
         grayFlag: Boolean
     ): Result<Int>
+
+    fun synProject(
+        projectCode: String,
+        isRefresh: Boolean? = true
+    ): Result<Boolean>
+
+    fun synProjectInit(
+        isRefresh: Boolean? = true
+    ): Result<List<String>>
 }
