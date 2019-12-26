@@ -116,7 +116,7 @@
                 showTime: this.$route.query.showTime === 'true',
                 offsetLeft: 0,
                 offsetTop: 0,
-                currentExe: 1,
+                currentExe: this.executeCount,
                 completeInit: false
             }
         },

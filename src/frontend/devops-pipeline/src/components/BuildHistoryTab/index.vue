@@ -102,7 +102,8 @@
                 ]
             },
             sourceColumns () {
-                return Object.values(this.BUILD_HISTORY_TABLE_COLUMNS_MAP).sort((c1, c2) => c1.index > c2.index)
+                const historyTableColumns = Object.values(this.BUILD_HISTORY_TABLE_COLUMNS_MAP).sort((c1, c2) => c1.index > c2.index)
+                return historyTableColumns.filter(x => !x.hiddenInHistory)
             },
             emptyTipsConfig () {
                 const { hasNoPermission, buildList, isLoading, historyPageStatus: { isQuerying } } = this
