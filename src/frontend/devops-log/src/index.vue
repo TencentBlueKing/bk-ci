@@ -24,7 +24,7 @@
                         v-if="!isInit"
                     >
                         <span class="item-time selection-color">{{(showTime ? item.data.timestamp : '')|timeFilter}}</span>
-                        <span class="selection-color" :style="`color: ${item.data.color};font-weight: ${item.data.fontWeight}`">{{item.data.value || ''}}</span>
+                        <span class="selection-color" :style="`color: ${item.data.color};font-weight: ${item.data.fontWeight}`" v-html="item.data.value"></span>
                     </span>
                 </template>
             </virtual-scroll>
@@ -116,7 +116,7 @@
                 showTime: this.$route.query.showTime === 'true',
                 offsetLeft: 0,
                 offsetTop: 0,
-                currentExe: 1,
+                currentExe: this.executeCount,
                 completeInit: false
             }
         },
@@ -531,7 +531,14 @@
             font-weight: 400;
             padding-right: 5px;
         }
-        /deep/ .selection-color {
+        /deep/ a {
+            color: #3c96ff;
+            text-decoration: underline;
+            &:active, &:visited, &:hover {
+                color: #3c96ff;
+            }
+        }
+        /deep/ a, /deep/ .selection-color {
             &::selection {
                 background-color: rgba(70, 146, 222, 0.54);
             }

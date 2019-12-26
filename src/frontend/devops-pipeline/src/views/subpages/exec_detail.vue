@@ -401,7 +401,7 @@
                 if (this.openLogApi.hasOpen) return
                 const route = this.$route.params || {}
                 const query = this.$route.query || {}
-                const currentExe = query.id === this.currentElement.id ? +query.currentExe : 1
+                const currentExe = query.id === this.currentElement.id ? +query.currentExe : (this.currentElement.executeCount || 1)
                 this.logPostData = {
                     projectId: route.projectId,
                     pipelineId: route.pipelineId,

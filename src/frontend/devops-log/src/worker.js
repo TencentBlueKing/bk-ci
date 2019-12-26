@@ -28,9 +28,6 @@ function handleColor (val) {
 }
 
 let allListData = []
-let offscreenCanvas
-let canvasContext
-
 let tagList = []
 let foldList = []
 
@@ -158,15 +155,8 @@ function addListData ({ list }) {
     allListData = allListData.concat(list)
 }
 
-function getListData ({ totalScrollHeight, itemHeight, itemNumber, canvasHeight, canvasWidth, minMapTop, totalHeight, mapHeight, isResize, type }) {
-    if (!offscreenCanvas || isResize) {
-        offscreenCanvas = new OffscreenCanvas(canvasWidth, canvasHeight)
-        canvasContext = offscreenCanvas.getContext('2d')
-        canvasContext.fillStyle = '#fff'
-        canvasContext.font = `normal normal normal ${itemHeight / 8}px Consolas`
-    }
-
-    const realHeight = minMapTop / (mapHeight - canvasHeight / 8) * (totalHeight - canvasHeight)
+function getListData ({ totalScrollHeight, itemHeight, itemNumber, canvasHeight, canvasWidth, minMapTop, totalHeight, mapHeight, type }) {
+    const realHeight = minMapTop / ((mapHeight - canvasHeight / 8) || 1) * (totalHeight - canvasHeight)
     let startIndex = Math.floor(realHeight / itemHeight)
     const endIndex = startIndex + itemNumber
     startIndex = startIndex > 0 ? startIndex - 1 : 0
@@ -192,6 +182,7 @@ function getListData ({ totalScrollHeight, itemHeight, itemNumber, canvasHeight,
     let minMapStartIndex = startIndex - Math.floor(itemNumber * 8 * minMapTop / canvasHeight)
     if (minMapStartIndex < 0) minMapStartIndex = 0
     const minMapEndIndex = minMapStartIndex + itemNumber * 8
+    const minMapList = []
     for (let i = minMapStartIndex; i <= minMapEndIndex; i++) {
         const currentItem = allListData[i]
         if (typeof currentItem === 'undefined') continue
@@ -200,13 +191,8 @@ function getListData ({ totalScrollHeight, itemHeight, itemNumber, canvasHeight,
             Object.assign(currentItem, handleItem)
             allListData[i] = currentItem
         }
-        const currentColor = currentItem.color || 'rgba(255,255,255,1)'
-        if (currentItem.color) canvasContext.font = `normal normal bold ${itemHeight / 8}px Consolas`
-        else canvasContext.font = `normal normal normal ${itemHeight / 8}px Consolas`
-        canvasContext.fillStyle = currentColor.replace(/rgba\((.+),(.+),(.+),(.)\)/, (rgba, r, g, b, a) => `rgba(${b},${g},${r},${a})`)
-        canvasContext.fillText(currentItem.message, 3, ((i - minMapStartIndex + 1) * itemHeight / 8))
+        minMapList.push(currentItem)
     }
-    const offscreenBitMap = offscreenCanvas.transferToImageBitmap()
 
-    postMessage({ type, indexList, listData, totalScrollHeight, offscreenBitMap })
+    postMessage({ type, indexList, listData, totalScrollHeight, minMapList })
 }
