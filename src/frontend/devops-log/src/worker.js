@@ -18,7 +18,13 @@ const reg = (() => {
 })()
 
 function handleColor (val) {
-    const res = ansiParse(val)[0] || { message: '', hasHandle: false }
+    const parseRes = ansiParse(val) || [{ message: '', hasHandle: false }]
+    const res = { message: '' }
+    parseRes.forEach((item) => {
+        res.message += item.message
+        if (!res.color && item.color) res.color = item.color
+    })
+    
     const currentColor = colorList.find(color => String(val).includes(color.key))
     if (currentColor) res.color = currentColor.color
     if (res.color) res.fontWeight = 600

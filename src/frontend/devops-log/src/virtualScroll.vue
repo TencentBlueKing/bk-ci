@@ -407,7 +407,7 @@
                 lDiv.style.fontWeight = 'normal'
                 lDiv.style.letterSpacing = '0px'
                 lDiv.style.opacity = 0
-                lDiv.innerHTML = text
+                lDiv.innerHTML = text.replace(/\s/g, '&nbsp;').replace(/<a&nbsp;/g, '<a ')
                 const res = lDiv.clientWidth + 100
                 document.body.removeChild(lDiv)
                 return res
