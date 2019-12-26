@@ -32,6 +32,7 @@ import com.tencent.devops.process.pojo.AtomErrorCode
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.pojo.ErrorType
+import com.tencent.devops.store.pojo.app.BuildEnv
 import com.tencent.devops.worker.common.api.ApiFactory
 import com.tencent.devops.worker.common.api.quality.QualityGatewaySDKApi
 import com.tencent.devops.worker.common.exception.TaskExecuteException
@@ -81,14 +82,14 @@ open class ScriptTask : ITask() {
         }
         try {
             command.execute(
-                buildId,
-                script,
-                taskParams,
-                variables,
-                projectId,
-                workspace,
-                buildVariables.buildEnvs,
-                continueNoneZero.toBoolean()
+                buildId = buildId,
+                script = script,
+                taskParam = taskParams,
+                runtimeVariables = variables,
+                projectId = projectId,
+                dir = workspace,
+                buildEnvs = takeBuildEnvs(buildVariables),
+                continueNoneZero = continueNoneZero.toBoolean()
             )
         } catch (t: Throwable) {
             logger.warn("Fail to run the script task", t)
@@ -112,6 +113,8 @@ open class ScriptTask : ITask() {
         // 设置质量红线指标信息
         setGatewayValue(workspace)
     }
+
+    open fun takeBuildEnvs(buildVariables: BuildVariables): List<BuildEnv> = buildVariables.buildEnvs
 
     private fun setGatewayValue(workspace: File) {
         try {
