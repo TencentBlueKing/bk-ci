@@ -88,7 +88,7 @@ open class ScriptTask : ITask() {
                 runtimeVariables = variables,
                 projectId = projectId,
                 dir = workspace,
-                buildEnvs = takeBuildEnvs(buildVariables),
+                buildEnvs = takeBuildEnvs(buildTask, buildVariables),
                 continueNoneZero = continueNoneZero.toBoolean()
             )
         } catch (t: Throwable) {
@@ -114,7 +114,7 @@ open class ScriptTask : ITask() {
         setGatewayValue(workspace)
     }
 
-    open fun takeBuildEnvs(buildVariables: BuildVariables): List<BuildEnv> = buildVariables.buildEnvs
+    open fun takeBuildEnvs(buildTask: BuildTask, buildVariables: BuildVariables): List<BuildEnv> = buildVariables.buildEnvs
 
     private fun setGatewayValue(workspace: File) {
         try {
