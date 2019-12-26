@@ -43,6 +43,7 @@ import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.PUT
 import javax.ws.rs.Path
+import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.Context
@@ -76,20 +77,6 @@ interface OPProjectResource {
         @ApiParam(value = "项目信息请求实体", required = true)
         projectInfoRequest: OpProjectUpdateInfoRequest
     ): Result<Int>
-
-//    @ApiOperation("更新项目信息")
-//    @PUT
-//    @Path("/{projectId}")
-//    fun updateProjectV2(
-//            @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-//            @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-//            userId: String,
-//            @ApiParam("PAAS_CC Token", required = true)
-//            @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
-//            accessToken: String,
-//            @ApiParam(value = "项目信息请求实体", required = true)
-//            projectInfoRequest: OpProjectUpdateInfoRequest
-//    ): Result<Int>
 
     @ApiOperation("获取项目信息列表")
     @GET
@@ -235,36 +222,6 @@ interface OPProjectResource {
         grayFlag: Boolean
     ): Result<Int>
 
-//    @ApiOperation("获取项目数量")
-//    @GET
-//    @Path("/count")
-//    fun getProjectCountV2(
-//            @ApiParam(value = "项目名称", required = false)
-//            @QueryParam(value = "project_name")
-//            projectName: String?,
-//            @ApiParam(value = "项目简称", required = false)
-//            @QueryParam(value = "english_name")
-//            englishName: String?,
-//            @ApiParam(value = "项目类型", required = false)
-//            @QueryParam(value = "project_type")
-//            projectType: Int?,
-//            @ApiParam(value = "是否保密", required = false)
-//            @QueryParam(value = "is_secrecy")
-//            isSecrecy: Boolean?,
-//            @ApiParam(value = "注册人", required = false)
-//            @QueryParam(value = "creator")
-//            creator: String?,
-//            @ApiParam(value = "审批人", required = false)
-//            @QueryParam(value = "approver")
-//            approver: String?,
-//            @ApiParam(value = "审核状态", required = false)
-//            @QueryParam(value = "approval_status")
-//            approvalStatus: Int?,
-//            @ApiParam(value = "是否灰度 true：是 false：否", defaultValue = false.toString())
-//            @QueryParam(value = "is_gray")
-//            grayFlag: Boolean
-//    ): Result<Int>
-
     @ApiOperation("灰度项目设置")
     @PUT
     @Path("/setGrayProject")
@@ -294,8 +251,24 @@ interface OPProjectResource {
     @Path("/listGrayProject")
     fun listGrayProject(): Result<OpGrayProject>
 
-//    @ApiOperation("查看灰度项目列表")
-//    @GET
-//    @Path("/list_gray/query")
-//    fun listGrayProjectV2(): Result<OpGrayProject>
+    @ApiOperation("同步项目")
+    @PUT
+    @Path("/{projectId}/syn")
+    fun synProject(
+        @ApiParam(value = "项目code", required = true)
+        @PathParam("projectId")
+        projectCode: String,
+        @ApiParam(value = "是否触发刷数据 true：是 false：否", defaultValue = false.toString())
+        @QueryParam(value = "isRefresh")
+        isRefresh: Boolean
+    ): Result<Boolean>
+
+    @ApiOperation("同步项目初始化")
+    @PUT
+    @Path("/init/syn")
+    fun synProjectInit(
+        @ApiParam(value = "是否触发刷数据 true：是 false：否", defaultValue = false.toString())
+        @QueryParam(value = "isRefresh")
+        isRefresh: Boolean
+    ): Result<List<String>>
 }
