@@ -51,11 +51,11 @@
 
         computed: {
             picList () {
-                if  (Array.isArray(this.pics) && this.pics.length > 0) {
+                if (Array.isArray(this.pics) && this.pics.length > 0) {
                     const first = this.pics[0]
                     const last = this.pics.slice(-1)
                     return [...last, ...this.pics, first]
-                } 
+                }
                 return []
             },
 
