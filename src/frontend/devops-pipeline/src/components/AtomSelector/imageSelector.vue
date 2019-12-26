@@ -68,6 +68,7 @@
                             <card :current-item.sync="currentItem"
                                 :card="card"
                                 v-for="card in searchInstallList"
+                                type="store"
                                 :key="card"
                                 :code="code"
                                 @choose="choose">
@@ -79,6 +80,7 @@
                             <card :current-item.sync="currentItem"
                                 :card="card"
                                 v-for="card in searchUninstallList"
+                                type="store"
                                 :key="card"
                                 :code="code"
                                 @choose="choose">
