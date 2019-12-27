@@ -176,9 +176,7 @@ object ProcessMessageCode {
     const val ERROR_PIPELINE_IS_RUNNING_LOCK = "2101198" // 流水线正在运行中，锁定
     const val ERROR_PIPELINE_TIMER_SCM_NO_CHANGE = "2101190" // 流水线定时触发时代码没有变更
 
-    //callback error
-
+    // callback error
     const val ERROR_CALLBACK_URL_INVALID = "2101180" // 回调的url非法
-    const val USER_NEED_PROJECT_X_PERMISSION = "2101181" // 项目: 用户无{0}权限
-
+    const val USER_NEED_PROJECT_X_PERMISSION = "2101181" // 用户（{0}）无（{1}）项目权限
 }
