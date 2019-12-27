@@ -25,11 +25,13 @@
  */
 package com.tencent.devops.openapi.service.v2
 
+import com.tencent.devops.common.auth.api.pojo.BKAuthProjectRolesResources
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.project.api.pojo.PipelinePermissionInfo
 import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
 import com.tencent.devops.project.pojo.ProjectCreateUserDTO
 import com.tencent.devops.project.pojo.ProjectVO
+import com.tencent.devops.project.pojo.Result
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
@@ -99,5 +101,14 @@ class ApigwProjectService(
     ): Boolean? {
         logger.info("createPipelinePermission:organizationType[$organizationType],organizationId[$organizationId],createInfo[$createInfo]")
         return client.get(ServiceTxProjectResource::class).createUserPipelinePermissionByApp(organizationType, organizationId, createInfo).data
+    }
+
+    fun getProjectRoles(
+        organizationType: String,
+        organizationId: Long,
+        projectCode: String
+    ): List<BKAuthProjectRolesResources>? {
+        logger.info("createPipelinePermission:organizationType[$organizationType],organizationId[$organizationId],projectCode[$projectCode]")
+        return client.get(ServiceTxProjectResource::class).getProjectRoles(projectCode, organizationType, organizationId).data
     }
 }
