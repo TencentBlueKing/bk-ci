@@ -918,7 +918,7 @@ class ProjectLocalService @Autowired constructor(
         }
         var roles = mutableListOf<BKAuthProjectRolesResources>()
         if(queryProject != null){
-            val roles = bkAuthProjectApi.getProjectRoles(bsPipelineAuthServiceCode, queryProject!!.projectName, queryProject!!.projectId)
+            val roles = bkAuthProjectApi.getProjectRoles(bsPipelineAuthServiceCode, queryProject!!.englishName, queryProject!!.projectId)
         }
         return roles
     }
@@ -952,7 +952,7 @@ class ProjectLocalService @Autowired constructor(
     private fun createUser2Project(userId: String, projectId: String, roleId: Int?, roleName: String?): Boolean {
         logger.info("[createUser2Project]  userId[$userId] projectCode[$projectId]")
         val projectInfo = projectDao.getByEnglishName(dslContext, projectId) ?: throw RuntimeException()
-        val roleList = bkAuthProjectApi.getProjectRoles(bsPipelineAuthServiceCode, projectId, projectInfo.projectName)
+        val roleList = bkAuthProjectApi.getProjectRoles(bsPipelineAuthServiceCode, projectId, projectInfo.englishName)
         var authRoleId: String? = null
         roleList.forEach {
             if(roleId == null || roleName.isNullOrEmpty()){
