@@ -271,11 +271,6 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
     ): Result<String?> {
         logger.info("updateMarketAtom userId is :$userId,marketAtomUpdateRequest is :$marketAtomUpdateRequest")
         val atomCode = marketAtomUpdateRequest.atomCode
-        val validateResult = validateUpdateMarketAtomReq(userId, marketAtomUpdateRequest)
-        logger.info("validateUpdateMarketAtomReq validateResult is :$validateResult")
-        if (validateResult.isNotOk()) {
-            return Result(validateResult.status, validateResult.message, null)
-        }
         val atomPackageSourceType = getAtomPackageSourceType(atomCode)
         logger.info("updateMarketAtom atomPackageSourceType is :$atomPackageSourceType")
         val version = marketAtomUpdateRequest.version
@@ -315,6 +310,11 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         logger.info("validateAtomVersionResult is :$validateAtomVersionResult")
         if (validateAtomVersionResult.isNotOk()) {
             return Result(status = validateAtomVersionResult.status, message = validateAtomVersionResult.message ?: "")
+        }
+        val validateResult = validateUpdateMarketAtomReq(userId, marketAtomUpdateRequest, atomRecord)
+        logger.info("validateUpdateMarketAtomReq validateResult is :$validateResult")
+        if (validateResult.isNotOk()) {
+            return Result(validateResult.status, validateResult.message, null)
         }
         var atomId = UUIDUtil.generate()
         val getAtomConfResult = getAtomConfig(
@@ -433,7 +433,8 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
      */
     abstract fun validateUpdateMarketAtomReq(
         userId: String,
-        marketAtomUpdateRequest: MarketAtomUpdateRequest
+        marketAtomUpdateRequest: MarketAtomUpdateRequest,
+        atomRecord: TAtomRecord
     ): Result<Boolean>
 
     /**
