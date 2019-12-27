@@ -55,6 +55,8 @@ object ScriptEnvUtils {
         }
         if (!scriptFile.createNewFile()) {
             logger.warn("Fail to create the file - (${scriptFile.absolutePath})")
+        } else {
+            scriptFile.deleteOnExit()
         }
     }
 
