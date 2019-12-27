@@ -24,27 +24,13 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.worker.common.task.script.bat
+package com.tencent.devops.worker.common.exception
 
-import com.tencent.devops.store.pojo.app.BuildEnv
-import com.tencent.devops.worker.common.task.script.ICommand
-import com.tencent.devops.worker.common.utils.BatScriptUtil
-import java.io.File
+import com.tencent.devops.process.pojo.AtomErrorCode.SYSTEM_SERVICE_ERROR
+import com.tencent.devops.process.pojo.ErrorType
 
-class CommandBatImpl() :
-    ICommand {
-
-    override fun execute(
-        buildId: String,
-        script: String,
-        taskParam: Map<String, String>,
-        runtimeVariables: Map<String, String>,
-        projectId: String,
-        dir: File,
-        buildEnvs: List<BuildEnv>,
-        continueNoneZero: Boolean
-    ) {
-        val realCommand = parseTemplate(buildId, script, taskParam.plus(runtimeVariables))
-        BatScriptUtil.execute(buildId, realCommand, runtimeVariables, dir)
-    }
-}
+class SystemServiceExecuteException(
+    val errorMsg: String,
+    val errorType: ErrorType = ErrorType.SYSTEM,
+    val errorCode: Int = SYSTEM_SERVICE_ERROR
+) : Throwable(errorMsg)

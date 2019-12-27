@@ -24,27 +24,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.worker.common.task.script.bat
+package com.tencent.devops.scm.pojo
 
-import com.tencent.devops.store.pojo.app.BuildEnv
-import com.tencent.devops.worker.common.task.script.ICommand
-import com.tencent.devops.worker.common.utils.BatScriptUtil
-import java.io.File
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-class CommandBatImpl() :
-    ICommand {
-
-    override fun execute(
-        buildId: String,
-        script: String,
-        taskParam: Map<String, String>,
-        runtimeVariables: Map<String, String>,
-        projectId: String,
-        dir: File,
-        buildEnvs: List<BuildEnv>,
-        continueNoneZero: Boolean
-    ) {
-        val realCommand = parseTemplate(buildId, script, taskParam.plus(runtimeVariables))
-        BatScriptUtil.execute(buildId, realCommand, runtimeVariables, dir)
-    }
-}
+@ApiModel("git仓库文件和目录列表")
+class GitRepositoryDirItem(
+    @ApiModelProperty("ID", required = true)
+    val id: String,
+    @ApiModelProperty("文件或目录名称", required = true)
+    val name: String,
+    @ApiModelProperty("类型", required = true)
+    val type: String,
+    @ApiModelProperty("模式", required = true)
+    val mode: String
+)

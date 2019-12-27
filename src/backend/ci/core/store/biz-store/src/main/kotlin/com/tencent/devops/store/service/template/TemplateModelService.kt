@@ -24,27 +24,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.worker.common.task.script.bat
+package com.tencent.devops.store.service.template
 
-import com.tencent.devops.store.pojo.app.BuildEnv
-import com.tencent.devops.worker.common.task.script.ICommand
-import com.tencent.devops.worker.common.utils.BatScriptUtil
-import java.io.File
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.pipeline.Model
 
-class CommandBatImpl() :
-    ICommand {
+interface TemplateModelService {
 
-    override fun execute(
-        buildId: String,
-        script: String,
-        taskParam: Map<String, String>,
-        runtimeVariables: Map<String, String>,
-        projectId: String,
-        dir: File,
-        buildEnvs: List<BuildEnv>,
-        continueNoneZero: Boolean
-    ) {
-        val realCommand = parseTemplate(buildId, script, taskParam.plus(runtimeVariables))
-        BatScriptUtil.execute(buildId, realCommand, runtimeVariables, dir)
-    }
+    /**
+     * 根据模板代码查询模板模型
+     */
+    fun getTemplateModel(templateCode: String): Result<Model?>
 }

@@ -269,6 +269,11 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
     ): Result<String?> {
         logger.info("updateMarketAtom userId is :$userId,marketAtomUpdateRequest is :$marketAtomUpdateRequest")
         val atomCode = marketAtomUpdateRequest.atomCode
+        val validateResult = validateUpdateMarketAtomReq(userId, marketAtomUpdateRequest)
+        logger.info("validateUpdateMarketAtomReq validateResult is :$validateResult")
+        if (validateResult.isNotOk()) {
+            return Result(validateResult.status, validateResult.message, null)
+        }
         val atomPackageSourceType = getAtomPackageSourceType(atomCode)
         logger.info("updateMarketAtom atomPackageSourceType is :$atomPackageSourceType")
         val version = marketAtomUpdateRequest.version
@@ -443,6 +448,14 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         }
         return Result(atomId)
     }
+
+    /**
+     * 校验升级插件参数
+     */
+    abstract fun validateUpdateMarketAtomReq(
+        userId: String,
+        marketAtomUpdateRequest: MarketAtomUpdateRequest
+    ): Result<Boolean>
 
     /**
      * 异步处理上架插件信息
