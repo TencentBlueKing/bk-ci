@@ -39,10 +39,10 @@ class TurboLinuxScriptTask : ScriptTask() {
 
     override fun takeBuildEnvs(buildTask: BuildTask, buildVariables: BuildVariables): List<BuildEnv> {
         val turboTaskId = buildTask.buildVariable?.get(PIPELINE_TURBO_TASK_ID)
-        return if (turboTaskId != null) { // 设置编译加速路径
-            buildVariables.buildEnvs.plus(BuildEnv(name = "turbo", version = "1.0", binPath = "", env = mapOf()))
-        } else {
+        return if (turboTaskId.isNullOrBlank()) {
             buildVariables.buildEnvs
+        } else { // 设置编译加速路径
+            buildVariables.buildEnvs.plus(BuildEnv(name = "turbo", version = "1.0", binPath = "", env = mapOf()))
         }
     }
 }
