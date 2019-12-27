@@ -40,6 +40,7 @@ import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.lang.Exception
 import java.util.concurrent.TimeUnit
 
 @Service
@@ -52,6 +53,9 @@ class IndexServiceV2 @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(IndexServiceV2::class.java)
+        private const val LOG_LINE_NUM = "log:build:line:num:"
+        private const val LOG_LINE_NUM_LOCK = "log:build:line:num:distribute:lock:"
+        fun getLineNumRedisKey(buildId: String) = LOG_LINE_NUM + buildId
     }
 
     private val indexCache = CacheBuilder.newBuilder()
@@ -84,7 +88,11 @@ class IndexServiceV2 @Autowired constructor(
 
     private fun saveIndex(buildId: String): String {
         val indexName = IndexNameUtils.getIndexName()
-        indexDaoV2.create(dslContext, buildId, indexName, true)
+        dslContext.transaction { configuration ->
+            val context = DSL.using(configuration)
+            indexDaoV2.create(context, buildId, indexName, true)
+            redisOperation.set(getLineNumRedisKey(buildId), 1.toString(), TimeUnit.DAYS.toSeconds(2))
+        }
         logger.info("[$buildId|$indexName] Create new index/type in db and cache")
         return indexName
     }
@@ -98,12 +106,46 @@ class IndexServiceV2 @Autowired constructor(
     }
 
     fun getAndAddLineNum(buildId: String, size: Int): Long? {
-        val startLineNum = indexDaoV2.updateLastLineNum(dslContext, buildId, size)
-        if (startLineNum == null) {
-            logger.warn("[$buildId|$size] Fail to get and add the line num")
-            return null
+        var lineNum = redisOperation.increment(getLineNumRedisKey(buildId), size.toLong())
+        // val startLineNum = indexDaoV2.updateLastLineNum(dslContext, buildId, size)
+        if (lineNum == null) {
+            val redisLock = RedisLock(redisOperation, LOG_LINE_NUM_LOCK + buildId, 10)
+            try {
+                redisLock.lock()
+                lineNum = redisOperation.increment(getLineNumRedisKey(buildId), size.toLong())
+                if (lineNum == null) {
+                    logger.warn("[$buildId|$size] Fail to get and add the line num, get from db")
+                    val build = indexDaoV2.getBuild(dslContext, buildId)
+                    if (build == null) {
+                        logger.warn("[$buildId|$size] The build is not exist in db")
+                        return null
+                    }
+                    lineNum = build.lastLineNum + size.toLong()
+                    redisOperation.set(getLineNumRedisKey(buildId), lineNum.toString(), TimeUnit.DAYS.toSeconds(2))
+                }
+            } finally {
+                redisLock.unlock()
+            }
         }
-        return startLineNum
+        return lineNum!! - size
+    }
+
+    fun flushLineNum2DB(buildId: String) {
+        val lineNum = redisOperation.get(getLineNumRedisKey(buildId))
+        if (lineNum.isNullOrBlank()) {
+            logger.warn("[$buildId] Fail to get lineNum from redis")
+            return
+        }
+        val latestLineNum = try {
+            lineNum!!.toLong()
+        } catch (e: Exception) {
+            logger.warn("[$buildId|$lineNum] Fail to convert line num to long", e)
+            return
+        }
+        val updateCount = indexDaoV2.updateLastLineNum(dslContext, buildId, latestLineNum)
+        if (updateCount != 1) {
+            logger.warn("[$buildId|$latestLineNum] Fail to update the build latest line num")
+        }
     }
 
     fun finish(buildId: String, tag: String?, jobId: String?, executeCount: Int?, finish: Boolean) {

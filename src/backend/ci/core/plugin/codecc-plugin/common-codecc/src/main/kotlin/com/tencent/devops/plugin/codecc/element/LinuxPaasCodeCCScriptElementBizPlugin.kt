@@ -59,14 +59,15 @@ class LinuxPaasCodeCCScriptElementBizPlugin constructor(
         pipelineId: String,
         pipelineName: String,
         userId: String,
-        channelCode: ChannelCode
+        channelCode: ChannelCode,
+        create: Boolean
     ) {
         with(element) {
             if (languages.isEmpty()) {
                 throw OperationException("工程语言不能为空")
             }
             try {
-                if (!codeCCTaskId.isNullOrEmpty()) {
+                if ((!create) && (!codeCCTaskId.isNullOrEmpty())) {
                     if (coverityApi.isTaskExist(codeCCTaskId!!, userId)) {
                         // Update the coverity
                         coverityApi.updateTask(pipelineName, userId, element)
