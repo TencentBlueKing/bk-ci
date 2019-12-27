@@ -63,7 +63,6 @@ class MQPipelineUpdateListener @Autowired constructor(
             return
         }
         val pipelineId = event.pipelineId
-        pipelineGroupService.updatePipelineLabel(event.userId, pipelineId, model.labels)
         pipelineUserService.update(pipelineId, event.userId)
         callBackControl.pipelineUpdateEvent(projectId = event.projectId, pipelineId = event.pipelineId)
     }
