@@ -45,7 +45,7 @@ import javax.ws.rs.core.MediaType
 @Path("/op/app/version")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface OpAppVersionResource {
+interface pAppVersionResource {
 
     @ApiOperation("获取所有app版本日志")
     @GET

@@ -27,7 +27,7 @@
 package com.tencent.devops.project.resources
 
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.project.api.service.user.UserProjectResource
+import com.tencent.devops.project.api.user.UserProjectResource
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectLogo
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
@@ -43,59 +43,62 @@ import java.io.InputStream
 class UserProjectResourceImpl @Autowired constructor(
     private val projectLocalService: ProjectLocalService
 ) : UserProjectResource {
-
-    override fun list(accessToken: String, includeDisable: Boolean?): Result<List<ProjectVO>> {
-        return Result(projectLocalService.list(accessToken, includeDisable))
+    override fun list(userId: String, accessToken: String?): Result<List<ProjectVO>> {
+        return Result(projectLocalService.list(accessToken!!, true))
     }
 
-    override fun get(accessToken: String, englishName: String): Result<ProjectVO> {
-        return Result(projectLocalService.getByEnglishName(accessToken, englishName))
+    override fun get(projectId: String, accessToken: String?): Result<ProjectVO> {
+        return Result(projectLocalService.getByEnglishName(accessToken!!, projectId))
     }
 
-    override fun create(userId: String, accessToken: String, projectCreateInfo: ProjectCreateInfo): Result<Boolean> {
-        // 创建蓝盾项目
-        projectLocalService.create(userId, accessToken, projectCreateInfo)
-
+    override fun create(userId: String, projectCreateInfo: ProjectCreateInfo, accessToken: String?): Result<Boolean> {
+        projectLocalService.create(
+            userId = userId,
+            accessToken = accessToken!!,
+            projectCreateInfo = projectCreateInfo
+        )
         return Result(true)
     }
 
     override fun update(
         userId: String,
-        accessToken: String,
-        englishName: String,
-        projectUpdateInfo: ProjectUpdateInfo
+        projectId: String,
+        projectUpdateInfo: ProjectUpdateInfo,
+        accessToken: String?
     ): Result<Boolean> {
-        projectLocalService.update(userId, accessToken, englishName, projectUpdateInfo)
-        return Result(true)
-    }
-
-    override fun enable(
-        userId: String,
-        accessToken: String,
-        englishName: String,
-        enabled: Boolean
-    ): Result<Boolean> {
-        projectLocalService.updateUsableStatus(userId, englishName, enabled)
+        projectLocalService.update(
+            userId = userId,
+            projectUpdateInfo = projectUpdateInfo,
+            accessToken = accessToken!!,
+            englishName = projectId
+        )
         return Result(true)
     }
 
     override fun updateLogo(
         userId: String,
-        accessToken: String,
-        englishName: String,
+        projectId: String,
         inputStream: InputStream,
-        disposition: FormDataContentDisposition
-    ): Result<ProjectLogo> {
-        return projectLocalService.updateLogo(userId, accessToken, englishName, inputStream, disposition)
+        disposition: FormDataContentDisposition,
+        accessToken: String?
+    ): Result<Boolean> {
+        projectLocalService.updateLogo(
+            userId = userId,
+            englishName = projectId,
+            inputStream = inputStream,
+            disposition = disposition,
+            accessToken = accessToken!!
+        )
+        return Result(true)
     }
 
     override fun validate(
         userId: String,
         validateType: ProjectValidateType,
         name: String,
-        englishName: String?
+        projectId: String?
     ): Result<Boolean> {
-        projectLocalService.validate(validateType, name, englishName)
+        projectLocalService.validate(validateType, name, projectId)
         return Result(true)
     }
 }
