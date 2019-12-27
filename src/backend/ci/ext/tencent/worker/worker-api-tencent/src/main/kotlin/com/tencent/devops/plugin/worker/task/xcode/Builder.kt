@@ -113,6 +113,7 @@ class Builder(private val argument: Argument) {
     private fun switchXCode(buildVariables: BuildVariables, workspace: File) {
         val command = "sudo /usr/bin/xcode-select --switch \${XCODE_HOME}"
         ShellUtil.execute(
+            buildId = buildVariables.buildId,
             script = command,
             dir = workspace,
             buildEnvs = buildVariables.buildEnvs,
@@ -158,6 +159,7 @@ class Builder(private val argument: Argument) {
         }
 
         ShellUtil.execute(
+            buildId = buildVariables.buildId,
             script = command.toString(),
             dir = workspace,
             buildEnvs = buildVariables.buildEnvs,

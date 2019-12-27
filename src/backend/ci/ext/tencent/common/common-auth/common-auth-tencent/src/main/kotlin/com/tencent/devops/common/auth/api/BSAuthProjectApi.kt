@@ -34,6 +34,7 @@ import com.tencent.devops.common.auth.api.pojo.BKAuthProjectRolesResources
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroupAndUserList
 import com.tencent.devops.common.auth.api.pojo.BkAuthProjectCodeAndId
+import com.tencent.devops.common.auth.api.pojo.BkAuthProjectInfoResources
 import com.tencent.devops.common.auth.api.pojo.BkAuthResponse
 import com.tencent.devops.common.auth.code.AuthServiceCode
 import okhttp3.MediaType
@@ -120,12 +121,19 @@ class BSAuthProjectApi @Autowired constructor(
         userId: String,
         supplier: (() -> List<String>)?
     ): List<String> {
+        val startEpoch = System.currentTimeMillis()
         val accessToken = bsAuthTokenApi.getAccessToken(serviceCode)
+        val tokenEscape = System.currentTimeMillis() - startEpoch
         val url = "${bkAuthProperties.url}/projects?access_token=$accessToken&user_id=$userId"
         val request = Request.Builder().url(url).get().build()
 
         OkhttpUtils.doHttp(request).use { response ->
             val responseContent = response.body()!!.string()
+            val escape = System.currentTimeMillis() - startEpoch
+            if (escape > 1000) {
+                // if > 1 second, print the response
+                logger.warn("[$userId|$serviceCode|$tokenEscape] It took ${escape}ms to get the project list with response($responseContent)")
+            }
             if (!response.isSuccessful) {
                 logger.error("Fail to get user projects. $responseContent")
                 throw RemoteServiceException("Fail to get user projects")
@@ -244,6 +252,24 @@ class BSAuthProjectApi @Autowired constructor(
                 throw RemoteServiceException("get project role fail: $responseObject")
             }
             return responseObject.data ?: emptyList()
+        }
+    }
+
+    override fun getProjectInfo(serviceCode: AuthServiceCode, projectCode: String): BkAuthProjectInfoResources? {
+        val accessToken = bsAuthTokenApi.getAccessToken(serviceCode)
+        val url = "${bkAuthProperties.url}/projects/$projectCode?access_token=$accessToken"
+        val request = Request.Builder().url(url).get().build()
+        OkhttpUtils.doHttp(request).use { response ->
+            val responseContent = response.body()!!.string()
+            if (!response.isSuccessful) {
+                logger.error("get project info fail: projectCode[$projectCode]")
+                throw RemoteServiceException("get project inProjectPaasCCServicefo fail: projectCode[$projectCode]")
+            }
+            val responseObject = objectMapper.readValue<BkAuthResponse<BkAuthProjectInfoResources>>(responseContent)
+            if (responseObject.code != 0) {
+                logger.error("get project info fail: $responseContent")
+            }
+            return responseObject.data ?: null
         }
     }
 

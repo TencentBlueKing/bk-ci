@@ -26,18 +26,31 @@
 
 package com.tencent.devops.project.service.impl
 
+import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.api.util.PageUtil
+import com.tencent.devops.common.auth.api.AuthProjectApi
+import com.tencent.devops.common.auth.api.AuthTokenApi
+import com.tencent.devops.common.auth.code.AuthServiceCode
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.Gray
+import com.tencent.devops.common.service.gray.RepoGray
+import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.web.mq.EXCHANGE_PAASCC_PROJECT_UPDATE
 import com.tencent.devops.common.web.mq.ROUTE_PAASCC_PROJECT_UPDATE
+import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dao.ProjectLabelRelDao
+import com.tencent.devops.project.dao.ProjectLocalDao
 import com.tencent.devops.project.dispatch.ProjectDispatcher
 import com.tencent.devops.project.pojo.OpGrayProject
 import com.tencent.devops.project.pojo.OpProjectUpdateInfoRequest
 import com.tencent.devops.project.pojo.PaasCCUpdateProject
+import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.Result
+import com.tencent.devops.project.pojo.mq.ProjectCreateBroadCastEvent
+import com.tencent.devops.project.service.ProjectPaasCCService
+import com.tencent.devops.project.service.ProjectPermissionService
 import org.jooq.DSLContext
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
@@ -47,12 +60,30 @@ import org.springframework.stereotype.Service
 class OpProjectServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
     private val projectDao: ProjectDao,
+    private val projectLocalDao: ProjectLocalDao,
     private val projectLabelRelDao: ProjectLabelRelDao,
     private val rabbitTemplate: RabbitTemplate,
     private val redisOperation: RedisOperation,
     private val gray: Gray,
-    private val projectDispatcher: ProjectDispatcher
-) : AbsOpProjectServiceImpl(dslContext, projectDao, projectLabelRelDao, redisOperation, gray, projectDispatcher) {
+    private val projectDispatcher: ProjectDispatcher,
+    private val paasCCService: ProjectPaasCCService,
+    private val bkAuthProjectApi: AuthProjectApi,
+    private val bsAuthTokenApi: AuthTokenApi,
+    private val repoGray: RepoGray,
+    private val projectPermissionService: ProjectPermissionService,
+    private val bsPipelineAuthServiceCode: AuthServiceCode
+) : AbsOpProjectServiceImpl(
+    dslContext,
+    projectDao,
+    projectLabelRelDao,
+    redisOperation,
+    gray,
+    repoGray,
+    projectDispatcher
+) {
+
+    private final val REDIS_PROJECT_KEY = "BK:PROJECT:INFO:"
+
     override fun listGrayProject(): Result<OpGrayProject> {
         return super.listGrayProject()
     }
@@ -61,42 +92,214 @@ class OpProjectServiceImpl @Autowired constructor(
         return super.setGrayProject(projectCodeList, operateFlag)
     }
 
-    override fun updateProjectFromOp(userId: String, accessToken: String, projectInfoRequest: OpProjectUpdateInfoRequest): Int {
+    override fun updateProjectFromOp(
+        userId: String,
+        accessToken: String,
+        projectInfoRequest: OpProjectUpdateInfoRequest
+    ): Int {
         val count = super.updateProjectFromOp(userId, accessToken, projectInfoRequest)
         val dbProjectRecord = projectDao.get(dslContext, projectInfoRequest.projectId)
         rabbitTemplate.convertAndSend(
             EXCHANGE_PAASCC_PROJECT_UPDATE,
             ROUTE_PAASCC_PROJECT_UPDATE, PaasCCUpdateProject(
-            userId = userId,
-            accessToken = accessToken,
-            projectId = projectInfoRequest.projectId,
-            retryCount = 0,
-            projectUpdateInfo = ProjectUpdateInfo(
-                projectName = projectInfoRequest.projectName,
-                projectType = projectInfoRequest.projectType,
-                bgId = projectInfoRequest.bgId,
-                bgName = projectInfoRequest.bgName,
-                centerId = projectInfoRequest.centerId,
-                centerName = projectInfoRequest.centerName,
-                deptId = projectInfoRequest.deptId,
-                deptName = projectInfoRequest.deptName,
-                description = dbProjectRecord!!.description ?: "",
-                englishName = dbProjectRecord!!.englishName,
-                ccAppId = projectInfoRequest.ccAppId,
-                ccAppName = projectInfoRequest.cc_app_name,
-                kind = projectInfoRequest.kind
+                userId = userId,
+                accessToken = accessToken,
+                projectId = projectInfoRequest.projectId,
+                retryCount = 0,
+                projectUpdateInfo = ProjectUpdateInfo(
+                    projectName = projectInfoRequest.projectName,
+                    projectType = projectInfoRequest.projectType,
+                    bgId = projectInfoRequest.bgId,
+                    bgName = projectInfoRequest.bgName,
+                    centerId = projectInfoRequest.centerId,
+                    centerName = projectInfoRequest.centerName,
+                    deptId = projectInfoRequest.deptId,
+                    deptName = projectInfoRequest.deptName,
+                    description = dbProjectRecord!!.description ?: "",
+                    englishName = dbProjectRecord!!.englishName,
+                    ccAppId = projectInfoRequest.ccAppId,
+                    ccAppName = projectInfoRequest.cc_app_name,
+                    kind = projectInfoRequest.kind
 //                        secrecy = projectInfoRequest.secrecyFlag
+                )
             )
-        )
         )
         return count
     }
 
-    override fun getProjectList(projectName: String?, englishName: String?, projectType: Int?, isSecrecy: Boolean?, creator: String?, approver: String?, approvalStatus: Int?, offset: Int, limit: Int, grayFlag: Boolean): Result<Map<String, Any?>?> {
-        return super.getProjectList(projectName, englishName, projectType, isSecrecy, creator, approver, approvalStatus, offset, limit, grayFlag)
+    override fun getProjectList(
+        projectName: String?,
+        englishName: String?,
+        projectType: Int?,
+        isSecrecy: Boolean?,
+        creator: String?,
+        approver: String?,
+        approvalStatus: Int?,
+        offset: Int,
+        limit: Int,
+        grayFlag: Boolean
+    ): Result<Map<String, Any?>?> {
+        return super.getProjectList(
+            projectName,
+            englishName,
+            projectType,
+            isSecrecy,
+            creator,
+            approver,
+            approvalStatus,
+            offset,
+            limit,
+            grayFlag
+        )
     }
 
-    override fun getProjectCount(projectName: String?, englishName: String?, projectType: Int?, isSecrecy: Boolean?, creator: String?, approver: String?, approvalStatus: Int?, grayFlag: Boolean): Result<Int> {
-        return super.getProjectCount(projectName, englishName, projectType, isSecrecy, creator, approver, approvalStatus, grayFlag)
+    override fun getProjectCount(
+        projectName: String?,
+        englishName: String?,
+        projectType: Int?,
+        isSecrecy: Boolean?,
+        creator: String?,
+        approver: String?,
+        approvalStatus: Int?,
+        grayFlag: Boolean
+    ): Result<Int> {
+        return super.getProjectCount(
+            projectName,
+            englishName,
+            projectType,
+            isSecrecy,
+            creator,
+            approver,
+            approvalStatus,
+            grayFlag
+        )
+    }
+
+    override fun synProject(projectCode: String, isRefresh: Boolean?): Result<Boolean> {
+        var isSyn = false
+        if (redisOperation.get(REDIS_PROJECT_KEY + projectCode) != null) {
+            return Result(isSyn)
+        }
+
+        val projectInfo = projectDao.getByEnglishName(dslContext, projectCode)
+        if (projectInfo == null) {
+            logger.error("syn project $projectCode is not exist")
+            throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PROJECT_NOT_EXIST))
+        }
+        val accessToken = bsAuthTokenApi.getAccessToken(bsPipelineAuthServiceCode)
+        val paasProjectInfo = paasCCService.getPaasCCProjectInfo(projectCode, accessToken)
+        if (paasProjectInfo == null) {
+            logger.info("synProject projectCode:$projectCode, paasCC is not exist. start Syn")
+            if (isRefresh!!) {
+                projectDispatcher.dispatch(
+                    ProjectCreateBroadCastEvent(
+                        userId = projectInfo.creator,
+                        projectId = projectInfo.projectId,
+                        projectInfo = ProjectCreateInfo(
+                            projectName = projectInfo.projectName,
+                            englishName = projectInfo.englishName,
+                            projectType = projectInfo.projectType,
+                            description = projectInfo.description,
+                            bgId = projectInfo.bgId,
+                            bgName = projectInfo.bgName,
+                            deptId = projectInfo.deptId,
+                            deptName = projectInfo.deptName,
+                            centerId = projectInfo.centerId,
+                            centerName = projectInfo.centerName,
+                            secrecy = projectInfo.isSecrecy,
+                            kind = projectInfo.kind
+                        )
+                    )
+                )
+            }
+            isSyn = true
+        }
+        val authProjectInfo = bkAuthProjectApi.getProjectInfo(bsPipelineAuthServiceCode, projectCode)
+        if (authProjectInfo == null) {
+            logger.info("synProject projectCode:$projectCode, authCenter is not exist. start Syn")
+            if (isRefresh!!) {
+//            projectPermissionService.createResources(
+//                userId = projectInfo.creator,
+//                projectList = listOf(
+//                    ResourceRegisterInfo(
+//                        projectInfo.englishName,
+//                        projectInfo.projectName
+//                    )
+//                )
+//            )
+            }
+            logger.info("project syn success, projectCode[$projectCode], creator[${projectInfo.creator}]")
+            isSyn = true
+        }
+        if (!isSyn) {
+            redisOperation.set(REDIS_PROJECT_KEY + projectCode, projectCode, null, true)
+        }
+
+        return Result(isSyn)
+    }
+
+    override fun synProjectInit(isRefresh: Boolean?): Result<List<String>> {
+        logger.info("synProject time: ${System.currentTimeMillis()}")
+        val synProject = mutableListOf<String>()
+        val startTime = System.currentTimeMillis()
+        var page = 1
+        val limit = 100
+        var isContinue = true
+        val excludeName = mutableListOf<String>()
+        excludeName.add("CODE_")
+        excludeName.add("git_")
+
+        val failList = mutableListOf<String>()
+
+        while (isContinue) {
+            val SQLLimit = PageUtil.convertPageSizeToSQLLimit(page, limit)
+            logger.info("synProject page: $page")
+            val projectInfos = projectLocalDao.getProjectListExclude(
+                dslContext = dslContext,
+                offset = SQLLimit.offset,
+                limit = SQLLimit.limit,
+                englishNamesExclude = excludeName
+            )
+
+            val lastPageInfos = projectDao.getProjectList(
+                dslContext = dslContext,
+                projectName = null,
+                englishName = null,
+                projectType = null,
+                isSecrecy = null,
+                creator = null,
+                approver = null,
+                approvalStatus = null,
+                grayFlag = false,
+                englishNames = null,
+                limit = SQLLimit.limit,
+                offset = SQLLimit.offset
+            )
+
+            if (lastPageInfos == null || lastPageInfos.size < limit) {
+                isContinue = false
+            }
+            if (page <= 1) {
+                logger.info("project List: ${projectInfos[1]}")
+            }
+            for (i in projectInfos.indices) {
+                val projectData = projectInfos[i]
+                try {
+                    val isSyn = synProject(projectData.englishName, isRefresh)
+                    if (isSyn.data!!) {
+                        logger.info("project ${projectData.englishName} need syn authCenter or Paas")
+                        synProject.add(projectData.englishName)
+                    }
+                } catch (ex: Exception) {
+                    logger.warn("syn project fail: errorMsg:[$ex]")
+                    failList.add(projectData.englishName)
+                }
+            }
+            page++
+        }
+        val endTime = System.currentTimeMillis()
+        logger.warn("syn fail list: $failList")
+        logger.info("syn project time: ${endTime - startTime}, syn project count: ${synProject.size} ")
+        return Result(synProject)
     }
 }
