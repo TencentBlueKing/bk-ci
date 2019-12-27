@@ -41,7 +41,7 @@ import io.swagger.annotations.ApiModel
 )
 interface Container {
     var id: String? // seq id
-    val name: String
+    var name: String
     val elements: List<Element>
     var status: String?
     var startEpoch: Long?
