@@ -34,7 +34,14 @@ import com.tencent.devops.log.jmx.v2.CreateIndexBeanV2
 import com.tencent.devops.log.jmx.v2.LogBeanV2
 import com.tencent.devops.log.model.message.LogMessage
 import com.tencent.devops.log.model.message.LogMessageWithLineNo
-import com.tencent.devops.log.model.pojo.*
+import com.tencent.devops.log.model.pojo.EndPageQueryLogs
+import com.tencent.devops.log.model.pojo.LogBatchEvent
+import com.tencent.devops.log.model.pojo.LogEvent
+import com.tencent.devops.log.model.pojo.LogLine
+import com.tencent.devops.log.model.pojo.LogStatusEvent
+import com.tencent.devops.log.model.pojo.PageQueryLogs
+import com.tencent.devops.log.model.pojo.QueryLogs
+import com.tencent.devops.log.model.pojo.QueryLineNo
 import com.tencent.devops.log.model.pojo.enums.LogStatus
 import com.tencent.devops.log.model.pojo.enums.LogType
 import com.tencent.devops.log.util.Constants
