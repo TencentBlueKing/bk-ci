@@ -231,6 +231,7 @@ class BSAuthProjectApi @Autowired constructor(
     ): List<BKAuthProjectRolesResources> {
         val accessToken = bsAuthTokenApi.getAccessToken(serviceCode)
         val url = "${bkAuthProperties.url}/projects/$projectCode/roles?access_token=$accessToken"
+        logger.info("getProjectRoles: url:$url")
         val request = Request.Builder().url(url).get().build()
         OkhttpUtils.doHttp(request).use { response ->
             val responseContent = response.body()!!.string()
