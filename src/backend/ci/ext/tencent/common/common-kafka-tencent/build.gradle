@@ -25,16 +25,6 @@
  */
 
 dependencies {
-    compile project(":core:common:common-api")
-    compile project(":core:common:common-auth:common-auth-api")
-    compile project(":core:common:common-redis")
+    compile "org.springframework.kafka:spring-kafka"
     compile project(":core:common:common-web")
-    compile project(":core:common:common-service")
-    compile "com.fasterxml.jackson.core:jackson-databind"
-    compile "com.fasterxml.jackson.core:jackson-core"
-    compile "com.fasterxml.jackson.core:jackson-annotations"
-    compile "com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider"
-    compile "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml"
-    compile "com.fasterxml.jackson.jaxrs:jackson-jaxrs-base"
-    compile "com.fasterxml.jackson.module:jackson-module-kotlin"
 }
