@@ -323,7 +323,7 @@ interface ServiceTxProjectResource {
     @Path("{projectId}/roles")
     fun getProjectRoles(
         @ApiParam("项目Id", required = true)
-        @QueryParam("projectId")
+        @PathParam("projectId")
         projectCode: String,
         @ApiParam("组织类型", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE)
