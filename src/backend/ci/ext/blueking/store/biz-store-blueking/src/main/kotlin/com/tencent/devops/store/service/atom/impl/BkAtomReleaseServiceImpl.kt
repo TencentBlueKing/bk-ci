@@ -39,6 +39,7 @@ import com.tencent.devops.common.api.constant.TEST
 import com.tencent.devops.common.api.constant.UNDO
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.model.store.tables.records.TAtomRecord
 import com.tencent.devops.store.pojo.atom.MarketAtomCreateRequest
 import com.tencent.devops.store.pojo.atom.MarketAtomUpdateRequest
 import com.tencent.devops.store.pojo.atom.enums.AtomPackageSourceTypeEnum
@@ -85,7 +86,8 @@ class BkAtomReleaseServiceImpl : BkAtomReleaseService, AtomReleaseServiceImpl() 
 
     override fun validateUpdateMarketAtomReq(
         userId: String,
-        marketAtomUpdateRequest: MarketAtomUpdateRequest
+        marketAtomUpdateRequest: MarketAtomUpdateRequest,
+        atomRecord: TAtomRecord
     ): Result<Boolean> {
         // 企业版升级插件暂无特殊参数需要校验
         return Result(true)

@@ -43,12 +43,14 @@ import com.tencent.devops.common.api.constant.NUM_TWO
 import com.tencent.devops.common.api.constant.SUCCESS
 import com.tencent.devops.common.api.constant.TEST
 import com.tencent.devops.common.api.constant.UNDO
+import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.AtomBaseInfo
 import com.tencent.devops.common.pipeline.pojo.AtomMarketInitPipelineReq
 import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.model.store.tables.records.TAtomRecord
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServicePipelineInitResource
 import com.tencent.devops.repository.api.ServiceGitRepositoryResource
@@ -189,9 +191,39 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
 
     override fun validateUpdateMarketAtomReq(
         userId: String,
-        marketAtomUpdateRequest: MarketAtomUpdateRequest
+        marketAtomUpdateRequest: MarketAtomUpdateRequest,
+        atomRecord: TAtomRecord
     ): Result<Boolean> {
         logger.info("validateUpdateMarketAtomReq userId is:$userId,marketAtomUpdateRequest is:$marketAtomUpdateRequest")
+        val frontendType = marketAtomUpdateRequest.frontendType
+        if (frontendType == FrontendTypeEnum.SPECIAL) {
+            val repositoryTreeInfoResult = client.get(ServiceGitRepositoryResource::class).getGitRepositoryTreeInfo(
+                userId = userId,
+                repoId = atomRecord.repositoryHashId,
+                refName = null,
+                path = null,
+                tokenType = TokenTypeEnum.PRIVATE_KEY
+            )
+            logger.info("the repositoryTreeInfoResult is :$repositoryTreeInfoResult")
+            if (repositoryTreeInfoResult.isNotOk()) {
+                return Result(repositoryTreeInfoResult.status, repositoryTreeInfoResult.message, null)
+            }
+            val repositoryTreeInfoList = repositoryTreeInfoResult.data
+            var flag = false
+            repositoryTreeInfoList?.forEach {
+                if(it.name=="bk-frontend" && it.type == "tree") {
+                    flag = true
+                    return@forEach
+                }
+            }
+            if (!flag) {
+                return MessageCodeUtil.generateResponseDataObject(
+                    StoreMessageCode.USER_REPOSITORY_BK_FRONTEND_DIR_IS_NULL,
+                    arrayOf("bk-frontend"),
+                    false
+                )
+            }
+        }
         return Result(true)
     }
 
