@@ -42,6 +42,7 @@ import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.scm.api.ServiceGitResource
 import com.tencent.devops.scm.code.git.api.GitBranch
 import com.tencent.devops.scm.code.git.api.GitTag
+import com.tencent.devops.scm.pojo.GitRepositoryDirItem
 import com.tencent.devops.scm.pojo.GitRepositoryResp
 import com.tencent.devops.scm.pojo.Project
 import org.springframework.beans.factory.annotation.Autowired
@@ -180,6 +181,17 @@ class TencentGitServiceImpl @Autowired constructor(val client: Client) : IGitSer
             updateGitProjectInfo = updateGitProjectInfo,
             tokenType = tokenType
         )
+    }
+
+    override fun getGitRepositoryTreeInfo(
+        userId: String,
+        repoName: String,
+        refName: String?,
+        path: String?,
+        token: String,
+        tokenType: TokenTypeEnum
+    ): Result<List<GitRepositoryDirItem>?> {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
     override fun moveProjectToGroup(
