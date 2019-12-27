@@ -175,7 +175,7 @@ class ComDistributeTaskAtom @Autowired constructor(
         runVariables: Map<String, String>,
         param: ComDistributionElement
     ): BuildStatus {
-        val user = task.starter
+        var userId = task.starter
         val buildId = task.buildId
         val pipelineId = task.pipelineId
         val taskId = task.taskId
@@ -188,7 +188,6 @@ class ComDistributeTaskAtom @Autowired constructor(
         }
 
         val localFileList = mutableListOf<String>()
-        var userId = task.starter
         val appId = client.get(ServiceProjectResource::class).get(task.projectId).data?.ccAppId?.toInt()
             ?: run {
                 LogUtils.addLine(rabbitTemplate, task.buildId, "找不到绑定业务ID/can not found business ID", task.taskId,
@@ -206,13 +205,13 @@ class ComDistributeTaskAtom @Autowired constructor(
 
             regexPathsStr.split(",").forEach { regex ->
                 if (isRepoGray) {
-                    val fileList = bkRepoClient.matchBkRepoFile(regex, projectId, pipelineId, buildId, isCustom)
+                    val fileList = bkRepoClient.matchBkRepoFile(userId, regex, projectId, pipelineId, buildId, isCustom)
                     val repoName = if (isCustom) "custom" else "pipeline"
                     fileList.forEach { bkrepoFile ->
                         LogUtils.addLine(rabbitTemplate, buildId, "匹配到文件：(${bkrepoFile.displayPath})", taskId, containerId, executeCount)
                         count++
                         val destFile = File(workspace, File(bkrepoFile.displayPath).name)
-                        bkRepoClient.downloadFile(user, projectId, repoName, bkrepoFile.fullPath, destFile)
+                        bkRepoClient.downloadFile(userId, projectId, repoName, bkrepoFile.fullPath, destFile)
                         localFileList.add(destFile.absolutePath)
                         logger.info("save file : ${destFile.canonicalPath} (${destFile.length()})")
                     }

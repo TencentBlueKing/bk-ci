@@ -28,6 +28,7 @@ package com.tencent.devops.process.engine.atom.task
 
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.archive.api.JFrogStorageApi
+import com.tencent.devops.common.archive.client.BkRepoClient
 import com.tencent.devops.common.archive.util.JFrogUtil
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.job.JobClient
@@ -35,6 +36,8 @@ import com.tencent.devops.common.job.api.pojo.EnvSet
 import com.tencent.devops.common.job.api.pojo.FastPushFileRequest
 import com.tencent.devops.common.pipeline.element.ReportArchiveServiceElement
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.gray.RepoGray
 import com.tencent.devops.log.utils.LogUtils
 import com.tencent.devops.process.bkjob.ClearJobTempFileEvent
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_BUILD_TASK_IDX_FILE_NOT_EXITS
@@ -69,7 +72,10 @@ class ReportArchiveServiceTaskAtom @Autowired constructor(
     private val reportService: ReportService,
     private val jFrogStorageApi: JFrogStorageApi,
     private val rabbitTemplate: RabbitTemplate,
-    private val jobClient: JobClient
+    private val jobClient: JobClient,
+    private val redisOperation: RedisOperation,
+    private val repoGray: RepoGray,
+    private val bkRepoClient: BkRepoClient
 ) : IAtomTask<ReportArchiveServiceElement> {
 
     private val regex = Pattern.compile("[,;]")
@@ -86,6 +92,7 @@ class ReportArchiveServiceTaskAtom @Autowired constructor(
         val taskInstanceId = task.taskParams[JOB_TASK_ID]?.toString()?.toLong()
             ?: return if (force) defaultFailAtomResponse else AtomResponse(task.status)
 
+        val userId = task.starter
         val buildId = task.buildId
         val taskId = task.taskId
         val projectId = task.projectId
@@ -94,6 +101,7 @@ class ReportArchiveServiceTaskAtom @Autowired constructor(
 
         val startTime = task.taskParams[BS_ATOM_START_TIME_MILLS].toString().toLong()
         val operator = task.taskParams[STARTER] as String
+        val isRepoGray = repoGray.isGray(projectId, redisOperation)
 
         logger.info("[$buildId]|LOOP|$taskId|JOB_TASK_ID=$taskInstanceId|startTime=$startTime")
         val timeout = getTimeoutMills()
@@ -118,6 +126,8 @@ class ReportArchiveServiceTaskAtom @Autowired constructor(
         val destPath = task.taskParams[TEMP_DEST_PATH] as String
         val fileDirParam = parseVariable(param.fileDir, runVariables)
         recordReportDetail(
+            userId = userId,
+            isRepoGray = isRepoGray,
             param = param,
             runVariables = runVariables,
             destPath = destPath,
@@ -141,6 +151,7 @@ class ReportArchiveServiceTaskAtom @Autowired constructor(
         param: ReportArchiveServiceElement,
         runVariables: Map<String, String>
     ): AtomResponse {
+        val userId = task.starter
         val buildId = task.buildId
         val taskId = task.taskId
         val containerId = task.containerHashId
@@ -166,6 +177,8 @@ class ReportArchiveServiceTaskAtom @Autowired constructor(
         val destPath = "/tmp/$projectId/$pipelineId/$buildId/$taskId/"
 
         val outputVariables = mutableMapOf<String, Any>()
+        val isRepoGray = repoGray.isGray(projectId, redisOperation)
+        LogUtils.addLine(rabbitTemplate, buildId, "use bkrepo: $isRepoGray", taskId, containerId, executeCount)
 
         val localIp = CommonUtils.getInnerIP()
         task.taskParams[BS_TASK_HOST] = localIp
@@ -221,6 +234,8 @@ class ReportArchiveServiceTaskAtom @Autowired constructor(
         }
 
         recordReportDetail(
+            userId = userId,
+            isRepoGray = isRepoGray,
             param = param,
             runVariables = runVariables,
             destPath = destPath,
@@ -240,6 +255,8 @@ class ReportArchiveServiceTaskAtom @Autowired constructor(
     }
 
     private fun recordReportDetail(
+        userId: String,
+        isRepoGray: Boolean,
         param: ReportArchiveServiceElement,
         runVariables: Map<String, String>,
         destPath: String,
@@ -252,6 +269,7 @@ class ReportArchiveServiceTaskAtom @Autowired constructor(
         projectId: String,
         pipelineId: String
     ) {
+
         val indexFileParam = parseVariable(param.indexFile, runVariables)
         val reportNameParam = parseVariable(param.reportName, runVariables)
 
@@ -280,7 +298,8 @@ class ReportArchiveServiceTaskAtom @Autowired constructor(
                 errorType = ErrorType.USER,
                 errorCode = ERROR_BUILD_TASK_IDX_FILE_NOT_EXITS.toInt(),
                 errorMsg = "Index file not exist"
-            ) }
+            )
+        }
         LogUtils.addLine(rabbitTemplate, buildId, "入口文件检测完成", taskId, containerId, executeCount)
 
         var indexFileContent = indexFile.readBytes().toString(Charset.defaultCharset())
@@ -290,9 +309,16 @@ class ReportArchiveServiceTaskAtom @Autowired constructor(
         // 获取项目下的所有文件，并上传到版本仓库
         val allFileList = recursiveGetFiles(localDirFile)
         val count = allFileList.size
-        allFileList.forEach { file ->
-            val relativePath = localDirFilePath.relativize(Paths.get(file.canonicalPath)).toString()
-            upload(projectId, pipelineId, buildId, taskId, relativePath, file)
+        if (isRepoGray) {
+            allFileList.forEach { file ->
+                val relativePath = localDirFilePath.relativize(Paths.get(file.canonicalPath)).toString()
+                bkRepoClient.uploadLocalFile(userId, projectId, "report", "$projectId/$buildId/$taskId/$relativePath", file)
+            }
+        } else {
+            allFileList.forEach { file ->
+                val relativePath = localDirFilePath.relativize(Paths.get(file.canonicalPath)).toString()
+                upload(projectId, pipelineId, buildId, taskId, relativePath, file)
+            }
         }
 
         var reportEmail: ReportEmail? = null
