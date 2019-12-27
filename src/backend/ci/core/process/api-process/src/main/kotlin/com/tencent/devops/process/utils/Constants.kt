@@ -74,9 +74,6 @@ const val PROJECT_NAME_CHINESE = "BK_CI_PROJECT_NAME_CN" // "project.name.chines
 
 const val PIPELINE_START_MOBILE = "BK_CI_IS_MOBILE" // "pipeline.start.isMobile"
 
-const val SUB_PIPELINE_BUILD_STATUS = "BK_CI_SUB_PIPELINE_BUILD_STATUS" // "sub.pipeline.build.status"
-const val SUB_PIPELINE_BUILD_DELETE_REASON = "BK_CI_SUB_PIPELINE_DELETE_REASON" // "sub.pipeline.build.delete.reason"
-
 const val PIPELINE_START_TASK_ID = "BK_CI_START_TASK_ID" // "pipeline.start.task.id"
 const val PIPELINE_RETRY_COUNT = "BK_CI_RETRY_COUNT" // "pipeline.retry.count"
 const val PIPELINE_RETRY_BUILD_ID = "BK_CI_RETRY_BUILD_ID" // "pipeline.retry.build.id"
@@ -157,6 +154,10 @@ object PipelineVarUtil {
      * 以下用于兼容旧参数
      */
     private val oldVarMappingNewVar = mapOf(
+        "repoName" to PIPELINE_REPO_NAME,
+        "pipeline.version" to PIPELINE_VERSION,
+        "pipeline.start.parent.build.task.id" to PIPELINE_START_PARENT_BUILD_TASK_ID,
+        "pipeline.start.parent.build.id" to PIPELINE_START_PARENT_BUILD_ID,
         "majorVersion" to MAJORVERSION,
         "minorVersion" to MINORVERSION,
         "fixVersion" to FIXVERSION,
@@ -187,6 +188,8 @@ object PipelineVarUtil {
         "hookTargetUrl" to PIPELINE_WEBHOOK_TARGET_URL,
         "hookBlock" to PIPELINE_WEBHOOK_BLOCK,
         "hookType" to PIPELINE_WEBHOOK_TYPE,
+        "hookRepo" to PIPELINE_WEBHOOK_REPO,
+        "hookRepoType" to PIPELINE_WEBHOOK_REPO_TYPE,
         "hookEventType" to PIPELINE_WEBHOOK_EVENT_TYPE,
         "bk_hookMergeRequestId" to PIPELINE_WEBHOOK_MR_ID,
         "bk_hookMergeRequest_committer" to PIPELINE_WEBHOOK_MR_COMMITTER,
@@ -210,6 +213,13 @@ object PipelineVarUtil {
     fun fillOldVar(vars: MutableMap<String, String>) {
         turning(newVarMappingOldVar, vars)
         prefixTurning(newPrefixMappingOld, vars)
+    }
+
+    /**
+     * 从新变量前缀的变量中查出并增加旧变量前缀的变量
+     */
+    fun fillOldVarPrefixTurning(vars: MutableMap<String, String>, replace: Boolean = false) {
+        prefixTurning(newPrefixMappingOld, vars, replace)
     }
 
     /**
