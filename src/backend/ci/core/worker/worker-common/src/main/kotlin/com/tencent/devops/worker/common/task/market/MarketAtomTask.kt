@@ -140,7 +140,7 @@ open class MarketAtomTask : ITask() {
             inputMap?.forEach { (name, value) ->
                 // 只有构建机插件才有workspace变量
                 if (buildTask.type == MarketBuildAtomElement.classType) {
-                    atomParams[name] = EnvUtils.parseEnv(value.toString(), systemVariables)
+                    atomParams[name] = EnvUtils.parseEnv(JsonUtil.toJson(value), systemVariables)
                 } else {
                     atomParams[name] = JsonUtil.toJson(value)
                 }
