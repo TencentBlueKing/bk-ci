@@ -40,7 +40,7 @@ data class QueryLineNo(
     @ApiModelProperty("构建ID", required = true)
     val buildId: String,
     @ApiModelProperty("日志列表", required = true)
-    val logs: TreeSet<Long> = TreeSet(),
+    val lines: TreeSet<Long> = TreeSet(),
     @ApiModelProperty("所用时间", required = false)
     var timeUsed: Long = 0,
     @ApiModelProperty("日志查询状态", required = false)
