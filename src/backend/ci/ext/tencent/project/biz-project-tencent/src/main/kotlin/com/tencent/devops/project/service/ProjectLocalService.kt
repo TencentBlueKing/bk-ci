@@ -779,7 +779,13 @@ class ProjectLocalService @Autowired constructor(
         return ProjectUtils.packagingBean(gitCiProject!!, setOf())
     }
 
-    fun createUser2ProjectByUser(createUser: String, userId: String, projectCode: String, roleId: Int?, roleName: String?): Boolean {
+    fun createUser2ProjectByUser(
+        createUser: String,
+        userId: String,
+        projectCode: String,
+        roleId: Int?,
+        roleName: String?
+    ): Boolean {
         logger.info("[createUser2ProjectByUser] createUser[$createUser] userId[$userId] projectCode[$projectCode]")
 
         if (!bkAuthProjectApi.isProjectUser(createUser, bsPipelineAuthServiceCode, projectCode, BkAuthGroup.MANAGER)) {
@@ -849,7 +855,14 @@ class ProjectLocalService @Autowired constructor(
             throw OperationException((MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.USER_NOT_PROJECT_USER)))
         }
 
-        return createPermission(userId, projectId, permission, resourceType, bsPipelineAuthServiceCode, resourceTypeCode)
+        return createPermission(
+            userId,
+            projectId,
+            permission,
+            resourceType,
+            bsPipelineAuthServiceCode,
+            resourceTypeCode
+        )
     }
 
     fun createPipelinePermissionByApp(
@@ -882,14 +895,21 @@ class ProjectLocalService @Autowired constructor(
             throw OperationException((MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.USER_NOT_PROJECT_USER)))
         }
         // TODO:此处bsPipelineAuthServiceCode 也需写成配置化
-        return createPermission(userId, projectId, permission, resourceType, bsPipelineAuthServiceCode, resourceTypeCode)
+        return createPermission(
+            userId,
+            projectId,
+            permission,
+            resourceType,
+            bsPipelineAuthServiceCode,
+            resourceTypeCode
+        )
     }
 
     fun getProjectRole(
         organizationType: String,
         organizationId: Long,
         projectId: String
-    ): List<BKAuthProjectRolesResources>{
+    ): List<BKAuthProjectRolesResources> {
         logger.info("[getProjectRole] organizationType[$organizationType], organizationId[$organizationId] projectCode[$projectId]")
         val projectList = getProjectListByOrg("", organizationType, organizationId)
         if (projectList.isEmpty()) {
@@ -900,7 +920,7 @@ class ProjectLocalService @Autowired constructor(
             logger.error("organizationType[$organizationType] :organizationId[$organizationId]  not project[$projectId] permission ")
             throw OperationException((MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.ORG_NOT_PROJECT)))
         }
-        var queryProject :ProjectVO? = null
+        var queryProject: ProjectVO? = null
         projectList.forEach { project ->
             if (project.projectCode == projectId) {
                 queryProject = project
@@ -908,8 +928,12 @@ class ProjectLocalService @Autowired constructor(
             }
         }
         var roles = mutableListOf<BKAuthProjectRolesResources>()
-        if(queryProject != null){
-            roles = bkAuthProjectApi.getProjectRoles(bsPipelineAuthServiceCode, queryProject!!.englishName, queryProject!!.projectId)
+        if (queryProject != null) {
+            roles = bkAuthProjectApi.getProjectRoles(
+                bsPipelineAuthServiceCode,
+                queryProject!!.englishName,
+                queryProject!!.projectId
+            ).toMutableList()
         }
         return roles
     }
@@ -946,30 +970,35 @@ class ProjectLocalService @Autowired constructor(
         val roleList = bkAuthProjectApi.getProjectRoles(bsPipelineAuthServiceCode, projectId, projectInfo.englishName)
         var authRoleId: String? = null
         roleList.forEach {
-            if(roleId == null || roleName.isNullOrEmpty()){
+            if (roleId == null || roleName.isNullOrEmpty()) {
                 if (it.roleName == BkAuthGroup.DEVELOPER.value) {
                     authRoleId = it.roleId.toString()
                     return@forEach
                 }
             }
-            if(roleId != null){
-                if(it.roleId == roleId){
+            if (roleId != null) {
+                if (it.roleId == roleId) {
                     authRoleId = it.roleId.toString()
                     return@forEach
                 }
             }
-            if(roleName != null){
-                if(it.roleName == roleName){
+            if (roleName != null) {
+                if (it.roleName == roleName) {
                     authRoleId = it.roleId.toString()
                     return@forEach
                 }
             }
 
         }
-        return bkAuthProjectApi.createProjectUser(userId, bsPipelineAuthServiceCode, projectInfo.projectId, authRoleId!!)
+        return bkAuthProjectApi.createProjectUser(
+            userId,
+            bsPipelineAuthServiceCode,
+            projectInfo.projectId,
+            authRoleId!!
+        )
     }
 
-    private fun getProjectListByOrg(userId: String, organizationType: String, organizationId: Long): List<ProjectVO>{
+    private fun getProjectListByOrg(userId: String, organizationType: String, organizationId: Long): List<ProjectVO> {
         var bgId: Long? = null
         var deptId: Long? = null
         var centerId: Long? = null
