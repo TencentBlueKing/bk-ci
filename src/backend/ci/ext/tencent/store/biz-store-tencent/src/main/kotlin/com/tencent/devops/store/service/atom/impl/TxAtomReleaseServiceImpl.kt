@@ -66,6 +66,7 @@ import com.tencent.devops.store.pojo.atom.MarketAtomCreateRequest
 import com.tencent.devops.store.pojo.atom.MarketAtomUpdateRequest
 import com.tencent.devops.store.pojo.atom.enums.AtomPackageSourceTypeEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
+import com.tencent.devops.store.pojo.common.BK_FRONTEND_DIR_NAME
 import com.tencent.devops.store.pojo.common.ReleaseProcessItem
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.atom.TxAtomReleaseService
@@ -211,7 +212,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
             val repositoryTreeInfoList = repositoryTreeInfoResult.data
             var flag = false
             repositoryTreeInfoList?.forEach {
-                if(it.name=="bk-frontend" && it.type == "tree") {
+                if (it.name == BK_FRONTEND_DIR_NAME && it.type == "tree") {
                     flag = true
                     return@forEach
                 }
@@ -219,7 +220,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
             if (!flag) {
                 return MessageCodeUtil.generateResponseDataObject(
                     StoreMessageCode.USER_REPOSITORY_BK_FRONTEND_DIR_IS_NULL,
-                    arrayOf("bk-frontend"),
+                    arrayOf(BK_FRONTEND_DIR_NAME),
                     false
                 )
             }

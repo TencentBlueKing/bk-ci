@@ -63,6 +63,7 @@ import com.tencent.devops.scm.config.GitConfig
 import com.tencent.devops.scm.exception.ScmException
 import com.tencent.devops.scm.pojo.CommitCheckRequest
 import com.tencent.devops.scm.pojo.GitRepositoryResp
+import com.tencent.devops.store.pojo.common.BK_FRONTEND_DIR_NAME
 import okhttp3.MediaType
 import okhttp3.Request
 import okhttp3.RequestBody
@@ -535,7 +536,7 @@ class GitService @Autowired constructor(
             }
             // 如果用户选的是自定义UI方式开发插件，则需要初始化UI开发脚手架
             if(FrontendTypeEnum.SPECIAL == frontendType) {
-                val atomFrontendFileDir = File(atomFileDir, "bk-frontend")
+                val atomFrontendFileDir = File(atomFileDir, BK_FRONTEND_DIR_NAME)
                 if (!atomFrontendFileDir.exists()){
                     atomFrontendFileDir.mkdirs()
                 }
