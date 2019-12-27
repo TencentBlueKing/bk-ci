@@ -27,12 +27,7 @@
 package com.tencent.devops.log.service
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.log.model.pojo.EndPageQueryLogs
-import com.tencent.devops.log.model.pojo.LogBatchEvent
-import com.tencent.devops.log.model.pojo.LogEvent
-import com.tencent.devops.log.model.pojo.LogStatusEvent
-import com.tencent.devops.log.model.pojo.PageQueryLogs
-import com.tencent.devops.log.model.pojo.QueryLogs
+import com.tencent.devops.log.model.pojo.*
 import com.tencent.devops.log.service.v2.LogServiceV2
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -57,6 +52,26 @@ class LogServiceDispatcher @Autowired constructor(
             logServiceV2.queryInitLogs(
                 buildId,
                 isAnalysis ?: false,
+                queryKeywords,
+                tag,
+                jobId,
+                executeCount
+            )
+        )
+    }
+
+    fun getLineNoByKeywords(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        queryKeywords: String,
+        tag: String?,
+        jobId: String?,
+        executeCount: Int?
+    ): Result<QueryLineNo> {
+        return Result(
+            logServiceV2.queryLineNoByKeywords(
+                buildId,
                 queryKeywords,
                 tag,
                 jobId,
