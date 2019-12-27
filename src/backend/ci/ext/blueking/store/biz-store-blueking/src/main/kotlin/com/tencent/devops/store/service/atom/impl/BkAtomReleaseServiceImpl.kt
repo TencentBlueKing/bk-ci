@@ -40,6 +40,7 @@ import com.tencent.devops.common.api.constant.UNDO
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.store.pojo.atom.MarketAtomCreateRequest
+import com.tencent.devops.store.pojo.atom.MarketAtomUpdateRequest
 import com.tencent.devops.store.pojo.atom.enums.AtomPackageSourceTypeEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.common.ReleaseProcessItem
@@ -80,6 +81,14 @@ class BkAtomReleaseServiceImpl : BkAtomReleaseService, AtomReleaseServiceImpl() 
     }
 
     override fun asyncHandleUpdateAtom(context: DSLContext, atomId: String, userId: String) {
+    }
+
+    override fun validateUpdateMarketAtomReq(
+        userId: String,
+        marketAtomUpdateRequest: MarketAtomUpdateRequest
+    ): Result<Boolean> {
+        // 企业版升级插件暂无特殊参数需要校验
+        return Result(true)
     }
 
     override fun handleProcessInfo(isNormalUpgrade: Boolean, status: Int): List<ReleaseProcessItem> {

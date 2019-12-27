@@ -41,6 +41,7 @@ import com.tencent.devops.repository.pojo.git.UpdateGitProjectInfo
 import com.tencent.devops.repository.service.RepoFileService
 import com.tencent.devops.repository.service.RepositoryService
 import com.tencent.devops.repository.service.RepositoryUserService
+import com.tencent.devops.scm.pojo.GitRepositoryDirItem
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -103,5 +104,21 @@ class ServiceGitRepositoryResourceImpl @Autowired constructor(
     override fun delete(userId: String, projectId: String, repositoryHashId: String): Result<Boolean> {
         repositoryService.userDelete(userId, projectId, repositoryHashId)
         return Result(true)
+    }
+
+    override fun getGitRepositoryTreeInfo(
+        userId: String,
+        repoId: String,
+        refName: String?,
+        path: String?,
+        tokenType: TokenTypeEnum
+    ): Result<List<GitRepositoryDirItem>?> {
+        return repositoryService.getGitRepositoryTreeInfo(
+            userId = userId,
+            repositoryConfig = RepositoryConfigUtils.buildConfig(repoId, null),
+            refName = refName,
+            path = path,
+            tokenType = tokenType
+        )
     }
 }
