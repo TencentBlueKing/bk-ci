@@ -143,7 +143,6 @@ class ProjectPaasCCService @Autowired constructor(
                 return result.data
             }
             logger.warn("Fail to get Project in paas cc with response $responseContent")
-            throw OperationException("获取PAASCC 项目失败")
         }
         return result.data
     }
