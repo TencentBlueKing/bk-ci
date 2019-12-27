@@ -35,6 +35,7 @@ import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.log.api.UserLogResource
+import com.tencent.devops.log.model.pojo.QueryLineNo
 import com.tencent.devops.log.model.pojo.QueryLogs
 import com.tencent.devops.log.service.LogServiceDispatcher
 import org.springframework.beans.factory.annotation.Autowired
@@ -65,6 +66,21 @@ class UserLogResourceImpl @Autowired constructor(
 
         validateAuth(userId, projectId, pipelineId, buildId)
         return logDispatcher.getInitLogs(projectId, pipelineId, buildId, isAnalysis, queryKeywords, tag, jobId, executeCount)
+    }
+
+    override fun getLineNoByKeywords(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        queryKeywords: String,
+        tag: String?,
+        jobId: String?,
+        executeCount: Int?
+    ): Result<QueryLineNo> {
+
+        validateAuth(userId, projectId, pipelineId, buildId)
+        return logDispatcher.getLineNoByKeywords(projectId, pipelineId, buildId, queryKeywords, tag, jobId, executeCount)
     }
 
     override fun getMoreLogs(
