@@ -27,6 +27,7 @@
 package com.tencent.devops.log.configuration
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ.EXCHANGE_LOG_BATCH_BUILD_EVENT
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ.EXCHANGE_LOG_BUILD_EVENT
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ.QUEUE_LOG_BATCH_BUILD_EVENT
@@ -34,10 +35,12 @@ import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ.QUEUE_LOG_BUILD
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ.ROUTE_LOG_BATCH_BUILD_EVENT
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ.ROUTE_LOG_BUILD_EVENT
 import com.tencent.devops.log.mq.LogListener
+import com.tencent.devops.log.service.v2.LogServiceV2
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.core.Binding
 import org.springframework.amqp.core.BindingBuilder
 import org.springframework.amqp.core.DirectExchange
+import org.springframework.amqp.core.FanoutExchange
 import org.springframework.amqp.core.Queue
 import org.springframework.amqp.rabbit.connection.ConnectionFactory
 import org.springframework.amqp.rabbit.core.RabbitAdmin
@@ -143,6 +146,47 @@ class LogMQConfiguration @Autowired constructor() {
         messageListenerAdapter.setMessageConverter(messageConverter)
         container.messageListener = messageListenerAdapter
         logger.info("Start log batch event listener")
+        return container
+    }
+
+    /**
+     * 构建结束广播交换机
+     */
+    @Bean
+    fun pipelineBuildFinishFanoutExchange(): FanoutExchange {
+        val fanoutExchange = FanoutExchange(MQ.EXCHANGE_PIPELINE_BUILD_FINISH_FANOUT, true, false)
+        fanoutExchange.isDelayed = true
+        return fanoutExchange
+    }
+
+    @Bean
+    fun pipelineBuildFinishQueue() = Queue(MQ.QUEUE_PIPELINE_BUILD_FINISH_LOG)
+
+    @Bean
+    fun pipelineBuildFinishQueueBind(
+        @Autowired pipelineBuildFinishQueue: Queue,
+        @Autowired pipelineBuildFinishFanoutExchange: FanoutExchange
+    ): Binding {
+        return BindingBuilder.bind(pipelineBuildFinishQueue).to(pipelineBuildFinishFanoutExchange)
+    }
+
+    @Bean
+    fun pipelineBuildFinishListenerContainer(
+        @Autowired connectionFactory: ConnectionFactory,
+        @Autowired pipelineBuildFinishQueue: Queue,
+        @Autowired rabbitAdmin: RabbitAdmin,
+        @Autowired logServiceV2: LogServiceV2,
+        @Autowired messageConverter: Jackson2JsonMessageConverter
+    ): SimpleMessageListenerContainer {
+        val container = SimpleMessageListenerContainer(connectionFactory)
+        container.setQueueNames(pipelineBuildFinishQueue.name)
+        container.setConcurrentConsumers(1)
+        container.setMaxConcurrentConsumers(1)
+        container.setRabbitAdmin(rabbitAdmin)
+
+        val adapter = MessageListenerAdapter(logServiceV2, logServiceV2::pipelineFinish.name)
+        adapter.setMessageConverter(messageConverter)
+        container.messageListener = adapter
         return container
     }
 
