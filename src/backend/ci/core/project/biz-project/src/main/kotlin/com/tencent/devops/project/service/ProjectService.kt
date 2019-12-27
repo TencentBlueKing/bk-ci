@@ -75,6 +75,8 @@ interface ProjectService {
 
     fun list(projectCodes: Set<String>): List<ProjectVO>
 
+    fun listOnlyByProjectCode(projectCodes: Set<String>): List<ProjectVO>
+
     fun list(projectCodes: List<String>): List<ProjectVO>
 
     fun getAllProject(): List<ProjectVO>

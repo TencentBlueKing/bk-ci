@@ -135,11 +135,10 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 // 注册项目到权限中心
                 projectPermissionService.createResources(
                     userId = userId,
-                    projectList = listOf(
-                        ResourceRegisterInfo(
-                            projectCreateInfo.englishName,
-                            projectCreateInfo.projectName
-                        )
+                    accessToken = "",
+                    resourceRegisterInfo = ResourceRegisterInfo(
+                        projectCreateInfo.englishName,
+                        projectCreateInfo.projectName
                     )
                 )
             } catch (e: Exception) {
@@ -263,6 +262,25 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         }
     }
 
+    override fun listOnlyByProjectCode(projectCodes: Set<String>): List<ProjectVO> {
+        val startEpoch = System.currentTimeMillis()
+        var success = false
+        try {
+            val list = ArrayList<ProjectVO>()
+
+            val grayProjectSet = grayProjectSet()
+
+            projectDao.listByCodes(dslContext, projectCodes).map {
+                list.add(ProjectUtils.packagingBean(it, grayProjectSet))
+            }
+            success = true
+            return list
+        } finally {
+            projectJmxApi.execute(PROJECT_LIST, System.currentTimeMillis() - startEpoch, success)
+            logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to list projects")
+        }
+    }
+
     /**
      * 根据有序projectCode列表获取有序项目信息列表
      * 不过滤已删除项目，调用业务端根据enable过滤
@@ -303,6 +321,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to list projects")
         }
     }
+
     /**
      * 获取用户已的可访问项目列表
      */
