@@ -31,7 +31,6 @@ import com.tencent.devops.project.api.pojo.PipelinePermissionInfo
 import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
 import com.tencent.devops.project.pojo.ProjectCreateUserDTO
 import com.tencent.devops.project.pojo.ProjectVO
-import com.tencent.devops.project.pojo.Result
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 

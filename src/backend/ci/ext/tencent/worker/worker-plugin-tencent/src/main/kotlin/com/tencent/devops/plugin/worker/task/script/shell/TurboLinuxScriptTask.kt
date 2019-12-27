@@ -27,7 +27,6 @@
 package com.tencent.devops.plugin.worker.task.script.shell
 
 import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxScriptElement
-import com.tencent.devops.worker.common.CommonEnv
 import com.tencent.devops.worker.common.task.TaskClassType
 import com.tencent.devops.worker.common.task.script.ScriptTask
 

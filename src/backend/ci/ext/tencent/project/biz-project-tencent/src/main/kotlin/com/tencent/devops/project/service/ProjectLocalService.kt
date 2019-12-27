@@ -988,7 +988,6 @@ class ProjectLocalService @Autowired constructor(
                     return@forEach
                 }
             }
-
         }
         return bkAuthProjectApi.createProjectUser(
             userId,

@@ -10,7 +10,6 @@ import com.tencent.devops.project.pojo.mq.ProjectUpdateBroadCastEvent
 import com.tencent.devops.project.pojo.mq.ProjectUpdateLogoBroadCastEvent
 import com.tencent.devops.project.service.ProjectPaasCCService
 import com.tencent.devops.project.service.impl.AbsOpProjectServiceImpl.Companion.logger
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
@@ -38,8 +37,7 @@ class ProjectEventListener @Autowired constructor(
                     onReceiveProjectUpdateLogo(event)
                 }
             }
-        }
-        catch (ex: Exception){
+        } catch (ex: Exception) {
             logger.error("project listener execute error", ex)
         }
     }
@@ -78,5 +76,4 @@ class ProjectEventListener @Autowired constructor(
             projectUpdateLogoInfo = projectUpdateLogoInfo
         )
     }
-
 }
