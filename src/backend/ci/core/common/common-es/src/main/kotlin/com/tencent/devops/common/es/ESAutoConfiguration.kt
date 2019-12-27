@@ -63,7 +63,7 @@ class ESAutoConfiguration {
             throw IllegalArgumentException("ES集群端口尚未配置")
         }
         if (cluster == null || cluster!!.isBlank()) {
-            throw  IllegalArgumentException("ES集群名称尚未配置")
+            throw IllegalArgumentException("ES集群名称尚未配置")
         }
         val settings = Settings.builder().put("cluster.name", cluster).build()
         val ips = ip!!.split(",".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
