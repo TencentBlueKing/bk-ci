@@ -28,6 +28,7 @@ package com.tencent.devops.log.service.v2
 
 import com.google.common.cache.CacheBuilder
 import com.tencent.devops.common.api.pojo.Page
+import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.log.jmx.v2.CreateIndexBeanV2
@@ -96,6 +97,13 @@ class LogServiceV2 @Autowired constructor(
         .maximumSize(100000)
         .expireAfterAccess(30, TimeUnit.MINUTES)
         .build<String/*BuildId*/, Boolean/*Has create the index*/>()
+
+    fun pipelineFinish(event: PipelineBuildFinishBroadCastEvent) {
+        with(event) {
+            logger.info("[$projectId|$pipelineId|$buildId] build finish")
+            indexServiceV2.flushLineNum2DB(buildId)
+        }
+    }
 
     fun addLogEvent(event: LogEvent) {
         startLog(event.buildId)

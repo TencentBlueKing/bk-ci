@@ -260,6 +260,7 @@ open class MarketAtomTask : ITask() {
                     }
                     command.append("\r\n${atomData.target.replace("\$bk_java_path", "%bk_java_path%")}\r\n")
                     BatScriptUtil.execute(
+                        buildTask.buildId,
                         command.toString(),
                         environment,
                         atomWorkspace
@@ -273,6 +274,7 @@ open class MarketAtomTask : ITask() {
                     }
                     command.append("\n${atomData.target}\n")
                     ShellUtil.execute(
+                        buildTask.buildId,
                         command.toString(),
                         atomWorkspace,
                         buildVariables.buildEnvs,
@@ -284,8 +286,20 @@ open class MarketAtomTask : ITask() {
             error = e
         } finally {
             output(buildTask, atomWorkspace, buildVariables, outputTemplate, namespace, atomCode)
-            if (error != null)
-                throw error
+            if (error != null) {
+                val defaultMessage = StringBuilder("Market atom env load exit with StackTrace:\n")
+                defaultMessage.append(error.toString())
+                error.stackTrace.forEach {
+                    with(it) {
+                        defaultMessage.append("\n    at $className.$methodName($fileName:$lineNumber)")
+                    }
+                }
+                throw TaskExecuteException(
+                    errorType = ErrorType.USER,
+                    errorCode = AtomErrorCode.USER_RESOURCE_NOT_FOUND,
+                    errorMsg = defaultMessage.toString()
+                )
+            }
         }
     }
 
