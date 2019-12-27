@@ -1,5 +1,6 @@
 package com.tencent.devops.process.api.user
 
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.pojo.Result
@@ -9,6 +10,7 @@ import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
 import com.tencent.devops.common.pipeline.event.CallBackEvent
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.service.ProjectPipelineCallBackService
 import com.tencent.devops.process.pojo.ProjectPipelineCallBack
 import com.tencent.devops.process.pojo.pipeline.enums.CallBackNetWorkRegionType
@@ -43,13 +45,13 @@ class UserCallBackResourceImpl @Autowired constructor(
         // 验证用户是否为管理员
         if (!bkAuthProjectApi.isProjectUser(userId, bsPipelineAuthServiceCode, projectId, BkAuthGroup.MANAGER)) {
             logger.info("create Project callback createUser is not project manager,createUser[$userId] projectId[$projectId]")
-            throw OperationException((MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.NOT_MANAGER)))
+            throw ErrorCodeException(defaultMessage = "用户非${projectId}项目管理员", errorCode = ProcessMessageCode.USER_NEED_PROJECT_X_PERMISSION)
         }
         // 验证url的合法性
         val regex = Regex("(https?|ftp|file)://[-A-Za-z0-9+&@#/%?=~_|!:,.;]+[-A-Za-z0-9+&@#/%=~_|]", RegexOption.IGNORE_CASE)
         val regexResult = url.matches(regex)
         if (!regexResult) {
-            throw InvalidParamException("URL param is invalid.")
+            throw ErrorCodeException(defaultMessage = "回调url非法", errorCode = ProcessMessageCode.ERROR_CALLBACK_URL_INVALID)
         }
         val encodeUrl = URLEncoder.encode(url, "UTF-8")
         val callBackUrl = when (region) {
