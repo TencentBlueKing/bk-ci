@@ -37,7 +37,6 @@ import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.script.CommonScriptUtils
-import com.tencent.devops.common.pipeline.NameAndValue
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.repository.pojo.enums.GitAccessLevelEnum
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
@@ -498,7 +497,7 @@ class GitService @Autowired constructor(
                 val deleteFlag = taskJsonFile.delete()
                 if (deleteFlag) {
                     taskJsonFile.createNewFile()
-                    taskJsonFile.writeText(JsonUtil.toJson(taskJsonMap),Charset.forName("UTF-8"))
+                    taskJsonFile.writeText(JsonUtil.toJson(taskJsonMap), Charset.forName("UTF-8"))
                 }
             }
             // 3、重新生成git信息
@@ -657,7 +656,6 @@ class GitService @Autowired constructor(
         }
     }
 
-
     fun getGitUserInfo(userId: String, token: String, tokenType: TokenTypeEnum): Result<GitUserInfo?> {
         logger.info("getGitUserInfo token is:$token, userId is:$userId,tokenType is:$tokenType")
         val url = StringBuilder("${gitConfig.gitApiUrl}/users/$userId")
@@ -711,10 +709,10 @@ class GitService @Autowired constructor(
         val encodeProjectName = URLEncoder.encode(repoName, "utf-8") // 为代码库名称字段encode
         val url = StringBuilder("${gitConfig.gitApiUrl}/projects/$encodeProjectName/repository/tree")
         setToken(tokenType, url, token)
-        if (!refName.isNullOrBlank()){
+        if (!refName.isNullOrBlank()) {
             url.append("&ref_name=$refName")
         }
-        if (!path.isNullOrBlank()){
+        if (!path.isNullOrBlank()) {
             url.append("&path=$path")
         }
         val request = Request.Builder()
@@ -725,10 +723,17 @@ class GitService @Autowired constructor(
             val data = it.body()!!.string()
             logger.info("getGitRepositoryTreeInfo token is:$token, response>> $data")
             if (!StringUtils.isEmpty(data)) {
-                val dataMap = JsonUtil.toMap(data)
-                val message = dataMap["message"]
-                if (StringUtils.isEmpty(message)) {
-                    return Result(JsonUtil.to(data, object : TypeReference<List<GitRepositoryDirItem>>() {}))
+                var message: String? = null
+                if (data.contains("\"message\":")) {
+                    val dataMap = JsonUtil.toMap(data)
+                    message = dataMap["message"] as? String
+                }
+                return if (StringUtils.isEmpty(message)) {
+                    Result(JsonUtil.to(data, object : TypeReference<List<GitRepositoryDirItem>>() {}))
+                } else {
+                    val result: Result<String?> = MessageCodeUtil.generateResponseDataObject(RepositoryMessageCode.GIT_REPO_PEM_FAIL)
+                    // 把工蜂的错误提示抛出去
+                    Result(result.status, "${result.message}（git error:$message）")
                 }
             }
             return Result(data = null)
