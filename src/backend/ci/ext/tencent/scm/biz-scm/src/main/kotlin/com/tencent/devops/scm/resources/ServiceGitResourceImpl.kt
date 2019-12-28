@@ -44,6 +44,7 @@ import com.tencent.devops.scm.api.ServiceGitResource
 import com.tencent.devops.scm.code.git.api.GitBranch
 import com.tencent.devops.scm.code.git.api.GitTag
 import com.tencent.devops.scm.pojo.CommitCheckRequest
+import com.tencent.devops.scm.pojo.GitRepositoryDirItem
 import com.tencent.devops.scm.pojo.GitRepositoryResp
 import com.tencent.devops.scm.services.GitService
 import org.springframework.beans.factory.annotation.Autowired
@@ -105,6 +106,24 @@ class ServiceGitResourceImpl @Autowired constructor(
             visibilityLevel = visibilityLevel,
             tokenType = tokenType,
             frontendType = frontendType
+        )
+    }
+
+    override fun getGitRepositoryTreeInfo(
+        userId: String,
+        repoName: String,
+        refName: String?,
+        path: String?,
+        token: String,
+        tokenType: TokenTypeEnum
+    ): Result<List<GitRepositoryDirItem>?> {
+        return gitService.getGitRepositoryTreeInfo(
+            userId = userId,
+            repoName = repoName,
+            refName = refName,
+            path = path,
+            token = token,
+            tokenType = tokenType
         )
     }
 

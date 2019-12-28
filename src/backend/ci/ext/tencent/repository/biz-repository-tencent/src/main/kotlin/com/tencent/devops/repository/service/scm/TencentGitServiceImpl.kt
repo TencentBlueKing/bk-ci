@@ -191,7 +191,14 @@ class TencentGitServiceImpl @Autowired constructor(val client: Client) : IGitSer
         token: String,
         tokenType: TokenTypeEnum
     ): Result<List<GitRepositoryDirItem>?> {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        return client.getScm(ServiceGitResource::class).getGitRepositoryTreeInfo(
+            userId = userId,
+            repoName = repoName,
+            refName = refName,
+            path = path,
+            token = token,
+            tokenType = tokenType
+        )
     }
 
     override fun moveProjectToGroup(

@@ -207,7 +207,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
             )
             logger.info("the repositoryTreeInfoResult is :$repositoryTreeInfoResult")
             if (repositoryTreeInfoResult.isNotOk()) {
-                return Result(repositoryTreeInfoResult.status, repositoryTreeInfoResult.message, null)
+                return Result(repositoryTreeInfoResult.status, repositoryTreeInfoResult.message, false)
             }
             val repositoryTreeInfoList = repositoryTreeInfoResult.data
             var flag = false

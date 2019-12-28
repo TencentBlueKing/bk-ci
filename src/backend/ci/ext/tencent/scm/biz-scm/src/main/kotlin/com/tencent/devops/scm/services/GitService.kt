@@ -26,6 +26,7 @@
 
 package com.tencent.devops.scm.services
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.google.gson.JsonParser
 import com.tencent.devops.common.api.constant.CommonMessageCode
@@ -62,6 +63,7 @@ import com.tencent.devops.scm.code.git.api.GitTagCommit
 import com.tencent.devops.scm.config.GitConfig
 import com.tencent.devops.scm.exception.ScmException
 import com.tencent.devops.scm.pojo.CommitCheckRequest
+import com.tencent.devops.scm.pojo.GitRepositoryDirItem
 import com.tencent.devops.scm.pojo.GitRepositoryResp
 import com.tencent.devops.store.pojo.common.BK_FRONTEND_DIR_NAME
 import okhttp3.MediaType
@@ -535,9 +537,9 @@ class GitService @Autowired constructor(
                 FileSystemUtils.deleteRecursively(atomGitFileDir)
             }
             // 如果用户选的是自定义UI方式开发插件，则需要初始化UI开发脚手架
-            if(FrontendTypeEnum.SPECIAL == frontendType) {
+            if (FrontendTypeEnum.SPECIAL == frontendType) {
                 val atomFrontendFileDir = File(atomFileDir, BK_FRONTEND_DIR_NAME)
-                if (!atomFrontendFileDir.exists()){
+                if (!atomFrontendFileDir.exists()) {
                     atomFrontendFileDir.mkdirs()
                 }
                 CommonScriptUtils.execute("git clone ${credentialSetter.getCredentialUrl(gitConfig.frontendSampleProjectUrl)}", atomFrontendFileDir)
@@ -734,6 +736,47 @@ class GitService @Autowired constructor(
             logger.info("GitProjectInfo token is:$token, response>> $data")
             if (!it.isSuccessful) return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
             return Result(JsonUtil.to(data, GitProjectInfo::class.java))
+        }
+    }
+
+    fun getGitRepositoryTreeInfo(
+        userId: String,
+        repoName: String,
+        refName: String?,
+        path: String?,
+        token: String,
+        tokenType: TokenTypeEnum
+    ): Result<List<GitRepositoryDirItem>?> {
+        logger.info("getGitRepositoryTreeInfo userId is:$userId,repoName is:$repoName,refName is:$refName")
+        logger.info("getGitRepositoryTreeInfo path is:$path,token is:$token,tokenType is:$tokenType")
+        val encodeProjectName = URLEncoder.encode(repoName, "utf-8") // 为代码库名称字段encode
+        val url = StringBuilder("${gitConfig.gitApiUrl}/projects/$encodeProjectName/repository/tree")
+        setToken(tokenType, url, token)
+        if (!refName.isNullOrBlank()) {
+            url.append("&ref_name=$refName")
+        }
+        if (!path.isNullOrBlank()) {
+            url.append("&path=$path")
+        }
+        val request = Request.Builder()
+            .url(url.toString())
+            .get()
+            .build()
+        OkhttpUtils.doHttp(request).use {
+            val data = it.body()!!.string()
+            logger.info("getGitRepositoryTreeInfo token is:$token, response>> $data")
+            if (!StringUtils.isEmpty(data)) {
+                val dataMap = JsonUtil.toMap(data)
+                val message = dataMap["message"]
+                return if (StringUtils.isEmpty(message)) {
+                    Result(JsonUtil.to(data, object : TypeReference<List<GitRepositoryDirItem>>() {}))
+                } else {
+                    val result: Result<String?> = MessageCodeUtil.generateResponseDataObject(RepositoryMessageCode.GIT_REPO_PEM_FAIL)
+                    // 把工蜂的错误提示抛出去
+                    Result(result.status, "${result.message}（git error:$message）")
+                }
+            }
+            return Result(data = null)
         }
     }
 
