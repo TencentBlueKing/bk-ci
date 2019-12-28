@@ -244,7 +244,7 @@ class ArtifactoryDownloadService @Autowired constructor(
             if (it.startsWith("g_")) throw BadRequestException("Invalid download users")
         }
 
-        val emailNotifyMessage = makeEmailNotifyMessage(title, body, receivers)
+        val emailNotifyMessage = EmailUtil.makeEmailNotifyMessage(title, body, receivers)
         client.get(ServiceNotifyResource::class).sendEmailNotify(emailNotifyMessage)
     }
 
@@ -322,15 +322,6 @@ class ArtifactoryDownloadService @Autowired constructor(
             JFrogUtil.getRealPath(targetProjectId, artifactoryType, it.fullPath)
         }
         return jFrogApiService.batchThirdPartyDownloadUrl(filePathList, ttl ?: 24 * 3600).map { it.value }
-    }
-
-    private fun makeEmailNotifyMessage(title: String, body: String, receivers: Set<String>): EmailNotifyMessage {
-        val emailNotifyMessage = EmailNotifyMessage()
-        emailNotifyMessage.addAllReceivers(receivers)
-        emailNotifyMessage.title = title
-        emailNotifyMessage.body = body
-        emailNotifyMessage.format = EnumEmailFormat.HTML
-        return emailNotifyMessage
     }
 
     companion object {

@@ -43,8 +43,11 @@ import com.tencent.bkrepo.repository.pojo.node.user.UserNodeRenameRequest
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.archive.pojo.ArtifactorySearchParam
 import com.tencent.devops.common.archive.pojo.BkRepoData
 import com.tencent.devops.common.archive.pojo.BkRepoFile
+import com.tencent.devops.common.archive.pojo.CreateShareUriRequest
+import com.tencent.devops.common.archive.pojo.CreateShareUriResponse
 import com.tencent.devops.common.service.config.CommonConfig
 import okhttp3.MediaType
 import okhttp3.Request
@@ -476,6 +479,23 @@ class BkRepoClient @Autowired constructor(
         return result
     }
 
+    fun getFileDownloadUrl(param: ArtifactorySearchParam): List<String> {
+        logger.info("getFileDownloadUrl, param: $param")
+        val repoName = if(param.custom) "custom" else "pipeline"
+        val files = matchBkRepoFile(
+            "",
+            param.regexPath,
+            param.projectId,
+            param.pipelineId,
+            param.buildId,
+            param.custom
+        )
+        logger.info("match files: $files")
+        return files.map {
+            "${getGatewaytUrl()}/bkrepo/api/service/generic/${param.projectId}/$repoName${it.fullPath}"
+        }
+    }
+
     private fun getAllBkRepoFiles(userId: String, projectId: String, pipelineId: String, buildId: String, isCustom: Boolean): BkRepoData {
         logger.info("getAllBkrepoFiles, projectId: $projectId, pipelineId: $pipelineId, buildId: $buildId, isCustom: $isCustom")
         var url = if (isCustom) {
@@ -592,18 +612,46 @@ class BkRepoClient @Autowired constructor(
         return destFiles
     }
 
-    fun externalDownloadUrl(
+    fun createShareUri(
         userId: String,
         projectId: String,
         repoName: String,
-        path: String,
-        downloadUser: String,
-        ttl: Int,
-        directed: Boolean = false
-    ): String {
-        logger.info("externalDownloadUrl, userId: $userId, projectId: $projectId, repoName: $repoName, path: $path, " +
-            "downloadUser: $downloadUser, ttl: $ttl, directed: $directed")
-        throw OperationException("TODO")
+        fullPath: String,
+        downloadUsers: List<String>,
+        downloadIps: List<String>,
+        timeoutInSeconds: Long
+    ): String{
+        val url = "${getGatewaytUrl()}/bkrepo/api/service/repository/api/share/$projectId/$repoName/${fullPath.removePrefix("/")}"
+        val requestData = CreateShareUriRequest(
+            authorizedUserList = downloadUsers,
+            authorizedIpList = downloadIps,
+            expireSeconds = timeoutInSeconds
+        )
+        val requestBody = objectMapper.writeValueAsString(requestData)
+        val request = Request.Builder()
+            .url(url)
+            // .header("Authorization", makeCredential())
+            .header(AUTH_HEADER_USER_ID, userId)
+            .post(
+                RequestBody.create(
+                    MediaType.parse("application/json; charset=utf-8"),
+                    objectMapper.writeValueAsString(requestData)
+                )
+            ).build()
+        OkhttpUtils.doHttp(request).use { response ->
+            val responseContent = response.body()!!.string()
+            if (!response.isSuccessful) {
+                logger.error("create share uri failed, requestBody: $requestBody, responseContent: $responseContent")
+                throw RuntimeException("create share uri failed")
+            }
+
+            val responseData = objectMapper.readValue<Response<CreateShareUriResponse>>(responseContent)
+            if (responseData.isNotOk()) {
+                throw RuntimeException("create share uri failed: ${responseData.message}")
+            }
+
+            return responseData.data!!.shareUrl
+        }
     }
 
     companion object {

@@ -377,9 +377,7 @@ class BkRepoService @Autowired constructor(
     }
 
     fun getFileDownloadUrl(param: ArtifactorySearchParam): List<String> {
-        logger.info("getFileDownloadUrl, param: $param")
-        // todo
-        throw OperationException("not implemented")
+        return bkRepoClient.getFileDownloadUrl(param)
     }
 
     fun externalDownloadUrl(
@@ -392,16 +390,21 @@ class BkRepoService @Autowired constructor(
     ): String {
         logger.info("externalDownloadUrl, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType, " +
             "path: $path, ttl: $ttl, directed: $directed")
-
-        return bkRepoClient.externalDownloadUrl(
+        val fullPath = if (path.endsWith(".ipa") && directed == false) {
+            path.replace(".ipa", ".plist")
+        } else {
+            path
+        }
+        val shareUri = bkRepoClient.createShareUri(
             userId = userId,
             projectId = projectId,
             repoName = RepoUtils.getRepoByType(artifactoryType),
-            path = path,
-            downloadUser = userId,
-            ttl = ttl,
-            directed = directed
+            fullPath = fullPath,
+            downloadUsers = listOf(),
+            downloadIps = listOf(),
+            timeoutInSeconds = ttl.toLong()
         )
+        return "https://dev.bkdevops.qq.com/bkrepo/api/user/repository${shareUri}"
     }
 
     fun internalDownloadUrl(
@@ -409,13 +412,20 @@ class BkRepoService @Autowired constructor(
         projectId: String,
         artifactoryType: ArtifactoryType,
         path: String,
-        ttl: Int,
-        directed: Boolean
+        ttl: Int
     ): String {
         logger.info("internalDownloadUrl, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType, " +
-            "path: $path, ttl: $ttl, directed: $directed")
-        // todo
-        throw OperationException("not implemented")
+            "path: $path, ttl: $ttl")
+        val shareUri = bkRepoClient.createShareUri(
+            userId = userId,
+            projectId = projectId,
+            repoName = RepoUtils.getRepoByType(artifactoryType),
+            fullPath = path,
+            downloadUsers = listOf(),
+            downloadIps = listOf(),
+            timeoutInSeconds = ttl.toLong()
+        )
+        return "https://dev.devgw.devops.oa.com/bkrepo/api/user/repository${shareUri}"
     }
 
     companion object {
