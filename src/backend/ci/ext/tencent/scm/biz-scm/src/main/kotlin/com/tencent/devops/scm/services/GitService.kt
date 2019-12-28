@@ -766,8 +766,11 @@ class GitService @Autowired constructor(
             val data = it.body()!!.string()
             logger.info("getGitRepositoryTreeInfo token is:$token, response>> $data")
             if (!StringUtils.isEmpty(data)) {
-                val dataMap = JsonUtil.toMap(data)
-                val message = dataMap["message"]
+                var message: String? = null
+                if (data.contains("\"message\":")) {
+                    val dataMap = JsonUtil.toMap(data)
+                    message = dataMap["message"] as? String
+                }
                 return if (StringUtils.isEmpty(message)) {
                     Result(JsonUtil.to(data, object : TypeReference<List<GitRepositoryDirItem>>() {}))
                 } else {
