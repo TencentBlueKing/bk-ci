@@ -172,7 +172,7 @@ object LoggerService {
 
     fun addFoldStartLine(foldName: String) {
         val logMessage = LogMessage(
-            message = "##[group] $foldName",
+            message = "##[group]$foldName",
             timestamp = System.currentTimeMillis(),
             tag = elementId,
             jobId = jobId,
@@ -184,7 +184,7 @@ object LoggerService {
 
     fun addFoldEndLine(foldName: String) {
         val logMessage = LogMessage(
-            message = "##[endgroup] $foldName",
+            message = "##[endgroup]$foldName",
             timestamp = System.currentTimeMillis(),
             tag = elementId,
             jobId = jobId,
@@ -196,7 +196,7 @@ object LoggerService {
 
     fun addRangeStartLine(rangeName: String) {
         val logMessage = LogMessage(
-            message = "[START]  $rangeName",
+            message = "[START] $rangeName",
             timestamp = System.currentTimeMillis(),
             tag = elementId,
             jobId = jobId,
@@ -208,7 +208,7 @@ object LoggerService {
 
     fun addRangeEndLine(rangeName: String) {
         val logMessage = LogMessage(
-            message = "[END]  $rangeName",
+            message = "[END] $rangeName",
             timestamp = System.currentTimeMillis(),
             tag = elementId,
             jobId = jobId,
