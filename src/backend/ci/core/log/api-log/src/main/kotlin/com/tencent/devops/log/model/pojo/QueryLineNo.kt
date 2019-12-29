@@ -39,7 +39,7 @@ import java.util.TreeSet
 data class QueryLineNo(
     @ApiModelProperty("构建ID", required = true)
     val buildId: String,
-    @ApiModelProperty("日志列表", required = true)
+    @ApiModelProperty("所在行号列表", required = true)
     val lines: TreeSet<Long> = TreeSet(),
     @ApiModelProperty("所用时间", required = false)
     var timeUsed: Long = 0,
