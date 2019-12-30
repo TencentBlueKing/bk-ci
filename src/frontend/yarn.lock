@@ -2754,7 +2754,7 @@ binary-extensions@^1.0.0:
 bk-magic-vue@2.1.7:
   version "2.1.7"
   resolved "http://r.tnpm.oa.com/@tencent/bk-magic-vue/download/@tencent/bk-magic-vue-2.1.7.tgz#b9448fb0c381782f927bf6fb39909451e0221fe8"
-  integrity sha1-vSTAPcTi0PqLuR2a2ijypuaA79c=
+  integrity sha1-uUSPsMOBeC+Se/b7OZCUUeAiH+g=
 
 block-stream@*:
   version "0.0.9"
