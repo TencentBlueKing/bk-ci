@@ -96,9 +96,8 @@ open class CodeccApi constructor(
                 "devopsToolParams" to devopsToolParams,
                 "toolCheckerSets" to genToolChecker(element),
                 "nameCn" to pipelineName,
-                "SHELL" to script,
-                "PROJECT_BUILD_TYPE" to (projectBuildType ?: ""),
-                "PROJECT_BUILD_COMMAND" to (projectBuildCommand ?: "")
+                "projectBuildType" to scriptType.name,
+                "projectBuildCommand" to script
             )
             logger.info("start to create task: $body")
 
