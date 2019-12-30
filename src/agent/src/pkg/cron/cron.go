@@ -24,41 +24,57 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package agent
+package cron
 
 import (
+	"fmt"
 	"github.com/astaxie/beego/logs"
-	"pkg/collector"
-	"pkg/config"
-	"pkg/cron"
-	"pkg/heartbeat"
-	"pkg/job"
-	"pkg/pipeline"
-	"pkg/upgrade"
+	"io/ioutil"
+	"os"
+	"pkg/util"
+	"pkg/util/systemutil"
+	"strings"
+	"time"
 )
 
-func Run() {
-	config.Init()
-
-	_, err := job.AgentStartup()
-	if err != nil {
-		logs.Warn("agent startup failed: ", err.Error())
+func CleanDumpFileJob(intervalInHours int, cleanBeforeInHours int) {
+	TryCleanDumpFile(cleanBeforeInHours)
+	for {
+		now := time.Now()
+		//nextTime := now.Add(time.Hour * time.Duration(intervalInHours))
+		nextTime := now.Add(time.Second * 30)
+		logs.Info("next clean time: ", util.FormatTime(nextTime))
+		t := time.NewTimer(nextTime.Sub(now))
+		<-t.C
+		TryCleanDumpFile(cleanBeforeInHours)
 	}
+}
 
-	// 数据采集
-	go collector.DoAgentCollect()
+func TryCleanDumpFile(hoursBefore int) {
+	logs.Info("clean jvm dump file starts")
+	defer func() {
+		if err := recover(); err != nil {
+			logs.Error("remove jvm dump files error: ", err)
+		}
+	}()
 
-	// 心跳
-	go heartbeat.DoAgentHeartbeat()
-
-	// 检查升级
-	go upgrade.DoPollAndUpgradeAgent()
-
-	// 启动pipeline
-	go pipeline.Start()
-
-	// 定期清理 24小时内生成 hs_err 文件
-	go cron.CleanDumpFileJob(12, 24)
-
-	job.DoPollAndBuild()
+	workDir := systemutil.GetWorkDir()
+	logs.Info("clean dump file in " + workDir + " before " + util.FormatTime(time.Now().Add(time.Hour*time.Duration(hoursBefore*-1))))
+	files, err := ioutil.ReadDir(workDir)
+	if err != nil {
+		logs.Error("read dir error: ", err.Error())
+	}
+	for _, file := range files {
+		if !file.IsDir() && strings.HasPrefix(file.Name(), "hs_err_pid") &&
+			int(time.Since(file.ModTime()).Hours()) > hoursBefore {
+			fileFullName := workDir + "/" + file.Name()
+			err = os.Remove(fileFullName)
+			if err != nil {
+				logs.Warn(fmt.Sprintf("remove file %s failed: ", fileFullName), err.Error())
+			} else {
+				logs.Info(fmt.Sprintf("file %s removed", fileFullName))
+			}
+		}
+	}
+	logs.Info("clean jvm dump file done")
 }
