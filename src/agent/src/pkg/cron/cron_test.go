@@ -24,41 +24,11 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package agent
+package cron
 
-import (
-	"github.com/astaxie/beego/logs"
-	"pkg/collector"
-	"pkg/config"
-	"pkg/cron"
-	"pkg/heartbeat"
-	"pkg/job"
-	"pkg/pipeline"
-	"pkg/upgrade"
-)
+import "testing"
 
-func Run() {
-	config.Init()
-
-	_, err := job.AgentStartup()
-	if err != nil {
-		logs.Warn("agent startup failed: ", err.Error())
-	}
-
-	// 数据采集
-	go collector.DoAgentCollect()
-
-	// 心跳
-	go heartbeat.DoAgentHeartbeat()
-
-	// 检查升级
-	go upgrade.DoPollAndUpgradeAgent()
-
-	// 启动pipeline
-	go pipeline.Start()
-
-	// 定期清理 24小时内生成 hs_err 文件
-	go cron.CleanDumpFileJob(12, 24)
-
-	job.DoPollAndBuild()
+func Test_AgentStartup_01(t *testing.T) {
+	CleanDumpFileJob(1, 1)
 }
+
