@@ -30,7 +30,5 @@ import com.tencent.devops.process.pojo.AtomErrorCode.USER_DEFAULT_ERROR
 import com.tencent.devops.process.pojo.ErrorType
 
 class UserTaskExecuteException(
-    val errorMsg: String,
-    val errorType: ErrorType = ErrorType.USER,
-    val errorCode: Int = USER_DEFAULT_ERROR
-) : Throwable(errorMsg)
+    override val errorMsg: String
+) : TaskExecuteException(ErrorType.USER, USER_DEFAULT_ERROR, errorMsg)
