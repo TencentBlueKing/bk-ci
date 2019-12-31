@@ -874,7 +874,7 @@ class ProjectLocalService @Autowired constructor(
         resourceType: String,
         resourceTypeCode: String
     ): Boolean {
-        logger.info("[createPipelinePermissionByApp] organizationType[$organizationType], organizationId[$organizationId] userId[$userId] projectCode[$projectId], permission[$permission]")
+        logger.info("[createPipelinePermissionByApp] organizationType[$organizationType], organizationId[$organizationId] userId[$userId] projectCode[$projectId], permission[$permission], resourceType[$resourceType],resourceTypeCode[$resourceTypeCode]")
         if (!bkAuthProjectApi.isProjectUser(userId, bsPipelineAuthServiceCode, projectId, null)) {
             logger.info("createPipelinePermission userId is not project manager,userId[$userId] projectId[$projectId]")
             throw OperationException((MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.USER_NOT_PROJECT_USER)))
@@ -896,12 +896,12 @@ class ProjectLocalService @Autowired constructor(
         }
         // TODO:此处bsPipelineAuthServiceCode 也需写成配置化
         return createPermission(
-            userId,
-            projectId,
-            permission,
-            resourceType,
-            bsPipelineAuthServiceCode,
-            resourceTypeCode
+            userId = userId,
+            projectId = projectId,
+            permission = permission,
+            resourceType = resourceType,
+            authServiceCode = bsPipelineAuthServiceCode,
+            resourceTypeCode = resourceTypeCode
         )
     }
 
