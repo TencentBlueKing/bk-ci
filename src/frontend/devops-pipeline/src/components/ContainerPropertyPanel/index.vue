@@ -36,8 +36,8 @@
                         <template>
                             <div class="bk-selector-create-item cursor-pointer" @click.stop.prevent="addThridSlave">
                                 <i class="bk-icon icon-plus-circle"></i>
-                                <span class="text">{{ $t('editPage.addThirdSlave') }}/span>
-                                </span></div>
+                                <span class="text">{{ $t('editPage.addThirdSlave') }}</span>
+                            </div>
                             <div v-if="container.baseOS === 'LINUX'" class="bk-selector-create-item cursor-pointer" @click.stop.prevent="addDockerImage">
                                 <i class="bk-icon icon-plus-circle"></i>
                                 <span class="text">{{ $t('editPage.addImage') }}</span>
@@ -74,7 +74,7 @@
                     <bk-input v-else @change="changeThirdImage" :value="buildResource" class="bk-image" :placeholder="$t('editPage.thirdImageHolder')" v-validate.initial="&quot;required&quot;" name="buildResource"></bk-input>
                 </form-field>
 
-                <form-field :label="$t('editPage.assignResource')" v-if="!isPublicResourceType && containerModalId && !['DOCKER', 'IDC', 'PUBLIC_DEVCLOUD'].includes(buildResourceType)" :required="true" :is-error="errors.has(&quot;buildResource&quot;)" :error-msg="errors.first(&quot;buildResource&quot;)" :desc="buildResourceType === &quot;THIRD_PARTY_AGENT_ENV&quot; ? this.$t('editPage.thirdSlaveTips') : &quot;&quot;">
+                <form-field :label="$t('editPage.assignResource')" v-if="buildResourceType !== 'MACOS' && !isPublicResourceType && containerModalId && !['DOCKER', 'IDC', 'PUBLIC_DEVCLOUD'].includes(buildResourceType)" :required="true" :is-error="errors.has(&quot;buildResource&quot;)" :error-msg="errors.first(&quot;buildResource&quot;)" :desc="buildResourceType === &quot;THIRD_PARTY_AGENT_ENV&quot; ? this.$t('editPage.thirdSlaveTips') : &quot;&quot;">
                     <container-env-node :disabled="!editable"
                         :os="container.baseOS"
                         :container-id="containerModalId"
@@ -90,6 +90,29 @@
                         name="buildResource"
                     />
                 </form-field>
+
+                <template v-if="buildResourceType === 'MACOS'">
+                    <form-field :label="$t('editPage.macSystemVersion')" :required="true" :is-error="errors.has('systemVersion')" :error-msg="errors.first(`systemVersion`)">
+                        <bk-select :value="systemVersion" searchable :loading="isLoadingMac" name="systemVersion" v-validate.initial="'required'">
+                            <bk-option v-for="item in systemVersionList"
+                                :key="item"
+                                :id="item"
+                                :name="item"
+                                @click.native="chooseMacSystem(item)">
+                            </bk-option>
+                        </bk-select>
+                    </form-field>
+                    <form-field :label="$t('editPage.xcodeVersion')" :required="true" :is-error="errors.has('xcodeVersion')" :error-msg="errors.first(`xcodeVersion`)">
+                        <bk-select :value="xcodeVersion" searchable :loading="isLoadingMac" name="xcodeVersion" v-validate.initial="'required'">
+                            <bk-option v-for="item in xcodeVersionList"
+                                :key="item"
+                                :id="item"
+                                :name="item"
+                                @click.native="chooseXcode(item)">
+                            </bk-option>
+                        </bk-select>
+                    </form-field>
+                </template>
 
                 <form-field :label="$t('editPage.imageTicket')" v-if="(buildResourceType === 'DOCKER') && buildImageType === 'THIRD'">
                     <request-selector v-bind="imageCredentialOption" :disabled="!editable" name="credentialId" :value="buildImageCreId" :handle-change="changeBuildResource"></request-selector>
@@ -218,7 +241,20 @@
                 showImageSelector: false,
                 isVersionLoading: false,
                 isLoadingImage: false,
-                imageRecommend: true
+                imageRecommend: true,
+                imageTypeList: [
+                    {
+                        label: this.$t('editPage.fromList'),
+                        value: 'BKSTORE'
+                    },
+                    {
+                        label: this.$t('editPage.fromHand'),
+                        value: 'THIRD'
+                    }
+                ],
+                isLoadingMac: false,
+                xcodeVersionList: [],
+                systemVersionList: []
             }
         },
         computed: {
@@ -311,6 +347,12 @@
                 } catch (e) {
                     return ''
                 }
+            },
+            xcodeVersion () {
+                return this.container.dispatchType.xcodeVersion
+            },
+            systemVersion () {
+                return this.container.dispatchType.systemVersion
             },
             buildResource () {
                 return this.container.dispatchType.value
@@ -416,11 +458,14 @@
             if (this.container.dispatchType && this.container.dispatchType.imageCode) {
                 this.getVersionList(this.container.dispatchType.imageCode)
             }
+            this.getMacOsData()
         },
         methods: {
             ...mapActions('atom', [
                 'updateContainer',
-                'togglePropertyPanel'
+                'togglePropertyPanel',
+                'getMacSysVersion',
+                'getMacXcodeVersion'
             ]),
             ...mapActions('soda', [
                 'startDebugDocker',
@@ -478,6 +523,25 @@
             chooseImage (event) {
                 event.preventDefault()
                 this.showImageSelector = !this.showImageSelector
+            },
+
+            getMacOsData () {
+                this.isLoadingMac = true
+                Promise.all([this.getMacSysVersion(), this.getMacXcodeVersion()]).then(([sysVersion, xcodeVersion]) => {
+                    this.xcodeVersionList = xcodeVersion.data || []
+                    this.systemVersionList = sysVersion.data || []
+                }).catch((err) => {
+                    this.$bkMessage({ message: (err.message || err), theme: 'error' })
+                }).finally(() => (this.isLoadingMac = false))
+            },
+
+            chooseMacSystem (item) {
+                this.changeBuildResource('systemVersion', item)
+                this.changeBuildResource('value', `${this.systemVersion}:${this.xcodeVersion}`)
+            },
+            chooseXcode (item) {
+                this.changeBuildResource('xcodeVersion', item)
+                this.changeBuildResource('value', `${this.systemVersion}:${this.xcodeVersion}`)
             },
 
             setContainerValidate (addErrors, removeErrors) {
