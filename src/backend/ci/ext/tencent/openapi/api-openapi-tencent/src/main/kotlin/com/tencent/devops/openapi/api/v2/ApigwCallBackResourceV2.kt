@@ -23,70 +23,52 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.openapi.api.v2
 
-package com.tencent.devops.project.api
-
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.project.pojo.Notice
-import com.tencent.devops.project.pojo.NoticeRequest
+import com.tencent.devops.common.pipeline.event.CallBackEvent
+import com.tencent.devops.process.pojo.pipeline.enums.CallBackNetWorkRegionType
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
-import javax.ws.rs.DELETE
-import javax.ws.rs.GET
+import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
-import javax.ws.rs.PUT
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["OP_NOTICE"], description = "OP-公告")
-@Path("/op/notice")
+@Api(tags = ["OPEN_API_V2_CALLBACK"], description = "OPEN-API-V2-callback资源")
+@Path("/{apigw:apigw-user|apigw-app|apigw}/v2/callbacks")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface OpNoticeResource {
+interface ApigwCallBackResourceV2 {
 
-    @ApiOperation("获取所有公告信息")
-    @GET
-    @Path("/")
-    fun getAllNotice(): Result<List<Notice>>
-
-    @ApiOperation("获取公告信息")
-    @GET
-    @Path("/{id}")
-    fun getNotice(
-        @ApiParam(value = "公告id", required = true)
-        @PathParam("id")
-        id: Long
-    ): Result<Notice?>
-
-    @ApiOperation("新增公告信息")
+    @ApiOperation("创建callback回调")
     @POST
-    @Path("/")
-    fun addNotice(
-        @ApiParam(value = "公告请求报文体", required = true)
-        noticeRequest: NoticeRequest
-    ): Result<Int>
-
-    @ApiOperation("更新公告信息")
-    @PUT
-    @Path("/{id}")
-    fun updateNotice(
-        @ApiParam(value = "公告id", required = true)
-        @PathParam("id")
-        id: Long,
-        @ApiParam(value = "公告请求报文体", required = true)
-        noticeRequest: NoticeRequest
-    ): Result<Int>
-
-    @ApiOperation("删除公告信息")
-    @DELETE
-    @Path("/{id}")
-    fun deleteNotice(
-        @ApiParam(value = "公告id", required = true)
-        @PathParam("id")
-        id: Long
-    ): Result<Int>
+    @Path("/projects/{projectId}")
+    fun create(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("projectId", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("url", required = true)
+        @QueryParam("url")
+        url: String,
+        @ApiParam("region", required = true)
+        @QueryParam("region")
+        region: CallBackNetWorkRegionType,
+        @ApiParam("event", required = true)
+        @QueryParam("event")
+        event: CallBackEvent,
+        @ApiParam("secretToken", required = false)
+        @QueryParam("secretToken")
+        secretToken: String?
+    ): Result<Boolean>
 }

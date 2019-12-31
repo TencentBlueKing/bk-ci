@@ -30,6 +30,7 @@ dependencies {
     compile project(":core:common:common-util")
     compile project(":core:quality:api-quality")
     compile project(":core:plugin:codecc-plugin:common-codecc")
+    compile project(":core:common:common-auth:common-auth-api")
     //compile project(":ext:tencent:openapi:api-openapi")
     compile project(":core:store:api-store")
     compile project(":ext:tencent:store:api-store-tencent")

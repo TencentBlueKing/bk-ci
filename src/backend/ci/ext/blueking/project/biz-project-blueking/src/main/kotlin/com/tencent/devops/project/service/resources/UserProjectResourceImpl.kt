@@ -44,34 +44,6 @@ class UserProjectResourceImpl @Autowired constructor(
     private val projectService: ProjectService
 ) : UserProjectResource {
 
-    override fun list(userId: String): Result<List<ProjectVO>> {
-        return Result(projectService.list(userId))
-    }
-
-    override fun create(userId: String, projectCreateInfo: ProjectCreateInfo): Result<Boolean> {
-        // 创建项目
-        projectService.create(userId, projectCreateInfo)
-
-        return Result(true)
-    }
-
-    override fun update(
-        userId: String,
-        projectId: String,
-        projectUpdateInfo: ProjectUpdateInfo
-    ): Result<Boolean> {
-        return Result(projectService.update(userId, projectId, projectUpdateInfo))
-    }
-
-    override fun updateLogo(
-        userId: String,
-        projectId: String,
-        inputStream: InputStream,
-        disposition: FormDataContentDisposition
-    ): Result<Boolean> {
-        return projectService.updateLogo(userId, projectId, inputStream, disposition)
-    }
-
     override fun validate(
         userId: String,
         validateType: ProjectValidateType,
@@ -82,34 +54,37 @@ class UserProjectResourceImpl @Autowired constructor(
         return Result(true)
     }
 
-    override fun get(projectId: String): Result<ProjectVO> {
+    override fun list(userId: String, accessToken: String?): Result<List<ProjectVO>> {
+        return Result(projectService.list(userId))
+    }
+
+    override fun get(projectId: String, accessToken: String?): Result<ProjectVO> {
         return Result(projectService.getByEnglishName(projectId) ?: throw OperationException("项目不存在"))
     }
 
-    override fun updateV2(userId: String, projectId: String, projectUpdateInfo: ProjectUpdateInfo): Result<Boolean> {
+    override fun create(userId: String, projectCreateInfo: ProjectCreateInfo, accessToken: String?): Result<Boolean> {
+        // 创建项目
+        projectService.create(userId, projectCreateInfo)
+
+        return Result(true)
+    }
+
+    override fun update(
+        userId: String,
+        projectId: String,
+        projectUpdateInfo: ProjectUpdateInfo,
+        accessToken: String?
+    ): Result<Boolean> {
         return Result(projectService.update(userId, projectId, projectUpdateInfo))
     }
 
-    override fun updateLogoV2(userId: String, projectId: String, inputStream: InputStream, disposition: FormDataContentDisposition): Result<Boolean> {
+    override fun updateLogo(
+        userId: String,
+        projectId: String,
+        inputStream: InputStream,
+        disposition: FormDataContentDisposition,
+        accessToken: String?
+    ): Result<Boolean> {
         return projectService.updateLogo(userId, projectId, inputStream, disposition)
-    }
-
-    override fun validateV2(userId: String, validateType: ProjectValidateType, name: String, projectId: String?): Result<Boolean> {
-        projectService.validate(validateType, name, projectId)
-        return Result(true)
-    }
-
-    override fun getV2(projectId: String): Result<ProjectVO> {
-        return Result(projectService.getByEnglishName(projectId) ?: throw OperationException("项目不存在"))
-    }
-
-    override fun enable(userId: String, accessToken: String, projectId: String, enabled: Boolean): Result<Boolean> {
-        projectService.updateUsableStatus(userId, projectId, enabled)
-        return Result(true)
-    }
-
-    override fun enableV2(userId: String, accessToken: String, projectId: String, enabled: Boolean): Result<Boolean> {
-        projectService.updateUsableStatus(userId, projectId, enabled)
-        return Result(true)
     }
 }

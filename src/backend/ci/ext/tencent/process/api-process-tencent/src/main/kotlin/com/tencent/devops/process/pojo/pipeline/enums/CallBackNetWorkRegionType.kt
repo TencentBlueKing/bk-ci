@@ -24,11 +24,10 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":core:common:common-api")
-    compile project(":core:common:common-web")
-    compile project(":core:project:api-project")
-    compile project(":core:common:common-auth:common-auth-api")
-}
+package com.tencent.devops.process.pojo.pipeline.enums
 
-apply from: "$rootDir/task_deploy_to_maven.gradle"
+enum class CallBackNetWorkRegionType {
+    DEVNET,
+    OSS,
+    IDC
+}

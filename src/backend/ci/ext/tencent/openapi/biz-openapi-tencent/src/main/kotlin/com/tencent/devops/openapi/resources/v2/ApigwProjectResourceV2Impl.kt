@@ -25,6 +25,7 @@
  */
 package com.tencent.devops.openapi.resources.v2
 
+import com.tencent.devops.common.auth.api.pojo.BKAuthProjectRolesResources
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.v2.ApigwProjectResourceV2
@@ -117,6 +118,20 @@ class ApigwProjectResourceV2Impl @Autowired constructor(
                 organizationType = organizationType,
                 organizationId = organizationId,
                 createInfo = createInfo
+            )
+        )
+    }
+
+    override fun getProjectRoles(
+        organizationType: String,
+        organizationId: Long,
+        projectCode: String
+    ): Result<List<BKAuthProjectRolesResources>?> {
+        return Result(
+            apigwProjectService.getProjectRoles(
+                organizationType = organizationType,
+                organizationId = organizationId,
+                projectCode = projectCode
             )
         )
     }

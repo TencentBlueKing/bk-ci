@@ -24,11 +24,21 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":core:common:common-api")
-    compile project(":core:common:common-web")
-    compile project(":core:project:api-project")
-    compile project(":core:common:common-auth:common-auth-api")
-}
+package com.tencent.devops.scm.resources
 
-apply from: "$rootDir/task_deploy_to_maven.gradle"
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.repository.pojo.oauth.GitToken
+import com.tencent.devops.scm.api.BuildGitCiResource
+import com.tencent.devops.scm.services.GitService
+import org.springframework.beans.factory.annotation.Autowired
+
+@RestResource
+class BuildGitCiResourceImpl @Autowired constructor(
+    private val gitService: GitService
+) : BuildGitCiResource {
+
+    override fun getToken(gitProjectId: Long): Result<GitToken> {
+        return Result(gitService.getToken(gitProjectId))
+    }
+}
