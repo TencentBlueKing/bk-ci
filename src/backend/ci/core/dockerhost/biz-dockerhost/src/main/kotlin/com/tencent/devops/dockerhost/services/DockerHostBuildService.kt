@@ -551,12 +551,18 @@ class DockerHostBuildService(
             }
         }
 
+        val publicImages = dockerHostBuildApi.getPublicImages().data
         val imageList = dockerCli.listImagesCmd().withShowAll(true).exec()
         imageList.forEach c@{
             if (it.repoTags == null || it.repoTags.isEmpty()) {
                 return@c
             }
-            it.repoTags.forEach { image ->
+            it.repoTags.forEach t@{ image ->
+                if (publicImages != null && publicImages.contains(image)) {
+                    logger.info("skip public image: $image")
+                    return@t
+                }
+
                 val lastUsedDate = LocalImageCache.getDate(image)
                 if (null != lastUsedDate) {
                     if ((Date().time - lastUsedDate.time) / (1000 * 60 * 60 * 24) >= dockerHostConfig.localImageCacheDays) {
