@@ -137,4 +137,18 @@ class DockerHostBuildResourceApi constructor(
             return contentLength
         }
     }
+
+    fun getPublicImages(): Result<List<String>> {
+        val path = "/$urlPrefix/api/dockerhost/public/images"
+        val request = buildGet(path)
+
+        OkhttpUtils.doHttp(request).use { response ->
+            val responseContent = response.body()!!.string()
+            if (!response.isSuccessful) {
+                logger.error("DockerHostBuildResourceApi $path fail. $responseContent")
+                throw RuntimeException("DockerHostBuildResourceApi $path fail")
+            }
+            return objectMapper.readValue(responseContent)
+        }
+    }
 }

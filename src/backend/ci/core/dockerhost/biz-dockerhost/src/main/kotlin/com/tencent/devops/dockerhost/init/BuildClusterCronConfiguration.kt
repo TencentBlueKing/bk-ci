@@ -70,9 +70,9 @@ class BuildClusterCronConfiguration : SchedulingConfigurer {
                 Runnable { runner.clearExitedContainer() }, 3600 * 1000, 3600 * 1000
             )
         )
-//        scheduledTaskRegistrar.addCronTask(
-//                { runner.clearLocalImages() }, clearLocalImageCron!!
-//        )
+        scheduledTaskRegistrar.addCronTask(
+                { runner.clearLocalImages() }, clearLocalImageCron!!
+        )
     }
 
     @Autowired
