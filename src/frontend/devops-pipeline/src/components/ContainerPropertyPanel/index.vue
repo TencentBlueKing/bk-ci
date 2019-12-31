@@ -395,12 +395,18 @@
                 }).finally(() => (this.isLoadingMac = false))
             },
             chooseMacSystem (item) {
-                this.changeBuildResource('systemVersion', item)
-                this.changeBuildResource('value', `${this.systemVersion}:${this.xcodeVersion}`)
+                this.handleContainerChange('dispatchType', Object.assign({
+                    ...this.container.dispatchType,
+                    systemVersion: item,
+                    value: `${this.systemVersion}:${this.xcodeVersion}`
+                }))
             },
             chooseXcode (item) {
-                this.changeBuildResource('xcodeVersion', item)
-                this.changeBuildResource('value', `${this.systemVersion}:${this.xcodeVersion}`)
+                this.handleContainerChange('dispatchType', Object.assign({
+                    ...this.container.dispatchType,
+                    xcodeVersion: item,
+                    value: `${this.systemVersion}:${this.xcodeVersion}`
+                }))
             },
             setContainerValidate (addErrors, removeErrors) {
                 const { errors } = this
