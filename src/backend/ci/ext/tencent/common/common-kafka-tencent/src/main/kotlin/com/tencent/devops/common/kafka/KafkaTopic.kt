@@ -34,9 +34,12 @@ object KafkaTopic {
     const val LINT_STATISTIC_TOPIC = "tendata-bkdevops-296-topic-lint-statistic"
     const val CNN_STATISTIC_TOPIC = "tendata-bkdevops-296-topic-cnn-statistic"
     const val DUPC_STATISTIC_TOPIC = "tendata-bkdevops-296-topic-dupc-statistic"
+
     const val ACTIVE_GONGFENG_PROJECT_TOPIC = "tendata-bkdevops-296-topic-active-gongfeng-project"
     const val SINGLE_STATISTIC_TOPIC = "tendata-bkdevops-296-topic-single-statistic"
     const val SINGLE_LINT_STATISTIC_TOPIC = "tendata-bkdevops-296-topic-single-lint-statistic"
     const val SINGLE_CCN_STATISTIC_TOPIC = "tendata-bkdevops-296-topic-single-ccn-statistic"
     const val SINGLE_DUPC_STATISTIC_TOPIC = "tendata-bkdevops-296-topic-single-dupc-statistic"
+
+    const val LANDUN_GIT_TASK_TOPIC = "tendata-bkdevops-296-topic-landun-git-task"
 }

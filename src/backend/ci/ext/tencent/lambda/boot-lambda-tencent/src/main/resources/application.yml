@@ -21,6 +21,14 @@ spring:
     consul:
       discovery:
         tags: local
+  kafka:
+    producer:
+      bootstrap-servers: tendata-bkdevops-296.sz.kafka.db.:32231
+      batch-size: 16384
+      retries: 3
+      acks: 1
+    listener:
+      concurrency: 3
 
 server:
   port: 8001

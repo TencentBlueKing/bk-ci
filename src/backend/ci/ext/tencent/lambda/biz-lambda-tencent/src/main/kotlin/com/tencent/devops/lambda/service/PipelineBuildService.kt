@@ -27,11 +27,15 @@ package com.tencent.devops.lambda.service
 
 import com.google.common.cache.CacheBuilder
 import com.google.common.cache.CacheLoader
+import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.exception.InvalidParamException
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildTaskFinishBroadCastEvent
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
+import com.tencent.devops.common.kafka.KafkaClient
+import com.tencent.devops.common.kafka.KafkaTopic
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.lambda.LambdaMessageCode.ERROR_LAMBDA_PROJECT_NOT_EXIST
@@ -44,9 +48,11 @@ import com.tencent.devops.lambda.pojo.ElementData
 import com.tencent.devops.lambda.pojo.ProjectOrganize
 import com.tencent.devops.lambda.storage.ESService
 import com.tencent.devops.model.process.tables.records.TPipelineBuildHistoryRecord
+import com.tencent.devops.model.process.tables.records.TPipelineBuildTaskRecord
 import com.tencent.devops.process.engine.pojo.BuildInfo
 import com.tencent.devops.process.pojo.ErrorType
 import com.tencent.devops.project.api.service.ServiceProjectResource
+import com.tencent.devops.repository.api.ServiceRepositoryResource
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -61,7 +67,8 @@ class PipelineBuildService @Autowired constructor(
     private val pipelineResDao: PipelineResDao,
     private val pipelineTemplateDao: PipelineTemplateDao,
     private val buildTaskDao: BuildTaskDao,
-    private val esService: ESService
+    private val esService: ESService,
+    private val kafkaClient: KafkaClient
 ) {
 
     fun onBuildFinish(event: PipelineBuildFinishBroadCastEvent) {
@@ -122,6 +129,48 @@ class PipelineBuildService @Autowired constructor(
             errorMsg = event.errorMsg
         )
         esService.buildElement(data)
+
+        pushGitTaskInfo(event, task)
+    }
+
+    private fun pushGitTaskInfo(event: PipelineBuildTaskFinishBroadCastEvent, task: TPipelineBuildTaskRecord?) {
+        try {
+            if (task != null) {
+                var gitUrl = ""
+                val taskMap = JsonUtil.toMap(task).toMutableMap()
+                val taskParamsMap = JsonUtil.toMap(task.taskParams)
+                when (taskParamsMap["atomCode"]) {
+                    "CODE_GIT" -> {
+                        val repositoryHashId = taskParamsMap["repositoryHashId"]
+                        val gitRepository = client.get(ServiceRepositoryResource::class)
+                            .get(event.projectId, repositoryHashId.toString(), RepositoryType.ID)
+                        gitUrl = gitRepository.data!!.url
+                    }
+                    "gitCodeRepoCommon" -> {
+                        val dataMap = JsonUtil.toMap(taskParamsMap["data"])
+                        val inputMap = JsonUtil.toMap(dataMap["input"])
+                        gitUrl = inputMap["repositoryUrl"].toString()
+                    }
+                    "gitCodeRepo" -> {
+                        val dataMap = JsonUtil.toMap(taskParamsMap["data"])
+                        val inputMap = JsonUtil.toMap(dataMap["input"])
+                        val repositoryHashId = inputMap["repositoryHashId"]
+                        val gitRepository = client.get(ServiceRepositoryResource::class)
+                            .get(event.projectId, repositoryHashId.toString(), RepositoryType.ID)
+                        gitUrl = gitRepository.data!!.url
+                    }
+                }
+
+                taskMap["gitUrl"] = gitUrl
+                taskMap.remove("taskParams")
+
+                kafkaClient.send(KafkaTopic.LANDUN_GIT_TASK_TOPIC, JsonUtil.toJson(taskMap))
+            } else {
+                logger.error("push git taskInfo error. buildId: ${event.buildId}, taskId: ${event.taskId}, task is null.")
+            }
+        } catch (e: Exception) {
+            logger.error("Push git task to kafka error, buildId: ${event.buildId}, taskId: ${event.taskId}", e)
+        }
     }
 
     private val projectCache = CacheBuilder.newBuilder()
