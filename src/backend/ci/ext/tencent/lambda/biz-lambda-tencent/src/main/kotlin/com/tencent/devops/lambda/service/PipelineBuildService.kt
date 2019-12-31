@@ -137,7 +137,6 @@ class PipelineBuildService @Autowired constructor(
         try {
             if (task != null) {
                 var gitUrl = ""
-                val taskMap = task.intoMap()
                 val taskParamsMap = JsonUtil.toMap(task.taskParams)
                 when (taskParamsMap["atomCode"]) {
                     "CODE_GIT" -> {
@@ -145,32 +144,38 @@ class PipelineBuildService @Autowired constructor(
                         val gitRepository = client.get(ServiceRepositoryResource::class)
                             .get(event.projectId, repositoryHashId.toString(), RepositoryType.ID)
                         gitUrl = gitRepository.data!!.url
+                        sendKafka(task, gitUrl)
                     }
                     "gitCodeRepoCommon" -> {
-                        val dataMap = JsonUtil.toMap(taskParamsMap["data"]!!)
-                        val inputMap = JsonUtil.toMap(dataMap["input"]!!)
+                        val dataMap = JsonUtil.toMap(taskParamsMap["data"] ?: error(""))
+                        val inputMap = JsonUtil.toMap(dataMap["input"] ?: error(""))
                         gitUrl = inputMap["repositoryUrl"].toString()
+                        sendKafka(task, gitUrl)
                     }
                     "gitCodeRepo" -> {
-                        val dataMap = JsonUtil.toMap(taskParamsMap["data"]!!)
-                        val inputMap = JsonUtil.toMap(dataMap["input"]!!)
+                        val dataMap = JsonUtil.toMap(taskParamsMap["data"] ?: error(""))
+                        val inputMap = JsonUtil.toMap(dataMap["input"] ?: error(""))
                         val repositoryHashId = inputMap["repositoryHashId"]
                         val gitRepository = client.get(ServiceRepositoryResource::class)
                             .get(event.projectId, repositoryHashId.toString(), RepositoryType.ID)
                         gitUrl = gitRepository.data!!.url
+                        sendKafka(task, gitUrl)
                     }
                 }
-
-                taskMap["gitUrl"] = gitUrl
-                taskMap.remove("taskParams")
-
-                kafkaClient.send(KafkaTopic.LANDUN_GIT_TASK_TOPIC, JsonUtil.toJson(taskMap))
             } else {
                 logger.error("push git taskInfo error. buildId: ${event.buildId}, taskId: ${event.taskId}, task is null.")
             }
         } catch (e: Exception) {
             logger.error("Push git task to kafka error, buildId: ${event.buildId}, taskId: ${event.taskId}", e)
         }
+    }
+
+    private fun sendKafka(task: TPipelineBuildTaskRecord, gitUrl: String) {
+        val taskMap = task.intoMap()
+        taskMap["GIT_URL"] = gitUrl
+        taskMap.remove("TASK_PARAMS")
+
+        kafkaClient.send(KafkaTopic.LANDUN_GIT_TASK_TOPIC, JsonUtil.toJson(taskMap))
     }
 
     private val projectCache = CacheBuilder.newBuilder()
