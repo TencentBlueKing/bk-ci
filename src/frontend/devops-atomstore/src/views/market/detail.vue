@@ -59,7 +59,7 @@
                     <p class="g-empty comment-empty" v-if="commentList.length <= 0"> {{ $t('空空如洗，快来评论一下吧！') }} </p>
                 </bk-tab-panel>
 
-                <bk-tab-panel name="yaml" label="YAML" v-if="type === 'atom'">
+                <bk-tab-panel name="yaml" :label="type === 'atom' ? 'YAML' : 'Dockerfile'" v-if="['atom', 'image'].includes(type)">
                     <section class="plugin-yaml"></section>
                 </bk-tab-panel>
             </bk-tab>
@@ -133,6 +133,7 @@
                     tabMode: 'indent',
                     mode: 'yaml',
                     theme: '3024-night',
+                    height: '400px',
                     autoRefresh: true,
                     cursorBlinkRate: 0,
                     readOnly: true
@@ -276,6 +277,9 @@
                     this.detailId = res.imageId
                     this.detail.name = res.imageName
                     this.commentInfo = res.userCommentInfo || {}
+                    const ele = document.querySelector('.plugin-yaml')
+                    this.codeEditor = CodeMirror(ele, this.codeMirrorCon)
+                    this.codeEditor.setValue(res.dockerFileContent || '')
 
                     const currentCategory = categorys.find((x) => (x.categoryCode === res.category))
                     const setting = currentCategory.settings || {}
@@ -367,6 +371,9 @@
             margin-bottom: 20px;
             padding: 10px;
             height: auto;
+            .CodeMirror-scroll {
+                height: 400px;
+            }
         }
         .summary-tab {
             overflow: hidden;
