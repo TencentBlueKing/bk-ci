@@ -122,7 +122,7 @@ interface BuildCodeccResource {
 
     @ApiOperation("获取codecc报告")
     @GET
-    @Path("/report/{buildId}")
+    @Path("/report/builds/{buildId}")
     fun getCodeccReport(
         @ApiParam("构建ID", required = true)
         @PathParam(value = "buildId")
