@@ -137,7 +137,7 @@ class PipelineBuildService @Autowired constructor(
         try {
             if (task != null) {
                 var gitUrl = ""
-                val taskMap = JsonUtil.toMap(task).toMutableMap()
+                val taskMap = task.intoMap()
                 val taskParamsMap = JsonUtil.toMap(task.taskParams)
                 when (taskParamsMap["atomCode"]) {
                     "CODE_GIT" -> {
