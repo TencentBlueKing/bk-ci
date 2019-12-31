@@ -68,7 +68,7 @@ class SubPipelineCallAtom constructor(
     override fun tryFinish(task: PipelineBuildTask, param: SubPipelineCallElement, runVariables: Map<String, String>, force: Boolean): AtomResponse {
         logger.info("[${task.buildId}]|ATOM_SUB_PIPELINE_FINISH|status=${task.status}")
 
-        return if (task.subBuildId == null || task.subBuildId.isNullOrBlank()) {
+        return if (task.subBuildId.isNullOrBlank()) {
             AtomResponse(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.USER,
@@ -76,8 +76,9 @@ class SubPipelineCallAtom constructor(
                 errorMsg = "找不到对应子流水线"
             )
         } else {
-            val buildInfo = pipelineRuntimeService.getBuildInfo(task.subBuildId!!)
-            return if (buildInfo == null) {
+            val subBuildId = task.subBuildId!!
+            val subBuildInfo = pipelineRuntimeService.getBuildInfo(subBuildId)
+            return if (subBuildInfo == null) {
                 LogUtils.addRedLine(
                     rabbitTemplate = rabbitTemplate,
                     buildId = task.buildId,
@@ -93,19 +94,8 @@ class SubPipelineCallAtom constructor(
                     errorMsg = "找不到对应子流水线"
                 )
             } else {
-                // 如果要终止，则也一并终止子流水线
-                if (force || BuildStatus.isFinish(task.status)) {
-                    val channelCode = ChannelCode.valueOf(runVariables[PIPELINE_START_CHANNEL]!!)
-                    pipelineBuildService.serviceShutdown(
-                        projectId = task.projectId,
-                        pipelineId = param.subPipelineId,
-                        buildId = task.subBuildId!!,
-                        channelCode = channelCode
-                    )
-                    return AtomResponse(task.status)
-                }
                 when {
-                    BuildStatus.isCancel(buildInfo.status) ->
+                    BuildStatus.isCancel(subBuildInfo.status) ->
                         LogUtils.addYellowLine(
                             rabbitTemplate = rabbitTemplate,
                             buildId = task.buildId,
@@ -114,7 +104,7 @@ class SubPipelineCallAtom constructor(
                             jobId = task.containerHashId,
                             executeCount = task.executeCount ?: 1
                         )
-                    BuildStatus.isFailure(buildInfo.status) ->
+                    BuildStatus.isFailure(subBuildInfo.status) ->
                         LogUtils.addYellowLine(
                             rabbitTemplate = rabbitTemplate,
                             buildId = task.buildId,
@@ -123,7 +113,7 @@ class SubPipelineCallAtom constructor(
                             jobId = task.containerHashId,
                             executeCount = task.executeCount ?: 1
                         )
-                    BuildStatus.isSuccess(buildInfo.status) ->
+                    BuildStatus.isSuccess(subBuildInfo.status) ->
                         LogUtils.addLine(
                             rabbitTemplate = rabbitTemplate,
                             buildId = task.buildId,
@@ -141,16 +131,15 @@ class SubPipelineCallAtom constructor(
                         )
                 }
                 AtomResponse(
-                    buildStatus = buildInfo.status,
-                    errorType = buildInfo.errorType,
-                    errorCode = buildInfo.errorCode,
-                    errorMsg = buildInfo.errorMsg
+                    buildStatus = subBuildInfo.status,
+                    errorType = subBuildInfo.errorType,
+                    errorCode = subBuildInfo.errorCode,
+                    errorMsg = subBuildInfo.errorMsg
                 )
             }
         }
     }
 
-    // TODO Exception中的错误码对应提示信息修改提取
     override fun execute(task: PipelineBuildTask, param: SubPipelineCallElement, runVariables: Map<String, String>): AtomResponse {
         logger.info("Enter SubPipelineCallAtom run...")
 
