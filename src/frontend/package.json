@@ -27,7 +27,8 @@
     "devops-turbo",
     "devops-vs",
     "devops-quality",
-    "devops-nav"
+    "devops-nav",
+    "devops-log"
   ],
   "dependencies": {
     "gulp-rename": "^1.4.0"

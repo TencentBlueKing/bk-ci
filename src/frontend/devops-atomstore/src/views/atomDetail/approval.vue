@@ -214,9 +214,6 @@
                     max-height: calc(100vh - 291px);
                     overflow-y: auto;
                 }
-                /deep/ .bk-table-header-wrapper table, /deep/ .bk-table-body-wrapper table {
-                    width: auto !important;
-                }
             }
         }
         .approve-form {

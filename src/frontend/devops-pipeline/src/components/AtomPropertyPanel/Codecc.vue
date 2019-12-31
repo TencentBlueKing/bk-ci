@@ -3,7 +3,7 @@
         <div class="bk-form bk-form-vertical">
             <div v-if="isThirdParty && container.baseOS === 'LINUX'" class="slave-tips">
                 <p class="slave-tips-title">如果非root账号启动agent, 请使用root帐号登录构建机运行以下命令：</p>
-                <p class="code-backgroud">mkdir -p /data/codecc_software<br>mount -t nfs -o nolock {{ CODECC_SOFWARE_URL }}:/data/codecc_software /data/codecc_software</p>
+                <p class="code-backgroud">mkdir -p /data/codecc_software<br>mount -t nfs -o {{ CODECC_SOFWARE_URL }}:/data/codecc_software /data/codecc_software</p>
             </div>
             <template v-for="(obj, key) in commonModel[&quot;row&quot;]">
                 <form-field v-if="!obj.hidden" :key="key" :desc="obj.desc" :required="obj.required" :label="obj.label" :is-error="errors.has(key)" :error-msg="errors.first(key)">
@@ -65,6 +65,7 @@
         mixins: [atomMixin, validMixins],
         data () {
             return {
+                CODECC_SOFWARE_URL: CODECC_SOFWARE_URL,
                 newModel: {},
                 task: {},
                 elementId: '',
@@ -121,7 +122,7 @@
                     {
                         id: 'script',
                         name: 'Coverity',
-                        item: ['scanType', 'scriptType', 'script', 'scriptTurbo', 'coverityToolSetId', 'klocworkToolSetId']
+                        item: ['scanType', 'scriptType', 'script', 'scriptTurbo', 'coverityToolSetId', 'klocworkToolSetId', 'pinpointToolSetId']
                     },
                     {
                         id: 'cpplintToolSetId',
@@ -213,7 +214,7 @@
                 return element.languages.some(lang => langMap[lang])
             },
             showScript () {
-                const showScript = this.element.tools.some(tool => (tool === 'COVERITY' || tool === 'KLOCWORK'))
+                const showScript = this.element.tools.some(tool => (tool === 'COVERITY' || tool === 'KLOCWORK' || tool === 'PINPOINT'))
                 return showScript
             },
             isMacos () {
@@ -235,6 +236,8 @@
                     this.newModel.coverityToolSetId.preFilter = { key: 'codeLangs', value: newVal }
                 } else if (newVal.length && this.element.tools.includes('KLOCWORK')) {
                     this.newModel.klocworkToolSetId.preFilter = { key: 'codeLangs', value: newVal }
+                } else if (newVal.length && this.element.tools.includes('PINPOINT')) {
+                    this.newModel.pinpointToolSetId.preFilter = { key: 'codeLangs', value: newVal }
                 }
             }
         },
@@ -411,25 +414,30 @@
                         this.newModel.scriptTurbo.hidden = true
                     }
 
-                    if (this.element.tools.includes('COVERITY') && !this.element.tools.includes('KLOCWORK')) {
+                    if (this.element.tools.includes('COVERITY')) {
                         this.newModel.coverityToolSetId.hidden = false
-                        this.newModel.klocworkToolSetId.hidden = true
                         this.newModel.coverityToolSetId.preFilter = { key: 'codeLangs', value: this.element.languages }
-                    } else if (!this.element.tools.includes('COVERITY') && this.element.tools.includes('KLOCWORK')) {
-                        this.newModel.klocworkToolSetId.hidden = false
+                    } else {
                         this.newModel.coverityToolSetId.hidden = true
-                        this.newModel.klocworkToolSetId.preFilter = { key: 'codeLangs', value: this.element.languages }
-                    } else if (this.element.tools.includes('COVERITY') && this.element.tools.includes('KLOCWORK')) {
-                        this.newModel.coverityToolSetId.hidden = false
+                    }
+                    if (this.element.tools.includes('KLOCWORK')) {
                         this.newModel.klocworkToolSetId.hidden = false
-                        this.newModel.coverityToolSetId.preFilter = { key: 'codeLangs', value: this.element.languages }
                         this.newModel.klocworkToolSetId.preFilter = { key: 'codeLangs', value: this.element.languages }
+                    } else {
+                        this.newModel.klocworkToolSetId.hidden = true
+                    }
+                    if (this.element.tools.includes('PINPOINT')) {
+                        this.newModel.pinpointToolSetId.hidden = false
+                        this.newModel.pinpointToolSetId.preFilter = { key: 'codeLangs', value: this.element.languages }
+                    } else {
+                        this.newModel.pinpointToolSetId.hidden = true
                     }
                 } else {
                     this.newModel.script.hidden = true
                     this.newModel.scanType.hidden = true
                     this.newModel.scriptType.hidden = true
                     this.newModel.scriptTurbo.hidden = true
+                    this.newModel.pinpointToolSetId.hidden = true
                     this.newModel.klocworkToolSetId.hidden = true
                     this.newModel.coverityToolSetId.hidden = true
                 }
@@ -486,12 +494,17 @@
             },
             getPropName (name) {
                 if (name === 'Coverity') {
-                    if (this.element.tools.filter(tool => tool === 'COVERITY').length && this.element.tools.filter(tool => tool === 'KLOCWORK').length) {
-                        name = 'Coverity、Klocwork'
+                    const nameList = []
+                    if (this.element.tools.filter(tool => tool === 'COVERITY').length) {
+                        nameList.push('Coverity')
                     }
-                    if (!this.element.tools.filter(tool => tool === 'COVERITY').length && this.element.tools.filter(tool => tool === 'KLOCWORK').length) {
-                        name = 'Klocwork'
+                    if (this.element.tools.filter(tool => tool === 'KLOCWORK').length) {
+                        nameList.push('Klocwork')
                     }
+                    if (this.element.tools.filter(tool => tool === 'PINPOINT').length) {
+                        nameList.push('Pinpoint')
+                    }
+                    name = nameList.join('、')
                 }
                 if (name === 'Gometalinter') {
                     if (this.element.tools.filter(tool => tool === 'GOML').length && this.element.tools.filter(tool => tool === 'GOCILINT').length) {

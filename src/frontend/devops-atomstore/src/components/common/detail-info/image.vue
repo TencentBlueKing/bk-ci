@@ -2,7 +2,7 @@
     <section class="detail-title">
         <img class="detail-pic atom-logo" :src="detail.logoUrl">
         <hgroup class="detail-info-group">
-            <h3 class="title-with-img">
+            <h3 :class="[{ 'not-recommend': detail.recommendFlag === false }, 'title-with-img']" :title="detail.recommendFlag === false ? $t('store.该镜像不推荐使用') : ''">
                 {{detail.name}}
             </h3>
             <h5 class="detail-info">
@@ -37,13 +37,15 @@
                 <span> {{ $t('store.简介：') }} </span><span>{{detail.summary || '-'}}</span>
             </h5>
         </hgroup>
-        <bk-popover placement="top" v-if="buttonInfo.disable">
-            <button class="bk-button bk-primary" type="button" disabled> {{ $t('store.安装') }} </button>
-            <template slot="content">
-                <p>{{buttonInfo.des}}</p>
-            </template>
-        </bk-popover>
-        <button class="detail-install" @click="goToInstall" v-else> {{ $t('store.安装') }} </button>
+        <template v-if="detail.needInstallToProject === 'NEED_INSTALL_TO_PROJECT_TRUE'">
+            <bk-popover placement="top" v-if="buttonInfo.disable">
+                <button class="bk-button bk-primary" type="button" disabled> {{ $t('安装') }} </button>
+                <template slot="content">
+                    <p>{{buttonInfo.des}}</p>
+                </template>
+            </bk-popover>
+            <button class="detail-install" @click="goToInstall" v-else> {{ $t('安装') }} </button>
+        </template>
     </section>
 </template>
 
@@ -114,12 +116,11 @@
     }
 </script>
 
-<style lang="scss" scope>
+<style lang="scss" scoped>
     @import '@/assets/scss/conf.scss';
 
     .detail-title {
         display: flex;
-        justify-content: space-between;
         align-items: center;
         margin: 47px auto 30px;
         width: 1200px;
@@ -207,6 +208,9 @@
                 display: inline-block;
                 width: calc(100% - 90px);
             }
+        }
+        .not-recommend {
+            text-decoration: line-through;
         }
         .title-with-img {
             display: flex;

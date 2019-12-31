@@ -462,6 +462,10 @@
         }
     },
     "editPage": {
+        "macSystemVersion": "MacOS system version",
+        "xcodeVersion": "XCode version",
+        "notRecomendPlugin": "该插件已不推荐使用",
+        "notRecomendImage": "该镜像已不推荐使用",
         "image": "镜像",
         "provideInfo": "{0} 提供，{1} 修改于 {2}",
         "officialCertification": "官方认证",

@@ -185,6 +185,92 @@ export default {
             }
         ]
     },
+    PINPOINT: {
+        'title': 'Pinpoint',
+        'normalLegend': [
+            {
+                'key': '新增',
+                'value': 'latest_new_add_count'
+            },
+            {
+                'key': '关闭',
+                'value': 'latest_closed_count'
+            }
+        ],
+        'normalKey': '关闭',
+        'normalVal': 'latest_closed_count',
+        'activeKey': '新增',
+        'activeVal': 'latest_new_add_count',
+        'mainKey': '遗留告警数',
+        'mainVal': 'latest_exist_count',
+        'charts': [
+            {
+                type: 'pie',
+                title: '所有告警状态',
+                color: ['#ffb400', '#30d878', '#3c96ff', '#dde4eb'],
+                opts: [
+                    {
+                        key: 'total_new',
+                        text: '待修复'
+                    },
+                    {
+                        key: 'total_close',
+                        text: '已修复'
+                    },
+                    {
+                        key: 'total_ignore',
+                        text: '已忽略'
+                    },
+                    {
+                        key: 'total_excluded',
+                        text: '已屏蔽'
+                    }
+                ],
+                enable: true
+            },
+            {
+                type: 'bar',
+                title: '待修复告警级别',
+                opts: [
+                    {
+                        key: 'total_new_serious',
+                        text: '严重'
+                    },
+                    {
+                        key: 'total_new_normal',
+                        text: '一般'
+                    },
+                    {
+                        key: 'total_new_prompt',
+                        text: '提示'
+                    }
+                ],
+                enable: true
+            },
+            {
+                type: 'bar',
+                title: '待修复告警作者',
+                opts: 'author_list',
+                xKey: 'name',
+                yKey: 'total_count',
+                level: [
+                    {
+                        key: 'serious_count',
+                        text: '严重'
+                    },
+                    {
+                        key: 'normal_count',
+                        text: '一般'
+                    },
+                    {
+                        key: 'prompt_count',
+                        text: '提示'
+                    }
+                ],
+                enable: true
+            }
+        ]
+    },
     CPPLINT: {
         'title': 'CppLint',
         'normalLegend': [

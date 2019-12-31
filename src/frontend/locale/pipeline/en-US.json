@@ -462,6 +462,10 @@
         }
     },
     "editPage": {
+        "macSystemVersion": "MacOS系统版本",
+        "xcodeVersion": "XCode版本",
+        "notRecomendPlugin": "This plugin is not recommended",
+        "notRecomendImage": "This image is not recommended",
         "image": "image",
         "provideInfo": "Provided by {0}, modified {1} on {2}",
         "officialCertification": "Official Certification",

@@ -223,7 +223,6 @@
             window.setProjectIdCookie(id)
 
             if ((!oldProject && project.gray) || (oldProject && oldProject.gray !== project.gray)) {
-                localStorage.setItem('projectId', id)
                 this.goHomeById(id, true)
             }
         }
