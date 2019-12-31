@@ -147,13 +147,13 @@ class PipelineBuildService @Autowired constructor(
                         gitUrl = gitRepository.data!!.url
                     }
                     "gitCodeRepoCommon" -> {
-                        val dataMap = JsonUtil.toMap(taskParamsMap["data"])
-                        val inputMap = JsonUtil.toMap(dataMap["input"])
+                        val dataMap = JsonUtil.toMap(taskParamsMap["data"]!!)
+                        val inputMap = JsonUtil.toMap(dataMap["input"]!!)
                         gitUrl = inputMap["repositoryUrl"].toString()
                     }
                     "gitCodeRepo" -> {
-                        val dataMap = JsonUtil.toMap(taskParamsMap["data"])
-                        val inputMap = JsonUtil.toMap(dataMap["input"])
+                        val dataMap = JsonUtil.toMap(taskParamsMap["data"]!!)
+                        val inputMap = JsonUtil.toMap(dataMap["input"]!!)
                         val repositoryHashId = inputMap["repositoryHashId"]
                         val gitRepository = client.get(ServiceRepositoryResource::class)
                             .get(event.projectId, repositoryHashId.toString(), RepositoryType.ID)
