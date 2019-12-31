@@ -970,11 +970,9 @@ class ProjectLocalService @Autowired constructor(
         val roleList = bkAuthProjectApi.getProjectRoles(bsPipelineAuthServiceCode, projectId, projectInfo.englishName)
         var authRoleId: String? = null
         roleList.forEach {
-            if (roleId == null || roleName.isNullOrEmpty()) {
-                if (it.roleName == BkAuthGroup.DEVELOPER.value) {
-                    authRoleId = it.roleId.toString()
-                    return@forEach
-                }
+            if (roleId == null && roleName.isNullOrEmpty()) {
+                authRoleId = BkAuthGroup.DEVELOPER.value
+                return@forEach
             }
             if (roleId != null) {
                 if (it.roleId == roleId) {
