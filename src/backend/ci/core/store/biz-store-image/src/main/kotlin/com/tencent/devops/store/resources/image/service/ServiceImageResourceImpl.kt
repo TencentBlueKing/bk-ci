@@ -44,7 +44,7 @@ class ServiceImageResourceImpl @Autowired constructor(
     override fun getSelfDevelopPublicImages(): Result<List<ImageRepoInfo>> {
         return Result(
             imageService.getSelfDevelopPublicImages(
-                interfaceName = "/service/market/image/selfDevelop/publicImages"
+                interfaceName = "/service/market/image/self_develop/public_images"
             )
         )
     }
