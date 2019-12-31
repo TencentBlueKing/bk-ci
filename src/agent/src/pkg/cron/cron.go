@@ -41,8 +41,8 @@ func CleanDumpFileJob(intervalInHours int, cleanBeforeInHours int) {
 	TryCleanDumpFile(cleanBeforeInHours)
 	for {
 		now := time.Now()
-		//nextTime := now.Add(time.Hour * time.Duration(intervalInHours))
-		nextTime := now.Add(time.Second * 30)
+		nextTime := now.Add(time.Hour * time.Duration(intervalInHours))
+		// nextTime := now.Add(time.Second * 30)
 		logs.Info("next clean time: ", util.FormatTime(nextTime))
 		t := time.NewTimer(nextTime.Sub(now))
 		<-t.C
