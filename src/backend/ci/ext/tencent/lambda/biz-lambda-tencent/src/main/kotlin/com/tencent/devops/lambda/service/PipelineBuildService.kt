@@ -57,6 +57,8 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import java.util.concurrent.TimeUnit
 
 @Service
@@ -171,8 +173,10 @@ class PipelineBuildService @Autowired constructor(
     }
 
     private fun sendKafka(task: TPipelineBuildTaskRecord, gitUrl: String) {
+        val dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
         val taskMap = task.intoMap()
         taskMap["GIT_URL"] = gitUrl
+        taskMap["WASH_TIME"] = LocalDateTime.now().format(dateTimeFormatter)
         taskMap.remove("TASK_PARAMS")
 
         kafkaClient.send(KafkaTopic.LANDUN_GIT_TASK_TOPIC, JsonUtil.toJson(taskMap))
