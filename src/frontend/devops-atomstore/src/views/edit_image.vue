@@ -301,6 +301,7 @@
             },
 
             submitImage () {
+                if (this.form.dockerFileType === 'INPUT') this.form.dockerFileContent = this.codeEditor.getValue()
                 this.$refs.imageForm.validate().then(() => {
                     if (!this.form.logoUrl) {
                         this.logoErr = true
