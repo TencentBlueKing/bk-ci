@@ -24,10 +24,10 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.agent
+package com.tencent.devops.process.pojo.pipeline.enums
 
-const val AGENT_VERSION = 11.0
-
-fun main(argv: Array<String>) {
-    println(AGENT_VERSION)
+enum class CallBackNetWorkRegionType {
+    DEVNET,
+    OSS,
+    IDC
 }

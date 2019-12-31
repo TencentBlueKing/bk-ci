@@ -24,10 +24,57 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.agent
+package cron
 
-const val AGENT_VERSION = 11.0
+import (
+	"fmt"
+	"github.com/astaxie/beego/logs"
+	"io/ioutil"
+	"os"
+	"pkg/util"
+	"pkg/util/systemutil"
+	"strings"
+	"time"
+)
 
-fun main(argv: Array<String>) {
-    println(AGENT_VERSION)
+func CleanDumpFileJob(intervalInHours int, cleanBeforeInHours int) {
+	TryCleanDumpFile(cleanBeforeInHours)
+	for {
+		now := time.Now()
+		nextTime := now.Add(time.Hour * time.Duration(intervalInHours))
+		// nextTime := now.Add(time.Second * 30)
+		logs.Info("next clean time: ", util.FormatTime(nextTime))
+		t := time.NewTimer(nextTime.Sub(now))
+		<-t.C
+		TryCleanDumpFile(cleanBeforeInHours)
+	}
+}
+
+func TryCleanDumpFile(hoursBefore int) {
+	logs.Info("clean jvm dump file starts")
+	defer func() {
+		if err := recover(); err != nil {
+			logs.Error("remove jvm dump files error: ", err)
+		}
+	}()
+
+	workDir := systemutil.GetWorkDir()
+	logs.Info("clean dump file in " + workDir + " before " + util.FormatTime(time.Now().Add(time.Hour*time.Duration(hoursBefore*-1))))
+	files, err := ioutil.ReadDir(workDir)
+	if err != nil {
+		logs.Error("read dir error: ", err.Error())
+	}
+	for _, file := range files {
+		if !file.IsDir() && strings.HasPrefix(file.Name(), "hs_err_pid") &&
+			int(time.Since(file.ModTime()).Hours()) > hoursBefore {
+			fileFullName := workDir + "/" + file.Name()
+			err = os.Remove(fileFullName)
+			if err != nil {
+				logs.Warn(fmt.Sprintf("remove file %s failed: ", fileFullName), err.Error())
+			} else {
+				logs.Info(fmt.Sprintf("file %s removed", fileFullName))
+			}
+		}
+	}
+	logs.Info("clean jvm dump file done")
 }

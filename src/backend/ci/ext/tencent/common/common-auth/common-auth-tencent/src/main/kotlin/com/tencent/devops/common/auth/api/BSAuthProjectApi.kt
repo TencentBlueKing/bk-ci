@@ -121,12 +121,19 @@ class BSAuthProjectApi @Autowired constructor(
         userId: String,
         supplier: (() -> List<String>)?
     ): List<String> {
+        val startEpoch = System.currentTimeMillis()
         val accessToken = bsAuthTokenApi.getAccessToken(serviceCode)
+        val tokenEscape = System.currentTimeMillis() - startEpoch
         val url = "${bkAuthProperties.url}/projects?access_token=$accessToken&user_id=$userId"
         val request = Request.Builder().url(url).get().build()
 
         OkhttpUtils.doHttp(request).use { response ->
             val responseContent = response.body()!!.string()
+            val escape = System.currentTimeMillis() - startEpoch
+            if (escape > 1000) {
+                // if > 1 second, print the response
+                logger.warn("[$userId|$serviceCode|$tokenEscape] It took ${escape}ms to get the project list with response($responseContent)")
+            }
             if (!response.isSuccessful) {
                 logger.error("Fail to get user projects. $responseContent")
                 throw RemoteServiceException("Fail to get user projects")

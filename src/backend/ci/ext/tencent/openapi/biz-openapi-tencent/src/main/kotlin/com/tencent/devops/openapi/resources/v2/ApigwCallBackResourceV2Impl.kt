@@ -23,11 +23,41 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.openapi.resources.v2
 
-package com.tencent.devops.agent
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.event.CallBackEvent
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.openapi.api.v2.ApigwCallBackResourceV2
+import com.tencent.devops.process.api.user.UserCallBackResource
+import com.tencent.devops.process.pojo.pipeline.enums.CallBackNetWorkRegionType
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
 
-const val AGENT_VERSION = 11.0
+@RestResource
+class ApigwCallBackResourceV2Impl @Autowired constructor(
+    private val client: Client
+) : ApigwCallBackResourceV2 {
+    override fun create(
+        userId: String,
+        projectId: String,
+        url: String,
+        region: CallBackNetWorkRegionType,
+        event: CallBackEvent,
+        secretToken: String?
+    ): Result<Boolean> {
+        return client.get(UserCallBackResource::class).create(
+            userId = userId,
+            projectId = projectId,
+            url = url,
+            region = region,
+            event = event,
+            secretToken = secretToken
+        )
+    }
 
-fun main(argv: Array<String>) {
-    println(AGENT_VERSION)
+    companion object {
+        private val logger = LoggerFactory.getLogger(ApigwCallBackResourceV2Impl::class.java)
+    }
 }

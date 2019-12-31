@@ -27,12 +27,22 @@
 package com.tencent.devops.plugin.worker.task.script.shell
 
 import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxScriptElement
+import com.tencent.devops.process.pojo.BuildTask
+import com.tencent.devops.process.pojo.BuildVariables
+import com.tencent.devops.process.utils.PIPELINE_TURBO_TASK_ID
+import com.tencent.devops.store.pojo.app.BuildEnv
 import com.tencent.devops.worker.common.task.TaskClassType
 import com.tencent.devops.worker.common.task.script.ScriptTask
 
 @TaskClassType(classTypes = [LinuxScriptElement.classType], priority = 999)
 class TurboLinuxScriptTask : ScriptTask() {
-    init {
-        // CommonEnv.addCommonEnv(mapOf("PATH" to "/data/bkdevops/apps/turbo/1.0:\$PATH"))
+
+    override fun takeBuildEnvs(buildTask: BuildTask, buildVariables: BuildVariables): List<BuildEnv> {
+        val turboTaskId = buildTask.buildVariable?.get(PIPELINE_TURBO_TASK_ID)
+        return if (turboTaskId.isNullOrBlank()) {
+            buildVariables.buildEnvs
+        } else { // 设置编译加速路径
+            buildVariables.buildEnvs.plus(BuildEnv(name = "turbo", version = "1.0", binPath = "", env = mapOf()))
+        }
     }
 }

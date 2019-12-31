@@ -24,10 +24,21 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.agent
+package com.tencent.devops.scm.resources
 
-const val AGENT_VERSION = 11.0
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.repository.pojo.oauth.GitToken
+import com.tencent.devops.scm.api.BuildGitCiResource
+import com.tencent.devops.scm.services.GitService
+import org.springframework.beans.factory.annotation.Autowired
 
-fun main(argv: Array<String>) {
-    println(AGENT_VERSION)
+@RestResource
+class BuildGitCiResourceImpl @Autowired constructor(
+    private val gitService: GitService
+) : BuildGitCiResource {
+
+    override fun getToken(gitProjectId: Long): Result<GitToken> {
+        return Result(gitService.getToken(gitProjectId))
+    }
 }

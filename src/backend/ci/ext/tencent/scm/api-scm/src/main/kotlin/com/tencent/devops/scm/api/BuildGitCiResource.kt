@@ -24,10 +24,32 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.agent
+package com.tencent.devops.scm.api
 
-const val AGENT_VERSION = 11.0
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.repository.pojo.oauth.GitToken
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.GET
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
+import javax.ws.rs.core.MediaType
 
-fun main(argv: Array<String>) {
-    println(AGENT_VERSION)
+@Api(tags = ["BUILD_SCM_GIT_CI"], description = "Service Code GIT CI resource")
+@Path("/build/gitci/")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface BuildGitCiResource {
+
+    @ApiOperation("获取项目的token")
+    @GET
+    @Path("/gitci/getToken")
+    fun getToken(
+        @ApiParam("gitProjectId", required = true)
+        @QueryParam("gitProjectId")
+        gitProjectId: Long
+    ): Result<GitToken>
 }

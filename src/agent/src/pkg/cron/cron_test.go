@@ -24,10 +24,11 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.agent
+package cron
 
-const val AGENT_VERSION = 11.0
+import "testing"
 
-fun main(argv: Array<String>) {
-    println(AGENT_VERSION)
+func Test_AgentStartup_01(t *testing.T) {
+	CleanDumpFileJob(1, 1)
 }
+
