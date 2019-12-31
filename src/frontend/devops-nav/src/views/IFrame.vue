@@ -15,7 +15,6 @@
                 v-if="src"
                 id="iframe-box"
                 ref="iframeEle"
-                allowfullscreen
                 :src="src"
                 @load="onLoad"
             />
