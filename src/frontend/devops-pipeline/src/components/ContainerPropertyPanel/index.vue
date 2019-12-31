@@ -386,12 +386,18 @@
             }
             if (['DOCKER', 'IDC', 'PUBLIC_DEVCLOUD'].includes(this.buildResourceType) && !this.buildImageCode && this.buildImageType !== 'THIRD') {
                 if (/\$\{/.test(this.buildResource)) {
-                    this.changeBuildResource('imageType', 'THIRD')
+                    this.handleContainerChange('dispatchType', Object.assign({
+                        ...this.container.dispatchType,
+                        imageType: 'THIRD'
+                    }))
                 } else {
                     this.isLoadingImage = true
                     this.requestImageHistory({ agentType: this.buildResourceType, value: this.buildResource }).then((res) => {
                         const data = res.data || {}
-                        this.changeBuildResource('imageType', 'BKSTORE')
+                        this.handleContainerChange('dispatchType', Object.assign({
+                            ...this.container.dispatchType,
+                            imageType: 'BKSTORE'
+                        }))
                         if (data.code) this.choose(data)
                     }).catch((err) => this.$showTips({ theme: 'error', message: err.message || err })).finally(() => (this.isLoadingImage = false))
                 }
@@ -420,30 +426,45 @@
 
             changeResourceType (name, val) {
                 this.imageRecommend = true
-                this.changeBuildResource('imageVersion', '')
-                this.changeBuildResource('value', '')
-                this.changeBuildResource('imageCode', '')
-                this.changeBuildResource('imageName', '')
-                this.changeBuildResource(name, val)
+                this.handleContainerChange('dispatchType', Object.assign({
+                    ...this.container.dispatchType,
+                    imageVersion: '',
+                    value: '',
+                    imageCode: '',
+                    imageName: '',
+                    [name]: val
+                }))
             },
 
             changeThirdImage (val) {
-                this.changeBuildResource('value', val)
+                this.handleContainerChange('dispatchType', Object.assign({
+                    ...this.container.dispatchType,
+                    value: val
+                }))
             },
 
             changeImageVersion (value) {
-                this.changeBuildResource('imageVersion', value)
-                this.changeBuildResource('value', this.buildImageCode)
+                this.handleContainerChange('dispatchType', Object.assign({
+                    ...this.container.dispatchType,
+                    imageVersion: value,
+                    value: this.buildImageCode
+                }))
             },
 
             choose (card) {
                 this.imageRecommend = card.recommendFlag
-                this.changeBuildResource('imageCode', card.code)
-                this.changeBuildResource('imageName', card.name)
+                this.handleContainerChange('dispatchType', Object.assign({
+                    ...this.container.dispatchType,
+                    imageCode: card.code,
+                    imageName: card.name
+                }))
                 return this.getVersionList(card.code).then(() => {
                     const firstVersion = this.versionList[0] || {}
-                    this.changeBuildResource('imageVersion', firstVersion.versionValue)
-                    this.changeBuildResource('value', card.code)
+                    this.handleContainerChange('dispatchType', Object.assign({
+                        ...this.container.dispatchType,
+                        imageVersion: firstVersion.versionValue,
+                        value: card.code
+                    }))
                 })
             },
 
