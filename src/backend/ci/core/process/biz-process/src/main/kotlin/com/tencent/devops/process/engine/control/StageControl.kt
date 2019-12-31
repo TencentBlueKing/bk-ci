@@ -91,7 +91,7 @@ class StageControl @Autowired constructor(
                             buildStatus = BuildStatus.TERMINATE
                         )
                 }
-                return sendTerminateEvent(BuildStatus.FAILED)
+                return sendTerminateEvent(BuildStatus.TERMINATE)
             }
 
             var nextStage = false
