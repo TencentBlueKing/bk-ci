@@ -41,5 +41,4 @@ class BuildGitCiResourceImpl @Autowired constructor(
     override fun getToken(gitProjectId: Long): Result<GitToken> {
         return Result(gitService.getToken(gitProjectId))
     }
-
 }

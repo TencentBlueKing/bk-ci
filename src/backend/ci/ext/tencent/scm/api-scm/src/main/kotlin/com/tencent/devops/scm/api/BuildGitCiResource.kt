@@ -27,34 +27,15 @@
 package com.tencent.devops.scm.api
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.scm.pojo.Project
-import com.tencent.devops.repository.pojo.enums.GitAccessLevelEnum
-import com.tencent.devops.repository.pojo.enums.RepoAuthType
-import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
-import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
-import com.tencent.devops.repository.pojo.git.GitMrChangeInfo
-import com.tencent.devops.repository.pojo.git.GitMrInfo
-import com.tencent.devops.repository.pojo.git.GitMrReviewInfo
-import com.tencent.devops.repository.pojo.git.GitProjectInfo
-import com.tencent.devops.repository.pojo.git.UpdateGitProjectInfo
 import com.tencent.devops.repository.pojo.oauth.GitToken
-import com.tencent.devops.scm.code.git.api.GitBranch
-import com.tencent.devops.scm.code.git.api.GitTag
-import com.tencent.devops.scm.pojo.CommitCheckRequest
-import com.tencent.devops.scm.pojo.GitRepositoryResp
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
-import javax.servlet.http.HttpServletResponse
 import javax.ws.rs.Consumes
-import javax.ws.rs.DELETE
 import javax.ws.rs.GET
-import javax.ws.rs.POST
-import javax.ws.rs.PUT
 import javax.ws.rs.Path
 import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
-import javax.ws.rs.core.Context
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["BUILD_SCM_GIT_CI"], description = "Service Code GIT CI resource")
@@ -71,5 +52,4 @@ interface BuildGitCiResource {
         @QueryParam("gitProjectId")
         gitProjectId: Long
     ): Result<GitToken>
-
 }
