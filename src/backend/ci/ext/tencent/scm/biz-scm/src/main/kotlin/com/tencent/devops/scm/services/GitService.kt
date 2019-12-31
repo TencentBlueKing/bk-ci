@@ -320,7 +320,7 @@ class GitService @Autowired constructor(
         }
     }
 
-    fun getToken(gitProjectId: Long): GitToken {
+    fun getToken(gitProjectId: String): GitToken {
         logger.info("Start to get the token for git project($gitProjectId)")
         val startEpoch = System.currentTimeMillis()
         try {
