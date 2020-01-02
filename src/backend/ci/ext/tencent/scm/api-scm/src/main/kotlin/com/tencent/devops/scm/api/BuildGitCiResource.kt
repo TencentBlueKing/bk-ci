@@ -46,10 +46,10 @@ interface BuildGitCiResource {
 
     @ApiOperation("获取项目的token")
     @GET
-    @Path("/gitci/getToken")
+    @Path("/getToken")
     fun getToken(
         @ApiParam("gitProjectId", required = true)
         @QueryParam("gitProjectId")
-        gitProjectId: Long
+        gitProjectId: String
     ): Result<GitToken>
 }
