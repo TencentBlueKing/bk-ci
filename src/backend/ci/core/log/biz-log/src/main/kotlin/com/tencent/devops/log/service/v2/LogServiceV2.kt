@@ -28,6 +28,7 @@ package com.tencent.devops.log.service.v2
 
 import com.google.common.cache.CacheBuilder
 import com.tencent.devops.common.api.pojo.Page
+import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.log.jmx.v2.CreateIndexBeanV2
@@ -97,6 +98,13 @@ class LogServiceV2 @Autowired constructor(
         .maximumSize(100000)
         .expireAfterAccess(30, TimeUnit.MINUTES)
         .build<String/*BuildId*/, Boolean/*Has create the index*/>()
+
+    fun pipelineFinish(event: PipelineBuildFinishBroadCastEvent) {
+        with(event) {
+            logger.info("[$projectId|$pipelineId|$buildId] build finish")
+            indexServiceV2.flushLineNum2DB(buildId)
+        }
+    }
 
     fun addLogEvent(event: LogEvent) {
         startLog(event.buildId)
@@ -321,6 +329,35 @@ class LogServiceV2 @Autowired constructor(
                 executeCount = executeCount
             )
             success = true
+            return result
+        } finally {
+            logBeanV2.query(System.currentTimeMillis() - startEpoch, success)
+        }
+    }
+
+    fun queryMoreOriginLogsAfterLine(
+        buildId: String,
+        start: Long,
+        tag: String? = null,
+        jobId: String? = null,
+        executeCount: Int?
+    ): QueryLogs {
+        val startEpoch = System.currentTimeMillis()
+        var success = false
+        try {
+            val indexAndType = indexServiceV2.getIndexAndType(buildId)
+            val index = indexAndType.index
+            val type = indexAndType.type
+            val result = doQueryMoreOriginLogsAfterLine(
+                buildId = buildId,
+                index = index,
+                type = type,
+                start = start,
+                tag = tag,
+                jobId = jobId,
+                executeCount = executeCount
+            )
+            success = logStatusSuccess(result.status)
             return result
         } finally {
             logBeanV2.query(System.currentTimeMillis() - startEpoch, success)

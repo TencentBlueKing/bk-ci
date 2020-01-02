@@ -31,6 +31,7 @@ import com.tencent.devops.store.pojo.app.BuildEnv
 import com.tencent.devops.worker.common.CommonEnv
 import com.tencent.devops.worker.common.WORKSPACE_ENV
 import com.tencent.devops.worker.common.logger.LoggerService
+import com.tencent.devops.worker.common.task.script.ScriptEnvUtils
 import java.io.File
 import java.nio.file.Files
 
@@ -68,7 +69,6 @@ object ShellUtil {
         "\n" +
         "        echo \$key=\$val  >> ##gateValueFile##\n" +
         "    }\n"
-    const val GATEWAY_FILE = "gatewayValueFile.ini"
 
     lateinit var buildEnvs: List<BuildEnv>
 
@@ -77,6 +77,7 @@ object ShellUtil {
     private val specialCharToReplace = Regex("['\n]") // --bug=75509999 Agent环境变量中替换掉破坏性字符
 
     fun execute(
+        buildId: String,
         script: String,
         dir: File,
         buildEnvs: List<BuildEnv>,
@@ -85,13 +86,14 @@ object ShellUtil {
         prefix: String = ""
     ): String {
         return executeUnixCommand(
-            command = getCommandFile(script, dir, buildEnvs, runtimeVariables, continueNoneZero).canonicalPath,
+            command = getCommandFile(buildId, script, dir, buildEnvs, runtimeVariables, continueNoneZero).canonicalPath,
             sourceDir = dir,
             prefix = prefix
         )
     }
 
     fun getCommandFile(
+        buildId: String,
         script: String,
         dir: File,
         buildEnvs: List<BuildEnv>,
@@ -166,8 +168,8 @@ object ShellUtil {
             command.append("set +e\n")
         }
 
-        command.append(setEnv.replace("##resultFile##", File(dir, "result.log").absolutePath))
-        command.append(setGateValue.replace("##gateValueFile##", File(dir, GATEWAY_FILE).absolutePath))
+        command.append(setEnv.replace("##resultFile##", File(dir, ScriptEnvUtils.getEnvFile(buildId)).absolutePath))
+        command.append(setGateValue.replace("##gateValueFile##", File(dir, ScriptEnvUtils.getQualityGatewayEnvFile()).absolutePath))
         command.append(script)
 
         file.writeText(command.toString())
