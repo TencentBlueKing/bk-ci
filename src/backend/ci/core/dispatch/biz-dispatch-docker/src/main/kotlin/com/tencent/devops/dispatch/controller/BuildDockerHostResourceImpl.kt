@@ -94,4 +94,8 @@ class BuildDockerHostResourceImpl @Autowired constructor(
         dockerHostBuildService.log(buildId, red, message, tag)
         return Result(0, "success")
     }
+
+    override fun getPublicImages(): Result<List<String>> {
+        return dockerHostBuildService.getPublicImage()
+    }
 }
