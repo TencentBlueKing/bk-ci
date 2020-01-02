@@ -47,6 +47,7 @@ interface ElementBizPlugin<T : Element> {
      * @param pipelineName 流水线名称
      * @param userId 操作人
      * @param channelCode 渠道
+     * @param create 是否新增
      */
     fun afterCreate(
         element: T,
@@ -54,7 +55,8 @@ interface ElementBizPlugin<T : Element> {
         pipelineId: String,
         pipelineName: String,
         userId: String,
-        channelCode: ChannelCode = ChannelCode.BS
+        channelCode: ChannelCode = ChannelCode.BS,
+        create: Boolean
     )
 
     /**

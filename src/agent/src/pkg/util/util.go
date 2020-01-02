@@ -26,7 +26,10 @@
 
 package util
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"time"
+)
 
 func ParseJsonToData(jsonData interface{}, targetData interface{}) error {
 	dataStr, err := json.Marshal(jsonData)
@@ -40,4 +43,8 @@ func ParseJsonToData(jsonData interface{}, targetData interface{}) error {
 	} else {
 		return nil
 	}
+}
+
+func FormatTime(t time.Time) string{
+	return t.Format("2006-01-02 15:04:05")
 }
