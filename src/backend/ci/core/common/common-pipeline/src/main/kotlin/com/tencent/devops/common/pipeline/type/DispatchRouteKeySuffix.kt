@@ -31,5 +31,6 @@ enum class DispatchRouteKeySuffix(val routeKeySuffix: String) {
     DEVCLOUD(".devcloud.public"),
     IDC(".idc.public"),
     GITCI(".gitci.public"),
-    CODECC(".codecc.scan")
+    CODECC(".codecc.scan"),
+    MACOS(".macos")
 }

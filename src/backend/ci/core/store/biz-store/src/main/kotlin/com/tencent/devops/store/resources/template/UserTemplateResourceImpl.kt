@@ -59,7 +59,7 @@ class UserTemplateResourceImpl @Autowired constructor(
     }
 
     override fun installTemplate(accessToken: String, userId: String, installTemplateReq: InstallTemplateReq): Result<Boolean> {
-        return marketTemplateService.installTemplate(accessToken, userId, ChannelCode.BS, installTemplateReq)
+        return marketTemplateService.installTemplate(userId, ChannelCode.BS, installTemplateReq)
     }
 
     override fun mainPageList(userId: String, page: Int?, pageSize: Int?): Result<List<MarketTemplateMain>> {

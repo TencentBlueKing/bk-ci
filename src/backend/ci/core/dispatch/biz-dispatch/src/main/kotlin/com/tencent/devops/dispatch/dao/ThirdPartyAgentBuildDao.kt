@@ -71,13 +71,11 @@ class ThirdPartyAgentBuildDao {
             val preRecord =
                 dslContext.selectFrom(this).where(BUILD_ID.eq(buildId)).and(VM_SEQ_ID.eq(vmSeqId)).fetchAny()
             if (preRecord != null) { // 支持更新，让用户进行步骤重试时继续能使用
-                dslContext.update(this)
+                return dslContext.update(this)
                     .set(WORKSPACE, thirdPartyAgentWorkspace)
-                    .set(CREATED_TIME, now)
                     .set(UPDATED_TIME, now)
                     .set(STATUS, PipelineTaskStatus.QUEUE.status)
                     .where(ID.eq(preRecord.id)).execute()
-                return preRecord.id
             }
             return dslContext.insertInto(
                 this,
