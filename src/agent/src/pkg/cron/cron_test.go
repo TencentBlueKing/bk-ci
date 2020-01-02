@@ -24,6 +24,11 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package config
+package cron
 
-const AgentVersion = "GO_20191231"
+import "testing"
+
+func Test_AgentStartup_01(t *testing.T) {
+	CleanDumpFileJob(1, 1)
+}
+
