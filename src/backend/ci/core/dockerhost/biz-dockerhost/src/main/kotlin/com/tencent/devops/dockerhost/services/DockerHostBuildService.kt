@@ -552,13 +552,17 @@ class DockerHostBuildService(
         }
 
         val publicImages = dockerHostBuildApi.getPublicImages().data
+        if (null == publicImages) {
+            logger.error("Public images is empty")
+            return
+        }
         val imageList = dockerCli.listImagesCmd().withShowAll(true).exec()
         imageList.forEach c@{
             if (it.repoTags == null || it.repoTags.isEmpty()) {
                 return@c
             }
             it.repoTags.forEach t@{ image ->
-                if (publicImages != null && publicImages.contains(image)) {
+                if (publicImages.contains(image)) {
                     logger.info("skip public image: $image")
                     return@t
                 }

@@ -731,6 +731,12 @@ class DockerHostBuildService @Autowired constructor(
         }
     }
 
+    fun getPublicImage(): Result<List<String>> {
+        logger.info("enter getPublicImage")
+        // TODO
+        return Result(listOf())
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(DockerHostBuildService::class.java)
 
