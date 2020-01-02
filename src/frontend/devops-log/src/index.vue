@@ -146,7 +146,7 @@
             language,
 
             valuefilter (val) {
-                return val.replace(/\s/g, '&nbsp;').replace(/<a[^>]*>/g, (a) => a.replace(/&nbsp;/g, ' ')).replace(/<br>/g, '')
+                return val.replace(/\s/g, '&nbsp;').replace(/<a[^>]*>/g, (a) => a.replace(/&nbsp;/g, ' ')).replace(/<br\/>/g, '')
             },
 
             downLoad () {
