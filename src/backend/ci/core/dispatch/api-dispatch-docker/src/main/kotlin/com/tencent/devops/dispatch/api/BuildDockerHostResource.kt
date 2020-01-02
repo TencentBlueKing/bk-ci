@@ -188,7 +188,10 @@ interface BuildDockerHostResource {
         message: String,
         @ApiParam("tag", required = false)
         @QueryParam("tag")
-        tag: String?
+        tag: String?,
+        @ApiParam("jobId", required = false)
+        @QueryParam("jobId")
+        jobId: String?
     ): Result<Boolean>?
 
     @ApiOperation("上报日志信息")
@@ -205,6 +208,9 @@ interface BuildDockerHostResource {
         message: String,
         @ApiParam("tag", required = false)
         @QueryParam("tag")
-        tag: String?
+        tag: String?,
+        @ApiParam("jobId", required = false)
+        @QueryParam("jobId")
+        jobId: String?
     ): Result<Boolean>?
 }
