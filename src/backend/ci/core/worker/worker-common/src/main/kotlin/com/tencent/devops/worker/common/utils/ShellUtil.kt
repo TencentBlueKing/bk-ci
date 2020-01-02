@@ -83,10 +83,19 @@ object ShellUtil {
         buildEnvs: List<BuildEnv>,
         runtimeVariables: Map<String, String>,
         continueNoneZero: Boolean = false,
+        systemEnvVariables: Map<String, String>? = null,
         prefix: String = ""
     ): String {
         return executeUnixCommand(
-            command = getCommandFile(buildId, script, dir, buildEnvs, runtimeVariables, continueNoneZero).canonicalPath,
+            command = getCommandFile(
+                buildId = buildId,
+                script = script,
+                dir = dir,
+                buildEnvs = buildEnvs,
+                runtimeVariables = runtimeVariables,
+                continueNoneZero = continueNoneZero,
+                systemEnvVariables = systemEnvVariables
+            ).canonicalPath,
             sourceDir = dir,
             prefix = prefix
         )
@@ -98,7 +107,8 @@ object ShellUtil {
         dir: File,
         buildEnvs: List<BuildEnv>,
         runtimeVariables: Map<String, String>,
-        continueNoneZero: Boolean = false
+        continueNoneZero: Boolean = false,
+        systemEnvVariables: Map<String, String>? = null
     ): File {
         val file = Files.createTempFile("devops_script", ".sh").toFile()
         file.deleteOnExit()
@@ -111,6 +121,12 @@ object ShellUtil {
 
         command.append("export $WORKSPACE_ENV=${dir.absolutePath}\n")
             .append("export DEVOPS_BUILD_SCRIPT_FILE=${file.absolutePath}\n")
+
+        // 设置系统环境变量
+        systemEnvVariables?.forEach { (name, value) ->
+            command.append("export $name=$value\n")
+        }
+
         val commonEnv = runtimeVariables.plus(CommonEnv.getCommonEnv())
             .filter {
                 !specialEnv(it.key, it.value)
