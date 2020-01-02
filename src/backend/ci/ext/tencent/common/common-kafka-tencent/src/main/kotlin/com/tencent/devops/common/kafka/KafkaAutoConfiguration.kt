@@ -52,12 +52,12 @@ import java.net.URL
 class KafkaAutoConfiguration {
     private val SECURITY_PROTOCOL = "SASL_PLAINTEXT"
     private val SASL_MECHANISM = "SCRAM-SHA-512"
+
     init {
         val authLocation: URL = KafkaAutoConfiguration::class.java.classLoader.getResource("kafka_client_jaas.conf")!!
         if (System.getProperty("java.security.auth.login.config") == null) {
             System.setProperty("java.security.auth.login.config", authLocation.toExternalForm())
         }
-
     }
 
     @Bean
