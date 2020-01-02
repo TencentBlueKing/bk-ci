@@ -9,20 +9,13 @@
                 title: loading.title
             }">
             <div class="node-list-header">
-                <div class="title">选择要添加的节点
+                <div class="title">{{ $t('environment.nodeInfo.selectNodeTip') }}
                     <span class="selected-node-prompt">
-                        共<span class="node-count"> {{ selectHandlercConf.curTotalCount }} </span>个节点
+                        {{ $t('environment.nodeInfo.selectNodeTip') }}<span class="node-count"> {{ selectHandlercConf.curTotalCount }} </span>{{ $t('environment.nodes') }}
                     </span>
                     <span class="selected-node-prompt">
-                        已选择<span class="node-count"> {{ selectHandlercConf.selectedNodeCount }} </span>个节点
+                        {{ $t('environment.selected') }}<span class="node-count"> {{ selectHandlercConf.selectedNodeCount }} </span>{{ $t('environment.nodes') }}
                     </span>
-                    <bk-popover placement="right" v-if="isCC || isCmdbNode">
-                        <i class="bk-icon icon-info-circle"></i>
-                        <template slot="content">
-                            <p v-if="isCC" style="max-width: 300px; text-align: left; white-space: normal;word-break: break-all;font-weight: 400;">用户可以导入CC中责任人或备份责任人为当前用户的节点（服务器），如果看不到要导入的节点，可以修改机器责任人后再导入或找责任人代为导入</p>
-                            <p v-if="isCmdbNode" style="max-width: 300px; text-align: left; white-space: normal;word-break: break-all;font-weight: 400;">用户可以导入CMDB中责任人或备份责任人为当前用户的节点（服务器），如果看不到要导入的节点，可以修改机器责任人后再导入或找责任人代为导入</p>
-                        </template>
-                    </bk-popover>
                 </div>
                 <div class="search-input-row">
                     <div class="biz-search-input">
@@ -48,7 +41,7 @@
                                 <i class="bk-icon icon-search" @click="searchNode"></i>
                             </div>
                             <div class="ip-searcher-footer" v-if="isSearchFooter">
-                                <p>多个IP以空格分开，按回车搜索</p>
+                                <p>{{ $t('environment.nodeInfo.searchNodePlaceholder') }}</p>
                             </div>
                         </div>
                     </div>
@@ -64,11 +57,11 @@
                             @change="toggleAllSelect"
                         ></bk-checkbox>
                         <div class="table-node-item node-item-ip">IP</div>
-                        <div class="table-node-item node-item-name">主机名</div>
-                        <div class="table-node-item node-item-type">来源/导入人</div>
-                        <div class="table-node-item node-item-status">主机状态</div>
+                        <div class="table-node-item node-item-name">{{ $t('environment.nodeInfo.cpuName') }}</div>
+                        <div class="table-node-item node-item-type">{{ `${$t('environment.nodeInfo.source')}/${$t('environment.nodeInfo.importer')}` }}</div>
+                        <div class="table-node-item node-item-status">{{ $t('environment.nodeInfo.cpuStatus') }}</div>
                         <div class="table-node-item node-item-agstatus">
-                            <span>区域</span>
+                            <span>{{ $t('environment.nodeInfo.gateway') }}</span>
                         </div>
                     </div>
                     <div class="table-node-body">
@@ -89,12 +82,12 @@
                             </div>
                             <div class="table-node-item node-item-type" :class="{ 'over-content': selectHandlercConf.curDisplayCount > 6 }">
                                 <div>
-                                    <span class="node-name">{{ getNodeTypeMap[col.nodeType] }}</span>
+                                    <span class="node-name">{{ $t('environment.nodeTypeMap')[col.nodeType] }}</span>
                                     <span>({{ col.createdUser }})</span>
                                 </div>
                             </div>
                             <div class="table-node-item node-item-status">
-                                <span class="node-status" :class="{ 'over-content': selectHandlercConf.curDisplayCount > 6 }">{{ getNodeStatusMap[col.nodeStatus] }}</span>
+                                <span class="node-status" :class="{ 'over-content': selectHandlercConf.curDisplayCount > 6 }">{{ $t('environment.nodeStatusMap')[col.nodeStatus] }}</span>
                             </div>
                             <div class="table-node-item node-item-agstatus" :class="{ 'over-content': selectHandlercConf.curDisplayCount > 6 }">
                                 <span>{{ col.gateway }}</span>
@@ -103,23 +96,20 @@
                     </div>
                 </div>
                 <div class="no-data-row" v-if="selectHandlercConf.searchEmpty || !rowList.length">
-                    <span v-if="(isCC || isCmdbNode) && !selectHandlercConf.curTotalCount">暂未找到主机负责人或备份负责人是你的主机，请联系对应负责人来添加</span>
-                    <span v-else>暂无数据</span>
+                    <span>{{ $t('environment.noData') }}</span>
                 </div>
             </div>
         </div>
         <div slot="footer">
             <div class="footer-handler">
                 <bk-button theme="primary" @click="confirmFn" :disabled="nodeSelectConf.unselected">{{ nodeSelectConf.importText }}</bk-button>
-                <bk-button theme="default" @click="cancelFn">取消</bk-button>
+                <bk-button theme="default" @click="cancelFn">{{ $t('environment.cancel') }}</bk-button>
             </div>
         </div>
     </bk-dialog>
 </template>
 
 <script>
-    import { mapGetters } from 'vuex'
-
     export default {
         props: {
             nodeSelectConf: Object,
@@ -130,16 +120,7 @@
             confirmFn: Function,
             toggleAllSelect: Function,
             cancelFn: Function,
-            changeCreatedUser: Function,
             query: Function,
-            isCmdbNode: {
-                type: Boolean,
-                default: false
-            },
-            isCC: {
-                type: Boolean,
-                default: false
-            },
             searchInfo: {
                 type: Object,
                 default: {
@@ -156,10 +137,6 @@
             }
         },
         computed: {
-            ...mapGetters('environment', [
-                'getNodeTypeMap',
-                'getNodeStatusMap'
-            ]),
             // 动态计算输入长度
             inputStyle () {
                 const tag = this.inputValue
@@ -211,7 +188,7 @@
             },
             paste (event) {
                 const value = event.clipboardData.getData('text')
-                let valParams = value.replace(/\r\n/g, ' ')
+                let valParams = value.replace(/[\r\n]/g, ' ')
                 valParams = valParams.replace(/\t/g, ' ')
                 let target = valParams.split(' ')
                 target = target.filter(item => {

@@ -1,11 +1,11 @@
 <template>
     <div class="environment-create">
-        <div class="env-header">
-            <div class="title">
+        <content-header class="env-header">
+            <div slot="left" class="title">
                 <i class="bk-icon icon-arrows-left" @click="toEnvList"></i>
-                <span class="header-text">新建环境</span>
+                <span class="header-text">{{ `${$t('environment.new')}${$t('environment.environment')}` }}</span>
             </div>
-        </div>
+        </content-header>
 
         <section
             class="sub-view-port"
@@ -21,55 +21,54 @@
             </empty-tips>
 
             <bk-form :label-width="100" class="create-env-form" :model="createEnvForm" v-if="hasPermission && !loading.isLoading">
-                <devops-form-item label="名称" :required="true" :property="'name'" :is-error="errors.has('env_name')" :error-msg="errors.first('env_name')">
+                <devops-form-item :label="$t('environment.envInfo.name')" :required="true" :property="'name'" :is-error="errors.has('env_name')" :error-msg="errors.first('env_name')">
                     <bk-input
                         class="env-name-input"
                         name="env_name"
                         maxlength="30"
-                        placeholder="请输入"
+                        :placeholder="$t('environment.pleaseEnter')"
                         v-model="createEnvForm.name"
                         v-validate="'required'">
                     </bk-input>
                 </devops-form-item>
-                <bk-form-item label="环境描述" :property="'desc'">
+                <bk-form-item :label="$t('environment.envInfo.envRemark')" :property="'desc'">
                     <bk-input
                         class="env-desc-input"
-                        placeholder="请输入"
+                        :placeholder="$t('environment.pleaseEnter')"
                         :type="'textarea'"
                         :rows="3"
                         :maxlength="100"
                         v-model="createEnvForm.desc">
                     </bk-input>
                 </bk-form-item>
-                <bk-form-item label="环境类型" class="env-type-item" :required="true" :property="'envType'">
+                <bk-form-item :label="$t('environment.envInfo.envType')" class="env-type-item" :required="true" :property="'envType'">
                     <bk-radio-group v-model="createEnvForm.envType">
-                        <bk-radio :value="'BUILD'">构建环境</bk-radio>
+                        <bk-radio :value="'BUILD'">{{ $t('environment.envInfo.buildEnvType') }}</bk-radio>
                     </bk-radio-group>
                 </bk-form-item>
-                <bk-form-item label="节点来源" :required="true" :property="'source'">
+                <bk-form-item :label="$t('environment.nodeInfo.nodeSource')" :required="true" :property="'source'">
                     <div class="env-source-content">
                         <div class="source-type-radio">
                             <bk-radio-group v-model="createEnvForm.source">
-                                <bk-radio :value="'EXISTING'">第三方构建机</bk-radio>
+                                <bk-radio :value="'EXISTING'">{{ $t('environment.thirdPartyBuildMachine') }}</bk-radio>
                             </bk-radio-group>
                             <span class="preview-node-btn"
                                 v-if="createEnvForm.source === 'EXISTING' && previewNodeList.length > 0"
-                                @click="toShowNodeList">选取节点</span>
+                                @click="toShowNodeList">{{ $t('environment.nodeInfo.selectNode') }}</span>
                         </div>
                         <div class="empty-node-selected" v-if="createEnvForm.source === 'EXISTING' && previewNodeList.length === 0">
-                            <p class="empty-prompt">暂未选取节点，
-                                <span class="show-node-dialog" @click="toShowNodeList">点击选取节点</span>
+                            <p class="empty-prompt">{{ $t('environment.nodeInfo.notyetNode') }}，
+                                <span class="show-node-dialog" @click="toShowNodeList">{{ $t('environment.nodeInfo.clickSelectNode') }}</span>
                             </p>
-                            <div v-if="errorHandler.nodeHashIds" class="error-tips">节点不能为空</div>
+                            <div v-if="errorHandler.nodeHashIds" class="error-tips">{{ $t('environment.nodeInfo.haveToNeedNode') }}</div>
                         </div>
                         <div class="selected-node-Preview" v-if="createEnvForm.source === 'EXISTING' && previewNodeList.length > 0">
                             <div class="node-table-message">
                                 <div class="table-node-head">
                                     <div class="table-node-item node-item-ip">IP</div>
-                                    <div class="table-node-item node-item-name">主机名</div>
-                                    <div class="table-node-item node-item-type">节点类型</div>
-                                    <div class="table-node-item node-item-status">节点状态</div>
-                                    <div class="table-node-item node-item-agstatus">Agent状态</div>
+                                    <div class="table-node-item node-item-name">{{ $t('environment.nodeInfo.cpuName') }}</div>
+                                    <div class="table-node-item node-item-type">{{ $t('environment.nodeInfo.nodeType') }}</div>
+                                    <div class="table-node-item node-item-status">{{ $t('environment.nodeInfo.nodeStatus') }}</div>
                                 </div>
                                 <div class="table-node-body">
                                     <div class="table-node-row" v-for="(row, index) of previewNodeList" :key="index">
@@ -80,18 +79,10 @@
                                             <span class="node-name">{{ row.name }}</span>
                                         </div>
                                         <div class="table-node-item node-item-type">
-                                            <span class="node-type">{{ getNodeTypeMap[row.nodeType] }}</span>
+                                            <span class="node-type">{{ $t('environment.nodeTypeMap')[row.nodeType] }}</span>
                                         </div>
                                         <div class="table-node-item node-item-status">
-                                            <span class="node-name">{{ row.nodeStatus }}</span>
-                                        </div>
-                                        <div class="table-node-item node-item-agstatus">
-                                            <span class="node-status" v-if="row.nodeType === 'BCSVM'"
-                                                :class="row.agentStatus ? 'normal-status-node' : 'refresh-status-node' ">{{ row.agentStatus ? '正常' : '刷新中' }}
-                                            </span>
-                                            <span class="node-status" v-else
-                                                :class="row.agentStatus ? 'normal-status-node' : 'abnormal-status-node' ">{{ row.agentStatus ? '正常' : '刷新中' }}
-                                            </span>
+                                            <span class="node-name">{{ $t('environment.nodeStatusMap')[row.nodeStatus] }}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -100,15 +91,14 @@
                     </div>
                 </bk-form-item>
                 <bk-form-item>
-                    <bk-button theme="primary" title="提交" @click.stop.prevent="submit">提交</bk-button>
-                    <bk-button theme="default" title="取消" @click="toEnvList">取消</bk-button>
+                    <bk-button theme="primary" :title="$t('environment.submit')" @click.stop.prevent="submit">{{ $t('environment.submit') }}</bk-button>
+                    <bk-button theme="default" :title="$t('environment.cancel')" @click="toEnvList">{{ $t('environment.cancel') }}</bk-button>
                 </bk-form-item>
             </bk-form>
         </section>
         <node-select :node-select-conf="nodeSelectConf"
             :search-info="searchInfo"
             :cur-user-info="curUserInfo"
-            :change-created-user="changeCreatedUser"
             :row-list="nodeList"
             :select-handlerc-conf="selectHandlercConf"
             :toggle-all-select="toggleAllSelect"
@@ -121,7 +111,6 @@
 </template>
 
 <script>
-    import { mapGetters } from 'vuex'
     import nodeSelect from '@/components/devops/environment/node-select-dialog'
     import emptyTips from '@/components/devops/emptyTips'
 
@@ -147,7 +136,7 @@
                 },
                 loading: {
                     isLoading: false,
-                    title: '数据加载中，请稍候'
+                    title: this.$t('environment.loadingTitle')
                 },
                 nodeDialogLoading: {
                     isLoading: false,
@@ -166,7 +155,7 @@
                     isShow: false,
                     quickClose: false,
                     unselected: true,
-                    importText: '导入'
+                    importText: this.$t('environment.import')
                 },
                 // 搜索节点
                 searchInfo: {
@@ -190,37 +179,33 @@
                     name: [
                         {
                             required: true,
-                            message: '必填项',
+                            message: this.$t('environment.requiredField'),
                             trigger: 'blur'
                         }
                     ]
                 },
                 // 权限配置
                 emptyTipsConfig: {
-                    title: '没有权限',
-                    desc: `你在该项目【环境管理】下没有【创建】权限，请切换项目访问或申请`,
+                    title: this.$t('environment.noPermission'),
+                    desc: this.$t('environment.envInfo.noCreateEnvPermissionTips'),
                     btns: [
                         {
                             type: 'primary',
                             size: 'normal',
                             handler: this.changeProject,
-                            text: '切换项目'
+                            text: this.$t('environment.switchProject')
                         },
                         {
                             type: 'success',
                             size: 'normal',
                             handler: this.goToApplyPerm,
-                            text: '去申请权限'
+                            text: this.$t('environment.applyPermission')
                         }
                     ]
                 }
             }
         },
         computed: {
-            ...mapGetters('environment', [
-                'getNodeTypeMap',
-                'getNodeStatusMap'
-            ]),
             projectId () {
                 return this.$route.params.projectId
             },
@@ -239,7 +224,7 @@
                     const isSelected = this.nodeList.some(item => {
                         return item.isChecked === true
                     })
-                    
+
                     if (isSelected) {
                         this.nodeSelectConf.unselected = false
                     } else {
@@ -480,7 +465,7 @@
              */
             submit () {
                 if (this.createEnvForm.source === 'CREATE') {
-                    const message = '请选择节点来源'
+                    const message = this.$t('environment.nodeInfo.selectNodeSource')
                     const theme = 'warning'
 
                     this.$bkMessage({
@@ -521,7 +506,7 @@
                                     params: createEnv
                                 })
 
-                                message = '新增成功'
+                                message = this.$t('environment.successfullyAdded')
                                 theme = 'success'
                             } catch (err) {
                                 message = err.message ? err.message : err
@@ -639,50 +624,6 @@
                 } finally {
                     this.nodeDialogLoading.isLoading = false
                 }
-            },
-            /**
-             * 构建机信息
-             */
-            async changeCreatedUser (id) {
-                const h = this.$createElement
-                const content = h('p', {
-                    style: {
-                        textAlign: 'center'
-                    }
-                }, `是否修改主机责任人为当前用户？`)
-
-                this.$bkInfo({
-                    title: `修改导入人`,
-                    subHeader: content,
-                    confirmFn: async () => {
-                        let message, theme
-                        const params = {}
-                        try {
-                            await this.$store.dispatch('environment/changeCreatedUser', {
-                                projectId: this.projectId,
-                                nodeHashId: id,
-                                params
-                            })
-
-                            message = '修改成功'
-                            theme = 'success'
-                        } catch (err) {
-                            const message = err.message ? err.message : err
-                            const theme = 'error'
-
-                            this.$bkMessage({
-                                message,
-                                theme
-                            })
-                        } finally {
-                            this.$bkMessage({
-                                message,
-                                theme
-                            })
-                            this.requestNodeList()
-                        }
-                    }
-                })
             }
         }
     }
@@ -696,18 +637,9 @@
         align-items: center;
     }
     .environment-create {
-        .env-header {
-            display: flex;
-            justify-content: space-between;
-            padding: 18px 20px;
-            width: 100%;
-            height: 60px;
-            border-bottom: 1px solid #DDE4EB;
-            background-color: #fff;
-            box-shadow:0px 2px 5px 0px rgba(51,60,72,0.03);
-            .header-text {
-                font-size: 16px;
-            }
+        height: 100%;
+        overflow: hidden;
+        .title {
             .icon-arrows-left {
                 margin-right: 4px;
                 cursor: pointer;
@@ -791,7 +723,7 @@
         }
 
         .node-item-name {
-            flex: 5;
+            flex: 3;
         }
 
         .node-item-ip,

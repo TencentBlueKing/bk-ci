@@ -19,7 +19,6 @@
 
 const path = require('path')
 const webpack = require('webpack')
-const ReplacePlugin = require('../webpackPlugin/replace-webpack-plugin')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
 const CopyWebpackPlugin = require('copy-webpack-plugin')
 const webpackBaseConfig = require('../webpack.base')
@@ -36,10 +35,11 @@ module.exports = (env, argv) => {
         entry: {
             pipeline: './src/main.js'
         },
-        publicPath: '/',
+        publicPath: '/pipeline/',
         dist: '/pipeline',
         port: 8006
     })
+    config.plugins.pop()
     config.plugins = [
         ...config.plugins,
         // brace 优化，只提取需要的语法
@@ -50,7 +50,7 @@ module.exports = (env, argv) => {
             filename: isProd ? `${dist}/frontend#pipeline#index.html` : `${dist}/index.html`,
             template: 'index.html',
             inject: true,
-            VENDOR_LIBS: `${isProd ? '/pipeline' : ''}/main.dll.js?v=${Math.random()}`,
+            VENDOR_LIBS: `/pipeline/main.dll.js?v=${Math.random()}`,
             urlPrefix,
             extUrlPrefix
         }),
@@ -58,10 +58,13 @@ module.exports = (env, argv) => {
             context: __dirname,
             manifest: require('./dist/manifest.json')
         }),
-        new CopyWebpackPlugin([{ from: path.join(__dirname, './dist'), to: dist }]),
-        ...(isProd ? [] : [new ReplacePlugin({
-            '__HTTP_SCHEMA__://__BKCI_FQDN__': urlPrefix
-        })])
+        new CopyWebpackPlugin([{ from: path.join(__dirname, './dist'), to: dist }])
     ]
+
+    config.devServer.historyApiFallback = {
+        rewrites: [
+            { from: /^\/pipeline/, to: '/pipeline/index.html' }
+        ]
+      }
     return config
 }

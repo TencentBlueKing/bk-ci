@@ -1,33 +1,48 @@
 <template>
-    <section class="pipeline-logs">
-        <div class="options-log">
-            <a href="javascript:;" class="log-count-menu dropdown-menu-more" v-if="executeCount > 1">
-                <div class="dropdown-trigger" @click.stop="toggleCountMenu">
-                    <span class="log-menu">（{{`${currentCount}/${executeCount}`}}
-                        <i :class="['bk-icon icon-angle-down log-menu', { 'icon-flip': isLogMore }]"
-                            id="toggleIcon"></i>）
-                    </span>
-                </div>
-                <div class="dropdown-list" v-if="showCountMenu">
-                    <ul class="list-wrapper">
-                        <li :class="['log-item-text log-menu', { 'active': num === currentCount }]" v-for="num in executeCount" :key="num" @click.stop="handleCurrentCount(num)">{{num}}</li>
-                    </ul>
-                </div>
-            </a>
-            <bk-button class="showtime-log"
-                size="small"
-                :theme="showTime ? 'primary' : 'default'"
-                @click.stop="showTime = !showTime"
-            >
-                显示时间
-            </bk-button>
-            <a class="bk-button bk-button-small export-log" v-if="showExport" download :href="downloadUrl">导出日志</a>
+    <bk-sideslider class="sodaci-property-panel pipeline-logs" width="820" :is-show.sync="visible" :quick-close="true">
+        <div class="options-log" slot="header">
+            <p>{{ showTitle }}</p>
+            <div>
+                <a href="javascript:;" class="log-count-menu dropdown-menu-more" v-if="executeCount > 1">
+                    <div class="dropdown-trigger" @click.stop="toggleCountMenu">
+                        <span class="log-menu">（{{`${currentCount}/${executeCount}`}}
+                            <i :class="['bk-icon icon-angle-down log-menu', { 'icon-flip': isLogMore }]"
+                                id="toggleIcon"></i>）
+                        </span>
+                    </div>
+                    <div class="dropdown-list" v-if="showCountMenu">
+                        <ul class="list-wrapper">
+                            <li :class="['log-item-text log-menu', { 'active': num === currentCount }]" v-for="num in executeCount" :key="num" @click.stop="handleCurrentCount(num)">{{num}}</li>
+                        </ul>
+                    </div>
+                </a>
+                <bk-button v-if="buildTag"
+                    class="share-log copy-log-link"
+                    size="small"
+                    theme="default"
+                    :data-clipboard-text="copyUrl"
+                    @click="copyLink"
+                >
+                    {{ $t('history.copyLink') }}
+                </bk-button>
+                <bk-button class="showtime-log"
+                    size="small"
+                    :theme="showTime ? 'primary' : 'default'"
+                    @click.stop="showTime = !showTime"
+                >
+                    {{ $t('history.showTime') }}
+                </bk-button>
+                <a class="bk-button bk-button-small export-log" v-if="showExport" download :href="downloadUrl">{{ $t('history.exportLog') }}</a>
+            </div>
         </div>
-        <div ref="logContainer" :buildNo="buildNo"></div>
-    </section>
+        <div slot="content" class="slider-log-content" ref="logContainer" :buildNo="buildNo"></div>
+    </bk-sideslider>
 </template>
 
 <script>
+    import { mapActions, mapState } from 'vuex'
+    import Clipboard from 'clipboard'
+
     export default {
         name: 'pipeline-log',
         props: {
@@ -50,6 +65,10 @@
             executeCount: {
                 type: Number,
                 default: 1
+            },
+            title: {
+                type: String,
+                default: ''
             }
         },
         data () {
@@ -61,6 +80,18 @@
             }
         },
         computed: {
+            ...mapState('atom', [
+                'isPropertyPanelVisible'
+            ]),
+            projectId () {
+                return this.$route.params.projectId
+            },
+            pipelineId () {
+                return this.$route.params.pipelineId
+            },
+            showTitle () {
+                return this.title || this.$t('history.viewLog')
+            },
             logUrl () {
                 const { $route: { params } } = this
                 return `${AJAX_URL_PIRFIX}/log/api/user/logs/${params.projectId}/${params.pipelineId}`
@@ -68,6 +99,20 @@
             downloadUrl () {
                 const { logUrl, buildNo, buildTag } = this
                 return `${logUrl}/${buildNo}/download${buildTag ? `?tag=${buildTag}` : ''}`
+            },
+            copyUrl () {
+                const { projectId, pipelineId, buildNo, buildTag } = this
+                return `${WEB_URL_PIRFIX}/pipeline/${projectId}/${pipelineId}/detail/${buildNo}#${buildTag}`
+            },
+            visible: {
+                get () {
+                    return this.isPropertyPanelVisible
+                },
+                set (value) {
+                    this.togglePropertyPanel({
+                        isShow: value
+                    })
+                }
             }
         },
         watch: {
@@ -93,6 +138,9 @@
             this.buildNo && this.renderLog(this.buildNo)
         },
         methods: {
+            ...mapActions('atom', [
+                'togglePropertyPanel'
+            ]),
             renderLog (buildNo) {
                 window.SodaLog.render(this.$refs.logContainer, this.logUrl, buildNo, this.showTime, this.buildTag, this.currentCount)
             },
@@ -113,6 +161,14 @@
                     this.showCountMenu = this.isLogMore = false
                 }
             },
+            copyLink () {
+                this.clipboard = new Clipboard('.copy-log-link').on('success', e => {
+                    this.$showTips({
+                        theme: 'success',
+                        message: this.$t('copySuc')
+                    })
+                })
+            },
             handleCurrentCount (num) {
                 if (num !== this.currentCount) {
                     this.currentCount = num
@@ -128,18 +184,13 @@
     @import './src/scss/conf.scss';
 
     .pipeline-logs {
-        height: 100%;
-        position: relative;
         .options-log {
-            top: -46px;
-            position: absolute;
-            font-size: 0;
-            color: $primaryColor;
-            right: 20px;
-            height: 32px;
-            z-index: 20;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-right: 20px;
         }
-        > div {
+        .slider-log-content {
             height: 100%;
         }
         .log-count-menu {

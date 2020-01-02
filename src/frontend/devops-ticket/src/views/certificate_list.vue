@@ -1,10 +1,10 @@
 <template>
-    <article class="certificate-list">
-        <inner-header>
+    <article class="credential-certificate-content">
+        <content-header>
             <template slot="left">
-                <span class="inner-header-title">我的证书</span>
+                <span class="inner-header-title">{{ $t('ticket.myCert') }}</span>
             </template>
-        </inner-header>
+        </content-header>
 
         <section class="sub-view-port" v-bkloading="{ isLoading: loading.isLoading, title: loading.title }">
             <div v-if="showContent && renderList.length" class="table-container">
@@ -15,15 +15,15 @@
                     :pagination="pagination"
                     @page-change="handlePageChange"
                     @page-limit-change="handlePageCountChange">
-                    <bk-table-column label="名称" prop="certId"></bk-table-column>
-                    <bk-table-column label="类型" prop="certType" :formatter="getShowType"></bk-table-column>
-                    <bk-table-column label="上传人" prop="creator"></bk-table-column>
-                    <bk-table-column label="过期时间" prop="expireTime" :formatter="convertToTime"></bk-table-column>
-                    <bk-table-column label="描述" prop="certRemark"></bk-table-column>
-                    <bk-table-column label="操作" width="200">
+                    <bk-table-column :label="$t('ticket.name')" prop="certId"></bk-table-column>
+                    <bk-table-column :label="$t('ticket.type')" prop="certType" :formatter="getShowType"></bk-table-column>
+                    <bk-table-column :label="$t('ticket.cert.uploader')" prop="creator"></bk-table-column>
+                    <bk-table-column :label="$t('ticket.cert.expireDate')" prop="expireTime" :formatter="convertToTime"></bk-table-column>
+                    <bk-table-column :label="$t('ticket.remark')" prop="certRemark"></bk-table-column>
+                    <bk-table-column :label="$t('ticket.operation')" width="200">
                         <template slot-scope="props">
-                            <bk-button theme="primary" text :disabled="!props.row.permissions || !props.row.permissions.edit" @click="handleEditCert(props.row)">编辑</bk-button>
-                            <bk-button theme="primary" text :disabled="!props.row.permissions || !props.row.permissions.delete" @click="handleDeleteCert(props.row.certId)">删除</bk-button>
+                            <bk-button theme="primary" text :disabled="!props.row.permissions || !props.row.permissions.edit" @click="handleEditCert(props.row)">{{ $t('ticket.edit') }}</bk-button>
+                            <bk-button theme="primary" text :disabled="!props.row.permissions || !props.row.permissions.delete" @click="handleDeleteCert(props.row.certId)">{{ $t('ticket.delete') }}</bk-button>
                         </template>
                     </bk-table-column>
                 </bk-table>
@@ -36,14 +36,12 @@
 </template>
 
 <script>
-    import innerHeader from '@/components/devops/inner_header'
     import { convertTime } from '@/utils/util'
     import emptyTips from '@/components/devops/emptyTips'
 
     export default {
         components: {
-            emptyTips,
-            innerHeader
+            emptyTips
         },
         data () {
             return {
@@ -61,11 +59,11 @@
                 certList: [],
                 renderList: [],
                 tip: {
-                    title: '暂无证书',
-                    desc: '您可以在新增证书中新增一个iOS或Android证书',
+                    title: this.$t('ticket.cert.emptyCert'),
+                    desc: this.$t('ticket.cert.emptyCertTips'),
                     btns: [
                         {
-                            text: '新增证书',
+                            text: this.$t('ticket.createCert'),
                             type: 'primary',
                             size: 'normal',
                             handler: this.addCertificateHandler
@@ -100,7 +98,7 @@
                     case 'tls':
                         return 'SSL/TLS'
                     case 'enterprise':
-                        return 'iOS企业签名证书'
+                        return this.$t('ticket.cert.iosCorporatesignCert')
                     default:
                         return type
                 }
@@ -122,7 +120,7 @@
             },
             async init () {
                 this.loading.isLoading = true
-                this.loading.title = '数据加载中，请稍候'
+                this.loading.title = this.$t('ticket.loadingTitle')
 
                 try {
                     this.requestList()
@@ -131,7 +129,7 @@
                         message: err.message ? err.message : err,
                         theme: 'error'
                     })
-                    console.error('获取证书列表错误')
+                    console.error(this.$t('ticket.cert.getCertError'))
                 } finally {
                     setTimeout(() => {
                         this.loading.isLoading = false
@@ -175,7 +173,7 @@
             },
             async handleDeleteCert (id) {
                 this.$bkInfo({
-                    title: '确认删除该证书?',
+                    title: `${this.$t('ticket.cert.deleteCertTips')}?`,
                     confirmFn: async () => {
                         let message, theme
                         try {
@@ -183,7 +181,7 @@
                                 projectId: this.projectId,
                                 id
                             })
-                            message = '删除证书成功'
+                            message = this.$t('ticket.cert.successfullyDeletedCert')
                             theme = 'success'
                         } catch (err) {
                             message = err.data ? err.data.message : err
@@ -207,7 +205,4 @@
 
 <style lang="scss">
     @import './../scss/conf';
-    .table-container {
-        margin: 35px;
-    }
 </style>

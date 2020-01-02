@@ -9,7 +9,7 @@
             }">
             <div class="bk-form machine-params-form" v-if="hasPermission">
                 <div class="bk-form-item is-required">
-                    <label class="bk-label env-item-label">机型：</label>
+                    <label class="bk-label env-item-label">{{ $t('environment.nodeInfo.model') }}：</label>
                     <div class="bk-form-content" style="margin-top:4px;">
                         <bk-radio-group v-model="constructImportForm.model">
                             <bk-radio :value="'MACOS'" :disabled="isAgent">macOS</bk-radio>
@@ -22,10 +22,10 @@
                     <label class="bk-label env-item-label">
                         <!-- 地点： -->
                         <bk-popover placement="right">
-                            <span style="padding-bottom: 3px; border-bottom: dashed 1px #c3cdd7;">地点</span>：
+                            <span style="padding-bottom: 3px; border-bottom: dashed 1px #c3cdd7;">{{ $t('environment.nodeInfo.model') }}</span>：
                             <template slot="content">
                                 <p style="width: 300px; text-align: left; white-space: normal;word-break: break-all;font-weight: 400;">
-                                    请根据构建机的归属地选择最近的接入点，这样可以提高构建机的归档和拉取构建产物的速度，并增加构建机的连接稳定性。PS:北京地区请选择天津。
+                                    {{ $t('environment.nodeInfo.buildMachineLocationTips') }}
                                 </p>
                             </template>
                         </bk-popover>
@@ -40,7 +40,7 @@
                         </bk-radio-group>
                     </div>
                 </div>
-                <p class="handler-prompt">{{ constructImportForm.model === 'WINDOWS' ? '请参考以下步骤' : '在目标构建机任意路径下(工作空间)执行如下命令：'}}</p>
+                <p class="handler-prompt">{{ constructImportForm.model === 'WINDOWS' ? $t('environment.nodeInfo.referenceStep') : $t('environment.nodeInfo.executeCommandPrompt')}}:</p>
                 <div class="construct-card-item command-tool-card" v-if="constructImportForm.model !== 'WINDOWS'">
                     <div class="command-line">
                         {{ constructImportForm.link }}
@@ -48,20 +48,20 @@
                     <div class="copy-button">
                         <a class="text-link copy-command"
                             @click="copyCommand">
-                            点击复制</a>
+                            {{ $t('environment.clickToCopy') }}</a>
                     </div>
                 </div>
                 <div class="construct-card-item command-tool-card windows-node-card" v-if="constructImportForm.model === 'WINDOWS'">
                     <div class="command-line">
-                        1.<a class="refresh-detail" :href="constructImportForm.link">点击</a>下载Agent
+                        1.<a class="refresh-detail" :href="constructImportForm.link">{{ $t('environment.click') }}</a>{{ $t('environment.download') }}Agent
                         <br>
-                        2.查阅【<a class="refresh-detail" target="_blank" :href="installDocsLink">如何在Windows上安装蓝盾构建机Agent</a>】
+                        2.{{ $t('environment.check') }}【<a class="refresh-detail" target="_blank" :href="installDocsLink">{{ $t('environment.nodeInfo.installBuildMachineTips') }}Agent</a>】
                     </div>
                 </div>
-                <p class="handler-prompt">已连接的节点</p>
+                <p class="handler-prompt">{{ $t('environment.nodeInfo.connectedNodes') }}</p>
                 <div class="construct-card-item connection-node-card">
                     <p class="no-connection-node" v-if="connectNodeDetail.status === 'UN_IMPORT'">
-                        暂未连接任何节点，<span class="refresh-detail" @click="requetConstructNode">点击刷新</span>
+                        {{ $t('environment.nodeInfo.noConnectedNodes') }}，<span class="refresh-detail" @click="requetConstructNode">{{ $t('environment.clickToRefresh') }}</span>
                     </p>
                     <div class="connected-node-msg" v-if="['UN_IMPORT_OK','IMPORT_EXCEPTION'].includes(connectNodeDetail.status)">
                         <div class="node-info">
@@ -69,11 +69,11 @@
                             <div class="node-msg-intro">
                                 <p class="node-name">{{ connectNodeDetail.hostname }}</p>
                                 <p>
-                                    <span class="agent-status">Agent状态：</span>
+                                    <span class="agent-status">Agent{{ $t('environment.status') }}：</span>
                                     <span :class="connectNodeDetail.status === 'UN_IMPORT_OK' ? 'normal-status-node' : 'abnormal-status-node' ">
-                                        {{ connectNodeDetail.status === 'UN_IMPORT_OK' ? '正常' : '异常' }}
+                                        {{ connectNodeDetail.status === 'UN_IMPORT_OK' ? $t('environment.nodeInfo.normal') : $t('environment.nodeInfo.abnormal') }}
                                     </span>
-                                    <span class="operating-system">操作系统：</span>
+                                    <span class="operating-system">{{ $t('environment.nodeInfo.os') }}</span>：
                                     <span>{{ connectNodeDetail.os }}</span>
                                 </p>
                             </div>
@@ -81,7 +81,7 @@
                         <!-- <div class="delete-handler"><i class="bk-icon icon-close"></i></div> -->
                     </div>
                 </div>
-                <p v-if="isAgent" class="target-console-tips">目标机登录方式：ssh -p36000 root@{{ nodeIp }} 密码请查收邮件！</p>
+                <p v-if="isAgent" class="target-console-tips">{{ $t('environment.nodeInfo.loginMethod') }}：ssh -p36000 root@{{ nodeIp }} {{ $t('environment.nodeInfo.checkMails') }}！</p>
             </div>
 
             <empty-tips v-if="!hasPermission"
@@ -94,7 +94,7 @@
             <div class="footer-handler">
                 <bk-button theme="primary" :disabled="connectNodeDetail.status === 'UN_IMPORT'"
                     @click="confirmFn">{{ constructToolConf.importText }}</bk-button>
-                <bk-button theme="default" @click="cancelFn">取消</bk-button>
+                <bk-button theme="default" @click="cancelFn">{{ $t('environment.cancel') }}</bk-button>
             </div>
         </div>
     </bk-dialog>
@@ -125,7 +125,7 @@
         data () {
             return {
                 defaultMachineCover: require('../../../scss/logo/machine.svg'),
-                installDocsLink: `${DOCS_URL_PREFIX}/所有服务/环境管理/如何在Windows上安装蓝盾构建机Agent.html`
+                installDocsLink: `${DOCS_URL_PREFIX}/${this.$t('allService')}/${this.$t('environment.environmentManage')}/${this.$t('environment.nodeInfo.installBuildMachineTips')}Agent.html`
             }
         },
         methods: {
@@ -133,7 +133,7 @@
                 if (copyText(this.constructImportForm.link)) {
                     this.$bkMessage({
                         theme: 'success',
-                        message: '复制成功'
+                        message: this.$t('environment.successfullyCopyed')
                     })
                 }
             }

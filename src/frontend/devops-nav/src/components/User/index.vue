@@ -15,7 +15,10 @@
             class="user-info-dropmenu"
         >
             <p class="user-avatar">
-                <!--<img :src="avatarUrl" alt="用户头像" />-->
+                <!-- <img
+                    :src="avatarUrl"
+                    alt="userAvatar"
+                > -->
                 <span>{{ chineseName }}</span>
             </p>
             <slot name="menu">
@@ -51,9 +54,9 @@
     import { clickoutside } from '../../directives/index'
 
     @Component({
-      directives: {
-        clickoutside
-      }
+        directives: {
+            clickoutside
+        }
     })
     export default class User extends Vue {
         @Prop()
@@ -69,27 +72,39 @@
         @Action togglePopupShow
 
         toggleUserInfo (show: boolean) :void {
-          this.show = !this.show
+            this.show = !this.show
         }
 
         hideUserInfo () : void {
-          this.show = false
+            this.show = false
         }
 
         @Watch('show')
         handleShow (show, oldVal) {
-          if (show !== oldVal) {
-            this.togglePopupShow(show)
-          }
+            if (show !== oldVal) {
+                this.togglePopupShow(show)
+            }
         }
 
         get menu (): object[] {
-          return [
-            {
-              to: '/console/pm',
-              label: '项目管理'
+            try {
+                return [
+                    {
+                        to: '/console/pm',
+                        label: this.$t('projectManage')
+                    },
+                    {
+                        cb: this.logout,
+                        label: this.$t('logout')
+                    }
+                ]
+            } catch (e) {
+                console.warn(e)
+                return []
             }
-          ]
+        }
+        logout (): void {
+            // logout logic
         }
     }
 </script>

@@ -17,7 +17,7 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-export const regionList = ['TC', 'SH', 'BJ', 'GZ', 'CD', 'GROUP']
+export const regionList = ['TC', 'SH', 'BJ', 'GZ', 'CD', 'GY', 'GROUP']
 
 export const codelibConfig = {
     svn: {
@@ -74,7 +74,7 @@ export const codelibTypes = [
  */
 export function getCodelibConfig (typeName, svnType = 'ssh', authType = 'ssh') {
     let type = typeName.toLowerCase().replace(/^\S*?([gitlab|git|svn|github|tgit])/i, '$1')
-    console.log(type)
+
     if (type === 'svn' && svnType === 'http') {
         type = 'svn_http'
     }
@@ -84,7 +84,7 @@ export function getCodelibConfig (typeName, svnType = 'ssh', authType = 'ssh') {
     if (type === 'tgit' && authType === 'HTTPS') {
         type = 'tgit_https'
     }
-    console.log(typeName, svnType, authType, type)
+
     return codelibConfig[type]
 }
 

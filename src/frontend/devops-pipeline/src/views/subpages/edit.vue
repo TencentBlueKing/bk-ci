@@ -23,30 +23,33 @@
     import { mapActions, mapState } from 'vuex'
     import emptyTips from '@/components/devops/emptyTips'
     import { navConfirm } from '@/utils/util'
-    import { CONFIRM_MSG, CONFIRM_TITLE } from '@/utils/pipelineConst'
-    import { PipelineEditTab, BaseSettingTab } from '@/components/PipelineEditTabs/'
+    import { PipelineEditTab, BaseSettingTab, NotifyTab } from '@/components/PipelineEditTabs/'
     import pipelineOperateMixin from '@/mixins/pipeline-operate-mixin'
 
     export default {
         components: {
             emptyTips,
             PipelineEditTab,
-            BaseSettingTab
+            BaseSettingTab,
+            NotifyTab
         },
         mixins: [pipelineOperateMixin],
         data () {
             return {
                 isLoading: true,
                 hasNoPermission: false,
+                leaving: false,
+                confirmMsg: this.$t('editPage.confirmMsg'),
+                confirmTitle: this.$t('editPage.confirmTitle'),
                 noPermissionTipsConfig: {
-                    title: '没有权限',
-                    desc: '你没有查看该流水线的权限，请切换项目或申请相应权限',
+                    title: this.$t('noPermission'),
+                    desc: this.$t('history.noPermissionTips'),
                     btns: [
                         {
                             theme: 'primary',
                             size: 'normal',
                             handler: this.changeProject,
-                            text: '切换项目'
+                            text: this.$t('changeProject')
                         },
                         {
                             theme: 'success',
@@ -54,13 +57,16 @@
                             handler: () => {
                                 this.goToApplyPerm('role_viewer')
                             },
-                            text: '申请权限'
+                            text: this.$t('applyPermission')
                         }
                     ]
                 }
             }
         },
         computed: {
+            ...mapState('pipelines', [
+                'projectGroupAndUsers'
+            ]),
             ...mapState([
                 'fetchError'
             ]),
@@ -70,7 +76,7 @@
             panels () {
                 return [{
                             name: 'pipeline',
-                            label: '流水线',
+                            label: this.$t('pipeline'),
                             component: 'PipelineEditTab',
                             bindData: {
                                 isEditing: this.isEditing,
@@ -79,8 +85,27 @@
                             }
                         },
                         {
+                            name: 'notify',
+                            label: this.$t('settings.notify'),
+                            component: 'NotifyTab',
+                            bindData: {
+                                failSubscription: this.pipelineSetting ? this.pipelineSetting.failSubscription : null,
+                                successSubscription: this.pipelineSetting ? this.pipelineSetting.successSubscription : null,
+                                projectGroupAndUsers: this.projectGroupAndUsers,
+                                updateSubscription: (container, name, value) => {
+                                    this.setPipelineEditing(true)
+                                    this.updatePipelineSetting({
+                                        container,
+                                        param: {
+                                            [name]: value
+                                        }
+                                    })
+                                }
+                            }
+                        },
+                        {
                             name: 'baseSetting',
-                            label: '基础设置',
+                            label: this.$t('editPage.baseSetting'),
                             component: 'BaseSettingTab',
                             bindData: {
                                 pipelineSetting: this.pipelineSetting,
@@ -96,8 +121,10 @@
             '$route.params.pipelineId': function (pipelineId, oldId) {
                 this.init()
             },
-            pipeline () {
+            pipeline (val) {
                 this.isLoading = false
+                this.requestInterceptAtom()
+                if (val && val.instanceFromTemplate) this.requestMatchTemplateRules(val.templateId)
             },
             fetchError (error) {
                 if (error.code === 403) {
@@ -108,11 +135,15 @@
         },
         mounted () {
             this.init()
+            this.requestQualityAtom()
             this.addLeaveListenr()
         },
         beforeDestroy () {
             this.setPipeline()
             this.removeLeaveListenr()
+            this.setPipelineEditing(false)
+            this.setSaveStatus(false)
+            this.errors.clear()
         },
         beforeRouteUpdate (to, from, next) {
             if (from.name !== to.name) {
@@ -129,15 +160,24 @@
                 'requestPipeline',
                 'togglePropertyPanel',
                 'setPipeline',
-                'setPipelineEditing'
+                'setPipelineEditing',
+                'setAuthEditing',
+                'setSaveStatus'
             ]),
             ...mapActions('pipelines', [
                 'requestPipelineSetting',
-                'updatePipelineSetting'
+                'updatePipelineSetting',
+                'requestProjectGroupAndUsers'
+            ]),
+            ...mapActions('soda', [
+                'requestQualityAtom',
+                'requestInterceptAtom'
             ]),
             init () {
+                this.isLoading = true
                 this.requestPipeline(this.$route.params)
                 this.requestPipelineSetting(this.$route.params)
+                this.requestProjectGroupAndUsers(this.$route.params)
             },
             switchTab (tab) {
                 this.$router.push({
@@ -147,12 +187,21 @@
                 })
             },
             leaveConfirm (to, from, next) {
-                if (this.isEditing) {
-                    navConfirm({ content: CONFIRM_MSG, title: CONFIRM_TITLE })
-                        .then(() => next())
-                        .catch(() => next(false))
-                } else {
-                    next(true)
+                if (!this.leaving) {
+                    if (this.isEditing) {
+                        this.leaving = true
+                        navConfirm({ content: this.confirmMsg, type: 'warning' })
+                            .then(() => {
+                                next(true)
+                                this.leaving = false
+                            })
+                            .catch(() => {
+                                next(false)
+                                this.leaving = false
+                            })
+                    } else {
+                        next(true)
+                    }
                 }
             },
             addLeaveListenr () {
@@ -162,8 +211,25 @@
                 window.removeEventListener('beforeunload', this.leaveSure)
             },
             leaveSure (e) {
-                e.returnValue = CONFIRM_MSG
-                return CONFIRM_MSG
+                e.returnValue = this.confirmMsg
+                return this.confirmMsg
+            },
+            requestQualityAtom () {
+                this.$store.dispatch('soda/requestQualityAtom', {
+                    projectId: this.projectId
+                })
+            },
+            requestInterceptAtom () {
+                this.$store.dispatch('soda/requestInterceptAtom', {
+                    projectId: this.projectId,
+                    pipelineId: this.pipelineId
+                })
+            },
+            requestMatchTemplateRules (templateId) {
+                this.$store.dispatch('soda/requestMatchTemplateRuleList', {
+                    projectId: this.projectId,
+                    templateId
+                })
             }
         }
     }
@@ -171,8 +237,14 @@
 
 <style lang="scss">
     .bkdevops-pipeline-edit-wrapper {
-        padding: 7px 25px 20px 25px;
         display: flex;
+        .bk-tab-header {
+            padding: 7px 25px 0;
+            box-sizing: content-box;
+        }
+        .bk-tab-section {
+            padding: 0 25px 20px;
+        }
         .scroll-container {
             margin-top: -20px;
             margin-left: -30px;

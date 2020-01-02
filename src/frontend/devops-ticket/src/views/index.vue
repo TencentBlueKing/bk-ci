@@ -1,83 +1,71 @@
 <template>
     <div class="biz-container credential-certificate-wrapper">
-        <div class="biz-side-bar">
-            <side-bar
-                :nav="sideMenuNav"
-                :side-menu-list="sideMenuList"
-                :sub-system-name="'credentialCertificate'">
-            </side-bar>
-        </div>
-        <router-view style="width: 100%"></router-view>
+        <aside-nav :nav="nav" :menu-click="menuClick">
+            <router-view slot="content" style="width: 100%"></router-view>
+        </aside-nav>
     </div>
 </template>
 
 <script>
-    import sideBar from '@/components/devops/side-nav'
-
     export default {
-        components: {
-            'side-bar': sideBar
-        },
-        data () {
-            return {
-                sideMenuNav: {
+        computed: {
+            nav () {
+                return {
                     icon: 'ticket',
-                    title: '凭证管理',
-                    url: `${DOCS_URL_PREFIX}/所有服务/凭证管理/summary.html`
-                },
-                sideMenuList: [
-                    {
-                        title: '凭据',
-                        list: [
-                            {
-                                id: 'credentialList',
-                                name: '我的凭据',
-                                icon: 'icon-id'
-                            },
-                            {
-                                id: 'createCredential',
-                                name: '新增凭据',
-                                icon: 'icon-id',
-                                showChildren: false,
-                                children: [
-                                    {
-                                        id: 'editCredential',
-                                        name: '编辑凭据',
-                                        icon: 'icon-id'
-                                    },
-                                    {
-                                        id: 'createCredentialWithType',
-                                        name: '新增凭据',
-                                        icon: 'icon-id'
-                                    }
-                                ]
-                            }
-                        ]
-                    }
-                    // {
-                    //     title: '证书',
-                    //     list: [
-                    //         {
-                    //             id: 'certList',
-                    //             name: '我的证书',
-                    //             icon: 'icon-personal-cert'
-                    //         },
-                    //         {
-                    //             id: 'createCert',
-                    //             name: '新增证书',
-                    //             icon: 'icon-personal-cert',
-                    //             showChildren: false,
-                    //             children: [
-                    //                 {
-                    //                     id: 'editCert',
-                    //                     name: '编辑证书',
-                    //                     icon: 'icon-personal-cert'
-                    //                 }
-                    //             ]
-                    //         }
-                    //     ]
-                    // }
-                ]
+                    title: this.$t('ticket.credentialManage'),
+                    url: `${DOCS_URL_PREFIX}/${this.$t('allService')}/${this.$t('ticket.credentialManage')}/summary.html`,
+                    menu: [
+                        {
+                            id: 'credentialList',
+                            name: this.$t('ticket.myCredential'),
+                            icon: 'icon-id'
+                        },
+                        {
+                            id: 'createCredential',
+                            name: this.$t('ticket.createCredential'),
+                            icon: 'icon-id',
+                            showChildren: false,
+                            group: true,
+                            children: [
+                                {
+                                    id: 'editCredential',
+                                    name: this.$t('ticket.editCredential'),
+                                    icon: 'icon-id'
+                                },
+                                {
+                                    id: 'createCredentialWithType',
+                                    name: this.$t('ticket.createCredential'),
+                                    icon: 'icon-id'
+                                }
+                            ]
+                        }
+                        // {
+                        //     id: 'certList',
+                        //     name: this.$t('ticket.myCert'),
+                        //     icon: 'icon-personal-cert'
+                        // },
+                        // {
+                        //     id: 'createCert',
+                        //     name: this.$t('ticket.createCert'),
+                        //     icon: 'icon-personal-cert',
+                        //     showChildren: false,
+                        //     children: [
+                        //         {
+                        //             id: 'editCert',
+                        //             name: this.$t('ticket.editCert'),
+                        //             icon: 'icon-personal-cert'
+                        //         }
+                        //     ]
+                        // }
+                    ]
+                }
+            }
+        },
+        methods: {
+            menuClick (name) {
+                this.$router.push({
+                    name
+                })
             }
         }
     }
@@ -93,8 +81,18 @@
             }
         }
     }
+    .credential-certificate-content {
+        height: 100%;
+        overflow: hidden;
+        .normal-tips {
+            font-size: 12px;
+            padding-top: 5px;
+        }
+    }
     .sub-view-port {
         height: calc(100% - 60px);
+        padding: 20px;
         overflow: auto;
+
     }
 </style>

@@ -26,6 +26,7 @@ const devopsUtil = {};
     const SYNC_TOP_PROJECT_ID = 'syncTopProjectId'
     const SYNC_PROJECT_LIST = 'syncProjectList'
     const SYNC_USER_INFO = 'syncUserInfo'
+    const SYNC_LOCALE = 'syncLocale'
     const RECEIVE_PROJECT_ID = 'receiveProjectId'
     const TOGGLE_PROJECT_MENU = 'toggleProjectMenu'
     const POP_PROJECT_DIALOG = 'popProjectDialog'
@@ -254,6 +255,14 @@ const devopsUtil = {};
      */
     exports[LEAVE_CANCEL_ORDER] = function () {
         triggerEvent('order::' + LEAVE_CANCEL)
+    }
+
+    /**
+     * 同步locale
+     * @method leaveCancelOrder
+     */
+    exports[SYNC_LOCALE] = function (locale) {
+        triggerEvent('order::' + SYNC_LOCALE, locale)
     }
 
     for (const key in exports) {

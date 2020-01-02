@@ -31,12 +31,12 @@
             </ul>
             <p class="add-variable" :class="{ 'is-disabled': !nodeDetails.canEdit }"
                 v-if="editable || !renderList.length" @click="addHandle">
-                <i class="bk-icon icon-plus-circle"></i>新增变量
+                <i class="bk-icon icon-plus-circle"></i>{{ $t('environment.envInfo.createVariable') }}
             </p>
             <div class="footer-handle">
-                <bk-button theme="primary" :disabled="!nodeDetails.canEdit" v-if="!editable && renderList.length" @click="edithandle">编辑</bk-button>
-                <bk-button theme="primary" v-if="editable" @click="save">保存</bk-button>
-                <bk-button theme="defalut" v-if="editable" @click="editable = false">取消</bk-button>
+                <bk-button theme="primary" :disabled="!nodeDetails.canEdit" v-if="!editable && renderList.length" @click="edithandle">{{ $t('environment.edit') }}</bk-button>
+                <bk-button theme="primary" v-if="editable" @click="save">{{ $t('environment.save') }}</bk-button>
+                <bk-button theme="defalut" v-if="editable" @click="editable = false">{{ $t('environment.cancel') }}</bk-button>
             </div>
         </div>
     </div>
@@ -129,7 +129,7 @@
                             params
                         })
 
-                        message = '保存成功'
+                        message = this.$t('environment.successfullySaved')
                         theme = 'success'
                         this.requestEnvs()
                     } catch (err) {

@@ -27,27 +27,29 @@ import {
 export function parsePathAlias (type, path, authType, svnType) {
     let reg = ''
     let msg = ''
+    const codelibLocaleObj = window.devops.$i18n.t('codelib')
+
     switch (true) {
         case isGithub(type):
             reg = /^https\:\/\/(github\.com)\/([\w\W\.\-\_\/\+]+)\.git$/i
-            msg = `请输入以https://github.com/开头的${type}地址`
+            msg = `${codelibLocaleObj.githubRule}${type}${codelibLocaleObj.address}`
             break
         case isSvn(type) && svnType === 'ssh':
             reg = /^svn\+ssh\:\/\/([\@\-\.a-z0-9A-Z]+)\/([\w\W\.\-\_\/\+]+)$/i
-            msg = `请输入以svn+ssh://开头的正确的${type}地址`
+            msg = `${codelibLocaleObj.svnSshRule}${type}${codelibLocaleObj.address}`
             break
         case isSvn(type) && svnType === 'http':
             reg = /^http\:\/\/([\-\.a-z0-9A-Z]+)\/([\w\W\.\-\_\/\+]+)$/i
-            msg = `请输入以http://开头的正确的${type}地址`
+            msg = `${codelibLocaleObj.httpRule}${type}${codelibLocaleObj.address}`
             break
         case isGitLab(type):
             reg = /^http\:\/\/([\-\.a-z0-9A-Z]+)\/([\w\W\.\-\_\/\+]+)\.git$/i
-            msg = `请输入以http://开头，以.git结尾的${type}地址`
+            msg = `${codelibLocaleObj.httpsRule}${type}${codelibLocaleObj.address}`
             break
     }
 
     const matchResult = path.match(reg)
-    
+
     return matchResult ? {
         alias: matchResult[2]
     } : {
@@ -56,12 +58,14 @@ export function parsePathAlias (type, path, authType, svnType) {
 }
 
 export function parsePathRegion (path) {
-    const regRegion = /\/\/(.*)(tc-svn|tc-scm|sh-svn([0-9]*)|bj-svn|bj-scm|gz-svn|svn-cd1|group-svn1\.group)\.tencent\.com\//i
+    const regRegion = /\/\/(.*)(tc-svn|tc-scm|sh-svn([0-9]*)|bj-svn|bj-scm|scm-gy|gz-svn|svn-cd1|group-svn1\.group)\.tencent\.com\//i
     const regionResult = path.match(regRegion)
     let region = ''
     if (regionResult) {
         region = regionResult[2].replace(/(\w+)-(.*)/, '$1').toUpperCase()
-        if (region === 'SVN') {
+        if (regionResult[2] === 'scm-gy') {
+            region = 'GY'
+        } else if (region === 'SVN') {
             region = 'CD'
         }
     }
@@ -70,10 +74,11 @@ export function parsePathRegion (path) {
 }
 
 export function firstUpperCase (str) {
+    const codelibLocaleObj = window.devops.$i18n.t('codelib')
     if (typeof str === 'string') {
         return str.slice(0, 1).toUpperCase() + str.slice(1).toLowerCase()
     } else {
-        console.warn('camelCase, 参数必须为字符串')
+        console.warn(`camelCase, ${codelibLocaleObj.paramBeString}`)
     }
 }
 

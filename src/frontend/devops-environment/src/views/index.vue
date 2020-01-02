@@ -1,67 +1,66 @@
+
 <template>
     <div class="biz-container">
-        <div class="biz-side-bar">
-            <side-bar
-                :nav="sideMenuNav"
-                :side-menu-list="sideMenuList"
-                :sub-system-name="'credentialCertificate'">
-            </side-bar>
-        </div>
-        <router-view style="width: 100%"></router-view>
+        <aside-nav :nav="nav" :menu-click="menuClick">
+            <router-view slot="content" style="width: 100%"></router-view>
+        </aside-nav>
     </div>
 </template>
 
 <script>
-    import sideBar from '@/components/devops/side-nav'
-
     export default {
-        components: {
-            'side-bar': sideBar
-        },
-        data () {
-            return {
-                sideMenuNav: {
+        computed: {
+            nav () {
+                return {
                     icon: 'environment',
-                    title: '环境管理',
-                    url: `${DOCS_URL_PREFIX}/所有服务/环境管理/summary.html`
-                },
-                sideMenuList: [
-                    {
-                        list: [
-                            {
-                                id: 'envList',
-                                name: '环境',
-                                icon: 'icon-env',
-                                showChildren: false,
-                                children: [
-                                    {
-                                        id: 'createEnv',
-                                        name: '新增环境',
-                                        icon: 'icon-env'
-                                    },
-                                    {
-                                        id: 'envDetail',
-                                        name: '环境详情',
-                                        icon: 'icon-env'
-                                    }
-                                ]
-                            },
-                            {
-                                id: 'nodeList',
-                                name: '节点',
-                                icon: 'icon-node',
-                                showChildren: false,
-                                children: [
-                                    {
-                                        id: 'nodeDetail',
-                                        name: '节点详情',
-                                        icon: 'icon-node'
-                                    }
-                                ]
-                            }
-                        ]
-                    }
-                ]
+                    title: this.$t('environment.environmentManage'),
+                    url: `${DOCS_URL_PREFIX}/${this.$t('allService')}/${this.$t('environment.environmentManage')}/summary.html`,
+                    menu: [
+                        {
+                            id: 'envList',
+                            name: this.$t('environment.environment'),
+                            icon: 'icon-env',
+                            showChildren: false,
+                            children: [
+                                {
+                                    id: 'createEnv',
+                                    name: this.$t('environment.createEnvrionment'),
+                                    icon: 'icon-env'
+                                },
+                                {
+                                    id: 'envDetail',
+                                    name: this.$t('environment.environmentDetail'),
+                                    icon: 'icon-env'
+                                }
+                            ]
+                        },
+                        {
+                            id: 'nodeList',
+                            name: this.$t('environment.node'),
+                            icon: 'icon-node',
+                            showChildren: false,
+                            children: [
+                                {
+                                    id: 'createNode',
+                                    name: this.$t('environment.createNode'),
+                                    icon: 'icon-node'
+                                },
+                                {
+                                    id: 'nodeDetail',
+                                    name: this.$t('environment.nodeDetail'),
+                                    icon: 'icon-node'
+                                }
+                            ]
+                        }
+                    ]
+                }
+            }
+        },
+        methods: {
+            menuClick (name) {
+                this.$router.push({
+                    name
+                })
             }
         }
     }
@@ -79,6 +78,7 @@
     }
     .sub-view-port {
         height: calc(100% - 60px);
+        padding: 20px;
         overflow: auto;
     }
 </style>

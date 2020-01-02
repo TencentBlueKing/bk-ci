@@ -31,6 +31,8 @@ const templateSetting = () => import(/* webpackChunkName: "pipelinesTemplate" */
 const templateInstance = () => import(/* webpackChunkName: "pipelinesTemplate" */'../../views/template/instance.vue')
 const templateInstanceCreate = () => import(/* webpackChunkName: "pipelinesTemplate" */'../../views/template/instance_create.vue')
 
+const atomManage = () => import(/* webpackChunkName: "atomManage" */'../../views/list/atomManage.vue')
+
 // 客户端流水线任务子页 - subpages
 const pipelinesEntry = () => import(/* webpackChunkName: "pipelinesEntry" */'../../views/subpages')
 // 客户端流水线任务历史 - history
@@ -41,6 +43,8 @@ const pipelinesDetail = () => import(/* webpackChunkName: "pipelinesDetail" */'.
 const pipelinesEdit = () => import(/* webpackChunkName: "pipelinesEdit" */'../../views/subpages/edit.vue')
 // 客户端流水线执行预览 - edit
 const pipelinesPreview = () => import(/* webpackChunkName: "pipelinesPreview" */'../../views/subpages/preview.vue')
+// 插件前端task.json在线调试
+const atomDebug = () => import(/* webpackChunkName: "atomDebug" */'../../views/atomDebug.vue')
 
 const routes = [
     {
@@ -57,8 +61,8 @@ const routes = [
                 path: 'list',
                 name: 'pipelinesListEntry',
                 meta: {
-                    title: '流水线',
-                    header: '流水线',
+                    title: 'pipeline',
+                    header: 'pipeline',
                     icon: 'pipeline',
                     to: 'pipelinesList'
                 },
@@ -80,9 +84,17 @@ const routes = [
                         component: pipelinesTemplate
                     },
                     {
+                        path: 'atomManage',
+                        name: 'atomManage',
+                        component: atomManage
+                    },
+                    {
                         path: ':type?',
                         name: 'pipelinesList',
-                        component: pipelinesNewList
+                        component: pipelinesNewList,
+                        meta: {
+                            webSocket: true
+                        }
                     }
                 ]
             },
@@ -113,6 +125,11 @@ const routes = [
                 ]
             },
             {
+                path: 'atomDebug',
+                name: 'atomDebug',
+                component: atomDebug
+            },
+            {
                 path: ':pipelineId',
                 component: pipelinesEntry,
                 children: [
@@ -128,8 +145,8 @@ const routes = [
                         name: 'pipelinesDetail',
                         component: pipelinesDetail,
                         meta: {
-                            title: '流水线执行详情',
-                            header: '流水线',
+                            title: 'pipeline',
+                            header: 'pipeline',
                             icon: 'pipeline',
                             to: 'pipelinesList'
                         }
@@ -142,12 +159,12 @@ const routes = [
                     },
                     {
                         // 执行历史
-                        path: 'history',
+                        path: 'history/:type?',
                         name: 'pipelinesHistory',
                         component: pipelinesHistory,
                         meta: {
-                            title: '执行历史',
-                            header: '流水线',
+                            title: 'pipeline',
+                            header: 'pipeline',
                             icon: 'pipeline',
                             to: 'pipelinesList'
                         }
@@ -158,8 +175,8 @@ const routes = [
                         name: 'pipelinesEdit',
                         meta: {
                             icon: 'pipeline',
-                            title: '编辑',
-                            header: '流水线',
+                            title: 'pipeline',
+                            header: 'pipeline',
                             to: 'pipelinesList'
                         },
                         component: pipelinesEdit
@@ -170,8 +187,8 @@ const routes = [
                         name: 'pipelinesPreview',
                         meta: {
                             icon: 'pipeline',
-                            title: '执行预览流水线',
-                            header: '流水线',
+                            title: 'pipeline',
+                            header: 'pipeline',
                             to: 'pipelinesList'
                         },
                         component: pipelinesPreview

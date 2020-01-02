@@ -1,10 +1,11 @@
 <template>
     <div class="environment-list-wrapper">
-        <div class="env-header">
-            <div class="title">环境</div>
-            <div class="handler-btn" v-if="showContent && envList.length"
-                @click="toCreateEnv">新增</div>
-        </div>
+        <content-header class="env-header">
+            <div slot="left">{{ $t('environment.environment') }}</div>
+            <div slot="right" v-if="showContent && envList.length">
+                <bk-button theme="primary" @click="toCreateEnv">{{ $t('environment.new') }}</bk-button>
+            </div>
+        </content-header>
 
         <section class="sub-view-port"
             v-bkloading="{
@@ -16,27 +17,27 @@
                 :data="envList"
                 :row-class-name="'env-item-row'"
                 @row-click="toEnvDetail">
-                <bk-table-column label="名称" prop="name"></bk-table-column>
-                <bk-table-column label="类型" prop="envType">
+                <bk-table-column :label="$t('environment.envInfo.name')" prop="name"></bk-table-column>
+                <bk-table-column :label="$t('environment.envInfo.type')" prop="envType">
                     <template slot-scope="props">
-                        <span v-if="props.row.envType === 'DEV'">部署-研发/测试环境</span>
-                        <span v-if="props.row.envType === 'PROD'">部署-生产环境</span>
-                        <span v-if="props.row.envType === 'BUILD'">构建环境</span>
+                        <span v-if="props.row.envType === 'DEV'">{{ $t('environment.envInfo.devEnvType') }}</span>
+                        <span v-if="props.row.envType === 'PROD'">{{ $t('environment.envInfo.testEnvType') }}</span>
+                        <span v-if="props.row.envType === 'BUILD'">{{ $t('environment.envInfo.buildEnvType') }}</span>
                     </template>
                 </bk-table-column>
-                <bk-table-column label="节点数" prop="nodeCount">
+                <bk-table-column :label="$t('environment.envInfo.nodeCount')" prop="nodeCount">
                     <template slot-scope="props">
                         <span class="node-count-item">{{ props.row.nodeCount }}</span>
                     </template>
                 </bk-table-column>
-                <bk-table-column label="创建时间" prop="createdTime">
+                <bk-table-column :label="$t('environment.envInfo.creationTime')" prop="createdTime">
                     <template slot-scope="props">
                         {{ localConvertTime(props.row.createdTime) }}
                     </template>
                 </bk-table-column>
-                <bk-table-column label="操作" width="160">
+                <bk-table-column :label="$t('environment.operation')" width="160">
                     <template slot-scope="props">
-                        <span class="handler-text" @click.stop="confirmDelete(props.row)">删除</span>
+                        <span class="handler-text" @click.stop="confirmDelete(props.row)">{{ $t('environment.delete') }}</span>
                     </template>
                 </bk-table-column>
             </bk-table>
@@ -66,8 +67,8 @@
                     title: ''
                 },
                 emptyInfo: {
-                    title: '暂无环境',
-                    desc: '环境可以由构建机组成，也可以由Devnet、IDC内的服务器组成'
+                    title: this.$t('environment.envInfo.emptyEnv'),
+                    desc: this.$t('environment.envInfo.emptyEnvTips')
                 }
             }
         },
@@ -91,7 +92,7 @@
                 } = this
 
                 loading.isLoading = true
-                loading.title = '数据加载中，请稍候'
+                loading.title = this.$t('environment.loadingTitle')
 
                 try {
                     this.requestList()
@@ -114,7 +115,7 @@
                     const res = await this.$store.dispatch('environment/requestEnvList', {
                         projectId: this.projectId
                     })
-               
+
                     this.envList.splice(0, this.envList.length)
                     res.map(item => {
                         this.envList.push(item)
@@ -145,10 +146,10 @@
                     style: {
                         textAlign: 'center'
                     }
-                }, `确定删除环境(${row.name})？`)
+                }, `${this.$t('environment.comfirm')}${this.$t('environment.delete')}${this.$t('environment.environment')}(${row.name})？`)
 
                 this.$bkInfo({
-                    title: `删除`,
+                    title: this.$t('environment.delete'),
                     subHeader: content,
                     confirmFn: async () => {
                         let message, theme
@@ -158,7 +159,7 @@
                                 envHashId: id
                             })
 
-                            message = '删除成功'
+                            message = this.$t('environment.successfullyDeleted')
                             theme = 'success'
                         } catch (err) {
                             message = err.data ? err.data.message : err
@@ -198,7 +199,8 @@
     @import './../scss/conf';
 
     .environment-list-wrapper {
-
+        height: 100%;
+        overflow: hidden;
         .env-header {
             display: flex;
             justify-content: space-between;
@@ -209,24 +211,6 @@
             background-color: #fff;
             box-shadow:0px 2px 5px 0px rgba(51,60,72,0.03);
         }
-
-        .handler-btn {
-            margin-top: -4px;
-            width: 76px;
-            height: 32px;
-            line-height: 32px;
-            display: inline-block;
-            text-align: center;
-            cursor: pointer;
-            background-color: $primaryColor;
-            font-size: 14px;
-            color: #fff;
-        }
-
-        .sub-view-port {
-            padding: 20px;
-        }
-
         .env-item-row {
             cursor: pointer;
         }

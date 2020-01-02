@@ -30,18 +30,9 @@ const store = {
         nodeTypes: nodeTypeMap,
         nodeStatus: nodeStatusMap,
         devCloudVmQuta: {},
-        currentSelectedModel: {},
-        processHeadConf: {
-            title: '节点',
-            current: 0,
-            list: ['选择机型', '确认信息'],
-            process: 'modelType'
-        }
+        currentSelectedModel: {}
     },
-    getters: {
-        getNodeTypeMap: state => state.nodeTypes,
-        getNodeStatusMap: state => state.nodeStatus
-    },
+    getters: {},
     mutations,
     actions
 }

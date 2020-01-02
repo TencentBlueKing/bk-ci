@@ -18,9 +18,6 @@
  */
 
 import Vue from 'vue'
-import {
-    
-} from './constants'
 
 const prefix = 'environment/api'
 const vue = new Vue()
@@ -131,14 +128,6 @@ const actions = {
         })
     },
     /**
-     * 修改节点导入人
-     */
-    changeCreatedUser ({ commit }, { projectId, nodeHashId, params }) {
-        return vue.$ajax.post(`${prefix}/user/envnode/${projectId}/${nodeHashId}/changeCreatedUser`, params).then(response => {
-            return response
-        })
-    },
-    /**
      * 生成构建机命令
      */
     requestDevCommand ({ commit }, { projectId, model, zoneName }) {
@@ -196,7 +185,7 @@ const actions = {
             return response
         })
     },
-    
+
     /**
      * 获取agent环境变量
      */
@@ -232,7 +221,7 @@ const actions = {
             return response
         })
     },
-    
+
     /**
     * 设置agent构建并发数
     */
@@ -268,7 +257,7 @@ const actions = {
             return response
         })
     },
-    
+
     /**
     * 获取磁盘IO图表数据
     */

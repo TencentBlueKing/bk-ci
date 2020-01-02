@@ -46,9 +46,9 @@ const routes = [
                 name: 'envList',
                 component: envList,
                 meta: {
-                    title: '环境列表',
+                    title: 'environmentList',
                     logo: 'environment',
-                    header: '环境管理',
+                    header: 'environmentManage',
                     to: 'envList'
                 }
             },
@@ -57,9 +57,9 @@ const routes = [
                 name: 'createEnv',
                 component: createEnv,
                 meta: {
-                    title: '新增环境',
+                    title: 'createEnvrionment',
                     logo: 'environment',
-                    header: '环境管理',
+                    header: 'environmentManage',
                     to: 'envList'
                 }
             },
@@ -68,9 +68,9 @@ const routes = [
                 name: 'envDetail',
                 component: envDetail,
                 meta: {
-                    title: '环境详情',
+                    title: 'environmentDetail',
                     logo: 'environment',
-                    header: '环境管理',
+                    header: 'environmentManage',
                     to: 'envList'
                 }
             },
@@ -79,9 +79,9 @@ const routes = [
                 name: 'nodeList',
                 component: nodeList,
                 meta: {
-                    title: '节点列表',
+                    title: 'nodeList',
                     logo: 'environment',
-                    header: '环境管理',
+                    header: 'environmentManage',
                     to: 'envList'
                 }
             },
@@ -90,9 +90,9 @@ const routes = [
                 name: 'nodeDetail',
                 component: nodeDetail,
                 meta: {
-                    title: '节点详情',
+                    title: 'nodeDetail',
                     logo: 'environment',
-                    header: '环境管理',
+                    header: 'environmentManage',
                     to: 'envList'
                 }
             }

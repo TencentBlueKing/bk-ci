@@ -2,6 +2,7 @@
 /// <reference path='./index.d.ts' />
 interface RootState {
     services: object[]
+    currentPage: object | null,
     user: object | null
     projectList: object[] | null
     related: Link[] | null
@@ -13,7 +14,8 @@ interface RootState {
     isShowPreviewTips: boolean
     fetchError: object
     headerConfig: object,
-    moduleLoading: boolean
+    moduleLoading: boolean,
+    isPermissionDialogShow: boolean
 }
 
 interface Link {
@@ -29,25 +31,20 @@ interface Demo {
 }
 
 interface Project {
-    project_code?: string
-    project_id?: string
-    project_name: string
-    english_name: string
+    projectCode?: string
+    projectId?: string
+    projectName: string
+    englishName: string
     description: string
-    project_type: string
-    use_bk?: boolean
-    cc_app_id?: number
-    deploy_type?: object[]
+    projectType: string
+    useBk?: boolean
+    ccAppId?: number
+    deployType?: object[]
     kind?: string
-    bg_id?: string
-    bg_name?: string
-    dept_id?: string
-    dept_name?: string
-    center_id?: string
-    center_name?: string
-    is_secrecy?: boolean
-    cc_app_name?: string
-    approval_status?: number
-    is_offlined?: boolean
+    isSecrecy?: boolean
+    ccAppName?: string
+    approvalStatus?: number
+    enabled?: boolean
+    logoAddr?: string
     gray?: boolean
 }

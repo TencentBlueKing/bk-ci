@@ -27,109 +27,109 @@ const store = {
         ticket: {
             PASSWORD: {
                 v1: {
-                    label: '密码',
+                    label: 'ticket.credential.password',
                     component: 'vue-input',
                     rules: 'required',
                     rule: { required: true },
                     required: true,
                     default: '',
-                    placeholder: '请输入密码',
-                    errorMsg: '密码不能为空',
+                    placeholder: 'ticket.credential.passwordPlaceholder',
+                    errorMsg: 'ticket.credential.passwordRequired',
                     type: 'password',
                     modelName: 'v1'
                 }
             },
             USERNAME_PASSWORD: {
                 v1: {
-                    label: '用户名',
+                    label: 'ticket.credential.username',
                     component: 'vue-input',
                     rules: 'required',
                     rule: { required: true },
                     default: '',
-                    placeholder: '请输入用户名',
-                    errorMsg: '用户名不能为空',
+                    placeholder: 'ticket.credential.usernamePlaceholder',
+                    errorMsg: 'ticket.credential.usernameRequired',
                     modelName: 'v1'
                 },
                 v2: {
-                    label: '密码',
+                    label: 'ticket.credential.password',
                     component: 'vue-input',
                     rules: 'required',
                     rule: { required: true },
                     required: true,
                     default: '',
-                    placeholder: '请输入密码',
-                    errorMsg: '密码不能为空',
+                    placeholder: 'ticket.credential.passwordPlaceholder',
+                    errorMsg: 'ticket.credential.passwordRequired',
                     type: 'password',
                     modelName: 'v2'
                 }
             },
             ACCESSTOKEN: {
                 v1: {
-                    label: 'AccessToken',
+                    label: 'ticket.credential.accessToken',
                     component: 'vue-input',
                     rules: 'required',
                     rule: { required: true },
                     default: '',
-                    placeholder: '请输入AccessToken',
-                    errorMsg: 'AccessToken不能为空',
+                    placeholder: 'ticket.credential.accessTokenRequired',
+                    errorMsg: 'ticket.credential.accessTokenRequired',
                     modelName: 'v1',
                     type: 'password'
                 }
             },
             SECRETKEY: {
                 v1: {
-                    label: 'secretKey',
+                    label: 'ticket.credential.secretKey',
                     component: 'vue-input',
                     rules: 'required',
                     rule: { required: true },
                     default: '',
-                    placeholder: '请输入secretKey',
-                    errorMsg: 'secretKey不能为空',
+                    placeholder: 'ticket.credential.secretKeyPlaceholder',
+                    errorMsg: 'ticket.credential.secretKeyRequired',
                     type: 'password',
                     modelName: 'v1'
                 }
             },
             APPID_SECRETKEY: {
                 v1: {
-                    label: 'appId',
+                    label: 'ticket.credential.appId',
                     component: 'vue-input',
                     rules: 'required',
                     rule: { required: true },
                     default: '',
-                    placeholder: '请输入appId',
-                    errorMsg: 'appId不能为空',
+                    placeholder: 'ticket.credential.appIdPlaceholder',
+                    errorMsg: 'ticket.credential.appIdRequired',
                     modelName: 'v1'
                 },
                 v2: {
-                    label: 'secretKey',
+                    label: 'ticket.credential.secretKey',
                     component: 'vue-input',
                     rules: 'required',
                     rule: { required: true },
                     default: '',
-                    placeholder: '请输入secretKey',
-                    errorMsg: 'secretKey不能为空',
+                    placeholder: 'ticket.credential.secretKeyPlaceholder',
+                    errorMsg: 'ticket.credential.secretKeyRequired',
                     type: 'password',
                     modelName: 'v2'
                 }
             },
             SSH_PRIVATEKEY: {
                 v1: {
-                    label: 'ssh私钥',
+                    label: 'ticket.credential.sshKey',
                     component: 'vue-textarea',
                     rules: 'required',
                     rule: { regex: /^(-----BEGIN RSA PRIVATE KEY-----){1}[\s\S]*(-----END RSA PRIVATE KEY-----)$/, required: true },
                     default: '',
-                    placeholder: '请输入SSH Key对应的私钥，以-----BEGIN RSA PRIVATE KEY-----开头，-----END RSA PRIVATE KEY-----结束',
-                    errorMsg: '请输入SSH Key对应的私钥，以-----BEGIN RSA PRIVATE KEY-----开头，-----END RSA PRIVATE KEY-----结束',
+                    placeholder: 'ticket.credential.sshKeyPlaceholder',
+                    errorMsg: 'ticket.credential.sshKeyPlaceholder',
                     modelName: 'v1'
                 },
                 v2: {
-                    label: '私钥密码',
+                    label: 'ticket.credential.keyPassword',
                     component: 'vue-input',
                     rules: '',
                     rule: {},
                     default: '',
-                    placeholder: '请输入私钥密码',
+                    placeholder: 'ticket.credential.keyPasswordPlaceholder',
                     errorMsg: '',
                     type: 'password',
                     modelName: 'v2'
@@ -137,33 +137,33 @@ const store = {
             },
             TOKEN_SSH_PRIVATEKEY: {
                 v1: {
-                    label: 'private token',
+                    label: 'ticket.credential.privateToken',
                     component: 'vue-input',
                     rules: 'required',
                     rule: { required: true },
                     default: '',
-                    placeholder: '请输入token',
-                    errorMsg: 'token不能为空',
+                    placeholder: 'ticket.credential.tokenPlaceholder',
+                    errorMsg: 'ticket.credential.tokenRequired',
                     type: 'password',
                     modelName: 'v1'
                 },
                 v2: {
-                    label: 'ssh私钥',
+                    label: 'ticket.credential.sshKey',
                     component: 'vue-textarea',
                     rules: 'required',
                     rule: { regex: /^(-----BEGIN RSA PRIVATE KEY-----){1}[\s\S]*(-----END RSA PRIVATE KEY-----)$/, required: true },
                     default: '',
-                    placeholder: '请输入SSH Key对应的私钥，以-----BEGIN RSA PRIVATE KEY-----开头，-----END RSA PRIVATE KEY-----结束',
-                    errorMsg: '请输入SSH Key对应的私钥，以-----BEGIN RSA PRIVATE KEY-----开头，-----END RSA PRIVATE KEY-----结束',
+                    placeholder: 'ticket.credential.sshKeyPlaceholder',
+                    errorMsg: 'ticket.credential.sshKeyPlaceholder',
                     modelName: 'v2'
                 },
                 v3: {
-                    label: '私钥密码',
+                    label: 'ticket.credential.keyPassword',
                     component: 'vue-input',
                     rules: '',
                     rule: {},
                     default: '',
-                    placeholder: '请输入私钥密码',
+                    placeholder: 'ticket.credential.keyPasswordPlaceholder',
                     errorMsg: '',
                     type: 'password',
                     modelName: 'v3'
@@ -171,35 +171,35 @@ const store = {
             },
             TOKEN_USERNAME_PASSWORD: {
                 v1: {
-                    label: 'private token',
+                    label: 'ticket.credential.privateToken',
                     component: 'vue-input',
                     rules: 'required',
                     rule: { required: true },
                     default: '',
-                    placeholder: '请输入token',
-                    errorMsg: 'token不能为空',
+                    placeholder: 'keyPasswordPlaceholder.tokenPlaceholder',
+                    errorMsg: 'ticket.credential.tokenRequired',
                     type: 'password',
                     modelName: 'v1'
                 },
                 v2: {
-                    label: '用户名',
+                    label: 'ticket.credential.username',
                     component: 'vue-input',
                     rules: 'required',
                     rule: { required: true },
                     default: '',
-                    placeholder: '请输入用户名',
-                    errorMsg: '用户名不能为空',
+                    placeholder: 'ticket.credential.usernamePlaceholder',
+                    errorMsg: 'ticket.credential.usernameRequired',
                     modelName: 'v2'
                 },
                 v3: {
-                    label: '密码',
+                    label: 'ticket.credential.password',
                     component: 'vue-input',
                     rules: 'required',
                     rule: { required: true },
                     required: true,
                     default: '',
-                    placeholder: '请输入密码',
-                    errorMsg: '密码不能为空',
+                    placeholder: 'ticket.credential.passwordPlaceholder',
+                    errorMsg: 'ticket.credential.passwordRequired',
                     type: 'password',
                     modelName: 'v3'
                 }
@@ -208,49 +208,59 @@ const store = {
         ticketType: [
             {
                 id: 'PASSWORD',
-                name: '密码',
-                desc: '用于蓝盾平台中需要加密保存的信息，如证书密码、脚本中需要加密字段等，'
+                name: 'password',
+                desc: 'passwordDesc'
             },
             {
                 id: 'USERNAME_PASSWORD',
-                name: '用户名+密码',
-                desc: '用于蓝盾平台中需要加密保存的信息，如证书密码、脚本中需要加密字段等，'
+                name: 'usernamePassword',
+                desc: 'passwordDesc'
             },
             {
                 id: 'ACCESSTOKEN',
-                name: 'AccessToken',
+                name: 'accessToken',
                 desc: '一个访问令牌包含了此登陆会话的安全信息，用于关联Gitlab类型代码库，'
             },
             {
                 id: 'SECRETKEY',
-                name: 'SecretKey',
-                desc: '用于蓝盾平台中需要加密保存的信息，如证书密码、脚本中需要加密字段等，'
+                name: 'secretKey',
+                desc: 'passwordDesc'
             },
             {
                 id: 'APPID_SECRETKEY',
-                name: 'AppId+SecretKey',
-                desc: '用来设置key value的键值对类型，例如bugly原子要填的用户帐号密码、api调用等，'
+                name: 'appIdSecretKey',
+                desc: 'appIdDesc'
             },
             {
                 id: 'SSH_PRIVATEKEY',
-                name: 'SSH私钥',
-                desc: 'SSH包含公钥和私钥,用于关联SVN类型代码库，SSH配置说明请参考蓝盾文档中心，'
+                name: 'SSHKEY',
+                desc: 'sshKeyDesc'
             },
             {
                 id: 'TOKEN_SSH_PRIVATEKEY',
-                name: 'SSH私钥+私有Token',
-                desc: '用于使用ssh方式关联Git类型代码库，'
+                name: 'sshKeyToken',
+                desc: 'sshKeyTokenDesc'
             },
             {
                 id: 'TOKEN_USERNAME_PASSWORD',
-                name: '用户名密码+私有token',
-                desc: '用于使用http方式关联Git类型代码库，'
+                name: 'passwordToken',
+                desc: 'passwordTokenDesc'
             }
         ]
     },
     getters: {
         getTicketByType: state => (type) => {
             return state.ticket[type]
+        },
+        getTicketType: state => () => {
+            const ticketLocale = window.devops.$i18n.t('ticket.credential')
+            return state.ticketType.map(type => {
+                return {
+                    id: type.id,
+                    name: ticketLocale[type.name],
+                    desc: ticketLocale[type.desc]
+                }
+            })
         }
     },
     mutations,
