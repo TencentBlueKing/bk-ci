@@ -33,6 +33,7 @@ import org.apache.kafka.common.config.SaslConfigs
 import org.apache.kafka.common.serialization.StringDeserializer
 import org.apache.kafka.common.serialization.StringSerializer
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.kafka.KafkaProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -45,7 +46,6 @@ import org.springframework.kafka.core.KafkaTemplate
 import org.springframework.kafka.core.ProducerFactory
 import org.springframework.kafka.support.serializer.JsonDeserializer
 import org.springframework.kafka.support.serializer.JsonSerializer
-import java.net.URL
 
 @Configuration
 @EnableKafka
@@ -53,12 +53,11 @@ class KafkaAutoConfiguration {
     private val SECURITY_PROTOCOL = "SASL_PLAINTEXT"
     private val SASL_MECHANISM = "SCRAM-SHA-512"
 
-    init {
-        val authLocation: URL = KafkaAutoConfiguration::class.java.classLoader.getResource("kafka_client_jaas.conf")!!
-        if (System.getProperty("java.security.auth.login.config") == null) {
-            System.setProperty("java.security.auth.login.config", authLocation.toExternalForm())
-        }
-    }
+    @Value("\${kafkaJaasConfig.userName}")
+    val userName: String = ""
+
+    @Value("\${kafkaJaasConfig.password}")
+    val password: String = ""
 
     @Bean
     fun producerConfigs(@Autowired kafkaProperties: KafkaProperties): Map<String, Any> {
@@ -67,6 +66,8 @@ class KafkaAutoConfiguration {
         props[ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG] = JsonSerializer::class.java
         props[CommonClientConfigs.SECURITY_PROTOCOL_CONFIG] = SECURITY_PROTOCOL
         props[SaslConfigs.SASL_MECHANISM] = SASL_MECHANISM
+        props[SaslConfigs.SASL_JAAS_CONFIG] = "org.apache.kafka.common.security.scram.ScramLoginModule required username=\"$userName\" password=\"$password\";"
+
         return props
     }
 
@@ -87,6 +88,8 @@ class KafkaAutoConfiguration {
         props[ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG] = StringSerializer::class.java
         props[CommonClientConfigs.SECURITY_PROTOCOL_CONFIG] = SECURITY_PROTOCOL
         props[SaslConfigs.SASL_MECHANISM] = SASL_MECHANISM
+        props[SaslConfigs.SASL_JAAS_CONFIG] = "org.apache.kafka.common.security.scram.ScramLoginModule required username=\"$userName\" password=\"$password\";"
+
         return props
     }
 
@@ -107,6 +110,7 @@ class KafkaAutoConfiguration {
         props[ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG] = JsonDeserializer::class.java
         props[CommonClientConfigs.SECURITY_PROTOCOL_CONFIG] = SECURITY_PROTOCOL
         props[SaslConfigs.SASL_MECHANISM] = SASL_MECHANISM
+        props[SaslConfigs.SASL_JAAS_CONFIG] = "org.apache.kafka.common.security.scram.ScramLoginModule required username=\"$userName\" password=\"$password\";"
 
         val jsonDeserializer = JsonDeserializer(Any::class.java)
         return DefaultKafkaConsumerFactory(
@@ -129,6 +133,7 @@ class KafkaAutoConfiguration {
         props[ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG] = StringDeserializer::class.java
         props[CommonClientConfigs.SECURITY_PROTOCOL_CONFIG] = SECURITY_PROTOCOL
         props[SaslConfigs.SASL_MECHANISM] = SASL_MECHANISM
+        props[SaslConfigs.SASL_JAAS_CONFIG] = "org.apache.kafka.common.security.scram.ScramLoginModule required username=\"$userName\" password=\"$password\";"
 
         return DefaultKafkaConsumerFactory(
             props, StringDeserializer(), StringDeserializer()

@@ -23,7 +23,7 @@ spring:
         tags: local
   kafka:
     producer:
-      bootstrap-servers: tendata-bkdevops-296.sz.kafka.db.:32231
+      bootstrap-servers: tendata-public.sz.kafka.db.:32276
       batch-size: 16384
       retries: 3
       acks: 1
@@ -33,6 +33,9 @@ spring:
 server:
   port: 8001
 
+kafkaJaasConfig:
+  userName: tendata-bkdevops-296
+  password: WGQPd5y1gq9zEYQ9
 
 elasticsearch:
   ip: bk-test5614.sh.es.db
