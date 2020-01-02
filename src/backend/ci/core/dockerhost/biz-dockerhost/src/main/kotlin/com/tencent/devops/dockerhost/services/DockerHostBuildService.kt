@@ -598,7 +598,7 @@ class DockerHostBuildService(
                 buildId = buildId,
                 red = red,
                 message = message,
-                tag = null,
+                tag = "",
                 jobId = containerHashId
             )
         } catch (e: Exception) {
