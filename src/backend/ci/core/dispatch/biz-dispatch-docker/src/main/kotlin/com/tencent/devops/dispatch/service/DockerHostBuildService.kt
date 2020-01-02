@@ -64,8 +64,10 @@ import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
 import com.tencent.devops.process.pojo.mq.PipelineBuildLessDockerShutdownEvent
 import com.tencent.devops.process.pojo.mq.PipelineBuildLessDockerStartupEvent
 import com.tencent.devops.process.pojo.mq.PipelineBuildLessStartupDispatchEvent
+import com.tencent.devops.store.api.image.service.ServiceStoreImageResource
 import com.tencent.devops.store.pojo.image.enums.ImageRDTypeEnum
 import com.tencent.devops.store.pojo.image.exception.UnknownImageType
+import com.tencent.devops.store.pojo.image.response.ImageRepoInfo
 import com.tencent.devops.ticket.pojo.enums.CredentialType
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -731,10 +733,9 @@ class DockerHostBuildService @Autowired constructor(
         }
     }
 
-    fun getPublicImage(): Result<List<String>> {
+    fun getPublicImage(): Result<List<ImageRepoInfo>> {
         logger.info("enter getPublicImage")
-        // TODO
-        return Result(listOf())
+        return client.get(ServiceStoreImageResource::class).getSelfDevelopPublicImages()
     }
 
     companion object {
