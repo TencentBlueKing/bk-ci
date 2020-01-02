@@ -840,7 +840,6 @@ class ProjectLocalService @Autowired constructor(
         createUser: String,
         projectId: String,
         userId: String,
-        userList: List<String>?,
         permission: String,
         resourceType: String,
         resourceTypeCode: String
@@ -850,17 +849,7 @@ class ProjectLocalService @Autowired constructor(
             logger.info("createPipelinePermission createUser is not project manager,createUser[$createUser] projectId[$projectId]")
             throw OperationException((MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.NOT_MANAGER)))
         }
-        val createUserList = mutableListOf<String>()
-        if (userList != null) {
-            if (userList.contains(userId)) {
-                createUserList.addAll(userList)
-            } else {
-                createUserList.addAll(userList)
-                createUserList.add(userId)
-            }
-        } else {
-            createUserList.add(userId)
-        }
+        val createUserList = userId.split(",")
 
         createUserList?.forEach {
             if (!bkAuthProjectApi.isProjectUser(it, bsPipelineAuthServiceCode, projectId, null)) {
@@ -884,7 +873,6 @@ class ProjectLocalService @Autowired constructor(
         organizationType: String,
         organizationId: Long,
         userId: String,
-        userList: List<String>?,
         projectId: String,
         permission: String,
         resourceType: String,
@@ -906,19 +894,9 @@ class ProjectLocalService @Autowired constructor(
         if (!isCreate) {
             throw OperationException((MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.USER_NOT_PROJECT_USER)))
         }
-        val createUserList = mutableListOf<String>()
-        if (userList != null) {
-            if (userList.contains(userId)) {
-                createUserList.addAll(userList)
-            } else {
-                createUserList.addAll(userList)
-                createUserList.add(userId)
-            }
-        } else {
-            createUserList.add(userId)
-        }
+        val createUserList = userId.split(",")
 
-        createUserList.forEach {
+        createUserList?.forEach {
             if (!bkAuthProjectApi.isProjectUser(it, bsPipelineAuthServiceCode, projectId, null)) {
                 logger.error("createPipelinePermission userId is not project user,userId[$it] projectId[$projectId]")
                 throw OperationException((MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.USER_NOT_PROJECT_USER)))

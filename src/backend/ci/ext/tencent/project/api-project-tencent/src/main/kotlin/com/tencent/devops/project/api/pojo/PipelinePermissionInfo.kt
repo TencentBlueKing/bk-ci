@@ -5,8 +5,6 @@ import io.swagger.annotations.ApiModelProperty
 data class PipelinePermissionInfo(
     @ApiModelProperty("目标用Id")
     val userId: String,
-    @ApiModelProperty("目标用Id列表")
-    val userIds: List<String>?,
     @ApiModelProperty("项目Code")
     val projectId: String,
     @ApiModelProperty("权限名称")
