@@ -24,22 +24,29 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":core:common:common-service")
-    compile project(":core:common:common-web")
-    compile project(":ext:tencent:common:common-digest-tencent")
-    compile project(":ext:tencent:common:common-kafka-tencent")
-    compile project(":core:common:common-kafka")
-    compile project(":core:common:common-es")
-    compile project(":core:common:common-event")
-    compile project(":core:common:common-db")
-    compile project(":core:common:common-client")
-    compile project(":core:process:api-process")
-    compile project(":core:process:model-process")
-    compile project(":ext:tencent:lambda:model-lambda")
-    compile project(":core:project:api-project")
-    compile project(":ext:tencent:lambda:api-lambda-tencent")
-    testCompile project(":core:common:common-test")
-}
+package com.tencent.devops.common.kafka
 
-apply from: "$rootDir/task_deploy_to_maven.gradle"
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.kafka.core.KafkaTemplate
+import org.springframework.stereotype.Component
+
+@Component
+class KafkaClient @Autowired constructor(
+    private val kafkaTemplate: KafkaTemplate<String, Any>,
+    private val stringKafkaTemplate: KafkaTemplate<String, Any>
+) {
+
+    /**
+     * string 消息传递
+     */
+    fun send(topic: String, msg: Any) {
+        stringKafkaTemplate.send(topic, msg)
+    }
+
+    /**
+     * json 消息传递
+     */
+    fun sendJson(topic: String, msg: Any) {
+        kafkaTemplate.send(topic, msg)
+    }
+}
