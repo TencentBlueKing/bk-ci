@@ -65,7 +65,6 @@
                 listData: [],
                 foldList: [],
                 worker: {},
-                offscreenCanvas: {},
                 totalHeight: 0,
                 itemNumber: 0,
                 totalNumber: 0,
@@ -166,13 +165,6 @@
                 this.$refs.minNav.width = this.visWidth / 100 * dpr
                 this.$refs.minNav.height = this.visHeight * dpr
                 this.$refs.minNav.getContext('2d').setTransform(dpr, 0, 0, dpr, 0, 0)
-
-                this.offscreenCanvas = document.createElement('canvas')
-                this.offscreenCanvas.width = this.visWidth / 10
-                this.offscreenCanvas.height = this.visHeight
-                const canvasContext = this.offscreenCanvas.getContext('2d')
-                canvasContext.fillStyle = '#fff'
-                canvasContext.font = `normal normal normal ${this.itemHeight / 8}px Consolas`
             },
 
             initEvent () {
@@ -359,20 +351,16 @@
             drawList (data) {
                 Object.assign(this, data)
                 const minMapList = data.minMapList || []
-                const canvasContext = this.offscreenCanvas.getContext('2d')
+                const canvasContext = this.$refs.minMap.getContext('2d')
                 canvasContext.clearRect(0, 0, this.visWidth / 10, this.visHeight)
                 for (let index = 0; index < minMapList.length; index++) {
                     const currentItem = minMapList[index]
                     const currentColor = currentItem.color || 'rgba(255,255,255,1)'
-                    if (currentItem.color) canvasContext.font = `normal normal bold ${this.itemHeight / 8}px Consolas`
-                    else canvasContext.font = `normal normal normal ${this.itemHeight / 8}px Consolas`
+                    if (currentItem.color) canvasContext.font = `normal normal bold 2px Consolas`
+                    else canvasContext.font = `normal normal normal 2px Consolas`
                     canvasContext.fillStyle = currentColor
-                    canvasContext.fillText(currentItem.message, 3, ((index + 1)* this.itemHeight / 8))
+                    canvasContext.fillText(currentItem.message, 5, ((index + 1)* 2))
                 }
-
-                const context = this.$refs.minMap.getContext('2d')
-                context.clearRect(0, 0, this.visWidth / 10, this.visHeight)
-                context.drawImage(this.offscreenCanvas, 0, 0)
                 this.isScrolling = false
             },
 
