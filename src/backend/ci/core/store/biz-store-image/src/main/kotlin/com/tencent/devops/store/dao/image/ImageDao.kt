@@ -55,6 +55,7 @@ import com.tencent.devops.store.pojo.common.KEY_UPDATE_TIME
 import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.image.enums.ImageAgentTypeEnum
+import com.tencent.devops.store.pojo.image.enums.ImageRDTypeEnum
 import com.tencent.devops.store.pojo.image.enums.ImageStatusEnum
 import org.jooq.Condition
 import org.jooq.DSLContext
@@ -883,5 +884,46 @@ class ImageDao {
             )
         logger.info(query.getSQL(true))
         return query.fetch()
+    }
+
+    /**
+     * 查出可运行的自研公共镜像
+     */
+    fun listRunnableSelfDevelopPublicImages(
+        dslContext: DSLContext
+    ): Result<Record9<String, String, String, String, String, String, String, String, String>>? {
+        val tImage = TImage.T_IMAGE.`as`("tImage")
+        val tImageFeature = TImageFeature.T_IMAGE_FEATURE.`as`("tImageFeature")
+        val tStoreProjectRel = TStoreProjectRel.T_STORE_PROJECT_REL.`as`("tStoreProjectRel")
+        val conditions = mutableSetOf<Condition>()
+        val imageStatusSet = setOf(
+            ImageStatusEnum.RELEASED.status.toByte(),
+            ImageStatusEnum.UNDERCARRIAGING.status.toByte(),
+            ImageStatusEnum.UNDERCARRIAGED.status.toByte()
+        )
+        // 自研
+        conditions.add(tImageFeature.IMAGE_TYPE.eq(ImageRDTypeEnum.SELF_DEVELOPED.type.toByte()))
+        // 公共
+        conditions.add(tImageFeature.PUBLIC_FLAG.eq(true))
+        // 状态
+        conditions.add(tImage.IMAGE_STATUS.`in`(imageStatusSet))
+        // 镜像
+        conditions.add(tStoreProjectRel.STORE_TYPE.eq(StoreTypeEnum.IMAGE.type.toByte()))
+        // 调试项目信息
+        conditions.add(tStoreProjectRel.TYPE.eq(StoreProjectTypeEnum.INIT.type.toByte()))
+        val baseStep = dslContext.select(
+            tImage.ID.`as`(KEY_IMAGE_ID),
+            tImage.IMAGE_CODE.`as`(KEY_IMAGE_CODE),
+            tImage.IMAGE_NAME.`as`(KEY_IMAGE_NAME),
+            tImage.IMAGE_SOURCE_TYPE.`as`(KEY_IMAGE_SOURCE_TYPE),
+            tImage.IMAGE_REPO_URL.`as`(KEY_IMAGE_REPO_URL),
+            tImage.IMAGE_REPO_NAME.`as`(KEY_IMAGE_REPO_NAME),
+            tImage.IMAGE_TAG.`as`(KEY_IMAGE_TAG),
+            tImage.TICKET_ID.`as`(Constants.KEY_IMAGE_TICKET_ID),
+            tStoreProjectRel.PROJECT_CODE.`as`(Constants.KEY_IMAGE_INIT_PROJECT)
+        ).from(tImage).join(tImageFeature).on(tImage.IMAGE_CODE.eq(tImageFeature.IMAGE_CODE))
+            .join(tStoreProjectRel).on(tImage.IMAGE_CODE.eq(tStoreProjectRel.STORE_CODE))
+        return baseStep.where(conditions)
+            .fetch()
     }
 }
