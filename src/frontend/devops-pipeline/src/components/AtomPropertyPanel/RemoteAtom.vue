@@ -57,7 +57,7 @@
                 iframe.postMessage({ atomPropsValue: this.element.data.input, atomPropsModel: this.atomPropsModel.input }, '*')
             },
             receiveMsgFromIframe (e) {
-                if (location.href.indexOf(e.origin) === 0) return
+                // if (location.href.indexOf(e.origin) === 0) return
                 // console.log(e, e.data, 'top1')
                 if (!e.data) return
                 if (e.data.atomValue) {
