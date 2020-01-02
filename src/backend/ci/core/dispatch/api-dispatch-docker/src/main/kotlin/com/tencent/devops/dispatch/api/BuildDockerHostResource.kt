@@ -207,4 +207,9 @@ interface BuildDockerHostResource {
         @QueryParam("tag")
         tag: String?
     ): Result<Boolean>?
+
+    @ApiOperation("获取公共镜像")
+    @GET
+    @Path("/public/images")
+    fun getPublicImages(): Result<List<String>>
 }
