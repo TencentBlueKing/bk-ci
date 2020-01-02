@@ -218,7 +218,8 @@ class DockerHostBuildService @Autowired constructor(
                     null
                 } else {
                     ImageRDTypeEnum.getImageRDTypeByName(dispatchType.imageRDType!!)
-                }
+                },
+                containerHashId = event.containerHashId
             )
 
             saveDockerInfoToBuildDetail(
@@ -660,7 +661,8 @@ class DockerHostBuildService @Autowired constructor(
                 },
                 // 无构建环境默认每次都从仓库拉取
                 imagePublicFlag = false,
-                imageRDType = ImageRDTypeEnum.SELF_DEVELOPED
+                imageRDType = ImageRDTypeEnum.SELF_DEVELOPED,
+                containerHashId = event.containerHashId
             )
         }
     }
