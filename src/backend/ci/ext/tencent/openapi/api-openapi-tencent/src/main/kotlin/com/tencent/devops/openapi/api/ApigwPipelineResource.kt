@@ -197,5 +197,4 @@ interface ApigwPipelineResource {
         @PathParam("pipelineId")
         pipelineId: String
     ): Result<Boolean>
-
 }
