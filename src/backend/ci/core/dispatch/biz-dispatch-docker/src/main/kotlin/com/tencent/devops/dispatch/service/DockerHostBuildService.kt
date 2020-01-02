@@ -332,7 +332,8 @@ class DockerHostBuildService @Autowired constructor(
                     registryPwd = build.registryPwd,
                     imageType = build.imageType,
                     imagePublicFlag = build.imagePublicFlag,
-                    imageRDType = ImageRDTypeEnum.getImageRDTypeStr(build.imageRdType?.toInt())
+                    imageRDType = ImageRDTypeEnum.getImageRDTypeStr(build.imageRdType?.toInt()),
+                    containerHashId = build.containerHashId
                 ))
             } else {
                 // 优先取设置了IP的任务（可能是固定构建机，也可能是上次用的构建机）
@@ -373,7 +374,8 @@ class DockerHostBuildService @Autowired constructor(
                     registryPwd = build.registryPwd,
                     imageType = build.imageType,
                     imagePublicFlag = build.imagePublicFlag,
-                    imageRDType = ImageRDTypeEnum.getImageRDTypeStr(build.imageRdType?.toInt())
+                    imageRDType = ImageRDTypeEnum.getImageRDTypeStr(build.imageRdType?.toInt()),
+                    containerHashId = build.containerHashId
                 ))
             }
         } finally {
@@ -459,7 +461,8 @@ class DockerHostBuildService @Autowired constructor(
                 registryPwd = build.registryPwd,
                 imageType = build.imageType,
                 imagePublicFlag = build.imagePublicFlag,
-                imageRDType = ImageRDTypeEnum.getImageRDTypeStr(build.imageRdType?.toInt())
+                imageRDType = ImageRDTypeEnum.getImageRDTypeStr(build.imageRdType?.toInt()),
+                containerHashId = build.containerHashId
             ))
         } finally {
             redisLock.unlock()
@@ -724,12 +727,12 @@ class DockerHostBuildService @Autowired constructor(
         }
     }
 
-    fun log(buildId: String, red: Boolean, message: String, tag: String? = "") {
+    fun log(buildId: String, red: Boolean, message: String, tag: String? = "", jobId: String? = "") {
         logger.info("write log from docker host, buildId: $buildId, msg: $message")
         if (red) {
-            LogUtils.addRedLine(rabbitTemplate, buildId, message, tag ?: "", "", 1)
+            LogUtils.addRedLine(rabbitTemplate, buildId, message, tag ?: "", jobId ?: "", 1)
         } else {
-            LogUtils.addLine(rabbitTemplate, buildId, message, tag ?: "", "", 1)
+            LogUtils.addLine(rabbitTemplate, buildId, message, tag ?: "", jobId ?: "", 1)
         }
     }
 
