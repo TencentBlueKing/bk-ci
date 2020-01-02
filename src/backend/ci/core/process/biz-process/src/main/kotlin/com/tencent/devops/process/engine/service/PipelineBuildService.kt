@@ -213,7 +213,12 @@ class PipelineBuildService(
             params = container.params
         )
 
-        return BuildManualStartupInfo(canManualStartup, canElementSkip, params)
+        val currentBuildNo = (model.stages[0].containers[0] as TriggerContainer).buildNo
+        if (currentBuildNo != null) {
+            currentBuildNo.buildNo = pipelineRepositoryService.getBuildNo(projectId, pipelineId) ?: currentBuildNo.buildNo
+        }
+
+        return BuildManualStartupInfo(canManualStartup, canElementSkip, params, currentBuildNo)
     }
 
     fun getBuildParameters(
@@ -386,9 +391,10 @@ class PipelineBuildService(
         channelCode: ChannelCode,
         checkPermission: Boolean = true,
         isMobile: Boolean = false,
-        startByMessage: String? = null
+        startByMessage: String? = null,
+        buildNo: Int? = null
     ): String {
-
+        logger.info("Manual build start with value [$values][$buildNo]")
         if (checkPermission) {
             pipelinePermissionService.validPipelinePermission(
                 userId = userId,
@@ -447,6 +453,11 @@ class PipelineBuildService(
                     throw ErrorCodeException(defaultMessage = "该流水线不能远程触发",
                         errorCode = ProcessMessageCode.DENY_START_BY_REMOTE)
                 }
+            }
+
+            if (buildNo != null) {
+                pipelineRuntimeService.updateBuildNo(pipelineId, buildNo)
+                logger.info("[$pipelineId] buildNo was changed to [$buildNo]")
             }
 
             val startParams = mutableMapOf<String, Any>()
