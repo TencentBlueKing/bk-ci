@@ -31,6 +31,7 @@ import com.tencent.devops.common.web.mq.alert.AlertLevel
 import com.tencent.devops.dispatch.pojo.ContainerInfo
 import com.tencent.devops.dispatch.pojo.DockerHostBuildInfo
 import com.tencent.devops.dispatch.pojo.DockerHostInfo
+import com.tencent.devops.store.pojo.image.response.ImageRepoInfo
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -211,5 +212,5 @@ interface BuildDockerHostResource {
     @ApiOperation("获取公共镜像")
     @GET
     @Path("/public/images")
-    fun getPublicImages(): Result<List<String>>
+    fun getPublicImages(): Result<List<ImageRepoInfo>>
 }
