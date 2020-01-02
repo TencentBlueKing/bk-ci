@@ -551,11 +551,7 @@ class DockerHostBuildService(
             }
         }
 
-        val publicImages = dockerHostBuildApi.getPublicImages().data
-        if (null == publicImages) {
-            logger.error("Public images is empty")
-            return
-        }
+        val publicImages = getPublicImages()
         val imageList = dockerCli.listImagesCmd().withShowAll(true).exec()
         imageList.forEach c@{
             if (it.repoTags == null || it.repoTags.isEmpty()) {
@@ -600,6 +596,15 @@ class DockerHostBuildService(
         } catch (e: Exception) {
             logger.info("write log to dispatch failed")
         }
+    }
+
+    private fun getPublicImages(): List<String> {
+        val result = mutableListOf<String>()
+        val publicImages = dockerHostBuildApi.getPublicImages().data!!
+        publicImages.filter { it.publicFlag && it.rdType == ImageRDTypeEnum.SELF_DEVELOPED }.forEach {
+            result.add("${it.repoUrl}/${it.repoName}:${it.repoTag}")
+        }
+        return result
     }
 
     private fun getImageNameWithTag(
