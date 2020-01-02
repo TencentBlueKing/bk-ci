@@ -205,9 +205,12 @@ const atomMixin = {
             try {
                 const { rely: { expression = [], operation = 'AND' } } = obj
                 const cb = item => {
-                    const { key, value } = item
+                    const { key, value, regex } = item
                     if (Array.isArray(value)) {
                         return typeof element[key] !== 'undefined' && value.includes(element[key])
+                    } else if (regex) {
+                        const reg = new RegExp(regex, 'i')
+                        return reg.test(element[key])
                     } else {
                         return element[key] === value
                     }
@@ -217,6 +220,8 @@ const atomMixin = {
                         return expression.every(cb)
                     case 'OR':
                         return expression.length > 0 ? expression.some(cb) : true
+                    case 'NOT':
+                        return expression.length > 0 ? !expression.some(cb) : true
                     default:
                         return true
                 }

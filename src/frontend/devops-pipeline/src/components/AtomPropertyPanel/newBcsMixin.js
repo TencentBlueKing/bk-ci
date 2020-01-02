@@ -413,7 +413,7 @@ const bcsMixin = {
                 if (resData) {
                     for (const obj in resData) {
                         let newKey = ''
-                        if (obj.startsWith('K8s') && this.curProject.kind === 1) {
+                        if (obj.startsWith('K8s') && (this.curProject.kind === 1 || this.curProject.kind === 3)) {
                             newKey = obj.substring(3)
                         } else if (this.curProject.kind === 2) {
                             newKey = obj.substring(0, 1).toUpperCase() + obj.substring(1)
@@ -435,7 +435,7 @@ const bcsMixin = {
         },
         getCategoryList () {
             let arr = []
-            if (this.curProject.kind === 1) {
+            if (this.curProject.kind === 1 || this.curProject.kind === 3) {
                 arr = [
                     {
                         id: 'DaemonSet',
