@@ -728,7 +728,7 @@ class DockerHostBuildService @Autowired constructor(
     }
 
     fun log(buildId: String, red: Boolean, message: String, tag: String? = "", jobId: String? = "") {
-        logger.info("write log from docker host, buildId: $buildId, msg: $message")
+        logger.info("write log from docker host, buildId: $buildId, msg: $message, tag: $tag, jobId= $jobId")
         if (red) {
             LogUtils.addRedLine(rabbitTemplate, buildId, message, tag ?: "", jobId ?: "", 1)
         } else {
