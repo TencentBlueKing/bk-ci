@@ -34,8 +34,8 @@ server:
   port: 8001
 
 kafkaJaasConfig:
-  userName: tendata-bkdevops-296
-  password: WGQPd5y1gq9zEYQ9
+  userName: tendata-sawyertest-268
+  password: iBSQLfsOHegEH24Z
 
 elasticsearch:
   ip: bk-test5614.sh.es.db
