@@ -878,7 +878,7 @@ class ProjectLocalService @Autowired constructor(
         resourceType: String,
         resourceTypeCode: String
     ): Boolean {
-        logger.info("[createPipelinePermissionByApp] organizationType[$organizationType], organizationId[$organizationId] userId[$userId], userList[$userList] projectCode[$projectId], permission[$permission], resourceType[$resourceType],resourceTypeCode[$resourceTypeCode]")
+        logger.info("[createPipelinePermissionByApp] organizationType[$organizationType], organizationId[$organizationId] userId[$userId] projectCode[$projectId], permission[$permission], resourceType[$resourceType],resourceTypeCode[$resourceTypeCode]")
         val projectList = getProjectListByOrg(userId, organizationType, organizationId)
         if (projectList.isEmpty()) {
             logger.error("organizationType[$organizationType] :organizationId[$organizationId]  not project[$projectId] permission ")
