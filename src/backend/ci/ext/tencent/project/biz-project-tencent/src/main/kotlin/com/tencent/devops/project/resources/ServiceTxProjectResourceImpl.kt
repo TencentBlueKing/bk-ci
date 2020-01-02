@@ -257,6 +257,7 @@ class ServiceTxProjectResourceImpl @Autowired constructor(
             createUser = createUser,
             projectId = createInfo.projectId,
             userId = createInfo.userId,
+            userList = createInfo.userIds,
             permission = createInfo.permission,
             resourceType = createInfo.resourceType,
             resourceTypeCode = createInfo.resourceTypeCode
@@ -276,7 +277,8 @@ class ServiceTxProjectResourceImpl @Autowired constructor(
             projectId = createInfo.projectId,
             permission = createInfo.permission,
             resourceType = "pipeline",
-            resourceTypeCode = createInfo.resourceTypeCode
+            resourceTypeCode = createInfo.resourceTypeCode,
+            userList = createInfo.userIds
         ))
     }
 
