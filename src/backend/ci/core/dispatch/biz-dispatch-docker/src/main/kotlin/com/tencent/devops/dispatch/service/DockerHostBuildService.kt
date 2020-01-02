@@ -315,7 +315,7 @@ class DockerHostBuildService @Autowired constructor(
                     return Result(1, "no task in queue")
                 }
                 val build = task[0]
-                logger.info("Start the docker build(${build.buildId}) seq(${build.vmSeqId})")
+                logger.info("Start the docker build(${build.buildId}) seq(${build.vmSeqId})hostTag($hostTag)imageName(${build.imageName})")
                 pipelineDockerTaskDao.updateStatusAndTag(dslContext, build.buildId, build.vmSeqId, PipelineTaskStatus.RUNNING, hostTag)
                 redisUtils.setDockerBuildLastHost(build.pipelineId, build.vmSeqId.toString(), hostTag) // 将本次构建使用的主机IP写入redis，以方便下次直接用这台IP
                 return Result(0, "success", DockerHostBuildInfo(
@@ -356,7 +356,7 @@ class DockerHostBuildService @Autowired constructor(
                     return Result(1, "no task in queue")
                 }
                 val build = task[0]
-                logger.info("Start the docker build(${build.buildId}) seq(${build.vmSeqId})")
+                logger.info("Start the docker build(${build.buildId}) seq(${build.vmSeqId})hostTag($hostTag)imageName(${build.imageName})")
                 pipelineDockerTaskDao.updateStatusAndTag(dslContext, build.buildId, build.vmSeqId, PipelineTaskStatus.RUNNING, hostTag)
                 redisUtils.setDockerBuildLastHost(build.pipelineId, build.vmSeqId.toString(), hostTag) // 将本次构建使用的主机IP写入redis，以方便下次直接用这台IP
                 return Result(0, "success", DockerHostBuildInfo(
