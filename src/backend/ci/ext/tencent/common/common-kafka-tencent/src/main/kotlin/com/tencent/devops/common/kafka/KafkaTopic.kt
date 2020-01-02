@@ -24,22 +24,22 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":core:common:common-service")
-    compile project(":core:common:common-web")
-    compile project(":ext:tencent:common:common-digest-tencent")
-    compile project(":ext:tencent:common:common-kafka-tencent")
-    compile project(":core:common:common-kafka")
-    compile project(":core:common:common-es")
-    compile project(":core:common:common-event")
-    compile project(":core:common:common-db")
-    compile project(":core:common:common-client")
-    compile project(":core:process:api-process")
-    compile project(":core:process:model-process")
-    compile project(":ext:tencent:lambda:model-lambda")
-    compile project(":core:project:api-project")
-    compile project(":ext:tencent:lambda:api-lambda-tencent")
-    testCompile project(":core:common:common-test")
-}
+package com.tencent.devops.common.kafka
 
-apply from: "$rootDir/task_deploy_to_maven.gradle"
+object KafkaTopic {
+    const val LANGUAGE_CODE_TOPIC = "tendata-bkdevops-296-topic-language-code"
+    const val TASK_DETAIL_TOPIC = "tendata-bkdevops-296-topic-taskdetail"
+    const val STATISTIC_TOPIC = "tendata-bkdevops-296-topic-statistic"
+    const val GONGFENG_PROJECT_TOPIC = "tendata-bkdevops-296-topic-gongfeng-project"
+    const val LINT_STATISTIC_TOPIC = "tendata-bkdevops-296-topic-lint-statistic"
+    const val CNN_STATISTIC_TOPIC = "tendata-bkdevops-296-topic-cnn-statistic"
+    const val DUPC_STATISTIC_TOPIC = "tendata-bkdevops-296-topic-dupc-statistic"
+
+    const val ACTIVE_GONGFENG_PROJECT_TOPIC = "tendata-bkdevops-296-topic-active-gongfeng-project"
+    const val SINGLE_STATISTIC_TOPIC = "tendata-bkdevops-296-topic-single-statistic"
+    const val SINGLE_LINT_STATISTIC_TOPIC = "tendata-bkdevops-296-topic-single-lint-statistic"
+    const val SINGLE_CCN_STATISTIC_TOPIC = "tendata-bkdevops-296-topic-single-ccn-statistic"
+    const val SINGLE_DUPC_STATISTIC_TOPIC = "tendata-bkdevops-296-topic-single-dupc-statistic"
+
+    const val LANDUN_GIT_TASK_TOPIC = "tendata-bkdevops-296-topic-landun-git-task"
+}

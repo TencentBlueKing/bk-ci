@@ -21,10 +21,21 @@ spring:
     consul:
       discovery:
         tags: local
+  kafka:
+    producer:
+      bootstrap-servers: tendata-public.sz.kafka.db.:32276
+      batch-size: 16384
+      retries: 3
+      acks: 1
+    listener:
+      concurrency: 3
 
 server:
   port: 8001
 
+kafkaJaasConfig:
+  userName: tendata-sawyertest-268
+  password: iBSQLfsOHegEH24Z
 
 elasticsearch:
   ip: bk-test5614.sh.es.db
