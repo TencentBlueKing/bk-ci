@@ -40,6 +40,7 @@ import com.tencent.devops.process.pojo.ErrorType
 import com.tencent.devops.process.pojo.report.enums.ReportTypeEnum
 import com.tencent.devops.store.pojo.atom.AtomEnv
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
+import com.tencent.devops.store.pojo.common.enums.BuildHostTypeEnum
 import com.tencent.devops.worker.common.WORKSPACE_ENV
 import com.tencent.devops.worker.common.api.ApiFactory
 import com.tencent.devops.worker.common.api.atom.AtomArchiveSDKApi
@@ -57,6 +58,7 @@ import com.tencent.devops.worker.common.utils.ShellUtil
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.nio.file.Files
+import java.nio.file.Paths
 
 /**
  * 构建脚本任务
@@ -138,9 +140,9 @@ open class MarketAtomTask : ITask() {
             inputMap?.forEach { (name, value) ->
                 // 只有构建机插件才有workspace变量
                 if (buildTask.type == MarketBuildAtomElement.classType) {
-                    atomParams[name] = EnvUtils.parseEnv(value.toString(), systemVariables)
+                    atomParams[name] = EnvUtils.parseEnv(JsonUtil.toJson(value), systemVariables)
                 } else {
-                    atomParams[name] = value.toString()
+                    atomParams[name] = JsonUtil.toJson(value)
                 }
             }
         } catch (e: Throwable) {
@@ -151,6 +153,24 @@ open class MarketAtomTask : ITask() {
                 errorCode = AtomErrorCode.SYSTEM_WORKER_LOADING_ERROR
             )
         }
+
+        val bkWorkspacePath =
+            if (buildTask.type != MarketBuildAtomElement.classType) {
+                // 无构建环境插件的workspace取临时文件的路径
+                atomWorkspace.canonicalPath
+            } else {
+                workspace.canonicalPath
+            }
+        runtimeVariables = runtimeVariables.plus(Pair("bkWorkspace", Paths.get(bkWorkspacePath).normalize().toString()))
+        val atomStatus = atomData.atomStatus
+        val testVersionFlag = if (AtomStatusEnum.TESTING.name == atomStatus) {
+            "Y"
+        } else {
+            "N"
+        }
+        runtimeVariables = runtimeVariables.plus(Pair("testVersionFlag", testVersionFlag)) // 设置是否是测试版本的标识
+        val variables = runtimeVariables.plus(atomParams)
+        logger.info("atomCode is:$atomCode ,variables is:$variables")
 
         atomParams["bkWorkspace"] =
             if (buildTask.type != MarketBuildAtomElement.classType) {
@@ -189,17 +209,17 @@ open class MarketAtomTask : ITask() {
             atomSensitiveConfMap[it.fieldName] = it.fieldValue
         }
         val atomSensitiveDataMap = mapOf("bkSensitiveConfInfo" to atomSensitiveConfMap)
-        writeInputFile(atomWorkspace, runtimeVariables.plus(atomParams).plus(atomSensitiveDataMap))
+        writeInputFile(atomWorkspace, variables.plus(atomSensitiveDataMap))
 
         writeSdkEnv(atomWorkspace, buildTask, buildVariables)
 
         val javaFile = getJavaFile()
         val environment = runtimeVariables.plus(
             mapOf(
-                DIR_ENV to atomWorkspace.absolutePath,
+                DIR_ENV to atomWorkspace.canonicalPath,
                 INPUT_ENV to inputFile,
                 OUTPUT_ENV to outputFile,
-                JAVA_PATH_ENV to javaFile.absolutePath
+                JAVA_PATH_ENV to javaFile.canonicalPath
             )
         )
 
@@ -209,7 +229,19 @@ open class MarketAtomTask : ITask() {
             atomExecuteFile = downloadAtomExecuteFile(atomData.pkgPath, atomWorkspace)
 
             checkSha1(atomExecuteFile, atomData.shaContent!!)
-
+            val buildHostType = if (BuildEnv.isThirdParty()) BuildHostTypeEnum.THIRD else BuildHostTypeEnum.PUBLIC
+            val atomDevLanguageEnvVarsResult = atomApi.getAtomDevLanguageEnvVars(
+                atomData.language!!, buildHostType.name, AgentEnv.getOS().name)
+            logger.info("atomCode is:$atomCode ,atomDevLanguageEnvVarsResult is:$atomDevLanguageEnvVarsResult")
+            val atomDevLanguageEnvVars = atomDevLanguageEnvVarsResult.data
+            val systemEnvVariables = mutableMapOf(
+                "PROJECT_ID" to buildVariables.projectId,
+                "BUILD_ID" to buildVariables.buildId,
+                "VM_SEQ_ID" to buildVariables.vmSeqId
+            )
+            atomDevLanguageEnvVars?.forEach {
+                systemEnvVariables[it.envKey] = it.envValue
+            }
             val preCmds = mutableListOf<String>()
             if (!atomData.preCmd.isNullOrBlank()) {
                 if (atomData.preCmd!!.contains(Regex("^\\s*\\[[\\w\\s\\S\\W]*\\]\\s*$"))) {
@@ -228,6 +260,7 @@ open class MarketAtomTask : ITask() {
                     }
                     command.append("\r\n${atomData.target.replace("\$bk_java_path", "%bk_java_path%")}\r\n")
                     BatScriptUtil.execute(
+                        buildTask.buildId,
                         command.toString(),
                         environment,
                         atomWorkspace
@@ -241,6 +274,7 @@ open class MarketAtomTask : ITask() {
                     }
                     command.append("\n${atomData.target}\n")
                     ShellUtil.execute(
+                        buildTask.buildId,
                         command.toString(),
                         atomWorkspace,
                         buildVariables.buildEnvs,
@@ -252,8 +286,20 @@ open class MarketAtomTask : ITask() {
             error = e
         } finally {
             output(buildTask, atomWorkspace, buildVariables, outputTemplate, namespace, atomCode)
-            if (error != null)
-                throw error
+            if (error != null) {
+                val defaultMessage = StringBuilder("Market atom env load exit with StackTrace:\n")
+                defaultMessage.append(error.toString())
+                error.stackTrace.forEach {
+                    with(it) {
+                        defaultMessage.append("\n    at $className.$methodName($fileName:$lineNumber)")
+                    }
+                }
+                throw TaskExecuteException(
+                    errorType = ErrorType.USER,
+                    errorCode = AtomErrorCode.USER_RESOURCE_NOT_FOUND,
+                    errorMsg = defaultMessage.toString()
+                )
+            }
         }
     }
 

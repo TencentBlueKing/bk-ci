@@ -36,6 +36,7 @@ import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
+import com.tencent.devops.store.pojo.atom.AtomDevLanguageEnvVar
 import com.tencent.devops.store.pojo.atom.AtomEnv
 import com.tencent.devops.store.pojo.atom.AtomEnvRequest
 import com.tencent.devops.store.pojo.common.SensitiveConfResp
@@ -151,5 +152,15 @@ class AtomArchiveResourceApi : AbstractBuildResourceApi(), AtomArchiveSDKApi {
         )}"
         val request = buildGet(path)
         download(request, file)
+    }
+
+    /**
+     * 获取插件开发语言相关的环境变量
+     */
+    override fun getAtomDevLanguageEnvVars(language: String, buildHostType: String, buildHostOs: String): Result<List<AtomDevLanguageEnvVar>?> {
+        val path = "/store/api/build/market/atom/dev/language/env/var/languages/$language/types/$buildHostType/oss/$buildHostOs"
+        val request = buildGet(path)
+        val responseContent = request(request, "获取插件开发语言相关的环境变量信息失败")
+        return objectMapper.readValue(responseContent)
     }
 }
