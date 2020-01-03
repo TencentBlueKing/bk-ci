@@ -871,7 +871,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         val isNormalUpgrade = getNormalUpgradeFlag(atomRecord.atomCode, atomRecord.atomStatus.toInt())
         logger.info("passTest isNormalUpgrade is:$isNormalUpgrade")
         val atomStatus = getPassTestStatus(isNormalUpgrade)
-        val (checkResult, code) = checkAtomVersionOptRight(userId, atomId, atomStatus)
+        val (checkResult, code) = checkAtomVersionOptRight(userId, atomId, atomStatus, isNormalUpgrade)
         if (!checkResult) {
             return MessageCodeUtil.generateResponseDataObject(code)
         }
@@ -915,43 +915,14 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
     }
 
     /**
-     * 检查版本发布过程中的操作权限：重新构建、确认测试完成、取消发布
+     * 检查版本发布过程中的操作权限
      */
-    protected fun checkAtomVersionOptRight(userId: String, atomId: String, status: Byte): Pair<Boolean, String> {
-        val record =
-            marketAtomDao.getAtomRecordById(dslContext, atomId) ?: return Pair(false, CommonMessageCode.PARAMETER_IS_INVALID)
-        val atomCode = record.atomCode
-        val modifier = record.modifier
-        val recordStatus = record.atomStatus
-
-        // 判断用户是否有权限
-        if (!(storeMemberDao.isStoreAdmin(
-                dslContext,
-                userId,
-                atomCode,
-                StoreTypeEnum.ATOM.type.toByte()
-            ) || modifier == userId)
-        ) {
-            return Pair(false, CommonMessageCode.PERMISSION_DENIED)
-        }
-
-        logger.info("record status=$recordStatus, status=$status")
-        if (status == AtomStatusEnum.AUDITING.status.toByte() &&
-            recordStatus != AtomStatusEnum.TESTING.status.toByte()
-        ) {
-            return Pair(false, StoreMessageCode.USER_ATOM_RELEASE_STEPS_ERROR)
-        } else if (status == AtomStatusEnum.BUILDING.status.toByte() &&
-            recordStatus !in (listOf(AtomStatusEnum.BUILD_FAIL.status.toByte(), AtomStatusEnum.TESTING.status.toByte()))
-        ) {
-            return Pair(false, StoreMessageCode.USER_ATOM_RELEASE_STEPS_ERROR)
-        } else if (status == AtomStatusEnum.GROUNDING_SUSPENSION.status.toByte() &&
-            recordStatus in (listOf(AtomStatusEnum.RELEASED.status.toByte()))
-        ) {
-            return Pair(false, StoreMessageCode.USER_ATOM_RELEASE_STEPS_ERROR)
-        }
-
-        return Pair(true, "")
-    }
+    abstract fun checkAtomVersionOptRight(
+        userId: String,
+        atomId: String,
+        status: Byte,
+        isNormalUpgrade: Boolean? = null
+    ): Pair<Boolean, String>
 
     /**
      * 处理用户提交的下架插件请求
