@@ -112,6 +112,14 @@ export function isShallowEqual (obj1: object, obj2: object): boolean {
     return obj1Keys.every((key: string) => obj1[key] === obj2[key])
 }
 
+export function judgementLsVersion () {
+    const curLsVersion = window.localStorage.getItem('lsVersion')
+    if (!curLsVersion || curLsVersion !== DEVOPS_LS_VERSION) {
+        window.localStorage.clear()
+        localStorage.setItem('lsVersion', DEVOPS_LS_VERSION)
+    }
+}
+
 // 动态加载js
 export function importScript (src, oHead) {
     return new Promise(resolve => {
@@ -138,6 +146,7 @@ export function importStyle (href, oHead) {
 }
 
 export function getServiceAliasByPath (path: string): string {
-    const serviceAliasREG = /^\/(console\/)?(\w+)\S*$/
-    return path.replace(serviceAliasREG, '$2')
+    const serviceAliasREG = /^\/(console\/)?([^\/]+)\//
+    const execRes = serviceAliasREG.exec(path) || []
+    return execRes[2] || path
 }

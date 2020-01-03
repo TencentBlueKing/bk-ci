@@ -2,8 +2,8 @@
     <div class="pipeline-template-list" v-bkloading="{ isLoading }">
         <div class="template-list-content">
             <div class="view-table-wrapper">
-                <bk-button theme="primary" class="add-template" @click="showSetting" :disabled="!isManagerUser" v-if="!showSelfEmpty">
-                    <i class="bk-icon icon-plus"></i><span>{{ $t('template.addTemplate') }}</span>
+                <bk-button theme="primary" icon="bk-icon icon-plus" class="add-template" @click="showSetting" :disabled="!isManagerUser" v-if="!showSelfEmpty">
+                    {{ $t('template.addTemplate') }}
                 </bk-button>
                 <template-table @getApiData="getTempFromSelf" ref="selfTemp"></template-table>
                 <empty-tips v-if="showSelfEmpty"
@@ -31,7 +31,7 @@
                         v-model="setting.value"
                         id="templateName"
                         name="templateName"
-                        v-validate="&quot;required|max:30&quot;"
+                        v-validate="'required|max:30'"
                     />
                 </form-field>
             </div>

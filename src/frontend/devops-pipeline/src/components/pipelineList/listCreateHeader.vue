@@ -4,7 +4,7 @@
             :create-text="$t('newlist.addPipeline')"
             @createPipeline="toggleTemplatePopup(true)">
             <div slot="addon" class="create-header-right">
-                <span class="pipeline-num">（{{ $t('newlist.numPrefix') }}{{num}}{{ $t('newlist.numSuffix') }}）</span>
+                <span class="pipeline-num">（{{ $t('newlist.sumPipelinesTips', [num]) }}）</span>
                 <i @click.stop="showSlide" class="layout-icon bk-icon icon-filter-shape" :class="{ 'active-icon': hasFilter }" :title="$t('newlist.filter')"></i>
                 <span class="seperate-line">|</span>
                 <i @click.stop="changeLayoutType('table')" class="layout-icon bk-icon icon-grid-view" v-if="layout === 'card'" :title="$t('newlist.cardLayout')"></i>
