@@ -2121,7 +2121,7 @@ babel-plugin-check-es2015-constants@^6.22.0:
   dependencies:
     babel-runtime "^6.22.0"
 
-babel-plugin-import-bk-magic-vue@^2.0.11, babel-plugin-import-bk-magic-vue@^2.0.9:
+babel-plugin-import-bk-magic-vue@^2.0.9:
   version "2.0.11"
   resolved "http://r.tnpm.oa.com/babel-plugin-import-bk-magic-vue/download/babel-plugin-import-bk-magic-vue-2.0.11.tgz#9e2cff4cb48f3ba7bf7ab136f868d59fc9214d20"
   integrity sha1-niz/TLSPO6e/erE2+GjVn8khTSA=

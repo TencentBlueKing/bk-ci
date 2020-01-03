@@ -476,8 +476,10 @@
 
             changeResourceType (name, val) {
                 this.imageRecommend = true
+                const defaultAgentType = (name === 'buildType' && ['THIRD_PARTY_AGENT_ID', 'THIRD_PARTY_AGENT_ENV'].includes(val) && !this.agentType) ? { agentType: 'ID' } : {}
                 this.handleContainerChange('dispatchType', Object.assign({
                     ...this.container.dispatchType,
+                    ...defaultAgentType,
                     imageVersion: '',
                     value: '',
                     imageCode: '',
@@ -582,12 +584,11 @@
             },
 
             changeBuildResource (name, value) {
-                const emptyValueObj = (name === 'buildType' || name === 'imageType' || name === 'agentType') ? { value: '' } : {}
-                const defaultAgentType = (name === 'buildType' && ['THIRD_PARTY_AGENT_ID', 'THIRD_PARTY_AGENT_ENV'].includes(value) && !this.agentType) ? { agentType: 'ID' } : {}
+                const emptyValueObj = (name === 'imageType' || name === 'agentType') ? { value: '' } : {}
                 this.handleContainerChange('dispatchType', Object.assign({
                     ...this.container.dispatchType,
                     [name]: value
-                }, emptyValueObj, defaultAgentType))
+                }, emptyValueObj))
                 this.handleContainerChange('buildEnv', {}) // 清空依赖编译环境
             },
             handleContainerChange (name, value) {
