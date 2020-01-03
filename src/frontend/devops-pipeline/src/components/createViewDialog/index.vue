@@ -173,7 +173,7 @@
             },
             isManagerUser () {
                 return this.userInfo.find(val => {
-                    return val.role_name === 'manager'
+                    return val.roleName === 'manager'
                 })
             }
         },
