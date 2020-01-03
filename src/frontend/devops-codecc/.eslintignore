@@ -1,0 +1,7 @@
+mock/
+build/
+dist/
+static/
+webpack_cache/
+css/
+*.min.js
