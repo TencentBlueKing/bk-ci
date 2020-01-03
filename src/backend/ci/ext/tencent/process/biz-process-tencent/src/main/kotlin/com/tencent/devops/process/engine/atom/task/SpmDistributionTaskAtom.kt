@@ -36,6 +36,7 @@ import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.pipeline.element.SpmDistributionElement
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.service.config.CommonConfig
+import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.log.utils.LogUtils
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_BUILD_TASK_CDN_FAIL
 import com.tencent.devops.process.engine.atom.AtomResponse
@@ -67,10 +68,6 @@ class SpmDistributionTaskAtom @Autowired constructor(
     private val rabbitTemplate: RabbitTemplate,
     private val commonConfig: CommonConfig
 ) : IAtomTask<SpmDistributionElement> {
-
-//    @Value("\${gateway.url:#{null}}")
-//    private val gatewayUrl: String? = null
-
     @Value("\${cdntool.cmdpath}")
     private val cmdpath = "/data1/cdntool/cdntool"
     @Value("\${cdntool.master}")
@@ -101,7 +98,7 @@ class SpmDistributionTaskAtom @Autowired constructor(
 
     override fun execute(task: PipelineBuildTask, param: SpmDistributionElement, runVariables: Map<String, String>): AtomResponse {
         logger.info("Enter SpmDistributionDelegate run...")
-        val searchUrl = "${commonConfig.devopsHostGateway}/jfrog/api/service/search/aql"
+        val searchUrl = "${HomeHostUtil.getHost(commonConfig.devopsHostGateway!!)}/jfrog/api/service/search/aql"
 
         val cmdbAppId = param.cmdbAppId
         val cmdbAppName = parseVariable(param.cmdbAppName, runVariables)
@@ -330,9 +327,9 @@ class SpmDistributionTaskAtom @Autowired constructor(
     // 获取jfrog传回的url
     private fun getUrl(realPath: String, isCustom: Boolean): String {
         return if (isCustom) {
-            "${commonConfig.devopsHostGateway}/jfrog/storage/service/custom/$realPath"
+            "${HomeHostUtil.getHost(commonConfig.devopsHostGateway!!)}/jfrog/storage/service/custom/$realPath"
         } else {
-            "${commonConfig.devopsHostGateway}/jfrog/storage/service/archive/$realPath"
+            "${HomeHostUtil.getHost(commonConfig.devopsHostGateway!!)}/jfrog/storage/service/archive/$realPath"
         }
     }
 
