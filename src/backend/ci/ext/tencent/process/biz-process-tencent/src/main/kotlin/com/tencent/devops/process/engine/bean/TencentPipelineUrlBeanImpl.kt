@@ -28,6 +28,7 @@ package com.tencent.devops.process.engine.bean
 
 import com.tencent.devops.common.archive.shorturl.ShortUrlApi
 import com.tencent.devops.common.service.config.CommonConfig
+import com.tencent.devops.common.service.utils.HomeHostUtil
 import org.slf4j.LoggerFactory
 
 class TencentPipelineUrlBeanImpl constructor(
@@ -40,17 +41,19 @@ class TencentPipelineUrlBeanImpl constructor(
     }
 
     override fun genBuildDetailUrl(projectCode: String, pipelineId: String, buildId: String): String {
-        logger.info("[$buildId]|genBuildDetailUrl| host=${commonConfig.devopsHostGateway}")
+        val devopsHostGateway = HomeHostUtil.getHost(commonConfig.devopsHostGateway!!)
+        logger.info("[$buildId]|genBuildDetailUrl| host=$devopsHostGateway")
         return shortUrlApi.getShortUrl(
-            url = "${commonConfig.devopsHostGateway}/console/pipeline/$projectCode/$pipelineId/detail/$buildId",
+            url = "$devopsHostGateway/console/pipeline/$projectCode/$pipelineId/detail/$buildId",
             ttl = 24 * 3600 * 3
         )
     }
 
     override fun genAppBuildDetailUrl(projectCode: String, pipelineId: String, buildId: String): String {
-        logger.info("[$buildId]|genBuildDetailUrl| outHost=${commonConfig.devopsOuterHostGateWay}")
+        val devopsOuterHostGateWay = HomeHostUtil.getHost(commonConfig.devopsOuterHostGateWay!!)
+        logger.info("[$buildId]|genBuildDetailUrl| outHost=$devopsOuterHostGateWay")
         return shortUrlApi.getShortUrl(
-            url = "${commonConfig.devopsOuterHostGateWay}/app/download/devops_app_forward.html?flag=buildReport&projectId=$projectCode&pipelineId=$pipelineId&buildId=$buildId",
+            url = "$devopsOuterHostGateWay/app/download/devops_app_forward.html?flag=buildReport&projectId=$projectCode&pipelineId=$pipelineId&buildId=$buildId",
             ttl = 24 * 3600 * 3
         )
     }

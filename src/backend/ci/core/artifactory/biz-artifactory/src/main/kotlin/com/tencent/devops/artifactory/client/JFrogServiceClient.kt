@@ -27,8 +27,9 @@
 package com.tencent.devops.artifactory.client
 
 import com.google.gson.JsonParser
-import com.tencent.devops.common.archive.pojo.ArtifactorySearchParam
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.archive.pojo.ArtifactorySearchParam
+import com.tencent.devops.common.service.utils.HomeHostUtil
 import okhttp3.MediaType
 import okhttp3.Request
 import okhttp3.RequestBody
@@ -49,11 +50,7 @@ class JFrogServiceClient {
     private var gatewayUrl: String? = null
 
     fun getHost(): String {
-        return if (gatewayUrl!!.startsWith("http")) {
-            gatewayUrl!!.removeSuffix("/")
-        } else {
-            "http://$gatewayUrl"
-        }
+        return HomeHostUtil.getHost(gatewayUrl!!)
     }
 
     // 从仓库匹配到所有文件
