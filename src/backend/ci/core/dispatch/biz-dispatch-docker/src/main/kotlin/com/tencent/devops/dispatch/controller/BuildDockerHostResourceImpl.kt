@@ -36,6 +36,7 @@ import com.tencent.devops.dispatch.pojo.DockerHostBuildInfo
 import com.tencent.devops.dispatch.pojo.DockerHostInfo
 import com.tencent.devops.dispatch.service.DockerHostBuildService
 import com.tencent.devops.dispatch.service.DockerHostDebugService
+import com.tencent.devops.store.pojo.image.response.ImageRepoInfo
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -93,5 +94,9 @@ class BuildDockerHostResourceImpl @Autowired constructor(
     override fun postLog(buildId: String, red: Boolean, message: String, tag: String?): Result<Boolean>? {
         dockerHostBuildService.log(buildId, red, message, tag)
         return Result(0, "success")
+    }
+
+    override fun getPublicImages(): Result<List<ImageRepoInfo>> {
+        return dockerHostBuildService.getPublicImage()
     }
 }
