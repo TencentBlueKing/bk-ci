@@ -55,6 +55,7 @@ import com.tencent.devops.store.dao.image.ImageLabelRelDao
 import com.tencent.devops.store.dao.image.MarketImageDao
 import com.tencent.devops.store.dao.image.MarketImageFeatureDao
 import com.tencent.devops.store.dao.image.MarketImageVersionLogDao
+import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.common.ReleaseProcessItem
 import com.tencent.devops.store.pojo.common.StoreProcessInfo
 import com.tencent.devops.store.pojo.common.StoreReleaseCreateRequest
@@ -429,7 +430,7 @@ abstract class ImageReleaseService {
         val isNormalUpgrade = getNormalUpgradeFlag(imageCode, imageRecord.imageStatus.toInt())
         logger.info("passTest isNormalUpgrade is:$isNormalUpgrade")
         val imageStatus = getPassTestStatus(isNormalUpgrade)
-        val (checkResult, code, params) = checkImageVersionOptRight(userId, imageId, imageStatus, validateUserFlag)
+        val (checkResult, code, params) = checkImageVersionOptRight(userId, imageId, imageStatus, validateUserFlag, isNormalUpgrade)
         if (!checkResult) {
             return MessageCodeUtil.generateResponseDataObject(code!!, params, false)
         }
@@ -726,15 +727,17 @@ abstract class ImageReleaseService {
     }
 
     /**
-     * 检查版本发布过程中的操作权限：重新构建、确认测试完成、取消发布
+     * 检查版本发布过程中的操作权限
      */
     protected fun checkImageVersionOptRight(
         userId: String,
         imageId: String,
         status: Byte,
-        validateUserFlag: Boolean = true
+        validateUserFlag: Boolean = true,
+        isNormalUpgrade: Boolean? = null
     ): Triple<Boolean, String?, Array<String>?> {
-        logger.info("checkImageVersionOptRight userId is:$userId, imageId is:$imageId, status is:$status, validateUserFlag is:$validateUserFlag")
+        logger.info("checkImageVersionOptRight userId is:$userId, imageId is:$imageId, status is:$status")
+        logger.info("checkImageVersionOptRight validateUserFlag is:$validateUserFlag, isNormalUpgrade is:$isNormalUpgrade")
         val imageRecord =
             imageDao.getImage(dslContext, imageId) ?: return Triple(
                 false,
@@ -755,23 +758,67 @@ abstract class ImageReleaseService {
             return Triple(false, CommonMessageCode.PERMISSION_DENIED, null)
         }
         logger.info("imageRecord status=$imageStatus, status=$status")
-        if (status == ImageStatusEnum.AUDITING.status.toByte() &&
+        val allowReleaseStatus = if (isNormalUpgrade != null && isNormalUpgrade) AtomStatusEnum.TESTING
+        else AtomStatusEnum.AUDITING
+        var validateFlag = true
+        if (status == ImageStatusEnum.COMMITTING.status.toByte() &&
+            imageStatus != ImageStatusEnum.INIT.status.toByte()
+        ) {
+            validateFlag = false
+        } else if (status == ImageStatusEnum.CHECKING.status.toByte() &&
+            imageStatus !in (
+                listOf(
+                    ImageStatusEnum.COMMITTING.status.toByte(),
+                    ImageStatusEnum.CHECK_FAIL.status.toByte(),
+                    ImageStatusEnum.TESTING.status.toByte()
+                ))
+        ) {
+            validateFlag = false
+        } else if (status == ImageStatusEnum.CHECK_FAIL.status.toByte() &&
+            imageStatus !in (
+                listOf(
+                    ImageStatusEnum.COMMITTING.status.toByte(),
+                    ImageStatusEnum.CHECKING.status.toByte(),
+                    ImageStatusEnum.CHECK_FAIL.status.toByte(),
+                    ImageStatusEnum.TESTING.status.toByte()
+                ))
+        ) {
+            validateFlag = false
+        } else if (status == ImageStatusEnum.TESTING.status.toByte() &&
+            imageStatus != ImageStatusEnum.CHECKING.status.toByte()
+        ) {
+            validateFlag = false
+        } else if (status == ImageStatusEnum.AUDITING.status.toByte() &&
             imageStatus != ImageStatusEnum.TESTING.status.toByte()
         ) {
-            return Triple(false, StoreMessageCode.USER_IMAGE_RELEASE_STEPS_ERROR, null)
-        } else if (status == ImageStatusEnum.CHECKING.status.toByte() &&
-            imageStatus !in (listOf(
-                ImageStatusEnum.CHECK_FAIL.status.toByte(),
-                ImageStatusEnum.TESTING.status.toByte()
-            ))
+            validateFlag = false
+        } else if (status == ImageStatusEnum.AUDIT_REJECT.status.toByte() &&
+            imageStatus != ImageStatusEnum.AUDITING.status.toByte()
         ) {
-            return Triple(false, StoreMessageCode.USER_IMAGE_RELEASE_STEPS_ERROR, null)
+            validateFlag = false
+        } else if (status == ImageStatusEnum.RELEASED.status.toByte() &&
+            imageStatus != allowReleaseStatus.status.toByte()
+        ) {
+            validateFlag = false
         } else if (status == ImageStatusEnum.GROUNDING_SUSPENSION.status.toByte() &&
-            imageStatus in (listOf(ImageStatusEnum.RELEASED.status.toByte()))
+            imageStatus == ImageStatusEnum.RELEASED.status.toByte()
         ) {
-            return Triple(false, StoreMessageCode.USER_IMAGE_RELEASE_STEPS_ERROR, null)
+            validateFlag = false
+        } else if (status == ImageStatusEnum.UNDERCARRIAGING.status.toByte() &&
+            imageStatus == ImageStatusEnum.RELEASED.status.toByte()
+        ) {
+            validateFlag = false
+        } else if (status == ImageStatusEnum.UNDERCARRIAGED.status.toByte() &&
+            imageStatus !in (
+                listOf(
+                    ImageStatusEnum.UNDERCARRIAGING.status.toByte(),
+                    ImageStatusEnum.RELEASED.status.toByte()
+                ))
+        ) {
+            validateFlag = false
         }
-        return Triple(true, null, null)
+
+        return if (validateFlag) Triple(true, null, null) else Triple(false, StoreMessageCode.USER_IMAGE_RELEASE_STEPS_ERROR, null)
     }
 
     private fun validateNameIsExist(
