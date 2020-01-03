@@ -54,9 +54,6 @@ class ShortUrlApi @Autowired constructor(private val objectMapper: ObjectMapper)
                 .url(URL)
                 .post(requestBody)
                 .build()
-
-//        val httpClient = okHttpClient.newBuilder().build()
-//        httpClient.newCall(request).execute().use { response ->
         OkhttpUtils.doHttp(request).use { response ->
             val responseContent = response.body()!!.string()
             if (!response.isSuccessful) {
