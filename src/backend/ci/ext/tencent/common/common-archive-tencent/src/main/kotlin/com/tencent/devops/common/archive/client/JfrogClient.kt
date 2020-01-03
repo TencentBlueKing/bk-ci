@@ -46,9 +46,17 @@ class JfrogClient constructor(
         private val logger = LoggerFactory.getLogger(JfrogClient::class.java)
     }
 
+    private fun getHost(): String {
+        return if (gatewayUrl.startsWith("http")) {
+            gatewayUrl.removeSuffix("/")
+        } else {
+            "http://$gatewayUrl"
+        }
+    }
+
     // 从仓库匹配到所有文件
     fun matchFiles(regex: String, isCustom: Boolean): List<String> {
-        val searchUrl = "http://$gatewayUrl/jfrog/api/service/search/aql"
+        val searchUrl = "${getHost()}/jfrog/api/service/search/aql"
         val requestBody = getRequestBody(regex, isCustom)
         logger.info("requestBody:" + requestBody.removePrefix("items.find(").removeSuffix(")"))
         val request = Request.Builder()
@@ -73,7 +81,7 @@ class JfrogClient constructor(
 
     // 从仓库下载文件到指定目录
     fun downloadFile(regex: String, isCustom: Boolean, destPath: String): List<File> {
-        val searchUrl = "http://$gatewayUrl/jfrog/api/service/search/aql"
+        val searchUrl = "${getHost()}/jfrog/api/service/search/aql"
         val requestBody = getRequestBody(regex, isCustom)
         logger.info("requestBody:" + requestBody.removePrefix("items.find(").removeSuffix(")"))
         val request = Request.Builder()
@@ -113,9 +121,9 @@ class JfrogClient constructor(
     // 获取jfrog传回的url
     private fun getUrl(realPath: String, isCustom: Boolean): String {
         return if (isCustom) {
-            "http://$gatewayUrl/jfrog/storage/service/custom/$realPath"
+            "${getHost()}/jfrog/storage/service/custom/$realPath"
         } else {
-            "http://$gatewayUrl/jfrog/storage/service/archive/$realPath"
+            "${getHost()}/jfrog/storage/service/archive/$realPath"
         }
     }
 
