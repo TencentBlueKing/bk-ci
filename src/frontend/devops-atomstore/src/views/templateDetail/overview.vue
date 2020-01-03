@@ -1,7 +1,7 @@
 <template>
     <div class="template-overview-wrapper">
         <div class="inner-header">
-            <div class="title"> {{ $t('模板概览') }} </div>
+            <div class="title"> {{ $t('store.模板概览') }} </div>
         </div>
 
         <section
@@ -13,7 +13,7 @@
             <div class="template-overview-container" v-if="showContent">
                 <div class="building-content">
                     <img :src="image">
-                    <p>{{ $t('功能正在建设中') }}···</p>
+                    <p>{{ $t('store.功能正在建设中') }}···</p>
                 </div>
             </div>
         </section>

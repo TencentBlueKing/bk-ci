@@ -7,7 +7,7 @@
                         {{ item.label }}
                     </bk-radio>
                 </bk-popover>
-                <bk-radio :key="item.id" v-else class="bkdevops-radio" :value="item.value" :disabled="disabled || item.disabled">
+                <bk-radio :key="item.id" class="bkdevops-radio" :value="item.value" :disabled="disabled || item.disabled" v-if="!item.tips && !item.hidden">
                     {{ item.label }}
                 </bk-radio>
             </template>

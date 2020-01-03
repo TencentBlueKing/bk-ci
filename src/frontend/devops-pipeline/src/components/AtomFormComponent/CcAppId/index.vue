@@ -12,13 +12,13 @@
                 return this.$store.state.curProject
             },
             appId () {
-                return this.curProject ? this.curProject.cc_app_id : ''
+                return this.curProject ? this.curProject.ccAppId : ''
             },
             hasAppId () {
                 return !!this.appId
             },
             appName () {
-                return this.curProject ? this.curProject.cc_app_name : ''
+                return this.curProject ? this.curProject.ccAppName : ''
             }
         },
         mounted () {

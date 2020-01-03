@@ -51,7 +51,7 @@
             },
             value: {
                 type: Object,
-                default: []
+                default: () => []
             },
             setParentValidate: {
                 type: Function,

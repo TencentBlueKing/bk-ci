@@ -23,6 +23,16 @@
             <bk-form-item :label="$t('desc')" :is-error="errors.has(&quot;desc&quot;)" :error-msg="errors.first(&quot;desc&quot;)">
                 <vuex-textarea name="desc" :value="pipelineSetting.desc" :placeholder="$t('pipelineDescInputTips')" v-validate.initial="&quot;max:100&quot;" :handle-change="handleBaseInfoChange" />
             </bk-form-item>
+            <bk-form-item class="item-badge" :label="$t('settings.badge')" v-if="routeName !== 'templateSetting'">
+                <img class="image-url" :src="badgeImageUrl">
+                <div v-for="copyUrl in urlList" :key="copyUrl.url">
+                    <label>{{copyUrl.label}}</label>
+                    <p class="badge-item">
+                        <bk-input readonly :value="copyUrl.url" disabled />
+                        <span class="bk-icon icon-clipboard copy-icon" :data-clipboard-text="copyUrl.url"></span>
+                    </p>
+                </div>
+            </bk-form-item>
         </bk-form>
     </div>
 </template>
@@ -31,6 +41,7 @@
     import VuexTextarea from '@/components/atomFormField/VuexTextarea/index.vue'
     import VuexInput from '@/components/atomFormField/VuexInput/index.vue'
     import { mapGetters } from 'vuex'
+    import Clipboard from 'clipboard'
 
     export default {
         name: 'bkdevops-base-info-setting-tab',
@@ -52,6 +63,21 @@
             pipelineId () {
                 return this.$route.params.pipelineId
             },
+            badgeImageUrl () {
+                return `${BADGE_URL_PREFIX}/process/api/external/pipelines/projects/${this.projectId}/${this.pipelineId}/badge?X-DEVOPS-PROJECT-ID=${this.projectId}`
+            },
+            badgeMarkdownLink () {
+                return `[![BK Pipelines Status](${BADGE_URL_PREFIX}/process/api/external/pipelines/projects/${this.projectId}/${this.pipelineId}/badge?X-DEVOPS-PROJECT-ID=${this.projectId})](${AJAX_URL_PIRFIX}/process/api-html/user/builds/projects/${this.projectId}/pipelines/${this.pipelineId}/latestFinished?X-DEVOPS-PROJECT-ID=${this.projectId})`
+            },
+            urlList () {
+                return [{
+                    label: this.$t('settings.imgUrl'),
+                    url: this.badgeImageUrl
+                }, {
+                    label: this.$t('settings.mdLink'),
+                    url: this.badgeMarkdownLink
+                }]
+            },
             labelValues () {
                 const labels = this.pipelineSetting.labels || []
                 return this.tagGroupList.map((tag) => {
@@ -66,7 +92,16 @@
             }
         },
         created () {
+            this.clipboard = new Clipboard('.copy-icon').on('success', e => {
+                this.$showTips({
+                    theme: 'success',
+                    message: this.$t('settings.conCopySuc')
+                })
+            })
             this.requestGrouptLists()
+        },
+        beforeDestroy () {
+            this.clipboard.destroy()
         },
         methods: {
             /** *
