@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.dispatch.pojo.DockerHostBuildInfo
 import com.tencent.devops.dispatch.pojo.DockerHostInfo
+import com.tencent.devops.store.pojo.image.response.ImageRepoInfo
 import okhttp3.MediaType
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
@@ -135,6 +136,20 @@ class DockerHostBuildResourceApi constructor(
                 throw RuntimeException("DockerHostBuildResourceApi $path fail")
             }
             return contentLength
+        }
+    }
+
+    fun getPublicImages(): Result<List<ImageRepoInfo>> {
+        val path = "/$urlPrefix/api/dockerhost/public/images"
+        val request = buildGet(path)
+
+        OkhttpUtils.doHttp(request).use { response ->
+            val responseContent = response.body()!!.string()
+            if (!response.isSuccessful) {
+                logger.error("DockerHostBuildResourceApi $path fail. $responseContent")
+                throw RuntimeException("DockerHostBuildResourceApi $path fail")
+            }
+            return objectMapper.readValue(responseContent)
         }
     }
 }
