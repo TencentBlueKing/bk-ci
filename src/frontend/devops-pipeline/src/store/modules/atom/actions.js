@@ -96,7 +96,6 @@ export default {
     setPipelineContainer ({ commit }, { oldContainers, containers }) {
         commit(SET_PIPELINE_CONTAINER, { oldContainers, containers })
     },
-
     requestTemplate: async ({ commit, dispatch }, { projectId, templateId, version }) => {
         try {
             const url = version ? `/${PROCESS_API_URL_PREFIX}/user/templates/projects/${projectId}/templates/${templateId}?version=${version}` : `/${PROCESS_API_URL_PREFIX}/user/templates/projects/${projectId}/templates/${templateId}`
@@ -235,7 +234,7 @@ export default {
         if (newContainer) {
             const { name, required, typeList, type, baseOS, defaultBuildType, defaultPublicBuildResource = '', ...restProps } = newContainer
             const baseOSObject = baseOS !== 'NONE' ? { baseOS } : {}
-            const isError = baseOS === 'WINDOWS'
+            const isError = ['WINDOWS', 'LINUX'].includes(baseOS)
             commit(ADD_CONTAINER, {
                 ...restPayload,
                 newContainer: {

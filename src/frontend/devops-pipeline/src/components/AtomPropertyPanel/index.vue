@@ -26,7 +26,7 @@
                         <div class="bk-form-content">
                             <div class="atom-select-entry">
                                 <template v-if="atom">
-                                    <span :title="atom.name" class="atom-selected-name">{{ atom.name }}</span>
+                                    <span :title="atom.recommendFlag === false ? $t('editPage.notRecomendPlugin') : atom.name" :class="[{ 'not-recommend': atom.recommendFlag === false }, 'atom-selected-name']">{{ atom.name }}</span>
                                     <bk-button theme="primary" class="atom-select-btn reselect-btn" :disabled="!editable" @click.stop="toggleAtomSelectorPopup(true)">{{ $t('editPage.reSelect') }}</bk-button>
                                 </template>
                                 <template v-else-if="!atomCode">
@@ -56,6 +56,18 @@
                         </div>
                         <p>{{ $t('editPage.noAtomVersion') }}</p>
                     </div>
+
+                    <div class="quality-setting-tips" v-if="showSetRuleTips">
+                        <div class="quality-setting-desc">
+                            {{ $t('details.quality.canSet') }}
+                            <span class="quality-rule-link" @click="toSetRule()">{{ $t('details.quality.settingNow') }}
+                                <logo name="tiaozhuan" size="14" style="fill:#3c96ff;position:relative;top:2px;" />
+                            </span>
+                        </div>
+                        <div class="refresh-btn" v-if="isSetted && !refreshLoading" @click="refresh()">{{ $t('details.quality.reflashSetting') }}</div>
+                        <i class="bk-icon icon-circle-2-1 executing-job" v-if="isSetted && refreshLoading"></i>
+                    </div>
+                    <qualitygate-tips v-if="showRuleList" :relative-rule-list="renderRelativeRuleList"></qualitygate-tips>
 
                     <div v-if="atom" :class="{ 'atom-form-box': true, 'readonly': !editable }">
                         <!-- <div class='desc-tips' v-if="!isNewAtomTemplate(atom.htmlTemplateVersion) && atom.description"> <span>插件描述：</span> {{ atom.description }}</div> -->
@@ -96,6 +108,7 @@
 <script>
     import AtomOption from './AtomOption'
     import { mapGetters, mapActions, mapState } from 'vuex'
+    import QualitygateTips from '@/components/atomFormField/QualitygateTips'
     import BuildScript from './BuildScript'
     import Unity3dBuild from './Unity3dBuild'
     import NormalAtom from './NormalAtom'
@@ -110,6 +123,7 @@
     import CodePullSvn from './CodePullSvn'
     import IosCertInstall from './IosCertInstall'
     import CrossDistribute from './CrossDistribute'
+    import SendWechatNotify from './SendWechatNotify'
     import CodeSvnWebHookTrigger from './CodeSvnWebHookTrigger'
     import ReportArchive from './ReportArchive'
     import PullGithub from './PullGithub'
@@ -134,6 +148,8 @@
             CodePullSvn,
             IosCertInstall,
             CrossDistribute,
+            SendWechatNotify,
+            QualitygateTips,
             CodeGithubWebHookTrigger,
             ReportArchive,
             CodeSvnWebHookTrigger,
@@ -322,6 +338,8 @@
                         return IosCertInstall
                     case 'acrossProjectDistribution':
                         return CrossDistribute
+                    case 'sendRTXNotify':
+                        return SendWechatNotify
                     case 'reportArchive':
                     case 'reportArchiveService':
                         return ReportArchive
@@ -538,6 +556,9 @@
 
 <style lang="scss">
     @import './propertyPanel';
+    .not-recommend {
+        text-decoration: line-through;
+    }
     .desc-tips {
         font-size: 14px;
         margin: 30px 0;
@@ -590,19 +611,25 @@
         display: flex;
         justify-content: space-between;
         margin-bottom: 10px;
+        align-items: center;
+        .quality-setting-desc {
+            flex: 3;
+        }
         .quality-rule-link {
-            margin-left: -6px;
+            // margin-left: -6px;
             color: $primaryColor;
             cursor: pointer;
         }
         .refresh-btn {
             color: $primaryColor;
             cursor: pointer;
+            flex: 1;
         }
         .executing-job {
             position: relative;
             top: 2px;
             margin-right: 20px;
+            flex: 1;
             &:before {
                 display: inline-block;
                 animation: rotating infinite .6s linear;
