@@ -37,10 +37,6 @@ module.exports = {
     env: {
         browser: true
     },
-    extends: [
-        'plugin:vue/recommended',
-        'standard'
-    ],
     // required to lint *.vue files
     plugins: [
         '@typescript-eslint',
