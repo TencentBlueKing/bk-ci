@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="14px" height="14px" viewBox="0 0 14 14" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 53 (72520) - https://sketchapp.com -->
+    <title>资源</title>
+    <desc>Created with Sketch.</desc>
+    <g id="二期" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="常规创建流程" transform="translate(-451.000000, -215.000000)" fill="#FFFFFF">
+            <g id="快捷创建规则" transform="translate(260.000000, 130.000000)">
+                <g id="版本转测" transform="translate(170.000000, 54.000000)">
+                    <g id="资源" transform="translate(21.000000, 31.000000)">
+                        <path d="M7,7 L0,3.5 L7,0 L14,3.5 L7,7 Z M2.40903629,3.5 L7,5.796875 L11.5909637,3.5 L7,1.203125 L2.40903629,3.5 Z" id="形状" fill-rule="nonzero"></path>
+                        <polygon id="路径" points="10.4739245 6.40522314 11.5909637 6.95859897 7 9.23377372 2.40903629 6.95859897 3.52607546 6.40522314 2.32155732 5.80851064 0 6.95859897 7 10.4255319 14 6.95859897 11.6784427 5.80851064"></polygon>
+                        <polygon id="路径" points="10.4739245 9.97969122 11.5909637 10.5330671 7 12.8082418 2.40903629 10.5330671 3.52607546 9.97969122 2.32155732 9.38297872 0 10.5330671 7 14 14 10.5330671 11.6784427 9.38297872"></polygon>
+                    </g>
+                </g>
+            </g>
+        </g>
+    </g>
+</svg>
