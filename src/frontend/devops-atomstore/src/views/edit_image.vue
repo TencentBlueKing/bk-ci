@@ -130,7 +130,7 @@
                     </bk-radio-group>
                 </bk-form-item>
                 <bk-form-item label="Dockerfile" :required="true" property="dockerFileContent" :rules="[requireRule]" ref="dockerFileContent">
-                    <section class="dockerfile" v-show="form.dockerFileType === 'INPUT'" @click="freshCodeMirror"></section>
+                    <section class="dockerfile" @click="freshCodeMirror"></section>
                 </bk-form-item>
                 <div class="version-msg">
                     <p class="form-title"> {{ $t('版本信息') }} </p>
@@ -395,6 +395,7 @@
                         })
                 }).catch((err) => this.$bkMessage({ message: err.message || err, theme: 'error' })).finally(() => {
                     this.isLoading = false
+                    setTimeout(() => this.codeEditor.refresh(), 100)
                 })
             },
 
