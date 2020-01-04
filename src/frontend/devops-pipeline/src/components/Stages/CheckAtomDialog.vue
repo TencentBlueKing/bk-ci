@@ -8,8 +8,8 @@
         :auto-close="false"
         @confirm="handleAtomCheck"
         @cancel="toggleCheck(false)">
-        <div v-bkloading="{ isLoading }" class="pipeline-template">
-            <bk-form :label-width="100" form-type="vertical">
+        <div v-bkloading="{ isLoading }">
+            <bk-form form-type="vertical">
                 <bk-form-item v-if="data.desc" :label="$t('editPage.checkDesc')">
                     <p style="white-space: pre-wrap;">{{data.desc}}</p>
                 </bk-form-item>

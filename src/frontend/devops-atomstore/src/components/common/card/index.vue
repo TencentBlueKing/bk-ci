@@ -1,17 +1,18 @@
 <template>
     <router-link :to="{ name: 'details', params: { code: atom.code, type: $route.query.pipeType || 'atom' } }" class="card-home">
         <img class="card-pic atom-logo" :src="atom.logoUrl">
-        <p class="card-name text-overflow">{{ atom.name }}</p>
+        <p :class="[{ 'not-recommend': atom.recommendFlag === false }, 'card-name', 'text-overflow']">{{ atom.name }}</p>
         <h5 class="card-detail">
             <span class="text-overflow">{{ atom.publisher }}</span>
             <span>{{ atom.downloads }} <i class="bk-icon icon-heat-2"></i></span>
         </h5>
-        <p v-if="hasSummary" class="card-summary">{{atom.summary || $t('暂无描述')}}</p>
+        <p v-if="hasSummary" class="card-summary">{{atom.summary || $t('store.暂无描述')}}</p>
         <section class="card-rate">
             <p class="score-group">
                 <comment-rate :rate="5" :width="15" :height="16" :style="{ width: starWidth }" class="score-real"></comment-rate>
                 <comment-rate :rate="0" :width="15" :height="16"></comment-rate>
             </p>
+            <i class="bk-icon icon-lock-shape" v-if="!atom.flag"></i>
         </section>
     </router-link>
 </template>
@@ -28,7 +29,6 @@
             atom: Object,
             hasSummary: Boolean
         },
-
         computed: {
             starWidth () {
                 const integer = Math.floor(this.atom.score)
@@ -52,6 +52,9 @@
         cursor: pointer;
         &:hover {
             box-shadow: 0 3px 8px 0 rgba(60, 150, 255, 0.2), 0 0 0 1px rgba(60, 150, 255, 0.08);
+        }
+        .not-recommend {
+            text-decoration: line-through;
         }
         .card-pic {
             margin: 17px 73px 4px;

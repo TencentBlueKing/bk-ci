@@ -23,14 +23,15 @@
     import { mapActions, mapState } from 'vuex'
     import emptyTips from '@/components/devops/emptyTips'
     import { navConfirm } from '@/utils/util'
-    import { PipelineEditTab, BaseSettingTab } from '@/components/PipelineEditTabs/'
+    import { PipelineEditTab, BaseSettingTab, NotifyTab } from '@/components/PipelineEditTabs/'
     import pipelineOperateMixin from '@/mixins/pipeline-operate-mixin'
 
     export default {
         components: {
             emptyTips,
             PipelineEditTab,
-            BaseSettingTab
+            BaseSettingTab,
+            NotifyTab
         },
         mixins: [pipelineOperateMixin],
         data () {
@@ -63,6 +64,9 @@
             }
         },
         computed: {
+            ...mapState('pipelines', [
+                'projectGroupAndUsers'
+            ]),
             ...mapState([
                 'fetchError'
             ]),
@@ -78,6 +82,25 @@
                                 isEditing: this.isEditing,
                                 pipeline: this.pipeline,
                                 isLoading: !this.pipeline
+                            }
+                        },
+                        {
+                            name: 'notify',
+                            label: this.$t('settings.notify'),
+                            component: 'NotifyTab',
+                            bindData: {
+                                failSubscription: this.pipelineSetting ? this.pipelineSetting.failSubscription : null,
+                                successSubscription: this.pipelineSetting ? this.pipelineSetting.successSubscription : null,
+                                projectGroupAndUsers: this.projectGroupAndUsers,
+                                updateSubscription: (container, name, value) => {
+                                    this.setPipelineEditing(true)
+                                    this.updatePipelineSetting({
+                                        container,
+                                        param: {
+                                            [name]: value
+                                        }
+                                    })
+                                }
                             }
                         },
                         {
@@ -100,6 +123,7 @@
             },
             pipeline (val) {
                 this.isLoading = false
+                this.requestInterceptAtom()
                 if (val && val.instanceFromTemplate) this.requestMatchTemplateRules(val.templateId)
             },
             fetchError (error) {
@@ -111,6 +135,7 @@
         },
         mounted () {
             this.init()
+            this.requestQualityAtom()
             this.addLeaveListenr()
         },
         beforeDestroy () {
@@ -136,16 +161,23 @@
                 'togglePropertyPanel',
                 'setPipeline',
                 'setPipelineEditing',
+                'setAuthEditing',
                 'setSaveStatus'
             ]),
             ...mapActions('pipelines', [
                 'requestPipelineSetting',
-                'updatePipelineSetting'
+                'updatePipelineSetting',
+                'requestProjectGroupAndUsers'
+            ]),
+            ...mapActions('soda', [
+                'requestQualityAtom',
+                'requestInterceptAtom'
             ]),
             init () {
                 this.isLoading = true
                 this.requestPipeline(this.$route.params)
                 this.requestPipelineSetting(this.$route.params)
+                this.requestProjectGroupAndUsers(this.$route.params)
             },
             switchTab (tab) {
                 this.$router.push({
@@ -158,7 +190,7 @@
                 if (!this.leaving) {
                     if (this.isEditing) {
                         this.leaving = true
-                        navConfirm({ content: this.confirmMsg, title: this.confirTitle })
+                        navConfirm({ content: this.confirmMsg, type: 'warning' })
                             .then(() => {
                                 next(true)
                                 this.leaving = false
@@ -181,6 +213,17 @@
             leaveSure (e) {
                 e.returnValue = this.confirmMsg
                 return this.confirmMsg
+            },
+            requestQualityAtom () {
+                this.$store.dispatch('soda/requestQualityAtom', {
+                    projectId: this.projectId
+                })
+            },
+            requestInterceptAtom () {
+                this.$store.dispatch('soda/requestInterceptAtom', {
+                    projectId: this.projectId,
+                    pipelineId: this.pipelineId
+                })
             },
             requestMatchTemplateRules (templateId) {
                 this.$store.dispatch('soda/requestMatchTemplateRuleList', {
