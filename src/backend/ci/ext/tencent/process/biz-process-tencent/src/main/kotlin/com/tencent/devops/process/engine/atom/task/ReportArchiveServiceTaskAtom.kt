@@ -205,8 +205,12 @@ class ReportArchiveServiceTaskAtom @Autowired constructor(
         val destEnvSet = EnvSet(listOf(), listOf(), listOf(EnvSet.IpDto(localIp)))
         val fileSource = FastPushFileRequest.FileSource(listOf(srcPath), srcEnvSet, "root")
         val fileRequest = FastPushFileRequest(
-            operator, listOf(fileSource), destPath, destEnvSet, "root",
-            getTimeoutMills().toLong()
+            userId = operator,
+            fileSources = listOf(fileSource),
+            fileTargetPath = destPath,
+            envSet = destEnvSet,
+            account = "user00",
+            timeout = getTimeoutMills().toLong()
         )
         val taskInstanceId = jobClient.fastPushFileDevops(fileRequest, projectId)
         LogUtils.addLine(rabbitTemplate, buildId, "查看结果: ${jobClient.getDetailUrl(projectId, taskInstanceId)}", task.taskId, containerId, executeCount)
