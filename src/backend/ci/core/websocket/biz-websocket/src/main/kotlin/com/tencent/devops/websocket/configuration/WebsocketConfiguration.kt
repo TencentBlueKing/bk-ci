@@ -28,6 +28,7 @@ package com.tencent.devops.websocket.configuration
 
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.websocket.dispatch.TransferDispatch
 import com.tencent.devops.common.websocket.dispatch.WebSocketDispatcher
 import com.tencent.devops.websocket.handler.ConnectChannelInterceptor
 import com.tencent.devops.websocket.listener.WebSocketListener
@@ -124,5 +125,12 @@ class WebsocketConfiguration {
         redisOperation: RedisOperation
     ): ConnectChannelInterceptor {
         return ConnectChannelInterceptor(redisOperation)
+    }
+    
+    @Bean
+    fun transferDispatch(
+        rabbitTemplate: RabbitTemplate
+    ): TransferDispatch{
+        return TransferDispatch(rabbitTemplate)
     }
 }
