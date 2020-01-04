@@ -57,6 +57,9 @@
                         @imgAdd="uploadimg"
                     />
                 </bk-form-item>
+                <bk-form-item label="Dockerfile" :required="true" property="dockerFileContent" :rules="[requireRule]" ref="dockerFileContent">
+                    <section class="dockerfile" @click="freshCodeMirror"></section>
+                </bk-form-item>
                 <div class="version-msg">
                     <p class="form-title"> {{ $t('版本信息') }} </p>
                     <hr class="cut-line">
@@ -78,6 +81,11 @@
     import { toolbars } from '@/utils/editor-options'
     import selectLogo from '@/components/common/selectLogo'
 
+    import CodeMirror from 'codemirror'
+    import 'codemirror/mode/yaml/yaml'
+    import 'codemirror/lib/codemirror.css'
+    import 'codemirror/theme/3024-night.css'
+
     export default {
         components: {
             selectLogo
@@ -95,6 +103,17 @@
                 classifys: [],
                 labelList: [],
                 categoryList: [],
+                codeMirrorCon: {
+                    lineNumbers: true,
+                    height: '400px',
+                    tabMode: 'indent',
+                    mode: 'yaml',
+                    theme: '3024-night',
+                    cursorHeight: 0.85,
+                    autoRefresh: true,
+                    autofocus: true
+                },
+                codeEditor: {},
                 toolbars
             }
         },
@@ -111,6 +130,11 @@
                 'requestImageCategorys',
                 'requestUpdateImageInfo'
             ]),
+
+            freshCodeMirror () {
+                this.codeEditor.refresh()
+                this.codeEditor.focus()
+            },
 
             chooseImageName (option) {
                 this.form.classifyName = option.classifyName
@@ -138,6 +162,10 @@
                     this.categoryList = categorys
                 }).catch((err) => this.$bkMessage({ message: err.message || err, theme: 'error' })).finally(() => {
                     this.isLoading = false
+                    const ele = document.querySelector('.dockerfile')
+                    this.codeEditor = CodeMirror(ele, this.codeMirrorCon)
+                    this.codeEditor.setValue(this.form.dockerFileContent || '')
+                    this.codeEditor.refresh()
                 })
             },
 
@@ -149,6 +177,7 @@
                         throw err
                     }
                     this.isLoading = true
+                    this.form.dockerFileContent = this.codeEditor.getValue()
                     const postData = {
                         imageCode: this.form.imageCode,
                         data: this.form
@@ -201,6 +230,18 @@
 
 <style lang="scss" scoped>
     @import './../../assets/scss/conf';
+    .dockerfile {
+        height: 400px;
+        overflow: auto;
+        background: black;
+        /deep/ .CodeMirror {
+            font-family: Consolas, "Courier New", monospace;
+            line-height: 1.5;
+            padding: 10px;
+            height: auto;
+        }
+    }
+
     .edit-atom-wrapper {
         height: 100%;
         overflow: auto;
