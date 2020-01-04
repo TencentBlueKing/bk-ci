@@ -3,20 +3,19 @@
         <h3 class="market-home-title">
             <icon class="title-icon" name="color-logo-store" size="25" />
             <p class="title-name">
-                <router-link :to="{ name: 'atomHome' }" class="back-home"> {{ $t('研发商店') }} </router-link>
+                <router-link :to="{ name: 'atomHome' }" class="back-home"> {{ $t('store.研发商店') }} </router-link>
                 <i class="right-arrow banner-arrow"></i>
                 <span class="back-home" @click="backToStore">{{type|typeFilter}}</span>
                 <i class="right-arrow banner-arrow"></i>
                 <span class="banner-des">{{detail.name}}</span>
             </p>
-            <router-link :to="{ name: 'atomList' }" class="title-work" v-if="type !== 'ide'"> {{ $t('工作台') }} </router-link>
+            <router-link :to="{ name: 'atomList' }" class="title-work" v-if="type !== 'ide'"> {{ $t('store.工作台') }} </router-link>
         </h3>
 
         <main class="store-main" v-show="!isLoading">
-            <atom v-if="type === 'atom'" :detail="detail" />
-            <template-info v-if="type === 'template'" :detail="detail" />
-            <bk-tab type="currentType" :active="'des'" class="detail-tabs">
-                <bk-tab-panel name="des" :label="$t('概述')" class="summary-tab">
+            <component :is="`${type}Info`" :detail="detail"></component>
+            <bk-tab type="currentType" :active.sync="currentTab" class="detail-tabs">
+                <bk-tab-panel name="des" :label="$t('store.概述')" class="summary-tab">
                     <mavon-editor
                         :editable="false"
                         default-open="preview"
@@ -29,13 +28,13 @@
                         v-if="detail.description"
                     >
                     </mavon-editor>
-                    <p class="g-empty summary-empty" v-if="!detail.description"> {{ $t('发布者很懒，什么都没留下！') }} </p>
+                    <p class="g-empty summary-empty" v-if="!detail.description"> {{ $t('store.发布者很懒，什么都没留下！') }} </p>
                 </bk-tab-panel>
 
-                <bk-tab-panel name="comment" :label="$t('评价')" class="detail-tab">
-                    <h3 class="comment-title"> {{ $t('用户评分') }} </h3>
+                <bk-tab-panel name="comment" :label="$t('store.评价')" class="detail-tab">
+                    <h3 class="comment-title"> {{ $t('store.用户评分') }} </h3>
                     <section class="rate-group">
-                        <h3 class="rate-title"><animated-integer :value="detail.avgScore" digits="1"></animated-integer><span>{{ $t('共') }}{{detail.totalNum}}{{ $t('份评分') }}</span></h3>
+                        <h3 class="rate-title"><animated-integer :value="detail.avgScore" digits="1"></animated-integer><span>{{ $t('store.共') }}{{detail.totalNum}}{{ $t('store.份评分') }}</span></h3>
                         <hgroup class="rate-card">
                             <h3 class="rate-info" v-for="(scoreItem, index) in detail.scoreItemList" :key="index">
                                 <comment-rate :rate="scoreItem.score" :width="10" :height="11"></comment-rate>
@@ -47,17 +46,17 @@
                             </h3>
                         </hgroup>
                         <button class="add-common" @click="showComment = true">
-                            <template v-if="commentInfo.commentFlag"> {{ $t('修改评论') }} </template>
-                            <template> {{ $t('撰写评论') }} </template>
+                            <template v-if="commentInfo.commentFlag"> {{ $t('store.修改评论') }} </template>
+                            <template> {{ $t('store.撰写评论') }} </template>
                         </button>
                     </section>
 
-                    <h3 class="comment-title"> {{ $t('用户评论') }} </h3>
+                    <h3 class="comment-title"> {{ $t('store.用户评论') }} </h3>
                     <hgroup v-for="(comment, index) in commentList" :key="index">
                         <comment :comment="comment"></comment>
                     </hgroup>
-                    <p class="comments-more" v-if="!isLoadEnd && commentList.length > 0" @click="getComments(true)"> {{ $t('阅读更多内容') }} </p>
-                    <p class="g-empty comment-empty" v-if="commentList.length <= 0"> {{ $t('空空如洗，快来评论一下吧！') }} </p>
+                    <p class="comments-more" v-if="!isLoadEnd && commentList.length > 0" @click="getComments(true)"> {{ $t('store.阅读更多内容') }} </p>
+                    <p class="g-empty comment-empty" v-if="commentList.length <= 0"> {{ $t('store.空空如洗，快来评论一下吧！') }} </p>
                 </bk-tab-panel>
             </bk-tab>
             <transition name="atom-fade">
@@ -73,7 +72,7 @@
     import comment from '../../components/common/comment'
     import commentDialog from '../../components/common/comment/commentDialog.vue'
     import animatedInteger from '../../components/common/animatedInteger'
-    import atom from '../../components/common/detail-info/atom'
+    import atomInfo from '../../components/common/detail-info/atom'
     import templateInfo from '../../components/common/detail-info/template'
 
     export default {
@@ -82,7 +81,7 @@
             commentRate,
             commentDialog,
             animatedInteger,
-            atom,
+            atomInfo,
             templateInfo
         },
 
@@ -92,10 +91,16 @@
                 let res = ''
                 switch (val) {
                     case 'template':
-                        res = bkLocale.$t('流水线模板')
+                        res = bkLocale.$t('store.流水线模板')
+                        break
+                    case 'ide':
+                        res = bkLocale.$t('store.IDE插件')
+                        break
+                    case 'image':
+                        res = bkLocale.$t('store.容器镜像')
                         break
                     default:
-                        res = bkLocale.$t('流水线插件')
+                        res = bkLocale.$t('store.流水线插件')
                         break
                 }
                 return res
@@ -277,6 +282,10 @@
 
 <style lang="scss" scoped>
     @import '@/assets/scss/conf.scss';
+    .plugin-yaml {
+        height: 400px;
+        background: black;
+    }
 
     .store-main {
         height: calc(100vh - 93px);
@@ -292,6 +301,13 @@
     .detail-tabs {
         margin: 49px auto 30px;
         width: 1200px;
+        /deep/ .CodeMirror {
+            font-family: Consolas, "Courier New", monospace;
+            line-height: 1.5;
+            margin-bottom: 20px;
+            padding: 10px;
+            height: auto;
+        }
         .summary-tab {
             overflow: hidden;
             min-height: 360px;
