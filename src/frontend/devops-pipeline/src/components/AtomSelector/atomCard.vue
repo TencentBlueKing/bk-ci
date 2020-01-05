@@ -8,7 +8,7 @@
             </div>
             <div class="atom-info-content">
                 <p class="atom-name">
-                    {{atom.name}}
+                    <span :class="{ 'not-recommend': atom.recommendFlag === false }" :title="atom.recommendFlag === false ? $t('editPage.notRecomendPlugin') : ''">{{atom.name}}</span>
                     <span class="allow-os-list" @mouseover="showOverallTip = false" @mouseleave="showOverallTip = true">
                         <template v-if="atom.os && atom.os.length > 0">
                             <template v-for="os in atom.os">
@@ -41,7 +41,7 @@
                     :title="atom.tips"
                     :loading="isInstalling"
                     v-else-if="!atom.hasInstalled"
-                >{{ $t('install') }}
+                >{{ $t('editPage.install') }}
                 </bk-button>
                 <a v-if="atom.docsLink" target="_blank" class="atom-link" :href="atom.docsLink">{{ $t('newlist.knowMore') }}</a>
             </div>

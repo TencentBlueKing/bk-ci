@@ -154,6 +154,7 @@ object PipelineVarUtil {
      * 以下用于兼容旧参数
      */
     private val oldVarMappingNewVar = mapOf(
+        "pipeline.start.isMobile" to PIPELINE_START_MOBILE,
         "repoName" to PIPELINE_REPO_NAME,
         "pipeline.version" to PIPELINE_VERSION,
         "pipeline.start.parent.build.task.id" to PIPELINE_START_PARENT_BUILD_TASK_ID,

@@ -28,8 +28,8 @@ package com.tencent.devops.worker.common.exception
 
 import com.tencent.devops.process.pojo.ErrorType
 
-class TaskExecuteException(
-    val errorType: ErrorType,
-    val errorCode: Int,
-    val errorMsg: String
+open class TaskExecuteException(
+    open val errorType: ErrorType,
+    open val errorCode: Int,
+    open val errorMsg: String
 ) : Throwable(errorMsg)

@@ -37,8 +37,11 @@ import ParamsView from '@/components/atomFormField/ParamsView'
 import SvnpathInput from '@/components/atomFormField/SvnpathInput'
 import KeyValue from '@/components/atomFormField/KeyValue'
 import KeyValueNormal from '@/components/atomFormField/KeyValueNormal'
+import NameSpaceVar from '@/components/atomFormField/NameSpaceVar'
 import RouteTips from '@/components/atomFormField/RouteTips'
+import QualitygateTips from '@/components/atomFormField/QualitygateTips'
 import FormField from './FormField'
+import GroupIdSelector from '@/components/atomFormField/groupIdSelector'
 import RemoteCurlUrl from '@/components/atomFormField/RemoteCurlUrl'
 import AutoComplete from '@/components/atomFormField/AutoComplete'
 import { urlJoin } from '../../utils/util'
@@ -78,7 +81,10 @@ const atomMixin = {
         SvnpathInput,
         KeyValue,
         KeyValueNormal,
+        NameSpaceVar,
         RouteTips,
+        GroupIdSelector,
+        QualitygateTips,
         AutoComplete
     },
     computed: {
@@ -184,9 +190,12 @@ const atomMixin = {
             try {
                 const { rely: { expression = [], operation = 'AND' } } = obj
                 const cb = item => {
-                    const { key, value } = item
+                    const { key, value, regex } = item
                     if (Array.isArray(value)) {
                         return typeof element[key] !== 'undefined' && value.includes(element[key])
+                    } else if (regex) {
+                        const reg = new RegExp(regex, 'i')
+                        return reg.test(element[key])
                     } else {
                         return element[key] === value
                     }
@@ -196,6 +205,8 @@ const atomMixin = {
                         return expression.every(cb)
                     case 'OR':
                         return expression.length > 0 ? expression.some(cb) : true
+                    case 'NOT':
+                        return expression.length > 0 ? !expression.some(cb) : true
                     default:
                         return true
                 }

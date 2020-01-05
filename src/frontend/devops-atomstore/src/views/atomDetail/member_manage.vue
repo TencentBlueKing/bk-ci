@@ -1,7 +1,7 @@
 <template>
     <div class="member-manage-wrapper">
         <div class="inner-header">
-            <div class="title"> {{ $t('成员管理') }} </div>
+            <div class="title"> {{ $t('store.成员管理') }} </div>
         </div>
 
         <section
@@ -12,18 +12,18 @@
             }">
             <div class="member-manage-content" v-if="showContent && memberList.length">
                 <div class="info-header">
-                    <button class="bk-button bk-primary add-button" type="button" @click="addMember" v-if="userInfo.isProjectAdmin"> {{ $t('新增成员') }} </button>
-                    <div class="member-total"> {{ $t('该插件目前有') }} <span>{{ memberCount }}</span> {{ $t('名成员') }} </div>
+                    <button class="bk-button bk-primary add-button" type="button" @click="addMember" v-if="userInfo.isProjectAdmin"> {{ $t('store.新增成员') }} </button>
+                    <div class="member-total"> {{ $t('store.该插件目前有') }} <span>{{ memberCount }}</span> {{ $t('store.名成员') }} </div>
                 </div>
                 <div class="member-content">
                     <bk-table style="margin-top: 15px;" :data="memberList">
-                        <bk-table-column :label="$t('成员')" prop="userName"></bk-table-column>
-                        <bk-table-column :label="$t('调试项目')" prop="projectName"></bk-table-column>
-                        <bk-table-column :label="$t('角色')" prop="type" :formatter="typeFormatter"></bk-table-column>
-                        <bk-table-column :label="$t('描述')" prop="type" :formatter="desFormatter"></bk-table-column>
-                        <bk-table-column :label="$t('操作')" width="120" class-name="handler-btn">
+                        <bk-table-column :label="$t('store.成员')" prop="userName"></bk-table-column>
+                        <bk-table-column :label="$t('store.调试项目')" prop="projectName"></bk-table-column>
+                        <bk-table-column :label="$t('store.角色')" prop="type" :formatter="typeFormatter"></bk-table-column>
+                        <bk-table-column :label="$t('store.描述')" prop="type" :formatter="desFormatter"></bk-table-column>
+                        <bk-table-column :label="$t('store.操作')" width="120" class-name="handler-btn">
                             <template slot-scope="props">
-                                <span :class="[{ 'disable': !userInfo.isProjectAdmin } ,'update-btn']" @click="handleDelete(props.row)"> {{ $t('删除') }} </span>
+                                <span :class="[{ 'disable': !userInfo.isProjectAdmin } ,'update-btn']" @click="handleDelete(props.row)"> {{ $t('store.删除') }} </span>
                             </template>
                         </bk-table-column>
                     </bk-table>
@@ -70,6 +70,7 @@
         },
         computed: {
             ...mapGetters('store', {
+                'currentAtom': 'getCurrentAtom',
                 'userInfo': 'getUserInfo'
             }),
 
@@ -79,14 +80,14 @@
 
             emptyTipsConfig () {
                 return {
-                    title: this.$t('暂时没有成员'),
-                    desc: this.$t('可以新增插件的管理人员或开发人员'),
+                    title: this.$t('store.暂时没有成员'),
+                    desc: this.$t('store.可以新增插件的管理人员或开发人员'),
                     btns: [
                         {
                             type: 'primary',
                             size: 'normal',
                             handler: () => this.addMember(),
-                            text: this.$t('新增成员'),
+                            text: this.$t('store.新增成员'),
                             disable: !this.userInfo.isProjectAdmin
                         }
                     ]
@@ -103,7 +104,7 @@
             },
 
             desFormatter (row, column, cellValue, index) {
-                return cellValue === 'ADMIN' ? this.$t('插件开发 版本发布 审批 成员管理 私有配置') : this.$t('插件开发 版本发布 私有配置')
+                return cellValue === 'ADMIN' ? this.$t('store.插件开发 版本发布 审批 成员管理 可见范围 私有配置') : this.$t('store.插件开发 版本发布 私有配置')
             },
 
             async init () {
@@ -156,11 +157,11 @@
                 let message, theme
                 try {
                     const res = await this.$store.dispatch('store/addAtomMember', {
-                        params
+                        params: Object.assign(params, { storeCode: this.atomCode })
                     })
 
                     if (res) {
-                        message = this.$t('新增成功')
+                        message = this.$t('store.新增成功')
                         theme = 'success'
                         this.requestList()
                         this.cancelHandle()
@@ -169,6 +170,7 @@
                     message = message = err.message ? err.message : err
                     theme = 'error'
                 } finally {
+                    this.showDialog = false
                     this.$bkMessage({
                         message,
                         theme
@@ -188,7 +190,7 @@
                         id: id
                     })
 
-                    message = this.$t('删除成功')
+                    message = this.$t('store.删除成功')
                     theme = 'success'
                     this.requestList()
                 } catch (err) {
@@ -209,10 +211,10 @@
                     style: {
                         textAlign: 'center'
                     }
-                }, `${this.$t('确定删除成员')}（${row.userName}）？`)
+                }, `${this.$t('store.确定删除成员')}（${row.userName}）？`)
 
                 this.$bkInfo({
-                    title: this.$t('删除'),
+                    title: this.$t('store.删除'),
                     subHeader,
                     confirmFn: async () => {
                         this.requestDeleteMember(row.id)

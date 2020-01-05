@@ -28,6 +28,7 @@
                 handler (newVal, oldVal) {
                     this.isLoading = false
                     if (this.isPipelineIdDiff) { // 如果是切换了pipeline，无需置为编辑状态
+                        this.requestInterceptAtom()
                         this.isPipelineIdDiff = false
                         return
                     }
@@ -61,6 +62,10 @@
                 'togglePropertyPanel',
                 'setPipeline',
                 'setPipelineEditing'
+            ]),
+            ...mapActions('soda', [
+                'requestQualityAtom',
+                'requestInterceptAtom'
             ]),
             getLinkAtomIndex (stages, hash) { // 新增
                 let index = null

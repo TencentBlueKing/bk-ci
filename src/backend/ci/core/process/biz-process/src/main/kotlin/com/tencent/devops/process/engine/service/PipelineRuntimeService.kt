@@ -322,8 +322,7 @@ class PipelineRuntimeService @Autowired constructor(
             }
             allVars[it.key] = it.value
         }
-        PipelineVarUtil.fillOldVar(vars)
-        return vars
+        return allVars
     }
 
     fun getAllVariableWithType(buildId: String): List<BuildParameters> {
@@ -347,12 +346,14 @@ class PipelineRuntimeService @Autowired constructor(
         PipelineVarUtil.replaceOldByNewVar(vars)
 
         val pipelineBuildParameters = mutableListOf<BuildParameters>()
-        vars.forEach { t, u -> pipelineBuildParameters.add(
-            BuildParameters(
-                t,
-                u
+        vars.forEach { t, u ->
+            pipelineBuildParameters.add(
+                BuildParameters(
+                    t,
+                    u
+                )
             )
-        ) }
+        }
 
         pipelineBuildVarDao.batchSave(
             dslContext = dslContext,
@@ -914,10 +915,10 @@ class PipelineRuntimeService @Autowired constructor(
                                     }
                                 } else { // 重试之外的其他任务
                                     val target = findTaskRecord(
-                                            lastTimeBuildTaskRecords = lastTimeBuildTaskRecords,
-                                            container = container,
-                                            retryStartTaskId = atomElement.id!!
-                                        )
+                                        lastTimeBuildTaskRecords = lastTimeBuildTaskRecords,
+                                        container = container,
+                                        retryStartTaskId = atomElement.id!!
+                                    )
                                     // 如果当前原子之前是完成状态，则跳过
                                     if (target == null || BuildStatus.isFinish(BuildStatus.values()[target.status])) {
                                         return@nextElement
@@ -1457,12 +1458,14 @@ class PipelineRuntimeService @Autowired constructor(
                         }
 
                         val pipelineBuildParameters = mutableListOf<BuildParameters>()
-                        params.params.forEach { pipelineBuildParameters.add(
-                            BuildParameters(
-                                it.key.toString(),
-                                it.value.toString()
+                        params.params.forEach {
+                            pipelineBuildParameters.add(
+                                BuildParameters(
+                                    it.key.toString(),
+                                    it.value.toString()
+                                )
                             )
-                        ) }
+                        }
                         pipelineBuildVarDao.batchSave(
                             dslContext,
                             projectId,
@@ -1897,6 +1900,7 @@ class PipelineRuntimeService @Autowired constructor(
         val record = buildDetailDao.get(dslContext, buildId)
         if (record == null) {
             logger.warn("build not exists, buildId: $buildId")
+            return
         }
         val model = JsonUtil.getObjectMapper().readValue(record!!.model, Model::class.java)
         model.stages.forEach s@{ stage ->
