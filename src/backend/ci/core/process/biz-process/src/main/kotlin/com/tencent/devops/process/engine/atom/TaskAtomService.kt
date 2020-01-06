@@ -42,7 +42,7 @@ import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.measure.MeasureService
 import com.tencent.devops.process.jmx.elements.JmxElements
-import com.tencent.devops.process.pojo.AtomErrorCode
+import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
@@ -118,7 +118,7 @@ class TaskAtomService @Autowired(required = false) constructor(
             atomResponse = AtomResponse(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.SYSTEM,
-                errorCode = AtomErrorCode.SYSTEM_DAEMON_INTERRUPTED,
+                errorCode = ErrorCode.SYSTEM_DAEMON_INTERRUPTED,
                 errorMsg = "后台服务运行出错"
             )
             logger.warn("[${task.buildId}]|Fail to execute the task [${task.taskName}]", t)
