@@ -1102,6 +1102,7 @@ class PipelineRuntimeService @Autowired constructor(
                 buildDetailDao.create(
                     dslContext = transactionContext,
                     buildId = buildId,
+                    startUser = userId,
                     startType = startType,
                     buildNum = buildNum,
                     model = JsonUtil.toJson(sModel),
