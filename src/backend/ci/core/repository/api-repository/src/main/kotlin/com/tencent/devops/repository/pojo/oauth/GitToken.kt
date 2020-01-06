@@ -36,5 +36,6 @@ data class GitToken(
     @JsonProperty("token_type")
     val tokenType: String = "",
     @JsonProperty("expires_in")
-    val expiresIn: Long = 0L
+    val expiresIn: Long = 0L,
+    val createTime: Long? = 0L
 )

@@ -74,8 +74,16 @@ interface ServiceProjectResource {
 
     @POST
     @Path("/")
-    @ApiOperation("查询指定项目")
+    @ApiOperation("查询指定项目，不包括被禁用的项目")
     fun listByProjectCode(
+        @ApiParam(value = "项目id", required = true)
+        projectCodes: Set<String>
+    ): Result<List<ProjectVO>>
+
+    @POST
+    @Path("/listOnlyByProjectCode")
+    @ApiOperation("查询指定项目，包括被禁用的项目")
+    fun listOnlyByProjectCode(
         @ApiParam(value = "项目id", required = true)
         projectCodes: Set<String>
     ): Result<List<ProjectVO>>

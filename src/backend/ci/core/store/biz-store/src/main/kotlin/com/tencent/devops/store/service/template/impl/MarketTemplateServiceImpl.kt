@@ -541,12 +541,13 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
                     val atomVersion = element.version
                     logger.info("the atomCode is:$atomCode，atomVersion is:$atomVersion")
                     val atomRecord = if (atomVersion.isNotEmpty()) {
-                        atomDao.getPipelineAtom(dslContext, atomCode, atomVersion.replace("*", ""))
+                        val atomStatusList = listOf(AtomStatusEnum.RELEASED.status.toByte(), AtomStatusEnum.UNDERCARRIAGING.status.toByte())
+                        atomDao.getPipelineAtom(dslContext, atomCode, atomVersion.replace("*", ""), atomStatusList)
                     } else {
                         marketAtomDao.getLatestAtomByCode(dslContext, atomCode) // 兼容历史存量原子插件的情况
                     }
                     logger.info("the atomRecord is:$atomRecord")
-                    if (null == atomRecord || atomRecord.deleteFlag || atomRecord.atomStatus != AtomStatusEnum.RELEASED.status.toByte()) {
+                    if (null == atomRecord || atomRecord.deleteFlag) {
                         return MessageCodeUtil.generateResponseDataObject(StoreMessageCode.USER_TEMPLATE_ATOM_IS_INVALID, arrayOf(atomCode))
                     }
                     invalidAtomList = generateUserAtomInvalidVisibleAtom(atomCode, userId, atomRecord, element)

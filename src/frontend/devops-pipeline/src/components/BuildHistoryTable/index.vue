@@ -12,7 +12,7 @@
                 <template v-if="col.prop === 'buildNum'" v-slot="props">
                     <span class="build-num-status">
                         <router-link :class="{ [props.row.status]: true }" style="line-height: 42px;" :to="getArchiveUrl(props.row)">#{{ props.row.buildNum }}</router-link>
-                        <i v-if="retryable(props.row)" :title="$t('retry')" class="bk-icon icon-retry" @click.stop="retry(props.row.id)" />
+                        <i v-if="retryable(props.row)" title="rebuild" class="bk-icon icon-retry" @click.stop="retry(props.row.id)" />
                         <i v-else-if="props.row.status === 'QUEUE' || props.row.status === 'RUNNING' || !props.row.endTime" :title="$t('history.stopBuild')" @click.stop="stopExecute(props.row.id)"
                             :class="{
                                 'bk-icon': true,
@@ -41,7 +41,7 @@
                     <template v-if="props.row.hasArtifactories">
                         <div class="artifact-list-cell">
                             <qrcode v-if="props.row.active && props.row.shortUrl" :text="props.row.shortUrl" :size="76">{{props.row.shortUrl}}</qrcode>
-                            <p class="artifact-entry history-text-link" @click.stop="e => showArtifactoriesPopup(e, props.row.index)">{{props.row.artifactList.length }}{{ $t('history.fileUnit') }}（{{props.row.sumSize}}）</p>
+                            <p class="artifact-entry history-text-link" @click.stop="e => showArtifactoriesPopup(e, props.row.index)">{{ $t('history.fileUnit', [props.row.artifactList.length]) }}（{{props.row.sumSize}}）</p>
                         </div>
                     </template>
                     <span v-else>--</span>
@@ -240,7 +240,6 @@
                 this.activeRemarkIndex = row.index
                 this.tempRemark = row.remark
                 const instance = this.getRemarkPopupInstance(row.index)
-                console.log(instance, 11)
                 if (instance) {
                     instance.show()
                     this.$nextTick(() => {
@@ -250,10 +249,10 @@
                 }
             },
             getRemarkPopupInstance (activeRemarkIndex) {
-                return this.$refs.remarkPopup && this.$refs.remarkPopup[activeRemarkIndex] && this.$refs.remarkPopup[activeRemarkIndex].instance && this.$refs.remarkPopup[activeRemarkIndex].instance.instances && this.$refs.remarkPopup[activeRemarkIndex].instance.instances[0]
+                return this.$refs.remarkPopup && this.$refs.remarkPopup[activeRemarkIndex] && this.$refs.remarkPopup[activeRemarkIndex].instance
             },
             retryable (row) {
-                return row.pipelineVersion === this.currentPipelineVersion && ['QUEUE', 'SUCCEED', 'RUNNING'].indexOf(row.status) < 0
+                return ['QUEUE', 'RUNNING'].indexOf(row.status) < 0
             },
             async handleRemarkChange (row) {
                 try {
@@ -423,12 +422,12 @@
                     })
 
                     if (res.id) {
-                        message = this.$t('subpage.retrSuc')
+                        message = this.$t('subpage.rebuildSuc')
                         theme = 'success'
 
                         this.$emit('update-table')
                     } else {
-                        message = this.$t('subpage.retryFail')
+                        message = this.$t('subpage.rebuildFail')
                         theme = 'error'
                     }
                 } catch (err) {
