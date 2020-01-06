@@ -70,6 +70,12 @@
             ...mapState([
                 'fetchError'
             ]),
+            projectId () {
+                return this.$route.params.projectId
+            },
+            pipelineId () {
+                return this.$route.params.pipelineId
+            },
             currentTab () {
                 return this.$route.params.tab || 'pipeline'
             },
