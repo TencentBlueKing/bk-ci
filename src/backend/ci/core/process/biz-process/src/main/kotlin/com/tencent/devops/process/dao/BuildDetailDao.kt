@@ -43,12 +43,20 @@ class BuildDetailDao {
         buildId: String,
         model: String
     ) {
-        create(dslContext, buildId, null, null, model)
+        create(
+            dslContext = dslContext,
+            buildId = buildId,
+            startUser = "",
+            startType = null,
+            buildNum = null,
+            model = model
+        )
     }
 
     fun create(
         dslContext: DSLContext,
         buildId: String,
+        startUser: String,
         startType: StartType?,
         buildNum: Int?,
         model: String,
@@ -63,10 +71,17 @@ class BuildDetailDao {
                 BUILD_NUM,
                 MODEL,
                 START_TIME,
-                STATUS
-            )
-                .values(buildId, startType?.name, buildNum ?: 0, model, LocalDateTime.now(), buildStatus.name)
-                .execute()
+                STATUS,
+                START_USER
+            ).values(
+                buildId,
+                startType?.name,
+                buildNum ?: 0,
+                model,
+                LocalDateTime.now(),
+                buildStatus.name,
+                startUser
+            ).execute()
         }
     }
 
