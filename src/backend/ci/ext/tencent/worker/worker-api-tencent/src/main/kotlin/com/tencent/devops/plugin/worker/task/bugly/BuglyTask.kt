@@ -316,7 +316,7 @@ class BuglyTask : ITask() {
 
     // 转化so文件
     private fun outputBuglyTool(jarName: String): URL {
-        val buglyToolInputMD5Stream = Thread.currentThread().contextClassLoader.getResourceAsStream(jarName)
+        val buglyToolInputMD5Stream = Thread.currentThread().contextClassLoader.getResourceAsStream("$jarName.file")
         val inputMD5 = DigestUtils.md5Hex(buglyToolInputMD5Stream)
         val outputFile = File(jarName)
         // 是否执行输出

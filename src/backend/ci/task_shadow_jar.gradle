@@ -36,7 +36,7 @@ jar {
 
 shadowJar {
 
-    mergeServiceFiles()
+//    mergeServiceFiles()
 
     destinationDir = file("${rootDir}/release")
     classifier = null
