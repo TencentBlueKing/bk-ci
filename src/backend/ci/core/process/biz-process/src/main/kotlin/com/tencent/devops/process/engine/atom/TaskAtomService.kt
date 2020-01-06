@@ -43,7 +43,7 @@ import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.measure.MeasureService
 import com.tencent.devops.process.jmx.elements.JmxElements
 import com.tencent.devops.process.pojo.AtomErrorCode
-import com.tencent.devops.process.pojo.ErrorType
+import com.tencent.devops.common.api.pojo.ErrorType
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
