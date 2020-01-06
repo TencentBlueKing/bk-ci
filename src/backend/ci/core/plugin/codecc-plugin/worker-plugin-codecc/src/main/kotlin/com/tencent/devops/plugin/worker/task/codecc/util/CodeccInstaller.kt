@@ -28,6 +28,8 @@ package com.tencent.devops.plugin.worker.task.codecc.util
 
 import com.google.common.io.Files
 import com.tencent.devops.common.api.enums.OSType
+import com.tencent.devops.common.api.exception.TaskExecuteException
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.FileUtil
 import com.tencent.devops.plugin.codecc.pojo.CodeccToolType
 import com.tencent.devops.plugin.worker.pojo.CodeccExecuteConfig
@@ -40,8 +42,8 @@ import com.tencent.devops.plugin.worker.task.codecc.LinuxCodeccConstants.THIRD_N
 import com.tencent.devops.plugin.worker.task.codecc.LinuxCodeccConstants.THIRD_PYLINT2_FILE
 import com.tencent.devops.plugin.worker.task.codecc.LinuxCodeccConstants.THIRD_PYLINT3_FILE
 import com.tencent.devops.plugin.worker.task.codecc.LinuxCodeccConstants.THIRD_PYTHON3_TAR_FILE
+import com.tencent.devops.process.pojo.AtomErrorCode
 import com.tencent.devops.worker.common.env.AgentEnv
-import com.tencent.devops.worker.common.exception.UserTaskExecuteException
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.utils.CommandLineUtils
 import com.tencent.devops.worker.common.utils.WorkspaceUtils
@@ -190,7 +192,11 @@ object CodeccInstaller {
             script.writeText(commands.joinToString(System.lineSeparator()))
             return CommandLineUtils.execute(script, workspace, true)
         } catch (e: Exception) {
-            throw UserTaskExecuteException("安装python2失败: ${e.message}")
+            throw throw TaskExecuteException(
+                errorType = ErrorType.USER,
+                errorCode = AtomErrorCode.USER_TASK_OPERATE_FAIL,
+                errorMsg = "安装python2失败: ${e.message}"
+            )
         }
     }
 
@@ -204,7 +210,11 @@ object CodeccInstaller {
             // 执行相关命令
             CommandLineUtils.execute("chmod -R 755 $pythonPath/bin/python", workspace, true)
         } catch (e: Exception) {
-            throw UserTaskExecuteException("安装python3失败: ${e.message}")
+            throw throw TaskExecuteException(
+                errorType = ErrorType.USER,
+                errorCode = AtomErrorCode.USER_TASK_OPERATE_FAIL,
+                errorMsg = "安装python3失败: ${e.message}"
+            )
         }
     }
 
