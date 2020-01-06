@@ -28,8 +28,8 @@ package com.tencent.devops.worker.common.task.script
 
 import com.tencent.devops.common.pipeline.enums.BuildScriptType
 import com.tencent.devops.process.pojo.AtomErrorCode
-import com.tencent.devops.process.pojo.ErrorType
-import com.tencent.devops.worker.common.exception.TaskExecuteException
+import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.worker.common.task.script.bat.CommandBatImpl
 import com.tencent.devops.worker.common.task.script.shell.CommandShellImpl
 
