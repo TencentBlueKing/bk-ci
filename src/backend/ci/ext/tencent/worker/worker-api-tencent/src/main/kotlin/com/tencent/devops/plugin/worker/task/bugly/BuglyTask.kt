@@ -335,13 +335,13 @@ class BuglyTask : ITask() {
             var buglyToolInputStream: InputStream? = null
             var buglyToolOutputStream: OutputStream? = null
             try {
-                buglyToolInputStream = Thread.currentThread().contextClassLoader.getResourceAsStream(jarName)
+                buglyToolInputStream = Thread.currentThread().contextClassLoader.getResourceAsStream("$jarName.file")
                 buglyToolOutputStream = outputFile.outputStream()
                 buglyToolInputStream.copyTo(buglyToolOutputStream)
             } catch (e: Exception) {
-                LoggerService.addNormalLine("Failed to export bugly tool $jarName")
+                LoggerService.addNormalLine("Failed to export bugly tool $jarName:$e")
                 throw TaskExecuteException(
-                    errorMsg = "Failed to export bugly tool $jarName",
+                    errorMsg = "Failed to export bugly tool $jarName:$e",
                     errorType = ErrorType.USER,
                     errorCode = ErrorCode.USER_INPUT_INVAILD
                 )
