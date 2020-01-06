@@ -28,7 +28,7 @@ package com.tencent.devops.plugin.worker.task.scm.util
 
 import com.tencent.devops.common.api.enums.RepositoryConfig
 import com.tencent.devops.common.api.exception.RemoteServiceException
-import com.tencent.devops.process.pojo.AtomErrorCode
+import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.worker.common.api.ApiFactory
@@ -53,7 +53,7 @@ object RepositoryUtils {
         } catch (ignored: Exception) {
             throw TaskExecuteException(errorMsg = "Fail to get the repo($repositoryConfig)",
                 errorType = ErrorType.USER,
-                errorCode = AtomErrorCode.USER_INPUT_INVAILD)
+                errorCode = ErrorCode.USER_INPUT_INVAILD)
         }
     }
 

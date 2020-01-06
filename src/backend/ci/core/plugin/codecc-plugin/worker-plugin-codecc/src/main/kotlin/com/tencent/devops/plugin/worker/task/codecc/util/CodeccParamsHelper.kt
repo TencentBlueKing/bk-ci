@@ -37,7 +37,7 @@ import com.tencent.devops.plugin.codecc.pojo.coverity.ProjectLanguage
 import com.tencent.devops.plugin.worker.pojo.CodeccExecuteConfig
 import com.tencent.devops.plugin.worker.task.codecc.LinuxCodeccConstants
 import com.tencent.devops.plugin.worker.task.codecc.WindowsCodeccConstants
-import com.tencent.devops.process.pojo.AtomErrorCode
+import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.worker.common.CommonEnv
 import com.tencent.devops.worker.common.api.utils.ThirdPartyAgentBuildInfoUtils
 import com.tencent.devops.worker.common.env.AgentEnv
@@ -206,7 +206,7 @@ object CodeccParamsHelper {
             if (!shareCoverityFile.exists()) {
                 throw throw TaskExecuteException(
                     errorType = ErrorType.USER,
-                    errorCode = AtomErrorCode.USER_TASK_OPERATE_FAIL,
+                    errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
                     errorMsg = "The coverity file (${shareCoverityFile.canonicalPath}) is not exist"
                 )
             }
@@ -224,7 +224,7 @@ object CodeccParamsHelper {
             if (AgentEnv.getOS() != OSType.MAC_OS && !shareToolFile.exists()) {
                 throw throw TaskExecuteException(
                     errorType = ErrorType.USER,
-                    errorCode = AtomErrorCode.USER_RESOURCE_NOT_FOUND,
+                    errorCode = ErrorCode.USER_RESOURCE_NOT_FOUND,
                     errorMsg = "The mutli tool file (${shareToolFile.canonicalPath}) is not exist"
                 )
             }

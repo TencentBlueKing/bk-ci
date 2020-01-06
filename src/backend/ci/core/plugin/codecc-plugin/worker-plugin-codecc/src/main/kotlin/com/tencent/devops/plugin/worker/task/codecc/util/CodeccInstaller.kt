@@ -42,7 +42,7 @@ import com.tencent.devops.plugin.worker.task.codecc.LinuxCodeccConstants.THIRD_N
 import com.tencent.devops.plugin.worker.task.codecc.LinuxCodeccConstants.THIRD_PYLINT2_FILE
 import com.tencent.devops.plugin.worker.task.codecc.LinuxCodeccConstants.THIRD_PYLINT3_FILE
 import com.tencent.devops.plugin.worker.task.codecc.LinuxCodeccConstants.THIRD_PYTHON3_TAR_FILE
-import com.tencent.devops.process.pojo.AtomErrorCode
+import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.utils.CommandLineUtils
@@ -194,7 +194,7 @@ object CodeccInstaller {
         } catch (e: Exception) {
             throw throw TaskExecuteException(
                 errorType = ErrorType.USER,
-                errorCode = AtomErrorCode.USER_TASK_OPERATE_FAIL,
+                errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
                 errorMsg = "安装python2失败: ${e.message}"
             )
         }
@@ -212,7 +212,7 @@ object CodeccInstaller {
         } catch (e: Exception) {
             throw throw TaskExecuteException(
                 errorType = ErrorType.USER,
-                errorCode = AtomErrorCode.USER_TASK_OPERATE_FAIL,
+                errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
                 errorMsg = "安装python3失败: ${e.message}"
             )
         }

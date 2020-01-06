@@ -32,7 +32,7 @@ import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.enums.BuildTaskStatus
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.pipeline.utils.ParameterUtils
-import com.tencent.devops.process.pojo.AtomErrorCode
+import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
 import com.tencent.devops.worker.common.env.BuildEnv
@@ -141,7 +141,7 @@ object Runner {
                                     }
                                     message = e.message ?: defaultMessage.toString()
                                     errorType = ErrorType.SYSTEM.name
-                                    errorCode = AtomErrorCode.SYSTEM_WORKER_LOADING_ERROR
+                                    errorCode = ErrorCode.SYSTEM_WORKER_LOADING_ERROR
                                 }
 
                                 val env = taskDaemon.getAllEnv()
