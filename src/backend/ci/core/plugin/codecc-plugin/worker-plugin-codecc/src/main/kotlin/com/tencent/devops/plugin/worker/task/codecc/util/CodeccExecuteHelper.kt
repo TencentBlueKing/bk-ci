@@ -26,10 +26,12 @@
 
 package com.tencent.devops.plugin.worker.task.codecc.util
 
+import com.tencent.devops.common.api.exception.TaskExecuteException
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.plugin.worker.pojo.CodeccExecuteConfig
 import com.tencent.devops.plugin.worker.task.codecc.LinuxCodeccConstants.COV_TOOLS
-import com.tencent.devops.worker.common.exception.UserTaskExecuteException
+import com.tencent.devops.process.pojo.AtomErrorCode
 import com.tencent.devops.worker.common.logger.LoggerService
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
@@ -91,7 +93,12 @@ object CodeccExecuteHelper {
             // 判断最后结果
             // 4个小时当做超时
             lock.await(codeccExecuteConfig.timeOut, TimeUnit.MINUTES)
-            if (successCount.get() != expectCount) throw UserTaskExecuteException("运行codecc任务失败: $errorMsg")
+            if (successCount.get() != expectCount)
+                throw TaskExecuteException(
+                    errorType = ErrorType.USER,
+                    errorCode = AtomErrorCode.USER_TASK_OPERATE_FAIL,
+                    errorMsg = "运行codecc任务失败: $errorMsg"
+                )
 
             return result.toString()
         } finally {
