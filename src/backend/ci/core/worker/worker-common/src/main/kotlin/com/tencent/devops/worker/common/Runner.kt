@@ -140,8 +140,8 @@ object Runner {
                                         }
                                     }
                                     message = e.message ?: defaultMessage.toString()
-                                    errorType = ErrorType.UNKNOWN.name
-                                    errorCode = ErrorCode.UNKNOWN_DEFAULT_ERROR
+                                    errorType = ErrorType.SYSTEM.name
+                                    errorCode = ErrorCode.SYSTEM_WORKER_LOADING_ERROR
                                 }
 
                                 val env = taskDaemon.getAllEnv()
