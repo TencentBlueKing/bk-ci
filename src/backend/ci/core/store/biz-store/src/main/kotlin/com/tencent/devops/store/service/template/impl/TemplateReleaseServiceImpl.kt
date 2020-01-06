@@ -41,6 +41,7 @@ import com.tencent.devops.store.dao.common.StoreReleaseDao
 import com.tencent.devops.store.dao.template.MarketTemplateDao
 import com.tencent.devops.store.dao.template.TemplateCategoryRelDao
 import com.tencent.devops.store.dao.template.TemplateLabelRelDao
+import com.tencent.devops.store.pojo.common.KEY_CATEGORY_CODE
 import com.tencent.devops.store.pojo.common.PASS
 import com.tencent.devops.store.pojo.common.ReleaseProcessItem
 import com.tencent.devops.store.pojo.common.StoreProcessInfo
@@ -269,7 +270,7 @@ abstract class TemplateReleaseServiceImpl @Autowired constructor() : TemplateRel
             val categoryRecords = templateCategoryRelDao.getCategorysByTemplateId(dslContext, template.id)
             val categoryCodeList = mutableListOf<String>()
             categoryRecords?.forEach {
-                categoryCodeList.add(it["categoryCode"] as String)
+                categoryCodeList.add(it[KEY_CATEGORY_CODE] as String)
             }
             val projectCode = storeProjectRelDao.getInitProjectCodeByStoreCode(dslContext, template.templateCode, StoreTypeEnum.TEMPLATE.type.toByte())
             val addMarketTemplateRequest = AddMarketTemplateRequest(

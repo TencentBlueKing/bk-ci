@@ -37,139 +37,102 @@ class AgentGrayUtils constructor(
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(AgentGrayUtils::class.java)
-        private const val FORCE_UPGRADE_AGENT_PREFIX = "thirdparty.agent.force.upgrade.id_"
-        private const val LOCK_UPGRADE_AGENT_PREFIX = "thirdparty.agent.lock.upgrade.id_"
-        private const val CAN_UPGRADE_AGENT_PREFIX = "thirdparty.agent.can.upgrade.id_"
 
-        private const val GREY_CAN_UPGRADE_AGENT_PREFIX = "grey_thirdparty.agent.can.upgrade.id_"
         private const val CURRENT_AGENT_MASTER_VERSION = "environment.thirdparty.agent.master.version"
         private const val GRAY_CURRENT_AGENT_MASTERT_VERSION = "environment.thirdparty.agent.gray.master.version"
 
         private const val CURRENT_AGENT_VERSION = "environment.thirdparty.agent.verison"
         private const val GRAY_CURRENT_AGENT_VERSION = "environment.thirdparty.agent.gray.version"
-    }
 
-    private fun getForceUpgradeAgentKey(agentId: Long): String {
-        return "$FORCE_UPGRADE_AGENT_PREFIX$agentId"
-    }
-
-    private fun getLockUpgradeAgentKey(agentId: Long): String {
-        return "$LOCK_UPGRADE_AGENT_PREFIX$agentId"
-    }
-
-    private fun getCanUpgradeAgentKey(agentId: Long): String {
-        return if (gray.isGray()) {
-            "$GREY_CAN_UPGRADE_AGENT_PREFIX$agentId"
-        } else {
-            "$CAN_UPGRADE_AGENT_PREFIX$agentId"
-        }
-    }
-
-    private fun getCanUpgradePrefix(): String {
-        return if (gray.isGray()) {
-            GREY_CAN_UPGRADE_AGENT_PREFIX
-        } else {
-            CAN_UPGRADE_AGENT_PREFIX
-        }
+        private const val CAN_UPGRADE_AGENT_SET_KEY = "environment:thirdparty:can_upgrade"
+        private const val GREY_CAN_UPGRADE_AGENT_SET_KEY = "environment:thirdparty:grey_can_upgrade"
+        private const val LOCK_UPGRADE_AGENT_SET_KEY = "environment:thirdparty:lock_upgrade"
+        private const val FORCE_UPGRADE_AGENT_SET_KEY = "environment:thirdparty:force_upgrade"
     }
 
     fun checkForceUpgrade(agentHashId: String): Boolean {
         val agentId = HashUtil.decodeIdToLong(agentHashId)
-        val needUpgrade = !redisOperation.get(getForceUpgradeAgentKey(agentId)).isNullOrBlank()
-        logger.info("get agent force upgrade($agentId): $needUpgrade")
-        return needUpgrade
+        return (redisOperation.getSetMembers(FORCE_UPGRADE_AGENT_SET_KEY) ?: setOf()).contains(agentId.toString())
     }
 
     fun setForceUpgradeAgents(agentIds: List<Long>) {
-        logger.info("set force upgrade agents: $agentIds")
         agentIds.forEach {
-            redisOperation.set(getForceUpgradeAgentKey(it), "true")
+            redisOperation.addSetValue(FORCE_UPGRADE_AGENT_SET_KEY, it.toString())
         }
     }
 
     fun unsetForceUpgradeAgents(agentIds: List<Long>) {
-        logger.info("unset force upgrade agents: $agentIds")
-        val keys = agentIds.map { getForceUpgradeAgentKey(it) }
-        redisOperation.delete(keys)
+        agentIds.forEach {
+            redisOperation.removeSetMember(FORCE_UPGRADE_AGENT_SET_KEY, it.toString())
+        }
     }
 
     fun getAllForceUpgradeAgents(): List<Long> {
-        val prefixLength = FORCE_UPGRADE_AGENT_PREFIX.length
-        val agentIds = redisOperation.keys("$FORCE_UPGRADE_AGENT_PREFIX*")
-            .map { it.substring(prefixLength).toLong() }
-        logger.info("all force upgrade agent: $agentIds")
-        return agentIds
+        return (redisOperation.getSetMembers(FORCE_UPGRADE_AGENT_SET_KEY)
+            ?: setOf()).filter { !it.isBlank() }.map { it.toLong() }
     }
 
     fun cleanAllForceUpgradeAgents() {
-        val allKeys = redisOperation.keys("$FORCE_UPGRADE_AGENT_PREFIX*")
-        logger.info("clean all force agent upgrade, keys: $allKeys")
-        if (allKeys.isNotEmpty()) {
-            redisOperation.delete(allKeys)
+        val allIds = redisOperation.getSetMembers(FORCE_UPGRADE_AGENT_SET_KEY) ?: return
+        allIds.forEach {
+            redisOperation.removeSetMember(FORCE_UPGRADE_AGENT_SET_KEY, it)
         }
     }
 
     fun checkLockUpgrade(agentHashId: String): Boolean {
         val agentId = HashUtil.decodeIdToLong(agentHashId)
-        val lockUpgrade = !redisOperation.get(getLockUpgradeAgentKey(agentId)).isNullOrBlank()
-        logger.info("get agent lock upgrade($agentId): $lockUpgrade")
-        return lockUpgrade
+        return (redisOperation.getSetMembers(LOCK_UPGRADE_AGENT_SET_KEY)
+            ?: setOf()).filter { !it.isBlank() }.contains(agentId.toString())
     }
 
     fun setLockUpgradeAgents(agentIds: List<Long>) {
-        logger.info("set lock upgrade agents: $agentIds")
         agentIds.forEach {
-            redisOperation.set(getLockUpgradeAgentKey(it), "true")
+            redisOperation.addSetValue(LOCK_UPGRADE_AGENT_SET_KEY, it.toString())
         }
     }
 
     fun unsetLockUpgradeAgents(agentIds: List<Long>) {
-        logger.info("unset lock upgrade agents: $agentIds")
-        val keys = agentIds.map { getLockUpgradeAgentKey(it) }
-        redisOperation.delete(keys)
+        agentIds.forEach {
+            redisOperation.removeSetMember(LOCK_UPGRADE_AGENT_SET_KEY, it.toString())
+        }
     }
 
     fun getAllLockUpgradeAgents(): List<Long> {
-        val prefixLength = LOCK_UPGRADE_AGENT_PREFIX.length
-        val agentIds = redisOperation.keys("$LOCK_UPGRADE_AGENT_PREFIX*")
-            .map { it.substring(prefixLength).toLong() }
-        logger.info("all Lock upgrade agent: $agentIds")
-        return agentIds
+        return (redisOperation.getSetMembers(LOCK_UPGRADE_AGENT_SET_KEY)
+            ?: setOf()).filter { !it.isBlank() }.map { it.toLong() }
     }
 
     fun cleanAllLockUpgradeAgents() {
-        val allKeys = redisOperation.keys("$LOCK_UPGRADE_AGENT_PREFIX*")
-        logger.info("clean all lock agent upgrade, keys: $allKeys")
-        if (allKeys.isNotEmpty()) {
-            redisOperation.delete(allKeys)
+        val allIds = redisOperation.getSetMembers(LOCK_UPGRADE_AGENT_SET_KEY) ?: return
+        allIds.forEach {
+            redisOperation.removeSetMember(LOCK_UPGRADE_AGENT_SET_KEY, it)
         }
     }
 
     fun setCanUpgradeAgents(agentIds: List<Long>) {
-        val redisKeyPrefix = getCanUpgradePrefix()
-        val existingAgentIds = redisOperation.keys("$redisKeyPrefix*")
-            .map { it.substring(redisKeyPrefix.length).toLong() }.toSet()
+        logger.info("setCanUpgradeAgents, agentIds: $agentIds")
+        val canUpgradeAgentSetKey = getCanUpgradeAgentSetKey()
+        val existingAgentIds = (redisOperation.getSetMembers(canUpgradeAgentSetKey) ?: setOf()).map {
+            it.toLong()
+        }
         val newAgentIds = agentIds.toSet()
-
         val toAddAgentIds = newAgentIds.filterNot { existingAgentIds.contains(it) }
         if (toAddAgentIds.isNotEmpty()) {
             toAddAgentIds.forEach {
-                redisOperation.set(getCanUpgradeAgentKey(it), "true")
+                redisOperation.addSetValue(canUpgradeAgentSetKey, it.toString())
             }
         }
-
         val toDeleteAgents = existingAgentIds.filterNot { newAgentIds.contains(it) }
         if (toDeleteAgents.isNotEmpty()) {
-            redisOperation.delete(toDeleteAgents.map { getCanUpgradeAgentKey(it) })
+            toDeleteAgents.forEach {
+                redisOperation.removeSetMember(canUpgradeAgentSetKey, it.toString())
+            }
         }
     }
 
     fun getCanUpgradeAgents(): List<Long> {
-        val redisKeyPrefix = getCanUpgradePrefix()
-        val agentIds = redisOperation.keys("$redisKeyPrefix*")
-            .map { it.substring(redisKeyPrefix.length).toLong() }
-        logger.info("can upgrade agents: $agentIds")
-        return agentIds
+        return (redisOperation.getSetMembers(getCanUpgradeAgentSetKey())
+            ?: setOf()).filter { !it.isBlank() }.map { it.toLong() }
     }
 
     fun getAgentMasterVersionKey(): String {
@@ -180,10 +143,19 @@ class AgentGrayUtils constructor(
         }
     }
 
-    fun getAgentVersionKey() =
-        if (gray.isGray()) {
+    fun getCanUpgradeAgentSetKey(): String {
+        return if (gray.isGray()) {
+            GREY_CAN_UPGRADE_AGENT_SET_KEY
+        } else {
+            CAN_UPGRADE_AGENT_SET_KEY
+        }
+    }
+
+    fun getAgentVersionKey(): String {
+        return if (gray.isGray()) {
             GRAY_CURRENT_AGENT_VERSION
         } else {
             CURRENT_AGENT_VERSION
         }
+    }
 }

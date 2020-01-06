@@ -27,16 +27,14 @@
 package com.tencent.devops.store.service.atom.impl
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.store.dao.atom.AtomLabelRelDao
 import com.tencent.devops.store.pojo.common.Label
-import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.atom.AtomLabelService
+import com.tencent.devops.store.service.common.LabelService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.time.LocalDateTime
 
 /**
  * 插件标签逻辑处理
@@ -46,7 +44,8 @@ import java.time.LocalDateTime
 @Service
 class AtomLabelServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
-    private val atomLabelRelDao: AtomLabelRelDao
+    private val atomLabelRelDao: AtomLabelRelDao,
+    private val labelService: LabelService
 ) : AtomLabelService {
 
     private val logger = LoggerFactory.getLogger(AtomLabelServiceImpl::class.java)
@@ -59,16 +58,7 @@ class AtomLabelServiceImpl @Autowired constructor(
         val atomLabelList = mutableListOf<Label>()
         val atomLabelRecords = atomLabelRelDao.getLabelsByAtomId(dslContext, atomId) // 查询插件标签信息
         atomLabelRecords?.forEach {
-            atomLabelList.add(
-                Label(
-                    id = it["id"] as String,
-                    labelCode = it["labelCode"] as String,
-                    labelName = it["labelName"] as String,
-                    labelType = StoreTypeEnum.getStoreType((it["labelType"] as Byte).toInt()),
-                    createTime = (it["createTime"] as LocalDateTime).timestampmilli(),
-                    updateTime = (it["updateTime"] as LocalDateTime).timestampmilli()
-                )
-            )
+            labelService.addLabelToLabelList(it, atomLabelList)
         }
         return Result(atomLabelList)
     }

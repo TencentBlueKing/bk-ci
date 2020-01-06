@@ -2,8 +2,8 @@
     <bk-dialog
         class="add-member-dialog"
         v-model="showDialog"
-        :title="$t('新增成员')"
-        :ok-text="$t('保存')"
+        :title="$t('store.新增成员')"
+        :ok-text="$t('store.保存')"
         :width="580"
         :close-icon="addMemberConf.closeIcon"
         :quick-close="addMemberConf.quickClose"
@@ -18,9 +18,9 @@
             <div class="add-member-content">
                 <form class="bk-form add-member-form g-form-radio" onsubmit="return false">
                     <div class="bk-form-item member-form-item is-required">
-                        <label class="bk-label"> {{ $t('成员名称：') }} </label>
+                        <label class="bk-label"> {{ $t('store.成员名称') }} </label>
                         <div class="bk-form-content member-item-content">
-                            <bk-input type="text" :placeholder="$t('请输入成员名称')"
+                            <bk-input type="text" :placeholder="$t('store.请输入成员名称')"
                                 name="memberName"
                                 v-model="memberForm.memberName"
                                 v-validate="{
@@ -28,11 +28,11 @@
                                 }"
                                 :class="{ 'is-danger': errors.has('memberName') }">
                             </bk-input>
-                            <div v-if="errors.has('memberName')" class="error-tips"> {{ $t('成员名称不能为空') }} </div>
+                            <div v-if="errors.has('memberName')" class="error-tips"> {{ $t('store.成员名称不能为空') }} </div>
                         </div>
                     </div>
                     <div class="bk-form-item member-form-item is-required">
-                        <label class="bk-label"> {{ $t('角色：') }} </label>
+                        <label class="bk-label"> {{ $t('store.角色：') }} </label>
                         <div class="bk-form-content member-item-content">
                             <bk-radio-group v-model="memberForm.type" class="radio-group">
                                 <bk-radio :value="entry.value" v-for="(entry, key) in typeList" :key="key">{{entry.label}}</bk-radio>
@@ -40,7 +40,7 @@
                         </div>
                     </div>
                     <div class="bk-form-item member-form-item is-required">
-                        <label class="bk-label"> {{ $t('权限列表：') }} </label>
+                        <label class="bk-label"> {{ $t('store.权限列表：') }} </label>
                         <div class="bk-form-content permission-list-content">
                             <div class="permission-name" :class="{ 'active-item': entry.active }" v-for="(entry, index) in permissionList" :key="index">
                                 {{ entry.name }}
@@ -100,6 +100,7 @@
             },
             showDialog (val) {
                 if (!val) {
+                    this.nameError = false
                     this.memberForm.memberName = ''
                     this.memberForm.type = 'ADMIN'
                 }
@@ -110,7 +111,7 @@
                 if (!this.memberForm.memberName) {
                     this.nameError = true
                     this.$bkMessage({
-                        message: this.$t('请输入成员名称'),
+                        message: this.$t('store.请输入成员名称'),
                         theme: 'error'
                     })
                     this.$emit('cancelHandle')
@@ -119,7 +120,8 @@
                         type: this.memberForm.type,
                         member: []
                     }
-                    params.member.push(this.memberForm.memberName)
+                    console.log(memberName)
+                    params.member.push(memberName)
                     this.$emit('confirmHandle', params)
                 }
             },
@@ -174,7 +176,7 @@
             display: flex;
             .permission-name {
                 margin-left: 16px;
-                padding: 4px 6px;
+                padding: 0px 6px;
                 border: 1px solid $borderColor;
                 border-radius: 22px;
                 font-size: 12px;

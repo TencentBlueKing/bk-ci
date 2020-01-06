@@ -64,8 +64,10 @@ import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
 import com.tencent.devops.process.pojo.mq.PipelineBuildLessDockerShutdownEvent
 import com.tencent.devops.process.pojo.mq.PipelineBuildLessDockerStartupEvent
 import com.tencent.devops.process.pojo.mq.PipelineBuildLessStartupDispatchEvent
+import com.tencent.devops.store.api.image.service.ServiceStoreImageResource
 import com.tencent.devops.store.pojo.image.enums.ImageRDTypeEnum
 import com.tencent.devops.store.pojo.image.exception.UnknownImageType
+import com.tencent.devops.store.pojo.image.response.ImageRepoInfo
 import com.tencent.devops.ticket.pojo.enums.CredentialType
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -288,8 +290,7 @@ class DockerHostBuildService @Autowired constructor(
         val redisLock = DockerHostLock(redisOperation)
         try {
             val gray = !grayFlag.isNullOrBlank() && grayFlag!!.toBoolean()
-            val grayProjectSet = redisOperation.getSetMembers(this.gray.getGrayRedisKey())?.filter { !it.isBlank() }
-                ?.toSet() ?: emptySet()
+            val grayProjectSet = this.gray.grayProjectSet(redisOperation)
             logger.info("Get the redis project set: $grayProjectSet")
             redisLock.lock()
             if (gray) {
@@ -313,7 +314,7 @@ class DockerHostBuildService @Autowired constructor(
                     return Result(1, "no task in queue")
                 }
                 val build = task[0]
-                logger.info("Start the docker build(${build.buildId}) seq(${build.vmSeqId})")
+                logger.info("Start the docker build(${build.buildId}) seq(${build.vmSeqId})hostTag($hostTag)imageName(${build.imageName})")
                 pipelineDockerTaskDao.updateStatusAndTag(dslContext, build.buildId, build.vmSeqId, PipelineTaskStatus.RUNNING, hostTag)
                 redisUtils.setDockerBuildLastHost(build.pipelineId, build.vmSeqId.toString(), hostTag) // 将本次构建使用的主机IP写入redis，以方便下次直接用这台IP
                 return Result(0, "success", DockerHostBuildInfo(
@@ -354,7 +355,7 @@ class DockerHostBuildService @Autowired constructor(
                     return Result(1, "no task in queue")
                 }
                 val build = task[0]
-                logger.info("Start the docker build(${build.buildId}) seq(${build.vmSeqId})")
+                logger.info("Start the docker build(${build.buildId}) seq(${build.vmSeqId})hostTag($hostTag)imageName(${build.imageName})")
                 pipelineDockerTaskDao.updateStatusAndTag(dslContext, build.buildId, build.vmSeqId, PipelineTaskStatus.RUNNING, hostTag)
                 redisUtils.setDockerBuildLastHost(build.pipelineId, build.vmSeqId.toString(), hostTag) // 将本次构建使用的主机IP写入redis，以方便下次直接用这台IP
                 return Result(0, "success", DockerHostBuildInfo(
@@ -729,6 +730,11 @@ class DockerHostBuildService @Autowired constructor(
         } else {
             LogUtils.addLine(rabbitTemplate, buildId, message, tag ?: "", "", 1)
         }
+    }
+
+    fun getPublicImage(): Result<List<ImageRepoInfo>> {
+        logger.info("enter getPublicImage")
+        return client.get(ServiceStoreImageResource::class).getSelfDevelopPublicImages()
     }
 
     companion object {

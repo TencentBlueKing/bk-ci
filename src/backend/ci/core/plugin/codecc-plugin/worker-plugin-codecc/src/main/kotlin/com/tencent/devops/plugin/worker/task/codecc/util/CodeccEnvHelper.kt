@@ -26,44 +26,60 @@
 
 package com.tencent.devops.plugin.worker.task.codecc.util
 
+import com.tencent.devops.common.api.enums.OSType
+import com.tencent.devops.plugin.worker.pojo.CodeccExecuteConfig
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.worker.common.api.ApiFactory
 import com.tencent.devops.worker.common.api.codecc.CodeccSDKApi
+import com.tencent.devops.worker.common.env.AgentEnv
+import com.tencent.devops.worker.common.env.BuildEnv
+import com.tencent.devops.worker.common.logger.LoggerService
+import com.tencent.devops.worker.common.task.script.ScriptEnvUtils
 import java.io.File
 
 object CodeccEnvHelper {
 
     private val api = ApiFactory.create(CodeccSDKApi::class)
 
-    private val ENV_FILES = arrayOf("result.log", "result.ini")
-
-    fun getCodeccEnv(workspace: File): MutableMap<String, String> {
-        val result = mutableMapOf<String, String>()
-        ENV_FILES.map { result.putAll(readScriptEnv(workspace, it)) }
-        return result
-    }
-
-    private fun readScriptEnv(workspace: File, file: String): Map<String, String> {
-        val f = File(workspace, file)
-        if (!f.exists()) {
-            return mapOf()
-        }
-        if (f.isDirectory) {
-            return mapOf()
-        }
-
-        val lines = f.readLines()
-        if (lines.isEmpty()) {
-            return mapOf()
-        }
-        // KEY-VALUE
-        return lines.filter { it.contains("=") }.map {
-            val split = it.split("=", ignoreCase = false, limit = 2)
-            split[0].trim() to split[1].trim()
-        }.toMap()
+    fun getCodeccEnv(workspace: File, buildId: String): Map<String, String> {
+        return ScriptEnvUtils.getEnv(buildId, workspace)
     }
 
     fun saveTask(buildVariables: BuildVariables) {
         api.saveTask(buildVariables.projectId, buildVariables.pipelineId, buildVariables.buildId)
+    }
+
+    // 第三方构建机初始化
+    fun thirdInit(coverityConfig: CodeccExecuteConfig) {
+        // 第三方构建机安装环境
+        val channelCode = coverityConfig.buildVariables.variables["pipeline.start.channel"] ?: ""
+        if (BuildEnv.isThirdParty()) {
+            when (AgentEnv.getOS()) {
+                OSType.WINDOWS -> {
+                    CodeccInstaller.windowsDonwloadScript()
+                }
+                OSType.LINUX -> {
+                    CodeccInstaller.donwloadScript()
+                    CodeccInstaller.setUpPython3(coverityConfig)
+                }
+                OSType.MAC_OS -> {
+                    CodeccInstaller.donwloadScript()
+                    CodeccInstaller.setupTools(coverityConfig)
+                }
+                else -> {
+                }
+            }
+        } else {
+            // mac公共机需要安装 python3 环境
+            if (AgentEnv.getOS() == OSType.MAC_OS) {
+                val pythonExist =
+                    CodeccInstaller.pythonExist(File("/data/soda/apps/python/3.5/IDLE.app/Contents/MacOS/Python"))
+                LoggerService.addNormalLine("check mac python is exist : $pythonExist")
+                if (!pythonExist) {
+                    LoggerService.addNormalLine("python installing...")
+                    CodeccInstaller.installMacPython()
+                }
+            }
+        }
     }
 }

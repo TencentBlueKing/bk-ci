@@ -28,9 +28,12 @@ package com.tencent.devops.plugin.worker.task.scm.util
 
 import com.tencent.devops.common.api.enums.RepositoryConfig
 import com.tencent.devops.common.api.exception.RemoteServiceException
+import com.tencent.devops.common.api.pojo.ErrorCode
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.worker.common.api.ApiFactory
 import com.tencent.devops.worker.common.api.scm.RepositorySDKApi
+import com.tencent.devops.common.api.exception.TaskExecuteException
 import org.slf4j.LoggerFactory
 
 object RepositoryUtils {
@@ -48,8 +51,9 @@ object RepositoryUtils {
             logger.info("Get the repo(${result.data})")
             return result.data!!
         } catch (ignored: Exception) {
-            logger.warn("Fail to get the repo($repositoryConfig)", ignored)
-            throw ignored
+            throw TaskExecuteException(errorMsg = "Fail to get the repo($repositoryConfig)",
+                errorType = ErrorType.USER,
+                errorCode = ErrorCode.USER_INPUT_INVAILD)
         }
     }
 
