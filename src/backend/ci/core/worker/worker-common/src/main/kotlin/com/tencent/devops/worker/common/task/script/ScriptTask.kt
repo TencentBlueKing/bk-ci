@@ -28,7 +28,7 @@ package com.tencent.devops.worker.common.task.script
 
 import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxScriptElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.WindowsScriptElement
-import com.tencent.devops.process.pojo.AtomErrorCode
+import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.common.api.pojo.ErrorType
@@ -56,7 +56,7 @@ open class ScriptTask : ITask() {
         val scriptType = taskParams["scriptType"] ?: throw TaskExecuteException(
             errorMsg = "Unknown script type of build script task",
             errorType = ErrorType.USER,
-            errorCode = AtomErrorCode.USER_INPUT_INVAILD
+            errorCode = ErrorCode.USER_INPUT_INVAILD
         )
         val continueNoneZero = taskParams["continueNoneZero"] ?: "false"
         // 如果脚本执行失败之后可以选择归档这个问题
@@ -65,7 +65,7 @@ open class ScriptTask : ITask() {
                 ?: throw TaskExecuteException(
                     errorMsg = "Empty build script content",
                     errorType = ErrorType.USER,
-                    errorCode = AtomErrorCode.USER_INPUT_INVAILD
+                    errorCode = ErrorCode.USER_INPUT_INVAILD
                 ), "UTF-8").replace("\r", "")
         logger.info("Start to execute the script task($scriptType) ($script)")
         val command = CommandFactory.create(scriptType)
@@ -103,7 +103,7 @@ open class ScriptTask : ITask() {
             throw TaskExecuteException(
                 errorMsg = "脚本执行失败",
                 errorType = ErrorType.USER,
-                errorCode = AtomErrorCode.USER_TASK_OPERATE_FAIL
+                errorCode = ErrorCode.USER_TASK_OPERATE_FAIL
             )
         } finally {
             // 成功失败都写入环境变量
@@ -124,12 +124,12 @@ open class ScriptTask : ITask() {
                 val key = it.split("=").getOrNull(0) ?: throw TaskExecuteException(
                     errorMsg = "Illegal gateway key set: $it",
                     errorType = ErrorType.USER,
-                    errorCode = AtomErrorCode.USER_INPUT_INVAILD
+                    errorCode = ErrorCode.USER_INPUT_INVAILD
                 )
                 val value = it.split("=").getOrNull(1) ?: throw TaskExecuteException(
                     errorMsg = "Illegal gateway key set: $it",
                     errorType = ErrorType.USER,
-                    errorCode = AtomErrorCode.USER_INPUT_INVAILD
+                    errorCode = ErrorCode.USER_INPUT_INVAILD
                 )
                 key to value.trim()
             }.toMap()
