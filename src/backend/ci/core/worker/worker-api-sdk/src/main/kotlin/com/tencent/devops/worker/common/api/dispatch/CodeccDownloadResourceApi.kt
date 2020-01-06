@@ -29,7 +29,7 @@ package com.tencent.devops.worker.common.api.dispatch
 import com.tencent.devops.common.api.enums.OSType
 import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorType
-import com.tencent.devops.process.pojo.AtomErrorCode
+import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
 import okhttp3.Protocol
 import okhttp3.Response
@@ -52,7 +52,7 @@ class CodeccDownloadResourceApi : AbstractBuildResourceApi(), CodeccDownloadApi 
             logger.warn("Fail to request($request) with code ${response.code()} , message ${response.message()} and response (${response.body()?.string()})")
             throw TaskExecuteException(
                 errorType = ErrorType.SYSTEM,
-                errorCode = AtomErrorCode.SYSTEM_SERVICE_ERROR,
+                errorCode = ErrorCode.SYSTEM_SERVICE_ERROR,
                 errorMsg = "下载Codecc的 $tool 工具失败"
             )
         }
@@ -73,7 +73,7 @@ class CodeccDownloadResourceApi : AbstractBuildResourceApi(), CodeccDownloadApi 
             logger.warn("Fail to request($request) with code ${response.code()} , message ${response.message()} and response (${response.body()?.string()})")
             throw TaskExecuteException(
                 errorType = ErrorType.SYSTEM,
-                errorCode = AtomErrorCode.SYSTEM_SERVICE_ERROR,
+                errorCode = ErrorCode.SYSTEM_SERVICE_ERROR,
                 errorMsg = "下载codecc的coverity的执行脚本失败"
             )
         }
@@ -95,7 +95,7 @@ class CodeccDownloadResourceApi : AbstractBuildResourceApi(), CodeccDownloadApi 
             logger.warn("Fail to request($request) with code ${response.code()} , message ${response.message()} and response (${response.body()?.string()})")
             throw TaskExecuteException(
                 errorType = ErrorType.SYSTEM,
-                errorCode = AtomErrorCode.SYSTEM_SERVICE_ERROR,
+                errorCode = ErrorCode.SYSTEM_SERVICE_ERROR,
                 errorMsg = "下载codecc的多工具执行脚本失败"
             )
         }
