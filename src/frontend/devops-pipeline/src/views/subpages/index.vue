@@ -138,6 +138,12 @@
                 'isEditing': 'atom/isEditing',
                 'getAllElements': 'atom/getAllElements'
             }),
+            projectId () {
+                return this.$route.params.projectId
+            },
+            pipelineId () {
+                return this.$route.params.pipelineId
+            },
             templateFormConfig () {
                 return [{
                     name: 'templateName',
