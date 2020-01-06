@@ -95,7 +95,7 @@ object CodeccExecuteHelper {
             lock.await(codeccExecuteConfig.timeOut, TimeUnit.MINUTES)
             if (successCount.get() != expectCount)
                 throw TaskExecuteException(
-                    errorType = ErrorType.SYSTEM,
+                    errorType = ErrorType.USER,
                     errorCode = AtomErrorCode.USER_TASK_OPERATE_FAIL,
                     errorMsg = "运行codecc任务失败: $errorMsg"
                 )
