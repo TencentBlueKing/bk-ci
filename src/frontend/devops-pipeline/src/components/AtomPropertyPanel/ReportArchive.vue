@@ -6,7 +6,7 @@
 
         <accordion show-checkbox :show-content="isShowEmailNotice" :after-toggle="toggleEmailNotice" :condition="true">
             <header class="var-header" slot="header">
-                <span>同时启用邮件通知</span>
+                <span>{{ $t('editPage.enableMailNotice') }}</span>
                 <input class="accordion-checkbox" type="checkbox" :checked="element.enableEmail" style="margin-left: auto;" />
             </header>
             <div slot="content">
@@ -53,7 +53,7 @@
             } else {
                 this.handleUpdateElement('enableEmail', false)
                 this.handleUpdateElement('emailReceivers', [])
-                this.handleUpdateElement('emailTitle', '【${pipeline.name}】  #${pipeline.build.num} 自定义报告已归档')
+                this.handleUpdateElement('emailTitle', '【${pipeline.name}】  #${pipeline.build.num}' + this.$t('editPage.archived'))
             }
         },
         methods: {

@@ -25,6 +25,7 @@
  */
 package com.tencent.devops.openapi.resources.v2
 
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.pojo.BKAuthProjectRolesResources
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
@@ -35,7 +36,6 @@ import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectCreateUserDTO
 import com.tencent.devops.project.pojo.ProjectVO
-import com.tencent.devops.project.pojo.Result
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -47,11 +47,11 @@ class ApigwProjectResourceV2Impl @Autowired constructor(
 
     override fun create(userId: String, accessToken: String, projectCreateInfo: ProjectCreateInfo): Result<String> {
         logger.info("v2/projects/newProject:create:Input($userId,$accessToken,$projectCreateInfo)")
-        return client.get(ServiceTxProjectResource::class).create(
+        return Result(client.get(ServiceTxProjectResource::class).create(
             userId = userId,
             accessToken = accessToken,
             projectCreateInfo = projectCreateInfo
-        )
+        ).data!!)
     }
 
     override fun getProjectByOrganizationId(

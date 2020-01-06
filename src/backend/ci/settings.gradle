@@ -260,6 +260,7 @@ include ":ext:tencent:image"
 include ":ext:tencent:image:api-image-tencent"
 include ":ext:tencent:image:biz-image-tencent"
 include ":ext:tencent:image:boot-image-tencent"
+include ":ext:tencent:image:boot-image-tencentyun"
 
 include ":ext:tencent:store"
 include ":ext:tencent:store:api-store-tencent"

@@ -3,35 +3,36 @@
         <h3 class="market-home-title ">
             <icon class="title-icon" name="color-logo-store" size="25" />
             <p class="title-name">
-                <router-link :to="{ name: 'atomHome', query: { pipeType: filterData.pipeType } }" class="back-home">研发商店</router-link>
+                <router-link :to="{ name: 'atomHome', query: { pipeType: filterData.pipeType } }" class="back-home"> {{ $t('store.研发商店') }} </router-link>
                 <i class="right-arrow banner-arrow"></i>
                 <span class="banner-des">{{filterData.pipeType|pipeTypeFilter}}</span>
             </p>
-            <router-link :to="{ name: 'atomList', params: { type: 'atom' } }" class="title-work">工作台</router-link>
+            <router-link :to="{ name: 'atomList', params: { type: filterData.pipeType || 'atom' } }" class="title-work" v-if="filterData.pipeType !== 'ide'"> {{ $t('store.工作台') }} </router-link>
         </h3>
 
         <main class="store-main" @scroll.passive="mainScroll">
             <section class="home-main">
                 <nav class="home-nav">
                     <section :class="[{ 'control-active': isInputFocus }, 'g-input-search']">
-                        <input class="g-input-border" type="text" placeholder="请输入名称" v-model="inputValue" @focus="isInputFocus = true" @blur="isInputFocus = false" @keyup.enter="filterData.searchStr = inputValue" />
+                        <input class="g-input-border" type="text" :placeholder="$t('store.请输入名称')" v-model="inputValue" @focus="isInputFocus = true" @blur="isInputFocus = false" @keyup.enter="filterData.searchStr = inputValue" />
                         <i class="bk-icon icon-search" v-if="!inputValue"></i>
                         <i class="bk-icon icon-close-circle-shape clear-icon" v-else @click="(inputValue = '', filterData.searchStr = '')"></i>
                     </section>
 
                     <section class="nav-pipetype">
-                        <p class="pipe-type" :class="{ 'active-tab': filterData.pipeType === 'atom' }" @click="changePipeType('atom')">
-                            <i class="bk-icon icon-atom"></i>
-                            <span>流水线插件</span>
-                        </p>
-                        <p class="pipe-type" :class="{ 'active-tab': filterData.pipeType === 'template' }" @click="changePipeType('template')">
-                            <i class="bk-icon icon-template"></i>
-                            <span>流水线模板</span>
+                        <p v-for="storeType in storeTypes"
+                            :key="storeType.type"
+                            class="pipe-type"
+                            :class="{ 'active-tab': filterData.pipeType === storeType.type }"
+                            @click="changePipeType(storeType.type)"
+                        >
+                            <icon class="title-icon" :name="`store-${storeType.type}`" size="18" />
+                            <span>{{storeType.des}}</span>
                         </p>
                     </section>
 
                     <section class="nav-fliter">
-                        <h3>分类</h3>
+                        <h3> {{ $t('store.分类') }} </h3>
                         <bk-select :value="`${filterData.classifyValue}${filterData.classifyKey || ''}`"
                             class="filter-select"
                             :scroll-height="500"
@@ -51,7 +52,7 @@
                             </bk-option-group>
                         </bk-select>
 
-                        <h3>特性<span @click="clearFliterData('features')" v-show="showFeatureClear">清除</span></h3>
+                        <h3> {{ $t('store.特性') }} <span @click="clearFliterData('features')" v-show="showFeatureClear"> {{ $t('store.清除') }} </span></h3>
                         <ul class="market-check-group">
                             <li v-for="(feature, index) in features" :key="index" class="market-checkbox-li" @click="chooseFeature(feature)">
                                 <span :class="[feature.checked ? 'checked' : '', 'market-checkbox']"></span>
@@ -59,12 +60,12 @@
                             </li>
                         </ul>
 
-                        <h3>评分<span @click="clearFliterData('rates')" v-show="showRateClear">清除</span></h3>
+                        <h3> {{ $t('store.评分') }} <span @click="clearFliterData('rates')" v-show="showRateClear"> {{ $t('store.清除') }} </span></h3>
                         <ul class="rate-ul">
                             <li v-for="(rate, index) in rates" :key="rate.value" class="rate-li" @click="chooseRate(rate)">
                                 <span :class="[{ checked: rate.checked }, 'rate-radio']"></span>
                                 <comment-rate :rate="rate.value" class="rate-star"></comment-rate>
-                                <span class="rate-above" v-if="index !== 0">及以上</span>
+                                <span class="rate-above" v-if="index !== 0"> {{ $t('store.及以上') }} </span>
                             </li>
                         </ul>
                     </section>
@@ -92,13 +93,20 @@
         
         filters: {
             pipeTypeFilter (val) {
+                const bkLocale = window.devops || {}
                 let res = ''
                 switch (val) {
                     case 'template':
-                        res = '流水线模板'
+                        res = bkLocale.$t('store.流水线模板')
+                        break
+                    case 'ide':
+                        res = bkLocale.$t('store.IDE插件')
+                        break
+                    case 'image':
+                        res = bkLocale.$t('store.容器镜像')
                         break
                     default:
-                        res = '流水线插件'
+                        res = bkLocale.$t('store.流水线插件')
                         break
                 }
                 return res
@@ -118,9 +126,9 @@
                 },
                 inputValue: '',
                 isInputFocus: false,
-                categories: [{ name: '所有', children: [{ name: '所有', id: 'all', classifyValue: 'all' }] }],
+                categories: [{ name: this.$t('store.所有'), children: [{ name: this.$t('store.所有'), id: 'all', classifyValue: 'all' }] }],
                 features: [
-                    { name: '蓝鲸官方', value: 'SELF_DEVELOPED', checked: false }
+                    { name: this.$t('store.蓝鲸官方'), value: 'SELF_DEVELOPED', checked: false }
                 ],
                 rates: [
                     { value: 5, checked: false },
@@ -129,7 +137,13 @@
                     { value: 2, checked: false },
                     { value: 1, checked: false }
                 ],
-                showToTop: false
+                showToTop: false,
+                storeTypes: [
+                    { type: 'atom', des: this.$t('store.流水线插件') },
+                    { type: 'template', des: this.$t('store.流水线模板') },
+                    { type: 'ide', des: this.$t('store.IDE插件') },
+                    { type: 'image', des: this.$t('store.容器镜像') }
+                ]
             }
         },
 
@@ -164,15 +178,33 @@
             },
 
             'filterData.pipeType': {
-                handler () {
-                    this.getClassifys()
+                handler (val) {
+                    this.getClassifys(val)
                 },
                 immediate: true
             }
         },
 
+        created () {
+            if (VERSION_TYPE === 'ee') this.storeTypes.splice(2, 1)
+        },
+
         methods: {
-            ...mapActions('store', ['requestAtomClassifys', 'requestAtomLables', 'requestTemplateList', 'requestTplCategorys', 'requestTplLabel', 'setMarketQuery']),
+            ...mapActions('store', [
+                'requestAtomClassifys',
+                'requestAtomLables',
+                'requestTemplateList',
+                'requestTplCategorys',
+                'requestTplLabel',
+                'requestTplClassify',
+                'requestIDEClassifys',
+                'requestIDECategorys',
+                'requestIDELabel',
+                'requestImageClassifys',
+                'requestImageCategorys',
+                'requestImageLabel',
+                'setMarketQuery'
+            ]),
 
             initData () {
                 const { searchStr, classifyKey, classifyValue = 'all', rdType, score, sortType, pipeType = 'atom' } = this.$route.query
@@ -242,7 +274,8 @@
             },
 
             setClassifyValue (key) {
-                const categories = this.categories[1] || {}
+                let categories = this.categories[2] || {}
+                if (this.filterData.pipeType === 'atom') categories = this.categories[1] || {}
                 const selected = (categories.children || []).find((category) => category.classifyCode === key) || {}
                 this.filterData.classifyValue = selected.classifyValue
                 this.filterData.classifyKey = 'classifyCode'
@@ -262,15 +295,20 @@
                 else this.$router.push({ name: 'atomHome', query: { pipeType } })
             },
 
-            getClassifys () {
-                const fun = { atom: () => this.getAtomClassifys(), template: () => this.getTemplateClassifys() }
-                const type = this.$route.query.pipeType || 'atom'
+            getClassifys (val) {
+                const fun = {
+                    atom: () => this.getAtomClassifys(),
+                    template: () => this.getTemplateClassifys(),
+                    ide: () => this.getIDEClassifys(),
+                    image: () => this.getImageClassifys()
+                }
+                const type = val || 'atom'
                 const method = fun[type]
                 method().then((arr) => {
                     const query = this.$route.query || {}
                     this.filterData.classifyValue = query.classifyValue || 'all'
                     this.filterData.classifyKey = query.classifyKey
-                    this.categories = [{ name: '所有', children: [{ name: '所有', id: 'all', classifyValue: 'all' }] }]
+                    this.categories = [{ name: this.$t('store.所有'), children: [{ name: this.$t('store.所有'), id: 'all', classifyValue: 'all' }] }]
 
                     arr.forEach((item) => {
                         const key = item.key
@@ -292,17 +330,37 @@
             getAtomClassifys () {
                 return Promise.all([this.requestAtomClassifys(), this.requestAtomLables()]).then(([classifys, lables]) => {
                     const res = []
-                    if (classifys.length > 0) res.push({ name: 'classifyName', key: 'classifyCode', groupName: '按分类', data: classifys })
-                    if (lables.length > 0) res.push({ name: 'labelName', key: 'labelCode', groupName: '按功能', data: lables })
+                    if (classifys.length > 0) res.push({ name: 'classifyName', key: 'classifyCode', groupName: this.$t('store.按分类'), data: classifys })
+                    if (lables.length > 0) res.push({ name: 'labelName', key: 'labelCode', groupName: this.$t('store.按功能'), data: lables })
                     return res
                 })
             },
 
             getTemplateClassifys () {
-                return Promise.all([this.requestTplCategorys(), this.requestTplLabel()]).then(([categorys, lables]) => {
+                return Promise.all([this.requestTplCategorys(), this.requestTplLabel(), this.requestTplClassify()]).then(([categorys, lables, classify]) => {
                     const res = []
+                    if (categorys.length > 0) res.push({ name: 'categoryName', key: 'categoryCode', groupName: this.$t('store.按应用范畴'), data: categorys })
+                    if (classify.length > 0) res.push({ name: 'classifyName', key: 'classifyCode', groupName: this.$t('store.按分类'), data: classify })
+                    if (lables.length > 0) res.push({ name: 'labelName', key: 'labelCode', groupName: this.$t('store.按功能'), data: lables })
+                    return res
+                })
+            },
 
+            getIDEClassifys () {
+                return Promise.all([this.requestIDECategorys(), this.requestIDELabel(), this.requestIDEClassifys()]).then(([categorys, lables, classify]) => {
+                    const res = []
+                    if (categorys.length > 0) res.push({ name: 'categoryName', key: 'categoryCode', groupName: this.$t('store.适用IDE'), data: categorys })
+                    if (classify.length > 0) res.push({ name: 'classifyName', key: 'classifyCode', groupName: this.$t('store.按分类'), data: classify })
+                    if (lables.length > 0) res.push({ name: 'labelName', key: 'labelCode', groupName: this.$t('store.按功能'), data: lables })
+                    return res
+                })
+            },
+
+            getImageClassifys () {
+                return Promise.all([this.requestImageCategorys(), this.requestImageLabel(), this.requestImageClassifys()]).then(([categorys, lables, classify]) => {
+                    const res = []
                     if (categorys.length > 0) res.push({ name: 'categoryName', key: 'categoryCode', groupName: '按应用范畴', data: categorys })
+                    if (classify.length > 0) res.push({ name: 'classifyName', key: 'classifyCode', groupName: '按分类', data: classify })
                     if (lables.length > 0) res.push({ name: 'labelName', key: 'labelCode', groupName: '按功能', data: lables })
                     return res
                 })
@@ -341,19 +399,18 @@
     }
 
     .store-main {
-        margin-left: calc(100vw - 100%);
         overflow-y: scroll;
     }
 
     .home-main {
         height: calc(100vh - 114px);
+        min-height: 600px;
         width: 1200px;
         margin: 21px auto 0;
         display: flex;
         flex-direction: row;
         .home-nav {
             width: 240px;
-            height: 886px;
             background: $white;
             border: 1px solid $borderWeightColor;
             .nav-pipetype {
@@ -364,7 +421,7 @@
                     line-height: 18px;
                     display: flex;
                     align-items: center;
-                    i {
+                    .title-icon {
                         margin: 0 15px;
                         font-size: 18px;
                     }

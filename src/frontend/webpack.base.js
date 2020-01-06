@@ -2,6 +2,8 @@ const path = require('path')
 const webpack = require('webpack')
 const MiniCssExtractPlugin = require('mini-css-extract-plugin')
 const VueLoaderPlugin = require('vue-loader/lib/plugin')
+const CopyWebpackPlugin = require('copy-webpack-plugin')
+const BundleWebpackPlugin = require('./webpackPlugin/bundle-webpack-plugin')
 // const TerserPlugin = require('terser-webpack-plugin')
 // const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin
 
@@ -9,25 +11,28 @@ module.exports = ({ entry, publicPath, dist, port = 8080, argv, env }) => {
     const isDev = argv.mode === 'development'
     const isMaster = process.env.NODE_ENV === 'master'
     const envDist = env && env.dist ? env.dist : 'frontend'
+    const version = env && env.version ? env.version : 'tencent'
     const buildDist = path.join(__dirname, envDist, dist)
+    console.log(path.join(__dirname, 'locale', dist), version)
     return {
+        devtool: '#source-map',
         entry,
         output: {
             publicPath,
-            chunkFilename: isMaster ? '[name].js' : '[name].[chunkhash].js',
-            filename: isMaster ? '[name].js' : '[name].[contentHash].min.js',
+            chunkFilename: '[name].[chunkhash].js',
+            filename: isMaster ? '[name].[contentHash].min.js' : '[name].js',
             path: buildDist
         },
         module: {
             rules: [
                 {
                     test: /\.vue$/,
-                    include: [path.resolve('src'), path.resolve('../node_modules/vue-echarts')],
+                    include: [path.resolve('src'), path.resolve('../node_modules/vue-echarts'), path.resolve('../devops-log')],
                     loader: 'vue-loader'
                 },
                 {
                     test: /\.js$/,
-                    include: [path.resolve('src'), path.resolve('../node_modules/vue-echarts')],
+                    include: [path.resolve('src'), path.resolve('../node_modules/vue-echarts'), path.resolve('../devops-log')],
                     use: [
                         {
                             loader: 'babel-loader'
@@ -36,14 +41,14 @@ module.exports = ({ entry, publicPath, dist, port = 8080, argv, env }) => {
                 },
                 {
                     test: /\.css$/,
-                    use: [isDev ? 'style-loader' : MiniCssExtractPlugin.loader, 'css-loader']
+                    use: [MiniCssExtractPlugin.loader, 'css-loader']
                 },
                 {
                     test: /\.scss$/,
-                    use: [isDev ? 'style-loader' : MiniCssExtractPlugin.loader, 'css-loader', 'sass-loader']
+                    use: [isDev ? 'style-loader' : MiniCssExtractPlugin.loader , 'css-loader', 'sass-loader']
                 },
                 {
-                    test: /\.(png|jpe?g|gif|svg|webp)(\?.*)?$/,
+                    test: /\.(png|jpe?g|gif|svg|webp|cur)(\?.*)?$/,
                     loader: 'url-loader',
                     options: {
                         limit: 10000,
@@ -73,14 +78,22 @@ module.exports = ({ entry, publicPath, dist, port = 8080, argv, env }) => {
         plugins: [
             // new BundleAnalyzerPlugin(),
             new VueLoaderPlugin(),
+            new BundleWebpackPlugin({
+                dist: envDist,
+                bundleName: 'assets_bundle'
+            }),
             new webpack.optimize.LimitChunkCountPlugin({
                 minChunkSize: 1000
             }),
             new webpack.HashedModuleIdsPlugin(),
             new MiniCssExtractPlugin({
-                filename: isDev ? '[name].css' : '[name].[chunkHash].css',
+                filename: isMaster ? '[name].[chunkHash].css' : '[name].css',
                 chunkName: '[id].css'
-            })
+            }),
+            new webpack.DefinePlugin({
+                VERSION_TYPE: JSON.stringify(version)
+            }),
+            new CopyWebpackPlugin([{ from: path.join(__dirname, 'locale', dist), to: buildDist }])
         ],
         optimization: {
             namedChunks: true,
@@ -90,7 +103,8 @@ module.exports = ({ entry, publicPath, dist, port = 8080, argv, env }) => {
             extensions: ['.js', '.vue', '.json', '.ts', '.scss', '.css'],
             alias: {
                 '@': path.resolve('src'),
-                'vue$': 'vue/dist/vue.esm.js'
+                'vue$': 'vue/dist/vue.esm.js',
+                '@locale': path.resolve(__dirname, 'locale')
             }
         },
         externals: {
@@ -99,7 +113,7 @@ module.exports = ({ entry, publicPath, dist, port = 8080, argv, env }) => {
             'vuex': 'Vuex'
         },
         devServer: {
-            contentBase: buildDist,
+            contentBase: path.join(__dirname, envDist),
             historyApiFallback: true,
             noInfo: false,
             disableHostCheck: true,

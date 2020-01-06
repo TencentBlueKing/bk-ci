@@ -1,7 +1,7 @@
 <template>
     <accordion show-checkbox show-content key="otherChoice">
         <header class="var-header" slot="header">
-            <span>流程控制选项</span>
+            <span>{{ $t('editPage.jobOption') }}</span>
             <i class="bk-icon icon-angle-down" style="display:block"></i>
         </header>
         <div slot="content" class="bk-form bk-form-vertical">
@@ -18,13 +18,10 @@
     import { mapActions } from 'vuex'
     import atomMixin from '@/components/AtomPropertyPanel/atomMixin'
     import validMixins from '@/components/validMixins'
-    import {
-        getJobOptionDefault,
-        JOB_OPTION
-    } from '@/store/modules/soda/jobOptionConfig'
+    import jobOptionConfigMixin from '@/store/modules/soda/jobOptionConfigMixin'
     export default {
         name: 'job-config',
-        mixins: [atomMixin, validMixins],
+        mixins: [atomMixin, validMixins, jobOptionConfigMixin],
         props: {
             jobOption: {
                 type: Object,
@@ -41,7 +38,7 @@
         },
         computed: {
             optionModel () {
-                return JOB_OPTION || {}
+                return this.JOB_OPTION || {}
             }
         },
         created () {
@@ -53,7 +50,6 @@
             ...mapActions('atom', [
                 'setPipelineEditing'
             ]),
-            getJobOptionDefault,
             handleUpdateJobOption (name, value) {
                 this.setPipelineEditing(true)
                 this.updateContainerParams('jobControlOption',

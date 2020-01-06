@@ -5,14 +5,14 @@
         :padding="0"
         :close-icon="organizationConf.closeIcon"
         :quick-close="organizationConf.quickClose"
-        ok-text="保存"
+        :ok-text="$t('store.保存')"
         @confirm="toConfirmLogo"
         @cancel="toCloseDialog"
     >
         <main class="organization-select-content" v-bkloading="{ isLoading: organizationConf.isLoading }">
             <div class="organization-content">
                 <div class="organization-card organization-tree">
-                    <div class="info-header">全部组织架构</div>
+                    <div class="info-header"> {{ $t('store.全部组织架构') }} </div>
                     <div class="tree-content">
                         <tree
                             ref="organizationTree"
@@ -26,7 +26,7 @@
                     </div>
                 </div>
                 <div class="organization-card organization-selected">
-                    <div class="info-header">已选组织架构</div>
+                    <div class="info-header"> {{ $t('store.已选组织架构') }} </div>
                     <div class="selected-content">
                         <div class="selected-item" v-for="(row, index) in selectedList" :key="index">{{ row.displayName }}</div>
                     </div>
@@ -49,7 +49,7 @@
         data () {
             return {
                 width: 715,
-                treeList: [{ id: 0, name: '腾讯公司', async: true }],
+                treeList: [{ id: 0, name: this.$t('store.腾讯公司'), async: true }],
                 selectedList: [],
                 organizationConf: {
                     hasHeader: false,
@@ -75,7 +75,7 @@
             showDialog (val) {
                 if (!val) {
                     this.selectedList = []
-                    this.treeList = [{ id: 0, name: '腾讯公司', async: true }]
+                    this.treeList = [{ id: 0, name: this.$t('store.腾讯公司'), async: true }]
                 }
             }
         },
@@ -134,9 +134,10 @@
             async toConfirmLogo () {
                 if (!this.selectedList.length) {
                     this.$bkMessage({
-                        message: '请选择部门',
+                        message: this.$t('store.请选择部门'),
                         theme: 'error'
                     })
+                    this.$emit('cancelHandle')
                 } else {
                     let message, theme
                     const deptInfos = []
@@ -167,7 +168,7 @@
                             await this.$store.dispatch('store/setTplVisableDept', { params })
                         }
 
-                        message = '保存成功'
+                        message = this.$t('store.保存成功')
                         theme = 'success'
                     } catch (err) {
                         message = err.message ? err.message : err

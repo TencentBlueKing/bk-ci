@@ -27,11 +27,11 @@
 package com.tencent.devops.process.service.spm
 
 import com.google.gson.JsonParser
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_BUILD_TASK_CDN_FAIL
 import com.tencent.devops.process.engine.exception.BuildTaskException
-import com.tencent.devops.process.pojo.ErrorType
 import com.tencent.devops.process.pojo.third.spm.SpmFileInfo
 import okhttp3.Request
 import org.slf4j.LoggerFactory

@@ -6,13 +6,15 @@
 
 <script lang="ts">
     import Vue from 'vue'
+    import { Component } from 'vue-property-decorator'
     import None from '../../views/None.vue'
-    export default Vue.extend({
-        name: 'devops-container',
+    @Component({
         components: {
             None
         }
     })
+    export default DevopsContainer extend Vue {   
+    }
 </script>
 
 

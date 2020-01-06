@@ -27,6 +27,8 @@
 package com.tencent.devops.process.engine.atom.task
 
 import com.tencent.devops.artifactory.api.service.ServiceArtifactoryResource
+import com.tencent.devops.common.api.pojo.ErrorCode
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.client.Client
@@ -40,9 +42,7 @@ import com.tencent.devops.log.utils.LogUtils
 import com.tencent.devops.common.pipeline.element.ExperienceElement
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.IAtomTask
-import com.tencent.devops.process.pojo.AtomErrorCode
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
-import com.tencent.devops.process.pojo.ErrorType
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
@@ -72,7 +72,7 @@ class ExperienceTaskAtom @Autowired constructor(
             return AtomResponse(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.USER,
-                errorCode = AtomErrorCode.USER_INPUT_INVAILD,
+                errorCode = ErrorCode.USER_INPUT_INVAILD,
                 errorMsg = "体验路径为空"
             )
         }
@@ -82,7 +82,7 @@ class ExperienceTaskAtom @Autowired constructor(
             return AtomResponse(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.USER,
-                errorCode = AtomErrorCode.USER_INPUT_INVAILD,
+                errorCode = ErrorCode.USER_INPUT_INVAILD,
                 errorMsg = "通知方式不正确"
             )
         }
@@ -130,7 +130,7 @@ class ExperienceTaskAtom @Autowired constructor(
             return AtomResponse(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.USER,
-                errorCode = AtomErrorCode.USER_TASK_OPERATE_FAIL,
+                errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
                 errorMsg = "文件($path)不存在"
             )
         }

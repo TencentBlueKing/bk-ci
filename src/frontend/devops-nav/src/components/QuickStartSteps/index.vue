@@ -39,12 +39,12 @@
     import Step2 from './Step2.vue'
     import Step3 from './Step3.vue'
     @Component({
-      components: {
-        Step0,
-        Step1,
-        Step2,
-        Step3
-      }
+        components: {
+            Step0,
+            Step1,
+            Step2,
+            Step3
+        }
     })
     export default class QuickStartSteps extends Vue {
         @Prop({ required: true, default: [] })
@@ -61,19 +61,19 @@
         }
 
         isDone (index: number): boolean {
-          return index < this.stepIndex
+            return index < this.stepIndex
         }
 
         isActive (index: number): boolean {
-          return index === this.stepIndex
+            return index === this.stepIndex
         }
 
         validate () {
-          return !(this.$refs.step.validate && !this.$refs.step.validate())
+            return !(this.$refs.step.validate && !this.$refs.step.validate())
         }
 
         get currentStep (): string {
-          return `Step${this.stepIndex}`
+            return `Step${this.stepIndex}`
         }
     }
 </script>

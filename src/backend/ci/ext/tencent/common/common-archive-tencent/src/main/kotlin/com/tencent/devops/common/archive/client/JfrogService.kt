@@ -30,6 +30,7 @@ import com.google.gson.JsonParser
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.archive.pojo.ArtifactorySearchParam
 import com.tencent.devops.common.service.config.CommonConfig
+import com.tencent.devops.common.service.utils.HomeHostUtil
 import okhttp3.MediaType
 import okhttp3.Request
 import okhttp3.RequestBody
@@ -45,11 +46,7 @@ class JfrogService constructor(
     }
 
     private fun getGatewaytUrl(): String {
-        return if (commonConfig.devopsHostGateway!!.startsWith("http://")) {
-            commonConfig.devopsHostGateway!!
-        } else {
-            "http://${commonConfig.devopsHostGateway!!}"
-        }
+        return HomeHostUtil.getHost(commonConfig.devopsHostGateway!!)
     }
 
     // 从仓库匹配到所有文件

@@ -50,14 +50,14 @@
                     @on-click="onClick"
                     @on-check="onCheck"
                     @on-drag-node="onDragNode"
-                    :dragAfterExpanded="dragAfterExpanded"
+                    :drag-after-expanded="dragAfterExpanded"
                     :draggable="draggable"
                     v-show="item.expanded"
                     :tpl="tpl"
                     :data="item.children"
                     :halfcheck="halfcheck"
                     :parent="item"
-                    :isDeleteRoot="isDeleteRoot"
+                    :is-delete-root="isDeleteRoot"
                     :multiple="multiple">
                 </bk-tree>
             </collapse-transition>

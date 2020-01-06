@@ -41,35 +41,38 @@
                         list: [
                             {
                                 id: 'tplOverview',
-                                name: '概览',
+                                selectId: ['tplOverview'],
+                                name: this.$t('store.概览'),
                                 icon: 'icon-overview',
                                 showChildren: false
-                            }
+                            },
                             // {
                             //     id: 'detail',
                             //     name: '详情',
                             //     icon: 'icon-txt',
                             //     showChildren: false
                             // },
-                            // {
-                            //     id: 'tplSettings',
-                            //     name: '设置',
-                            //     icon: 'icon-cog',
-                            //     isOpen: false,
-                            //     showChildren: true,
-                            //     children: [
-                            //         // {
-                            //         //     id: 'member',
-                            //         //     name: '成员管理',
-                            //         //     icon: ''
-                            //         // },
-                            //         {
-                            //             id: 'tplVisible',
-                            //             name: '可见范围',
-                            //             icon: ''
-                            //         }
-                            //     ]
-                            // }
+                            {
+                                id: 'tplSettings',
+                                selectId: ['tplSettings'],
+                                name: this.$t('store.设置'),
+                                icon: 'icon-cog',
+                                isOpen: false,
+                                showChildren: true,
+                                children: [
+                                    // {
+                                    //     id: 'member',
+                                    //     name: '成员管理',
+                                    //     icon: ''
+                                    // },
+                                    {
+                                        id: 'tplVisible',
+                                        selectId: ['tplVisible'],
+                                        name: this.$t('store.可见范围'),
+                                        icon: ''
+                                    }
+                                ]
+                            }
                         ]
                     }
                 ]
@@ -99,6 +102,7 @@
             if (this.routeName === 'tplVisible' || this.routeName === 'member') {
                 this.sideMenuList[0].list[1].isOpen = true
             }
+            this.hanldeEnterprise()
         },
         methods: {
             goBack () {
@@ -123,6 +127,11 @@
                         message,
                         theme
                     })
+                }
+            },
+            hanldeEnterprise () {
+                if (VERSION_TYPE === 'ee') {
+                    this.sideMenuList[0].list.splice(1, 1)
                 }
             }
         }
