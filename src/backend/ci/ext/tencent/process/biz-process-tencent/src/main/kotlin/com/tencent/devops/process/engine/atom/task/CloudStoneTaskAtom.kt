@@ -27,6 +27,8 @@
 package com.tencent.devops.process.engine.atom.task
 
 import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.api.pojo.ErrorCode
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.archive.client.JfrogClient
 import com.tencent.devops.common.client.Client
@@ -38,8 +40,6 @@ import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.IAtomTask
 import com.tencent.devops.process.engine.atom.defaultFailAtomResponse
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
-import com.tencent.devops.process.pojo.AtomErrorCode
-import com.tencent.devops.process.pojo.ErrorType
 import com.tencent.devops.process.service.CloudStoneService
 import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
@@ -109,7 +109,7 @@ class CloudStoneTaskAtom @Autowired constructor(
                 return AtomResponse(
                     buildStatus = BuildStatus.FAILED,
                     errorType = ErrorType.USER,
-                    errorCode = AtomErrorCode.USER_TASK_OPERATE_FAIL,
+                    errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
                     errorMsg = "上传云石失败: ${result.second}"
                 )
             }

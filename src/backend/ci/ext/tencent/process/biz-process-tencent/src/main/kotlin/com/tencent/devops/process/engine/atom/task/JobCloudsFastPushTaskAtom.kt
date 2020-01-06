@@ -26,6 +26,8 @@
 
 package com.tencent.devops.process.engine.atom.task
 
+import com.tencent.devops.common.api.pojo.ErrorCode
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.archive.client.JfrogClient
@@ -45,8 +47,6 @@ import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.esb.JobCloudsFastPushFile
 import com.tencent.devops.process.esb.JobFastPushFile
 import com.tencent.devops.process.esb.SourceIp
-import com.tencent.devops.process.pojo.AtomErrorCode
-import com.tencent.devops.process.pojo.ErrorType
 import com.tencent.devops.process.util.CommonUtils
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.apache.commons.codec.digest.DigestUtils
@@ -98,7 +98,7 @@ class JobCloudsFastPushTaskAtom @Autowired constructor(
             ?: return if (force) AtomResponse(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.SYSTEM,
-                errorCode = AtomErrorCode.USER_INPUT_INVAILD,
+                errorCode = ErrorCode.USER_INPUT_INVAILD,
                 errorMsg = "JOB_TASK_ID is not correct"
             ) else AtomResponse(task.status)
         val firstStatus = task.taskParams[FIRST_STATUS] as String?
@@ -190,7 +190,7 @@ class JobCloudsFastPushTaskAtom @Autowired constructor(
                 AtomResponse(
                     buildStatus = BuildStatus.FAILED,
                     errorType = ErrorType.USER,
-                    errorCode = AtomErrorCode.USER_TASK_OPERATE_FAIL,
+                    errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
                     errorMsg = "send cloud stone file to Svr fail"
                 )
             else {
