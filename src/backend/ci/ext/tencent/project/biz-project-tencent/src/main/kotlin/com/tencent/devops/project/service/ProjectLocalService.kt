@@ -575,6 +575,9 @@ class ProjectLocalService @Autowired constructor(
         try {
             val projectIdList = getAuthProjectIds(accessToken).toSet()
             val list = ArrayList<ProjectVO>()
+            if(projectIdList == null || projectIdList.isEmpty()){
+                return emptyList()
+            }
 
             val grayProjectSet = grayProjectSet()
 
