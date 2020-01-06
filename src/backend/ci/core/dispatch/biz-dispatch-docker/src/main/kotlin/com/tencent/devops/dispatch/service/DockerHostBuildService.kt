@@ -290,8 +290,7 @@ class DockerHostBuildService @Autowired constructor(
         val redisLock = DockerHostLock(redisOperation)
         try {
             val gray = !grayFlag.isNullOrBlank() && grayFlag!!.toBoolean()
-            val grayProjectSet = redisOperation.getSetMembers(this.gray.getGrayRedisKey())?.filter { !it.isBlank() }
-                ?.toSet() ?: emptySet()
+            val grayProjectSet = this.gray.grayProjectSet(redisOperation)
             logger.info("Get the redis project set: $grayProjectSet")
             redisLock.lock()
             if (gray) {
