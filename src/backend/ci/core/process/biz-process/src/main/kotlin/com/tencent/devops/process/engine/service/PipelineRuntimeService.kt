@@ -96,7 +96,7 @@ import com.tencent.devops.process.engine.pojo.event.PipelineBuildMonitorEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildStartEvent
 import com.tencent.devops.process.pojo.BuildBasicInfo
 import com.tencent.devops.process.pojo.BuildHistory
-import com.tencent.devops.process.pojo.ErrorType
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.process.pojo.PipelineBuildMaterial
 import com.tencent.devops.process.pojo.ReviewParam
 import com.tencent.devops.process.pojo.VmInfo
@@ -322,8 +322,7 @@ class PipelineRuntimeService @Autowired constructor(
             }
             allVars[it.key] = it.value
         }
-        PipelineVarUtil.fillOldVar(vars)
-        return vars
+        return allVars
     }
 
     fun getAllVariableWithType(buildId: String): List<BuildParameters> {

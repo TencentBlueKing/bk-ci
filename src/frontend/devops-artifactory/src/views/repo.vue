@@ -84,7 +84,7 @@
                                     <i class="bk-icon icon-download"></i>下载
                                 </li>
                                 <li
-                                    v-if="lastClickItem.fullPath && lastClickItem.folder === false && isWindows && isApkOrIpa() && isMof"
+                                    v-if="isExtendTx && lastClickItem.fullPath && lastClickItem.folder === false && isWindows && isApkOrIpa() && isMof"
                                     @click.stop="handlerDownload($event, 'MoF')">
                                     <i class="bk-icon icon-download"></i>魔方有线安装
                                 </li>
@@ -387,8 +387,11 @@
             isMof () {
                 const projectId = this.$route.params.projectId
                 return this.projectList.find(item => {
-                    return (item.dept_name === '魔方工作室群' && item.project_code === projectId)
+                    return (item.deptName === '魔方工作室群' && item.projectCode === projectId)
                 })
+            },
+            isExtendTx () {
+                return VERSION_TYPE === 'tencent'
             },
             breadcrumbs () {
                 const breadcrumbs = []
@@ -735,7 +738,7 @@
                     noPermissionList: [
                         { resource: resource, option: option }
                     ],
-                    applyPermissionUrl: `/backend/api/perm/apply/subsystem/?client_id=pipeline&project_code=${this.projectId}&service_code=pipeline&${role}=pipeline:${pipelineId}`
+                    applyPermissionUrl: this.isExtendTx ? `/backend/api/perm/apply/subsystem/?client_id=pipeline&project_code=${this.projectId}&service_code=pipeline&${role}=pipeline:${pipelineId}` : PERM_URL_PREFIX
                 }
                 this.$showAskPermissionDialog(params)
             },

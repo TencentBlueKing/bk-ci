@@ -2,7 +2,7 @@
     <div v-bkloading="{ isLoading: !pipelineSetting }" class="bkdevops-clean-policy-setting-tab">
         <p class="hint">
             <i class="bk-icon icon-info-circle-shape"></i>
-            定期清理流水线构建可以大大提升整个蓝盾的加载速度，请合理配置清理策略
+            {{ $t('settings.cleanTips') }}
         </p>
         <!-- <div v-if="pipelineSetting">
             <form-field :required='true' label='保留天数' :is-error='errors.has("keepDays")' :errorMsg='errors.first("keepDays")'>
@@ -16,7 +16,7 @@
 </template>
 
 <script>
-        
+
     export default {
         name: 'bkdevops-clean-policy-setting-tab',
         props: {

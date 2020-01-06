@@ -20,7 +20,6 @@
 const webpackBaseConfig = require('../webpack.base')
 
 module.exports = (env, argv) => {
-    console.log('aaadddsd', env)
     return webpackBaseConfig({
         env,
         argv,

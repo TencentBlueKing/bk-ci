@@ -29,6 +29,7 @@
 package com.tencent.devops.process.engine.atom.task
 
 import com.fasterxml.jackson.annotation.JsonProperty
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.archive.client.BkRepoClient
@@ -58,7 +59,6 @@ import com.tencent.devops.process.engine.common.BS_ATOM_START_TIME_MILLS
 import com.tencent.devops.process.engine.common.BS_TASK_HOST
 import com.tencent.devops.process.engine.exception.BuildTaskException
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
-import com.tencent.devops.process.pojo.ErrorType
 import com.tencent.devops.process.service.PipelineUserService
 import com.tencent.devops.process.util.CommonUtils
 import okhttp3.Request

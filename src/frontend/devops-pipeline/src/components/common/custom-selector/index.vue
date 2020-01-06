@@ -18,13 +18,13 @@
         </div>
 
         <div class="bk-selector-list" v-show="showList && list.length">
-            <ul class="outside-ul" ref="selectorList">
-                <li v-for="(data, index) in list"
+            <ul class="outside-ul" ref="selectorList" @scroll.passive="scrollLoadMore">
+                <li v-for="(data, index) in renderList"
                     class="bk-selector-list-item"
-                    :key="index"
+                    :key="data"
                     @click.stop="selectList(data)">
                     <div class="bk-selector-node" :class="activeClass(index)">
-                        <!--<img :src="localCoverAvatar(data)" class="bk-data-avatar">-->
+                        <img :src="localCoverAvatar(data)" class="bk-data-avatar">
                         <span class="text">{{ data }}</span>
                     </div>
                 </li>
@@ -75,7 +75,11 @@
                 focusList: '',
                 minscroll: 0,
                 maxscroll: 4,
-                list: []
+                list: [],
+                renderList: [],
+                loadIndex: 4,
+                loadSize: 100,
+                loadEnd: false
             }
         },
         watch: {
@@ -99,6 +103,16 @@
             this.getData()
         },
         methods: {
+            scrollLoadMore (event) {
+                const target = event.target
+                const bottomDis = target.scrollHeight - target.clientHeight - target.scrollTop
+                if (bottomDis <= 50 && !this.loadEnd) {
+                    const newList = this.list.slice(this.loadIndex * this.loadSize, (++this.loadIndex) * this.loadSize)
+                    this.loadEnd = this.loadIndex * this.loadSize >= this.list.length
+                    this.renderList = this.renderList.concat(newList)
+                }
+            },
+
             input (e) {
                 e.preventDefault()
 
@@ -113,6 +127,7 @@
 
                 if (value.length) this.filterData(value)
             },
+
             paste (e) {
                 e.preventDefault()
 
@@ -122,7 +137,7 @@
                 try {
                     if (value && validateRes.reg && validateRes.target.length > 3) {
                         if (validateRes.isEixt > -1) {
-                            throw new Error(`${value}已存在`)
+                            throw new Error(`${value}${this.$t('editPage.atomForm.hasExisted')}`)
                         } else {
                             this.selectList(value)
                         }
@@ -155,7 +170,7 @@
                         if (tagList.length) this.selectList(tagList, 'batch')
                         if (value && errList.length) {
                             errList.join(';')
-                            throw new Error(`${errList}不是项目组成员`)
+                            throw new Error(`${errList}${this.$t('editPage.atomForm.notFound')}`)
                         }
                     }
                 } catch (err) {
@@ -165,6 +180,7 @@
                     })
                 }
             },
+
             /**
              *  隐藏补全列表
              */
@@ -198,7 +214,7 @@
 
                     if (this.value && errList.length && !this.showList) {
                         errList.join(';')
-                        const err = (`${errList}不是项目组成员`)
+                        const err = (`${errList}${this.$t('editPage.atomForm.notFound')}`)
                         this.$showTips({
                             message: err,
                             theme: 'error'
@@ -349,19 +365,26 @@
              */
             filterData (val) {
                 this.list = this.config.data.filter(item => item.indexOf(val) > -1)
+                this.resetLoadData()
             },
             /**
              *  获取数据
              */
             getData () {
                 this.list = this.config.data
+                this.resetLoadData()
+            },
+            resetLoadData () {
+                this.loadIndex = 4
+                this.loadEnd = false
+                this.renderList = this.list.slice(0, 400)
             },
             /**
              *  头像格式
              */
             localCoverAvatar (data) {
                 const member = /^\$\{(.*)\}$/.test(data) ? 'un_know' : data
-                return `http://bking.com/avatars/${member}/avatar.jpg`
+                return `${USER_IMG_URL}/avatars/${member}/avatar.jpg`
             },
             // 重置input
             resetInput () {

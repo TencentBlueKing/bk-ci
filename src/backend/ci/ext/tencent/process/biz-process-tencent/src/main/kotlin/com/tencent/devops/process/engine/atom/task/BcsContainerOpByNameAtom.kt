@@ -31,6 +31,9 @@ package com.tencent.devops.process.engine.atom.task
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.common.api.pojo.ErrorCode.USER_INPUT_INVAILD
+import com.tencent.devops.common.api.pojo.ErrorCode.USER_TASK_OPERATE_FAIL
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.auth.api.BSAuthTokenApi
@@ -41,10 +44,7 @@ import com.tencent.devops.common.pipeline.element.BcsContainerOpByNameElement
 import com.tencent.devops.common.pipeline.element.bcs.BcsCommandStatus
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.IAtomTask
-import com.tencent.devops.process.pojo.AtomErrorCode.USER_INPUT_INVAILD
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
-import com.tencent.devops.process.pojo.AtomErrorCode.USER_TASK_OPERATE_FAIL
-import com.tencent.devops.process.pojo.ErrorType
 import com.tencent.devops.process.pojo.third.enum.BcsCategory
 import com.tencent.devops.process.pojo.third.enum.BcsOperation
 import okhttp3.MediaType

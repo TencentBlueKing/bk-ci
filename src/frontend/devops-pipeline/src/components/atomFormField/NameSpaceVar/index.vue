@@ -3,12 +3,9 @@
         <ul>
             <template v-if="paramList.length">
                 <li class="param-item" key="th">
-                    <!--<div><vuex-input value='namespace名称' disabled='true'/></div>
-                    <div><vuex-input value='参数key' disabled='true'/></div>
-                    <div><vuex-input value='参数value' disabled='true' /></div>-->
-                    <span>namespace名称</span>
-                    <span>参数key</span>
-                    <span>参数value</span>
+                    <span>{{ $t('editPage.atomForm.namespaceName') }}</span>
+                    <span>{{ $t('editPage.atomForm.paramKey') }}</span>
+                    <span>{{ $t('editPage.atomForm.paramValue') }}</span>
                     <i style="visibility:hidden" class="bk-icon icon-minus" />
                 </li>
                 <li class="param-item" v-for="(param, index) in paramList" :key="index">
@@ -20,7 +17,7 @@
             </template>
             <a class="text-link hover-click" v-if="!disabled" @click.stop.prevent="editParam(paramList.length, true)">
                 <i class="bk-icon icon-plus-circle" />
-                <span>新增变量</span>
+                <span>{{ $t('editPage.addParams') }}</span>
             </a>
         </ul>
     </div>

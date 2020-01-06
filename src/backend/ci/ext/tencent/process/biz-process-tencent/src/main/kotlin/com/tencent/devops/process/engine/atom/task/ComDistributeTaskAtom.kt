@@ -37,6 +37,7 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.gray.RepoGray
+import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.log.utils.LogUtils
 import com.tencent.devops.process.bkjob.ClearJobTempFileEvent
 import com.tencent.devops.process.engine.atom.AtomResponse
@@ -224,7 +225,7 @@ class ComDistributeTaskAtom @Autowired constructor(
                         executeCount
                     )
 
-                    val searchUrl = "${commonConfig.devopsHostGateway}/jfrog/api/service/search/aql"
+                    val searchUrl = "${HomeHostUtil.getHost(commonConfig.devopsHostGateway!!)}/jfrog/api/service/search/aql"
                     val request = Request.Builder()
                         .url(searchUrl)
                         .post(RequestBody.create(MediaType.parse("text/plain; charset=utf-8"), requestBody))
@@ -417,9 +418,9 @@ class ComDistributeTaskAtom @Autowired constructor(
     // 获取jfrog传回的url
     private fun getUrl(realPath: String, isCustom: Boolean): String {
         return if (isCustom) {
-            "${commonConfig.devopsHostGateway}/jfrog/storage/service/custom/$realPath"
+            "${HomeHostUtil.getHost(commonConfig.devopsHostGateway!!)}/jfrog/storage/service/custom/$realPath"
         } else {
-            "${commonConfig.devopsHostGateway}/jfrog/storage/service/archive/$realPath"
+            "${HomeHostUtil.getHost(commonConfig.devopsHostGateway!!)}/jfrog/storage/service/archive/$realPath"
         }
     }
 

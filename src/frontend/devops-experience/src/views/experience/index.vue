@@ -23,7 +23,7 @@
                 return {
                     icon: 'experience',
                     title: '版本体验',
-                    url: `${DOCS_URL_PREFIX}/所有服务/版本体验/summary.html`,
+                    // url: 'http://docs.devops.oa.com/所有服务/版本体验/summary.html',
                     menu: [{
                                id: 'experienceList',
                                name: '体验管理',

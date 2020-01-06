@@ -49,6 +49,7 @@ import com.tencent.devops.common.archive.pojo.BkRepoFile
 import com.tencent.devops.common.archive.pojo.CreateShareUriRequest
 import com.tencent.devops.common.archive.pojo.CreateShareUriResponse
 import com.tencent.devops.common.service.config.CommonConfig
+import com.tencent.devops.common.service.utils.HomeHostUtil
 import okhttp3.MediaType
 import okhttp3.Request
 import okhttp3.RequestBody
@@ -66,13 +67,8 @@ class BkRepoClient constructor(
     private val objectMapper: ObjectMapper,
     private val commonConfig: CommonConfig
 ) {
-
     private fun getGatewaytUrl(): String {
-        return if (commonConfig.devopsHostGateway!!.startsWith("http://")) {
-            commonConfig.devopsHostGateway!!
-        } else {
-            "http://${commonConfig.devopsHostGateway!!}"
-        }
+        return HomeHostUtil.getHost(commonConfig.devopsHostGateway!!)
     }
 
     fun getFileSize(userId: String, projectId: String, repoName: String, path: String): NodeSizeInfo {

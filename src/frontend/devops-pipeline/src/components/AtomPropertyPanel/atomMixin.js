@@ -24,10 +24,11 @@ import VuexInput from '@/components/atomFormField/VuexInput'
 import ExperienceInput from '@/components/atomFormField/ExperienceInput'
 import VuexTextarea from '@/components/atomFormField/VuexTextarea'
 import Selector from '@/components/atomFormField/Selector'
+import SelectInput from '@/components/AtomFormComponent/SelectInput'
 import AtomAceEditor from '@/components/atomFormField/AtomAceEditor'
 import CronTimer from '@/components/atomFormField/CronTimer/week'
 import StaffInput from '@/components/atomFormField/StaffInput'
-import UserInput from '@/components/atomFormField/UserInput'
+import CompanyStaffInput from '@/components/atomFormField/CompanyStaffInput'
 import RequestSelector from '@/components/atomFormField/RequestSelector'
 import GitRequestSelector from '@/components/atomFormField/GitRequestSelector'
 import AtomCheckbox from '@/components/atomFormField/AtomCheckbox'
@@ -41,6 +42,8 @@ import KeyValue from '@/components/atomFormField/KeyValue'
 import KeyValueNormal from '@/components/atomFormField/KeyValueNormal'
 import NameSpaceVar from '@/components/atomFormField/NameSpaceVar'
 import RouteTips from '@/components/atomFormField/RouteTips'
+import QualitygateTips from '@/components/atomFormField/QualitygateTips'
+import CheckInline from '@/components/atomFormField/CheckInline'
 import FormField from './FormField'
 import GroupIdSelector from '@/components/atomFormField/groupIdSelector'
 import RemoteCurlUrl from '@/components/atomFormField/RemoteCurlUrl'
@@ -67,10 +70,11 @@ const atomMixin = {
         VuexTextarea,
         EnumInput,
         Selector,
+        SelectInput,
         AtomAceEditor,
         CronTimer,
         StaffInput,
-        UserInput,
+        CompanyStaffInput,
         RequestSelector,
         GitRequestSelector,
         AtomCheckbox,
@@ -86,7 +90,9 @@ const atomMixin = {
         KeyValueNormal,
         NameSpaceVar,
         RouteTips,
+        CheckInline,
         GroupIdSelector,
+        QualitygateTips,
         AutoComplete
     },
     computed: {
@@ -100,6 +106,7 @@ const atomMixin = {
     methods: {
         ...mapActions('atom', [
             'updateAtomInput',
+            'updateWholeAtomInput',
             'updateAtomOutput',
             'updateAtomOutputNameSpace',
             'updateAtom',
@@ -125,6 +132,12 @@ const atomMixin = {
                 newParam: {
                     [name]: value
                 }
+            })
+        },
+        handleUpdateWholeAtomInput (newInput) {
+            this.updateWholeAtomInput({
+                atom: this.element,
+                newInput
             })
         },
         handleUpdateAtomOutput (name, value) {
@@ -192,9 +205,12 @@ const atomMixin = {
             try {
                 const { rely: { expression = [], operation = 'AND' } } = obj
                 const cb = item => {
-                    const { key, value } = item
+                    const { key, value, regex } = item
                     if (Array.isArray(value)) {
                         return typeof element[key] !== 'undefined' && value.includes(element[key])
+                    } else if (regex) {
+                        const reg = new RegExp(regex, 'i')
+                        return reg.test(element[key])
                     } else {
                         return element[key] === value
                     }
@@ -204,6 +220,8 @@ const atomMixin = {
                         return expression.every(cb)
                     case 'OR':
                         return expression.length > 0 ? expression.some(cb) : true
+                    case 'NOT':
+                        return expression.length > 0 ? !expression.some(cb) : true
                     default:
                         return true
                 }

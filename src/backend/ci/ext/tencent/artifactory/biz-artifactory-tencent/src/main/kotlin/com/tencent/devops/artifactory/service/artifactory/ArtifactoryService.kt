@@ -60,7 +60,6 @@ import com.tencent.devops.common.auth.api.BkAuthServiceCode
 import com.tencent.devops.common.auth.code.BSRepoAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
-import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import org.slf4j.LoggerFactory
@@ -567,9 +566,10 @@ class ArtifactoryService @Autowired constructor(
                     val path = "/" + it.path.removePrefix(pipelinePathPrefix)
                     val pipelineId = pipelineService.getPipelineId(path)
                     val buildId = pipelineService.getBuildId(path)
-                    val url =
-                        "${HomeHostUtil.outerServerHost()}/app/download/devops_app_forward.html?flag=buildArchive&projectId=$projectId&pipelineId=$pipelineId&buildId=$buildId"
-                    val shortUrl = shortUrlApi.getShortUrl(url, 300)
+                    // shortUrlApi存在性能问题，并且列表过大，调用次数过多，性能问题,由前端用到后再单独调用
+//                    val url =
+//                        "${HomeHostUtil.outerServerHost()}/app/download/devops_app_forward.html?flag=buildArchive&projectId=$projectId&pipelineId=$pipelineId&buildId=$buildId"
+//                    val shortUrl = shortUrlApi.getShortUrl(url, 300)
 
                     if ((!checkPermission || pipelineHasPermissionList.contains(pipelineId)) &&
                         pipelineIdToNameMap.containsKey(pipelineId) && buildIdToNameMap.containsKey(buildId)
@@ -589,7 +589,7 @@ class ArtifactoryService @Autowired constructor(
                                 artifactoryType = ArtifactoryType.PIPELINE,
                                 properties = properties,
                                 appVersion = appVersion,
-                                shortUrl = shortUrl
+                                shortUrl = "" // 安全起见，置空，而不是直接干掉
                             )
                         )
                     }
