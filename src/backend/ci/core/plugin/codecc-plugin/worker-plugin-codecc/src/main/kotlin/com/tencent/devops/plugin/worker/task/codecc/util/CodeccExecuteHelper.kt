@@ -31,7 +31,7 @@ import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.plugin.worker.pojo.CodeccExecuteConfig
 import com.tencent.devops.plugin.worker.task.codecc.LinuxCodeccConstants.COV_TOOLS
-import com.tencent.devops.process.pojo.AtomErrorCode
+import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.worker.common.logger.LoggerService
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
@@ -96,7 +96,7 @@ object CodeccExecuteHelper {
             if (successCount.get() != expectCount)
                 throw TaskExecuteException(
                     errorType = ErrorType.USER,
-                    errorCode = AtomErrorCode.USER_TASK_OPERATE_FAIL,
+                    errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
                     errorMsg = "运行codecc任务失败: $errorMsg"
                 )
 
