@@ -120,8 +120,7 @@
                         type: this.memberForm.type,
                         member: []
                     }
-                    console.log(memberName)
-                    params.member.push(memberName)
+                    params.member.push(this.memberForm.memberName)
                     this.$emit('confirmHandle', params)
                 }
             },

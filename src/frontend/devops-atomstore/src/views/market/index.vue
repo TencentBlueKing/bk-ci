@@ -100,7 +100,7 @@
                         res = bkLocale.$t('store.流水线模板')
                         break
                     case 'image':
-                        res = bkLocale.$t('容器镜像')
+                        res = bkLocale.$t('store.容器镜像')
                         break
                     default:
                         res = bkLocale.$t('store.流水线插件')
@@ -327,9 +327,9 @@
             getTemplateClassifys () {
                 return Promise.all([this.requestTplCategorys(), this.requestTplLabel(), this.requestTplClassify()]).then(([categorys, lables, classify]) => {
                     const res = []
-                    if (categorys.length > 0) res.push({ name: 'categoryName', key: 'categoryCode', groupName: this.$t('按应用范畴'), data: categorys })
-                    if (classify.length > 0) res.push({ name: 'classifyName', key: 'classifyCode', groupName: this.$t('按分类'), data: classify })
-                    if (lables.length > 0) res.push({ name: 'labelName', key: 'labelCode', groupName: this.$t('按功能'), data: lables })
+                    if (categorys.length > 0) res.push({ name: 'categoryName', key: 'categoryCode', groupName: this.$t('store.按应用范畴'), data: categorys })
+                    if (classify.length > 0) res.push({ name: 'classifyName', key: 'classifyCode', groupName: this.$t('store.按分类'), data: classify })
+                    if (lables.length > 0) res.push({ name: 'labelName', key: 'labelCode', groupName: this.$t('store.按功能'), data: lables })
                     return res
                 })
             },
@@ -337,9 +337,9 @@
             getImageClassifys () {
                 return Promise.all([this.requestImageCategorys(), this.requestImageLabel(), this.requestImageClassifys()]).then(([categorys, lables, classify]) => {
                     const res = []
-                    if (categorys.length > 0) res.push({ name: 'categoryName', key: 'categoryCode', groupName: this.$t('按应用范畴'), data: categorys })
-                    if (classify.length > 0) res.push({ name: 'classifyName', key: 'classifyCode', groupName: this.$t('按分类'), data: classify })
-                    if (lables.length > 0) res.push({ name: 'labelName', key: 'labelCode', groupName: this.$t('按功能'), data: lables })
+                    if (categorys.length > 0) res.push({ name: 'categoryName', key: 'categoryCode', groupName: this.$t('store.按应用范畴'), data: categorys })
+                    if (classify.length > 0) res.push({ name: 'classifyName', key: 'classifyCode', groupName: this.$t('store.按分类'), data: classify })
+                    if (lables.length > 0) res.push({ name: 'labelName', key: 'labelCode', groupName: this.$t('store.按功能'), data: lables })
                     return res
                 })
             },
