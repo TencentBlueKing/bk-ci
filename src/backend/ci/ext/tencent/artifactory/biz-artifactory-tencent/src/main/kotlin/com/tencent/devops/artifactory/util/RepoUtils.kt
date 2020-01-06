@@ -99,7 +99,7 @@ object RepoUtils {
                 createdTime = LocalDateTime.parse(nodeInfo.createdDate, DateTimeFormatter.ISO_DATE_TIME).timestamp(),
                 modifiedTime = LocalDateTime.parse(nodeInfo.lastModifiedDate, DateTimeFormatter.ISO_DATE_TIME).timestamp(),
                 checksums = FileChecksums(nodeInfo.sha256, "", ""),
-                meta = mapOf() // todo  元数据补充 pipelineName
+                meta = metadata
             )
         }
     }

@@ -33,6 +33,7 @@ import com.tencent.devops.common.cos.model.exception.COSException
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.archive.client.BkRepoClient
 import com.tencent.devops.log.utils.LogUtils
 import net.sf.json.JSONArray
 import okhttp3.MediaType
@@ -64,6 +65,8 @@ class UploadCosCdnThread : Runnable {
     var elementId: String = ""
     var containerId: String = ""
     var executeCount: Int = 1
+    var bkRepoClient: BkRepoClient? = null
+    var isRepoGray: Boolean? = false
     private var rabbitTemplate: RabbitTemplate? = null
 
     constructor()
@@ -73,12 +76,16 @@ class UploadCosCdnThread : Runnable {
         rabbitTemplate: RabbitTemplate,
         cosService: CosService,
         redisOperation: RedisOperation,
-        uploadCosCdnParam: UploadCosCdnParam
+        uploadCosCdnParam: UploadCosCdnParam,
+        isRepoGray: Boolean,
+        bkRepoClient: BkRepoClient
     ): this() {
         this.gatewayUrl = gatewayUrl
         this.rabbitTemplate = rabbitTemplate
         this.cosService = cosService
         this.redisOperation = redisOperation
+        this.isRepoGray = isRepoGray
+        this.bkRepoClient = bkRepoClient
         this.uploadCosCdnParam = uploadCosCdnParam
         this.projectId = uploadCosCdnParam.projectId
         this.pipelineId = uploadCosCdnParam.pipelineId
@@ -104,52 +111,75 @@ class UploadCosCdnThread : Runnable {
         domain: String,
         cosClientConfig: COSClientConfig
     ): MutableList<Map<String, String>> {
-        val searchUrl = "http://$gatewayUrl/jfrog/api/service/search/aql"
-
         val downloadUrlList = mutableListOf<Map<String, String>>()
-
         // 下载文件到临时目录，然后上传到COS
         val workspace = Files.createTempDir()
+        LogUtils.addLine(rabbitTemplate!!, buildId, "use bkrepo: $isRepoGray", elementId, containerId, executeCount)
+
         try {
             count = 0
             regexPaths.split(",").forEach { regex ->
-                val requestBody = getRequestBody(regex, customize)
-                logger.info("Get file request body: $requestBody")
-                val request = Request.Builder()
-                        .url(searchUrl)
-                        .post(RequestBody.create(MediaType.parse("text/plain; charset=utf-8"), requestBody))
-                        .build()
-
-                OkhttpUtils.doHttp(request).use { response ->
-                    val body = response.body()!!.string()
-
-                    val results = parser.parse(body).asJsonObject["results"].asJsonArray
-
-                    logger.info("There are ${results.size()} file(s) match $regex")
-                    LogUtils.addLine(
-                        rabbitTemplate = rabbitTemplate!!,
-                        buildId = buildId,
-                        message = "There are ${results.size()} file(s) match $regex",
-                        tag = elementId,
-                        jobId = containerId,
-                        executeCount = executeCount
+                if(isRepoGray!!){
+                    val repoName = if(customize) "custom" else "pipeline"
+                    val fileList = bkRepoClient!!.listFileByPattern(
+                        "",
+                        projectId,
+                        pipelineId,
+                        buildId,
+                        repoName,
+                        regex
                     )
-                    for (i in 0 until results.size()) {
+                    fileList.forEach{
                         count++
-                        val obj = results[i].asJsonObject
-                        val path = getPath(obj["path"].asString, obj["name"].asString, customize)
-                        val url = getUrl(path, customize)
-                        // val filePath = getFilePath(obj["path"].asString, obj["name"].asString, isCustom)
-                        val file = File(workspace, obj["name"].asString)
-                        OkhttpUtils.downloadFile(url, file)
-
+                        val file = File(workspace, it.name)
+                        bkRepoClient!!.downloadFile("", projectId, repoName, it.fullPath, File(workspace, it.name))
                         val cdnFileName = cdnPath + file.name
                         val downloadUrl = uploadToCosImpl(cdnFileName, domain, file, cosClientConfig, bucket)
 
                         downloadUrlList.add(mapOf("fileName" to file.name, "fileDownloadUrl" to downloadUrl))
                         setProcessToRedis(1, count, null)
                     }
+                } else {
+                    val searchUrl = "http://$gatewayUrl/jfrog/api/service/search/aql"
+                    val requestBody = getRequestBody(regex, customize)
+                    logger.info("Get file request body: $requestBody")
+                    val request = Request.Builder()
+                        .url(searchUrl)
+                        .post(RequestBody.create(MediaType.parse("text/plain; charset=utf-8"), requestBody))
+                        .build()
+
+                    OkhttpUtils.doHttp(request).use { response ->
+                        val body = response.body()!!.string()
+
+                        val results = parser.parse(body).asJsonObject["results"].asJsonArray
+
+                        logger.info("There are ${results.size()} file(s) match $regex")
+                        LogUtils.addLine(
+                            rabbitTemplate = rabbitTemplate!!,
+                            buildId = buildId,
+                            message = "There are ${results.size()} file(s) match $regex",
+                            tag = elementId,
+                            jobId = containerId,
+                            executeCount = executeCount
+                        )
+                        for (i in 0 until results.size()) {
+                            count++
+                            val obj = results[i].asJsonObject
+                            val path = getPath(obj["path"].asString, obj["name"].asString, customize)
+                            val url = getUrl(path, customize)
+                            // val filePath = getFilePath(obj["path"].asString, obj["name"].asString, isCustom)
+                            val file = File(workspace, obj["name"].asString)
+                            OkhttpUtils.downloadFile(url, file)
+
+                            val cdnFileName = cdnPath + file.name
+                            val downloadUrl = uploadToCosImpl(cdnFileName, domain, file, cosClientConfig, bucket)
+
+                            downloadUrlList.add(mapOf("fileName" to file.name, "fileDownloadUrl" to downloadUrl))
+                            setProcessToRedis(1, count, null)
+                        }
+                    }
                 }
+
             }
             if (count == 0) {
                 setProcessToRedis(2, 0, null)

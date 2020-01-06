@@ -32,7 +32,10 @@ import com.google.common.io.Files
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.archive.client.JfrogService
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.archive.client.BkRepoClient
 import com.tencent.devops.common.pipeline.zhiyun.ZhiyunConfig
+import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.gray.RepoGray
 import com.tencent.devops.log.utils.LogUtils
 import com.tencent.devops.model.plugin.tables.TPluginZhiyunProduct
 import com.tencent.devops.plugin.dao.ZhiyunProductDao
@@ -55,7 +58,10 @@ class ZhiyunService @Autowired constructor(
     private val zhiyunProductDao: ZhiyunProductDao,
     private val dslContext: DSLContext,
     private val rabbitTemplate: RabbitTemplate,
-    private val zhiyunConfig: ZhiyunConfig
+    private val zhiyunConfig: ZhiyunConfig,
+    private val redisOperation: RedisOperation,
+    private val repoGray: RepoGray,
+    private val bkRepoClient: BkRepoClient
 ) {
 
     companion object {
@@ -68,7 +74,22 @@ class ZhiyunService @Autowired constructor(
 
         val tmpFolder = Files.createTempDir()
         try {
-            val matchFiles = jfrogService.downloadFile(fileParams, tmpFolder.canonicalPath)
+            val isRepoGray = repoGray.isGray(fileParams.projectId, redisOperation)
+            LogUtils.addLine(rabbitTemplate, fileParams.buildId, "use bkrepo: $isRepoGray", fileParams.elementId, fileParams.containerId, fileParams.executeCount)
+
+            val matchFiles = if(isRepoGray){
+                bkRepoClient.downloadFileByPattern(
+                    userId = "",
+                    projectId = fileParams.projectId,
+                    pipelineId = fileParams.pipelineId,
+                    buildId = fileParams.buildId,
+                    repoName = if (fileParams.custom) "custom" else "pipeline",
+                    pathPattern = fileParams.regexPath,
+                    destPath = tmpFolder.canonicalPath
+                )
+            } else {
+                jfrogService.downloadFile(fileParams, tmpFolder.canonicalPath)
+            }
             if (matchFiles.isEmpty()) throw OperationException("There is 0 file find in ${fileParams.regexPath}(custom: ${fileParams.custom})")
             val resultList = mutableListOf<String>()
             matchFiles.forEach { file ->

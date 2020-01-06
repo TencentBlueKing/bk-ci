@@ -283,7 +283,7 @@ class BkRepoDownloadService @Autowired constructor(
                 downloadIps = listOf(),
                 timeoutInSeconds = (ttl ?: 24 * 3600).toLong()
             )
-            resultList.add("https://dev.gw.open.oa.com/bkrepo/api/user/repository${shareUri}")
+            resultList.add("http://dev.gw.open.oa.com/bkrepo/api/user/repository${shareUri}")
         }
         return resultList
     }

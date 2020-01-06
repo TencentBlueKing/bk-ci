@@ -29,6 +29,7 @@ package com.tencent.devops.process.engine.atom.task.deploy
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.util.FileUtil
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.archive.client.BkRepoClient
 import com.tencent.devops.common.archive.client.JfrogClient
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.gcloud.DynamicGcloudClient
@@ -38,7 +39,9 @@ import com.tencent.devops.common.gcloud.api.pojo.UploadResParam
 import com.tencent.devops.common.gcloud.api.pojo.dyn.DynNewResourceParam
 import com.tencent.devops.common.pipeline.element.GcloudPufferElement
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.config.CommonConfig
+import com.tencent.devops.common.service.gray.RepoGray
 import com.tencent.devops.log.utils.LogUtils
 import com.tencent.devops.plugin.api.ServiceGcloudConfResource
 import com.tencent.devops.process.engine.atom.AtomResponse
@@ -58,19 +61,22 @@ class GcloudPufferTaskAtom @Autowired constructor(
     private val client: Client,
     private val objectMapper: ObjectMapper,
     private val rabbitTemplate: RabbitTemplate,
-    private val commonConfig: CommonConfig
+    private val commonConfig: CommonConfig,
+    private val redisOperation: RedisOperation,
+    private val repoGray: RepoGray,
+    private val bkRepoClient: BkRepoClient
 ) : IAtomTask<GcloudPufferElement> {
-
-//    @Value("\${gateway.url:#{null}}")
-//    private val gatewayUrl: String? = null
 
     override fun execute(task: PipelineBuildTask, param: GcloudPufferElement, runVariables: Map<String, String>): AtomResponse {
         parseParam(param, runVariables)
         LogUtils.addLine(rabbitTemplate, task.buildId, "gcloud element params:\n $param", task.taskId, task.containerHashId, task.executeCount ?: 1)
 
         val gcloudUtil = TicketUtil(client)
+        val projectId = task.projectId
+        val pipelineId = task.pipelineId
         val buildId = task.buildId
         val taskId = task.taskId
+        val userId = task.starter
 
         with(param) {
             val host = client.get(ServiceGcloudConfResource::class).getByConfigId(configId.toInt()).data
@@ -78,11 +84,25 @@ class GcloudPufferTaskAtom @Autowired constructor(
                 LogUtils.addRedLine(rabbitTemplate, task.buildId, "unknown configId($configId)", task.taskId, task.containerHashId, task.executeCount ?: 1)
                 return AtomResponse(BuildStatus.FAILED)
             }
-
-            val jfrogClient = JfrogClient(commonConfig.devopsHostGateway ?: "", task.projectId, task.pipelineId, buildId)
             val isCustom = fileSource.toUpperCase() == "CUSTOMIZE"
             val destPath = Files.createTempDirectory("gcloud").toAbsolutePath().toString()
-            val downloadFileList = jfrogClient.downloadFile(filePath, isCustom, destPath)
+            val isRepoGray = repoGray.isGray(projectId, redisOperation)
+            LogUtils.addLine(rabbitTemplate, buildId, "use bkrepo: $isRepoGray", taskId, task.containerHashId, task.executeCount ?: 1)
+
+            val downloadFileList = if(isRepoGray){
+                bkRepoClient.downloadFileByPattern(
+                    userId = userId,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    buildId = buildId,
+                    repoName = if (isCustom) "custom" else "pipeline",
+                    pathPattern = filePath,
+                    destPath = destPath
+                )
+            } else {
+                val jfrogClient = JfrogClient(commonConfig.devopsHostGateway ?: "", projectId, pipelineId, buildId)
+                jfrogClient.downloadFile(filePath, isCustom, destPath)
+            }
 
             if (downloadFileList.isEmpty()) {
                 LogUtils.addRedLine(rabbitTemplate, buildId, "匹配不到待分发的文件: $filePath", taskId, task.containerHashId, task.executeCount ?: 1)

@@ -32,6 +32,9 @@ import com.google.common.io.Files
 import com.tencent.devops.common.api.util.FileUtil
 import com.tencent.devops.common.archive.client.JfrogService
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.archive.client.BkRepoClient
+import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.gray.RepoGray
 import com.tencent.devops.log.utils.LogUtils
 import com.tencent.devops.plugin.pojo.luna.LunaUploadParam
 import okhttp3.MediaType
@@ -51,7 +54,10 @@ import java.util.Locale
 @Service
 class LunaService @Autowired constructor(
     private val jfrogService: JfrogService,
-    private val rabbitTemplate: RabbitTemplate
+    private val rabbitTemplate: RabbitTemplate,
+    private val redisOperation: RedisOperation,
+    private val repoGray: RepoGray,
+    private val bkRepoClient: BkRepoClient
 ) {
 
     val LUNA_URL = "http://100.115.8.10:8080/shupload/"
@@ -60,9 +66,32 @@ class LunaService @Autowired constructor(
         val fileParams = lunaUploadParam.fileParams
         logger.info("Luna upload param for build(${fileParams.buildId}): $lunaUploadParam")
 
+        val projectId = fileParams.projectId
+        val pipelineId = fileParams.pipelineId
+        val buildId = fileParams.buildId
+        val elementId = fileParams.elementId
+        val containerId = fileParams.containerId
+        val executeCount = fileParams.executeCount
+        val isCustom = fileParams.custom
+        val regexPath = fileParams.regexPath
+
         val tmpFolder = Files.createTempDir()
         try {
-            val files = jfrogService.downloadFile(fileParams, tmpFolder.canonicalPath)
+            val isRepoGray = repoGray.isGray(fileParams.projectId, redisOperation)
+            LogUtils.addLine(rabbitTemplate, fileParams.buildId, "use bkrepo: $isRepoGray", elementId, containerId, executeCount)
+            val files = if(isRepoGray){
+                bkRepoClient.downloadFileByPattern(
+                    userId = "",
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    buildId = buildId,
+                    repoName = if (isCustom) "custom" else "pipeline",
+                    pathPattern = regexPath,
+                    destPath = tmpFolder.canonicalPath
+                )
+            } else {
+                jfrogService.downloadFile(fileParams, tmpFolder.canonicalPath)
+            }
             if (files.isEmpty()) {
                 logger.error("No file matches the regex: $fileParams")
                 LogUtils.addLine(rabbitTemplate, fileParams.buildId, "没有匹配到文件", fileParams.elementId, fileParams.containerId, fileParams.executeCount)
