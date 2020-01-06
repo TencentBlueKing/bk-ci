@@ -193,7 +193,7 @@ object CodeccInstaller {
             return CommandLineUtils.execute(script, workspace, true)
         } catch (e: Exception) {
             throw throw TaskExecuteException(
-                errorType = ErrorType.SYSTEM,
+                errorType = ErrorType.USER,
                 errorCode = AtomErrorCode.USER_TASK_OPERATE_FAIL,
                 errorMsg = "安装python2失败: ${e.message}"
             )
