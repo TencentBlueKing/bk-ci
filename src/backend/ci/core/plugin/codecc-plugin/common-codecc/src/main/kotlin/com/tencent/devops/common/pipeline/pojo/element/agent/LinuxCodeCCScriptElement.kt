@@ -89,7 +89,7 @@ open class LinuxCodeCCScriptElement(
     @ApiModelProperty("spotbugs相关参数", required = false)
     var projectBuildCommand: String? = null,
     @ApiModelProperty("圈复杂度阈值", required = false)
-    var ccnThreshold: Int? = null,
+    var ccnThreshold: String? = null,
     @ApiModelProperty("是否隐藏代码内容，字符串的false和true", required = false)
     var needCodeContent: String? = null,
     var coverityToolSetId: String? = null,
@@ -106,7 +106,8 @@ open class LinuxCodeCCScriptElement(
     var occheckToolSetId: String? = null,
     var gociLintToolSetId: String? = null,
     var woodpeckerToolSetId: String? = null,
-    var horuspyToolSetId: String? = null
+    var horuspyToolSetId: String? = null,
+    var pinpointToolSetId: String? = null
 ) : Element(name, id, status) {
 
     companion object {

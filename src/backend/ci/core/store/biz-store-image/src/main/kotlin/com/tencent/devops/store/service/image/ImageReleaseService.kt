@@ -223,7 +223,8 @@ abstract class ImageReleaseService {
         userId: String,
         marketImageUpdateRequest: MarketImageUpdateRequest,
         checkLatest: Boolean = true,
-        sendCheckResultNotify: Boolean = true
+        sendCheckResultNotify: Boolean = true,
+        runCheckPipeline: Boolean = true
     ): Result<String?> {
         logger.info("updateMarketImage userId is :$userId, marketImageUpdateRequest is :$marketImageUpdateRequest")
         val imageCode = marketImageUpdateRequest.imageCode
@@ -368,13 +369,24 @@ abstract class ImageReleaseService {
             if (null != labelIdList && labelIdList.isNotEmpty()) {
                 imageLabelRelDao.batchAdd(context, userId, imageId, labelIdList)
             }
-            // 运行检查镜像合法性的流水线
-            runCheckImagePipeline(
-                context = context,
-                userId = userId,
-                imageId = imageId,
-                sendCheckResultNotify = sendCheckResultNotify
-            )
+            if (runCheckPipeline) {
+                // 运行检查镜像合法性的流水线
+                runCheckImagePipeline(
+                    context = context,
+                    userId = userId,
+                    imageId = imageId,
+                    sendCheckResultNotify = sendCheckResultNotify
+                )
+            } else {
+                // 直接置为测试中状态
+                marketImageDao.updateImageStatusById(
+                    dslContext = context,
+                    imageId = imageId,
+                    imageStatus = ImageStatusEnum.TESTING.status.toByte(),
+                    userId = userId,
+                    msg = "no check"
+                )
+            }
         }
         return Result(imageId)
     }
@@ -453,6 +465,20 @@ abstract class ImageReleaseService {
             marketImageDao.updateImageStatusById(dslContext, imageId, imageStatus, userId, "")
         }
         return Result(true)
+    }
+
+    fun recheckWithoutValidate(
+        context: DSLContext,
+        userId: String,
+        imageId: String,
+        sendCheckResultNotify: Boolean = true
+    ) {
+        runCheckImagePipeline(
+            context = context,
+            userId = userId,
+            imageId = imageId,
+            sendCheckResultNotify = false
+        )
     }
 
     private fun runCheckImagePipeline(

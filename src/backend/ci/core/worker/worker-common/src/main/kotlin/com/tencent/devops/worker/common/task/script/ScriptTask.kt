@@ -28,18 +28,18 @@ package com.tencent.devops.worker.common.task.script
 
 import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxScriptElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.WindowsScriptElement
-import com.tencent.devops.process.pojo.AtomErrorCode
+import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
-import com.tencent.devops.process.pojo.ErrorType
+import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.store.pojo.app.BuildEnv
 import com.tencent.devops.worker.common.api.ApiFactory
 import com.tencent.devops.worker.common.api.quality.QualityGatewaySDKApi
-import com.tencent.devops.worker.common.exception.TaskExecuteException
+import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.task.ITask
 import com.tencent.devops.worker.common.task.script.bat.WindowsScriptTask
 import com.tencent.devops.worker.common.utils.ArchiveUtils
-import com.tencent.devops.worker.common.utils.ShellUtil
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.net.URLDecoder
@@ -56,7 +56,7 @@ open class ScriptTask : ITask() {
         val scriptType = taskParams["scriptType"] ?: throw TaskExecuteException(
             errorMsg = "Unknown script type of build script task",
             errorType = ErrorType.USER,
-            errorCode = AtomErrorCode.USER_INPUT_INVAILD
+            errorCode = ErrorCode.USER_INPUT_INVAILD
         )
         val continueNoneZero = taskParams["continueNoneZero"] ?: "false"
         // 如果脚本执行失败之后可以选择归档这个问题
@@ -65,7 +65,7 @@ open class ScriptTask : ITask() {
                 ?: throw TaskExecuteException(
                     errorMsg = "Empty build script content",
                     errorType = ErrorType.USER,
-                    errorCode = AtomErrorCode.USER_INPUT_INVAILD
+                    errorCode = ErrorCode.USER_INPUT_INVAILD
                 ), "UTF-8").replace("\r", "")
         logger.info("Start to execute the script task($scriptType) ($script)")
         val command = CommandFactory.create(scriptType)
@@ -73,9 +73,8 @@ open class ScriptTask : ITask() {
         val runtimeVariables = buildVariables.variables
         val projectId = buildVariables.projectId
 
-        ENV_FILES.forEach {
-            cleanScriptEnv(workspace, it)
-        }
+        ScriptEnvUtils.cleanEnv(buildId, workspace)
+
         val variables = if (buildTask.buildVariable == null) {
             runtimeVariables
         } else {
@@ -83,14 +82,14 @@ open class ScriptTask : ITask() {
         }
         try {
             command.execute(
-                buildId,
-                script,
-                taskParams,
-                variables,
-                projectId,
-                workspace,
-                buildVariables.buildEnvs,
-                continueNoneZero.toBoolean()
+                buildId = buildId,
+                script = script,
+                taskParam = taskParams,
+                runtimeVariables = variables,
+                projectId = projectId,
+                dir = workspace,
+                buildEnvs = takeBuildEnvs(buildTask, buildVariables),
+                continueNoneZero = continueNoneZero.toBoolean()
             )
         } catch (t: Throwable) {
             logger.warn("Fail to run the script task", t)
@@ -104,33 +103,33 @@ open class ScriptTask : ITask() {
             throw TaskExecuteException(
                 errorMsg = "脚本执行失败",
                 errorType = ErrorType.USER,
-                errorCode = AtomErrorCode.USER_TASK_OPERATE_FAIL
+                errorCode = ErrorCode.USER_TASK_OPERATE_FAIL
             )
         } finally {
             // 成功失败都写入环境变量
-            ENV_FILES.forEach {
-                addEnv(readScriptEnv(workspace, it))
-            }
+            addEnv(ScriptEnvUtils.getEnv(buildId, workspace))
         }
 
         // 设置质量红线指标信息
         setGatewayValue(workspace)
     }
 
+    open fun takeBuildEnvs(buildTask: BuildTask, buildVariables: BuildVariables): List<BuildEnv> = buildVariables.buildEnvs
+
     private fun setGatewayValue(workspace: File) {
         try {
-            val gatewayFile = File(workspace, ShellUtil.GATEWAY_FILE)
+            val gatewayFile = File(workspace, ScriptEnvUtils.getQualityGatewayEnvFile())
             if (!gatewayFile.exists()) return
             val data = gatewayFile.readLines().map {
                 val key = it.split("=").getOrNull(0) ?: throw TaskExecuteException(
                     errorMsg = "Illegal gateway key set: $it",
                     errorType = ErrorType.USER,
-                    errorCode = AtomErrorCode.USER_INPUT_INVAILD
+                    errorCode = ErrorCode.USER_INPUT_INVAILD
                 )
                 val value = it.split("=").getOrNull(1) ?: throw TaskExecuteException(
                     errorMsg = "Illegal gateway key set: $it",
                     errorType = ErrorType.USER,
-                    errorCode = AtomErrorCode.USER_INPUT_INVAILD
+                    errorCode = ErrorCode.USER_INPUT_INVAILD
                 )
                 key to value.trim()
             }.toMap()
@@ -148,38 +147,7 @@ open class ScriptTask : ITask() {
         }
     }
 
-    private fun cleanScriptEnv(workspace: File, file: String) {
-        val scriptFile = File(workspace, file)
-        if (!scriptFile.exists()) {
-            return
-        }
-        // Clean the script env
-        scriptFile.writeText("")
-    }
-
-    private fun readScriptEnv(workspace: File, file: String): Map<String, String> {
-        val f = File(workspace, file)
-        if (!f.exists()) {
-            return mapOf()
-        }
-        if (f.isDirectory) {
-            return mapOf()
-        }
-
-        val lines = f.readLines()
-        if (lines.isEmpty()) {
-            return mapOf()
-        }
-        // KEY-VALUE
-        return lines.filter { it.contains("=") }.map {
-            val split = it.split("=", ignoreCase = false, limit = 2)
-            split[0].trim() to split[1].trim()
-        }.toMap()
-    }
-
     companion object {
         private val logger = LoggerFactory.getLogger(ScriptTask::class.java)
-
-        private val ENV_FILES = arrayOf("result.log", "result.ini")
     }
 }
