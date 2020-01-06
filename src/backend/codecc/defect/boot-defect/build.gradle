@@ -1,0 +1,7 @@
+dependencies {
+    compile project(":defect:biz-defect")
+}
+
+version = null
+
+apply from: "$rootDir/task_spring_boot_package.gradle"

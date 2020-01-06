@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.AESUtil
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.code.RepoAuthServiceCode
 import com.tencent.devops.common.client.Client
@@ -171,8 +172,8 @@ class GitOauthService @Autowired constructor(
 
         val accessToken = doGetAccessToken(userId) ?: return null
 
-        // 提前半个小时刷新token
-        return if (accessToken.expiresIn * 1000 <= System.currentTimeMillis() - 1800 * 1000) {
+        return if (isTokenExpire(accessToken)) {
+            logger.info("try to refresh the git token of user($userId)")
             val lock = RedisLock(redisOperation, "OAUTH_REFRESH_TOKEN_$userId", 60L)
             lock.use {
                 lock.lock()
@@ -188,14 +189,20 @@ class GitOauthService @Autowired constructor(
         }
     }
 
+    private fun isTokenExpire(accessToken: GitToken): Boolean {
+        // 提前半个小时刷新token
+        return (accessToken.createTime ?: 0) + accessToken.expiresIn * 1000 - 1800 * 1000 <= System.currentTimeMillis()
+    }
+
     private fun doGetAccessToken(userId: String): GitToken? {
         return gitTokenDao.getAccessToken(dslContext, userId)?.map {
             with(TRepositoryGtiToken.T_REPOSITORY_GTI_TOKEN) {
                 GitToken(
-                    AESUtil.decrypt(aesKey!!, it.get(ACCESS_TOKEN)),
-                    AESUtil.decrypt(aesKey!!, it.get(REFRESH_TOKEN)),
-                    it.get(TOKEN_TYPE),
-                    it.get(EXPIRES_IN)
+                    accessToken = AESUtil.decrypt(aesKey!!, it.get(ACCESS_TOKEN)),
+                    refreshToken = AESUtil.decrypt(aesKey!!, it.get(REFRESH_TOKEN)),
+                    tokenType = it.get(TOKEN_TYPE),
+                    expiresIn = it.get(EXPIRES_IN),
+                    createTime = it.get(CREATE_TIME).timestampmilli()
                 )
             }
         }

@@ -191,6 +191,16 @@ class AtomDao : AtomBaseDao() {
         }
     }
 
+    fun getPipelineAtom(dslContext: DSLContext, atomCode: String, version: String, atomStatusList: List<Byte>): TAtomRecord? {
+        return with(TAtom.T_ATOM) {
+            dslContext.selectFrom(this)
+                .where(ATOM_CODE.eq(atomCode).and(VERSION.like("$version%")).and(ATOM_STATUS.`in`(atomStatusList)))
+                .orderBy(CREATE_TIME.desc())
+                .limit(1)
+                .fetchOne()
+        }
+    }
+
     fun getPipelineAtom(dslContext: DSLContext, projectCode: String, atomCode: String, version: String, atomStatusList: List<Byte>): TAtomRecord? {
         val a = TAtom.T_ATOM.`as`("a")
         val b = TStoreProjectRel.T_STORE_PROJECT_REL.`as`("b")
