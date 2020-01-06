@@ -53,6 +53,7 @@ import com.tencent.devops.project.pojo.mq.ProjectUpdateLogoBroadCastEvent
 import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.project.service.ProjectPermissionService
 import com.tencent.devops.project.service.ProjectService
+import com.tencent.devops.project.util.GrayProjectCache
 import com.tencent.devops.project.util.ImageUtil
 import com.tencent.devops.project.util.ProjectUtils
 import com.tencent.devops.project.util.exception.ProjectNotExistException
@@ -355,8 +356,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         return map
     }
 
-    override fun grayProjectSet() =
-        (redisOperation.getSetMembers(gray.getGrayRedisKey()) ?: emptySet()).filter { !it.isBlank() }.toSet()
+    override fun grayProjectSet() = gray.grayProjectSet(redisOperation)
 
     override fun updateLogo(
         userId: String,
