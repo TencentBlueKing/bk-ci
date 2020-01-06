@@ -110,9 +110,6 @@
                     case 'image':
                         res = bkLocale.$t('store.容器镜像')
                         break
-                    case 'image':
-                        res = bkLocale.$t('容器镜像')
-                        break
                     default:
                         res = bkLocale.$t('store.流水线插件')
                         break

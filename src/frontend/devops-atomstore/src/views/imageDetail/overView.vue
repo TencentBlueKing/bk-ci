@@ -1,14 +1,14 @@
 <template>
     <div class="image-overview-wrapper">
         <div class="inner-header">
-            <div class="title"> {{ $t('镜像概览') }} </div>
+            <div class="title"> {{ $t('store.镜像概览') }} </div>
         </div>
 
         <section class="sub-view-port">
             <div class="image-overview-container">
                 <div class="building-content">
                     <img :src="image">
-                    <p> {{ $t('功能正在建设中') }}···</p>
+                    <p> {{ $t('store.功能正在建设中') }}···</p>
                 </div>
             </div>
         </section>
