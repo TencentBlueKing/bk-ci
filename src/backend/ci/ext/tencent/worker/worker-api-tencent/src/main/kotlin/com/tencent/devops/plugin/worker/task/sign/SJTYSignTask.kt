@@ -26,18 +26,18 @@
 
 package com.tencent.devops.plugin.worker.task.sign
 
+import com.tencent.devops.common.api.exception.TaskExecuteException
+import com.tencent.devops.common.api.pojo.ErrorCode
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.FileUtil
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_IPA_SIGN_STATUS
 import com.tencent.devops.common.pipeline.element.IosSJTYSignElement
-import com.tencent.devops.process.pojo.AtomErrorCode
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
-import com.tencent.devops.process.pojo.ErrorType
 import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import com.tencent.devops.worker.common.api.ios.sign.IOSSignApi
 import com.tencent.devops.worker.common.env.AgentEnv
-import com.tencent.devops.worker.common.exception.TaskExecuteException
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.task.ITask
 import com.tencent.devops.worker.common.task.TaskClassType
@@ -59,14 +59,14 @@ class SJTYSignTask : ITask() {
         val ipaFiles = taskParams["ipaFile"] ?: throw TaskExecuteException(
             errorMsg = "ipaFile is empty",
             errorType = ErrorType.USER,
-            errorCode = AtomErrorCode.USER_INPUT_INVAILD
+            errorCode = ErrorCode.USER_INPUT_INVAILD
         )
         val customPath = taskParams["destPath"]
         val isCustomize = taskParams["customize"]
         val certId = taskParams["certId"] ?: throw TaskExecuteException(
             errorMsg = "certId is empty",
             errorType = ErrorType.USER,
-            errorCode = AtomErrorCode.USER_INPUT_INVAILD
+            errorCode = ErrorCode.USER_INPUT_INVAILD
         )
         val repoType = if (isCustomize != null && isCustomize.toBoolean()) {
             1
@@ -123,7 +123,7 @@ class SJTYSignTask : ITask() {
             throw TaskExecuteException(
                 errorMsg = "enterprise sign failed after all retry : ($file)",
                 errorType = ErrorType.USER,
-                errorCode = AtomErrorCode.USER_TASK_OPERATE_FAIL
+                errorCode = ErrorCode.USER_TASK_OPERATE_FAIL
             )
         }
     }
