@@ -34,10 +34,6 @@
                 type: [String, Number],
                 default: ''
             },
-            footer: {
-                type: [String, Number],
-                default: '知道了'
-            },
             width: {
                 type: [String, Number],
                 default: '230'
@@ -50,7 +46,8 @@
         data () {
             const tooltipEventList = this.getTooltipEventList()
             return {
-                isShow: this.name ? !tooltipEventList.includes(this.name) : false
+                isShow: this.name ? !tooltipEventList.includes(this.name) : false,
+                footer: this.$t('newlist.known')
             }
         },
         computed: {
@@ -72,7 +69,7 @@
                 let tooltipEventList = localStorage.getItem('tooltipEventList')
                 tooltipEventList = tooltipEventList ? JSON.parse(tooltipEventList) : []
                 tooltipEventList.push(this.name)
-                
+
                 localStorage.setItem('tooltipEventList', JSON.stringify(tooltipEventList))
                 this.isShow = false
                 if (this.instance && typeof this.instance.hide === 'function') {

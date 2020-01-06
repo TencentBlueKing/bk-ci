@@ -6,13 +6,13 @@
             autocomplete="off"
             :name="name"
             :value="selectedText"
-            :placeholder="placeholder"
+            :placeholder="placeholder || defaultPlaceHolder"
             @input="input"
             @mousedown="focus"
             @blur="hideAll" />
 
         <div class="bk-selector-list" v-show="(showList || openList) && localList.length">
-            <ul>
+            <ul class="ul-container">
                 <li
                     v-for="(data, index) in list"
                     class="bk-selector-list-item"
@@ -32,7 +32,7 @@
     import atomFieldMixin from '../atomFieldMixin'
 
     export default {
-        name: 'atom-complete',
+        name: 'auto-complete',
         mixins: [atomFieldMixin],
         props: {
             name: {
@@ -44,7 +44,7 @@
             },
             placeholder: {
                 type: String,
-                default: '请输入'
+                default: ''
             },
             list: {
                 type: Array,
@@ -68,7 +68,8 @@
                 showList: false,
                 focusList: '',
                 localValue: '',
-                localList: []
+                localList: [],
+                defaultPlaceHolder: '请输入'
             }
         },
         computed: {
@@ -147,3 +148,12 @@
         }
     }
 </script>
+
+<style lang="scss">
+
+    .ul-container {
+        max-height: 180px;
+        overflow: scroll;
+        border: 1px solid #E5EBEE;
+    }
+</style>

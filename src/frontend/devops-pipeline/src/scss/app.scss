@@ -23,7 +23,7 @@
 @import './conf';
 @import './mixins/clearfix';
 @import './mixins/ellipsis';
-@import './icon/iconfont.scss';
+@import './icon/iconfont';
 // @import './bk-patch';
 @import './animation';
 @import './form';
@@ -35,6 +35,9 @@ body {
     height: 100%;
     color: $fontWeightColor;
     font-family: "pingFangSC-Regular", "Microsoft Yahei";
+}
+.cursor-pointer {
+    cursor: pointer;
 }
 
 input:-webkit-autofill,
@@ -49,6 +52,16 @@ select:-webkit-autofill:focus {
   -webkit-text-fill-color: $fontWeightColor;
   background-color: white;
   transition: background-color 5000s ease-in-out 0s;
+}
+
+* {
+    outline: none;
+}
+
+.sodaci-property-panel {
+    .bk-sideslider-content {
+        max-height: calc(100vh - 60px);
+    }
 }
 
 table tr:hover {
@@ -909,23 +922,6 @@ table tr:hover {
     line-height: 60px;
     font-size: 16px;
     margin-left: 20px;
-}
-// 覆盖bk-dropdown的错误样式
-.bk-selector-create-item {
-    cursor: pointer;
-}
-.bk-selector {
-    .bk-selector-list-item .bk-selector-tools {
-        top: 13px !important;
-    }
-    .bk-selector-create-item {
-        .text {
-            color: $fontWeightColor;
-            &:hover {
-                color: $primaryColor;
-            }
-        }
-    }
 }
 
 .ace-monokai {

@@ -13,6 +13,7 @@
     "public:external": "cross-env NODE_ENV=external npm run public --"
   },
   "dependencies": {
+    "@icon-cool/bk-icon-devops": "0.0.6",
     "axios": "^0.18.1",
     "bk-magic-vue": "2.1.7",
     "brace": "^0.10.0",
@@ -123,5 +124,6 @@
     "> 1%",
     "last 2 versions",
     "not ie <= 8"
-  ]
+  ],
+  "gitHead": "afc92dde9341d36ec28514ede9e7cca0af3edb1b"
 }

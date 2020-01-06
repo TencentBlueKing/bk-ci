@@ -55,6 +55,8 @@
             ...mapActions('store', [
                 'requestAtomReplyComment',
                 'requestTemplateReplyComment',
+                'requestIDEReplyComment',
+                'requestImageReplyComment',
                 'setCommentReplay',
                 'clearCommentReply'
             ]),
@@ -93,7 +95,9 @@
                 const postData = { replyContent, replyToUser: this.replyToUser }
                 const funObj = {
                     atom: () => this.requestAtomReplyComment({ id, postData }),
-                    template: () => this.requestTemplateReplyComment({ id, postData })
+                    template: () => this.requestTemplateReplyComment({ id, postData }),
+                    ide: () => this.requestIDEReplyComment({ id, postData }),
+                    image: () => this.requestImageReplyComment({ id, postData })
                 }
 
                 funObj[type]().then((res) => {

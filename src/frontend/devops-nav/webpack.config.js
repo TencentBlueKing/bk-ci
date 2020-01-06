@@ -79,6 +79,7 @@ module.exports = (env = {}, argv) => {
       ]
     }
   ]
+  config.plugins.pop()
   config.plugins = [
     ...config.plugins,
     new HtmlWebpackPlugin({
@@ -106,9 +107,15 @@ module.exports = (env = {}, argv) => {
     }),
     new CopyWebpackPlugin([{ from: path.join(__dirname, './src/assets/static'), to: `${dist}/static` }]),
     ...(isDev ? [new ReplacePlugin({
-      '__HTTP_SCHEMA__://__BKCI_FQDN__/ms': `${urlPrefix}/ms`,
-      '__HTTP_SCHEMA__://__BKCI_FQDN__': ''
+      '__HTTP_SCHEMA__://__BKCI_STATIC_FQDN__': 'http://v2.dev.static.devops.oa.com',
+      '__HTTP_SCHEMA__://__BKCI_FQDN__': urlPrefix
     })] : [])
   ]
+  config.devServer.historyApiFallback = {
+    rewrites: [
+        { from: /^\/console/, to: '/console/index.html' }
+    ]
+  }
+  config.output.publicPath = '/console/'
   return config
 }

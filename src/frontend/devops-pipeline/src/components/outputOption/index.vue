@@ -1,17 +1,17 @@
 <template>
     <div class="output-option-wrapper">
-        <vertical-tab :tabs="tabs"></vertical-tab>
         <div class="output-option-empty" v-if="isEmptyNav">
             <div class="no-data-right">
                 <img src="../../images/box.png">
-                <p>暂时没有产出物报告</p>
+                <p>{{ $t('details.noOutputReport') }}</p>
             </div>
         </div>
+        <vertical-tab v-else :tabs="tabs"></vertical-tab>
     </div>
 </template>
 
 <script>
-    import { mapActions } from 'vuex'
+    import { mapGetters, mapActions } from 'vuex'
     import VerticalTab from '../PipelineEditTabs/VerticalTab'
 
     export default {
@@ -36,14 +36,36 @@
             }
         },
         computed: {
+            ...mapGetters({
+                'checkHasCodecc': 'soda/getHasAtomCheck'
+            }),
+            hasCodecc () {
+                return this.checkHasCodecc(this.curPipeline.stages, 'linuxPaasCodeCCScript') || this.checkHasCodecc(this.curPipeline.stages, 'CodeccCheckAtom')
+            },
             buildNo () {
                 return this.$route.params.buildNo
             },
             tabs () {
                 return [
+                    ...(this.hasCodecc ? [{
+                        id: 'codeCheck',
+                        name: this.$t('details.codeCheck'),
+                        component: 'codeCheck',
+                        componentProps: {
+
+                        }
+                    }] : []),
+                    ...(this.hasWetestTab ? [{
+                        id: 'wetestReport',
+                        name: this.$t('details.wetestReportName'),
+                        component: 'wetestReport',
+                        componentProps: {
+                            pipelineReportList: this.pipelineReportList
+                        }
+                    }] : []),
                     ...(this.hasThirdPartyReport ? [{
                         id: 'thirdReport',
-                        name: '第三方报告',
+                        name: this.$t('details.thirdReport'),
                         component: 'thirdPartyReport',
                         componentProps: {
                             reportList: this.thirdPartyReportList
@@ -75,6 +97,7 @@
         },
         methods: {
             ...mapActions('soda', [
+                'requestWetestReport',
                 'requestReportList'
             ]),
             async init () {
@@ -85,8 +108,21 @@
                         pipelineId,
                         buildId: buildNo
                     }
+                    const [reportRes] = await Promise.all([
+                        this.requestReportList(params)
+                    ])
+                    // 先把wetest报告相关注释
+                    // const [wetestRes, reportRes] = await Promise.all([
+                    //     this.requestWetestReport(params),
+                    //     this.requestReportList(params)
+                    // ])
 
-                    const reportRes = await this.requestReportList(params)
+                    // if (wetestRes.records && wetestRes.records.length) {
+                    //     this.hasWetestTab = true
+                    //     this.pipelineReportList = [
+                    //         ...wetestRes.records
+                    //     ]
+                    // }
 
                     if (reportRes.length) {
                         this.thirdPartyReportList = []
@@ -120,7 +156,7 @@
         }
         .report-iframe-content {
             // overflow: hidden;
-            height: 90%;
+            height: 95%;
             margin-top: 20px;
             width: 100%;
             // min-width: 1280px;

@@ -2,18 +2,22 @@
     <bk-dialog
         v-if="renderObj.id"
         v-model="showDialog"
-        class="devops-announcement-dialog"
-        ok-text="立即体验"
+        ext-cls="devops-announcement-dialog"
+        :ok-text="$t('expNow')"
         :width="828"
         :has-footer="false"
         :has-header="false"
         :close-icon="false"
         :quick-close="false"
         :title="renderObj.noticeTitle"
-        @confirm="toLink(renderObj.redirectUrl)">
+        @confirm="toLink(renderObj.redirectUrl)"
+    >
         <main class="new-service-content">
             <div class="announcement-content">
-                <div class="content-detail" v-html="renderObj.noticeContent"></div>
+                <div
+                    class="content-detail"
+                    v-html="renderObj.noticeContent"
+                />
             </div>
         </main>
     </bk-dialog>
@@ -76,6 +80,13 @@
     @import '../../assets/scss/conf';
 
     .devops-announcement-dialog {
+        // .bk-dialog-tool {
+        //     display: none;
+        // }
+        .bk-dialog-body {
+            margin: 0px;
+            padding: 0px !important;
+        }
         .new-service-content {
             padding: 20px;
             height: 547px;
