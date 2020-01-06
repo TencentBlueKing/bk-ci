@@ -29,14 +29,14 @@ package com.tencent.devops.scm.resources
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.repository.pojo.oauth.GitToken
-import com.tencent.devops.scm.api.BuildGitCiResource
+import com.tencent.devops.scm.api.SerivceGitCiResource
 import com.tencent.devops.scm.services.GitService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class BuildGitCiResourceImpl @Autowired constructor(
+class ServiceGitCiResourceImpl @Autowired constructor(
     private val gitService: GitService
-) : BuildGitCiResource {
+) : SerivceGitCiResource {
 
     override fun getToken(gitProjectId: String): Result<GitToken> {
         return Result(gitService.getToken(gitProjectId))
