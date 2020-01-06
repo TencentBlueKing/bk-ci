@@ -36,11 +36,11 @@
                     :pipeline-id="pipelineId"
                     :status="pipelineStatus"
                     :can-manual-startup="canManualStartup"
-                    :before-exec="isEditing ? save : undefined"
+                    :before-exec="isEditing && !saveBtnDisabled ? save : undefined"
                     @exec="toExecute">
                     <section slot="exec-bar" slot-scope="triggerProps">
                         <bk-button v-if="pipelineStatus !== 'running'" theme="primary" :disabled="btnDisabled || !canManualStartup || triggerProps.isDisable" :icon="executeStatus || triggerProps.isDisable ? 'loading' : ''" :title="canManualStartup ? '' : '不支持手动启动流水线'">
-                            {{ isEditing ? $t('subpage.saveAndExec') : $t('exec') }}
+                            {{ isEditing && !saveBtnDisabled ? $t('subpage.saveAndExec') : $t('exec') }}
                         </bk-button>
                     </section>
                 </triggers>

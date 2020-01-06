@@ -30,7 +30,5 @@ import com.tencent.devops.process.pojo.AtomErrorCode.SYSTEM_SERVICE_ERROR
 import com.tencent.devops.process.pojo.ErrorType
 
 class SystemServiceExecuteException(
-    val errorMsg: String,
-    val errorType: ErrorType = ErrorType.SYSTEM,
-    val errorCode: Int = SYSTEM_SERVICE_ERROR
-) : Throwable(errorMsg)
+    override val errorMsg: String
+) : TaskExecuteException(ErrorType.SYSTEM, SYSTEM_SERVICE_ERROR, errorMsg)

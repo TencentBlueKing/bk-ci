@@ -61,7 +61,7 @@
             },
             leaveConfirm (to, from, next) {
                 if (this.isEditing) {
-                    navConfirm({ content: this.confirmMsg, title: this.confirmTitle })
+                    navConfirm({ content: this.confirmMsg, type: 'warning' })
                         .then(() => next())
                         .catch(() => next(false))
                 } else {

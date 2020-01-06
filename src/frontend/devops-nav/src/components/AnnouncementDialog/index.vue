@@ -1,5 +1,6 @@
 <template>
     <bk-dialog
+        v-if="renderObj.id"
         v-model="showDialog"
         ext-cls="devops-announcement-dialog"
         :ok-text="$t('expNow')"
@@ -75,7 +76,7 @@
     }
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
     @import '../../assets/scss/conf';
 
     .devops-announcement-dialog {
