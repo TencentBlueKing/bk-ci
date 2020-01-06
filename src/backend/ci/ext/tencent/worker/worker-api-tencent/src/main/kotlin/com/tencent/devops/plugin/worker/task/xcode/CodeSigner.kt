@@ -27,10 +27,10 @@
 package com.tencent.devops.plugin.worker.task.xcode
 
 import com.tencent.devops.common.api.enums.OSType
+import com.tencent.devops.common.api.exception.TaskExecuteException
+import com.tencent.devops.common.api.pojo.ErrorCode
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.log.Ansi
-import com.tencent.devops.process.pojo.AtomErrorCode
-import com.tencent.devops.process.pojo.ErrorType
-import com.tencent.devops.worker.common.exception.TaskExecuteException
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.utils.ExecutorUtil.runCommand
 import com.tencent.devops.worker.common.utils.ExecutorUtil
@@ -95,7 +95,7 @@ object CodeSigner {
             throw TaskExecuteException(
                 errorMsg = "tansfer plist into entitlement failed",
                 errorType = ErrorType.USER,
-                errorCode = AtomErrorCode.USER_TASK_OPERATE_FAIL
+                errorCode = ErrorCode.USER_TASK_OPERATE_FAIL
             )
         }
     }
@@ -174,7 +174,7 @@ object CodeSigner {
             throw TaskExecuteException(
                 errorMsg = "Wrong ipa package",
                 errorType = ErrorType.USER,
-                errorCode = AtomErrorCode.USER_RESOURCE_NOT_FOUND
+                errorCode = ErrorCode.USER_RESOURCE_NOT_FOUND
             )
         }
         val payloadFile = files[0]
@@ -183,7 +183,7 @@ object CodeSigner {
             throw TaskExecuteException(
                 errorMsg = "Wrong ipa package",
                 errorType = ErrorType.USER,
-                errorCode = AtomErrorCode.USER_RESOURCE_NOT_FOUND
+                errorCode = ErrorCode.USER_RESOURCE_NOT_FOUND
             )
         }
 
