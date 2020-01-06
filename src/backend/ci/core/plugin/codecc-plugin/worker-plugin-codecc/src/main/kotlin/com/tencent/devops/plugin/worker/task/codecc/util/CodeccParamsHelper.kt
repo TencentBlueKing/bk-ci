@@ -205,7 +205,7 @@ object CodeccParamsHelper {
             val shareCoverityFile = LinuxCodeccConstants.getCovPyFile()
             if (!shareCoverityFile.exists()) {
                 throw throw TaskExecuteException(
-                    errorType = ErrorType.SYSTEM,
+                    errorType = ErrorType.USER,
                     errorCode = AtomErrorCode.USER_TASK_OPERATE_FAIL,
                     errorMsg = "The coverity file (${shareCoverityFile.canonicalPath}) is not exist"
                 )
