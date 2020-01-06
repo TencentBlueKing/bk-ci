@@ -551,12 +551,18 @@ class DockerHostBuildService(
             }
         }
 
+        val publicImages = getPublicImages()
         val imageList = dockerCli.listImagesCmd().withShowAll(true).exec()
         imageList.forEach c@{
             if (it.repoTags == null || it.repoTags.isEmpty()) {
                 return@c
             }
-            it.repoTags.forEach { image ->
+            it.repoTags.forEach t@{ image ->
+                if (publicImages.contains(image)) {
+                    logger.info("skip public image: $image")
+                    return@t
+                }
+
                 val lastUsedDate = LocalImageCache.getDate(image)
                 if (null != lastUsedDate) {
                     if ((Date().time - lastUsedDate.time) / (1000 * 60 * 60 * 24) >= dockerHostConfig.localImageCacheDays) {
@@ -590,6 +596,15 @@ class DockerHostBuildService(
         } catch (e: Exception) {
             logger.info("write log to dispatch failed")
         }
+    }
+
+    private fun getPublicImages(): List<String> {
+        val result = mutableListOf<String>()
+        val publicImages = dockerHostBuildApi.getPublicImages().data!!
+        publicImages.filter { it.publicFlag && it.rdType == ImageRDTypeEnum.SELF_DEVELOPED }.forEach {
+            result.add("${it.repoUrl}/${it.repoName}:${it.repoTag}")
+        }
+        return result
     }
 
     private fun getImageNameWithTag(
