@@ -36,7 +36,7 @@ import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
 import com.tencent.devops.process.engine.common.Timeout
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.pojo.AtomErrorCode
-import com.tencent.devops.process.pojo.ErrorType
+import com.tencent.devops.common.api.pojo.ErrorType
 import org.slf4j.LoggerFactory
 import java.util.concurrent.TimeUnit
 
