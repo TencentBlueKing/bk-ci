@@ -1,7 +1,7 @@
 <template>
     <div v-bkloading="{ isLoading }" class="remote-trigger">
-        <p>添加本插件后，当前流水线可过特定的URL触发构建（启动人是流水线的最后编辑人）。</p>
-        <p>示例：</p>
+        <p>{{ $t('editPage.remoteCurlTips') }}</p>
+        <p>{{ $t('editPage.example') }}：</p>
         <p class="curl-url">curl -X POST {{baseUrl}}/external/pipelines/{{value}}/build -H "Content-Type: application/json" -d "{{stringifyParmas}}" </p>
     </div>
 </template>

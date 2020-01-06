@@ -96,7 +96,7 @@ export function updateRecentVisitServiceList (path: string): void {
 
 export function isObject (param) {
     const type = typeof param
-    return param !== null && type == 'object' && !Array.isArray(param)
+    return param !== null && type === 'object' && !Array.isArray(param)
 }
 
 export function isShallowEqual (obj1: object, obj2: object): boolean {
@@ -122,7 +122,7 @@ export function judgementLsVersion () {
 
 // 动态加载js
 export function importScript (src, oHead) {
-    return new Promise((resolve, reject) => {
+    return new Promise(resolve => {
         const oScript = document.createElement('script')
         oScript.type = 'text\/javascript'
         oScript.setAttribute('src', src)
@@ -134,7 +134,7 @@ export function importScript (src, oHead) {
 
 // 动态加载css
 export function importStyle (href, oHead) {
-    return new Promise((resolve, reject) => {
+    return new Promise(resolve => {
         const oStyle = document.createElement('link')
         oStyle.setAttribute('rel', 'stylesheet')
         oStyle.setAttribute('type', 'text/css')
@@ -146,7 +146,7 @@ export function importStyle (href, oHead) {
 }
 
 export function getServiceAliasByPath (path: string): string {
-    const serviceAliasREG = /^\/(console\/)?([^\/]+)\//
+    const serviceAliasREG = /^\/(console\/)?([^\/]+)\/?/
     const execRes = serviceAliasREG.exec(path) || []
     return execRes[2] || path
 }

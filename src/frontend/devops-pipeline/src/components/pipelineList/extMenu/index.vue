@@ -41,7 +41,7 @@
                         isRunning: false,
                         name: '',
                         runningInfo: {
-                            time: '0秒',
+                            time: '0',
                             percentage: '0%',
                             log: '',
                             buildCount: 0
@@ -171,4 +171,3 @@
         }
     }
 </style>
-git

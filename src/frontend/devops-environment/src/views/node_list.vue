@@ -1,131 +1,192 @@
 <template>
     <div class="node-list-wrapper">
-        <div class="node-header">
-            <div class="title">节点</div>
-            <div class="header-handler-row" v-if="nodeList.length > 0">
-                <bk-button theme="primary" class="import-vmbuild-btn" @click="toImportNode('construct')">导入节点</bk-button>
+        <content-header class="env-header">
+            <div slot="left">{{ $t('environment.node') }}</div>
+            <div slot="right" v-if="nodeList.length > 0">
+                <template v-if="isExtendTx">
+                    <bk-button theme="primary" class="create-node-btn"
+                        @click="toCreateNode">{{ $t('environment.new') }}</bk-button>
+                    <bk-dropdown-menu :align="'right'"
+                        @show="dropdownIsShow('show')"
+                        @hide="dropdownIsShow('hide')"
+                        ref="dropdown">
+                        <bk-button slot="dropdown-trigger">
+                            <span>{{ $t('environment.import') }}</span>
+                            <i :class="['bk-icon icon-angle-down',{ 'icon-flip': isDropdownShow }]"></i>
+                        </bk-button>
+                        <ul class="bk-dropdown-list" slot="dropdown-content">
+                            <li>
+                                <a href="javascript:;" @click="toImportNode('cmdb')">{{ $t('environment.nodeInfo.idcTestMachine') }}</a>
+                            </li>
+                            <li>
+                                <a href="javascript:;" @click="toImportNode('construct')">{{ $t('environment.thirdPartyBuildMachine') }}</a>
+                            </li>
+                        </ul>
+                    </bk-dropdown-menu>
+                </template>
+                <bk-button theme="primary" class="import-vmbuild-btn" v-else @click="toImportNode('construct')">{{ $t('environment.nodeInfo.importNode') }}</bk-button>
             </div>
-        </div>
-        <div class="node-container" v-bkloading="{
+        </content-header>
+        <section class="sub-view-port" v-bkloading="{
             isLoading: loading.isLoading,
             title: loading.title
         }">
-            <section class="sub-view-port">
-                <bk-table v-if="showContent && nodeList.length"
-                    size="medium"
-                    class="node-table-wrapper"
-                    :data="nodeList">
-                    <bk-table-column label="别名" prop="displayName">
-                        <template slot-scope="props">
-                            <div class="bk-form-content node-item-content" v-if="props.row.isEnableEdit">
-                                <div class="edit-content">
-                                    <input type="text" class="bk-form-input env-name-input"
-                                        maxlength="30"
-                                        name="nodeName"
-                                        v-validate="'required'"
-                                        v-model="curEditNodeDisplayName"
-                                        :class="{ 'is-danger': errors.has('nodeName') }">
-                                    <div class="handler-btn">
-                                        <span class="edit-base save" @click="saveEdit(props.row)">保存</span>
-                                        <span class="edit-base cancel" @click="cancelEdit(props.row.nodeHashId)">取消</span>
+            <bk-table v-if="showContent && nodeList.length"
+                size="medium"
+                class="node-table-wrapper"
+                :data="nodeList">
+                <bk-table-column :label="$t('environment.nodeInfo.displayName')" prop="displayName">
+                    <template slot-scope="props">
+                        <div class="bk-form-content node-item-content" v-if="props.row.isEnableEdit">
+                            <div class="edit-content">
+                                <input type="text" class="bk-form-input env-name-input"
+                                    maxlength="30"
+                                    name="nodeName"
+                                    v-validate="'required'"
+                                    v-model="curEditNodeDisplayName"
+                                    :class="{ 'is-danger': errors.has('nodeName') }">
+                                <div class="handler-btn">
+                                    <span class="edit-base save" @click="saveEdit(props.row)">{{ $t('environment.save') }}</span>
+                                    <span class="edit-base cancel" @click="cancelEdit(props.row.nodeHashId)">{{ $t('environment.cancel') }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="table-node-item node-item-id" v-else>
+                            <span class="node-name"
+                                :class="{ 'pointer': canShowDetail(props.row) }"
+                                :title="props.row.displayName"
+                                @click="toNodeDetail(props.row)"
+                            >{{ props.row.displayName || '-' }}</span>
+                            <i class="bk-icon icon-edit" v-if="!isEditNodeStatus && props.row.canEdit" @click="editNodeName(props.row)"></i>
+                        </div>
+                    </template>
+                </bk-table-column>
+                <bk-table-column :label="`${$t('environment.nodeInfo.intranet')}IP`" prop="ip" min-width="80">
+                    <template slot-scope="props">
+                        {{ props.row.ip || '-' }}
+                    </template>
+                </bk-table-column>
+                <bk-table-column :label="$t('environment.nodeInfo.os')" prop="osName">
+                    <template slot-scope="props">
+                        {{ props.row.osName || '-' }}
+                    </template>
+                </bk-table-column>
+                <bk-table-column :label="`${$t('environment.nodeInfo.source')}/${$t('environment.nodeInfo.importer')}`" prop="createdUser" min-width="120">
+                    <template slot-scope="props">
+                        <div v-if="(props.row.nodeType === 'CC' || props.row.nodeType === 'CMDB') && ((props.row.nodeType === 'CC' && props.row.createdUser !== props.row.operator && props.row.createdUser !== props.row.bakOperator)
+                            || (props.row.nodeType === 'CMDB' && props.row.createdUser !== props.row.operator && props.row.bakOperator.split(';').indexOf(props.row.createdUser) === -1))">
+                            <div class="edit-operator" v-if="userInfo.username === props.row.operator || userInfo.username === props.row.bakOperator">
+                                <i class="bk-icon icon-exclamation-circle"></i><span @click="changeCreatedUser(props.row.nodeHashId)">{{ $t('environment.nodeInfo.operatorModfied') }}</span>
+                            </div>
+                            <div class="prompt-operator" v-else>
+                                <bk-popover placement="top">
+                                    <span><i class="bk-icon icon-exclamation-circle"></i>{{ $t('environment.nodeInfo.prohibited') }}</span>
+                                    <template slot="content">
+                                        <p>{{ $t('environment.nodeInfo.currentImporter') }}<span>{{ props.row.createdUser }}</span></p>
+                                        <p>{{ $t('environment.nodeInfo.currentOperator') }}<span>{{ props.row.operator }}</span><span v-if="props.row.nodeType === 'CC'">/{{ props.row.bakOperator }}</span></p>
+                                        <p>{{ $t('environment.nodeInfo.contactOperator') }}</p>
+                                    </template>
+                                </bk-popover>
+                            </div>
+                        </div>
+                        <div v-else>
+                            <span class="node-name">{{ $t('environment.nodeTypeMap')[props.row.nodeType] || '-' }}</span>
+                            <span>({{ props.row.createdUser }})</span>
+                        </div>
+                    </template>
+                </bk-table-column>
+                <bk-table-column :label="$t('environment.status')" prop="nodeStatus">
+                    <template slot-scope="props">
+                        <div class="table-node-item node-item-status"
+                            v-if="props.row.nodeStatus === 'BUILDING_IMAGE' && props.row.nodeType === 'DEVCLOUD'">
+                            <span class="node-status-icon normal-stutus-icon"></span>
+                            <span class="node-status">{{ $t('environment.nodeInfo.normal') }}</span>
+                        </div>
+                        <div class="table-node-item node-item-status">
+                            <!-- 状态icon -->
+                            <span class="node-status-icon normal-stutus-icon" v-if="successStatus.includes(props.row.nodeStatus)"></span>
+                            <span class="node-status-icon abnormal-stutus-icon"
+                                v-if="failStatus.includes(props.row.nodeStatus)">
+                            </span>
+                            <div class="bk-spin-loading bk-spin-loading-mini bk-spin-loading-primary"
+                                v-if="runningStatus.includes(props.row.nodeStatus)">
+                                <div class="rotate rotate1"></div>
+                                <div class="rotate rotate2"></div>
+                                <div class="rotate rotate3"></div>
+                                <div class="rotate rotate4"></div>
+                                <div class="rotate rotate5"></div>
+                                <div class="rotate rotate6"></div>
+                                <div class="rotate rotate7"></div>
+                                <div class="rotate rotate8"></div>
+                            </div>
+                            <!-- 状态值 -->
+                            <span class="install-agent"
+                                v-if="props.row.nodeType === 'DEVCLOUD' && props.row.nodeStatus === 'RUNNING'"
+                                @click="installAgent(props.row)">
+                                {{ $t('environment.nodeStatusMap')[props.row.nodeStatus] }}
+                            </span>
+                            <span class="node-status" v-else>{{ $t('environment.nodeStatusMap')[props.row.nodeStatus] }}</span>
+                            <div class="install-agent"
+                                v-if="['CC','CMDB','THIRDPARTY'].includes(props.row.nodeType) && props.row.nodeStatus === 'ABNORMAL'"
+                                @click="installAgent(props.row)"
+                            >{{ `（${$t('environment.install')}Agent）` }}</div>
+                        </div>
+                    </template>
+                </bk-table-column>
+                <bk-table-column :label="`${$t('environment.create')}/${$t('environment.nodeInfo.importTime')}`" prop="createTime" min-width="80">
+                    <template slot-scope="props">
+                        {{ props.row.createTime || '-' }}
+                    </template>
+                </bk-table-column>
+                <bk-table-column :label="$t('environment.nodeInfo.lastModifyTime')" prop="lastModifyTime" min-width="80">
+                    <template slot-scope="props">
+                        {{ props.row.lastModifyTime || '-' }}
+                    </template>
+                </bk-table-column>
+                <bk-table-column :label="$t('environment.operation')" width="160">
+                    <template slot-scope="props">
+                        <div class="table-node-item node-item-handler"
+                            :class="{ 'over-handler': isMultipleBtn }">
+                            <span class="node-handle delete-node-text"
+                                v-if="props.row.canDelete && !['TSTACK', 'DEVCLOUD'].includes(props.row.nodeType)"
+                                @click.stop="confirmDelete(props.row, index)"
+                            >{{ $t('environment.delete') }}</span>
+                            <span class="node-handle delete-node-text"
+                                v-if="!props.row.canUse && props.row.nodeStatus !== 'CREATING'"
+                                @click.stop="toNodeApplyPerm(props.row)"
+                            >{{ $t('environment.applyPermission') }}</span>
+                            <span id="moreHandler" class="node-handle more-handle"
+                                v-if="props.row.canUse && props.row.nodeType === 'DEVCLOUD'">
+                                <bk-popover
+                                    placement="bottom-start"
+                                    size="samll"
+                                    theme="light">
+                                    <span>{{ $t('environment.more') }}</span>
+                                    <div slot="content" class="devcloud-menu-list">
+                                        <dropdown-list :is-show="showTooltip" @handleNode="handleNode" :node="props.row"></dropdown-list>
                                     </div>
-                                </div>
-                            </div>
-                            <div class="table-node-item node-item-id" v-else>
-                                <span class="node-name"
-                                    :class="{ 'pointer': canShowDetail(props.row) }"
-                                    :title="props.row.displayName"
-                                    @click="toNodeDetail(props.row)"
-                                >{{ props.row.displayName || '-' }}</span>
-                                <i class="bk-icon icon-edit" v-if="!isEditNodeStatus && props.row.canEdit" @click="editNodeName(props.row)"></i>
-                            </div>
-                        </template>
-                    </bk-table-column>
-                    <bk-table-column label="内网IP" prop="ip" min-width="80">
-                        <template slot-scope="props">
-                            {{ props.row.ip || '-' }}
-                        </template>
-                    </bk-table-column>
-                    <bk-table-column label="操作系统" prop="osName">
-                        <template slot-scope="props">
-                            {{ props.row.osName || '-' }}
-                        </template>
-                    </bk-table-column>
-                    <bk-table-column label="来源/导入人" prop="createdUser" min-width="120">
-                        <template slot-scope="props">
-                            <div>
-                                <span class="node-name">{{ getNodeTypeMap[props.row.nodeType] || '-' }}</span>
-                                <span>({{ props.row.createdUser }})</span>
-                            </div>
-                        </template>
-                    </bk-table-column>
-                    <bk-table-column label="状态" prop="nodeStatus">
-                        <template slot-scope="props">
-                            <div class="table-node-item node-item-status"
-                                v-if="props.row.nodeStatus === 'BUILDING_IMAGE' && props.row.nodeType === 'DEVCLOUD'">
-                                <span class="node-status-icon normal-stutus-icon"></span>
-                                <span class="node-status">正常</span>
-                            </div>
-                            <div class="table-node-item node-item-status">
-                                <!-- 状态icon -->
-                                <span class="node-status-icon normal-stutus-icon" v-if="successStatus.includes(props.row.nodeStatus)"></span>
-                                <span class="node-status-icon abnormal-stutus-icon"
-                                    v-if="failStatus.includes(props.row.nodeStatus)">
-                                </span>
-                                <div class="bk-spin-loading bk-spin-loading-mini bk-spin-loading-primary"
-                                    v-if="runningStatus.includes(props.row.nodeStatus)">
-                                    <div class="rotate rotate1"></div>
-                                    <div class="rotate rotate2"></div>
-                                    <div class="rotate rotate3"></div>
-                                    <div class="rotate rotate4"></div>
-                                    <div class="rotate rotate5"></div>
-                                    <div class="rotate rotate6"></div>
-                                    <div class="rotate rotate7"></div>
-                                    <div class="rotate rotate8"></div>
-                                </div>
-                                <!-- 状态值 -->
-                                <span class="install-agent"
-                                    v-if="props.row.nodeType === 'DEVCLOUD' && props.row.nodeStatus === 'RUNNING'"
-                                    @click="installAgent(props.row)">
-                                    {{ getNodeStatusMap[props.row.nodeStatus] }}
-                                </span>
-                                <span class="node-status" v-else>{{ getNodeStatusMap[props.row.nodeStatus] }}</span>
-                            </div>
-                        </template>
-                    </bk-table-column>
-                    <bk-table-column label="创建/导入时间" prop="createTime" min-width="80">
-                        <template slot-scope="props">
-                            {{ props.row.createTime || '-' }}
-                        </template>
-                    </bk-table-column>
-                    <bk-table-column label="最后修改时间" prop="lastModifyTime" min-width="80">
-                        <template slot-scope="props">
-                            {{ props.row.lastModifyTime || '-' }}
-                        </template>
-                    </bk-table-column>
-                    <bk-table-column label="操作" width="160">
-                        <template slot-scope="props">
-                            <div class="table-node-item node-item-handler"
-                                :class="{ 'over-handler': isMultipleBtn }">
-                                <span class="node-handle delete-node-text"
-                                    v-if="props.row.canDelete && !['TSTACK', 'DEVCLOUD'].includes(props.row.nodeType)"
-                                    @click.stop="confirmDelete(props.row, index)"
-                                >删除</span>
-                                <span class="node-handle delete-node-text"
-                                    v-if="!props.row.canUse && props.row.nodeStatus !== 'CREATING'"
-                                    @click.stop="toNodeApplyPerm(props.row)"
-                                >申请权限</span>
-                            </div>
-                        </template>
-                    </bk-table-column>
-                </bk-table>
+                                </bk-popover>
+                            </span>
+                        </div>
+                    </template>
+                </bk-table-column>
+            </bk-table>
 
-                <empty-node v-if="showContent && !nodeList.length"
-                    :to-import-node="toImportNode"
-                    :empty-info="emptyInfo"
-                ></empty-node>
-            </section>
-        </div>
+            <empty-node v-if="showContent && !nodeList.length"
+                :to-import-node="toImportNode"
+                :to-create-node="toCreateNode"
+                :empty-info="emptyInfo"
+            ></empty-node>
+        </section>
+
+        <!-- 导入CMDB -->
+        <config-manage-node :node-select-conf="cmdbNodeSelectConf"
+            :node-list="nodeList"
+            @confirm-fn="confirmCmdbFn"
+            @cancel-fn="cancelCmdbFn"
+        ></config-manage-node>
+
+        <!-- 导入第三方构建机 -->
         <third-construct :construct-tool-conf="constructToolConf"
             :construct-import-form="constructImportForm"
             :connect-node-detail="connectNodeDetail"
@@ -139,25 +200,38 @@
             :is-agent="isAgent"
             :node-ip="nodeIp"
         ></third-construct>
+
+        <make-mirror-dialog
+            :current-node="createImageNode"
+            :make-mirror-conf="makeMirrorConf"
+            @cancelMakeMirror="makeMirrorConf.isShow = false"
+            @submitMakeMirror="requestList"
+        ></make-mirror-dialog>
     </div>
 </template>
 
 <script>
-    import { mapGetters } from 'vuex'
     import emptyNode from './empty_node'
     import thirdConstruct from '@/components/devops/environment/third-construct-dialog'
+    import configManageNode from '@/components/devops/environment/config-manage-node'
+    import dropdownList from '@/components/devops/environment/dropdown-list'
+    import makeMirrorDialog from '@/components/devops/environment/make-mirror-dialog'
     import { getQueryString } from '@/utils/util'
 
     export default {
         components: {
             emptyNode,
-            thirdConstruct
+            thirdConstruct,
+            configManageNode,
+            dropdownList,
+            makeMirrorDialog
         },
         data () {
             return {
                 timer: -1,
                 curEditNodeItem: '',
                 curEditNodeDisplayName: '',
+                createImageNode: '',
                 nodeIp: '',
                 isAgent: false,
                 isMultipleBtn: false,
@@ -176,7 +250,7 @@
                 // 页面loading
                 loading: {
                     isLoading: false,
-                    title: '数据加载中，请稍候'
+                    title: this.$t('environment.loadingTitle')
                 },
                 // 弹窗loading
                 dialogLoading: {
@@ -184,15 +258,15 @@
                     title: ''
                 },
                 emptyInfo: {
-                    title: '导入你的第一个节点',
-                    desc: '节点可以是你的开发机，也可以是团队公用的编译机'
+                    title: this.$t('environment.nodeInfo.emptyNode'),
+                    desc: this.$t('environment.nodeInfo.emptyNodeTips')
                 },
                 // 构建机弹窗配置
                 constructToolConf: {
                     isShow: false,
                     hasHeader: false,
                     quickClose: false,
-                    importText: '导入'
+                    importText: this.$t('environment.import')
                 },
                 // 构建机内容
                 constructImportForm: {
@@ -207,40 +281,47 @@
                     status: 'UN_IMPORT',
                     os: 'macOS 10.13.4'
                 },
+                // CMDB弹窗配置
+                cmdbNodeSelectConf: {
+                    isShow: false,
+                    quickClose: false,
+                    hasHeader: false,
+                    unselected: true,
+                    importText: '导入'
+                },
                 makeMirrorConf: {
                     isShow: false
                 },
                 // 权限配置
                 emptyTipsConfig: {
-                    title: '没有权限',
-                    desc: `你在该项目【节点管理】下没有【创建】权限，请切换项目访问或申请`,
+                    title: this.$t('environment.noPermission'),
+                    desc: this.$t('environment.nodeInfo.noCreateNodePermissionTips'),
                     btns: [
                         {
                             type: 'primary',
                             size: 'normal',
                             handler: this.changeProject,
-                            text: '切换项目'
+                            text: this.$t('environment.switchProject')
                         },
                         {
                             type: 'success',
                             size: 'normal',
                             handler: this.goToApplyPerm,
-                            text: '去申请权限'
+                            text: this.$t('environment.applyPermission')
                         }
                     ]
                 }
             }
         },
         computed: {
-            ...mapGetters('environment', [
-                'getNodeTypeMap',
-                'getNodeStatusMap'
-            ]),
             projectId () {
                 return this.$route.params.projectId
             },
             userInfo () {
                 return window.userInfo
+            },
+            isExtendTx () {
+                return VERSION_TYPE === 'tencent'
             }
         },
         watch: {
@@ -280,7 +361,7 @@
                 } = this
 
                 loading.isLoading = true
-                loading.title = '数据加载中，请稍候'
+                loading.title = this.$t('environment.loadingTitle')
 
                 try {
                     this.requestList()
@@ -310,16 +391,8 @@
 
                     res.map(item => {
                         item.isEnableEdit = item.nodeHashId === this.curEditNodeItem
-                        item.isMore = item.nodeHashId === this.lastCliCKNode.nodeHashId
                         this.nodeList.push(item)
                     })
-
-                    // for (let i = 0; i < this.nodeList.length; i++) {
-                    //     if (this.nodeList[i].canDelete && !this.nodeList[i].canUse) {
-                    //         this.isMultipleBtn = true
-                    //         break
-                    //     }
-                    // }
 
                     if (this.nodeList.length) {
                         this.loopCheck()
@@ -340,32 +413,6 @@
              *  轮询整个列表状态
              */
             async loopCheck () {
-                // let {
-                //     timer
-                // } = this
-                // let res
-
-                // clearTimeout(timer)
-
-                // for (let i = 0; i < this.nodeList.length; i++) {
-                //     let target = this.nodeList[i]
-                //     if (target.nodeType === 'BCS虚拟机' && (target.nodeStatus === '异常' ||
-                //         target.nodeStatus === '正在创建中' ||
-                //         target.nodeStatus === '未知' ||
-                //         !target.agentStatus)) {
-                //         res = true
-                //         break
-                //     } else {
-                //         res = false
-                //     }
-                // }
-
-                // if (res) {
-                //     this.timer = setTimeout(async () => {
-                //         await this.requestList()
-                //     }, 10000)
-                // }
-
                 clearTimeout(this.timer)
 
                 if (this.nodeList.length) {
@@ -378,11 +425,11 @@
                 this.$toggleProjectMenu(true)
             },
             goToApplyPerm () {
-                const url = `/backend/api/perm/apply/subsystem/?client_id=node&project_code=${this.projectId}&service_code=environment&role_creator=env_node`
+                const url = this.isExtendTx ? `/backend/api/perm/apply/subsystem/?client_id=node&project_code=${this.projectId}&service_code=environment&role_creator=env_node` : PERM_URL_PREFIX
                 window.open(url, '_blank')
             },
             toNodeApplyPerm (row) {
-                const url = `/backend/api/perm/apply/subsystem/?client_id=node&project_code=${this.projectId}&service_code=environment&role_manager=env_node:${row.nodeHashId}`
+                const url = this.isExtendTx ? `/backend/api/perm/apply/subsystem/?client_id=node&project_code=${this.projectId}&service_code=environment&role_manager=env_node:${row.nodeHashId}` : PERM_URL_PREFIX
                 window.open(url, '_blank')
             },
             dropdownIsShow (isShow) {
@@ -392,14 +439,41 @@
                     this.isDropdownShow = false
                 }
             },
+            async toCreateNode () {
+                try {
+                    const res = await this.$store.dispatch('environment/requestVmQuta', {
+                        projectId: this.projectId
+                    })
+
+                    if (res.devCloudVmEnabled) {
+                        this.$store.commit('environment/modifyProcessHead', {
+                            process: 'modelType',
+                            current: 0
+                        })
+                        this.$router.push({ name: 'createNode' })
+                    } else {
+                        const message = `${this.$t('environment.project')}${this.projectId}${this.$t('environment.nodeInfo.devCloudApply')}`
+                        const theme = 'warning'
+
+                        this.$bkMessage({
+                            message,
+                            theme
+                        })
+                    }
+                } catch (err) {
+                    const message = err.message ? err.message : err
+                    const theme = 'error'
+
+                    this.$bkMessage({
+                        message,
+                        theme
+                    })
+                }
+            },
             toNodeDetail (node) {
                 if (this.canShowDetail(node)) {
                     this.$router.push({ name: 'nodeDetail', params: { nodeHashId: node.nodeHashId } })
                 }
-            },
-            toInstall () {
-                const url = `${DOCS_URL_PREFIX}/%E6%89%80%E6%9C%89%E6%9C%8D%E5%8A%A1/%E7%8E%AF%E5%A2%83%E7%AE%A1%E7%90%86/installGseAgentGuide.html`
-                window.open(url, '_blank')
             },
             /**
              * 删除节点
@@ -415,10 +489,11 @@
                     style: {
                         textAlign: 'center'
                     }
-                }, `确定删除节点(${row.nodeId})？`)
+                }, `${this.$t('environment.nodeInfo.deleteNodetips', [row.displayName])}`)
 
                 this.$bkInfo({
-                    title: `删除`,
+                    theme: 'warning',
+                    type: 'warning',
                     subHeader: content,
                     confirmFn: async () => {
                         let message, theme
@@ -428,7 +503,7 @@
                                 params: params
                             })
 
-                            message = '删除成功'
+                            message = this.$t('environment.successfullyDeleted')
                             theme = 'success'
                         } catch (err) {
                             message = err.data ? err.data.message : err
@@ -452,10 +527,10 @@
                     style: {
                         textAlign: 'center'
                     }
-                }, `是否修改主机责任人为当前用户？`)
+                }, `${this.$t('environment.nodeInfo.modifyOperatorTips')}？`)
 
                 this.$bkInfo({
-                    title: `修改导入人`,
+                    title: this.$t('environment.nodeInfo.modifyImporter'),
                     subHeader: content,
                     confirmFn: async () => {
                         let message, theme
@@ -467,7 +542,7 @@
                                 params
                             })
 
-                            message = '修改成功'
+                            message = this.$t('environment.successfullyModified')
                             theme = 'success'
                         } catch (err) {
                             const message = err.message ? err.message : err
@@ -535,7 +610,7 @@
                             this.requestGateway()
                         }
                     } else {
-                        message = '第三方构建机接入灰度公测中'
+                        message = this.$t('environment.nodeInfo.grayscalePublicBeta')
                         theme = 'warning'
 
                         this.$bkMessage({
@@ -578,7 +653,7 @@
                         this.constructImportForm.location = this.gatewayList[0].zoneName
                     }
 
-                    if (node && node.nodeType === 'THIRDPARTY') { // 如果是第三方构建机类型则获取构建机详情以获得安装命令或下载链接
+                    if (node && ['DEVCLOUD', 'THIRDPARTY'].includes(node.nodeType)) { // 如果是第三方构建机类型则获取构建机详情以获得安装命令或下载链接
                         this.getVmBuildDetail(node.nodeHashId)
                     } else {
                         this.requestDevCommand()
@@ -660,15 +735,19 @@
                 if (['DEVCLOUD', 'THIRDPARTY'].includes(node.nodeType)) {
                     this.nodeIp = node.ip
                     this.isAgent = true
-                    this.constructToolConf.importText = '确定'
+                    this.constructToolConf.importText = this.$t('environment.comfirm')
                     this.switchConstruct(node)
                 } else if (['CC', 'CMDB'].includes(node.nodeType)) {
-                    const url = `${DOCS_URL_PREFIX}/所有服务/环境管理/installGseAgentGuide.html`
+                    const url = `${DOCS_URL_PREFIX}/x/WtMrAg`
                     window.open(url, '_blank')
                 }
             },
             async toImportNode (type) {
-                this.switchConstruct()
+                if (type === 'cmdb') {
+                    this.cmdbNodeSelectConf.isShow = true
+                } else {
+                    this.switchConstruct()
+                }
             },
             /**
              * 构建机导入节点
@@ -676,7 +755,7 @@
             async confirmFn () {
                 if (!this.dialogLoading.isLoading) {
                     this.dialogLoading.isLoading = true
-                    this.constructToolConf.importText = this.constructToolConf.importText === '确定' ? '提交中...' : '导入中...'
+                    this.constructToolConf.importText = this.constructToolConf.importText === this.$t('environment.comfirm') ? `${this.$t('environment.nodeInfo.submitting')}...` : `${this.$t('environment.nodeInfo.importing')}...`
 
                     let message, theme
 
@@ -686,7 +765,7 @@
                             agentId: this.constructImportForm.agentId
                         })
 
-                        message = this.constructToolConf.importText === '提交中...' ? '提交成功' : '导入成功'
+                        message = this.constructToolConf.importText === `${this.$t('environment.submitting')}...` ? this.$t('environment.successfullySubmited') : this.$t('environment.successfullyImported')
                         theme = 'success'
                         this.constructToolConf.isShow = false
                     } catch (err) {
@@ -700,7 +779,7 @@
 
                         this.dialogLoading.isLoading = false
                         this.dialogLoading.isShow = false
-                        this.constructToolConf.importText = '导入'
+                        this.constructToolConf.importText = this.$t('environment.import')
                         this.requestList()
                     }
                 }
@@ -710,7 +789,7 @@
                     this.isAgent = false
                     this.constructToolConf.isShow = false
                     this.dialogLoading.isShow = false
-                    this.constructToolConf.importText = '导入'
+                    this.constructToolConf.importText = this.$t('environment.import')
                 }
             },
             editNodeName (node) {
@@ -738,7 +817,7 @@
                             params
                         })
 
-                        message = '修改成功'
+                        message = this.$t('environment.successfullyModified')
                         theme = 'success'
                     } catch (err) {
                         message = err.message ? err.message : err
@@ -779,10 +858,11 @@
                     style: {
                         textAlign: 'center'
                     }
-                }, `确定销毁该节点？`)
+                }, `${this.$t('environment.nodeInfo.destoryNode')}？`)
 
                 this.$bkInfo({
-                    title: `确定`,
+                    theme: 'warning',
+                    type: 'warning',
                     subHeader: content,
                     confirmFn: async () => {
                         clearTimeout(this.timer)
@@ -794,7 +874,7 @@
                                 nodeHashId: node.nodeHashId
                             })
 
-                            message = '提交成功'
+                            message = this.$t('environment.successfullySubmited')
                             theme = 'success'
                         } catch (err) {
                             message = err.message ? err.message : err
@@ -809,15 +889,41 @@
                     }
                 })
             },
+            makeImage (node) {
+                this.createImageNode = node
+                // this.showCreateImage = true
+                this.makeMirrorConf.isShow = true
+            },
+            handleNode (name, canUse, node) {
+                if (canUse) {
+                    switch (name) {
+                        case 'destory':
+                            this.destoryNode(node)
+                            break
+                        case 'makeImage':
+                            this.makeImage(node)
+                            break
+                        default:
+                            break
+                    }
+                }
+            },
             canShowDetail (row) {
                 return row.nodeType === 'THIRDPARTY' || (row.nodeType === 'DEVCLOUD' && row.nodeStatus === 'NORMAL')
+            },
+            confirmCmdbFn (nodes) {
+                this.cmdbNodeSelectConf.isShow = false
+                this.requestList()
+            },
+            cancelCmdbFn () {
+                this.cmdbNodeSelectConf.isShow = false
             }
         }
     }
 </script>
 
 <style lang="scss">
-    @import './../scss/conf';
+@import './../scss/conf';
 
     %flex {
         display: flex;
@@ -828,53 +934,9 @@
         min-width: 1126px;
         height: 100%;
         overflow: hidden;
-        .node-header {
-            display: flex;
-            justify-content: space-between;
-            padding: 18px 20px;
-            width: 100%;
-            height: 60px;
-            border-bottom: 1px solid $borderWeightColor;
-            background-color: #fff;
-            box-shadow:0px 2px 5px 0px rgba(51,60,72,0.03);
-        }
-
-        .header-handler-row {
-            position: relative;
-            top: -4px;
-
-            .create-node-btn,
-            .import-node-btn,
-            .import-vmbuild-btn {
-                width: 76px;
-                height: 32px;
-                line-height: 30px;
-            }
-
-            .bk-icon {
-                margin-left: 0;
-                position: relative;
-                top: 0;
-                font-size: 12px;
-            }
-
-            .import-vmbuild-btn {
-                width: 150px;
-            }
-        }
 
         .create-node-btn {
             margin-right: 6px;
-        }
-
-        .node-container {
-            overflow: auto;
-            height: calc(100% - 60px);
-        }
-
-        .sub-view-port {
-            padding: 20px;
-            height: auto;
         }
 
         .prompt-operator,
@@ -990,7 +1052,6 @@
             .is-danger {
                 border-color: #ff5656;
                 background-color: #fff4f4;
-                
             }
         }
 

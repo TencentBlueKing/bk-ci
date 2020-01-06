@@ -5,14 +5,15 @@
         <p class="desc">{{ desc }}</p>
         <p class="btns-row">
             <slot name="btns">
-                <button class="bk-button"
-                    v-if="btns.length"
+                <bk-button theme="primary"
                     v-for="(btn, index) in btns"
                     :key="index"
                     :class="[`bk-${btn.type}`, `bk-button-${btn.size}`]"
-                    @click="btn.handler">
+                    @click="execFun(btn)"
+                    :disabled="btn.disable"
+                >
                     {{ btn.text }}
-                </button>
+                </bk-button>
             </slot>
         </p>
     </section>
@@ -48,6 +49,12 @@
         },
         created () {
             this.noDataSrc = noData
+        },
+
+        methods: {
+            execFun (btn) {
+                if (!btn.disable) btn.handler()
+            }
         }
     }
 </script>

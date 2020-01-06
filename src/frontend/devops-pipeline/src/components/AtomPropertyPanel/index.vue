@@ -108,28 +108,46 @@
 <script>
     import AtomOption from './AtomOption'
     import { mapGetters, mapActions, mapState } from 'vuex'
+    import RemoteAtom from './RemoteAtom'
     import QualitygateTips from '@/components/atomFormField/QualitygateTips'
     import BuildScript from './BuildScript'
     import Unity3dBuild from './Unity3dBuild'
     import NormalAtom from './NormalAtom'
     import VuexInput from '@/components/atomFormField/VuexInput'
     import Selector from '@/components/atomFormField/Selector'
+    import Gcloud from './Gcloud'
+    import JobExecuteTaskExt from './JobExecuteTaskExt'
     import FormField from './FormField'
     import BuildArchiveGet from './BuildArchiveGet'
+    import Codecc from './Codecc'
     import { isObject } from '@/utils/util'
     import { bus } from '@/utils/bus'
+    import JobDevopsFastExecuteScript from './JobDevopsFastExecuteScript'
+    import Tcls from './Tcls'
+    import JobDevOpsFastPushFile from './JobDevOpsFastPushFile'
+    import JobDevopsExecuteTaskExt from './JobDevopsExecuteTaskExt'
+    import ZhiyunInstanceMaintenance from './ZhiyunInstanceMaintenance'
     import TimerTrigger from './TimerTrigger'
+    import Tcm from './Tcm'
     import CodePullGitX from './CodePullGitX'
     import CodePullSvn from './CodePullSvn'
+    import ZhiyunUpdateAsyncEX from './ZhiyunUpdateAsyncEX'
     import IosCertInstall from './IosCertInstall'
+    import BcsContainerOp from './BcsContainerOp'
+    import NewBcsContainerOp from './NewBcsContainerOp'
     import CrossDistribute from './CrossDistribute'
+    import VersionExperience from './VersionExperience'
     import SendWechatNotify from './SendWechatNotify'
+    import WeTest from './WeTest'
+    import jobCloudsFastPush from './jobCloudsFastPush'
+    import jobCloudsFastExecuteScript from './jobCloudsFastExecuteScript'
     import CodeSvnWebHookTrigger from './CodeSvnWebHookTrigger'
     import ReportArchive from './ReportArchive'
     import PullGithub from './PullGithub'
     import CodeGithubWebHookTrigger from './CodeGithubWebHookTrigger'
     import PushImageToThirdRepo from './PushImageToThirdRepo'
     import ReferenceVariable from './ReferenceVariable'
+    import AtomFormWithAppID from './AtomFormWithAppID'
     import NormalAtomV2 from './NormalAtomV2'
     import CodeGitWebHookTrigger from './CodeGitWebHookTrigger'
     import SubPipelineCall from './SubPipelineCall'
@@ -138,22 +156,40 @@
     export default {
         name: 'atom-property-panel',
         components: {
+            RemoteAtom,
             ReferenceVariable,
             AtomOption,
             VuexInput,
             Selector,
+            Gcloud,
+            JobExecuteTaskExt,
             FormField,
             BuildArchiveGet,
+            Codecc,
+            JobDevopsFastExecuteScript,
+            Tcls,
+            JobDevOpsFastPushFile,
+            JobDevopsExecuteTaskExt,
+            ZhiyunInstanceMaintenance,
             CodePullGitX,
             CodePullSvn,
+            ZhiyunUpdateAsyncEX,
+            Tcm,
             IosCertInstall,
+            BcsContainerOp,
+            NewBcsContainerOp,
             CrossDistribute,
+            VersionExperience,
             SendWechatNotify,
             QualitygateTips,
+            WeTest,
             CodeGithubWebHookTrigger,
+            jobCloudsFastPush,
+            jobCloudsFastExecuteScript,
             ReportArchive,
             CodeSvnWebHookTrigger,
             PullGithub,
+            AtomFormWithAppID,
             NormalAtomV2,
             PushImageToThirdRepo,
             CodeGitWebHookTrigger,
@@ -316,28 +352,69 @@
                 return Array.isArray(this.atomVersionList) && this.atomVersionList.length > 0
             },
             AtomComponent () {
+                if (this.atomCode === 'ddtestatomdev' || this.atomCode === 'CodeccCheckAtom') {
+                    return RemoteAtom
+                }
                 if (this.isNewAtomTemplate(this.atom.htmlTemplateVersion)) {
                     return NormalAtomV2
                 }
                 switch (this.atomCode) {
+                    case 'comDistribution':
+                    case 'cloudStone':
+                    case 'openStatePushFile':
+                    case 'gseKitProcRunCmdDev':
+                    case 'gseKitProcRunCmdProd':
+                        return AtomFormWithAppID
                     case 'timerTrigger':
                         return TimerTrigger
                     case 'linuxScript':
                     case 'windowsScript':
                         return BuildScript
+                    case 'linuxPaasCodeCCScript':
+                        return Codecc
                     case 'unity3dBuild':
                         return Unity3dBuild
+                    case 'gcloud':
+                        return Gcloud
+                    case 'jobExecuteTaskExt':
+                        return JobExecuteTaskExt
                     case 'buildArchiveGet':
                         return BuildArchiveGet
+                    case 'jobDevOpsFastExecuteScript':
+                        return JobDevopsFastExecuteScript
+                    case 'tclsAddVersion':
+                        return Tcls
+                    case 'jobDevOpsFastPushFile':
+                        return JobDevOpsFastPushFile
+                    case 'jobDevOpsExecuteTaskExt':
+                        return JobDevopsExecuteTaskExt
+                    case 'zhiyunInstanceMaintenance':
+                        return ZhiyunInstanceMaintenance
                     case 'CODE_GIT':
                     case 'CODE_GITLAB':
                         return CodePullGitX
                     case 'CODE_SVN':
                         return CodePullSvn
+                    case 'zhiyunUpdateAsyncEX':
+                        return ZhiyunUpdateAsyncEX
+                    case 'tcmElement':
+                        return Tcm
                     case 'iosCertInstall':
                         return IosCertInstall
+                    case 'bcsContainerOp':
+                        return BcsContainerOp
+                    case 'bcsContainerOpByName':
+                        return NewBcsContainerOp
                     case 'acrossProjectDistribution':
                         return CrossDistribute
+                    case 'experience':
+                        return VersionExperience
+                    case 'wetestElement':
+                        return WeTest
+                    case 'jobCloudsFastPush':
+                        return jobCloudsFastPush
+                    case 'jobCloudsFastExecuteScript':
+                        return jobCloudsFastExecuteScript
                     case 'sendRTXNotify':
                         return SendWechatNotify
                     case 'reportArchive':
