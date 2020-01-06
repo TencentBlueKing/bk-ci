@@ -156,7 +156,7 @@ class DockerHostBuildService @Autowired constructor(
             if (dispatchType.imageType == ImageType.THIRD) {
                 if (!dispatchType.credentialId.isNullOrBlank()) {
                     val projectId = if (dispatchType.credentialProject.isNullOrBlank()) {
-                        logger.warn("dockerHostBuild:credentialProject=null,buildId=${event.buildId},credentialId=${dispatchType.credentialId}")
+                        logger.warn("dockerHostBuild:credentialProject=nullOrBlank,buildId=${event.buildId},credentialId=${dispatchType.credentialId}")
                         event.projectId
                     } else {
                         dispatchType.credentialProject!!
