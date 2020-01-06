@@ -28,6 +28,5 @@ package com.tencent.devops.common.api.pojo
 
 enum class ErrorType(val statusName: String, val visiable: Boolean) {
     SYSTEM("系统运行错误", true), // 0 平台运行报错
-    USER("业务逻辑错误", true), // 1 任务执行报错
-    UNKNOWN("暂未定义错误", true) // 2 还未处理的平台错误
+    USER("业务逻辑错误", true) // 1 任务执行报错
 }
