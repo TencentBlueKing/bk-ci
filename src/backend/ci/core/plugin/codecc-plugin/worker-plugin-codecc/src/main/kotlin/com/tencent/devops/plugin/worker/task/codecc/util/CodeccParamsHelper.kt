@@ -223,8 +223,8 @@ object CodeccParamsHelper {
             val shareToolFile = LinuxCodeccConstants.getToolPyFile()
             if (AgentEnv.getOS() != OSType.MAC_OS && !shareToolFile.exists()) {
                 throw throw TaskExecuteException(
-                    errorType = ErrorType.SYSTEM,
-                    errorCode = AtomErrorCode.USER_TASK_OPERATE_FAIL,
+                    errorType = ErrorType.USER,
+                    errorCode = AtomErrorCode.USER_RESOURCE_NOT_FOUND,
                     errorMsg = "The mutli tool file (${shareToolFile.canonicalPath}) is not exist"
                 )
             }

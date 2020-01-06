@@ -72,9 +72,9 @@ object CodeccRepoHelper {
     ): List<CodeccExecuteConfig.RepoItem> {
         val buildTasks = pipelineTaskApi.getAllBuildTask().data
             ?: throw TaskExecuteException(
-                ErrorType.SYSTEM,
-                AtomErrorCode.SYSTEM_INNER_TASK_ERROR,
-                "get build task fail"
+                errorType = ErrorType.SYSTEM,
+                errorCode = AtomErrorCode.SYSTEM_INNER_TASK_ERROR,
+                errorMsg = "get build task fail"
             )
         val codeccTask = buildTasks.first { it.taskType in codeccElementTypes }
 
