@@ -32,7 +32,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.archive.element.ReportArchiveElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
-import com.tencent.devops.process.pojo.AtomErrorCode
+import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.common.api.pojo.ErrorType
@@ -95,7 +95,7 @@ open class MarketAtomTask : ITask() {
             atomEnvResult.data ?: throw TaskExecuteException(
                 errorMsg = "can not found $atomName: ${atomEnvResult.message}",
                 errorType = ErrorType.SYSTEM,
-                errorCode = AtomErrorCode.SYSTEM_WORKER_LOADING_ERROR
+                errorCode = ErrorCode.SYSTEM_WORKER_LOADING_ERROR
             )
 
         // val atomWorkspace = File("${workspace.absolutePath}/${atomCode}_${buildTask.taskId}_data")
@@ -105,7 +105,7 @@ open class MarketAtomTask : ITask() {
             atomEnvResult.data ?: throw TaskExecuteException(
                 errorMsg = "create directory fail! please check ${atomTmpSpace.absolutePath}",
                 errorType = ErrorType.SYSTEM,
-                errorCode = AtomErrorCode.SYSTEM_WORKER_LOADING_ERROR
+                errorCode = ErrorCode.SYSTEM_WORKER_LOADING_ERROR
             )
         }
 
@@ -150,7 +150,7 @@ open class MarketAtomTask : ITask() {
             throw TaskExecuteException(
                 errorMsg = "plugin input illegal",
                 errorType = ErrorType.SYSTEM,
-                errorCode = AtomErrorCode.SYSTEM_WORKER_LOADING_ERROR
+                errorCode = ErrorCode.SYSTEM_WORKER_LOADING_ERROR
             )
         }
 
@@ -188,7 +188,7 @@ open class MarketAtomTask : ITask() {
             throw TaskExecuteException(
                 errorMsg = "can not found any plugin cmd",
                 errorType = ErrorType.SYSTEM,
-                errorCode = AtomErrorCode.SYSTEM_WORKER_LOADING_ERROR
+                errorCode = ErrorCode.SYSTEM_WORKER_LOADING_ERROR
             )
         }
 
@@ -290,7 +290,7 @@ open class MarketAtomTask : ITask() {
                 }
                 throw TaskExecuteException(
                     errorType = ErrorType.USER,
-                    errorCode = AtomErrorCode.USER_RESOURCE_NOT_FOUND,
+                    errorCode = ErrorCode.USER_RESOURCE_NOT_FOUND,
                     errorMsg = defaultMessage.toString()
                 )
             }
@@ -489,7 +489,7 @@ open class MarketAtomTask : ITask() {
                 throw TaskExecuteException(
                     errorMsg = "MarketAtom failed with ${atomResult.status}: ${atomResult.message}",
                     errorType = ErrorType.USER,
-                    errorCode = atomResult.errorCode ?: AtomErrorCode.USER_DEFAULT_ERROR
+                    errorCode = atomResult.errorCode ?: ErrorCode.USER_DEFAULT_ERROR
                 )
             }
         }
@@ -601,7 +601,7 @@ open class MarketAtomTask : ITask() {
             throw TaskExecuteException(
                 errorMsg = "Plugin File Sha1 is wrong! wrong sha1: $fileSha1",
                 errorType = ErrorType.SYSTEM,
-                errorCode = AtomErrorCode.SYSTEM_WORKER_LOADING_ERROR
+                errorCode = ErrorCode.SYSTEM_WORKER_LOADING_ERROR
             )
         }
     }
@@ -623,7 +623,7 @@ open class MarketAtomTask : ITask() {
             throw TaskExecuteException(
                 errorMsg = "download plugin execute file fail",
                 errorType = ErrorType.SYSTEM,
-                errorCode = AtomErrorCode.SYSTEM_WORKER_LOADING_ERROR
+                errorCode = ErrorCode.SYSTEM_WORKER_LOADING_ERROR
             )
         }
     }
