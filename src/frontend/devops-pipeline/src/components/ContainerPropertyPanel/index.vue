@@ -35,8 +35,13 @@
                                 <i class="bk-icon icon-plus-circle"></i>
                                 <span class="text">{{ $t('editPage.addThirdSlave') }}/span>
                                 </span></div>
+                            <div v-if="container.baseOS === 'LINUX'" class="bk-selector-create-item cursor-pointer" @click.stop.prevent="addDockerImage">
+                                <i class="bk-icon icon-plus-circle"></i>
+                                <span class="text">{{ $t('editPage.addImage') }}</span>
+                            </div>
                         </template>
                     </selector>
+                    <span class="bk-form-help" v-if="isPublicResourceType">{{ $t('editPage.publicResTips') }}</span>
                 </form-field>
 
                 <form-field :label="$t('editPage.image')" v-if="['DOCKER', 'IDC', 'PUBLIC_DEVCLOUD'].includes(buildResourceType) && !isLoadingImage" :required="true" :is-error="errors.has(&quot;buildImageVersion&quot;) || errors.has(&quot;buildResource&quot;)" :error-msg="$t('editPage.imageErrMgs')">
@@ -155,7 +160,7 @@
             </div>
 
             <image-selector :is-show.sync="showImageSelector"
-                v-if="['DOCKER', 'IDC', 'PUBLIC_DEVCLOUD'].includes(buildResourceType)"
+                v-if="['DOCKER', 'IDC', 'PUBLIC_DEVCLOUD'].includes(buildResourceType) && !isLoadingImage"
                 :code="buildImageCode"
                 :build-resource-type="buildResourceType"
                 @choose="choose"
@@ -207,7 +212,6 @@
         },
         data () {
             return {
-                DOCS_URL_PREFIX,
                 showImageSelector: false,
                 isVersionLoading: false,
                 isLoadingImage: false,

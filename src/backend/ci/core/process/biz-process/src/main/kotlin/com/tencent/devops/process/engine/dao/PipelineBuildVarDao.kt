@@ -26,6 +26,8 @@
 
 package com.tencent.devops.process.engine.dao
 
+import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
+import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.model.process.Tables.T_PIPELINE_BUILD_VAR
 import com.tencent.devops.model.process.tables.records.TPipelineBuildVarRecord
 import org.jooq.DSLContext
@@ -96,6 +98,27 @@ class PipelineBuildVarDao @Autowired constructor() {
         }
     }
 
+    fun getVarsWithType(dslContext: DSLContext, buildId: String, key: String? = null): List<BuildParameters> {
+
+        with(T_PIPELINE_BUILD_VAR) {
+            val where = dslContext.selectFrom(this)
+                .where(BUILD_ID.eq(buildId))
+            if (key != null) {
+                where.and(KEY.eq(key))
+            }
+            val result = where.fetch()
+            val list = mutableListOf<BuildParameters>()
+            result?.forEach {
+                if (it.varType != null) {
+                    list.add(BuildParameters(it.key, it.value, BuildFormPropertyType.valueOf(it.varType)))
+                } else {
+                    list.add(BuildParameters(it.key, it.value))
+                }
+            }
+            return list
+        }
+    }
+
     @Suppress("unused")
     fun deleteBuildVar(dslContext: DSLContext, buildId: String, varName: String? = null): Int {
         return with(T_PIPELINE_BUILD_VAR) {
@@ -112,26 +135,41 @@ class PipelineBuildVarDao @Autowired constructor() {
         projectId: String,
         pipelineId: String,
         buildId: String,
-        variables: Map<String, Any>
+        variables: List<BuildParameters>
     ) {
         val sets =
             mutableListOf<InsertOnDuplicateSetMoreStep<TPipelineBuildVarRecord>>()
         with(T_PIPELINE_BUILD_VAR) {
             val maxLength = VALUE.dataType.length()
-            variables.forEach { (key, value) ->
-                val valueString = value.toString()
+            variables.forEach { v ->
+                val valueString = v.value.toString()
                 if (valueString.length > maxLength) {
-                    logger.warn("[$buildId]|[$pipelineId]|ABANDON_DATA|len[$key]=${valueString.length}(max=$maxLength)")
+                    logger.warn("[$buildId]|[$pipelineId]|ABANDON_DATA|len[${v.key}]=${valueString.length}(max=$maxLength)")
                     return@forEach
                 }
-                val set = dslContext.insertInto(this)
-                    .set(PROJECT_ID, projectId)
-                    .set(PIPELINE_ID, pipelineId)
-                    .set(BUILD_ID, buildId)
-                    .set(KEY, key)
-                    .set(VALUE, valueString)
-                    .onDuplicateKeyUpdate()
-                    .set(VALUE, valueString)
+
+                val set: InsertOnDuplicateSetMoreStep<TPipelineBuildVarRecord>
+                if (v.valueType != null) {
+                    set = dslContext.insertInto(this)
+                        .set(PROJECT_ID, projectId)
+                        .set(PIPELINE_ID, pipelineId)
+                        .set(BUILD_ID, buildId)
+                        .set(KEY, v.key)
+                        .set(VALUE, v.value.toString())
+                        .set(VAR_TYPE, v.valueType!!.name)
+                        .onDuplicateKeyUpdate()
+                        .set(VALUE, v.value.toString())
+                        .set(VAR_TYPE, v.valueType!!.name)
+                } else {
+                    set = dslContext.insertInto(this)
+                        .set(PROJECT_ID, projectId)
+                        .set(PIPELINE_ID, pipelineId)
+                        .set(BUILD_ID, buildId)
+                        .set(KEY, v.key)
+                        .set(VALUE, v.value.toString())
+                        .onDuplicateKeyUpdate()
+                        .set(VALUE, v.value.toString())
+                }
                 sets.add(set)
             }
         }

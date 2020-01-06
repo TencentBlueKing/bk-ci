@@ -65,7 +65,7 @@ export default {
         return state
     },
     [SET_PIPELINE_EDITING]: (state, editing) => {
-        Vue.set(state.pipeline, 'editing', editing)
+        if (state.pipeline) Vue.set(state.pipeline, 'editing', editing)
         return state
     },
     [SET_CONTAINER_DETAIL]: (state, { containerTypeList, containerModalMap }) => {

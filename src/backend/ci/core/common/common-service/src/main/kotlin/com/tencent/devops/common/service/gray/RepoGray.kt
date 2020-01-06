@@ -39,4 +39,6 @@ class RepoGray {
 
     fun grayProjectSet(redisOperation: RedisOperation) =
         (redisOperation.getSetMembers(repoGrayRedisKey) ?: emptySet()).filter { !it.isBlank() }.toSet()
+
+    fun getRepoGrayRedisKey() = repoGrayRedisKey
 }

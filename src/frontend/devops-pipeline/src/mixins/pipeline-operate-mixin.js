@@ -49,7 +49,7 @@ export default {
             return this.$route.params.pipelineId
         },
         longProjectId () {
-            return this.$store.state.curProject.project_id || ''
+            return this.$store.state.curProject.projectId || ''
         },
         isTemplatePipeline () {
             return this.curPipeline && this.curPipeline.instanceFromTemplate
@@ -158,7 +158,7 @@ export default {
             const content = `${this.$t('newlist.deletePipeline')}: ${pipelineName}`
 
             try {
-                await navConfirm({ title: this.$t('subpage.confirmDelete'), content })
+                await navConfirm({ type: 'warning', content })
 
                 await this.removePipeline({
                     projectId: this.projectId,
@@ -319,12 +319,39 @@ export default {
             }
             return this.$ajax.put(`/${PROCESS_API_URL_PREFIX}/user/pipelines/${projectId}/${pipelineId}`, pipeline)
         },
+        // 补全wechatGroup末尾分号
+        wechatGroupCompletion (setting) {
+            try {
+                let successWechatGroup = setting.successSubscription.wechatGroup
+                let failWechatGroup = setting.failSubscription.wechatGroup
+                if (successWechatGroup && !/\;$/.test(successWechatGroup)) {
+                    successWechatGroup = `${successWechatGroup};`
+                }
+                if (failWechatGroup && !/\;$/.test(failWechatGroup)) {
+                    failWechatGroup = `${failWechatGroup};`
+                }
+                return {
+                    ...setting,
+                    successSubscription: {
+                        ...setting.successSubscription,
+                        wechatGroup: successWechatGroup
+                    },
+                    failSubscription: {
+                        ...setting.failSubscription,
+                        wechatGroup: failWechatGroup
+                    }
+                }
+            } catch (e) {
+                console.warn(e)
+                return setting
+            }
+        },
         getPipelineSetting () {
             const { pipelineSetting, projectId } = this
-            return {
+            return this.wechatGroupCompletion({
                 ...pipelineSetting,
                 projectId
-            }
+            })
         },
         savePipelineSetting () {
             const { $route } = this
@@ -348,7 +375,7 @@ export default {
                 })
 
                 if (res.id) {
-                    message = this.$t('subpage.retrySuc')
+                    message = this.$t('subpage.rebuildSuc')
                     theme = 'success'
                     if (goDetail) {
                         this.$router.replace({
@@ -362,7 +389,7 @@ export default {
                     }
                     this.$emit('update-table')
                 } else {
-                    message = this.$t('subpage.retryFail')
+                    message = this.$t('subpage.rebuildFail')
                     theme = 'error'
                 }
             } catch (err) {
@@ -388,10 +415,10 @@ export default {
             }
             // 清除流水线参数渲染过程中添加的key
             this.formatParams(pipeline)
-            const finalSetting = {
+            const finalSetting = this.wechatGroupCompletion({
                 ...pipelineSetting,
                 projectId: $route.params.projectId
-            }
+            })
             // 请求执行构建
             return this.$ajax.post(`/${PROCESS_API_URL_PREFIX}/user/pipelines/${$route.params.projectId}/${$route.params.pipelineId}/saveAll`, {
                 model: {

@@ -96,7 +96,6 @@ export default {
     setPipelineContainer ({ commit }, { oldContainers, containers }) {
         commit(SET_PIPELINE_CONTAINER, { oldContainers, containers })
     },
-
     requestTemplate: async ({ commit, dispatch }, { projectId, templateId, version }) => {
         try {
             const url = version ? `/${PROCESS_API_URL_PREFIX}/user/templates/projects/${projectId}/templates/${templateId}?version=${version}` : `/${PROCESS_API_URL_PREFIX}/user/templates/projects/${projectId}/templates/${templateId}`

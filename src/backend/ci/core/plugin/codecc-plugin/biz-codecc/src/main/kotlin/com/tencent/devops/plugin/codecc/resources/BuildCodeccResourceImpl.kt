@@ -29,7 +29,8 @@ package com.tencent.devops.plugin.codecc.resources
 import com.tencent.devops.common.api.enums.OSType
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.plugin.codecc.api.BuildCodeccResource
+import com.tencent.devops.plugin.api.BuildCodeccResource
+import com.tencent.devops.plugin.codecc.pojo.CodeccCallback
 import com.tencent.devops.plugin.codecc.service.CodeccDownloaderService
 import com.tencent.devops.plugin.codecc.service.CodeccService
 import org.springframework.beans.factory.annotation.Autowired
@@ -55,5 +56,9 @@ class BuildCodeccResourceImpl @Autowired constructor(
 
     override fun saveCodeccTask(projectId: String, pipelineId: String, buildId: String): Result<Int> {
         return Result(codeccService.saveCodeccTask(projectId, pipelineId, buildId))
+    }
+
+    override fun getCodeccReport(buildId: String): Result<CodeccCallback?> {
+        return Result(codeccService.getCodeccReport(buildId))
     }
 }

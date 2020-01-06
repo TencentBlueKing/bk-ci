@@ -20,6 +20,7 @@
 import { UPDATE_CURRENT_ATOM } from './constants'
 
 const prefix = 'store/api'
+const repositoryPrefix = 'repository/api'
 const projectPrefix = 'project/api'
 const supportPrefix = 'support/api'
 const Vue = window.Vue
@@ -172,6 +173,13 @@ export const actions = {
     },
 
     /**
+     * git OAuth授权
+     */
+    checkIsOAuth ({ commit }, { type, atomCode }) {
+        return vue.$ajax.get(`${repositoryPrefix}/user/git/isOauth?redirectUrlType=${type}&atomCode=${atomCode}`)
+    },
+
+    /**
      * 新增流水线插件
      */
     createNewAtom ({ commit }, { params }) {
@@ -256,6 +264,13 @@ export const actions = {
     },
 
     /**
+     * 重新构建
+     */
+    rebuild ({ commit }, { atomId, projectId }) {
+        return vue.$ajax.put(`${prefix}/user/market/desk/atom/release/rebuild/${atomId}?projectId=${projectId}`)
+    },
+
+    /**
      * 查看流水线插件可见范围
      */
     requestVisibleList ({ commit }, { atomCode }) {
@@ -281,6 +296,13 @@ export const actions = {
      */
     requestDeleteMember ({ commit }, { atomCode, id }) {
         return vue.$ajax.delete(`${prefix}/user/market/desk/atom/member/delete?atomCode=${atomCode}&id=${id}`)
+    },
+
+    /**
+     * 根据机构类型和机构ID查看机构列表
+     */
+    requestOrganizations ({ commit }, { type, id }) {
+        return vue.$ajax.get(`${projectPrefix}/user/organizations/types/${type}/ids/${id}`)
     },
 
     /**
@@ -323,6 +345,13 @@ export const actions = {
      */
     requestAtomStatistic ({ commit }, { atomCode }) {
         return vue.$ajax.get(`${prefix}/user/market/atom/statistic/${atomCode}`)
+    },
+
+    /**
+     * 当前用户信息
+     */
+    requestUserInfo ({ commit }) {
+        return vue.$ajax.get(`${projectPrefix}/user/users`)
     },
 
     /**

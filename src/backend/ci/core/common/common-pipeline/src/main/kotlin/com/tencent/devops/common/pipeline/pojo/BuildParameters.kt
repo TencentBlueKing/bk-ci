@@ -26,6 +26,7 @@
 
 package com.tencent.devops.common.pipeline.pojo
 
+import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -34,5 +35,7 @@ data class BuildParameters(
     @ApiModelProperty("元素值ID-标识符", required = true)
     val key: String,
     @ApiModelProperty("元素值名称-显示用", required = true)
-    val value: Any
+    val value: Any,
+    @ApiModelProperty("元素值类型", required = false)
+    val valueType: BuildFormPropertyType? = null
 )

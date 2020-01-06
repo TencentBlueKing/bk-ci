@@ -40,7 +40,8 @@ class LinuxCodeCCScriptElementBizPlugin : ElementBizPlugin<LinuxCodeCCScriptElem
         pipelineId: String,
         pipelineName: String,
         userId: String,
-        channelCode: ChannelCode
+        channelCode: ChannelCode,
+        create: Boolean
     ) {
     }
 
