@@ -32,15 +32,17 @@ const store = {
         devCloudVmQuta: {},
         currentSelectedModel: {},
         processHeadConf: {
-            title: '节点',
             current: 0,
-            list: ['选择机型', '确认信息'],
             process: 'modelType'
         }
     },
     getters: {
-        getNodeTypeMap: state => state.nodeTypes,
-        getNodeStatusMap: state => state.nodeStatus
+        getProcessHeadConf: state => () => {
+            const envLocale = window.devops.$i18n.t('environment')
+            state.processHeadConf.title = envLocale.node
+            state.processHeadConf.list = [envLocale.selectModel, envLocale.confirmInfo]
+            return state.processHeadConf
+        }
     },
     mutations,
     actions

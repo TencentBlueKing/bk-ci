@@ -23,7 +23,7 @@ import './scss/app.scss'
 
 window.Pages = window.Pages || {}
 window.Pages['environment'] = {
-    title: '环境管理',
+    title: 'environmentManage',
     routes,
     store
 }

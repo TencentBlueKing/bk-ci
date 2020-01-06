@@ -18,9 +18,13 @@
  */
 
 const webpackBaseConfig = require('../webpack.base')
+const webpack = require('webpack')
+const getConfig = require('./constConfig.js')
 
 module.exports = (env, argv) => {
-    return webpackBaseConfig({
+    const version = env && env.version ? env.version : 'tencent'
+    const constConfig = getConfig(version)
+    const config = webpackBaseConfig({
         env,
         argv,
         entry: {
@@ -28,6 +32,11 @@ module.exports = (env, argv) => {
         },
         publicPath: '/artifactory/',
         dist: '/artifactory',
-        port: 8001
+        port: 8008
     })
+    config.plugins = [
+        ...config.plugins,
+        new webpack.DefinePlugin(constConfig)
+    ]
+    return config
 }

@@ -58,6 +58,9 @@
                     <p class="comments-more" v-if="!isLoadEnd && commentList.length > 0" @click="getComments(true)"> {{ $t('store.阅读更多内容') }} </p>
                     <p class="g-empty comment-empty" v-if="commentList.length <= 0"> {{ $t('store.空空如洗，快来评论一下吧！') }} </p>
                 </bk-tab-panel>
+                <bk-tab-panel name="yaml" :label="$t('store.yaml')" v-if="type === 'atom'">
+                    <section class="plugin-yaml"></section>
+                </bk-tab-panel>
             </bk-tab>
             <transition name="atom-fade">
                 <commentDialog v-if="showComment" @freshComment="freshComment" @closeDialog="showComment = false" :name="detail.name" :code="detailCode" :id="detailId" :comment-id="commentInfo.commentId"></commentDialog>
@@ -72,8 +75,15 @@
     import comment from '../../components/common/comment'
     import commentDialog from '../../components/common/comment/commentDialog.vue'
     import animatedInteger from '../../components/common/animatedInteger'
+    import ideInfo from '../../components/common/detail-info/ide'
     import atomInfo from '../../components/common/detail-info/atom'
     import templateInfo from '../../components/common/detail-info/template'
+    import imageInfo from '../../components/common/detail-info/image'
+
+    import CodeMirror from 'codemirror'
+    import 'codemirror/mode/yaml/yaml'
+    import 'codemirror/lib/codemirror.css'
+    import 'codemirror/theme/3024-night.css'
 
     export default {
         components: {
@@ -82,7 +92,9 @@
             commentDialog,
             animatedInteger,
             atomInfo,
-            templateInfo
+            templateInfo,
+            ideInfo,
+            imageInfo
         },
 
         filters: {
@@ -118,14 +130,29 @@
                 showComment: false,
                 showInstallConfirm: false,
                 commentInfo: {},
+                codeEditor: {},
+                currentTab: 'des',
+                codeMirrorCon: {
+                    lineNumbers: true,
+                    tabMode: 'indent',
+                    mode: 'yaml',
+                    theme: '3024-night',
+                    autoRefresh: true,
+                    cursorBlinkRate: 0,
+                    readOnly: true
+                },
                 methodsGenerator: {
                     comment: {
                         atom: (postData) => this.requestAtomComments(postData),
-                        template: (postData) => this.requestTemplateComments(postData)
+                        template: (postData) => this.requestTemplateComments(postData),
+                        ide: (postData) => this.requestIDEComments(postData),
+                        image: (postData) => this.requestImageComments(postData)
                     },
                     scoreDetail: {
                         atom: () => this.requestAtomScoreDetail(this.detailCode),
-                        template: () => this.requestTemplateScoreDetail(this.detailCode)
+                        template: () => this.requestTemplateScoreDetail(this.detailCode),
+                        ide: () => this.requestIDEScoreDetail(this.detailCode),
+                        image: () => this.requestImageScoreDetail(this.detailCode)
                     }
                 }
             }
@@ -143,7 +170,17 @@
             }
         },
 
-        created () {
+        watch: {
+            currentTab (val) {
+                if (val === 'yaml') {
+                    setTimeout(() => {
+                        this.codeEditor.refresh()
+                    }, 0)
+                }
+            }
+        },
+
+        mounted () {
             this.getDetail()
         },
         
@@ -157,7 +194,15 @@
                 'requestAtomScoreDetail',
                 'requestTemplateComments',
                 'requestTemplateScoreDetail',
-                'getUserApprovalInfo'
+                'requestIDE',
+                'requestIDEComments',
+                'requestIDEScoreDetail',
+                'requestImage',
+                'requestImageComments',
+                'requestImageScoreDetail',
+                'getUserApprovalInfo',
+                'requestImageCategorys',
+                'getAtomYaml'
             ]),
 
             freshComment (comment) {
@@ -186,7 +231,9 @@
                 const type = this.$route.params.type
                 const funObj = {
                     atom: () => this.getAtomDetail(),
-                    template: () => this.getTemplateDetail()
+                    template: () => this.getTemplateDetail(),
+                    ide: () => this.getIDEDetail(),
+                    image: () => this.getImageDetail()
                 }
                 const getDetailMethod = funObj[type]
 
@@ -204,13 +251,17 @@
                 return Promise.all([
                     this.requestAtom({ atomCode }),
                     this.requestAtomStatistic({ atomCode }),
-                    this.getUserApprovalInfo(atomCode)
-                ]).then(([atomDetail, atomStatic, userAppInfo]) => {
+                    this.getUserApprovalInfo(atomCode),
+                    this.getAtomYaml({ atomCode })
+                ]).then(([atomDetail, atomStatic, userAppInfo, yaml]) => {
                     this.detail = atomDetail || {}
                     this.detailId = atomDetail.atomId
                     this.detail.downloads = atomStatic.downloads || 0
                     this.commentInfo = atomDetail.userCommentInfo || {}
                     this.$set(this.detail, 'approveStatus', (userAppInfo || {}).approveStatus)
+                    const ele = document.querySelector('.plugin-yaml')
+                    this.codeEditor = CodeMirror(ele, this.codeMirrorCon)
+                    this.codeEditor.setValue(yaml || '')
                 })
             },
 
@@ -221,6 +272,35 @@
                     this.detailId = templateDetail.templateId
                     this.detail.name = templateDetail.templateName
                     this.commentInfo = templateDetail.userCommentInfo || {}
+                })
+            },
+
+            getIDEDetail () {
+                const atomCode = this.detailCode
+
+                return this.requestIDE({ atomCode }).then((res) => {
+                    this.detail = res || {}
+                    this.detailId = res.atomId
+                    this.detail.name = res.atomName
+                    this.commentInfo = res.userCommentInfo || {}
+                })
+            },
+
+            getImageDetail () {
+                const imageCode = this.detailCode
+
+                return Promise.all([
+                    this.requestImageCategorys(),
+                    this.requestImage({ imageCode })
+                ]).then(([categorys, res]) => {
+                    this.detail = res || {}
+                    this.detailId = res.imageId
+                    this.detail.name = res.imageName
+                    this.commentInfo = res.userCommentInfo || {}
+
+                    const currentCategory = categorys.find((x) => (x.categoryCode === res.category))
+                    const setting = currentCategory.settings || {}
+                    this.detail.needInstallToProject = setting.needInstallToProject
                 })
             },
 

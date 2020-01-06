@@ -25,7 +25,7 @@
                 newModel: {},
                 list: [],
                 tmpRevision: '',
-                tips: '当前流水线存在多个代码拉取插件，你需设置此字段以解决冲突问题'
+                tips: this.$t('editPage.repoConflict')
             }
         },
         computed: {
@@ -37,9 +37,6 @@
                 'getAllContainers',
                 'isCodePullAtom'
             ]),
-            isThirdDocker () {
-                return this.container && this.container.dispatchType && this.container.dispatchType.buildType === 'DOCKER' && ['tlinux1.2', 'tlinux2.2'].indexOf(this.container.dispatchType.value) === -1
-            },
             pipelineStages () {
                 const { getAllContainers } = this
                 return getAllContainers(this.pipeline.stages || []) || []
@@ -169,12 +166,12 @@
                     id: paramId,
                     type: 'STRING',
                     defaultValue: 'HEAD',
-                    desc: 'Svn拉取代码插件指定的版本号',
+                    desc: this.$t('editPage.svnVersionTips'),
                     required: true
                 })
             },
             setSvnVersionState () {
-                if (this.isThirdParty || this.isThirdDocker) {
+                if (this.isThirdParty) {
                     this.newModel.svnVersion && this.newModel.svnVersion.list.map(item => {
                         item.disabled = false
                     })

@@ -21,6 +21,22 @@ function errorHandler (error: object) {
     })
 }
 
+request.interceptors.request.use(config => {
+    if (/(\/?ms\/backend|\/?backend)/.test(config.url)) {
+        return config   
+    }
+    const routePid = getCurrentPid()
+    return {
+        ...config,
+        headers: routePid ? {
+            ...(config.headers || {}),
+            'X-DEVOPS-PROJECT-ID': routePid
+        } : config.headers
+    };
+  }, function (error) {
+    return Promise.reject(error);
+  });
+
 request.interceptors.response.use(response => {
     injectCSRFTokenToHeaders() // 注入csrfToken
     const { data: { code, data, message, status }, status: httpStatus } = response
@@ -54,6 +70,17 @@ const injectCSRFTokenToHeaders = () => {
         request.defaults.headers.common['X-CSRFToken'] = CSRFToken
     } else {
         console.warn('Can not find backend_csrftoken in document.cookie')
+    }
+}
+
+
+const getCurrentPid = () => {
+    try {
+        // @ts-ignore
+        const cookiePid = cookie.get(X_DEVOPS_PROJECT_ID)
+        return window.GLOBAL_PID || cookiePid
+    } catch (e) {
+        return undefined
     }
 }
 
