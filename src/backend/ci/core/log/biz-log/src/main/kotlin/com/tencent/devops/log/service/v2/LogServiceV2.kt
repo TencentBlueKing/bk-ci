@@ -335,35 +335,6 @@ class LogServiceV2 @Autowired constructor(
         }
     }
 
-    fun queryMoreOriginLogsAfterLine(
-        buildId: String,
-        start: Long,
-        tag: String? = null,
-        jobId: String? = null,
-        executeCount: Int?
-    ): QueryLogs {
-        val startEpoch = System.currentTimeMillis()
-        var success = false
-        try {
-            val indexAndType = indexServiceV2.getIndexAndType(buildId)
-            val index = indexAndType.index
-            val type = indexAndType.type
-            val result = doQueryMoreOriginLogsAfterLine(
-                buildId = buildId,
-                index = index,
-                type = type,
-                start = start,
-                tag = tag,
-                jobId = jobId,
-                executeCount = executeCount
-            )
-            success = logStatusSuccess(result.status)
-            return result
-        } finally {
-            logBeanV2.query(System.currentTimeMillis() - startEpoch, success)
-        }
-    }
-
     fun queryLineNoByKeywords(
         buildId: String,
         keywordsStr: String?,

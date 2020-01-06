@@ -56,12 +56,12 @@ class LogServiceDispatcher @Autowired constructor(
     ): Result<QueryLogs> {
         return Result(
             logServiceV2.queryInitLogs(
-                buildId,
-                isAnalysis ?: false,
-                queryKeywords,
-                tag,
-                jobId,
-                executeCount
+                buildId = buildId,
+                isAnalysis = isAnalysis ?: false,
+                keywordsStr = queryKeywords,
+                tag = tag,
+                jobId = jobId,
+                executeCount = executeCount
             )
         )
     }
@@ -77,11 +77,11 @@ class LogServiceDispatcher @Autowired constructor(
     ): Result<QueryLineNo> {
         return Result(
             logServiceV2.queryLineNoByKeywords(
-                buildId,
-                queryKeywords,
-                tag,
-                jobId,
-                executeCount
+                buildId = buildId,
+                keywordsStr = queryKeywords,
+                tag = tag,
+                jobId = jobId,
+                executeCount = executeCount
             )
         )
     }
@@ -101,14 +101,14 @@ class LogServiceDispatcher @Autowired constructor(
     ): Result<PageQueryLogs> {
             return Result(
                 logServiceV2.queryInitLogsPage(
-                    buildId,
-                    isAnalysis ?: false,
-                    queryKeywords,
-                    tag,
-                    jobId,
-                        executeCount,
-                    page ?: -1,
-                    pageSize ?: -1
+                    buildId = buildId,
+                    isAnalysis = isAnalysis ?: false,
+                    keywordsStr = queryKeywords,
+                    tag = tag,
+                    jobId = jobId,
+                    executeCount = executeCount,
+                    page = page ?: -1,
+                    pageSize = pageSize ?: -1
                 )
             )
     }
@@ -127,14 +127,14 @@ class LogServiceDispatcher @Autowired constructor(
     ): Result<QueryLogs> {
             return Result(
                 logServiceV2.queryMoreLogsBetweenLines(
-                    buildId,
-                    num ?: 100,
-                    fromStart ?: true,
-                    start,
-                    end,
-                    tag,
-                    jobId,
-                        executeCount
+                    buildId = buildId,
+                    num = num ?: 100,
+                    fromStart = fromStart ?: true,
+                    start = start,
+                    end = end,
+                    tag = tag,
+                    jobId = jobId,
+                    executeCount = executeCount
                 )
             )
     }
