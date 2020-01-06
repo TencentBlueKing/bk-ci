@@ -25,7 +25,7 @@
         props: {
             value: {
                 type: Object,
-                default: []
+                default: () => []
             }
         },
         data () {

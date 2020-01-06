@@ -78,7 +78,7 @@
                     </devops-form-item>
                     <devops-form-item label="默认阈值" :required="true" :property="'threshold'" class="default-threshlod-item"
                         :is-error="createForm.dataType === 'BOOLEAN' ? formErrors.thresholdError : errors.has('threshold')"
-                        :error-msg="'默认阈值不能为空'">
+                        :error-msg="errors.first('threshold') || '默认阈值不能为空'">
                         <template v-if="createForm.dataType === 'BOOLEAN'">
                             <bk-select v-model="createForm.threshold" @selected="togglethreshold">
                                 <bk-option v-for="(option, index) in optionBoolean"
@@ -87,6 +87,17 @@
                                     :name="option.label">
                                 </bk-option>
                             </bk-select>
+                        </template>
+                        <template v-else-if="createForm.dataType === 'FLOAT'">
+                            <bk-input
+                                class="meta-threshold-input"
+                                name="threshold"
+                                v-model="createForm.threshold"
+                                v-validate="{
+                                    required: true,
+                                    floatTypeRule: true
+                                }">
+                            </bk-input>
                         </template>
                         <template v-else>
                             <bk-input
@@ -131,7 +142,7 @@
                 showContent: false,
                 isInitEdit: false,
                 isEditing: false,
-                docsUrl: 'http://docs.devops.oa.com',
+                docsUrl: '',
                 title: '创建脚本任务指标',
                 metaTypeList: [
                     { id: 'INT', name: '整数（int）' },
@@ -178,6 +189,10 @@
                 metaNameRule: {
                     getMessage: field => '只能输入英文、数字和下划线',
                     validate: value => /^[a-zA-Z0-9_]+$/.test(value)
+                },
+                floatTypeRule: {
+                    getMessage: field => '请输入正确的非负浮点数',
+                    validate: value => /^[0-9]+([.]{1}[0-9]+){0,1}$/.test(value)
                 }
             }
         },
@@ -198,7 +213,7 @@
             },
             projectId (val) {
                 this.$router.push({
-                    name: 'overview',
+                    name: 'qualityOverview',
                     params: {
                         projectId: this.projectId
                     }
@@ -217,7 +232,7 @@
         },
         mounted () {
             this.$nextTick(() => {
-                this.$validator.extend('metaNameRule', this.metaNameRule)
+                ['metaNameRule', 'floatTypeRule'].map(rule => this.$validator.extend(`${rule}`, this[rule]))
             })
         },
         methods: {
@@ -460,6 +475,9 @@
                 width: 646px;
             }
             .default-threshlod-item .bk-form-input {
+                width: 264px;
+            }
+            .meta-threshold-input {
                 width: 264px;
             }
             .bk-select {

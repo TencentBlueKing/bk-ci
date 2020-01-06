@@ -18,14 +18,14 @@
  */
 
 const dictionary = {
-    cn: {
+    'zh-CN': {
         messages: {
             alpha: field => '字段只能包含字母',
-            required: field => '字段不能为空',
             unique: field => '字段不能重复',
+            required: field => '字段不能为空',
             excludeComma: field => '字段不能包含英文逗号',
             string: field => '字段只能包含数字，字母和下划线',
-            varRule: field => `只能以字母和下划线开头，同时只包含字母，数字以及下划线`,
+            varRule: field => `${field}只能以字母和下划线开头，同时只包含字母，数字以及下划线`,
             numeric: field => '字段只能包含数字',
             regex: (field, regex) => {
                 return `字段不符合(${regex})正则表达式规则`
@@ -44,8 +44,36 @@ const dictionary = {
             },
             pullmode: field => '字段不能为空',
             excludeEmptyCapital: field => `字段不能为空，只支持英文小写、数字、下划线以及/`,
-            mutualGroup: field => `字段不能为空，只支持英文、数字`,
+            mutualGroup: field => `字段不能为空，只支持英文、数字或填写变量`,
             nonVarRule: field => '该字段不需要包含${}'
+        }
+    },
+    'en-US': {
+        messages: {
+            unique: field => `${field} field cannot be repeated`,
+            excludeComma: field => 'Field cannot contain English commas',
+            string: field => 'Fields can only contain numbers, letters, and underscores',
+            numeric: field => 'Fields can only contain numbers',
+            regex: (field, regex) => {
+                return `Field does not match (${regex}) regular expression rules`
+            },
+            max: (field, args) => {
+                return `Field length cannot exceed ${args} characters`
+            },
+            min: (field, args) => {
+                return `Field length cannot be less than ${args} characters`
+            },
+            max_value: (field, args) => {
+                return `Maximum cannot exceed ${args}`
+            },
+            min_value: (field, args) => {
+                return `Minimum must not be less than ${args}`
+            },
+            varRule: field => `${field} only begin with letters and underscores, and only contain letters, numbers, and underscores`,
+            pullmode: field => 'Field cannot be empty',
+            excludeEmptyCapital: field => `The field must be filled and only supports English letter, numbers or variables `,
+            mutualGroup: field => `Field only supports English, numbers or fill in variables`,
+            nonVarRule: field => 'This field does not need to be included ${}'
         }
     }
 }

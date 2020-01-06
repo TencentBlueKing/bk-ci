@@ -133,7 +133,7 @@
                 showContent: false,
                 isEmptyRule: false,
                 totalInterceptRecor: 0,
-                docsUrl: `${DOCS_URL_PREFIX}/所有服务/质量红线/什么是质量红线.html`,
+                docsUrl: `${DOCS_URL_PREFIX}/x/MYbm`,
                 pipelineListLabel: [],
                 pipelineListValue: [],
                 trendList: [],

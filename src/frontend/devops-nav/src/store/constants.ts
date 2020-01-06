@@ -47,17 +47,10 @@ export const [
 ] = serviceList.map(s => `${s}/api`)
 
 export const EMPTY_PROJECT: Project = {
-    project_name: '',
-    english_name: '',
-    project_type: '',
+    projectName: '',
+    englishName: '',
+    projectType: '',
     description: '',
-    bg_id: '',
-    bg_name: '',
-    dept_id: '',
-    dept_name: '',
-    center_id: '',
-    center_name: '',
-    is_secrecy: false,
-    deploy_type: [],
+    isSecrecy: false,
     kind: '0'
 }

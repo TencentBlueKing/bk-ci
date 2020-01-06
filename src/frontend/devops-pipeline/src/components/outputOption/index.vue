@@ -78,7 +78,6 @@
                 'requestReportList'
             ]),
             async init () {
-                // WeTest
                 try {
                     const { projectId, pipelineId, buildNo } = this.$route.params
                     const params = {

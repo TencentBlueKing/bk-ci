@@ -18,9 +18,10 @@
  */
 
 const webpackBaseConfig = require('../webpack.base')
+const webpack = require('webpack')
 
 module.exports = (env, argv) => {
-    return webpackBaseConfig({
+    const config = webpackBaseConfig({
         env,
         argv,
         entry: {
@@ -28,6 +29,7 @@ module.exports = (env, argv) => {
         },
         publicPath: '/quality/',
         dist: '/quality',
-        port: 8010
+        port: 8002
     })
+    return config
 }

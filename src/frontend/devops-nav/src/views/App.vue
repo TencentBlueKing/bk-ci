@@ -17,21 +17,23 @@
 
 <script lang="ts">
     import Vue from 'vue'
-    import { Watch } from 'vue-property-decorator'
+    import { Component, Watch } from 'vue-property-decorator'
     import { State } from 'vuex-class'
+    
+    @Component
     export default class App extends Vue {
         @State('fetchError') fetchError
         @State('moduleLoading') moduleLoading
 
         @Watch('fetchError')
         handleFetchError (e) {
-          if (e.status === 503) {
-            this.$router.replace('/maintaining')
-          }
-          this.$bkMessage({
-            message: e.message || '内部服务错误',
-            theme: 'error'
-          })
+            if (e.status === 503) {
+                this.$router.replace('/maintaining')
+            }
+            this.$bkMessage({
+                message: e.message || this.$t('NetworkError'),
+                theme: 'error'
+            })
         }
     }
 </script>
