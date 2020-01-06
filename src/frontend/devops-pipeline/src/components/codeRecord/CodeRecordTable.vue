@@ -12,7 +12,17 @@
             </span>
         </p>
         <bk-table :data="commitList">
-            <bk-table-column :label="$t('history.remark')" prop="comment"></bk-table-column>
+            <!-- <bk-table-column :label="$t('history.remark')" prop="comment"></bk-table-column> -->
+            <bk-table-column :label="$t('history.remark')" prop="comment">
+                <template slot-scope="props">
+                    <a class="commit-link"
+                        :href="props.row.url"
+                        target="_blank"
+                        v-if="props.row.type === 2 && props.row.url">{{ props.row.comment }}
+                    </a>
+                    <span v-else>{{ props.row.comment }}</span>
+                </template>
+            </bk-table-column>
             <bk-table-column
                 :width="150"
                 label="Commit"
@@ -76,11 +86,15 @@
 </script>
 
 <style lang="scss">
+    @import './../../scss/conf';
     .code-record-table-container {
         overflow: auto;
         height: 100%;
         .prompt-tips {
             margin-bottom: 12px;
+        }
+        .commit-link {
+            color: $primaryColor;
         }
     }
 </style>

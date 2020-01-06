@@ -34,6 +34,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.StartType
+import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHookTriggerElement
@@ -691,12 +692,20 @@ class PipelineBuildWebhookService @Autowired constructor(
         // 兼容从旧v1版本下发过来的请求携带旧的变量命名
         val params = startParams.map { (PipelineVarUtil.oldVarToNewVar(it.key) ?: it.key) to it.value }.toMap()
 
+        val startParamsWithType = mutableListOf<BuildParameters>()
+        params.forEach { t, u -> startParamsWithType.add(
+            BuildParameters(
+                t,
+                u
+            )
+        ) }
+
         try {
             val buildId = pipelineBuildService.startPipeline(
                 userId = userId,
                 readyToBuildPipelineInfo = pipelineInfo,
                 startType = StartType.WEB_HOOK,
-                startParams = params,
+                startParamsWithType = startParamsWithType,
                 channelCode = pipelineInfo.channelCode,
                 isMobile = false,
                 model = fullModel,

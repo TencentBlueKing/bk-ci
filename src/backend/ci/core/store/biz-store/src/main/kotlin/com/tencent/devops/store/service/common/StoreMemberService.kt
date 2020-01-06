@@ -54,7 +54,7 @@ interface StoreMemberService {
     /**
      * 添加store组件成员
      */
-    fun add(userId: String, storeMemberReq: StoreMemberReq, storeType: StoreTypeEnum, collaborationFlag: Boolean? = false): Result<Boolean>
+    fun add(userId: String, storeMemberReq: StoreMemberReq, storeType: StoreTypeEnum, collaborationFlag: Boolean? = false, sendNotify: Boolean = true): Result<Boolean>
 
     /**
      * 删除store组件成员

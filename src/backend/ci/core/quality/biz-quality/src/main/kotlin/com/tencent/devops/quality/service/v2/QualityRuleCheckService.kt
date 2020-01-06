@@ -33,7 +33,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxPaasCodeCCScriptElement
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.notify.api.service.ServiceNotifyResource
-import com.tencent.devops.plugin.codecc.api.ServiceCodeccElementResource
+import com.tencent.devops.plugin.api.ServiceCodeccElementResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.quality.api.v2.pojo.QualityHisMetadata
@@ -165,7 +165,7 @@ class QualityRuleCheckService @Autowired constructor(
 
             // 遍历项目下所有拦截规则
             val ruleList = ruleService.serviceListRuleByPosition(projectId, buildCheckParams.position)
-            val metadataList = qualityHisMetadataService.serviceGetHisMetadata(buildId)
+            val metadataList = lazyGetHisMetadata(buildId)
             logger.info("Rule metadata serviceList for build(${buildCheckParams.buildId}):\n metadataList=$metadataList")
 
             ruleList.filter { rule ->
@@ -202,6 +202,16 @@ class QualityRuleCheckService @Autowired constructor(
             logger.info("end check pipeline($pipelineId) build($buildId) task(${buildCheckParams.taskId})")
             return RuleCheckResult(allPass, allEnd, auditTimeOutMinutes * 60, resultList)
         }
+    }
+
+    // codecc回调数据是异步的，为空加个等待
+    private fun lazyGetHisMetadata(buildId: String): List<QualityHisMetadata> {
+        for (i in setOf(1, 5, 3, 7)) {
+            val result = qualityHisMetadataService.serviceGetHisMetadata(buildId)
+            if (result.isNotEmpty()) return result
+            Thread.sleep(i * 1000L)
+        }
+        return listOf()
     }
 
     private fun checkPostHandle(
@@ -383,10 +393,10 @@ class QualityRuleCheckService @Autowired constructor(
                 return ""
             }
             if (record.detail.isNullOrBlank()) {
-                "<a target='_blank' href='${HomeHostUtil.innerServerHost()}/console/codecc/$projectId/procontrol/prodesc?proj_id=$taskId&projectId=$projectId'>查看详情</a>"
+                "<a target='_blank' href='${HomeHostUtil.innerServerHost()}/console/codecc/$projectId/task/$taskId/detail'>查看详情</a>"
             } else {
-                val detail = codeccToolUrlPathMap[record.detail!!] ?: "procontrol/multidefectmanage"
-                "<a target='_blank' href='${HomeHostUtil.innerServerHost()}/console/codecc/$projectId/$detail?proj_id=$taskId&toolName=${record.detail}&projectId=$projectId'>查看详情</a>"
+                val detail = codeccToolUrlPathMap[record.detail!!] ?: "defect/lint"
+                "<a target='_blank' href='${HomeHostUtil.innerServerHost()}/console/codecc/$projectId/task/$taskId/$detail/${record.detail}/list'>查看详情</a>"
             }
         } else {
             record.logPrompt ?: ""

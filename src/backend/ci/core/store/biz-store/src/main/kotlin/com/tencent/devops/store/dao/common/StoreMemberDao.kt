@@ -58,7 +58,15 @@ class StoreMemberDao {
                     storeType,
                     userId,
                     userId
-                ).execute()
+                )
+                .onDuplicateKeyUpdate()
+                .set(STORE_CODE, storeCode)
+                .set(USERNAME, userName)
+                .set(TYPE, type)
+                .set(STORE_TYPE, storeType)
+                .set(CREATOR, userId)
+                .set(MODIFIER, userId)
+                .execute()
         }
     }
 
