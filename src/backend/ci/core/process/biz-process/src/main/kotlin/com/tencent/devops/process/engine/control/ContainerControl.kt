@@ -44,7 +44,7 @@ import com.tencent.devops.process.engine.pojo.event.PipelineBuildAtomTaskEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildStageEvent
 import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
-import com.tencent.devops.process.pojo.AtomErrorCode
+import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.process.pojo.mq.PipelineBuildContainerEvent
 import org.slf4j.LoggerFactory
@@ -318,7 +318,7 @@ class ContainerControl @Autowired constructor(
                         buildStatus = task.status,
                         canRetry = true,
                         errorType = ErrorType.SYSTEM,
-                        errorCode = AtomErrorCode.SYSTEM_WORKER_INITIALIZATION_ERROR,
+                        errorCode = ErrorCode.SYSTEM_WORKER_INITIALIZATION_ERROR,
                         errorMsg = message ?: "插件执行意外终止"
                     )
                     startVMFail = startVMFail || task.taskSeq == 0
