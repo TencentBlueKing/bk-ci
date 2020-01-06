@@ -624,8 +624,7 @@ class ProjectLocalService @Autowired constructor(
         }.toList()
     }
 
-    private fun grayProjectSet() =
-        (redisOperation.getSetMembers(gray.getGrayRedisKey()) ?: emptySet()).filter { !it.isBlank() }.toSet()
+    private fun grayProjectSet() = gray.grayProjectSet(redisOperation)
 
     private fun convertFile(inputStream: InputStream): File {
         val logo = Files.createTempFile("default_", ".png").toFile()
