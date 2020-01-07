@@ -24,7 +24,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo
+package com.tencent.devops.common.api.pojo
 
 /**
  * 错误码制定规则（0代表成功，为了兼容历史接口的成功状态都是返回0）：
@@ -41,7 +41,7 @@ package com.tencent.devops.process.pojo
  * @version: $Revision$ $Date$ $LastChangedBy$
  *
  */
-object AtomErrorCode {
+object ErrorCode {
     // 蓝盾系统错误
     const val SUCESSS = "0" // 成功
     const val SYSTEM_DAEMON_INTERRUPTED = 16015000 // 守护进程中断

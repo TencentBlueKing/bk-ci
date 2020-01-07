@@ -54,10 +54,11 @@
 </template>
 
 <script>
-    import { mapGetters } from 'vuex'
     export default {
         props: {
-            showDialog: Boolean
+            showDialog: Boolean,
+            projectCode: String,
+            permissionList: Array
         },
         data () {
             return {
@@ -67,13 +68,6 @@
                 typeList: [
                     { label: 'Owner', value: 'ADMIN' },
                     { label: 'Developer', value: 'DEVELOPER' }
-                ],
-                permissionList: [
-                    { name: this.$t('store.插件开发'), active: true },
-                    { name: this.$t('store.版本发布'), active: true },
-                    { name: this.$t('store.私有配置'), active: true },
-                    { name: this.$t('store.审批'), active: true },
-                    { name: this.$t('store.成员管理'), active: true }
                 ],
                 memberForm: {
                     memberName: '',
@@ -86,12 +80,6 @@
             }
         },
         computed: {
-            ...mapGetters('store', {
-                'currentAtom': 'getCurrentAtom'
-            }),
-            atomCode () {
-                return this.$route.params.atomCode
-            },
             addMemberConf () {
                 return {
                     hasHeader: false,
@@ -102,16 +90,13 @@
             }
         },
         watch: {
-            'memberForm.type' (val) {
-                if (val === 'ADMIN') {
-                    this.permissionList.map(item => {
-                        item.active = true
+            'memberForm.type': {
+                handler (val) {
+                    this.permissionList.forEach((item) => {
+                        item.active = (item.type === val || val === 'ADMIN')
                     })
-                } else {
-                    this.permissionList[2].active = false
-                    this.permissionList[3].active = false
-                    this.permissionList[4].active = false
-                }
+                },
+                immediate: true
             },
             showDialog (val) {
                 if (!val) {
@@ -122,17 +107,20 @@
             }
         },
         methods: {
-            async toConfirm () {
-                const { memberName, type } = this.memberForm
-                const valid = await this.$validator.validate()
-                if (valid) {
+            toConfirm () {
+                if (!this.memberForm.memberName) {
+                    this.nameError = true
+                    this.$bkMessage({
+                        message: this.$t('store.请输入成员名称'),
+                        theme: 'error'
+                    })
+                    this.$emit('cancelHandle')
+                } else {
                     const params = {
-                        storeCode: this.atomCode,
-                        type,
+                        type: this.memberForm.type,
                         member: []
                     }
-                    console.log(memberName)
-                    params.member.push(memberName)
+                    params.member.push(this.memberForm.memberName)
                     this.$emit('confirmHandle', params)
                 }
             },
