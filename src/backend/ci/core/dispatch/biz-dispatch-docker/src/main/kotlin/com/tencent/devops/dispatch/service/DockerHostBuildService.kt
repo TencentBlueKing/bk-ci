@@ -155,12 +155,15 @@ class DockerHostBuildService @Autowired constructor(
             var password: String? = null
             if (dispatchType.imageType == ImageType.THIRD) {
                 if (!dispatchType.credentialId.isNullOrBlank()) {
+                    val projectId = if (dispatchType.credentialProject.isNullOrBlank()) {
+                        logger.warn("dockerHostBuild:credentialProject=nullOrBlank,buildId=${event.buildId},credentialId=${dispatchType.credentialId}")
+                        event.projectId
+                    } else {
+                        dispatchType.credentialProject!!
+                    }
                     val ticketsMap = CommonUtils.getCredential(
                         client = client,
-                        projectId = dispatchType.credentialProject ?: {
-                            logger.warn("dockerHostBuild:credentialProject=null,buildId=${event.buildId},credentialId=${dispatchType.credentialId}")
-                            event.projectId
-                        }(),
+                        projectId = projectId,
                         credentialId = dispatchType.credentialId!!,
                         type = CredentialType.USERNAME_PASSWORD
                     )
