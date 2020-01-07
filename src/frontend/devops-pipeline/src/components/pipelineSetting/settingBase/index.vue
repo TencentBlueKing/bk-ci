@@ -1,17 +1,21 @@
 <template>
     <section class="bk-form pipeline-setting base" v-if="!isLoading">
         <div class="setting-container">
-            <form-field :required="true" label="名称" :is-error="errors.has(&quot;name&quot;)" :error-msg="errors.first(&quot;name&quot;)">
-                <input class="bk-form-input" placeholder="请输入流水线名称" v-model="pipelineSetting.pipelineName" name="name" v-validate.initial="&quot;required|max:40&quot;" />
+            <form-field :required="true" :label="$t('name')" :is-error="errors.has(&quot;name&quot;)" :error-msg="errors.first(&quot;name&quot;)">
+                <input class="bk-form-input" :placeholder="$t('settings.namePlaceholder')" v-model="pipelineSetting.pipelineName" name="name" v-validate.initial="&quot;required|max:40&quot;" />
             </form-field>
 
-            <form-field :required="false" label="分组" v-if="tagGroupList.length">
+            <form-field :required="false" :label="$t('settings.group')" v-if="tagGroupList.length">
                 <div class="form-group form-group-inline">
                     <div :class="grouInlineCol"
                         v-for="(filter, index) in tagGroupList"
                         :key="index">
                         <label class="group-title">{{filter.name}}</label>
-                        <bk-select v-model="pipelineSetting.labels" multiple>
+                        <bk-select :value="labelValues[index]"
+                            @selected="handleLabelSelect(index, arguments)"
+                            @clear="handleLabelSelect(index, [[]])"
+                            multiple
+                        >
                             <bk-option v-for="(option, oindex) in filter.labels" :key="oindex" :id="option.id" :name="option.name">
                             </bk-option>
                         </bk-select>
@@ -19,11 +23,11 @@
                 </div>
             </form-field>
 
-            <form-field label="描述" :is-error="errors.has(&quot;desc&quot;)" :error-msg="errors.first(&quot;desc&quot;)">
-                <textarea name="desc" v-model="pipelineSetting.desc" placeholder="请输入100个字符以内的描述内容" class="bk-form-textarea" v-validate.initial="&quot;max:100&quot;"></textarea>
+            <form-field :label="$t('desc')" :is-error="errors.has(&quot;desc&quot;)" :error-msg="errors.first(&quot;desc&quot;)">
+                <textarea name="desc" v-model="pipelineSetting.desc" :placeholder="$t('settings.descPlaceholder')" class="bk-form-textarea" v-validate.initial="&quot;max:100&quot;"></textarea>
             </form-field>
 
-            <form-field label="运行锁定" class="opera-lock-radio">
+            <form-field :label="$t('settings.runLock')" class="opera-lock-radio">
                 <bk-radio-group v-model="pipelineSetting.runLockType">
                     <bk-radio v-for="(entry, key) in runTypeList" :key="key" :value="entry.value" class="view-radio">{{ entry.label }}</bk-radio>
                 </bk-radio-group>
@@ -31,30 +35,100 @@
             <div class="bk-form-item opera-lock" v-if="pipelineSetting.runLockType === 'SINGLE'">
                 <div class="bk-form-content">
                     <div class="opera-lock-item">
-                        <label class="opera-lock-label">最大排队数量：</label>
+                        <label class="opera-lock-label">{{ $t('settings.largestNum') }}：</label>
                         <div class="bk-form-control control-prepend-group control-append-group">
-                            <input type="text" name="maxQueueSize" placeholder="请输入" class="bk-form-input" v-validate.initial="&quot;required|numeric|max_value:20|min_value:0&quot;" v-model.number="pipelineSetting.maxQueueSize">
+                            <input type="text" name="maxQueueSize" :placeholder="$t('settings.itemPlaceholder')" class="bk-form-input" v-validate.initial="&quot;required|numeric|max_value:20|min_value:0&quot;" v-model.number="pipelineSetting.maxQueueSize">
                             <div class="group-box group-append">
-                                <div class="group-text">个</div>
+                                <div class="group-text">{{ $t('settings.item') }}</div>
                             </div>
                             <p v-if="errors.has('maxQueueSize')" class="is-danger">{{errors.first("maxQueueSize")}}</p>
                         </div>
                     </div>
                     <div class="opera-lock-item">
-                        <label class="opera-lock-label">最大排队时长：</label>
+                        <label class="opera-lock-label">{{ $t('settings.lagestTime') }}：</label>
                         <div class="bk-form-control control-prepend-group control-append-group">
-                            <input type="text" name="waitQueueTimeMinute" placeholder="请输入" class="bk-form-input" v-validate.initial="&quot;required|numeric|max_value:1440|min_value:60&quot;" v-model.number="pipelineSetting.waitQueueTimeMinute">
+                            <input type="text" name="waitQueueTimeMinute" :placeholder="$t('settings.itemPlaceholder')" class="bk-form-input" v-validate.initial="'required|numeric|max_value:1440|min_value:1'" v-model.number="pipelineSetting.waitQueueTimeMinute">
                             <div class="group-box group-append">
-                                <div class="group-text">分钟</div>
+                                <div class="group-text">{{ $t('settings.minutes') }}</div>
                             </div>
                             <p v-if="errors.has('waitQueueTimeMinute')" class="is-danger">{{errors.first("waitQueueTimeMinute")}}</p>
                         </div>
                     </div>
                 </div>
             </div>
-            <div class="handle-btn" style="margin-left: 146px;margin-top: 30px">
-                <bk-button @click="savePipelineSetting()" theme="primary" :disabled="isDisabled || noPermission">保存</bk-button>
-                <bk-button @click="exit">取消</bk-button>
+            <form-field :label="$t('settings.notice')" style="margin-bottom: 0px">
+                <bk-tab :active="curNavTab.name" type="unborder-card" @tab-change="changeCurTab">
+                    <bk-tab-panel
+                        v-for="(entry, index) in subscriptionList"
+                        :key="index"
+                        v-bind="entry"
+                    >
+                        <div class="notice-tab">
+                            <div class="bk-form-item item-notice">
+                                <label class="bk-label">{{ $t('settings.noticeType') }}：</label>
+                                <div class="bk-form-content notice-group">
+                                    <bk-checkbox-group :value="pipelineSubscription.types" @change="handleCheckNoticeType">
+                                        <bk-checkbox v-for="item in noticeList" :key="item.value" :value="item.value" class="atom-checkbox-list-item">
+                                            {{ item.name }}
+                                        </bk-checkbox>
+                                    </bk-checkbox-group>
+                                </div>
+                            </div>
+                            <div class="bk-form-item item-notice">
+                                <label class="bk-label">{{ $t('settings.noticeGroup') }}：</label>
+                                <div class="bk-form-content notice-group">
+                                    <bk-checkbox-group :value="pipelineSubscription.groups" @change="handleSwitch">
+                                        <bk-checkbox v-for="item in projectGroupAndUsers" :key="item.value" :value="item.groupId" class="atom-checkbox-list-item">
+                                            {{ item.groupName }}
+                                            <bk-popover placement="top">
+                                                <span class="info-notice-length">({{item.users.length}})</span>
+                                                <div class="notice-user-content" slot="content">{{item.users.length ? item.users.join(';') : $t('settings.emptyNoticeGroup')}}</div>
+                                            </bk-popover>
+                                        </bk-checkbox>
+                                    </bk-checkbox-group>
+                                </div>
+                            </div>
+                            <form-field :label="$t('settings.additionUser')">
+                                <staff-input :handle-change="(name,value) => pipelineSubscription.users = value.join(&quot;,&quot;)" name="users" :value="pipelineSettingUser"></staff-input>
+                            </form-field>
+
+                            <form-field :label="$t('settings.noticeContent')" :is-error="errors.has(&quot;content&quot;)" :error-msg="errors.first(&quot;content&quot;)">
+                                <textarea name="desc" v-model="pipelineSubscription.content" class="bk-form-textarea"></textarea>
+                            </form-field>
+
+                            <form-field style="margin-bottom: 10px;">
+                                <atom-checkbox style="width: auto"
+                                    :handle-change="toggleEnable"
+                                    name="detailFlag"
+                                    :text="$t('settings.pipelineLink')"
+                                    :desc="$t('settings.pipelineLinkDesc')"
+                                    :value="pipelineSubscription.detailFlag">
+                                </atom-checkbox>
+                            </form-field>
+                            <form-field style="margin-bottom: 10px;">
+                                <atom-checkbox style="width: auto"
+                                    :handle-change="toggleEnable"
+                                    name="wechatGroupFlag"
+                                    :text="$t('settings.enableGroup')"
+                                    :desc="groupIdDesc"
+                                    :value="pipelineSubscription.wechatGroupFlag">
+                                </atom-checkbox>
+                            </form-field>
+                            <group-id-selector class="item-groupid" v-if="pipelineSubscription.wechatGroupFlag"
+                                :handle-change="groupIdChange"
+                                :value="pipelineSubscription.wechatGroup"
+                                :placeholder="$t('settings.groupIdTips')"
+                                icon-class="icon-question-circle"
+                                desc-direction="top">
+                            </group-id-selector>
+                        </div>
+                    </bk-tab-panel>
+                </bk-tab>
+            </form-field>
+
+            <div class="handle-btn" style="margin-left: 146px;">
+                <bk-button @click="savePipelineSetting()" theme="primary" :disabled="isDisabled || noPermission">{{ $t('save') }}</bk-button>
+                <bk-button @click="exit">{{ $t('cancel') }}</bk-button>
             </div>
         </div>
     </section>
@@ -63,10 +137,15 @@
 <script>
     import { mapActions, mapState, mapGetters } from 'vuex'
     import FormField from '@/components/AtomPropertyPanel/FormField.vue'
-    import Clipboard from 'clipboard'
+    import StaffInput from '@/components/atomFormField/StaffInput/index.vue'
+    import GroupIdSelector from '@/components/atomFormField/groupIdSelector'
+    import AtomCheckbox from '@/components/atomFormField/AtomCheckbox'
     export default {
         components: {
-            FormField
+            FormField,
+            StaffInput,
+            GroupIdSelector,
+            AtomCheckbox
         },
         props: {
             isDisabled: {
@@ -82,38 +161,55 @@
                 resetFlag: false,
                 runTypeList: [
                     {
-                        label: '可同时运行多个构建任务',
+                        label: this.$t('settings.runningOption.multiple'),
                         value: 'MULTIPLE'
                     },
                     {
-                        label: '锁定流水线，任何触发方式都无法运行',
+                        label: this.$t('settings.runningOption.lock'),
                         value: 'LOCK'
                     },
                     {
-                        label: '同一时间最多只能运行一个构建任务',
+                        label: this.$t('settings.runningOption.single'),
                         value: 'SINGLE'
                     }
-                ]
+                ],
+                subscriptionList: [
+                    { label: this.$t('settings.buildFail'), name: 'fail' },
+                    { label: this.$t('settings.buildSuc'), name: 'success' }
+                ],
+                curNavTab: { label: this.$t('settings.buildFail'), name: 'fail' },
+                noticeList: [
+                    { id: 1, name: this.$t('settings.rtxNotice'), value: 'RTX' },
+                    { id: 4, name: this.$t('settings.emailNotice'), value: 'EMAIL' },
+                    { id: 2, name: this.$t('settings.wechatNotice'), value: 'WECHAT' },
+                    { id: 3, name: this.$t('settings.smsNotice'), value: 'SMS' }
+                ],
+                pipelineSubscription: {
+                    groups: [],
+                    types: [],
+                    users: '',
+                    content: ''
+                },
+                groupIdDesc: this.$t('settings.groupIdDesc'),
+                groupIdStorage: []
             }
         },
         computed: {
             ...mapState('soda', [
-                'pipelineSetting'
+                'pipelineSetting',
+                'projectGroupAndUsers'
             ]),
             ...mapGetters({
                 'tagGroupList': 'pipelines/getTagGroupList'
             }),
+            pipelineSettingUser () {
+                return this.pipelineSubscription.users ? this.pipelineSubscription.users.split(',') : []
+            },
             projectId () {
                 return this.$route.params.projectId
             },
-            pipelineId () {
-                return this.$route.params.pipelineId
-            },
             templateId () {
                 return this.$route.params.templateId
-            },
-            routeName () {
-                return this.$route.name
             },
             grouInlineCol () {
                 const classObj = {}
@@ -121,6 +217,18 @@
                 key += this.tagGroupList.length < 3 ? this.tagGroupList.length < 2 ? '' : 'column-2' : 'column-3'
                 classObj[key] = true
                 return classObj
+            },
+            labelValues () {
+                const labels = this.pipelineSetting.labels
+                return this.tagGroupList.map((tag) => {
+                    const currentLables = tag.labels || []
+                    const value = []
+                    currentLables.forEach((label) => {
+                        const index = labels.findIndex((item) => (item === label.id))
+                        if (index > -1) value.push(label.id)
+                    })
+                    return value
+                })
             }
         },
         watch: {
@@ -133,6 +241,7 @@
                     } else {
                         this.noPermission = false
                     }
+                    this.curNavTab.name === 'success' ? this.pipelineSubscription = this.pipelineSetting.successSubscription : this.pipelineSubscription = this.pipelineSetting.failSubscription
                     this.isLoading = false
                     if (!this.isEditing && JSON.stringify(oldVal) !== '{}' && newVal !== null && !this.resetFlag) {
                         this.isEditing = true
@@ -144,28 +253,86 @@
         },
         created () {
             this.requestTemplateSetting(this.$route.params)
-
+            this.requestProjectGroupAndUsers(this.$route.params)
             this.requestGrouptLists()
-
-            this.clipboard = new Clipboard('.copy-icon').on('success', e => {
-                this.$showTips({
-                    theme: 'success',
-                    message: '内容复制成功'
-                })
-            })
         },
-        beforeDestroy () {
-            this.clipboard.destroy()
+        mounted () {
+            this.list = this.groupIdStorage = localStorage.getItem('groupIdStr') ? localStorage.getItem('groupIdStr').split(';').filter(item => item) : []
+        },
+        destroyed () {
+            this.wechatGroupCompletion()
+            this.setGroupidStorage(this.pipelineSubscription)
         },
         methods: {
             ...mapActions('soda', [
-                'requestTemplateSetting'
+                'requestTemplateSetting',
+                'updatePipelineSetting',
+                'requestProjectGroupAndUsers'
             ]),
+            handleLabelSelect (index, arg) {
+                let labels = []
+                this.labelValues.forEach((value, valueIndex) => {
+                    if (valueIndex === index) labels = labels.concat(arg[0])
+                    else labels = labels.concat(value)
+                })
+                this.pipelineSetting.labels = labels
+            },
             isStateChange () {
                 this.$emit('setState', {
                     isLoading: this.isLoading,
                     isEditing: this.isEditing
                 })
+            },
+            handleChangeRunType (name, value) {
+                Object.assign(this.pipelineSetting, { [name]: value })
+            },
+            handleCheckNoticeType (value) {
+                this.pipelineSubscription.types = value
+            },
+            handleSwitch (value) {
+                this.pipelineSubscription.groups = value
+            },
+            changeCurTab (name) {
+                const tab = this.subscriptionList.find(item => item.name === name)
+                this.setGroupidStorage(this.pipelineSubscription)
+                this.curNavTab = tab
+                this.pipelineSubscription = name === 'success' ? this.pipelineSetting.successSubscription : this.pipelineSetting.failSubscription
+            },
+            toggleEnable (name, value) {
+                this.pipelineSubscription[name] = value
+                this.updatePipelineSetting({
+                    container: this.pipelineSubscription,
+                    param: {
+                        name: value
+                    }
+                })
+            },
+            groupIdChange (name, value) {
+                this.pipelineSubscription.wechatGroup = value
+                this.updatePipelineSetting({
+                    container: this.pipelineSubscription,
+                    param: {
+                        wechatGroup: this.pipelineSubscription.wechatGroup
+                    }
+                })
+            },
+            // 补全末尾分号
+            wechatGroupCompletion () {
+                const wechatGroup = this.pipelineSubscription.wechatGroup
+                if (wechatGroup && wechatGroup.charAt(wechatGroup.length - 1) !== ';') {
+                    this.pipelineSubscription.wechatGroup += ';'
+                }
+            },
+            setGroupidStorage (data) {
+                if (!data.wechatGroup) {
+                    return false
+                }
+                data.wechatGroup.split(';').filter(item => item).forEach(item => {
+                    if (!this.groupIdStorage.includes(item)) {
+                        this.groupIdStorage.push(item)
+                    }
+                })
+                localStorage.setItem('groupIdStr', this.groupIdStorage.sort().join(';'))
             },
             exit () {
                 this.$emit('cancel')
@@ -191,6 +358,7 @@
             },
             async savePipelineSetting () {
                 if (this.errors.any()) return
+                this.wechatGroupCompletion()
                 this.isDisabled = true
                 let result
                 let resData
@@ -201,7 +369,7 @@
 
                     if (resData && resData.data) {
                         this.$showTips({
-                            message: `${pipelineSetting.pipelineName}修改成功`,
+                            message: `${pipelineSetting.pipelineName}${this.$t('updateSuc')}`,
                             theme: 'success'
                         })
                         this.isEditing = false
@@ -209,25 +377,15 @@
                         result = true
                     } else {
                         this.$showTips({
-                            message: `${pipelineSetting.pipelineName}修改失败`,
+                            message: `${pipelineSetting.pipelineName}${this.$t('updateFail')}`,
                             theme: 'error'
                         })
                     }
                 } catch (err) {
-                    if (this.routeName !== 'templateSetting' && err.code === 403) { // 没有权限执行
-                        this.$showAskPermissionDialog({
-                            noPermissionList: [{
-                                resource: `流水线: ${this.pipelineSetting.pipelineName}`,
-                                option: '编辑'
-                            }],
-                            applyPermissionUrl: `${PERM_URL_PIRFIX}/backend/api/perm/apply/subsystem/?client_id=pipeline&project_code=${this.projectId}&service_code=pipeline&role_manager=pipeline:${this.pipelineId}`
-                        })
-                    } else {
-                        this.$showTips({
-                            message: err.message || err,
-                            theme: 'error'
-                        })
-                    }
+                    this.$showTips({
+                        message: err.message || err,
+                        theme: 'error'
+                    })
                     result = false
                 }
                 this.isDisabled = false
@@ -253,6 +411,26 @@
              & .bk-form-content .bk-form-radio{
                 display: block;
              }
+        }
+        .notice-tab {
+            padding: 10px 0px 0px;
+            margin-left: -70px;
+            .bk-form-content {
+                margin-left: 155px;
+            }
+            .item-groupid .bk-tooltip {
+                float: left;
+                margin-left: -15px;
+                line-height: 30px;
+            }
+            .bk-form-item label{
+                display: inline-block;
+                width: 145px;
+                white-space: nowrap;
+                text-overflow: ellipsis;
+                overflow: hidden;
+                padding-right: 10px;
+            }
         }
         .form-group-inline {
             font-size: 0;
@@ -347,5 +525,24 @@
                 font-size: 14px;
             }
         }
+    }
+    .item-notice {
+        .notice-group {
+            margin-top: 8px;
+            .atom-checkbox-list-item {
+                font-weight: bold;
+                width: 170px;
+                padding: 0 20px 10px 0;
+                overflow: hidden;
+                text-overflow:ellipsis;
+                white-space: nowrap;
+            }
+        }
+    }
+    .notice-user-content {
+        max-width: 300px;
+        white-space: normal;
+        word-wrap: break-word;
+        font-weight: 400;
     }
 </style>

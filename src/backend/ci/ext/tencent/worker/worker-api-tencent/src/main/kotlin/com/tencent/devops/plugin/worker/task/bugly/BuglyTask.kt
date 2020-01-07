@@ -26,14 +26,14 @@
 
 package com.tencent.devops.plugin.worker.task.bugly
 
+import com.tencent.devops.common.api.exception.TaskExecuteException
+import com.tencent.devops.common.api.pojo.ErrorCode
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.pipeline.element.BuglyElement
 import com.tencent.devops.common.pipeline.enums.Platform
-import com.tencent.devops.process.pojo.AtomErrorCode
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
-import com.tencent.devops.process.pojo.ErrorType
 import com.tencent.devops.worker.common.api.bugly.BuglyResourceApi
-import com.tencent.devops.worker.common.exception.TaskExecuteException
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.task.ITask
 import com.tencent.devops.worker.common.task.TaskClassType
@@ -111,7 +111,7 @@ class BuglyTask : ITask() {
             else -> throw TaskExecuteException(
                 errorMsg = "not platform found",
                 errorType = ErrorType.USER,
-                errorCode = AtomErrorCode.USER_RESOURCE_NOT_FOUND
+                errorCode = ErrorCode.USER_RESOURCE_NOT_FOUND
             )
         }
     }
@@ -124,7 +124,7 @@ class BuglyTask : ITask() {
         if (apkFiles.count() == 0) throw TaskExecuteException(
             errorMsg = "no apk file found in ${folderFile.canonicalPath}",
             errorType = ErrorType.USER,
-            errorCode = AtomErrorCode.USER_RESOURCE_NOT_FOUND
+            errorCode = ErrorCode.USER_RESOURCE_NOT_FOUND
         )
         apkFiles.forEach { apk ->
             LoggerService.addNormalLine("apk file: ${apk.canonicalPath}")
@@ -161,7 +161,7 @@ class BuglyTask : ITask() {
         if (ipaFiles.count() == 0) TaskExecuteException(
             errorMsg = "no ipa file found in ${folderFile.canonicalPath}",
             errorType = ErrorType.USER,
-            errorCode = AtomErrorCode.USER_RESOURCE_NOT_FOUND
+            errorCode = ErrorCode.USER_RESOURCE_NOT_FOUND
         )
 //        LoggerService.addNormalLine("ipa file: ${ipaFile.canonicalPath}")
         ipaFiles.forEach { ipa ->
@@ -196,7 +196,7 @@ class BuglyTask : ITask() {
         if (dsymFiles.count() == 0) throw TaskExecuteException(
             errorMsg = "no dSYM file found",
             errorType = ErrorType.USER,
-            errorCode = AtomErrorCode.USER_RESOURCE_NOT_FOUND
+            errorCode = ErrorCode.USER_RESOURCE_NOT_FOUND
         )
         dsymFiles.forEach { dsymFile ->
 
@@ -254,7 +254,7 @@ class BuglyTask : ITask() {
         if (!sourceFolder.isDirectory) throw TaskExecuteException(
             errorMsg = "$folder is not a directory",
             errorType = ErrorType.USER,
-            errorCode = AtomErrorCode.USER_INPUT_INVAILD
+            errorCode = ErrorCode.USER_INPUT_INVAILD
         )
         // transfer .so
         // 按照目录来压缩
@@ -343,7 +343,7 @@ class BuglyTask : ITask() {
                 throw TaskExecuteException(
                     errorMsg = "Failed to export bugly tool $jarName",
                     errorType = ErrorType.USER,
-                    errorCode = AtomErrorCode.USER_INPUT_INVAILD
+                    errorCode = ErrorCode.USER_INPUT_INVAILD
                 )
             } finally {
                 // 关闭输入输出流
@@ -384,7 +384,7 @@ class BuglyTask : ITask() {
             throw TaskExecuteException(
                 errorMsg = "post bugly file fail. ${result.data}",
                 errorType = ErrorType.SYSTEM,
-                errorCode = AtomErrorCode.SYSTEM_SERVICE_ERROR
+                errorCode = ErrorCode.SYSTEM_SERVICE_ERROR
             )
         }
     }

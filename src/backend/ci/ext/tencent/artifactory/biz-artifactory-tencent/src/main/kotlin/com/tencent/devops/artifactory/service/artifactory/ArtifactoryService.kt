@@ -567,13 +567,16 @@ class ArtifactoryService @Autowired constructor(
                     val path = "/" + it.path.removePrefix(pipelinePathPrefix)
                     val pipelineId = pipelineService.getPipelineId(path)
                     val buildId = pipelineService.getBuildId(path)
-                    val url =
-                        "${HomeHostUtil.outerServerHost()}/app/download/devops_app_forward.html?flag=buildArchive&projectId=$projectId&pipelineId=$pipelineId&buildId=$buildId"
-                    val shortUrl = shortUrlApi.getShortUrl(url, 300)
 
                     if ((!checkPermission || pipelineHasPermissionList.contains(pipelineId)) &&
                         pipelineIdToNameMap.containsKey(pipelineId) && buildIdToNameMap.containsKey(buildId)
                     ) {
+                        val shortUrl = if (it.name.endsWith(".ipa") || it.name.endsWith(".apk")) {
+                            val url = "${HomeHostUtil.outerServerHost()}/app/download/devops_app_forward.html?flag=buildArchive&projectId=$projectId&pipelineId=$pipelineId&buildId=$buildId"
+                            shortUrlApi.getShortUrl(url, 300)
+                        } else {
+                            ""
+                        }
                         val pipelineName = pipelineIdToNameMap[pipelineId]!!
                         val buildName = buildIdToNameMap[buildId]!!
                         val fullName = pipelineService.getFullName(path, pipelineId, pipelineName, buildId, buildName)

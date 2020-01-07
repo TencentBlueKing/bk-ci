@@ -9,6 +9,7 @@ import com.tencent.devops.project.pojo.mq.ProjectCreateBroadCastEvent
 import com.tencent.devops.project.pojo.mq.ProjectUpdateBroadCastEvent
 import com.tencent.devops.project.pojo.mq.ProjectUpdateLogoBroadCastEvent
 import com.tencent.devops.project.service.ProjectPaasCCService
+import com.tencent.devops.project.service.impl.AbsOpProjectServiceImpl.Companion.logger
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
@@ -24,16 +25,20 @@ class ProjectEventListener @Autowired constructor(
 ) : Listener<ProjectBroadCastEvent> {
 
     override fun execute(event: ProjectBroadCastEvent) {
-        when (event) {
-            is ProjectCreateBroadCastEvent -> {
-                onReceiveProjectCreate(event)
+        try {
+            when (event) {
+                is ProjectCreateBroadCastEvent -> {
+                    onReceiveProjectCreate(event)
+                }
+                is ProjectUpdateBroadCastEvent -> {
+                    onReceiveProjectUpdate(event)
+                }
+                is ProjectUpdateLogoBroadCastEvent -> {
+                    onReceiveProjectUpdateLogo(event)
+                }
             }
-            is ProjectUpdateBroadCastEvent -> {
-                onReceiveProjectUpdate(event)
-            }
-            is ProjectUpdateLogoBroadCastEvent -> {
-                onReceiveProjectUpdateLogo(event)
-            }
+        } catch (ex: Exception) {
+            logger.error("project listener execute error", ex)
         }
     }
 

@@ -6,6 +6,7 @@ import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.project.pojo.PaasCCProjectForCreate
 import com.tencent.devops.project.pojo.PaasCCProjectForUpdate
+import com.tencent.devops.project.pojo.PaasCCProjectInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectUpdateLogoInfo
@@ -127,6 +128,23 @@ class ProjectPaasCCService @Autowired constructor(
             logger.warn("Fail to update the projectLogo in paas cc with response $responseContent")
             throw OperationException("更新PaaSCC的项目LOGO信息失败")
         }
+    }
+
+    fun getPaasCCProjectInfo(projectCode: String, accessToken: String): PaasCCProjectInfo? {
+        logger.info("get the paas cc projectInfo $projectCode with token $accessToken")
+        val url = "$ccUrl/$projectCode?access_token=$accessToken"
+        val mediaType = MediaType.parse("application/json; charset=utf-8")
+        val request = Request.Builder().url(url).get().build()
+        val responseContent = request(request, "获取PAASCC项目信息失败")
+        val result = objectMapper.readValue<Result<PaasCCProjectInfo>>(responseContent)
+        if (result.code.toInt() != 0) {
+            if (result.code == 2001600) {
+                logger.warn("Fail to get Project in paas cc with: ${result.message}")
+                return result.data
+            }
+            logger.warn("Fail to get Project in paas cc with response $responseContent")
+        }
+        return result.data
     }
 
     private fun request(request: Request, errorMessage: String): String {

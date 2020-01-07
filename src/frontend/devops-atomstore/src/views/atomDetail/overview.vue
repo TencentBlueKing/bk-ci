@@ -1,7 +1,7 @@
 <template>
     <div class="atom-overview-wrapper">
         <div class="inner-header">
-            <div class="title">插件概览</div>
+            <div class="title"> {{ $t('store.插件概览') }} </div>
         </div>
 
         <section
@@ -13,7 +13,7 @@
             <div class="atom-overview-container" v-if="showContent">
                 <div class="info-content info-content-left">
                     <div class="overview-statistics">
-                        <div class="info-title">总体统计</div>
+                        <div class="info-title"> {{ $t('store.总体统计') }} </div>
                         <div class="atom-statistic">
                             <div class="total-item" v-for="(entry, index) in statisticList" :key="index">
                                 <div class="item-value" :class="{ 'blue-theme': entry.name === 'commentCnt' || entry.name === 'score' }">{{ entry.value }}</div>
@@ -22,33 +22,63 @@
                         </div>
                     </div>
                     <div class="trend-chart">
-                        <div class="info-title">趋势图</div>
+                        <div class="info-title"> {{ $t('store.趋势图') }} </div>
                         <div class="chart-content">
                             <div class="info-tab">
-                                <span class="tab-item">安装量</span>
+                                <span class="tab-item"> {{ $t('store.安装量') }} </span>
                             </div>
                             <div class="chart-item">
                                 <img :src="image">
-                                <p>功能正在建设中···</p>
+                                <p>{{ $t('store.功能正在建设中') }}···</p>
                             </div>
                         </div>
                     </div>
                 </div>
                 <div class="info-content info-content-right">
                     <div class="atom-code-card">
-                        <div class="card-title">插件代码</div>
+                        <div class="card-title"> {{ $t('store.插件代码') }} </div>
                         <div class="card-content">
                             <div class="code-form-item">
-                                <div class="info-label">开发语言：</div>
+                                <div class="info-label"> {{ $t('store.开发语言：') }} </div>
                                 <div class="info-value">{{ codeForm.language }}</div>
                             </div>
+                            <template v-if="!isEnterprise">
+                                <div class="code-form-item">
+                                    <div class="info-label"> {{ $t('store.已托管至：') }} </div>
+                                    <div class="info-value link-text" @click="toLink()"> {{ $t('store.工蜂') }} </div>
+                                </div>
+                                <div class="code-form-item codelib-form-item">
+                                    <div class="info-label"> {{ $t('store.代码库：') }} </div>
+                                    <div class="info-value codelib-url">
+                                        <span class="codelib-text">{{ codeForm.codeSrc }}</span>
+                                        <span class="link-text copy-btn" :data-clipboard-text="codeForm.codeSrc" @click="copyUrl"> {{ $t('store.复制') }} </span>
+                                    </div>
+                                </div>
+                                <div class="code-form-item codelib-form-item">
+                                    <div class="info-label"> {{ $t('store.授权人：') }} </div>
+                                    <div class="info-value codelib-url">
+                                        {{codeForm.repositoryAuthorizer}}
+                                        <bk-popover placement="top">
+                                            <i class="bk-icon icon-info-circle"></i>
+                                            <template slot="content">
+                                                <p> {{ $t('store.在发布插件时，使用授权人的身份拉取插件代码自动构建打包，或设置插件可见范围') }} </p>
+                                            </template>
+                                        </bk-popover>
+                                        <span class="link-text repo-outh"
+                                            @click="modifyRepoMemInfo"
+                                            :title="$t('store.将使用你的身份进行插件代码库相关操作')"
+                                            v-if="userInfo.isProjectAdmin && userInfo.userName !== codeForm.repositoryAuthorizer"
+                                        > {{ $t('store.重置授权') }} </span>
+                                    </div>
+                                </div>
+                            </template>
                         </div>
                     </div>
                     <div class="atom-latest-news">
-                        <div class="info-title">最新动态</div>
+                        <div class="info-title"> {{ $t('store.最新动态') }} </div>
                         <div class="news-content">
                             <img :src="image">
-                            <p>功能正在建设中···</p>
+                            <p>{{ $t('store.功能正在建设中') }}···</p>
                         </div>
                     </div>
                 </div>
@@ -58,6 +88,7 @@
 </template>
 
 <script>
+    import { mapGetters } from 'vuex'
     import Clipboard from 'clipboard'
     import imgBuilding from '@/images/building.png'
 
@@ -65,76 +96,80 @@
         data () {
             return {
                 showContent: false,
+                factoryUrl: 'https://git.code.oa.com/',
                 image: imgBuilding,
                 statisticList: [
-                    { name: 'downloads', label: '安装量', value: 0 },
-                    { name: 'pipelineCnt', label: '流水线个数', value: 0 },
-                    { name: 'commentCnt', label: '评论数', value: 0 },
-                    { name: 'score', label: '评分', value: 0 }
+                    { name: 'downloads', label: this.$t('store.安装量'), value: 0 },
+                    { name: 'pipelineCnt', label: this.$t('store.流水线个数'), value: 0 },
+                    { name: 'commentCnt', label: this.$t('store.评论数'), value: 0 },
+                    { name: 'score', label: this.$t('store.评分'), value: 0 }
                 ],
                 loading: {
                     isLoading: false,
                     title: ''
-                },
-                codeForm: {}
+                }
             }
         },
         computed: {
+            ...mapGetters('store', {
+                'codeForm': 'getCurrentAtom',
+                'userInfo': 'getUserInfo'
+            }),
             atomId () {
                 return this.$route.params.atomId
             },
             atomCode () {
                 return this.$route.params.atomCode
+            },
+            isEnterprise () {
+                return VERSION_TYPE === 'ee'
             }
         },
-        async mounted () {
-            await this.requestAtomDetail()
-            await this.requestAtomStatistic()
+        created () {
+            this.initData()
         },
+
         methods: {
-            async requestAtomDetail () {
+            initData () {
                 this.loading.isLoading = true
-                this.loading.title = '数据加载中，请稍候'
 
-                try {
-                    const res = await this.$store.dispatch('store/requestAtom', {
-                        atomCode: this.atomCode
-                    })
-                    this.codeForm = res
-                    this.$store.dispatch('store/updateCurrentaAtom', { res })
-                } catch (err) {
-                    const message = err.message ? err.message : err
-                    const theme = 'error'
-
-                    this.$bkMessage({
-                        message,
-                        theme
-                    })
-                } finally {
-                    setTimeout(() => {
-                        this.loading.isLoading = false
-                        this.showContent = true
-                    }, 500)
-                }
+                this.requestAtomStatistic().catch((err) => {
+                    this.$bkMessage({ message: err.message || err, theme: 'error' })
+                }).finally(() => {
+                    this.loading.isLoading = false
+                    this.showContent = true
+                })
             },
-            async requestAtomStatistic () {
-                try {
-                    const res = await this.$store.dispatch('store/requestAtomStatistic', {
-                        atomCode: this.atomCode
+
+            modifyRepoMemInfo () {
+                const atomCode = this.atomCode
+                const projectCode = this.codeForm.projectCode
+                this.$store.dispatch('store/checkIsOAuth', { type: 'ATOM_REPOSITORY', atomCode }).then((res) => {
+                    if (res.status === 403) {
+                        window.open(res.url, '_self')
+                        return
+                    }
+
+                    return this.$store.dispatch('store/modifyRepoMemInfo', { atomCode, projectCode }).then((res) => {
+                        if (res) {
+                            this.codeForm.repositoryAuthorizer = this.userInfo.userName
+                            this.$store.dispatch('store/updateCurrentaAtom', { res: this.codeForm })
+                            this.$bkMessage({ message: '重置授权成功', theme: 'success', limit: 1 })
+                        }
                     })
+                }).catch(err => this.$bkMessage({ message: err.message || err, theme: 'error' }))
+            },
+
+            requestAtomStatistic () {
+                return this.$store.dispatch('store/requestAtomStatistic', {
+                    atomCode: this.atomCode
+                }).then((res) => {
                     this.statisticList.forEach(item => {
                         item.value = res[item.name]
                     })
-                } catch (err) {
-                    const message = err.message ? err.message : err
-                    const theme = 'error'
-
-                    this.$bkMessage({
-                        message,
-                        theme
-                    })
-                }
+                })
             },
+
             copyUrl () {
                 this.clipboardInstance = new Clipboard('.copy-btn')
                 this.clipboardInstance.on('success', e => {
@@ -145,8 +180,9 @@
                     })
                 })
             },
-            toLink (url) {
-                window.open(url, '_blank')
+
+            toLink () {
+                window.open(this.factoryUrl, '_blank')
             }
         }
     }
@@ -229,14 +265,17 @@
             .card-content {
                 height: 129px;
                 margin-top: 8px;
-                padding: 20px;
+                padding: 10px 20px;
                 border: 1px solid $borderWeightColor;
                 background: #fff;
+                display: flex;
+                flex-direction: column;
+                justify-content: space-around;
+                font-size: 12px;
             }
             .code-form-item {
                 position: relative;
                 display: flex;
-                margin-top: 15px;
                 width: 100%;
                 &:first-child {
                     margin-top: 0;
@@ -257,27 +296,29 @@
             }
             .codelib-url {
                 position: relative;
-                top: 4px;
                 width: calc(100% - 84px);
+                display: flex;
+                align-items: center;
+                .bk-icon {
+                    vertical-align: middle;
+                    margin-left: 4px;
+                }
             }
             .codelib-text {
                 display: inline-block;
                 white-space: nowrap;
-                max-width: 86%;
+                flex: 1;
                 overflow: hidden;
+                color: $fontWeightColor;
                 font-size: 12px;
                 text-overflow: ellipsis;
             }
             .copy-btn {
-                position: relative;
-                top: -2px;
-                left: 4px;
-                font-size: 12px;
+                margin-left: 4px;
             }
-        }
-        .jump-url {
-            color: $primaryColor;
-            cursor: pointer;
+            .repo-outh {
+                margin-left: 14px;
+            }
         }
         .trend-chart {
             margin-top: 24px;

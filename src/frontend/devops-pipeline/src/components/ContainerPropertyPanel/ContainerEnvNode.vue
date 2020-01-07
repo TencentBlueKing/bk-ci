@@ -1,28 +1,59 @@
 <template>
-    <div :class="{ 'container-node-selector': true, 'is-focus-selector': isFocus }">
-        <span v-if="!isFocus" :class="{ 'build-resource-label': true, 'disabled': disabled }">{{ buildResource }}</span>
-        <select-input
-            name="value"
+    <div class="container-node-selector">
+        <enum-input v-if="showAgentType"
+            class="agent-type"
+            name="agentType"
+            :list="agentTypeList"
             :disabled="disabled"
-            :is-loading="isLoading"
             :handle-change="handleSelect"
-            :options="nodeList"
-            :has-error="hasError"
-            @focus="handleFocus"
-            @blur="handleBlur"
-            :value="value"
-        >
-        </select-input>
+            :value="agentType">
+        </enum-input>
+        <div :class="{ 'agent-name-select': true, 'abnormal-tip': abnormalSlave }" v-if="showAgentById">
+            <selector
+                name="value"
+                :disabled="disabled"
+                :handle-change="handleSelect"
+                :list="nodeList"
+                :value="value"
+                :toggle-visible="toggleAgentList"
+            >
+                <template>
+                    <div class="bk-selector-create-item cursor-pointer" @click.stop.prevent="addThridSlave">
+                        <i class="bk-icon icon-plus-circle"></i>
+                        <span class="text">{{ $t('editPage.addThirdSlave') }}</span>
+                    </div>
+                </template>
+            </selector>
+        </div>
+        <div :class="{ 'alias-name-select': true, 'is-focus-selector': isFocus }" v-else>
+            <span v-if="!isFocus" :class="{ 'build-resource-label': true, 'disabled': disabled, 'abnormal-tip': abnormalSlave }">{{ buildResource }}</span>
+            <select-input
+                name="value"
+                :disabled="disabled"
+                :is-loading="isLoading"
+                :handle-change="handleSelect"
+                :options="nodeList"
+                :has-error="hasError"
+                @focus="handleFocus"
+                @blur="handleBlur"
+                :value="value"
+            >
+            </select-input>
+        </div>
     </div>
 </template>
 
 <script>
     import { mapActions } from 'vuex'
+    import EnumInput from '@/components/atomFormField/EnumInput'
+    import Selector from '@/components/atomFormField/Selector'
     import SelectInput from '@/components/AtomFormComponent/SelectInput'
 
     export default {
         name: 'container-node-selector',
         components: {
+            EnumInput,
+            Selector,
             SelectInput
         },
         props: {
@@ -42,6 +73,14 @@
             buildResourceType: {
                 type: String
             },
+            buildImageType: {
+                type: String,
+                default: 'BKDEVOPS'
+            },
+            agentType: {
+                type: String,
+                default: 'ID'
+            },
             disabled: {
                 type: Boolean,
                 default: false
@@ -51,6 +90,10 @@
                 required: false
             },
             toggleVisible: {
+                type: Function,
+                default: () => () => {}
+            },
+            addThridSlave: {
                 type: Function,
                 default: () => () => {}
             },
@@ -73,6 +116,28 @@
                 const node = this.nodeList.find(node => node.name && node.id === this.value)
                 const label = node && typeof node.label === 'string' ? node.label : ''
                 return this.value ? this.value + label : this.value
+            },
+            abnormalSlave () {
+                return !!(this.buildResource && this.buildResource.indexOf(`（${this.$t('editPage.addThirdSlave')}）`) > 0) || false
+            },
+            isAgentId () {
+                return this.buildResourceType === 'THIRD_PARTY_AGENT_ID'
+            },
+            showAgentType () {
+                return ['THIRD_PARTY_AGENT_ID', 'THIRD_PARTY_AGENT_ENV'].includes(this.buildResourceType)
+            },
+            showAgentById () {
+                return this.showAgentType && this.agentType === 'ID'
+            },
+            agentTypeList () {
+                return this.isAgentId ? [
+                    { label: this.$t('editPage.selectSlave'), value: 'ID' },
+                    { label: this.$t('editPage.inputSlave'), value: 'NAME' }
+                ]
+                    : [
+                        { label: this.$t('editPage.selectEnv'), value: 'ID' },
+                        { label: this.$t('editPage.inputEnv'), value: 'NAME' }
+                    ]
             }
         },
         watch: {
@@ -99,23 +164,35 @@
                     this.getResourceList()
                 }
             },
+            toggleAgentList (isShow) {
+                if (isShow) this.getResourceList()
+            },
             async getResourceList () {
                 try {
                     this.isLoading = true
                     this.nodeList = []
-                    const { data: { resources } } = await this.fetchBuildResourceByType({
+                    let { data: { resources } } = await this.fetchBuildResourceByType({
                         projectCode: this.projectId,
                         os: this.os,
                         buildType: this.buildResourceType,
                         containerId: this.containerId
                     })
+                    if ((this.buildResourceType === 'DOCKER') && this.buildImageType === 'THIRD') resources = []
                     if (Array.isArray(resources)) {
                         this.nodeList = resources.map((resource, index) => ({
                             ...resource,
-                            id: resource.name,
+                            id: this.showAgentById ? resource.id : resource.name,
                             name: resource.name + (resource.label ? resource.label : ''),
                             disalbed: !resource.name
                         }))
+                    }
+
+                    // 第三方构建机（节点/环境）选择添加无权限查看项
+                    if (this.showAgentById && this.value !== '' && this.nodeList.filter(item => item.id === this.value).length === 0) {
+                        this.nodeList.splice(0, 0, {
+                            id: this.value,
+                            name: `******（${this.$t('editPage.noPermToView')}）`
+                        })
                     }
                 } catch (err) {
                     this.$bkMessage({
@@ -134,27 +211,45 @@
     @import '../../scss/conf';
     @import '../../scss/mixins/ellipsis';
     .container-node-selector {
-        
-        &:not(.is-focus-selector) {
-            input,
-            input[disabled] {
-                color: transparent !important;
-                background-color: transparent !important;
+
+        .alias-name-select {
+            &:not(.is-focus-selector) {
+                input,
+                input[disabled] {
+                    color: transparent !important;
+                    background-color: transparent !important;
+                }
+                .build-resource-label.disabled {
+                    background-color: #fafafa;
+                    color: #aaaaaa;
+                }
             }
-            .build-resource-label.disabled {
-                background-color: #fafafa;
+            .abnormal-tip {
+                color: $dangerColor;
+            }
+
+            .build-resource-label {
+                position: absolute;
+                width: 100%;
+                height: 32px;
+                line-height: 32px;
+                font-size: 12px;
+                padding: 0 50px 0 10px;
+                @include ellipsis();
+            }
+        }
+
+        .abnormal-tip {
+            .bk-select-name {
+                color: $dangerColor;
+            }
+            .is-disabled .bk-select-name {
                 color: #aaaaaa;
             }
         }
 
-        .build-resource-label {
-            position: absolute;
-            width: 100%;
-            height: 32px;
-            line-height: 32px;
-            font-size: 12px;
-            padding: 0 50px 0 10px;
-            @include ellipsis();
+        .agent-type {
+            margin-bottom: 8px;
         }
     }
 </style>

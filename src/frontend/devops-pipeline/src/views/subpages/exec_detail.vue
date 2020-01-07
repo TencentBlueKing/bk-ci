@@ -12,19 +12,19 @@
             <bk-tab :active="curItemTab" @tab-change="switchTab" class="bkdevops-pipeline-tab-card pipeline-detail-tab-card" type="unborder-card">
                 <div slot="setting" class="pipeline-info">
                     <div class="info-item">
-                        <span class="item-label">状态：</span>
+                        <span class="item-label">{{ $t('status') }}：</span>
                         <template v-if="execDetail.status === 'CANCELED'">
-                            <span v-bk-tooltips.light="`取消人：${execDetail.cancelUserId}`" :class="{ [execDetail.status]: execDetail.status }">{{ statusMap[execDetail.status] }}</span>
+                            <span v-bk-tooltips.light="`${$t('details.canceller')}：${execDetail.cancelUserId}`" :class="{ [execDetail.status]: execDetail.status }">{{ statusMap[execDetail.status] }}</span>
                         </template>
                         <span v-else :class="{ [execDetail.status]: execDetail.status }">{{ statusMap[execDetail.status] }}</span>
-                        <i v-if="showRetryIcon" title="重试" class="bk-icon icon-retry" @click.stop="retry(execDetail.id, true)"></i>
+                        <i v-if="showRetryIcon" title="rebuild" class="bk-icon icon-retry" @click.stop="retry(execDetail.id, true)"></i>
                     </div>
                     <div class="info-item">
-                        <span class="item-label">执行人：</span>
+                        <span class="item-label">{{ $t('details.executor') }}：</span>
                         <span class="trigger-mode">{{ execDetail.userId || '--' }}</span>
                     </div>
                     <div class="info-item">
-                        <span class="item-label">任务耗时：</span>
+                        <span class="item-label">{{ $t('details.executionTime') }}：</span>
                         <span>{{ execDetail.endTime ? convertMStoStringByRule(execDetail.endTime - execDetail.startTime) : '--' }}</span>
                     </div>
                 </div>
@@ -40,69 +40,93 @@
                 </bk-tab-panel>
             </bk-tab>
         </template>
-
-        <bk-sideslider v-if="editingElementPos && execDetail" v-bind="sidePanelConfig" :is-show.sync="isPropertyPanelShow" :quick-close="true">
-            <template slot="content">
-                <pipeline-log
-                    class="log-panel"
-                    v-if="showLog"
-                    :build-no="$route.params.buildNo"
-                    :build-num="execDetail.buildNum"
-                    :show-export="true"
-                    :build-tag="getElementId"
-                    :execute-count="getExecuteCount"
+        <template v-if="editingElementPos && execDetail">
+            <template v-if="showLog">
+                <log :is-init="isInitLog"
+                    :title="currentElement.name"
+                    :status="currentElement.status"
+                    :id="currentElement.id"
+                    :execute-count="currentElement.executeCount"
+                    :down-load-name="`${editingElementPos.stageIndex + 1}-${editingElementPos.containerIndex + 1}-${editingElementPos.elementIndex + 1}-${currentElement.name}`"
+                    @changeExecute="changeExecute"
+                    :link-url="linkUrl"
+                    :down-load-link="downLoadPluginLink"
+                    @closeLog="closeLog"
+                    log-type="plugin"
+                    ref="log"
                 />
+            </template>
+            <template v-else-if="showContainerPanel">
                 <container-property-panel
-                    v-else-if="showContainerPanel"
+                    :title="sidePanelConfig.title"
                     :container-index="editingElementPos.containerIndex"
                     :stage-index="editingElementPos.stageIndex"
                     :stages="execDetail.model.stages"
                     :editable="false"
                 />
             </template>
-        </bk-sideslider>
+        </template>
+
+        <template v-if="execDetail">
+            <log v-if="showCompleteLog"
+                :is-init="isInitLog"
+                :title="execDetail.pipelineName"
+                :status="execDetail.status"
+                :id="execDetail.id"
+                :link-url="linkUrl"
+                :down-load-name="execDetail.pipelineName"
+                :down-load-link="downLoadAllLink"
+                @closeLog="closeLog"
+                log-type="all"
+                ref="log"
+            >
+            </log>
+        </template>
     </section>
 </template>
 
 <script>
     import { mapState, mapActions } from 'vuex'
-    import pipelineWebsocket from '@/utils/pipelineWebSocket'
+    import webSocketMessage from '@/utils/webSocketMessage'
     import stages from '@/components/Stages'
     import viewPart from '@/components/viewPart'
     import codeRecord from '@/components/codeRecord'
     import outputOption from '@/components/outputOption'
-    import PipelineLog from '@/components/Log'
     import ContainerPropertyPanel from '@/components/ContainerPropertyPanel/'
     import emptyTips from '@/components/devops/emptyTips'
+    import log from '../../../../devops-log'
     import pipelineOperateMixin from '@/mixins/pipeline-operate-mixin'
-    import { statusMap } from '@/utils/pipelineConst'
+    import pipelineConstMixin from '@/mixins/pipelineConstMixin'
     import { convertMStoStringByRule } from '@/utils/util'
 
     export default {
         components: {
             stages,
-            PipelineLog,
             ContainerPropertyPanel,
             viewPart,
             codeRecord,
             outputOption,
-            emptyTips
+            emptyTips,
+            log
         },
-        mixins: [pipelineOperateMixin],
+        mixins: [pipelineOperateMixin, pipelineConstMixin],
 
         data () {
             return {
                 isLoading: true,
                 hasNoPermission: false,
+                isInitLog: false,
+                logPostData: {},
+                linkUrl: WEB_URL_PIRFIX + location.pathname,
                 noPermissionTipsConfig: {
-                    title: '没有权限',
-                    desc: '你没有查看该流水线的权限，请切换项目或申请相应权限',
+                    title: this.$t('noPermission'),
+                    desc: this.$t('history.noPermissionTips'),
                     btns: [
                         {
                             theme: 'primary',
                             size: 'normal',
                             handler: this.changeProject,
-                            text: '切换项目'
+                            text: this.$t('changeProject')
                         },
                         {
                             theme: 'success',
@@ -110,7 +134,7 @@
                             handler: () => {
                                 this.goToApplyPerm('role_manager')
                             },
-                            text: '申请权限'
+                            text: this.$t('applyPermission')
                         }
                     ]
                 }
@@ -122,18 +146,22 @@
                 'execDetail',
                 'editingElementPos',
                 'isPropertyPanelVisible',
+                'isShowCompleteLog',
                 'fetchingAtomList'
             ]),
             ...mapState([
                 'fetchError'
             ]),
-            statusMap () {
-                return statusMap
+            downLoadAllLink () {
+                return `${AJAX_URL_PIRFIX}/log/api/user/logs/${this.$route.params.projectId}/${this.$route.params.pipelineId}/${this.execDetail.id}/download`
+            },
+            downLoadPluginLink () {
+                return `${AJAX_URL_PIRFIX}/log/api/user/logs/${this.$route.params.projectId}/${this.$route.params.pipelineId}/${this.execDetail.id}/download?tag=${this.currentElement.id}&executeCount=${this.logPostData.currentExe}`
             },
             panels () {
                 return [{
                     name: 'executeDetail',
-                    label: '执行详情',
+                    label: this.$t('details.executeDetail'),
                     component: 'stages',
                     className: 'exec-pipeline',
                     bindData: {
@@ -142,19 +170,19 @@
                     }
                 }, {
                     name: 'partView',
-                    label: '查看构件',
+                    label: this.$t('details.partView'),
                     className: '',
                     component: 'view-part',
                     bindData: {}
                 }, {
                     name: 'codeRecords',
-                    label: '代码变更记录',
+                    label: this.$t('details.codeRecords'),
                     className: '',
                     component: 'code-record',
                     bindData: {}
                 }, {
                     name: 'output',
-                    label: '产出物报告',
+                    label: this.$t('details.outputReport'),
                     className: '',
                     component: 'output-option',
                     bindData: {
@@ -162,13 +190,43 @@
                     }
                 }]
             },
-            showLog () {
-                const { editingElementPos, $route: { params } } = this
-                return typeof editingElementPos.elementIndex !== 'undefined' && params.buildNo
+            showLog: {
+                get () {
+                    const { editingElementPos, $route: { params } } = this
+                    const res = typeof editingElementPos.elementIndex !== 'undefined' && params.buildNo
+                    if (res) this.initLog()
+                    return res
+                },
+                set (value) {
+                    this.togglePropertyPanel({
+                        isShow: value
+                    })
+                }
+            },
+            showCompleteLog () {
+                const { isShowCompleteLog, $route: { params } } = this
+                const res = isShowCompleteLog && params.buildNo
+                if (res) this.initAllLog()
+                return res
             },
             showContainerPanel () {
                 const { editingElementPos } = this
-                return typeof editingElementPos.containerIndex !== 'undefined'
+                const res = typeof editingElementPos.containerIndex !== 'undefined'
+                return res
+            },
+            currentJob () {
+                const { editingElementPos, execDetail } = this
+                const model = execDetail.model || {}
+                const stages = model.stages || []
+                const currentStage = stages[editingElementPos.stageIndex] || []
+                return currentStage.containers[editingElementPos.containerIndex]
+            },
+            currentElement () {
+                const {
+                    editingElementPos: { stageIndex, containerIndex, elementIndex },
+                    execDetail: { model: { stages } }
+                } = this
+                return stages[stageIndex].containers[containerIndex].elements[elementIndex]
             },
             getElementId () {
                 const {
@@ -203,10 +261,10 @@
             },
             sidePanelConfig () {
                 return this.showLog ? {
-                    title: `${this.getElementViewName || '查看日志'}`,
+                    title: `${this.getElementViewName || this.$t('history.viewLog')}`,
                     width: 820
                 } : {
-                    title: '属性栏',
+                    title: this.$t('propertyBar'),
                     class: 'sodaci-property-panel',
                     width: 640
                 }
@@ -221,30 +279,24 @@
             curItemTab () {
                 return this.routerParams.type || 'executeDetail'
             },
-            isPropertyPanelShow: {
-                get () {
-                    return this.isPropertyPanelVisible
-                },
-                set (value) {
-                    this.togglePropertyPanel({
-                        isShow: value
-                    })
-                }
-            },
             showRetryIcon () {
-                return this.execDetail && (this.execDetail.latestVersion === this.execDetail.curVersion) && ['RUNNING', 'QUEUE', 'SUCCEED'].indexOf(this.execDetail.status) < 0
+                return this.execDetail && ['RUNNING', 'QUEUE'].indexOf(this.execDetail.status) < 0
             }
         },
 
         watch: {
             execDetail (val) {
                 this.isLoading = val === null
+                const query = this.$route.query || {}
+                const logType = query.logType
+                const id = query.id
+                if (logType === 'plugin') this.showElementLog(id)
+                if (logType === 'all') this.showAllLog(id)
             },
             'routerParams.buildNo': {
                 handler (val, oldVal) {
                     if (val !== oldVal) {
                         this.requestPipelineExecDetail(this.routerParams)
-                        this.initWebSocket(val)
                     }
                 }
             },
@@ -256,8 +308,13 @@
             }
         },
 
-        created () {
+        mounted () {
             this.requestPipelineExecDetail(this.routerParams)
+            this.$store.dispatch('soda/requestInterceptAtom', {
+                projectId: this.routerParams.projectId,
+                pipelineId: this.routerParams.pipelineId
+            })
+            webSocketMessage.installWsMessage(this.setPipelineDetail)
         },
 
         beforeDestroy () {
@@ -265,7 +322,7 @@
             this.togglePropertyPanel({
                 isShow: false
             })
-            pipelineWebsocket.disconnect()
+            webSocketMessage.unInstallWsMessage()
         },
 
         methods: {
@@ -273,7 +330,12 @@
                 'updateAtom',
                 'togglePropertyPanel',
                 'requestPipelineExecDetail',
-                'setPipelineDetail'
+                'setPipelineDetail',
+                'getInitLog',
+                'getAfterLog'
+            ]),
+            ...mapActions('soda', [
+                'requestInterceptAtom'
             ]),
             convertMStoStringByRule,
             switchTab (tabType = 'executeDetail') {
@@ -286,17 +348,124 @@
                 })
             },
 
-            initWebSocket () {
-                const projectId = this.routerParams.projectId
-                const subscribe = `/topic/pipelineDetail/${this.routerParams.buildNo}`
-
-                pipelineWebsocket.connect(projectId, subscribe, {
-                    success: (res) => {
-                        const data = JSON.parse(res.body)
-                        this.setPipelineDetail(data)
-                    },
-                    error: (message) => this.$showTips({ message, theme: 'error' })
+            showElementLog (elementId) {
+                let eleIndex, conIndex
+                const staIndex = this.execDetail.model.stages.findIndex(stage => {
+                    conIndex = stage.containers.findIndex(container => {
+                        eleIndex = container.elements.findIndex(element => element.id === elementId)
+                        return eleIndex > -1
+                    })
+                    return conIndex > -1
                 })
+                if (staIndex > -1) {
+                    this.togglePropertyPanel({
+                        isShow: true,
+                        editingElementPos: {
+                            stageIndex: staIndex,
+                            containerIndex: conIndex,
+                            elementIndex: eleIndex
+                        }
+                    })
+                }
+            },
+
+            changeExecute (currentExe) {
+                this.logPostData.currentExe = currentExe
+                this.openLogApi.hasOpen = false
+                clearTimeout(this.getAfterLogApi.id)
+                this.openLogApi()
+            },
+
+            showAllLog () {
+                this.togglePropertyPanel({
+                    isShow: true,
+                    isComplete: true
+                })
+            },
+
+            initAllLog () {
+                if (this.openLogApi.hasOpen) return
+                const route = this.$route.params || {}
+                const query = this.$route.query || {}
+                const currentExe = query.id === this.execDetail.id ? +query.currentExe : 1
+                this.logPostData = {
+                    projectId: route.projectId,
+                    pipelineId: route.pipelineId,
+                    buildId: this.execDetail.id,
+                    currentExe
+                }
+                this.openLogApi()
+            },
+
+            initLog () {
+                if (this.openLogApi.hasOpen) return
+                const route = this.$route.params || {}
+                const query = this.$route.query || {}
+                const currentExe = query.id === this.currentElement.id ? +query.currentExe : (this.currentElement.executeCount || 1)
+                this.logPostData = {
+                    projectId: route.projectId,
+                    pipelineId: route.pipelineId,
+                    buildId: this.execDetail.id,
+                    tag: this.currentElement.id,
+                    currentExe
+                }
+                this.openLogApi()
+            },
+
+            openLogApi () {
+                if (this.openLogApi.hasOpen) return
+                this.openLogApi.hasOpen = true
+                this.isInitLog = true
+                this.getInitLog(this.logPostData).then((res) => {
+                    this.handleLogRes(res)
+                    if (!res.finished || res.hasMore) this.$refs.log.scrollPageToBottom()
+                }).catch((err) => {
+                    this.$bkMessage({ theme: 'error', message: err.message || err })
+                    this.isInitLog = false
+                })
+            },
+
+            handleLogRes (res) {
+                res = res.data || {}
+                const logs = res.logs || []
+                const lastLog = logs[logs.length - 1] || {}
+                const lastLogNo = lastLog.lineNo || this.handleLogRes.lineNo || -1
+                this.handleLogRes.lineNo = lastLogNo
+                this.logPostData.lineNo = +lastLogNo + 1
+                const logEle = this.$refs.log
+                if (!logEle) return
+
+                if (res.finished) {
+                    if (res.hasMore) {
+                        this.isInitLog = false
+                        logEle.addLogData(logs)
+                        this.getAfterLogApi(100)
+                    } else {
+                        logEle.addLogData(logs, true)
+                        this.isInitLog = false
+                    }
+                } else {
+                    logEle.addLogData(logs)
+                    this.isInitLog = false
+                    this.getAfterLogApi(1000)
+                }
+            },
+
+            getAfterLogApi (mis) {
+                this.getAfterLogApi.id = setTimeout(() => {
+                    this.getAfterLog(this.logPostData).then((res) => {
+                        this.handleLogRes(res)
+                    }).catch((err) => {
+                        this.$bkMessage({ theme: 'error', message: err.message || err })
+                    })
+                }, mis)
+            },
+
+            closeLog () {
+                this.showLog = false
+                this.openLogApi.hasOpen = false
+                this.handleLogRes.lineNo = -1
+                clearTimeout(this.getAfterLogApi.id)
             }
         }
     }
@@ -312,7 +481,7 @@
         .pipeline-detail-tab-card {
             height: 100%;
             .bk-tab-section {
-                height: calc(100% - 52px);
+                height: calc(100% - 60px);
                 padding-bottom: 10px;
             }
         }
@@ -342,7 +511,7 @@
         }
 
          .pipeline-info {
-            width: 360px;
+            width: 480px;
             display: flex;
             height: 100%;
             align-items: center;

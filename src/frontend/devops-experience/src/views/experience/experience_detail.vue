@@ -73,7 +73,7 @@
             isMof () {
                 const projectId = this.$route.params.projectId
                 return this.$store.state.projectList.find(item => {
-                    return (item.dept_name === '魔方工作室群' && item.project_code === projectId)
+                    return (item.deptName === '魔方工作室群' && item.projectCode === projectId)
                 })
             },
             isWindows () {

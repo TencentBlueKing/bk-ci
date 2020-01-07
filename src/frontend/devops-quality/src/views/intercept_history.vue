@@ -151,7 +151,7 @@
         watch: {
             projectId () {
                 this.$router.push({
-                    name: 'overview',
+                    name: 'qualityOverview',
                     params: {
                         projectId: this.projectId
                     }

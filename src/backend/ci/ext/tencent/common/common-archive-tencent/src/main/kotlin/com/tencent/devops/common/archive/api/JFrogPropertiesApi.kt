@@ -28,39 +28,29 @@ package com.tencent.devops.common.archive.api
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.archive.api.pojo.JFrogProperties
 import com.tencent.devops.common.archive.util.JFrogUtil
-import com.tencent.devops.common.api.util.OkhttpUtils
 import okhttp3.MediaType
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Component
 
-@Component
-class JFrogPropertiesApi @Autowired constructor(
-    jFrogConfigProperties: JFrogConfigProperties,
+class JFrogPropertiesApi constructor(
+    private val jFrogConfigProperties: JFrogConfigProperties,
     private val objectMapper: ObjectMapper
 ) {
-//    private val okHttpClient = okhttp3.OkHttpClient.Builder()
-//            .connectTimeout(5L, TimeUnit.SECONDS)
-//            .readTimeout(60L, TimeUnit.SECONDS)
-//            .writeTimeout(60L, TimeUnit.SECONDS)
-//            .build()
     private val baseUrl = jFrogConfigProperties.url!!
     private val credential = JFrogUtil.makeCredential(jFrogConfigProperties.username!!, jFrogConfigProperties.password!!)
 
     fun getProperties(path: String): Map<String, List<String>> {
         val url = "$baseUrl/api/storage/$path?properties"
         val request = Request.Builder()
-                .url(url)
-                .header("Authorization", credential)
-                .get()
-                .build()
+            .url(url)
+            .header("Authorization", credential)
+            .get()
+            .build()
 
-//        val httpClient = okHttpClient.newBuilder().build()
-//        httpClient.newCall(request).execute().use { response ->
         OkhttpUtils.doHttp(request).use { response ->
             val responseContent = response.body()!!.string()
             if (!response.isSuccessful) {
@@ -83,12 +73,10 @@ class JFrogPropertiesApi @Autowired constructor(
         val recursiveInt = if (recursive) 1 else 0
         val url = "$baseUrl/api/storage/$path?properties=${encodeProperties(properties)}&recursive=$recursiveInt"
         val request = Request.Builder()
-                .url(url)
-                .header("Authorization", credential)
-                .put(RequestBody.create(MediaType.parse("application/json"), ""))
-                .build()
-//        val httpClient = okHttpClient.newBuilder().build()
-//        httpClient.newCall(request).execute().use { response ->
+            .url(url)
+            .header("Authorization", credential)
+            .put(RequestBody.create(MediaType.parse("application/json"), ""))
+            .build()
         OkhttpUtils.doHttp(request).use { response ->
             val responseContent = response.body()!!.string()
             if (!response.isSuccessful) {
@@ -104,13 +92,10 @@ class JFrogPropertiesApi @Autowired constructor(
         val recursiveInt = if (recursive) 1 else 0
         val url = "$baseUrl/api/storage/$path?properties=${propertyKeys.joinToString(",")}&recursive=$recursiveInt"
         val request = Request.Builder()
-                .url(url)
-                .header("Authorization", credential)
-                .delete()
-                .build()
-
-//        val httpClient = okHttpClient.newBuilder().build()
-//        httpClient.newCall(request).execute().use { response ->
+            .url(url)
+            .header("Authorization", credential)
+            .delete()
+            .build()
         OkhttpUtils.doHttp(request).use { response ->
             val responseContent = response.body()!!.string()
             if (!response.isSuccessful) {
@@ -139,9 +124,9 @@ class JFrogPropertiesApi @Autowired constructor(
 
     private fun encodeProperty(str: String): String {
         return str.replace(",", "%5C,")
-                .replace("\\", "%5C\\")
-                .replace("|", "%5C|")
-                .replace("=", "%5C=")
+            .replace("\\", "%5C\\")
+            .replace("|", "%5C|")
+            .replace("=", "%5C=")
     }
 
     companion object {

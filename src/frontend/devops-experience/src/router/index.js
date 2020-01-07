@@ -16,7 +16,7 @@ const routes = [
                 meta: {
                     title: '移动端管理发布',
                     logo: 'experience',
-                    header: '版本体验',
+                    header: 'experience',
                     to: 'experienceList'
                 }
             },
@@ -27,7 +27,7 @@ const routes = [
                 meta: {
                     title: '发布详情',
                     logo: 'experience',
-                    header: '版本体验',
+                    header: 'experience',
                     to: 'experienceList'
                 }
             },
@@ -38,7 +38,7 @@ const routes = [
                 meta: {
                     title: '新增体验',
                     logo: 'experience',
-                    header: '版本体验',
+                    header: 'experience',
                     to: 'experienceList'
                 }
             },
@@ -49,7 +49,7 @@ const routes = [
                 meta: {
                     title: '编辑发布',
                     logo: 'experience',
-                    header: '版本体验',
+                    header: 'experience',
                     to: 'experienceList'
                 }
             },
@@ -60,7 +60,7 @@ const routes = [
                 meta: {
                     title: '设置',
                     logo: 'experience',
-                    header: '版本体验',
+                    header: 'experience',
                     to: 'experienceList'
                 }
             }

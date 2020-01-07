@@ -126,7 +126,7 @@ class ServiceGitResourceImpl @Autowired constructor(
     }
 
     override fun getToken(gitProjectId: Long): Result<GitToken> {
-        return Result(gitService.getToken(gitProjectId))
+        return Result(gitService.getToken(gitProjectId.toString()))
     }
 
     override fun getGitCIFileContent(gitProjectId: Long, filePath: String, token: String, ref: String): Result<String> {

@@ -29,6 +29,7 @@ package com.tencent.devops.common.auth.api
 import com.tencent.devops.common.auth.api.pojo.BKAuthProjectRolesResources
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroupAndUserList
+import com.tencent.devops.common.auth.api.pojo.BkAuthProjectInfoResources
 import com.tencent.devops.common.auth.code.AuthServiceCode
 import com.tencent.devops.common.auth.code.BK_DEVOPS_SCOPE
 
@@ -114,6 +115,10 @@ class MockAuthProjectApi constructor(
         projectCode: String,
         projectId: String
     ): List<BKAuthProjectRolesResources> {
+        TODO("not implemented") // To change body of created functions use File | Settings | File Templates.
+    }
+
+    override fun getProjectInfo(serviceCode: AuthServiceCode, projectId: String): BkAuthProjectInfoResources? {
         TODO("not implemented") // To change body of created functions use File | Settings | File Templates.
     }
 }

@@ -69,7 +69,7 @@
                                     <div v-for="(art, inx) in item.artifactorys" :key="inx" :class="[art === &quot;DEV&quot; ? &quot;dev-art&quot; : &quot;prod-art&quot;, &quot;art-tag&quot;]">
                                         {{art === 'DEV' ? '研发仓库' : '生产仓库'}}
                                     </div>
-                                    <span class="handler-btn" v-if="imageType === 'private'" @click="setBuildImage(item)">拷贝为构建镜像</span>
+                                    <!-- span class="handler-btn" v-if="imageType === 'private'" @click="setBuildImage(item)">拷贝为构建镜像</span !-->
                                 </template>
                                 <template v-else>--</template>
                             </td>

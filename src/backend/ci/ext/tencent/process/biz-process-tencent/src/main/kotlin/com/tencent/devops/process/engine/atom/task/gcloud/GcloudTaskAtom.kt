@@ -28,6 +28,8 @@ package com.tencent.devops.process.engine.atom.task.gcloud
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.common.api.pojo.ErrorCode
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.element.GcloudElement
@@ -37,8 +39,6 @@ import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.IAtomTask
 import com.tencent.devops.process.engine.atom.defaultFailAtomResponse
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
-import com.tencent.devops.process.pojo.AtomErrorCode
-import com.tencent.devops.process.pojo.ErrorType
 import com.tencent.devops.process.service.PipelineUserService
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.slf4j.LoggerFactory
@@ -107,7 +107,7 @@ class GcloudTaskAtom @Autowired constructor(
             AtomResponse(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.USER,
-                errorCode = AtomErrorCode.USER_TASK_OPERATE_FAIL,
+                errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
                 errorMsg = "execute gcloud task failed"
             )
         }

@@ -28,6 +28,7 @@ dependencies {
     compile project(":core:common:common-service")
     compile project(":core:common:common-web")
     compile project(":ext:tencent:common:common-digest-tencent")
+    compile project(":ext:tencent:common:common-kafka-tencent")
     compile project(":core:common:common-kafka")
     compile project(":core:common:common-es")
     compile project(":core:common:common-event")

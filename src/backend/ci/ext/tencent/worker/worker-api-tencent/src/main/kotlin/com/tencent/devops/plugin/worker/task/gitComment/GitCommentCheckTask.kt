@@ -26,12 +26,12 @@
 
 package com.tencent.devops.plugin.worker.task.gitComment
 
+import com.tencent.devops.common.api.exception.TaskExecuteException
+import com.tencent.devops.common.api.pojo.ErrorCode
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.pipeline.element.GitCommentCheckElement
-import com.tencent.devops.process.pojo.AtomErrorCode
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
-import com.tencent.devops.process.pojo.ErrorType
-import com.tencent.devops.worker.common.exception.TaskExecuteException
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.task.ITask
 import com.tencent.devops.worker.common.task.TaskClassType
@@ -57,17 +57,17 @@ class GitCommentCheckTask : ITask() {
         val sourceBranch = taskParam["sourceBranch"] ?: throw TaskExecuteException(
             errorMsg = "Git Comment检查没有源分支",
             errorType = ErrorType.USER,
-            errorCode = AtomErrorCode.USER_INPUT_INVAILD
+            errorCode = ErrorCode.USER_INPUT_INVAILD
         )
         val targetBranch = taskParam["targetBranch"] ?: throw TaskExecuteException(
             errorMsg = "Git Comment检查没有目标分支",
             errorType = ErrorType.USER,
-            errorCode = AtomErrorCode.USER_INPUT_INVAILD
+            errorCode = ErrorCode.USER_INPUT_INVAILD
         )
         val commentPattern = taskParam["commentPattern"] ?: throw TaskExecuteException(
             errorMsg = "Git Comment检查没有检查的正则匹配",
             errorType = ErrorType.USER,
-            errorCode = AtomErrorCode.USER_INPUT_INVAILD
+            errorCode = ErrorCode.USER_INPUT_INVAILD
         )
         val failOnMismatch = (taskParam["failOnMismatch"] ?: false.toString()).toBoolean()
 
@@ -81,14 +81,14 @@ class GitCommentCheckTask : ITask() {
             throw TaskExecuteException(
                 errorMsg = "Git Comment检查的代码库（${codeDir.absolutePath}）不存在",
                 errorType = ErrorType.USER,
-                errorCode = AtomErrorCode.USER_RESOURCE_NOT_FOUND
+                errorCode = ErrorCode.USER_RESOURCE_NOT_FOUND
             )
         }
         if (!File(codeDir, ".git").exists()) {
             throw TaskExecuteException(
                 errorMsg = "Git Comment检查路径不是一个git代码库",
                 errorType = ErrorType.USER,
-                errorCode = AtomErrorCode.USER_RESOURCE_NOT_FOUND
+                errorCode = ErrorCode.USER_RESOURCE_NOT_FOUND
             )
         }
         val git = Git(FileRepositoryBuilder().setWorkTree(codeDir).readEnvironment().build())
@@ -102,12 +102,12 @@ class GitCommentCheckTask : ITask() {
         val sourceObjectId = resolve(git, sourceBranch) ?: throw TaskExecuteException(
             errorMsg = "Git源分支${sourceBranch}没有找到对应的commitID",
             errorType = ErrorType.USER,
-            errorCode = AtomErrorCode.USER_RESOURCE_NOT_FOUND
+            errorCode = ErrorCode.USER_RESOURCE_NOT_FOUND
         )
         val targetObjectId = resolve(git, targetBranch) ?: throw TaskExecuteException(
             errorMsg = "Git目标分支${targetBranch}没有找到对应的commitID",
             errorType = ErrorType.USER,
-            errorCode = AtomErrorCode.USER_RESOURCE_NOT_FOUND
+            errorCode = ErrorCode.USER_RESOURCE_NOT_FOUND
         )
         val commits = try {
             git.log().addRange(targetObjectId, sourceObjectId).call()
@@ -116,7 +116,7 @@ class GitCommentCheckTask : ITask() {
             throw TaskExecuteException(
                 errorMsg = "Git Comment检查获取分支信息失败 - ${t.message}",
                 errorType = ErrorType.USER,
-                errorCode = AtomErrorCode.USER_TASK_OPERATE_FAIL
+                errorCode = ErrorCode.USER_TASK_OPERATE_FAIL
             )
         }
 
@@ -133,7 +133,7 @@ class GitCommentCheckTask : ITask() {
                     throw TaskExecuteException(
                         errorMsg = "Git Comment检查: ${it.fullMessage} 与匹配规则($commentPattern)不匹配",
                         errorType = ErrorType.USER,
-                        errorCode = AtomErrorCode.USER_INPUT_INVAILD
+                        errorCode = ErrorCode.USER_INPUT_INVAILD
                     )
                 }
                 LoggerService.addYellowLine("Git Comment检查: ${it.fullMessage} 与匹配规则($commentPattern)不匹配")

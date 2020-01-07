@@ -1,13 +1,13 @@
 package com.tencent.devops.plugin.worker.task.bk
 
+import com.tencent.devops.common.api.exception.TaskExecuteException
+import com.tencent.devops.common.api.pojo.ErrorCode
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.pipeline.element.SensitiveScanElement
-import com.tencent.devops.process.pojo.AtomErrorCode
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
-import com.tencent.devops.process.pojo.ErrorType
 import com.tencent.devops.worker.common.api.ApiFactory
 import com.tencent.devops.worker.common.api.report.ReportSDKApi
-import com.tencent.devops.worker.common.exception.TaskExecuteException
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.task.ITask
 import com.tencent.devops.worker.common.task.TaskClassType
@@ -85,7 +85,7 @@ class SensitiveScanTask : ITask() {
             throw TaskExecuteException(
                 errorMsg = "文件夹($fileDirParam)不存在",
                 errorType = ErrorType.USER,
-                errorCode = AtomErrorCode.USER_RESOURCE_NOT_FOUND
+                errorCode = ErrorCode.USER_RESOURCE_NOT_FOUND
             )
         }
 

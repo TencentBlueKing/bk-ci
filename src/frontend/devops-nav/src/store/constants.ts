@@ -9,10 +9,12 @@ export const UPDATE_NEW_PROJECT: string = 'UPDATE_NEW_PROJECT'
 export const TOGGLE_PROJECT_DIALOG: string = 'TOGGLE_PROJECT_DIALOG'
 export const UPDATE_PROJECT_MUTATION: string = 'UPDATE_PROJECT_MUTATION'
 export const RESET_NEW_PROJECT: string = 'RESET_NEW_PROJECT'
-export const SET_POPUP_SHOW = 'SET_POPUP_SHOW'
-export const UPDATE_HEADER_CONFIG = 'UPDATE_HEADER_CONFIG'
-export const CLOSE_PREVIEW_TIPS = 'CLOSE_PREVIEW_TIPS'
-export const TOGGLE_MODULE_LOADING = 'TOGGLE_MODULE_LOADING'
+export const SET_POPUP_SHOW: string = 'SET_POPUP_SHOW'
+export const UPDATE_HEADER_CONFIG: string = 'UPDATE_HEADER_CONFIG'
+export const CLOSE_PREVIEW_TIPS: string = 'CLOSE_PREVIEW_TIPS'
+export const TOGGLE_MODULE_LOADING: string = 'TOGGLE_MODULE_LOADING'
+export const UPDATE_CURRENT_PAGE: string = 'UPDATE_CURRENT_PAGE'
+export const TOGGLE_PERMISSION_DIALOG: string = 'TOGGLE_PERMISSION_DIALOG'
 
 // 服务列表
 const serviceList = [
@@ -47,17 +49,17 @@ export const [
 ] = serviceList.map(s => `${s}/api`)
 
 export const EMPTY_PROJECT: Project = {
-    project_name: '',
-    english_name: '',
-    project_type: '',
+    projectName: '',
+    englishName: '',
+    projectType: '',
     description: '',
-    bg_id: '',
-    bg_name: '',
-    dept_id: '',
-    dept_name: '',
-    center_id: '',
-    center_name: '',
-    is_secrecy: false,
-    deploy_type: [],
+    bgId: '',
+    bgName: '',
+    deptId: '', 
+    deptName: '',
+    centerId: '',
+    centerName: '',
+    isSecrecy: false,
+    deployType: [],
     kind: '0'
 }

@@ -254,7 +254,7 @@ class OpImageDataTransferService @Autowired constructor(
         var changedCount = 0
         // 2.调project接口获取项目负责人信息
         val projectInfo =
-            client.get(ServiceProjectResource::class).listByProjectCode(setOf(projectCode)).data?.get(0)
+            client.get(ServiceProjectResource::class).listOnlyByProjectCode(setOf(projectCode)).data?.get(0)
                 ?: throw DataConsistencyException(
                     srcData = "projectCode=$projectCode",
                     targetData = "projectDetail",
@@ -296,6 +296,16 @@ class OpImageDataTransferService @Autowired constructor(
             } else {
                 // 生成code
                 imageCode = it.repo!!.removePrefix("/").removeSuffix("/").replace("paas/bkdevops/", "").replace("/", "_")
+                // 超长处理
+                if (imageCode.length > 60) {
+                    imageCode = imageCode.substring(imageCode.length - 60)
+                    if (imageCode.indexOf("_") != -1) {
+                        imageCode = imageCode.substring(imageCode.indexOf("_") + 1)
+                    }
+                    if (imageCode.isEmpty()) {
+                        imageCode = "build_image"
+                    }
+                }
                 // 重复处理
                 var imageCodeNum = 0
                 var tempImageCode = imageCode
@@ -311,7 +321,17 @@ class OpImageDataTransferService @Autowired constructor(
             var imageName = if (-1 != index) {
                 it.repo!!.substring(index + 1)
             } else {
-                it.repo
+                it.repo ?: ""
+            }
+            // 超长处理
+            if (imageName.length > 60) {
+                imageName = imageName.substring(imageName.length - 60)
+                if (imageName.indexOf("_") != -1) {
+                    imageName = imageName.substring(imageName.indexOf("_") + 1)
+                }
+                if (imageName.isEmpty()) {
+                    imageName = "build_image"
+                }
             }
             // 重复处理
             var imageNameNum = 0
