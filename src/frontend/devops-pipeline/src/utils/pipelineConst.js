@@ -39,6 +39,6 @@ export const BUILD_HISTORY_TABLE_DEFAULT_COLUMNS = [
     'endTime',
     'totalTime',
     'artifactList',
-    'remark',
-    'entry'
+    'pipelineVersion',
+    'remark'
 ]
