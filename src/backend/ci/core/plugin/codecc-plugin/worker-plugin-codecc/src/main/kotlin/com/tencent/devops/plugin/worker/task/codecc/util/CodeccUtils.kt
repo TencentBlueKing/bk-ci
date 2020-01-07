@@ -78,7 +78,6 @@ object CodeccUtils {
     fun executeCommand(codeccExecuteConfig: CodeccExecuteConfig): String {
         val codeccWorkspace = getCodeccWorkspace(codeccExecuteConfig)
         try {
-            takeBuildEnvs(codeccExecuteConfig)
             initData(codeccExecuteConfig.scriptType, codeccWorkspace)
             return doRun(codeccExecuteConfig)
         } finally {
@@ -196,7 +195,7 @@ object CodeccUtils {
             buildId = codeccExecuteConfig.buildTask.buildId,
             script = list.joinToString(" "),
             dir = workspace,
-            buildEnvs = codeccExecuteConfig.buildVariables.buildEnvs,
+            buildEnvs = takeBuildEnvs(codeccExecuteConfig),
             runtimeVariables = variables,
             prefix = "[cov] "
         )
@@ -265,7 +264,7 @@ object CodeccUtils {
             buildId = codeccExecuteConfig.buildTask.buildId,
             script = list.joinToString(" "),
             dir = workspace,
-            buildEnvs = codeccExecuteConfig.buildVariables.buildEnvs,
+            buildEnvs = takeBuildEnvs(codeccExecuteConfig),
             runtimeVariables = variables,
             prefix = "[tools] "
         )
