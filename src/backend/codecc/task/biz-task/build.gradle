@@ -1,0 +1,28 @@
+apply plugin: "java"
+dependencies {
+    compile project(":common:common-service")
+    compile project(":common:common-web")
+    compile project(":common:common-client")
+    compile project(":common:common-util")
+//    compile project(":common:common-auth")
+    compile project(":common:common-db")
+    compile project(":task:model-task")
+    compile project(":task:api-task")
+    compile project(":defect:api-defect")
+    compile group: 'com.tencent.bk.devops', name: 'api-process', version: '0.0.3', changing: true
+    compile group: 'com.tencent.bk.devops', name: 'api-repository', version: '0.0.3', changing: true
+    compile group: 'com.tencent.bk.devops', name: 'api-codecc', version: '0.0.2', changing: true
+    compile(group: 'com.tencent.bk.devops', name: 'api-project', version: '0.0.3', changing: true) {
+        exclude group: 'com.tencent.bk.devops', module: 'model-project'
+        exclude group: 'com.tencent.bk.devops', module: 'common-api'
+    }
+
+//    compile(group:'com.tencent.devops', name:'common-pipeline', version:'4.0.0')
+    compile "org.json:json:20180130"
+//    compile group: 'com.tencent.bk.devops', name: 'common-license', version: '0.0.2', changing: true
+
+}
+
+version = null
+
+// version "1.2.3"  // 这里可以设定版本号

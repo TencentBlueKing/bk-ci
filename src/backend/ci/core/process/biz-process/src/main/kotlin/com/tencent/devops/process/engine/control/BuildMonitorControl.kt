@@ -41,8 +41,8 @@ import com.tencent.devops.process.engine.pojo.event.PipelineBuildMonitorEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildStartEvent
 import com.tencent.devops.process.engine.service.PipelineRuntimeExtService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
-import com.tencent.devops.process.pojo.AtomErrorCode
-import com.tencent.devops.process.pojo.ErrorType
+import com.tencent.devops.common.api.pojo.ErrorCode
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.process.pojo.mq.PipelineBuildContainerEvent
 import com.tencent.devops.process.service.PipelineSettingService
 import org.slf4j.LoggerFactory
@@ -204,7 +204,7 @@ class BuildMonitorControl @Autowired constructor(
                     buildId = event.buildId,
                     status = BuildStatus.QUEUE_TIMEOUT,
                     errorType = ErrorType.USER,
-                    errorCode = AtomErrorCode.USER_JOB_OUTTIME_LIMIT,
+                    errorCode = ErrorCode.USER_JOB_OUTTIME_LIMIT,
                     errorMsg = "Job排队超时，请检查并发配置"
                 )
             )
