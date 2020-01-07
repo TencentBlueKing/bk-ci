@@ -2,22 +2,43 @@ import VueI18n from 'vue-i18n'
 import Vue from 'vue'
 import { lang, locale } from 'bk-magic-vue'
 import axios from 'axios'
+import cookies from 'js-cookie'
 const DEFAULT_LOCALE = 'zh-CN'
-const LS_KEY = 'devops_i18n_locale'
+const LS_KEY = 'blueking_language'
 const loadedModule = {}
 const localeLabelMap = {
     'zh-CN': '中文',
-    'en-US': 'English'
+    'zh-cn': '中文',
+    'cn': '中文',
+    'en-US': 'English',
+    'en-us': 'English',
+    'en': 'English',
+    'us': 'English'
 }
+const localeAliasMap = {
+    'zh-cn': 'zh-CN',
+    'cn': 'zh-CN',
+    'en-us': 'en-US',
+    'en': 'en-US',
+    'us': 'en-US'
+}
+
+const BK_CI_DOMAIN = location.host
 
 function getLsLocale () {
-    if (!localStorage) return DEFAULT_LOCALE
-    return localStorage.getItem(LS_KEY) || DEFAULT_LOCALE
+    try {
+        const cookieLcale = cookies.get(LS_KEY) ||  DEFAULT_LOCALE
+        return localeAliasMap[cookieLcale.toLowerCase()] || DEFAULT_LOCALE
+    } catch (error) {
+        return DEFAULT_LOCALE
+    }
 }
 
+
 function setLsLocale (locale) {
-    if (localStorage) {
-        localStorage.setItem(LS_KEY, locale)
+    if (typeof cookies.set === 'function') {
+        cookies.remove(LS_KEY)
+        cookies.set(LS_KEY, locale, { domain: BK_CI_DOMAIN, path: '/' })
     }
 }
 
@@ -38,10 +59,9 @@ export default (r) => {
 
 
     function dynamicLoadModule (module, locale = DEFAULT_LOCALE) {
-        
         const localeModuleId = getLocalModuleId(module, locale)
         if (loadedModule[localeModuleId]) {
-            return
+            return Promise.resolve()
         }
         return axios.get(`${WEBSITE_URL}/${module}/${locale}.json?t=${+new Date()}`, {
             crossdomain: true
@@ -98,10 +118,9 @@ function importAll (r) {
                 ...lang[localeKey.replace('-', '')],
                 ...mod
             }
-            
             localeList.push({
                 key: localeKey,
-                label: localeKey.split('-').pop()
+                label: localeLabelMap[localeKey]
             })
         }
         return acc

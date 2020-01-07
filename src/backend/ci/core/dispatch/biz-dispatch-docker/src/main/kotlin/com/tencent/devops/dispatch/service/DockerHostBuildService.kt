@@ -155,12 +155,15 @@ class DockerHostBuildService @Autowired constructor(
             var password: String? = null
             if (dispatchType.imageType == ImageType.THIRD) {
                 if (!dispatchType.credentialId.isNullOrBlank()) {
+                    val projectId = if (dispatchType.credentialProject.isNullOrBlank()) {
+                        logger.warn("dockerHostBuild:credentialProject=nullOrBlank,buildId=${event.buildId},credentialId=${dispatchType.credentialId}")
+                        event.projectId
+                    } else {
+                        dispatchType.credentialProject!!
+                    }
                     val ticketsMap = CommonUtils.getCredential(
                         client = client,
-                        projectId = dispatchType.credentialProject ?: {
-                            logger.warn("dockerHostBuild:credentialProject=null,buildId=${event.buildId},credentialId=${dispatchType.credentialId}")
-                            event.projectId
-                        }(),
+                        projectId = projectId,
                         credentialId = dispatchType.credentialId!!,
                         type = CredentialType.USERNAME_PASSWORD
                     )
@@ -291,9 +294,7 @@ class DockerHostBuildService @Autowired constructor(
         val redisLock = DockerHostLock(redisOperation)
         try {
             val gray = !grayFlag.isNullOrBlank() && grayFlag!!.toBoolean()
-            val grayProjectSet = redisOperation.getSetMembers(this.gray.getGrayRedisKey())?.filter { !it.isBlank() }
-                ?.toSet() ?: emptySet()
-            logger.info("Get the redis project set: $grayProjectSet")
+            val grayProjectSet = this.gray.grayProjectSet(redisOperation)
             redisLock.lock()
             if (gray) {
                 // 优先取设置了IP的任务（可能是固定构建机，也可能是上次用的构建机）
@@ -316,7 +317,7 @@ class DockerHostBuildService @Autowired constructor(
                     return Result(1, "no task in queue")
                 }
                 val build = task[0]
-                logger.info("Start the docker build(${build.buildId}) seq(${build.vmSeqId})")
+                logger.info("Start the docker build(${build.buildId}) seq(${build.vmSeqId})hostTag($hostTag)imageName(${build.imageName})")
                 pipelineDockerTaskDao.updateStatusAndTag(dslContext, build.buildId, build.vmSeqId, PipelineTaskStatus.RUNNING, hostTag)
                 redisUtils.setDockerBuildLastHost(build.pipelineId, build.vmSeqId.toString(), hostTag) // 将本次构建使用的主机IP写入redis，以方便下次直接用这台IP
                 return Result(0, "success", DockerHostBuildInfo(
@@ -358,7 +359,7 @@ class DockerHostBuildService @Autowired constructor(
                     return Result(1, "no task in queue")
                 }
                 val build = task[0]
-                logger.info("Start the docker build(${build.buildId}) seq(${build.vmSeqId})")
+                logger.info("Start the docker build(${build.buildId}) seq(${build.vmSeqId})hostTag($hostTag)imageName(${build.imageName})")
                 pipelineDockerTaskDao.updateStatusAndTag(dslContext, build.buildId, build.vmSeqId, PipelineTaskStatus.RUNNING, hostTag)
                 redisUtils.setDockerBuildLastHost(build.pipelineId, build.vmSeqId.toString(), hostTag) // 将本次构建使用的主机IP写入redis，以方便下次直接用这台IP
                 return Result(0, "success", DockerHostBuildInfo(
