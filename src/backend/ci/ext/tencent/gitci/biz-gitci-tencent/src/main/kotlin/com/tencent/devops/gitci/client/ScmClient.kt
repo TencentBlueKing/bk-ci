@@ -49,6 +49,7 @@ class ScmClient @Autowired constructor(
         buildId: String,
         userId: String,
         status: String,
+        context: String,
         gitProjectConf: GitRepositoryConf
     ) = try {
         val titleData = mutableListOf<String>()
