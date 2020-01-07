@@ -123,7 +123,7 @@ class DockerHostBuildService(
     }
 
     fun rollbackBuild(buildId: String, vmSeqId: Int, shutdown: Boolean): Boolean {
-        log(buildId, true, if (shutdown) "构建环境启动后即退出，请检查镜像是否合法或联系【DevOps-Helper】查看，构建任务将失败退出" else "启动构建环境失败，构建任务将重试")
+        log(buildId, true, if (shutdown) "构建环境启动后即退出，请检查镜像是否合法或联系【蓝盾助手】查看，构建任务将失败退出" else "启动构建环境失败，构建任务将重试")
 
         val result = dockerHostBuildApi.rollbackBuild(buildId, vmSeqId, shutdown)
         if (result != null) {
