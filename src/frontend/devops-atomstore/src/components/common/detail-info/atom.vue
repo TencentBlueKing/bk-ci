@@ -3,7 +3,7 @@
         <img class="detail-pic atom-logo" :src="detail.logoUrl">
         <hgroup class="detail-info-group">
             <h3 class="title-with-img">
-                {{detail.name}}
+                <span :class="{ 'not-recommend': detail.recommendFlag === false }" :title="detail.recommendFlag === false ? $t('store.该插件不推荐使用') : ''">{{detail.name}}</span>
                 <template v-if="userInfo.type !== 'ADMIN' && detail.htmlTemplateVersion !== '1.0'">
                     <h5 :title="approveMsg" :class="[{ 'not-public': approveMsg !== $t('store.协作') }]" @click="cooperation">
                         <icon class="detail-img" name="cooperation" size="16" />
