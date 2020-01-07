@@ -652,7 +652,7 @@
             align-items: center;
             margin-top: 15px;
             .image-name {
-                width: 44%;
+                width: 50%;
                 display: flex;
                 align-items: center;
                 .not-recommend {
@@ -677,7 +677,7 @@
                 }
             }
             .image-tag {
-                width: 44%;
+                width: 50%;
                 margin-left: 10px;
             }
         }
