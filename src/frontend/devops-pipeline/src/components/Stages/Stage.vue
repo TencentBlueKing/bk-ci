@@ -19,12 +19,16 @@
                 <template v-if="isAddMenuShow">
                     <span class="insert-tip direction line-add" @click.stop="showStageSelectPopup(false)">
                         <i class="tip-icon" />
-                        {{ $t('editPage.insert') }}
+                        <span>
+                            {{ $t('editPage.insert') }}
+                        </span>
                     </span>
                     <span class="cruve-line left"></span>
                     <div @click.stop="showStageSelectPopup(true)" class="insert-tip parallel-add">
                         <i class="tip-icon" />
-                        {{ $t('editPage.insert') }}
+                        <span>
+                            {{ $t('editPage.append') }}
+                        </span>
                     </div>
                 </template>
             </span>

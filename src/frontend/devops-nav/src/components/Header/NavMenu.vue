@@ -46,9 +46,9 @@
                                     @click.prevent="gotoPage(service)"
                                 >
                                     {{ serviceName(service.name) }}
-                                    <span
+                                    <!-- <span
                                         class="service-id"
-                                    >{{ serviceId(service.name) }}</span>
+                                    >{{ serviceId(service.name) }}</span> -->
                                 </a>
                             </li>
                         </ul>
@@ -149,7 +149,8 @@
         }
 
         serviceName (name): string {
-            return name.slice(0, name.indexOf('('))
+            const charPos = name.indexOf('(')
+            return charPos > -1 ? name.slice(0, charPos) : name
         }
 
         getServiceLogoByPath (link: string): string {
