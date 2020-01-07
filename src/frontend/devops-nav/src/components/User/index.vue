@@ -15,7 +15,10 @@
             class="user-info-dropmenu"
         >
             <p class="user-avatar">
-                <!--<img :src="avatarUrl" alt="用户头像" />-->
+                <!-- <img
+                    :src="avatarUrl"
+                    alt="userAvatar"
+                > -->
                 <span>{{ chineseName }}</span>
             </p>
             <slot name="menu">
@@ -84,12 +87,24 @@
         }
 
         get menu (): object[] {
+            try {
                 return [
                     {
                         to: '/console/pm',
                         label: this.$t('projectManage')
+                    },
+                    {
+                        cb: this.logout,
+                        label: this.$t('logout')
                     }
                 ]
+            } catch (e) {
+                console.warn(e)
+                return []
+            }
+        }
+        logout (): void {
+            // logout logic
         }
     }
 </script>

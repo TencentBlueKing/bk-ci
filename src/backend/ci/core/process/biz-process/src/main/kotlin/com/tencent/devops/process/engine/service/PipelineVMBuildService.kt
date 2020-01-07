@@ -53,7 +53,7 @@ import com.tencent.devops.process.jmx.elements.JmxElements
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildTaskResult
 import com.tencent.devops.process.pojo.BuildVariables
-import com.tencent.devops.process.pojo.ErrorType
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.process.pojo.mq.PipelineBuildContainerEvent
 import com.tencent.devops.process.utils.PIPELINE_ELEMENT_ID
 import com.tencent.devops.process.utils.PIPELINE_TURBO_TASK_ID
