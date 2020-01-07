@@ -1,19 +1,6 @@
 const pipelineConstMixin = {
     data () {
         return {
-            statusMap: {
-                RUNNING: this.$t('details.statusMap.RUNNING'),
-                PREPARE_ENV: this.$t('details.statusMap.PREPARE_ENV'),
-                CANCELED: this.$t('details.statusMap.CANCELED'),
-                FAILED: this.$t('details.statusMap.FAILED'),
-                SUCCEED: this.$t('details.statusMap.SUCCEED'),
-                REVIEW_ABORT: this.$t('details.statusMap.REVIEW_ABORT'),
-                HEARTBEAT_TIMEOUT: this.$t('details.statusMap.HEARTBEAT_TIMEOUT'),
-                QUALITY_CHECK_FAIL: this.$t('details.statusMap.QUALITY_CHECK_FAIL'),
-                QUEUE: this.$t('details.statusMap.QUEUE'),
-                QUEUE_TIMEOUT: this.$t('details.statusMap.QUEUE_TIMEOUT'),
-                EXEC_TIMEOUT: this.$t('details.statusMap.EXEC_TIMEOUT')
-            },
             BUILD_HISTORY_TABLE_COLUMNS_MAP: {
                 buildNum: {
                     index: 0,
@@ -105,6 +92,11 @@ const pipelineConstMixin = {
                     }]
                 }
             }
+        }
+    },
+    methods: {
+        getStatusLabel (STATUS) {
+            return this.$t(`details.statusMap.${STATUS}`)
         }
     }
 }
