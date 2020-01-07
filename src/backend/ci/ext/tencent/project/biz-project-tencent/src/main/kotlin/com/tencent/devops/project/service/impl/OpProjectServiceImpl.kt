@@ -28,6 +28,7 @@ package com.tencent.devops.project.service.impl
 
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.PageUtil
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.api.AuthTokenApi
 import com.tencent.devops.common.auth.code.AuthServiceCode
@@ -49,12 +50,17 @@ import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.mq.ProjectCreateBroadCastEvent
+import com.tencent.devops.project.pojo.mq.ProjectUpdateBroadCastEvent
 import com.tencent.devops.project.service.ProjectPaasCCService
 import com.tencent.devops.project.service.ProjectPermissionService
+import com.tencent.devops.project.service.tof.TOFService
 import org.jooq.DSLContext
+import org.jooq.impl.DSL
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.dao.DuplicateKeyException
 import org.springframework.stereotype.Service
+import org.springframework.util.CollectionUtils
 
 @Service
 class OpProjectServiceImpl @Autowired constructor(
@@ -70,6 +76,7 @@ class OpProjectServiceImpl @Autowired constructor(
     private val bkAuthProjectApi: AuthProjectApi,
     private val bsAuthTokenApi: AuthTokenApi,
     private val repoGray: RepoGray,
+    private val tofService: TOFService,
     private val projectPermissionService: ProjectPermissionService,
     private val bsPipelineAuthServiceCode: AuthServiceCode
 ) : AbsOpProjectServiceImpl(
@@ -97,34 +104,79 @@ class OpProjectServiceImpl @Autowired constructor(
         accessToken: String,
         projectInfoRequest: OpProjectUpdateInfoRequest
     ): Int {
-        val count = super.updateProjectFromOp(userId, accessToken, projectInfoRequest)
-        val dbProjectRecord = projectDao.get(dslContext, projectInfoRequest.projectId)
-        rabbitTemplate.convertAndSend(
-            EXCHANGE_PAASCC_PROJECT_UPDATE,
-            ROUTE_PAASCC_PROJECT_UPDATE, PaasCCUpdateProject(
-                userId = userId,
-                accessToken = accessToken,
-                projectId = projectInfoRequest.projectId,
-                retryCount = 0,
-                projectUpdateInfo = ProjectUpdateInfo(
-                    projectName = projectInfoRequest.projectName,
-                    projectType = projectInfoRequest.projectType,
-                    bgId = projectInfoRequest.bgId,
-                    bgName = projectInfoRequest.bgName,
-                    centerId = projectInfoRequest.centerId,
-                    centerName = projectInfoRequest.centerName,
-                    deptId = projectInfoRequest.deptId,
-                    deptName = projectInfoRequest.deptName,
-                    description = dbProjectRecord!!.description ?: "",
-                    englishName = dbProjectRecord!!.englishName,
-                    ccAppId = projectInfoRequest.ccAppId,
-                    ccAppName = projectInfoRequest.cc_app_name,
-                    kind = projectInfoRequest.kind
-//                        secrecy = projectInfoRequest.secrecyFlag
+        logger.info("the projectInfoRequest is: $projectInfoRequest")
+        val projectId = projectInfoRequest.projectId
+        val dbProjectRecord = projectDao.get(dslContext, projectId)
+        if (dbProjectRecord == null) {
+            logger.warn("The project $projectId is not exist")
+            throw OperationException("项目不存在")
+        }
+        // 判断项目是不是审核的情况
+        var flag = false
+        if (1 == dbProjectRecord.approvalStatus && (2 == projectInfoRequest.approvalStatus || 3 == projectInfoRequest.approvalStatus)) {
+            flag = true
+            projectInfoRequest.approver = projectInfoRequest.approver
+            projectInfoRequest.approvalTime = System.currentTimeMillis()
+        } else {
+            projectInfoRequest.approver = dbProjectRecord.approver
+            projectInfoRequest.approvalTime = dbProjectRecord.approvalTime?.timestampmilli()
+        }
+        dslContext.transaction { configuration ->
+            val transactionContext = DSL.using(configuration)
+
+            try {
+                val appName = if (projectInfoRequest.ccAppId != null && projectInfoRequest.ccAppId!! > 0) {
+                    tofService.getCCAppName(projectInfoRequest.ccAppId!!)
+                } else {
+                    null
+                }
+                projectInfoRequest.cc_app_name = appName
+                projectDao.updateProjectFromOp(transactionContext, projectInfoRequest)
+            } catch (e: DuplicateKeyException) {
+                logger.warn("Duplicate project $projectInfoRequest", e)
+                throw OperationException("项目名或英文名重复")
+            }
+            // 先解除项目与标签的关联关系，然后再从新建立二者之间的关系
+            projectLabelRelDao.deleteByProjectId(transactionContext, projectId)
+            val labelIdList = projectInfoRequest.labelIdList
+            if (!CollectionUtils.isEmpty(labelIdList)) projectLabelRelDao.batchAdd(
+                dslContext = transactionContext,
+                projectId = projectId,
+                labelIdList = labelIdList!!
+            )
+
+            projectDispatcher.dispatch(
+                ProjectUpdateBroadCastEvent(
+                    userId = userId,
+                    projectId = projectId,
+                    projectInfo = ProjectUpdateInfo(
+                        projectName = projectInfoRequest.projectName,
+                        projectType = projectInfoRequest.projectType,
+                        bgId = projectInfoRequest.bgId,
+                        bgName = projectInfoRequest.bgName,
+                        centerId = projectInfoRequest.centerId,
+                        centerName = projectInfoRequest.centerName,
+                        deptId = projectInfoRequest.deptId,
+                        deptName = projectInfoRequest.deptName,
+                        description = dbProjectRecord.description,
+                        englishName = dbProjectRecord.englishName,
+                        ccAppId = projectInfoRequest.ccAppId,
+                        ccAppName = projectInfoRequest.cc_app_name,
+                        kind = projectInfoRequest.kind,
+                        secrecy = projectInfoRequest.secrecyFlag
+                    )
                 )
             )
-        )
-        return count
+        }
+        return if (!flag) {
+            0 // 更新操作
+        } else {
+            return when {
+                2 == projectInfoRequest.approvalStatus -> 1 // 审批通过
+                3 == projectInfoRequest.approvalStatus -> 2 // 驳回
+                else -> 0
+            }
+        }
     }
 
     override fun getProjectList(
