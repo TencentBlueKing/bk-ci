@@ -146,7 +146,7 @@ export function importStyle (href, oHead) {
 }
 
 export function getServiceAliasByPath (path: string): string {
-    const serviceAliasREG = /^\/(console\/)?([^\/]+)\//
+    const serviceAliasREG = /^\/(console\/)?([^\/]+)\/?/
     const execRes = serviceAliasREG.exec(path) || []
     return execRes[2] || path
 }

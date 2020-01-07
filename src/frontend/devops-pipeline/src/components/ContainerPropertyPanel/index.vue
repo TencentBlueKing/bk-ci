@@ -33,8 +33,8 @@
                         <template>
                             <div class="bk-selector-create-item cursor-pointer" @click.stop.prevent="addThridSlave">
                                 <i class="bk-icon icon-plus-circle"></i>
-                                <span class="text">{{ $t('editPage.addThirdSlave') }}/span>
-                                </span></div>
+                                <span class="text">{{ $t('editPage.addThirdSlave') }}</span>
+                            </div>
                             <div v-if="container.baseOS === 'LINUX'" class="bk-selector-create-item cursor-pointer" @click.stop.prevent="addDockerImage">
                                 <i class="bk-icon icon-plus-circle"></i>
                                 <span class="text">{{ $t('editPage.addImage') }}</span>
@@ -71,7 +71,7 @@
                     <bk-input v-else @change="changeThirdImage" :value="buildResource" class="bk-image" :placeholder="$t('editPage.thirdImageHolder')" v-validate.initial="&quot;required&quot;" name="buildResource"></bk-input>
                 </form-field>
 
-                <form-field :label="$t('editPage.assignResource')" v-if="!isPublicResourceType && containerModalId && !['DOCKER', 'IDC', 'PUBLIC_DEVCLOUD'].includes(buildResourceType)" :required="true" :is-error="errors.has(&quot;buildResource&quot;)" :error-msg="errors.first(&quot;buildResource&quot;)" :desc="buildResourceType === &quot;THIRD_PARTY_AGENT_ENV&quot; ? this.$t('editPage.thirdSlaveTips') : &quot;&quot;">
+                <form-field :label="$t('editPage.assignResource')" v-if="buildResourceType !== 'MACOS' && !isPublicResourceType && containerModalId && !['DOCKER', 'IDC', 'PUBLIC_DEVCLOUD'].includes(buildResourceType)" :required="true" :is-error="errors.has(&quot;buildResource&quot;)" :error-msg="errors.first(&quot;buildResource&quot;)" :desc="buildResourceType === &quot;THIRD_PARTY_AGENT_ENV&quot; ? this.$t('editPage.thirdSlaveTips') : &quot;&quot;">
                     <container-env-node :disabled="!editable"
                         :os="container.baseOS"
                         :container-id="containerModalId"
@@ -87,6 +87,29 @@
                         name="buildResource"
                     />
                 </form-field>
+
+                <template v-if="buildResourceType === 'MACOS'">
+                    <form-field :label="$t('editPage.macSystemVersion')" :required="true" :is-error="errors.has('systemVersion')" :error-msg="errors.first(`systemVersion`)">
+                        <bk-select :value="systemVersion" searchable :loading="isLoadingMac" name="systemVersion" v-validate.initial="'required'">
+                            <bk-option v-for="item in systemVersionList"
+                                :key="item"
+                                :id="item"
+                                :name="item"
+                                @click.native="chooseMacSystem(item)">
+                            </bk-option>
+                        </bk-select>
+                    </form-field>
+                    <form-field :label="$t('editPage.xcodeVersion')" :required="true" :is-error="errors.has('xcodeVersion')" :error-msg="errors.first(`xcodeVersion`)">
+                        <bk-select :value="xcodeVersion" searchable :loading="isLoadingMac" name="xcodeVersion" v-validate.initial="'required'">
+                            <bk-option v-for="item in xcodeVersionList"
+                                :key="item"
+                                :id="item"
+                                :name="item"
+                                @click.native="chooseXcode(item)">
+                            </bk-option>
+                        </bk-select>
+                    </form-field>
+                </template>
 
                 <form-field :label="$t('editPage.imageTicket')" v-if="(buildResourceType === 'DOCKER') && buildImageType === 'THIRD'">
                     <request-selector v-bind="imageCredentialOption" :disabled="!editable" name="credentialId" :value="buildImageCreId" :handle-change="changeBuildResource"></request-selector>
@@ -215,7 +238,10 @@
                 showImageSelector: false,
                 isVersionLoading: false,
                 isLoadingImage: false,
-                imageRecommend: true
+                imageRecommend: true,
+                isLoadingMac: false,
+                xcodeVersionList: [],
+                systemVersionList: []
             }
         },
         computed: {
@@ -308,6 +334,12 @@
                 } catch (e) {
                     return ''
                 }
+            },
+            xcodeVersion () {
+                return this.container.dispatchType.xcodeVersion
+            },
+            systemVersion () {
+                return this.container.dispatchType.systemVersion
             },
             buildResource () {
                 return this.container.dispatchType.value
@@ -416,11 +448,14 @@
             if (this.container.dispatchType && this.container.dispatchType.imageCode) {
                 this.getVersionList(this.container.dispatchType.imageCode)
             }
+            this.getMacOsData()
         },
         methods: {
             ...mapActions('atom', [
                 'updateContainer',
-                'togglePropertyPanel'
+                'togglePropertyPanel',
+                'getMacSysVersion',
+                'getMacXcodeVersion'
             ]),
             ...mapActions('pipelines', [
                 'requestImageVersionlist',
@@ -430,8 +465,10 @@
 
             changeResourceType (name, val) {
                 this.imageRecommend = true
+                const defaultAgentType = (name === 'buildType' && ['THIRD_PARTY_AGENT_ID', 'THIRD_PARTY_AGENT_ENV'].includes(val) && !this.agentType) ? { agentType: 'ID' } : {}
                 this.handleContainerChange('dispatchType', Object.assign({
                     ...this.container.dispatchType,
+                    ...defaultAgentType,
                     imageVersion: '',
                     value: '',
                     imageCode: '',
@@ -490,6 +527,31 @@
                 this.showImageSelector = !this.showImageSelector
             },
 
+            getMacOsData () {
+                this.isLoadingMac = true
+                Promise.all([this.getMacSysVersion(), this.getMacXcodeVersion()]).then(([sysVersion, xcodeVersion]) => {
+                    this.xcodeVersionList = xcodeVersion.data || []
+                    this.systemVersionList = sysVersion.data || []
+                }).catch((err) => {
+                    this.$bkMessage({ message: (err.message || err), theme: 'error' })
+                }).finally(() => (this.isLoadingMac = false))
+            },
+
+            chooseMacSystem (item) {
+                this.handleContainerChange('dispatchType', Object.assign({
+                    ...this.container.dispatchType,
+                    systemVersion: item,
+                    value: `${this.systemVersion}:${this.xcodeVersion}`
+                }))
+            },
+            chooseXcode (item) {
+                this.handleContainerChange('dispatchType', Object.assign({
+                    ...this.container.dispatchType,
+                    xcodeVersion: item,
+                    value: `${this.systemVersion}:${this.xcodeVersion}`
+                }))
+            },
+
             setContainerValidate (addErrors, removeErrors) {
                 const { errors } = this
 
@@ -511,12 +573,11 @@
             },
 
             changeBuildResource (name, value) {
-                const emptyValueObj = (name === 'buildType' || name === 'imageType' || name === 'agentType') ? { value: '' } : {}
-                const defaultAgentType = (name === 'buildType' && ['THIRD_PARTY_AGENT_ID', 'THIRD_PARTY_AGENT_ENV'].includes(value) && !this.agentType) ? { agentType: 'ID' } : {}
+                const emptyValueObj = (name === 'imageType' || name === 'agentType') ? { value: '' } : {}
                 this.handleContainerChange('dispatchType', Object.assign({
                     ...this.container.dispatchType,
                     [name]: value
-                }, emptyValueObj, defaultAgentType))
+                }, emptyValueObj))
                 this.handleContainerChange('buildEnv', {}) // 清空依赖编译环境
             },
             handleContainerChange (name, value) {
