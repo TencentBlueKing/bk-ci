@@ -41,6 +41,8 @@ import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.dao.common.StoreProjectRelDao
 import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_AGENT_TYPE_SCOPE
 import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_CODE
+import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_DOCKER_FILE_CONTENT
+import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_DOCKER_FILE_TYPE
 import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_FEATURE_CERTIFICATION_FLAG
 import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_FEATURE_PUBLIC_FLAG
 import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_FEATURE_RECOMMEND_FLAG
@@ -79,7 +81,6 @@ import com.tencent.devops.store.util.MultiSourceDataPaginator
 import com.tencent.devops.store.util.PagableDataSource
 import org.jooq.DSLContext
 import org.jooq.Record
-import org.jooq.Record21
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
@@ -954,7 +955,7 @@ class ImageProjectService @Autowired constructor(
     }
 
     fun genJobMarketImageItem(
-        it: Record21<String, String, String, Byte, String, String, String, Int, String, String, String, String, String, String, String, String, LocalDateTime, Boolean, Boolean, Boolean, String>,
+        it: Record,
         canInstallFlag: Boolean,
         installFlag: Boolean,
         availableFlag: Boolean
@@ -992,6 +993,8 @@ class ImageProjectService @Autowired constructor(
         val certificationFlag = it.get(KEY_IMAGE_FEATURE_CERTIFICATION_FLAG) as Boolean
         val modifier = it.get(KEY_MODIFIER) as String?
         val updateTime = (it.get(KEY_UPDATE_TIME) as LocalDateTime).timestampmilli()
+        val dockerFileType = it.get(KEY_IMAGE_DOCKER_FILE_TYPE) as String? ?: "INPUT"
+        val dockerFileContent = it.get(KEY_IMAGE_DOCKER_FILE_CONTENT) as String? ?: ""
         return JobMarketImageItem(
             imageId = id,
             id = id,
@@ -1011,6 +1014,8 @@ class ImageProjectService @Autowired constructor(
             imageRepoUrl = imageRepoUrl ?: "",
             imageRepoName = imageRepoName,
             imageTag = imageTag,
+            dockerFileType = dockerFileType,
+            dockerFileContent = dockerFileContent,
             labelNames = labelList?.map { it.labelName }?.joinToString { it } ?: "",
             category = category ?: "",
             categoryName = categoryLanName,
