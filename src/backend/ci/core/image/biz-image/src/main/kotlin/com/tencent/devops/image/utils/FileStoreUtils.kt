@@ -26,6 +26,9 @@
 
 package com.tencent.devops.image.utils
 
+import com.tencent.devops.common.api.exception.TaskExecuteException
+import com.tencent.devops.common.api.pojo.ErrorCode
+import com.tencent.devops.common.api.pojo.ErrorType
 import org.slf4j.LoggerFactory
 import java.io.BufferedInputStream
 import java.io.BufferedOutputStream
@@ -72,7 +75,11 @@ object FileStoreUtils {
             ops.flush()
         } catch (ex: Exception) {
             logger.error("store file failed", ex)
-            throw RuntimeException("镜像文件保存失败")
+            throw TaskExecuteException(
+                errorCode = ErrorCode.SYSTEM_SERVICE_ERROR,
+                errorType = ErrorType.SYSTEM,
+                errorMsg = "镜像文件保存失败"
+            )
         } finally {
             closeQuietily(ips)
             closeQuietily(ops)
