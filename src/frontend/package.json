@@ -2,7 +2,9 @@
   "name": "root",
   "private": true,
   "devDependencies": {
+    "ghooks": "^2.0.4",
     "gulp": "^4.0.2",
+    "husky": "^3.0.7",
     "lerna": "3.17.0",
     "ora": "^3.4.0"
   },
@@ -21,7 +23,8 @@
     "devops-ticket",
     "devops-pipeline",
     "devops-quality",
-    "devops-nav"
+    "devops-nav",
+    "devops-log"
   ],
   "dependencies": {
     "gulp-rename": "^1.4.0"
