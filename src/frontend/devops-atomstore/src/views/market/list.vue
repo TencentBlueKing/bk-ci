@@ -101,7 +101,8 @@
 
                 const apiFun = {
                     atom: () => this.getAtomList(postData, searchStr),
-                    template: () => this.getTemplateList(postData, searchStr)
+                    template: () => this.getTemplateList(postData, searchStr),
+                    image: () => this.getImageList(postData, searchStr)
                 }
 
                 apiFun[pipeType]().then((res) => {
@@ -123,6 +124,11 @@
             getAtomList (postData, searchStr) {
                 postData.atomName = searchStr
                 return this.$store.dispatch('store/requestMarketAtom', postData)
+            },
+
+            getImageList (postData, searchStr) {
+                postData.imageName = searchStr
+                return this.$store.dispatch('store/requestMarketImage', postData)
             },
 
             chooseOrderType (order) {

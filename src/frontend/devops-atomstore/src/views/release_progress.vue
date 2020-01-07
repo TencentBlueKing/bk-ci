@@ -19,8 +19,7 @@
                 </div>
             </div>
             <div class="sub_header_right">
-                <a class="develop-guide-link" target="_blank"
-                    :href="docsLink"> {{ $t('store.插件指引') }} </a>
+                <a class="develop-guide-link" target="_blank" :href="docsLink"> {{ $t('store.插件指引') }} </a>
             </div>
         </div>
         <div class="release-progress-content" v-show="showContent">
@@ -59,101 +58,101 @@
                                     :disabled="entry.status !== 'doing' || !permission"
                                     @click.stop="passTest"
                                     :title="permissionMsg"
-                                > {{ $t('继续') }} </bk-button>
+                                > {{ $t('store.继续') }} </bk-button>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
-            <div class="detail-title version-detail-title" v-if="!isOver">
-                <p class="form-title"> {{ $t('store.版本详情') }} </p>
-                <hr class="cut-line">
-                <div class="atom-version-detail">
-                    <div class="detail-form-item multi-item">
-                        <div class="detail-form-item">
-                            <div class="info-label"> {{ $t('store.名称：') }} </div>
-                            <div class="info-value">{{ versionDetail.name }}</div>
-                        </div>
-                        <div class="detail-form-item">
-                            <div class="info-label"> {{ $t('store.标识：') }} </div>
-                            <div class="info-value">{{ versionDetail.atomCode }}</div>
-                        </div>
-                    </div>
-                    <div class="detail-form-item multi-item">
-                        <div class="detail-form-item">
-                            <div class="info-label"> {{ $t('store.范畴：') }} </div>
-                            <div class="info-value">{{ categoryMap[versionDetail.category] }}</div>
-                        </div>
-                        <div class="detail-form-item">
-                            <div class="info-label"> {{ $t('store.分类：') }} </div>
-                            <div class="info-value">{{ versionDetail.classifyName }}</div>
-                        </div>
-                    </div>
-                    <div class="detail-form-item multi-item">
-                        <div class="detail-form-item">
-                            <div class="info-label"> {{ $t('store.操作系统：') }} </div>
-                            <div class="info-value" v-if="versionDetail.os">
-                                <span v-if="versionDetail.jobType === 'AGENT'">
-                                    <i class="bk-icon icon-linux-view" v-if="versionDetail.os.indexOf('LINUX') !== -1"></i>
-                                    <i class="bk-icon icon-windows" v-if="versionDetail.os.indexOf('WINDOWS') !== -1"></i>
-                                    <i class="bk-icon icon-macos" v-if="versionDetail.os.indexOf('MACOS') !== -1"></i>
-                                </span>
+                <div class="detail-title version-detail-title" v-if="!isOver">
+                    <p class="form-title"> {{ $t('store.版本详情') }} </p>
+                    <hr class="cut-line">
+                    <div class="atom-version-detail">
+                        <div class="detail-form-item multi-item">
+                            <div class="detail-form-item">
+                                <div class="info-label"> {{ $t('store.名称：') }} </div>
+                                <div class="info-value">{{ versionDetail.name }}</div>
+                            </div>
+                            <div class="detail-form-item">
+                                <div class="info-label"> {{ $t('store.标识：') }} </div>
+                                <div class="info-value">{{ versionDetail.atomCode }}</div>
                             </div>
                         </div>
-                    </div>
-                    <div class="detail-form-item">
-                        <div class="info-label"> {{ $t('store.功能标签：') }} </div>
-                        <div class="info-value feature-label">
-                            <div class="label-card" v-for="(label, index) in versionDetail.labels" :key="index">{{ label }}</div>
+                        <div class="detail-form-item multi-item">
+                            <div class="detail-form-item">
+                                <div class="info-label"> {{ $t('store.范畴：') }} </div>
+                                <div class="info-value">{{ categoryMap[versionDetail.category] }}</div>
+                            </div>
+                            <div class="detail-form-item">
+                                <div class="info-label"> {{ $t('store.分类：') }} </div>
+                                <div class="info-value">{{ versionDetail.classifyName }}</div>
+                            </div>
+                        </div>
+                        <div class="detail-form-item multi-item">
+                            <div class="detail-form-item">
+                                <div class="info-label"> {{ $t('store.操作系统：') }} </div>
+                                <div class="info-value" v-if="versionDetail.os">
+                                    <span v-if="versionDetail.jobType === 'AGENT'">
+                                        <i class="bk-icon icon-linux-view" v-if="versionDetail.os.indexOf('LINUX') !== -1"></i>
+                                        <i class="bk-icon icon-windows" v-if="versionDetail.os.indexOf('WINDOWS') !== -1"></i>
+                                        <i class="bk-icon icon-macos" v-if="versionDetail.os.indexOf('MACOS') !== -1"></i>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="detail-form-item">
+                            <div class="info-label"> {{ $t('store.功能标签：') }} </div>
+                            <div class="info-value feature-label">
+                                <div class="label-card" v-for="(label, index) in versionDetail.labels" :key="index">{{ label }}</div>
+                            </div>
+                        </div>
+                        <div class="detail-form-item">
+                            <div class="info-label"> {{ $t('store.简介：') }} </div>
+                            <div class="info-value">{{ versionDetail.summary }}</div>
+                        </div>
+                        <div class="detail-form-item">
+                            <div class="info-label"> {{ $t('store.详细描述：') }} </div>
+                            <div class="info-value markdown-editor-show" ref="editor" :class="{ 'overflow': !isDropdownShow }">
+                                <mavon-editor
+                                    :editable="false"
+                                    default-open="preview"
+                                    :subfield="false"
+                                    :toolbars-flag="false"
+                                    :external-link="false"
+                                    :box-shadow="false"
+                                    preview-background="#fafbfd"
+                                    v-model="versionDetail.description"
+                                >
+                                </mavon-editor>
+                            </div>
+                        </div>
+                        <div class="toggle-btn" v-if="isOverflow" @click="toggleShow()">{{ isDropdownShow ? $t('store.收起') : $t('store.展开') }}
+                            <i :class="['bk-icon icon-angle-down', { 'icon-flip': isDropdownShow }]"></i>
+                        </div>
+                        <div class="detail-form-item">
+                            <div class="info-label"> {{ $t('store.发布者：') }} </div>
+                            <div class="info-value">{{ versionDetail.publisher }}</div>
+                        </div>
+                        <div class="detail-form-item">
+                            <div class="info-label"> {{ $t('store.发布类型：') }} </div>
+                            <div class="info-value">{{ releaseMap[versionDetail.releaseType] }}</div>
+                        </div>
+                        <div class="detail-form-item">
+                            <div class="info-label"> {{ $t('store.版本：') }} </div>
+                            <div class="info-value">{{ versionDetail.version }}</div>
+                        </div>
+                        <div class="detail-form-item">
+                            <div class="info-label"> {{ $t('store.发布包：') }} </div>
+                            <div class="info-value">{{ versionDetail.pkgName }}</div>
+                        </div>
+                        <div class="detail-form-item">
+                            <div class="info-label"> {{ $t('store.发布描述：') }} </div>
+                            <div class="info-value">{{ versionDetail.versionContent }}</div>
                         </div>
                     </div>
-                    <div class="detail-form-item">
-                        <div class="info-label"> {{ $t('store.简介：') }} </div>
-                        <div class="info-value">{{ versionDetail.summary }}</div>
+                    <div class="atom-logo-box">
+                        <img :src="versionDetail.logoUrl" v-if="versionDetail.logoUrl">
+                        <i class="bk-icon icon-placeholder atom-logo" v-else></i>
                     </div>
-                    <div class="detail-form-item">
-                        <div class="info-label"> {{ $t('store.详细描述：') }} </div>
-                        <div class="info-value markdown-editor-show" ref="editor" :class="{ 'overflow': !isDropdownShow }">
-                            <mavon-editor
-                                :editable="false"
-                                default-open="preview"
-                                :subfield="false"
-                                :toolbars-flag="false"
-                                :external-link="false"
-                                :box-shadow="false"
-                                preview-background="#fafbfd"
-                                v-model="versionDetail.description"
-                            >
-                            </mavon-editor>
-                        </div>
-                    </div>
-                    <div class="toggle-btn" v-if="isOverflow" @click="toggleShow()">{{ isDropdownShow ? $t('store.收起') : $t('store.展开') }}
-                        <i :class="['bk-icon icon-angle-down', { 'icon-flip': isDropdownShow }]"></i>
-                    </div>
-                    <div class="detail-form-item">
-                        <div class="info-label"> {{ $t('store.发布者：') }} </div>
-                        <div class="info-value">{{ versionDetail.publisher }}</div>
-                    </div>
-                    <div class="detail-form-item">
-                        <div class="info-label"> {{ $t('store.发布类型：') }} </div>
-                        <div class="info-value">{{ releaseMap[versionDetail.releaseType] }}</div>
-                    </div>
-                    <div class="detail-form-item">
-                        <div class="info-label"> {{ $t('store.版本：') }} </div>
-                        <div class="info-value">{{ versionDetail.version }}</div>
-                    </div>
-                    <div class="detail-form-item">
-                        <div class="info-label"> {{ $t('store.发布包：') }} </div>
-                        <div class="info-value">{{ versionDetail.pkgName }}</div>
-                    </div>
-                    <div class="detail-form-item">
-                        <div class="info-label"> {{ $t('store.发布描述：') }} </div>
-                        <div class="info-value">{{ versionDetail.versionContent }}</div>
-                    </div>
-                </div>
-                <div class="atom-logo-box">
-                    <img :src="versionDetail.logoUrl" v-if="versionDetail.logoUrl">
-                    <i class="bk-icon icon-placeholder atom-logo" v-else></i>
                 </div>
             </div>
             <div class="released-tips" v-if="isOver">
