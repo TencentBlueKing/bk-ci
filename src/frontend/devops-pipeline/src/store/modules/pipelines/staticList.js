@@ -40,18 +40,6 @@ const state = {
         'QUEUE_TIMEOUT': 'queue_timeout',
         'EXEC_TIMEOUT': 'exec_timeout'
     }
-    // statusMapCN: {
-    //     'SUCCEED': '成功',
-    //     'success': '成功',
-    //     'FAILED': '失败',
-    //     'HEARTBEAT_TIMEOUT': '超时',
-    //     'error': '失败',
-    //     'known_error': '失败',
-    //     'running': '执行中',
-    //     'QUEUE': '排队',
-    //     'QUEUE_TIMEOUT': '排队超时',
-    //     'EXEC_TIMEOUT': '执行超时'
-    // },
 }
 
 const getters = {

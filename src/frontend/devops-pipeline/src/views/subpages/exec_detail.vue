@@ -14,9 +14,9 @@
                     <div class="info-item">
                         <span class="item-label">{{ $t('status') }}：</span>
                         <template v-if="execDetail.status === 'CANCELED'">
-                            <span v-bk-tooltips.light="`${$t('details.canceller')}：${execDetail.cancelUserId}`" :class="{ [execDetail.status]: execDetail.status }">{{ statusMap[execDetail.status] }}</span>
+                            <span v-bk-tooltips.light="`${$t('details.canceller')}：${execDetail.cancelUserId}`" :class="{ [execDetail.status]: execDetail.status }">{{ getStatusLabel(execDetail.status) }}</span>
                         </template>
-                        <span v-else :class="{ [execDetail.status]: execDetail.status }">{{ statusMap[execDetail.status] }}</span>
+                        <span v-else :class="{ [execDetail.status]: execDetail.status }">{{ getStatusLabel(execDetail.status) }}</span>
                         <i v-if="showRetryIcon" title="rebuild" class="bk-icon icon-retry" @click.stop="retry(execDetail.id, true)"></i>
                     </div>
                     <div class="info-item">
