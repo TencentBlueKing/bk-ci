@@ -128,6 +128,7 @@
     import DevopsOption from './Option.vue'
 
     @Component({
+        name: 'big-select',
         components: {
             DevopsOption
         }
@@ -406,7 +407,7 @@
         }
         
         handleOptionClick (option) {
-            return this.isSelect(option) ? this.unselectOption(option) : this.selectOption(option)
+            return this.isSelect(option) && this.multiple ? this.unselectOption(option) : this.selectOption(option)
         }
         
         selectOption (option) {

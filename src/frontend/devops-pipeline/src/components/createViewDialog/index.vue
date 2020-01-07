@@ -154,6 +154,7 @@
                 },
                 viewTypeTips: {
                     content: this.$t('view.typeTips'),
+                    width: 200,
                     placements: ['right']
                 }
             }
@@ -170,7 +171,7 @@
             },
             isManagerUser () {
                 return this.userInfo.find(val => {
-                    return val.role_name === 'manager'
+                    return val.roleName === 'manager'
                 })
             }
         },
