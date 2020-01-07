@@ -100,7 +100,7 @@ class BcsClient constructor(
                 }
             } catch (e: Exception) {
                 logger.error("create VM error", e)
-                throw OperationException("创建BCS虚拟机失败, 请联系【DevOps-Helper】")
+                throw OperationException("创建BCS虚拟机失败, 请联系【蓝盾助手】")
             }
         }
     }

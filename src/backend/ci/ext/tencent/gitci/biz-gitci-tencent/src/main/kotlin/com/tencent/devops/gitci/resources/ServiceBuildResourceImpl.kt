@@ -61,7 +61,7 @@ class ServiceBuildResourceImpl @Autowired constructor(
             throw ParamBlankException("Invalid buildId")
         }
         if (!gitProjectConfService.isEnable(gitProjectId)) {
-            throw CustomException(Response.Status.FORBIDDEN, "项目未开启工蜂CI，请联系DevOps-Helper")
+            throw CustomException(Response.Status.FORBIDDEN, "项目未开启工蜂CI，请联系蓝盾助手")
         }
     }
 }

@@ -45,7 +45,7 @@ class CurrentBuildResourceImpl @Autowired constructor(
     override fun getLatestBuildDetail(userId: String, gitProjectId: Long, buildId: String?): Result<GitCIModelDetail?> {
         checkParam(userId)
         if (!gitProjectConfService.isEnable(gitProjectId)) {
-            throw CustomException(Response.Status.FORBIDDEN, "项目未开启工蜂CI，请联系DevOps-Helper")
+            throw CustomException(Response.Status.FORBIDDEN, "项目未开启工蜂CI，请联系蓝盾助手")
         }
         return if (buildId.isNullOrBlank()) {
             Result(currentBuildService.getLatestBuildDetail(userId, gitProjectId))

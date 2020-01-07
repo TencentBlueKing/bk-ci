@@ -151,7 +151,7 @@ class BuildPushDockerImageTask : ITask() {
             val responseBody = response.body()!!.string()
             logger.info("responseBody: $responseBody")
             if (!response.isSuccessful) {
-                LoggerService.addNormalLine(Ansi().fgRed().a("启动构建镜像失败！请联系【DevOps-Helper】").reset().toString())
+                LoggerService.addNormalLine(Ansi().fgRed().a("启动构建镜像失败！请联系【蓝盾助手】").reset().toString())
                 throw TaskExecuteException(
                     errorCode = ErrorCode.SYSTEM_INNER_TASK_ERROR,
                     errorType = ErrorType.SYSTEM,
@@ -163,7 +163,7 @@ class BuildPushDockerImageTask : ITask() {
                 val map = responseData["data"] as Map<String, Any>
                 return Pair(map["first"] as String, map["second"])
             } else {
-                LoggerService.addNormalLine(Ansi().fgRed().a("查询构建镜像状态失败！请联系【DevOps-Helper】").reset().toString())
+                LoggerService.addNormalLine(Ansi().fgRed().a("查询构建镜像状态失败！请联系【蓝盾助手】").reset().toString())
                 throw TaskExecuteException(
                     errorCode = ErrorCode.USER_RESOURCE_NOT_FOUND,
                     errorType = ErrorType.USER,
@@ -189,7 +189,7 @@ class BuildPushDockerImageTask : ITask() {
             logger.info("responseBody: $responseBody")
             if (!response.isSuccessful) {
                 logger.error("failed to get start docker build")
-                LoggerService.addNormalLine(Ansi().fgRed().a("启动构建失败！请联系【DevOps-Helper】").reset().toString())
+                LoggerService.addNormalLine(Ansi().fgRed().a("启动构建失败！请联系【蓝盾助手】").reset().toString())
                 throw TaskExecuteException(
                     errorCode = ErrorCode.USER_RESOURCE_NOT_FOUND,
                     errorType = ErrorType.USER,
