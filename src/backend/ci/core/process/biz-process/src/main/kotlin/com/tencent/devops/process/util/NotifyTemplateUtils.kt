@@ -240,7 +240,7 @@ object NotifyTemplateUtils {
         "\t\t\t\t\t\t\t\t\t\t\t\t\t</td>\n" +
         "\t\t\t\t\t\t\t\t\t\t\t\t</tr>\n" +
         "\t\t\t\t\t\t\t\t\t\t\t\t<tr class=\"prompt-tips\">\n" +
-        "\t\t\t\t\t\t\t\t\t\t\t\t\t<td style=\"padding-top: 32px; padding-bottom: 10px; color: #707070;\">如有任何问题，可随时联系蓝盾助手。</td>\n" +
+        "\t\t\t\t\t\t\t\t\t\t\t\t\t<td style=\"padding-top: 32px; padding-bottom: 10px; color: #707070;\">如有任何问题，可随时联系DevOps-Helper。</td>\n" +
         "\t\t\t\t\t\t\t\t\t\t\t\t</tr>\n" +
         "\t\t\t\t\t\t\t\t\t\t\t</table>\n" +
         "\t\t\t\t\t\t\t\t\t\t</td>\n" +

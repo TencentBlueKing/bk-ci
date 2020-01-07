@@ -29,8 +29,10 @@ package com.tencent.devops.plugin.codecc
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
-import com.tencent.devops.common.api.exception.CodeccReportException
 import com.tencent.devops.common.api.exception.RemoteServiceException
+import com.tencent.devops.common.api.exception.TaskExecuteException
+import com.tencent.devops.common.api.pojo.ErrorCode
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
@@ -232,7 +234,11 @@ open class CodeccApi constructor(
 
     private fun getCodeccResult(responseBody: String): CoverityResult {
         val result = objectMapper.readValue<CoverityResult>(responseBody)
-        if (result.code != "0" || result.status != 0) throw RuntimeException("execute codecc task fail")
+        if (result.code != "0" || result.status != 0) throw TaskExecuteException(
+            errorCode = ErrorCode.SYSTEM_SERVICE_ERROR,
+            errorType = ErrorType.SYSTEM,
+            errorMsg = "execute codecc task fail"
+        )
         return result
     }
 
@@ -269,7 +275,11 @@ open class CodeccApi constructor(
             }
         } catch (ignored: Throwable) {
             logger.warn("Fail to get the codecc report of ($projectId|$pipelineId)", ignored)
-            throw CodeccReportException("获取CodeCC报告失败")
+            throw TaskExecuteException(
+                errorCode = ErrorCode.SYSTEM_SERVICE_ERROR,
+                errorType = ErrorType.SYSTEM,
+                errorMsg = "获取CodeCC报告失败"
+            )
         }
     }
 
