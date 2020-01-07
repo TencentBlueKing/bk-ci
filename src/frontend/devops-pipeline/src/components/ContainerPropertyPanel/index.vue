@@ -536,7 +536,6 @@
                     this.$bkMessage({ message: (err.message || err), theme: 'error' })
                 }).finally(() => (this.isLoadingMac = false))
             },
-
             chooseMacSystem (item) {
                 this.handleContainerChange('dispatchType', Object.assign({
                     ...this.container.dispatchType,
@@ -551,7 +550,6 @@
                     value: `${this.systemVersion}:${this.xcodeVersion}`
                 }))
             },
-
             setContainerValidate (addErrors, removeErrors) {
                 const { errors } = this
 
