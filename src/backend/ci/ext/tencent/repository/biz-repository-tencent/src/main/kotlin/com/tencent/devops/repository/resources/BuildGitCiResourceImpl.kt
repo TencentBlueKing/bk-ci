@@ -30,12 +30,12 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.repository.api.BuildGitCiResource
 import com.tencent.devops.repository.pojo.oauth.GitToken
-import com.tencent.devops.repository.service.scm.IGitCiService
+import com.tencent.devops.repository.service.scm.TencentGitCiService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class BuildGitCiResourceImpl @Autowired constructor(
-    private val gitciService: IGitCiService
+    private val gitciService: TencentGitCiService
 ) : BuildGitCiResource {
     override fun getToken(gitProjectId: String): Result<GitToken?> {
         return Result(gitciService.getToken(gitProjectId))

@@ -26,9 +26,17 @@
 
 package com.tencent.devops.repository.service.scm
 
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.repository.pojo.oauth.GitToken
+import com.tencent.devops.scm.api.SerivceGitCiResource
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.context.annotation.Primary
+import org.springframework.stereotype.Service
 
-interface IGitCiService {
-
-    fun getToken(gitProjectId: String): GitToken?
+@Primary
+@Service
+class TencentGitCiService @Autowired constructor(val client: Client) {
+    fun getToken(gitProjectId: String): GitToken? {
+        return client.getScm(SerivceGitCiResource::class).getToken(gitProjectId).data
+    }
 }
