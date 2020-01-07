@@ -68,7 +68,7 @@ class ScmClient @Autowired constructor(
             commitId = commitId,
             state = status,
             targetUrl = gitProjectConf.homepage + "/ci/pipelines#/build/" + buildId + "?buildNum=" + buildNum,
-            context = "",
+            context = context,
             description = description,
             block = false,
             mrRequestId = mergeRequestId,
