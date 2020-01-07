@@ -1,10 +1,8 @@
-package com.tencent.devops.store.pojo.dto
+package com.tencent.devops.store.pojo
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import io.swagger.annotations.ApiModelProperty
 
-@JsonIgnoreProperties(ignoreUnknown = true)
-data class CreateExtensionServiceDTO (
+data class ExtServiceCreateInfo (
     @ApiModelProperty("扩展服务code")
     val serviceCode: String,
     @ApiModelProperty("扩展服务Name")

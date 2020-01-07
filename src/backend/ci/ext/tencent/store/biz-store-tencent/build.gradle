@@ -27,7 +27,6 @@
 dependencies {
     compile project(":ext:tencent:common:common-digest-tencent")
     compile project(":ext:tencent:common:common-auth:common-auth-tencent")
-    compile project(":ext:tencent:store:api-store-service")
     compile project(":ext:tencent:repository:api-repository-tencent")
     compile project(":ext:tencent:project:api-project-tencent")
     compile project(":ext:tencent:support:api-support-tencent")
