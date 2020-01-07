@@ -419,7 +419,7 @@ interface ServiceBuildResource {
         simpleResult: SimpleResult
     ): Result<Boolean>
 
-    @ApiOperation("获取构建详情")
+    @ApiOperation("保存构建详情")
     @POST
     // @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/seqs/{vmSeqId}/saveBuildVmInfo")
     @Path("/{projectId}/{pipelineId}/{buildId}/{vmSeqId}/saveBuildVmInfo")
