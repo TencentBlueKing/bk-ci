@@ -164,13 +164,14 @@ export default {
             const allContainers = getters.getAllContainers(stages)
 
             if (allContainers.some(container => container.isError)) {
-                throw new Error(this.$t('storeMap.oneCodecc'))
+                throw new Error(window.pipelineVue.$i18n && window.pipelineVue.$i18n.t('storeMap.correctPipeline'))
             }
 
             const allElements = getters.getAllElements(stages)
 
             const elementValid = allElements.some(ele => {
                 ele['@type'] === 'linuxPaasCodeCCScript' && codeccCount++
+                ele.atomCode === 'CodeccCheckAtom' && codeccCount++
                 ele['@type'] === 'manualTrigger' && manualTriggerCount++
                 ele['@type'] === 'timerTrigger' && timerTriggerCount++
                 ele['@type'] === 'remoteTrigger' && remoteTriggerCount++
@@ -179,15 +180,15 @@ export default {
             })
 
             if (codeccCount > 1) {
-                throw new Error(this.$t('storeMap.oneCodecc'))
+                throw new Error(window.pipelineVue.$i18n && window.pipelineVue.$i18n.t('storeMap.oneCodecc'))
             } else if (manualTriggerCount > 1) {
-                throw new Error(this.$t('storeMap.oneManualTrigger'))
+                throw new Error(window.pipelineVue.$i18n && window.pipelineVue.$i18n.t('storeMap.oneManualTrigger'))
             } else if (timerTriggerCount > 1) {
-                throw new Error(this.$t('storeMap.oneTimerTrigger'))
+                throw new Error(window.pipelineVue.$i18n && window.pipelineVue.$i18n.t('storeMap.oneTimerTrigger'))
             } else if (remoteTriggerCount > 1) {
-                throw new Error(this.$t('storeMap.oneRemoteTrigger'))
+                throw new Error(window.pipelineVue.$i18n && window.pipelineVue.$i18n.t('storeMap.oneRemoteTrigger'))
             } else if (elementValid) {
-                throw new Error(this.$t('storeMap.correctPipeline'))
+                throw new Error(window.pipelineVue.$i18n && window.pipelineVue.$i18n.t('storeMap.correctPipeline'))
             }
 
             return {
