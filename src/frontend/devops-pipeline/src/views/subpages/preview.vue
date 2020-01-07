@@ -100,6 +100,12 @@
                 'editingElementPos',
                 'isPropertyPanelVisible'
             ]),
+            projectId () {
+                return this.$route.params.projectId
+            },
+            pipelineId () {
+                return this.$route.params.pipelineId
+            },
             panelTitle () {
                 const { stageIndex, containerIndex, elementIndex } = this.editingElementPos
                 if (typeof elementIndex !== 'undefined') {
@@ -113,12 +119,12 @@
             }
         },
         watch: {
-            pipelineId () {
+            pipelineId (pipelineId) {
                 this.$router.push({
                     name: 'pipelinesEdit',
                     params: {
                         projectId: this.projectId,
-                        pipelineId: this.pipelineId
+                        pipelineId
                     }
                 })
             },
