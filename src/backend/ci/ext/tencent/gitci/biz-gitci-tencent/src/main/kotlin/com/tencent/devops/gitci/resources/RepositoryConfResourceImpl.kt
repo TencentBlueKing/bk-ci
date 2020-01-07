@@ -63,7 +63,7 @@ class RepositoryConfResourceImpl @Autowired constructor(
             throw ParamBlankException("Invalid userId")
         }
         if (!gitProjectConfService.isEnable(gitProjectId)) {
-            throw CustomException(Response.Status.FORBIDDEN, "项目未开启工蜂CI，请联系蓝盾助手")
+            throw CustomException(Response.Status.FORBIDDEN, "项目未开启工蜂CI，请联系DevOps-Helper")
         }
     }
 }

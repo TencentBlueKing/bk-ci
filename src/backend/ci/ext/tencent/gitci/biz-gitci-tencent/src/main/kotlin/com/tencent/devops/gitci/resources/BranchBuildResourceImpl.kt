@@ -46,7 +46,7 @@ class BranchBuildResourceImpl @Autowired constructor(
     override fun getBranchBuildList(userId: String, gitProjectId: Long, defaultBranch: String?): Result<List<BranchBuildHistory>> {
         checkParam(userId)
         if (!gitProjectConfService.isEnable(gitProjectId)) {
-            throw CustomException(Response.Status.FORBIDDEN, "项目未开启工蜂CI，请联系蓝盾助手")
+            throw CustomException(Response.Status.FORBIDDEN, "项目未开启工蜂CI，请联系DevOps-Helper")
         }
         return Result(branchBuildService.getBranchBuildList(userId, gitProjectId, defaultBranch))
     }

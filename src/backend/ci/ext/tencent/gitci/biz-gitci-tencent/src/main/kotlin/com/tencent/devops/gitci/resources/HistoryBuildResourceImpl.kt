@@ -46,7 +46,7 @@ class HistoryBuildResourceImpl @Autowired constructor(
     override fun getHistoryBuildList(userId: String, gitProjectId: Long, page: Int?, pageSize: Int?): Result<BuildHistoryPage<GitCIBuildHistory>> {
         checkParam(userId)
         if (!gitProjectConfService.isEnable(gitProjectId)) {
-            throw CustomException(Response.Status.FORBIDDEN, "项目未开启工蜂CI，请联系蓝盾助手")
+            throw CustomException(Response.Status.FORBIDDEN, "项目未开启工蜂CI，请联系DevOps-Helper")
         }
         return Result(historyBuildService.getHistoryBuildList(userId, gitProjectId, page, pageSize))
     }

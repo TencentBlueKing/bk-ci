@@ -47,7 +47,7 @@ class MergeBuildResourceImpl @Autowired constructor(
     override fun getMergeBuildList(userId: String, gitProjectId: Long, page: Int?, pageSize: Int?): Result<BuildHistoryPage<GitCIBuildHistory>> {
         checkParam(userId)
         if (!gitProjectConfService.isEnable(gitProjectId)) {
-            throw CustomException(Response.Status.FORBIDDEN, "项目未开启工蜂CI，请联系蓝盾助手")
+            throw CustomException(Response.Status.FORBIDDEN, "项目未开启工蜂CI，请联系DevOps-Helper")
         }
         return Result(mergeBuildService.getMergeBuildList(userId, gitProjectId, page, pageSize))
     }

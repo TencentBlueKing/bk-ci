@@ -140,7 +140,7 @@ object EmailUtil {
             "                                                </tr>\n" +
             "\n" +
             "                                                <tr class=\"prompt-tips\">\n" +
-            "                                                    <td style=\"padding-top: 32px; padding-bottom: 10px; color: #707070;\">如有任何问题，可随时联系蓝盾助手。</td>\n" +
+            "                                                    <td style=\"padding-top: 32px; padding-bottom: 10px; color: #707070;\">如有任何问题，可随时联系DevOps-Helper。</td>\n" +
             "                                                </tr>\n" +
             "                                                <tr class=\"info-remark\">\n" +
             "                                                    <td style=\"padding: 20px 0; text-align: right; line-height: 24px; color: #707070;\">\n" +
