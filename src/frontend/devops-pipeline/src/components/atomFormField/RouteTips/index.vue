@@ -76,18 +76,18 @@
         }
         .tips-content {
             .tips-row {
-                margin: 7px;
+                line-height: 26px;
                 .tips-label {
                     display: inline-block;
                     font-weight: bold;
                     font-size: 14px;
-                    width: 65px;
+                    width: 75px;
                     text-align: right;
                 }
                 .tips-route {
                     display: inline-block;
                     font-size: 12px;
-                    width: 430px;
+                    width: 420px;
                     overflow: hidden;
                     text-overflow:ellipsis;
                     white-space: nowrap;

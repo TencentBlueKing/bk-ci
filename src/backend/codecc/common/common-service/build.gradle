@@ -1,0 +1,14 @@
+apply plugin: "maven"
+apply plugin: "java"
+dependencies {
+    compile project(":common:common-api")
+    compile project(":common:common-redis")
+    compile project(":common:common-util")
+    compile "org.springframework.boot:spring-boot-starter-data-redis"
+    compile "org.springframework.boot:spring-boot-starter-actuator"
+    compile "org.springframework.boot:spring-boot-starter-log4j2"
+    compile "org.springframework.cloud:spring-cloud-starter-consul-discovery"
+    compile "io.github.openfeign:feign-okhttp"
+    compile "org.jolokia:jolokia-core"
+}
+

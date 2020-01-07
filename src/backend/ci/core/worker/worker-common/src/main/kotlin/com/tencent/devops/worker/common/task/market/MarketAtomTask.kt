@@ -26,17 +26,16 @@
 
 package com.tencent.devops.worker.common.task.market
 
-import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.enums.OSType
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.archive.element.ReportArchiveElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
-import com.tencent.devops.process.pojo.AtomErrorCode
+import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
-import com.tencent.devops.process.pojo.ErrorType
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.process.pojo.report.enums.ReportTypeEnum
 import com.tencent.devops.store.pojo.atom.AtomEnv
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
@@ -48,12 +47,13 @@ import com.tencent.devops.worker.common.api.quality.QualityGatewaySDKApi
 import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.env.BuildEnv
 import com.tencent.devops.worker.common.env.BuildType
-import com.tencent.devops.worker.common.exception.TaskExecuteException
+import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.task.ITask
 import com.tencent.devops.worker.common.task.TaskFactory
 import com.tencent.devops.worker.common.utils.ArchiveUtils
 import com.tencent.devops.worker.common.utils.BatScriptUtil
+import com.tencent.devops.worker.common.utils.FileUtils
 import com.tencent.devops.worker.common.utils.ShellUtil
 import org.slf4j.LoggerFactory
 import java.io.File
@@ -95,21 +95,21 @@ open class MarketAtomTask : ITask() {
             atomEnvResult.data ?: throw TaskExecuteException(
                 errorMsg = "can not found $atomName: ${atomEnvResult.message}",
                 errorType = ErrorType.SYSTEM,
-                errorCode = AtomErrorCode.SYSTEM_WORKER_LOADING_ERROR
+                errorCode = ErrorCode.SYSTEM_WORKER_LOADING_ERROR
             )
 
         // val atomWorkspace = File("${workspace.absolutePath}/${atomCode}_${buildTask.taskId}_data")
-        val atomWorkspace = Files.createTempDirectory("${atomCode}_${buildTask.taskId}_data").toFile()
+        val atomTmpSpace = Files.createTempDirectory("${atomCode}_${buildTask.taskId}_data").toFile()
 
-        if (!atomWorkspace.exists() && !atomWorkspace.mkdirs()) {
+        if (!atomTmpSpace.exists() && !atomTmpSpace.mkdirs()) {
             atomEnvResult.data ?: throw TaskExecuteException(
-                errorMsg = "create directory fail! please check ${atomWorkspace.absolutePath}",
+                errorMsg = "create directory fail! please check ${atomTmpSpace.absolutePath}",
                 errorType = ErrorType.SYSTEM,
-                errorCode = AtomErrorCode.SYSTEM_WORKER_LOADING_ERROR
+                errorCode = ErrorCode.SYSTEM_WORKER_LOADING_ERROR
             )
         }
 
-        cleanOutput(atomWorkspace)
+        cleanOutput(atomTmpSpace)
 
         val variablesMap = buildVariables.variablesWithType.map { it.key to it.value.toString() }.toMap()
         var runtimeVariables = if (buildTask.buildVariable != null) {
@@ -150,16 +150,16 @@ open class MarketAtomTask : ITask() {
             throw TaskExecuteException(
                 errorMsg = "plugin input illegal",
                 errorType = ErrorType.SYSTEM,
-                errorCode = AtomErrorCode.SYSTEM_WORKER_LOADING_ERROR
+                errorCode = ErrorCode.SYSTEM_WORKER_LOADING_ERROR
             )
         }
 
         val bkWorkspacePath =
             if (buildTask.type != MarketBuildAtomElement.classType) {
                 // 无构建环境插件的workspace取临时文件的路径
-                atomWorkspace.canonicalPath
+                atomTmpSpace.absolutePath
             } else {
-                workspace.canonicalPath
+                workspace.absolutePath
             }
         runtimeVariables = runtimeVariables.plus(Pair("bkWorkspace", Paths.get(bkWorkspacePath).normalize().toString()))
         val atomStatus = atomData.atomStatus
@@ -171,14 +171,6 @@ open class MarketAtomTask : ITask() {
         runtimeVariables = runtimeVariables.plus(Pair("testVersionFlag", testVersionFlag)) // 设置是否是测试版本的标识
         val variables = runtimeVariables.plus(atomParams)
         logger.info("atomCode is:$atomCode ,variables is:$variables")
-
-        atomParams["bkWorkspace"] =
-            if (buildTask.type != MarketBuildAtomElement.classType) {
-                // 无构建环境插件的workspace取临时文件的路径
-                atomWorkspace.absolutePath
-            } else {
-                workspace.absolutePath
-            }
 
         val outputTemplate =
             if (props["output"] != null) {
@@ -196,7 +188,7 @@ open class MarketAtomTask : ITask() {
             throw TaskExecuteException(
                 errorMsg = "can not found any plugin cmd",
                 errorType = ErrorType.SYSTEM,
-                errorCode = AtomErrorCode.SYSTEM_WORKER_LOADING_ERROR
+                errorCode = ErrorCode.SYSTEM_WORKER_LOADING_ERROR
             )
         }
 
@@ -209,24 +201,24 @@ open class MarketAtomTask : ITask() {
             atomSensitiveConfMap[it.fieldName] = it.fieldValue
         }
         val atomSensitiveDataMap = mapOf("bkSensitiveConfInfo" to atomSensitiveConfMap)
-        writeInputFile(atomWorkspace, variables.plus(atomSensitiveDataMap))
+        writeInputFile(atomTmpSpace, variables.plus(atomSensitiveDataMap))
 
-        writeSdkEnv(atomWorkspace, buildTask, buildVariables)
+        writeSdkEnv(atomTmpSpace, buildTask, buildVariables)
 
         val javaFile = getJavaFile()
         val environment = runtimeVariables.plus(
             mapOf(
-                DIR_ENV to atomWorkspace.canonicalPath,
+                DIR_ENV to atomTmpSpace.absolutePath,
                 INPUT_ENV to inputFile,
                 OUTPUT_ENV to outputFile,
-                JAVA_PATH_ENV to javaFile.canonicalPath
+                JAVA_PATH_ENV to javaFile.absolutePath
             )
         )
 
         var error: Throwable? = null
         try {
             // 下载atom执行文件
-            atomExecuteFile = downloadAtomExecuteFile(atomData.pkgPath, atomWorkspace)
+            atomExecuteFile = downloadAtomExecuteFile(atomData.pkgPath, atomTmpSpace)
 
             checkSha1(atomExecuteFile, atomData.shaContent!!)
             val buildHostType = if (BuildEnv.isThirdParty()) BuildHostTypeEnum.THIRD else BuildHostTypeEnum.PUBLIC
@@ -245,7 +237,7 @@ open class MarketAtomTask : ITask() {
             val preCmds = mutableListOf<String>()
             if (!atomData.preCmd.isNullOrBlank()) {
                 if (atomData.preCmd!!.contains(Regex("^\\s*\\[[\\w\\s\\S\\W]*\\]\\s*$"))) {
-                    preCmds.addAll(JsonUtil.to(atomData.preCmd!!, object : TypeReference<List<String>>() {}))
+                    preCmds.addAll(JsonUtil.to(atomData.preCmd!!))
                 } else {
                     preCmds.add(atomData.preCmd!!)
                 }
@@ -260,10 +252,11 @@ open class MarketAtomTask : ITask() {
                     }
                     command.append("\r\n${atomData.target.replace("\$bk_java_path", "%bk_java_path%")}\r\n")
                     BatScriptUtil.execute(
-                        buildTask.buildId,
-                        command.toString(),
-                        environment,
-                        atomWorkspace
+                        buildId = buildVariables.buildId,
+                        script = command.toString(),
+                        runtimeVariables = environment,
+                        dir = atomTmpSpace,
+                        systemEnvVariables = systemEnvVariables
                     )
                 }
                 AgentEnv.getOS() == OSType.LINUX || AgentEnv.getOS() == OSType.MAC_OS -> {
@@ -274,18 +267,19 @@ open class MarketAtomTask : ITask() {
                     }
                     command.append("\n${atomData.target}\n")
                     ShellUtil.execute(
-                        buildTask.buildId,
-                        command.toString(),
-                        atomWorkspace,
-                        buildVariables.buildEnvs,
-                        environment
+                        buildId = buildVariables.buildId,
+                        script = command.toString(),
+                        dir = atomTmpSpace,
+                        buildEnvs = buildVariables.buildEnvs,
+                        runtimeVariables = environment,
+                        systemEnvVariables = systemEnvVariables
                     )
                 }
             }
         } catch (e: Throwable) {
             error = e
         } finally {
-            output(buildTask, atomWorkspace, buildVariables, outputTemplate, namespace, atomCode)
+            output(buildTask, atomTmpSpace, File(bkWorkspacePath), buildVariables, outputTemplate, namespace, atomCode)
             if (error != null) {
                 val defaultMessage = StringBuilder("Market atom env load exit with StackTrace:\n")
                 defaultMessage.append(error.toString())
@@ -296,7 +290,7 @@ open class MarketAtomTask : ITask() {
                 }
                 throw TaskExecuteException(
                     errorType = ErrorType.USER,
-                    errorCode = AtomErrorCode.USER_RESOURCE_NOT_FOUND,
+                    errorCode = ErrorCode.USER_RESOURCE_NOT_FOUND,
                     errorMsg = defaultMessage.toString()
                 )
             }
@@ -397,16 +391,17 @@ open class MarketAtomTask : ITask() {
 
     private fun output(
         buildTask: BuildTask,
-        atomWorkspace: File,
+        atomTmpSpace: File,
+        bkWorkspace: File,
         buildVariables: BuildVariables,
         outputTemplate: Map<String, Map<String, Any>>,
         namespace: String?,
         atomCode: String
     ) {
-        val atomResult = readOutputFile(atomWorkspace)
+        val atomResult = readOutputFile(atomTmpSpace)
         logger.info("the atomResult from Market is :\n$atomResult")
 
-        deletePluginFile()
+        deletePluginFile(atomTmpSpace)
         val success: Boolean
         if (atomResult == null) {
             LoggerService.addYellowLine("No output")
@@ -450,8 +445,8 @@ open class MarketAtomTask : ITask() {
                  */
                 when (type) {
                     "string" -> env[key] = output["value"] as String
-                    "report" -> env[key] = archiveReport(buildTask, output, buildVariables, atomWorkspace)
-                    "artifact" -> env[key] = archiveArtifact(output, atomWorkspace, buildVariables)
+                    "report" -> env[key] = archiveReport(buildTask, output, buildVariables, bkWorkspace)
+                    "artifact" -> env[key] = archiveArtifact(output, bkWorkspace, buildVariables)
                 }
                 if (outputTemplate.containsKey(varKey)) {
                     val outPutDefine = outputTemplate[varKey]
@@ -496,16 +491,14 @@ open class MarketAtomTask : ITask() {
                 throw TaskExecuteException(
                     errorMsg = "MarketAtom failed with ${atomResult.status}: ${atomResult.message}",
                     errorType = ErrorType.USER,
-                    errorCode = atomResult.errorCode ?: AtomErrorCode.USER_DEFAULT_ERROR
+                    errorCode = atomResult.errorCode ?: ErrorCode.USER_DEFAULT_ERROR
                 )
             }
         }
     }
 
-    private fun deletePluginFile() {
-        logger.info("delete plugin file: ${atomExecuteFile.name} ${atomExecuteFile.delete()}")
-        logger.info("delete plugin input: $inputFile ${File(inputFile).delete()}")
-        logger.info("delete plugin output: $outputFile ${File(outputFile).delete()}")
+    private fun deletePluginFile(atomWorkspace: File) {
+        FileUtils.deleteRecursivelyOnExit(atomWorkspace)
     }
 
     /**
@@ -610,7 +603,7 @@ open class MarketAtomTask : ITask() {
             throw TaskExecuteException(
                 errorMsg = "Plugin File Sha1 is wrong! wrong sha1: $fileSha1",
                 errorType = ErrorType.SYSTEM,
-                errorCode = AtomErrorCode.SYSTEM_WORKER_LOADING_ERROR
+                errorCode = ErrorCode.SYSTEM_WORKER_LOADING_ERROR
             )
         }
     }
@@ -632,7 +625,7 @@ open class MarketAtomTask : ITask() {
             throw TaskExecuteException(
                 errorMsg = "download plugin execute file fail",
                 errorType = ErrorType.SYSTEM,
-                errorCode = AtomErrorCode.SYSTEM_WORKER_LOADING_ERROR
+                errorCode = ErrorCode.SYSTEM_WORKER_LOADING_ERROR
             )
         }
     }

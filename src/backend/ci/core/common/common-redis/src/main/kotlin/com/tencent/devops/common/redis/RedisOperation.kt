@@ -71,10 +71,6 @@ class RedisOperation(private val redisTemplate: RedisTemplate<String, String>) {
         return redisTemplate.hasKey(key)
     }
 
-    fun keys(pattern: String): Set<String> {
-        return redisTemplate.keys(pattern) ?: emptySet()
-    }
-
     fun addSetValue(key: String, item: String) {
         redisTemplate.opsForSet().add(key, item)
     }
