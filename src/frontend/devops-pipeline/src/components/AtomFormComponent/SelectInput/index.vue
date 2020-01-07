@@ -250,7 +250,7 @@
                     const reqUrl = urlParse(url, queryParams)
                     const res = await this.$ajax.get(reqUrl)
                     let options = getResponseData(res, dataPath)
-                    
+
                     if (this.hasGroup) {
                         options = options.filter(item => item.children.length)
                         this.optionList = options.map(item => {

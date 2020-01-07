@@ -308,7 +308,7 @@ BEGIN
                   FROM information_schema.statistics
                   WHERE TABLE_SCHEMA = db
                     AND TABLE_NAME = 'T_PIPELINE_BUILD_VAR'
-                    AND INDEX_NAME = 'IDX_SEARCH_BUILDID') THEN
+                    AND INDEX_NAME = 'IDX_SEARCH_BUILD_ID') THEN
         ALTER TABLE T_PIPELINE_BUILD_VAR
             ADD INDEX `IDX_SEARCH_BUILD_ID` (`PROJECT_ID`,`PIPELINE_ID`, `KEY`);
     END IF;
@@ -411,6 +411,33 @@ BEGIN
                     AND INDEX_NAME = 'IDX_DEL') THEN
         ALTER TABLE T_BUILD_STARTUP_PARAM
             ADD INDEX IDX_DEL (`PROJECT_ID`,`PIPELINE_ID`);
+    END IF;
+
+
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_PIPELINE_BUILD_VAR'
+                    AND COLUMN_NAME = 'VAR_TYPE') THEN
+        ALTER TABLE T_PIPELINE_BUILD_VAR ADD COLUMN `VAR_TYPE` VARCHAR(64) COMMENT '变量类型';
+    END IF;
+
+
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_PIPELINE_RESOURCE'
+                    AND COLUMN_NAME = 'CREATOR') THEN
+        ALTER TABLE T_PIPELINE_RESOURCE ADD COLUMN `CREATOR` varchar(64) DEFAULT NULL;
+    END IF;
+
+
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_PIPELINE_RESOURCE'
+                    AND COLUMN_NAME = 'CREATE_TIME') THEN
+        ALTER TABLE T_PIPELINE_RESOURCE ADD COLUMN `CREATE_TIME` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP;
     END IF;
 
     COMMIT;

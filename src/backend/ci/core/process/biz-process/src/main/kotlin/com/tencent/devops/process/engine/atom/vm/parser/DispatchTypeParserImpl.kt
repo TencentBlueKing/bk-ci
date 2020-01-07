@@ -46,7 +46,13 @@ class DispatchTypeParserImpl @Autowired constructor(
 
     private val logger = LoggerFactory.getLogger(DispatchTypeParserImpl::class.java)
 
-    override fun parse(userId: String, projectId: String, dispatchType: DispatchType) {
+    override fun parse(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        dispatchType: DispatchType
+    ) {
         if (dispatchType is StoreDispatchType) {
             // 凭证项目默认初始值为当前项目
             dispatchType.credentialProject = projectId
@@ -55,6 +61,8 @@ class DispatchTypeParserImpl @Autowired constructor(
                 val imageRepoInfo = storeImageService.getImageRepoInfo(
                     userId = userId,
                     projectId = projectId,
+                    pipelineId = pipelineId,
+                    buildId = buildId,
                     imageCode = dispatchType.imageCode,
                     imageVersion = dispatchType.imageVersion,
                     defaultPrefix = ""

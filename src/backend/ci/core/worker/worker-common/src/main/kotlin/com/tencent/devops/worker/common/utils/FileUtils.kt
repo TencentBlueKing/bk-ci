@@ -41,4 +41,16 @@ object FileUtils {
             return@filter matcher.matches(startPath.relativize(Paths.get(it.canonicalPath)))
         }
     }
+
+    fun deleteRecursivelyOnExit(fileDir: File) {
+        fileDir.deleteOnExit()
+        if (fileDir.isDirectory) {
+            fileDir.listFiles()?.forEach { file ->
+                file.deleteOnExit()
+                if (file.isDirectory) {
+                    deleteRecursivelyOnExit(file)
+                }
+            }
+        }
+    }
 }
