@@ -46,6 +46,7 @@ import com.tencent.devops.plugin.worker.task.codecc.util.CodeccParamsHelper.getP
 import com.tencent.devops.plugin.worker.task.codecc.util.CodeccParamsHelper.getPyLint3Path
 import com.tencent.devops.plugin.worker.task.codecc.util.CodeccParamsHelper.getPython2Path
 import com.tencent.devops.plugin.worker.task.codecc.util.CodeccParamsHelper.getPython3Path
+import com.tencent.devops.process.utils.PIPELINE_TURBO_TASK_ID
 import com.tencent.devops.worker.common.CommonEnv
 import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.env.BuildEnv
@@ -194,7 +195,7 @@ object CodeccUtils {
             buildId = codeccExecuteConfig.buildTask.buildId,
             script = list.joinToString(" "),
             dir = workspace,
-            buildEnvs = codeccExecuteConfig.buildVariables.buildEnvs,
+            buildEnvs = takeBuildEnvs(codeccExecuteConfig),
             runtimeVariables = variables,
             prefix = "[cov] "
         )
@@ -263,7 +264,7 @@ object CodeccUtils {
             buildId = codeccExecuteConfig.buildTask.buildId,
             script = list.joinToString(" "),
             dir = workspace,
-            buildEnvs = codeccExecuteConfig.buildVariables.buildEnvs,
+            buildEnvs = takeBuildEnvs(codeccExecuteConfig),
             runtimeVariables = variables,
             prefix = "[tools] "
         )
@@ -278,6 +279,22 @@ object CodeccUtils {
             ) {
                 LoggerService.addNormalLine("$tag $it")
             }
+        }
+    }
+
+    private fun takeBuildEnvs(coverConfig: CodeccExecuteConfig): List<com.tencent.devops.store.pojo.app.BuildEnv> {
+        val turboTaskId = coverConfig.buildTask.buildVariable?.get(PIPELINE_TURBO_TASK_ID)
+        return if (turboTaskId.isNullOrBlank()) {
+            coverConfig.buildVariables.buildEnvs
+        } else { // 设置编译加速路径
+            coverConfig.buildVariables.buildEnvs.plus(
+                com.tencent.devops.store.pojo.app.BuildEnv(
+                    name = "turbo",
+                    version = "1.0",
+                    binPath = "",
+                    env = mapOf()
+                )
+            )
         }
     }
 }
