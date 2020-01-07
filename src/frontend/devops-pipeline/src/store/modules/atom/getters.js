@@ -164,7 +164,7 @@ export default {
             const allContainers = getters.getAllContainers(stages)
 
             if (allContainers.some(container => container.isError)) {
-                throw new Error(window.pipelineVue.$i18n && window.pipelineVue.$i18n.t('storeMap.oneCodecc'))
+                throw new Error(window.pipelineVue.$i18n && window.pipelineVue.$i18n.t('storeMap.correctPipeline'))
             }
 
             const allElements = getters.getAllElements(stages)

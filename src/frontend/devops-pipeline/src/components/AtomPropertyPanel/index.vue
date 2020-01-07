@@ -108,6 +108,7 @@
 <script>
     import AtomOption from './AtomOption'
     import { mapGetters, mapActions, mapState } from 'vuex'
+    import RemoteAtom from './RemoteAtom'
     import QualitygateTips from '@/components/atomFormField/QualitygateTips'
     import BuildScript from './BuildScript'
     import Unity3dBuild from './Unity3dBuild'
@@ -138,6 +139,7 @@
     export default {
         name: 'atom-property-panel',
         components: {
+            RemoteAtom,
             ReferenceVariable,
             AtomOption,
             VuexInput,
@@ -316,6 +318,9 @@
                 return Array.isArray(this.atomVersionList) && this.atomVersionList.length > 0
             },
             AtomComponent () {
+                if (this.atomCode === 'ddtestatomdev' || this.atomCode === 'CodeccCheckAtom') {
+                    return RemoteAtom
+                }
                 if (this.isNewAtomTemplate(this.atom.htmlTemplateVersion)) {
                     return NormalAtomV2
                 }
