@@ -58,6 +58,10 @@ data class ImageUpdateRequest(
     val imageSize: String?,
     @ApiModelProperty("镜像TAG", required = true)
     val imageTag: String,
+    @ApiModelProperty("dockerFile类型", required = true)
+    val dockerFileType: String?,
+    @ApiModelProperty("dockerFile内容", required = true)
+    val dockerFileContent: String?,
     @ApiModelProperty("LOGO url", required = true)
     val logoUrl: String,
     @ApiModelProperty("镜像图标（BASE64字符串）", required = false)
