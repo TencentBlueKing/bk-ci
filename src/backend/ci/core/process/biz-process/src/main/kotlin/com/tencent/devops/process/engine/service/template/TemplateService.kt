@@ -50,10 +50,12 @@ import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.extend.ModelCheckPlugin
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
+import com.tencent.devops.common.pipeline.pojo.BuildNo
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.agent.CodeGitElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.CodeSvnElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.GithubElement
+import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxPaasCodeCCScriptElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeSVNWebHookTriggerElement
@@ -1240,7 +1242,8 @@ class TemplateService @Autowired constructor(
                         userId = userId,
                         projectId = projectId,
                         pipelineId = it.pipelineId,
-                        model = pipelineService.instanceModel(
+                        model = getInstanceModel(
+                            pipelineId = it.pipelineId,
                             templateModel = templateModel,
                             pipelineName = it.pipelineName,
                             buildNo = it.buildNo,
@@ -1279,6 +1282,61 @@ class TemplateService @Autowired constructor(
         }
 
         return TemplateOperationRet(0, TemplateOperationMessage(successPipelines, failurePipelines, messages), "")
+    }
+
+    /**
+     *  实例内有codeccId则用实例内的数据
+     */
+    private fun getInstanceModel(
+        pipelineId: String,
+        templateModel: Model,
+        pipelineName: String,
+        buildNo: BuildNo?,
+        param: List<BuildFormProperty>?,
+        instanceFromTemplate: Boolean,
+        labels: List<String>? = null
+    ): Model {
+        var model = pipelineService.instanceModel(
+            templateModel = templateModel,
+            pipelineName = pipelineName,
+            buildNo = buildNo,
+            param = param,
+            instanceFromTemplate = instanceFromTemplate,
+            labels = labels
+        )
+
+        val instanceModelStr = pipelineResDao.getLatestVersionModelString(dslContext, pipelineId)
+        val instanceModel = objectMapper.readValue(instanceModelStr, Model::class.java)
+        var codeCCTaskId: String? = null
+        var codeCCTaskCnName: String? = null
+        var codeCCTaskName: String? = null
+
+        instanceModel.stages.forEach { stage ->
+            stage.containers.forEach { container ->
+                container.elements.forEach { element ->
+                    if (element is LinuxPaasCodeCCScriptElement) {
+                        codeCCTaskId = element.codeCCTaskId
+                        codeCCTaskCnName = element.codeCCTaskCnName
+                        codeCCTaskName = element.codeCCTaskName
+                        return@forEach
+                    }
+                }
+            }
+        }
+        if (codeCCTaskId != null) {
+            model.stages.forEach { stage ->
+                stage.containers.forEach { container ->
+                    container.elements.forEach { element ->
+                        if (element is LinuxPaasCodeCCScriptElement) {
+                            element.codeCCTaskId = codeCCTaskId
+                            element.codeCCTaskName = codeCCTaskName
+                            element.codeCCTaskCnName = codeCCTaskCnName
+                        }
+                    }
+                }
+            }
+        }
+        return model
     }
 
     fun copySetting(setting: PipelineSetting, pipelineId: String, templateName: String): PipelineSetting {

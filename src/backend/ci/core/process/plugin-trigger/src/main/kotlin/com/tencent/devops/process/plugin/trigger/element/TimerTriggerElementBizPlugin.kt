@@ -54,7 +54,8 @@ class TimerTriggerElementBizPlugin constructor(
         pipelineId: String,
         pipelineName: String,
         userId: String,
-        channelCode: ChannelCode
+        channelCode: ChannelCode,
+        create: Boolean
     ) {
         val crontabExpressions = mutableSetOf<String>()
         logger.info("[$pipelineId]|$userId| Timer trigger [${element.name}] enable=${element.isElementEnable()}")
