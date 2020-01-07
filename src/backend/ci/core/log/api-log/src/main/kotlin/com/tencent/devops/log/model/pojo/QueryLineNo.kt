@@ -24,26 +24,25 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.pojo
+package com.tencent.devops.log.model.pojo
 
-import com.fasterxml.jackson.annotation.JsonProperty
+import com.tencent.devops.log.model.pojo.enums.LogStatus
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+import java.util.TreeSet
 
-data class DockerHostBuildInfo(
-    val projectId: String,
-    val agentId: String,
-    val pipelineId: String,
+/**
+ *
+ * Powered By Tencent
+ */
+@ApiModel("日志查询模型")
+data class QueryLineNo(
+    @ApiModelProperty("构建ID", required = true)
     val buildId: String,
-    val vmSeqId: Int,
-    val secretKey: String,
-    val status: Int,
-    val imageName: String,
-    val containerId: String,
-    @JsonProperty("wsInHost")
-    val wsInHost: Boolean,
-    val registryUser: String?,
-    val registryPwd: String?,
-    val imageType: String?,
-    val imagePublicFlag: Boolean?,
-    val imageRDType: String?,
-    val containerHashId: String?
+    @ApiModelProperty("所在行号列表", required = true)
+    val lines: TreeSet<Long> = TreeSet(),
+    @ApiModelProperty("所用时间", required = false)
+    var timeUsed: Long = 0,
+    @ApiModelProperty("日志查询状态", required = false)
+    var status: LogStatus = LogStatus.SUCCEED
 )

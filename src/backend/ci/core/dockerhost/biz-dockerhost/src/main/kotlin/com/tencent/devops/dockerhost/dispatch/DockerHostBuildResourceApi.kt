@@ -130,8 +130,8 @@ class DockerHostBuildResourceApi constructor(
         }
     }
 
-    fun postLog(buildId: String, red: Boolean, message: String, tag: String? = ""): Result<Boolean>? {
-        val path = "/$urlPrefix/api/dockerhost/postlog?buildId=$buildId&red=$red&tag=$tag"
+    fun postLog(buildId: String, red: Boolean, message: String, tag: String? = "", jobId: String? = ""): Result<Boolean>? {
+        val path = "/$urlPrefix/api/dockerhost/postlog?buildId=$buildId&red=$red&tag=$tag&jobId=$jobId"
         val request = buildPost(path, RequestBody.create(MediaType.parse("application/json; charset=utf-8"), message))
 
         OkhttpUtils.doHttp(request).use { response ->
