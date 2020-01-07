@@ -18,7 +18,9 @@
 <script lang="ts">
     import Vue from 'vue'
     import { Prop, Component } from 'vue-property-decorator'
-    @Component
+    @Component({
+        name: 'devops-option'
+    })
     export default class DevopsOption extends Vue {
         @Prop({ required: true })
         id: string | number

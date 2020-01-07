@@ -4,10 +4,7 @@
             <i v-if="icon" :class="`bk-icon icon-${icon} bread-crumb-item-icon`" />
             <span @click="handleNameClick" :title="activeName" :disabled="!to" class="bread-crumb-name">{{activeName}}</span>
         </slot>
-        <show-tooltip v-if="showTips" placement="bottom" :content="tipsContent" :name="tipsName">
-            <span @click.stop="breadCrumbItemClick" :class="{ 'bk-icon': true, 'icon-angle-right': true, 'active': isActive, 'is-cursor': hasRecords }"></span>
-        </show-tooltip>
-        <span v-else @click.stop="breadCrumbItemClick" :class="{ 'bk-icon': true, 'icon-angle-right': true, 'active': isActive, 'is-cursor': hasRecords }"></span>
+        <span @click.stop="breadCrumbItemClick" :class="{ 'bk-icon': true, 'icon-angle-right': true, 'active': isActive, 'is-cursor': hasRecords }"></span>
         <template v-if="hasRecords">
             <crumb-records v-if="isActive" :param-id="paramId" :param-name="paramName" :records="records" :handle-record-click="handleRecordClick" :active-id="activeId"></crumb-records>
         </template>
@@ -16,13 +13,11 @@
 
 <script>
     import CrumbRecords from './CrumbRecords'
-    import showTooltip from '@/components/common/showTooltip'
 
     export default {
         name: 'bread-crumb-item',
         components: {
-            CrumbRecords,
-            showTooltip
+            CrumbRecords
         },
         props: {
             showTips: Boolean,
@@ -112,7 +107,7 @@
         height: 32px;
         line-height: 32px;
         border-radius: 10px;
-        
+
         &.active,
         &.disabled:hover {
             background-color: #f5f5f5;

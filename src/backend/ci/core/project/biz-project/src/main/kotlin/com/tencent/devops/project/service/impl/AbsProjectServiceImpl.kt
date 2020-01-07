@@ -355,8 +355,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         return map
     }
 
-    override fun grayProjectSet() =
-        (redisOperation.getSetMembers(gray.getGrayRedisKey()) ?: emptySet()).filter { !it.isBlank() }.toSet()
+    override fun grayProjectSet() = gray.grayProjectSet(redisOperation)
 
     override fun updateLogo(
         userId: String,

@@ -26,9 +26,12 @@
 
 package com.tencent.devops.common.service.gray
 
+import com.google.common.cache.CacheBuilder
 import com.tencent.devops.common.redis.RedisOperation
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
+import java.util.concurrent.TimeUnit
 
 @Component
 class Gray {
@@ -38,6 +41,11 @@ class Gray {
 
     var gray: Boolean? = null
     private val redisKey = "project:setting:gray" // 灰度项目列表存在redis的标识key
+
+    private val cache = CacheBuilder.newBuilder()
+        .maximumSize(2000)
+        .expireAfterWrite(30, TimeUnit.SECONDS)
+        .build<String/*Redis Keys*/, Set<String>/*Project Names*/>()
 
     fun isGray(): Boolean {
         if (gray == null) {
@@ -62,8 +70,26 @@ class Gray {
         return isGray() == grayProjectSet.contains(projectId)
     }
 
-    fun grayProjectSet(redisOperation: RedisOperation) =
-        (redisOperation.getSetMembers(getGrayRedisKey()) ?: emptySet()).filter { !it.isBlank() }.toSet()
+    fun grayProjectSet(redisOperation: RedisOperation): Set<String> {
+        var projects = cache.getIfPresent(getGrayRedisKey())
+        if (projects != null) {
+            return projects
+        }
+        synchronized(this) {
+            projects = cache.getIfPresent(getGrayRedisKey())
+            if (projects != null) {
+                return projects!!
+            }
+            logger.info("Refresh the local gray projects")
+            projects = (redisOperation.getSetMembers(getGrayRedisKey()) ?: emptySet()).filter { !it.isBlank() }.toSet()
+            cache.put(getGrayRedisKey(), projects!!)
+        }
+        return projects!!
+    }
 
     fun getGrayRedisKey() = redisKey
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(Gray::class.java)
+    }
 }
