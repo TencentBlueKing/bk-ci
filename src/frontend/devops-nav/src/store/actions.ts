@@ -27,7 +27,7 @@ import {
 
 const actions: ActionTree<RootState, any> = {
     togglePermissionDialog ({ commit }: ActionContext<RootState, any>, visible: boolean) {
-        this.commit(TOGGLE_PERMISSION_DIALOG, visible)  
+        commit(TOGGLE_PERMISSION_DIALOG, visible)  
     },
     updateCurrentPage ({ commit }: ActionContext<RootState, any>, page: object) {
         commit(UPDATE_CURRENT_PAGE, page)
@@ -68,24 +68,19 @@ const actions: ActionTree<RootState, any> = {
     async getProjects ({ dispatch }: ActionContext<RootState, any>, includeDisable = false) {
         const res: any = await Request.get(`${PROJECT_API_URL_PREFIX}/user/projects/?includeDisable=${includeDisable}`)
         const projectList: Project[] = res
-        dispatch('setProjectList', projectList)
-        window.setLsCacheItem('projectList', projectList.filter((project: Project) => project.enabled))
-    },
-    checkProjectField (_, { field, value, projectId }) {
-        if (field === 'project_name') {
-            return Request.get(`${PROJECT_API_URL_PREFIX}/user/projects/${field}/validate/?project_name=${value}${projectId ? `&project_id=${projectId}` : ''}`)
-        } else {
-            return Request.get(`${PROJECT_API_URL_PREFIX}/user/projects/${field}/${value}/validate/`)
+        if (Array.isArray(projectList)) {
+            dispatch('setProjectList', projectList)
+            window.setLsCacheItem('projectList', projectList.filter((project: Project) => project.enabled))
         }
     },
-    ajaxUpdatePM ({ commit }, { id, data }) {
-        return Request.put(`${PROJECT_API_URL_PREFIX}/user/projects/${id}/`, data)
+    ajaxUpdatePM (_, { projectCode, data }) {
+        return Request.put(`${PROJECT_API_URL_PREFIX}/user/projects/${projectCode}/`, data)
     },
     ajaxAddPM (_, data) {
         return Request.post(`${PROJECT_API_URL_PREFIX}/user/projects/`, data)
     },
-    toggleProjectEnable (_, { projectId, enabled }) {
-        return Request.put(`${PROJECT_API_URL_PREFIX}/user/projects/${projectId}/enable?enabled=${enabled}`)
+    toggleProjectEnable (_, { projectCode, enabled }) {
+        return Request.put(`${PROJECT_API_URL_PREFIX}/user/projects/${projectCode}/enable?enabled=${enabled}`)
     },
     selectDemoProject ({ commit }, { project }) {
         commit(SET_DEMO_PROJECT, {
@@ -104,6 +99,7 @@ const actions: ActionTree<RootState, any> = {
         commit(RESET_NEW_PROJECT, project)
     },
     toggleProjectDialog ({ commit }, payload) {
+        commit(RESET_NEW_PROJECT, payload.project || EMPTY_PROJECT)
         commit(TOGGLE_PROJECT_DIALOG, payload)
         if (payload.project) {
             commit(UPDATE_NEW_PROJECT, payload.project)
@@ -115,8 +111,8 @@ const actions: ActionTree<RootState, any> = {
     getDocList () {
         return Request.get(`${BACKEND_API_URL_PREFIX}/ci/docs/?format=json`)
     },
-    changeProjectLogo (_, { projectId, formData }) {
-        return Request.put(`${PROJECT_API_URL_PREFIX}/user/projects/${projectId}/logo/`, formData)
+    changeProjectLogo (_, { projectCode, formData }) {
+        return Request.put(`${PROJECT_API_URL_PREFIX}/user/projects/${projectCode}/logo/`, formData)
     },
     closePreviewTips ({ commit }) {
         commit(CLOSE_PREVIEW_TIPS)
