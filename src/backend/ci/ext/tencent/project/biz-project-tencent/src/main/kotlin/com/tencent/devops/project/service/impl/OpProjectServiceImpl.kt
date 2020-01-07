@@ -36,8 +36,6 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.common.service.gray.RepoGray
 import com.tencent.devops.common.service.utils.MessageCodeUtil
-import com.tencent.devops.common.web.mq.EXCHANGE_PAASCC_PROJECT_UPDATE
-import com.tencent.devops.common.web.mq.ROUTE_PAASCC_PROJECT_UPDATE
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dao.ProjectLabelRelDao
@@ -45,7 +43,6 @@ import com.tencent.devops.project.dao.ProjectLocalDao
 import com.tencent.devops.project.dispatch.ProjectDispatcher
 import com.tencent.devops.project.pojo.OpGrayProject
 import com.tencent.devops.project.pojo.OpProjectUpdateInfoRequest
-import com.tencent.devops.project.pojo.PaasCCUpdateProject
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.Result
