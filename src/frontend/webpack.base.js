@@ -13,6 +13,7 @@ module.exports = ({ entry, publicPath, dist, port = 8080, argv, env }) => {
     const envDist = env && env.dist ? env.dist : 'frontend'
     const buildDist = path.join(__dirname, envDist, dist)
     return {
+        devtool: '#source-map',
         entry,
         output: {
             publicPath,
@@ -24,12 +25,12 @@ module.exports = ({ entry, publicPath, dist, port = 8080, argv, env }) => {
             rules: [
                 {
                     test: /\.vue$/,
-                    include: [path.resolve('src'), path.resolve('../node_modules/vue-echarts')],
+                    include: [path.resolve('src'), path.resolve('../node_modules/vue-echarts'), path.resolve('../devops-log')],
                     loader: 'vue-loader'
                 },
                 {
                     test: /\.js$/,
-                    include: [path.resolve('src'), path.resolve('../node_modules/vue-echarts')],
+                    include: [path.resolve('src'), path.resolve('../node_modules/vue-echarts'), path.resolve('../devops-log')],
                     use: [
                         {
                             loader: 'babel-loader'
