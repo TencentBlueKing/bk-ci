@@ -29,6 +29,9 @@ package com.tencent.devops.scm.code.svn.api
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.common.api.exception.TaskExecuteException
+import com.tencent.devops.common.api.pojo.ErrorCode
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.scm.config.SVNConfig
@@ -100,7 +103,11 @@ object SVNApi {
         logger.info("lock the svn repo response $body")
         val response: Boolean = JsonUtil.getObjectMapper().readValue(body)
         if (!response) {
-            throw RuntimeException("Fail to lock the svn repo")
+            throw TaskExecuteException(
+                errorCode = ErrorCode.SYSTEM_SERVICE_ERROR,
+                errorType = ErrorType.SYSTEM,
+                errorMsg = "Fail to lock the svn repo"
+            )
         }
     }
 
@@ -123,7 +130,11 @@ object SVNApi {
         logger.info("unlock the svn repo response $body")
         val response: Boolean = JsonUtil.getObjectMapper().readValue(body)
         if (!response) {
-            throw RuntimeException("Fail to unlock the svn repo")
+            throw TaskExecuteException(
+                errorCode = ErrorCode.SYSTEM_SERVICE_ERROR,
+                errorType = ErrorType.SYSTEM,
+                errorMsg = "Fail to unlock the svn repo"
+            )
         }
     }
 
