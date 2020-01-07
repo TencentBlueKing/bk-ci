@@ -33,7 +33,9 @@ interface Window {
     vuexStore: any
     setLsCacheItem: Function
     getLsCacheItem: Function
+    setProjectIdCookie: Function
     JSONP: Function
+    GLOBAL_PID: string
     attachEvent(event: string, listener: EventListener): boolean
     detachEvent(event: string, listener: EventListener): void
 }
