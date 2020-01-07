@@ -36,5 +36,6 @@ data class DockerTag(
     var modifiedBy: String? = null,
     var desc: String? = "",
     var size: String? = null,
-    var artifactorys: List<String>? = null
+    var artifactorys: List<String>? = null,
+    var storeFlag: Boolean? = null
 )
