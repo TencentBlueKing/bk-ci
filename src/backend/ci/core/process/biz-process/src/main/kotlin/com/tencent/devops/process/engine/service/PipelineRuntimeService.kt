@@ -96,7 +96,7 @@ import com.tencent.devops.process.engine.pojo.event.PipelineBuildMonitorEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildStartEvent
 import com.tencent.devops.process.pojo.BuildBasicInfo
 import com.tencent.devops.process.pojo.BuildHistory
-import com.tencent.devops.process.pojo.ErrorType
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.process.pojo.PipelineBuildMaterial
 import com.tencent.devops.process.pojo.ReviewParam
 import com.tencent.devops.process.pojo.VmInfo
@@ -1102,6 +1102,7 @@ class PipelineRuntimeService @Autowired constructor(
                 buildDetailDao.create(
                     dslContext = transactionContext,
                     buildId = buildId,
+                    startUser = userId,
                     startType = startType,
                     buildNum = buildNum,
                     model = JsonUtil.toJson(sModel),
