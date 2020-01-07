@@ -28,7 +28,5 @@ data class UpdateExtensionServiceDTO(
     @ApiModelProperty("发布时间")
     val publishTime: Long,
     @ApiModelProperty("是否是最后版本")
-    val latestFlag: Int,
-    @ApiModelProperty("修改用户")
-    val modifierUser: String
+    val latestFlag: Int
 )

@@ -20,7 +20,7 @@ import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["USER_EXT_SERVICE_MEMBER"], description = "服务扩展-用户")
-@Path("/user/extension/services/members/")
+@Path("/user/extension/services/members")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserExtServiceMembersResource {

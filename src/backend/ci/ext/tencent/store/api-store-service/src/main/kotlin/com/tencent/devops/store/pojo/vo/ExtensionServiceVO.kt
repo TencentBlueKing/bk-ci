@@ -9,6 +9,10 @@ data class ExtensionServiceVO (
     val serviceId: String,
     @ApiModelProperty("扩展服务code")
     val serviceCode: String,
+    @ApiModelProperty("调试项目名称")
+    val itemName: String,
+    @ApiModelProperty("调试项目Id")
+    val itemId: String,
     @ApiModelProperty("扩展服务Name")
     val serviceName: String,
     @ApiModelProperty("所属分类")
@@ -17,8 +21,6 @@ data class ExtensionServiceVO (
     val version: String,
     @ApiModelProperty("状态")
     val status: Int,
-    @ApiModelProperty("状态对应的描述")
-    val statusMsg: String?,
     @ApiModelProperty("LOGO url")
     val logoUrl: String?,
     @ApiModelProperty("ICON")
