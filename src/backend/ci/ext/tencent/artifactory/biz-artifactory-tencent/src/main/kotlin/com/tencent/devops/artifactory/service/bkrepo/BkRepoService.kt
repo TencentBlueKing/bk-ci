@@ -52,6 +52,7 @@ import com.tencent.devops.common.archive.shorturl.ShortUrlApi
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.io.File
 import java.nio.file.FileSystems
 import java.nio.file.Paths
 import java.time.LocalDateTime
@@ -370,7 +371,7 @@ class BkRepoService @Autowired constructor(
                 srcFile,
                 targetProjectId,
                 RepoUtils.CUSTOM_REPO,
-                destPathFolder
+                "destPathFolder/${File(srcFile).name}"
             )
         }
         return Count(srcFiles.size)
