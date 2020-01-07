@@ -29,7 +29,6 @@ package com.tencent.devops.process.engine.service
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
-import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.NormalContainer
@@ -44,7 +43,7 @@ import com.tencent.devops.common.websocket.dispatch.WebSocketDispatcher
 import com.tencent.devops.model.process.tables.records.TPipelineBuildDetailRecord
 import com.tencent.devops.process.dao.BuildDetailDao
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
-import com.tencent.devops.process.pojo.ErrorType
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -60,7 +59,6 @@ class PipelineBuildDetailService @Autowired constructor(
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val redisOperation: RedisOperation,
-    private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val webSocketDispatcher: WebSocketDispatcher,
     private val pipelineWebsocketService: PipelineWebsocketService,
     private val pipelineBuildDao: PipelineBuildDao
@@ -127,37 +125,27 @@ class PipelineBuildDetailService @Autowired constructor(
         return JsonUtil.to(record.model, Model::class.java)
     }
 
-    fun create(buildId: String, startType: StartType, buildNum: Int, model: Model) {
-        buildDetailDao.create(dslContext, buildId, startType, buildNum, JsonUtil.toJson(model))
-        pipelineDetailChangeEvent(buildId)
-    }
-
     fun pipelineDetailChangeEvent(buildId: String) {
         val pipelineBuildInfo = pipelineBuildDao.getBuildInfo(dslContext, buildId) ?: return
         logger.info("dispatch pipelineDetailChangeEvent, buildId: $buildId")
         webSocketDispatcher.dispatch(
-                pipelineWebsocketService.buildDetailMessage(pipelineBuildInfo.buildId, pipelineBuildInfo.projectId, pipelineBuildInfo.pipelineId, pipelineBuildInfo.startUser)
+            pipelineWebsocketService.buildDetailMessage(
+                buildId = pipelineBuildInfo.buildId,
+                projectId = pipelineBuildInfo.projectId,
+                pipelineId = pipelineBuildInfo.pipelineId,
+                userId = pipelineBuildInfo.startUser
+            )
         )
-//        pipelineEventDispatcher.dispatch(
-//            PipelineStatusChangeEvent(
-//                source = "pipelineDetailChangeEvent",
-//                pipelineId = pipelineBuildInfo.pipelineId,
-//                changeType = ChangeType.DETAIL,
-//                buildId = pipelineBuildInfo.buildId,
-//                projectId = pipelineBuildInfo.projectId,
-//                userId = pipelineBuildInfo.startUser
-//            )
-//        )
     }
 
     fun updateModel(buildId: String, model: Model) {
         val now = System.currentTimeMillis()
         logger.info("update the build model for the build $buildId and now $now")
         buildDetailDao.update(
-            dslContext,
-            buildId,
-            JsonUtil.getObjectMapper().writeValueAsString(model),
-            BuildStatus.RUNNING
+            dslContext = dslContext,
+            buildId = buildId,
+            model = JsonUtil.getObjectMapper().writeValueAsString(model),
+            buildStatus = BuildStatus.RUNNING
         )
         pipelineDetailChangeEvent(buildId)
     }

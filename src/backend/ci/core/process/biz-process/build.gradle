@@ -46,6 +46,7 @@ dependencies {
     compile project(":core:quality:api-quality")
     compile project(":core:quality:common-quality")
     compile project(":core:plugin:api-plugin")
+    compile project(":core:plugin:codecc-plugin:common-codecc")
     compile project(":core:notify:api-notify")
     compile project(":core:process:model-process")
 
