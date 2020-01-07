@@ -87,6 +87,7 @@ const pipelineConstMixin = {
                     prop: 'entry',
                     label: this.$t('history.tableMap.entry'),
                     width: 120,
+                    hiddenInHistory: true,
                     entries: [{
                         type: '',
                         label: this.$t('detail')
