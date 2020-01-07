@@ -32,6 +32,7 @@ import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.EnvControlTaskType
+import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.log.utils.LogUtils
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.AtomUtils
@@ -133,7 +134,7 @@ class DispatchVMShutdownTaskAtom @Autowired constructor(
                     taskType = EnvControlTaskType.VM.name,
                     taskAtom = "",
                     status = BuildStatus.QUEUE,
-                    taskParams = container.genTaskParams(),
+                    taskParams = mutableMapOf(),
                     executeCount = 1,
                     starter = userId,
                     approver = null,
@@ -144,6 +145,9 @@ class DispatchVMShutdownTaskAtom @Autowired constructor(
 
             // stopVM-1xxx 停止虚拟机节点
             val stopVMTaskSeq = VMUtils.genVMSeq(containerSeq, taskSeq)
+            val taskParams = container.genTaskParams()
+            taskParams["elements"] = emptyList<Element>() // elements可能过多导致存储问题
+
             list.add(
                 PipelineBuildTask(
                     projectId = projectId,
@@ -159,7 +163,7 @@ class DispatchVMShutdownTaskAtom @Autowired constructor(
                     taskType = EnvControlTaskType.VM.name,
                     taskAtom = AtomUtils.parseAtomBeanName(DispatchVMShutdownTaskAtom::class.java),
                     status = BuildStatus.QUEUE,
-                    taskParams = container.genTaskParams(),
+                    taskParams = taskParams,
                     executeCount = 1,
                     starter = userId,
                     approver = null,
