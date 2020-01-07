@@ -156,6 +156,7 @@ class CallBackControl @Autowired constructor(
     private fun send(callBack: ProjectPipelineCallBack, requestBody: String, executeCount: Int = 1) {
         if (executeCount > 3) {
             logger.error("[${callBack.projectId}]|CALL_BACK|url=${callBack.callBackUrl}| retry fail!")
+            return
         }
         val request = Request.Builder()
             .url(callBack.callBackUrl)
