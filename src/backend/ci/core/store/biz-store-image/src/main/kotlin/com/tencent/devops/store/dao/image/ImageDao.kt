@@ -85,6 +85,8 @@ class ImageDao {
         val imageStatusMsg: String?,
         val imageSize: String?,
         val imageTag: String?,
+        val dockerFileType: String?,
+        val dockerFileContent: String?,
         val agentTypeList: List<ImageAgentTypeEnum>,
         val logoUrl: String?,
         val icon: String?,
@@ -716,6 +718,12 @@ class ImageDao {
             }
             if (!imageUpdateBean.imageTag.isNullOrBlank()) {
                 baseQuery = baseQuery.set(IMAGE_TAG, imageUpdateBean.imageTag)
+            }
+            if (!imageUpdateBean.dockerFileType.isNullOrBlank()) {
+                baseQuery = baseQuery.set(DOCKER_FILE_TYPE, imageUpdateBean.dockerFileType)
+            }
+            if (imageUpdateBean.dockerFileContent != null) {
+                baseQuery = baseQuery.set(DOCKER_FILE_CONTENT, imageUpdateBean.dockerFileContent)
             }
             if (imageUpdateBean.agentTypeList.isNotEmpty()) {
                 baseQuery = baseQuery.set(AGENT_TYPE_SCOPE, JsonUtil.toJson(imageUpdateBean.agentTypeList))
