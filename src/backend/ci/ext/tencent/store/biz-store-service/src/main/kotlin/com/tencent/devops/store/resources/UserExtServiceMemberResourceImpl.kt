@@ -5,7 +5,6 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.UserExtServiceMembersResource
 import com.tencent.devops.store.pojo.common.StoreMemberItem
 import com.tencent.devops.store.pojo.common.StoreMemberReq
-import com.tencent.devops.store.pojo.common.enums.StoreMemberTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.TxExtServiceMemberImpl
 import org.springframework.beans.factory.annotation.Autowired
@@ -15,7 +14,12 @@ class UserExtServiceMemberResourceImpl @Autowired constructor(
     private val txExtServiceMemberImpl: TxExtServiceMemberImpl
 ): UserExtServiceMembersResource {
     override fun list(userId: String, serviceCode: String): Result<List<StoreMemberItem?>> {
-        return txExtServiceMemberImpl.list(userId, serviceCode)
+        return txExtServiceMemberImpl.list(
+            userId = userId,
+            storeCode = serviceCode,
+            //TODO: 此处需在core内添加服务扩展类型
+            storeType = StoreTypeEnum.ATOM
+        )
     }
 
     override fun add(userId: String, storeMemberReq: StoreMemberReq): Result<Boolean> {
@@ -35,7 +39,8 @@ class UserExtServiceMemberResourceImpl @Autowired constructor(
             userId = userId,
             storeCode = serviceCode,
             //TODO: 此处需在core内添加服务扩展类型
-            storeType = StoreTypeEnum.ATOM
+            storeType = StoreTypeEnum.ATOM,
+            id = id
             )
     }
 
