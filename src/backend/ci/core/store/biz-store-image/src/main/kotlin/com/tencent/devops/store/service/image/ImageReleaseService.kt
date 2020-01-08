@@ -324,7 +324,7 @@ abstract class ImageReleaseService {
                 ImageStatusEnum.GROUNDING_SUSPENSION.status.toByte(),
                 ImageStatusEnum.UNDERCARRIAGED.status.toByte()
         )
-        if (imageRecords.size < 1) {
+        if (imageRecords.size == 1) {
             // 如果是首次发布，只有处于初始化的镜像状态才允许添加新的版本
             imageFinalStatusList.add(ImageStatusEnum.INIT.status.toByte())
         }
