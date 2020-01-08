@@ -27,7 +27,6 @@
 package com.tencent.devops.websocket.cron
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.websocket.utils.RedisUtlis
 import com.tencent.devops.websocket.keys.WebsocketKeys
