@@ -189,7 +189,7 @@ class WebsocketService @Autowired constructor(
 
     fun addCacheSession(sessionId: String) {
         if (cacheSessionList.contains(sessionId)) {
-            logger.warn("this session already in cacheSession")
+            logger.warn("this session[$sessionId] already in cacheSession")
             return
         }
         cacheSessionList.add(sessionId)
@@ -201,6 +201,7 @@ class WebsocketService @Autowired constructor(
 
     fun isCacheSession(sessionId: String): Boolean {
         if (cacheSessionList.contains(sessionId)) {
+            logger.info("sessionId[$sessionId] is in this host")
             return true
         }
         return false
