@@ -39,6 +39,9 @@ import org.springframework.stereotype.Repository
 @Repository
 class MarketAtomBuildAppRelDao {
 
+    /**
+     * 查询插件构建信息
+     */
     fun getMarketAtomBuildAppInfo(dslContext: DSLContext, atomId: String): Result<out Record>? {
         val a = TStoreBuildInfo.T_STORE_BUILD_INFO.`as`("a")
         val b = TAtomBuildAppRel.T_ATOM_BUILD_APP_REL.`as`("b")
