@@ -43,11 +43,11 @@ import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.dao.atom.AtomDao
-import com.tencent.devops.store.dao.atom.MarketAtomBuildInfoDao
 import com.tencent.devops.store.dao.atom.MarketAtomClassifyDao
 import com.tencent.devops.store.dao.atom.MarketAtomDao
 import com.tencent.devops.store.dao.atom.MarketAtomEnvInfoDao
 import com.tencent.devops.store.dao.atom.MarketAtomFeatureDao
+import com.tencent.devops.store.dao.common.StoreBuildInfoDao
 import com.tencent.devops.store.dao.common.StoreMemberDao
 import com.tencent.devops.store.dao.common.StoreProjectRelDao
 import com.tencent.devops.store.pojo.atom.AtomDevLanguage
@@ -102,7 +102,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
     @Autowired
     lateinit var storeMemberDao: StoreMemberDao
     @Autowired
-    lateinit var marketAtomBuildInfoDao: MarketAtomBuildInfoDao
+    lateinit var storeBuildInfoDao: StoreBuildInfoDao
     @Autowired
     lateinit var marketAtomEnvInfoDao: MarketAtomEnvInfoDao
     @Autowired
@@ -640,7 +640,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
      * 获取插件开发支持的语言
      */
     override fun listLanguage(): Result<List<AtomDevLanguage?>> {
-        val records = marketAtomBuildInfoDao.list(dslContext)
+        val records = storeBuildInfoDao.list(dslContext, StoreTypeEnum.ATOM)
         val ret = mutableListOf<AtomDevLanguage>()
         records?.forEach {
             ret.add(

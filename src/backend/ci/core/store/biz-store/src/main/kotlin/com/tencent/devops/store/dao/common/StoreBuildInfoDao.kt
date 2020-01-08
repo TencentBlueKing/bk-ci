@@ -24,36 +24,33 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.pojo.common.enums
+package com.tencent.devops.store.dao.common
 
-enum class StoreTypeEnum(val type: Int) {
-    ATOM(0), // 插件
-    TEMPLATE(1), // 模板
-    IMAGE(2), // 镜像
-    IDE_ATOM(3), // IDE插件
-    SERVICE(4); // 扩展服务
+import com.tencent.devops.model.store.tables.TStoreBuildInfo
+import com.tencent.devops.model.store.tables.records.TStoreBuildInfoRecord
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import org.jooq.DSLContext
+import org.jooq.Result
+import org.springframework.stereotype.Repository
 
-    companion object {
-        fun getStoreType(type: Int): String {
-            return when (type) {
-                0 -> StoreTypeEnum.ATOM.name
-                1 -> StoreTypeEnum.TEMPLATE.name
-                2 -> StoreTypeEnum.IMAGE.name
-                3 -> StoreTypeEnum.IDE_ATOM.name
-                4 -> StoreTypeEnum.SERVICE.name
-                else -> StoreTypeEnum.ATOM.name
-            }
+@Repository
+class StoreBuildInfoDao {
+
+    fun list(dslContext: DSLContext, storeType: StoreTypeEnum): Result<TStoreBuildInfoRecord>? {
+        with(TStoreBuildInfo.T_STORE_BUILD_INFO) {
+            return dslContext.selectFrom(this)
+                    .where(ENABLE.eq(true))
+                    .and(STORE_TYPE.eq(storeType.type.toByte()))
+                    .orderBy(CREATE_TIME.asc()).fetch()
         }
+    }
 
-        fun getStoreTypeObj(type: Int): StoreTypeEnum? {
-            return when (type) {
-                0 -> ATOM
-                1 -> TEMPLATE
-                2 -> IMAGE
-                3 -> IDE_ATOM
-                4 -> SERVICE
-                else -> null
-            }
+    fun getAtomBuildInfoByLanguage(dslContext: DSLContext, language: String, storeType: StoreTypeEnum): TStoreBuildInfoRecord {
+        return with(TStoreBuildInfo.T_STORE_BUILD_INFO) {
+            dslContext.selectFrom(this)
+                .where(LANGUAGE.eq(language))
+                .and(STORE_TYPE.eq(storeType.type.toByte()))
+                .fetchOne()
         }
     }
 }
