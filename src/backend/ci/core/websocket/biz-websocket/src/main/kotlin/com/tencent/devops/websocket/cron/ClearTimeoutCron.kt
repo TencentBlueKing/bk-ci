@@ -91,6 +91,7 @@ class ClearTimeoutCron(
                     val timeout: Long = it.substringAfter("&").toLong()
                     val userId = it.substringAfter("#").substringBefore("&")
                     val sessionId = it.substringBefore("#")
+                    logger.info("clearTimeout str[$it] timeout[$timeout] userId[$userId] sessionId[$sessionId]")
                     if (nowTime > timeout) {
                         val sessionPage = RedisUtlis.getPageFromSessionPageBySession(redisOperation, sessionId)
                         RedisUtlis.cleanSessionPageBySessionId(redisOperation, sessionId)
