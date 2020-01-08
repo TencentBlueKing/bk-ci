@@ -2,11 +2,11 @@
     <bk-dropdown-menu :class="{ &quot;devops-button-dropdown&quot;: true, &quot;disabled&quot;: disabled }">
         <bk-button :disabled="disabled" theme="primary" slot="dropdown-trigger">
             <i class="bk-icon icon-plus"></i>
-            <span>关联代码库</span>
+            <span>{{ $t('codelib.linkCodelib') }}</span>
         </bk-button>
         <ul class="devops-button-dropdown-menu" slot="dropdown-content">
-            <li v-for="typeLabel in codelibTypes" :key="typeLabel" @click="createCodelib(typeLabel)">
-                {{typeLabel}}代码库
+            <li v-for="typeLabel in codelibTypes" :key="typeLabel" @click="createCodelib(typeLabel)" v-if="!isExtendTx || typeLabel !== 'Gitlab' || isBlueKing">
+                {{ `${typeLabel} ${$t('codelib.repo')}` }}
             </li>
         </ul>
     </bk-dropdown-menu>
@@ -24,11 +24,22 @@
             disabled: {
                 type: Boolean,
                 default: false
+            },
+            isBlueKing: {
+                type: Boolean,
+                default: false
             }
         },
         computed: {
+            isExtendTx () {
+                return VERSION_TYPE === 'tencent'
+            },
             codelibTypes () {
-                return codelibTypes
+                let typeList = codelibTypes
+                if (!this.isExtendTx) {
+                    typeList = typeList.filter(type => !['Git', 'TGit'].includes(type))
+                }
+                return typeList
             }
         }
     }

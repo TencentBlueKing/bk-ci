@@ -23,7 +23,7 @@ const localeAliasMap = {
     'us': 'en-US'
 }
 
-const BK_CI_DOMAIN = location.host
+const BK_CI_DOMAIN = 'devops.oa.com'
 
 function getLsLocale () {
     try {

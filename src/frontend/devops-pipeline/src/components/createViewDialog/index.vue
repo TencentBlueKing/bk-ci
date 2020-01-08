@@ -79,11 +79,11 @@
                                                 <div v-if="errors.has(`item-${index}`)" class="error-tips">{{ errors.first(`item-${index}`) }}</div>
                                             </section>
                                             <section v-if="row.id === 'filterByCreator'">
-                                                <user-input
+                                                <staff-input
                                                     :name="'user' + index"
                                                     :value="row.userIds"
                                                     :handle-change="staffHandleChange">
-                                                </user-input>
+                                                </staff-input>
                                                 <div v-if="staffHacCheckYet && !row.userIds.length" class="error-tips">{{ $t('view.creatorTips') }}</div>
                                             </section>
                                             <section v-if="row.id !== 'filterByName' && row.id !== 'filterByCreator'">
@@ -122,11 +122,13 @@
 
 <script>
     import { mapGetters } from 'vuex'
-    import UserInput from '@/components/atomFormField/UserInput/index.vue'
+    // import UserInput from '@/components/atomFormField/UserInput/index.vue'
+    import StaffInput from '@/components/atomFormField/StaffInput/index.vue'
 
     export default {
         components: {
-            UserInput
+            // UserInput
+            StaffInput
         },
         data () {
             return {

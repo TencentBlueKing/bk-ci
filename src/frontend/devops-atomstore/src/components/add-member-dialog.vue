@@ -17,7 +17,7 @@
             }">
             <div class="add-member-content">
                 <form class="bk-form add-member-form g-form-radio" onsubmit="return false">
-                    <div class="bk-form-item member-form-item is-required">
+                    <div class="bk-form-item member-form-item is-required" v-if="VERSION === 'ee'">
                         <label class="bk-label"> {{ $t('store.成员名称') }} </label>
                         <div class="bk-form-content member-item-content">
                             <bk-input type="text" :placeholder="$t('store.请输入成员名称')"
@@ -29,6 +29,26 @@
                                 :class="{ 'is-danger': errors.has('memberName') }">
                             </bk-input>
                             <div v-if="errors.has('memberName')" class="error-tips"> {{ $t('store.成员名称不能为空') }} </div>
+                        </div>
+                    </div>
+                    <div class="bk-form-item member-form-item is-required" v-else>
+                        <label class="bk-label"> {{ $t('store.成员名称') }} </label>
+                        <div class="bk-form-content member-item-content">
+                            <bk-select
+                                searchable
+                                multiple
+                                show-select-all
+                                v-model="memberForm.list"
+                                @selected="selectMember"
+                            >
+                                <bk-option v-for="(option, index) in memberList"
+                                    :key="index"
+                                    :id="option.id"
+                                    :name="option.name">
+                                </bk-option>
+                            </bk-select>
+                            <div class="prompt-tips"> {{ $t('store.若列表中找不到用户，请先将其添加为插件所属调试项目的成员') }} </div>
+                            <div class="error-tips" v-if="nameError"> {{ $t('store.成员名称不能为空') }}</div>
                         </div>
                     </div>
                     <div class="bk-form-item member-form-item is-required">
@@ -54,10 +74,11 @@
 </template>
 
 <script>
-    import { mapGetters } from 'vuex'
     export default {
         props: {
-            showDialog: Boolean
+            showDialog: Boolean,
+            projectCode: String,
+            permissionList: Array
         },
         data () {
             return {
@@ -68,14 +89,8 @@
                     { label: 'Owner', value: 'ADMIN' },
                     { label: 'Developer', value: 'DEVELOPER' }
                 ],
-                permissionList: [
-                    { name: this.$t('store.插件开发'), active: true },
-                    { name: this.$t('store.版本发布'), active: true },
-                    { name: this.$t('store.私有配置'), active: true },
-                    { name: this.$t('store.审批'), active: true },
-                    { name: this.$t('store.成员管理'), active: true }
-                ],
                 memberForm: {
+                    list: [],
                     memberName: '',
                     type: 'ADMIN'
                 },
@@ -86,12 +101,6 @@
             }
         },
         computed: {
-            ...mapGetters('store', {
-                'currentAtom': 'getCurrentAtom'
-            }),
-            atomCode () {
-                return this.$route.params.atomCode
-            },
             addMemberConf () {
                 return {
                     hasHeader: false,
@@ -102,37 +111,78 @@
             }
         },
         watch: {
-            'memberForm.type' (val) {
-                if (val === 'ADMIN') {
-                    this.permissionList.map(item => {
-                        item.active = true
+            'memberForm.type': {
+                handler (val) {
+                    this.permissionList.forEach((item) => {
+                        item.active = (item.type === val || val === 'ADMIN')
                     })
-                } else {
-                    this.permissionList[2].active = false
-                    this.permissionList[3].active = false
-                    this.permissionList[4].active = false
-                }
+                },
+                immediate: true
             },
             showDialog (val) {
                 if (!val) {
                     this.nameError = false
                     this.memberForm.memberName = ''
+                    this.memberForm.list = []
                     this.memberForm.type = 'ADMIN'
                 }
             }
         },
+
+        created () {
+            if (this.projectCode) {
+                this.getMemberList()
+            }
+        },
         methods: {
-            async toConfirm () {
-                const { memberName, type } = this.memberForm
-                const valid = await this.$validator.validate()
-                if (valid) {
-                    const params = {
-                        storeCode: this.atomCode,
-                        type,
-                        member: []
+            async getMemberList () {
+                try {
+                    const res = await this.$store.dispatch('store/requestProjectMember', {
+                        projectCode: this.projectCode
+                    })
+                    this.memberList.splice(0, this.memberList.length)
+                    if (res) {
+                        res.map(item => {
+                            this.memberList.push({
+                                id: item,
+                                name: item
+                            })
+                        })
                     }
-                    console.log(memberName)
-                    params.member.push(memberName)
+                } catch (err) {
+                    const message = err.message ? err.message : err
+                    const theme = 'error'
+
+                    this.$bkMessage({
+                        message,
+                        theme
+                    })
+                }
+            },
+
+            selectMember (data) {
+                this.memberForm.list = data
+                this.nameError = false
+            },
+
+            handleChange () {
+                this.nameError = false
+            },
+
+            toConfirm () {
+                if (!this.memberForm.memberName && !this.memberForm.list.length) {
+                    this.nameError = true
+                    this.$bkMessage({
+                        message: this.$t('store.请输入成员名称'),
+                        theme: 'error'
+                    })
+                    this.$emit('cancelHandle')
+                } else {
+                    const params = {
+                        type: this.memberForm.type,
+                        member: this.memberForm.list
+                    }
+                    if (VERSION_TYPE === 'ee') params.member.push(this.memberForm.memberName)
                     this.$emit('confirmHandle', params)
                 }
             },

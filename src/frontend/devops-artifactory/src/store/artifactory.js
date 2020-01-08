@@ -351,9 +351,9 @@ export const actions = {
      * @return {Promise} promise 对象
      */
     requestProjectList  ({ commit }) {
-        return vue.$ajax.get('/backend/api/projects/').then(response => {
+        return vue.$ajax.get('/project/api/user/projects/').then(response => {
             const res = response || []
-            
+
             commit('forceUpdateProjectList', res)
             return res
         })
