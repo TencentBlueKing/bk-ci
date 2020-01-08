@@ -41,6 +41,7 @@ import com.tencent.devops.store.dao.common.StoreReleaseDao
 import com.tencent.devops.store.dao.template.MarketTemplateDao
 import com.tencent.devops.store.dao.template.TemplateCategoryRelDao
 import com.tencent.devops.store.dao.template.TemplateLabelRelDao
+import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.common.KEY_CATEGORY_CODE
 import com.tencent.devops.store.pojo.common.PASS
 import com.tencent.devops.store.pojo.common.ReleaseProcessItem
@@ -144,17 +145,22 @@ abstract class TemplateReleaseServiceImpl @Autowired constructor() : TemplateRel
                     arrayOf(templateName)
             )
             val templateRecord = templateRecords[0]
-            if (templateRecords.size > 1) {
-                // 判断最近一个模板版本的状态，只有处于审核驳回、已发布、上架中止和已下架的状态才允许添加新的版本
-                val templateFinalStatusList = listOf(
-                    TemplateStatusEnum.AUDIT_REJECT.status.toByte(),
-                    TemplateStatusEnum.RELEASED.status.toByte(),
-                    TemplateStatusEnum.GROUNDING_SUSPENSION.status.toByte(),
-                    TemplateStatusEnum.UNDERCARRIAGED.status.toByte()
+            // 判断最近一个模板版本的状态，如果不是首次发布，则只有处于审核驳回、已发布、上架中止和已下架的插件状态才允许添加新的版本
+            val templateFinalStatusList = mutableListOf(
+                    AtomStatusEnum.AUDIT_REJECT.status.toByte(),
+                    AtomStatusEnum.RELEASED.status.toByte(),
+                    AtomStatusEnum.GROUNDING_SUSPENSION.status.toByte(),
+                    AtomStatusEnum.UNDERCARRIAGED.status.toByte()
+            )
+            if (templateRecords.size < 1) {
+                // 如果是首次发布，只有处于初始化的模板状态才允许添加新的版本
+                templateFinalStatusList.add(AtomStatusEnum.INIT.status.toByte())
+            }
+            if (!templateFinalStatusList.contains(templateRecord.templateStatus)) {
+                return MessageCodeUtil.generateResponseDataObject(
+                        StoreMessageCode.USER_TEMPLATE_VERSION_IS_NOT_FINISH,
+                        arrayOf(templateRecord.templateName, templateRecord.version)
                 )
-                if (!templateFinalStatusList.contains(templateRecord.templateStatus)) {
-                    return MessageCodeUtil.generateResponseDataObject(StoreMessageCode.USER_TEMPLATE_VERSION_IS_NOT_FINISH, arrayOf(templateRecord.templateName, templateRecord.version))
-                }
             }
             // todo 检查源模板模型的合法性
             val isNormalUpgrade = getNormalUpgradeFlag(templateRecord.templateCode, templateRecord.templateStatus.toInt())
