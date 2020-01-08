@@ -102,13 +102,13 @@ class BkRepoDownloadService @Autowired constructor(
         userId: String,
         projectId: String,
         artifactoryType: ArtifactoryType,
-        path: String,
+        argPath: String,
         ttl: Int,
         directed: Boolean
     ): Url {
         logger.info("serviceGetInnerDownloadUrl, userId: $userId, projectId: $projectId, " +
-            "artifactoryType: $artifactoryType, path: $path, ttl: $ttl, directed: $directed")
-        val normalizedPath = PathUtils.checkAndNormalizeAbsPath(path)
+            "artifactoryType: $artifactoryType, path: $argPath, ttl: $ttl, directed: $directed")
+        val normalizedPath = PathUtils.checkAndNormalizeAbsPath(argPath)
         val url = bkRepoService.internalDownloadUrl(userId, projectId, artifactoryType, normalizedPath, ttl)
         return Url(url)
     }
@@ -117,12 +117,12 @@ class BkRepoDownloadService @Autowired constructor(
         userId: String,
         projectId: String,
         artifactoryType: ArtifactoryType,
-        path: String
+        argPath: String
     ): Url {
         logger.info("getDownloadUrl, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType, " +
-            "path: $path")
+            "argPath: $argPath")
         // 校验用户流水线权限？
-        val normalizedPath = PathUtils.checkAndNormalizeAbsPath(path)
+        val normalizedPath = PathUtils.checkAndNormalizeAbsPath(argPath)
         val repo = RepoUtils.getRepoByType(artifactoryType)
         return Url(
             "$DEVNET_GATEWAY_URL/bkrepo/api/user/generic/$projectId/$repo$normalizedPath",
@@ -135,11 +135,11 @@ class BkRepoDownloadService @Autowired constructor(
         userId: String,
         projectId: String,
         artifactoryType: ArtifactoryType,
-        path: String
+        argPath: String
     ): Url {
         logger.info("getIoaUrl, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType, " +
-            "path: $path")
-        val normalizedPath = PathUtils.checkAndNormalizeAbsPath(path)
+            "argPath: $argPath")
+        val normalizedPath = PathUtils.checkAndNormalizeAbsPath(argPath)
 
         // todo
         throw OperationException("not implemented")

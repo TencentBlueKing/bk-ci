@@ -118,8 +118,7 @@ class ArtifactoryDownloadService @Autowired constructor(
         logger.info("serviceGetExternalDownloadUrl, userId: $userId, userId: $projectId, userId: $projectId, " +
             "artifactoryType: $artifactoryType, path: $path, ttl: $ttl, directed: $directed")
         val normalizedPath = PathUtils.checkAndNormalizeAbsPath(path)
-
-        val realPath = JFrogUtil.getRealPath(projectId, artifactoryType, path)
+        val realPath = JFrogUtil.getRealPath(projectId, artifactoryType, normalizedPath)
         val url = jFrogApiService.externalDownloadUrl(realPath, userId, ttl, directed)
         return Url(url)
     }

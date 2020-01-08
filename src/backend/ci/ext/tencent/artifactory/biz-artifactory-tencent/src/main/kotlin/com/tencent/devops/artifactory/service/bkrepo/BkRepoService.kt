@@ -268,8 +268,8 @@ class BkRepoService @Autowired constructor(
         }
     }
 
-    override fun createDockerUser(projectId: String): DockerUser {
-        logger.info("createDockerUser, projectId: $projectId")
+    override fun createDockerUser(projectCode: String): DockerUser {
+        logger.info("createDockerUser, projectCode: $projectCode")
         throw OperationException("Not Supported")
     }
 
@@ -371,7 +371,7 @@ class BkRepoService @Autowired constructor(
                 srcFile,
                 targetProjectId,
                 RepoUtils.CUSTOM_REPO,
-                "destPathFolder/${File(srcFile).name}"
+                "$destPathFolder/${File(srcFile).name}"
             )
         }
         return Count(srcFiles.size)
