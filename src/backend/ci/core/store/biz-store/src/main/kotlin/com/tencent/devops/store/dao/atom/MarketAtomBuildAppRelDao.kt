@@ -24,7 +24,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.dao.common
+package com.tencent.devops.store.dao.atom
 
 import com.tencent.devops.model.store.tables.TAppVersion
 import com.tencent.devops.model.store.tables.TApps
@@ -37,9 +37,12 @@ import org.jooq.Result
 import org.springframework.stereotype.Repository
 
 @Repository
-class StoreBuildAppRelDao {
+class MarketAtomBuildAppRelDao {
 
-    fun getStoreBuildAppInfo(dslContext: DSLContext, atomId: String): Result<out Record>? {
+    /**
+     * 查询插件构建信息
+     */
+    fun getMarketAtomBuildAppInfo(dslContext: DSLContext, atomId: String): Result<out Record>? {
         val a = TStoreBuildInfo.T_STORE_BUILD_INFO.`as`("a")
         val b = TAtomBuildAppRel.T_ATOM_BUILD_APP_REL.`as`("b")
         val c = TAppVersion.T_APP_VERSION.`as`("c")
