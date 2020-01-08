@@ -20,7 +20,7 @@
         <transition name="slide-right">
             <i v-if="status === 'SUCCEED'" class="bk-icon success icon-check-circle-shape" />
         </transition>
-        <slot v-if="!status || status === 'SKIP'"></slot>
+        <slot v-if="!status || status === 'SKIP' || status === 'QUALITY_CHECK_FAIL'"></slot>
     </span>
 </template>
 

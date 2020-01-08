@@ -41,7 +41,7 @@ import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils.replaceCod
 import com.tencent.devops.plugin.worker.pojo.CodeccExecuteConfig
 import com.tencent.devops.plugin.worker.task.scm.util.RepositoryUtils
 import com.tencent.devops.plugin.worker.task.scm.util.SvnUtil
-import com.tencent.devops.process.pojo.AtomErrorCode
+import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.common.api.pojo.ErrorType
@@ -73,7 +73,7 @@ object CodeccRepoHelper {
         val buildTasks = pipelineTaskApi.getAllBuildTask().data
             ?: throw TaskExecuteException(
                 errorType = ErrorType.SYSTEM,
-                errorCode = AtomErrorCode.SYSTEM_INNER_TASK_ERROR,
+                errorCode = ErrorCode.SYSTEM_INNER_TASK_ERROR,
                 errorMsg = "get build task fail"
             )
         val codeccTask = buildTasks.first { it.taskType in codeccElementTypes }
@@ -114,7 +114,7 @@ object CodeccRepoHelper {
                 else -> {
                     throw TaskExecuteException(
                         ErrorType.SYSTEM,
-                        AtomErrorCode.SYSTEM_INNER_TASK_ERROR,
+                        ErrorCode.SYSTEM_INNER_TASK_ERROR,
                         "get codecc task fail"
                     )
                 }

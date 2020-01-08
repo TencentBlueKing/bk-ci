@@ -26,6 +26,8 @@
 
 package com.tencent.devops.process.engine.atom.task
 
+import com.tencent.devops.common.api.pojo.ErrorCode
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.element.SendRTXNotifyElement
@@ -45,9 +47,7 @@ import com.tencent.devops.notify.api.service.ServiceNotifyResource
 import com.tencent.devops.notify.pojo.RtxNotifyMessage
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.IAtomTask
-import com.tencent.devops.process.pojo.AtomErrorCode
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
-import com.tencent.devops.process.pojo.ErrorType
 import com.tencent.devops.process.util.ServiceHomeUrlUtils
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
@@ -79,7 +79,7 @@ class RtxTaskAtom @Autowired constructor(
                 AtomResponse(
                     buildStatus = BuildStatus.FAILED,
                     errorType = ErrorType.USER,
-                    errorCode = AtomErrorCode.USER_INPUT_INVAILD,
+                    errorCode = ErrorCode.USER_INPUT_INVAILD,
                     errorMsg = "Message Receivers is empty(接收人为空)"
                 )
             }
@@ -88,7 +88,7 @@ class RtxTaskAtom @Autowired constructor(
                 AtomResponse(
                     buildStatus = BuildStatus.FAILED,
                     errorType = ErrorType.USER,
-                    errorCode = AtomErrorCode.USER_INPUT_INVAILD,
+                    errorCode = ErrorCode.USER_INPUT_INVAILD,
                     errorMsg = "Message Body is empty(消息内容为空)"
                 )
             }
@@ -97,7 +97,7 @@ class RtxTaskAtom @Autowired constructor(
                 AtomResponse(
                     buildStatus = BuildStatus.FAILED,
                     errorType = ErrorType.USER,
-                    errorCode = AtomErrorCode.USER_INPUT_INVAILD,
+                    errorCode = ErrorCode.USER_INPUT_INVAILD,
                     errorMsg = "Message Title is empty(标题为空)"
                 )
             }

@@ -26,18 +26,18 @@
 
 package com.tencent.devops.process.engine.atom.task
 
+import com.tencent.devops.common.api.pojo.ErrorCode.USER_INPUT_INVAILD
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.notify.enums.EnumEmailFormat
 import com.tencent.devops.common.pipeline.enums.BuildStatus
-import com.tencent.devops.process.pojo.ErrorType
 import com.tencent.devops.log.utils.LogUtils
 import com.tencent.devops.notify.api.service.ServiceNotifyResource
 import com.tencent.devops.notify.pojo.EmailNotifyMessage
 import com.tencent.devops.common.pipeline.element.SendEmailNotifyElement
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.IAtomTask
-import com.tencent.devops.process.pojo.AtomErrorCode.USER_INPUT_INVAILD
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.util.ServiceHomeUrlUtils
 import org.springframework.amqp.rabbit.core.RabbitTemplate

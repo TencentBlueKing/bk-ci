@@ -19,9 +19,14 @@
 
 import * as atom from './atom'
 import * as template from './template'
+import * as IDE from './IDE'
+import * as Image from './image'
 import { mergeModules } from '@/utils/index'
 import { UPDATE_CURRENT_LIST, UPDATE_MARKET_QUERY } from './constants'
+
 const Vue = window.Vue
+const vue = new Vue()
+const prefix = 'store/api'
 
 const commonModules = {
     namespaced: true,
@@ -45,7 +50,7 @@ const commonModules = {
         setCommentList ({ commit }, res) {
             commit(UPDATE_CURRENT_LIST, res)
         },
-    
+
         setCommentReplay ({ commit, state }, { id, newList, isAdd }) {
             const commentList = state.commentList || []
             const currentComment = commentList.find(comment => comment.data.commentId === id) || {}
@@ -80,6 +85,14 @@ const commonModules = {
                 }
             })
             commit(UPDATE_CURRENT_LIST, commentList)
+        },
+
+        getLogoUrl ({ commit }, { type }) {
+            return vue.$ajax.get(`${prefix}/user/store/logo/type/${type}`)
+        },
+
+        requestProjectList ({ commit }) {
+            return vue.$ajax.get(`/project/api/user/projects/`)
         }
     },
     getters: {
@@ -88,4 +101,4 @@ const commonModules = {
     }
 }
 
-export default mergeModules(commonModules, atom, template)
+export default mergeModules(commonModules, atom, template, IDE, Image)

@@ -66,7 +66,7 @@
         },
         methods: {
             async getList () {
-                const url = `/backend/api/ci/projects/users/${this.projectId}/`
+                const url = `/project/api/user/users/projects/${this.projectId}/list`
 
                 try {
                     const res = await vue.$ajax.get(`${url}`).then(response => {

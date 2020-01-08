@@ -64,7 +64,7 @@
                         <li @click.stop="handlerDownload()">
                             <i class="bk-icon icon-download"></i>下载
                         </li>
-                        <li @click.stop="handlerDownload($event, 'MoF')" v-if="isWindows && isApkOrIpa() && isMof">
+                        <li @click.stop="handlerDownload($event, 'MoF')" v-if="isExtendTx && isWindows && isApkOrIpa() && isMof">
                             <i class="bk-icon icon-download"></i>魔方有线安装
                         </li>
                         <li @click.stop="refresh()">
@@ -220,12 +220,6 @@
             projectId () {
                 return this.$route.params.projectId
             },
-            onlineProjectList () {
-                return this.$store.state.sideMenu.onlineProjectList
-            },
-            curProjectName () {
-                return this.getCurProjectById(this.projectId).project_name || ''
-            },
             searchKeysLen () {
                 return Object.keys(this.searchKeys).length || 0
             },
@@ -235,8 +229,11 @@
             isMof () {
                 const projectId = this.$route.params.projectId
                 return this.projectList.find(item => {
-                    return (item.dept_name === '魔方工作室群' && item.project_code === projectId)
+                    return (item.deptName === '魔方工作室群' && item.projectCode === projectId)
                 })
+            },
+            isExtendTx () {
+                return VERSION_TYPE === 'tencent'
             }
         },
         watch: {
@@ -263,9 +260,6 @@
             this.$refs.scrollBox.removeEventListener('scroll', this.handleScroll)
         },
         methods: {
-            getCurProjectById (id) {
-                return this.onlineProjectList.find(item => (item.project_id_classic === id || item.project_code === id))
-            },
             /**
              * 跳转
              */
@@ -498,7 +492,7 @@
                     noPermissionList: [
                         { resource: resource, option: option }
                     ],
-                    applyPermissionUrl: `/backend/api/perm/apply/subsystem/?client_id=pipeline&project_code=${this.projectId}&service_code=pipeline&${role}=pipeline:${pipelineId}`
+                    applyPermissionUrl: this.isExtendTx ? `/backend/api/perm/apply/subsystem/?client_id=pipeline&project_code=${this.projectId}&service_code=pipeline&${role}=pipeline:${pipelineId}` : PERM_URL_PREFIX
                 }
                 this.$showAskPermissionDialog(params)
             },

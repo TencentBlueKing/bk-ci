@@ -27,7 +27,7 @@
 package com.tencent.devops.worker.common.task.script
 
 import com.tencent.devops.common.pipeline.enums.BuildScriptType
-import com.tencent.devops.process.pojo.AtomErrorCode
+import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.worker.common.task.script.bat.CommandBatImpl
@@ -42,7 +42,7 @@ object CommandFactory {
                 throw TaskExecuteException(
                     errorMsg = "Unsupported script type: $scriptType",
                     errorType = ErrorType.USER,
-                    errorCode = AtomErrorCode.USER_INPUT_INVAILD
+                    errorCode = ErrorCode.USER_INPUT_INVAILD
                 )
             }
         }

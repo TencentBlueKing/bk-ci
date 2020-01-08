@@ -1,6 +1,6 @@
 <template>
     <router-link :to="{ name: 'details', params: { code: atom.code, type: $route.query.pipeType || 'atom' } }" class="card-home">
-        <img class="card-pic atom-logo" :src="atom.logoUrl">
+        <img class="card-pic atom-logo" :src="atom.logoUrl || defaultUrl">
         <p :class="[{ 'not-recommend': atom.recommendFlag === false }, 'card-name', 'text-overflow']">{{ atom.name }}</p>
         <h5 class="card-detail">
             <span class="text-overflow">{{ atom.publisher }}</span>
@@ -29,6 +29,13 @@
             atom: Object,
             hasSummary: Boolean
         },
+
+        data () {
+            return {
+                defaultUrl: 'http://radosgw.open.oa.com/paas_backend/ieod/dev/file/png/random_15647373141529070794466428255950.png?v=1564737314'
+            }
+        },
+
         computed: {
             starWidth () {
                 const integer = Math.floor(this.atom.score)
@@ -50,6 +57,9 @@
         border-radius: 2px;
         border:1px solid $lightGray;
         cursor: pointer;
+        .not-recommend {
+            text-decoration: line-through;
+        }
         &:hover {
             box-shadow: 0 3px 8px 0 rgba(60, 150, 255, 0.2), 0 0 0 1px rgba(60, 150, 255, 0.08);
         }

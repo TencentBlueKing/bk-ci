@@ -413,15 +413,15 @@
 }
 
 .bk-tab2-content .v-note-wrapper,
-.markdown-editor-show .v-note-wrapper {
-		min-width: 0px;
-		min-height: 0px;
-		z-index: 100;
-		.v-note-panel {
-				border: none;
-				.v-note-show .v-show-content, .v-note-wrapper .v-note-panel .v-note-show .v-show-content-html {
-						background: $white;
-				}
+.summary-tab .v-note-wrapper {
+	min-width: 0px;
+	min-height: 0px;
+	z-index: 100;
+	.v-note-panel {
+		border: none;
+		.v-note-show .v-show-content, .v-note-wrapper .v-note-panel .v-note-show .v-show-content-html {
+			background: $white;
+		}
 	}
 }
 
@@ -441,7 +441,7 @@
 }
 
 .filter-select .bk-tooltip,.bk-tooltip-ref,.bk-select-name:focus {
-			outline: none;
+	outline: none;
 }
 
 .detail-tabs {
@@ -452,6 +452,7 @@
 	}
 	.bk-tab-section {
 		background: $white;
+		padding: 0;
 	}
 }
 

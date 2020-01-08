@@ -1,11 +1,11 @@
 <template>
     <div class="env-detail-wrapper">
-        <div class="env-detail-header">
-            <div class="title">
+        <content-header class="env-detail-header">
+            <template slot="left">
                 <i class="bk-icon icon-arrows-left" @click="toEnvList"></i>
-                <span class="header-text">{{ curEnvDetail.name }}</span>
-            </div>
-        </div>
+                {{ curEnvDetail.name }}
+            </template>
+        </content-header>
 
         <div class="env-detail-container"
             v-bkloading="{
@@ -15,26 +15,27 @@
             <div class="env-parameter-tab">
                 <div class="env-detail-nav">
                     <div class="tab-nav-item node-list" :class="{ activeItem: curItemTab === 'node' }"
-                        @click="changeTab('node')">节点</div>
+                        @click="changeTab('node')">{{ $t('environment.node') }}</div>
                     <div class="tab-nav-item config-item" :class="{ activeItem: curItemTab === 'config' }"
-                        @click="changeTab('config')">配置项</div>
+                        @click="changeTab('config')">{{ $t('environment.configItem') }}</div>
                     <div class="tab-nav-item base-item" :class="{ activeItem: curItemTab === 'base' }"
-                        @click="changeTab('base')">基本信息</div>
+                        @click="changeTab('base')">{{ $t('environment.basicInfo') }}</div>
                 </div>
 
                 <div class="node-content-wrapper" v-if="curItemTab === 'node'">
                     <div class="node-content-header">
-                        <bk-button theme="primary" @click="importNewNode">导入</bk-button>
+                        <bk-button theme="primary" @click="importNewNode">{{ $t('environment.import') }}</bk-button>
                     </div>
                     <div class="node-table" v-if="showContent && nodeList.length">
                         <div class="table-head">
-                            <div class="table-node-item node-item-ip">名称</div>
+                            <div class="table-node-item node-item-ip">{{ $t('environment.envInfo.name') }}</div>
                             <div class="table-node-item node-item-name">IP</div>
-                            <div class="table-node-item node-item-type">来源/导入人</div>
-                            <div class="table-node-item node-item-os">操作系统</div>
-                            <div class="table-node-item node-item-area">区域</div>
-                            <div class="table-node-item node-item-status">主机状态</div>
-                            <div class="table-node-item node-item-handler node-header-head">操作</div>
+                            <div class="table-node-item node-item-type">{{ `${$t('environment.nodeInfo.source')}/${$t('environment.nodeInfo.importer')}` }}</div>
+                            <div class="table-node-item node-item-os">{{ $t('environment.nodeInfo.os') }}</div>
+                            <div class="table-node-item node-item-area">{{ $t('environment.nodeInfo.gateway') }}</div>
+                            <div class="table-node-item node-item-status">{{ $t('environment.nodeInfo.cpuStatus') }}</div>
+                            <div class="table-node-item node-item-agstatus" v-if="isExtendTx">{{ $t('environment.nodeInfo.gseAgentStatus') }}</div>
+                            <div class="table-node-item node-item-handler node-header-head">{{ $t('environment.operation') }}</div>
                         </div>
                         <div class="table-node-body" ref="scrollBox">
                             <div class="table-row" v-for="(row, index) of nodeList" :key="index">
@@ -59,7 +60,7 @@
                                 </div>
                                 <div class="table-node-item node-item-status">
                                     <div class="bk-spin-loading bk-spin-loading-mini bk-spin-loading-primary"
-                                        v-if="row.nodeStatus === '正在创建中'">
+                                        v-if="row.nodeStatus === $t('environment.nodeInfo.creating')">
                                         <div class="rotate rotate1"></div>
                                         <div class="rotate rotate2"></div>
                                         <div class="rotate rotate3"></div>
@@ -69,15 +70,34 @@
                                         <div class="rotate rotate7"></div>
                                         <div class="rotate rotate8"></div>
                                     </div>
-                                    <span class="node-status-icon normal-stutus-icon" v-if="row.nodeStatus === '正常'"></span>
+                                    <span class="node-status-icon normal-stutus-icon" v-if="row.nodeStatus === $t('environment.nodeInfo.normal')"></span>
                                     <span class="node-status-icon abnormal-stutus-icon"
-                                        v-if="row.nodeStatus === '异常' || row.nodeStatus === '未知' || row.nodeStatus === '已删除' || row.nodeStatus === '失联'">
+                                        v-if="row.nodeStatus === $t('environment.nodeInfo.abnormal') || row.nodeStatus === $t('environment.nodeInfo.unknown') || row.nodeStatus === $t('environment.nodeInfo.deleted') || row.nodeStatus === $t('environment.nodeInfo.loss')">
                                     </span>
 
                                     <span class="node-status">{{ row.nodeStatus }}</span>
                                 </div>
+                                <div class="table-node-item node-item-agstatus" v-if="isExtendTx">
+                                    <span class="node-status-icon normal-stutus-icon" v-if="row.agentStatus"></span>
+                                    <span class="node-status-icon abnormal-stutus-icon" v-if="!row.agentStatus && row.nodeType !== $t('environment.BCSVirtualMachine')"></span>
+                                    <div class="bk-spin-loading bk-spin-loading-mini bk-spin-loading-primary"
+                                        v-if="!row.agentStatus && row.nodeType === $t('environment.BCSVirtualMachine')">
+                                        <div class="rotate rotate1"></div>
+                                        <div class="rotate rotate2"></div>
+                                        <div class="rotate rotate3"></div>
+                                        <div class="rotate rotate4"></div>
+                                        <div class="rotate rotate5"></div>
+                                        <div class="rotate rotate6"></div>
+                                        <div class="rotate rotate7"></div>
+                                        <div class="rotate rotate8"></div>
+                                    </div>
+                                    <span class="node-agstatus" v-if="row.nodeType === $t('environment.BCSVirtualMachine')">{{ row.agentStatus ? $t('environment.nodeInfo.normal') : $t('environment.nodeInfo.refreshing') }}</span>
+                                    <span class="node-agstatus" v-else>{{ row.agentStatus ? $t('environment.nodeInfo.normal') : $t('environment.nodeInfo.abnormal') }}</span>
+                                    <span class="install-btn" v-if="(row.nodeType === 'CMDB' || row.nodeType === 'CC') && !row.agentStatus "
+                                        @click="toInstall">{{ $t('environment.nodeInfo.installGseAgent') }}</span>
+                                </div>
                                 <div class="table-node-item node-item-handler">
-                                    <span class="node-delete delete-node-text" @click.stop="confirmDelete(row, index)">移除</span>
+                                    <span class="node-delete delete-node-text" @click.stop="confirmDelete(row, index)">{{ $t('environment.remove') }}</span>
                                 </div>
                             </div>
                         </div>
@@ -89,19 +109,19 @@
                 <div class="config-content-wrapper" v-if="curItemTab === 'config'">
                     <div class="config-content-header">
                         <bk-button theme="primary" :disabled="lastselectConfIndex > -1"
-                            @click="createConfigItem">新增配置项</bk-button>
+                            @click="createConfigItem">{{ $t('environment.addConfItem') }}</bk-button>
                     </div>
                     <div class="config-table" v-if="showContent && configList.length">
                         <div class="table-head config-head">
-                            <div class="table-config-item config-item-key">键</div>
-                            <div class="table-config-item config-item-value">值</div>
-                            <div class="table-config-item config-item-type">类型</div>
-                            <div class="table-config-item config-item-handler">操作</div>
+                            <div class="table-config-item config-item-key">{{ $t('environment.envInfo.key') }}</div>
+                            <div class="table-config-item config-item-value">{{ $t('environment.envInfo.value') }}</div>
+                            <div class="table-config-item config-item-type">{{ $t('environment.envInfo.type') }}</div>
+                            <div class="table-config-item config-item-handler">{{ $t('environment.operation') }}</div>
                         </div>
                         <div class="table-config-body">
                             <div class="table-row config-row" v-for="(row, index) of configList" :key="index">
                                 <div class="table-config-item config-item-key">
-                                    <input type="text" class="bk-form-input config-input config-key-input" placeholder="请输入"
+                                    <input type="text" class="bk-form-input config-input config-key-input" :placeholder="$t('environment.pleaseEnter')"
                                         v-if="row.isCreateItem || row.isEditItem"
                                         v-model="row.name"
                                         name="confName"
@@ -110,13 +130,13 @@
                                     <span class="config-name" v-else>{{ row.name }}</span>
                                 </div>
                                 <div class="table-config-item config-item-value">
-                                    <input type="password" class="bk-form-input config-input config-value-input" placeholder="请输入"
+                                    <input type="password" class="bk-form-input config-input config-value-input" :placeholder="$t('environment.pleaseEnter')"
                                         v-if="(!curIsPlaintext && (row.isCreateItem || row.isEditItem) && (row.isSecure === 'ciphertext'))"
                                         v-model="row.value"
                                         name="confvalue"
                                         @input="errorHandler.valueError = false"
                                         :class="{ 'is-danger': errorHandler.valueError }">
-                                    <input type="text" class="bk-form-input config-input config-value-input" placeholder="请输入"
+                                    <input type="text" class="bk-form-input config-input config-value-input" :placeholder="$t('environment.pleaseEnter')"
                                         v-if="(curIsPlaintext || row.isSecure === 'plaintext') && (row.isCreateItem || row.isEditItem)"
                                         v-model="row.value"
                                         name="confvalue"
@@ -140,16 +160,16 @@
                                             :name="option.name">
                                         </bk-option>
                                     </bk-select>
-                                    <span class="config-type" v-else>{{ row.secure ? '密文' : '明文' }}</span>
+                                    <span class="config-type" v-else>{{ row.secure ? $t('environment.envInfo.cipherText') : $t('environment.envInfo.clearText') }}</span>
                                 </div>
                                 <div class="table-config-item config-item-handler">
                                     <div class="editing-handler" v-if="(row.isCreateItem || row.isEditItem)">
-                                        <span class="config-edit" @click="saveEditConfig(row, index)">保存</span>
-                                        <span class="text-type" @click="cancelEdit(row, index)">取消</span>
+                                        <span class="config-edit" @click="saveEditConfig(row, index)">{{ $t('environment.save') }}</span>
+                                        <span class="text-type" @click="cancelEdit(row, index)">{{ $t('environment.cancel') }}</span>
                                     </div>
                                     <div class="preview-handler" v-else>
-                                        <span class="config-edit" @click="changeConfig(row, index)">编辑</span>
-                                        <span class="config-edit" @click="deleteConfig(row, index)">删除</span>
+                                        <span class="config-edit" @click="changeConfig(row, index)">{{ $t('environment.edit') }}</span>
+                                        <span class="config-edit" @click="deleteConfig(row, index)">{{ $t('environment.delete') }}</span>
                                     </div>
                                 </div>
                             </div>
@@ -161,10 +181,10 @@
                 <div class="base-message-wrapper" v-if="curItemTab === 'base'">
                     <form class="bk-form base-env-form" ref="modifyEnv">
                         <div class="bk-form-item">
-                            <label class="bk-label env-item-label">名称</label>
+                            <label class="bk-label env-item-label">{{ $t('environment.envInfo.name') }}</label>
                             <div class="bk-form-content env-item-content">
                                 <div class="edit-content" v-if="isEditingName">
-                                    <input type="text" class="bk-form-input env-name-input" placeholder="请输入"
+                                    <input type="text" class="bk-form-input env-name-input" :placeholder="$t('environment.pleaseEnter')"
                                         maxlength="30"
                                         name="envName"
                                         v-model="editEnvForm.name"
@@ -174,16 +194,16 @@
                                 <p v-else class="env-base cur-env-name"><span class="env-name-content">{{ curEnvDetail.name }}</span></p>
                                 <div class="handler-btn">
                                     <i class="bk-icon icon-edit" v-if="!isEditingName" @click="toEditBaseForm('name')"></i>
-                                    <span class="edit-base" v-if="isEditingName" @click="saveEnvDetail('name')">保存</span>
-                                    <span class="edit-base" v-if="isEditingName" @click="cancelEnvDetail('name')">取消</span>
+                                    <span class="edit-base" v-if="isEditingName" @click="saveEnvDetail('name')">{{ $t('environment.save') }}</span>
+                                    <span class="edit-base" v-if="isEditingName" @click="cancelEnvDetail('name')">{{ $t('environment.cancel') }}</span>
                                 </div>
                             </div>
                         </div>
                         <div class="bk-form-item">
-                            <label class="bk-label env-item-label env-desc-label">环境描述</label>
+                            <label class="bk-label env-item-label env-desc-label">{{ $t('environment.envInfo.envRemark') }}</label>
                             <div class="bk-form-content env-item-content">
                                 <div class="edit-content" v-if="isEditingDesc">
-                                    <textarea class="bk-form-input env-desc-input" placeholder="请输入" name="envDesc" v-if="isEditingDesc"
+                                    <textarea class="bk-form-input env-desc-input" :placeholder="$t('environment.pleaseEnter')" name="envDesc" v-if="isEditingDesc"
                                         maxlength="100"
                                         v-model="editEnvForm.desc">
                                     </textarea>
@@ -194,46 +214,46 @@
                                 </p>
                                 <div class="handler-btn">
                                     <i class="bk-icon icon-edit" v-if="!isEditingDesc" @click="toEditBaseForm('desc')"></i>
-                                    <span class="edit-base" v-if="isEditingDesc" @click="saveEnvDetail('desc')">保存</span>
-                                    <span class="edit-base" v-if="isEditingDesc" @click="cancelEnvDetail('desc')">取消</span>
+                                    <span class="edit-base" v-if="isEditingDesc" @click="saveEnvDetail('desc')">{{ $t('environment.save') }}</span>
+                                    <span class="edit-base" v-if="isEditingDesc" @click="cancelEnvDetail('desc')">{{ $t('environment.cancel') }}</span>
                                 </div>
                             </div>
                         </div>
                         <div class="bk-form-item">
-                            <label class="bk-label env-item-label env-desc-label">环境类型</label>
+                            <label class="bk-label env-item-label env-desc-label">{{ $t('environment.envInfo.envType') }}</label>
                             <div class="bk-form-content env-item-content">
                                 <div class="edit-content" v-if="isEditingType">
                                     <bk-radio-group v-model="editEnvForm.type">
-                                        <bk-radio :value="'DEV'" class="env-type-radio">部署-研发/测试环境</bk-radio>
-                                        <bk-radio :value="'PROD'" class="env-type-radio">部署-生产环境</bk-radio>
+                                        <bk-radio :value="'DEV'" class="env-type-radio">{{ $t('environment.envInfo.devEnvType') }}</bk-radio>
+                                        <bk-radio :value="'PROD'" class="env-type-radio">{{ $t('environment.envInfo.testEnvType') }}</bk-radio>
                                     </bk-radio-group>
                                 </div>
                                 <p class="env-base type-content" v-else>
-                                    <span v-if="curEnvDetail.envType === 'DEV'">部署-研发/测试环境</span>
-                                    <span v-if="curEnvDetail.envType === 'PROD'">部署-生产环境</span>
-                                    <span v-if="curEnvDetail.envType === 'BUILD'">构建环境</span>
+                                    <span v-if="curEnvDetail.envType === 'DEV'">{{ $t('environment.envInfo.devEnvType') }}</span>
+                                    <span v-if="curEnvDetail.envType === 'PROD'">{{ $t('environment.envInfo.testEnvType') }}</span>
+                                    <span v-if="curEnvDetail.envType === 'BUILD'">{{ $t('environment.envInfo.buildEnvType') }}</span>
                                 </p>
                                 <div class="handler-btn" v-if="curEnvDetail.envType !== 'BUILD'">
                                     <i class="bk-icon icon-edit" v-if="!isEditingType" @click="toEditBaseForm('type')"></i>
-                                    <span class="edit-base" v-if="isEditingType" @click="saveEnvDetail('type')">保存</span>
-                                    <span class="edit-base" v-if="isEditingType" @click="cancelEnvDetail('type')">取消</span>
+                                    <span class="edit-base" v-if="isEditingType" @click="saveEnvDetail('type')">{{ $t('environment.save') }}</span>
+                                    <span class="edit-base" v-if="isEditingType" @click="cancelEnvDetail('type')">{{ $t('environment.cancel') }}</span>
                                 </div>
                             </div>
                         </div>
                         <div class="bk-form-item">
-                            <label class="bk-label env-item-label env-desc-label">节点数</label>
+                            <label class="bk-label env-item-label env-desc-label">{{ $t('environment.envInfo.nodeCount') }}</label>
                             <div class="bk-form-content env-item-content">
                                 <p class="env-base">{{ curEnvDetail.nodeCount }}</p>
                             </div>
                         </div>
                         <div class="bk-form-item">
-                            <label class="bk-label env-item-label env-desc-label">创建时间</label>
+                            <label class="bk-label env-item-label env-desc-label">{{ $t('environment.envInfo.creationTime') }}</label>
                             <div class="bk-form-content env-item-content">
                                 <p class="env-base">{{ localConvertTime(curEnvDetail.createdTime) }}</p>
                             </div>
                         </div>
                         <div class="bk-form-item create-user-item">
-                            <label class="bk-label env-item-label env-desc-label">创建人</label>
+                            <label class="bk-label env-item-label env-desc-label">{{ $t('environment.envInfo.creator') }}</label>
                             <div class="bk-form-content env-item-content">
                                 <p class="env-base">{{ curEnvDetail.createdUser }}</p>
                             </div>
@@ -245,7 +265,6 @@
         <node-select :node-select-conf="nodeSelectConf"
             :search-info="searchInfo"
             :cur-user-info="curUserInfo"
-            :change-created-user="changeCreatedUser"
             :row-list="importNodeList"
             :select-handlerc-conf="selectHandlercConf"
             :confirm-fn="confirmFn"
@@ -306,7 +325,7 @@
                     quickClose: false,
                     hasHeader: false,
                     unselected: true,
-                    importText: '导入'
+                    importText: this.$t('environment.import')
                 },
                 // 搜索节点
                 searchInfo: {
@@ -321,8 +340,8 @@
                     searchEmpty: false
                 },
                 confTextType: [
-                    { label: 'plaintext', name: '明文' },
-                    { label: 'ciphertext', name: '密文' }
+                    { label: 'plaintext', name: this.$t('environment.envInfo.clearText') },
+                    { label: 'ciphertext', name: this.$t('environment.envInfo.cipherText') }
                 ]
             }
         },
@@ -335,6 +354,9 @@
             },
             curUserInfo () {
                 return window.userInfo
+            },
+            isExtendTx () {
+                return VERSION_TYPE === 'tencent'
             }
         },
         watch: {
@@ -381,7 +403,7 @@
                 } = this
 
                 loading.isLoading = true
-                loading.title = '数据加载中，请稍候'
+                loading.title = this.$t('environment.loadingTitle')
 
                 try {
                     this.requestList()
@@ -449,9 +471,9 @@
 
                 for (let i = 0; i < this.nodeList.length; i++) {
                     const target = this.nodeList[i]
-                    if (target.nodeType === 'BCS虚拟机' && (target.nodeStatus === '异常'
-                        || target.nodeStatus === '正在创建中'
-                        || target.nodeStatus === '未知'
+                    if (target.nodeType === this.$t('environment.BCSVirtualMachine') && (target.nodeStatus === this.$t('environment.nodeInfo.abnormal')
+                        || target.nodeStatus === this.$t('environment.nodeInfo.creating')
+                        || target.nodeStatus === this.$t('environment.nodeInfo.unknown')
                         || !target.agentStatus)) {
                         res = true
                         break
@@ -528,11 +550,11 @@
                         })
 
                         if (this.curEnvDetail.envType === 'BUILD') {
-                            if (kk.nodeType !== 'THIRDPARTY' || !kk.canUse) {
+                            if (!(['THIRDPARTY', 'DEVCLOUD'].includes(kk.nodeType)) || !kk.canUse) {
                                 kk.isDisplay = false
                             }
                         } else {
-                            if (kk.nodeType === 'THIRDPARTY' || !kk.canUse) {
+                            if (['THIRDPARTY', 'DEVCLOUD'].includes(kk.nodeType) || !kk.canUse) {
                                 kk.isDisplay = false
                             }
                         }
@@ -584,10 +606,11 @@
                     style: {
                         textAlign: 'center'
                     }
-                }, `确定移除节点(${row.nodeId})？`)
+                }, `${this.$t('environment.nodeInfo.removeNodetips', [row.nodeId])}`)
 
                 this.$bkInfo({
-                    title: `移除`,
+                    type: 'warning',
+                    theme: 'warning',
                     subHeader: content,
                     confirmFn: async () => {
                         let message, theme
@@ -598,7 +621,7 @@
                                 params: params
                             })
 
-                            message = '删除成功'
+                            message = this.$t('environment.successfullyDeleted')
                             theme = 'success'
                         } catch (err) {
                             message = err.data ? err.data.message : err
@@ -609,54 +632,6 @@
                                 theme
                             })
                             this.requestList()
-                        }
-                    }
-                })
-            },
-            /**
-             * 构建机信息
-             */
-            async changeCreatedUser (id, type) {
-                const h = this.$createElement
-                const content = h('p', {
-                    style: {
-                        textAlign: 'center'
-                    }
-                }, `是否修改主机责任人为当前用户？`)
-
-                this.$bkInfo({
-                    title: `修改导入人`,
-                    subHeader: content,
-                    confirmFn: async () => {
-                        let message, theme
-                        const params = {}
-                        try {
-                            await this.$store.dispatch('environment/changeCreatedUser', {
-                                projectId: this.projectId,
-                                nodeHashId: id,
-                                params
-                            })
-
-                            message = '修改成功'
-                            theme = 'success'
-                        } catch (err) {
-                            const message = err.message ? err.message : err
-                            const theme = 'error'
-
-                            this.$bkMessage({
-                                message,
-                                theme
-                            })
-                        } finally {
-                            this.$bkMessage({
-                                message,
-                                theme
-                            })
-                            if (type) {
-                                this.requestNodeList()
-                            } else {
-                                this.requestList()
-                            }
                         }
                     }
                 })
@@ -731,7 +706,7 @@
                         params: modifyEenv
                     })
 
-                    message = '保存成功'
+                    message = this.$t('environment.successfullySaved')
                     theme = 'success'
                 } catch (err) {
                     message = err.message ? err.message : err
@@ -756,10 +731,11 @@
                         style: {
                             textAlign: 'center'
                         }
-                    }, `确认删除该配置项?`)
+                    }, `${this.$t('environment.deleteConfigItem')}?`)
 
                     this.$bkInfo({
-                        title: `确认`,
+                        type: 'warning',
+                        theme: 'warning',
                         subHeader: content,
                         confirmFn: async () => {
                             let message, theme
@@ -789,7 +765,7 @@
                                     params: modifyEenv
                                 })
 
-                                message = '删除成功'
+                                message = this.$t('environment.successfullyDeleted')
                                 theme = 'success'
                             } catch (err) {
                                 message = err.message ? err.message : err
@@ -815,7 +791,7 @@
                 const params = []
 
                 this.nodeDialogLoading.isLoading = true
-                this.nodeSelectConf.importText = '导入中...'
+                this.nodeSelectConf.importText = `${this.$t('environment.nodeType.importing')}...`
 
                 nodeArr.map(item => {
                     params.push(item)
@@ -828,7 +804,7 @@
                         params: params
                     })
 
-                    message = '导入成功'
+                    message = this.$t('environment.successfullyImported')
                     theme = 'success'
                 } catch (err) {
                     message = err.message ? err.message : err
@@ -841,7 +817,7 @@
 
                     this.nodeSelectConf.isShow = false
                     this.nodeDialogLoading.isLoading = false
-                    this.nodeSelectConf.importText = '导入'
+                    this.nodeSelectConf.importText = this.$t('environment.import')
                     this.requestList()
                     this.requestEnvDetail()
                 }
@@ -872,8 +848,6 @@
              * 节点全选
              */
             toggleAllSelect () {
-                this.selectHandlercConf.allNodeSelected = !this.selectHandlercConf.allNodeSelected
-
                 if (this.selectHandlercConf.allNodeSelected) {
                     this.importNodeList.forEach(item => {
                         if (item.isDisplay && !item.isEixtEnvNode) {
@@ -901,7 +875,7 @@
 
                         if (this.curEnvDetail.envType === 'BUILD') {
                             for (let i = 0; i < target.length; i++) {
-                                if (target[i] && str.indexOf(target[i]) > -1 && item.nodeType === 'THIRDPARTY' && item.canUse) {
+                                if (target[i] && str.indexOf(target[i]) > -1 && ['THIRDPARTY', 'DEVCLOUD'].includes(item.nodeType) && item.canUse) {
                                     item.isDisplay = true
                                     break
                                 } else {
@@ -910,7 +884,7 @@
                             }
                         } else {
                             for (let i = 0; i < target.length; i++) {
-                                if (target[i] && str.indexOf(target[i]) > -1 && item.nodeType !== 'THIRDPARTY' && item.canUse) {
+                                if (target[i] && str.indexOf(target[i]) > -1 && !(['THIRDPARTY', 'DEVCLOUD'].includes(item.nodeType)) && item.canUse) {
                                     item.isDisplay = true
                                     break
                                 } else {
@@ -934,13 +908,13 @@
 
                     if (this.curEnvDetail.envType === 'BUILD') {
                         this.importNodeList.forEach(item => {
-                            if (item.nodeType === 'THIRDPARTY' && item.canUse) {
+                            if (['THIRDPARTY', 'DEVCLOUD'].includes(item.nodeType) && item.canUse) {
                                 item.isDisplay = true
                             }
                         })
                     } else {
                         this.importNodeList.forEach(item => {
-                            if (item.nodeType !== 'THIRDPARTY' && item.canUse) {
+                            if (!(['THIRDPARTY', 'DEVCLOUD'].includes(item.nodeType)) && item.canUse) {
                                 item.isDisplay = true
                             }
                         })
@@ -990,7 +964,7 @@
                                     params: modifyEenv
                                 })
 
-                                message = '保存成功'
+                                message = this.$t('environment.successfullySaved')
                                 theme = 'success'
                             }
                         } else if (type === 'desc') {
@@ -1004,7 +978,7 @@
                                 params: modifyEenv
                             })
 
-                            message = '保存成功'
+                            message = this.$t('environment.successfullySaved')
                             theme = 'success'
                         } else {
                             modifyEenv.name = this.curEnvDetail.name
@@ -1017,7 +991,7 @@
                                 params: modifyEenv
                             })
 
-                            message = '保存成功'
+                            message = this.$t('environment.successfullySaved')
                             theme = 'success'
                         }
                     } catch (err) {
@@ -1108,7 +1082,7 @@
                 this.configList.unshift(newItem)
             },
             toInstall () {
-                const url = `${DOCS_URL_PREFIX}/%E6%89%80%E6%9C%89%E6%9C%8D%E5%8A%A1/%E7%8E%AF%E5%A2%83%E7%AE%A1%E7%90%86/installGseAgentGuide.html`
+                const url = `${DOCS_URL_PREFIX}/x/WtMrAg`
                 window.open(url, '_blank')
             },
             importNewNode () {
@@ -1135,7 +1109,7 @@
                 if (!this.nodeDialogLoading.isLoading) {
                     this.nodeSelectConf.isShow = false
                     this.selectHandlercConf.searchEmpty = false
-                    this.nodeSelectConf.importText = '导入'
+                    this.nodeSelectConf.importText = this.$t('environment.import')
                 }
             },
             /**
@@ -1161,19 +1135,6 @@
         overflow: hidden;
 
         .env-detail-header {
-            display: flex;
-            justify-content: space-between;
-            padding: 18px 20px;
-            width: 100%;
-            height: 60px;
-            border-bottom: 1px solid #DDE4EB;
-            background-color: #fff;
-            box-shadow:0px 2px 5px 0px rgba(51,60,72,0.03);
-
-            .header-text {
-                font-size: 16px;
-            }
-
             .icon-arrows-left {
                 margin-right: 4px;
                 cursor: pointer;
