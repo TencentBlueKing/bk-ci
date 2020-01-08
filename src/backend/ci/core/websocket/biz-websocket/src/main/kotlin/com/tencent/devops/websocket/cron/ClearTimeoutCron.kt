@@ -87,7 +87,11 @@ class ClearTimeoutCron(
             if(redisData != null){
                 val newSessionList = mutableListOf<String>()
                 val sessionList = redisData.split(",")
+                if(sessionList == null || sessionList.isEmpty()){
+                    continue
+                }
                 sessionList.forEach {
+                    logger.info("clearTimeout redisStr[$it]")
                     val timeout: Long = it.substringAfter("&").toLong()
                     val userId = it.substringAfter("#").substringBefore("&")
                     val sessionId = it.substringBefore("#")
