@@ -7,8 +7,12 @@ import io.swagger.annotations.ApiModelProperty
 data class ExtensionServiceVO(
     @ApiModelProperty("扩展服务Id")
     val serviceId: String,
+    @ApiModelProperty("扩展服务名称")
+    val name: String,
     @ApiModelProperty("扩展服务code")
     val serviceCode: String,
+    @ApiModelProperty("版本")
+    val version: String,
     @ApiModelProperty("调试项目名称")
     val itemName: String,
     @ApiModelProperty("调试项目Id")
@@ -17,10 +21,8 @@ data class ExtensionServiceVO(
     val serviceName: String,
     @ApiModelProperty("所属分类")
     val category: String,
-    @ApiModelProperty("服务版本")
-    val version: String,
     @ApiModelProperty("状态")
-    val status: Int,
+    val serviceStatus: Int,
     @ApiModelProperty("LOGO url")
     val logoUrl: String?,
     @ApiModelProperty("ICON")

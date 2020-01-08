@@ -8,10 +8,9 @@ import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
 @Repository
-class ExtServiceEvnDao {
+class ExtServiceEnvDao {
     fun create(
         dslContext: DSLContext,
-        userId: String,
         id: String,
         extServiceEnvCreateInfo: ExtServiceEnvCreateInfo
     ) {
@@ -49,7 +48,7 @@ class ExtServiceEvnDao {
         }
     }
 
-    fun updateExtServiceFeatureBaseInfo(
+    fun updateExtServiceEnvInfo(
         dslContext: DSLContext,
         userId: String,
         serviceId: String,

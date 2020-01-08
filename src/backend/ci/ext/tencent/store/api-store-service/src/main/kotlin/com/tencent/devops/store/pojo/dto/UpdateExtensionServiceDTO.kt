@@ -5,6 +5,8 @@ import io.swagger.annotations.ApiModelProperty
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class UpdateExtensionServiceDTO(
+    @ApiModelProperty("扩展服务Code")
+    val serviceCode: String,
     @ApiModelProperty("扩展服务Name")
     val serviceName: String,
     @ApiModelProperty("所属分类")

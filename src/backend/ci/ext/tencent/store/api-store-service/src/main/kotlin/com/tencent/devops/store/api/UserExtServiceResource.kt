@@ -1,5 +1,6 @@
 package com.tencent.devops.store.api
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ACCESS_TOKEN
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.dto.InitExtServiceDTO
@@ -21,35 +22,27 @@ import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["EXTENSION_SERVICE"], description = "服务扩展")
-@Path("/user/extension/services")
+@Path("/user/extension/services/desk")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserExtServiceResource {
 
-//    @POST
-//    @ApiOperation(value = "添加扩展服务")
-//    @Path("/{serviceCode}")
-//    fun createExtensionService(
-//        @ApiParam("扩展服务编码")
-//        @PathParam("serviceCode")
-//        serviceCode: String,
-//        @ApiParam("扩展服务信息")
-//        extensionInfo: CreateExtensionServiceDTO
-//    ): Result<String>
-
     @POST
-    @ApiOperation(value = "初始化扩展服务")
+    @ApiOperation(value = "工作台--初始化扩展服务")
     @Path("/{serviceCode}/init")
     fun initExtensionService(
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
         @ApiParam("扩展服务编码")
         @PathParam("serviceCode")
         serviceCode: String,
         @ApiParam("扩展服务信息")
         extensionInfo: InitExtServiceDTO
-    ): Result<String>
+    ): Result<Boolean>
 
     @PUT
-    @ApiOperation(value = "提交服务扩展")
+    @ApiOperation(value = "工作台--提交服务扩展")
     @Path("/{serviceId}/submit")
     fun submitExtensionService(
         @ApiParam("userId", required = true)
@@ -58,9 +51,11 @@ interface UserExtServiceResource {
         @ApiParam("扩展服务Id")
         @PathParam("serviceId")
         serviceId: String,
+        @ApiParam("服务编码")
+        proejctCode: String,
         @ApiParam("扩展服务信息")
         extensionInfo: SubmitDTO
-    ): Result<String>
+    ): Result<String?>
 
 //    @PUT
 //    @ApiOperation(value = "修改扩展服务")
@@ -86,15 +81,24 @@ interface UserExtServiceResource {
     ): Result<ExtensionServiceVO>
 
     @GET
-    @ApiOperation(value = "获取单条服务信息-含版本信息")
-    @Path("/{serviceId}/all")
-    fun getExtServiceAndVersion(
+    @ApiOperation(value = "根据用户获取服务扩展工作台列表")
+    @Path("/desk/atom/list/")
+    fun listDeskExtService(
+        @ApiParam("token", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
+        accessToken: String,
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @ApiParam("扩展服务Id")
-        @PathParam("serviceId")
-        serviceId: String
+        @PathParam("serviceCode")
+        serviceCode: String,
+        @ApiParam("页码", required = false)
+        @QueryParam("page")
+        page: Int?,
+        @ApiParam("每页数量", required = false)
+        @QueryParam("pageSize")
+        pageSize: Int?
     ): Result<ExtensionAndVersionVO>
 
     @GET

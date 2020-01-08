@@ -16,7 +16,6 @@ class ExtServiceDao {
         dslContext: DSLContext,
         userId: String,
         id: String,
-        classType: String,
         extServiceCreateInfo: ExtServiceCreateInfo
     ) {
         with(TExtensionService.T_EXTENSION_SERVICE) {
@@ -59,7 +58,7 @@ class ExtServiceDao {
                     extServiceCreateInfo.latestFlag,
                     extServiceCreateInfo.deleteFlag,
                     extServiceCreateInfo.creatorUser,
-                    extServiceCreateInfo.modifierUser,
+                    userId,
                     LocalDateTime.now(),
                     LocalDateTime.now()
                 )
@@ -70,7 +69,7 @@ class ExtServiceDao {
     fun updateExtServiceBaseInfo(
         dslContext: DSLContext,
         userId: String,
-        atomIdList: List<String>,
+        serviceId: String,
         extServiceUpdateInfo: ExtServiceUpdateInfo
     ) {
         with(TExtensionService.T_EXTENSION_SERVICE) {
@@ -78,15 +77,6 @@ class ExtServiceDao {
             val serviceName = extServiceUpdateInfo.serviceName
             if (null != serviceName) {
                 baseStep.set(SERVICE_NAME, serviceName)
-            }
-            val classifyCode = extServiceUpdateInfo.category
-            if (null != classifyCode) {
-                val a = TClassify.T_CLASSIFY.`as`("a")
-                val classifyId = dslContext.select(a.ID)
-                    .from(a)
-                    .where(a.CLASSIFY_CODE.eq(classifyCode).and(a.TYPE.eq(0)))
-                    .fetchOne(0, String::class.java)
-                baseStep.set(CLASSIFY_ID, classifyId)
             }
             val summary = extServiceUpdateInfo.sunmmary
             if (null != summary) {
@@ -105,7 +95,7 @@ class ExtServiceDao {
                 baseStep.set(PUBLISHER, publisher)
             }
             baseStep.set(MODIFIER, userId).set(UPDATE_TIME, LocalDateTime.now())
-                .where(ID.`in`(atomIdList))
+                .where(ID.eq(serviceId))
                 .execute()
         }
     }
@@ -119,6 +109,12 @@ class ExtServiceDao {
     fun getServiceByCode(dslContext: DSLContext, serviceCode: String): TExtensionServiceRecord? {
         return with(TExtensionService.T_EXTENSION_SERVICE) {
             dslContext.selectFrom(this).where(DELETE_FLAG.eq(false)).and(SERVICE_CODE.eq(serviceCode)).fetchOne()
+        }
+    }
+
+    fun getServiceByName(dslContext: DSLContext, serviceName: String): TExtensionServiceRecord? {
+        return with(TExtensionService.T_EXTENSION_SERVICE) {
+            dslContext.selectFrom(this).where(DELETE_FLAG.eq(false)).and(SERVICE_NAME.eq(serviceName)).fetchOne()
         }
     }
 }
