@@ -211,11 +211,13 @@ class WebsocketService @Autowired constructor(
         val timeout = System.currentTimeMillis() + TimeUnit.DAYS.toMillis(sessionTimeOut!!)
         val redisData = "$sessionId#$userId&$timeout"
         //hash后对1000取模，将数据打散到1000个桶内
-        val redisHashKey = WebsocketKeys.HASH_USER_TIMEOUT_REDIS_KEY+redisData.hashCode().rem(WebsocketKeys.REDIS_MO)
+        var bucket = redisData.hashCode().rem(WebsocketKeys.REDIS_MO)
+        if(bucket < 0) bucket *= -1
+        val redisHashKey = WebsocketKeys.HASH_USER_TIMEOUT_REDIS_KEY+bucket
         logger.info("redis hash sessionId[$sessionId] userId[$userId] redisHashKey[$redisHashKey]")
         var timeoutData = redisOperation.get(redisHashKey)
         if(timeoutData != null) {
-            redisOperation.set(redisHashKey, redisData, null, true)
+            redisOperation.set(redisHashKey, timeoutData, null, true)
         }else{
             timeoutData = "$timeoutData,$redisData"
             redisOperation.set(redisHashKey, timeoutData, null, true)
