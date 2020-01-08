@@ -55,7 +55,6 @@ import com.tencent.devops.store.dao.image.ImageLabelRelDao
 import com.tencent.devops.store.dao.image.MarketImageDao
 import com.tencent.devops.store.dao.image.MarketImageFeatureDao
 import com.tencent.devops.store.dao.image.MarketImageVersionLogDao
-import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.common.ReleaseProcessItem
 import com.tencent.devops.store.pojo.common.StoreProcessInfo
 import com.tencent.devops.store.pojo.common.StoreReleaseCreateRequest
@@ -320,14 +319,14 @@ abstract class ImageReleaseService {
         }
         // 判断最近一个镜像版本的状态，如果不是首次发布，则只有处于审核驳回、已发布、上架中止和已下架的插件状态才允许添加新的版本
         val imageFinalStatusList = mutableListOf(
-                AtomStatusEnum.AUDIT_REJECT.status.toByte(),
-                AtomStatusEnum.RELEASED.status.toByte(),
-                AtomStatusEnum.GROUNDING_SUSPENSION.status.toByte(),
-                AtomStatusEnum.UNDERCARRIAGED.status.toByte()
+                ImageStatusEnum.AUDIT_REJECT.status.toByte(),
+                ImageStatusEnum.RELEASED.status.toByte(),
+                ImageStatusEnum.GROUNDING_SUSPENSION.status.toByte(),
+                ImageStatusEnum.UNDERCARRIAGED.status.toByte()
         )
         if (imageRecords.size < 1) {
             // 如果是首次发布，只有处于初始化的镜像状态才允许添加新的版本
-            imageFinalStatusList.add(AtomStatusEnum.INIT.status.toByte())
+            imageFinalStatusList.add(ImageStatusEnum.INIT.status.toByte())
         }
         if (!imageFinalStatusList.contains(imageRecord.imageStatus)) {
             return MessageCodeUtil.generateResponseDataObject(
@@ -760,8 +759,8 @@ abstract class ImageReleaseService {
             return Triple(false, CommonMessageCode.PERMISSION_DENIED, null)
         }
         logger.info("imageRecord status=$imageStatus, status=$status")
-        val allowReleaseStatus = if (isNormalUpgrade != null && isNormalUpgrade) AtomStatusEnum.TESTING
-        else AtomStatusEnum.AUDITING
+        val allowReleaseStatus = if (isNormalUpgrade != null && isNormalUpgrade) ImageStatusEnum.TESTING
+        else ImageStatusEnum.AUDITING
         var validateFlag = true
         if (status == ImageStatusEnum.COMMITTING.status.toByte() &&
                 imageStatus != ImageStatusEnum.INIT.status.toByte()
