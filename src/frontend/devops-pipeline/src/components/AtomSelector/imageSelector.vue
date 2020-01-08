@@ -56,8 +56,7 @@
                                 </ul>
                             </section>
 
-                            <empty-tips v-if="!tab.unRecommendData.length && !tab.recommendData.length" type="no-result">
-                            </empty-tips>
+                            <p v-if="!tab.unRecommendData.length && !tab.recommendData.length" class="list-empty"></p>
                         </template>
                     </bk-tab-panel>
                 </bk-tab>
@@ -75,7 +74,7 @@
                                 @choose="choose">
                             </card>
                         </template>
-
+                        
                         <template v-if="searchUninstallList.length">
                             <h3 class="search-title gap-border">{{ $t('editPage.unInstalled') }}</h3>
                             <card :current-item.sync="currentItem"
@@ -87,7 +86,7 @@
                                 @choose="choose">
                             </card>
                         </template>
-
+                        
                         <section v-if="searchUnrecomandList.length">
                             <h3 :class="[{ 'expand': searchExpandObtained }, 'search-title', 'gap-border', 'uninstall']" @click="searchExpandObtained = !searchExpandObtained">
                                 {{ $t('editPage.unRecommend') }}
@@ -110,7 +109,7 @@
                             </ul>
                         </section>
 
-                        <empty-tips v-if="!searchInstallList.length && !searchUninstallList.length && !searchUnrecomandList.length" type="no-result"></empty-tips>
+                        <p v-if="!searchInstallList.length && !searchUninstallList.length && !searchUnrecomandList.length" class="list-empty"></p>
                     </template>
                 </section>
             </main>
@@ -121,12 +120,10 @@
 <script>
     import { mapActions } from 'vuex'
     import card from './imageCard'
-    import EmptyTips from '../common/empty'
 
     export default {
         components: {
-            card,
-            EmptyTips
+            card
         },
 
         props: {
@@ -362,6 +359,12 @@
             transform: rotate(45deg);
         }
     }
+
+    .list-empty {
+        background: url('../../images/no_result.png') center no-repeat;
+        height: 500px;
+    }
+
     .selector-popup {
         position: fixed;
         right: 660px;

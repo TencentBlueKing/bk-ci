@@ -107,5 +107,3 @@ export const defaultBuildNo = {
     buildNo: '0',
     buildNoType: buildNoRules[2].value
 }
-
-export const SET_AUTH_EDITING = 'SET_AUTH_EDITING'

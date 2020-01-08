@@ -37,14 +37,12 @@ export default {
             'curProject'
         ]),
         ...mapState('pipelines', [
-            'pipelineSetting',
-            'pipelineAuthority'
+            'pipelineSetting'
         ]),
         ...mapState('atom', [
             'pipeline',
             'executeStatus',
-            'saveStatus',
-            'authSettingEditing'
+            'saveStatus'
         ]),
         isTemplatePipeline () {
             return this.curPipeline && this.curPipeline.instanceFromTemplate
@@ -63,7 +61,6 @@ export default {
             'setPipelineEditing',
             'setExecuteStatus',
             'setSaveStatus',
-            'setAuthEditing',
             'updateContainer'
         ]),
         async fetchPipelineList () {
@@ -466,7 +463,6 @@ export default {
                     return false
                 }
                 this.setPipelineEditing(false)
-                this.setAuthEditing(false)
                 this.$showTips({
                     message: this.$t('saveSuc'),
                     theme: 'success'
