@@ -319,20 +319,22 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                     arrayOf(version, requireVersion)
             )
         }
-        if (atomRecords.size > 1) {
-            // 判断最近一个插件版本的状态，只有处于审核驳回、已发布、上架中止和已下架的状态才允许添加新的版本
-            val atomFinalStatusList = listOf(
-                    AtomStatusEnum.AUDIT_REJECT.status.toByte(),
-                    AtomStatusEnum.RELEASED.status.toByte(),
-                    AtomStatusEnum.GROUNDING_SUSPENSION.status.toByte(),
-                    AtomStatusEnum.UNDERCARRIAGED.status.toByte()
+        // 判断最近一个插件版本的状态，如果不是首次发布，则只有处于审核驳回、已发布、上架中止和已下架的插件状态才允许添加新的版本
+        val atomFinalStatusList = mutableListOf(
+                AtomStatusEnum.AUDIT_REJECT.status.toByte(),
+                AtomStatusEnum.RELEASED.status.toByte(),
+                AtomStatusEnum.GROUNDING_SUSPENSION.status.toByte(),
+                AtomStatusEnum.UNDERCARRIAGED.status.toByte()
+        )
+        if (atomRecords.size < 1) {
+            // 如果是首次发布，只有处于初始化的插件状态才允许添加新的版本
+            atomFinalStatusList.add(AtomStatusEnum.INIT.status.toByte())
+        }
+        if (!atomFinalStatusList.contains(atomRecord.atomStatus)) {
+            return MessageCodeUtil.generateResponseDataObject(
+                    StoreMessageCode.USER_ATOM_VERSION_IS_NOT_FINISH,
+                    arrayOf(atomRecord.name, atomRecord.version)
             )
-            if (!atomFinalStatusList.contains(atomRecord.atomStatus)) {
-                return MessageCodeUtil.generateResponseDataObject(
-                        StoreMessageCode.USER_ATOM_VERSION_IS_NOT_FINISH,
-                        arrayOf(atomRecord.name, atomRecord.version)
-                )
-            }
         }
         var atomId = UUIDUtil.generate()
         val getAtomConfResult = getAtomConfig(
