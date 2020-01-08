@@ -318,20 +318,22 @@ abstract class ImageReleaseService {
                     arrayOf(version, requireVersion)
             )
         }
-        if (imageRecords.size > 1) {
-            // 判断最近一个镜像版本的状态，只有处于审核驳回、已发布、上架中止和已下架的状态才允许添加新的版本
-            val imageFinalStatusList = listOf(
-                    ImageStatusEnum.AUDIT_REJECT.status.toByte(),
-                    ImageStatusEnum.RELEASED.status.toByte(),
-                    ImageStatusEnum.GROUNDING_SUSPENSION.status.toByte(),
-                    ImageStatusEnum.UNDERCARRIAGED.status.toByte()
+        // 判断最近一个镜像版本的状态，如果不是首次发布，则只有处于审核驳回、已发布、上架中止和已下架的插件状态才允许添加新的版本
+        val imageFinalStatusList = mutableListOf(
+                AtomStatusEnum.AUDIT_REJECT.status.toByte(),
+                AtomStatusEnum.RELEASED.status.toByte(),
+                AtomStatusEnum.GROUNDING_SUSPENSION.status.toByte(),
+                AtomStatusEnum.UNDERCARRIAGED.status.toByte()
+        )
+        if (imageRecords.size < 1) {
+            // 如果是首次发布，只有处于初始化的镜像状态才允许添加新的版本
+            imageFinalStatusList.add(AtomStatusEnum.INIT.status.toByte())
+        }
+        if (!imageFinalStatusList.contains(imageRecord.imageStatus)) {
+            return MessageCodeUtil.generateResponseDataObject(
+                    StoreMessageCode.USER_IMAGE_VERSION_IS_NOT_FINISH,
+                    arrayOf(imageRecord.imageName, imageRecord.version)
             )
-            if (!imageFinalStatusList.contains(imageRecord.imageStatus)) {
-                return MessageCodeUtil.generateResponseDataObject(
-                        StoreMessageCode.USER_IMAGE_VERSION_IS_NOT_FINISH,
-                        arrayOf(imageRecord.imageName, imageRecord.version)
-                )
-            }
         }
         var imageId = UUIDUtil.generate()
         dslContext.transaction { t ->
