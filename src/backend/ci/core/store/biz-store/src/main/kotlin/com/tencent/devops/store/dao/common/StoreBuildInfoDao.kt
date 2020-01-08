@@ -45,7 +45,7 @@ class StoreBuildInfoDao {
         }
     }
 
-    fun getAtomBuildInfoByLanguage(dslContext: DSLContext, language: String, storeType: StoreTypeEnum): TStoreBuildInfoRecord {
+    fun getStoreBuildInfoByLanguage(dslContext: DSLContext, language: String, storeType: StoreTypeEnum): TStoreBuildInfoRecord {
         return with(TStoreBuildInfo.T_STORE_BUILD_INFO) {
             dslContext.selectFrom(this)
                 .where(LANGUAGE.eq(language))

@@ -131,7 +131,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
                     userId,
                     marketAtomCreateRequest.projectCode,
                     atomCode,
-                    storeBuildInfoDao.getAtomBuildInfoByLanguage(
+                    storeBuildInfoDao.getStoreBuildInfoByLanguage(
                             dslContext,
                             marketAtomCreateRequest.language,
                             StoreTypeEnum.ATOM
