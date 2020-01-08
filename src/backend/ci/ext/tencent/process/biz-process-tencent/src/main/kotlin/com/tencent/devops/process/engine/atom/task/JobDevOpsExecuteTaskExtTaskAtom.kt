@@ -30,6 +30,8 @@ package com.tencent.devops.process.engine.atom.task
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.common.api.pojo.ErrorCode
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.job.JobClient
 import com.tencent.devops.common.job.api.pojo.ExecuteTaskRequest
@@ -42,8 +44,6 @@ import com.tencent.devops.process.engine.atom.IAtomTask
 import com.tencent.devops.process.engine.atom.defaultFailAtomResponse
 import com.tencent.devops.process.engine.common.BS_ATOM_START_TIME_MILLS
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
-import com.tencent.devops.process.pojo.AtomErrorCode
-import com.tencent.devops.process.pojo.ErrorType
 import com.tencent.devops.process.util.ParameterUtils
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
@@ -126,7 +126,7 @@ class JobDevOpsExecuteTaskExtTaskAtom @Autowired constructor(
             return AtomResponse(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.USER,
-                errorCode = AtomErrorCode.USER_RESOURCE_NOT_FOUND,
+                errorCode = ErrorCode.USER_RESOURCE_NOT_FOUND,
                 errorMsg = "taskId is not init"
             )
         }
@@ -179,7 +179,7 @@ class JobDevOpsExecuteTaskExtTaskAtom @Autowired constructor(
         return if (buildStatus == BuildStatus.FAILED) AtomResponse(
             buildStatus = BuildStatus.FAILED,
             errorType = ErrorType.USER,
-            errorCode = AtomErrorCode.USER_TASK_OPERATE_FAIL,
+            errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
             errorMsg = "start execute task failed"
         ) else AtomResponse(buildStatus)
     }

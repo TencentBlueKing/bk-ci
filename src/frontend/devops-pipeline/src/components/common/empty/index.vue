@@ -1,12 +1,19 @@
 <template>
     <div class="paas-ci-empty">
         <p class="code-check-title" v-if="isCodeCheck">{{ emptyTitle }}</p>
-        <img :src="calcSrc" alt="暂无数据" class="empty-pic">
+        <div class="empty-pic-box">
+            <img :src="calcSrc" :alt="calcAlt">
+            <p class="empty-pic-desc">
+                <slot>
+                    {{ calcAlt }}
+                </slot>
+            </p>
+        </div>
     </div>
 </template>
 
 <script>
-    import noData from '@/images/no_data.png'
+    import noData from '@/images/box.png'
     import noResult from '@/images/no_result.png'
 
     export default {
@@ -35,11 +42,11 @@
             switch (type) {
                 case 'no-result':
                     this.calcSrc = noResult
-                    this.calcAlt = '未搜索到任何的结果'
+                    this.calcAlt = this.$t('newlist.noSearchResult')
                     break
                 default:
                     this.calcSrc = noData
-                    this.calcAlt = '暂无数据'
+                    this.calcAlt = this.$t('noData')
             }
         }
     }
@@ -60,11 +67,14 @@
             font-size: 15px;
             font-weight: 600;
         }
-        .empty-pic {
+        .empty-pic-box {
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
+        }
+        .empty-pic-desc {
+            text-align: center;
         }
     }
 </style>

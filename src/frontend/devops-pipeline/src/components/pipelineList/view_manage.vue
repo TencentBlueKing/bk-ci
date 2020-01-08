@@ -1,10 +1,10 @@
 <template>
     <div class="view-manage-wrapper">
         <div class="commonly-view-list">
-            <p>我的常用视图
+            <p>{{ $t('newlist.defaultViews') }}
                 <span>（<span>{{ commonlyViews.length }}</span>/7）</span>
-                <bk-button size="small" class="cancen-btn" @click.stop="closeViewManage()">取消</bk-button>
-                <bk-button theme="primary" size="small" class="save-btn" @click.stop="saveViewManage()">保存</bk-button>
+                <bk-button size="small" class="cancen-btn" @click.stop="closeViewManage()">{{ $t('cancel') }}</bk-button>
+                <bk-button theme="primary" size="small" class="save-btn" @click.stop="saveViewManage()">{{ $t('save') }}</bk-button>
             </p>
             <ul class="view-card-list" ref="viewList">
                 <draggable v-model="commonlyViews" :options="dragOptions">
@@ -18,7 +18,7 @@
         <div class="manage-view-content">
             <ul class="manage-view-list">
                 <li class="view-item" v-for="(entry, index) in viewSettingList" :key="index">
-                    <h3>{{ entry.label }}<span class="add-view-btn" v-if="index === 2" @click="routeTocreateView()">添加新视图</span></h3>
+                    <h3>{{ entry.label }}<span class="add-view-btn" v-if="index === 2" @click="routeTocreateView()">{{ $t('view.addView') }}</span></h3>
                     <div class="view-box" v-for="(view, viewIndex) in entry.viewList" :key="viewIndex">
                         <span class="view-title">{{ view.name }}</span>
                         <i class="bk-icon icon-plus-square" :class="{ 'is-selected': isIncludeCommonly(view.id) || commonlyViews.length === 7 }"

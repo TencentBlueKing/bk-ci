@@ -4,6 +4,8 @@ import { updateRecentVisitServiceList, urlJoin, getServiceAliasByPath, importScr
 
 import compilePath from '../utils/pathExp'
 import request from '../utils/request'
+import * as cookie from 'js-cookie'
+
 
 // 404
 // const None = () => import('../views/None.vue')
@@ -19,6 +21,8 @@ const IFrame = () => import('../views/IFrame.vue')
 const QuickStart = () => import('../views/QuickStart.vue')
 
 const ProjectManage = () => import('../views/ProjectManage.vue')
+
+// const Docs = () => import('../views/Docs.vue')
 
 const Maintaining = () => import('../views/503.vue')
 
@@ -87,7 +91,7 @@ function isAmdModule (currentPage: subService): boolean {
     return currentPage && currentPage.inject_type === 'amd'
 }
 
-const createRouter = (store: any) => {
+const createRouter = (store: any, dynamicLoadModule: any, i18n: any) => {
     const router = new Router({
         mode: 'history',
         routes: routes
@@ -105,19 +109,22 @@ const createRouter = (store: any) => {
     router.beforeEach((to, from, next) => {
         const serviceAlias = getServiceAliasByPath(to.path)
         const currentPage = window.serviceObject.serviceMap[serviceAlias]
-        
+
         window.currentPage = currentPage
+        store.dispatch('updateCurrentPage', currentPage) // update currentPage
         if (!currentPage) { // console 首页
             next()
             return
         }
-        const { css_url, js_url } = currentPage
         
+        const { css_url, js_url } = currentPage
         if (isAmdModule(currentPage) && !loadedModule[serviceAlias]) {
+            loadedModule[serviceAlias] = true
             store.dispatch('toggleModuleLoading', true)
             Promise.all([
                 importStyle(css_url, document.head),
-                importScript(js_url, document.body)
+                importScript(js_url, document.body),
+                dynamicLoadModule(serviceAlias, i18n.locale)
             ]).then(() => {
                 const module = window.Pages[serviceAlias]
                 store.registerModule(serviceAlias, module.store)
@@ -130,20 +137,18 @@ const createRouter = (store: any) => {
                 router.addRoutes(dynamicRoutes)
                 setTimeout(() => {
                     store.dispatch('toggleModuleLoading', false)
-                }, 0)
+                }, 100)
+                goNext(to, store, next)
             })
-            loadedModule[serviceAlias] = true
-        }
-        const newPath = initProjectId(to, store)
-        if (to.path !== newPath) {
-            next({
-                path: newPath,
-                query: to.query,
-                hash: to.hash
+            goNext(to, store, next)
+        } else if (isAmdModule(currentPage) && loadedModule[serviceAlias]) {
+            dynamicLoadModule(serviceAlias, i18n.locale).then(() => {
+                goNext(to, store, next)    
             })
         } else {
-            next()
+            goNext(to, store, next)
         }
+            
     })
 
     router.afterEach(route => {
@@ -158,6 +163,35 @@ function updateHeaderConfig ({ showProjectList, showNav }) {
     return {
         showProjectList: showProjectList || (window.currentPage && window.currentPage.show_project_list && typeof showProjectList === 'undefined'),
         showNav: showNav || (window.currentPage && window.currentPage.show_nav && typeof showNav === 'undefined')
+    }
+}
+
+/**
+ * 上报用户信息
+ */
+function counterUser (): void {
+    const userId = window.userInfo.username
+    const os = parseOS()
+    
+    request.post('/project/api/user/count/login', {
+        os,
+        userId
+    })
+}
+
+function uploadBKCounter (count: number = 1): void {
+    try {
+        const date: Date = new Date()
+        const appMsg = {
+            bkdevops: {
+                [`${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`]: count
+            }
+        }
+        window.JSONP('http://open.oa.com/app_statistics/liveness/save_jsonp?app_msg=' + JSON.stringify(appMsg), function () {
+            // jsonp callback with data
+        })
+    } catch (e) {
+        console.warn('upload bk error', e)
     }
 }
 
@@ -179,8 +213,14 @@ function parseOS (): string {
 }
 
 function getProjectId (store, params): string {
-    const projectId = localStorage.getItem('projectId') || store.getters.onlineProjectList[0].project_code
-    return String(params.projectId) !== '0' && params.projectId ? params.projectId : projectId
+    try {
+        const cookiePid = cookie.get(X_DEVOPS_PROJECT_ID)
+        const projectId = window.GLOBAL_PID || cookiePid || localStorage.getItem('projectId') || store.getters.enableProjectList[0].projectCode
+        return String(params.projectId) !== '0' && params.projectId ? params.projectId : projectId
+    } catch (e) {
+        return ''
+    }
+    
 }
 
 function initProjectId (to, store): string {
@@ -193,11 +233,26 @@ function initProjectId (to, store): string {
             ...params,
             projectId
         } : params
-        
         return matched.length ? compilePath(lastMatched.path)(options) : to.path
     } catch (e) {
         console.log(e)
         return to.path
+    }
+}
+
+function goNext(to, store, next) {
+    const newPath = initProjectId(to, store)
+
+    // @ts-ignore
+    window.setProjectIdCookie(getProjectId(store, to.params))
+    if (to.path !== newPath) {
+        next({
+            path: newPath,
+            query: to.query,
+            hash: to.hash
+        })
+    } else {
+        next()
     }
 }
 export default createRouter

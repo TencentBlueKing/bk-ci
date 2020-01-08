@@ -26,6 +26,7 @@
 
 package com.tencent.devops.process.engine.atom.task
 
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.archive.api.JFrogStorageApi
 import com.tencent.devops.common.archive.client.BkRepoClient
@@ -48,7 +49,6 @@ import com.tencent.devops.process.engine.common.BS_ATOM_START_TIME_MILLS
 import com.tencent.devops.process.engine.common.BS_TASK_HOST
 import com.tencent.devops.process.engine.exception.BuildTaskException
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
-import com.tencent.devops.process.pojo.ErrorType
 import com.tencent.devops.process.pojo.report.ReportEmail
 import com.tencent.devops.process.pojo.report.enums.ReportTypeEnum
 import com.tencent.devops.process.service.ReportService
@@ -205,8 +205,12 @@ class ReportArchiveServiceTaskAtom @Autowired constructor(
         val destEnvSet = EnvSet(listOf(), listOf(), listOf(EnvSet.IpDto(localIp)))
         val fileSource = FastPushFileRequest.FileSource(listOf(srcPath), srcEnvSet, "root")
         val fileRequest = FastPushFileRequest(
-            operator, listOf(fileSource), destPath, destEnvSet, "root",
-            getTimeoutMills().toLong()
+            userId = operator,
+            fileSources = listOf(fileSource),
+            fileTargetPath = destPath,
+            envSet = destEnvSet,
+            account = "user00",
+            timeout = getTimeoutMills().toLong()
         )
         val taskInstanceId = jobClient.fastPushFileDevops(fileRequest, projectId)
         LogUtils.addLine(rabbitTemplate, buildId, "查看结果: ${jobClient.getDetailUrl(projectId, taskInstanceId)}", task.taskId, containerId, executeCount)

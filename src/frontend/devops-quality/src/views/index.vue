@@ -29,7 +29,7 @@
                     {
                         list: [
                             {
-                                id: 'overview',
+                                id: 'qualityOverview',
                                 name: '总览',
                                 icon: 'icon-overview',
                                 showChildren: false

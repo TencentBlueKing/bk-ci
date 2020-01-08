@@ -87,7 +87,7 @@
                 } catch (e) {
                     if (e.code === 403) {
                         if (this.element.buildNoType === 'ASSIGN' && this.element.buildNo) {
-                            this.newModel.buildNo.list = [{ id: this.element.buildNo, name: '******（无权限查看）' }]
+                            this.newModel.buildNo.list = [{ id: this.element.buildNo, name: `******（${this.$t('editPage.noPermToView')}）` }]
                         }
                     } else {
                         this.$showTips({

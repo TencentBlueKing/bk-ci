@@ -62,6 +62,7 @@ object BatScriptUtil {
         script: String,
         runtimeVariables: Map<String, String>,
         dir: File,
+        systemEnvVariables: Map<String, String>? = null,
         prefix: String = ""
     ): String {
         try {

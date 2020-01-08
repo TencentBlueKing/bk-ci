@@ -47,15 +47,9 @@
                             </bk-input>
                         </devops-form-item>
                         <devops-form-item label="ID" :property="'id'" :is-error="errors.has('gatewayId')" :error-msg="errors.first('gatewayId')">
-                            <bk-popover placement="right" class="gateway-id-tips">
-                                <i class="bk-icon icon-info-circle"></i>
-                                <template slot="content">
-                                    <p style="width: 320px; text-align: left; white-space: normal;word-break: break-all;font-weight: 400;">若设置了ID（例如gate1），红线将只对名称以ID加下划线开头的控制点生效（例如gate1_XX）</p>
-                                </template>
-                            </bk-popover>
                             <bk-input
                                 class="rule-name-input"
-                                placeholder="请输入由英文和数字组成的ID，例如gate1。可用于控制点有多个插件的场景。"
+                                placeholder="可不填。仅支持英文和数字，例如gate1。"
                                 name="gatewayId"
                                 v-model="createRuleForm.gatewayId"
                                 v-validate="{
@@ -64,6 +58,10 @@
                                 }">
                             </bk-input>
                         </devops-form-item>
+                        <p class="gateway-id-tips">
+                            <i class="bk-icon icon-info-circle"></i>
+                            <span>若输入了ID（例如gate1），红线将只对名称以ID加下划线开头的控制点生效（例如gate1_XX）</span>
+                        </p>
                         <bk-form-item label="描述" :property="'desc'">
                             <bk-input
                                 type="text"
@@ -302,13 +300,15 @@
                                             </bk-checkbox-group>
                                         </bk-form-item>
                                         <bk-form-item label="附加通知人员">
-                                            <staff-input :name="'attacher'" :value="createRuleForm.notifyUserList" :handle-change="handleChange"></staff-input>
+                                            <staff-input v-if="isExtendTx" :name="'attacher'" :value="createRuleForm.notifyUserList" :handle-change="handleChange"></staff-input>
+                                            <user-input v-else :handle-change="handleChange" name="attacher" :value="createRuleForm.notifyUserList" placeholder="请输入通知人员"></user-input>
                                         </bk-form-item>
                                     </bk-form>
 
                                     <bk-form v-else :label-width="120" :model="createRuleForm" class="user-audit-form">
                                         <bk-form-item label="审核人" :required="true">
-                                            <staff-input :name="'reviewer'" :value="createRuleForm.auditUserList" :handle-change="handleChange"></staff-input>
+                                            <staff-input v-if="isExtendTx" :name="'reviewer'" :value="createRuleForm.auditUserList" :handle-change="handleChange"></staff-input>
+                                            <user-input v-else :handle-change="handleChange" name="reviewer" :value="createRuleForm.auditUserList" placeholder="请输入通知人员"></user-input>
                                         </bk-form-item>
                                         <bk-form-item label="审核超时时间">
                                             <bk-input type="number"
@@ -366,7 +366,7 @@
                     >
                     </metadata-panel>
                 </div>
-                
+
             </template>
         </bk-sideslider>
 
@@ -411,6 +411,7 @@
     import { mapGetters } from 'vuex'
     import metadataPanel from '@/components/devops/metadata-panel'
     import staffInput from '@/components/devops/StaffInput'
+    import UserInput from '@/components/devops/UserInput/index.vue'
     import pipelineList from '@/components/devops/pipeline-list'
     import templateList from '@/components/devops/template-list'
     import createGroup from '@/components/devops/create_group'
@@ -424,6 +425,7 @@
             templateList,
             metadataPanel,
             staffInput,
+            UserInput,
             emptyTips
         },
         data () {
@@ -442,11 +444,6 @@
                 beforeSiteImg: require('@/images/admission-preview.png'),
                 afterSiteImg: require('@/images/prompt-preview.png'),
                 templateName: ['日常构建', '版本转测', '发布上线'],
-                noticeTypeList: [
-                    { name: 'work-wechat', value: 'RTX', isChecked: false },
-                    { name: 'wechat', value: 'WECHAT', isChecked: false },
-                    { name: 'email', value: 'EMAIL', isChecked: false }
-                ],
                 optionBoolean: [
                     { label: '是', value: 'true' },
                     { label: '否', value: 'false' }
@@ -568,12 +565,26 @@
             currentINdicators () {
                 const target = this.createRuleForm.indicators.map(item => item.cnName)
                 return target.join('、')
+            },
+            isExtendTx () {
+                return VERSION_TYPE === 'tencent'
+            },
+            noticeTypeList () {
+                const list = [
+                    { name: 'work-wechat', value: 'RTX', isChecked: false },
+                    { name: 'wechat', value: 'WECHAT', isChecked: false },
+                    { name: 'email', value: 'EMAIL', isChecked: false }
+                ]
+                if (!this.isExtendTx) {
+                    list.splice(0, 2)
+                }
+                return list
             }
         },
         watch: {
             projectId (val) {
                 this.$router.push({
-                    name: 'overview',
+                    name: 'qualityOverview',
                     params: {
                         projectId: this.projectId
                     }
@@ -637,7 +648,7 @@
             },
             goToApplyPerm () {
                 const host = GW_URL_PREFIX.replace('/console', '')
-                const url = `${host}/backend/api/perm/apply/subsystem/?client_id=code&project_code=${this.projectId}&service_code=quality_gate&role_creator=rule`
+                const url = this.isExtendTx ? `${host}/backend/api/perm/apply/subsystem/?client_id=code&project_code=${this.projectId}&service_code=quality_gate&role_creator=rule` : PERM_URL_PREFIX
                 window.open(url, '_blank')
             },
             addLeaveListenr () {
@@ -696,7 +707,7 @@
                         textAlign: 'center'
                     }
                 }, msg)
-                
+
                 this.$bkInfo({
                     title: title,
                     subHeader: content,
@@ -742,7 +753,7 @@
                             textAlign: 'center'
                         }
                     }, msg)
-                    
+
                     this.$bkInfo({
                         title: `删除${indicator.cnName}指标`,
                         subHeader: content,
@@ -955,7 +966,7 @@
 
                     this.createRuleForm = JSON.parse(JSON.stringify(this.baseForm))
                     Object.assign(this.createRuleForm, res)
-                    
+
                     // 指标处理
                     this.createRuleForm.indicators.forEach(item => {
                         item.operationList = item.operationList.map(operation => {
@@ -1030,7 +1041,7 @@
             },
             async checkPipelineAtom (data) {
                 this.selectedPipelines = JSON.parse(JSON.stringify(data))
-                
+
                 const params = {
                     projectId: this.projectId,
                     pipelineIds: data,
@@ -1091,7 +1102,7 @@
                     const res = await this.$store.dispatch('quality/requestRangeTemplate', { params })
 
                     this.createRuleForm.pipelineList = this.createRuleForm.pipelineList.filter(item => item.type !== 'template')
-                    
+
                     res.map(item => {
                         item.isRefresh = false
                         item.type = 'template'
@@ -1104,7 +1115,7 @@
                         }
                         this.createRuleForm.pipelineList.push(item)
                     })
-                    
+
                     this.tableLoading = false
                 } catch (err) {
                     const message = err.message ? err.message : err
@@ -1235,7 +1246,7 @@
                 } else {
                     const tempArr = []
                     const tplData = JSON.parse(JSON.stringify(params.data))
-    
+
                     tplData.forEach(item => {
                         const isExist = this.createRuleForm.indicators.some(val => val.hashId === item.hashId)
                         if (!isExist) {
@@ -1248,7 +1259,7 @@
                             tempArr.push(item)
                         }
                     })
-                    
+
                     const target = this.createRuleForm.indicators
                     this.createRuleForm.indicators = [...target.slice(0, this.lastClickCount + 1), ...tempArr, ...target.slice(this.lastClickCount + 1, target.length)]
                 }
@@ -1296,7 +1307,7 @@
                     operation: this.createRuleForm.operation,
                     auditTimeoutMinutes: parseInt(this.createRuleForm.auditTimeoutMinutes) || undefined
                 }
-                
+
                 this.createRuleForm.pipelineList.forEach(item => {
                     if (item.type === 'pipeline') {
                         obj.range.push(item.pipelineId)
@@ -1561,12 +1572,10 @@
                 margin-right: 38px;
             }
             .gateway-id-tips {
-                position: absolute;
-                top: 8px;
-                left: -22px;
-                .icon-info-circle {
-                    color: #C3CDD7;
-                }
+                margin-top: 8px;
+                margin-left: 100px;
+                color:#C3CDD7;
+                font-size: 12px;
             }
         }
         .rule-metadata-table {
@@ -1810,6 +1819,9 @@
                 .bk-form-checkbox {
                     margin-right: 36px;
                 }
+            }
+            .bk-form-checkbox {
+                margin-right: 36px;
             }
         }
         .system-active {

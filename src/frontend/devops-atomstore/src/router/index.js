@@ -26,7 +26,7 @@ const marketDetail = () => import(/* webpackChunkName: 'atomDetails' */ '@/views
 
 const atomList = () => import(/* webpackChunkName: 'atomList' */ '@/views/atom_list.vue') // 工作台
 
-const installAtom = () => import(/* webpackChunkName: 'installAtom' */ '@/views/install_atom.vue') // 安装流水线插件
+const install = () => import(/* webpackChunkName: 'install' */ '@/views/install.vue') // 研发商店安装页面
 
 const editAtom = () => import(/* webpackChunkName: 'editAtom' */ '@/views/edit_atom.vue') // 上架/升级流水线插件
 const releaseProgress = () => import(/* webpackChunkName: 'releaseProgress' */ '@/views/release_progress.vue') // 发布进度
@@ -34,23 +34,46 @@ const atomDatail = () => import(/* webpackChunkName: 'atomDatail' */ '@/views/at
 const atomOverview = () => import(/* webpackChunkName: 'atomOverview' */ '@/views/atomDetail/overview.vue') // 流水线插件概览
 const settings = () => import(/* webpackChunkName: 'settings' */ '@/views/atomDetail/settings.vue') // 流水线插件设置
 const atomInformation = () => import(/* webpackChunkName: 'atomInformation' */ '@/views/atomDetail/detail.vue') // 流水线插件详情
+const approval = () => import(/* webpackChunkName: 'approval' */ '@/views/atomDetail/approval.vue') // 流水线插件审批
 const memberManage = () => import(/* webpackChunkName: 'memberManage' */ '@/views/atomDetail/member_manage.vue') // 成员管理
-const privateSetting = () => import(/* webpackChunkName: 'privateSetting' */ '@/views/atomDetail/private_setting.vue') // 可见范围
+const visibleRange = () => import(/* webpackChunkName: 'visibleRange' */ '@/views/atomDetail/visible_range.vue') // 可见范围
+const privateSetting = () => import(/* webpackChunkName: 'privateSetting' */ '@/views/atomDetail/private_setting.vue') // 私有配置
+const edit = () => import(/* webpackChunkName: 'editAtom' */ '@/views/atomDetail/edit.vue') // 编辑插件详情
 
 const editTemplate = () => import(/* webpackChunkName: 'editTemplate' */ '@/views/edit_template.vue') // 上架模板
 const upgradeTemplate = () => import(/* webpackChunkName: 'upgradeTemplate' */ '@/views/upgrade_template.vue') // 上架模板进度
 const tplDatail = () => import(/* webpackChunkName: 'tplDatail' */ '@/views/templateDetail/index.vue') // 模板概览
 const tplOverview = () => import(/* webpackChunkName: 'tplOverview' */ '@/views/templateDetail/overview.vue') // 模板概览
 const tplSettings = () => import(/* webpackChunkName: 'tplSettings' */ '@/views/templateDetail/settings.vue') // 模板设置
+const tplVisibleRange = () => import(/* webpackChunkName: 'tplVisibleRange' */ '@/views/templateDetail/visible_range.vue') // 可见范围
+
+const editImage = () => import(/* webpackChunkName: 'editImage' */ '@/views/edit_image.vue') // 上架镜像
+const imageProgress = () => import(/* webpackChunkName: 'imageProgress' */ '@/views/imageProgress.vue') // 镜像进度
+const imageDatailIndex = () => import(/* webpackChunkName: 'imageDatailIndex' */ '@/views/imageDetail/index.vue') // 镜像详情总览
+const imageDetail = () => import(/* webpackChunkName: 'imageDetail' */ '@/views/imageDetail/detail.vue') // 镜像详情页面
+const imageOverview = () => import(/* webpackChunkName: 'imageOverview' */ '@/views/imageDetail/overView.vue') // 镜像概览
+const imageSettings = () => import(/* webpackChunkName: 'imageSettings' */ '@/views/imageDetail/settings.vue') // 镜像设置
+const imageVisibleRange = () => import(/* webpackChunkName: 'tplVisibleRange' */ '@/views/imageDetail/visibleRange.vue') // 镜像可见范围
+const imageMemberManage = () => import(/* webpackChunkName: 'imageMemberManage' */ '@/views/imageDetail/memberManage.vue') // 镜像成员管理
+const imageEdit = () => import(/* webpackChunkName: 'imageEdit' */ '@/views/imageDetail/edit.vue') // 编辑镜像详情
+
+const editImage = () => import(/* webpackChunkName: 'editImage' */ '@/views/edit_image.vue') // 上架镜像
+const imageProgress = () => import(/* webpackChunkName: 'imageProgress' */ '@/views/imageProgress.vue') // 镜像进度
+const imageDatailIndex = () => import(/* webpackChunkName: 'imageDatailIndex' */ '@/views/imageDetail/index.vue') // 镜像详情总览
+const imageDetail = () => import(/* webpackChunkName: 'imageDetail' */ '@/views/imageDetail/detail.vue') // 镜像详情页面
+const imageOverview = () => import(/* webpackChunkName: 'imageOverview' */ '@/views/imageDetail/overView.vue') // 镜像概览
+const imageSettings = () => import(/* webpackChunkName: 'imageSettings' */ '@/views/imageDetail/settings.vue') // 镜像设置
+const imageMemberManage = () => import(/* webpackChunkName: 'imageMemberManage' */ '@/views/imageDetail/memberManage.vue') // 镜像成员管理
+const imageEdit = () => import(/* webpackChunkName: 'imageEdit' */ '@/views/imageDetail/edit.vue') // 编辑镜像详情
 
 const routes = [
     {
         path: 'store',
         component: atomEntry,
         meta: {
-            title: '研发商店',
+            title: 'store',
             logo: 'store',
-            header: '研发商店',
+            header: 'store',
             to: 'atomHome'
         },
         redirect: {
@@ -62,9 +85,9 @@ const routes = [
                 component: marketIndex,
                 name: 'marketIndex',
                 meta: {
-                    title: '研发商店',
+                    title: 'store',
                     logo: 'store',
-                    header: '研发商店',
+                    header: 'store',
                     to: 'atomHome'
                 },
                 children: [
@@ -73,9 +96,9 @@ const routes = [
                         name: 'list',
                         component: marketList,
                         meta: {
-                            title: '商店列表',
+                            title: 'list',
                             logo: 'store',
-                            header: '研发商店',
+                            header: 'store',
                             to: 'atomHome'
                         }
                     },
@@ -84,9 +107,9 @@ const routes = [
                         name: 'atomHome',
                         component: marketHome,
                         meta: {
-                            title: '商店首页',
+                            title: 'atomHome',
                             logo: 'store',
-                            header: '研发商店',
+                            header: 'store',
                             to: 'atomHome'
                         }
                     }
@@ -97,9 +120,9 @@ const routes = [
                 name: 'details',
                 component: marketDetail,
                 meta: {
-                    title: '详情',
+                    title: 'details',
                     logo: 'store',
-                    header: '研发商店',
+                    header: 'store',
                     to: 'atomHome'
                 }
             },
@@ -108,9 +131,9 @@ const routes = [
                 name: 'atomList',
                 component: atomList,
                 meta: {
-                    title: '工作台',
+                    title: 'atomList',
                     logo: 'store',
-                    header: '研发商店',
+                    header: 'store',
                     to: 'atomHome'
                 }
             },
@@ -119,9 +142,9 @@ const routes = [
                 name: 'upgradeAtom',
                 component: editAtom,
                 meta: {
-                    title: ' 升级流水线插件',
+                    title: ' upgradeAtom',
                     logo: 'store',
-                    header: '研发商店',
+                    header: 'store',
                     to: 'atomHome'
                 }
             },
@@ -130,9 +153,9 @@ const routes = [
                 name: 'shelfAtom',
                 component: editAtom,
                 meta: {
-                    title: '上架流水线插件',
+                    title: 'shelfAtom',
                     logo: 'store',
-                    header: '研发商店',
+                    header: 'store',
                     to: 'atomHome'
                 }
             },
@@ -141,9 +164,9 @@ const routes = [
                 name: 'editTemplate',
                 component: editTemplate,
                 meta: {
-                    title: '上架模板',
+                    title: 'editTemplate',
                     logo: 'store',
-                    header: '研发商店',
+                    header: 'store',
                     to: 'atomHome'
                 }
             },
@@ -152,10 +175,11 @@ const routes = [
                 name: 'releaseProgress',
                 component: releaseProgress,
                 meta: {
-                    title: '发布进度',
+                    title: 'releaseProgress',
                     logo: 'store',
-                    header: '研发商店',
-                    to: 'atomHome'
+                    header: 'store',
+                    to: 'atomHome',
+                    webSocket: ['^\/console\/store\/releaseProgress\/(shelf|upgrade)\/[^\/]+$']
                 }
             },
             {
@@ -163,9 +187,31 @@ const routes = [
                 name: 'upgradeTemplate',
                 component: upgradeTemplate,
                 meta: {
-                    title: '上架模板进度',
+                    title: 'upgradeTemplate',
                     logo: 'store',
-                    header: '研发商店',
+                    header: 'store',
+                    to: 'atomHome'
+                }
+            },
+            {
+                path: 'editImage/:imageId',
+                name: 'editImage',
+                component: editImage,
+                meta: {
+                    title: 'editImage',
+                    logo: 'store',
+                    header: 'store',
+                    to: 'atomHome'
+                }
+            },
+            {
+                path: 'imageProgress/:imageId',
+                name: 'imageProgress',
+                component: imageProgress,
+                meta: {
+                    title: 'imageProgress',
+                    logo: 'store',
+                    header: 'store',
                     to: 'atomHome'
                 }
             },
@@ -179,9 +225,9 @@ const routes = [
                         name: 'overview',
                         component: atomOverview,
                         meta: {
-                            title: '概览',
+                            title: 'overview',
                             logo: 'store',
-                            header: '研发商店',
+                            header: 'store',
                             to: 'atomHome'
                         }
                     },
@@ -190,9 +236,31 @@ const routes = [
                         name: 'detail',
                         component: atomInformation,
                         meta: {
-                            title: '详情',
+                            title: 'detail',
                             logo: 'store',
-                            header: '研发商店',
+                            header: 'store',
+                            to: 'atomHome'
+                        }
+                    },
+                    {
+                        path: 'edit',
+                        name: 'edit',
+                        component: edit,
+                        meta: {
+                            title: 'edit',
+                            logo: 'store',
+                            header: 'store',
+                            to: 'atomHome'
+                        }
+                    },
+                    {
+                        path: 'approval',
+                        name: 'approval',
+                        component: approval,
+                        meta: {
+                            title: 'approval',
+                            logo: 'store',
+                            header: 'store',
                             to: 'atomHome'
                         }
                     },
@@ -201,9 +269,9 @@ const routes = [
                         name: 'settings',
                         component: settings,
                         meta: {
-                            title: '设置',
+                            title: 'settings',
                             logo: 'store',
-                            header: '研发商店',
+                            header: 'store',
                             to: 'atomHome'
                         },
                         children: [
@@ -212,9 +280,20 @@ const routes = [
                                 name: 'member',
                                 component: memberManage,
                                 meta: {
-                                    title: '成员管理',
+                                    title: 'member',
                                     logo: 'store',
-                                    header: '研发商店',
+                                    header: 'store',
+                                    to: 'atomHome'
+                                }
+                            },
+                            {
+                                path: 'visible',
+                                name: 'visible',
+                                component: visibleRange,
+                                meta: {
+                                    title: 'visible',
+                                    logo: 'store',
+                                    header: 'store',
                                     to: 'atomHome'
                                 }
                             },
@@ -223,9 +302,9 @@ const routes = [
                                 name: 'private',
                                 component: privateSetting,
                                 meta: {
-                                    title: '私有设置',
+                                    title: 'private',
                                     logo: 'store',
-                                    header: '研发商店',
+                                    header: 'store',
                                     to: 'atomHome'
                                 }
                             }
@@ -243,9 +322,9 @@ const routes = [
                         name: 'tplOverview',
                         component: tplOverview,
                         meta: {
-                            title: '概览',
+                            title: 'overview',
                             logo: 'store',
-                            header: '研发商店',
+                            header: 'store',
                             to: 'atomHome'
                         }
                     },
@@ -254,33 +333,174 @@ const routes = [
                         name: 'tplSettings',
                         component: tplSettings,
                         meta: {
-                            title: '设置',
+                            title: 'settings',
                             logo: 'store',
-                            header: '研发商店',
+                            header: 'store',
                             to: 'atomHome'
-                        }
+                        },
+                        children: [
+                            {
+                                path: 'visible',
+                                name: 'tplVisible',
+                                component: tplVisibleRange,
+                                meta: {
+                                    title: 'visible',
+                                    logo: 'store',
+                                    header: 'store',
+                                    to: 'atomHome'
+                                }
+                            }
+                        ]
                     }
                 ]
             },
             {
-                path: ':atomCode/install/atom',
-                name: 'installAtom',
-                component: installAtom,
-                meta: {
-                    title: '安装流水线插件',
-                    logo: 'store',
-                    header: '研发商店',
-                    to: 'atomHome'
-                }
+                path: 'image/:imageCode',
+                name: 'imageDatailIndex',
+                component: imageDatailIndex,
+                children: [
+                    {
+                        path: 'overview',
+                        name: 'imageOverview',
+                        component: imageOverview,
+                        meta: {
+                            title: 'overview',
+                            logo: 'store',
+                            header: 'store',
+                            to: 'atomHome'
+                        }
+                    },
+                    {
+                        path: 'detail',
+                        name: 'imageDetail',
+                        component: imageDetail,
+                        meta: {
+                            title: 'detail',
+                            logo: 'store',
+                            header: 'store',
+                            to: 'atomHome'
+                        }
+                    },
+                    {
+                        path: 'edit',
+                        name: 'imageEdit',
+                        component: imageEdit,
+                        meta: {
+                            title: 'edit',
+                            logo: 'store',
+                            header: 'store',
+                            to: 'atomHome'
+                        }
+                    },
+                    {
+                        path: 'settings',
+                        name: 'imageSettings',
+                        component: imageSettings,
+                        meta: {
+                            title: 'settings',
+                            logo: 'store',
+                            header: 'store',
+                            to: 'atomHome'
+                        },
+                        children: [
+                            {
+                                path: 'member',
+                                name: 'imageMemberManage',
+                                component: imageMemberManage,
+                                meta: {
+                                    title: 'member',
+                                    logo: 'store',
+                                    header: 'store',
+                                    to: 'atomHome'
+                                }
+                            },
+                            {
+                                path: 'visible',
+                                name: 'imageVisibleRange',
+                                component: imageVisibleRange,
+                                meta: {
+                                    title: 'visible',
+                                    logo: 'store',
+                                    header: 'store',
+                                    to: 'atomHome'
+                                }
+                            }
+                        ]
+                    }
+                ]
             },
             {
-                path: ':templateCode/install/template',
-                name: 'installTemplate',
-                component: installAtom,
+                path: 'image/:imageCode',
+                name: 'imageDatailIndex',
+                component: imageDatailIndex,
+                children: [
+                    {
+                        path: 'overview',
+                        name: 'imageOverview',
+                        component: imageOverview,
+                        meta: {
+                            title: '概览',
+                            logo: 'store',
+                            header: '研发商店',
+                            to: 'atomHome'
+                        }
+                    },
+                    {
+                        path: 'detail',
+                        name: 'imageDetail',
+                        component: imageDetail,
+                        meta: {
+                            title: '详情',
+                            logo: 'store',
+                            header: '研发商店',
+                            to: 'atomHome'
+                        }
+                    },
+                    {
+                        path: 'edit',
+                        name: 'imageEdit',
+                        component: imageEdit,
+                        meta: {
+                            title: '编辑',
+                            logo: 'store',
+                            header: '研发商店',
+                            to: 'atomHome'
+                        }
+                    },
+                    {
+                        path: 'settings',
+                        name: 'imageSettings',
+                        component: imageSettings,
+                        meta: {
+                            title: '设置',
+                            logo: 'store',
+                            header: '研发商店',
+                            to: 'atomHome'
+                        },
+                        children: [
+                            {
+                                path: 'member',
+                                name: 'imageMemberManage',
+                                component: imageMemberManage,
+                                meta: {
+                                    title: '成员管理',
+                                    logo: 'store',
+                                    header: '研发商店',
+                                    to: 'atomHome'
+                                }
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                path: 'install',
+                name: 'install',
+                component: install,
                 meta: {
-                    title: '安装模板',
+                    title: 'install',
                     logo: 'store',
-                    header: '研发商店',
+                    header: 'store',
                     to: 'atomHome'
                 }
             }

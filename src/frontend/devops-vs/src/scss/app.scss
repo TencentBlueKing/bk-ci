@@ -1,0 +1,69 @@
+// 整个站点样式
+@charset 'utf-8';
+@import './conf';
+@import './mixins/clearfix';
+@import './devops-common';
+
+html,
+body {
+	height: 100%;
+    font-family: "Microsoft Yahei", "PingFangSC-Regular";
+}
+input:-webkit-autofill, textarea:-webkit-autofill, select:-webkit-autofill {
+    background-color: #fff !important;
+}
+.biz-app {
+    height: 100%;
+    a:not(.bk-button) {
+    	&:hover {
+    		color: $primaryColor;
+    	}
+    }
+}
+
+.biz-container {
+	width: 100%;
+	display: flex;
+	min-height: calc(100% - 210px);
+	.biz-side-bar {
+		width: 261px;
+		min-width: 261px;
+		border-right: 1px solid $borderWeightColor;
+		background: #fff;
+	}
+    .biz-content-wrapper {
+        min-height: 400px;
+    }
+	.biz-content {
+		position: relative;
+		align-items: stretch;
+		flex: 1;
+		overflow: hidden;
+		.biz-top-bar {
+			height: 60px;
+			border-bottom: 1px solid $borderWeightColor;
+			background: #fff;
+			box-shadow: 4px 0 3px rgba(0, 0, 0, 0.1);
+		}
+	}
+	.biz-panel-header {
+		@include clearfix;
+		padding: 17px 20px 12px 20px;
+		.left {
+			float: left;
+		}
+		.right {
+			float: right;
+		}
+	}
+}
+
+// 自适应
+@media screen and (max-width: $mediaWidth) {
+	.biz-container {
+		.biz-side-bar {
+            width: 241px;
+            min-width: 241px;
+		}
+	}
+}
