@@ -4,10 +4,9 @@
   "devDependencies": {
     "ghooks": "^2.0.4",
     "gulp": "^4.0.2",
-    "lerna": "^3.16.4",
-    "ora": "^3.4.0",
-    "yargs": "^14.0.0",
-    "husky": "^3.0.7"
+    "husky": "^3.0.7",
+    "lerna": "3.17.0",
+    "ora": "^3.4.0"
   },
   "scripts": {
     "start": "lerna bootstrap",
@@ -23,6 +22,11 @@
     "devops-atomstore",
     "devops-ticket",
     "devops-pipeline",
-    "devops-nav"
-  ]
+    "devops-quality",
+    "devops-nav",
+    "devops-log"
+  ],
+  "dependencies": {
+    "gulp-rename": "^1.4.0"
+  }
 }

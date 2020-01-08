@@ -30,6 +30,7 @@ import (
 	"github.com/astaxie/beego/logs"
 	"pkg/collector"
 	"pkg/config"
+	"pkg/cron"
 	"pkg/heartbeat"
 	"pkg/job"
 	"pkg/pipeline"
@@ -55,6 +56,9 @@ func Run() {
 
 	// 启动pipeline
 	go pipeline.Start()
+
+	// 定期清理 24小时内生成 hs_err 文件
+	go cron.CleanDumpFileJob(1, 24)
 
 	job.DoPollAndBuild()
 }
