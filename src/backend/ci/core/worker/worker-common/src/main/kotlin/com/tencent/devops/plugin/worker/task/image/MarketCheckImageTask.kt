@@ -33,15 +33,15 @@ import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketCheckImageElement
 import com.tencent.devops.dockerhost.pojo.CheckImageRequest
 import com.tencent.devops.dockerhost.pojo.CheckImageResponse
-import com.tencent.devops.process.pojo.AtomErrorCode
+import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
-import com.tencent.devops.process.pojo.ErrorType
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import com.tencent.devops.store.pojo.image.request.ImageBaseInfoUpdateRequest
 import com.tencent.devops.worker.common.api.ApiFactory
 import com.tencent.devops.worker.common.api.docker.DockerSDKApi
-import com.tencent.devops.worker.common.exception.TaskExecuteException
+import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.task.ITask
 import com.tencent.devops.worker.common.task.TaskClassType
@@ -69,7 +69,7 @@ class MarketCheckImageTask : ITask() {
         val registryPwd = buildVariableMap["registryPwd"]
         val checkImageRequest = CheckImageRequest(imageType, imageName!!, registryUser, registryPwd)
         val dockerHostIp = System.getenv("docker_host_ip")
-        val path = "/api/docker/build/image/buildIds/${buildTask.buildId}/check"
+        val path = "/api/docker/build/image/buildIds/${buildTask.buildId}/check?containerHashId=${buildVariables.containerId}"
         val body = RequestBody.create(
             MediaType.parse("application/json; charset=utf-8"),
             JsonUtil.toJson(checkImageRequest)
@@ -87,7 +87,7 @@ class MarketCheckImageTask : ITask() {
             throw TaskExecuteException(
                 errorMsg = "checkImage fail: message ${response.message()} and response ($responseContent)",
                 errorType = ErrorType.SYSTEM,
-                errorCode = AtomErrorCode.SYSTEM_SERVICE_ERROR
+                errorCode = ErrorCode.SYSTEM_SERVICE_ERROR
             )
         }
         val checkImageResult = JsonUtil.to(responseContent!!, object : TypeReference<Result<CheckImageResponse?>>() {
@@ -98,7 +98,7 @@ class MarketCheckImageTask : ITask() {
             throw TaskExecuteException(
                 errorMsg = "checkImage fail: ${checkImageResult.message}",
                 errorType = ErrorType.SYSTEM,
-                errorCode = AtomErrorCode.SYSTEM_SERVICE_ERROR
+                errorCode = ErrorCode.SYSTEM_SERVICE_ERROR
             )
         }
         val imageVersion = buildVariableMap["version"]
@@ -120,7 +120,7 @@ class MarketCheckImageTask : ITask() {
             throw TaskExecuteException(
                 errorMsg = "updateImage fail: ${updateImageResult.message}",
                 errorType = ErrorType.SYSTEM,
-                errorCode = AtomErrorCode.SYSTEM_SERVICE_ERROR
+                errorCode = ErrorCode.SYSTEM_SERVICE_ERROR
             )
         }
         LoggerService.addNormalLine("check image success")
