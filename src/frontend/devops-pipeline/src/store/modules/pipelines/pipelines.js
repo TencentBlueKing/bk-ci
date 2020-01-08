@@ -208,7 +208,6 @@ const actions = {
     requestImageDetail ({ commit }, { code }) {
         return ajax.get(`/${STORE_API_URL_PREFIX}/user/market/image/imageCodes/${code}`)
     },
-
     requestImageHistory ({ commit }, { agentType, value }) {
         return ajax.get(`/${STORE_API_URL_PREFIX}/user/market/history/transfer?agentType=${agentType}&value=${value}`)
     },

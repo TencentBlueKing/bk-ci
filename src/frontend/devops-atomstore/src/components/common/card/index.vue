@@ -57,6 +57,9 @@
         border-radius: 2px;
         border:1px solid $lightGray;
         cursor: pointer;
+        .not-recommend {
+            text-decoration: line-through;
+        }
         &:hover {
             box-shadow: 0 3px 8px 0 rgba(60, 150, 255, 0.2), 0 0 0 1px rgba(60, 150, 255, 0.08);
         }

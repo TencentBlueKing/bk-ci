@@ -220,7 +220,7 @@
                         </bk-popover>
                     </div>
                 </div>
-                <div class="bk-form-item release-package-form-item is-required" style="margin-top: 10px" v-if="isEnterprise">
+                <div class="bk-form-item release-package-form-item is-required" style="margin-top: 10px">
                     <label class="bk-label"> {{ $t('store.发布包') }} </label>
                     <div class="bk-form-content atom-item-content">
                         <bk-file-upload
