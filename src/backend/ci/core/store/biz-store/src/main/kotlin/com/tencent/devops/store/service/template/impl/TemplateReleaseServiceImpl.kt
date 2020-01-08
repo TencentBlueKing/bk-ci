@@ -151,7 +151,7 @@ abstract class TemplateReleaseServiceImpl @Autowired constructor() : TemplateRel
                     TemplateStatusEnum.GROUNDING_SUSPENSION.status.toByte(),
                     TemplateStatusEnum.UNDERCARRIAGED.status.toByte()
             )
-            if (templateRecords.size < 1) {
+            if (templateRecords.size == 1) {
                 // 如果是首次发布，只有处于初始化的模板状态才允许添加新的版本
                 templateFinalStatusList.add(TemplateStatusEnum.INIT.status.toByte())
             }
