@@ -93,22 +93,26 @@ class ClearTimeoutCron(
                 }
                 sessionList.forEach {
                     logger.info("clearTimeout redisStr[$it],redisKey[${WebsocketKeys.HASH_USER_TIMEOUT_REDIS_KEY + bucket}")
-                    if (it != null && it.isNotEmpty()) {
-                        val timeout: Long = it.substringAfter("&").toLong()
-                        val userId = it.substringAfter("#").substringBefore("&")
-                        val sessionId = it.substringBefore("#")
-                        logger.info("clearTimeout str[$it] timeout[$timeout] userId[$userId] sessionId[$sessionId]")
-                        if (nowTime > timeout) {
-                            val sessionPage = RedisUtlis.getPageFromSessionPageBySession(redisOperation, sessionId)
-                            RedisUtlis.cleanSessionPageBySessionId(redisOperation, sessionId)
-                            if (sessionPage != null) {
-                                RedisUtlis.cleanPageSessionBySessionId(redisOperation, sessionId, sessionPage)
+                    try {
+                        if (it != null) {
+                            val timeout: Long = it.substringAfter("&").toLong()
+                            val userId = it.substringAfter("#").substringBefore("&")
+                            val sessionId = it.substringBefore("#")
+                            logger.info("clearTimeout str[$it] timeout[$timeout] userId[$userId] sessionId[$sessionId]")
+                            if (nowTime > timeout) {
+                                val sessionPage = RedisUtlis.getPageFromSessionPageBySession(redisOperation, sessionId)
+                                RedisUtlis.cleanSessionPageBySessionId(redisOperation, sessionId)
+                                if (sessionPage != null) {
+                                    RedisUtlis.cleanPageSessionBySessionId(redisOperation, sessionId, sessionPage)
+                                }
+                                RedisUtlis.cleanUserSessionBySessionId(redisOperation, userId, sessionId)
+                                websocketService.removeCacheSession(sessionId)
+                                logger.info("[clearTimeOutSession] sessionId:$sessionId,loadPage:$sessionPage,userId:$userId")
                             }
-                            RedisUtlis.cleanUserSessionBySessionId(redisOperation, userId, sessionId)
-                            websocketService.removeCacheSession(sessionId)
-                            logger.info("[clearTimeOutSession] sessionId:$sessionId,loadPage:$sessionPage,userId:$userId")
+                            newSessionList.add(it)
                         }
-                        newSessionList.add(it)
+                    } catch (e: Exception) {
+                        logger.warn("fail msg: ${e.message}")
                     }
                 }
                 redisOperation.set(
