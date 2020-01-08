@@ -83,7 +83,7 @@
 
                 let url = this.url || ''
                 let isErrorParam = false
-                url.replace(/{([^\{\}]+)}/g, (str, key) => {
+                url = url.replace(/{([^\{\}]+)}/g, (str, key) => {
                     const value = this.paramValues[key]
                     if (typeof value === 'undefined') isErrorParam = true
                     return value

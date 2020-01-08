@@ -74,8 +74,8 @@ $lineRadius: 6px;
 
 @mixin add-plus-icon-hover ($hoverColor, $hoverBorderColor, $hoverBg) {
     &:hover {
-        border-color: $hoverBorderColor; 
-        background-color: $hoverColor; 
+        border-color: $hoverBorderColor;
+        background-color: $hoverColor;
         &:before,
         &:after {
             background-color: $hoverBg;
@@ -85,8 +85,8 @@ $lineRadius: 6px;
 
 @mixin add-plus-icon-active ($activeColor, $activeBorder, $activeBg) {
     &.active {
-        border-color: $activeBorder; 
-        background-color: $activeColor; 
+        border-color: $activeBorder;
+        background-color: $activeColor;
         &:before,
         &:after {
             background-color: $activeBg;
@@ -129,7 +129,8 @@ $borderColor: #addaff;
 .insert-tip {
     position: absolute;
     display: block;
-    width: 50px;
+    padding: 0 10px;
+    max-width: 100px;
     height: 24px;
     display: flex;
     align-items: center;
@@ -154,11 +155,13 @@ $borderColor: #addaff;
         border-bottom: 1px solid $borderColor;
     }
     .tip-icon {
-        margin: 0 5px 0 7px;
+        margin: 0 5px 0 0;
         cursor: pointer;
         @include add-plus-icon($primaryColor, $primaryColor, white, 8px, false);
     }
-
+    > span {
+        white-space: nowrap;
+    }
 
     &:hover {
         background-color: $primaryColor;
