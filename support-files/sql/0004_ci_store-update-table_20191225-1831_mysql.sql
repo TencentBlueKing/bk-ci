@@ -27,7 +27,7 @@ BEGIN
                   WHERE TABLE_SCHEMA = db
                     AND TABLE_NAME = 'T_IMAGE'
                     AND COLUMN_NAME = 'DOCKER_FILE_CONTENT') THEN
-        ALTER TABLE T_IMAGE ADD COLUMN `DOCKER_FILE_CONTENT` text NOT NULL DEFAULT '' COMMENT 'dockerFile内容';
+        ALTER TABLE T_IMAGE ADD COLUMN `DOCKER_FILE_CONTENT` text NOT NULL COMMENT 'dockerFile内容';
     END IF;
 	
     COMMIT;
