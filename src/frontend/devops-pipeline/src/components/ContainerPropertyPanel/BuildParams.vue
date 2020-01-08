@@ -145,6 +145,7 @@
     import KeyValueNormal from '@/components/atomFormField/KeyValueNormal'
     import validMixins from '../validMixins'
     import draggable from 'vuedraggable'
+    import { allVersionKeyList } from '@/utils/pipelineConst'
     import { STORE_API_URL_PREFIX, REPOSITORY_API_URL_PREFIX } from '@/store/constants'
     import {
         isStringParam,
@@ -234,13 +235,6 @@
                 'osList',
                 'getBuildResourceTypeList'
             ]),
-            versionConfig () {
-                return {
-                    MajorVersion: {},
-                    MinorVersion: {},
-                    FixVersion: {}
-                }
-            },
             baseOSList () {
                 return this.osList.filter(os => os.value !== 'NONE').map(os => ({
                     id: os.value,
@@ -272,7 +266,6 @@
             },
             globalParams: {
                 get () {
-                    const allVersionKeyList = Object.keys(this.versionConfig)
                     return this.renderParams.filter(p => !allVersionKeyList.includes(p.id))
                 },
                 set (params) {
@@ -280,7 +273,6 @@
                 }
             },
             versions () {
-                const allVersionKeyList = Object.keys(this.versionConfig)
                 return this.params.filter(p => allVersionKeyList.includes(p.id))
             },
             hasGlobalParams () {
@@ -526,7 +518,6 @@
 
             // 全局参数添加遍历的key值
             getParams (params) {
-                const allVersionKeyList = Object.keys(this.versionConfig)
                 const result = params.map(item => {
                     const temp = { ...item }
                     if (!allVersionKeyList.includes(item.id)) {
