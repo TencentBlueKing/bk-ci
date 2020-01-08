@@ -57,15 +57,27 @@ class ServiceIdcDockerHostResourceImpl @Autowired constructor(private val docker
             logger.warn("Create container, dockerStartBuildInfo: $dockerHostBuildInfo")
 
             val containerId = dockerHostBuildService.createContainer(dockerHostBuildInfo)
-            dockerHostBuildService.log(dockerHostBuildInfo.buildId, "构建环境启动成功，等待Agent启动...")
+            dockerHostBuildService.log(
+                buildId = dockerHostBuildInfo.buildId,
+                message = "构建环境启动成功，等待Agent启动...",
+                containerHashId = dockerHostBuildInfo.containerHashId
+            )
             return Result(containerId)
         } catch (e: NoSuchImageException) {
             logger.error("Create container container failed, no such image. pipelineId: ${dockerHostBuildInfo.pipelineId}, vmSeqId: ${dockerHostBuildInfo.vmSeqId}, err: ${e.message}")
-            dockerHostBuildService.log(dockerHostBuildInfo.buildId, "构建环境启动失败，镜像不存在, 镜像:${dockerHostBuildInfo.imageName}")
+            dockerHostBuildService.log(
+                buildId = dockerHostBuildInfo.buildId,
+                message = "构建环境启动失败，镜像不存在, 镜像:${dockerHostBuildInfo.imageName}",
+                containerHashId = dockerHostBuildInfo.containerHashId
+            )
             return Result(2, e.message, "")
         } catch (e: ContainerException) {
             logger.error("Create container failed, rollback build. buildId: ${dockerHostBuildInfo.buildId}, vmSeqId: ${dockerHostBuildInfo.vmSeqId}")
-            dockerHostBuildService.log(dockerHostBuildInfo.buildId, "构建环境启动失败，错误信息:${e.message}")
+            dockerHostBuildService.log(
+                buildId = dockerHostBuildInfo.buildId,
+                message = "构建环境启动失败，错误信息:${e.message}",
+                containerHashId = dockerHostBuildInfo.containerHashId
+            )
             return Result(1, e.message, "")
         }
     }
