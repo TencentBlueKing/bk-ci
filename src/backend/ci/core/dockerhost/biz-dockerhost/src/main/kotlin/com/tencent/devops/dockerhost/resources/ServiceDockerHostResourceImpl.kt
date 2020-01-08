@@ -150,8 +150,12 @@ class ServiceDockerHostResourceImpl @Autowired constructor(
         }
     }
 
-    override fun checkImage(buildId: String, checkImageRequest: CheckImageRequest): Result<CheckImageResponse?> {
-        return dockerHostBuildService.checkImage(buildId, checkImageRequest)
+    override fun checkImage(
+        buildId: String,
+        checkImageRequest: CheckImageRequest,
+        containerHashId: String?
+    ): Result<CheckImageResponse?> {
+        return dockerHostBuildService.checkImage(buildId, checkImageRequest, containerHashId)
     }
 
     companion object {

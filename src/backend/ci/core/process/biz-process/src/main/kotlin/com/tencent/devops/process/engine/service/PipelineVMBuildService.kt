@@ -53,7 +53,7 @@ import com.tencent.devops.process.jmx.elements.JmxElements
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildTaskResult
 import com.tencent.devops.process.pojo.BuildVariables
-import com.tencent.devops.process.pojo.ErrorType
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.process.pojo.mq.PipelineBuildContainerEvent
 import com.tencent.devops.process.utils.PIPELINE_ELEMENT_ID
 import com.tencent.devops.process.utils.PIPELINE_TURBO_TASK_ID
@@ -155,8 +155,15 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
                         buildId = buildId, vmSeqId = vmSeqId, buildStatus = BuildStatus.SUCCEED
                     )
                     return BuildVariables(
-                        buildId, vmSeqId, vmName,
-                        buildInfo.projectId, buildInfo.pipelineId, variables, buildEnvs, it.containerId ?: "", variablesWithType
+                        buildId = buildId,
+                        vmSeqId = vmSeqId,
+                        vmName = vmName,
+                        projectId = buildInfo.projectId,
+                        pipelineId = buildInfo.pipelineId,
+                        variables = variables,
+                        buildEnvs = buildEnvs,
+                        containerId = it.containerId ?: "",
+                        variablesWithType = variablesWithType
                     )
                 }
                 vmId++

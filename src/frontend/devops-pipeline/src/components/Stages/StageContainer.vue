@@ -7,24 +7,22 @@
             <span class="connect-line left" :class="{ &quot;cruve&quot;: containerIndex === 0 }"></span>
             <span class="connect-line right" :class="{ &quot;cruve&quot;: containerIndex === 0 }"></span>
         </template>
-        <show-tooltip placement="bottom" v-bind="containerTooltipConfig">
-            <h3 :class="{ &quot;container-title&quot;: true, &quot;first-ctitle&quot;: containerIndex === 0, [container.status]: container.status }" @click="showContainerPanel">
-                <status-icon type="container" :editable="editable" :job-option="container.jobControlOption" :status="container.status">
-                    {{ containerSerialNum }}
-                </status-icon>
-                <p class="container-name">
-                    <span :title="container.name">{{ container.status === 'PREPARE_ENV' ? $t('editPage.prepareEnv') : container.name }}</span>
-                </p>
-                <container-type :class="showCopyJob ? 'hover-hide' : ''" :container="container" v-if="!showCheckedToatal"></container-type>
-                <span :title="$t('editPage.copyJob')" v-if="showCopyJob && !container.isError" class="bk-icon copyJob" @click.stop="copyContainer">
-                    <Logo name="copy" size="18"></Logo>
-                </span>
-                <i v-if="showCopyJob" @click.stop="deleteJob" class="add-plus-icon close" />
-                <span @click.stop v-if="showCheckedToatal && canSkipElement">
-                    <bk-checkbox class="atom-canskip-checkbox" v-model="container.runContainer" :disabled="containerDisabled"></bk-checkbox>
-                </span>
-            </h3>
-        </show-tooltip>
+        <h3 :class="{ &quot;container-title&quot;: true, &quot;first-ctitle&quot;: containerIndex === 0, [container.status]: container.status }" @click="showContainerPanel">
+            <status-icon type="container" :editable="editable" :job-option="container.jobControlOption" :status="container.status">
+                {{ containerSerialNum }}
+            </status-icon>
+            <p class="container-name">
+                <span :title="container.name">{{ container.status === 'PREPARE_ENV' ? $t('editPage.prepareEnv') : container.name }}</span>
+            </p>
+            <container-type :class="showCopyJob ? 'hover-hide' : ''" :container="container" v-if="!showCheckedToatal"></container-type>
+            <span :title="$t('editPage.copyJob')" v-if="showCopyJob && !container.isError" class="bk-icon copyJob" @click.stop="copyContainer">
+                <Logo name="copy" size="18"></Logo>
+            </span>
+            <i v-if="showCopyJob" @click.stop="deleteJob" class="add-plus-icon close" />
+            <span @click.stop v-if="showCheckedToatal && canSkipElement">
+                <bk-checkbox class="atom-canskip-checkbox" v-model="container.runContainer" :disabled="containerDisabled"></bk-checkbox>
+            </span>
+        </h3>
         <atom-list :container="container" :editable="editable" :is-preview="isPreview" :can-skip-element="canSkipElement" :stage-index="stageIndex" :container-index="containerIndex" :container-status="container.status">
         </atom-list>
     </div>
@@ -35,7 +33,6 @@
     import { getOuterHeight } from '@/utils/util'
     import ContainerType from './ContainerType'
     import AtomList from './AtomList'
-    import showTooltip from '@/components/common/showTooltip'
     import StatusIcon from './StatusIcon'
     import Logo from '@/components/Logo'
 
@@ -44,7 +41,6 @@
             StatusIcon,
             ContainerType,
             AtomList,
-            showTooltip,
             Logo
         },
         props: {
@@ -79,7 +75,7 @@
             ]),
             ...mapGetters('atom', [
                 'isTriggerContainer',
-                'isDockerBuildResource',
+
                 'getAllContainers'
             ]),
             showCheckedToatal () {
@@ -101,20 +97,6 @@
             },
             containerDisabled () {
                 return !!(this.container.jobControlOption && this.container.jobControlOption.enable === false)
-            },
-            containerTooltipConfig () {
-                let name, content
-                switch (true) {
-                    case this.isTriggerContainer(this.container):
-                        name = 'build_trigger'
-                        content = this.$t('editPage.triggerTooltips')
-                        break
-                }
-                return !this.isPreview && name ? {
-                    name,
-                    content,
-                    key: name
-                } : {}
             }
         },
         watch: {
