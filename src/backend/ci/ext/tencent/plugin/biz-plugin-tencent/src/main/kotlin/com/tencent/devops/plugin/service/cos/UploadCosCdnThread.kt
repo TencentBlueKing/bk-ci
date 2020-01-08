@@ -179,7 +179,6 @@ class UploadCosCdnThread : Runnable {
                         }
                     }
                 }
-
             }
             if (count == 0) {
                 setProcessToRedis(2, 0, null)
