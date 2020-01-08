@@ -1,26 +1,56 @@
 package com.tencent.devops.store.resources
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.UserExtServiceMembersResource
 import com.tencent.devops.store.pojo.common.StoreMemberItem
 import com.tencent.devops.store.pojo.common.StoreMemberReq
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.service.TxExtServiceMemberImpl
 import org.springframework.beans.factory.annotation.Autowired
 
-class UserExtServiceMemberResourceImpl @Autowired constructor() : UserExtServiceMembersResource {
+@RestResource
+class UserExtServiceMemberResourceImpl @Autowired constructor(
+    private val txExtServiceMemberImpl: TxExtServiceMemberImpl
+): UserExtServiceMembersResource {
     override fun list(userId: String, serviceCode: String): Result<List<StoreMemberItem?>> {
-        TODO("not implemented") // To change body of created functions use File | Settings | File Templates.
+        return txExtServiceMemberImpl.list(
+            userId = userId,
+            storeCode = serviceCode,
+            //TODO: 此处需在core内添加服务扩展类型
+            storeType = StoreTypeEnum.ATOM
+        )
     }
 
     override fun add(userId: String, storeMemberReq: StoreMemberReq): Result<Boolean> {
-        TODO("not implemented") // To change body of created functions use File | Settings | File Templates.
+        return txExtServiceMemberImpl.add(
+            userId = userId,
+            storeMemberReq = storeMemberReq,
+            sendNotify = true,
+            //TODO: 此处需在core内添加服务扩展类型
+            storeType = StoreTypeEnum.ATOM,
+            collaborationFlag = true
+
+        )
     }
 
     override fun delete(userId: String, id: String, serviceCode: String): Result<Boolean> {
-        TODO("not implemented") // To change body of created functions use File | Settings | File Templates.
+        return txExtServiceMemberImpl.delete(
+            userId = userId,
+            storeCode = serviceCode,
+            //TODO: 此处需在core内添加服务扩展类型
+            storeType = StoreTypeEnum.ATOM,
+            id = id
+            )
     }
 
     override fun view(userId: String, serviceCode: String): Result<StoreMemberItem?> {
-        TODO("not implemented") // To change body of created functions use File | Settings | File Templates.
+        return txExtServiceMemberImpl.viewMemberInfo(
+            userId = userId,
+            storeCode = serviceCode,
+            //TODO: 此处需在core内添加服务扩展类型
+            storeType = StoreTypeEnum.ATOM
+            )
     }
 
     override fun changeMemberTestProjectCode(
@@ -29,6 +59,13 @@ class UserExtServiceMemberResourceImpl @Autowired constructor() : UserExtService
         projectCode: String,
         serviceCode: String
     ): Result<Boolean> {
-        TODO("not implemented") // To change body of created functions use File | Settings | File Templates.
+        return txExtServiceMemberImpl.changeMemberTestProjectCode(
+            accessToken = accessToken,
+            userId = userId,
+            projectCode = projectCode,
+            storeCode = serviceCode,
+            //TODO: 此处需在core内添加服务扩展类型
+            storeType = StoreTypeEnum.ATOM
+        )
     }
 }
