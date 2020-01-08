@@ -120,7 +120,6 @@ class BuglyTask : ITask() {
         // search apk file
         val apkFiles = folderFile.walk().filter { return@filter it.name.endsWith(".apk") }
         // 允许有多个apk的存在
-//        if (apkFiles.count() > 1) throw RuntimeException("more than 1 apk file found in ${workspace.canonicalPath}")
         if (apkFiles.count() == 0) throw TaskExecuteException(
             errorMsg = "no apk file found in ${folderFile.canonicalPath}",
             errorType = ErrorType.USER,
@@ -157,7 +156,6 @@ class BuglyTask : ITask() {
         val ipaFiles = folderFile.walk().filter { return@filter it.name.endsWith(".ipa") }
 
         // 允许有多个ipa文件存在
-//        if (ipaFiles.count() > 1) throw RuntimeException("more than 1 ipa file found")
         if (ipaFiles.count() == 0) TaskExecuteException(
             errorMsg = "no ipa file found in ${folderFile.canonicalPath}",
             errorType = ErrorType.USER,
@@ -224,11 +222,6 @@ class BuglyTask : ITask() {
             LoggerService.addNormalLine("no mapping.txt found")
             return
         }
-        // 允许上传多个mapping.txt
-//        if (mappingFile.count() > 1) {
-//            throw RuntimeException("more than 1 mapping.txt found")
-//        }
-//        val file = mappingFiles.elementAt(0)
         mappingFiles.forEach { mappingFile ->
             LoggerService.addNormalLine("mappingFile: ${mappingFile.canonicalPath}")
             postBuglyFile(mappingFile, appId, appKey, "1", buildId)
