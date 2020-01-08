@@ -108,7 +108,7 @@ class ClearTimeoutCron(
                                 RedisUtlis.cleanUserSessionBySessionId(redisOperation, userId, sessionId)
                                 websocketService.removeCacheSession(sessionId)
                                 logger.info("[clearTimeOutSession] sessionId:$sessionId,loadPage:$sessionPage,userId:$userId")
-                            }else {
+                            } else {
                                 newSessionList.add(it)
                             }
                         }
@@ -116,12 +116,14 @@ class ClearTimeoutCron(
                         logger.warn("fail msg: ${e.message}")
                     }
                 }
-                redisOperation.set(
-                    WebsocketKeys.HASH_USER_TIMEOUT_REDIS_KEY + bucket,
-                    objectMapper.writeValueAsString(newSessionList),
-                    null,
-                    true
-                )
+                if (newSessionList.isNotEmpty() && newSessionList.size > 0) {
+                    redisOperation.set(
+                        WebsocketKeys.HASH_USER_TIMEOUT_REDIS_KEY + bucket,
+                        objectMapper.writeValueAsString(newSessionList),
+                        null,
+                        true
+                    )
+                }
             }
         }
     }
