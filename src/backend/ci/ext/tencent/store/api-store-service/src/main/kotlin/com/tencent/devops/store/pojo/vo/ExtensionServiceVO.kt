@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import io.swagger.annotations.ApiModelProperty
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-data class ExtensionServiceVO (
+data class ExtensionServiceVO(
     @ApiModelProperty("扩展服务Id")
     val serviceId: String,
     @ApiModelProperty("扩展服务code")

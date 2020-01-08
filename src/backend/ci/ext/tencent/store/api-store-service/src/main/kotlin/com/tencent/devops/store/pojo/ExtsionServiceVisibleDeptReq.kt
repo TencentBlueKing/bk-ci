@@ -5,7 +5,7 @@ import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("扩展服务可见范围")
-data class ExtsionServiceVisibleDeptReq (
+data class ExtsionServiceVisibleDeptReq(
     @ApiModelProperty("扩展服务编码", required = true)
     val serviceCode: String,
     @ApiModelProperty("机构列表", required = true)

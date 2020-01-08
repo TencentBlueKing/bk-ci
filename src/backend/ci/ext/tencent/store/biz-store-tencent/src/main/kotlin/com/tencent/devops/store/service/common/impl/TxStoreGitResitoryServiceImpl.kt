@@ -43,7 +43,7 @@ class TxStoreGitResitoryServiceImpl @Autowired constructor(
         return Result(true)
     }
 
-    companion object{
+    companion object {
         val logger = LoggerFactory.getLogger(TxStoreGitResitoryServiceImpl::class.java)
     }
 }

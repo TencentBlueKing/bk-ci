@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service
 @Service
 class TxExtServiceMemberImpl @Autowired constructor(
     private val txStoreGitResitoryService: TxStoreGitResitoryService
-): ExtServiceMemberImpl() {
+) : ExtServiceMemberImpl() {
 
     override fun addRepoMember(
         storeMemberReq: StoreMemberReq,
@@ -22,5 +22,4 @@ class TxExtServiceMemberImpl @Autowired constructor(
     override fun deleteRepoMember(userId: String, username: String, repositoryHashId: String): Result<Boolean> {
         return txStoreGitResitoryService.deleteRepoMember(userId, username, repositoryHashId)
     }
-
 }

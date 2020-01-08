@@ -1,6 +1,5 @@
 package com.tencent.devops.store.dao
 
-import com.tencent.devops.model.store.tables.TAtom
 import com.tencent.devops.model.store.tables.TClassify
 import com.tencent.devops.model.store.tables.TExtensionService
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum

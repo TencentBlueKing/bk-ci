@@ -24,24 +24,9 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.service.atom.impl
+package com.tencent.devops.store.pojo.enums
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.pojo.common.StoreMemberReq
-import com.tencent.devops.store.service.common.TxStoreGitResitoryService
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
-
-@Service
-class TxAtomMemberServiceImpl @Autowired constructor(
-    private val storeGitResitoryService: TxStoreGitResitoryService
-) : AtomMemberServiceImpl() {
-
-    override fun addRepoMember(storeMemberReq: StoreMemberReq, userId: String, repositoryHashId: String): Result<Boolean> {
-       return storeGitResitoryService.addRepoMember(storeMemberReq, userId, repositoryHashId)
-    }
-
-    override fun deleteRepoMember(userId: String, username: String, repositoryHashId: String): Result<Boolean> {
-        return storeGitResitoryService.deleteRepoMember(userId, username, repositoryHashId)
-    }
+enum class HtmlComponentTypeEnum {
+    SIMPLE, // 简单的前端组件类型
+    IFRAME  // ifrmae前端组件类型
 }

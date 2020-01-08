@@ -87,5 +87,4 @@ class TencentServiceConfig @Autowired constructor() {
 
     @Bean
     fun storeLogoService() = TxStoreLogoServiceImpl()
-
 }

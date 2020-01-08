@@ -6,23 +6,21 @@ import com.tencent.devops.store.pojo.common.StoreMemberItem
 import com.tencent.devops.store.pojo.common.StoreMemberReq
 import org.springframework.beans.factory.annotation.Autowired
 
-class UserExtServiceMemberResourceImpl @Autowired constructor(
-
-): UserExtServiceMembersResource {
+class UserExtServiceMemberResourceImpl @Autowired constructor() : UserExtServiceMembersResource {
     override fun list(userId: String, serviceCode: String): Result<List<StoreMemberItem?>> {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        TODO("not implemented") // To change body of created functions use File | Settings | File Templates.
     }
 
     override fun add(userId: String, storeMemberReq: StoreMemberReq): Result<Boolean> {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        TODO("not implemented") // To change body of created functions use File | Settings | File Templates.
     }
 
     override fun delete(userId: String, id: String, serviceCode: String): Result<Boolean> {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        TODO("not implemented") // To change body of created functions use File | Settings | File Templates.
     }
 
     override fun view(userId: String, serviceCode: String): Result<StoreMemberItem?> {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        TODO("not implemented") // To change body of created functions use File | Settings | File Templates.
     }
 
     override fun changeMemberTestProjectCode(
@@ -31,6 +29,6 @@ class UserExtServiceMemberResourceImpl @Autowired constructor(
         projectCode: String,
         serviceCode: String
     ): Result<Boolean> {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        TODO("not implemented") // To change body of created functions use File | Settings | File Templates.
     }
 }
