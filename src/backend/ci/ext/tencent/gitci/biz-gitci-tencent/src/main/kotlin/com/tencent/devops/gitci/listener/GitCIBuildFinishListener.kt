@@ -69,8 +69,8 @@ class GitCIBuildFinishListener @Autowired constructor(
         try {
             val record = gitRequestEventBuildDao.getEventByBuildId(dslContext, buildFinishEvent.buildId)
             if (record != null) {
-                val normalizedYaml = record["NORMALIZED_YAML"] as String
-                val yamlObject = YamlUtil.getObjectMapper().readValue(normalizedYaml, CIBuildYaml::class.java)
+                val originYaml = record["ORIGIN_YAML"] as String
+                val yamlObject = YamlUtil.getObjectMapper().readValue(originYaml, CIBuildYaml::class.java)
 
                 val objectKind = record["OBJECT_KIND"] as String
 
