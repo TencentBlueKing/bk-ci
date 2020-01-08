@@ -1,8 +1,7 @@
 
-           id: 041fe6a2b4c478dfcd4d47803ae39e8f2a662c55
-           message: --story=856981507 工蜂CI commit check支持用户自定义字段展示
+           id: 9e9991ee447d32b174e6aa35f099c2d26261919d
+           message: add codecc v2 support
 
-           user: sawyersong2
-           email: wudiduomjimo@gmail.com
-           time: Tue Jan 07 22:24:45 CST 2020
-        
+           user: irwinsun
+           email: irwin.ypsun@gmail.com
+           time: Wed Nov 20 11:48:46 CST 2019
