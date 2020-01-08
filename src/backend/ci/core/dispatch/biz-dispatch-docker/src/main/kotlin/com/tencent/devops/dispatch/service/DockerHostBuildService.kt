@@ -223,7 +223,8 @@ class DockerHostBuildService @Autowired constructor(
                     null
                 } else {
                     ImageRDTypeEnum.getImageRDTypeByName(dispatchType.imageRDType!!)
-                }
+                },
+                containerHashId = event.containerHashId
             )
 
             saveDockerInfoToBuildDetail(
@@ -294,7 +295,6 @@ class DockerHostBuildService @Autowired constructor(
         try {
             val gray = !grayFlag.isNullOrBlank() && grayFlag!!.toBoolean()
             val grayProjectSet = this.gray.grayProjectSet(redisOperation)
-            logger.info("Get the redis project set: $grayProjectSet")
             redisLock.lock()
             if (gray) {
                 // 优先取设置了IP的任务（可能是固定构建机，也可能是上次用的构建机）
@@ -335,7 +335,8 @@ class DockerHostBuildService @Autowired constructor(
                     registryPwd = build.registryPwd,
                     imageType = build.imageType,
                     imagePublicFlag = build.imagePublicFlag,
-                    imageRDType = ImageRDTypeEnum.getImageRDTypeStr(build.imageRdType?.toInt())
+                    imageRDType = ImageRDTypeEnum.getImageRDTypeStr(build.imageRdType?.toInt()),
+                    containerHashId = build.containerHashId
                 ))
             } else {
                 // 优先取设置了IP的任务（可能是固定构建机，也可能是上次用的构建机）
@@ -376,7 +377,8 @@ class DockerHostBuildService @Autowired constructor(
                     registryPwd = build.registryPwd,
                     imageType = build.imageType,
                     imagePublicFlag = build.imagePublicFlag,
-                    imageRDType = ImageRDTypeEnum.getImageRDTypeStr(build.imageRdType?.toInt())
+                    imageRDType = ImageRDTypeEnum.getImageRDTypeStr(build.imageRdType?.toInt()),
+                    containerHashId = build.containerHashId
                 ))
             }
         } finally {
@@ -462,7 +464,8 @@ class DockerHostBuildService @Autowired constructor(
                 registryPwd = build.registryPwd,
                 imageType = build.imageType,
                 imagePublicFlag = build.imagePublicFlag,
-                imageRDType = ImageRDTypeEnum.getImageRDTypeStr(build.imageRdType?.toInt())
+                imageRDType = ImageRDTypeEnum.getImageRDTypeStr(build.imageRdType?.toInt()),
+                containerHashId = build.containerHashId
             ))
         } finally {
             redisLock.unlock()
@@ -664,7 +667,8 @@ class DockerHostBuildService @Autowired constructor(
                 },
                 // 无构建环境默认每次都从仓库拉取
                 imagePublicFlag = false,
-                imageRDType = ImageRDTypeEnum.SELF_DEVELOPED
+                imageRDType = ImageRDTypeEnum.SELF_DEVELOPED,
+                containerHashId = event.containerHashId
             )
         }
     }
@@ -726,12 +730,12 @@ class DockerHostBuildService @Autowired constructor(
         }
     }
 
-    fun log(buildId: String, red: Boolean, message: String, tag: String? = "") {
-        logger.info("write log from docker host, buildId: $buildId, msg: $message")
+    fun log(buildId: String, red: Boolean, message: String, tag: String? = "", jobId: String? = "") {
+        logger.info("write log from docker host, buildId: $buildId, msg: $message, tag: $tag, jobId= $jobId")
         if (red) {
-            LogUtils.addRedLine(rabbitTemplate, buildId, message, tag ?: "", "", 1)
+            LogUtils.addRedLine(rabbitTemplate, buildId, message, tag ?: "", jobId ?: "", 1)
         } else {
-            LogUtils.addLine(rabbitTemplate, buildId, message, tag ?: "", "", 1)
+            LogUtils.addLine(rabbitTemplate, buildId, message, tag ?: "", jobId ?: "", 1)
         }
     }
 

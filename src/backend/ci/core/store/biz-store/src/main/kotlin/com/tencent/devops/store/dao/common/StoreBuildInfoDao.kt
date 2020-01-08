@@ -24,25 +24,33 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.plugin.worker.task.codecc
+package com.tencent.devops.store.dao.common
 
-import java.io.File
+import com.tencent.devops.model.store.tables.TStoreBuildInfo
+import com.tencent.devops.model.store.tables.records.TStoreBuildInfoRecord
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import org.jooq.DSLContext
+import org.jooq.Result
+import org.springframework.stereotype.Repository
 
-object WindowsCodeccConstants {
+@Repository
+class StoreBuildInfoDao {
 
-    // windows公共构建机路径
-    // windows不需要安装，直接配置路径即可
-    val WINDOWS_CODECC_FOLDER = File("c:/software/codecc")
-    val WINDOWS_COV_PY_FILE = File(WINDOWS_CODECC_FOLDER, "script/${LinuxCodeccConstants.getCovPyFile().name}")
-    val WINDOWS_TOOL_PY_FILE = File(WINDOWS_CODECC_FOLDER, "script/${LinuxCodeccConstants.getToolPyFile().name}")
-    val WINDOWS_COVRITY_HOME = File(WINDOWS_CODECC_FOLDER, "cov-analysis-win64-2018.06")
-    val WINDOWS_KLOCWORK_HOME = File(WINDOWS_CODECC_FOLDER, "kw-analysis-win64-12.3")
-    val WINDOWS_PYTHON2_PATH = File(WINDOWS_CODECC_FOLDER, "Python27")
-    val WINDOWS_PYTHON3_PATH = File(WINDOWS_CODECC_FOLDER, "Python-3.5.2")
-    val WINDOWS_PYLINT2_PATH = File(WINDOWS_CODECC_FOLDER, "pylint_2.7")
-    val WINDOWS_PYLINT3_PATH = File(WINDOWS_CODECC_FOLDER, "pylint_3.5")
-    val WINDOWS_GOROOT_PATH = File(WINDOWS_CODECC_FOLDER, "go1.10.3")
-    val WINDOWS_JDK_PATH = File(WINDOWS_CODECC_FOLDER, "Java/jdk1.8.0_65/bin")
-    val WINDOWS_NODE_PATH = File(WINDOWS_CODECC_FOLDER, "node-v8.9.0-win-x86_eslint")
-    val WINDOWS_GOMETALINTER_PATH = File(WINDOWS_CODECC_FOLDER, "gometalinter/bin")
+    fun list(dslContext: DSLContext, storeType: StoreTypeEnum): Result<TStoreBuildInfoRecord>? {
+        with(TStoreBuildInfo.T_STORE_BUILD_INFO) {
+            return dslContext.selectFrom(this)
+                    .where(ENABLE.eq(true))
+                    .and(STORE_TYPE.eq(storeType.type.toByte()))
+                    .orderBy(CREATE_TIME.asc()).fetch()
+        }
+    }
+
+    fun getAtomBuildInfoByLanguage(dslContext: DSLContext, language: String, storeType: StoreTypeEnum): TStoreBuildInfoRecord {
+        return with(TStoreBuildInfo.T_STORE_BUILD_INFO) {
+            dslContext.selectFrom(this)
+                .where(LANGUAGE.eq(language))
+                .and(STORE_TYPE.eq(storeType.type.toByte()))
+                .fetchOne()
+        }
+    }
 }

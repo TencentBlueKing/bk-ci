@@ -24,25 +24,40 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.plugin.worker.task.codecc
+package com.tencent.devops.store.dao.common
 
-import java.io.File
+import com.tencent.devops.model.store.tables.TAppVersion
+import com.tencent.devops.model.store.tables.TApps
+import com.tencent.devops.model.store.tables.TAtomBuildAppRel
+import com.tencent.devops.model.store.tables.TAtomEnvInfo
+import com.tencent.devops.model.store.tables.TStoreBuildInfo
+import org.jooq.DSLContext
+import org.jooq.Record
+import org.jooq.Result
+import org.springframework.stereotype.Repository
 
-object WindowsCodeccConstants {
+@Repository
+class StoreBuildAppRelDao {
 
-    // windows公共构建机路径
-    // windows不需要安装，直接配置路径即可
-    val WINDOWS_CODECC_FOLDER = File("c:/software/codecc")
-    val WINDOWS_COV_PY_FILE = File(WINDOWS_CODECC_FOLDER, "script/${LinuxCodeccConstants.getCovPyFile().name}")
-    val WINDOWS_TOOL_PY_FILE = File(WINDOWS_CODECC_FOLDER, "script/${LinuxCodeccConstants.getToolPyFile().name}")
-    val WINDOWS_COVRITY_HOME = File(WINDOWS_CODECC_FOLDER, "cov-analysis-win64-2018.06")
-    val WINDOWS_KLOCWORK_HOME = File(WINDOWS_CODECC_FOLDER, "kw-analysis-win64-12.3")
-    val WINDOWS_PYTHON2_PATH = File(WINDOWS_CODECC_FOLDER, "Python27")
-    val WINDOWS_PYTHON3_PATH = File(WINDOWS_CODECC_FOLDER, "Python-3.5.2")
-    val WINDOWS_PYLINT2_PATH = File(WINDOWS_CODECC_FOLDER, "pylint_2.7")
-    val WINDOWS_PYLINT3_PATH = File(WINDOWS_CODECC_FOLDER, "pylint_3.5")
-    val WINDOWS_GOROOT_PATH = File(WINDOWS_CODECC_FOLDER, "go1.10.3")
-    val WINDOWS_JDK_PATH = File(WINDOWS_CODECC_FOLDER, "Java/jdk1.8.0_65/bin")
-    val WINDOWS_NODE_PATH = File(WINDOWS_CODECC_FOLDER, "node-v8.9.0-win-x86_eslint")
-    val WINDOWS_GOMETALINTER_PATH = File(WINDOWS_CODECC_FOLDER, "gometalinter/bin")
+    fun getStoreBuildAppInfo(dslContext: DSLContext, atomId: String): Result<out Record>? {
+        val a = TStoreBuildInfo.T_STORE_BUILD_INFO.`as`("a")
+        val b = TAtomBuildAppRel.T_ATOM_BUILD_APP_REL.`as`("b")
+        val c = TAppVersion.T_APP_VERSION.`as`("c")
+        val d = TApps.T_APPS.`as`("d")
+        val e = TAtomEnvInfo.T_ATOM_ENV_INFO.`as`("e")
+        return dslContext.select(
+            d.NAME.`as`("appName"),
+            c.VERSION.`as`("appVersion")
+        ).from(a)
+            .join(b)
+            .on(a.ID.eq(b.BUILD_INFO_ID))
+            .join(c)
+            .on(b.APP_VERSION_ID.eq(c.ID))
+            .join(d)
+            .on(c.APP_ID.eq(d.ID))
+            .join(e)
+            .on(a.LANGUAGE.eq(e.LANGUAGE))
+            .where(e.ATOM_ID.eq(atomId))
+            .fetch()
+    }
 }

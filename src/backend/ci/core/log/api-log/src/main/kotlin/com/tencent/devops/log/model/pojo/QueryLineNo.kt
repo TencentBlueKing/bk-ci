@@ -24,40 +24,25 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.dao.atom
+package com.tencent.devops.log.model.pojo
 
-import com.tencent.devops.model.store.tables.TAppVersion
-import com.tencent.devops.model.store.tables.TApps
-import com.tencent.devops.model.store.tables.TAtomBuildAppRel
-import com.tencent.devops.model.store.tables.TAtomBuildInfo
-import com.tencent.devops.model.store.tables.TAtomEnvInfo
-import org.jooq.DSLContext
-import org.jooq.Record
-import org.jooq.Result
-import org.springframework.stereotype.Repository
+import com.tencent.devops.log.model.pojo.enums.LogStatus
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+import java.util.TreeSet
 
-@Repository
-class MarketAtomBuildAppRelDao {
-
-    fun getMarketAtomBuildAppInfo(dslContext: DSLContext, atomId: String): Result<out Record>? {
-        val a = TAtomBuildInfo.T_ATOM_BUILD_INFO.`as`("a")
-        val b = TAtomBuildAppRel.T_ATOM_BUILD_APP_REL.`as`("b")
-        val c = TAppVersion.T_APP_VERSION.`as`("c")
-        val d = TApps.T_APPS.`as`("d")
-        val e = TAtomEnvInfo.T_ATOM_ENV_INFO.`as`("e")
-        return dslContext.select(
-            d.NAME.`as`("appName"),
-            c.VERSION.`as`("appVersion")
-        ).from(a)
-            .join(b)
-            .on(a.ID.eq(b.BUILD_INFO_ID))
-            .join(c)
-            .on(b.APP_VERSION_ID.eq(c.ID))
-            .join(d)
-            .on(c.APP_ID.eq(d.ID))
-            .join(e)
-            .on(a.LANGUAGE.eq(e.LANGUAGE))
-            .where(e.ATOM_ID.eq(atomId))
-            .fetch()
-    }
-}
+/**
+ *
+ * Powered By Tencent
+ */
+@ApiModel("日志查询模型")
+data class QueryLineNo(
+    @ApiModelProperty("构建ID", required = true)
+    val buildId: String,
+    @ApiModelProperty("所在行号列表", required = true)
+    val lines: TreeSet<Long> = TreeSet(),
+    @ApiModelProperty("所用时间", required = false)
+    var timeUsed: Long = 0,
+    @ApiModelProperty("日志查询状态", required = false)
+    var status: LogStatus = LogStatus.SUCCEED
+)
