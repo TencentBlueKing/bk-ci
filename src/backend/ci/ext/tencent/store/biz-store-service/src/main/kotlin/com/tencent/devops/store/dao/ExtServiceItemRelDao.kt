@@ -1,16 +1,11 @@
 package com.tencent.devops.store.dao
 
 import com.tencent.devops.model.store.tables.TExtensionServiceItemRel
-import com.tencent.devops.model.store.tables.TExtensionServiceVersionLog
 import com.tencent.devops.model.store.tables.records.TExtensionServiceItemRelRecord
-import com.tencent.devops.model.store.tables.records.TExtensionServiceVersionLogRecord
 import com.tencent.devops.store.pojo.ExtServiceItemRelCreateInfo
 import com.tencent.devops.store.pojo.ExtServiceItemRelUpdateInfo
-import com.tencent.devops.store.pojo.ExtServiceVersionLogCreateInfo
-import com.tencent.devops.store.pojo.ExtServiceVersionLogUpdateInfo
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
-import sun.util.resources.LocaleData
 import java.time.LocalDateTime
 
 @Repository

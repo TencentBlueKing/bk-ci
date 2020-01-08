@@ -55,7 +55,7 @@ class ExtServiceVersionLogDao {
                 baseStep.set(CONTENT, content)
             }
             val releaseType = extServiceVersionLogUpdateInfo.releaseType
-            if(null != releaseType){
+            if (null != releaseType) {
                 baseStep.set(RELEASE_TYPE, releaseType.toByte())
             }
             baseStep.set(MODIFIER, userId).set(UPDATE_TIME, LocalDateTime.now())
@@ -67,8 +67,8 @@ class ExtServiceVersionLogDao {
     fun getVersionLogByServiceId(
         dslContext: DSLContext,
         serviceId: String
-    ): TExtensionServiceVersionLogRecord{
-        with(TExtensionServiceVersionLog.T_EXTENSION_SERVICE_VERSION_LOG){
+    ): TExtensionServiceVersionLogRecord {
+        with(TExtensionServiceVersionLog.T_EXTENSION_SERVICE_VERSION_LOG) {
             return dslContext.selectFrom(this).where(SERVICE_ID.eq(serviceId)).fetchOne()
         }
     }

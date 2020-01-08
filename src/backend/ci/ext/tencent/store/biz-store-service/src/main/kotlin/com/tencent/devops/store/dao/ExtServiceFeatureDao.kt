@@ -90,7 +90,7 @@ class ExtServiceFeatureDao {
     }
 
     fun getServiceByCode(dslContext: DSLContext, serviceCode: String): TExtensionServiceFeatureRecord? {
-        return with(TExtensionServiceFeature.T_EXTENSION_SERVICE_FEATURE){
+        return with(TExtensionServiceFeature.T_EXTENSION_SERVICE_FEATURE) {
             dslContext.selectFrom(this).where(DELETE_FLAG.eq(false)).and(ID.eq(serviceCode)).fetchOne()
         }
     }

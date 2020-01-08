@@ -2,7 +2,6 @@ package com.tencent.devops.store.api
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.pojo.VersionLog
 import com.tencent.devops.store.pojo.vo.VersionLogVO
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation

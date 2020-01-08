@@ -5,7 +5,7 @@ import com.tencent.devops.store.pojo.VersionLog
 import io.swagger.annotations.ApiModelProperty
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-data class ExtensionAndVersionVO (
+data class ExtensionAndVersionVO(
     @ApiModelProperty("基本信息")
     val extensionServiceVO: ExtensionServiceVO,
     @ApiModelProperty("扩展服务code")

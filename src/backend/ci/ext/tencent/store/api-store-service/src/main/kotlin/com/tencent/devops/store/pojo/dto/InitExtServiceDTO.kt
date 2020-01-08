@@ -5,7 +5,7 @@ import com.tencent.devops.store.pojo.ExtsionInfoReq
 import io.swagger.annotations.ApiModelProperty
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-data class InitExtServiceDTO (
+data class InitExtServiceDTO(
     @ApiModelProperty("扩展服务code")
     val serviceCode: String,
     @ApiModelProperty("扩展服务Name")

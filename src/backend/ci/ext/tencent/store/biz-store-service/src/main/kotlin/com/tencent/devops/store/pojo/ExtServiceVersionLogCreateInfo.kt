@@ -2,7 +2,7 @@ package com.tencent.devops.store.pojo
 
 import io.swagger.annotations.ApiModelProperty
 
-data class ExtServiceVersionLogCreateInfo (
+data class ExtServiceVersionLogCreateInfo(
     @ApiModelProperty("扩展服务ID")
     val serviceId: String,
     @ApiModelProperty("发布类型，0：新上架 1：非兼容性升级 2：兼容性功能更新 3：兼容性问题修正  ")

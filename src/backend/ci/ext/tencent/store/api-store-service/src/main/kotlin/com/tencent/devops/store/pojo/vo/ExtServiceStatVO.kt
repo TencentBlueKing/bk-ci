@@ -2,7 +2,7 @@ package com.tencent.devops.store.pojo.vo
 
 import io.swagger.annotations.ApiModelProperty
 
-data class ExtServiceStatVO (
+data class ExtServiceStatVO(
     @ApiModelProperty("扩展服务code")
     val serviceCode: String,
     @ApiModelProperty("扩展服务Id")

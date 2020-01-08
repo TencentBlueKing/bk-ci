@@ -11,7 +11,7 @@ import com.tencent.devops.store.service.common.impl.StoreMemberServiceImpl
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
-abstract class ExtServiceMemberImpl : StoreMemberServiceImpl(){
+abstract class ExtServiceMemberImpl : StoreMemberServiceImpl() {
 
     @Autowired
     lateinit var extServiceDao: ExtServiceDao
@@ -77,10 +77,10 @@ abstract class ExtServiceMemberImpl : StoreMemberServiceImpl(){
     abstract fun deleteRepoMember(userId: String, username: String, repositoryHashId: String): Result<Boolean>
 
     override fun getStoreName(storeCode: String): String {
-        return  extServiceDao.getServiceByCode(dslContext, storeCode)?.serviceName ?: ""
+        return extServiceDao.getServiceByCode(dslContext, storeCode)?.serviceName ?: ""
     }
 
-    companion object{
+    companion object {
         val logger = LoggerFactory.getLogger(this::class.java)
     }
 }

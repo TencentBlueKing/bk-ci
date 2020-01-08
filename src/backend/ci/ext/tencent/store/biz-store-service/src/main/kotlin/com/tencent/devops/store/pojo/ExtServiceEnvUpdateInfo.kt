@@ -2,7 +2,7 @@ package com.tencent.devops.store.pojo
 
 import io.swagger.annotations.ApiModelProperty
 
-data class ExtServiceEnvUpdateInfo (
+data class ExtServiceEnvUpdateInfo(
     @ApiModelProperty("扩展服务开发语言")
     val language: String,
     @ApiModelProperty("扩展服务执行包路径")

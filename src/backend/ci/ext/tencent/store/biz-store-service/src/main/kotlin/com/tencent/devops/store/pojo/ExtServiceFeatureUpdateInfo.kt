@@ -2,7 +2,7 @@ package com.tencent.devops.store.pojo
 
 import io.swagger.annotations.ApiModelProperty
 
-data class ExtServiceFeatureUpdateInfo (
+data class ExtServiceFeatureUpdateInfo(
     @ApiModelProperty("是否为公共扩展服务， TRUE：是 FALSE：不是  ")
     val publicFlag: Boolean,
     @ApiModelProperty("是否推荐， TRUE：是 FALSE：不是 ")

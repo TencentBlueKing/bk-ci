@@ -73,8 +73,6 @@ interface UserExtServiceResource {
 //        extensionInfo: UpdateExtensionServiceDTO
 //    ): Result<String>
 
-
-
     @GET
     @ApiOperation(value = "获取单条扩展服务信息")
     @Path("/{serviceId}")
@@ -116,5 +114,4 @@ interface UserExtServiceResource {
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<ExtensionServiceVO>
-
 }

@@ -1,9 +1,8 @@
 package com.tencent.devops.store.pojo
 
 import io.swagger.annotations.ApiModelProperty
-import sun.security.jca.ServiceId
 
-data class ExtServiceEnvCreateInfo (
+data class ExtServiceEnvCreateInfo(
     @ApiModelProperty("扩展服务Id")
     val serviceId: String,
     @ApiModelProperty("扩展服务开发语言")

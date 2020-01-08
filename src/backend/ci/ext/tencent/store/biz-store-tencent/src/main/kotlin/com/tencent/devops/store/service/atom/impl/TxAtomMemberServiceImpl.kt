@@ -38,7 +38,7 @@ class TxAtomMemberServiceImpl @Autowired constructor(
 ) : AtomMemberServiceImpl() {
 
     override fun addRepoMember(storeMemberReq: StoreMemberReq, userId: String, repositoryHashId: String): Result<Boolean> {
-       return storeGitResitoryService.addRepoMember(storeMemberReq, userId, repositoryHashId)
+        return storeGitResitoryService.addRepoMember(storeMemberReq, userId, repositoryHashId)
     }
 
     override fun deleteRepoMember(userId: String, username: String, repositoryHashId: String): Result<Boolean> {

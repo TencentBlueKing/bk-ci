@@ -2,7 +2,7 @@ package com.tencent.devops.store.pojo
 
 import io.swagger.annotations.ApiModelProperty
 
-data class ExtServiceFeatureCreateInfo (
+data class ExtServiceFeatureCreateInfo(
     @ApiModelProperty("扩展服务code")
     val serviceCode: String,
     @ApiModelProperty("是否为公共扩展服务， TRUE：是 FALSE：不是  ")
