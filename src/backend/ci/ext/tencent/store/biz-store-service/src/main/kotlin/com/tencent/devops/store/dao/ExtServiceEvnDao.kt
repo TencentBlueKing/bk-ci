@@ -25,7 +25,6 @@ class ExtServiceEvnDao {
                 PKG_SHA_CONTENT,
                 DOCKER_FILE_CONTENT,
                 IMAGE_PATH,
-                IMAGE_CMD,
                 FRONTEND_ENTRY_FILE,
                 CREATOR,
                 MODIFIER,
@@ -40,7 +39,6 @@ class ExtServiceEvnDao {
                     extServiceEnvCreateInfo.pkgShaContent,
                     extServiceEnvCreateInfo.dockerFileContent,
                     extServiceEnvCreateInfo.imagePath,
-                    extServiceEnvCreateInfo.imageCmd,
                     extServiceEnvCreateInfo.frontentEntryFile,
                     extServiceEnvCreateInfo.creatorUser,
                     extServiceEnvCreateInfo.modifierUser,
@@ -78,10 +76,6 @@ class ExtServiceEvnDao {
             val imagePath = extServiceEnvUpdateInfo.imagePath
             if (null != imagePath) {
                 baseStep.set(IMAGE_PATH, imagePath)
-            }
-            val imageCmd = extServiceEnvUpdateInfo.imageCmd
-            if (null != imageCmd) {
-                baseStep.set(IMAGE_CMD, imageCmd)
             }
             val frontentEntryFile = extServiceEnvUpdateInfo.frontentEntryFile
             if (null != frontentEntryFile) {
