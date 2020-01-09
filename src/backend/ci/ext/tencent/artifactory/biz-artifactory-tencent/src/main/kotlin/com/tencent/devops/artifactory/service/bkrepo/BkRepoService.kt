@@ -49,8 +49,11 @@ import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_PIPELINE_ID
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_PIPELINE_NAME
 import com.tencent.devops.common.archive.pojo.ArtifactorySearchParam
 import com.tencent.devops.common.archive.shorturl.ShortUrlApi
+import com.tencent.devops.common.service.config.CommonConfig
+import com.tencent.devops.common.service.utils.HomeHostUtil
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.io.File
 import java.nio.file.FileSystems
@@ -63,8 +66,14 @@ import javax.ws.rs.NotFoundException
 class BkRepoService @Autowired constructor(
     val pipelineService: PipelineService,
     val shortUrlApi: ShortUrlApi,
-    val bkRepoClient: BkRepoClient
+    val bkRepoClient: BkRepoClient,
+    val commonConfig: CommonConfig
 ) : RepoService {
+    @Value("\${bkrepo.devnetGatewayUrl:#{null}}")
+    private val DEVNET_GATEWAY_URL: String? = null
+
+    @Value("\${bkrepo.externalUrl:#{null}}")
+    private val EXTERNAL_URL: String? = null
 
     override fun list(userId: String, projectId: String, artifactoryType: ArtifactoryType, path: String): List<FileInfo> {
         logger.info("list, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType, path: $path")
@@ -405,7 +414,7 @@ class BkRepoService @Autowired constructor(
             downloadIps = listOf(),
             timeoutInSeconds = ttl.toLong()
         )
-        return "https://dev.bkdevops.qq.com/bkrepo/api/user/repository${shareUri}"
+        return "${HomeHostUtil.getHost(commonConfig.devopsOuterHostGateWay!!)}/bkrepo/api/user/repository${shareUri}"
     }
 
     fun internalDownloadUrl(
@@ -426,7 +435,7 @@ class BkRepoService @Autowired constructor(
             downloadIps = listOf(),
             timeoutInSeconds = ttl.toLong()
         )
-        return "https://dev.devgw.devops.oa.com/bkrepo/api/user/repository${shareUri}"
+        return "${HomeHostUtil.getHost(commonConfig.devopsHostGateway!!)}/bkrepo/api/user/repository${shareUri}"
     }
 
     companion object {

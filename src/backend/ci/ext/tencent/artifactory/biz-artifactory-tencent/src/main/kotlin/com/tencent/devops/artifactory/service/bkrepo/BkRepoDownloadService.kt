@@ -71,6 +71,9 @@ class BkRepoDownloadService @Autowired constructor(
     @Value("\${bkrepo.idcGatewayUrl:#{null}}")
     private val IDC_GATEWAY_URL: String? = null
 
+    @Value("\${bkrepo.thirdPartyUrl:#{null}}")
+    private val THIRDPARTYH_URL: String? = null
+
     override fun getDownloadUrl(token: String): DownloadUrl {
         // 不支持
         throw OperationException("not support")
@@ -283,7 +286,7 @@ class BkRepoDownloadService @Autowired constructor(
                 downloadIps = listOf(),
                 timeoutInSeconds = (ttl ?: 24 * 3600).toLong()
             )
-            resultList.add("http://dev.gw.open.oa.com/bkrepo/api/user/repository${shareUri}")
+            resultList.add("$THIRDPARTYH_URL/bkrepo/api/user/repository${shareUri}")
         }
         return resultList
     }
