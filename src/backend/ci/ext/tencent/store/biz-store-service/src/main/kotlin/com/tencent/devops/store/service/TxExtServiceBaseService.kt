@@ -21,7 +21,7 @@ import org.springframework.stereotype.Service
 class TxExtServiceBaseService: ExtServiceBaseService() {
 
     @Autowired
-    lateinit var client: Client
+    override lateinit var client: Client
 
     @Value("\${git.service.nameSpaceId}")
     private lateinit var serviceNameSpaceId: String
@@ -61,7 +61,7 @@ class TxExtServiceBaseService: ExtServiceBaseService() {
                 userId,
                 extensionInfo.itemCode,
                 serviceCode,
-                storeBuildInfoDao.getAtomBuildInfoByLanguage(
+                storeBuildInfoDao.getStoreBuildInfoByLanguage(
                     dslContext,
                     extensionInfo.language,
                     StoreTypeEnum.SERVICE

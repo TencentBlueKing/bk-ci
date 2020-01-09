@@ -32,7 +32,6 @@ import com.tencent.devops.store.pojo.dto.InitExtServiceDTO
 import com.tencent.devops.store.pojo.dto.SubmitDTO
 import com.tencent.devops.store.pojo.enums.ExtServiceStatusEnum
 import com.tencent.devops.store.pojo.vo.ExtensionAndVersionVO
-import com.tencent.devops.store.pojo.vo.ExtensionServiceVO
 import com.tencent.devops.store.pojo.vo.MyExtServiceRespItem
 import com.tencent.devops.store.service.common.StoreCommonService
 import org.jooq.DSLContext
