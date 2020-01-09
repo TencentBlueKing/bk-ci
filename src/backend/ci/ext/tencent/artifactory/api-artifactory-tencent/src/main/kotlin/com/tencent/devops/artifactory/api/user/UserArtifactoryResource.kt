@@ -208,10 +208,7 @@ interface UserArtifactoryResource {
         artifactoryType: ArtifactoryType,
         @ApiParam("路径", required = true)
         @QueryParam("path")
-        path: String,
-        @ApiParam("渠道", required = false)
-        @QueryParam("channelCode")
-        channelCode: ChannelCode?
+        path: String
     ): Result<Url>
 
     @ApiOperation("创建分享链接")

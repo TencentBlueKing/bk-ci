@@ -139,13 +139,11 @@ class CurrentBuildService @Autowired constructor(
             "项目未开启工蜂CI，无法查询"
         )
 
-        return client.get(ServiceArtifactoryResource::class).downloadUrl(
+        return client.get(UserArtifactoryResource::class).downloadUrl(
+            userId,
             conf.projectCode!!,
             artifactoryType,
-            userId,
-            path,
-            60,
-            false
+            path
         ).data!!
     }
 

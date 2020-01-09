@@ -38,7 +38,7 @@ interface RepoDownloadService {
 
     fun serviceGetInnerDownloadUrl(userId: String, projectId: String, artifactoryType: ArtifactoryType, argPath: String, ttl: Int, directed: Boolean = false): Url
 
-    fun getDownloadUrl(userId: String, projectId: String, artifactoryType: ArtifactoryType, argPath: String, channelCode: ChannelCode?): Url
+    fun getDownloadUrl(userId: String, projectId: String, artifactoryType: ArtifactoryType, argPath: String): Url
 
     fun getIoaUrl(userId: String, projectId: String, artifactoryType: ArtifactoryType, argPath: String): Url
 

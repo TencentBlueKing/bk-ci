@@ -136,7 +136,7 @@ class ArtifactoryDownloadService @Autowired constructor(
         return Url(url)
     }
 
-    override fun getDownloadUrl(userId: String, projectId: String, artifactoryType: ArtifactoryType, argPath: String, channelCode: ChannelCode?): Url {
+    override fun getDownloadUrl(userId: String, projectId: String, artifactoryType: ArtifactoryType, argPath: String): Url {
         val path = JFrogUtil.normalize(argPath)
         if (!JFrogUtil.isValid(path)) {
             logger.error("Path $path is not valid")
@@ -155,9 +155,9 @@ class ArtifactoryDownloadService @Autowired constructor(
                 throw CustomException(Response.Status.INTERNAL_SERVER_ERROR, "元数据(pipelineId)不存在，请通过共享下载文件")
             }
             val pipelineId = properties[ARCHIVE_PROPS_PIPELINE_ID]!!.first()
-            if (channelCode == null || channelCode != ChannelCode.GIT) {
+            /*if (channelCode == null || channelCode != ChannelCode.GIT) {
                 pipelineService.validatePermission(userId, projectId, pipelineId, AuthPermission.DOWNLOAD, "用户($userId)在工程($projectId)下没有流水线${pipelineId}下载构建权限")
-            }
+            }*/
         }
 
         val url = jFrogApiService.downloadUrl(realPath)
