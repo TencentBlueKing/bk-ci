@@ -126,7 +126,6 @@ abstract class ExtServiceBaseService @Autowired constructor() {
                 pkgShaContent = "",
                 dockerFileContent = "",
                 imagePath = "",
-                imageCmd = "",
                 frontentEntryFile = "",
                 creatorUser = userId,
                 modifierUser = userId
