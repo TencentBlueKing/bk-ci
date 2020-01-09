@@ -23,6 +23,7 @@ import com.tencent.devops.store.pojo.ExtServiceFeatureCreateInfo
 import com.tencent.devops.store.pojo.ExtServiceItemRelCreateInfo
 import com.tencent.devops.store.pojo.ExtServiceUpdateInfo
 import com.tencent.devops.store.pojo.ExtServiceVersionLogCreateInfo
+import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.enums.ExtServicePackageSourceTypeEnum
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreMemberTypeEnum
@@ -345,7 +346,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
                     version = it["version"] as String,
                     category = it["category"] as String,
                     logoUrl = it["logoUrl"] as String?,
-                    serviceStatus = ExtServiceStatusEnum.getServiceStatus(it["serviceStatus"] as Int),
+                    serviceStatus = ExtServiceStatusEnum.getServiceStatus((it["serviceStatus"] as Byte).toInt()),
                     creator = it["creator"] as String,
                     createTime = DateTimeUtil.toDateTime(it["createTime"] as LocalDateTime),
                     modifier = it["modifier"] as String,
