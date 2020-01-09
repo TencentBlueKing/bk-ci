@@ -1,5 +1,6 @@
 package com.tencent.devops.store.dao
 
+import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.model.store.tables.TExtensionServiceFeature
 import com.tencent.devops.model.store.tables.records.TExtensionServiceFeatureRecord
 import com.tencent.devops.store.pojo.ExtServiceFeatureCreateInfo
@@ -14,7 +15,6 @@ class ExtServiceFeatureDao {
     fun create(
         dslContext: DSLContext,
         userId: String,
-        id: String,
         extServiceFeatureCreateInfo: ExtServiceFeatureCreateInfo
     ) {
         with(TExtensionServiceFeature.T_EXTENSION_SERVICE_FEATURE) {
@@ -36,7 +36,7 @@ class ExtServiceFeatureDao {
                 UPDATE_TIME
             )
                 .values(
-                    id,
+                    UUIDUtil.generate(),
                     extServiceFeatureCreateInfo.serviceCode,
                     extServiceFeatureCreateInfo.publicFlag,
                     extServiceFeatureCreateInfo.recommentFlag,

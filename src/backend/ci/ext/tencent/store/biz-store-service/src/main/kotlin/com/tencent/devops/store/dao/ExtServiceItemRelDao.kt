@@ -1,5 +1,6 @@
 package com.tencent.devops.store.dao
 
+import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.model.store.tables.TExtensionServiceItemRel
 import com.tencent.devops.model.store.tables.records.TExtensionServiceItemRelRecord
 import com.tencent.devops.store.pojo.ExtServiceItemRelCreateInfo
@@ -13,7 +14,6 @@ class ExtServiceItemRelDao {
     fun create(
         dslContext: DSLContext,
         userId: String,
-        id: String,
         extServiceItemRelCreateInfo: ExtServiceItemRelCreateInfo
     ) {
         with(TExtensionServiceItemRel.T_EXTENSION_SERVICE_ITEM_REL) {
@@ -28,7 +28,7 @@ class ExtServiceItemRelDao {
                 UPDATE_TIME
             )
                 .values(
-                    id,
+                    UUIDUtil.generate(),
                     extServiceItemRelCreateInfo.serviceId,
                     extServiceItemRelCreateInfo.itemId,
                     extServiceItemRelCreateInfo.creatorUser,
