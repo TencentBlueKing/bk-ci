@@ -30,6 +30,9 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.api.exception.TaskExecuteException
+import com.tencent.devops.common.api.pojo.ErrorCode
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.environment.agent.pojo.devcloud.Action
 import com.tencent.devops.common.environment.agent.pojo.devcloud.DevCloudContainer
@@ -77,7 +80,11 @@ class DevCloudClient {
             val responseContent = response.body()!!.string()
             if (!response.isSuccessful) {
                 logger.warn("[$staffName] Fail to create container - [$devCloudContainer] with response [${response.code()}|${response.message()}|$responseContent]")
-                throw RuntimeException("Fail to request to devCloud")
+                throw TaskExecuteException(
+                    errorCode = ErrorCode.SYSTEM_SERVICE_ERROR,
+                    errorType = ErrorType.SYSTEM,
+                    errorMsg = "Fail to request to devCloud"
+                )
             }
             logger.info("response: $responseContent")
             val responseData: Map<String, Any> = jacksonObjectMapper().readValue(responseContent)
@@ -111,7 +118,11 @@ class DevCloudClient {
             val responseContent = response.body()!!.string()
             if (!response.isSuccessful) {
                 logger.warn("[$staffName|$name|$action] Fail to get the request from url: $url with response: [${response.code()}|${response.message()}|$responseContent]")
-                throw RuntimeException("Fail to start docker")
+                throw TaskExecuteException(
+                    errorCode = ErrorCode.SYSTEM_SERVICE_ERROR,
+                    errorType = ErrorType.SYSTEM,
+                    errorMsg = "Fail to start docker"
+                )
             }
             logger.info("response: $responseContent")
             val responseData: Map<String, Any> = jacksonObjectMapper().readValue(responseContent)
@@ -153,7 +164,11 @@ class DevCloudClient {
             val responseContent = response.body()!!.string()
             if (!response.isSuccessful) {
                 logger.warn("[$staffName] Create image failure with image ($devCloudImage) with response [${response.code()}|${response.message()}|$responseContent]")
-                throw RuntimeException("Fail to createImage")
+                throw TaskExecuteException(
+                    errorCode = ErrorCode.SYSTEM_SERVICE_ERROR,
+                    errorType = ErrorType.SYSTEM,
+                    errorMsg = "Fail to createImage"
+                )
             }
             logger.info("response: $responseContent")
             val responseData: Map<String, Any> = jacksonObjectMapper().readValue(responseContent)
@@ -199,7 +214,11 @@ class DevCloudClient {
             val responseContent = response.body()!!.string()
             if (!response.isSuccessful) {
                 logger.warn("[$staffName|$name] Fail to get container status with response [${response.code()}|${response.message()}|$responseContent]")
-                throw RuntimeException("Fail to get container status")
+                throw TaskExecuteException(
+                    errorCode = ErrorCode.SYSTEM_SERVICE_ERROR,
+                    errorType = ErrorType.SYSTEM,
+                    errorMsg = "Fail to get container status"
+                )
             }
             logger.info("response: $responseContent")
             return JSONObject(responseContent)

@@ -69,14 +69,14 @@ class ArtifactoryBuildCustomDirService @Autowired constructor(
             val name = it.uri.removePrefix("/")
             val fullPath = JFrogUtil.compose(normalizePath, name, it.folder)
             FileInfo(
-                name,
-                fullPath,
-                it.uri,
-                fullPath,
-                it.size,
-                it.folder,
-                LocalDateTime.parse(it.lastModified, DateTimeFormatter.ISO_DATE_TIME).timestamp(),
-                ArtifactoryType.CUSTOM_DIR
+                name = name,
+                fullName = fullPath,
+                path = it.uri,
+                fullPath = fullPath,
+                size = it.size,
+                folder = it.folder,
+                modifiedTime = LocalDateTime.parse(it.lastModified, DateTimeFormatter.ISO_DATE_TIME).timestamp(),
+                artifactoryType = ArtifactoryType.CUSTOM_DIR
             )
         }
         return JFrogUtil.sort(fileInfoList)

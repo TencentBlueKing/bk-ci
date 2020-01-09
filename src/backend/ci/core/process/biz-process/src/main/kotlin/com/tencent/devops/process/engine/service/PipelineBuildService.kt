@@ -27,8 +27,8 @@
 package com.tencent.devops.process.engine.service
 
 import com.fasterxml.jackson.core.type.TypeReference
+import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.pojo.BuildHistoryPage
 import com.tencent.devops.common.api.pojo.IdValue
@@ -213,7 +213,12 @@ class PipelineBuildService(
             params = container.params
         )
 
-        return BuildManualStartupInfo(canManualStartup, canElementSkip, params)
+        val currentBuildNo = (model.stages[0].containers[0] as TriggerContainer).buildNo
+        if (currentBuildNo != null) {
+            currentBuildNo.buildNo = pipelineRepositoryService.getBuildNo(projectId, pipelineId) ?: currentBuildNo.buildNo
+        }
+
+        return BuildManualStartupInfo(canManualStartup, canElementSkip, params, currentBuildNo)
     }
 
     fun getBuildParameters(
@@ -283,7 +288,7 @@ class PipelineBuildService(
                     defaultMessage = "构建任务${buildId}不存在",
                     params = arrayOf(buildId))
 
-            if (!BuildStatus.isFailure(buildInfo.status)) {
+            if (!BuildStatus.isFinish(buildInfo.status)) {
                 throw ErrorCodeException(
                     errorCode = ProcessMessageCode.ERROR_DUPLICATE_BUILD_RETRY_ACT,
                     defaultMessage = "重试已经启动，忽略重复的请求"
@@ -329,12 +334,6 @@ class PipelineBuildService(
                         }
                     }
                 }
-
-                params[PIPELINE_RETRY_COUNT] = if (params[PIPELINE_RETRY_COUNT] != null) {
-                    params[PIPELINE_RETRY_COUNT].toString().toInt() + 1
-                } else {
-                    1
-                }
             } else {
                 // 完整构建重试
                 try {
@@ -345,12 +344,15 @@ class PipelineBuildService(
                 } catch (e: Exception) {
                     logger.warn("Fail to get the startup param for the build($buildId)", e)
                 }
-                // 假如之前构建有原子级重试，则清除掉。因为整个流水线重试的是一个新的构建了(buildId)。
-                params.remove(PIPELINE_RETRY_COUNT)
+            }
+
+            params[PIPELINE_RETRY_COUNT] = if (params[PIPELINE_RETRY_COUNT] != null) {
+                params[PIPELINE_RETRY_COUNT].toString().toInt() + 1
+            } else {
+                1
             }
 
             params[PIPELINE_START_USER_ID] = userId
-            params[PIPELINE_START_TYPE] = StartType.MANUAL.name
             params[PIPELINE_RETRY_BUILD_ID] = buildId
 
             val readyToBuildPipelineInfo =
@@ -362,17 +364,12 @@ class PipelineBuildService(
                         params = arrayOf(buildId))
 
             val startParamsWithType = mutableListOf<BuildParameters>()
-            params.forEach { t, u -> startParamsWithType.add(
-                BuildParameters(
-                    t,
-                    u
-                )
-            ) }
+            params.forEach { (t, u) -> startParamsWithType.add(BuildParameters(key = t, value = u)) }
 
             return startPipeline(
                 userId = userId,
                 readyToBuildPipelineInfo = readyToBuildPipelineInfo,
-                startType = StartType.MANUAL,
+                startType = StartType.toStartType(params[PIPELINE_START_TYPE]?.toString() ?: ""),
                 startParamsWithType = startParamsWithType,
                 channelCode = channelCode ?: ChannelCode.BS,
                 isMobile = isMobile,
@@ -394,9 +391,10 @@ class PipelineBuildService(
         channelCode: ChannelCode,
         checkPermission: Boolean = true,
         isMobile: Boolean = false,
-        startByMessage: String? = null
+        startByMessage: String? = null,
+        buildNo: Int? = null
     ): String {
-
+        logger.info("Manual build start with value [$values][$buildNo]")
         if (checkPermission) {
             pipelinePermissionService.validPipelinePermission(
                 userId = userId,
@@ -455,6 +453,11 @@ class PipelineBuildService(
                     throw ErrorCodeException(defaultMessage = "该流水线不能远程触发",
                         errorCode = ProcessMessageCode.DENY_START_BY_REMOTE)
                 }
+            }
+
+            if (buildNo != null) {
+                pipelineRuntimeService.updateBuildNo(pipelineId, buildNo)
+                logger.info("[$pipelineId] buildNo was changed to [$buildNo]")
             }
 
             val startParams = mutableMapOf<String, Any>()
@@ -543,7 +546,9 @@ class PipelineBuildService(
         try {
             return File(path).name
         } catch (e: Exception) {
-            throw OperationException("仓库参数($paramKey)不合法")
+            throw ErrorCodeException(defaultMessage = "仓库参数($paramKey)不合法",
+                errorCode = CommonMessageCode.ERROR_INVALID_PARAM_,
+                params = arrayOf(paramKey))
         }
     }
 
@@ -601,12 +606,7 @@ class PipelineBuildService(
             startParams[PIPELINE_START_PARENT_BUILD_TASK_ID] = parentTaskId
             // 子流水线的调用不受频率限制
             val startParamsWithType = mutableListOf<BuildParameters>()
-            startParams.forEach { t, u -> startParamsWithType.add(
-                BuildParameters(
-                    t,
-                    u
-                )
-            ) }
+            startParams.forEach { (t, u) -> startParamsWithType.add(BuildParameters(key = t, value = u)) }
 
             val subBuildId = startPipeline(
                 userId = readyToBuildPipelineInfo.lastModifyUser,
@@ -674,12 +674,14 @@ class PipelineBuildService(
             }
             // 子流水线的调用不受频率限制
             val startParamsWithType = mutableListOf<BuildParameters>()
-            startParams.forEach { t, u -> startParamsWithType.add(
-                BuildParameters(
-                    t,
-                    u
+            startParams.forEach { t, u ->
+                startParamsWithType.add(
+                    BuildParameters(
+                        t,
+                        u
+                    )
                 )
-            ) }
+            }
 
             return startPipeline(
                 userId = userId,
@@ -852,12 +854,11 @@ class PipelineBuildService(
                             if (superPipeline != null) {
                                 logger.info("[$pipelineId]|SERVICE_SHUTDOWN|super_build=${superPipeline.buildId}|super_pipeline=${superPipeline.pipelineId}")
                                 serviceShutdown(
-                                    projectId,
-                                    superPipeline.pipelineId,
-                                    superPipeline.buildId,
-                                    channelCode
+                                    projectId = projectId,
+                                    pipelineId = superPipeline.pipelineId,
+                                    buildId = superPipeline.buildId,
+                                    channelCode = channelCode
                                 )
-                                return
                             }
                         }
                     }
@@ -866,13 +867,13 @@ class PipelineBuildService(
 
             try {
                 pipelineRuntimeService.cancelBuild(
-                    projectId,
-                    pipelineId,
-                    buildId,
-                    buildInfo.startUser,
-                    BuildStatus.FAILED
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    buildId = buildId,
+                    userId = buildInfo.startUser,
+                    buildStatus = BuildStatus.FAILED
                 )
-                buildDetailService.updateBuildCancelUser(buildId, buildInfo.startUser)
+                buildDetailService.updateBuildCancelUser(buildId = buildId, cancelUserId = buildInfo.startUser)
                 logger.info("Cancel the pipeline($pipelineId) of instance($buildId) by the user(${buildInfo.startUser})")
             } catch (t: Throwable) {
                 logger.warn("Fail to shutdown the build($buildId) of pipeline($pipelineId)", t)
@@ -917,11 +918,15 @@ class PipelineBuildService(
         channelCode: ChannelCode,
         checkPermission: Boolean
     ): ModelDetail {
-
-        return buildDetailService.get(buildId) ?: throw ErrorCodeException(
+        val newModel = buildDetailService.get(buildId) ?: throw ErrorCodeException(
             statusCode = Response.Status.NOT_FOUND.statusCode,
-        errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS,
-        defaultMessage = "流水线编排不存在")
+            errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS,
+            defaultMessage = "流水线编排不存在"
+        )
+
+        pipelineBuildQualityService.addQualityGateReviewUsers(projectId, pipelineId, buildId, newModel.model)
+
+        return newModel
     }
 
     fun getBuildDetailByBuildNo(
@@ -1498,7 +1503,7 @@ class PipelineBuildService(
                                 LogUtils.addFoldEndLine(
                                     rabbitTemplate = rabbitTemplate,
                                     buildId = buildId,
-                                    tagName = "${e.name}-[$taskId]",
+                                    groupName = "${e.name}-[$taskId]",
                                     tag = taskId,
                                     jobId = containerId,
                                     executeCount = 1
@@ -1514,8 +1519,14 @@ class PipelineBuildService(
             }
 
             try {
-                pipelineRuntimeService.cancelBuild(projectId, pipelineId, buildId, userId, BuildStatus.CANCELED)
-                buildDetailService.updateBuildCancelUser(buildId, userId)
+                pipelineRuntimeService.cancelBuild(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    buildId = buildId,
+                    userId = userId,
+                    buildStatus = BuildStatus.CANCELED
+                )
+                buildDetailService.updateBuildCancelUser(buildId = buildId, cancelUserId = userId)
                 logger.info("Cancel the pipeline($pipelineId) of instance($buildId) by the user($userId)")
             } catch (t: Throwable) {
                 logger.warn("Fail to shutdown the build($buildId) of pipeline($pipelineId)", t)

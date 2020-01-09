@@ -350,7 +350,7 @@
         },
         computed: {
             ...mapGetters([
-                'onlineProjectList'
+                'enableProjectList'
             ]),
             ...mapGetters('turbo', [
                 'getSoftwareInstallList'
@@ -418,7 +418,7 @@
                     ccacheEnabled: item.ccacheEnabled
                 })
             },
-            
+
             // 提交配置
             async configCommit (isReloadSoft) { //  machineId
                 const validate = await this.$validator.validateAll()
@@ -428,9 +428,9 @@
                 this.isLoading = true
                 try {
                     let projectName = ''
-                    this.onlineProjectList.forEach(project => {
-                        if (project.project_code === this.projectId) {
-                            projectName = project.project_name
+                    this.enableProjectList.forEach(project => {
+                        if (project.projectCode === this.projectId) {
+                            projectName = project.projectName
                         }
                     })
                     if (!this.taskParam.bsPipelineName) {

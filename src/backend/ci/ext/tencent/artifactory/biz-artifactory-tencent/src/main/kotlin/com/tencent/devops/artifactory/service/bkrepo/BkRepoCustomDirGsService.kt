@@ -26,13 +26,13 @@
 
 package com.tencent.devops.artifactory.service.bkrepo
 
-import com.tencent.devops.artifactory.client.BkRepoClient
 import com.tencent.devops.artifactory.client.JFrogApiService
 import com.tencent.devops.artifactory.service.JFrogService
 import com.tencent.devops.artifactory.service.CustomDirGsService
 import com.tencent.devops.artifactory.util.JFrogUtil
 import com.tencent.devops.artifactory.util.RepoUtils
 import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.archive.client.BkRepoClient
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import javax.ws.rs.NotFoundException

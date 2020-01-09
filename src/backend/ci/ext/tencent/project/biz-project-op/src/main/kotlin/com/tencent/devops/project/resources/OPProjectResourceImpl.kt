@@ -53,26 +53,97 @@ class OPProjectResourceImpl @Autowired constructor(
     }
 
     override fun setGrayProject(projectGraySetRequest: OpProjectGraySetRequest): Result<Boolean> {
-        return Result(data = opProjectService.setGrayProject(projectGraySetRequest.projectCodeList, projectGraySetRequest.operateFlag))
+        return Result(
+            data = opProjectService.setGrayProject(
+                projectGraySetRequest.projectCodeList,
+                projectGraySetRequest.operateFlag
+            )
+        )
     }
 
-    override fun updateProject(userId: String, accessToken: String, projectInfoRequest: OpProjectUpdateInfoRequest): Result<Int> {
+    override fun updateProject(
+        userId: String,
+        accessToken: String,
+        projectInfoRequest: OpProjectUpdateInfoRequest
+    ): Result<Int> {
         return Result(data = opProjectService.updateProjectFromOp(userId, accessToken, projectInfoRequest))
     }
 
-    override fun getProjectList(projectName: String?, englishName: String?, projectType: Int?, isSecrecy: Boolean?, creator: String?, approver: String?, approvalStatus: Int?, offset: Int, limit: Int, grayFlag: Boolean, request: HttpServletRequest): Result<Map<String, Any?>?> {
+    override fun getProjectList(
+        projectName: String?,
+        englishName: String?,
+        projectType: Int?,
+        isSecrecy: Boolean?,
+        creator: String?,
+        approver: String?,
+        approvalStatus: Int?,
+        offset: Int,
+        limit: Int,
+        grayFlag: Boolean,
+        request: HttpServletRequest
+    ): Result<Map<String, Any?>?> {
+        return opProjectService.getProjectList(
+            projectName,
+            englishName,
+            projectType,
+            isSecrecy,
+            creator,
+            approver,
+            approvalStatus,
+            offset,
+            limit,
+            grayFlag
+        )
+    }
+
+    override fun getProjectCount(
+        projectName: String?,
+        englishName: String?,
+        projectType: Int?,
+        isSecrecy: Boolean?,
+        creator: String?,
+        approver: String?,
+        approvalStatus: Int?,
+        grayFlag: Boolean
+    ): Result<Int> {
+        return opProjectService.getProjectCount(
+            projectName,
+            englishName,
+            projectType,
+            isSecrecy,
+            creator,
+            approver,
+            approvalStatus,
+            grayFlag
+        )
+    }
+
+    override fun getProjectList(
+        projectName: String?,
+        englishName: String?,
+        projectType: Int?,
+        isSecrecy: Boolean?,
+        creator: String?,
+        approver: String?,
+        approvalStatus: Int?,
+        offset: Int,
+        limit: Int,
+        grayFlag: Boolean,
+        repoGrayFlag: Boolean,
+        request: HttpServletRequest
+    ): Result<Map<String, Any?>?> {
         return opProjectService.getProjectList(projectName, englishName, projectType, isSecrecy, creator, approver, approvalStatus, offset, limit, grayFlag)
     }
 
-    override fun getProjectCount(projectName: String?, englishName: String?, projectType: Int?, isSecrecy: Boolean?, creator: String?, approver: String?, approvalStatus: Int?, grayFlag: Boolean): Result<Int> {
-        return opProjectService.getProjectCount(projectName, englishName, projectType, isSecrecy, creator, approver, approvalStatus, grayFlag)
+    override fun setRepoGrayProject(projectGraySetRequest: OpProjectGraySetRequest): Result<Boolean> {
+        return Result(data = opProjectService.setRepoGrayProject(projectGraySetRequest.projectCodeList, projectGraySetRequest.operateFlag))
     }
 
-//    override fun updateProjectV2(userId: String, accessToken: String, projectInfoRequest: OpProjectUpdateInfoRequest): Result<Int> {
-//        return Result(data = opProjectService.updateProjectFromOp(userId, accessToken, projectInfoRequest))
-//    }
-//
-//    override fun setGrayProjectV2(projectGraySetRequest: OpProjectGraySetRequest): Result<Boolean> {
-//        return Result(data = opProjectService.setGrayProject(projectGraySetRequest.projectCodeList, projectGraySetRequest.operateFlag))
-//    }
+    override fun synProject(projectCode: String, isRefresh: Boolean): Result<Boolean> {
+        return opProjectService.synProject(projectCode, isRefresh)
+    }
+
+    override fun synProjectInit(isRefresh: Boolean): Result<List<String>> {
+        return opProjectService.synProjectInit(isRefresh)
+    }
 }

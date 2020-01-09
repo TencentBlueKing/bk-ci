@@ -1,5 +1,6 @@
 package com.tencent.devops.store.api.image
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_PROJECT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.image.enums.ImageAgentTypeEnum
@@ -27,6 +28,9 @@ interface UserImageHistoryDataResource {
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
+        @ApiParam("projectId", required = true)
+        @HeaderParam(AUTH_HEADER_PROJECT_ID)
+        projectId: String,
         @ApiParam("机器类型", required = true)
         @QueryParam("agentType")
         agentType: ImageAgentTypeEnum,

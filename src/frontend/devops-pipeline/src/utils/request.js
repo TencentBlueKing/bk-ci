@@ -37,6 +37,30 @@ function errorHandler (error) {
     return Promise.reject(error)
 }
 
+function isAbsoluteURL (url = '') {
+    return /^https?:\/\//i.test(url)
+}
+
+request.interceptors.request.use(config => {
+    const url = isAbsoluteURL(config.url) ? new window.URL(config.url) : {
+        host: config.baseURL,
+        pathname: config.url
+    }
+    if (/(devops|gw\.open)\.oa\.com(\/ms)?$/i.test(url.host) && !/(\/?ms\/backend|\/?backend)\//i.test(url.pathname)) {
+        const routePid = getCurrentPid()
+        return {
+            ...config,
+            headers: routePid ? {
+                ...(config.headers || {}),
+                'X-DEVOPS-PROJECT-ID': routePid
+            } : config.headers
+        }
+    }
+    return config
+}, function (error) {
+    return Promise.reject(error)
+})
+
 // request.interceptors.response.use(response => {
 //     injectCSRFTokenToHeaders() // 注入csrfToken
 //     const { data: { status, message, code, result } } = response
@@ -71,14 +95,14 @@ request.interceptors.response.use(response => {
     } else if (httpStatus === 503) {
         const errMsg = {
             status: httpStatus,
-            message: '服务正在部署中，请稍候...'
+            message: (window.pipelineVue.$i18n && window.pipelineVue.$i18n.t('err503')) || 'service is in deployment'
         }
         return Promise.reject(errMsg)
     } else if ((typeof status !== 'undefined' && status !== 0) || (typeof result !== 'undefined' && !result)) {
         const errorMsg = { httpStatus, message, code: code || status }
         return Promise.reject(errorMsg)
     } else if (httpStatus === 400) {
-        const errorMsg = { httpStatus, message: '内部服务异常' }
+        const errorMsg = { httpStatus, message: (window.pipelineVue.$i18n && window.pipelineVue.$i18n.t('err400')) || 'service is abnormal' }
         return Promise.reject(errorMsg)
     }
 
@@ -91,6 +115,16 @@ const injectCSRFTokenToHeaders = () => {
         request.defaults.headers.post['X-CSRFToken'] = CSRFToken
     } else {
         console.warn('Can not find backend_csrftoken in document.cookie')
+    }
+}
+
+const getCurrentPid = () => {
+    try {
+        const pathPid = window.pipelineVue && window.pipelineVue.$route && window.pipelineVue.$route.params && window.pipelineVue.$route.params.projectId
+        const lsPid = localStorage.getItem('projectId')
+        return pathPid || lsPid
+    } catch (e) {
+        return undefined
     }
 }
 

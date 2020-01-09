@@ -30,6 +30,8 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.gitci.dao.GitCISettingDao
 import com.tencent.devops.gitci.pojo.GitRepositoryConf
 import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
+import com.tencent.devops.project.api.op.OPProjectResource
+import com.tencent.devops.project.pojo.OpProjectGraySetRequest
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -79,6 +81,13 @@ class RepositoryConfService @Autowired constructor(
             projectResult.data!!.projectCode
         } else {
             gitRepoConf.projectCode
+        }
+
+        // add to gray project
+        try {
+            client.get(OPProjectResource::class).setGrayProject(OpProjectGraySetRequest(1, listOf(projectCode!!)))
+        } catch (e: Throwable) {
+            logger.error("Set project to gray failed ", e)
         }
 
         gitCISettingDao.saveSetting(dslContext, repositoryConf, projectCode!!)

@@ -1,112 +1,205 @@
 <template>
-    <section v-if="container" slot="content" :class="{ &quot;readonly&quot;: !editable }" class="container-property-panel bk-form bk-form-vertical">
-        <form-field :required="true" label="名称" :is-error="errors.has(&quot;name&quot;)" :error-msg="errors.first(&quot;name&quot;)">
-            <vuex-input :disabled="!editable" input-type="text" placeholder="请输入名称" name="name" v-validate.initial="&quot;required&quot;" :value="container.name" :handle-change="handleContainerChange" />
-        </form-field>
+    <bk-sideslider class="sodaci-property-panel" width="640" :is-show.sync="visible" :quick-close="true">
+        <header class="container-panel-header" slot="header">
+            {{ title }}
+            <div v-if="showDebugDockerBtn" :class="!editable ? 'control-bar' : 'debug-btn'">
+                <bk-button theme="warning" @click="startDebug('docker')">{{ $t('editPage.docker.debugConsole') }}</bk-button>
+            </div>
+        </header>
+        <section v-if="container" slot="content" :class="{ &quot;readonly&quot;: !editable }" class="container-property-panel bk-form bk-form-vertical">
+            <form-field :required="true" :label="$t('name')" :is-error="errors.has(&quot;name&quot;)" :error-msg="errors.first(&quot;name&quot;)">
+                <div class="container-resource-name">
+                    <vuex-input :disabled="!editable" input-type="text" :placeholder="$t('nameInputTips')" name="name" v-validate.initial="&quot;required&quot;" :value="container.name" :handle-change="handleContainerChange" />
+                    <atom-checkbox
+                        v-if="isVmContainer(container)"
+                        class="show-build-resource"
+                        :value="container.showBuildResource"
+                        :text="$t('editPage.showAliasName')"
+                        name="showBuildResource"
+                        :handle-change="handleContainerChange"
+                    >
+                    </atom-checkbox>
+                </div>
+            </form-field>
 
-        <form v-if="isVmContainer(container)" v-bkloading="{ isLoading: !apps || !containerModalId }">
-            <form-field label="构建资源类型">
-                <selector
-                    :disabled="!editable"
-                    :handle-change="changeBuildResource"
-                    :list="buildResourceTypeList"
-                    :value="buildResourceType"
-                    :clearable="false"
-                    setting-key="type"
-                    name="buildType"
-                >
-                    <template slot="props">
-                        <div class="bk-selector-create-item" @click.stop.prevent="addThridSlave">
-                            <i class="bk-icon icon-plus-circle"></i>
-                            <i class="text">新增第三方构建机</i>
-                        </div>
-                    </template>
-                </selector>
-                <span class="bk-form-help" v-if="isPublicResourceType">由蓝盾官方提供的构建集群，你无需担心资源不足、安全等问题。<a target="_blank" :href="`${DOCS_URL_PREFIX}/所有服务/流水线/用户指南/publicBuild.html`">查看更多</a></span>
-            </form-field>
-            <form-field label="指定构建资源" v-if="!isPublicResourceType && containerModalId" :required="true" :is-error="errors.has(&quot;buildResource&quot;)" :error-msg="errors.first(&quot;buildResource&quot;)" :desc="buildResourceType === &quot;THIRD_PARTY_AGENT_ENV&quot; ? &quot;若环境下包含多个节点，则优先分配上次使用过的节点；若第一次使用，则随机分配&quot; : &quot;&quot;">
-                <container-env-node :disabled="!editable"
-                    :os="container.baseOS"
-                    :container-id="containerModalId"
-                    :build-resource-type="buildResourceType"
-                    :toggle-visible="toggleVisible"
-                    :handle-change="changeBuildResource"
-                    :value="buildResource"
-                    :has-error="errors.has(&quot;buildResource&quot;)"
-                    v-validate.initial="&quot;required&quot;"
-                    name="buildResource"
-                />
-            </form-field>
-            <form-field label="指定工作空间" v-if="isThirdParty">
-                <vuex-input :disabled="!editable" name="workspace" :value="container.dispatchType.workspace" :handle-change="changeBuildResource" placeholder="不填默认为 [Agent安装目录]/workspace/[流水线ID]/" />
-            </form-field>
-            <form-field class="container-app-field" v-if="showDependencies" label="依赖编译环境">
-                <container-app-selector :disabled="!editable" class="app-selector-item" v-if="!hasBuildEnv" app="" version="" :handle-change="handleContainerAppChange" :apps="apps"></container-app-selector>
-                <container-app-selector :disabled="!editable" v-else class="app-selector-item" v-for="(version, app) in container.buildEnv"
-                    :key="app"
-                    :app="app"
-                    :version="version"
-                    :handle-change="handleContainerAppChange"
-                    :envs="container.buildEnv"
-                    :apps="apps"
-                    :remove-container-app="removeContainerApp"
-                    :add-container-app="containerAppList.length > 0 ? addContainerApp : null"
-                ></container-app-selector>
-            </form-field>
-            <div class="build-path-tips" v-if="hasBuildEnv">
-                <div class="tips-icon"><i class="bk-icon icon-info-circle-shape"></i></div>
-                <div class="tips-content">
-                    <p class="tips-title">在选择了上述依赖环境后，我们将执行如下操作：</p>
-                    <template v-for="(value, keys) in container.buildEnv">
-                        <div class="tips-list" v-if="value" :key="keys">
-                            <p class="tips-item">{{ appBinPath(value, keys) }}</p>
-                            <p class="tips-item"
-                                v-for="(env, envIndex) in appEnvs[keys]" :key="envIndex">{{ appEnvPath(value, keys, env) }}</p>
-                        </div>
-                    </template>
+            <form v-if="isVmContainer(container)" v-bkloading="{ isLoading: !apps || !containerModalId || isLoadingImage }">
+                <form-field :label="$t('editPage.resourceType')">
+                    <selector
+                        :disabled="!editable"
+                        :handle-change="changeResourceType"
+                        :list="buildResourceTypeList"
+                        :value="buildResourceType"
+                        :clearable="false"
+                        setting-key="type"
+                        name="buildType"
+                    >
+                        <template>
+                            <div class="bk-selector-create-item cursor-pointer" @click.stop.prevent="addThridSlave">
+                                <i class="bk-icon icon-plus-circle"></i>
+                                <span class="text">{{ $t('editPage.addThirdSlave') }}</span>
+                            </div>
+                            <div v-if="container.baseOS === 'LINUX'" class="bk-selector-create-item cursor-pointer" @click.stop.prevent="addDockerImage">
+                                <i class="bk-icon icon-plus-circle"></i>
+                                <span class="text">{{ $t('editPage.addImage') }}</span>
+                            </div>
+                        </template>
+                    </selector>
+                    <span class="bk-form-help" v-if="isPublicResourceType">{{ $t('editPage.publicResTips') }}</span>
+                </form-field>
+
+                <form-field :label="$t('editPage.image')" v-if="['DOCKER', 'IDC', 'PUBLIC_DEVCLOUD'].includes(buildResourceType) && !isLoadingImage" :required="true" :is-error="errors.has(&quot;buildImageVersion&quot;) || errors.has(&quot;buildResource&quot;)" :error-msg="$t('editPage.imageErrMgs')">
+                    <enum-input
+                        name="imageType"
+                        :list="imageTypeList"
+                        :disabled="!editable"
+                        :handle-change="changeBuildResource"
+                        :value="buildImageType">
+                    </enum-input>
+
+                    <section v-if="buildImageType === 'BKSTORE'" class="bk-image">
+                        <section class="image-name">
+                            <span :class="[{ disable: !editable }, { 'not-recommend': imageRecommend === false }, 'image-named']" :title="imageRecommend === false ? $t('editPage.notRecomendImage') : buildImageName">{{buildImageName || $t('editPage.chooseImage')}}</span>
+                            <bk-button theme="primary" @click.stop="chooseImage" :disabled="!editable">{{buildImageCode ? $t('editPage.reElection') : $t('editPage.select')}}</bk-button>
+                        </section>
+                        <bk-select @change="changeImageVersion" :value="buildImageVersion" searchable class="image-tag" :loading="isVersionLoading" :disabled="!editable" v-validate.initial="&quot;required&quot;" name="buildImageVersion">
+                            <bk-option v-for="option in versionList"
+                                :key="option.versionValue"
+                                :id="option.versionValue"
+                                :name="option.versionName"
+                            >
+                            </bk-option>
+                        </bk-select>
+                    </section>
+
+                    <bk-input v-else @change="changeThirdImage" :value="buildResource" class="bk-image" :placeholder="$t('editPage.thirdImageHolder')" v-validate.initial="&quot;required&quot;" name="buildResource"></bk-input>
+                </form-field>
+
+                <form-field :label="$t('editPage.assignResource')" v-if="buildResourceType !== 'MACOS' && !isPublicResourceType && containerModalId && !['DOCKER', 'IDC', 'PUBLIC_DEVCLOUD'].includes(buildResourceType)" :required="true" :is-error="errors.has(&quot;buildResource&quot;)" :error-msg="errors.first(&quot;buildResource&quot;)" :desc="buildResourceType === &quot;THIRD_PARTY_AGENT_ENV&quot; ? this.$t('editPage.thirdSlaveTips') : &quot;&quot;">
+                    <container-env-node :disabled="!editable"
+                        :os="container.baseOS"
+                        :container-id="containerModalId"
+                        :build-resource-type="buildResourceType"
+                        :build-image-type="buildImageType"
+                        :agent-type="buildAgentType"
+                        :toggle-visible="toggleVisible"
+                        :handle-change="changeBuildResource"
+                        :add-thrid-slave="addThridSlave"
+                        :value="buildResource"
+                        :has-error="errors.has(&quot;buildResource&quot;)"
+                        v-validate.initial="&quot;required&quot;"
+                        name="buildResource"
+                    />
+                </form-field>
+
+                <template v-if="buildResourceType === 'MACOS'">
+                    <form-field :label="$t('editPage.macSystemVersion')" :required="true" :is-error="errors.has('systemVersion')" :error-msg="errors.first(`systemVersion`)">
+                        <bk-select :value="systemVersion" searchable :loading="isLoadingMac" name="systemVersion" v-validate.initial="'required'">
+                            <bk-option v-for="item in systemVersionList"
+                                :key="item"
+                                :id="item"
+                                :name="item"
+                                @click.native="chooseMacSystem(item)">
+                            </bk-option>
+                        </bk-select>
+                    </form-field>
+                    <form-field :label="$t('editPage.xcodeVersion')" :required="true" :is-error="errors.has('xcodeVersion')" :error-msg="errors.first(`xcodeVersion`)">
+                        <bk-select :value="xcodeVersion" searchable :loading="isLoadingMac" name="xcodeVersion" v-validate.initial="'required'">
+                            <bk-option v-for="item in xcodeVersionList"
+                                :key="item"
+                                :id="item"
+                                :name="item"
+                                @click.native="chooseXcode(item)">
+                            </bk-option>
+                        </bk-select>
+                    </form-field>
+                </template>
+
+                <form-field :label="$t('editPage.imageTicket')" v-if="(buildResourceType === 'DOCKER') && buildImageType === 'THIRD'">
+                    <request-selector v-bind="imageCredentialOption" :disabled="!editable" name="credentialId" :value="buildImageCreId" :handle-change="changeBuildResource"></request-selector>
+                </form-field>
+
+                <form-field :label="$t('editPage.workspace')" v-if="isThirdParty">
+                    <vuex-input :disabled="!editable" name="workspace" :value="container.dispatchType.workspace" :handle-change="changeBuildResource" :placeholder="$t('editPage.workspaceTips')" />
+                </form-field>
+                <form-field class="container-app-field" v-if="showDependencies" :label="$t('editPage.envDependency')">
+                    <container-app-selector :disabled="!editable" class="app-selector-item" v-if="!hasBuildEnv" app="" version=""
+                        :handle-change="handleContainerAppChange"
+                        :apps="apps"
+                        :remove-container-app="removeContainerApp"
+                        :add-container-app="containerAppList.length > 0 ? addContainerApp : null"
+                    ></container-app-selector>
+                    <container-app-selector :disabled="!editable" v-else class="app-selector-item" v-for="(version, app) in container.buildEnv"
+                        :key="app"
+                        :app="app"
+                        :version="version"
+                        :handle-change="handleContainerAppChange"
+                        :envs="container.buildEnv"
+                        :apps="apps"
+                        :remove-container-app="removeContainerApp"
+                        :add-container-app="containerAppList.length > 0 ? addContainerApp : null"
+                    ></container-app-selector>
+                </form-field>
+
+                <div class="build-path-tips" v-if="hasBuildEnv">
+                    <div class="tips-icon"><i class="bk-icon icon-info-circle-shape"></i></div>
+                    <div class="tips-content">
+                        <p class="tips-title">{{ $t('editPage.envDependencyTips') }}：</p>
+                        <template v-for="(value, keys) in container.buildEnv">
+                            <div class="tips-list" v-if="value" :key="keys">
+                                <p class="tips-item">{{ appBinPath(value, keys) }}</p>
+                                <p class="tips-item"
+                                    v-for="(env, envIndex) in appEnvs[keys]" :key="envIndex">{{ appEnvPath(value, keys, env) }}</p>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            </form>
+
+            <section v-if="isTriggerContainer(container)">
+                <version-config :disabled="!editable" :params="container.params" :build-no="container.buildNo" :set-parent-validate="setContainerValidate" :update-container-params="handleContainerChange"></version-config>
+                <build-params key="params" :disabled="!editable" :params="container.params" :addition-params="container.templateParams" setting-key="params" :title="$t('template.pipelineVar')" :build-no="container.buildNo" :set-parent-validate="setContainerValidate" :update-container-params="handleContainerChange"></build-params>
+                <build-params v-if="routeName === 'templateEdit'" key="templateParams" :disabled="!editable" :params="container.templateParams" :addition-params="container.params" setting-key="templateParams" :title="$t('template.templateConst')" :set-parent-validate="setContainerValidate" :update-container-params="handleContainerChange"></build-params>
+            </section>
+
+            <div>
+                <div class="job-option">
+                    <job-option
+                        v-if="!isTriggerContainer(container)"
+                        :job-option="container.jobControlOption"
+                        :update-container-params="handleContainerChange"
+                        :set-parent-validate="setContainerValidate"
+                        @setKeyValueValidate="setContainerValidate"
+                        :disabled="!editable"
+                    >
+                    </job-option>
+                </div>
+                <div class="job-mutual">
+                    <job-mutual
+                        v-if="!isTriggerContainer(container)"
+                        :mutex-group="container.mutexGroup"
+                        :update-container-params="handleContainerChange"
+                        :set-parent-validate="setContainerValidate"
+                        :disabled="!editable"
+                    >
+                    </job-mutual>
                 </div>
             </div>
-        </form>
 
-        <section v-if="isTriggerContainer(container)">
-            <version-config :disabled="!editable" :params="container.params" :build-no="container.buildNo" :set-parent-validate="setContainerValidate" :update-container-params="handleContainerChange"></version-config>
-            <build-params key="params" :disabled="!editable" :params="container.params" :addition-params="container.templateParams" setting-key="params" title="流水线变量" :build-no="container.buildNo" :set-parent-validate="setContainerValidate" :update-container-params="handleContainerChange"></build-params>
-            <build-params v-if="routeName === 'templateEdit'" key="templateParams" :disabled="!editable" :params="container.templateParams" :addition-params="container.params" setting-key="templateParams" title="模板常量" :set-parent-validate="setContainerValidate" :update-container-params="handleContainerChange"></build-params>
+            <image-selector :is-show.sync="showImageSelector"
+                v-if="['DOCKER', 'IDC', 'PUBLIC_DEVCLOUD'].includes(buildResourceType) && !isLoadingImage"
+                :code="buildImageCode"
+                :build-resource-type="buildResourceType"
+                @choose="choose"
+            ></image-selector>
         </section>
-
-        <div>
-            <div class="job-option">
-                <job-option
-                    v-if="!isTriggerContainer(container)"
-                    :job-option="container.jobControlOption"
-                    :update-container-params="handleContainerChange"
-                    :set-parent-validate="setContainerValidate"
-                    @setKeyValueValidate="setContainerValidate"
-                    :disabled="!editable"
-                >
-                </job-option>
-            </div>
-            <div class="job-mutual">
-                <job-mutual
-                    v-if="!isTriggerContainer(container)"
-                    :mutex-group="container.mutexGroup"
-                    :update-container-params="handleContainerChange"
-                    :set-parent-validate="setContainerValidate"
-                    :disabled="!editable"
-                >
-                </job-mutual>
-            </div>
-        </div>
-
-        <div v-if="!isTriggerContainer(container) && editable" class="control-bar">
-            <bk-button theme="danger" @click="handleDelete">删除</bk-button>
-        </div>
-    </section>
+    </bk-sideslider>
 </template>
 
 <script>
     import { mapGetters, mapActions, mapState } from 'vuex'
     import Vue from 'vue'
+    import RequestSelector from '@/components/atomFormField/RequestSelector'
+    import EnumInput from '@/components/atomFormField/EnumInput'
     import VuexInput from '@/components/atomFormField/VuexInput'
     import Selector from '@/components/atomFormField/Selector'
     import FormField from '@/components/AtomPropertyPanel/FormField'
@@ -116,10 +209,14 @@
     import VersionConfig from './VersionConfig'
     import JobOption from './JobOption'
     import JobMutual from './JobMutual'
+    import AtomCheckbox from '@/components/atomFormField/AtomCheckbox'
+    import ImageSelector from '@/components/AtomSelector/imageSelector'
 
     export default {
         name: 'container-property-panel',
         components: {
+            RequestSelector,
+            EnumInput,
             VuexInput,
             FormField,
             ContainerAppSelector,
@@ -128,20 +225,32 @@
             ContainerEnvNode,
             JobOption,
             JobMutual,
-            Selector
+            Selector,
+            AtomCheckbox,
+            ImageSelector
         },
         props: {
             containerIndex: Number,
             stageIndex: Number,
             stages: Array,
-            editable: Boolean
+            editable: Boolean,
+            title: String
         },
         data () {
             return {
-                DOCS_URL_PREFIX
+                showImageSelector: false,
+                isVersionLoading: false,
+                isLoadingImage: false,
+                imageRecommend: true,
+                isLoadingMac: false,
+                xcodeVersionList: [],
+                systemVersionList: []
             }
         },
         computed: {
+            ...mapState('atom', [
+                'execDetail'
+            ]),
             ...mapGetters('atom', [
                 'getAppEnvs',
                 'getContainerApps',
@@ -152,15 +261,33 @@
                 'isTriggerContainer',
                 'isNormalContainer',
                 'getBuildResourceTypeList',
-                'execDetail',
                 'getContainerModalId',
                 'isThirdPartyContainer',
                 'isPublicResource',
                 'isDockerBuildResource'
             ]),
+            ...mapState('atom', [
+                'isPropertyPanelVisible'
+            ]),
             ...mapState('soda', [
                 'tstackWhiteList'
             ]),
+            visible: {
+                get () {
+                    return this.isPropertyPanelVisible
+                },
+                set (value) {
+                    this.togglePropertyPanel({
+                        isShow: value
+                    })
+                }
+            },
+            imageTypeList () {
+                return [
+                    { label: this.$t('editPage.fromList'), value: 'BKSTORE' },
+                    { label: this.$t('editPage.fromHand'), value: 'THIRD', hidden: this.buildResourceType === 'PUBLIC_DEVCLOUD' }
+                ]
+            },
             appEnvs () {
                 return this.getAppEnvs(this.container.baseOS)
             },
@@ -211,8 +338,32 @@
                     return ''
                 }
             },
+            xcodeVersion () {
+                return this.container.dispatchType.xcodeVersion
+            },
+            systemVersion () {
+                return this.container.dispatchType.systemVersion
+            },
             buildResource () {
                 return this.container.dispatchType.value
+            },
+            buildImageType () {
+                return this.container.dispatchType.imageType
+            },
+            buildImageCode () {
+                return this.container.dispatchType && this.container.dispatchType.imageCode
+            },
+            buildImageVersion () {
+                return this.container.dispatchType.imageVersion
+            },
+            buildImageName () {
+                return this.container.dispatchType && this.container.dispatchType.imageName
+            },
+            buildImageCreId () {
+                return this.container.dispatchType.credentialId || ''
+            },
+            buildAgentType () {
+                return this.container.dispatchType.agentType || 'ID'
             },
             apps () {
                 const { container: { baseOS }, getContainerApps } = this
@@ -231,8 +382,18 @@
                 const selectedApps = Object.keys(buildEnv)
                 return Object.keys(apps).filter(app => !selectedApps.includes(app))
             },
-            enableExt () {
-                return this.$store.state.curProject.enableExternal || false
+            showDebugDockerBtn () {
+                return this.routeName !== 'templateEdit' && this.container.baseOS === 'LINUX' && this.isDocker && this.buildResource && (this.routeName === 'pipelinesEdit' || this.container.status === 'RUNNING' || (this.routeName === 'pipelinesDetail' && this.execDetail && this.execDetail.buildNum === this.execDetail.latestBuildNum && this.execDetail.curVersion === this.execDetail.latestVersion))
+            },
+            imageCredentialOption () {
+                return {
+                    paramId: 'credentialId',
+                    paramName: 'credentialId',
+                    url: `/ticket/api/user/credentials/${this.projectId}/hasPermissionList?permission=USE&page=1&pageSize=1000&credentialTypes=USERNAME_PASSWORD`,
+                    hasAddItem: true,
+                    itemText: this.$t('editPage.addCredentials'),
+                    itemTargetUrl: `/ticket/${this.projectId}/createCredential/USERNAME_PASSWORD/true`
+                }
             }
         },
         watch: {
@@ -259,13 +420,147 @@
             if (!this.isTriggerContainer(container) && this.container.mutexGroup === undefined) {
                 Vue.set(container, 'mutexGroup', {})
             }
+            if (this.buildResourceType === 'THIRD_PARTY_AGENT_ID' && !this.container.dispatchType.agentType) {
+                this.handleContainerChange('dispatchType', Object.assign({
+                    ...this.container.dispatchType,
+                    agentType: 'ID'
+                }))
+            }
+            if (['DOCKER', 'IDC', 'PUBLIC_DEVCLOUD'].includes(this.buildResourceType) && !this.buildImageCode && this.buildImageType !== 'THIRD') {
+                if (/\$\{/.test(this.buildResource)) {
+                    this.handleContainerChange('dispatchType', Object.assign({
+                        ...this.container.dispatchType,
+                        imageType: 'THIRD'
+                    }))
+                } else {
+                    this.isLoadingImage = true
+                    this.requestImageHistory({ agentType: this.buildResourceType, value: this.buildResource }).then((res) => {
+                        const data = res.data || {}
+                        this.handleContainerChange('dispatchType', Object.assign({
+                            ...this.container.dispatchType,
+                            imageType: 'BKSTORE'
+                        }))
+                        if (data.code) this.choose(data)
+                    }).catch((err) => this.$showTips({ theme: 'error', message: err.message || err })).finally(() => (this.isLoadingImage = false))
+                }
+            }
+            if (['DOCKER', 'IDC', 'PUBLIC_DEVCLOUD'].includes(this.buildResourceType) && this.buildImageCode) {
+                this.isLoadingImage = true
+                this.requestImageDetail({ code: this.buildImageCode }).then((res) => {
+                    const data = res.data || {}
+                    this.imageRecommend = data.recommendFlag
+                }).catch((err) => this.$showTips({ theme: 'error', message: err.message || err })).finally(() => (this.isLoadingImage = false))
+            }
+            if (this.container.dispatchType && this.container.dispatchType.imageCode) {
+                this.getVersionList(this.container.dispatchType.imageCode)
+            }
+            this.getMacOsData()
         },
         methods: {
             ...mapActions('atom', [
                 'updateContainer',
-                'deleteContainer',
-                'deleteStage'
+                'togglePropertyPanel',
+                'getMacSysVersion',
+                'getMacXcodeVersion'
             ]),
+            ...mapActions('soda', [
+                'startDebugDocker',
+                'getContainerInfoByBuildId',
+                'startDebugTstack'
+            ]),
+            ...mapActions('pipelines', [
+                'requestImageVersionlist',
+                'requestImageHistory',
+                'requestImageDetail'
+            ]),
+
+            changeResourceType (name, val) {
+                this.imageRecommend = true
+                const defaultAgentType = (name === 'buildType' && ['THIRD_PARTY_AGENT_ID', 'THIRD_PARTY_AGENT_ENV'].includes(val) && !this.agentType) ? { agentType: 'ID' } : {}
+                this.handleContainerChange('dispatchType', Object.assign({
+                    ...this.container.dispatchType,
+                    ...defaultAgentType,
+                    imageVersion: '',
+                    value: '',
+                    imageCode: '',
+                    imageName: '',
+                    [name]: val
+                }))
+            },
+
+            changeThirdImage (val) {
+                this.handleContainerChange('dispatchType', Object.assign({
+                    ...this.container.dispatchType,
+                    value: val
+                }))
+            },
+
+            changeImageVersion (value) {
+                this.handleContainerChange('dispatchType', Object.assign({
+                    ...this.container.dispatchType,
+                    imageVersion: value,
+                    value: this.buildImageCode
+                }))
+            },
+
+            choose (card) {
+                this.imageRecommend = card.recommendFlag
+                this.handleContainerChange('dispatchType', Object.assign({
+                    ...this.container.dispatchType,
+                    imageCode: card.code,
+                    imageName: card.name
+                }))
+                return this.getVersionList(card.code).then(() => {
+                    const firstVersion = this.versionList[0] || {}
+                    this.handleContainerChange('dispatchType', Object.assign({
+                        ...this.container.dispatchType,
+                        imageVersion: firstVersion.versionValue,
+                        value: card.code
+                    }))
+                })
+            },
+
+            getVersionList (imageCode) {
+                this.isVersionLoading = true
+                const data = {
+                    projectCode: this.projectId,
+                    imageCode
+                }
+                return this.requestImageVersionlist(data).then((res) => {
+                    this.versionList = res.data || []
+                }).catch((err) => this.$showTips({ theme: 'error', message: err.message || err })).finally(() => {
+                    this.isVersionLoading = false
+                })
+            },
+
+            chooseImage (event) {
+                event.preventDefault()
+                this.showImageSelector = !this.showImageSelector
+            },
+
+            getMacOsData () {
+                this.isLoadingMac = true
+                Promise.all([this.getMacSysVersion(), this.getMacXcodeVersion()]).then(([sysVersion, xcodeVersion]) => {
+                    this.xcodeVersionList = xcodeVersion.data || []
+                    this.systemVersionList = sysVersion.data || []
+                }).catch((err) => {
+                    this.$bkMessage({ message: (err.message || err), theme: 'error' })
+                }).finally(() => (this.isLoadingMac = false))
+            },
+            chooseMacSystem (item) {
+                this.handleContainerChange('dispatchType', Object.assign({
+                    ...this.container.dispatchType,
+                    systemVersion: item,
+                    value: `${this.systemVersion}:${this.xcodeVersion}`
+                }))
+            },
+            chooseXcode (item) {
+                this.handleContainerChange('dispatchType', Object.assign({
+                    ...this.container.dispatchType,
+                    xcodeVersion: item,
+                    value: `${this.systemVersion}:${this.xcodeVersion}`
+                }))
+            },
             setContainerValidate (addErrors, removeErrors) {
                 const { errors } = this
 
@@ -285,23 +580,9 @@
                 const isError = !!errors.items.length
                 this.handleContainerChange('isError', isError)
             },
-            handleDelete () {
-                const { containerIndex, containers, stageIndex, stages } = this
 
-                if (containers.length === 1) {
-                    this.deleteStage({
-                        stageIndex,
-                        stages
-                    })
-                } else {
-                    this.deleteContainer({
-                        containerIndex,
-                        containers
-                    })
-                }
-            },
             changeBuildResource (name, value) {
-                const emptyValueObj = name === 'buildType' ? { value: '' } : {}
+                const emptyValueObj = (name === 'imageType' || name === 'agentType') ? { value: '' } : {}
                 this.handleContainerChange('dispatchType', Object.assign({
                     ...this.container.dispatchType,
                     [name]: value
@@ -341,6 +622,72 @@
                     ...buildEnv
                 })
             },
+            async startDebug (type) {
+                const vmSeqId = this.getRealSeqId()
+                let url = ''
+                const tab = window.open('about:blank')
+                try {
+                    if (type === 'docker') {
+                        // docker 分根据buildId获取容器信息和新启动一个容器
+                        if (this.routeName === 'pipelinesDetail' && this.container.status === 'RUNNING') {
+                            const res = await this.getContainerInfoByBuildId({
+                                projectId: this.projectId,
+                                pipelineId: this.pipelineId,
+                                buildId: this.buildId,
+                                vmSeqId
+                            })
+                            if (res.containerId && res.address) {
+                                url = `${WEB_URL_PIRFIX}/pipeline/${this.projectId}/dockerConsole/?pipelineId=${this.pipelineId}&containerId=${res.containerId}&targetIp=${res.address}`
+                            }
+                        } else {
+                            const res = await this.startDebugDocker({
+                                projectId: this.projectId,
+                                pipelineId: this.pipelineId,
+                                vmSeqId,
+                                imageCode: this.buildImageCode,
+                                imageVersion: this.buildImageVersion,
+                                imageName: this.buildResource,
+                                buildEnv: this.container.buildEnv,
+                                imageType: this.buildImageType,
+                                credentialId: this.buildImageCreId
+                            })
+                            if (res === true) {
+                                url = `${WEB_URL_PIRFIX}/pipeline/${this.projectId}/dockerConsole/?pipelineId=${this.pipelineId}&vmSeqId=${vmSeqId}`
+                            }
+                        }
+                    }
+                    tab.location = url
+                } catch (err) {
+                    tab.close()
+                    if (err.code === 403) {
+                        this.$showAskPermissionDialog({
+                            noPermissionList: [{
+                                resource: this.$t('pipeline'),
+                                option: this.$t('edit')
+                            }],
+                            applyPermissionUrl: `${PERM_URL_PIRFIX}/backend/api/perm/apply/subsystem/?client_id=pipeline&project_code=${this.projectId}&service_code=pipeline&role_manager=pipeline:${this.pipelineId}`
+                        })
+                    } else {
+                        this.$showTips({
+                            theme: 'error',
+                            message: err.message || err
+                        })
+                    }
+                }
+            },
+            getRealSeqId () {
+                let i = 0
+                let seqId = 0
+                this.stages && this.stages.map((stage, sIndex) => {
+                    stage.containers.map((container, cIndex) => {
+                        if (sIndex === this.stageIndex && cIndex === this.containerIndex) {
+                            seqId = i
+                        }
+                        i++
+                    })
+                })
+                return seqId
+            },
             appBinPath (value, key) {
                 const { container: { baseOS }, apps } = this
                 const app = apps[key]
@@ -368,11 +715,65 @@
 
 <style lang="scss">
     @import '../AtomPropertyPanel/propertyPanel';
+    .container-panel-header {
+        display: flex;
+        margin-right: 20px;
+        justify-content: space-between;
+    }
     .container-property-panel {
         font-size: 14px;
+        .bk-image {
+            display: flex;
+            align-items: center;
+            margin-top: 15px;
+            .image-name {
+                width: 44%;
+                display: flex;
+                align-items: center;
+                .not-recommend {
+                    text-decoration: line-through;
+                }
+                .image-named {
+                    border: 1px solid #c4c6cc;
+                    flex: 1;
+                    height: 32px;
+                    line-height: 32px;
+                    font-size: 12px;
+                    color: $fontWeightColor;
+                    line-height: 32px;
+                    padding-left: 10px;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
+                    &.disable {
+                        color: #c4c6cc;
+                        cursor: not-allowed;
+                    }
+                }
+            }
+            .image-tag {
+                width: 44%;
+                margin-left: 10px;
+            }
+        }
+        .container-resource-name {
+            display: flex;
+            align-items: center;
+            > input {
+                flex: 1;
+            }
+            .show-build-resource {
+                margin-left: 10px;
+            }
+        }
         .control-bar {
             position: absolute;
-            right: 12px;
+            right: 34px;
+            top: 12px;
+        }
+        .debug-btn {
+            position: absolute;
+            right: 34px;
             top: 12px;
         }
         .accordion-checkbox {

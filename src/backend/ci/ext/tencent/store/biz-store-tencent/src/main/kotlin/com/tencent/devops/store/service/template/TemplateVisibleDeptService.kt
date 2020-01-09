@@ -27,6 +27,7 @@
 package com.tencent.devops.store.service.template
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.store.pojo.common.DeptInfo
 
 /**
@@ -40,7 +41,13 @@ interface TemplateVisibleDeptService {
      */
     fun addVisibleDept(userId: String, templateCode: String, deptInfos: List<DeptInfo>): Result<Boolean>
 
-    fun validateUserTemplateAtomVisibleDept(userId: String, templateCode: String, projectCode: String?): Result<Boolean>
-
+    /**
+     * 校验模板和插件的可见范围
+     */
     fun validateTemplateVisibleDept(templateCode: String, deptInfos: List<DeptInfo>?): Result<Boolean>
+
+    /**
+     * 校验模板和插件的可见范围
+     */
+    fun validateTemplateVisibleDept(templateModel: Model, deptInfos: List<DeptInfo>?): Result<Boolean>
 }

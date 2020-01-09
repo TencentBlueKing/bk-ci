@@ -30,6 +30,8 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.ParamBlankException
+import com.tencent.devops.common.api.pojo.ErrorCode
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.DHUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
@@ -42,9 +44,7 @@ import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.IAtomTask
 import com.tencent.devops.process.engine.atom.defaultFailAtomResponse
 import com.tencent.devops.process.engine.atom.defaultSuccessAtomResponse
-import com.tencent.devops.process.pojo.AtomErrorCode
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
-import com.tencent.devops.process.pojo.ErrorType
 import com.tencent.devops.ticket.api.ServiceCredentialResource
 import com.tencent.devops.ticket.pojo.enums.CredentialType
 import okhttp3.MediaType
@@ -84,7 +84,7 @@ class TclsAddVersionTaskAtom @Autowired constructor(
                 return AtomResponse(
                     buildStatus = BuildStatus.FAILED,
                     errorType = ErrorType.USER,
-                    errorCode = AtomErrorCode.USER_INPUT_INVAILD,
+                    errorCode = ErrorCode.USER_INPUT_INVAILD,
                     errorMsg = "TCLS serviceId is not init"
                 )
             }
@@ -95,7 +95,7 @@ class TclsAddVersionTaskAtom @Autowired constructor(
                 return AtomResponse(
                     buildStatus = BuildStatus.FAILED,
                     errorType = ErrorType.USER,
-                    errorCode = AtomErrorCode.USER_INPUT_INVAILD,
+                    errorCode = ErrorCode.USER_INPUT_INVAILD,
                     errorMsg = "TCLS appId is not init"
                 )
             }
@@ -107,7 +107,7 @@ class TclsAddVersionTaskAtom @Autowired constructor(
             return AtomResponse(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.USER,
-                errorCode = AtomErrorCode.USER_INPUT_INVAILD,
+                errorCode = ErrorCode.USER_INPUT_INVAILD,
                 errorMsg = "ticketId is not init"
             )
         }

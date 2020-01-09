@@ -30,12 +30,16 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.auth.api.pojo.BKAuthProjectRolesResources
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroupAndUserList
 import com.tencent.devops.common.auth.api.pojo.BkAuthProjectCodeAndId
+import com.tencent.devops.common.auth.api.pojo.BkAuthProjectInfoResources
 import com.tencent.devops.common.auth.api.pojo.BkAuthResponse
 import com.tencent.devops.common.auth.code.AuthServiceCode
+import okhttp3.MediaType
 import okhttp3.Request
+import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
@@ -117,12 +121,19 @@ class BSAuthProjectApi @Autowired constructor(
         userId: String,
         supplier: (() -> List<String>)?
     ): List<String> {
+        val startEpoch = System.currentTimeMillis()
         val accessToken = bsAuthTokenApi.getAccessToken(serviceCode)
+        val tokenEscape = System.currentTimeMillis() - startEpoch
         val url = "${bkAuthProperties.url}/projects?access_token=$accessToken&user_id=$userId"
         val request = Request.Builder().url(url).get().build()
 
         OkhttpUtils.doHttp(request).use { response ->
             val responseContent = response.body()!!.string()
+            val escape = System.currentTimeMillis() - startEpoch
+            if (escape > 1000) {
+                // if > 1 second, print the response
+                logger.warn("[$userId|$serviceCode|$tokenEscape] It took ${escape}ms to get the project list with response($responseContent)")
+            }
             if (!response.isSuccessful) {
                 logger.error("Fail to get user projects. $responseContent")
                 throw RemoteServiceException("Fail to get user projects")
@@ -184,6 +195,82 @@ class BSAuthProjectApi @Autowired constructor(
                 projectAvailableList[it.projectCode] = projectInfo.projectName
             }
             return projectAvailableList
+        }
+    }
+
+    override fun createProjectUser(
+        user: String,
+        serviceCode: AuthServiceCode,
+        projectCode: String,
+        role: String
+    ): Boolean {
+        var result = false
+        val accessToken = bsAuthTokenApi.getAccessToken(serviceCode)
+        val url = "${bkAuthProperties.url}/projects/$projectCode/roles/$role/users?access_token=$accessToken"
+        val bodyJson = mutableMapOf<String, String>()
+        bodyJson.put("user_type", "rtx")
+        bodyJson.put("user_id", user)
+        val content = objectMapper.writeValueAsString(bodyJson)
+        logger.info("createProjectUser: url[$url], body:[$content]")
+        val mediaType = MediaType.parse("application/json; charset=utf-8")
+        val body = RequestBody.create(mediaType, content)
+        val request = Request.Builder().url(url).post(body).build()
+
+        OkhttpUtils.doHttp(request).use { response ->
+            val responseContent = response.body()!!.string()
+            if (!response.isSuccessful) {
+                logger.error("create project user fail: user[$user], projectCode[$projectCode]")
+                throw RemoteServiceException("create project user fail: user[$user], projectCode[$projectCode]")
+            }
+            val responseObject = objectMapper.readValue<BkAuthResponse<Any>>(responseContent)
+            if (responseObject.code != 0) {
+                logger.error("create project user fail: $responseObject")
+                throw RemoteServiceException("create project user fail: $responseObject")
+            }
+            result = true
+        }
+        return result
+    }
+
+    override fun getProjectRoles(
+        serviceCode: AuthServiceCode,
+        projectCode: String,
+        projectId: String
+    ): List<BKAuthProjectRolesResources> {
+        val accessToken = bsAuthTokenApi.getAccessToken(serviceCode)
+        val url = "${bkAuthProperties.url}/projects/$projectCode/roles?access_token=$accessToken"
+        logger.info("getProjectRoles: url:$url")
+        val request = Request.Builder().url(url).get().build()
+        OkhttpUtils.doHttp(request).use { response ->
+            val responseContent = response.body()!!.string()
+            if (!response.isSuccessful) {
+                logger.error("get project roles fail: projectCode[$projectCode]")
+                throw RemoteServiceException("get project roles fail: projectCode[$projectCode]")
+            }
+            val responseObject = objectMapper.readValue<BkAuthResponse<List<BKAuthProjectRolesResources>>>(responseContent)
+            if (responseObject.code != 0) {
+                logger.error("get project role fail: $responseObject")
+                throw RemoteServiceException("get project role fail: $responseObject")
+            }
+            return responseObject.data ?: emptyList()
+        }
+    }
+
+    override fun getProjectInfo(serviceCode: AuthServiceCode, projectCode: String): BkAuthProjectInfoResources? {
+        val accessToken = bsAuthTokenApi.getAccessToken(serviceCode)
+        val url = "${bkAuthProperties.url}/projects/$projectCode?access_token=$accessToken"
+        val request = Request.Builder().url(url).get().build()
+        OkhttpUtils.doHttp(request).use { response ->
+            val responseContent = response.body()!!.string()
+            if (!response.isSuccessful) {
+                logger.error("get project info fail: projectCode[$projectCode]")
+                throw RemoteServiceException("get project inProjectPaasCCServicefo fail: projectCode[$projectCode]")
+            }
+            val responseObject = objectMapper.readValue<BkAuthResponse<BkAuthProjectInfoResources>>(responseContent)
+            if (responseObject.code != 0) {
+                logger.error("get project info fail: $responseContent")
+            }
+            return responseObject.data ?: null
         }
     }
 

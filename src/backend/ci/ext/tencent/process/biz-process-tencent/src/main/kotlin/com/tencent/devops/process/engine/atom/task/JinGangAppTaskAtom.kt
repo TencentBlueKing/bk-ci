@@ -26,6 +26,8 @@
 
 package com.tencent.devops.process.engine.atom.task
 
+import com.tencent.devops.common.api.pojo.ErrorCode
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.auth.api.AuthResourceType
@@ -39,8 +41,6 @@ import com.tencent.devops.common.pipeline.element.JinGangAppElement
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.IAtomTask
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
-import com.tencent.devops.process.pojo.AtomErrorCode
-import com.tencent.devops.process.pojo.ErrorType
 import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
@@ -81,7 +81,7 @@ class JinGangAppTaskAtom @Autowired constructor(
             else -> return AtomResponse(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.SYSTEM,
-                errorCode = AtomErrorCode.USER_INPUT_INVAILD,
+                errorCode = ErrorCode.USER_INPUT_INVAILD,
                 errorMsg = "unsupported srcType : $srcType"
             )
         }

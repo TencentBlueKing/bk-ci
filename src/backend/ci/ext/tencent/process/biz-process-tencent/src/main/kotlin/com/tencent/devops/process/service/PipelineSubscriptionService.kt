@@ -75,6 +75,7 @@ import com.tencent.devops.process.utils.PIPELINE_START_WEBHOOK_USER_ID
 import com.tencent.devops.process.utils.PIPELINE_TIME_DURATION
 import com.tencent.devops.process.utils.PIPELINE_TIME_END
 import com.tencent.devops.process.utils.PIPELINE_VERSION
+import com.tencent.devops.process.utils.PipelineVarUtil
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -186,6 +187,8 @@ class PipelineSubscriptionService @Autowired(required = false) constructor(
             val timeDuration = vars[PIPELINE_TIME_DURATION]!!.toLongOrNull() ?: 0L
             vars[PIPELINE_TIME_DURATION] = DateTimeUtil.formatMillSecond(timeDuration * 1000)
         }
+        // 兼容旧流水线的旧变量
+        PipelineVarUtil.fillOldVar(vars)
 
         val executionVar = getExecutionVariables(pipelineId, vars)
         if (executionVar.originTriggerType == StartType.PIPELINE.name) {

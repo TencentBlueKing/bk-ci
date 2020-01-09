@@ -3,32 +3,19 @@
         <h3 class="market-home-title">
             <icon class="title-icon" name="color-logo-store" size="25" />
             <p class="title-name">
-                <router-link :to="{ name: 'atomHome' }" class="back-home">研发商店</router-link>
+                <router-link :to="{ name: 'atomHome' }" class="back-home"> {{ $t('store.研发商店') }} </router-link>
                 <i class="right-arrow banner-arrow"></i>
                 <span class="back-home" @click="backToStore">{{type|typeFilter}}</span>
                 <i class="right-arrow banner-arrow"></i>
                 <span class="banner-des">{{detail.name}}</span>
             </p>
-            <router-link :to="{ name: 'atomList' }" class="title-work">工作台</router-link>
+            <router-link :to="{ name: 'atomList' }" class="title-work" v-if="type !== 'ide'"> {{ $t('store.工作台') }} </router-link>
         </h3>
 
-        <main class="store-main">
-            <section class="detail-title">
-                <img class="detail-pic atom-logo" :src="detail.logoUrl" v-if="detail.logoUrl">
-                <icon class="detail-pic atom-icon" v-else :name="getAtomIcon(detail.code)" size="160" style="fill:#C3CDD7" />
-                <detail-info :detail="detail" :type="type"></detail-info>
-
-                <bk-popover placement="top" v-if="buttonInfo.disable">
-                    <button class="bk-button bk-primary" type="button" disabled>安装</button>
-                    <template slot="content">
-                        <p>{{buttonInfo.des}}</p>
-                    </template>
-                </bk-popover>
-                <button class="detail-install" @click="goToInstall" v-else>安装</button>
-            </section>
-
-            <bk-tab type="currentType" :active="'des'" class="detail-tabs">
-                <bk-tab-panel name="des" label="概述" class="summary-tab">
+        <main class="store-main" v-show="!isLoading">
+            <component :is="`${type}Info`" :detail="detail"></component>
+            <bk-tab type="currentType" :active.sync="currentTab" class="detail-tabs">
+                <bk-tab-panel name="des" :label="$t('store.概述')" class="summary-tab">
                     <mavon-editor
                         :editable="false"
                         default-open="preview"
@@ -36,17 +23,18 @@
                         :toolbars-flag="false"
                         :box-shadow="false"
                         :external-link="false"
+                        preview-background="#fff"
                         v-model="detail.description"
                         v-if="detail.description"
                     >
                     </mavon-editor>
-                    <p class="g-empty summary-empty" v-if="!detail.description">发布者很懒，什么都没留下！</p>
+                    <p class="g-empty summary-empty" v-if="!detail.description"> {{ $t('store.发布者很懒，什么都没留下！') }} </p>
                 </bk-tab-panel>
 
-                <bk-tab-panel name="comment" label="评价" class="detail-tab">
-                    <h3 class="comment-title">用户评分</h3>
+                <bk-tab-panel name="comment" :label="$t('store.评价')" class="detail-tab">
+                    <h3 class="comment-title"> {{ $t('store.用户评分') }} </h3>
                     <section class="rate-group">
-                        <h3 class="rate-title"><animated-integer :value="detail.avgScore" digits="1"></animated-integer><span>共{{detail.totalNum}}份评分</span></h3>
+                        <h3 class="rate-title"><animated-integer :value="detail.avgScore" digits="1"></animated-integer><span>{{ $t('store.共') }}{{detail.totalNum}}{{ $t('store.份评分') }}</span></h3>
                         <hgroup class="rate-card">
                             <h3 class="rate-info" v-for="(scoreItem, index) in detail.scoreItemList" :key="index">
                                 <comment-rate :rate="scoreItem.score" :width="10" :height="11"></comment-rate>
@@ -58,17 +46,20 @@
                             </h3>
                         </hgroup>
                         <button class="add-common" @click="showComment = true">
-                            <template v-if="commentInfo.commentFlag">修改评论</template>
-                            <template>撰写评论</template>
+                            <template v-if="commentInfo.commentFlag"> {{ $t('store.修改评论') }} </template>
+                            <template> {{ $t('store.撰写评论') }} </template>
                         </button>
                     </section>
 
-                    <h3 class="comment-title">用户评论</h3>
+                    <h3 class="comment-title"> {{ $t('store.用户评论') }} </h3>
                     <hgroup v-for="(comment, index) in commentList" :key="index">
                         <comment :comment="comment"></comment>
                     </hgroup>
-                    <p class="comments-more" v-if="!isLoadEnd && commentList.length > 0" @click="getComments(true)">阅读更多内容</p>
-                    <p class="g-empty comment-empty" v-if="commentList.length <= 0">空空如洗，快来评论一下吧！</p>
+                    <p class="comments-more" v-if="!isLoadEnd && commentList.length > 0" @click="getComments(true)"> {{ $t('store.阅读更多内容') }} </p>
+                    <p class="g-empty comment-empty" v-if="commentList.length <= 0"> {{ $t('store.空空如洗，快来评论一下吧！') }} </p>
+                </bk-tab-panel>
+                <bk-tab-panel name="yaml" :label="$t('store.yaml')" v-if="type === 'atom'">
+                    <section class="plugin-yaml"></section>
                 </bk-tab-panel>
             </bk-tab>
             <transition name="atom-fade">
@@ -79,36 +70,49 @@
 </template>
 
 <script>
-    import Vue from 'vue'
-    import mavonEditor from 'mavon-editor'
-    import 'mavon-editor/dist/css/index.css'
     import { mapActions, mapGetters } from 'vuex'
-    import detailInfo from '../../components/common/detail-info'
     import commentRate from '../../components/common/comment-rate'
     import comment from '../../components/common/comment'
     import commentDialog from '../../components/common/comment/commentDialog.vue'
     import animatedInteger from '../../components/common/animatedInteger'
+    import ideInfo from '../../components/common/detail-info/ide'
+    import atomInfo from '../../components/common/detail-info/atom'
+    import templateInfo from '../../components/common/detail-info/template'
+    import imageInfo from '../../components/common/detail-info/image'
 
-    Vue.use(mavonEditor)
+    import CodeMirror from 'codemirror'
+    import 'codemirror/mode/yaml/yaml'
+    import 'codemirror/lib/codemirror.css'
+    import 'codemirror/theme/3024-night.css'
 
     export default {
         components: {
             comment,
             commentRate,
             commentDialog,
-            detailInfo,
-            animatedInteger
+            animatedInteger,
+            atomInfo,
+            templateInfo,
+            ideInfo,
+            imageInfo
         },
 
         filters: {
             typeFilter (val) {
+                const bkLocale = window.devops || {}
                 let res = ''
                 switch (val) {
                     case 'template':
-                        res = '流水线模板'
+                        res = bkLocale.$t('store.流水线模板')
+                        break
+                    case 'ide':
+                        res = bkLocale.$t('store.IDE插件')
+                        break
+                    case 'image':
+                        res = bkLocale.$t('store.容器镜像')
                         break
                     default:
-                        res = '流水线插件'
+                        res = bkLocale.$t('store.流水线插件')
                         break
                 }
                 return res
@@ -121,19 +125,34 @@
                 pageSize: 10,
                 pageIndex: 1,
                 detail: {},
-                isLoading: true,
+                isLoading: false,
                 isLoadEnd: false,
                 showComment: false,
                 showInstallConfirm: false,
                 commentInfo: {},
+                codeEditor: {},
+                currentTab: 'des',
+                codeMirrorCon: {
+                    lineNumbers: true,
+                    tabMode: 'indent',
+                    mode: 'yaml',
+                    theme: '3024-night',
+                    autoRefresh: true,
+                    cursorBlinkRate: 0,
+                    readOnly: true
+                },
                 methodsGenerator: {
                     comment: {
                         atom: (postData) => this.requestAtomComments(postData),
-                        template: (postData) => this.requestTemplateComments(postData)
+                        template: (postData) => this.requestTemplateComments(postData),
+                        ide: (postData) => this.requestIDEComments(postData),
+                        image: (postData) => this.requestImageComments(postData)
                     },
                     scoreDetail: {
                         atom: () => this.requestAtomScoreDetail(this.detailCode),
-                        template: () => this.requestTemplateScoreDetail(this.detailCode)
+                        template: () => this.requestTemplateScoreDetail(this.detailCode),
+                        ide: () => this.requestIDEScoreDetail(this.detailCode),
+                        image: () => this.requestImageScoreDetail(this.detailCode)
                     }
                 }
             }
@@ -148,19 +167,20 @@
 
             type () {
                 return this.$route.params.type
-            },
-
-            buttonInfo () {
-                const typeString = this.type === 'atom' ? '插件' : '模板'
-                const info = {}
-                info.disable = this.detail.defaultFlag || !this.detail.flag
-                if (this.detail.defaultFlag) info.des = `通用流水线${typeString}，所有项目默认可用，无需安装`
-                if (!this.detail.flag) info.des = `你没有该流水线${typeString}的安装权限，请联系流水线${typeString}发布者`
-                return info
             }
         },
 
-        created () {
+        watch: {
+            currentTab (val) {
+                if (val === 'yaml') {
+                    setTimeout(() => {
+                        this.codeEditor.refresh()
+                    }, 0)
+                }
+            }
+        },
+
+        mounted () {
             this.getDetail()
         },
         
@@ -173,7 +193,16 @@
                 'requestAtomComments',
                 'requestAtomScoreDetail',
                 'requestTemplateComments',
-                'requestTemplateScoreDetail'
+                'requestTemplateScoreDetail',
+                'requestIDE',
+                'requestIDEComments',
+                'requestIDEScoreDetail',
+                'requestImage',
+                'requestImageComments',
+                'requestImageScoreDetail',
+                'getUserApprovalInfo',
+                'requestImageCategorys',
+                'getAtomYaml'
             ]),
 
             freshComment (comment) {
@@ -202,7 +231,9 @@
                 const type = this.$route.params.type
                 const funObj = {
                     atom: () => this.getAtomDetail(),
-                    template: () => this.getTemplateDetail()
+                    template: () => this.getTemplateDetail(),
+                    ide: () => this.getIDEDetail(),
+                    image: () => this.getImageDetail()
                 }
                 const getDetailMethod = funObj[type]
 
@@ -217,11 +248,20 @@
             getAtomDetail () {
                 const atomCode = this.detailCode
 
-                return Promise.all([this.requestAtom({ atomCode }), this.requestAtomStatistic({ atomCode })]).then(([atomDetail, atomStatic]) => {
+                return Promise.all([
+                    this.requestAtom({ atomCode }),
+                    this.requestAtomStatistic({ atomCode }),
+                    this.getUserApprovalInfo(atomCode),
+                    this.getAtomYaml({ atomCode })
+                ]).then(([atomDetail, atomStatic, userAppInfo, yaml]) => {
                     this.detail = atomDetail || {}
                     this.detailId = atomDetail.atomId
                     this.detail.downloads = atomStatic.downloads || 0
                     this.commentInfo = atomDetail.userCommentInfo || {}
+                    this.$set(this.detail, 'approveStatus', (userAppInfo || {}).approveStatus)
+                    const ele = document.querySelector('.plugin-yaml')
+                    this.codeEditor = CodeMirror(ele, this.codeMirrorCon)
+                    this.codeEditor.setValue(yaml || '')
                 })
             },
 
@@ -232,6 +272,35 @@
                     this.detailId = templateDetail.templateId
                     this.detail.name = templateDetail.templateName
                     this.commentInfo = templateDetail.userCommentInfo || {}
+                })
+            },
+
+            getIDEDetail () {
+                const atomCode = this.detailCode
+
+                return this.requestIDE({ atomCode }).then((res) => {
+                    this.detail = res || {}
+                    this.detailId = res.atomId
+                    this.detail.name = res.atomName
+                    this.commentInfo = res.userCommentInfo || {}
+                })
+            },
+
+            getImageDetail () {
+                const imageCode = this.detailCode
+
+                return Promise.all([
+                    this.requestImageCategorys(),
+                    this.requestImage({ imageCode })
+                ]).then(([categorys, res]) => {
+                    this.detail = res || {}
+                    this.detailId = res.imageId
+                    this.detail.name = res.imageName
+                    this.commentInfo = res.userCommentInfo || {}
+
+                    const currentCategory = categorys.find((x) => (x.categoryCode === res.category))
+                    const setting = currentCategory.settings || {}
+                    this.detail.needInstallToProject = setting.needInstallToProject
                 })
             },
 
@@ -280,17 +349,6 @@
                 })
             },
 
-            goToInstall () {
-                const key = this.type === 'atom' ? 'atomCode' : 'templateCode'
-                const name = this.type === 'atom' ? 'installAtom' : 'installTemplate'
-                const params = { [key]: this.detailCode }
-                this.$router.push({
-                    name,
-                    params,
-                    hash: '#MARKET'
-                })
-            },
-
             backToStore () {
                 Object.assign(this.markerQuey, { pipeType: this.type })
                 this.$router.push({
@@ -304,6 +362,10 @@
 
 <style lang="scss" scoped>
     @import '@/assets/scss/conf.scss';
+    .plugin-yaml {
+        height: 400px;
+        background: black;
+    }
 
     .store-main {
         height: calc(100vh - 93px);
@@ -313,41 +375,19 @@
 
     .detail-home {
         overflow: hidden;
-        .detail-title {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin: 47px auto 30px;
-            width: 1200px;
-            .detail-pic {
-                width: 130px;
-            }
-            .atom-icon {
-                height: 160px;
-                width: 160px;
-            }
-            .detail-install {
-                width: 89px;
-                height: 36px;
-                background: $primaryColor;
-                border-radius: 2px;
-                border: none;
-                font-size: 14px;
-                color: $white;
-                line-height: 36px;
-                &:active {
-                    transform: scale(.97)
-                }
-            }
-            .bk-tooltip button {
-                width: 89px;
-            }
-        }
+        min-height: 100%;
     }
 
     .detail-tabs {
         margin: 49px auto 30px;
         width: 1200px;
+        /deep/ .CodeMirror {
+            font-family: Consolas, "Courier New", monospace;
+            line-height: 1.5;
+            margin-bottom: 20px;
+            padding: 10px;
+            height: auto;
+        }
         .summary-tab {
             overflow: hidden;
             min-height: 360px;

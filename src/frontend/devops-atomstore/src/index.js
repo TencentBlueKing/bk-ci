@@ -20,6 +20,11 @@
 import routes from './router'
 import store from './store'
 import './assets/scss/index.scss'
+import mavonEditor from 'mavon-editor'
+import 'mavon-editor/dist/css/index.css'
+
+const Vue = window.Vue
+Vue.use(mavonEditor)
 
 window.Pages = window.Pages || {}
 window.Pages['store'] = {

@@ -1,15 +1,14 @@
 <template>
     <div class="task-card" :class="`${config.isRunning ? `task-${config.status}` : ''}`">
-        <!-- <div v-if="!hasPermission" class="card-overflow"> -->
-        <!--<bk-button class="apply-button" theme="success">申请权限</bk-button>-->
-        <!-- </div> -->
+        <div v-if="!hasPermission" class="card-overflow">
+        </div>
         <bk-button
             class="apply-button"
             theme="success"
             v-if="!hasPermission"
             @click="applyPermission(config)"
         >
-            申请权限
+            {{ $t('newlist.applyPerm') }}
         </bk-button>
         <div class="task-card-header">
             <p
@@ -17,7 +16,7 @@
                 :title="config.name"
                 @click.stop="emitEventHandler('title-click', config.pipelineId)"
             >
-                <span class="template-tag" v-if="config.isInstanceTemplate">模</span>
+                <span class="template-tag" v-if="config.isInstanceTemplate">{{ $t('newlist.temp') }}</span>
                 {{ config.name }}
             </p>
             <!-- 状态切换按钮 start -->
@@ -46,12 +45,12 @@
         <template v-if="!config.isRunning">
             <div class="task-card-content" @click.stop="cardContentClick">
                 <template v-if="config.content.length">
-                    <p class="content-row" v-for="row of config.content" :key="row.key">
+                    <p class="content-row" v-for="(row, cindex) of config.content" :key="row.key">
                         <span class="row-key">{{ row.key }}</span>
                         :
                         <span
                             class="row-value"
-                            :class="!index ? config.status : ''"
+                            :class="!cindex ? config.status : ''"
                         >{{ row.value }}</span>
                     </p>
                 </template>
@@ -83,7 +82,9 @@
                 class="task-card-running-multi"
                 @click.stop="emitEventHandler('title-click', config.pipelineId)"
                 v-if="config.runningInfo.buildCount > 1"
-            >正在同时运行多个构建任务</div>
+            >
+                {{ $t('newlist.multipleBuilds') }}
+            </div>
             <div class="task-card-running" @click.stop="cardContentClick" v-else>
                 <div class="running-detail clearfix">
                     <div class="running-detail-text fl">{{ config.runningInfo.time }}</div>
@@ -151,7 +152,7 @@
                         isRunning: false,
                         name: '',
                         runningInfo: {
-                            time: '0秒',
+                            time: '0',
                             percentage: '0%',
                             log: '',
                             buildCount: 0
@@ -183,6 +184,7 @@
              *  参数为pipelineId的触发全局bus事件
              */
             emitEventHandler (eventName, pipelineId) {
+                console.log(eventName)
                 bus.$emit(eventName, pipelineId)
             },
             /**
@@ -219,8 +221,8 @@
             applyPermission (config) {
                 bus.$emit(
                     'set-permission',
-                    `流水线：${config.name}`,
-                    '查看',
+                    `${this.$t('pipeline')}：${config.name}`,
+                    this.$t('newlist.view'),
                     config.pipelineId
                 )
             }

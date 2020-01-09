@@ -34,6 +34,7 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ManualReviewAction
 import com.tencent.devops.common.pipeline.pojo.element.agent.ManualReviewUserTaskElement
 import com.tencent.devops.common.service.config.CommonConfig
+import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.log.utils.LogUtils
 import com.tencent.devops.notify.api.service.ServiceNotifyResource
 import com.tencent.devops.notify.pojo.EmailNotifyMessage
@@ -135,11 +136,11 @@ class TencentManualReviewTaskAtom(
         val pipelineName = runVariables[PIPELINE_NAME].toString()
 
         val reviewUrl = shortUrlApi.getShortUrl(
-            "${commonConfig.devopsHostGateway}/console/pipeline/$projectCode/$pipelineId/detail/$buildId",
+            "${HomeHostUtil.getHost(commonConfig.devopsHostGateway!!)}/console/pipeline/$projectCode/$pipelineId/detail/$buildId",
             24 * 3600 * 3
         )
         val reviewAppUrl = shortUrlApi.getShortUrl(
-            "${commonConfig.devopsOuteApiHostGateWay}/app/download/devops_app_forward.html?flag=buildReport&projectId=$projectCode&pipelineId=$pipelineId&buildId=$buildId",
+            "${HomeHostUtil.getHost(commonConfig.devopsOuteApiHostGateWay!!)}/app/download/devops_app_forward.html?flag=buildReport&projectId=$projectCode&pipelineId=$pipelineId&buildId=$buildId",
             24 * 3600 * 3
         )
 

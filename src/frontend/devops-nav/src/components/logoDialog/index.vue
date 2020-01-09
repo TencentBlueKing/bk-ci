@@ -4,7 +4,7 @@
         class="devops-project-logo-dialog"
         :width="width"
         :close-icon="false"
-        title="修改LOGO"
+        :title="$t('changeLogo')"
         header-position="left"
     >
         <main class="project-logo-content">
@@ -24,12 +24,12 @@
                         accept="image/png, image/jpeg"
                         @change="fileChange"
                     >
-                    <label for="file"><i class="bk-icon icon-bk" />选择LOGO</label>
+                    <label for="file"><i class="bk-icon icon-bk" />{{ $t('selectLogo') }}</label>
                     <p class="logo-desc">
-                        只允许上传png、jpg
+                        {{ $t('supportExtTips') }}
                     </p>
                     <p class="logo-desc">
-                        大小不超过2M
+                        {{ $t("logoSizelimit") }}
                     </p>
                 </div>
             </div>
@@ -42,14 +42,14 @@
                     :loading="isUploading"
                     @click="toConfirmLogo"
                 >
-                    确定
+                    {{ $t("okLabel") }}
                 </bk-button>
                 <bk-button
                     theme="default"
                     :disabled="isUploading"
                     @click="toCloseDialog"
                 >
-                    取消
+                    {{ $t("cancelLabel") }}
                 </bk-button>
             </div>
         </template>
@@ -84,10 +84,10 @@
         curImage: string = ''
 
         get logoDialogConf (): object {
-          return {
-            hasHeader: false,
-            quickClose: false
-          }
+            return {
+                hasHeader: false,
+                quickClose: false
+            }
         }
     }
 </script>

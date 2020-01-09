@@ -89,4 +89,18 @@ interface ServiceStoreResource {
         @ApiParam(value = "store组件内置流水线构建结果请求报文体", required = true)
         storeBuildResultRequest: StoreBuildResultRequest
     ): Result<Boolean>
+
+    @GET
+    @Path("/{templateCode}/validate")
+    fun validateUserTemplateAtomVisibleDept(
+        @ApiParam("用户", required = true)
+        @QueryParam("userId")
+        userId: String,
+        @ApiParam("标识", required = true)
+        @PathParam("templateCode")
+        templateCode: String,
+        @ApiParam("项目", required = true)
+        @QueryParam("projectCode")
+        projectCode: String?
+    ): Result<Boolean>
 }

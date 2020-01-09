@@ -15,8 +15,8 @@
                             <bk-popover placement="bottom" class="group-list-edit" theme="light">
                                 <span class="bk-icon icon-more"></span>
                                 <div class="group-operate-container" slot="content">
-                                    <p class="entry-link" @click="showDialog($event, groupIndex)">重命名</p>
-                                    <p class="entry-link" @click="deleteGroup(groupIndex)">删除</p>
+                                    <p class="entry-link" @click="showDialog($event, groupIndex)">{{ $t('rename') }}</p>
+                                    <p class="entry-link" @click="deleteGroup(groupIndex)">{{ $t('delete') }}</p>
                                 </div>
                             </bk-popover>
                         </div>
@@ -32,29 +32,21 @@
                                     maxlength="20"
                                     @blur="inputBlur($event, groupIndex, tagIndex)"
                                     @keyup.enter="tagModify(groupIndex, tagIndex)"
-                                    placeholder="请输入标签名称,按Enter键确定">
+                                    :placeholder="$t('group.labelLimitTips')">
                             </div>
                             <div class="group-card-tools">
                                 <i class="bk-icon icon-edit2 group-card-icon" @click="tagEdit($event, groupIndex, tagIndex)"></i>
-                                <span class="tools-ele group-card-icon bk-icon icon-close"
-                                    @click.stop="toggleTools(groupIndex, tagIndex)">
-                                    <div class="tips-content">
-                                        <a class="confirm" @click.stop="tagRemove(groupIndex, tagIndex)">确定</a>
+                                <bk-popover ref="toolsConfigRef" placement="top" trigger="click">
+                                    <span class="tools-ele group-card-icon bk-icon icon-close" @click="toggleTools(groupIndex, tagIndex)">
+                                    </span>
+                                    <div slot="content" class="tools-config-tooltip">
+                                        <a class="confirm" @click.stop="tagRemove(groupIndex, tagIndex)">{{ $t('confirm') }}</a>
                                         <span></span>
-                                        <a class="cancel" @click.stop="hideTools">取消</a>
+                                        <a class="cancel" @click.stop="hideTools">{{ $t('cancel') }}</a>
                                     </div>
-                                </span>
+                                </bk-popover>
                             </div>
                         </div>
-                        <!-- <div class="group-card" v-if="group.isAdd">
-                            <div class="group-card-title group-edit">
-                                <input type="text"  class="tag-input"
-                                    v-model="tagValue"
-                                    @blur="inputBlur($event, groupIndex)"
-                                    @keyup.enter="tagModify(groupIndex)"
-                                    placeholder="请输入标签名称,按Enter键确定">
-                            </div>
-                        </div> -->
 
                         <bk-button
                             size="normal"
@@ -64,10 +56,10 @@
                             @click="tagAdd($event, groupIndex)"
                             :disabled="btnIsdisable"
                         >
-                            新建标签
+                            {{ $t('group.addLabel') }}
                         </bk-button>
                         <bk-button v-else class="group-card-add" size="normal" :disabled="true">
-                            一个分组下最多可以添加10个标签
+                            {{ $t('group.labelLimitTips') }}
                         </bk-button>
                     </div>
 
@@ -77,7 +69,7 @@
                             :disabled="btnIsdisable"
                             @click="showDialog"
                         >
-                            新建分组
+                            {{ $t('group.addGroup') }}
                         </bk-button>
                     </div>
                     <div v-show="tagGroupList.length < 1">
@@ -91,7 +83,7 @@
                                     <p>{{ emptyTipsConfig.contentTwo }}</p>
                                 </div>
                                 <bk-button theme="primary" @click="showDialog">
-                                    新建分组
+                                    {{ $t('group.addGroup') }}
                                 </bk-button>
                             </div>
                         </empty-tips>
@@ -106,11 +98,11 @@
                     @confirm="dialogCommit">
                     <div>
                         <div class="bk-form-item">
-                            <label class="bk-label">分组名称</label>
+                            <label class="bk-label">{{ $t('group.groupName') }}</label>
                             <div class="bk-form-content">
                                 <input type="text"
                                     class="bk-form-input"
-                                    placeholder="请输入分组名称"
+                                    :placeholder="$t('group.groupInputTips')"
                                     v-model="groupSetting.value"
                                     name="groupName"
                                     v-validate="&quot;required|max:20&quot;"
@@ -153,15 +145,15 @@
                 showContent: false,
                 isShowGroup: true,
                 emptyTipsConfig: {
-                    title: '创建一个标签分组',
-                    desc: '为流水线分配合理的标签有助于快速定位和管理流水线，请了解以下约束:',
-                    contentOne: '1. 一个项目下最多可以添加3个分组',
-                    contentTwo: '2. 一个分组下最多可以添加10个标签'
+                    title: this.$t('group.emptyTips.title'),
+                    desc: this.$t('group.emptyTips.desc'),
+                    contentOne: this.$t('group.emptyTips.contentOne'),
+                    contentTwo: this.$t('group.emptyTips.contentTwo')
                 },
                 groupSetting: {
                     hasHeader: true,
                     isShow: false,
-                    title: '新建分组',
+                    title: this.$t('group.addGroup'),
                     value: '',
                     groupIndex: null,
                     padding: 20
@@ -174,12 +166,6 @@
                     oldActiveToops: 'xxx',
                     isGroupEdit: false,
                     isActiveGroup: false
-                },
-                defaultSettings: {
-                    isShow: false,
-                    title: '筛选',
-                    quickClose: true,
-                    width: 360
                 }
             }
         },
@@ -192,14 +178,14 @@
             },
             projectId () {
                 return this.$route.params.projectId
+            },
+            toolsConfigInstance () {
+                return this.$refs.toolsConfigRef && this.$refs.toolsConfigRef[0] && this.$refs.toolsConfigRef[0].instance ? this.$refs.toolsConfigRef[0].instance : null
             }
         },
         async created () {
             await this.init()
             this.addClickListenr()
-        },
-        mounted () {
-
         },
         methods: {
             isShowGroupBtn () {
@@ -241,11 +227,11 @@
                     isShow: true
                 }
                 if (groupIndex || groupIndex === 0) {
-                    setting.title = '重命名'
+                    setting.title = this.$t('rename')
                     setting.groupIndex = groupIndex
                     setting.value = this.tagGroupList[groupIndex].name
                 } else {
-                    setting.title = '新建分组'
+                    setting.title = this.$t('group.addGroup')
                     setting.groupIndex = null
                     setting.value = ''
                 }
@@ -266,7 +252,7 @@
                 if (!valid) {
                     return false
                 }
-                if (groups.title === '新建分组') {
+                if (groups.title === this.$t('group.addGroup')) {
                     this.REQUEST('addGroup', {
                         name: groups.value,
                         projectId: this.projectId
@@ -284,10 +270,10 @@
                 groups.isShow = false
             },
             deleteGroup (groupIndex) {
-                const name = this.tagGroupList[groupIndex].name
+                // const name = this.tagGroupList[groupIndex].name
                 const { $store } = this
-                const content = `删除${name}标签分组?`
-                navConfirm({ title: '确认', content })
+                const content = this.$t('group.deleteReason')
+                navConfirm({ type: 'warning', content })
                     .then(async () => {
                         try {
                             await $store.dispatch('pipelines/deleteGroup', {
@@ -305,10 +291,13 @@
                     }).catch(() => {})
             },
 
-            async tagRemove (groupIndex, tagIndex) { // 标签删除
+            tagRemove (groupIndex, tagIndex) { // 标签删除
                 this.REQUEST('deleteTag', {
                     labelId: this.tagGroupList[groupIndex].labels[tagIndex].id
                 })
+                if (this.toolsConfigInstance) {
+                    this.toolsConfigInstance.hide()
+                }
             },
             toggleTools (groupIndex, tagIndex) { // 删除提示toggle
                 const active = this.active
@@ -324,6 +313,9 @@
             },
             hideTools () { // 删除提示隐藏
                 this.active.isActiveToops = false
+                if (this.toolsConfigInstance) {
+                    this.toolsConfigInstance.hide()
+                }
             },
 
             tagEdit (e, groupIndex, tagIndex) {
@@ -481,12 +473,10 @@
                 margin-bottom: 10px;
             }
             .devops-empty-tips .content {
-                width: 250px;
                 height: 60px;
-                margin: 0 auto;
                 line-height: 20px;
                 font-size: 14px;
-                text-align: left;
+                text-align: center;
             }
             .bk-dialog-body .form-group{
                 label {
@@ -580,44 +570,6 @@
                     &.active {
                         .tips-content {
                             display: block;
-                        }
-                    }
-                    .tips-content {
-                        display: none;
-                        position: absolute;
-                        bottom: 22px;
-                        left: -38px;
-                        padding: 0 12px;
-                        width: 90px;
-                        height: 30px;
-                        line-height: 30px;
-                        border: none;
-                        border-radius: 2px;
-                        font-size: 0;
-                        color: #fff;
-                        background-color: rgba(0,0,0,0.9);
-                        z-index: 50;
-                        span {
-                            margin: 0 7px;
-                            font-size: 12px;
-                            border: 1px solid rgba(255,255,255,0.1)
-                        }
-                        a {
-                            font-size: 12px;
-                            cursor: pointer;
-                        }
-                        &:after {
-                            position: absolute;
-                            content: '';
-                            width: 6px;
-                            height: 6px;
-                            border: 1px solid #000;
-                            border-bottom: 0;
-                            border-right: 0;
-                            transform: rotate(45deg);
-                            background: rgba(0,0,0,0.9);
-                            bottom: -2px;
-                            right: 42px;
                         }
                     }
                 }
@@ -751,6 +703,21 @@
                 > a {
                     color: $primaryColor;
                 }
+            }
+        }
+    }
+
+    .tools-config-tooltip {
+        span {
+            margin: 0 7px;
+            font-size: 12px;
+            border: 1px solid rgba(255,255,255,0.1)
+        }
+        a {
+            font-size: 12px;
+            cursor: pointer;
+            &:hover {
+                color: $primaryColor;
             }
         }
     }

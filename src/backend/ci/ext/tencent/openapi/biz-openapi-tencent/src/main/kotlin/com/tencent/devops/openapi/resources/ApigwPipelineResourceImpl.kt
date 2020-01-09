@@ -35,6 +35,9 @@ import com.tencent.devops.openapi.api.ApigwPipelineResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.pojo.Pipeline
 import com.tencent.devops.process.pojo.PipelineId
+import com.tencent.devops.process.pojo.PipelineName
+import com.tencent.devops.store.api.atom.ServiceMarketAtomResource
+import com.tencent.devops.store.pojo.atom.InstallAtomReq
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -101,6 +104,25 @@ class ApigwPipelineResourceImpl @Autowired constructor(private val client: Clien
             channelCode = ChannelCode.BS,
             checkPermission = true
         )
+    }
+
+    override fun installAtom(
+        userId: String,
+        channelCode: ChannelCode?,
+        installAtomReq: InstallAtomReq
+    ): Result<Boolean> {
+        logger.info("install Atom: userId[$userId] channelCode[$channelCode] installAtomReq[$installAtomReq]")
+        return client.get(ServiceMarketAtomResource::class).installAtom(userId, channelCode, installAtomReq)
+    }
+
+    override fun rename(userId: String, projectId: String, pipelineId: String, name: PipelineName): Result<Boolean> {
+        logger.info("rename: userId[$userId] projectId[$projectId] pipelineId[$pipelineId] name[$name]")
+        return client.get(ServicePipelineResource::class).rename(userId, projectId, pipelineId, name)
+    }
+
+    override fun restore(userId: String, projectId: String, pipelineId: String): Result<Boolean> {
+        logger.info("restore: userId[$userId] projectId[$projectId] pipelineId[$pipelineId]")
+        return client.get(ServicePipelineResource::class).restore(userId, projectId, pipelineId)
     }
 
     companion object {

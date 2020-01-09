@@ -36,9 +36,11 @@ data class PipelineContainerDispatchInfo(
     val dispatchImageType: String?,
     val dispatchCredentialId: String?,
     val dispatchWorkspace: String?,
-    val dispatchAgentType: String?
+    val dispatchAgentType: String?,
+    val dispatchSystemVersion: String?,
+    val dispatchXcodeVersion: String?
 ) {
     override fun toString(): String {
-        return "PipelineContainerDispatchInfo(containerId='$containerId', pipelineId='$pipelineId', pipelineVersion=$pipelineVersion, projectId='$projectId', dispatchBuildType='$dispatchBuildType', dispatchValue='$dispatchValue', dispatchImageType=$dispatchImageType, dispatchCredentialId=$dispatchCredentialId, dispatchWorkspace=$dispatchWorkspace, dispatchAgentType=$dispatchAgentType)"
+        return "PipelineContainerDispatchInfo(containerId='$containerId', pipelineId='$pipelineId', pipelineVersion=$pipelineVersion, projectId='$projectId', dispatchBuildType='$dispatchBuildType', dispatchValue='$dispatchValue', dispatchImageType=$dispatchImageType, dispatchCredentialId=$dispatchCredentialId, dispatchWorkspace=$dispatchWorkspace, dispatchAgentType=$dispatchAgentType), dispatchSystemVersion=$dispatchSystemVersion, dispatchXcodeVersion=$dispatchXcodeVersion)"
     }
 }

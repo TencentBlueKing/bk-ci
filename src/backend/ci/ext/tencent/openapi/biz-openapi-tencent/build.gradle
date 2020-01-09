@@ -29,6 +29,8 @@ dependencies {
     compile project(":ext:tencent:openapi:model-openapi")
     compile project(":ext:tencent:openapi:api-openapi-tencent")
     compile project(":ext:tencent:common:common-pipeline-tencent")
+    compile project(":ext:tencent:process:biz-process-tencent")
+    compile project(":ext:tencent:repository:api-repository-tencent")
     compile project (":core:common:common-client")
     compile "io.jsonwebtoken:jjwt"
     compile group: 'net.sf.json-lib', name: 'json-lib', classifier: "jdk15"

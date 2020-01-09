@@ -27,6 +27,12 @@
 package com.tencent.devops.store.service.template.impl
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.pipeline.Model
+import com.tencent.devops.common.pipeline.pojo.element.Element
+import com.tencent.devops.model.store.tables.records.TAtomRecord
+import com.tencent.devops.project.api.service.ServiceProjectOrganizationResource
+import com.tencent.devops.store.dao.common.StoreDeptRelDao
+import com.tencent.devops.store.pojo.common.enums.DeptStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.common.StoreVisibleDeptService
 import com.tencent.devops.store.service.template.TemplateVisibleDeptService
@@ -37,6 +43,9 @@ import org.springframework.stereotype.Service
 
 @Service
 class TxMarketTemplateServiceImpl : TxMarketTemplateService, MarketTemplateServiceImpl() {
+
+    @Autowired
+    private lateinit var storeDeptRelDao: StoreDeptRelDao
 
     @Autowired
     private lateinit var storeVisibleDeptService: StoreVisibleDeptService
@@ -70,10 +79,52 @@ class TxMarketTemplateServiceImpl : TxMarketTemplateService, MarketTemplateServi
         }
     }
 
-    override fun validateUserTemplateAtomVisibleDept(userId: String, templateCode: String): Result<Boolean> {
-        logger.info("validateUserTemplateAtomVisibleDept userId: $userId，templateCode: $templateCode")
-        val validateResult = templateVisibleDeptService.validateUserTemplateAtomVisibleDept(userId, templateCode, null)
-        logger.info("validateUserTemplateAtomVisibleDept validateResult: $validateResult")
-        return validateResult
+    override fun generateUserAtomInvalidVisibleAtom(
+        atomCode: String,
+        userId: String,
+        atomRecord: TAtomRecord,
+        element: Element
+    ): List<String> {
+        val userDeptIdList = storeUserService.getUserDeptList(userId) // 获取用户的机构ID信息
+        val invalidAtomList = mutableListOf<String>()
+        val atomDeptRelRecords = storeDeptRelDao.batchList(dslContext, listOf(atomCode), StoreTypeEnum.ATOM.type.toByte())
+        logger.info("the atomCode is :$atomCode,atomDeptRelRecords is :$atomDeptRelRecords")
+        val isAtomMember = storeMemberDao.isStoreMember(dslContext, userId, atomCode, StoreTypeEnum.ATOM.type.toByte())
+        logger.info("the isAtomMember is:$isAtomMember")
+        // 如果插件是默认插件，则无需校验与用户的可见范围
+        if (!atomRecord.defaultFlag) {
+            var flag = false
+            if (isAtomMember) {
+                flag = true
+            } else {
+                atomDeptRelRecords?.forEach deptEach@{
+                    val atomDeptId = it.deptId
+                    if (userDeptIdList.contains(atomDeptId)) {
+                        flag = true // 用户在原子插件的可见范围内
+                        return@deptEach
+                    } else {
+                        // 判断该原子的可见范围是否设置了全公司可见
+                        val parentDeptInfoList = client.get(ServiceProjectOrganizationResource::class).getParentDeptInfos(atomDeptId.toString(), 1).data
+                        logger.info("the parentDeptInfoList is:$parentDeptInfoList")
+                        if (null != parentDeptInfoList && parentDeptInfoList.isEmpty()) {
+                            // 没有上级机构说明设置的可见范围是全公司
+                            flag = true // 用户在原子插件的可见范围内
+                            return@deptEach
+                        }
+                    }
+                }
+            }
+            logger.info("the flag is:$flag")
+            if (!flag) {
+                invalidAtomList.add(element.name)
+            }
+        }
+        return invalidAtomList
+    }
+
+    override fun validateTempleAtomVisible(templateCode: String, templateModel: Model): Result<Boolean> {
+        // 校验模板与插件的可见范围
+        val templateDeptInfos = storeVisibleDeptService.getVisibleDept(templateCode, StoreTypeEnum.TEMPLATE, DeptStatusEnum.APPROVED).data?.deptInfos
+        return templateVisibleDeptService.validateTemplateVisibleDept(templateModel = templateModel, deptInfos = templateDeptInfos)
     }
 }

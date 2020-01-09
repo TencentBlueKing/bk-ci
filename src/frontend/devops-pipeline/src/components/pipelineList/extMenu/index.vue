@@ -41,7 +41,7 @@
                         isRunning: false,
                         name: '',
                         runningInfo: {
-                            time: '0秒',
+                            time: '0',
                             percentage: '0%',
                             log: '',
                             buildCount: 0
@@ -145,8 +145,8 @@
     .footer-ext-menu {
         position: absolute;
         top: -1px;
-        right: -90px;
-        width: 90px;
+        right: -100px;
+        width: 100px;
         border: 1px solid $borderWeightColor;
         border-radius: 2px;
         box-shadow: 0 3px 6px rgba(0, 0, 0, .1);
@@ -171,4 +171,3 @@
         }
     }
 </style>
-git

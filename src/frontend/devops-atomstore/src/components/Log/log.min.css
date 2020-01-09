@@ -1,0 +1,380 @@
+.soda-log {
+  position: relative;
+  font-size: 12px;
+  height: 100%;
+  font-family: Monaco, monospace, -apple-system, SF UI Text, Arial, PingFang SC, Hiragino Sans GB, Microsoft YaHei, WenQuanYi Micro Hei, sans-serif;
+  color: #f1f1f1;
+  background-color: #222;
+}
+.soda-log p,
+.soda-log pre {
+  margin: 0;
+}
+.soda-log * {
+  box-sizing: border-box;
+}
+.soda-log .soda-log-body {
+  background-color: #222;
+  position: absolute;
+  margin-top: 6px;
+  top: 0;
+  right: 0;
+  left: 0;
+  bottom: 0;
+  overflow: hidden;
+}
+.soda-log .soda-log-body #log-content {
+  height: 100%;
+  overflow-y: auto;
+  transition: all 0.6s ease;
+  box-sizing: border-box;
+  padding-bottom: 38px;
+}
+.soda-log .soda-log-body .line {
+  display: flex;
+  flex-direction: row;
+  padding: 0 15px 0 55px;
+  min-height: 16px;
+  margin: 0;
+}
+.soda-log .soda-log-body .line:hover {
+  background-color: #383838;
+}
+.soda-log .soda-log-body .line-num {
+  display: inline-block;
+  padding-right: 12px;
+  min-width: 32px;
+  margin-left: -37px;
+  text-align: right;
+  line-height: 22px;
+  color: #5f697d;
+}
+.soda-log .soda-log-body .line-time {
+  color: #5f697d;
+}
+.soda-log .soda-log-body .line-text {
+  line-height: 22px;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  word-break: break-all;
+}
+.soda-log .soda-log-body .line-text .bold {
+  font-weight: bold;
+}
+.soda-log .soda-log-body .line-text .italic {
+  font-style: italic;
+}
+.soda-log .soda-log-body .line-text .underline {
+  text-decoration: underline;
+}
+.soda-log .soda-log-body .line-text a,
+.soda-log .soda-log-body .line-text a:hover,
+.soda-log .soda-log-body .line-text a:active {
+  color: #3c96ff;
+}
+.soda-log .soda-log-body .line-text .black {
+  color: #4E4E4E;
+}
+.soda-log .soda-log-body .line-text .red {
+  color: #FF6C60;
+}
+.soda-log .soda-log-body .line-text .green {
+  color: #0A0;
+}
+.soda-log .soda-log-body .line-text .yellow {
+  color: #FFFFB6;
+}
+.soda-log .soda-log-body .line-text .blue {
+  color: #96CBFE;
+}
+.soda-log .soda-log-body .line-text .magenta {
+  color: #FF73FD;
+}
+.soda-log .soda-log-body .line-text .cyan {
+  color: #5FF;
+}
+.soda-log .soda-log-body .line-text .white {
+  color: #EEE;
+}
+.soda-log .soda-log-body .line-text .grey {
+  color: #969696;
+}
+.soda-log .soda-log-body .fold {
+  height: 22px;
+  overflow: hidden;
+  cursor: pointer;
+}
+.soda-log .soda-log-body .fold.open {
+  height: auto;
+}
+.soda-log .soda-log-body .fold .line:first-of-type:before {
+  cursor: pointer;
+  transition: all 0.4s ease;
+  transform-origin: 55% -3%;
+  position: absolute;
+  top: 10px;
+  left: 8px;
+  content: '';
+  display: block;
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-width: 5px;
+  border-color: transparent;
+  border-top-color: #5f697d;
+}
+.soda-log .soda-log-body .fold .fold-name {
+  z-index: 1;
+  display: block;
+  right: 85px;
+}
+.soda-log .soda-log-body p,
+.soda-log .soda-log-body .fold {
+  position: relative;
+}
+.soda-log .soda-log-body .fold:not(.open) .line:first-of-type:before {
+  transform: rotate(-90deg);
+}
+.soda-log .soda-log-body .fold-end,
+.soda-log .soda-log-body .fold-start:not(.fold) {
+  display: none;
+}
+.soda-log .soda-log-body .duration,
+.soda-log .soda-log-body .fold .fold-name {
+  position: absolute;
+  top: 5px;
+  padding: 0 7px 2px;
+  line-height: 10px;
+  font-size: 10px;
+  background-color: #666;
+  border-radius: 6px;
+  color: #bbb;
+  margin: 0 8px;
+}
+.soda-log .soda-log-body .line.level > span > i {
+  cursor: pointer;
+  display: block;
+  font-style: initial;
+}
+.soda-log .soda-log-body .line.level > span > i.before {
+  content: '';
+  display: block;
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-width: 7px;
+  border-color: transparent;
+  border-top-color: #bbb;
+}
+.soda-log .soda-log-body .line.level > span > i.after {
+  content: '';
+  display: block;
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-width: 7px;
+  border-color: transparent;
+  border-bottom-color: #bbb;
+}
+.soda-log .soda-log-body .duration {
+  display: block;
+  right: 12px;
+  float: right;
+}
+.soda-log .soda-log-body .log-waited {
+  width: 100%;
+  position: absolute;
+  padding-left: 60px;
+  bottom: 15px;
+  text-align: left;
+  height: 24px;
+  line-height: 24px;
+}
+.soda-log .soda-log-body .log-waited > div {
+  width: 6px;
+  height: 5px;
+  background-color: #fff;
+  margin-right: 5px;
+  border-radius: 100%;
+  display: inline-block;
+  -webkit-animation: sk-bouncedelay 1.6s infinite ease-in-out both;
+  animation: sk-bouncedelay 1.6s infinite ease-in-out both;
+}
+.soda-log .soda-log-body .log-waited .bounce1 {
+  -webkit-animation-delay: -0.64s;
+  animation-delay: -0.64s;
+}
+.soda-log .soda-log-body .log-waited .bounce2 {
+  -webkit-animation-delay: -0.32s;
+  animation-delay: -0.32s;
+}
+.soda-log .soda-log-body .log-waited .bounce3 {
+  -webkit-animation-delay: -0.16s;
+  animation-delay: -0.16s;
+}
+@-webkit-keyframes sk-bouncedelay {
+  0%,
+  80%,
+  100% {
+    -webkit-transform: scale(0);
+  }
+  40% {
+    -webkit-transform: scale(1);
+  }
+}
+@keyframes sk-bouncedelay {
+  0%,
+  80%,
+  100% {
+    -webkit-transform: scale(0);
+    transform: scale(0);
+  }
+  40% {
+    -webkit-transform: scale(1);
+    transform: scale(1);
+  }
+}
+.soda-log .error {
+  display: flex;
+  align-items: center;
+  color: #ff6c60;
+  font-size: 1.5em;
+  height: 100%;
+  justify-content: center;
+}
+.soda-log .search-icon {
+  display: inline-block;
+  position: relative;
+  width: 14px;
+  height: 14px;
+}
+.soda-log .search-icon:before {
+  content: '';
+  position: absolute;
+  background-color: transparent;
+  border: 2px solid #f2f2f2;
+  border-radius: 50%;
+  width: 5px;
+  height: 5px;
+  left: 0;
+  top: 0;
+}
+.soda-log .search-icon:after {
+  content: '';
+  position: absolute;
+  background-color: transparent;
+  width: 2px;
+  height: 6px;
+  transform: rotate(-45deg);
+  background: #f2f2f2;
+  left: 9px;
+  top: 7px;
+  border-radius: 2px;
+}
+.soda-log #scroll {
+  width: 32px;
+  border-radius: 2px;
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  cursor: pointer;
+  z-index: 999;
+}
+.soda-log #scroll #search-bar,
+.soda-log #scroll .search-area {
+  margin-bottom: 4px;
+}
+.soda-log #scroll .search-area {
+  display: inline-block;
+  width: 240px;
+  left: -210px;
+  height: 31px;
+  background-color: #2b3140;
+  border-radius: 2px;
+  border: 1px solid #737987;
+  position: relative;
+}
+.soda-log #scroll .search-area input {
+  width: 210px;
+  line-height: 31px;
+  padding: 0 10px;
+  background: transparent;
+  border: none;
+  color: #fff;
+}
+.soda-log #scroll .search-area i {
+  position: relative;
+  left: 9px;
+  width: 12px;
+  height: 12px;
+  cursor: default;
+}
+.soda-log #scroll .search-area i.search-btn {
+  top: -1px;
+}
+.soda-log #scroll i {
+  position: absolute;
+  top: 12px;
+  left: 9px;
+  width: 12px;
+  height: 12px;
+}
+.soda-log #scroll i.search-btn {
+  left: 7px;
+  top: 6px;
+}
+.soda-log #scroll i.search-btn:before {
+  content: '';
+  position: absolute;
+  background-color: transparent;
+  border: 2px solid #f2f2f2;
+  border-radius: 50%;
+  width: 10px;
+  height: 10px;
+  left: 0;
+  top: 0;
+}
+.soda-log #scroll i.search-btn:after {
+  content: '';
+  position: absolute;
+  background-color: transparent;
+  width: 2px;
+  height: 6px;
+  transform: rotate(-45deg);
+  background: #f2f2f2;
+  left: 12px;
+  top: 12px;
+  border-radius: 2px;
+}
+.soda-log .arrow {
+  position: relative;
+  display: block;
+  width: 30px;
+  height: 31px;
+  border: 1px solid #737987;
+  opacity: 0.4;
+}
+.soda-log .arrow i.arrow {
+  border-right: 2px solid #fff;
+  border-top: 2px solid #fff;
+  border-bottom: none;
+  border-left: none;
+  -webkit-transform: rotate(-45deg);
+  transform: rotate(-45deg);
+  box-sizing: border-box;
+}
+.soda-log .arrow:hover {
+  background-color: rgba(115, 121, 135, 0.4);
+}
+.soda-log .arrow:last-child {
+  border-bottom: none;
+}
+.soda-log .arrow.left {
+  transform: rotate(90deg);
+}
+.soda-log .arrow.bottom {
+  transform: rotate(180deg);
+}
+.soda-log .arrow.right {
+  transform: rotate(270deg);
+}

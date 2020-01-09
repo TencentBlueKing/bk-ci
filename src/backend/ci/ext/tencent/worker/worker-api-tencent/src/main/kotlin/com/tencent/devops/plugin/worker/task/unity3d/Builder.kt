@@ -26,13 +26,13 @@
 
 package com.tencent.devops.plugin.worker.task.unity3d
 
+import com.tencent.devops.common.api.exception.TaskExecuteException
+import com.tencent.devops.common.api.pojo.ErrorCode
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.log.Ansi
 import com.tencent.devops.common.pipeline.enums.Platform
 import com.tencent.devops.plugin.worker.task.unity3d.model.Argument
-import com.tencent.devops.process.pojo.AtomErrorCode
 import com.tencent.devops.process.pojo.BuildVariables
-import com.tencent.devops.process.pojo.ErrorType
-import com.tencent.devops.worker.common.exception.TaskExecuteException
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.utils.ShellUtil
 import java.io.File
@@ -122,6 +122,7 @@ class Builder(private val argument: Argument) {
 
         try {
             ShellUtil.execute(
+                buildId = buildVariables.buildId,
                 script = buildCommand,
                 dir = workspace,
                 buildEnvs = buildVariables.buildEnvs,
@@ -133,7 +134,7 @@ class Builder(private val argument: Argument) {
         if (!future.get()) throw TaskExecuteException(
             errorMsg = "unity fail...",
             errorType = ErrorType.USER,
-            errorCode = AtomErrorCode.USER_TASK_OPERATE_FAIL
+            errorCode = ErrorCode.USER_TASK_OPERATE_FAIL
         )
     }
 

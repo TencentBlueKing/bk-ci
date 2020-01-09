@@ -215,6 +215,12 @@ class OpIdeAtomServiceImpl @Autowired constructor(
         atomRecords?.forEach {
             val atomFeatureRecord = marketIdeAtomFeatureDao.getIdeAtomFeature(dslContext, atomCode)!!
             val classifyRecord = classifyDao.getClassify(dslContext, it.classifyId)
+            val classifyCode = classifyRecord?.classifyCode
+            val classifyName = classifyRecord?.classifyName
+            val classifyLanName = MessageCodeUtil.getCodeLanMessage(
+                messageCode = "${StoreMessageCode.MSG_CODE_STORE_CLASSIFY_PREFIX}$classifyCode",
+                defaultMessage = classifyName
+            )
             val atomEnvInfoRecord = ideAtomEnvInfoDao.getIdeAtomEnvInfo(dslContext, it.id)
             opIdeAtomItemList.add(
                 OpIdeAtomItem(
@@ -224,8 +230,8 @@ class OpIdeAtomServiceImpl @Autowired constructor(
                     atomType = IdeAtomTypeEnum.getAtomTypeObj(atomFeatureRecord.atomType.toInt()),
                     atomVersion = it.version,
                     atomStatus = IdeAtomStatusEnum.getIdeAtomStatusObj(it.atomStatus.toInt())!!,
-                    classifyCode = classifyRecord?.classifyCode,
-                    classifyName = classifyRecord?.classifyName,
+                    classifyCode = classifyCode,
+                    classifyName = classifyLanName,
                     categoryList = atomCategoryService.getCategorysByAtomId(it.id).data,
                     publisher = it.publisher,
                     pubTime = if (null != it.pubTime) DateTimeUtil.toDateTime(it.pubTime) else null,
@@ -277,6 +283,12 @@ class OpIdeAtomServiceImpl @Autowired constructor(
             val atomCode = it["atomCode"] as String
             val atomVersion = it["atomVersion"] as String
             val atomEnvInfoRecord = ideAtomEnvInfoDao.getIdeAtomEnvInfo(dslContext, atomId)
+            val atomClassifyCode = it["classifyCode"] as? String
+            val classifyName = it["classifyName"] as? String
+            val classifyLanName = MessageCodeUtil.getCodeLanMessage(
+                messageCode = "${StoreMessageCode.MSG_CODE_STORE_CLASSIFY_PREFIX}$atomClassifyCode",
+                defaultMessage = classifyName
+            )
             val opIdeAtomItem = OpIdeAtomItem(
                 atomId = atomId,
                 atomName = it["atomName"] as String,
@@ -284,8 +296,8 @@ class OpIdeAtomServiceImpl @Autowired constructor(
                 atomType = if (null != it["atomType"]) IdeAtomTypeEnum.getAtomTypeObj((it["atomType"] as Byte).toInt()) else null,
                 atomVersion = it["atomVersion"] as String,
                 atomStatus = IdeAtomStatusEnum.getIdeAtomStatusObj((it["atomStatus"] as Byte).toInt())!!,
-                classifyCode = it["classifyCode"] as? String,
-                classifyName = it["classifyName"] as? String,
+                classifyCode = atomClassifyCode,
+                classifyName = classifyLanName,
                 categoryList = atomCategoryService.getCategorysByAtomId(atomId).data,
                 publisher = it["publisher"] as String,
                 pubTime = if (null != it["pubTime"]) DateTimeUtil.toDateTime(it["pubTime"] as LocalDateTime) else null,

@@ -26,7 +26,9 @@
 
 package com.tencent.devops.process.engine.atom.task.deploy
 
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.archive.client.BkRepoClient
 import com.tencent.devops.common.archive.client.JfrogService
 import com.tencent.devops.common.archive.pojo.ArtifactorySearchParam
 import com.tencent.devops.common.client.Client
@@ -36,6 +38,8 @@ import com.tencent.devops.common.job.api.pojo.EnvSet
 import com.tencent.devops.common.job.api.pojo.OpenStateFastPushFileRequest
 import com.tencent.devops.common.pipeline.element.OpenStatePushFileElement
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.gray.RepoGray
 import com.tencent.devops.environment.api.ServiceEnvironmentResource
 import com.tencent.devops.environment.api.ServiceNodeResource
 import com.tencent.devops.log.utils.LogUtils
@@ -48,7 +52,6 @@ import com.tencent.devops.process.engine.common.BS_ATOM_START_TIME_MILLS
 import com.tencent.devops.process.engine.common.BS_TASK_HOST
 import com.tencent.devops.process.engine.exception.BuildTaskException
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
-import com.tencent.devops.process.pojo.ErrorType
 import com.tencent.devops.process.service.PipelineUserService
 import com.tencent.devops.process.util.CommonUtils
 import com.tencent.devops.project.api.service.ServiceProjectResource
@@ -68,7 +71,10 @@ class OpenStatePushFileTaskAtom @Autowired constructor(
     private val jobClient: JobClient,
     private val pipelineUserService: PipelineUserService,
     private val jfrogService: JfrogService,
-    private val rabbitTemplate: RabbitTemplate
+    private val rabbitTemplate: RabbitTemplate,
+    private val repoGray: RepoGray,
+    private val redisOperation: RedisOperation,
+    private val bkRepoClient: BkRepoClient
 ) : IAtomTask<OpenStatePushFileElement> {
     override fun tryFinish(
         task: PipelineBuildTask,
@@ -162,13 +168,19 @@ class OpenStatePushFileTaskAtom @Autowired constructor(
         runVariables: Map<String, String>,
         isCustom: Boolean = false
     ): BuildStatus {
+        val userId = task.starter
         val buildId = task.buildId
         val projectId = task.projectId
         val pipelineId = task.pipelineId
         val taskId = task.taskId
+        val containerId = task.containerHashId
         val executeCount = task.executeCount ?: 1
 
         val srcPath = parseVariable(param.srcPath, runVariables)
+        val isRepoGray = repoGray.isGray(projectId, redisOperation)
+        if (isRepoGray) {
+            LogUtils.addLine(rabbitTemplate, buildId, "use bkrepo: $isRepoGray", taskId, containerId, executeCount)
+        }
 
         // 下载所有文件
         var count = 0
@@ -178,17 +190,30 @@ class OpenStatePushFileTaskAtom @Autowired constructor(
         srcPath.split(",").map {
             it.trim().removePrefix("/").removePrefix("./")
         }.forEach { path ->
-            val files = jfrogService.downloadFile(
-                ArtifactorySearchParam(
+            val files = if (isRepoGray) {
+                bkRepoClient.downloadFileByPattern(
+                    user = userId,
                     projectId = projectId,
                     pipelineId = pipelineId,
                     buildId = buildId,
-                    regexPath = path,
-                    custom = isCustom,
-                    executeCount = executeCount,
-                    elementId = taskId
-                ), destPath.canonicalPath
-            )
+                    repoName = if (isCustom) "custom" else "pipeline",
+                    pathPattern = path,
+                    destPath = destPath.canonicalPath
+                )
+            } else {
+                jfrogService.downloadFile(
+                    ArtifactorySearchParam(
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        buildId = buildId,
+                        regexPath = path,
+                        custom = isCustom,
+                        executeCount = executeCount,
+                        elementId = taskId
+                    ),
+                    destPath.canonicalPath
+                )
+            }
 
             files.forEach { file ->
                 localFileList.add(file.absolutePath)
@@ -357,8 +382,8 @@ class OpenStatePushFileTaskAtom @Autowired constructor(
                 buildId = buildId,
                 message = "执行超时/Job getTimeout: ${maxRunningMills / 60000} Minutes",
                 tag = taskId,
-                    jobId = containerHashId,
-                    executeCount = executeCount
+                jobId = containerHashId,
+                executeCount = executeCount
             )
             return BuildStatus.EXEC_TIMEOUT
         }

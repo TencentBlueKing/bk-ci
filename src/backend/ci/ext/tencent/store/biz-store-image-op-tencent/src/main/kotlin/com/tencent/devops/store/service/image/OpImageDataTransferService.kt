@@ -254,7 +254,7 @@ class OpImageDataTransferService @Autowired constructor(
         var changedCount = 0
         // 2.调project接口获取项目负责人信息
         val projectInfo =
-            client.get(ServiceProjectResource::class).listByProjectCode(setOf(projectCode)).data?.get(0)
+            client.get(ServiceProjectResource::class).listOnlyByProjectCode(setOf(projectCode)).data?.get(0)
                 ?: throw DataConsistencyException(
                     srcData = "projectCode=$projectCode",
                     targetData = "projectDetail",
@@ -296,6 +296,16 @@ class OpImageDataTransferService @Autowired constructor(
             } else {
                 // 生成code
                 imageCode = it.repo!!.removePrefix("/").removeSuffix("/").replace("paas/bkdevops/", "").replace("/", "_")
+                // 超长处理
+                if (imageCode.length > 60) {
+                    imageCode = imageCode.substring(imageCode.length - 60)
+                    if (imageCode.indexOf("_") != -1) {
+                        imageCode = imageCode.substring(imageCode.indexOf("_") + 1)
+                    }
+                    if (imageCode.isEmpty()) {
+                        imageCode = "build_image"
+                    }
+                }
                 // 重复处理
                 var imageCodeNum = 0
                 var tempImageCode = imageCode
@@ -308,11 +318,30 @@ class OpImageDataTransferService @Autowired constructor(
             }
             // 5.镜像名称生成
             val index = it.repo!!.lastIndexOf("/")
-            val imageName = if (-1 != index) {
+            var imageName = if (-1 != index) {
                 it.repo!!.substring(index + 1)
             } else {
-                it.repo
+                it.repo ?: ""
             }
+            // 超长处理
+            if (imageName.length > 60) {
+                imageName = imageName.substring(imageName.length - 60)
+                if (imageName.indexOf("_") != -1) {
+                    imageName = imageName.substring(imageName.indexOf("_") + 1)
+                }
+                if (imageName.isEmpty()) {
+                    imageName = "build_image"
+                }
+            }
+            // 重复处理
+            var imageNameNum = 0
+            var tempImageName = imageName
+            while (imageDao.countByName(dslContext, tempImageName) > 0) {
+                logger.warn("$interfaceName:transferImage:Inner:imageName $tempImageName already exists")
+                imageNameNum += 1
+                tempImageName = imageName + "_$imageNameNum"
+            }
+            imageName = tempImageName
             // 6.调OP新增镜像接口
             // image字段是含repoUrl、repoName、tag的完整字段
             logger.info("$interfaceName:transferImage:Inner:ImageCreateRequest($creator,$projectCode,$imageName,$imageCode,${it.image},${it.repo},$imageTag)")
@@ -338,6 +367,8 @@ class OpImageDataTransferService @Autowired constructor(
                     imageRepoName = imageRepoName,
                     ticketId = null,
                     imageTag = imageTag,
+                    dockerFileType = null,
+                    dockerFileContent = null,
                     logoUrl = "http://radosgw.open.oa.com/paas_backend/ieod/prod/file/png/random_15755397330026456632033301754111.png?v=1575539733",
                     summary = "旧版的构建镜像，通过拷贝为构建镜像入口生成。\n" +
                         "已自动转换为容器镜像商店数据，请项目管理员在研发商店工作台进行管理。",

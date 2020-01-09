@@ -39,16 +39,13 @@ class UserSubPipelineInfoResourceImpl @Autowired constructor (
 ) : UserSubPipelineInfoResource {
 
     override fun subpipManualStartupInfo(userId: String, projectId: String, pipelineId: String): Result<List<SubPipelineStartUpInfo>> {
-        checkParam(userId, projectId)
+        checkParam(userId)
         return subPipeService.subpipManualStartupInfo(userId, projectId, pipelineId)
     }
 
-    private fun checkParam(userId: String, projectId: String) {
+    private fun checkParam(userId: String) {
         if (userId.isBlank()) {
             throw ParamBlankException("Invalid userId")
-        }
-        if (projectId.isBlank()) {
-            throw ParamBlankException("Invalid projectId")
         }
     }
 }

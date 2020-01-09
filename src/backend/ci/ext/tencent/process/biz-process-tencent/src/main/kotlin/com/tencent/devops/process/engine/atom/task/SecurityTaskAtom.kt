@@ -29,6 +29,8 @@ package com.tencent.devops.process.engine.atom.task
 import com.google.gson.JsonParser
 import com.tencent.devops.artifactory.api.service.ServiceArtifactoryResource
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
+import com.tencent.devops.common.api.pojo.ErrorCode
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.archive.client.JfrogClient
 import com.tencent.devops.common.client.Client
@@ -46,8 +48,6 @@ import com.tencent.devops.process.engine.atom.IAtomTask
 import com.tencent.devops.process.engine.common.BS_ATOM_LOOP_TIMES
 import com.tencent.devops.process.engine.common.BS_ATOM_STATUS_REFRESH_DELAY_MILLS
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
-import com.tencent.devops.process.pojo.AtomErrorCode
-import com.tencent.devops.process.pojo.ErrorType
 import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
@@ -165,7 +165,7 @@ class SecurityTaskAtom @Autowired constructor(
             AtomResponse(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.USER,
-                errorCode = AtomErrorCode.USER_RESOURCE_NOT_FOUND,
+                errorCode = ErrorCode.USER_RESOURCE_NOT_FOUND,
                 errorMsg = "找不到APK加固任务ID"
             )
         }
@@ -198,7 +198,7 @@ class SecurityTaskAtom @Autowired constructor(
             AtomResponse(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.USER,
-                errorCode = AtomErrorCode.USER_TASK_OPERATE_FAIL,
+                errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
                 errorMsg = "apk包加固执行失败"
             )
         }
@@ -269,7 +269,7 @@ class SecurityTaskAtom @Autowired constructor(
             AtomResponse(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.SYSTEM,
-                errorCode = AtomErrorCode.SYSTEM_OUTTIME_ERROR,
+                errorCode = ErrorCode.SYSTEM_OUTTIME_ERROR,
                 errorMsg = "apk加固执行超时"
             )
         }

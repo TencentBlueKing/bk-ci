@@ -14,13 +14,13 @@ const routes = [
         children: [
             {
                 path: '',
-                name: 'overview',
+                name: 'qualityOverview',
                 component: overview,
                 meta: {
                     title: '总览',
                     logo: 'quality',
-                    header: '质量红线',
-                    to: 'overview'
+                    header: 'quality',
+                    to: 'qualityOverview'
                 }
             },
             {
@@ -30,8 +30,8 @@ const routes = [
                 meta: {
                     title: '红线规则',
                     logo: 'quality',
-                    header: '质量红线',
-                    to: 'overview'
+                    header: 'quality',
+                    to: 'qualityOverview'
                 }
             },
             {
@@ -41,8 +41,8 @@ const routes = [
                 meta: {
                     title: '创建红线规则',
                     logo: 'quality',
-                    header: '质量红线',
-                    to: 'overview'
+                    header: 'quality',
+                    to: 'qualityOverview'
                 }
             },
             {
@@ -52,8 +52,8 @@ const routes = [
                 meta: {
                     title: '编辑红线规则',
                     logo: 'quality',
-                    header: '质量红线',
-                    to: 'overview'
+                    header: 'quality',
+                    to: 'qualityOverview'
                 }
             },
             {
@@ -63,8 +63,8 @@ const routes = [
                 meta: {
                     title: '红线记录',
                     logo: 'quality',
-                    header: '质量红线',
-                    to: 'overview'
+                    header: 'quality',
+                    to: 'qualityOverview'
                 }
             },
             {
@@ -74,8 +74,8 @@ const routes = [
                 meta: {
                     title: '指标列表',
                     logo: 'quality',
-                    header: '质量红线',
-                    to: 'overview'
+                    header: 'quality',
+                    to: 'qualityOverview'
                 }
             },
             {
@@ -85,8 +85,8 @@ const routes = [
                 meta: {
                     title: '创建脚本任务指标',
                     logo: 'quality',
-                    header: '质量红线',
-                    to: 'overview'
+                    header: 'quality',
+                    to: 'qualityOverview'
                 }
             },
             {
@@ -96,8 +96,8 @@ const routes = [
                 meta: {
                     title: '编辑脚本任务指标',
                     logo: 'quality',
-                    header: '质量红线',
-                    to: 'overview'
+                    header: 'quality',
+                    to: 'qualityOverview'
                 }
             },
             {
@@ -107,8 +107,8 @@ const routes = [
                 meta: {
                     title: '通知组',
                     logo: 'quality',
-                    header: '质量红线',
-                    to: 'overview'
+                    header: 'quality',
+                    to: 'qualityOverview'
                 }
             }
         ]
