@@ -54,7 +54,7 @@ spring:
           uri: file:///data1/work/config/devops-config
     consul:
       discovery:
-        tags: dev
+        tags: test
 
 server:
   port: 21937
