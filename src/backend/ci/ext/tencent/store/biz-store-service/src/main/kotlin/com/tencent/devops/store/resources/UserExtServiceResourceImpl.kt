@@ -10,7 +10,7 @@ import com.tencent.devops.store.pojo.vo.ExtensionServiceVO
 import com.tencent.devops.store.service.ExtServiceBaseService
 import org.springframework.beans.factory.annotation.Autowired
 
-@RestResource
+
 class UserExtServiceResourceImpl @Autowired constructor(
     private val extServiceBaseService: ExtServiceBaseService
 ): UserExtServiceResource{
@@ -58,12 +58,14 @@ class UserExtServiceResourceImpl @Autowired constructor(
         page: Int?,
         pageSize: Int?
     ): Result<ExtensionAndVersionVO?> {
-        return extServiceBaseService.getMyService(
-            userId = userId,
-            serviceCode = serviceCode,
-            page = page,
-            pageSize = pageSize
-        )
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+
+//        return extServiceBaseService.getMyService(
+//            userId = userId,
+//            serviceCode = serviceCode,
+//            page = page,
+//            pageSize = pageSize
+//        )
     }
 
     override fun getExtensionServiceInfoList(
