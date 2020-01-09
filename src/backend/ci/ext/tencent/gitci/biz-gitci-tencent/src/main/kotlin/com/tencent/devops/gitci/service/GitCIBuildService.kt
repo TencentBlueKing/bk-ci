@@ -385,7 +385,7 @@ class GitCIBuildService @Autowired constructor(
         }
     }
 
-    private fun createPipelineParams(gitProjectConf: GitRepositoryConf, yaml: CIBuildYaml): List<BuildFormProperty> {
+    private fun createPipelineParams(gitProjectConf: GitRepositoryConf, yaml: CIBuildYaml): MutableList<BuildFormProperty> {
         val result = mutableListOf<BuildFormProperty>()
         gitProjectConf.env?.forEach {
             val value = gitCIParameterUtils.encrypt(it.value)
