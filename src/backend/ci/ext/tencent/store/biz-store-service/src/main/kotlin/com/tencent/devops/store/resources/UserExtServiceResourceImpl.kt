@@ -9,7 +9,6 @@ import com.tencent.devops.store.pojo.vo.ExtensionAndVersionVO
 import com.tencent.devops.store.pojo.vo.ExtensionServiceVO
 import com.tencent.devops.store.service.ExtServiceBaseService
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
 
 @RestResource
 class UserExtServiceResourceImpl @Autowired constructor(
@@ -27,12 +26,26 @@ class UserExtServiceResourceImpl @Autowired constructor(
         )
     }
 
-    override fun submitExtensionService(userId: String, serviceId: String, proejctCode: String, submitDTO: SubmitDTO): Result<String?> {
-        return extServiceBaseService.updateExtService(
-            userId = userId,
-            projectCode = proejctCode,
-            submitDTO = submitDTO
-        )
+//    override fun submitExtensionService(
+//        userId: String,
+//        serviceId: String,
+//        projectCode: String,
+//        extensionInfo: SubmitDTO
+//    ): Result<String?> {
+//        return extServiceBaseService.updateExtService(
+//            userId = userId,
+//            projectCode = projectCode,
+//            submitDTO = extensionInfo
+//        )
+//    }
+
+    override fun submitExtensionService(
+        userId: String,
+        serviceId: String,
+        projectCode: String,
+        extensionInfo: SubmitDTO
+    ): Result<String?> {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
     override fun getExtensionServiceInfo(userId: String, serviceId: String): Result<ExtensionServiceVO> {

@@ -1,6 +1,5 @@
 package com.tencent.devops.store.api
 
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ACCESS_TOKEN
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.dto.InitExtServiceDTO
@@ -52,21 +51,11 @@ interface UserExtServiceResource {
         @PathParam("serviceId")
         serviceId: String,
         @ApiParam("服务编码")
-        proejctCode: String,
+        projectCode: String,
         @ApiParam("扩展服务信息")
         extensionInfo: SubmitDTO
     ): Result<String?>
 
-//    @PUT
-//    @ApiOperation(value = "修改扩展服务")
-//    @Path("/{serviceId}")
-//    fun updateExtensionService(
-//        @ApiParam("扩展服务Id")
-//        @PathParam("serviceId")
-//        serviceId: String,
-//        @ApiParam("扩展服务信息")
-//        extensionInfo: UpdateExtensionServiceDTO
-//    ): Result<String>
 
     @GET
     @ApiOperation(value = "获取单条扩展服务信息")
