@@ -86,13 +86,13 @@ class BuildDockerHostResourceImpl @Autowired constructor(
         return Result(0, "success")
     }
 
-    override fun log(buildId: String, red: Boolean, message: String, tag: String?): Result<Boolean>? {
-        dockerHostBuildService.log(buildId, red, message, tag)
+    override fun log(buildId: String, red: Boolean, message: String, tag: String?, jobId: String?): Result<Boolean>? {
+        dockerHostBuildService.log(buildId, red, message, tag, jobId)
         return Result(0, "success")
     }
 
-    override fun postLog(buildId: String, red: Boolean, message: String, tag: String?): Result<Boolean>? {
-        dockerHostBuildService.log(buildId, red, message, tag)
+    override fun postLog(buildId: String, red: Boolean, message: String, tag: String?, jobId: String?): Result<Boolean>? {
+        dockerHostBuildService.log(buildId, red, message, tag, jobId)
         return Result(0, "success")
     }
 
