@@ -345,7 +345,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
                     version = it["version"] as String,
                     category = it["category"] as String,
                     logoUrl = it["logoUrl"] as String?,
-                    serviceStatus = it["serviceStatus"] as String,
+                    serviceStatus = ExtServiceStatusEnum.getServiceStatus(it["serviceStatus"] as Int),
                     creator = it["creator"] as String,
                     createTime = DateTimeUtil.toDateTime(it["createTime"] as LocalDateTime),
                     modifier = it["modifier"] as String,

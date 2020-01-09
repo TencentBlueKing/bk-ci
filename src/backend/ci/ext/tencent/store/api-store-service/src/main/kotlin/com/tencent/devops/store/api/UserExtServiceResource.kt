@@ -78,7 +78,7 @@ interface UserExtServiceResource {
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @ApiParam("扩展服务Id")
-        @PathParam("serviceCode")
+        @QueryParam("serviceCode")
         serviceCode: String?,
         @ApiParam("页码", required = false)
         @QueryParam("page")
