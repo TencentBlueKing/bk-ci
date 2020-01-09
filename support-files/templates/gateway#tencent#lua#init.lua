@@ -92,7 +92,9 @@ config = {
     host = "__BKCI_ITLOGIN_HOST__"
   },
   bkrepo = {
-    domain = "__BKREPO_HOST__"
+    domain = "__BKREPO_HOST__",
+    user = "__BKREPO_USER__",
+    password = "__BKREPO_PASSWORD__"
   },
   prebuild = {
     domain = "__BKCI_PREBUILD_FQDN__",

@@ -1,6 +1,9 @@
 package com.tencent.devops.plugin.worker.task.sign
 
 import com.tencent.devops.common.api.exception.CustomException
+import com.tencent.devops.common.api.exception.TaskExecuteException
+import com.tencent.devops.common.api.pojo.ErrorCode
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.FileUtil
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_IPA_SIGN_STATUS
 import com.tencent.devops.common.pipeline.element.IosSJTYSignElement
@@ -30,7 +33,11 @@ class SJTYSignTask : ITask() {
     ) {
 
         val taskParams = buildTask.params ?: mapOf()
-        val ipaFiles = taskParams["ipaFile"] ?: throw RuntimeException("ipaFile is empty")
+        val ipaFiles = taskParams["ipaFile"] ?: throw TaskExecuteException(
+            errorCode = ErrorCode.USER_RESOURCE_NOT_FOUND,
+            errorType = ErrorType.USER,
+            errorMsg = "ipaFile is empty"
+        )
         val customPath = taskParams["destPath"]
         val isCustomize = taskParams["customize"]
         val certId = taskParams["certId"] ?: throw CustomException(Response.Status.INTERNAL_SERVER_ERROR, "certId is empty")
@@ -79,7 +86,11 @@ class SJTYSignTask : ITask() {
         }
         // 最终失败
         if (isException) {
-            throw RuntimeException("enterprise sign failed after all retry : ($file)")
+            throw TaskExecuteException(
+                errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
+                errorType = ErrorType.USER,
+                errorMsg = "enterprise sign failed after all retry : ($file)"
+            )
         }
     }
 
