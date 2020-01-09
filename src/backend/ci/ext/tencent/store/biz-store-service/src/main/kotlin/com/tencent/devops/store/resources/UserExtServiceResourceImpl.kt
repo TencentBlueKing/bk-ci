@@ -39,13 +39,17 @@ class UserExtServiceResourceImpl @Autowired constructor(
     }
 
     override fun listDeskExtService(
-        accessToken: String,
         userId: String,
-        serviceCode: String,
+        serviceCode: String?,
         page: Int?,
         pageSize: Int?
-    ): Result<ExtensionAndVersionVO> {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    ): Result<ExtensionAndVersionVO?> {
+        return extServiceBaseService.getMyService(
+            userId = userId,
+            serviceCode = serviceCode,
+            page = page,
+            pageSize = pageSize
+        )
     }
 
     override fun getExtensionServiceInfoList(

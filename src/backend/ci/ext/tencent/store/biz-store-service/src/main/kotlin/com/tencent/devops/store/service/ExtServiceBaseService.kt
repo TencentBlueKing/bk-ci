@@ -2,9 +2,12 @@ package com.tencent.devops.store.service
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.UUIDUtil
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.dao.ExtServiceDao
 import com.tencent.devops.store.dao.ExtServiceEnvDao
@@ -28,6 +31,9 @@ import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.dto.InitExtServiceDTO
 import com.tencent.devops.store.pojo.dto.SubmitDTO
 import com.tencent.devops.store.pojo.enums.ExtServiceStatusEnum
+import com.tencent.devops.store.pojo.vo.ExtensionAndVersionVO
+import com.tencent.devops.store.pojo.vo.ExtensionServiceVO
+import com.tencent.devops.store.pojo.vo.MyExtServiceRespItem
 import com.tencent.devops.store.service.common.StoreCommonService
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -35,6 +41,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import org.springframework.util.StringUtils
+import java.time.LocalDateTime
 
 @Service
 abstract class ExtServiceBaseService @Autowired constructor() {
@@ -61,6 +68,8 @@ abstract class ExtServiceBaseService @Autowired constructor() {
     lateinit var extServiceVersionLogDao: ExtServiceVersionLogDao
     @Autowired
     lateinit var extServiceLabelDao: ExtServiceLableRelDao
+    @Autowired
+    lateinit var client: Client
 
     fun addExtService(
         userId: String,
@@ -88,13 +97,13 @@ abstract class ExtServiceBaseService @Autowired constructor() {
                     serviceCode = extensionInfo.serviceCode,
                     serviceName = extensionInfo.serviceName,
                     creatorUser = extensionInfo.creatorUser,
-                    version = "1.0.0",
                     publisher = userId,
                     publishTime = System.currentTimeMillis(),
-                    status = 0
+                    status = 0,
+                    version = ""
                 )
             )
-            // 添加插件与项目关联关系，type为0代表新增插件时关联的初始化项目
+            // 添加扩展服务与项目关联关系，type为0代表新增扩展服务时关联的初始化项目
             storeProjectRelDao.addStoreProjectRel(
                 dslContext = context,
                 userId = userId,
@@ -123,8 +132,8 @@ abstract class ExtServiceBaseService @Autowired constructor() {
                 creatorUser = userId,
                 modifierUser = userId
             )
-            extServiceEnvDao.create(context, id, extServiceEnvCreateInfo) // 添加流水线插件执行环境信息
-            // 默认给新建插件的人赋予管理员权限
+            extServiceEnvDao.create(context, id, extServiceEnvCreateInfo) // 添加扩展服务执行环境信息
+            // 默认给新建扩展服务的人赋予管理员权限
             storeMemberDao.addStoreMember(
                 dslContext = context,
                 userId = userId,
@@ -133,7 +142,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
                 type = StoreMemberTypeEnum.ADMIN.type.toByte(),
                 storeType = StoreTypeEnum.SERVICE.type.toByte()
             )
-            // 添加插件特性信息
+            // 添加扩展服务特性信息
             extFeatureDao.create(
                 dslContext = context,
                 userId = userId,
@@ -146,6 +155,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
                     modifierUser = userId
                 )
             )
+            // 添加扩展服务扩展点
             extServiceItemRelDao.create(
                 dslContext = dslContext,
                 userId = userId,
@@ -173,22 +183,23 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         val version = submitDTO.version
 
         // 判断扩展服务是不是首次创建版本
-        val serviceRecord = extServiceDao.getServiceByCode(dslContext, serviceCode)
-        logger.info("the serviceRecords is :$serviceRecord")
-        if (null == serviceRecord) {
+        val serviceRecords = extServiceDao.listServiceByCode(dslContext, serviceCode)
+        logger.info("the serviceRecords is :$serviceRecords")
+        if (null == serviceRecords) {
             return MessageCodeUtil.generateResponseDataObject(
                 CommonMessageCode.PARAMETER_IS_INVALID,
                 arrayOf(serviceCode)
             )
         }
+        val serviceRecord = serviceRecords[0]
         // 判断更新的插件名称是否重复
-        if (validateAddServiceReqByName(submitDTO.serviceName).data!!) return MessageCodeUtil.generateResponseDataObject(
+        if (validateAddServiceReqByName(submitDTO.serviceName, submitDTO.serviceCode)) return MessageCodeUtil.generateResponseDataObject(
             CommonMessageCode.PARAMETER_IS_EXIST,
             arrayOf(submitDTO.serviceName)
         )
         // 校验前端传的版本号是否正确
         val releaseType = submitDTO.releaseType
-        val dbVersion = serviceRecord.version
+        val dbVersion = serviceRecord!!.version
         // 最近的版本处于上架中止状态，重新升级版本号不变
         val cancelFlag = serviceRecord.serviceStatus == ExtServiceStatusEnum.GROUNDING_SUSPENSION.status.toByte()
         val requireVersion =
@@ -250,7 +261,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
                     ),
                     extServiceVersionLogCreateInfo = ExtServiceVersionLogCreateInfo(
                         serviceId = serviceId,
-                        releaseType = submitDTO.releaseType.releaseType,
+                        releaseType = finalReleaseType,
                         content = submitDTO.versionContent,
                         creatorUser = userId,
                         modifierUser = userId
@@ -272,7 +283,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
                     ),
                     extServiceVersionLogCreateInfo = ExtServiceVersionLogCreateInfo(
                         serviceId = serviceId,
-                        releaseType = submitDTO.releaseType.releaseType,
+                        releaseType = submitDTO.releaseType.releaseType.toByte(),
                         content = submitDTO.versionContent,
                         creatorUser = userId,
                         modifierUser = userId
@@ -290,6 +301,68 @@ abstract class ExtServiceBaseService @Autowired constructor() {
             //asyncHandleUpdateAtom(context, serviceId, userId)
         }
         return Result(serviceId)
+    }
+
+    fun getMyService(
+        userId: String,
+        serviceCode: String?,
+        page: Int?,
+        pageSize: Int?
+    ): Result<ExtensionAndVersionVO?>{
+        logger.info("the getMyService userId is :$userId,serviceCode is :$serviceCode")
+        // 获取有权限的插件代码列表
+        val records = extServiceDao.getMyService(dslContext, userId, serviceCode, page, pageSize)
+        val count = extServiceDao.countByUser(dslContext, userId, serviceCode)
+        logger.info("the getMyService userId is :$userId,records is :$records,count is :$count")
+        // 获取项目ID对应的名称
+        val projectCodeList = mutableListOf<String>()
+        records?.forEach {
+            val testProjectCode = storeProjectRelDao.getUserStoreTestProjectCode(
+                dslContext,
+                userId,
+                it["serviceCode"] as String,
+                StoreTypeEnum.SERVICE
+            )
+            if (null != testProjectCode) projectCodeList.add(testProjectCode)
+        }
+        logger.info("the getMyService userId is :$userId,projectCodeList is :$projectCodeList")
+        val projectMap = client.get(ServiceProjectResource::class).getNameByCode(projectCodeList.joinToString(",")).data
+        logger.info("the getMyService userId is :$userId,projectMap is :$projectMap")
+        val myService = mutableListOf<MyExtServiceRespItem?>()
+        records?.forEach {
+            val serviceCode = it["serviceCode"] as String
+            var releaseFlag = false // 是否有处于上架状态的插件插件版本
+            val releaseAtomNum = extServiceDao.countReleaseServiceByCode(dslContext, serviceCode)
+            if (releaseAtomNum > 0) {
+                releaseFlag = true
+            }
+            myService.add(
+                MyExtServiceRespItem(
+                    serviceId = it["serviceId"] as String,
+                    name = it["serviceName"] as String,
+                    serviceCode = it["serviceCode"] as String,
+                    version = it["version"] as String,
+                    category = it["category"] as String,
+                    logoUrl = it["logoUrl"] as String,
+                    serviceStatus = it["serviceStatus"] as String,
+                    creator = it["creator"] as String,
+                    createTime = DateTimeUtil.toDateTime(it["createTime"] as LocalDateTime),
+                    modifier = it["modifier"] as String,
+                    updateTime = DateTimeUtil.toDateTime(it["updateTime"] as LocalDateTime),
+                    projectName = projectMap?.get(
+                        storeProjectRelDao.getUserStoreTestProjectCode(
+                            dslContext,
+                            userId,
+                            it["atomCode"] as String,
+                            StoreTypeEnum.ATOM
+                        )
+                    ) ?: "",
+                    //TODO: 从第三张表获取数据
+                    language = "此处要完善",
+                    releaseFlag = releaseFlag
+                    ))
+        }
+        return Result(ExtensionAndVersionVO(count, page, pageSize, myService))
     }
 
     abstract fun handleAtomPackage(
@@ -382,13 +455,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
                 false
             )
         }
-
-        validateAddServiceReqByName(extensionInfo.serviceName)
-        return Result(true)
-    }
-
-    private fun validateAddServiceReqByName(serviceName: String): Result<Boolean> {
-        // 判断扩展服务是否存在
+        val serviceName = extensionInfo.serviceName
         val nameInfo = extServiceDao.getServiceByName(dslContext, serviceName)
         if (nameInfo != null) {
             // 抛出错误提示
@@ -400,6 +467,22 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         }
         return Result(true)
     }
+
+    //TODO 此处需调整为： 同一个名称只支持在同一个服务内相同
+    private fun validateAddServiceReqByName(serviceName: String, serviceCode: String): Boolean {
+        // 判断扩展服务是否存在
+        val nameInfo = extServiceDao.listServiceByName(dslContext, serviceName)
+        if(nameInfo != null){
+            for(code in nameInfo){
+                if(serviceCode != code!!.serviceCode){
+                    return true
+                }
+            }
+        }
+        return false
+    }
+
+
 
     companion object {
         val logger = LoggerFactory.getLogger(ExtServiceBaseService::class.java)

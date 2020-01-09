@@ -81,25 +81,22 @@ interface UserExtServiceResource {
     ): Result<ExtensionServiceVO>
 
     @GET
-    @ApiOperation(value = "根据用户获取服务扩展工作台列表")
-    @Path("/desk/atom/list/")
+    @ApiOperation(value = "工作台--根据用户获取服务扩展列表")
+    @Path("/extService/list/")
     fun listDeskExtService(
-        @ApiParam("token", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
-        accessToken: String,
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @ApiParam("扩展服务Id")
         @PathParam("serviceCode")
-        serviceCode: String,
+        serviceCode: String?,
         @ApiParam("页码", required = false)
         @QueryParam("page")
         page: Int?,
         @ApiParam("每页数量", required = false)
         @QueryParam("pageSize")
         pageSize: Int?
-    ): Result<ExtensionAndVersionVO>
+    ): Result<ExtensionAndVersionVO?>
 
     @GET
     @ApiOperation(value = "获取扩展服务列表")

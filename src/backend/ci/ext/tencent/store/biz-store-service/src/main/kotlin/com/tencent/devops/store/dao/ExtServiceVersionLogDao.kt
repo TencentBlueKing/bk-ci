@@ -5,6 +5,7 @@ import com.tencent.devops.model.store.tables.records.TExtensionServiceVersionLog
 import com.tencent.devops.store.pojo.ExtServiceVersionLogCreateInfo
 import com.tencent.devops.store.pojo.ExtServiceVersionLogUpdateInfo
 import org.jooq.DSLContext
+import org.jooq.Result
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
@@ -31,7 +32,7 @@ class ExtServiceVersionLogDao {
                 .values(
                     id,
                     extServiceVersionLogCreateInfo.serviceId,
-                    extServiceVersionLogCreateInfo.releaseType.toByte(),
+                    extServiceVersionLogCreateInfo.releaseType,
                     extServiceVersionLogCreateInfo.content,
                     extServiceVersionLogCreateInfo.creatorUser,
                     extServiceVersionLogCreateInfo.modifierUser,
@@ -64,12 +65,30 @@ class ExtServiceVersionLogDao {
         }
     }
 
-    fun getVersionLogByServiceId(
+    fun getVersionLogById(
         dslContext: DSLContext,
-        serviceId: String
+        logId: String
     ): TExtensionServiceVersionLogRecord {
         with(TExtensionServiceVersionLog.T_EXTENSION_SERVICE_VERSION_LOG) {
-            return dslContext.selectFrom(this).where(SERVICE_ID.eq(serviceId)).fetchOne()
+            return dslContext.selectFrom(this).where(ID.eq(logId)).fetchOne()
+        }
+    }
+
+    fun listVersionLogByServiceId(
+        dslContext: DSLContext,
+        serviceId: String
+    ): Result<TExtensionServiceVersionLogRecord> {
+        with(TExtensionServiceVersionLog.T_EXTENSION_SERVICE_VERSION_LOG) {
+            return dslContext.selectFrom(this).where(SERVICE_ID.eq(serviceId)).fetch()
+        }
+    }
+
+    fun countVersionLogByServiceId(
+        dslContext: DSLContext,
+        serviceId: String
+    ): Int {
+        with(TExtensionServiceVersionLog.T_EXTENSION_SERVICE_VERSION_LOG) {
+            return dslContext.selectCount().from(this).where(SERVICE_ID.eq(serviceId)).fetchOne(0, Int::class.java)
         }
     }
 }

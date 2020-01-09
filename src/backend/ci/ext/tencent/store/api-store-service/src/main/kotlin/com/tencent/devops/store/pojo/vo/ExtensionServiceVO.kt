@@ -44,7 +44,7 @@ data class ExtensionServiceVO(
     @ApiModelProperty("修改用户")
     val modifierUser: String,
     @ApiModelProperty("添加时间")
-    val creatorTime: Long,
+    val creatorTime: String,
     @ApiModelProperty("修改时间")
-    val modifierTime: Long
+    val modifierTime: String
 )

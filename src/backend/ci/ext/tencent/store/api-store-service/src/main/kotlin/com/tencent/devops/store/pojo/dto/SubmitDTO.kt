@@ -1,7 +1,6 @@
 package com.tencent.devops.store.pojo.dto
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import com.tencent.devops.store.pojo.VersionLog
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import io.swagger.annotations.ApiModelProperty
 

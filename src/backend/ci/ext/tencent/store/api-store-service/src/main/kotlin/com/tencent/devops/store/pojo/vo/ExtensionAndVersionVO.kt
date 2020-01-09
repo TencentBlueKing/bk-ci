@@ -12,5 +12,5 @@ data class ExtensionAndVersionVO(
     @ApiModelProperty("每页记录大小", required = false)
     val pageSize: Int?,
     @ApiModelProperty("数据集合", required = false)
-    val records: List<ExtensionServiceVO?>
+    val records: List<MyExtServiceRespItem?>
 )

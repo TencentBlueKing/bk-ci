@@ -2,6 +2,7 @@ package com.tencent.devops.store.api
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.store.pojo.VersionLog
 import com.tencent.devops.store.pojo.vo.VersionLogVO
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -30,7 +31,7 @@ interface UserExtServiceVersionLogResource {
         @ApiParam("serviceId", required = true)
         @PathParam("serviceId")
         serviceId: String
-    ): Result<List<VersionLogVO>>
+    ): Result<VersionLogVO?>
 
     @Path("/ids/{logId}")
     @GET
@@ -42,5 +43,5 @@ interface UserExtServiceVersionLogResource {
         @ApiParam("logId", required = true)
         @PathParam("logId")
         logId: String
-    ): Result<VersionLogVO>
+    ): Result<VersionLog>
 }

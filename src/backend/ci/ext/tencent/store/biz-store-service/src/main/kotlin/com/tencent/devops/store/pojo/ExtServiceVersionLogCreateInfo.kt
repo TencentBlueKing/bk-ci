@@ -6,7 +6,7 @@ data class ExtServiceVersionLogCreateInfo(
     @ApiModelProperty("扩展服务ID")
     val serviceId: String,
     @ApiModelProperty("发布类型，0：新上架 1：非兼容性升级 2：兼容性功能更新 3：兼容性问题修正  ")
-    val releaseType: Int,
+    val releaseType: Byte,
     @ApiModelProperty("版本日志内容")
     val content: String,
     @ApiModelProperty("添加用户")
