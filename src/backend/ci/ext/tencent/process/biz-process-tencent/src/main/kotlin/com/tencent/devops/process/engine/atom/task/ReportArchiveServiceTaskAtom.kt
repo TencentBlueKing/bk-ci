@@ -316,7 +316,7 @@ class ReportArchiveServiceTaskAtom @Autowired constructor(
         if (isRepoGray) {
             allFileList.forEach { file ->
                 val relativePath = localDirFilePath.relativize(Paths.get(file.canonicalPath)).toString()
-                bkRepoClient.uploadLocalFile(userId, projectId, "report", "$projectId/$buildId/$taskId/$relativePath", file)
+                bkRepoClient.uploadLocalFile(userId, projectId, "report", "$pipelineId/$buildId/$taskId/$relativePath", file)
             }
         } else {
             allFileList.forEach { file ->

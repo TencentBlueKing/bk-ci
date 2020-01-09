@@ -36,6 +36,7 @@ import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.timestampmilli
+import com.tencent.devops.common.archive.client.BkRepoClient
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_BUNDLE_IDENTIFIER
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_VERSION
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_VS_LEAK_COUNT
@@ -51,6 +52,8 @@ import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.auth.code.VSAuthServiceCode
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.gray.RepoGray
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.log.utils.LogUtils
 import com.tencent.devops.model.plugin.tables.TPluginJingang
@@ -91,7 +94,10 @@ class JinGangService @Autowired constructor(
     private val dslContext: DSLContext,
     private val authProjectApi: AuthProjectApi,
     private val pipelineServiceCode: PipelineAuthServiceCode,
-    private val vsServiceCode: VSAuthServiceCode
+    private val vsServiceCode: VSAuthServiceCode,
+    private val redisOperation: RedisOperation,
+    private val repoGray: RepoGray,
+    private val bkRepoClient: BkRepoClient
 ) {
 
     companion object {
@@ -203,7 +209,6 @@ class JinGangService @Autowired constructor(
         val type = if (isCustom) ArtifactoryType.CUSTOM_DIR else ArtifactoryType.PIPELINE
 
         // 获取文件信息
-
         val jfrogFile = try {
             client.get(ServiceArtifactoryResource::class).show(projectId, type, file).data!!
         } catch (e: RemoteServiceException) {
@@ -240,7 +245,24 @@ class JinGangService @Autowired constructor(
                 pipelineId
             )
                 ?: throw RuntimeException("no pipeline name found for $pipelineId")
-        val fileUrl = getUrl(projectId, jfrogFile.path, isCustom)
+
+        val isRepoGray = repoGray.isGray(projectId, redisOperation)
+        LogUtils.addLine(rabbitTemplate, buildId, "use bkrepo: $isRepoGray", elementId, "", 1)
+
+        val fileUrl = if (isRepoGray) {
+            val shareUri = bkRepoClient.createShareUri(
+                userId,
+                projectId,
+                if (isCustom) "custom" else "pipeline",
+                jfrogFile.fullPath,
+                listOf(),
+                listOf(),
+                3600 * 24
+            )
+            "http://$gatewayUrl/bkrepo/api/user/repository$shareUri"
+        } else {
+            getUrl(projectId, jfrogFile.path, isCustom)
+        }
         val projectInfo =
             client.get(ServiceProjectResource::class).listByProjectCode(setOf(projectId)).data?.firstOrNull()
         val ccId = projectInfo?.ccAppId ?: throw RuntimeException("no ccid found for project: $projectId")

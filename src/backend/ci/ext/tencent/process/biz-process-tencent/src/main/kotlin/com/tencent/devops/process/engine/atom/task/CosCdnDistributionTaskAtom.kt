@@ -30,12 +30,12 @@ import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.element.CosCdnDistributionElement
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.log.utils.LogUtils
 import com.tencent.devops.plugin.api.cos.ServicePluginCosResource
 import com.tencent.devops.plugin.pojo.cos.CdnUploadFileInfo
-import com.tencent.devops.common.pipeline.element.CosCdnDistributionElement
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.IAtomTask
 import com.tencent.devops.process.engine.common.BS_ATOM_START_TIME_MILLS
@@ -90,7 +90,8 @@ class CosCdnDistributionTaskAtom @Autowired constructor(
 
         if (param.ticketId.isBlank()) {
             logger.error("ticketId is not initialized of build($buildId)")
-            LogUtils.addRedLine(rabbitTemplate, buildId, "ticketId is not initialized", taskId, task.containerHashId, task.executeCount ?: 1)
+            LogUtils.addRedLine(rabbitTemplate, buildId, "ticketId is not initialized", taskId, task.containerHashId, task.executeCount
+                ?: 1)
             return AtomResponse(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.USER,
@@ -108,7 +109,8 @@ class CosCdnDistributionTaskAtom @Autowired constructor(
 
         if (userId == null) {
             logger.warn("The start user is empty")
-            LogUtils.addRedLine(rabbitTemplate, buildId, "启动用户名为空", taskId, task.containerHashId, task.executeCount ?: 1)
+            LogUtils.addRedLine(rabbitTemplate, buildId, "启动用户名为空", taskId, task.containerHashId, task.executeCount
+                ?: 1)
             return AtomResponse(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.USER,
@@ -122,10 +124,12 @@ class CosCdnDistributionTaskAtom @Autowired constructor(
 
         val cdnUploadFileInfo = CdnUploadFileInfo(regexPathsStr, isCustom, ticketId, cdnPathPrefix)
         val taskResult = client.get(ServicePluginCosResource::class)
-            .uploadCdn(projectId, pipelineId, buildId, taskId, task.containerHashId ?: "", task.executeCount ?: 1, cdnUploadFileInfo)
+            .uploadCdn(projectId, pipelineId, buildId, taskId, task.containerHashId ?: "", task.executeCount
+                ?: 1, cdnUploadFileInfo)
         if (taskResult.isNotOk() || taskResult.data == null) {
             logger.warn("Start upload to cdn task failed.msg:${taskResult.message}")
-            LogUtils.addRedLine(rabbitTemplate, buildId, "上传CDN失败", taskId, task.containerHashId, task.executeCount ?: 1)
+            LogUtils.addRedLine(rabbitTemplate, buildId, "上传CDN失败", taskId, task.containerHashId, task.executeCount
+                ?: 1)
             return AtomResponse(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.SYSTEM,
@@ -136,7 +140,8 @@ class CosCdnDistributionTaskAtom @Autowired constructor(
 
         val startTime = System.currentTimeMillis()
         val cdnUploadTaskId = taskResult.data!!.uploadTaskKey
-        val buildStatus = checkStatus(startTime, maxRunningMins, buildId, cdnUploadTaskId, task.containerHashId ?: "", task.executeCount ?: 1)
+        val buildStatus = checkStatus(startTime, maxRunningMins, buildId, cdnUploadTaskId, task.containerHashId
+            ?: "", task.executeCount ?: 1)
         if (!BuildStatus.isFinish(buildStatus)) {
             task.taskParams["bsCdnUploadTaskId"] = cdnUploadTaskId
             task.taskParams[BS_ATOM_START_TIME_MILLS] = startTime
@@ -161,7 +166,8 @@ class CosCdnDistributionTaskAtom @Autowired constructor(
     ): AtomResponse {
         val buildId = task.buildId
         if (task.taskParams["bsCdnUploadTaskId"] == null) {
-            LogUtils.addRedLine(rabbitTemplate, buildId, "找不到CDN任务ID，请联系管理员", task.taskId, task.containerHashId, task.executeCount ?: 1)
+            LogUtils.addRedLine(rabbitTemplate, buildId, "找不到CDN任务ID，请联系管理员", task.taskId, task.containerHashId, task.executeCount
+                ?: 1)
             return AtomResponse(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.SYSTEM,
@@ -172,7 +178,8 @@ class CosCdnDistributionTaskAtom @Autowired constructor(
         val cdnUploadTaskId = task.taskParams["bsCdnUploadTaskId"].toString()
         val startTime = task.taskParams[BS_ATOM_START_TIME_MILLS].toString().toLong()
         val maxRunningMins = param.maxRunningMins
-        return AtomResponse(checkStatus(startTime, maxRunningMins, buildId, cdnUploadTaskId, task.containerHashId ?: "", task.executeCount ?: 1))
+        return AtomResponse(checkStatus(startTime, maxRunningMins, buildId, cdnUploadTaskId, task.containerHashId
+            ?: "", task.executeCount ?: 1))
     }
 
     private fun checkStatus(

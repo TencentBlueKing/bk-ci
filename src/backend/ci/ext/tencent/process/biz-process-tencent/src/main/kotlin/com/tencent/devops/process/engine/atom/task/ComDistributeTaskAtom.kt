@@ -75,8 +75,8 @@ class ComDistributeTaskAtom @Autowired constructor(
     private val pipelineUserService: PipelineUserService,
     private val client: Client,
     private val commonConfig: CommonConfig,
-    private val repoGray: RepoGray,
     private val redisOperation: RedisOperation,
+    private val repoGray: RepoGray,
     private val bkRepoClient: BkRepoClient
 ) : IAtomTask<ComDistributionElement> {
 
@@ -184,9 +184,7 @@ class ComDistributeTaskAtom @Autowired constructor(
         val executeCount = task.executeCount ?: 1
         val workspace = java.nio.file.Files.createTempDirectory("${DigestUtils.md5Hex("$buildId-$taskId")}_").toFile()
         val isRepoGray = repoGray.isGray(projectId, redisOperation)
-        if (isRepoGray) {
-            LogUtils.addLine(rabbitTemplate, buildId, "use bkrepo: $isRepoGray", taskId, containerId, executeCount)
-        }
+        LogUtils.addLine(rabbitTemplate, buildId, "use bkrepo: $isRepoGray", taskId, containerId, executeCount)
 
         val localFileList = mutableListOf<String>()
         val appId = client.get(ServiceProjectResource::class).get(task.projectId).data?.ccAppId?.toInt()
