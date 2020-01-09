@@ -85,7 +85,6 @@ import java.time.LocalDateTime
 class BuildStartControl @Autowired constructor(
     private val modelStageIdGenerator: ModelStageIdGenerator,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
-    private val buildStartupParamService: BuildStartupParamService,
     private val runLockInterceptor: RunLockInterceptor,
     private val redisOperation: RedisOperation,
     private val pipelineRuntimeService: PipelineRuntimeService,
@@ -138,7 +137,7 @@ class BuildStartControl @Autowired constructor(
             return
         }
 
-        // 单步重试不做操作，手动重试需还原个节点状态，启动需获取revision信息
+        // 单步重试不做操作，手动重试需还原各节点状态，启动需获取revision信息
         LogUtils.addLine(
             rabbitTemplate = rabbitTemplate,
             buildId = buildId,
@@ -160,8 +159,10 @@ class BuildStartControl @Autowired constructor(
         if (BuildStatus.isReadyToRun(buildInfo.status)) {
 
             updateModel(model, pipelineId, buildId, taskId)
-            // 这入启动参数
-            writeStartParam(projectId, pipelineId, buildId, model)
+            // 本次启动的参数处理
+            val allVariable = pipelineRuntimeService.getAllVariable(buildId)
+            if (allVariable[PIPELINE_RETRY_COUNT] != null)
+                pipelineRuntimeService.writeStartParam(projectId, pipelineId, buildId, model)
 
             val projectName = projectOauthTokenService.getProjectName(projectId) ?: ""
             val pipelineUserInfo = pipelineUserService.get(pipelineId)!!
@@ -274,38 +275,6 @@ class BuildStartControl @Autowired constructor(
             buildIdLock.unlock()
         }
         return buildInfo
-    }
-
-    private fun writeStartParam(projectId: String, pipelineId: String, buildId: String, model: Model) {
-        val triggerContainer = model.stages[0].containers[0] as TriggerContainer
-
-        if (triggerContainer.buildNo != null) {
-            val buildNo = pipelineRuntimeService.getBuildNo(pipelineId)
-            pipelineRuntimeService.setVariable(
-                projectId = projectId, pipelineId = pipelineId,
-                buildId = buildId, varName = BUILD_NO, varValue = buildNo
-            )
-        }
-        // 写
-        if (triggerContainer.params.isNotEmpty()) {
-            // 只有在构建参数中的才设置
-            val allVariable = pipelineRuntimeService.getAllVariable(buildId)
-            val params = allVariable.filter {
-                it.key.startsWith(SkipElementUtils.prefix) || it.key == BUILD_NO || it.key == PIPELINE_RETRY_COUNT
-            }.plus(triggerContainer.params.map {
-                if (allVariable.containsKey(it.id)) { // 做下真实传值的替换
-                    it.id to allVariable[it.id]
-                } else {
-                    it.id to it.defaultValue
-                }
-            }.toMap())
-            buildStartupParamService.addParam(
-                projectId = projectId,
-                pipelineId = pipelineId,
-                buildId = buildId,
-                param = JsonUtil.getObjectMapper().writeValueAsString(params)
-            )
-        }
     }
 
     private fun updateModel(model: Model, pipelineId: String, buildId: String, taskId: String) {
