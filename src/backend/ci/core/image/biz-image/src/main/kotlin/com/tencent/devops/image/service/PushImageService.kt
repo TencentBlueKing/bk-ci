@@ -35,6 +35,7 @@ import com.github.dockerjava.core.command.PushImageResultCallback
 import com.tencent.devops.common.api.util.SecurityUtil
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.image.config.DockerConfig
 import com.tencent.devops.image.pojo.PushImageParam
@@ -162,8 +163,38 @@ class PushImageService @Autowired constructor(
     }
 
     private fun pullImage(image: String) {
+        /*val authConfig = CommonUtils.getAuthConfig(
+            imageType = imageType,
+            dockerHostConfig = dockerHostConfig,
+            imageName = imageName,
+            registryUser = registryUser,
+            registryPwd = registryPwd
+        )*/
+
         dockerClient.pullImageCmd(image).exec(PullImageResultCallback()).awaitCompletion()
     }
+
+    /*
+    private fun getAuthConfig(imageType: String?, dockerHostConfig: DockerHostConfig, imageName: String, registryUser: String?, registryPwd: String?): AuthConfig? {
+        return if (imageType == ImageType.THIRD.type) {
+            val (registryHost, _, _) = parseImage(imageName)
+            logger.info("registry host: $registryHost")
+            if (registryUser.isNullOrBlank()) {
+                AuthConfig().withRegistryAddress(registryHost)
+            } else {
+                logger.info("registryUser: $registryUser, registryPwd: $registryPwd")
+                AuthConfig()
+                    .withUsername(registryUser)
+                    .withPassword(registryPwd)
+                    .withRegistryAddress(registryHost)
+            }
+        } else {
+            AuthConfig()
+                .withUsername(dockerHostConfig.registryUsername)
+                .withPassword(SecurityUtil.decrypt(dockerHostConfig.registryPassword!!))
+                .withRegistryAddress(dockerHostConfig.registryUrl)
+        }
+    }*/
 
     private fun pushImageToRepo(pushImageParam: PushImageParam) {
         var userName: String? = null
