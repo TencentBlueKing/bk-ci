@@ -21,7 +21,7 @@ import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["USER_EXTENSION_SERVICE"], description = "服务扩展")
-@Path("/user/extension/services/desk")
+@Path("/user/extension/desk/services")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserExtServiceResource {
@@ -51,10 +51,11 @@ interface UserExtServiceResource {
         @PathParam("serviceId")
         serviceId: String,
         @ApiParam("服务编码")
+        @QueryParam("projectCode")
         projectCode: String,
         @ApiParam("扩展服务信息")
         extensionInfo: SubmitDTO
-    ): Result<String?>
+    ): Result<String>
 
 
     @GET
@@ -85,7 +86,7 @@ interface UserExtServiceResource {
         @ApiParam("每页数量", required = false)
         @QueryParam("pageSize")
         pageSize: Int?
-    ): Result<ExtensionAndVersionVO?>
+    ): Result<ExtensionAndVersionVO>
 
     @GET
     @ApiOperation(value = "获取扩展服务列表")

@@ -174,7 +174,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         userId: String,
         projectCode: String,
         submitDTO: SubmitDTO
-    ): Result<String?> {
+    ): Result<String> {
         logger.info("updateExtService userId[$userId],submitDTO[$submitDTO]")
         val serviceCode = submitDTO.serviceCode
         val extPackageSourceType = getExtServicePackageSourceType(serviceCode)
@@ -307,7 +307,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         serviceCode: String?,
         page: Int?,
         pageSize: Int?
-    ): Result<ExtensionAndVersionVO?>{
+    ): Result<ExtensionAndVersionVO>{
         logger.info("the getMyService userId is :$userId,serviceCode is :$serviceCode")
         // 获取有权限的插件代码列表
         val records = extServiceDao.getMyService(dslContext, userId, serviceCode, page, pageSize)

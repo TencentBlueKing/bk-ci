@@ -10,10 +10,10 @@ import com.tencent.devops.store.pojo.vo.ExtensionServiceVO
 import com.tencent.devops.store.service.ExtServiceBaseService
 import org.springframework.beans.factory.annotation.Autowired
 
-
+@RestResource
 class UserExtServiceResourceImpl @Autowired constructor(
     private val extServiceBaseService: ExtServiceBaseService
-): UserExtServiceResource{
+) : UserExtServiceResource {
     override fun initExtensionService(
         userId: String,
         serviceCode: String,
@@ -26,26 +26,17 @@ class UserExtServiceResourceImpl @Autowired constructor(
         )
     }
 
-//    override fun submitExtensionService(
-//        userId: String,
-//        serviceId: String,
-//        projectCode: String,
-//        extensionInfo: SubmitDTO
-//    ): Result<String?> {
-//        return extServiceBaseService.updateExtService(
-//            userId = userId,
-//            projectCode = projectCode,
-//            submitDTO = extensionInfo
-//        )
-//    }
-
     override fun submitExtensionService(
         userId: String,
         serviceId: String,
         projectCode: String,
         extensionInfo: SubmitDTO
-    ): Result<String?> {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    ): Result<String> {
+        return extServiceBaseService.updateExtService(
+            userId = userId,
+            projectCode = projectCode,
+            submitDTO = extensionInfo
+        )
     }
 
     override fun getExtensionServiceInfo(userId: String, serviceId: String): Result<ExtensionServiceVO> {
@@ -57,15 +48,13 @@ class UserExtServiceResourceImpl @Autowired constructor(
         serviceCode: String?,
         page: Int?,
         pageSize: Int?
-    ): Result<ExtensionAndVersionVO?> {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-
-//        return extServiceBaseService.getMyService(
-//            userId = userId,
-//            serviceCode = serviceCode,
-//            page = page,
-//            pageSize = pageSize
-//        )
+    ): Result<ExtensionAndVersionVO> {
+        return extServiceBaseService.getMyService(
+            userId = userId,
+            serviceCode = serviceCode,
+            page = page,
+            pageSize = pageSize
+        )
     }
 
     override fun getExtensionServiceInfoList(
