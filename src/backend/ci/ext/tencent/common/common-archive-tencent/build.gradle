@@ -26,16 +26,10 @@
 
 dependencies {
     compile project(":core:common:common-web")
-    compile ("com.tencent.bkrepo:api-generic:0.7.0-SNAPSHOT") {
-        exclude group: "org.springframework.boot", module: "spring-boot-starter-json"
-        exclude group: "org.springframework.cloud", module: "spring-cloud-openfeign-core"
-        exclude group: "org.apache.skywalking", module: "apm-toolkit-trace"
+    compile("com.tencent.bkrepo:api-generic:0.7.0") {
         changing(true)
     }
-    compile ("com.tencent.bkrepo:api-repository:0.7.0-SNAPSHOT") {
-        exclude group: "org.springframework.boot", module: "spring-boot-starter-json"
-        exclude group: "org.springframework.cloud", module: "spring-cloud-openfeign-core"
-        exclude group: "org.apache.skywalking", module: "apm-toolkit-trace"
+    compile("com.tencent.bkrepo:api-repository:0.7.0") {
         changing(true)
     }
 }
