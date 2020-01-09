@@ -33,6 +33,7 @@ import com.tencent.devops.common.ci.task.AbstractTask
  * model
  */
 data class CIBuildYaml(
+    val pipelineName: String?,
     val trigger: Trigger?,
     val mr: MergeRequest?,
     val variables: Map<String, String>?,
