@@ -1,6 +1,7 @@
 package com.tencent.devops.store.resources
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.UserExtServiceResource
 import com.tencent.devops.store.pojo.dto.InitExtServiceDTO
 import com.tencent.devops.store.pojo.dto.SubmitDTO
@@ -10,7 +11,7 @@ import com.tencent.devops.store.service.ExtServiceBaseService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
-@Service
+@RestResource
 class UserExtServiceResourceImpl @Autowired constructor(
     private val extServiceBaseService: ExtServiceBaseService
 ): UserExtServiceResource{
