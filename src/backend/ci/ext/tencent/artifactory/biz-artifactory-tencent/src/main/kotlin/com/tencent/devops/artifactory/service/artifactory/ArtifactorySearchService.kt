@@ -56,7 +56,7 @@ class ArtifactorySearchService @Autowired constructor(
         searchProps: SearchProps,
         offset: Int,
         limit: Int,
-        channelCode: ChannelCode ?= ChannelCode.BS
+        channelCode: ChannelCode ? = ChannelCode.BS
     ): Pair<Long, List<FileInfo>> {
         logger.info("Search file. [ProjectId=$projectId, Props=$searchProps]")
 

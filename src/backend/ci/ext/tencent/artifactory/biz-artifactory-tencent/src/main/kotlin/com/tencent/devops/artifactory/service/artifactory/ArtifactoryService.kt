@@ -60,7 +60,6 @@ import com.tencent.devops.common.auth.api.BkAuthServiceCode
 import com.tencent.devops.common.auth.code.BSRepoAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
-import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
@@ -534,7 +533,7 @@ class ArtifactoryService @Autowired constructor(
         jFrogAQLFileInfoList: List<JFrogAQLFileInfo>,
         pipelineHasPermissionList: List<String>,
         checkPermission: Boolean = true,
-        channelCode: ChannelCode ?= ChannelCode.BS
+        channelCode: ChannelCode ? = ChannelCode.BS
     ): List<FileInfo> {
         val startTimestamp = System.currentTimeMillis()
 

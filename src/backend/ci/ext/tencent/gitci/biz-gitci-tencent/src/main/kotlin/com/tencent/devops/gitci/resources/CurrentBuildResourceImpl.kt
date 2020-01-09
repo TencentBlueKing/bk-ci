@@ -28,13 +28,10 @@ package com.tencent.devops.gitci.resources
 
 import com.tencent.devops.artifactory.pojo.FileInfo
 import com.tencent.devops.artifactory.pojo.FileInfoPage
-import com.tencent.devops.artifactory.pojo.Property
-import com.tencent.devops.artifactory.pojo.SearchProps
 import com.tencent.devops.artifactory.pojo.Url
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.ParamBlankException
-import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.gitci.api.CurrentBuildResource
@@ -87,7 +84,6 @@ class CurrentBuildResourceImpl @Autowired constructor(
 
         return Result(currentBuildService.getReports(userId, gitProjectId, pipelineId, buildId))
     }
-
 
     private fun checkParam(userId: String, gitProjectId: Long) {
         if (userId.isBlank()) {
