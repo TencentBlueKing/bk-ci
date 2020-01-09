@@ -309,11 +309,9 @@ class JobCloudsFastPushTaskAtom @Autowired constructor(
                 }
             }
 
-
             LogUtils.addLine(rabbitTemplate, buildId, "Param cloudStonePath=$cloudStonePath", taskId, containerId, executeCount)
             LogUtils.addLine(rabbitTemplate, buildId, "Param isCustom=$isCustom", taskId, containerId, executeCount)
             LogUtils.addLine(rabbitTemplate, buildId, "Param cloudStoneFileList=$cloudStoneFileList", taskId, containerId, executeCount)
-
             LogUtils.addLine(rabbitTemplate, buildId, "$count 个文件将被分发/$count file(s) will be distribute...", taskId, containerId, executeCount)
             if (count == 0) {
                 LogUtils.addRedLine(

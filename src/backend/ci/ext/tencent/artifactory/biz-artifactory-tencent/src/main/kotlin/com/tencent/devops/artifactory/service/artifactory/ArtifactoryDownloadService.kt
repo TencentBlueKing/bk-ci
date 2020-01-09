@@ -252,7 +252,7 @@ class ArtifactoryDownloadService @Autowired constructor(
         artifactoryType: ArtifactoryType,
         argPath: String,
         ttl: Int?,
-        crossProjectId:     String?,
+        crossProjectId: String?,
         crossPipineId: String?,
         crossBuildNo: String?
     ): List<String> {
