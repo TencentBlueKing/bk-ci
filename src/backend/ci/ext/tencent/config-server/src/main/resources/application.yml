@@ -52,6 +52,9 @@ spring:
       server:
         git:
           uri: file:///data1/work/config/devops-config
+    consul:
+      discovery:
+        tags: dev
 
 server:
   port: 21937
