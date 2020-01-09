@@ -303,12 +303,12 @@ open class MarketAtomTask : ITask() {
         inputTemplate: Map<String, Map<String, Any>>
     ) {
         LoggerService.addNormalLine("=====================================================================")
-        LoggerService.addNormalLine("Task           :${atomData.atomName}")
+        LoggerService.addNormalLine("Task           : ${atomData.atomName}")
         if (!atomData.summary.isNullOrBlank()) {
-            LoggerService.addNormalLine("Description    :${atomData.summary}")
+            LoggerService.addNormalLine("Description    : ${atomData.summary}")
         }
-        LoggerService.addNormalLine("Version        :${atomData.version}")
-        LoggerService.addNormalLine("Author         :${atomData.creator}")
+        LoggerService.addNormalLine("Version        : ${atomData.version}")
+        LoggerService.addNormalLine("Author         : ${atomData.creator}")
         if (!atomData.docsLink.isNullOrBlank()) {
             LoggerService.addNormalLine("Help           : <a target=\"_blank\" href=\"${atomData.docsLink}\">More Information</a>")
         }
