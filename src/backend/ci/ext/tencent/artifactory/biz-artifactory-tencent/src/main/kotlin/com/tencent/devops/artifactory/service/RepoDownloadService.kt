@@ -29,7 +29,6 @@ package com.tencent.devops.artifactory.service
 import com.tencent.devops.artifactory.pojo.DownloadUrl
 import com.tencent.devops.artifactory.pojo.Url
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
-import com.tencent.devops.common.pipeline.enums.ChannelCode
 
 interface RepoDownloadService {
     fun getDownloadUrl(token: String): DownloadUrl

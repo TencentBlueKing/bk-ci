@@ -532,8 +532,7 @@ class ArtifactoryService @Autowired constructor(
         projectId: String,
         jFrogAQLFileInfoList: List<JFrogAQLFileInfo>,
         pipelineHasPermissionList: List<String>,
-        checkPermission: Boolean = true,
-        channelCode: ChannelCode ? = ChannelCode.BS
+        checkPermission: Boolean = true
     ): List<FileInfo> {
         val startTimestamp = System.currentTimeMillis()
 
@@ -569,13 +568,7 @@ class ArtifactoryService @Autowired constructor(
                     val pipelineId = pipelineService.getPipelineId(path)
                     val buildId = pipelineService.getBuildId(path)
 
-                    // gitci请求跳过auth检测
-                    var pipelineHasPermission = pipelineHasPermissionList.contains(pipelineId)
-                    if (channelCode == ChannelCode.GIT) {
-                        pipelineHasPermission = true
-                    }
-
-                    if ((!checkPermission || pipelineHasPermission) &&
+                    if ((!checkPermission || pipelineHasPermissionList.contains(pipelineId)) &&
                         pipelineIdToNameMap.containsKey(pipelineId) && buildIdToNameMap.containsKey(buildId)
                     ) {
                         val shortUrl = if (it.name.endsWith(".ipa") || it.name.endsWith(".apk")) {

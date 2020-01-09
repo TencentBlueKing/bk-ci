@@ -33,7 +33,6 @@ import com.tencent.devops.artifactory.service.RepoDownloadService
 import com.tencent.devops.artifactory.util.PathUtils
 import com.tencent.devops.artifactory.util.RepoUtils
 import com.tencent.devops.common.api.exception.OperationException
-import com.tencent.devops.common.pipeline.enums.ChannelCode
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
