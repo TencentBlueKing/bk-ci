@@ -316,7 +316,7 @@ class PipelineRuntimeService @Autowired constructor(
             } else {
                 // 从旧转新: 兼容从旧入口写入的数据转到新的流水线运行
                 val newVarName = PipelineVarUtil.oldVarToNewVar(it.key)
-                if (!newVarName.isNullOrBlank()) {
+                if (!newVarName.isNullOrBlank() && !vars.contains(newVarName)) {
                     allVars[newVarName!!] = it.value
                 }
             }
