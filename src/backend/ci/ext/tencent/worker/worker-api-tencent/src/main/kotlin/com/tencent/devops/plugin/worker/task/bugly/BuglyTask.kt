@@ -120,7 +120,6 @@ class BuglyTask : ITask() {
         // search apk file
         val apkFiles = folderFile.walk().filter { return@filter it.name.endsWith(".apk") }
         // 允许有多个apk的存在
-//        if (apkFiles.count() > 1) throw RuntimeException("more than 1 apk file found in ${workspace.canonicalPath}")
         if (apkFiles.count() == 0) throw TaskExecuteException(
             errorMsg = "no apk file found in ${folderFile.canonicalPath}",
             errorType = ErrorType.USER,
@@ -157,7 +156,6 @@ class BuglyTask : ITask() {
         val ipaFiles = folderFile.walk().filter { return@filter it.name.endsWith(".ipa") }
 
         // 允许有多个ipa文件存在
-//        if (ipaFiles.count() > 1) throw RuntimeException("more than 1 ipa file found")
         if (ipaFiles.count() == 0) TaskExecuteException(
             errorMsg = "no ipa file found in ${folderFile.canonicalPath}",
             errorType = ErrorType.USER,
@@ -224,11 +222,6 @@ class BuglyTask : ITask() {
             LoggerService.addNormalLine("no mapping.txt found")
             return
         }
-        // 允许上传多个mapping.txt
-//        if (mappingFile.count() > 1) {
-//            throw RuntimeException("more than 1 mapping.txt found")
-//        }
-//        val file = mappingFiles.elementAt(0)
         mappingFiles.forEach { mappingFile ->
             LoggerService.addNormalLine("mappingFile: ${mappingFile.canonicalPath}")
             postBuglyFile(mappingFile, appId, appKey, "1", buildId)
@@ -316,7 +309,7 @@ class BuglyTask : ITask() {
 
     // 转化so文件
     private fun outputBuglyTool(jarName: String): URL {
-        val buglyToolInputMD5Stream = Thread.currentThread().contextClassLoader.getResourceAsStream(jarName)
+        val buglyToolInputMD5Stream = Thread.currentThread().contextClassLoader.getResourceAsStream("$jarName.file")
         val inputMD5 = DigestUtils.md5Hex(buglyToolInputMD5Stream)
         val outputFile = File(jarName)
         // 是否执行输出
@@ -335,13 +328,13 @@ class BuglyTask : ITask() {
             var buglyToolInputStream: InputStream? = null
             var buglyToolOutputStream: OutputStream? = null
             try {
-                buglyToolInputStream = Thread.currentThread().contextClassLoader.getResourceAsStream(jarName)
+                buglyToolInputStream = Thread.currentThread().contextClassLoader.getResourceAsStream("$jarName.file")
                 buglyToolOutputStream = outputFile.outputStream()
                 buglyToolInputStream.copyTo(buglyToolOutputStream)
             } catch (e: Exception) {
-                LoggerService.addNormalLine("Failed to export bugly tool $jarName")
+                LoggerService.addNormalLine("Failed to export bugly tool $jarName:$e")
                 throw TaskExecuteException(
-                    errorMsg = "Failed to export bugly tool $jarName",
+                    errorMsg = "Failed to export bugly tool $jarName:$e",
                     errorType = ErrorType.USER,
                     errorCode = ErrorCode.USER_INPUT_INVAILD
                 )

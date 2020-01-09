@@ -38,11 +38,11 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["BUILD_SCM_GIT_CI"], description = "Service Code GIT CI resource")
-@Path("/build/gitci/")
+@Api(tags = ["SERVICE_SCM_GIT_CI"], description = "Service Code GIT CI resource")
+@Path("/service/gitci/")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface BuildGitCiResource {
+interface SerivceGitCiResource {
 
     @ApiOperation("获取项目的token")
     @GET

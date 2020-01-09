@@ -26,6 +26,9 @@
 
 package com.tencent.devops.common.environment.agent.client
 
+import com.tencent.devops.common.api.exception.TaskExecuteException
+import com.tencent.devops.common.api.pojo.ErrorCode
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.environment.agent.utils.SmartProxyUtil
 import okhttp3.Headers
@@ -58,7 +61,11 @@ object DevCloudContainerInstanceClient {
         OkhttpUtils.doHttp(request).use { response ->
             val responseContent = response.body()!!.string()
             if (!response.isSuccessful) {
-                throw RuntimeException("Fail to get container status")
+                throw TaskExecuteException(
+                    errorCode = ErrorCode.SYSTEM_SERVICE_ERROR,
+                    errorType = ErrorType.SYSTEM,
+                    errorMsg = "Fail to get container status"
+                )
             }
             logger.info("response: $responseContent")
             return JSONObject(responseContent)
