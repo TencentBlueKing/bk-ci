@@ -28,8 +28,8 @@ package com.tencent.devops.store.dao.atom
 
 import com.tencent.devops.model.store.tables.TAppVersion
 import com.tencent.devops.model.store.tables.TApps
-import com.tencent.devops.model.store.tables.TAtomBuildAppRel
 import com.tencent.devops.model.store.tables.TAtomEnvInfo
+import com.tencent.devops.model.store.tables.TStoreBuildAppRel
 import com.tencent.devops.model.store.tables.TStoreBuildInfo
 import org.jooq.DSLContext
 import org.jooq.Record
@@ -44,7 +44,7 @@ class MarketAtomBuildAppRelDao {
      */
     fun getMarketAtomBuildAppInfo(dslContext: DSLContext, atomId: String): Result<out Record>? {
         val a = TStoreBuildInfo.T_STORE_BUILD_INFO.`as`("a")
-        val b = TAtomBuildAppRel.T_ATOM_BUILD_APP_REL.`as`("b")
+        val b = TStoreBuildAppRel.T_STORE_BUILD_APP_REL.`as`("b")
         val c = TAppVersion.T_APP_VERSION.`as`("c")
         val d = TApps.T_APPS.`as`("d")
         val e = TAtomEnvInfo.T_ATOM_ENV_INFO.`as`("e")
