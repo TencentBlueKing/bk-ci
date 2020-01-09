@@ -286,7 +286,7 @@ class BkRepoDownloadService @Autowired constructor(
                 downloadIps = listOf(),
                 timeoutInSeconds = (ttl ?: 24 * 3600).toLong()
             )
-            resultList.add("$THIRDPARTYH_URL/bkrepo/api/user/repository${shareUri}")
+            resultList.add("$THIRDPARTYH_URL/bkrepo/api/user/repository$shareUri")
         }
         return resultList
     }

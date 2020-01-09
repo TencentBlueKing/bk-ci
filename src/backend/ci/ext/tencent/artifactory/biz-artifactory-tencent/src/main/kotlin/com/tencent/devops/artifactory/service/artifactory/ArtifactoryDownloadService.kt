@@ -51,11 +51,9 @@ import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.BSAuthProjectApi
 import com.tencent.devops.common.auth.code.BSRepoAuthServiceCode
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.notify.enums.EnumEmailFormat
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.notify.api.service.ServiceNotifyResource
-import com.tencent.devops.notify.pojo.EmailNotifyMessage
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
@@ -254,7 +252,7 @@ class ArtifactoryDownloadService @Autowired constructor(
         artifactoryType: ArtifactoryType,
         argPath: String,
         ttl: Int?,
-        crossProjectId: String?,
+        crossProjectId:     String?,
         crossPipineId: String?,
         crossBuildNo: String?
     ): List<String> {

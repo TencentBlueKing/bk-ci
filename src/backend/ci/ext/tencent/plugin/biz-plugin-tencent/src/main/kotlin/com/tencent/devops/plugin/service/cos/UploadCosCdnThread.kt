@@ -28,12 +28,12 @@ package com.tencent.devops.plugin.service.cos
 
 import com.google.common.io.Files
 import com.google.gson.JsonParser
+import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.archive.client.BkRepoClient
 import com.tencent.devops.common.cos.COSClientConfig
 import com.tencent.devops.common.cos.model.exception.COSException
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.api.util.OkhttpUtils
-import com.tencent.devops.common.archive.client.BkRepoClient
 import com.tencent.devops.log.utils.LogUtils
 import net.sf.json.JSONArray
 import okhttp3.MediaType
@@ -79,7 +79,7 @@ class UploadCosCdnThread : Runnable {
         uploadCosCdnParam: UploadCosCdnParam,
         isRepoGray: Boolean,
         bkRepoClient: BkRepoClient
-    ): this() {
+    ) : this() {
         this.gatewayUrl = gatewayUrl
         this.rabbitTemplate = rabbitTemplate
         this.cosService = cosService
@@ -97,7 +97,7 @@ class UploadCosCdnThread : Runnable {
     override fun run() {
         try {
             uploadFileToCos(uploadCosCdnParam!!.regexPaths, uploadCosCdnParam!!.customize, uploadCosCdnParam!!.bucket,
-                    uploadCosCdnParam!!.cdnPath, uploadCosCdnParam!!.domain, uploadCosCdnParam!!.cosClientConfig)
+                uploadCosCdnParam!!.cdnPath, uploadCosCdnParam!!.domain, uploadCosCdnParam!!.cosClientConfig)
         } catch (ex: Exception) {
             logger.error("Execute Upload to cos cdn exception: ${ex.message}", ex)
         }
@@ -119,8 +119,8 @@ class UploadCosCdnThread : Runnable {
         try {
             count = 0
             regexPaths.split(",").forEach { regex ->
-                if(isRepoGray!!){
-                    val repoName = if(customize) "custom" else "pipeline"
+                if (isRepoGray!!) {
+                    val repoName = if (customize) "custom" else "pipeline"
                     val fileList = bkRepoClient!!.listFileByPattern(
                         "",
                         projectId,
@@ -129,7 +129,7 @@ class UploadCosCdnThread : Runnable {
                         repoName,
                         regex
                     )
-                    fileList.forEach{
+                    fileList.forEach {
                         count++
                         val file = File(workspace, it.name)
                         bkRepoClient!!.downloadFile("", projectId, repoName, it.fullPath, File(workspace, it.name))
@@ -287,13 +287,13 @@ class UploadCosCdnThread : Runnable {
             while (readSize != -1) {
                 val content = if (readSize == trunkSize) tmpContent else Arrays.copyOf(tmpContent, readSize)
                 val nextPos = cosService!!.append(
-                        cosClientConfig,
-                        bucket,
-                        cdnFileName,
-                        null,
-                        content,
-                        currentPos,
-                        "application/octet-stream"
+                    cosClientConfig,
+                    bucket,
+                    cdnFileName,
+                    null,
+                    content,
+                    currentPos,
+                    "application/octet-stream"
                 )
                 currentPos = nextPos
                 readSize = fis.read(tmpContent)
@@ -313,10 +313,10 @@ class UploadCosCdnThread : Runnable {
         logger.info("refresh spm requestUrl: $requestUrl")
         logger.info("refresh spm requestBody: $requestBody")
         val request = Request.Builder()
-                .url(requestUrl)
-                .addHeader("X-REFRESH-TOKEN", refreshToken)
-                .post(RequestBody.create(MediaType.parse("text/plain; charset=utf-8"), requestBody))
-                .build()
+            .url(requestUrl)
+            .addHeader("X-REFRESH-TOKEN", refreshToken)
+            .post(RequestBody.create(MediaType.parse("text/plain; charset=utf-8"), requestBody))
+            .build()
 
         OkhttpUtils.doHttp(request).use { response ->
             val body = response.body()!!.string()
@@ -336,16 +336,16 @@ class UploadCosCdnThread : Runnable {
         val pathPair = getPathPair(regex)
         return if (isCustom) {
             "items.find(\n" +
-                    "    {\n" +
-                    "        \"repo\":{\"\$eq\":\"generic-local\"}, \"path\":{\"\$eq\":\"bk-custom/$projectId${pathPair.first}\"}, \"name\":{\"\$match\":\"${pathPair.second}\"}\n" +
-                    "    }\n" +
-                    ")"
+                "    {\n" +
+                "        \"repo\":{\"\$eq\":\"generic-local\"}, \"path\":{\"\$eq\":\"bk-custom/$projectId${pathPair.first}\"}, \"name\":{\"\$match\":\"${pathPair.second}\"}\n" +
+                "    }\n" +
+                ")"
         } else {
             "items.find(\n" +
-                    "    {\n" +
-                    "        \"repo\":{\"\$eq\":\"generic-local\"}, \"path\":{\"\$eq\":\"bk-archive/$projectId/$pipelineId/$buildId${pathPair.first}\"}, \"name\":{\"\$match\":\"${pathPair.second}\"}\n" +
-                    "    }\n" +
-                    ")"
+                "    {\n" +
+                "        \"repo\":{\"\$eq\":\"generic-local\"}, \"path\":{\"\$eq\":\"bk-archive/$projectId/$pipelineId/$buildId${pathPair.first}\"}, \"name\":{\"\$match\":\"${pathPair.second}\"}\n" +
+                "    }\n" +
+                ")"
         }
     }
 

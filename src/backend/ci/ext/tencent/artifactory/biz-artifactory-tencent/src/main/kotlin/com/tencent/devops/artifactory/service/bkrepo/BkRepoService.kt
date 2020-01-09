@@ -414,7 +414,7 @@ class BkRepoService @Autowired constructor(
             downloadIps = listOf(),
             timeoutInSeconds = ttl.toLong()
         )
-        return "${HomeHostUtil.getHost(commonConfig.devopsOuterHostGateWay!!)}/bkrepo/api/user/repository${shareUri}"
+        return "${HomeHostUtil.getHost(commonConfig.devopsOuterHostGateWay!!)}/bkrepo/api/user/repository$shareUri"
     }
 
     fun internalDownloadUrl(
@@ -435,7 +435,7 @@ class BkRepoService @Autowired constructor(
             downloadIps = listOf(),
             timeoutInSeconds = ttl.toLong()
         )
-        return "${HomeHostUtil.getHost(commonConfig.devopsHostGateway!!)}/bkrepo/api/user/repository${shareUri}"
+        return "${HomeHostUtil.getHost(commonConfig.devopsHostGateway!!)}/bkrepo/api/user/repository$shareUri"
     }
 
     companion object {

@@ -30,9 +30,9 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.google.common.io.Files
 import com.tencent.devops.common.api.exception.OperationException
-import com.tencent.devops.common.archive.client.JfrogService
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.archive.client.BkRepoClient
+import com.tencent.devops.common.archive.client.JfrogService
 import com.tencent.devops.common.pipeline.zhiyun.ZhiyunConfig
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.RepoGray
@@ -77,7 +77,7 @@ class ZhiyunService @Autowired constructor(
             val isRepoGray = repoGray.isGray(fileParams.projectId, redisOperation)
             LogUtils.addLine(rabbitTemplate, fileParams.buildId, "use bkrepo: $isRepoGray", fileParams.elementId, fileParams.containerId, fileParams.executeCount)
 
-            val matchFiles = if(isRepoGray){
+            val matchFiles = if (isRepoGray) {
                 bkRepoClient.downloadFileByPattern(
                     userId = "",
                     projectId = fileParams.projectId,
@@ -93,49 +93,49 @@ class ZhiyunService @Autowired constructor(
             if (matchFiles.isEmpty()) throw OperationException("There is 0 file find in ${fileParams.regexPath}(custom: ${fileParams.custom})")
             val resultList = mutableListOf<String>()
             matchFiles.forEach { file ->
-                        try {
-                            LogUtils.addLine(rabbitTemplate, fileParams.buildId, "start to upload file to zhi yun: ${file.canonicalPath}",
-                                fileParams.elementId, fileParams.containerId, fileParams.executeCount)
-                            val request = with(zhiyunUploadParam) {
-                                LogUtils.addLine(rabbitTemplate, fileParams.buildId, "zhi yun upload file params: $para",
-                                    fileParams.elementId, fileParams.containerId, fileParams.executeCount)
-                                val body = MultipartBody.Builder()
-                                        .setType(MultipartBody.FORM)
-                                        .addFormDataPart("tarball", file.name, RequestBody.create(MediaType.parse("application/octet-stream"), file))
-                                        .addFormDataPart("caller", zhiyunConfig.caller)
-                                        .addFormDataPart("password", zhiyunConfig.password)
-                                        .addFormDataPart("operator", operator)
-                                        .addFormDataPart("para[product]", para.product)
-                                        .addFormDataPart("para[name]", para.name)
-                                        .addFormDataPart("para[author]", para.author)
-                                        .addFormDataPart("para[description]", para.description)
-                                        .addFormDataPart("para[clean]", para.clean)
-                                        .addFormDataPart("para[ciInstId]", para.buildId)
-                                        .addFormDataPart("para[codeUrl]", para.codeUrl)
-                                        .build()
-                                Request.Builder()
-                                        .header("apikey", zhiyunConfig.apiKey)
-                                        .url("${zhiyunConfig.url}/simpleCreateVersion")
-                                        .post(body)
-                                        .build()
-                            }
-                            OkhttpUtils.doHttp(request).use { res ->
-                                val response = res.body()!!.string()
-                                logger.info("zhi yun upload response for build(${fileParams.buildId}): $response")
-                                val jsonMap = objectMapper.readValue<Map<String, Any>>(response)
-                                val code = jsonMap["code"]
-                                val msg = jsonMap["msg"] as String
-                                if (code != "0") {
-                                    throw OperationException("fail to upload \" ${file.canonicalPath} \":\n$msg")
-                                }
-                                LogUtils.addLine(rabbitTemplate, fileParams.buildId, "successfully upload: ${file.name}:\n$msg",
-                                    fileParams.elementId, fileParams.containerId, fileParams.executeCount)
-                                resultList.add(msg.trim().removeSuffix(":succ"))
-                            }
-                        } finally {
-                            file.delete()
-                        }
+                try {
+                    LogUtils.addLine(rabbitTemplate, fileParams.buildId, "start to upload file to zhi yun: ${file.canonicalPath}",
+                        fileParams.elementId, fileParams.containerId, fileParams.executeCount)
+                    val request = with(zhiyunUploadParam) {
+                        LogUtils.addLine(rabbitTemplate, fileParams.buildId, "zhi yun upload file params: $para",
+                            fileParams.elementId, fileParams.containerId, fileParams.executeCount)
+                        val body = MultipartBody.Builder()
+                            .setType(MultipartBody.FORM)
+                            .addFormDataPart("tarball", file.name, RequestBody.create(MediaType.parse("application/octet-stream"), file))
+                            .addFormDataPart("caller", zhiyunConfig.caller)
+                            .addFormDataPart("password", zhiyunConfig.password)
+                            .addFormDataPart("operator", operator)
+                            .addFormDataPart("para[product]", para.product)
+                            .addFormDataPart("para[name]", para.name)
+                            .addFormDataPart("para[author]", para.author)
+                            .addFormDataPart("para[description]", para.description)
+                            .addFormDataPart("para[clean]", para.clean)
+                            .addFormDataPart("para[ciInstId]", para.buildId)
+                            .addFormDataPart("para[codeUrl]", para.codeUrl)
+                            .build()
+                        Request.Builder()
+                            .header("apikey", zhiyunConfig.apiKey)
+                            .url("${zhiyunConfig.url}/simpleCreateVersion")
+                            .post(body)
+                            .build()
                     }
+                    OkhttpUtils.doHttp(request).use { res ->
+                        val response = res.body()!!.string()
+                        logger.info("zhi yun upload response for build(${fileParams.buildId}): $response")
+                        val jsonMap = objectMapper.readValue<Map<String, Any>>(response)
+                        val code = jsonMap["code"]
+                        val msg = jsonMap["msg"] as String
+                        if (code != "0") {
+                            throw OperationException("fail to upload \" ${file.canonicalPath} \":\n$msg")
+                        }
+                        LogUtils.addLine(rabbitTemplate, fileParams.buildId, "successfully upload: ${file.name}:\n$msg",
+                            fileParams.elementId, fileParams.containerId, fileParams.executeCount)
+                        resultList.add(msg.trim().removeSuffix(":succ"))
+                    }
+                } finally {
+                    file.delete()
+                }
+            }
             return resultList
         } finally {
             tmpFolder.deleteRecursively()
@@ -149,10 +149,10 @@ class ZhiyunService @Autowired constructor(
             with(TPluginZhiyunProduct.T_PLUGIN_ZHIYUN_PRODUCT) {
                 for (item in recordList) {
                     result.add(
-                            ZhiyunProduct(
-                                    productId = item.get(PRODUCT_ID),
-                                    productName = item.get(PRODUCT_NAME)
-                            )
+                        ZhiyunProduct(
+                            productId = item.get(PRODUCT_ID),
+                            productName = item.get(PRODUCT_NAME)
+                        )
                     )
                 }
             }
