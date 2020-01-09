@@ -14,7 +14,7 @@ data class MyExtServiceRespItem (
     @ApiModelProperty("扩展服务所属范畴，TRIGGER：触发器类扩展服务 TASK：任务类扩展服务", required = true)
     val category: String,
     @ApiModelProperty("logo链接")
-    val logoUrl: String?,
+    val logoUrl: String?= null,
     @ApiModelProperty("版本号", required = true)
     val version: String,
     @ApiModelProperty(

@@ -344,7 +344,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
                     serviceCode = it["serviceCode"] as String,
                     version = it["version"] as String,
                     category = it["category"] as String,
-                    logoUrl = it["logoUrl"] as String,
+                    logoUrl = it["logoUrl"] as String?,
                     serviceStatus = it["serviceStatus"] as String,
                     creator = it["creator"] as String,
                     createTime = DateTimeUtil.toDateTime(it["createTime"] as LocalDateTime),
@@ -354,8 +354,8 @@ abstract class ExtServiceBaseService @Autowired constructor() {
                         storeProjectRelDao.getUserStoreTestProjectCode(
                             dslContext,
                             userId,
-                            it["atomCode"] as String,
-                            StoreTypeEnum.ATOM
+                            it["serviceCode"] as String,
+                            StoreTypeEnum.SERVICE
                         )
                     ) ?: "",
                     //TODO: 从第三张表获取数据
