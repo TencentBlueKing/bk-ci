@@ -12,7 +12,7 @@ data class ExtServiceUpdateInfo(
     @ApiModelProperty("状态")
     val status: Int,
     @ApiModelProperty("状态对应的描述")
-    val statusMsg: String?,
+    val statusMsg: String?= null,
     @ApiModelProperty("LOGO url")
     val logoUrl: String?= null,
     @ApiModelProperty("ICON")
