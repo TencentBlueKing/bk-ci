@@ -131,16 +131,16 @@ class SampleAtomReleaseServiceImpl : SampleAtomReleaseService, AtomReleaseServic
         val record =
                 marketAtomDao.getAtomRecordById(dslContext, atomId) ?: return Pair(false, CommonMessageCode.PARAMETER_IS_INVALID)
         val atomCode = record.atomCode
-        val modifier = record.modifier
+        val creator = record.creator
         val recordStatus = record.atomStatus
 
-        // 判断用户是否有权限
+        // 判断用户是否有权限(当前版本的创建者和管理员可以操作)
         if (!(storeMemberDao.isStoreAdmin(
                         dslContext,
                         userId,
                         atomCode,
                         StoreTypeEnum.ATOM.type.toByte()
-                ) || modifier == userId)
+                ) || creator == userId)
         ) {
             return Pair(false, CommonMessageCode.PERMISSION_DENIED)
         }
