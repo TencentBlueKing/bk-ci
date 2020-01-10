@@ -12,17 +12,13 @@ import org.springframework.beans.factory.annotation.Autowired
 class BuildVarResourceImpl @Autowired constructor(
     private val pipelineRuntimeService: PipelineRuntimeService
 ) : BuildVarResource {
-    override fun getBuildVar(buildId: String, projectId: String, pipelineId: String, key: String?): Result<MutableMap<String, String>> {
-        checkParam(buildId = buildId, projectId = projectId, pipelineId = pipelineId)
-        return Result(pipelineRuntimeService.getVariable(buildId = buildId, projectId = projectId, pipelineId = pipelineId, key = key))
+    override fun getBuildVar(buildId: String): Result<Map<String, String>> {
+        checkParam(buildId)
+        return Result(pipelineRuntimeService.getAllVariable(buildId))
     }
 
-    fun checkParam(buildId: String, projectId: String, pipelineId: String) {
+    fun checkParam(buildId: String) {
         if (StringUtils.isBlank(buildId))
             throw ParamBlankException("build Id is null or blank")
-        if (StringUtils.isBlank(projectId))
-            throw ParamBlankException("project Id is null or blank")
-        if (StringUtils.isBlank(pipelineId))
-            throw ParamBlankException("pipeline Id is null or blank")
     }
 }

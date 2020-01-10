@@ -128,6 +128,7 @@ import com.tencent.devops.process.utils.PIPELINE_START_USER_NAME
 import com.tencent.devops.process.utils.PIPELINE_VERSION
 import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_TYPE
 import com.tencent.devops.process.utils.PipelineVarUtil
+import org.apache.commons.lang.StringUtils
 import org.apache.commons.lang3.math.NumberUtils
 import org.jooq.DSLContext
 import org.jooq.Record
@@ -323,19 +324,6 @@ class PipelineRuntimeService @Autowired constructor(
             allVars[it.key] = it.value
         }
         return allVars
-    }
-
-    fun getVariable(buildId: String, projectId: String, pipelineId: String, key: String?): MutableMap<String, String> {
-        logger.info("get build var: $buildId  |  $projectId  |  $pipelineId  |  $key")
-        val res = pipelineBuildVarDao.getVars(
-                dslContext = dslContext,
-                buildId = buildId,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                key = key
-        )
-        logger.info("get build var: $res")
-        return res
     }
 
     fun getAllVariableWithType(buildId: String): List<BuildParameters> {
