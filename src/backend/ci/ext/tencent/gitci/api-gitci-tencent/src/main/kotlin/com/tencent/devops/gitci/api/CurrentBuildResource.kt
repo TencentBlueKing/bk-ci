@@ -112,7 +112,7 @@ interface CurrentBuildResource {
     ): Result<Url>
 
     @ApiOperation("获取构建报告列表")
-    @Path(" /projects/{gitProjectId}/pipelines/{pipelineId}/builds/{buildId}/report")
+    @Path("/projects/{gitProjectId}/pipelines/{pipelineId}/builds/{buildId}/report")
     @GET
     fun getReports(
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
