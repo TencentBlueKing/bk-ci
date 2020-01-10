@@ -822,7 +822,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 storeId = atomId,
                 storeCode = atomCode,
                 storeType = StoreTypeEnum.ATOM,
-                modifier = record.modifier,
+                creator = record.creator,
                 processInfo = processInfo
             )
             logger.info("getProcessInfo storeProcessInfo is $storeProcessInfo")

@@ -339,7 +339,7 @@ abstract class TemplateReleaseServiceImpl @Autowired constructor() : TemplateRel
                 storeId = templateId,
                 storeCode = templateCode,
                 storeType = StoreTypeEnum.TEMPLATE,
-                modifier = record.modifier,
+                creator = record.creator,
                 processInfo = processInfo
             )
             logger.info("getProcessInfo storeProcessInfo: $storeProcessInfo")
