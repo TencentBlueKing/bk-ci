@@ -234,7 +234,6 @@
             ...mapGetters({
                 'pipelineList': 'pipelines/getAllPipelineList',
                 'statusMap': 'pipelines/getStatusMap',
-                'statusMapCN': 'pipelines/getStatusMapCN',
                 'tagGroupList': 'pipelines/getTagGroupList'
             }),
             ...mapState('pipelines', [
