@@ -29,6 +29,7 @@ package com.tencent.devops.store.service.image
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.LATEST
 import com.tencent.devops.common.api.exception.DataConsistencyException
+import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DHUtil
@@ -227,6 +228,12 @@ abstract class ImageReleaseService {
         runCheckPipeline: Boolean = true
     ): Result<String?> {
         logger.info("updateMarketImage userId is :$userId, marketImageUpdateRequest is :$marketImageUpdateRequest")
+        if (marketImageUpdateRequest.agentTypeScope.isEmpty()) {
+            throw InvalidParamException(
+                message = "agentTypeScope cannot be empty",
+                params = arrayOf("agentTypeScope=[]")
+            )
+        }
         val imageCode = marketImageUpdateRequest.imageCode
         val imageTag = marketImageUpdateRequest.imageTag
         // 判断镜像tag是否为latest
