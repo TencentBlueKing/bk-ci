@@ -70,7 +70,7 @@ interface CurrentBuildResource {
     ): Result<GitCIModelDetail?>
 
     @ApiOperation("根据元数据获取文件(有排序),searchProps条件为and")
-    @Path("/artifactories/{gitProjectId}/search")
+    @Path("/artifactories/projects/{gitProjectId}/search")
     @GET
     fun search(
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
@@ -112,7 +112,7 @@ interface CurrentBuildResource {
     ): Result<Url>
 
     @ApiOperation("获取构建报告列表")
-    @Path("/reports/{gitProjectId}/{pipelineId}/{buildId}")
+    @Path(" /projects/{gitProjectId}/pipelines/{pipelineId}/builds/{buildId}/report")
     @GET
     fun getReports(
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
