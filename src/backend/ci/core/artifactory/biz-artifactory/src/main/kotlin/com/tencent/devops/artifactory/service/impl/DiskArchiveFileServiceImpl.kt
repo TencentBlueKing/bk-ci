@@ -35,6 +35,7 @@ import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.service.config.CommonConfig
+import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
@@ -201,10 +202,10 @@ class DiskArchiveFileServiceImpl : ArchiveFileService, ArchiveFileServiceImpl() 
     ): String {
         logger.info("generateFileDownloadPath fileChannelType is: $fileChannelType,fileType is: $fileType,destPath is: $destPath")
         val urlPrefix = when (fileChannelType) {
-            FileChannelTypeEnum.WEB_SHOW -> "${commonConfig.devopsHostGateway}/ms/artifactory/api/user/artifactories/file/download"
-            FileChannelTypeEnum.WEB_DOWNLOAD -> "${commonConfig.devopsHostGateway}/ms/artifactory/api/user/artifactories/file/download/local"
-            FileChannelTypeEnum.SERVICE -> "${commonConfig.devopsApiGateway}/ms/artifactory/api/service/artifactories/file/download"
-            FileChannelTypeEnum.BUILD -> "${commonConfig.devopsBuildGateway}/ms/artifactory/api/build/artifactories/file/download"
+            FileChannelTypeEnum.WEB_SHOW -> "${HomeHostUtil.getHost(commonConfig.devopsHostGateway!!)}/ms/artifactory/api/user/artifactories/file/download"
+            FileChannelTypeEnum.WEB_DOWNLOAD -> "${HomeHostUtil.getHost(commonConfig.devopsHostGateway!!)}/ms/artifactory/api/user/artifactories/file/download/local"
+            FileChannelTypeEnum.SERVICE -> "${HomeHostUtil.getHost(commonConfig.devopsApiGateway!!)}/ms/artifactory/api/service/artifactories/file/download"
+            FileChannelTypeEnum.BUILD -> "${HomeHostUtil.getHost(commonConfig.devopsBuildGateway!!)}/ms/artifactory/api/build/artifactories/file/download"
         }
         val filePath = URLEncoder.encode("/$destPath", "UTF-8")
         return if (fileChannelType == FileChannelTypeEnum.WEB_SHOW) {

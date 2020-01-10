@@ -31,6 +31,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.DockerVersion
 import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.common.web.mq.alert.AlertLevel
 import com.tencent.devops.common.web.mq.alert.AlertUtils
 import com.tencent.devops.dispatch.dao.PipelineDockerDebugDao
@@ -60,7 +61,8 @@ class DockerHostDebugService @Autowired constructor(
     private val redisUtils: RedisUtils,
     private val redisOperation: RedisOperation,
     private val client: Client,
-    private val storeImageService: StoreImageService
+    private val storeImageService: StoreImageService,
+    private val gray: Gray
 ) {
 
     @Value("\${dispatch.dockerBuildImagePrefix:#{null}}")
@@ -68,7 +70,6 @@ class DockerHostDebugService @Autowired constructor(
 
     @Value("\${project.gray:#{null}}")
     private val grayFlag: String? = null
-    private val redisKey = "project:setting:gray" // 灰度项目列表存在redis的标识key
 
     private val TLINUX1_2_IMAGE = "/bkdevops/docker-builder1.2:v1"
     private val TLINUX2_2_IMAGE = "/bkdevops/docker-builder2.2:v1"
@@ -93,6 +94,8 @@ class DockerHostDebugService @Autowired constructor(
             imageRepoInfo = storeImageService.getImageRepoInfo(
                 userId = userId,
                 projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = null,
                 imageCode = imageCode,
                 imageVersion = imageVersion,
                 defaultPrefix = dockerBuildImagePrefix
@@ -120,7 +123,7 @@ class DockerHostDebugService @Autowired constructor(
             else -> when (imageName) {
                 DockerVersion.TLINUX1_2.value -> dockerBuildImagePrefix + TLINUX1_2_IMAGE
                 DockerVersion.TLINUX2_2.value -> dockerBuildImagePrefix + TLINUX2_2_IMAGE
-                else -> "$dockerBuildImagePrefix/$imageName"
+                else -> "$dockerBuildImagePrefix/bkdevops/$imageName"
             }
         }
         logger.info("insertDebug:Docker images is: $dockerImage")
@@ -170,7 +173,9 @@ class DockerHostDebugService @Autowired constructor(
                 ImageType.BKDEVOPS -> ImageType.BKDEVOPS.type
                 ImageType.BKSTORE -> imageRepoInfo!!.sourceType.type
                 else -> throw UnknownImageType("imageCode:$imageCode,imageVersion:$imageVersion,imageType:$imageType")
-            }
+            },
+            imagePublicFlag = imageRepoInfo?.publicFlag,
+            imageRDType = imageRepoInfo?.rdType
         )
     }
 
@@ -204,8 +209,7 @@ class DockerHostDebugService @Autowired constructor(
         val redisLock = DockerHostDebugLock(redisOperation)
         try {
             val gray = !grayFlag.isNullOrBlank() && grayFlag!!.toBoolean()
-            val grayProjectSet = redisOperation.getSetMembers(redisKey)?.filter { !it.isBlank() }
-                ?.toSet() ?: emptySet()
+            val grayProjectSet = this.gray.grayProjectSet(redisOperation)
             logger.info("gray environment: $gray")
             redisLock.lock()
             if (gray) {

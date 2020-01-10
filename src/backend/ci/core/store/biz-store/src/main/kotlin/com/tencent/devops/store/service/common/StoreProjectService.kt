@@ -52,7 +52,6 @@ interface StoreProjectService {
      * 安装商店组件
      */
     fun installStoreComponent(
-        accessToken: String,
         userId: String,
         projectCodeList: ArrayList<String>,
         storeId: String,
@@ -70,7 +69,6 @@ interface StoreProjectService {
         userId: String,
         storeCode: String,
         storeType: StoreTypeEnum,
-        accessToken: String,
         projectCodeList: ArrayList<String>,
         channelCode: ChannelCode = ChannelCode.BS
     ): Result<Boolean>

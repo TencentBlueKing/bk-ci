@@ -1,3 +1,28 @@
+/*
+ * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ *
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ *
+ * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
+ *
+ * A copy of the MIT License is included in this file.
+ *
+ *
+ * Terms of the MIT License:
+ * ---------------------------------------------------
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
+ * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+ * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+ * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
 package com.tencent.devops.store.dao.image
 
 import com.tencent.devops.common.api.util.JsonUtil
@@ -14,13 +39,10 @@ import com.tencent.devops.model.store.tables.TStoreDeptRel
 import com.tencent.devops.model.store.tables.TStoreProjectRel
 import com.tencent.devops.model.store.tables.TStoreStatisticsTotal
 import com.tencent.devops.model.store.tables.records.TImageRecord
-import com.tencent.devops.store.dao.image.Constants.KEY_CATEGORY_CODE
-import com.tencent.devops.store.dao.image.Constants.KEY_CATEGORY_NAME
-import com.tencent.devops.store.dao.image.Constants.KEY_CLASSIFY_ID
-import com.tencent.devops.store.dao.image.Constants.KEY_CREATE_TIME
-import com.tencent.devops.store.dao.image.Constants.KEY_CREATOR
 import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_AGENT_TYPE_SCOPE
 import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_CODE
+import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_DOCKER_FILE_CONTENT
+import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_DOCKER_FILE_TYPE
 import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_FEATURE_CERTIFICATION_FLAG
 import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_FEATURE_PUBLIC_FLAG
 import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_FEATURE_RECOMMEND_FLAG
@@ -37,11 +59,16 @@ import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_SOURCE_TYPE
 import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_SUMMARY
 import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_TAG
 import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_VERSION
-import com.tencent.devops.store.dao.image.Constants.KEY_MODIFIER
-import com.tencent.devops.store.dao.image.Constants.KEY_PUBLISHER
-import com.tencent.devops.store.dao.image.Constants.KEY_PUB_TIME
-import com.tencent.devops.store.dao.image.Constants.KEY_UPDATE_TIME
 import com.tencent.devops.store.exception.image.ClassifyNotExistException
+import com.tencent.devops.store.pojo.common.KEY_CATEGORY_CODE
+import com.tencent.devops.store.pojo.common.KEY_CATEGORY_NAME
+import com.tencent.devops.store.pojo.common.KEY_CLASSIFY_ID
+import com.tencent.devops.store.pojo.common.KEY_CREATE_TIME
+import com.tencent.devops.store.pojo.common.KEY_CREATOR
+import com.tencent.devops.store.pojo.common.KEY_MODIFIER
+import com.tencent.devops.store.pojo.common.KEY_PUBLISHER
+import com.tencent.devops.store.pojo.common.KEY_PUB_TIME
+import com.tencent.devops.store.pojo.common.KEY_UPDATE_TIME
 import com.tencent.devops.store.pojo.common.enums.ApproveStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
@@ -55,9 +82,9 @@ import com.tencent.devops.store.pojo.image.request.MarketImageUpdateRequest
 import com.tencent.devops.store.service.image.SupportService
 import org.jooq.Condition
 import org.jooq.DSLContext
+import org.jooq.Record
 import org.jooq.Record1
 import org.jooq.Record18
-import org.jooq.Record21
 import org.jooq.Result
 import org.jooq.UpdateSetFirstStep
 import org.jooq.impl.DSL
@@ -206,7 +233,7 @@ class MarketImageDao @Autowired constructor(
             tImage.ID.`as`(KEY_IMAGE_ID),
             tImage.IMAGE_CODE.`as`(KEY_IMAGE_CODE),
             tImage.IMAGE_NAME.`as`(KEY_IMAGE_NAME),
-            tImageFeature.IMAGE_TYPE.`as`(Constants.KEY_IMAGE_RD_TYPE),
+            tImageFeature.IMAGE_TYPE.`as`(KEY_IMAGE_RD_TYPE),
             tImage.IMAGE_SOURCE_TYPE.`as`(KEY_IMAGE_SOURCE_TYPE),
             tImage.IMAGE_SIZE.`as`(KEY_IMAGE_SIZE),
             tImage.CLASSIFY_ID.`as`(KEY_CLASSIFY_ID),
@@ -430,7 +457,7 @@ class MarketImageDao @Autowired constructor(
             .fetchOne(0, String::class.java)
             ?: throw ClassifyNotExistException("classifyCode=${marketImageUpdateRequest.classifyCode}")
         with(TImage.T_IMAGE) {
-            dslContext.update(this)
+            val steps = dslContext.update(this)
                 .set(IMAGE_NAME, marketImageUpdateRequest.imageName)
                 .set(CLASSIFY_ID, classifyId)
                 .set(LOGO_URL, marketImageUpdateRequest.logoUrl)
@@ -441,7 +468,13 @@ class MarketImageDao @Autowired constructor(
                 .set(IMAGE_REPO_URL, marketImageUpdateRequest.imageRepoUrl)
                 .set(IMAGE_REPO_NAME, marketImageUpdateRequest.imageRepoName)
                 .set(IMAGE_TAG, marketImageUpdateRequest.imageTag)
-                .set(TICKET_ID, marketImageUpdateRequest.ticketId)
+            if (!marketImageUpdateRequest.dockerFileType.isNullOrBlank()) {
+                steps.set(DOCKER_FILE_TYPE, marketImageUpdateRequest.dockerFileType)
+            }
+            if (marketImageUpdateRequest.dockerFileContent != null) {
+                steps.set(DOCKER_FILE_CONTENT, marketImageUpdateRequest.dockerFileContent)
+            }
+            steps.set(TICKET_ID, marketImageUpdateRequest.ticketId)
                 .set(AGENT_TYPE_SCOPE, JsonUtil.toJson(marketImageUpdateRequest.agentTypeScope))
                 .set(SUMMARY, marketImageUpdateRequest.summary)
                 .set(DESCRIPTION, marketImageUpdateRequest.description)
@@ -481,6 +514,8 @@ class MarketImageDao @Autowired constructor(
                 IMAGE_REPO_URL,
                 IMAGE_REPO_NAME,
                 IMAGE_TAG,
+                DOCKER_FILE_TYPE,
+                DOCKER_FILE_CONTENT,
                 TICKET_ID,
                 AGENT_TYPE_SCOPE,
                 LOGO_URL,
@@ -505,6 +540,8 @@ class MarketImageDao @Autowired constructor(
                     marketImageUpdateRequest.imageRepoUrl,
                     marketImageUpdateRequest.imageRepoName,
                     marketImageUpdateRequest.imageTag,
+                    marketImageUpdateRequest.dockerFileType ?: "INPUT",
+                    marketImageUpdateRequest.dockerFileContent ?: "",
                     marketImageUpdateRequest.ticketId,
                     JsonUtil.toJson(marketImageUpdateRequest.agentTypeScope),
                     marketImageUpdateRequest.logoUrl,
@@ -846,7 +883,7 @@ class MarketImageDao @Autowired constructor(
         visibleImageCodes: List<String>,
         offset: Int? = 0,
         limit: Int? = -1
-    ): Result<Record21<String, String, String, Byte, String, String, String, Int, String, String, String, String, String, String, String, String, LocalDateTime, Boolean, Boolean, Boolean, String>>? {
+    ): Result<Record>? {
         val tImageFeature = TImageFeature.T_IMAGE_FEATURE.`as`("tImageFeature")
         val extraConditions = mutableListOf<Condition>()
         extraConditions.add(tImageFeature.IMAGE_CODE.`in`(visibleImageCodes.subtract(installedImageCodes)))
@@ -911,7 +948,7 @@ class MarketImageDao @Autowired constructor(
         installedImageCodes: List<String>,
         offset: Int? = 0,
         limit: Int? = -1
-    ): Result<Record21<String, String, String, Byte, String, String, String, Int, String, String, String, String, String, String, String, String, LocalDateTime, Boolean, Boolean, Boolean, String>>? {
+    ): Result<Record>? {
         val tImageFeature = TImageFeature.T_IMAGE_FEATURE.`as`("tImageFeature")
         val extraConditions = mutableListOf<Condition>()
         extraConditions.add(tImageFeature.IMAGE_CODE.`in`(installedImageCodes))
@@ -975,7 +1012,7 @@ class MarketImageDao @Autowired constructor(
         visibleImageCodes: List<String>,
         offset: Int? = 0,
         limit: Int? = -1
-    ): Result<Record21<String, String, String, Byte, String, String, String, Int, String, String, String, String, String, String, String, String, LocalDateTime, Boolean, Boolean, Boolean, String>>? {
+    ): Result<Record>? {
         val tImageFeature = TImageFeature.T_IMAGE_FEATURE.`as`("tImageFeature")
         val extraConditions = mutableListOf<Condition>()
         extraConditions.add(tImageFeature.IMAGE_CODE.notIn(visibleImageCodes))
@@ -1040,7 +1077,7 @@ class MarketImageDao @Autowired constructor(
         rdType: ImageRDTypeEnum?,
         offset: Int? = 0,
         limit: Int? = -1
-    ): Result<Record21<String, String, String, Byte, String, String, String, Int, String, String, String, String, String, String, String, String, LocalDateTime, Boolean, Boolean, Boolean, String>>? {
+    ): Result<Record>? {
         val validOffset = if (offset == null || offset < 0) 0 else offset
         val validLimit = if (limit == null || limit <= 0) null else limit
         val tImageFeature = TImageFeature.T_IMAGE_FEATURE.`as`("tImageFeature")
@@ -1078,6 +1115,8 @@ class MarketImageDao @Autowired constructor(
             tImage.IMAGE_REPO_URL.`as`(KEY_IMAGE_REPO_URL),
             tImage.IMAGE_REPO_NAME.`as`(KEY_IMAGE_REPO_NAME),
             tImage.IMAGE_TAG.`as`(KEY_IMAGE_TAG),
+            tImage.DOCKER_FILE_TYPE.`as`(KEY_IMAGE_DOCKER_FILE_TYPE),
+            tImage.DOCKER_FILE_CONTENT.`as`(KEY_IMAGE_DOCKER_FILE_CONTENT),
             tCategory.CATEGORY_CODE.`as`(KEY_CATEGORY_CODE),
             tCategory.CATEGORY_NAME.`as`(KEY_CATEGORY_NAME),
             tImage.PUBLISHER.`as`(KEY_PUBLISHER),
@@ -1161,7 +1200,7 @@ class MarketImageDao @Autowired constructor(
         extraConditions: List<Condition>?,
         offset: Int? = 0,
         limit: Int? = -1
-    ): Result<Record21<String, String, String, Byte, String, String, String, Int, String, String, String, String, String, String, String, String, LocalDateTime, Boolean, Boolean, Boolean, String>>? {
+    ): Result<Record>? {
         val validOffset = if (offset == null || offset < 0) 0 else offset
         val validLimit = if (limit == null || limit <= 0) null else limit
         val tImageFeature = TImageFeature.T_IMAGE_FEATURE.`as`("tImageFeature")
@@ -1204,6 +1243,8 @@ class MarketImageDao @Autowired constructor(
             tImage.IMAGE_REPO_URL.`as`(KEY_IMAGE_REPO_URL),
             tImage.IMAGE_REPO_NAME.`as`(KEY_IMAGE_REPO_NAME),
             tImage.IMAGE_TAG.`as`(KEY_IMAGE_TAG),
+            tImage.DOCKER_FILE_TYPE.`as`(KEY_IMAGE_DOCKER_FILE_TYPE),
+            tImage.DOCKER_FILE_CONTENT.`as`(KEY_IMAGE_DOCKER_FILE_CONTENT),
             tCategory.CATEGORY_CODE.`as`(KEY_CATEGORY_CODE),
             tCategory.CATEGORY_NAME.`as`(KEY_CATEGORY_NAME),
             tImage.PUBLISHER.`as`(KEY_PUBLISHER),

@@ -306,6 +306,7 @@ export const actions = {
             return response.data
         })
     },
+
     requestDownloadUrl: async ({ commit }, { projectId, artifactoryType, path }) => {
         return request.post(`${ARTIFACTORY_API_URL_PREFIX}/user/artifactories/${projectId}/${artifactoryType}/downloadUrl?path=${encodeURIComponent(path)}`).then(response => {
             return response.data
@@ -377,7 +378,7 @@ export const getters = {
             if (index) {
                 return stage.containers.some(container => {
                     return container.elements.find(el => {
-                        return el['@type'] === atom
+                        return el.atomCode === atom
                     })
                 })
             }

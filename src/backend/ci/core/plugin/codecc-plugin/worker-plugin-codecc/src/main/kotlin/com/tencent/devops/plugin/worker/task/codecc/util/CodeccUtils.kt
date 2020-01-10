@@ -46,6 +46,7 @@ import com.tencent.devops.plugin.worker.task.codecc.util.CodeccParamsHelper.getP
 import com.tencent.devops.plugin.worker.task.codecc.util.CodeccParamsHelper.getPyLint3Path
 import com.tencent.devops.plugin.worker.task.codecc.util.CodeccParamsHelper.getPython2Path
 import com.tencent.devops.plugin.worker.task.codecc.util.CodeccParamsHelper.getPython3Path
+import com.tencent.devops.process.utils.PIPELINE_TURBO_TASK_ID
 import com.tencent.devops.worker.common.CommonEnv
 import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.env.BuildEnv
@@ -53,7 +54,6 @@ import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.utils.ShellUtil
 import org.slf4j.LoggerFactory
 import java.io.File
-import java.net.URLDecoder
 import kotlin.math.max
 
 /**
@@ -123,9 +123,10 @@ object CodeccUtils {
     private fun doCoverityCommand(codeccExecuteConfig: CodeccExecuteConfig): String {
         val workspace = codeccExecuteConfig.workspace
         val taskParams = codeccExecuteConfig.buildTask.params ?: mapOf()
-        val script = URLDecoder.decode(taskParams["script"] ?: "", "UTF-8")
+        val script = taskParams["script"] ?: ""
         val scriptType = codeccExecuteConfig.scriptType
         val scriptFile = ShellUtil.getCommandFile(
+            buildId = codeccExecuteConfig.buildTask.buildId,
             script = script,
             dir = workspace,
             buildEnvs = codeccExecuteConfig.buildVariables.buildEnvs,
@@ -191,9 +192,10 @@ object CodeccUtils {
         val variables =
             codeccExecuteConfig.buildVariables.variables.plus(codeccExecuteConfig.buildTask.buildVariable ?: mapOf())
         return ShellUtil.execute(
+            buildId = codeccExecuteConfig.buildTask.buildId,
             script = list.joinToString(" "),
             dir = workspace,
-            buildEnvs = codeccExecuteConfig.buildVariables.buildEnvs,
+            buildEnvs = takeBuildEnvs(codeccExecuteConfig),
             runtimeVariables = variables,
             prefix = "[cov] "
         )
@@ -259,9 +261,10 @@ object CodeccUtils {
         val variables =
             codeccExecuteConfig.buildVariables.variables.plus(codeccExecuteConfig.buildTask.buildVariable ?: mapOf())
         return ShellUtil.execute(
+            buildId = codeccExecuteConfig.buildTask.buildId,
             script = list.joinToString(" "),
             dir = workspace,
-            buildEnvs = codeccExecuteConfig.buildVariables.buildEnvs,
+            buildEnvs = takeBuildEnvs(codeccExecuteConfig),
             runtimeVariables = variables,
             prefix = "[tools] "
         )
@@ -276,6 +279,22 @@ object CodeccUtils {
             ) {
                 LoggerService.addNormalLine("$tag $it")
             }
+        }
+    }
+
+    private fun takeBuildEnvs(coverConfig: CodeccExecuteConfig): List<com.tencent.devops.store.pojo.app.BuildEnv> {
+        val turboTaskId = coverConfig.buildTask.buildVariable?.get(PIPELINE_TURBO_TASK_ID)
+        return if (turboTaskId.isNullOrBlank()) {
+            coverConfig.buildVariables.buildEnvs
+        } else { // 设置编译加速路径
+            coverConfig.buildVariables.buildEnvs.plus(
+                com.tencent.devops.store.pojo.app.BuildEnv(
+                    name = "turbo",
+                    version = "1.0",
+                    binPath = "",
+                    env = mapOf()
+                )
+            )
         }
     }
 }

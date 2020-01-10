@@ -37,7 +37,7 @@ data class TriggerContainer(
     @ApiModelProperty("构建容器序号id", required = false, hidden = true)
     override var id: String? = null,
     @ApiModelProperty("容器名称", required = true)
-    override val name: String = "",
+    override var name: String = "",
     @ApiModelProperty("任务集合", required = true)
     override val elements: List<Element> = listOf(),
     @ApiModelProperty("状态", required = true, hidden = true)

@@ -44,8 +44,9 @@ package com.tencent.devops.store.constant
  */
 object StoreMessageCode {
 
-    const val MSG_CODE_STORE_CLASSIFY_PREFIX = "MSG_CODE_STORE_CLASSIFY_PREFIX_" // 研发商店插件分类国际化前缀
-    const val MSG_CODE_STORE_CATEGORY_PREFIX = "MSG_CODE_STORE_CATEGORY_PREFIX_" // 研发商店插件分类国际化前缀
+    const val MSG_CODE_STORE_CLASSIFY_PREFIX = "MSG_CODE_STORE_CLASSIFY_PREFIX_" // 研发商店插分类国际化前缀
+    const val MSG_CODE_STORE_CATEGORY_PREFIX = "MSG_CODE_STORE_CATEGORY_PREFIX_" // 研发商店范畴国际化前缀
+    const val MSG_CODE_STORE_LABEL_PREFIX = "MSG_CODE_STORE_LABEL_PREFIX_" // 研发商店标签国际化前缀
     // 插件相关的错误提示
     const val USER_QUERY_ATOM_PERMISSION_IS_INVALID = "2120001" // 研发商店：没有插件的查看权限
     const val USER_QUERY_PROJECT_PERMISSION_IS_INVALID = "2120002" // 研发商店：没有项目的查看权限
@@ -77,6 +78,7 @@ object StoreMessageCode {
     const val USER_TEMPLATE_ATOM_NOT_INSTALLED = "2120204" // 研发商店：模版下的插件{0}尚未安装，请先安装后再使用
     const val USER_TEMPLATE_RELEASED = "2120205" // 研发商店：模版{0}已发布到商店，请先下架再删除
     const val USER_TEMPLATE_USED = "2120206" // 研发商店：模版{0}已安装到其他项目下使用，请勿移除
+    const val USER_TEMPLATE_ATOM_IS_INVALID = "2120207" // 研发商店：模版下的插件{0}不可用，请联系模板发布者
 
     const val USER_IMAGE_VERSION_IS_NOT_FINISH = "2120301" // 研发商店：镜像{0}的{1}版本发布未结束，请稍后再试
     const val USER_IMAGE_VERSION_IS_INVALID = "2120302" // 研发商店：镜像升级的版本号{0}错误，应为{1}
@@ -87,6 +89,7 @@ object StoreMessageCode {
     const val USER_IMAGE_UNKNOWN_SOURCE_TYPE = "2120307" // 研发商店：镜像原始来源类型未知：{0}
     const val USER_IMAGE_UNKNOWN_IMAGE_CATEGORY = "2120308" // 镜像范畴未知：{0}
     const val USER_IMAGE_NOT_EXIST = "2120309" // 镜像不存在：{0}
+    const val USER_IMAGE_VERSION_NOT_EXIST = "2120310" // 标识为{0}版本号为{1}的镜像不存在
 
     // store公共业务相关的错误提示
     const val USER_PRAISE_IS_INVALID = "2120901" // 研发商店：你已点赞过

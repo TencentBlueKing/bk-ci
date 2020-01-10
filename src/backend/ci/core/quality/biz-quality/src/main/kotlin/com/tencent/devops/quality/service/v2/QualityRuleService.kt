@@ -388,9 +388,10 @@ class QualityRuleService @Autowired constructor(
             val summaryIndicatorList = getSummaryIndicatorList(indicators, ruleIndicatorMap)
             val ruleSummaryControlPoint =
                     QualityRuleSummaryWithPermission.RuleSummaryControlPoint(
-                            controlPoint?.hashId ?: "",
-                            controlPoint?.type ?: "",
-                            controlPoint?.name ?: "")
+                        hashId = controlPoint?.hashId ?: "",
+                        name = controlPoint?.type ?: "",
+                        cnName = controlPoint?.name ?: ""
+                    )
             val pipelineCount = rule.indicatorRange.split(",").filter { pipelineIdInfoMap.containsKey(it) }.size
             val ruleTemplateIds = if (rule.pipelineTemplateRange.isNullOrBlank()) listOf() else rule.pipelineTemplateRange.split(",")
             val templatePipelineCount = templatePipelineCountMap.filter { it.key in ruleTemplateIds }.values.sum()
@@ -398,17 +399,17 @@ class QualityRuleService @Autowired constructor(
 
             // 最后生成结果
             QualityRuleSummaryWithPermission(
-                    HashUtil.encodeLongId(rule.id),
-                    rule.name,
-                    ruleSummaryControlPoint,
-                    summaryIndicatorList,
-                    RuleRange.PART_BY_NAME,
-                    templateSummary.plus(pipelineSummary),
-                    pipelineCount + templatePipelineCount,
-                    rule.executeCount,
-                    rule.interceptTimes,
-                    rule.enable,
-                    rulePermission
+                ruleHashId = HashUtil.encodeLongId(rule.id),
+                name = rule.name,
+                controlPoint = ruleSummaryControlPoint,
+                indicatorList = summaryIndicatorList,
+                range = RuleRange.PART_BY_NAME,
+                rangeSummary = templateSummary.plus(pipelineSummary),
+                pipelineCount = pipelineCount + templatePipelineCount,
+                pipelineExecuteCount = rule.executeCount,
+                interceptTimes = rule.interceptTimes,
+                enable = rule.enable,
+                permissions = rulePermission
             )
         } ?: listOf()
         return Pair(count, list)
@@ -455,7 +456,7 @@ class QualityRuleService @Autowired constructor(
             val pipelineId = it.key
             val info = it.value
             val pipelineElement = pipelineElementsMap[pipelineId] ?: listOf()
-            val pipelineElementCodes = pipelineElement.map { it.classType }
+            val pipelineElementCodes = pipelineElement.map { it.atomCode }
             val lackElements = indicatorElement.minus(pipelineElementCodes).toMutableSet()
             if (controlPoint != null && !pipelineElementCodes.contains(controlPoint.type)) lackElements.add(controlPoint.type)
             QualityRuleSummaryWithPermission.RuleRangeSummary(id = info.pipelineId,

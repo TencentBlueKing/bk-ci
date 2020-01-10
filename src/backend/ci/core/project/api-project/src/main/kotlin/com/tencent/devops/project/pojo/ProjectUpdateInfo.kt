@@ -67,5 +67,8 @@ data class ProjectUpdateInfo(
 //    @JsonProperty("cc_app_name")
     var ccAppName: String?, // APP name 通过调用CC接口同步
     @ApiModelProperty("容器选择， 0 是不选， 1 是k8s, 2 是mesos")
-    val kind: Int?
+    val kind: Int?,
+    @ApiModelProperty("是否保密")
+    var secrecy: Boolean = false
+
 )
