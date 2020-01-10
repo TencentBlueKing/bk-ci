@@ -28,6 +28,7 @@ package com.tencent.devops.dockerhost.services
 
 import com.github.dockerjava.api.DockerClient
 import com.github.dockerjava.api.exception.NotFoundException
+import com.github.dockerjava.api.exception.UnauthorizedException
 import com.github.dockerjava.api.model.AuthConfig
 import com.github.dockerjava.api.model.AuthConfigurations
 import com.github.dockerjava.api.model.BuildResponseItem
@@ -43,6 +44,7 @@ import com.github.dockerjava.core.command.PullImageResultCallback
 import com.github.dockerjava.core.command.PushImageResultCallback
 import com.github.dockerjava.core.command.WaitContainerResultCallback
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.common.web.mq.alert.AlertLevel
@@ -71,7 +73,6 @@ import java.io.IOException
 import java.nio.file.Paths
 import java.util.Date
 import javax.annotation.PostConstruct
-import kotlin.math.log
 
 @Component
 class DockerHostBuildService(
@@ -226,6 +227,11 @@ class DockerHostBuildService(
                         buildId = dockerBuildInfo.buildId,
                         containerHashId = dockerBuildInfo.containerHashId
                     )
+                } catch (t: UnauthorizedException) {
+                    val errorMessage = "无权限拉取镜像：$imageName，请检查凭证：[buildId=${dockerBuildInfo.buildId}][containerHashId=${dockerBuildInfo.containerHashId}]"
+                    logger.error(errorMessage, t)
+                    // 直接失败，禁止使用本地镜像
+                    throw PermissionForbiddenException(errorMessage)
                 } catch (t: Throwable) {
                     logger.warn("Fail to pull the image $imageName of build ${dockerBuildInfo.buildId}", t)
                     log(dockerBuildInfo.buildId, "拉取镜像失败，错误信息：${t.message}", dockerBuildInfo.containerHashId)
@@ -421,6 +427,11 @@ class DockerHostBuildService(
                     buildId = buildId,
                     containerHashId = ""
                 )
+            } catch (t: UnauthorizedException) {
+                val errorMessage = "无权限拉取镜像：$imageName，请检查凭证"
+                logger.error(errorMessage, t)
+                // 直接失败，禁止使用本地镜像
+                throw PermissionForbiddenException(errorMessage)
             } catch (t: Throwable) {
                 logger.warn("Fail to pull the image $imageName of build $buildId", t, "")
                 log(buildId, "拉取镜像失败，错误信息：${t.message}", "")
