@@ -143,7 +143,7 @@ class ExtServiceDao {
             a.ID.`as`("serviceId"),
             a.SERVICE_CODE.`as`("serviceCode"),
             a.SERVICE_NAME.`as`("serviceName"),
-            a.CREATOR.`as`("category"),
+            a.CLASSIFY_ID.`as`("category"),
             a.LOGO_URL.`as`("logoUrl"),
             a.VERSION.`as`("version"),
             a.SERVICE_STATUS.`as`("serviceStatus"),

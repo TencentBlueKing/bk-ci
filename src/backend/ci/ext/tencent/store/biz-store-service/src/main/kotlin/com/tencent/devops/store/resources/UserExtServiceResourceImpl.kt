@@ -1,6 +1,7 @@
 package com.tencent.devops.store.resources
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.UserExtServiceResource
 import com.tencent.devops.store.pojo.dto.InitExtServiceDTO
 import com.tencent.devops.store.pojo.dto.SubmitDTO
@@ -8,12 +9,11 @@ import com.tencent.devops.store.pojo.vo.ExtensionAndVersionVO
 import com.tencent.devops.store.pojo.vo.ExtensionServiceVO
 import com.tencent.devops.store.service.ExtServiceBaseService
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
 
-@Service
+@RestResource
 class UserExtServiceResourceImpl @Autowired constructor(
     private val extServiceBaseService: ExtServiceBaseService
-): UserExtServiceResource{
+) : UserExtServiceResource {
     override fun initExtensionService(
         userId: String,
         serviceCode: String,
@@ -26,11 +26,16 @@ class UserExtServiceResourceImpl @Autowired constructor(
         )
     }
 
-    override fun submitExtensionService(userId: String, serviceId: String, proejctCode: String, submitDTO: SubmitDTO): Result<String?> {
+    override fun submitExtensionService(
+        userId: String,
+        serviceId: String,
+        projectCode: String,
+        extensionInfo: SubmitDTO
+    ): Result<String> {
         return extServiceBaseService.updateExtService(
             userId = userId,
-            projectCode = proejctCode,
-            submitDTO = submitDTO
+            projectCode = projectCode,
+            submitDTO = extensionInfo
         )
     }
 
@@ -43,7 +48,7 @@ class UserExtServiceResourceImpl @Autowired constructor(
         serviceCode: String?,
         page: Int?,
         pageSize: Int?
-    ): Result<ExtensionAndVersionVO?> {
+    ): Result<ExtensionAndVersionVO> {
         return extServiceBaseService.getMyService(
             userId = userId,
             serviceCode = serviceCode,

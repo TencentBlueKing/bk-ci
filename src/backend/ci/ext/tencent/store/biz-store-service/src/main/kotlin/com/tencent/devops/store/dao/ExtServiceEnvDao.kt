@@ -1,5 +1,6 @@
 package com.tencent.devops.store.dao
 
+import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.model.store.tables.TExtensionServiceEnvInfo
 import com.tencent.devops.store.pojo.ExtServiceEnvCreateInfo
 import com.tencent.devops.store.pojo.ExtServiceEnvUpdateInfo
@@ -11,7 +12,6 @@ import java.time.LocalDateTime
 class ExtServiceEnvDao {
     fun create(
         dslContext: DSLContext,
-        id: String,
         extServiceEnvCreateInfo: ExtServiceEnvCreateInfo
     ) {
         with(TExtensionServiceEnvInfo.T_EXTENSION_SERVICE_ENV_INFO) {
@@ -31,7 +31,7 @@ class ExtServiceEnvDao {
                 UPDATE_TIME
             )
                 .values(
-                    id,
+                    UUIDUtil.generate(),
                     extServiceEnvCreateInfo.serviceId,
                     extServiceEnvCreateInfo.language,
                     extServiceEnvCreateInfo.pkgPath,

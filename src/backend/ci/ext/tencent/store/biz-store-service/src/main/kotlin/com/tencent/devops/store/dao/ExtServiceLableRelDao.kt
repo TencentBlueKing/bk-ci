@@ -1,7 +1,6 @@
 package com.tencent.devops.store.dao
 
 import com.tencent.devops.common.api.util.UUIDUtil
-import com.tencent.devops.model.store.tables.TAtomLabelRel
 import com.tencent.devops.model.store.tables.TExtensionServiceLabelRel
 import com.tencent.devops.model.store.tables.TLabel
 import com.tencent.devops.store.pojo.common.KEY_CREATE_TIME

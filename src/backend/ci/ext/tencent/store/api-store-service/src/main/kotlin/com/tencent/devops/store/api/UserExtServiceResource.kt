@@ -1,6 +1,5 @@
 package com.tencent.devops.store.api
 
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ACCESS_TOKEN
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.dto.InitExtServiceDTO
@@ -21,8 +20,8 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["EXTENSION_SERVICE"], description = "服务扩展")
-@Path("/user/extension/services/desk")
+@Api(tags = ["USER_EXTENSION_SERVICE"], description = "服务扩展")
+@Path("/user/extension/desk/services")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserExtServiceResource {
@@ -52,21 +51,12 @@ interface UserExtServiceResource {
         @PathParam("serviceId")
         serviceId: String,
         @ApiParam("服务编码")
-        proejctCode: String,
+        @QueryParam("projectCode")
+        projectCode: String,
         @ApiParam("扩展服务信息")
         extensionInfo: SubmitDTO
-    ): Result<String?>
+    ): Result<String>
 
-//    @PUT
-//    @ApiOperation(value = "修改扩展服务")
-//    @Path("/{serviceId}")
-//    fun updateExtensionService(
-//        @ApiParam("扩展服务Id")
-//        @PathParam("serviceId")
-//        serviceId: String,
-//        @ApiParam("扩展服务信息")
-//        extensionInfo: UpdateExtensionServiceDTO
-//    ): Result<String>
 
     @GET
     @ApiOperation(value = "获取单条扩展服务信息")
@@ -88,7 +78,7 @@ interface UserExtServiceResource {
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @ApiParam("扩展服务Id")
-        @PathParam("serviceCode")
+        @QueryParam("serviceCode")
         serviceCode: String?,
         @ApiParam("页码", required = false)
         @QueryParam("page")
@@ -96,7 +86,7 @@ interface UserExtServiceResource {
         @ApiParam("每页数量", required = false)
         @QueryParam("pageSize")
         pageSize: Int?
-    ): Result<ExtensionAndVersionVO?>
+    ): Result<ExtensionAndVersionVO>
 
     @GET
     @ApiOperation(value = "获取扩展服务列表")

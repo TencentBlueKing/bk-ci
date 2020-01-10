@@ -20,7 +20,7 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["EXTENSION_SERVICE_COMMENT"], description = "服务扩展_评论")
+@Api(tags = ["USER_EXTENSION_SERVICE_COMMENT"], description = "服务扩展_评论")
 @Path("/user/extension/services/comments")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)

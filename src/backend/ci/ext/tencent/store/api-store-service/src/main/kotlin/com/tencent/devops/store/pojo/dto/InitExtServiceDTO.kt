@@ -24,7 +24,7 @@ data class InitExtServiceDTO(
     @ApiModelProperty("扩展点列表")
     val extensionList: List<ExtsionInfoReq>,
     @ApiModelProperty(value = "项目可视范围", required = false)
-    val visibilityLevel: VisibilityLevelEnum? = null,
+    val visibilityLevel: VisibilityLevelEnum? = VisibilityLevelEnum.PRIVATE,
     @ApiModelProperty("添加用户")
     val creatorUser: String
 
