@@ -708,7 +708,7 @@ abstract class ImageReleaseService {
                 storeId = imageId,
                 storeCode = imageCode,
                 storeType = StoreTypeEnum.IMAGE,
-                modifier = record.modifier,
+                creator = record.creator,
                 processInfo = processInfo
             )
             logger.info("getProcessInfo storeProcessInfo: $storeProcessInfo")
