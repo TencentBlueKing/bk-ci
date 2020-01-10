@@ -151,8 +151,8 @@ class MutexControl @Autowired constructor(
         container: PipelineBuildContainer
     ): Boolean {
         val containerMutexId = getMutexContainerId(buildId, containerId)
-        val lockKey = getMutexLockKey(projectId, buildId, mutexGroup)
-        val queueKey = getMutexQueueKey(projectId, buildId, mutexGroup)
+        val lockKey = getMutexLockKey(projectId, mutexGroup)
+        val queueKey = getMutexQueueKey(projectId, mutexGroup)
         val containerMutexLock = RedisLockByValue(redisOperation, lockKey, containerMutexId, 86400)
         // 获取到锁的containerId
         val lockedContainerMutexId = redisOperation.get(lockKey)
@@ -199,7 +199,7 @@ class MutexControl @Autowired constructor(
         mutexGroup: MutexGroup
     ) {
         val containerMutexId = getMutexContainerId(buildId, containerId)
-        val lockKey = getMutexLockKey(projectId, buildId, mutexGroup)
+        val lockKey = getMutexLockKey(projectId, mutexGroup)
         val containerMutexLock = RedisLockByValue(redisOperation, lockKey, containerMutexId, 86400)
         containerMutexLock.unlock()
         quitMutexQueue(
@@ -218,7 +218,7 @@ class MutexControl @Autowired constructor(
         container: PipelineBuildContainer
     ): Boolean {
 
-        val lockKey = getMutexLockKey(projectId, buildId, mutexGroup)
+        val lockKey = getMutexLockKey(projectId, mutexGroup)
         val lockedContainerMutexId = redisOperation.get(lockKey)
         // 当没有启动互斥组或者没有启动互斥组排队或者互斥组名字为空的时候，则直接排队失败
         if (!mutexGroup.enable || !mutexGroup.queueEnable || mutexGroup.mutexGroupName.isNullOrBlank()) {
@@ -226,7 +226,7 @@ class MutexControl @Autowired constructor(
             return false
         }
         val containerMutexId = getMutexContainerId(buildId, containerId)
-        val queueKey = getMutexQueueKey(projectId, buildId, mutexGroup)
+        val queueKey = getMutexQueueKey(projectId, mutexGroup)
         val exist = redisOperation.hhaskey(queueKey, containerMutexId)
         val queueSize = redisOperation.hsize(queueKey)
 
@@ -284,7 +284,7 @@ class MutexControl @Autowired constructor(
 
     private fun enterMutexQueue(projectId: String, buildId: String, containerId: String, mutexGroup: MutexGroup) {
         val containerMutexId = getMutexContainerId(buildId, containerId)
-        val queueKey = getMutexQueueKey(projectId, buildId, mutexGroup)
+        val queueKey = getMutexQueueKey(projectId, mutexGroup)
         val currentTime = LocalDateTime.now().timestamp()
         redisOperation.hset(queueKey, containerMutexId, currentTime.toString())
     }
@@ -296,16 +296,18 @@ class MutexControl @Autowired constructor(
         mutexGroup: MutexGroup
     ) {
         val containerMutexId = getMutexContainerId(buildId, containerId)
-        val queueKey = getMutexQueueKey(projectId, buildId, mutexGroup)
+        val queueKey = getMutexQueueKey(projectId, mutexGroup)
         redisOperation.hdelete(queueKey, containerMutexId)
     }
 
-    private fun getMutexLockKey(projectId: String, buildId: String, mutexGroup: MutexGroup): String {
-        return "lock:container:mutex:$projectId:${mutexGroup.mutexGroupName}:lock"
+    private fun getMutexLockKey(projectId: String, mutexGroup: MutexGroup): String {
+        val mutexGroupName = mutexGroup.mutexGroupName ?: ""
+        return "lock:container:mutex:$projectId:$mutexGroupName:lock"
     }
 
-    private fun getMutexQueueKey(projectId: String, buildId: String, mutexGroup: MutexGroup): String {
-        return "lock:container:mutex:$projectId:${mutexGroup.mutexGroupName}:queue"
+    private fun getMutexQueueKey(projectId: String, mutexGroup: MutexGroup): String {
+        val mutexGroupName = mutexGroup.mutexGroupName ?: ""
+        return "lock:container:mutex:$projectId:$mutexGroupName:queue"
     }
 
 
