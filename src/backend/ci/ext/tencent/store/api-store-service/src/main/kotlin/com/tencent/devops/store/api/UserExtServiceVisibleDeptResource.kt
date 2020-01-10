@@ -31,7 +31,7 @@ interface UserExtServiceVisibleDeptResource {
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @ApiParam("插件市场-插件可见范围请求报文体", required = true)
-        atomVisibleDeptRequest: ExtsionServiceVisibleDeptReq
+        serviceVisibleDeptRequest: ExtsionServiceVisibleDeptReq
     ): Result<Boolean>
 
     @ApiOperation("查看扩展服务可见范围")

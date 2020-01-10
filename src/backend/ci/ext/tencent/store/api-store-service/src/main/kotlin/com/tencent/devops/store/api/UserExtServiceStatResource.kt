@@ -1,7 +1,7 @@
 package com.tencent.devops.store.api
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.pojo.vo.ExtServiceStatVO
+import com.tencent.devops.store.pojo.ExtServiceStatistic
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -25,5 +25,5 @@ interface UserExtServiceStatResource {
         @ApiParam("扩展服务编码")
         @PathParam("serviceCode")
         serviceCode: String
-    ): Result<ExtServiceStatVO>
+    ): Result<ExtServiceStatistic>
 }

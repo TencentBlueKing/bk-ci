@@ -3,66 +3,31 @@ package com.tencent.devops.store.resources
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.UserExtServiceResource
-import com.tencent.devops.store.pojo.dto.InitExtServiceDTO
-import com.tencent.devops.store.pojo.dto.SubmitDTO
-import com.tencent.devops.store.pojo.vo.ExtensionAndVersionVO
-import com.tencent.devops.store.pojo.vo.ExtensionServiceVO
-import com.tencent.devops.store.service.ExtServiceBaseService
+import com.tencent.devops.store.pojo.atom.enums.MarketAtomSortTypeEnum
+import com.tencent.devops.store.pojo.enums.ExtServiceSortTypeEnum
+import com.tencent.devops.store.pojo.vo.ExtServiceMainItemVo
+import com.tencent.devops.store.pojo.vo.SearchExtServiceVO
+import com.tencent.devops.store.service.ExtServiceSearchService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class UserExtServiceResourceImpl @Autowired constructor(
-    private val extServiceBaseService: ExtServiceBaseService
+    val extServiceSearchService: ExtServiceSearchService
 ) : UserExtServiceResource {
-    override fun initExtensionService(
-        userId: String,
-        serviceCode: String,
-        extensionInfo: InitExtServiceDTO
-    ): Result<Boolean> {
-        return extServiceBaseService.addExtService(
-            userId = userId,
-            serviceCode = serviceCode,
-            extensionInfo = extensionInfo
-        )
+    override fun mainPageList(userId: String, page: Int?, pageSize: Int?): Result<List<ExtServiceMainItemVo>> {
+        return extServiceSearchService.mainPageList(userId, page, pageSize)
     }
 
-    override fun submitExtensionService(
+    override fun list(
         userId: String,
-        serviceId: String,
-        projectCode: String,
-        extensionInfo: SubmitDTO
-    ): Result<String> {
-        return extServiceBaseService.updateExtService(
-            userId = userId,
-            projectCode = projectCode,
-            submitDTO = extensionInfo
-        )
-    }
-
-    override fun getExtensionServiceInfo(userId: String, serviceId: String): Result<ExtensionServiceVO> {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
-
-    override fun listDeskExtService(
-        userId: String,
-        serviceCode: String?,
+        serviceName: String?,
+        classifyCode: String?,
+        labelCode: String?,
+        score: Int?,
+        sortType: ExtServiceSortTypeEnum?,
         page: Int?,
         pageSize: Int?
-    ): Result<ExtensionAndVersionVO> {
-        return extServiceBaseService.getMyService(
-            userId = userId,
-            serviceCode = serviceCode,
-            page = page,
-            pageSize = pageSize
-        )
-    }
-
-    override fun getExtensionServiceInfoList(
-        serviceId: String?,
-        category: String?,
-        page: Int?,
-        pageSize: Int?
-    ): Result<ExtensionServiceVO> {
+    ): Result<SearchExtServiceVO> {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 }
