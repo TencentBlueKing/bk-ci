@@ -76,21 +76,19 @@ class UserBuildResourceImpl @Autowired constructor(private val buildService: Pip
         userId: String,
         projectId: String,
         pipelineId: String,
-        values: Map<String, String>
+        values: Map<String, String>,
+        buildNo: Int?
     ): Result<BuildId> {
         checkParam(userId, projectId, pipelineId)
-        return Result(
-            BuildId(
-                buildService.buildManualStartup(
-                    userId,
-                    StartType.MANUAL,
-                    projectId,
-                    pipelineId,
-                    values,
-                    ChannelCode.BS
-                )
-            )
-        )
+        return Result(BuildId(buildService.buildManualStartup(
+            userId = userId,
+            startType = StartType.MANUAL,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            values = values,
+            channelCode = ChannelCode.BS,
+            buildNo = buildNo
+        )))
     }
 
     override fun retry(

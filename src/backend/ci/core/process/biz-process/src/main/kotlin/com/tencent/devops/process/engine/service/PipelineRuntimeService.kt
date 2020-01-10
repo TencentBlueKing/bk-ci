@@ -96,7 +96,7 @@ import com.tencent.devops.process.engine.pojo.event.PipelineBuildMonitorEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildStartEvent
 import com.tencent.devops.process.pojo.BuildBasicInfo
 import com.tencent.devops.process.pojo.BuildHistory
-import com.tencent.devops.process.pojo.ErrorType
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.process.pojo.PipelineBuildMaterial
 import com.tencent.devops.process.pojo.ReviewParam
 import com.tencent.devops.process.pojo.VmInfo
@@ -238,19 +238,6 @@ class PipelineRuntimeService @Autowired constructor(
         return pipelineBuildDao.convert(t)
     }
 
-    /**
-     * TODO 这个与下面的getBuildNoByByPair方法重复了，需要后面搞清楚前面接口是否不用了，重构一版
-     * @see #com.tencent.devops.process.api.service.ServicePipelineResource#getBuildNoByBuildIds
-     */
-    fun listBuildInfoByBuildIds(buildIds: Set<String>): MutableMap<String, Int> {
-        val result = mutableMapOf<String, Int>()
-        val buildInfoList = pipelineBuildDao.listBuildInfoByBuildIds(dslContext, buildIds)
-        buildInfoList.forEach {
-            result[it.buildId] = it.buildNum
-        }
-        return result
-    }
-
     fun getBuildNoByByPair(buildIds: Set<String>): MutableMap<String, String> {
         val result = mutableMapOf<String, String>()
         val buildInfoList = pipelineBuildDao.listBuildInfoByBuildIds(dslContext, buildIds)
@@ -317,8 +304,29 @@ class PipelineRuntimeService @Autowired constructor(
 
     fun getAllVariable(buildId: String): Map<String, String> {
         val vars = pipelineBuildVarDao.getVars(dslContext, buildId)
-        PipelineVarUtil.fillOldVar(vars)
-        return vars
+        // 旧流水线的前缀变量追加 未来旧版下线该调用会移除
+        PipelineVarUtil.fillOldVarPrefixTurning(vars)
+
+        val allVars = mutableMapOf<String, String>()
+        vars.forEach {
+            // 从新转旧: 新流水线产生的变量 兼容在旧流水线中已经使用到的旧变量
+            val oldVarName = PipelineVarUtil.newVarToOldVar(it.key)
+            if (!oldVarName.isNullOrBlank()) {
+                allVars[oldVarName!!] = it.value
+            } else {
+                // 从旧转新: 兼容从旧入口写入的数据转到新的流水线运行
+                val newVarName = PipelineVarUtil.oldVarToNewVar(it.key)
+                if (!newVarName.isNullOrBlank() && !vars.contains(newVarName)) {
+                    allVars[newVarName!!] = it.value
+                }
+            }
+            allVars[it.key] = it.value
+        }
+        return allVars
+    }
+
+    fun getAllVariableWithType(buildId: String): List<BuildParameters> {
+        return pipelineBuildVarDao.getVarsWithType(dslContext, buildId)
     }
 
     fun setVariable(projectId: String, pipelineId: String, buildId: String, varName: String, varValue: Any) {
@@ -336,12 +344,23 @@ class PipelineRuntimeService @Autowired constructor(
     fun batchSetVariable(projectId: String, pipelineId: String, buildId: String, variables: Map<String, Any>) {
         val vars = variables.map { it -> it.key to it.value.toString() }.toMap().toMutableMap()
         PipelineVarUtil.replaceOldByNewVar(vars)
+
+        val pipelineBuildParameters = mutableListOf<BuildParameters>()
+        vars.forEach { t, u ->
+            pipelineBuildParameters.add(
+                BuildParameters(
+                    t,
+                    u
+                )
+            )
+        }
+
         pipelineBuildVarDao.batchSave(
             dslContext = dslContext,
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
-            variables = vars
+            variables = pipelineBuildParameters
         )
     }
 
@@ -750,10 +769,12 @@ class PipelineRuntimeService @Autowired constructor(
         return true
     }
 
-    fun startBuild(pipelineInfo: PipelineInfo, fullModel: Model, params: Map<String, Any>): String {
+    fun startBuild(pipelineInfo: PipelineInfo, fullModel: Model, startParamsWithType: List<BuildParameters>): String {
+        val params = startParamsWithType.map { it.key to it.value }.toMap()
         val startBuildStatus: BuildStatus = BuildStatus.QUEUE // 默认都是排队状态
-        val buildId = // 如果不是从某个步骤重试的，则当成一个全新的, 后续看产品用户需求，是否需要仍然在当前build跑
-            if (params[PIPELINE_RETRY_START_TASK_ID] == null) {
+        val buildId =
+            // 2019-12-16 产品 rerun 需求
+            if (params[PIPELINE_RETRY_BUILD_ID] == null) {
                 buildIdGenerator.getNextId()
             } else {
                 params[PIPELINE_RETRY_BUILD_ID].toString()
@@ -883,22 +904,31 @@ class PipelineRuntimeService @Autowired constructor(
                                 if (retryStartTaskId == atomElement.id) {
                                     // 重试判断是否存在原子重试，其他保持不变
                                     val taskRecord = retryTaskContainerStatus(
-                                        lastTimeBuildTaskRecords, container, retryStartTaskId!!, atomElement
+                                        lastTimeBuildTaskRecords = lastTimeBuildTaskRecords,
+                                        container = container,
+                                        retryStartTaskId = retryStartTaskId!!,
+                                        atomElement = atomElement
                                     )
                                     if (taskRecord != null) {
                                         updateExistsRecord.add(taskRecord)
                                         needUpdateContainer = true
                                     }
                                 } else { // 重试之外的其他任务
-                                    val target =
-                                        findTaskRecord(lastTimeBuildTaskRecords, container, atomElement.id!!)
+                                    val target = findTaskRecord(
+                                        lastTimeBuildTaskRecords = lastTimeBuildTaskRecords,
+                                        container = container,
+                                        retryStartTaskId = atomElement.id!!
+                                    )
                                     // 如果当前原子之前是完成状态，则跳过
                                     if (target == null || BuildStatus.isFinish(BuildStatus.values()[target.status])) {
                                         return@nextElement
                                     }
 
                                     val taskRecord = retryTaskContainerStatus(
-                                        lastTimeBuildTaskRecords, container, atomElement.id!!, atomElement
+                                        lastTimeBuildTaskRecords = lastTimeBuildTaskRecords,
+                                        container = container,
+                                        retryStartTaskId = atomElement.id!!,
+                                        atomElement = atomElement
                                     )
                                     if (taskRecord != null) {
                                         updateExistsRecord.add(taskRecord)
@@ -912,10 +942,14 @@ class PipelineRuntimeService @Autowired constructor(
                                 }
 
                                 val taskRecord = retryTaskContainerStatus(
-                                    lastTimeBuildTaskRecords, container, atomElement.id!!, atomElement
+                                    lastTimeBuildTaskRecords = lastTimeBuildTaskRecords,
+                                    container = container,
+                                    retryStartTaskId = atomElement.id!!,
+                                    atomElement = atomElement
                                 )
                                 if (taskRecord != null) {
                                     updateExistsRecord.add(taskRecord)
+                                    needUpdateContainer = true
                                 }
                             }
                         } else {
@@ -1068,6 +1102,7 @@ class PipelineRuntimeService @Autowired constructor(
                 buildDetailDao.create(
                     dslContext = transactionContext,
                     buildId = buildId,
+                    startUser = userId,
                     startType = startType,
                     buildNum = buildNum,
                     model = JsonUtil.toJson(sModel),
@@ -1090,7 +1125,7 @@ class PipelineRuntimeService @Autowired constructor(
                 projectId = pipelineInfo.projectId,
                 pipelineId = pipelineInfo.pipelineId,
                 buildId = buildId,
-                variables = params
+                variables = startParamsWithType
             )
 
             // 上一次存在的需要重试的任务直接Update，否则就插入
@@ -1322,7 +1357,11 @@ class PipelineRuntimeService @Autowired constructor(
         retryStartTaskId: String,
         atomElement: Element? = null
     ): TPipelineBuildTaskRecord? {
-        val target: TPipelineBuildTaskRecord? = findTaskRecord(lastTimeBuildTaskRecords, container, retryStartTaskId)
+        val target: TPipelineBuildTaskRecord? = findTaskRecord(
+            lastTimeBuildTaskRecords = lastTimeBuildTaskRecords,
+            container = container,
+            retryStartTaskId = retryStartTaskId
+        )
 
         if (target != null) {
             container.status = null // 重置状态为空
@@ -1419,13 +1458,21 @@ class PipelineRuntimeService @Autowired constructor(
                             logger.info("[{}]|taskId={}| update task param failed|result:{}", buildId, taskId, result)
                         }
 
-                        val reviewParams = params.params.associate { it.key.toString() to it.value.toString() }
+                        val pipelineBuildParameters = mutableListOf<BuildParameters>()
+                        params.params.forEach {
+                            pipelineBuildParameters.add(
+                                BuildParameters(
+                                    it.key.toString(),
+                                    it.value.toString()
+                                )
+                            )
+                        }
                         pipelineBuildVarDao.batchSave(
                             dslContext,
                             projectId,
                             pipelineId,
                             buildId,
-                            reviewParams
+                            pipelineBuildParameters
                         )
 
                         pipelineEventDispatcher.dispatch(
@@ -1854,6 +1901,7 @@ class PipelineRuntimeService @Autowired constructor(
         val record = buildDetailDao.get(dslContext, buildId)
         if (record == null) {
             logger.warn("build not exists, buildId: $buildId")
+            return
         }
         val model = JsonUtil.getObjectMapper().readValue(record!!.model, Model::class.java)
         model.stages.forEach s@{ stage ->

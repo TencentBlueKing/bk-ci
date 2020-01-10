@@ -1,3 +1,29 @@
+/*
+ * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ *
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ *
+ * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
+ *
+ * A copy of the MIT License is included in this file.
+ *
+ *
+ * Terms of the MIT License:
+ * ---------------------------------------------------
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
+ * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+ * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+ * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
 package com.tencent.devops.process.engine.atom.vm.parser
 
 import com.tencent.devops.common.pipeline.type.DispatchType
@@ -20,7 +46,13 @@ class DispatchTypeParserImpl @Autowired constructor(
 
     private val logger = LoggerFactory.getLogger(DispatchTypeParserImpl::class.java)
 
-    override fun parse(userId: String, projectId: String, dispatchType: DispatchType) {
+    override fun parse(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        dispatchType: DispatchType
+    ) {
         if (dispatchType is StoreDispatchType) {
             // 凭证项目默认初始值为当前项目
             dispatchType.credentialProject = projectId
@@ -29,6 +61,8 @@ class DispatchTypeParserImpl @Autowired constructor(
                 val imageRepoInfo = storeImageService.getImageRepoInfo(
                     userId = userId,
                     projectId = projectId,
+                    pipelineId = pipelineId,
+                    buildId = buildId,
                     imageCode = dispatchType.imageCode,
                     imageVersion = dispatchType.imageVersion,
                     defaultPrefix = ""
@@ -52,6 +86,8 @@ class DispatchTypeParserImpl @Autowired constructor(
                 dispatchType.value = completeImageName
                 dispatchType.credentialId = imageRepoInfo.ticketId
                 dispatchType.credentialProject = imageRepoInfo.ticketProject
+                dispatchType.imagePublicFlag = imageRepoInfo.publicFlag
+                dispatchType.imageRDType = imageRepoInfo.rdType.name
             } else {
                 dispatchType.credentialProject = projectId
             }

@@ -30,6 +30,7 @@ import com.tencent.devops.common.api.pojo.Zone
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.model.dispatch.tables.TDispatchPipelineDockerTask
 import com.tencent.devops.model.dispatch.tables.records.TDispatchPipelineDockerTaskRecord
+import com.tencent.devops.store.pojo.image.enums.ImageRDTypeEnum
 import org.jooq.DSLContext
 import org.jooq.Field
 import org.jooq.Result
@@ -55,7 +56,10 @@ class PipelineDockerTaskDao {
         zone: String?,
         registryUser: String?,
         registryPwd: String?,
-        imageType: String?
+        imageType: String?,
+        imagePublicFlag: Boolean?,
+        imageRDType: ImageRDTypeEnum?,
+        containerHashId: String?
     ): Int {
         with(TDispatchPipelineDockerTask.T_DISPATCH_PIPELINE_DOCKER_TASK) {
             val now = LocalDateTime.now()
@@ -74,6 +78,7 @@ class PipelineDockerTaskDao {
                     .set(REGISTRY_USER, registryUser)
                     .set(REGISTRY_PWD, registryPwd)
                     .set(IMAGE_TYPE, imageType)
+                    .set(CONTAINER_HASH_ID, containerHashId)
                     .where(ID.eq(preRecord.id)).execute()
                 return preRecord.id
             }
@@ -93,27 +98,31 @@ class PipelineDockerTaskDao {
                 ZONE,
                 REGISTRY_USER,
                 REGISTRY_PWD,
-                IMAGE_TYPE)
-                .values(
-                    projectId,
-                    agentId,
-                    pipelineId,
-                    buildId,
-                    vmSeqId,
-                    status.status,
-                    secretKey,
-                    imageName,
-                    channelCode,
-                    hostTag,
-                    now,
-                    now,
-                    zone,
-                    registryUser,
-                    registryPwd,
-                    imageType
-                )
-                .returning(ID)
-                .fetchOne().id
+                IMAGE_TYPE,
+                IMAGE_PUBLIC_FLAG,
+                IMAGE_RD_TYPE,
+                CONTAINER_HASH_ID
+            ).values(
+                projectId,
+                agentId,
+                pipelineId,
+                buildId,
+                vmSeqId,
+                status.status,
+                secretKey,
+                imageName,
+                channelCode,
+                hostTag,
+                now,
+                now,
+                zone,
+                registryUser,
+                registryPwd,
+                imageType,
+                imagePublicFlag,
+                imageRDType?.type?.toByte(),
+                containerHashId
+            ).returning(ID).fetchOne().id
         }
     }
 

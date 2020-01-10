@@ -28,10 +28,13 @@ package com.tencent.devops.plugin.worker.task.archive
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.common.api.exception.TaskExecuteException
+import com.tencent.devops.common.api.pojo.ErrorCode
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.archive.element.BuildPushDockerImageElement
 import com.tencent.devops.common.log.Ansi
 import com.tencent.devops.common.pipeline.enums.BuildScriptType
-import com.tencent.devops.common.archive.element.BuildPushDockerImageElement
 import com.tencent.devops.dockerhost.pojo.DockerBuildParam
 import com.tencent.devops.dockerhost.pojo.Status
 import com.tencent.devops.process.pojo.BuildTask
@@ -66,8 +69,14 @@ class BuildPushDockerImageTask : ITask() {
 
         val responseMap = api.dockerBuildCredential(projectId)
         logger.info("responseMap is $responseMap")
-        var repoAddr = responseMap["domain"] as String + ":" + responseMap["docker_port"] as String
-        repoAddr = repoAddr.substring(7, repoAddr.length)
+        val host = (responseMap["domain"] ?: responseMap["host"]) as String
+        val port = (responseMap["docker_port"] ?: responseMap["port"]) as String
+        val repoAddr = when {
+            host.startsWith("http://") -> "${host.substring(7).removePrefix("/")}:$port"
+            host.startsWith("https://") -> "${host.substring(8).removePrefix("/")}:$port"
+            else -> "${host.removePrefix("/")}:$port"
+        }
+
         val userName = responseMap["user"] as String
         val password = responseMap["password"] as String
 
@@ -92,7 +101,11 @@ class BuildPushDockerImageTask : ITask() {
             if (status.first == Status.FAILURE.name) {
                 logger.info("Docker build failed, msg: ${status.second}")
                 LoggerService.addNormalLine("构建镜像失败，错误详情：${status.second}")
-                throw RuntimeException("failed to build docker image.")
+                throw TaskExecuteException(
+                    errorCode = ErrorCode.USER_RESOURCE_NOT_FOUND,
+                    errorType = ErrorType.USER,
+                    errorMsg = "failed to build docker image."
+                )
             } else {
                 LoggerService.addNormalLine("构建镜像成功！")
             }
@@ -102,7 +115,7 @@ class BuildPushDockerImageTask : ITask() {
 
             logger.info("Start to build the docker images.")
             val command = CommandFactory.create(BuildScriptType.SHELL.name)
-            val runtimeVariables = buildVariables.variables
+            val runtimeVariables = buildVariables.variablesWithType.map { it.key to it.value.toString() }.toMap()
             command.execute(buildId, loginScript, taskParams, runtimeVariables, projectId, workspace, buildVariables.buildEnvs)
 
             LoggerService.addNormalLine("Start to build the docker image. imageName:$imageName; imageTag:$imageTag")
@@ -110,9 +123,12 @@ class BuildPushDockerImageTask : ITask() {
             try {
                 command.execute(buildId, buildScript, taskParams, runtimeVariables, projectId, workspace, buildVariables.buildEnvs)
             } catch (t: RuntimeException) {
-                logger.warn("Fail to execute docker build command", t)
-                LoggerService.addNormalLine(Ansi().fgRed().a("Dockerfile第一行请确认使用$repoAddr").reset().toString())
-                throw t
+                LoggerService.addNormalLine(Ansi().fgRed().a("Dockerfile第一行请确认使用 $repoAddr").reset().toString())
+                throw TaskExecuteException(
+                    errorCode = ErrorCode.USER_RESOURCE_NOT_FOUND,
+                    errorType = ErrorType.USER,
+                    errorMsg = "构建失败，Dockerfile第一行请确认使用 $repoAddr"
+                )
             }
 
             LoggerService.addNormalLine("Start to push the docker image. imageName:$imageName; imageTag:$imageTag")
@@ -135,9 +151,12 @@ class BuildPushDockerImageTask : ITask() {
             val responseBody = response.body()!!.string()
             logger.info("responseBody: $responseBody")
             if (!response.isSuccessful) {
-                logger.error("failed to get start docker build")
                 LoggerService.addNormalLine(Ansi().fgRed().a("启动构建镜像失败！请联系【蓝盾助手】").reset().toString())
-                throw RuntimeException("failed to get docker build status")
+                throw TaskExecuteException(
+                    errorCode = ErrorCode.SYSTEM_INNER_TASK_ERROR,
+                    errorType = ErrorType.SYSTEM,
+                    errorMsg = "failed to get start docker build status"
+                )
             }
             val responseData: Map<String, Any> = jacksonObjectMapper().readValue(responseBody)
             if (responseData["status"] == 0) {
@@ -145,7 +164,10 @@ class BuildPushDockerImageTask : ITask() {
                 return Pair(map["first"] as String, map["second"])
             } else {
                 LoggerService.addNormalLine(Ansi().fgRed().a("查询构建镜像状态失败！请联系【蓝盾助手】").reset().toString())
-                throw RuntimeException("failed to get docker build status")
+                throw TaskExecuteException(
+                    errorCode = ErrorCode.USER_RESOURCE_NOT_FOUND,
+                    errorType = ErrorType.USER,
+                    errorMsg = "failed to get docker build status")
             }
         }
     }
@@ -168,7 +190,11 @@ class BuildPushDockerImageTask : ITask() {
             if (!response.isSuccessful) {
                 logger.error("failed to get start docker build")
                 LoggerService.addNormalLine(Ansi().fgRed().a("启动构建失败！请联系【蓝盾助手】").reset().toString())
-                throw RuntimeException("failed to get tstack token")
+                throw TaskExecuteException(
+                    errorCode = ErrorCode.USER_RESOURCE_NOT_FOUND,
+                    errorType = ErrorType.USER,
+                    errorMsg = "failed to get tstack token"
+                )
             }
         }
     }
