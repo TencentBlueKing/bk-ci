@@ -58,7 +58,8 @@
                     <p class="comments-more" v-if="!isLoadEnd && commentList.length > 0" @click="getComments(true)"> {{ $t('store.阅读更多内容') }} </p>
                     <p class="g-empty comment-empty" v-if="commentList.length <= 0"> {{ $t('store.空空如洗，快来评论一下吧！') }} </p>
                 </bk-tab-panel>
-                <bk-tab-panel name="yaml" :label="$t('store.yaml')" v-if="type === 'atom'">
+
+                <bk-tab-panel name="yaml" :label="type === 'atom' ? 'YAML' : 'Dockerfile'" v-if="['atom', 'image'].includes(type)">
                     <section class="plugin-yaml"></section>
                 </bk-tab-panel>
             </bk-tab>
@@ -75,7 +76,6 @@
     import comment from '../../components/common/comment'
     import commentDialog from '../../components/common/comment/commentDialog.vue'
     import animatedInteger from '../../components/common/animatedInteger'
-    import ideInfo from '../../components/common/detail-info/ide'
     import atomInfo from '../../components/common/detail-info/atom'
     import templateInfo from '../../components/common/detail-info/template'
     import imageInfo from '../../components/common/detail-info/image'
@@ -93,7 +93,6 @@
             animatedInteger,
             atomInfo,
             templateInfo,
-            ideInfo,
             imageInfo
         },
 
@@ -137,6 +136,7 @@
                     tabMode: 'indent',
                     mode: 'yaml',
                     theme: '3024-night',
+                    height: '400px',
                     autoRefresh: true,
                     cursorBlinkRate: 0,
                     readOnly: true
@@ -145,13 +145,11 @@
                     comment: {
                         atom: (postData) => this.requestAtomComments(postData),
                         template: (postData) => this.requestTemplateComments(postData),
-                        ide: (postData) => this.requestIDEComments(postData),
                         image: (postData) => this.requestImageComments(postData)
                     },
                     scoreDetail: {
                         atom: () => this.requestAtomScoreDetail(this.detailCode),
                         template: () => this.requestTemplateScoreDetail(this.detailCode),
-                        ide: () => this.requestIDEScoreDetail(this.detailCode),
                         image: () => this.requestImageScoreDetail(this.detailCode)
                     }
                 }
@@ -194,9 +192,6 @@
                 'requestAtomScoreDetail',
                 'requestTemplateComments',
                 'requestTemplateScoreDetail',
-                'requestIDE',
-                'requestIDEComments',
-                'requestIDEScoreDetail',
                 'requestImage',
                 'requestImageComments',
                 'requestImageScoreDetail',
@@ -232,7 +227,6 @@
                 const funObj = {
                     atom: () => this.getAtomDetail(),
                     template: () => this.getTemplateDetail(),
-                    ide: () => this.getIDEDetail(),
                     image: () => this.getImageDetail()
                 }
                 const getDetailMethod = funObj[type]
@@ -275,17 +269,6 @@
                 })
             },
 
-            getIDEDetail () {
-                const atomCode = this.detailCode
-
-                return this.requestIDE({ atomCode }).then((res) => {
-                    this.detail = res || {}
-                    this.detailId = res.atomId
-                    this.detail.name = res.atomName
-                    this.commentInfo = res.userCommentInfo || {}
-                })
-            },
-
             getImageDetail () {
                 const imageCode = this.detailCode
 
@@ -297,6 +280,9 @@
                     this.detailId = res.imageId
                     this.detail.name = res.imageName
                     this.commentInfo = res.userCommentInfo || {}
+                    const ele = document.querySelector('.plugin-yaml')
+                    this.codeEditor = CodeMirror(ele, this.codeMirrorCon)
+                    this.codeEditor.setValue(res.dockerFileContent || '')
 
                     const currentCategory = categorys.find((x) => (x.categoryCode === res.category))
                     const setting = currentCategory.settings || {}
@@ -367,6 +353,11 @@
         background: black;
     }
 
+    .plugin-yaml {
+        height: 400px;
+        background: black;
+    }
+
     .store-main {
         height: calc(100vh - 93px);
         margin-left: calc(100vw - 100%);
@@ -387,6 +378,9 @@
             margin-bottom: 20px;
             padding: 10px;
             height: auto;
+            .CodeMirror-scroll {
+                height: 400px;
+            }
         }
         .summary-tab {
             overflow: hidden;
@@ -406,6 +400,10 @@
         }
         .comment-empty {
             margin-top: 70px;
+        }
+        /deep/ .CodeMirror {
+            min-height: 300px;
+            height: auto;
         }
     }
 

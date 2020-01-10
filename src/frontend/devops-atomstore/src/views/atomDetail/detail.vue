@@ -31,7 +31,7 @@
                         </div>
                         <div class="detail-form-item multi-item">
                             <div class="detail-form-item">
-                                <div class="info-label"> {{ $t(`store.${isEnterprise ? '适用机器类型' : '适用Job类型'}：`) }} </div>
+                                <div class="info-label"> {{ $t(`store.适用机器类型：`) }} </div>
                                 <!-- <div class="info-value" v-if="atomDetail.os">{{ atomOs(atomDetail.os) }}</div> -->
                                 <div class="info-value" v-if="atomDetail.os">{{ jobTypeMap[atomDetail.jobType] }}
                                     <span v-if="atomDetail.jobType === 'AGENT'">（
@@ -41,12 +41,8 @@
                                     </span>
                                 </div>
                             </div>
-                            <div class="detail-form-item is-open" v-if="!isEnterprise">
-                                <label class="info-label"> {{ $t('store.是否开源：') }}</label>
-                                <div class="info-value">{{ atomDetail.visibilityLevel | levelFilter }}</div>
-                            </div>
                         </div>
-                        <div class="detail-form-item" v-if="isEnterprise">
+                        <div class="detail-form-item">
                             <div class="info-label"> {{ $t('store.发布包：') }} </div>
                             <div class="info-value">{{ atomDetail.pkgName }}</div>
                         </div>
@@ -82,7 +78,7 @@
                         </div>
                     </div>
                     <div class="item-form item-form-right">
-                        <img :src="atomDetail.logoUrl || defaultUrl">
+                        <img :src="atomDetail.logoUrl">
                     </div>
                 </div>
                 <div class="version-content">
@@ -120,17 +116,8 @@
     import { mapGetters } from 'vuex'
 
     export default {
-        filters: {
-            levelFilter (val) {
-                const bkLocale = window.devops || {}
-                if (val === 'LOGIN_PUBLIC') return bkLocale.$t('store.是')
-                else return bkLocale.$t('store.否')
-            }
-        },
-
         data () {
             return {
-                defaultUrl: 'http://radosgw.open.oa.com/paas_backend/ieod/dev/file/png/random_15647373141529070794466428255950.png?v=1564737314',
                 showContent: false,
                 isDropdownShow: false,
                 isOverflow: false,
@@ -167,10 +154,6 @@
             },
             atomStatusList () {
                 return atomStatusMap
-            },
-
-            isEnterprise () {
-                return VERSION_TYPE === 'ee'
             }
         },
 

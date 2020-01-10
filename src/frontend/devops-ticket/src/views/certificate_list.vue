@@ -173,9 +173,7 @@
             },
             async handleDeleteCert (id) {
                 this.$bkInfo({
-                    type: 'warning',
-                    theme: 'warning',
-                    title: `${this.$t('ticket.cert.deleteCertTips', [id])}`,
+                    title: `${this.$t('ticket.cert.deleteCertTips')}?`,
                     confirmFn: async () => {
                         let message, theme
                         try {

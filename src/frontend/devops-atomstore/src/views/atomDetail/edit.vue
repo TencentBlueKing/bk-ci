@@ -60,24 +60,6 @@
                         </bk-select>
                     </div>
                 </div>
-                <template v-if="userInfo.isProjectAdmin && !isEnterprise">
-                    <div class="bk-form-item is-required is-open" ref="openSourceError">
-                        <label class="bk-label"> {{ $t('store.是否开源') }} </label>
-                        <div class="bk-form-content atom-item-content">
-                            <bk-radio-group v-model="atomForm.visibilityLevel" class="radio-group">
-                                <bk-radio :disabled="entry.disable" :title="entry.title" :value="entry.value" v-for="(entry, key) in isOpenSource" :key="key" @click.native="changeOpenSource">{{entry.label}}</bk-radio>
-                            </bk-radio-group>
-                            <div v-if="formErrors.openSourceError" class="error-tips"> {{ $t('store.字段有误，请重新选择') }} </div>
-                        </div>
-                    </div>
-                    <div class="bk-form-item is-required is-open" v-if="atomForm.visibilityLevel === 'PRIVATE'">
-                        <label class="bk-label"> {{ $t('store.不开源原因') }} </label>
-                        <div class="bk-form-content atom-item-content">
-                            <bk-input type="textarea" v-model="atomForm.privateReason" @input="formErrors.privateReasonError = false"></bk-input>
-                            <div v-if="formErrors.privateReasonError" class="error-tips"> {{ $t('store.不开源原因不能为空') }} </div>
-                        </div>
-                    </div>
-                </template>
                 <div class="bk-form-item introduction-form-item is-required">
                     <label class="bk-label"> {{ $t('store.简介') }} </label>
                     <div class="bk-form-content atom-item-content is-tooltips">
@@ -166,22 +148,14 @@
                 atomForm: JSON.parse(JSON.stringify(this.$store.state.store.currentAtom)),
                 hasChange: false,
                 showlogoDialog: false,
-                selectedUrl: '',
-                isOpenSource: [
-                    { label: this.$t('store.是'), value: 'LOGIN_PUBLIC' },
-                    { label: this.$t('store.否'), value: 'PRIVATE', disable: true, title: this.$t('store.若有特殊原因无法开源，请联系蓝盾助手（务必联系蓝盾助手，自行修改工蜂项目配置会失效，每次升级插件时将根据插件配置自动刷新）') }
-                ]
+                selectedUrl: ''
             }
         },
 
         computed: {
             ...mapGetters('store', {
                 'userInfo': 'getUserInfo'
-            }),
-
-            isEnterprise () {
-                return VERSION_TYPE === 'ee'
-            }
+            })
         },
 
         watch: {
@@ -244,16 +218,6 @@
 
                 if (!this.atomForm.classifyCode) {
                     this.formErrors.sortError = true
-                    isGood = false
-                }
-
-                if (!this.isEnterprise && this.isOpenSource.findIndex((x) => x.value === this.atomForm.visibilityLevel) <= -1) {
-                    this.formErrors.openSourceError = true
-                    isGood = false
-                }
-
-                if (this.atomForm.visibilityLevel === 'PRIVATE' && !this.atomForm.privateReason) {
-                    this.formErrors.privateReasonError = true
                     isGood = false
                 }
 

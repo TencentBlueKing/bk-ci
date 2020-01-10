@@ -19,11 +19,8 @@
 
 const webpackBaseConfig = require('../webpack.base')
 const webpack = require('webpack')
-const getConfig = require('./constConfig.js')
 
 module.exports = (env, argv) => {
-    const version = env && env.version ? env.version : 'tencent'
-    const constConfig = getConfig(version)
     const config = webpackBaseConfig({
         env,
         argv,
@@ -34,9 +31,5 @@ module.exports = (env, argv) => {
         dist: '/quality',
         port: 8002
     })
-    config.plugins = [
-        ...config.plugins,
-        new webpack.DefinePlugin(constConfig)
-    ]
     return config
 }

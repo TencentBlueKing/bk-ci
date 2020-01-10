@@ -14,7 +14,7 @@
                 return {
                     icon: 'environment',
                     title: this.$t('environment.environmentManage'),
-                    url: `${DOCS_URL_PREFIX}/x/BIzm`,
+                    url: `${DOCS_URL_PREFIX}/${this.$t('allService')}/${this.$t('environment.environmentManage')}/summary.html`,
                     menu: [
                         {
                             id: 'envList',

@@ -362,14 +362,12 @@
             async downloadFile ({ artifactoryType, path }, key = 'download') {
                 try {
                     const { projectId } = this.$route.params
-                    const isDevnet = await this.$store.dispatch('soda/requestDevnetGateway')
                     const res = await this.$store.dispatch('soda/requestDownloadUrl', {
                         projectId,
                         artifactoryType,
                         path
                     })
-                    const url = isDevnet ? res.url : res.url2
-                    window.open(url, '_self')
+                    window.open(res.url, '_self')
                 } catch (err) {
                     const message = err.message ? err.message : err
                     const theme = 'error'

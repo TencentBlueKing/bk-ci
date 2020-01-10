@@ -89,7 +89,7 @@
                                 </div>
                             </div>
                             <form-field :label="$t('settings.additionUser')">
-                                <staff-input :handle-change="(name,value) => pipelineSubscription.users = value.join(&quot;,&quot;)" name="users" :value="pipelineSettingUser"></staff-input>
+                                <user-input :handle-change="(name,value) => pipelineSubscription.users = value.join(&quot;,&quot;)" name="users" :value="pipelineSettingUser"></user-input>
                             </form-field>
 
                             <form-field :label="$t('settings.noticeContent')" :is-error="errors.has(&quot;content&quot;)" :error-msg="errors.first(&quot;content&quot;)">
@@ -137,13 +137,13 @@
 <script>
     import { mapActions, mapState, mapGetters } from 'vuex'
     import FormField from '@/components/AtomPropertyPanel/FormField.vue'
-    import StaffInput from '@/components/atomFormField/StaffInput/index.vue'
+    import UserInput from '@/components/atomFormField/UserInput/index.vue'
     import GroupIdSelector from '@/components/atomFormField/groupIdSelector'
     import AtomCheckbox from '@/components/atomFormField/AtomCheckbox'
     export default {
         components: {
             FormField,
-            StaffInput,
+            UserInput,
             GroupIdSelector,
             AtomCheckbox
         },

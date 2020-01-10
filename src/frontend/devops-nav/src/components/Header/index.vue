@@ -56,7 +56,6 @@
         </div>
         <div class="header-right-bar">
             <locale-switcher></locale-switcher>
-            <qrcode class="feed-back-icon" />
             <span class="seperate-line">|</span>
             <!-- <feed-back class='feed-back-icon'></feed-back> -->
             <i
@@ -82,8 +81,6 @@
     import { State, Action, Getter } from 'vuex-class'
     import User from '../User/index.vue'
     import NavMenu from './NavMenu.vue'
-    import FeedBack from './FeedBack.vue'
-    import Qrcode from './Qrcode.vue'
     import Logo from '../Logo/index.vue'
     import LocaleSwitcher from '../LocaleSwitcher/index.vue'
     import DevopsSelect from '../Select/index.vue'
@@ -95,8 +92,6 @@
         components: {
             User,
             NavMenu,
-            FeedBack,
-            Qrcode,
             ProjectDialog,
             Logo,
             DevopsSelect,
@@ -232,7 +227,7 @@
         }
 
         goToDocs (): void {
-            this.to(`${DOCS_URL_PREFIX}/display/DevOps`)
+            this.to(`${DOCS_URL_PREFIX}`)
         }
 
         goToPm (): void {

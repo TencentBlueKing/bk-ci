@@ -68,7 +68,6 @@ buildscript {
         sigarVersion = "1.6.4"
         poiVersion = "3.17"
         commonLang3Version = "3.5"
-        springKafkaVersion = "1.3.10.RELEASE"
     }
 
     def mavenRepoUrl = System.getProperty("mavenRepoUrl")
@@ -306,9 +305,6 @@ subprojects {
             dependencySet(group: 'org.apache.poi', version: "$poiVersion") {
                 entry "poi"
                 entry "poi-ooxml"
-            }
-            dependencySet(group: "org.springframework.kafka", version: "$springKafkaVersion") {
-                entry "spring-kafka"
             }
         }
     }

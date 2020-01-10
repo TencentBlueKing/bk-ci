@@ -34,7 +34,6 @@
                             <div class="table-node-item node-item-os">{{ $t('environment.nodeInfo.os') }}</div>
                             <div class="table-node-item node-item-area">{{ $t('environment.nodeInfo.gateway') }}</div>
                             <div class="table-node-item node-item-status">{{ $t('environment.nodeInfo.cpuStatus') }}</div>
-                            <div class="table-node-item node-item-agstatus" v-if="isExtendTx">{{ $t('environment.nodeInfo.gseAgentStatus') }}</div>
                             <div class="table-node-item node-item-handler node-header-head">{{ $t('environment.operation') }}</div>
                         </div>
                         <div class="table-node-body" ref="scrollBox">
@@ -60,7 +59,7 @@
                                 </div>
                                 <div class="table-node-item node-item-status">
                                     <div class="bk-spin-loading bk-spin-loading-mini bk-spin-loading-primary"
-                                        v-if="row.nodeStatus === $t('environment.nodeInfo.creating')">
+                                        v-if="row.nodeStatus === $t('environment.nodeInfo.normal')">
                                         <div class="rotate rotate1"></div>
                                         <div class="rotate rotate2"></div>
                                         <div class="rotate rotate3"></div>
@@ -76,25 +75,6 @@
                                     </span>
 
                                     <span class="node-status">{{ row.nodeStatus }}</span>
-                                </div>
-                                <div class="table-node-item node-item-agstatus" v-if="isExtendTx">
-                                    <span class="node-status-icon normal-stutus-icon" v-if="row.agentStatus"></span>
-                                    <span class="node-status-icon abnormal-stutus-icon" v-if="!row.agentStatus && row.nodeType !== $t('environment.BCSVirtualMachine')"></span>
-                                    <div class="bk-spin-loading bk-spin-loading-mini bk-spin-loading-primary"
-                                        v-if="!row.agentStatus && row.nodeType === $t('environment.BCSVirtualMachine')">
-                                        <div class="rotate rotate1"></div>
-                                        <div class="rotate rotate2"></div>
-                                        <div class="rotate rotate3"></div>
-                                        <div class="rotate rotate4"></div>
-                                        <div class="rotate rotate5"></div>
-                                        <div class="rotate rotate6"></div>
-                                        <div class="rotate rotate7"></div>
-                                        <div class="rotate rotate8"></div>
-                                    </div>
-                                    <span class="node-agstatus" v-if="row.nodeType === $t('environment.BCSVirtualMachine')">{{ row.agentStatus ? $t('environment.nodeInfo.normal') : $t('environment.nodeInfo.refreshing') }}</span>
-                                    <span class="node-agstatus" v-else>{{ row.agentStatus ? $t('environment.nodeInfo.normal') : $t('environment.nodeInfo.abnormal') }}</span>
-                                    <span class="install-btn" v-if="(row.nodeType === 'CMDB' || row.nodeType === 'CC') && !row.agentStatus "
-                                        @click="toInstall">{{ $t('environment.nodeInfo.installGseAgent') }}</span>
                                 </div>
                                 <div class="table-node-item node-item-handler">
                                     <span class="node-delete delete-node-text" @click.stop="confirmDelete(row, index)">{{ $t('environment.remove') }}</span>
@@ -354,9 +334,6 @@
             },
             curUserInfo () {
                 return window.userInfo
-            },
-            isExtendTx () {
-                return VERSION_TYPE === 'tencent'
             }
         },
         watch: {
@@ -550,11 +527,11 @@
                         })
 
                         if (this.curEnvDetail.envType === 'BUILD') {
-                            if (!(['THIRDPARTY', 'DEVCLOUD'].includes(kk.nodeType)) || !kk.canUse) {
+                            if (kk.nodeType !== 'THIRDPARTY' || !kk.canUse) {
                                 kk.isDisplay = false
                             }
                         } else {
-                            if (['THIRDPARTY', 'DEVCLOUD'].includes(kk.nodeType) || !kk.canUse) {
+                            if (kk.nodeType === 'THIRDPARTY' || !kk.canUse) {
                                 kk.isDisplay = false
                             }
                         }
@@ -606,11 +583,10 @@
                     style: {
                         textAlign: 'center'
                     }
-                }, `${this.$t('environment.nodeInfo.removeNodetips', [row.nodeId])}`)
+                }, `${this.$t('environment.nodeInfo.removeNodetips')}(${row.nodeId})？`)
 
                 this.$bkInfo({
-                    type: 'warning',
-                    theme: 'warning',
+                    title: this.$t('environment.remove'),
                     subHeader: content,
                     confirmFn: async () => {
                         let message, theme
@@ -734,8 +710,7 @@
                     }, `${this.$t('environment.deleteConfigItem')}?`)
 
                     this.$bkInfo({
-                        type: 'warning',
-                        theme: 'warning',
+                        title: this.$t('environment.delete'),
                         subHeader: content,
                         confirmFn: async () => {
                             let message, theme
@@ -875,7 +850,7 @@
 
                         if (this.curEnvDetail.envType === 'BUILD') {
                             for (let i = 0; i < target.length; i++) {
-                                if (target[i] && str.indexOf(target[i]) > -1 && ['THIRDPARTY', 'DEVCLOUD'].includes(item.nodeType) && item.canUse) {
+                                if (target[i] && str.indexOf(target[i]) > -1 && item.nodeType === 'THIRDPARTY' && item.canUse) {
                                     item.isDisplay = true
                                     break
                                 } else {
@@ -884,7 +859,7 @@
                             }
                         } else {
                             for (let i = 0; i < target.length; i++) {
-                                if (target[i] && str.indexOf(target[i]) > -1 && !(['THIRDPARTY', 'DEVCLOUD'].includes(item.nodeType)) && item.canUse) {
+                                if (target[i] && str.indexOf(target[i]) > -1 && item.nodeType !== 'THIRDPARTY' && item.canUse) {
                                     item.isDisplay = true
                                     break
                                 } else {
@@ -908,13 +883,13 @@
 
                     if (this.curEnvDetail.envType === 'BUILD') {
                         this.importNodeList.forEach(item => {
-                            if (['THIRDPARTY', 'DEVCLOUD'].includes(item.nodeType) && item.canUse) {
+                            if (item.nodeType === 'THIRDPARTY' && item.canUse) {
                                 item.isDisplay = true
                             }
                         })
                     } else {
                         this.importNodeList.forEach(item => {
-                            if (!(['THIRDPARTY', 'DEVCLOUD'].includes(item.nodeType)) && item.canUse) {
+                            if (item.nodeType !== 'THIRDPARTY' && item.canUse) {
                                 item.isDisplay = true
                             }
                         })
@@ -1080,10 +1055,6 @@
                 this.lastselectConfIndex = 0
                 this.lastSelectConfig = newItem
                 this.configList.unshift(newItem)
-            },
-            toInstall () {
-                const url = `${DOCS_URL_PREFIX}/x/WtMrAg`
-                window.open(url, '_blank')
             },
             importNewNode () {
                 this.searchInfo = {

@@ -29,8 +29,7 @@
             return {
                 newModel: {},
                 loading: true,
-                iframeHeight: '300px',
-                src1: 'http://dev.nav.oa.com:8002?projectId=t1'
+                iframeHeight: '300px'
             }
         },
         computed: {

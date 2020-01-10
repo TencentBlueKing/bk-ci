@@ -29,14 +29,14 @@
                         <span v-if="row.artifactoryType === 'PIPELINE'">{{ $t('details.pipelineRepo') }}</span>
                     </div>
                     <div class="table-part-item part-item-handler">
-                        <i @click.stop="gotoArtifactory" class="bk-icon icon-position-shape handler-btn" :title="$t('editPage.atomForm.toArtifactory')"></i>
+                        <!-- <i @click.stop="gotoArtifactory" class="bk-icon icon-position-shape handler-btn" :title="$t('editPage.atomForm.toArtifactory')"></i> -->
                         <i class="bk-icon icon-new-download handler-btn" v-if="hasPermission" :title="$t('download')"
                             @click="requestUrl(row, 'download')"></i>
-                        <i class="bk-icon icon-tree-module-shape handler-btn" v-if="hasPermission && isMof && isWindows && isApkOrIpa(row)" :title="$t('details.mofDownload')"
-                            @click="requestUrl(row, 'download', null, 'MoF')"></i>
-                        <span class="handler-btn-tool copy" v-if="row.artifactoryType === 'PIPELINE'" :title="$t('details.saveToCustom')" @click="copyToCustom(row)">
+                        <!-- <i class="bk-icon icon-tree-module-shape handler-btn" v-if="hasPermission && isMof && isWindows && isApkOrIpa(row)" :title="$t('details.mofDownload')"
+                            @click="requestUrl(row, 'download', null, 'MoF')"></i> -->
+                        <!-- <span class="handler-btn-tool copy" v-if="row.artifactoryType === 'PIPELINE'" :title="$t('details.saveToCustom')" @click="copyToCustom(row)">
                             <Logo class="icon-copy" name="copy" size="15"></Logo>
-                        </span>
+                        </span> -->
                         <span class="handler-btn-tool qrcode"
                             v-if="(extForFile(row.name) === 'ipafile' || extForFile(row.name) === 'apkfile') && hasPermission">
                             <i class="bk-icon icon-qrcode handler-btn"
@@ -132,13 +132,11 @@
 </template>
 
 <script>
-    import Logo from '@/components/Logo'
     import qrcode from '@/components/devops/qrcode'
     import { convertFileSize, convertTime } from '@/utils/util'
 
     export default {
         components: {
-            Logo,
             qrcode
         },
         data () {
@@ -186,12 +184,6 @@
             },
             buildNo () {
                 return this.$route.params.buildNo
-            },
-            artifactoryUrl () {
-                return `${WEB_URL_PIRFIX}/artifactory/${this.projectId}/?pipelineId=${this.pipelineId}&buildId=${this.buildNo}`
-            },
-            isMof () {
-                return this.$store.state.curProject.deptName === '魔方工作室群'
             },
             isWindows () {
                 return /WINDOWS/.test(window.navigator.userAgent.toUpperCase())
@@ -294,9 +286,7 @@
                     })
                 }
             },
-            gotoArtifactory () {
-                window.open(this.artifactoryUrl, '_blank')
-            },
+
             addClickListenr () {
                 document.addEventListener('mouseup', this.clickHandler)
             },

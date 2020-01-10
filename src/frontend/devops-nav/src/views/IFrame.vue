@@ -15,6 +15,7 @@
                 v-if="src"
                 id="iframe-box"
                 ref="iframeEle"
+                allowfullscreen
                 :src="src"
                 @load="onLoad"
             />
@@ -100,20 +101,6 @@
             return explorer.indexOf('Chrome') >= 0 && explorer.indexOf('QQ') === -1
         }
 
-        get underlineProjectList () {
-            return this.projectList.map(item => ({
-                ...item,
-                project_code: item.projectCode,
-                project_id: item.projectId,
-                project_name: item.projectName,
-                cc_app_id: item.ccAppId,
-                cc_app_name: item.ccAppName,
-                is_offlined: item.offlined,
-                bg_id: item.bgId,
-                approval_status: item.approvalStatus
-            }))
-        }
-
         backHome () {
             if (this.needLoading) {
                 this.isLoading = true
@@ -158,7 +145,7 @@
             this.isLoading = false
             if (this.$refs.iframeEle) {
                 const childWin = this.$refs.iframeEle.contentWindow
-                this.iframeUtil.syncProjectList(childWin, this.underlineProjectList)
+                this.iframeUtil.syncProjectList(childWin, this.projectList)
                 this.iframeUtil.syncUserInfo(childWin, this.user)
                 this.iframeUtil.syncLocale(childWin, this.$i18n.locale)
                 
@@ -186,11 +173,11 @@
             }
         }
 
-        @Watch('underlineProjectList')
+        @Watch('projectList')
         handleProjectListChange (projectList, oldList) {
             if (this.$refs.iframeEle) {
                 const childWin = this.$refs.iframeEle.contentWindow
-                this.iframeUtil.syncProjectList(childWin, this.projectList)
+                this.iframeUtil.syncProjectList(childWin, projectList)
             }
         }
 

@@ -131,9 +131,9 @@ abstract class ImageReleaseService {
         if (codeCount > 0) {
             // 抛出错误提示
             return MessageCodeUtil.generateResponseDataObject(
-                CommonMessageCode.PARAMETER_IS_EXIST,
-                arrayOf(imageCode),
-                null
+                    CommonMessageCode.PARAMETER_IS_EXIST,
+                    arrayOf(imageCode),
+                    null
             )
         }
         val imageName = marketImageRelRequest.imageName
@@ -142,9 +142,9 @@ abstract class ImageReleaseService {
         if (nameCount > 0) {
             // 抛出错误提示
             return MessageCodeUtil.generateResponseDataObject(
-                CommonMessageCode.PARAMETER_IS_EXIST,
-                arrayOf(imageName),
-                null
+                    CommonMessageCode.PARAMETER_IS_EXIST,
+                    arrayOf(imageName),
+                    null
             )
         }
         if (needAuth) {
@@ -152,7 +152,7 @@ abstract class ImageReleaseService {
             try {
                 // 判断用户是否项目的成员
                 validateFlag = client.get(ServiceProjectResource::class)
-                    .verifyUserProjectPermission(accessToken, marketImageRelRequest.projectCode, userId).data
+                        .verifyUserProjectPermission(accessToken, marketImageRelRequest.projectCode, userId).data
             } catch (e: Exception) {
                 logger.error("verifyUserProjectPermission error is :$e")
                 return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
@@ -183,37 +183,37 @@ abstract class ImageReleaseService {
             marketImageDao.addMarketImage(context, userId, imageId, imageCode, marketImageRelRequest)
             // 添加镜像与项目关联关系
             storeProjectRelDao.addStoreProjectRel(
-                dslContext = context,
-                userId = userId,
-                storeCode = imageCode,
-                projectCode = marketImageRelRequest.projectCode,
-                type = StoreProjectTypeEnum.INIT.type.toByte(),
-                storeType = StoreTypeEnum.IMAGE.type.toByte()
+                    dslContext = context,
+                    userId = userId,
+                    storeCode = imageCode,
+                    projectCode = marketImageRelRequest.projectCode,
+                    type = StoreProjectTypeEnum.INIT.type.toByte(),
+                    storeType = StoreTypeEnum.IMAGE.type.toByte()
             )
             storeProjectRelDao.addStoreProjectRel(
-                dslContext = context,
-                userId = userId,
-                storeCode = imageCode,
-                projectCode = marketImageRelRequest.projectCode,
-                type = StoreProjectTypeEnum.TEST.type.toByte(),
-                storeType = StoreTypeEnum.IMAGE.type.toByte()
+                    dslContext = context,
+                    userId = userId,
+                    storeCode = imageCode,
+                    projectCode = marketImageRelRequest.projectCode,
+                    type = StoreProjectTypeEnum.TEST.type.toByte(),
+                    storeType = StoreTypeEnum.IMAGE.type.toByte()
             )
             // 默认给关联镜像的人赋予管理员权限
             storeMemberDao.addStoreMember(
-                dslContext = context,
-                userId = userId,
-                storeCode = imageCode,
-                userName = userId,
-                type = StoreMemberTypeEnum.ADMIN.type.toByte(),
-                storeType = StoreTypeEnum.IMAGE.type.toByte()
+                    dslContext = context,
+                    userId = userId,
+                    storeCode = imageCode,
+                    userName = userId,
+                    type = StoreMemberTypeEnum.ADMIN.type.toByte(),
+                    storeType = StoreTypeEnum.IMAGE.type.toByte()
             )
             // 添加镜像特性信息
             marketImageFeatureDao.addImageFeature(
-                dslContext = context,
-                userId = userId,
-                imageFeatureCreateRequest = ImageFeatureCreateRequest(
-                    imageCode = imageCode
-                )
+                    dslContext = context,
+                    userId = userId,
+                    imageFeatureCreateRequest = ImageFeatureCreateRequest(
+                            imageCode = imageCode
+                    )
             )
         }
         return imageId
@@ -237,16 +237,16 @@ abstract class ImageReleaseService {
         logger.info("the imageRecords is :$imageRecords")
         if (null == imageRecords || imageRecords.size == 0) {
             return MessageCodeUtil.generateResponseDataObject(
-                CommonMessageCode.PARAMETER_IS_INVALID,
-                arrayOf(imageCode)
+                    CommonMessageCode.PARAMETER_IS_INVALID,
+                    arrayOf(imageCode)
             )
         }
         val imageName = marketImageUpdateRequest.imageName
         // 判断更新的名称是否已存在
         val count = imageDao.countByName(dslContext, imageName)
         if (validateNameIsExist(count, imageRecords, imageName)) return MessageCodeUtil.generateResponseDataObject(
-            CommonMessageCode.PARAMETER_IS_EXIST,
-            arrayOf(imageName)
+                CommonMessageCode.PARAMETER_IS_EXIST,
+                arrayOf(imageName)
         )
         val imageRecord = imageRecords[0]
         val imageSourceType = marketImageUpdateRequest.imageSourceType
@@ -254,16 +254,16 @@ abstract class ImageReleaseService {
         if (imageSourceType == ImageType.BKDEVOPS) {
             // 判断用户发布的镜像是否是自已名下有权限操作的镜像
             val projectCode =
-                storeProjectRelDao.getUserStoreTestProjectCode(dslContext, userId, imageCode, StoreTypeEnum.IMAGE)
-                    ?: throw DataConsistencyException(
-                        srcData = "(IMAGE,$userId,$imageCode)",
-                        targetData = "TestProjectCode",
-                        message = "Cannot find testproject record"
-                    )
+                    storeProjectRelDao.getUserStoreTestProjectCode(dslContext, userId, imageCode, StoreTypeEnum.IMAGE)
+                            ?: throw DataConsistencyException(
+                                    srcData = "(IMAGE,$userId,$imageCode)",
+                                    targetData = "TestProjectCode",
+                                    message = "Cannot find testproject record"
+                            )
             val listProjectImagesResult = client.get(ServiceImageResource::class).listAllProjectImages(
-                userId = userId,
-                projectId = projectCode,
-                searchKey = imageRepoName
+                    userId = userId,
+                    projectId = projectCode,
+                    searchKey = imageRepoName
             )
             logger.info("the listProjectImagesResult is :$listProjectImagesResult")
             if (listProjectImagesResult.isNotOk()) {
@@ -273,8 +273,8 @@ abstract class ImageReleaseService {
             if ((null == projectImageListResp || projectImageListResp.imageList.map { it.repo }.contains(imageRepoName))) {
                 // 查询是否上架的是公共镜像
                 val listPublicImagesResult = client.get(ServiceImageResource::class).listAllPublicImages(
-                    userId = userId,
-                    searchKey = imageRepoName
+                        userId = userId,
+                        searchKey = imageRepoName
                 )
                 logger.info("the listPublicImagesResult is :$listPublicImagesResult")
                 if (listPublicImagesResult.isNotOk()) {
@@ -288,16 +288,16 @@ abstract class ImageReleaseService {
         }
         // 判断镜像的tag是否被关联过
         val relFlag = imageDao.countReleaseImageByTag(
-            dslContext = dslContext,
-            imageCode = imageCode,
-            imageRepoUrl = marketImageUpdateRequest.imageRepoUrl,
-            imageRepoName = imageRepoName,
-            imageTag = imageTag
+                dslContext = dslContext,
+                imageCode = imageCode,
+                imageRepoUrl = marketImageUpdateRequest.imageRepoUrl,
+                imageRepoName = imageRepoName,
+                imageTag = imageTag
         ) == 0
         if (!relFlag) {
             return MessageCodeUtil.generateResponseDataObject(
-                CommonMessageCode.PARAMETER_IS_EXIST,
-                arrayOf(imageTag)
+                    CommonMessageCode.PARAMETER_IS_EXIST,
+                    arrayOf(imageTag)
             )
         }
         // 校验前端传的版本号是否正确
@@ -307,22 +307,22 @@ abstract class ImageReleaseService {
         // 最近的版本处于上架中止状态，重新升级版本号不变
         val cancelFlag = imageRecord.imageStatus == ImageStatusEnum.GROUNDING_SUSPENSION.status.toByte()
         val requireVersion =
-            if (cancelFlag && releaseType == ReleaseTypeEnum.CANCEL_RE_RELEASE) dbVersion else storeCommonService.getRequireVersion(
-                dbVersion,
-                releaseType
-            )
+                if (cancelFlag && releaseType == ReleaseTypeEnum.CANCEL_RE_RELEASE) dbVersion else storeCommonService.getRequireVersion(
+                        dbVersion,
+                        releaseType
+                )
         if (version != requireVersion) {
             return MessageCodeUtil.generateResponseDataObject(
-                StoreMessageCode.USER_IMAGE_VERSION_IS_INVALID,
-                arrayOf(version, requireVersion)
+                    StoreMessageCode.USER_IMAGE_VERSION_IS_INVALID,
+                    arrayOf(version, requireVersion)
             )
         }
         // 判断最近一个镜像版本的状态，如果不是首次发布，则只有处于审核驳回、已发布、上架中止和已下架的插件状态才允许添加新的版本
         val imageFinalStatusList = mutableListOf(
-            ImageStatusEnum.AUDIT_REJECT.status.toByte(),
-            ImageStatusEnum.RELEASED.status.toByte(),
-            ImageStatusEnum.GROUNDING_SUSPENSION.status.toByte(),
-            ImageStatusEnum.UNDERCARRIAGED.status.toByte()
+                ImageStatusEnum.AUDIT_REJECT.status.toByte(),
+                ImageStatusEnum.RELEASED.status.toByte(),
+                ImageStatusEnum.GROUNDING_SUSPENSION.status.toByte(),
+                ImageStatusEnum.UNDERCARRIAGED.status.toByte()
         )
         if (imageRecords.size == 1) {
             // 如果是首次发布，只有处于初始化的镜像状态才允许添加新的版本
@@ -330,8 +330,8 @@ abstract class ImageReleaseService {
         }
         if (!imageFinalStatusList.contains(imageRecord.imageStatus)) {
             return MessageCodeUtil.generateResponseDataObject(
-                StoreMessageCode.USER_IMAGE_VERSION_IS_NOT_FINISH,
-                arrayOf(imageRecord.imageName, imageRecord.version)
+                    StoreMessageCode.USER_IMAGE_VERSION_IS_NOT_FINISH,
+                    arrayOf(imageRecord.imageName, imageRecord.version)
             )
         }
         var imageId = UUIDUtil.generate()
@@ -347,22 +347,22 @@ abstract class ImageReleaseService {
                     releaseType.releaseType.toByte()
                 }
                 updateMarketImage(
-                    context = context,
-                    userId = userId,
-                    imageId = imageId,
-                    imageSize = "",
-                    releaseType = finalReleaseType,
-                    marketImageUpdateRequest = marketImageUpdateRequest
+                        context = context,
+                        userId = userId,
+                        imageId = imageId,
+                        imageSize = "",
+                        releaseType = finalReleaseType,
+                        marketImageUpdateRequest = marketImageUpdateRequest
                 )
             } else {
                 // 升级镜像
                 upgradeMarketImage(
-                    context = context,
-                    userId = userId,
-                    imageId = imageId,
-                    imageSize = "",
-                    imageRecord = imageRecord,
-                    marketImageUpdateRequest = marketImageUpdateRequest
+                        context = context,
+                        userId = userId,
+                        imageId = imageId,
+                        imageSize = "",
+                        imageRecord = imageRecord,
+                        marketImageUpdateRequest = marketImageUpdateRequest
                 )
             }
             // 更新标签信息
@@ -374,19 +374,19 @@ abstract class ImageReleaseService {
             if (runCheckPipeline) {
                 // 运行检查镜像合法性的流水线
                 runCheckImagePipeline(
-                    context = context,
-                    userId = userId,
-                    imageId = imageId,
-                    sendCheckResultNotify = sendCheckResultNotify
+                        context = context,
+                        userId = userId,
+                        imageId = imageId,
+                        sendCheckResultNotify = sendCheckResultNotify
                 )
             } else {
                 // 直接置为测试中状态
                 marketImageDao.updateImageStatusById(
-                    dslContext = context,
-                    imageId = imageId,
-                    imageStatus = ImageStatusEnum.TESTING.status.toByte(),
-                    userId = userId,
-                    msg = "no check"
+                        dslContext = context,
+                        imageId = imageId,
+                        imageStatus = ImageStatusEnum.TESTING.status.toByte(),
+                        userId = userId,
+                        msg = "no check"
                 )
             }
         }
@@ -411,7 +411,7 @@ abstract class ImageReleaseService {
 
     abstract fun getPassTestStatus(isNormalUpgrade: Boolean): Byte
 
-    fun creator(
+    fun passTest(
         userId: String,
         imageId: String,
         validateUserFlag: Boolean = true
@@ -421,9 +421,9 @@ abstract class ImageReleaseService {
         logger.info("passTest imageRecord is:$imageRecord")
         if (null == imageRecord) {
             return MessageCodeUtil.generateResponseDataObject(
-                CommonMessageCode.PARAMETER_IS_INVALID,
-                arrayOf(imageId),
-                false
+                    CommonMessageCode.PARAMETER_IS_INVALID,
+                    arrayOf(imageId),
+                    false
             )
         }
         // 查看当前版本之前的版本是否有已发布的，如果有已发布的版本则只是普通的升级操作而不需要审核
@@ -431,13 +431,7 @@ abstract class ImageReleaseService {
         val isNormalUpgrade = getNormalUpgradeFlag(imageCode, imageRecord.imageStatus.toInt())
         logger.info("passTest isNormalUpgrade is:$isNormalUpgrade")
         val imageStatus = getPassTestStatus(isNormalUpgrade)
-        val (checkResult, code, params) = checkImageVersionOptRight(
-            userId,
-            imageId,
-            imageStatus,
-            validateUserFlag,
-            isNormalUpgrade
-        )
+        val (checkResult, code, params) = checkImageVersionOptRight(userId, imageId, imageStatus, validateUserFlag, isNormalUpgrade)
         if (!checkResult) {
             return MessageCodeUtil.generateResponseDataObject(code!!, params, false)
         }
@@ -449,22 +443,22 @@ abstract class ImageReleaseService {
                 val pubTime = LocalDateTime.now()
                 // 记录发布信息
                 storeReleaseDao.addStoreReleaseInfo(
-                    dslContext = context,
-                    userId = userId,
-                    storeReleaseCreateRequest = StoreReleaseCreateRequest(
-                        storeCode = imageCode,
-                        storeType = StoreTypeEnum.IMAGE,
-                        latestUpgrader = imageRecord.creator,
-                        latestUpgradeTime = pubTime
-                    )
+                        dslContext = context,
+                        userId = userId,
+                        storeReleaseCreateRequest = StoreReleaseCreateRequest(
+                                storeCode = imageCode,
+                                storeType = StoreTypeEnum.IMAGE,
+                                latestUpgrader = imageRecord.creator,
+                                latestUpgradeTime = pubTime
+                        )
                 )
                 marketImageDao.updateImageStatusInfo(
-                    dslContext = context,
-                    imageId = imageId,
-                    imageStatus = imageStatus,
-                    imageStatusMsg = "",
-                    latestFlag = true,
-                    pubTime = pubTime
+                        dslContext = context,
+                        imageId = imageId,
+                        imageStatus = imageStatus,
+                        imageStatusMsg = "",
+                        latestFlag = true,
+                        pubTime = pubTime
                 )
             }
             // 通知发布者
@@ -482,10 +476,10 @@ abstract class ImageReleaseService {
         sendCheckResultNotify: Boolean = true
     ) {
         runCheckImagePipeline(
-            context = context,
-            userId = userId,
-            imageId = imageId,
-            sendCheckResultNotify = false
+                context = context,
+                userId = userId,
+                imageId = imageId,
+                sendCheckResultNotify = false
         )
     }
 
@@ -501,9 +495,9 @@ abstract class ImageReleaseService {
         val version = imageRecord.version
         val imagePipelineRelRecord = storePipelineRelDao.getStorePipelineRel(context, imageCode, StoreTypeEnum.IMAGE)
         val projectCode = storeProjectRelDao.getInitProjectCodeByStoreCode(
-            context,
-            imageCode,
-            StoreTypeEnum.IMAGE.type.toByte()
+                context,
+                imageCode,
+                StoreTypeEnum.IMAGE.type.toByte()
         ) // 查找新增镜像时关联的项目
         logger.info("runCheckImagePipeline imagePipelineRelRecord is:$imagePipelineRelRecord,projectCode is:$projectCode")
         val ticketId = imageRecord.ticketId
@@ -514,27 +508,27 @@ abstract class ImageReleaseService {
             val encoder = Base64.getEncoder()
             val decoder = Base64.getDecoder()
             val credentialResult = client.get(ServiceCredentialResource::class).get(
-                projectCode!!, ticketId,
-                encoder.encodeToString(pair.publicKey)
+                    projectCode!!, ticketId,
+                    encoder.encodeToString(pair.publicKey)
             )
             if (credentialResult.isNotOk() || credentialResult.data == null) {
                 throw ParamBlankException("Fail to get the credential($ticketId) of project($projectCode)")
             }
             val credential = credentialResult.data!!
             userName = String(
-                DHUtil.decrypt(
-                    decoder.decode(credential.v1),
-                    decoder.decode(credential.publicKey),
-                    pair.privateKey
-                )
+                    DHUtil.decrypt(
+                            decoder.decode(credential.v1),
+                            decoder.decode(credential.publicKey),
+                            pair.privateKey
+                    )
             )
             if (credential.v2 != null && credential.v2!!.isNotEmpty()) {
                 password = String(
-                    DHUtil.decrypt(
-                        decoder.decode(credential.v2),
-                        decoder.decode(credential.publicKey),
-                        pair.privateKey
-                    )
+                        DHUtil.decrypt(
+                                decoder.decode(credential.v2),
+                                decoder.decode(credential.publicKey),
+                                pair.privateKey
+                        )
                 )
             }
         }
@@ -547,25 +541,25 @@ abstract class ImageReleaseService {
         val imageSourceType = imageRecord.imageSourceType
         if (null == imagePipelineRelRecord) {
             val checkImageInitPipelineReq = CheckImageInitPipelineReq(
-                imageCode = imageCode,
-                imageName = dockerImageName,
-                version = version,
-                imageType = imageSourceType,
-                registryUser = userName,
-                registryPwd = password,
-                sendNotify = sendCheckResultNotify
+                    imageCode = imageCode,
+                    imageName = dockerImageName,
+                    version = version,
+                    imageType = imageSourceType,
+                    registryUser = userName,
+                    registryPwd = password,
+                    sendNotify = sendCheckResultNotify
             )
             val checkImageInitPipelineResp = client.get(ServicePipelineInitResource::class)
-                .initCheckImagePipeline(userId, projectCode!!, checkImageInitPipelineReq).data
+                    .initCheckImagePipeline(userId, projectCode!!, checkImageInitPipelineReq).data
             logger.info("the checkImageInitPipelineResp is:$checkImageInitPipelineResp")
             if (null != checkImageInitPipelineResp) {
                 storePipelineRelDao.add(context, imageCode, StoreTypeEnum.IMAGE, checkImageInitPipelineResp.pipelineId)
                 marketImageDao.updateImageStatusById(
-                    context,
-                    imageId,
-                    checkImageInitPipelineResp.imageCheckStatus.status.toByte(),
-                    userId,
-                    null
+                        context,
+                        imageId,
+                        checkImageInitPipelineResp.imageCheckStatus.status.toByte(),
+                        userId,
+                        null
                 )
                 val buildId = checkImageInitPipelineResp.buildId
                 if (null != buildId) {
@@ -588,26 +582,26 @@ abstract class ImageReleaseService {
                 startParams["registryPwd"] = password
             }
             val buildIdObj = client.get(ServiceBuildResource::class).manualStartup(
-                userId, projectCode!!, imagePipelineRelRecord.pipelineId, startParams,
-                ChannelCode.AM
+                    userId, projectCode!!, imagePipelineRelRecord.pipelineId, startParams,
+                    ChannelCode.AM
             ).data
             logger.info("the buildIdObj is:$buildIdObj")
             if (null != buildIdObj) {
                 storePipelineBuildRelDao.add(context, imageId, imagePipelineRelRecord.pipelineId, buildIdObj.id)
                 marketImageDao.updateImageStatusById(
-                    context,
-                    imageId,
-                    ImageStatusEnum.CHECKING.status.toByte(),
-                    userId,
-                    null
+                        context,
+                        imageId,
+                        ImageStatusEnum.CHECKING.status.toByte(),
+                        userId,
+                        null
                 ) // 验证中
             } else {
                 marketImageDao.updateImageStatusById(
-                    context,
-                    imageId,
-                    ImageStatusEnum.CHECK_FAIL.status.toByte(),
-                    userId,
-                    null
+                        context,
+                        imageId,
+                        ImageStatusEnum.CHECK_FAIL.status.toByte(),
+                        userId,
+                        null
                 ) // 验证失败
             }
         }
@@ -627,25 +621,25 @@ abstract class ImageReleaseService {
             iconData = supportService.getIconDataByLogoUrl(logoUrl!!)
         }
         marketImageDao.updateMarketImage(
-            dslContext = context,
-            userId = userId,
-            imageId = imageId,
-            imageSize = imageSize,
-            iconData = iconData,
-            marketImageUpdateRequest = marketImageUpdateRequest
+                dslContext = context,
+                userId = userId,
+                imageId = imageId,
+                imageSize = imageSize,
+                iconData = iconData,
+                marketImageUpdateRequest = marketImageUpdateRequest
         )
         imageCategoryRelDao.updateCategory(
-            dslContext = context,
-            userId = userId,
-            imageId = imageId,
-            categoryCode = marketImageUpdateRequest.category
+                dslContext = context,
+                userId = userId,
+                imageId = imageId,
+                categoryCode = marketImageUpdateRequest.category
         )
         marketImageVersionLogDao.addMarketImageVersion(
-            dslContext = context,
-            userId = userId,
-            imageId = imageId,
-            releaseType = releaseType,
-            versionContent = marketImageUpdateRequest.versionContent
+                dslContext = context,
+                userId = userId,
+                imageId = imageId,
+                releaseType = releaseType,
+                versionContent = marketImageUpdateRequest.versionContent
         )
     }
 
@@ -663,26 +657,26 @@ abstract class ImageReleaseService {
             iconData = supportService.getIconDataByLogoUrl(logoUrl!!)
         }
         marketImageDao.upgradeMarketImage(
-            dslContext = context,
-            userId = userId,
-            imageId = imageId,
-            imageSize = imageSize,
-            iconData = iconData,
-            imageRecord = imageRecord,
-            marketImageUpdateRequest = marketImageUpdateRequest
+                dslContext = context,
+                userId = userId,
+                imageId = imageId,
+                imageSize = imageSize,
+                iconData = iconData,
+                imageRecord = imageRecord,
+                marketImageUpdateRequest = marketImageUpdateRequest
         )
         imageCategoryRelDao.updateCategory(
-            dslContext = context,
-            userId = userId,
-            imageId = imageId,
-            categoryCode = marketImageUpdateRequest.category
+                dslContext = context,
+                userId = userId,
+                imageId = imageId,
+                categoryCode = marketImageUpdateRequest.category
         )
         marketImageVersionLogDao.addMarketImageVersion(
-            dslContext = context,
-            userId = userId,
-            imageId = imageId,
-            releaseType = marketImageUpdateRequest.releaseType.releaseType.toByte(),
-            versionContent = marketImageUpdateRequest.versionContent
+                dslContext = context,
+                userId = userId,
+                imageId = imageId,
+                releaseType = marketImageUpdateRequest.releaseType.releaseType.toByte(),
+                versionContent = marketImageUpdateRequest.versionContent
         )
     }
 
@@ -704,12 +698,12 @@ abstract class ImageReleaseService {
             val processInfo = handleProcessInfo(isNormalUpgrade, status)
 
             val storeProcessInfo = storeCommonService.generateStoreProcessInfo(
-                userId = userId,
-                storeId = imageId,
-                storeCode = imageCode,
-                storeType = StoreTypeEnum.IMAGE,
-                modifier = record.modifier,
-                processInfo = processInfo
+                    userId = userId,
+                    storeId = imageId,
+                    storeCode = imageCode,
+                    storeType = StoreTypeEnum.IMAGE,
+                    modifier = record.modifier,
+                    processInfo = processInfo
             )
             logger.info("getProcessInfo storeProcessInfo: $storeProcessInfo")
             return Result(storeProcessInfo)
@@ -746,21 +740,21 @@ abstract class ImageReleaseService {
         logger.info("checkImageVersionOptRight userId is:$userId, imageId is:$imageId, status is:$status")
         logger.info("checkImageVersionOptRight validateUserFlag is:$validateUserFlag, isNormalUpgrade is:$isNormalUpgrade")
         val imageRecord =
-            imageDao.getImage(dslContext, imageId) ?: return Triple(
-                false,
-                CommonMessageCode.PARAMETER_IS_INVALID,
-                arrayOf(imageId)
-            )
+                imageDao.getImage(dslContext, imageId) ?: return Triple(
+                        false,
+                        CommonMessageCode.PARAMETER_IS_INVALID,
+                        arrayOf(imageId)
+                )
         val imageCode = imageRecord.imageCode
-        val creator = imageRecord.creator
+        val modifier = imageRecord.modifier
         val imageStatus = imageRecord.imageStatus
-        // 判断用户是否有权限(当前版本的创建者和管理员可以操作)
+        // 判断用户是否有权限
         if (!(storeMemberDao.isStoreAdmin(
-                dslContext,
-                userId,
-                imageCode,
-                StoreTypeEnum.IMAGE.type.toByte()
-            ) || creator == userId || !validateUserFlag)
+                        dslContext,
+                        userId,
+                        imageCode,
+                        StoreTypeEnum.IMAGE.type.toByte()
+                ) || modifier == userId || !validateUserFlag)
         ) {
             return Triple(false, CommonMessageCode.PERMISSION_DENIED, null)
         }
@@ -769,67 +763,63 @@ abstract class ImageReleaseService {
         else ImageStatusEnum.AUDITING
         var validateFlag = true
         if (status == ImageStatusEnum.COMMITTING.status.toByte() &&
-            imageStatus != ImageStatusEnum.INIT.status.toByte()
+                imageStatus != ImageStatusEnum.INIT.status.toByte()
         ) {
             validateFlag = false
         } else if (status == ImageStatusEnum.CHECKING.status.toByte() &&
-            imageStatus !in (
-                listOf(
-                    ImageStatusEnum.COMMITTING.status.toByte(),
-                    ImageStatusEnum.CHECK_FAIL.status.toByte(),
-                    ImageStatusEnum.TESTING.status.toByte()
-                ))
+                imageStatus !in (
+                        listOf(
+                                ImageStatusEnum.COMMITTING.status.toByte(),
+                                ImageStatusEnum.CHECK_FAIL.status.toByte(),
+                                ImageStatusEnum.TESTING.status.toByte()
+                        ))
         ) {
             validateFlag = false
         } else if (status == ImageStatusEnum.CHECK_FAIL.status.toByte() &&
-            imageStatus !in (
-                listOf(
-                    ImageStatusEnum.COMMITTING.status.toByte(),
-                    ImageStatusEnum.CHECKING.status.toByte(),
-                    ImageStatusEnum.CHECK_FAIL.status.toByte(),
-                    ImageStatusEnum.TESTING.status.toByte()
-                ))
+                imageStatus !in (
+                        listOf(
+                                ImageStatusEnum.COMMITTING.status.toByte(),
+                                ImageStatusEnum.CHECKING.status.toByte(),
+                                ImageStatusEnum.CHECK_FAIL.status.toByte(),
+                                ImageStatusEnum.TESTING.status.toByte()
+                        ))
         ) {
             validateFlag = false
         } else if (status == ImageStatusEnum.TESTING.status.toByte() &&
-            imageStatus != ImageStatusEnum.CHECKING.status.toByte()
+                imageStatus != ImageStatusEnum.CHECKING.status.toByte()
         ) {
             validateFlag = false
         } else if (status == ImageStatusEnum.AUDITING.status.toByte() &&
-            imageStatus != ImageStatusEnum.TESTING.status.toByte()
+                imageStatus != ImageStatusEnum.TESTING.status.toByte()
         ) {
             validateFlag = false
         } else if (status == ImageStatusEnum.AUDIT_REJECT.status.toByte() &&
-            imageStatus != ImageStatusEnum.AUDITING.status.toByte()
+                imageStatus != ImageStatusEnum.AUDITING.status.toByte()
         ) {
             validateFlag = false
         } else if (status == ImageStatusEnum.RELEASED.status.toByte() &&
-            imageStatus != allowReleaseStatus.status.toByte()
+                imageStatus != allowReleaseStatus.status.toByte()
         ) {
             validateFlag = false
         } else if (status == ImageStatusEnum.GROUNDING_SUSPENSION.status.toByte() &&
-            imageStatus == ImageStatusEnum.RELEASED.status.toByte()
+                imageStatus == ImageStatusEnum.RELEASED.status.toByte()
         ) {
             validateFlag = false
         } else if (status == ImageStatusEnum.UNDERCARRIAGING.status.toByte() &&
-            imageStatus == ImageStatusEnum.RELEASED.status.toByte()
+                imageStatus == ImageStatusEnum.RELEASED.status.toByte()
         ) {
             validateFlag = false
         } else if (status == ImageStatusEnum.UNDERCARRIAGED.status.toByte() &&
-            imageStatus !in (
-                listOf(
-                    ImageStatusEnum.UNDERCARRIAGING.status.toByte(),
-                    ImageStatusEnum.RELEASED.status.toByte()
-                ))
+                imageStatus !in (
+                        listOf(
+                                ImageStatusEnum.UNDERCARRIAGING.status.toByte(),
+                                ImageStatusEnum.RELEASED.status.toByte()
+                        ))
         ) {
             validateFlag = false
         }
 
-        return if (validateFlag) Triple(true, null, null) else Triple(
-            false,
-            StoreMessageCode.USER_IMAGE_RELEASE_STEPS_ERROR,
-            null
-        )
+        return if (validateFlag) Triple(true, null, null) else Triple(false, StoreMessageCode.USER_IMAGE_RELEASE_STEPS_ERROR, null)
     }
 
     private fun validateNameIsExist(
@@ -877,27 +867,27 @@ abstract class ImageReleaseService {
         val validVersion = version?.trim()
         // 判断用户是否有权限下架镜像
         if (!(storeMemberDao.isStoreAdmin(
-                dslContext = dslContext,
-                userId = validUserId,
-                storeCode = validImageCode,
-                storeType = StoreTypeEnum.IMAGE.type.toByte()
-            ) || !validateUserFlag)
+                        dslContext = dslContext,
+                        userId = validUserId,
+                        storeCode = validImageCode,
+                        storeType = StoreTypeEnum.IMAGE.type.toByte()
+                ) || !validateUserFlag)
         ) {
             return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED)
         }
         if (!version.isNullOrEmpty()) {
             val imageRecord = imageDao.getImage(dslContext, validImageCode, validVersion!!)
-                ?: return MessageCodeUtil.generateResponseDataObject(
-                    messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
-                    params = arrayOf(validImageCode, validVersion),
-                    data = false
-                )
+                    ?: return MessageCodeUtil.generateResponseDataObject(
+                            messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                            params = arrayOf(validImageCode, validVersion),
+                            data = false
+                    )
             logger.info("$interfaceName:offlineMarketImage:Inner:imageRecord=(${imageRecord.imageCode},${imageRecord.version})")
             if (ImageStatusEnum.RELEASED.status.toByte() != imageRecord.imageStatus) {
                 return MessageCodeUtil.generateResponseDataObject(
-                    messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
-                    params = arrayOf(validImageCode, validVersion),
-                    data = false
+                        messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                        params = arrayOf(validImageCode, validVersion),
+                        data = false
                 )
             }
             dslContext.transaction { t ->
@@ -906,29 +896,29 @@ abstract class ImageReleaseService {
                 logger.info("$interfaceName:offlineMarketImage:Inner:releaseImageRecords.size=${releaseImageRecords?.size}")
                 if (null != releaseImageRecords && releaseImageRecords.size > 0) {
                     marketImageDao.updateImageStatusInfoById(
-                        dslContext = context,
-                        imageId = imageRecord.id,
-                        userId = validUserId,
-                        imageStatusInfoUpdateRequest = ImageStatusInfoUpdateRequest(
-                            imageStatus = ImageStatusEnum.UNDERCARRIAGED,
-                            imageStatusMsg = reason,
-                            latestFlag = false
-                        )
+                            dslContext = context,
+                            imageId = imageRecord.id,
+                            userId = validUserId,
+                            imageStatusInfoUpdateRequest = ImageStatusInfoUpdateRequest(
+                                    imageStatus = ImageStatusEnum.UNDERCARRIAGED,
+                                    imageStatusMsg = reason,
+                                    latestFlag = false
+                            )
                     )
                     val newestReleaseImageRecord = releaseImageRecords[0]
                     if (newestReleaseImageRecord.id == imageRecord.id) {
                         if (releaseImageRecords.size == 1) {
                             val newestUndercarriagedImage =
-                                marketImageDao.getNewestUndercarriagedImageByCode(context, validImageCode)
+                                    marketImageDao.getNewestUndercarriagedImageByCode(context, validImageCode)
                             logger.info("$interfaceName:offlineMarketImage:Inner:newestUndercarriagedImage=(${newestUndercarriagedImage?.imageCode},${newestUndercarriagedImage?.version})")
                             if (null != newestUndercarriagedImage) {
                                 marketImageDao.updateImageStatusInfoById(
-                                    dslContext = context,
-                                    imageId = newestUndercarriagedImage.id,
-                                    userId = validUserId,
-                                    imageStatusInfoUpdateRequest = ImageStatusInfoUpdateRequest(
-                                        latestFlag = true
-                                    )
+                                        dslContext = context,
+                                        imageId = newestUndercarriagedImage.id,
+                                        userId = validUserId,
+                                        imageStatusInfoUpdateRequest = ImageStatusInfoUpdateRequest(
+                                                latestFlag = true
+                                        )
                                 )
                             }
                         } else {
@@ -936,12 +926,12 @@ abstract class ImageReleaseService {
                             val tmpImageRecord = releaseImageRecords[1]
                             logger.info("$interfaceName:offlineMarketImage:Inner:lastReleasedImage=(${tmpImageRecord?.imageCode},${tmpImageRecord?.version})")
                             marketImageDao.updateImageStatusInfoById(
-                                dslContext = context,
-                                imageId = tmpImageRecord.id,
-                                userId = validUserId,
-                                imageStatusInfoUpdateRequest = ImageStatusInfoUpdateRequest(
-                                    latestFlag = true
-                                )
+                                    dslContext = context,
+                                    imageId = tmpImageRecord.id,
+                                    userId = validUserId,
+                                    imageStatusInfoUpdateRequest = ImageStatusInfoUpdateRequest(
+                                            latestFlag = true
+                                    )
                             )
                         }
                     }
@@ -953,19 +943,19 @@ abstract class ImageReleaseService {
             dslContext.transaction { t ->
                 val context = DSL.using(t)
                 marketImageDao.updateImageStatusByCode(
-                    context, validImageCode, false, ImageStatusEnum.RELEASED.status.toByte(),
-                    ImageStatusEnum.UNDERCARRIAGED.status.toByte(), validUserId, "undercarriage"
+                        context, validImageCode, false, ImageStatusEnum.RELEASED.status.toByte(),
+                        ImageStatusEnum.UNDERCARRIAGED.status.toByte(), validUserId, "undercarriage"
                 )
                 val newestUndercarriagedImage =
-                    marketImageDao.getNewestUndercarriagedImageByCode(context, validImageCode)
+                        marketImageDao.getNewestUndercarriagedImageByCode(context, validImageCode)
                 logger.info("$interfaceName:offlineMarketImage:Inner:newestUndercarriagedImage=(${newestUndercarriagedImage?.imageCode},${newestUndercarriagedImage?.version})")
                 if (null != newestUndercarriagedImage) {
                     // 把发布时间最晚的下架版本latestFlag置为true
                     marketImageDao.updateImageLatestFlagById(
-                        dslContext = context,
-                        imageId = newestUndercarriagedImage.id,
-                        userId = validUserId,
-                        latestFlag = true
+                            dslContext = context,
+                            imageId = newestUndercarriagedImage.id,
+                            userId = validUserId,
+                            latestFlag = true
                     )
                 }
             }

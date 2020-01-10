@@ -11,7 +11,7 @@
             <div class="node-list-header">
                 <div class="title">{{ $t('environment.nodeInfo.selectNodeTip') }}
                     <span class="selected-node-prompt">
-                        {{ $t('environment.nodeInfo.total') }}<span class="node-count"> {{ selectHandlercConf.curTotalCount }} </span>{{ $t('environment.nodes') }}
+                        {{ $t('environment.nodeInfo.selectNodeTip') }}<span class="node-count"> {{ selectHandlercConf.curTotalCount }} </span>{{ $t('environment.nodes') }}
                     </span>
                     <span class="selected-node-prompt">
                         {{ $t('environment.selected') }}<span class="node-count"> {{ selectHandlercConf.selectedNodeCount }} </span>{{ $t('environment.nodes') }}
@@ -61,8 +61,7 @@
                         <div class="table-node-item node-item-type">{{ `${$t('environment.nodeInfo.source')}/${$t('environment.nodeInfo.importer')}` }}</div>
                         <div class="table-node-item node-item-status">{{ $t('environment.nodeInfo.cpuStatus') }}</div>
                         <div class="table-node-item node-item-agstatus">
-                            <span v-if="hasConstruct">{{ $t('environment.nodeInfo.gateway') }}</span>
-                            <span v-else>{{ $t('environment.nodeInfo.gseAgentStatus') }}</span>
+                            <span>{{ $t('environment.nodeInfo.gateway') }}</span>
                         </div>
                     </div>
                     <div class="table-node-body">
@@ -82,23 +81,7 @@
                                 <span class="node-name">{{ col.name }}</span>
                             </div>
                             <div class="table-node-item node-item-type" :class="{ 'over-content': selectHandlercConf.curDisplayCount > 6 }">
-                                <div v-if="(col.nodeType === 'CC' || col.nodeType === 'CMDB') && ((col.nodeType === 'CC' && col.createdUser !== col.operator && col.createdUser !== col.bakOperator)
-                                    || (col.nodeType === 'CMDB' && col.createdUser !== col.operator && col.bakOperator.split(';').indexOf(col.createdUser) === -1))">
-                                    <div class="edit-operator" v-if="curUserInfo.username === col.operator || curUserInfo.username === col.bakOperator">
-                                        <i class="bk-icon icon-exclamation-circle"></i><span @click="changeCreatedUser(col.nodeHashId, 1)">{{ $t('environment.nodeInfo.operatorModfied') }}</span>
-                                    </div>
-                                    <div class="prompt-operator" v-else>
-                                        <bk-popover placement="top">
-                                            <span><i class="bk-icon icon-exclamation-circle"></i>{{ $t('environment.nodeInfo.prohibited') }}</span>
-                                            <template slot="content">
-                                                <p style="text-align: left;">{{ $t('environment.nodeInfo.currentImporter') }}<span>{{ col.createdUser }}</span></p>
-                                                <p style="text-align: left;">{{ $t('environment.nodeInfo.currentOperator') }}<span>{{ col.operator }}</span><span v-if="col.nodeType === 'CC'">/{{ col.bakOperator }}</span></p>
-                                                <p style="text-align: left;">{{ $t('environment.nodeInfo.contactOperator') }}</p>
-                                            </template>
-                                        </bk-popover>
-                                    </div>
-                                </div>
-                                <div v-else>
+                                <div>
                                     <span class="node-name">{{ $t('environment.nodeTypeMap')[col.nodeType] }}</span>
                                     <span>({{ col.createdUser }})</span>
                                 </div>
@@ -107,21 +90,7 @@
                                 <span class="node-status" :class="{ 'over-content': selectHandlercConf.curDisplayCount > 6 }">{{ $t('environment.nodeStatusMap')[col.nodeStatus] }}</span>
                             </div>
                             <div class="table-node-item node-item-agstatus" :class="{ 'over-content': selectHandlercConf.curDisplayCount > 6 }">
-                                <span v-if="['THIRDPARTY','DEVCLOUD'].includes(col.nodeType)">{{ col.gateway }}</span>
-                                <span v-else>
-                                    <span class="node-agstatus normal-status-node" v-if="col.nodeType === 'BCSVM'"
-                                        :class="{
-                                            'refresh-status-node': !col.agentStatus,
-                                            'over-content': selectHandlercConf.curDisplayCount > 6
-                                        }">{{ col.agentStatus ? $t('environment.nodeInfo.normal') : $t('environment.nodeInfo.refreshing') }}
-                                    </span>
-                                    <span class="node-agstatus normal-status-node" v-else
-                                        :class="{
-                                            'abnormal-status-node': !col.agentStatus,
-                                            'over-content': selectHandlercConf.curDisplayCount > 6
-                                        }">{{ col.agentStatus ? $t('environment.nodeInfo.normal') : $t('environment.nodeInfo.abnormal') }}
-                                    </span>
-                                </span>
+                                <span>{{ col.gateway }}</span>
                             </div>
                         </div>
                     </div>
@@ -151,7 +120,6 @@
             confirmFn: Function,
             toggleAllSelect: Function,
             cancelFn: Function,
-            changeCreatedUser: Function,
             query: Function,
             searchInfo: {
                 type: Object,
@@ -177,7 +145,7 @@
             },
             hasConstruct () {
                 return this.rowList.some(row => {
-                    return ['THIRDPARTY', 'DEVCLOUD'].includes(row.nodeType) && row.isDisplay
+                    return row.nodeType === 'THIRDPARTY' && row.isDisplay
                 })
             }
         },

@@ -12,7 +12,6 @@
             </div>
         </div>
         <router-view />
-        <Announcement-dialog v-if="hideAnnounce !== true" />
     </div>
 </template>
 
@@ -20,18 +19,11 @@
     import Vue from 'vue'
     import { Component, Watch } from 'vue-property-decorator'
     import { State } from 'vuex-class'
-    import AnnouncementDialog from '../components/AnnouncementDialog/index.vue'
-    const ENTERPRISE_VERSION = false
-    @Component({
-        components: {
-            AnnouncementDialog
-        }
-    })
+    
+    @Component
     export default class App extends Vue {
         @State('fetchError') fetchError
         @State('moduleLoading') moduleLoading
-
-        hideAnnounce: boolean = ENTERPRISE_VERSION
 
         @Watch('fetchError')
         handleFetchError (e) {

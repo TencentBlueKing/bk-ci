@@ -20,11 +20,9 @@
 import PipelineEditTab from './PipelineEditTab'
 import BaseSettingTab from './BaseSettingTab'
 import NotifyTab from './NotifyTab'
-import AuthorityTab from './AuthorityTab'
 
 export {
     PipelineEditTab,
     BaseSettingTab,
-    NotifyTab,
-    AuthorityTab
+    NotifyTab
 }

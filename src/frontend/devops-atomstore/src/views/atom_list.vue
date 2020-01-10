@@ -51,12 +51,12 @@
                         tabName: this.$t('store.流水线插件'),
                         showMore: true,
                         moreList: [
-                            { name: this.$t('store.插件指引'), link: 'http://iwiki.oa.com/pages/viewpage.action?pageId=15008942' },
+                            { name: this.$t('store.插件指引'), link: 'http://tempdocklink/pages/viewpage.action?pageId=15008942' },
                             { name: this.$t('store.debugTask'), link: `/console/pipeline/${currentProjectCode}/atomDebug` }
                         ]
                     },
-                    template: { name: this.$t('store.模版指引'), tabName: this.$t('store.流水线模板'), link: 'http://iwiki.oa.com/pages/viewpage.action?pageId=15008944' },
-                    image: { name: this.$t('store.镜像指引'), tabName: this.$t('store.容器镜像'), link: 'http://iwiki.oa.com/pages/viewpage.action?pageId=22118721' }
+                    template: { name: this.$t('store.模版指引'), tabName: this.$t('store.流水线模板'), link: 'http://tempdocklink/pages/viewpage.action?pageId=15008944' },
+                    image: { name: this.$t('store.镜像指引'), tabName: this.$t('store.容器镜像'), link: 'http://tempdocklink/pages/viewpage.action?pageId=22118721' }
                 }
             }
         },

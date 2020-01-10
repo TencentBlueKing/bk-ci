@@ -23,7 +23,7 @@
     import { mapActions, mapState } from 'vuex'
     import emptyTips from '@/components/devops/emptyTips'
     import { navConfirm } from '@/utils/util'
-    import { PipelineEditTab, BaseSettingTab, NotifyTab, AuthorityTab } from '@/components/PipelineEditTabs/'
+    import { PipelineEditTab, BaseSettingTab, NotifyTab } from '@/components/PipelineEditTabs/'
     import pipelineOperateMixin from '@/mixins/pipeline-operate-mixin'
 
     export default {
@@ -31,8 +31,7 @@
             emptyTips,
             PipelineEditTab,
             BaseSettingTab,
-            NotifyTab,
-            AuthorityTab
+            NotifyTab
         },
         mixins: [pipelineOperateMixin],
         data () {
@@ -77,9 +76,6 @@
             pipelineId () {
                 return this.$route.params.pipelineId
             },
-            longProjectId () {
-                return this.curProject && this.curProject.projectId ? this.curProject.projectId : ''
-            },
             currentTab () {
                 return this.$route.params.tab || 'pipeline'
             },
@@ -114,26 +110,6 @@
                             }
                         },
                         {
-                            name: 'auth',
-                            label: this.$t('settings.auth'),
-                            component: 'AuthorityTab',
-                            bindData: {
-                                isLoading: !this.pipelineAuthority,
-                                pipelineAuthority: this.pipelineAuthority,
-                                projectGroupAndUsers: this.projectGroupAndUsers,
-                                updateAuthority: (name, value) => {
-                                    this.setPipelineEditing(true)
-                                    this.setAuthEditing(true)
-                                    this.updatePipelineAuthority({
-                                        pipelineAuthority: {
-                                            [name]: value
-                                        }
-
-                                    })
-                                }
-                            }
-                        },
-                        {
                             name: 'baseSetting',
                             label: this.$t('editPage.baseSetting'),
                             component: 'BaseSettingTab',
@@ -150,9 +126,6 @@
         watch: {
             '$route.params.pipelineId': function (pipelineId, oldId) {
                 this.init()
-            },
-            longProjectId () {
-                this.getRoleList()
             },
             pipeline (val) {
                 this.isLoading = false
@@ -176,8 +149,6 @@
             this.removeLeaveListenr()
             this.setPipelineEditing(false)
             this.setSaveStatus(false)
-            this.setAuthEditing(false)
-            this.authEditing = false
             this.errors.clear()
         },
         beforeRouteUpdate (to, from, next) {
@@ -202,8 +173,6 @@
             ...mapActions('pipelines', [
                 'requestPipelineSetting',
                 'updatePipelineSetting',
-                'updatePipelineAuthority',
-                'fetchRoleList',
                 'requestProjectGroupAndUsers'
             ]),
             ...mapActions('soda', [
@@ -214,7 +183,6 @@
                 this.isLoading = true
                 this.requestPipeline(this.$route.params)
                 this.requestPipelineSetting(this.$route.params)
-                this.getRoleList()
                 this.requestProjectGroupAndUsers(this.$route.params)
             },
             switchTab (tab) {
@@ -251,15 +219,6 @@
             leaveSure (e) {
                 e.returnValue = this.confirmMsg
                 return this.confirmMsg
-            },
-
-            getRoleList () {
-                if (this.longProjectId && this.pipelineId) {
-                    this.fetchRoleList({
-                        projectId: this.longProjectId,
-                        pipelineId: this.pipelineId
-                    })
-                }
             },
             requestQualityAtom () {
                 this.$store.dispatch('soda/requestQualityAtom', {
