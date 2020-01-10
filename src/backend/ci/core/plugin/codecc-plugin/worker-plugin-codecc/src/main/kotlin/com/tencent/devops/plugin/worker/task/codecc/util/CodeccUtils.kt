@@ -26,6 +26,7 @@
 
 package com.tencent.devops.plugin.worker.task.codecc.util
 
+import com.tencent.devops.common.api.enums.OSType
 import com.tencent.devops.common.pipeline.enums.BuildScriptType
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.plugin.codecc.pojo.coverity.CoverityProjectType
@@ -51,6 +52,7 @@ import com.tencent.devops.worker.common.CommonEnv
 import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.env.BuildEnv
 import com.tencent.devops.worker.common.logger.LoggerService
+import com.tencent.devops.worker.common.utils.BatScriptUtil
 import com.tencent.devops.worker.common.utils.ShellUtil
 import org.slf4j.LoggerFactory
 import java.io.File
@@ -73,15 +75,11 @@ open class CodeccUtils {
 
     fun executeCommand(codeccExecuteConfig: CodeccExecuteConfig): String {
         val codeccWorkspace = getCodeccWorkspace(codeccExecuteConfig)
-        try {
-            initData(codeccExecuteConfig.scriptType, codeccWorkspace)
-            return doRun(codeccExecuteConfig)
-        } finally {
-            if (codeccWorkspace.exists() && codeccWorkspace.isDirectory) codeccWorkspace.deleteRecursively()
-        }
+        initData(codeccExecuteConfig.scriptType, codeccWorkspace)
+        return doRun(codeccExecuteConfig)
     }
 
-    fun getCodeccWorkspace(codeccExecuteConfig: CodeccExecuteConfig): File {
+    private fun getCodeccWorkspace(codeccExecuteConfig: CodeccExecuteConfig): File {
         val buildId = codeccExecuteConfig.buildVariables.buildId
         val workspace = codeccExecuteConfig.workspace
 
@@ -131,13 +129,7 @@ open class CodeccUtils {
         val taskParams = codeccExecuteConfig.buildTask.params ?: mapOf()
         val script = taskParams["script"] ?: ""
         val scriptType = codeccExecuteConfig.scriptType
-        val scriptFile = ShellUtil.getCommandFile(
-            buildId = codeccExecuteConfig.buildTask.buildId,
-            script = script,
-            dir = workspace,
-            buildEnvs = codeccExecuteConfig.buildVariables.buildEnvs,
-            runtimeVariables = codeccExecuteConfig.buildVariables.variables
-        )
+        val scriptFile = getScriptFile(codeccExecuteConfig, script)
         logger.info("Start to execute the script file for script($script)")
 
         val scanTools = if (codeccExecuteConfig.filterTools.isNotEmpty()) {
@@ -177,7 +169,11 @@ open class CodeccUtils {
         if (!BuildEnv.isThirdParty()) list.add("-DCOVERITY_HOME_BIN=${getCovToolPath(scriptType)}/bin")
         list.add("-DPROJECT_BUILD_PATH=${workspace.canonicalPath}")
         list.add("-DSYNC_TYPE=${taskParams["asynchronous"] != "true"}")
-        if (!BuildEnv.isThirdParty() && scanTools.contains("KLOCWORK")) list.add("-DKLOCWORK_HOME_BIN=${getKlocToolPath(scriptType)}")
+        if (!BuildEnv.isThirdParty() && scanTools.contains("KLOCWORK")) list.add(
+            "-DKLOCWORK_HOME_BIN=${getKlocToolPath(
+                scriptType
+            )}"
+        )
         if (taskParams.containsKey("goPath")) list.add("-DGO_PATH=${taskParams["goPath"]}")
         list.add("-DSUB_PATH=${getGoRootPath(scriptType)}:$GO_CI_LINT_PATH")
 
@@ -187,16 +183,7 @@ open class CodeccUtils {
         else "[cov]"
         printLog(list, tag)
 
-        val variables =
-            codeccExecuteConfig.buildVariables.variables.plus(codeccExecuteConfig.buildTask.buildVariable ?: mapOf())
-        return ShellUtil.execute(
-            buildId = codeccExecuteConfig.buildTask.buildId,
-            script = list.joinToString(" "),
-            dir = workspace,
-            buildEnvs = takeBuildEnvs(codeccExecuteConfig),
-            runtimeVariables = variables,
-            prefix = "[cov] "
-        )
+        return executeScript(codeccExecuteConfig, list, "[cov] ")
     }
 
     open fun toolPreExecute(list: MutableList<String>) {
@@ -262,14 +249,7 @@ open class CodeccUtils {
 
         val variables =
             codeccExecuteConfig.buildVariables.variables.plus(codeccExecuteConfig.buildTask.buildVariable ?: mapOf())
-        return ShellUtil.execute(
-            buildId = codeccExecuteConfig.buildTask.buildId,
-            script = list.joinToString(" "),
-            dir = workspace,
-            buildEnvs = takeBuildEnvs(codeccExecuteConfig),
-            runtimeVariables = variables,
-            prefix = "[tools] "
-        )
+        return executeScript(codeccExecuteConfig, list, "[tool] ")
     }
 
     private fun printLog(list: List<String>, tag: String) {
@@ -298,5 +278,51 @@ open class CodeccUtils {
                 )
             )
         }
+    }
+
+    private fun getScriptFile(codeccExecuteConfig: CodeccExecuteConfig, script: String): File {
+        return if (AgentEnv.getOS() == OSType.WINDOWS) {
+            BatScriptUtil.getCommandFile(
+                buildId = codeccExecuteConfig.buildTask.buildId,
+                script = script,
+                dir = codeccExecuteConfig.workspace,
+                runtimeVariables = codeccExecuteConfig.buildVariables.variables
+            )
+        } else {
+            ShellUtil.getCommandFile(
+                buildId = codeccExecuteConfig.buildTask.buildId,
+                script = script,
+                dir = codeccExecuteConfig.workspace,
+                buildEnvs = codeccExecuteConfig.buildVariables.buildEnvs,
+                runtimeVariables = codeccExecuteConfig.buildVariables.variables
+            )
+        }
+    }
+
+    private fun executeScript(
+        codeccExecuteConfig: CodeccExecuteConfig,
+        list: MutableList<String>,
+        prefix: String
+    ): String {
+        val variables =
+            codeccExecuteConfig.buildVariables.variables.plus(codeccExecuteConfig.buildTask.buildVariable ?: mapOf())
+        return if (AgentEnv.getOS() == OSType.WINDOWS) {
+            BatScriptUtil.execute(
+                buildId = codeccExecuteConfig.buildTask.buildId,
+                script = list.joinToString(" "),
+                dir = codeccExecuteConfig.workspace,
+                runtimeVariables = variables,
+                prefix = prefix)
+        } else {
+            ShellUtil.execute(
+                buildId = codeccExecuteConfig.buildTask.buildId,
+                script = list.joinToString(" "),
+                dir = codeccExecuteConfig.workspace,
+                buildEnvs = takeBuildEnvs(codeccExecuteConfig),
+                runtimeVariables = variables,
+                prefix = prefix
+            )
+        }
+
     }
 }
