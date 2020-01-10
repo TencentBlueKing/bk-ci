@@ -29,6 +29,7 @@ package com.tencent.devops.misc.service
 import com.tencent.devops.common.api.enums.AgentStatus
 import com.tencent.devops.common.environment.agent.AgentGrayUtils
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.misc.dao.ThirdPartyAgentDao
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -40,7 +41,8 @@ class AgentUpgradeService @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val agentGrayUtils: AgentGrayUtils,
     private val dslContext: DSLContext,
-    private val thirdPartyAgentDao: ThirdPartyAgentDao
+    private val thirdPartyAgentDao: ThirdPartyAgentDao,
+    private val gray: Gray
 ) {
 
     fun updateCanUpgradeAgentList() {
@@ -58,12 +60,19 @@ class AgentUpgradeService @Autowired constructor(
             return
         }
 
-        val importOKAgents = thirdPartyAgentDao.listByStatus(dslContext, setOf(AgentStatus.IMPORT_OK))
+        val grayProjects = gray.grayProjectSet(redisOperation)
+        val gray = gray.isGray()
+        val importOKAgents = thirdPartyAgentDao.listByStatus(dslContext, setOf(AgentStatus.IMPORT_OK)).toSet()
         val needUpgradeAgents = importOKAgents.filter {
-            if (it.version.isNullOrBlank() || it.masterVersion.isNullOrBlank()) { // 旧Agent不处理
-                false
-            } else {
-                it.version != currentVersion || it.masterVersion != currentMasterVersion
+            when {
+                it.version.isNullOrBlank() || it.masterVersion.isNullOrBlank() -> false
+                gray && grayProjects.contains(it.projectId) -> {
+                    it.version != currentVersion || it.masterVersion != currentMasterVersion
+                }
+                !gray && !grayProjects.contains(it.projectId) -> {
+                    it.version != currentVersion || it.masterVersion != currentMasterVersion
+                }
+                else -> false
             }
         }
         val canUpgraderAgent = if (needUpgradeAgents.size > maxParallelCount) {

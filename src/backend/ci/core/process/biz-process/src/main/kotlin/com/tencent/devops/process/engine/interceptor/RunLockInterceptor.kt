@@ -77,6 +77,6 @@ class RunLockInterceptor @Autowired constructor(
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(PipelineInterceptor::class.java)
+        private val logger = LoggerFactory.getLogger(RunLockInterceptor::class.java)
     }
 }

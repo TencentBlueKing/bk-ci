@@ -149,12 +149,12 @@ object LoggerService {
 
     fun addNormalLine(message: String) {
         val logMessage = LogMessage(
-            message,
-            System.currentTimeMillis(),
-            elementId,
-            jobId,
-            LogType.LOG,
-            executeCount
+            message = message,
+            timestamp = System.currentTimeMillis(),
+            tag = elementId,
+            jobId = jobId,
+            logType = LogType.LOG,
+            executeCount = executeCount
         )
         logger.info(logMessage.toString())
         try {
@@ -170,26 +170,50 @@ object LoggerService {
     fun addRedLine(message: String) =
         addNormalLine(Ansi().fgRed().a(message).reset().toString())
 
-    fun addFoldStartLine(tagName: String) {
+    fun addFoldStartLine(foldName: String) {
         val logMessage = LogMessage(
-            "soda_fold:start:$tagName",
-            System.currentTimeMillis(),
-            elementId,
-            jobId,
-            LogType.START,
-            executeCount
+            message = "##[group]$foldName",
+            timestamp = System.currentTimeMillis(),
+            tag = elementId,
+            jobId = jobId,
+            logType = LogType.LOG,
+            executeCount = executeCount
         )
         addLog(logMessage)
     }
 
-    fun addFoldEndLine(tagName: String) {
+    fun addFoldEndLine(foldName: String) {
         val logMessage = LogMessage(
-            "soda_fold:end:$tagName",
-            System.currentTimeMillis(),
-            elementId,
-            jobId,
-            LogType.END,
-            executeCount
+            message = "##[endgroup]$foldName",
+            timestamp = System.currentTimeMillis(),
+            tag = elementId,
+            jobId = jobId,
+            logType = LogType.LOG,
+            executeCount = executeCount
+        )
+        addLog(logMessage)
+    }
+
+    fun addRangeStartLine(rangeName: String) {
+        val logMessage = LogMessage(
+            message = "[START] $rangeName",
+            timestamp = System.currentTimeMillis(),
+            tag = elementId,
+            jobId = jobId,
+            logType = LogType.START,
+            executeCount = executeCount
+        )
+        addLog(logMessage)
+    }
+
+    fun addRangeEndLine(rangeName: String) {
+        val logMessage = LogMessage(
+            message = "[END] $rangeName",
+            timestamp = System.currentTimeMillis(),
+            tag = elementId,
+            jobId = jobId,
+            logType = LogType.END,
+            executeCount = executeCount
         )
         addLog(logMessage)
     }

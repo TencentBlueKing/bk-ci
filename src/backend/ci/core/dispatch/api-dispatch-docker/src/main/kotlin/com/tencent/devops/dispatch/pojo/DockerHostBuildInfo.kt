@@ -42,5 +42,8 @@ data class DockerHostBuildInfo(
     val wsInHost: Boolean,
     val registryUser: String?,
     val registryPwd: String?,
-    val imageType: String?
+    val imageType: String?,
+    val imagePublicFlag: Boolean?,
+    val imageRDType: String?,
+    val containerHashId: String?
 )
