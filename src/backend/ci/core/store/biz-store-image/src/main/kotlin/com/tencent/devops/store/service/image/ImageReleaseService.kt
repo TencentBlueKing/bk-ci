@@ -325,7 +325,7 @@ abstract class ImageReleaseService {
             ImageStatusEnum.UNDERCARRIAGED.status.toByte()
         )
         if (imageRecords.size == 1) {
-            // 如果是首次发布，只有处于初始化的镜像状态才允许添加新的版本
+            // 如果是首次发布，处于初始化的镜像状态也允许添加新的版本
             imageFinalStatusList.add(ImageStatusEnum.INIT.status.toByte())
         }
         if (!imageFinalStatusList.contains(imageRecord.imageStatus)) {
@@ -411,7 +411,7 @@ abstract class ImageReleaseService {
 
     abstract fun getPassTestStatus(isNormalUpgrade: Boolean): Byte
 
-    fun creator(
+    fun passTest(
         userId: String,
         imageId: String,
         validateUserFlag: Boolean = true
