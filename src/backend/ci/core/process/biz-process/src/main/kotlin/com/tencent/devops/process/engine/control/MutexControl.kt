@@ -34,6 +34,7 @@ import com.tencent.devops.common.redis.RedisLockByValue
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.log.utils.LogUtils
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
+import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
@@ -43,7 +44,8 @@ import java.time.LocalDateTime
 @Component
 class MutexControl @Autowired constructor(
     private val rabbitTemplate: RabbitTemplate,
-    private val redisOperation: RedisOperation
+    private val redisOperation: RedisOperation,
+    private val pipelineRuntimeService: PipelineRuntimeService
 ) {
 
     private val logger = LoggerFactory.getLogger(javaClass)
@@ -151,8 +153,8 @@ class MutexControl @Autowired constructor(
         container: PipelineBuildContainer
     ): Boolean {
         val containerMutexId = getMutexContainerId(buildId, containerId)
-        val lockKey = getMutexLockKey(projectId, mutexGroup)
-        val queueKey = getMutexQueueKey(projectId, mutexGroup)
+        val lockKey = getMutexLockKey(projectId, buildId, mutexGroup)
+        val queueKey = getMutexQueueKey(projectId, buildId, mutexGroup)
         val containerMutexLock = RedisLockByValue(redisOperation, lockKey, containerMutexId, 86400)
         // 获取到锁的containerId
         val lockedContainerMutexId = redisOperation.get(lockKey)
@@ -199,7 +201,7 @@ class MutexControl @Autowired constructor(
         mutexGroup: MutexGroup
     ) {
         val containerMutexId = getMutexContainerId(buildId, containerId)
-        val lockKey = getMutexLockKey(projectId, mutexGroup)
+        val lockKey = getMutexLockKey(projectId, buildId, mutexGroup)
         val containerMutexLock = RedisLockByValue(redisOperation, lockKey, containerMutexId, 86400)
         containerMutexLock.unlock()
         quitMutexQueue(
@@ -223,7 +225,7 @@ class MutexControl @Autowired constructor(
             return false
         }
         val containerMutexId = getMutexContainerId(buildId, containerId)
-        val queueKey = getMutexQueueKey(projectId, mutexGroup)
+        val queueKey = getMutexQueueKey(projectId, buildId, mutexGroup)
         val exist = redisOperation.hhaskey(queueKey, containerMutexId)
         val queueSize = redisOperation.hsize(queueKey)
         // 也已经在队列中,判断是否已经超时
@@ -280,7 +282,7 @@ class MutexControl @Autowired constructor(
 
     private fun enterMutexQueue(projectId: String, buildId: String, containerId: String, mutexGroup: MutexGroup) {
         val containerMutexId = getMutexContainerId(buildId, containerId)
-        val queueKey = getMutexQueueKey(projectId, mutexGroup)
+        val queueKey = getMutexQueueKey(projectId, buildId, mutexGroup)
         val currentTime = LocalDateTime.now().timestamp()
         redisOperation.hset(queueKey, containerMutexId, currentTime.toString())
     }
@@ -292,18 +294,27 @@ class MutexControl @Autowired constructor(
         mutexGroup: MutexGroup
     ) {
         val containerMutexId = getMutexContainerId(buildId, containerId)
-        val queueKey = getMutexQueueKey(projectId, mutexGroup)
+        val queueKey = getMutexQueueKey(projectId, buildId, mutexGroup)
         redisOperation.hdelete(queueKey, containerMutexId)
     }
 
-    private fun getMutexLockKey(projectId: String, mutexGroup: MutexGroup): String {
-        val mutexGroupName = mutexGroup.mutexGroupName ?: ""
+    private fun getMutexLockKey(projectId: String, buildId: String, mutexGroup: MutexGroup): String {
+        val mutexGroupName = parseEnvMutexGroupName(mutexGroup.mutexGroupName, buildId)
         return "lock:container:mutex:$projectId:$mutexGroupName:lock"
     }
 
-    private fun getMutexQueueKey(projectId: String, mutexGroup: MutexGroup): String {
-        val mutexGroupName = mutexGroup.mutexGroupName ?: ""
+    private fun getMutexQueueKey(projectId: String, buildId: String, mutexGroup: MutexGroup): String {
+        val mutexGroupName = parseEnvMutexGroupName(mutexGroup.mutexGroupName, buildId)
         return "lock:container:mutex:$projectId:$mutexGroupName:queue"
+    }
+
+    private fun parseEnvMutexGroupName(mutexGroupName: String?, buildId: String): String {
+        return if (mutexGroupName == null) {
+            ""
+        } else {
+            val variables = pipelineRuntimeService.getAllVariable(buildId)
+            EnvUtils.parseEnv(mutexGroupName, variables)
+        }
     }
 
     private fun getMutexContainerId(buildId: String, containerId: String): String {
