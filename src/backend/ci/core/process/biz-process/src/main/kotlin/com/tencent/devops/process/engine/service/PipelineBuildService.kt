@@ -335,16 +335,17 @@ class PipelineBuildService(
                     }
                 }
             } else {
-                // 完整构建重试
+                // 完整构建重试，去掉启动参数中的重试插件ID保证不冲突
                 try {
                     val startupParam = buildStartupParamService.getParam(buildId)
                     if (startupParam != null && startupParam.isNotEmpty()) {
-                        params.putAll(JsonUtil.toMap(startupParam))
+                        params.putAll(JsonUtil.toMap(startupParam).filter { it.key != PIPELINE_RETRY_START_TASK_ID })
                     }
                 } catch (e: Exception) {
                     logger.warn("Fail to get the startup param for the build($buildId)", e)
                 }
             }
+            logger.info("[$pipelineId]|RETRY_PIPELINE_ORIGIN|taskId=$taskId|buildId=$buildId|originRetryCount=${params[PIPELINE_RETRY_COUNT]}|startParams=$params")
 
             params[PIPELINE_RETRY_COUNT] = if (params[PIPELINE_RETRY_COUNT] != null) {
                 params[PIPELINE_RETRY_COUNT].toString().toInt() + 1
