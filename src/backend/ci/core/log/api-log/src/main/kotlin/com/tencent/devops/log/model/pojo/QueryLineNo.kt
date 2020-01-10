@@ -24,25 +24,25 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.plugin.worker.task.codecc
+package com.tencent.devops.log.model.pojo
 
-import java.io.File
+import com.tencent.devops.log.model.pojo.enums.LogStatus
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+import java.util.TreeSet
 
-object WindowsCodeccConstants {
-
-    // windows公共构建机路径
-    // windows不需要安装，直接配置路径即可
-    val WINDOWS_CODECC_FOLDER = File("c:/software/codecc")
-    val WINDOWS_COV_PY_FILE = File(WINDOWS_CODECC_FOLDER, "script/${LinuxCodeccConstants.getCovPyFile().name}")
-    val WINDOWS_TOOL_PY_FILE = File(WINDOWS_CODECC_FOLDER, "script/${LinuxCodeccConstants.getToolPyFile().name}")
-    val WINDOWS_COVRITY_HOME = File(WINDOWS_CODECC_FOLDER, "cov-analysis-win64-2018.06")
-    val WINDOWS_KLOCWORK_HOME = File(WINDOWS_CODECC_FOLDER, "kw-analysis-win64-12.3")
-    val WINDOWS_PYTHON2_PATH = File(WINDOWS_CODECC_FOLDER, "Python27")
-    val WINDOWS_PYTHON3_PATH = File(WINDOWS_CODECC_FOLDER, "Python-3.5.2")
-    val WINDOWS_PYLINT2_PATH = File(WINDOWS_CODECC_FOLDER, "pylint_2.7")
-    val WINDOWS_PYLINT3_PATH = File(WINDOWS_CODECC_FOLDER, "pylint_3.5")
-    val WINDOWS_GOROOT_PATH = File(WINDOWS_CODECC_FOLDER, "go1.10.3")
-    val WINDOWS_JDK_PATH = File(WINDOWS_CODECC_FOLDER, "Java/jdk1.8.0_65/bin")
-    val WINDOWS_NODE_PATH = File(WINDOWS_CODECC_FOLDER, "node-v8.9.0-win-x86_eslint")
-    val WINDOWS_GOMETALINTER_PATH = File(WINDOWS_CODECC_FOLDER, "gometalinter/bin")
-}
+/**
+ *
+ * Powered By Tencent
+ */
+@ApiModel("日志查询模型")
+data class QueryLineNo(
+    @ApiModelProperty("构建ID", required = true)
+    val buildId: String,
+    @ApiModelProperty("所在行号列表", required = true)
+    val lines: TreeSet<Long> = TreeSet(),
+    @ApiModelProperty("所用时间", required = false)
+    var timeUsed: Long = 0,
+    @ApiModelProperty("日志查询状态", required = false)
+    var status: LogStatus = LogStatus.SUCCEED
+)
