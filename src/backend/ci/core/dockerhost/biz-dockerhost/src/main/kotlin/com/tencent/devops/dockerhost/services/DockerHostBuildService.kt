@@ -232,6 +232,11 @@ class DockerHostBuildService(
                     logger.error(errorMessage, t)
                     // 直接失败，禁止使用本地镜像
                     throw PermissionForbiddenException(errorMessage)
+                } catch (t: UnauthorizedException) {
+                    val errorMessage = "仓库中镜像不存在：$imageName，请检查凭证：[buildId=${dockerBuildInfo.buildId}][containerHashId=${dockerBuildInfo.containerHashId}]"
+                    logger.error(errorMessage, t)
+                    // 直接失败，禁止使用本地镜像
+                    throw PermissionForbiddenException(errorMessage)
                 } catch (t: Throwable) {
                     logger.warn("Fail to pull the image $imageName of build ${dockerBuildInfo.buildId}", t)
                     log(dockerBuildInfo.buildId, "拉取镜像失败，错误信息：${t.message}", dockerBuildInfo.containerHashId)
@@ -429,6 +434,11 @@ class DockerHostBuildService(
                 )
             } catch (t: UnauthorizedException) {
                 val errorMessage = "无权限拉取镜像：$imageName，请检查凭证"
+                logger.error(errorMessage, t)
+                // 直接失败，禁止使用本地镜像
+                throw PermissionForbiddenException(errorMessage)
+            } catch (t: NotFoundException) {
+                val errorMessage = "仓库中镜像不存在：$imageName，请检查凭证"
                 logger.error(errorMessage, t)
                 // 直接失败，禁止使用本地镜像
                 throw PermissionForbiddenException(errorMessage)
