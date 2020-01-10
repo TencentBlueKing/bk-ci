@@ -1,0 +1,9 @@
+spring:
+  application:
+    name: plugin
+    desc: DevOps Plugin Service
+    version: 0.0.1
+    packageName: com.tencent.devops.plugin
+
+server:
+  port: 21925

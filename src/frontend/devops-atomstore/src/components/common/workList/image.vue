@@ -101,16 +101,17 @@
                         <bk-input v-model="relateImageData.form.imageCode" :placeholder="$t('store.请输入镜像标识')"></bk-input>
                     </bk-form-item>
                     <bk-form-item :label="$t('store.镜像源')" :required="true" property="imageSourceType" class="h32" :rules="[requireRule]">
-                        <bk-radio-group v-model="relateImageData.form.imageSourceType" class="mt6">
+                        <bk-radio-group v-model="relateImageData.form.imageSourceType">
+                            <bk-radio value="BKDEVOPS" class="mr12"> {{ $t('store.蓝盾源') }} </bk-radio>
                             <bk-radio value="THIRD"> {{ $t('store.第三方源') }} </bk-radio>
                         </bk-radio-group>
                     </bk-form-item>
                     <bk-form-item :label="$t('store.调试项目')" :required="true" property="projectCode" :desc="$t('store.在发布过程中，可以在该项目下调试镜像')" :rules="[requireRule]">
                         <bk-select v-model="relateImageData.form.projectCode" searchable :placeholder="$t('store.请选择项目')" @change="toggleProjectList">
                             <bk-option v-for="option in projectList"
-                                :key="option.project_code"
-                                :id="option.project_code"
-                                :name="option.project_name">
+                                :key="option.projectCode"
+                                :id="option.projectCode"
+                                :name="option.projectName">
                             </bk-option>
                             <a href="/console/pm" slot="extension" target="_blank"> {{ $t('store.新增项目') }} </a>
                         </bk-select>
@@ -195,7 +196,7 @@
                         imageCode: '',
                         projectCode: '',
                         imageName: '',
-                        imageSourceType: 'THIRD',
+                        imageSourceType: 'BKDEVOPS',
                         ticketId: ''
                     }
                 },
@@ -303,6 +304,8 @@
                 }
                 this.$bkInfo({
                     title: this.$t('store.确认要删除？'),
+                    type: 'warning',
+                    theme: 'warning',
                     confirmFn
                 })
             },

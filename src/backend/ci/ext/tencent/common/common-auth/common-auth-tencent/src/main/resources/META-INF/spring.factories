@@ -1,0 +1,3 @@
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+com.tencent.devops.common.auth.AuthAutoConfiguration,\
+com.tencent.devops.common.auth.CCAutoConfiguration

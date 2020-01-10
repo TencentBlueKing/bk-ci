@@ -1,0 +1,9 @@
+spring:
+  application:
+    name: notify${service-suffix}
+    desc: DevOps Notify Service
+    version: 4.0
+    packageName: com.tencent.devops.notify
+
+server:
+  port: 21911

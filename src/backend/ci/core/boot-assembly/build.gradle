@@ -38,7 +38,7 @@ dependencies {
     compile project(":core:image:biz-image")
     compile project(":core:log:biz-log")
     compile project(":core:misc:biz-misc")
-    compile project(":core:notify:biz-notify-blueking")
+//    compile project(":core:notify:biz-notify-blueking")
     compile project(":core:plugin:biz-plugin")
     compile project(":core:process:biz-process-sample")
     compile project(":core:project:biz-project-sample")
