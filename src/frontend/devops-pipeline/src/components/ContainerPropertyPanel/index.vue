@@ -500,10 +500,11 @@
                     imageName: card.name
                 }))
                 return this.getVersionList(card.code).then(() => {
-                    const firstVersion = this.versionList[0] || {}
+                    let chooseVersion = this.versionList[0] || {}
+                    if (card.version) chooseVersion = this.versionList.find(x => x.versionValue === card.version) || {}
                     this.handleContainerChange('dispatchType', Object.assign({
                         ...this.container.dispatchType,
-                        imageVersion: firstVersion.versionValue,
+                        imageVersion: chooseVersion.versionValue,
                         value: card.code
                     }))
                 })
