@@ -53,9 +53,9 @@ class BkRepoCustomDirService @Autowired constructor(
     private val bkRepoClient: BkRepoClient,
     private val artifactoryAuthServiceCode: BSRepoAuthServiceCode
 ) : CustomDirService {
-    override fun list(userId: String, projectId: String, path: String): List<FileInfo> {
-        logger.info("list, userId: $userId, projectId: $projectId, path: $path")
-        val normalizedPath = PathUtils.checkAndNormalizeAbsPath(path)
+    override fun list(userId: String, projectId: String, argPath: String): List<FileInfo> {
+        logger.info("list, userId: $userId, projectId: $projectId, argPath: $argPath")
+        val normalizedPath = PathUtils.checkAndNormalizeAbsPath(argPath)
         val fileList = bkRepoClient.listFile(
             userId,
             projectId,
@@ -69,9 +69,9 @@ class BkRepoCustomDirService @Autowired constructor(
         return JFrogUtil.sort(fileList)
     }
 
-    override fun show(userId: String, projectId: String, path: String): FileDetail {
-        logger.info("show, userId: $userId, projectId: $projectId, path: $path")
-        val normalizedPath = PathUtils.checkAndNormalizeAbsPath(path)
+    override fun show(userId: String, projectId: String, argPath: String): FileDetail {
+        logger.info("show, userId: $userId, projectId: $projectId, argPath: $argPath")
+        val normalizedPath = PathUtils.checkAndNormalizeAbsPath(argPath)
         val fileDetail = bkRepoClient.getFileDetail(
             userId,
             projectId,
@@ -86,9 +86,9 @@ class BkRepoCustomDirService @Autowired constructor(
         bkRepoClient.uploadFile(userId, projectId, RepoUtils.CUSTOM_REPO, argPath, inputStream)
     }
 
-    override fun mkdir(userId: String, projectId: String, path: String) {
-        logger.info("mkdir, userId: $userId, projectId: $projectId, path: $path")
-        val normalizedPath = PathUtils.checkAndNormalizeAbsPath(path)
+    override fun mkdir(userId: String, projectId: String, argPath: String) {
+        logger.info("mkdir, userId: $userId, projectId: $projectId, argPath: $argPath")
+        val normalizedPath = PathUtils.checkAndNormalizeAbsPath(argPath)
         bkRepoClient.mkdir(userId, projectId, RepoUtils.CUSTOM_REPO, normalizedPath)
     }
 

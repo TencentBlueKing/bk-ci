@@ -51,11 +51,9 @@ import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.BSAuthProjectApi
 import com.tencent.devops.common.auth.code.BSRepoAuthServiceCode
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.notify.enums.EnumEmailFormat
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.notify.api.service.ServiceNotifyResource
-import com.tencent.devops.notify.pojo.EmailNotifyMessage
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
@@ -118,8 +116,7 @@ class ArtifactoryDownloadService @Autowired constructor(
         logger.info("serviceGetExternalDownloadUrl, userId: $userId, userId: $projectId, userId: $projectId, " +
             "artifactoryType: $artifactoryType, path: $path, ttl: $ttl, directed: $directed")
         val normalizedPath = PathUtils.checkAndNormalizeAbsPath(path)
-
-        val realPath = JFrogUtil.getRealPath(projectId, artifactoryType, path)
+        val realPath = JFrogUtil.getRealPath(projectId, artifactoryType, normalizedPath)
         val url = jFrogApiService.externalDownloadUrl(realPath, userId, ttl, directed)
         return Url(url)
     }
@@ -246,7 +243,7 @@ class ArtifactoryDownloadService @Autowired constructor(
             if (it.startsWith("g_")) throw BadRequestException("Invalid download users")
         }
 
-        val emailNotifyMessage = makeEmailNotifyMessage(title, body, receivers)
+        val emailNotifyMessage = EmailUtil.makeEmailNotifyMessage(title, body, receivers)
         client.get(ServiceNotifyResource::class).sendEmailNotify(emailNotifyMessage)
     }
 
@@ -324,15 +321,6 @@ class ArtifactoryDownloadService @Autowired constructor(
             JFrogUtil.getRealPath(targetProjectId, artifactoryType, it.fullPath)
         }
         return jFrogApiService.batchThirdPartyDownloadUrl(filePathList, ttl ?: 24 * 3600).map { it.value }
-    }
-
-    private fun makeEmailNotifyMessage(title: String, body: String, receivers: Set<String>): EmailNotifyMessage {
-        val emailNotifyMessage = EmailNotifyMessage()
-        emailNotifyMessage.addAllReceivers(receivers)
-        emailNotifyMessage.title = title
-        emailNotifyMessage.body = body
-        emailNotifyMessage.format = EnumEmailFormat.HTML
-        return emailNotifyMessage
     }
 
     companion object {

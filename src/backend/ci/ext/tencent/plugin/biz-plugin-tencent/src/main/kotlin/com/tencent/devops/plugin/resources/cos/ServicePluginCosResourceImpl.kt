@@ -35,6 +35,8 @@ import com.tencent.devops.common.cos.COSClientConfig
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.archive.client.BkRepoClient
+import com.tencent.devops.common.service.gray.RepoGray
 import com.tencent.devops.log.utils.LogUtils
 import com.tencent.devops.plugin.api.cos.ServicePluginCosResource
 import com.tencent.devops.plugin.pojo.cos.CdnUploadFileInfo
@@ -58,26 +60,14 @@ class ServicePluginCosResourceImpl @Autowired constructor(
     private val cosService: CosService,
     private val client: Client,
     private val redisOperation: RedisOperation,
-    private val rabbitTemplate: RabbitTemplate
+    private val rabbitTemplate: RabbitTemplate,
+    private val repoGray: RepoGray,
+    private val bkrepoClient: BkRepoClient
 ) : ServicePluginCosResource {
 
     @Value("\${gateway.url}")
     private val gatewayUrl: String? = null
     private val parser = JsonParser()
-
-//    override fun uploadCos(projectId: String, pipelineId: String, buildId: String, fileInfo: CosUploadFileInfo): MutableMap<String, String> {
-//        this.buildId = buildId
-//        this.projectId = projectId
-//        this.pipelineId = pipelineId
-//        //参数校验
-//        checkParam(fileInfo)
-//
-//        //根据ticketid从ticketService获取凭证信息
-//        val ticketsMap = getCredential(projectId, fileInfo.ticketId, CredentialType.COS_APPID_SECRETID_SECRETKEY_REGION)
-//        val cosClientConfig = COSClientConfig(ticketsMap["v1"]!!.toLong(), ticketsMap["v2"], ticketsMap["v3"], ticketsMap["v4"], EnvEnum.IDC)
-//
-//        return uploadFileToCos(fileInfo.regexPaths, fileInfo.customize, fileInfo.bucket, "/", cosClientConfig)
-//    }
 
     override fun uploadCdn(
         projectId: String,
@@ -113,8 +103,11 @@ class ServicePluginCosResourceImpl @Autowired constructor(
             cdnUploadFileInfo.customize, cosAppInfo.bucket, cdnPath, cosAppInfo.domain, cosClientConfig
         )
 
+        val isRepoGray = repoGray.isGray(projectId, redisOperation)
+        LogUtils.addLine(rabbitTemplate, buildId, "use bkrepo: $isRepoGray", elementId, containerId, executeCount)
+
         val uploadCosCdnThread =
-            UploadCosCdnThread(gatewayUrl!!, rabbitTemplate, cosService, redisOperation, uploadCosCdnParam)
+            UploadCosCdnThread(gatewayUrl!!, rabbitTemplate, cosService, redisOperation, uploadCosCdnParam, isRepoGray, bkrepoClient)
         val uploadThread = Thread(uploadCosCdnThread, uploadTaskKey)
         LogUtils.addLine(rabbitTemplate, buildId, "开始上传CDN...", elementId, containerId, executeCount)
         uploadThread.start()

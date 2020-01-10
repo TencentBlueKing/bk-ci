@@ -53,14 +53,13 @@ class BkRepoAppService @Autowired constructor(
         userId: String,
         projectId: String,
         artifactoryType: ArtifactoryType,
-        path: String,
+        argPath: String,
         ttl: Int,
         directed: Boolean
     ): Url {
         logger.info("getExternalDownloadUrl, userId: $userId, projectId: $projectId, " +
-            "artifactoryType: $artifactoryType, path: $path, ttl: $ttl, directed: $directed")
-        val normalizedPath = PathUtils.checkAndNormalizeAbsPath(path)
-
+            "artifactoryType: $artifactoryType, argPath: $argPath, ttl: $ttl, directed: $directed")
+        val normalizedPath = PathUtils.checkAndNormalizeAbsPath(argPath)
         val properties = bkRepoClient.listMetadata(userId, projectId, RepoUtils.getRepoByType(artifactoryType), normalizedPath)
         if (properties[ARCHIVE_PROPS_PIPELINE_ID].isNullOrBlank()) {
             throw CustomException(Response.Status.INTERNAL_SERVER_ERROR, "元数据(pipelineId)不存在，请通过共享下载文件")
@@ -120,7 +119,7 @@ class BkRepoAppService @Autowired constructor(
 //        return Url(url)
     }
 
-    override fun getPlistFile(userId: String, projectId: String, artifactoryType: ArtifactoryType, path: String, ttl: Int, directed: Boolean, experienceHashId: String?): String {
+    override fun getPlistFile(userId: String, projectId: String, artifactoryType: ArtifactoryType, argPath: String, ttl: Int, directed: Boolean, experienceHashId: String?): String {
         // todo
         throw OperationException("not implemented")
 //        val userName = if (experienceHashId != null) {

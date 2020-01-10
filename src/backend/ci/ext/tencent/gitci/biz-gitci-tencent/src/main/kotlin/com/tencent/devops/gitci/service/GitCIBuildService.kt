@@ -151,6 +151,7 @@ class GitCIBuildService @Autowired constructor(
                 buildId,
                 event.userId,
                 "pending",
+                yaml.pipelineName ?: "",
                 gitProjectConf
             )
         }
