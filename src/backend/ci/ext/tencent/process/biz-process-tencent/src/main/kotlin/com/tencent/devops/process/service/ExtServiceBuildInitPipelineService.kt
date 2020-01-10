@@ -43,7 +43,6 @@ import com.tencent.devops.common.pipeline.enums.DockerVersion
 import com.tencent.devops.common.pipeline.enums.GitPullModeType
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.enums.VMBaseOS
-import com.tencent.devops.common.pipeline.pojo.AtomBaseInfo
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.agent.CodeGitElement
@@ -54,10 +53,9 @@ import com.tencent.devops.common.pipeline.pojo.git.GitPullMode
 import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
 import com.tencent.devops.process.engine.service.PipelineBuildService
 import com.tencent.devops.process.engine.service.PipelineService
-import com.tencent.devops.process.pojo.AtomMarketInitPipelineResp
 import com.tencent.devops.process.pojo.pipeline.ExtServiceBuildInitPipelineResp
-import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.dto.ExtServiceBaseInfoDTO
+import com.tencent.devops.store.pojo.enums.ExtServiceStatusEnum
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -77,25 +75,37 @@ class ExtServiceBuildInitPipelineService @Autowired constructor(
      * 初始化流水线进行打包归档
      */
     fun initPipeline(
-            userId: String,
-            projectCode: String,
-            extServiceBaseInfo: ExtServiceBaseInfoDTO,
-            repositoryHashId: String,
-            repositoryPath: String?,
-            script: String,
-            buildEnv: Map<String, String>?
+        userId: String,
+        projectCode: String,
+        extServiceBaseInfo: ExtServiceBaseInfoDTO,
+        repositoryHashId: String,
+        repositoryPath: String?,
+        script: String,
+        buildEnv: Map<String, String>?
     ): Result<ExtServiceBuildInitPipelineResp> {
         var containerSeqId = 0
         // stage-1
         val stageFirstElement = ManualTriggerElement(id = "T-1-1-1")
         val stageFirstElements = listOf<Element>(stageFirstElement)
         val params = mutableListOf<BuildFormProperty>()
-        params.add(BuildFormProperty("serviceCode", true, BuildFormPropertyType.STRING, extServiceBaseInfo.serviceCode, null, null,
-            null, null, null, null, null, null))
-        params.add(BuildFormProperty("version", true, BuildFormPropertyType.STRING, extServiceBaseInfo.version, null, null,
-            null, null, null, null, null, null))
-        params.add(BuildFormProperty("script", true, BuildFormPropertyType.STRING, script, null, null,
-            null, null, null, null, null, null))
+        params.add(
+            BuildFormProperty(
+                "serviceCode", true, BuildFormPropertyType.STRING, extServiceBaseInfo.serviceCode, null, null,
+                null, null, null, null, null, null
+            )
+        )
+        params.add(
+            BuildFormProperty(
+                "version", true, BuildFormPropertyType.STRING, extServiceBaseInfo.version, null, null,
+                null, null, null, null, null, null
+            )
+        )
+        params.add(
+            BuildFormProperty(
+                "script", true, BuildFormPropertyType.STRING, script, null, null,
+                null, null, null, null, null, null
+            )
+        )
         val stageFirstContainer = TriggerContainer(
             id = containerSeqId.toString(),
             name = "构建触发",
@@ -131,7 +141,8 @@ class ExtServiceBuildInitPipelineService @Autowired constructor(
             continueNoneZero = false
         )
         val stageSecondAtomBuildArchiveElement = AtomBuildArchiveElement(id = "T-2-1-3")
-        val stageSecondElements = listOf(stageSecondPullCodeElement, stageSecondLinuxScriptElement, stageSecondAtomBuildArchiveElement)
+        val stageSecondElements =
+            listOf(stageSecondPullCodeElement, stageSecondLinuxScriptElement, stageSecondAtomBuildArchiveElement)
         val stageSecondContainer = VMBuildContainer(
             id = containerSeqId.toString(),
             elements = stageSecondElements,
@@ -151,8 +162,8 @@ class ExtServiceBuildInitPipelineService @Autowired constructor(
         val stageSecondContainers = listOf<Container>(stageSecondContainer)
         val stageSecond = Stage(stageSecondContainers, "stage-2")
         val stages = mutableListOf(stageFirst, stageSecond)
-        val atomCode = atomBaseInfo.atomCode
-        val pipelineName = "am-$projectCode-$atomCode-${System.currentTimeMillis()}"
+        val serviceCode = extServiceBaseInfo.serviceCode
+        val pipelineName = "service-$projectCode-$serviceCode-${System.currentTimeMillis()}"
         val model = Model(pipelineName, pipelineName, stages)
         logger.info("model is:$model")
         // 保存流水线信息
@@ -160,10 +171,10 @@ class ExtServiceBuildInitPipelineService @Autowired constructor(
         logger.info("createPipeline result is:$pipelineId")
         // 异步启动流水线
         val startParams = mutableMapOf<String, String>() // 启动参数
-        startParams["atomCode"] = atomCode
-        startParams["version"] = atomBaseInfo.version
+        startParams["serviceCode"] = serviceCode
+        startParams["version"] = extServiceBaseInfo.version
         startParams["script"] = script
-        var atomBuildStatus = AtomStatusEnum.BUILDING
+        var extServiceStatus = ExtServiceStatusEnum.BUILDING
         var buildId: String? = null
         try {
             buildId = buildService.buildManualStartup(
@@ -177,11 +188,11 @@ class ExtServiceBuildInitPipelineService @Autowired constructor(
                 isMobile = false,
                 startByMessage = null
             )
-            logger.info("atomMarketBuildManualStartup result is:$buildId")
+            logger.info("buildManualStartup result is:$buildId")
         } catch (e: Exception) {
             logger.info("buildManualStartup error is :$e", e)
-            atomBuildStatus = AtomStatusEnum.BUILD_FAIL
+            extServiceStatus = ExtServiceStatusEnum.BUILD_FAIL
         }
-        return Result(AtomMarketInitPipelineResp(pipelineId, buildId, atomBuildStatus))
+        return Result(ExtServiceBuildInitPipelineResp(pipelineId, buildId, extServiceStatus))
     }
 }
