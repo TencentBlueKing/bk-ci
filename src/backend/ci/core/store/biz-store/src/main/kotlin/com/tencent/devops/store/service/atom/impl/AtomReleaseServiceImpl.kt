@@ -327,7 +327,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             AtomStatusEnum.UNDERCARRIAGED.status.toByte()
         )
         if (atomRecords.size == 1) {
-            // 如果是首次发布，只有处于初始化的插件状态才允许添加新的版本
+            // 如果是首次发布，处于初始化的插件状态也允许添加新的版本
             atomFinalStatusList.add(AtomStatusEnum.INIT.status.toByte())
         }
         if (!atomFinalStatusList.contains(atomRecord.atomStatus)) {
