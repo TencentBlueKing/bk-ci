@@ -227,12 +227,12 @@ class DockerHostBuildService(
                         containerHashId = dockerBuildInfo.containerHashId
                     )
                 } catch (t: UnauthorizedException) {
-                    val errorMessage = "无权限拉取镜像：$imageName，请检查凭证：[buildId=${dockerBuildInfo.buildId}][containerHashId=${dockerBuildInfo.containerHashId}]"
+                    val errorMessage = "无权限拉取镜像：$imageName，请检查镜像路径或凭证是否正确；[buildId=${dockerBuildInfo.buildId}][containerHashId=${dockerBuildInfo.containerHashId}]"
                     logger.error(errorMessage, t)
                     // 直接失败，禁止使用本地镜像
                     throw NotFoundException(errorMessage)
                 } catch (t: NotFoundException) {
-                    val errorMessage = "仓库中镜像不存在：$imageName，请检查凭证：[buildId=${dockerBuildInfo.buildId}][containerHashId=${dockerBuildInfo.containerHashId}]"
+                    val errorMessage = "镜像不存在：$imageName，请检查镜像路径或凭证是否正确；[buildId=${dockerBuildInfo.buildId}][containerHashId=${dockerBuildInfo.containerHashId}]"
                     logger.error(errorMessage, t)
                     // 直接失败，禁止使用本地镜像
                     throw NotFoundException(errorMessage)
