@@ -1,0 +1,17 @@
+spring:
+  application:
+    name: ticket
+    desc: DevOps Ticket Service
+    version: 4.0.0
+    packageName: com.tencent.devops.ticket
+
+server:
+  port: 21915
+
+
+cert:
+  aes-key: "gHi(xG9Af)jEvCx&"
+
+credential:
+  mixer: "******"
+  aes-key: "G/I%yP{?ST}2TXPg"

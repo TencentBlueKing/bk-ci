@@ -36,6 +36,7 @@ const settings = () => import(/* webpackChunkName: 'settings' */ '@/views/atomDe
 const atomInformation = () => import(/* webpackChunkName: 'atomInformation' */ '@/views/atomDetail/detail.vue') // 流水线插件详情
 const approval = () => import(/* webpackChunkName: 'approval' */ '@/views/atomDetail/approval.vue') // 流水线插件审批
 const memberManage = () => import(/* webpackChunkName: 'memberManage' */ '@/views/atomDetail/member_manage.vue') // 成员管理
+const visibleRange = () => import(/* webpackChunkName: 'visibleRange' */ '@/views/atomDetail/visible_range.vue') // 可见范围
 const privateSetting = () => import(/* webpackChunkName: 'privateSetting' */ '@/views/atomDetail/private_setting.vue') // 私有配置
 const edit = () => import(/* webpackChunkName: 'editAtom' */ '@/views/atomDetail/edit.vue') // 编辑插件详情
 
@@ -44,6 +45,17 @@ const upgradeTemplate = () => import(/* webpackChunkName: 'upgradeTemplate' */ '
 const tplDatail = () => import(/* webpackChunkName: 'tplDatail' */ '@/views/templateDetail/index.vue') // 模板概览
 const tplOverview = () => import(/* webpackChunkName: 'tplOverview' */ '@/views/templateDetail/overview.vue') // 模板概览
 const tplSettings = () => import(/* webpackChunkName: 'tplSettings' */ '@/views/templateDetail/settings.vue') // 模板设置
+const tplVisibleRange = () => import(/* webpackChunkName: 'tplVisibleRange' */ '@/views/templateDetail/visible_range.vue') // 可见范围
+
+const editImage = () => import(/* webpackChunkName: 'editImage' */ '@/views/edit_image.vue') // 上架镜像
+const imageProgress = () => import(/* webpackChunkName: 'imageProgress' */ '@/views/imageProgress.vue') // 镜像进度
+const imageDatailIndex = () => import(/* webpackChunkName: 'imageDatailIndex' */ '@/views/imageDetail/index.vue') // 镜像详情总览
+const imageDetail = () => import(/* webpackChunkName: 'imageDetail' */ '@/views/imageDetail/detail.vue') // 镜像详情页面
+const imageOverview = () => import(/* webpackChunkName: 'imageOverview' */ '@/views/imageDetail/overView.vue') // 镜像概览
+const imageSettings = () => import(/* webpackChunkName: 'imageSettings' */ '@/views/imageDetail/settings.vue') // 镜像设置
+const imageVisibleRange = () => import(/* webpackChunkName: 'tplVisibleRange' */ '@/views/imageDetail/visibleRange.vue') // 镜像可见范围
+const imageMemberManage = () => import(/* webpackChunkName: 'imageMemberManage' */ '@/views/imageDetail/memberManage.vue') // 镜像成员管理
+const imageEdit = () => import(/* webpackChunkName: 'imageEdit' */ '@/views/imageDetail/edit.vue') // 编辑镜像详情
 
 const editImage = () => import(/* webpackChunkName: 'editImage' */ '@/views/edit_image.vue') // 上架镜像
 const imageProgress = () => import(/* webpackChunkName: 'imageProgress' */ '@/views/imageProgress.vue') // 镜像进度
@@ -275,6 +287,17 @@ const routes = [
                                 }
                             },
                             {
+                                path: 'visible',
+                                name: 'visible',
+                                component: visibleRange,
+                                meta: {
+                                    title: 'visible',
+                                    logo: 'store',
+                                    header: 'store',
+                                    to: 'atomHome'
+                                }
+                            },
+                            {
                                 path: 'private',
                                 name: 'private',
                                 component: privateSetting,
@@ -314,7 +337,95 @@ const routes = [
                             logo: 'store',
                             header: 'store',
                             to: 'atomHome'
+                        },
+                        children: [
+                            {
+                                path: 'visible',
+                                name: 'tplVisible',
+                                component: tplVisibleRange,
+                                meta: {
+                                    title: 'visible',
+                                    logo: 'store',
+                                    header: 'store',
+                                    to: 'atomHome'
+                                }
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                path: 'image/:imageCode',
+                name: 'imageDatailIndex',
+                component: imageDatailIndex,
+                children: [
+                    {
+                        path: 'overview',
+                        name: 'imageOverview',
+                        component: imageOverview,
+                        meta: {
+                            title: 'overview',
+                            logo: 'store',
+                            header: 'store',
+                            to: 'atomHome'
                         }
+                    },
+                    {
+                        path: 'detail',
+                        name: 'imageDetail',
+                        component: imageDetail,
+                        meta: {
+                            title: 'detail',
+                            logo: 'store',
+                            header: 'store',
+                            to: 'atomHome'
+                        }
+                    },
+                    {
+                        path: 'edit',
+                        name: 'imageEdit',
+                        component: imageEdit,
+                        meta: {
+                            title: 'edit',
+                            logo: 'store',
+                            header: 'store',
+                            to: 'atomHome'
+                        }
+                    },
+                    {
+                        path: 'settings',
+                        name: 'imageSettings',
+                        component: imageSettings,
+                        meta: {
+                            title: 'settings',
+                            logo: 'store',
+                            header: 'store',
+                            to: 'atomHome'
+                        },
+                        children: [
+                            {
+                                path: 'member',
+                                name: 'imageMemberManage',
+                                component: imageMemberManage,
+                                meta: {
+                                    title: 'member',
+                                    logo: 'store',
+                                    header: 'store',
+                                    to: 'atomHome'
+                                }
+                            },
+                            {
+                                path: 'visible',
+                                name: 'imageVisibleRange',
+                                component: imageVisibleRange,
+                                meta: {
+                                    title: 'visible',
+                                    logo: 'store',
+                                    header: 'store',
+                                    to: 'atomHome'
+                                }
+                            }
+                        ]
                     }
                 ]
             },

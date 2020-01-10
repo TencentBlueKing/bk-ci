@@ -33,6 +33,9 @@ const envDetail = () => import(/* webpackChunkName: 'envDetail' */ '../views/env
 // 节点列表
 const nodeList = () => import(/* webpackChunkName: 'nodeList' */ '../views/node_list')
 
+// 新增节点
+const createNode = () => import(/* webpackChunkName: 'createNode' */ '../views/create_nodes')
+
 // 节点详情
 const nodeDetail = () => import(/* webpackChunkName: 'nodeDetail' */ '../views/node_detail')
 
@@ -80,6 +83,17 @@ const routes = [
                 component: nodeList,
                 meta: {
                     title: 'nodeList',
+                    logo: 'environment',
+                    header: 'environmentManage',
+                    to: 'envList'
+                }
+            },
+            {
+                path: 'createNode',
+                name: 'createNode',
+                component: createNode,
+                meta: {
+                    title: 'createNode',
                     logo: 'environment',
                     header: 'environmentManage',
                     to: 'envList'

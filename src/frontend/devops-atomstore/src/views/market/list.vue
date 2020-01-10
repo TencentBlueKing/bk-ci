@@ -102,6 +102,7 @@
                 const apiFun = {
                     atom: () => this.getAtomList(postData, searchStr),
                     template: () => this.getTemplateList(postData, searchStr),
+                    ide: () => this.getIDEList(postData, searchStr),
                     image: () => this.getImageList(postData, searchStr)
                 }
 
@@ -124,6 +125,11 @@
             getAtomList (postData, searchStr) {
                 postData.atomName = searchStr
                 return this.$store.dispatch('store/requestMarketAtom', postData)
+            },
+
+            getIDEList (postData, searchStr) {
+                postData.atomName = searchStr
+                return this.$store.dispatch('store/requestMarketIDE', postData)
             },
 
             getImageList (postData, searchStr) {

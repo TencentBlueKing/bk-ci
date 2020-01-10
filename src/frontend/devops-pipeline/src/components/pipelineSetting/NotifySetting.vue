@@ -20,7 +20,7 @@
                 </bk-checkbox-group>
             </bk-form-item>
             <bk-form-item :label="$t('settings.additionUser')" :required="true">
-                <bk-input @change="handleUsers" name="users" :value="pipelineSettingUser"></bk-input>
+                <staff-input :handle-change="handleUsers" name="users" :value="pipelineSettingUser"></staff-input>
             </bk-form-item>
             <bk-form-item :label="$t('settings.noticeContent')" :required="true">
                 <textarea name="desc" v-model="subscription.content" class="bk-form-textarea"></textarea>
@@ -57,12 +57,14 @@
 </template>
 
 <script>
+    import StaffInput from '@/components/atomFormField/StaffInput/index.vue'
     import GroupIdSelector from '@/components/atomFormField/groupIdSelector'
     import AtomCheckbox from '@/components/atomFormField/AtomCheckbox'
     import { mapActions } from 'vuex'
     export default {
         name: 'notify-setting',
         components: {
+            StaffInput,
             GroupIdSelector,
             AtomCheckbox
         },
@@ -74,6 +76,7 @@
         computed: {
             noticeList () {
                 return [
+                    { id: 1, name: this.$t('settings.rtxNotice'), value: 'RTX' },
                     { id: 4, name: this.$t('settings.emailNotice'), value: 'EMAIL' },
                     { id: 2, name: this.$t('settings.wechatNotice'), value: 'WECHAT' },
                     { id: 3, name: this.$t('settings.smsNotice'), value: 'SMS' }
@@ -93,9 +96,8 @@
             ...mapActions('pipelines', [
                 'requestProjectGroupAndUsers'
             ]),
-            handleUsers (value, e) {
-                const { name } = e.target
-                this.updateSubscription(name, value)
+            handleUsers (name, value) {
+                this.updateSubscription(name, value.join(','))
             }
         }
     }

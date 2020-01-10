@@ -63,8 +63,10 @@ export const codelibConfig = {
 
 export const codelibTypes = [
     'SVN',
+    'Git',
     'Github',
-    'Gitlab'
+    'Gitlab',
+    'TGit'
 ]
 
 /**
@@ -74,7 +76,6 @@ export const codelibTypes = [
  */
 export function getCodelibConfig (typeName, svnType = 'ssh', authType = 'ssh') {
     let type = typeName.toLowerCase().replace(/^\S*?([gitlab|git|svn|github|tgit])/i, '$1')
-
     if (type === 'svn' && svnType === 'http') {
         type = 'svn_http'
     }
@@ -84,7 +85,6 @@ export function getCodelibConfig (typeName, svnType = 'ssh', authType = 'ssh') {
     if (type === 'tgit' && authType === 'HTTPS') {
         type = 'tgit_https'
     }
-
     return codelibConfig[type]
 }
 
@@ -125,3 +125,10 @@ export const isGitLab = judgementCodelibType('codeGitLab')
  * @param {string} typeName
  */
 export const isGithub = judgementCodelibType('github')
+
+/**
+ * 判断是代码库是否为TGit
+ * method isTGit
+ * @param {string} typeName
+ */
+export const isTGit = judgementCodelibType('codeTGit')

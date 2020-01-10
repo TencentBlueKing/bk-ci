@@ -64,7 +64,7 @@
                 >{{ item.label }}</span>
                 <div class="bkdevops-button">
                     <a
-                        :href="DOCS_URL_PREFIX"
+                        :href="`${DOCS_URL_PREFIX}/x/kJKj`"
                         target="_blank"
                     >
                         <bk-button
@@ -82,6 +82,11 @@
                     <p class="title">
                         {{ $t("latestNews") }}
                     </p>
+                    <a
+                        href="http://x.code.oa.com/bkdevops/devops/notice"
+                        class="more"
+                        target="_blank"
+                    >{{ $t('moreDetail') }}</a>
                 </header>
 
                 <div class="devops-news-content">
@@ -108,7 +113,7 @@
                 <p>
                     {{ $t("bkdevopsDesc") }}
                     <a
-                        :href="DOCS_URL_PREFIX"
+                        :href="`${DOCS_URL_PREFIX}/display/DevOps`"
                         class="more"
                         target="_blank"
                     >{{ $t("learnMore") }}</a>
@@ -119,7 +124,7 @@
                 <p>
                     {{ $t("bkdevopsWay") }}
                     <a
-                        :href="DOCS_URL_PREFIX"
+                        :href="`${DOCS_URL_PREFIX}/x/RY6j`"
                         target="_blank"
                         class="more"
                     >{{ $t("learnMore") }}</a>
@@ -139,6 +144,7 @@
                 </div>
             </article>
         </aside>
+        <consult-tools />
     </div>
 </template>
 
@@ -149,6 +155,7 @@
     import NavBox from '../components/NavBox/index.vue'
     import Logo from '../components/Logo/index.vue'
     import { Accordion, AccordionItem } from '../components/Accordion/index'
+    import ConsultTools from '../components/ConsultTools'
     
     import { urlJoin } from '../utils/util'
 
@@ -157,7 +164,8 @@
             NavBox,
             Accordion,
             AccordionItem,
-            Logo
+            Logo,
+            ConsultTools
         }
     })
     export default class Home extends Vue {

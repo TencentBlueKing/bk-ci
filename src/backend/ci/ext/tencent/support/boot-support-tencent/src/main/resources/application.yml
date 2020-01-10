@@ -1,0 +1,30 @@
+spring:
+  application:
+    name: support
+    desc: Landun Support Service
+    version: 4.0
+    packageName: com.tencent.devops.support
+  datasource:
+    url: jdbc:mysql://10.125.48.80:3306/devops_support?useSSL=false&autoReconnect=true&timezone=+800&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true
+    username: tig4php
+    password: tig4php
+  redis:
+      database: 2
+      host: 10.125.48.80
+      password: itdev@db
+  rabbitmq:
+    virtual-host: soda4
+    username: soda
+    password: soda
+    addresses: 10.125.48.80:5672
+  cloud:
+    consul:
+      discovery:
+        tags: local
+
+file:
+  allowUploadFileTypes: jpg,png,gif,swf,txt,doc,docx,xls,xlsx,ppt,pptx,pdf,flv,rmvb,mp4,svg
+  maxUploadFileSize: 52428800
+
+server:
+  port: 8093
