@@ -45,6 +45,8 @@ import com.tencent.devops.process.dao.BuildDetailDao
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
+import com.tencent.devops.quality.QualityGateInElement
+import com.tencent.devops.quality.QualityGateOutElement
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -521,6 +523,9 @@ class PipelineBuildDetailService @Autowired constructor(
                         }
                         e.reviewUsers.clear()
                         e.reviewUsers.addAll(list)
+                    } else if (e is QualityGateInElement || e is QualityGateOutElement) {
+                        e.status = BuildStatus.REVIEWING.name
+                        c.status = BuildStatus.REVIEWING.name
                     } else {
                         c.status = BuildStatus.RUNNING.name
                         e.status = BuildStatus.RUNNING.name
