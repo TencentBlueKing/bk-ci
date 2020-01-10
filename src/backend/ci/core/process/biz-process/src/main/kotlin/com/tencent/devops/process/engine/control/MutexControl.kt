@@ -44,8 +44,7 @@ import java.time.LocalDateTime
 @Component
 class MutexControl @Autowired constructor(
     private val rabbitTemplate: RabbitTemplate,
-    private val redisOperation: RedisOperation,
-    private val pipelineRuntimeService: PipelineRuntimeService
+    private val redisOperation: RedisOperation
 ) {
 
     private val logger = LoggerFactory.getLogger(javaClass)
@@ -74,7 +73,7 @@ class MutexControl @Autowired constructor(
         }
         return MutexGroup(
             enable = mutexGroup.enable,
-            mutexGroupName = mutexGroup.mutexGroupName,
+            mutexGroupName = mutexGroupName,
             queueEnable = mutexGroup.queueEnable,
             timeout = timeOut,
             queue = queue
@@ -303,23 +302,13 @@ class MutexControl @Autowired constructor(
     }
 
     private fun getMutexLockKey(projectId: String, buildId: String, mutexGroup: MutexGroup): String {
-        val mutexGroupName = parseEnvMutexGroupName(mutexGroup.mutexGroupName, buildId)
-        return "lock:container:mutex:$projectId:$mutexGroupName:lock"
+        return "lock:container:mutex:$projectId:${mutexGroup.mutexGroupName}:lock"
     }
 
     private fun getMutexQueueKey(projectId: String, buildId: String, mutexGroup: MutexGroup): String {
-        val mutexGroupName = parseEnvMutexGroupName(mutexGroup.mutexGroupName, buildId)
-        return "lock:container:mutex:$projectId:$mutexGroupName:queue"
+        return "lock:container:mutex:$projectId:${mutexGroup.mutexGroupName}:queue"
     }
 
-    private fun parseEnvMutexGroupName(mutexGroupName: String?, buildId: String): String {
-        return if (mutexGroupName.isNullOrBlank()) {
-            ""
-        } else {
-            val variables = pipelineRuntimeService.getAllVariable(buildId)
-            EnvUtils.parseEnv(mutexGroupName!!, variables)
-        }
-    }
 
     private fun getMutexContainerId(buildId: String, containerId: String): String {
         return "${buildId}_$containerId"
