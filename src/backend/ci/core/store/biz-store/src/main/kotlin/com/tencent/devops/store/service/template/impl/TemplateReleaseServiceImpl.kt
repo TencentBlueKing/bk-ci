@@ -439,7 +439,7 @@ abstract class TemplateReleaseServiceImpl @Autowired constructor() : TemplateRel
                 }
             }
         } else {
-            // 把IDE插件所有已发布的版本全部下架
+            // 把所有已发布的版本全部下架
             dslContext.transaction { t ->
                 val context = DSL.using(t)
                 marketTemplateDao.updateTemplateStatusByCode(

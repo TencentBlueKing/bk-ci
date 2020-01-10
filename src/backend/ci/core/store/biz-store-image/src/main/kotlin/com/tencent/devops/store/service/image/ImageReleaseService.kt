@@ -411,7 +411,7 @@ abstract class ImageReleaseService {
 
     abstract fun getPassTestStatus(isNormalUpgrade: Boolean): Byte
 
-    fun passTest(
+    fun creator(
         userId: String,
         imageId: String,
         validateUserFlag: Boolean = true
@@ -752,15 +752,15 @@ abstract class ImageReleaseService {
                 arrayOf(imageId)
             )
         val imageCode = imageRecord.imageCode
-        val modifier = imageRecord.modifier
+        val creator = imageRecord.creator
         val imageStatus = imageRecord.imageStatus
-        // 判断用户是否有权限
+        // 判断用户是否有权限(当前版本的创建者和管理员可以操作)
         if (!(storeMemberDao.isStoreAdmin(
                 dslContext,
                 userId,
                 imageCode,
                 StoreTypeEnum.IMAGE.type.toByte()
-            ) || modifier == userId || !validateUserFlag)
+            ) || creator == userId || !validateUserFlag)
         ) {
             return Triple(false, CommonMessageCode.PERMISSION_DENIED, null)
         }
