@@ -75,7 +75,7 @@ enum class ImageStatusEnum(val status: Int) {
                 COMMITTING.status,
                 CHECKING.status,
                 TESTING.status,
-                //上架中止应当属于非终止态，需将数据回显至下一次上架
+                // 上架中止应当属于非终止态，需将数据回显至下一次上架
                 GROUNDING_SUSPENSION.status,
                 AUDITING.status,
                 UNDERCARRIAGING.status
