@@ -30,6 +30,7 @@ import com.tencent.devops.common.api.pojo.Zone
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.model.dispatch.tables.TDispatchPipelineDockerDebug
 import com.tencent.devops.model.dispatch.tables.records.TDispatchPipelineDockerDebugRecord
+import com.tencent.devops.store.pojo.image.enums.ImageRDTypeEnum
 import org.jooq.DSLContext
 import org.jooq.DatePart
 import org.jooq.Field
@@ -54,41 +55,48 @@ class PipelineDockerDebugDao {
         buildEnv: String,
         registryUser: String?,
         registryPwd: String?,
-        imageType: String?
+        imageType: String?,
+        imagePublicFlag: Boolean?,
+        imageRDType: ImageRDTypeEnum?
     ): Int {
         with(TDispatchPipelineDockerDebug.T_DISPATCH_PIPELINE_DOCKER_DEBUG) {
             val now = LocalDateTime.now()
             return dslContext.insertInto(this,
-                    PROJECT_ID,
-                    PIPELINE_ID,
-                    VM_SEQ_ID,
-                    STATUS,
-                    TOKEN,
-                    IMAGE_NAME,
-                    HOST_TAG,
-                    CREATED_TIME,
-                    UPDATED_TIME,
-                    BUILD_ENV,
-                    REGISTRY_USER,
-                    REGISTRY_PWD,
-                    IMAGE_TYPE)
-                    .values(
-                            projectId,
-                            pipelineId,
-                            vmSeqId,
-                            status.status,
-                            token,
-                            imageName,
-                            hostTag,
-                            now,
-                            now,
-                            buildEnv,
-                            registryUser,
-                            registryPwd,
-                            imageType
-                    )
-                    .returning(ID)
-                    .fetchOne().id
+                PROJECT_ID,
+                PIPELINE_ID,
+                VM_SEQ_ID,
+                STATUS,
+                TOKEN,
+                IMAGE_NAME,
+                HOST_TAG,
+                CREATED_TIME,
+                UPDATED_TIME,
+                BUILD_ENV,
+                REGISTRY_USER,
+                REGISTRY_PWD,
+                IMAGE_TYPE,
+                IMAGE_PUBLIC_FLAG,
+                IMAGE_RD_TYPE
+            )
+                .values(
+                    projectId,
+                    pipelineId,
+                    vmSeqId,
+                    status.status,
+                    token,
+                    imageName,
+                    hostTag,
+                    now,
+                    now,
+                    buildEnv,
+                    registryUser,
+                    registryPwd,
+                    imageType,
+                    imagePublicFlag,
+                    imageRDType?.type?.toByte()
+                )
+                .returning(ID)
+                .fetchOne().id
         }
     }
 
@@ -100,11 +108,11 @@ class PipelineDockerDebugDao {
     ): Boolean {
         with(TDispatchPipelineDockerDebug.T_DISPATCH_PIPELINE_DOCKER_DEBUG) {
             return dslContext.update(this)
-                    .set(STATUS, status.status)
-                    .set(UPDATED_TIME, LocalDateTime.now())
-                    .where(PIPELINE_ID.eq(pipelineId))
-                    .and(VM_SEQ_ID.eq(vmSeqId))
-                    .execute() == 1
+                .set(STATUS, status.status)
+                .set(UPDATED_TIME, LocalDateTime.now())
+                .where(PIPELINE_ID.eq(pipelineId))
+                .and(VM_SEQ_ID.eq(vmSeqId))
+                .execute() == 1
         }
     }
 
@@ -116,11 +124,11 @@ class PipelineDockerDebugDao {
     ): Boolean {
         with(TDispatchPipelineDockerDebug.T_DISPATCH_PIPELINE_DOCKER_DEBUG) {
             return dslContext.update(this)
-                    .set(CONTAINER_ID, containerId)
-                    .set(UPDATED_TIME, LocalDateTime.now())
-                    .where(PIPELINE_ID.eq(pipelineId))
-                    .and(VM_SEQ_ID.eq(vmSeqId))
-                    .execute() == 1
+                .set(CONTAINER_ID, containerId)
+                .set(UPDATED_TIME, LocalDateTime.now())
+                .where(PIPELINE_ID.eq(pipelineId))
+                .and(VM_SEQ_ID.eq(vmSeqId))
+                .execute() == 1
         }
     }
 
@@ -133,12 +141,12 @@ class PipelineDockerDebugDao {
     ): Boolean {
         with(TDispatchPipelineDockerDebug.T_DISPATCH_PIPELINE_DOCKER_DEBUG) {
             return dslContext.update(this)
-                    .set(STATUS, status.status)
-                    .set(HOST_TAG, hostTag)
-                    .set(UPDATED_TIME, LocalDateTime.now())
-                    .where(PIPELINE_ID.eq(pipelineId))
-                    .and(VM_SEQ_ID.eq(vmSeqId))
-                    .execute() == 1
+                .set(STATUS, status.status)
+                .set(HOST_TAG, hostTag)
+                .set(UPDATED_TIME, LocalDateTime.now())
+                .where(PIPELINE_ID.eq(pipelineId))
+                .and(VM_SEQ_ID.eq(vmSeqId))
+                .execute() == 1
         }
     }
 
@@ -149,9 +157,9 @@ class PipelineDockerDebugDao {
     ): Result<TDispatchPipelineDockerDebugRecord> {
         with(TDispatchPipelineDockerDebug.T_DISPATCH_PIPELINE_DOCKER_DEBUG) {
             return dslContext.selectFrom(this)
-                    .where(PIPELINE_ID.eq(pipelineId))
-                    .and(VM_SEQ_ID.eq(vmSeqId))
-                    .fetch()
+                .where(PIPELINE_ID.eq(pipelineId))
+                .and(VM_SEQ_ID.eq(vmSeqId))
+                .fetch()
         }
     }
 
@@ -162,9 +170,9 @@ class PipelineDockerDebugDao {
     ): TDispatchPipelineDockerDebugRecord? {
         with(TDispatchPipelineDockerDebug.T_DISPATCH_PIPELINE_DOCKER_DEBUG) {
             return dslContext.selectFrom(this)
-                    .where(PIPELINE_ID.eq(pipelineId))
-                    .and(VM_SEQ_ID.eq(vmSeqId))
-                    .fetchOne()
+                .where(PIPELINE_ID.eq(pipelineId))
+                .and(VM_SEQ_ID.eq(vmSeqId))
+                .fetchOne()
         }
     }
 
@@ -174,10 +182,10 @@ class PipelineDockerDebugDao {
     ): Result<TDispatchPipelineDockerDebugRecord> {
         with(TDispatchPipelineDockerDebug.T_DISPATCH_PIPELINE_DOCKER_DEBUG) {
             return dslContext.selectFrom(this)
-                    .where(STATUS.eq(PipelineTaskStatus.QUEUE.status))
-                    .and(HOST_TAG.eq("")).and(PROJECT_ID.notIn(projectIds))
-                    .orderBy(UPDATED_TIME.asc())
-                    .fetch()
+                .where(STATUS.eq(PipelineTaskStatus.QUEUE.status))
+                .and(HOST_TAG.eq("")).and(PROJECT_ID.notIn(projectIds))
+                .orderBy(UPDATED_TIME.asc())
+                .fetch()
         }
     }
 
@@ -187,10 +195,10 @@ class PipelineDockerDebugDao {
     ): Result<TDispatchPipelineDockerDebugRecord> {
         with(TDispatchPipelineDockerDebug.T_DISPATCH_PIPELINE_DOCKER_DEBUG) {
             return dslContext.selectFrom(this)
-                    .where(STATUS.eq(PipelineTaskStatus.QUEUE.status))
-                    .and(HOST_TAG.eq("")).and(PROJECT_ID.`in`(projectIds))
-                    .orderBy(UPDATED_TIME.asc())
-                    .fetch()
+                .where(STATUS.eq(PipelineTaskStatus.QUEUE.status))
+                .and(HOST_TAG.eq("")).and(PROJECT_ID.`in`(projectIds))
+                .orderBy(UPDATED_TIME.asc())
+                .fetch()
         }
     }
 
@@ -201,10 +209,10 @@ class PipelineDockerDebugDao {
     ): Result<TDispatchPipelineDockerDebugRecord> {
         with(TDispatchPipelineDockerDebug.T_DISPATCH_PIPELINE_DOCKER_DEBUG) {
             return dslContext.selectFrom(this)
-                    .where(STATUS.eq(PipelineTaskStatus.QUEUE.status))
-                    .and(HOST_TAG.eq(hostTag)).and(PROJECT_ID.notIn(projectIds))
-                    .orderBy(UPDATED_TIME.asc())
-                    .fetch()
+                .where(STATUS.eq(PipelineTaskStatus.QUEUE.status))
+                .and(HOST_TAG.eq(hostTag)).and(PROJECT_ID.notIn(projectIds))
+                .orderBy(UPDATED_TIME.asc())
+                .fetch()
         }
     }
 
@@ -215,10 +223,10 @@ class PipelineDockerDebugDao {
     ): Result<TDispatchPipelineDockerDebugRecord> {
         with(TDispatchPipelineDockerDebug.T_DISPATCH_PIPELINE_DOCKER_DEBUG) {
             return dslContext.selectFrom(this)
-                    .where(STATUS.eq(PipelineTaskStatus.QUEUE.status))
-                    .and(HOST_TAG.eq(hostTag)).and(PROJECT_ID.`in`(projectIds))
-                    .orderBy(UPDATED_TIME.asc())
-                    .fetch()
+                .where(STATUS.eq(PipelineTaskStatus.QUEUE.status))
+                .and(HOST_TAG.eq(hostTag)).and(PROJECT_ID.`in`(projectIds))
+                .orderBy(UPDATED_TIME.asc())
+                .fetch()
         }
     }
 
@@ -229,10 +237,10 @@ class PipelineDockerDebugDao {
         with(TDispatchPipelineDockerDebug.T_DISPATCH_PIPELINE_DOCKER_DEBUG) {
             val statusCond = STATUS.eq(PipelineTaskStatus.DONE.status).or(STATUS.eq(PipelineTaskStatus.FAILURE.status))
             return dslContext.selectFrom(this)
-                    .where(statusCond)
-                    .and(HOST_TAG.eq(hostTag))
-                    .orderBy(UPDATED_TIME.asc())
-                    .fetch()
+                .where(statusCond)
+                .and(HOST_TAG.eq(hostTag))
+                .orderBy(UPDATED_TIME.asc())
+                .fetch()
         }
     }
 
@@ -243,82 +251,82 @@ class PipelineDockerDebugDao {
     ) {
         with(TDispatchPipelineDockerDebug.T_DISPATCH_PIPELINE_DOCKER_DEBUG) {
             dslContext.deleteFrom(this)
-                    .where(PIPELINE_ID.eq(pipelineId))
-                    .and(VM_SEQ_ID.eq(vmSeqId))
-                    .execute()
+                .where(PIPELINE_ID.eq(pipelineId))
+                .and(VM_SEQ_ID.eq(vmSeqId))
+                .execute()
         }
     }
 
     fun deleteDebug(dslContext: DSLContext, id: Int) {
         with(TDispatchPipelineDockerDebug.T_DISPATCH_PIPELINE_DOCKER_DEBUG) {
             dslContext.deleteFrom(this)
-                    .where(ID.eq(id))
-                    .execute()
+                .where(ID.eq(id))
+                .execute()
         }
     }
 
     fun getTimeOutDebugTask(dslContext: DSLContext): Result<TDispatchPipelineDockerDebugRecord> {
         with(TDispatchPipelineDockerDebug.T_DISPATCH_PIPELINE_DOCKER_DEBUG) {
             return dslContext.selectFrom(this)
-                    .where(timestampDiff(DatePart.HOUR, UPDATED_TIME.cast(Timestamp::class.java)).greaterOrEqual(1))
-                    .fetch()
+                .where(timestampDiff(DatePart.HOUR, UPDATED_TIME.cast(Timestamp::class.java)).greaterOrEqual(1))
+                .fetch()
         }
     }
 
     fun updateTimeOutDebugTask(dslContext: DSLContext): Boolean {
         with(TDispatchPipelineDockerDebug.T_DISPATCH_PIPELINE_DOCKER_DEBUG) {
             return dslContext.update(this)
-                    .set(STATUS, PipelineTaskStatus.DONE.status)
-                    .where(timestampDiff(DatePart.HOUR, UPDATED_TIME.cast(Timestamp::class.java)).greaterOrEqual(1))
-                    .execute() == 1
+                .set(STATUS, PipelineTaskStatus.DONE.status)
+                .where(timestampDiff(DatePart.HOUR, UPDATED_TIME.cast(Timestamp::class.java)).greaterOrEqual(1))
+                .execute() == 1
         }
     }
 
     fun getUnclaimedHostDebug(dslContext: DSLContext): Result<TDispatchPipelineDockerDebugRecord> {
         with(TDispatchPipelineDockerDebug.T_DISPATCH_PIPELINE_DOCKER_DEBUG) {
             return dslContext.selectFrom(this)
-                    .where(timestampDiff(org.jooq.DatePart.SECOND, UPDATED_TIME.cast(java.sql.Timestamp::class.java)).greaterOrEqual(60))
-                    .and(STATUS.eq(PipelineTaskStatus.QUEUE.status))
-                    .and(HOST_TAG.isNotNull).and(HOST_TAG.notEqual(""))
-                    .fetch()
+                .where(timestampDiff(org.jooq.DatePart.SECOND, UPDATED_TIME.cast(java.sql.Timestamp::class.java)).greaterOrEqual(60))
+                .and(STATUS.eq(PipelineTaskStatus.QUEUE.status))
+                .and(HOST_TAG.isNotNull).and(HOST_TAG.notEqual(""))
+                .fetch()
         }
     }
 
     fun clearHostTagForUnclaimedHostDebug(dslContext: DSLContext): Boolean {
         with(TDispatchPipelineDockerDebug.T_DISPATCH_PIPELINE_DOCKER_DEBUG) {
             return dslContext.update(this)
-                    .set(HOST_TAG, "")
-                    .where(timestampDiff(org.jooq.DatePart.SECOND, UPDATED_TIME.cast(java.sql.Timestamp::class.java)).greaterOrEqual(60))
-                    .and(STATUS.eq(PipelineTaskStatus.QUEUE.status))
-                    .and(HOST_TAG.isNotNull).and(HOST_TAG.notEqual(""))
-                    .execute() == 1
+                .set(HOST_TAG, "")
+                .where(timestampDiff(org.jooq.DatePart.SECOND, UPDATED_TIME.cast(java.sql.Timestamp::class.java)).greaterOrEqual(60))
+                .and(STATUS.eq(PipelineTaskStatus.QUEUE.status))
+                .and(HOST_TAG.isNotNull).and(HOST_TAG.notEqual(""))
+                .execute() == 1
         }
     }
 
     fun getUnclaimedZoneDebug(dslContext: DSLContext): Result<TDispatchPipelineDockerDebugRecord> {
         with(TDispatchPipelineDockerDebug.T_DISPATCH_PIPELINE_DOCKER_DEBUG) {
             return dslContext.selectFrom(this)
-                    .where(timestampDiff(org.jooq.DatePart.SECOND, UPDATED_TIME.cast(java.sql.Timestamp::class.java)).greaterOrEqual(100))
-                    .and(STATUS.eq(PipelineTaskStatus.QUEUE.status))
-                    .and(ZONE.isNotNull).and(ZONE.notEqual(""))
-                    .fetch()
+                .where(timestampDiff(org.jooq.DatePart.SECOND, UPDATED_TIME.cast(java.sql.Timestamp::class.java)).greaterOrEqual(100))
+                .and(STATUS.eq(PipelineTaskStatus.QUEUE.status))
+                .and(ZONE.isNotNull).and(ZONE.notEqual(""))
+                .fetch()
         }
     }
 
     fun resetZoneForUnclaimedZoneDebug(dslContext: DSLContext): Boolean {
         with(TDispatchPipelineDockerDebug.T_DISPATCH_PIPELINE_DOCKER_DEBUG) {
             return dslContext.update(this)
-                    .set(ZONE, Zone.SHENZHEN.name)
-                    .where(timestampDiff(org.jooq.DatePart.SECOND, UPDATED_TIME.cast(java.sql.Timestamp::class.java)).greaterOrEqual(100))
-                    .and(STATUS.eq(PipelineTaskStatus.QUEUE.status))
-                    .and(ZONE.isNotNull).and(ZONE.notEqual("")).and(ZONE.notEqual(Zone.SHENZHEN.name))
-                    .execute() == 1
+                .set(ZONE, Zone.SHENZHEN.name)
+                .where(timestampDiff(org.jooq.DatePart.SECOND, UPDATED_TIME.cast(java.sql.Timestamp::class.java)).greaterOrEqual(100))
+                .and(STATUS.eq(PipelineTaskStatus.QUEUE.status))
+                .and(ZONE.isNotNull).and(ZONE.notEqual("")).and(ZONE.notEqual(Zone.SHENZHEN.name))
+                .execute() == 1
         }
     }
 
     fun timestampDiff(part: DatePart, t1: Field<Timestamp>): Field<Int> {
         return DSL.field("timestampdiff({0}, {1}, NOW())",
-                Int::class.java, DSL.keyword(part.toSQL()), t1)
+            Int::class.java, DSL.keyword(part.toSQL()), t1)
     }
 }
 
@@ -348,4 +356,4 @@ ALTER TABLE T_DISPATCH_PIPELINE_DOCKER_DEBUG ADD COLUMN `REGISTRY_USER` varchar(
 ALTER TABLE T_DISPATCH_PIPELINE_DOCKER_DEBUG ADD COLUMN `REGISTRY_PWD` varchar(128) NULL;
 ALTER TABLE T_DISPATCH_PIPELINE_DOCKER_DEBUG ADD COLUMN `IMAGE_TYPE` varchar(128) NULL;
 
-* */
+ * */

@@ -29,6 +29,7 @@ package com.tencent.devops.store.service.image
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.LATEST
 import com.tencent.devops.common.api.exception.DataConsistencyException
+import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DHUtil
@@ -223,9 +224,16 @@ abstract class ImageReleaseService {
         userId: String,
         marketImageUpdateRequest: MarketImageUpdateRequest,
         checkLatest: Boolean = true,
-        sendCheckResultNotify: Boolean = true
+        sendCheckResultNotify: Boolean = true,
+        runCheckPipeline: Boolean = true
     ): Result<String?> {
         logger.info("updateMarketImage userId is :$userId, marketImageUpdateRequest is :$marketImageUpdateRequest")
+        if (marketImageUpdateRequest.agentTypeScope.isEmpty()) {
+            throw InvalidParamException(
+                message = "agentTypeScope cannot be empty",
+                params = arrayOf("agentTypeScope=[]")
+            )
+        }
         val imageCode = marketImageUpdateRequest.imageCode
         val imageTag = marketImageUpdateRequest.imageTag
         // 判断镜像tag是否为latest
@@ -368,13 +376,24 @@ abstract class ImageReleaseService {
             if (null != labelIdList && labelIdList.isNotEmpty()) {
                 imageLabelRelDao.batchAdd(context, userId, imageId, labelIdList)
             }
-            // 运行检查镜像合法性的流水线
-            runCheckImagePipeline(
-                context = context,
-                userId = userId,
-                imageId = imageId,
-                sendCheckResultNotify = sendCheckResultNotify
-            )
+            if (runCheckPipeline) {
+                // 运行检查镜像合法性的流水线
+                runCheckImagePipeline(
+                    context = context,
+                    userId = userId,
+                    imageId = imageId,
+                    sendCheckResultNotify = sendCheckResultNotify
+                )
+            } else {
+                // 直接置为测试中状态
+                marketImageDao.updateImageStatusById(
+                    dslContext = context,
+                    imageId = imageId,
+                    imageStatus = ImageStatusEnum.TESTING.status.toByte(),
+                    userId = userId,
+                    msg = "no check"
+                )
+            }
         }
         return Result(imageId)
     }
@@ -453,6 +472,20 @@ abstract class ImageReleaseService {
             marketImageDao.updateImageStatusById(dslContext, imageId, imageStatus, userId, "")
         }
         return Result(true)
+    }
+
+    fun recheckWithoutValidate(
+        context: DSLContext,
+        userId: String,
+        imageId: String,
+        sendCheckResultNotify: Boolean = true
+    ) {
+        runCheckImagePipeline(
+            context = context,
+            userId = userId,
+            imageId = imageId,
+            sendCheckResultNotify = false
+        )
     }
 
     private fun runCheckImagePipeline(

@@ -170,6 +170,7 @@
             display: flex;
             .label {
                 min-width: 56px;
+                line-height: 32px;
             }
             .bk-selector {
                 position: relative;

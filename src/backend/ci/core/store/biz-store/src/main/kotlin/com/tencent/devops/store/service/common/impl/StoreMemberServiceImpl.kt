@@ -136,7 +136,7 @@ abstract class StoreMemberServiceImpl : StoreMemberService {
     /**
      * 添加store组件成员
      */
-    override fun add(userId: String, storeMemberReq: StoreMemberReq, storeType: StoreTypeEnum, collaborationFlag: Boolean?): Result<Boolean> {
+    override fun add(userId: String, storeMemberReq: StoreMemberReq, storeType: StoreTypeEnum, collaborationFlag: Boolean?, sendNotify: Boolean): Result<Boolean> {
         logger.info("addMember userId is:$userId,storeMemberReq is:$storeMemberReq,storeType is:$storeType")
         val storeCode = storeMemberReq.storeCode
         val type = storeMemberReq.type.type.toByte()
@@ -166,14 +166,16 @@ abstract class StoreMemberServiceImpl : StoreMemberService {
             }
             receivers.add(item)
         }
-        executorService.submit<Result<Boolean>> {
-            val bodyParams = mapOf("storeAdmin" to userId, "storeName" to getStoreName(storeCode))
-            storeNotifyService.sendNotifyMessage(
-                templateCode = STORE_MEMBER_ADD_NOTIFY_TEMPLATE + "_$storeType",
-                sender = DEVOPS,
-                receivers = receivers,
-                bodyParams = bodyParams
-            )
+        if (sendNotify) {
+            executorService.submit<Result<Boolean>> {
+                val bodyParams = mapOf("storeAdmin" to userId, "storeName" to getStoreName(storeCode))
+                storeNotifyService.sendNotifyMessage(
+                    templateCode = STORE_MEMBER_ADD_NOTIFY_TEMPLATE + "_$storeType",
+                    sender = DEVOPS,
+                    receivers = receivers,
+                    bodyParams = bodyParams
+                )
+            }
         }
         return Result(true)
     }

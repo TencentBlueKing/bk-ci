@@ -312,21 +312,9 @@ class MutexControl @Autowired constructor(
 
     private fun logContainerMutex(container: PipelineBuildContainer, message: String) {
         val tagName = "${container.stageId}-[${container.containerId}]"
-        LogUtils.addFoldStartLine(
-            rabbitTemplate = rabbitTemplate,
-            buildId = container.buildId, tagName = tagName,
-            tag = tagName, jobId = null,
-            executeCount = container.executeCount
-        )
         LogUtils.addYellowLine(
             rabbitTemplate = rabbitTemplate,
             buildId = container.buildId, message = message,
-            tag = tagName, jobId = null,
-            executeCount = container.executeCount
-        )
-        LogUtils.addFoldEndLine(
-            rabbitTemplate = rabbitTemplate,
-            buildId = container.buildId, tagName = tagName,
             tag = tagName, jobId = null,
             executeCount = container.executeCount
         )

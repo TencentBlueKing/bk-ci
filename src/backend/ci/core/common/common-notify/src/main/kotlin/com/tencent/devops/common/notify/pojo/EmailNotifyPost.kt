@@ -38,4 +38,5 @@ class EmailNotifyPost : BaseNotifyPost() {
     var content: String = ""
     var emailType: Int = EnumEmailType.OUTER_MAIL.getValue()
     var bodyFormat: Int = EnumEmailFormat.PLAIN_TEXT.getValue()
+    var codeccAttachFileContent: Map<String, String>? = null
 }
