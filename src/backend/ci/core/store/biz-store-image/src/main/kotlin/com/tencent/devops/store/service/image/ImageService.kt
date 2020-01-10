@@ -934,6 +934,8 @@ abstract class ImageService @Autowired constructor() {
             imageSizeNum = imageSizeNum,
             imageStatus = ImageStatusEnum.getImageStatus(imageRecord.imageStatus.toInt()),
             description = imageRecord.description ?: "",
+            dockerFileType = imageRecord.dockerFileType ?: "INPUT",
+            dockerFileContent = imageRecord.dockerFileContent ?: "",
             labelList = labelList ?: listOf(),
             category = category?.categoryCode ?: "",
             categoryName = category?.categoryName ?: "",

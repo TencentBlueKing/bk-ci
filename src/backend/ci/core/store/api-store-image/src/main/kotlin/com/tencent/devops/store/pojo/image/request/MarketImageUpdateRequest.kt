@@ -61,6 +61,10 @@ data class MarketImageUpdateRequest(
     val imageRepoName: String,
     @ApiModelProperty("镜像tag", required = true)
     val imageTag: String,
+    @ApiModelProperty("dockerFile类型", required = true)
+    val dockerFileType: String?,
+    @ApiModelProperty("dockerFile内容", required = true)
+    val dockerFileContent: String?,
     @ApiModelProperty("版本号", required = true)
     val version: String,
     @ApiModelProperty("发布类型，NEW：新上架 INCOMPATIBILITY_UPGRADE：非兼容性升级 COMPATIBILITY_UPGRADE：兼容性功能更新 COMPATIBILITY_FIX：兼容性问题修正", required = true)
