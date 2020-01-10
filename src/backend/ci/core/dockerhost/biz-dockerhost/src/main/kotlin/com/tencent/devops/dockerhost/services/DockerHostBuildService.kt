@@ -232,7 +232,7 @@ class DockerHostBuildService(
                     logger.error(errorMessage, t)
                     // 直接失败，禁止使用本地镜像
                     throw PermissionForbiddenException(errorMessage)
-                } catch (t: UnauthorizedException) {
+                } catch (t: NotFoundException) {
                     val errorMessage = "仓库中镜像不存在：$imageName，请检查凭证：[buildId=${dockerBuildInfo.buildId}][containerHashId=${dockerBuildInfo.containerHashId}]"
                     logger.error(errorMessage, t)
                     // 直接失败，禁止使用本地镜像
