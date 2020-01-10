@@ -26,6 +26,7 @@
 
 package com.tencent.devops.process.engine.listener.run.finish
 
+import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.listener.pipeline.BaseListener
 import com.tencent.devops.common.pipeline.container.Container
@@ -193,7 +194,14 @@ class PipelineBuildCancelListener @Autowired constructor(
         } ?: return
 
         // 释放互斥锁
-        val mutexGroupName = mutexGroup.mutexGroupName ?: ""
+        // 需要替换mutex中的变量。
+        val mutexGroupName = if(mutexGroup.mutexGroupName == null) {
+            ""
+        } else {
+            val variables = pipelineRuntimeService.getAllVariable(buildId)
+            EnvUtils.parseEnv(mutexGroup.mutexGroupName!!, variables)
+
+        }
         val mutexEnable = mutexGroup.enable
         if (mutexGroupName.isNotBlank() && mutexEnable) {
             // 锁住containerController
