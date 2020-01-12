@@ -102,6 +102,12 @@ class CommonConfig {
     val devopsOuteApiHostGateWay: String? = null
 
     /**
+     * 蓝盾新仓库API地址
+     */
+    @Value("\${bkrepo.url:#{null}}")
+    val bkrepoApiUrl: String? = null
+
+    /**
      * 微服务端口
      */
     @Value("\${server.port:80}")

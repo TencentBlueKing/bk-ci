@@ -35,6 +35,7 @@ import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
+import com.tencent.devops.common.pipeline.element.market.ExtServiceBuildArchiveElement
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.enums.BuildScriptType
 import com.tencent.devops.common.pipeline.enums.ChannelCode
@@ -47,7 +48,6 @@ import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.agent.CodeGitElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxScriptElement
-import com.tencent.devops.common.pipeline.pojo.element.market.AtomBuildArchiveElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.pipeline.pojo.git.GitPullMode
 import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
@@ -140,9 +140,9 @@ class ExtServiceBuildInitPipelineService @Autowired constructor(
             script = "\${script}",
             continueNoneZero = false
         )
-        val stageSecondAtomBuildArchiveElement = AtomBuildArchiveElement(id = "T-2-1-3")
+        val stageSecondExtServiceBuildArchiveElement = ExtServiceBuildArchiveElement(id = "T-2-1-3")
         val stageSecondElements =
-            listOf(stageSecondPullCodeElement, stageSecondLinuxScriptElement, stageSecondAtomBuildArchiveElement)
+            listOf(stageSecondPullCodeElement, stageSecondLinuxScriptElement, stageSecondExtServiceBuildArchiveElement)
         val stageSecondContainer = VMBuildContainer(
             id = containerSeqId.toString(),
             elements = stageSecondElements,
