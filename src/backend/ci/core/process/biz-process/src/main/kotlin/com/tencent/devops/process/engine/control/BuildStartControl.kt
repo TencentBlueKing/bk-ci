@@ -156,9 +156,7 @@ class BuildStartControl @Autowired constructor(
 
             updateModel(model, pipelineId, buildId, taskId)
             // 本次启动的参数处理
-            val allVariable = pipelineRuntimeService.getAllVariable(buildId)
-            if (allVariable[PIPELINE_RETRY_COUNT] == null)
-                pipelineRuntimeService.writeStartParam(projectId, pipelineId, buildId, model)
+            pipelineRuntimeService.writeStartParam(projectId, pipelineId, buildId, model)
 
             val projectName = projectOauthTokenService.getProjectName(projectId) ?: ""
             val pipelineUserInfo = pipelineUserService.get(pipelineId)!!
