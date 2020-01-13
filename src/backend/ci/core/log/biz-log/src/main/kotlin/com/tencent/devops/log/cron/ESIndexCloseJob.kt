@@ -29,7 +29,9 @@ package com.tencent.devops.log.cron
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.log.client.LogClient
 import com.tencent.devops.log.util.IndexNameUtils.LOG_PREFIX
+import org.elasticsearch.client.support.AbstractClient
 import org.elasticsearch.client.transport.TransportClient
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -41,7 +43,7 @@ import java.time.temporal.ChronoUnit
 
 @Component
 class ESIndexCloseJob @Autowired constructor(
-    private val client: TransportClient,
+    private val client: LogClient,
     private val redisOperation: RedisOperation
 ) {
 
@@ -79,28 +81,30 @@ class ESIndexCloseJob @Autowired constructor(
     fun getExpireIndexDay() = expireIndexInDay
 
     private fun closeESIndexes() {
-        val indexes = client.admin()
-            .indices()
-            .prepareGetIndex()
-            .get()
+        client.getClients().forEach { c ->
+            val indexes = c.admin()
+                .indices()
+                .prepareGetIndex()
+                .get()
 
-        if (indexes.indices.isEmpty()) {
-            return
-        }
+            if (indexes.indices.isEmpty()) {
+                return
+            }
 
-        val deathLine = LocalDateTime.now()
+            val deathLine = LocalDateTime.now()
                 .minus(expireIndexInDay.toLong(), ChronoUnit.DAYS)
-        logger.info("Get the death line - ($deathLine)")
-        indexes.indices.forEach { index ->
-            if (expire(deathLine, index)) {
-                closeESIndex(index)
+            logger.info("Get the death line - ($deathLine)")
+            indexes.indices.forEach { index ->
+                if (expire(deathLine, index)) {
+                    closeESIndex(c, index)
+                }
             }
         }
     }
 
-    private fun closeESIndex(index: String) {
+    private fun closeESIndex(c: AbstractClient, index: String) {
         logger.info("[$index] Start to close ES index")
-        val resp = client.admin()
+        val resp = c.admin()
             .indices()
             .prepareClose(index)
             .get()

@@ -27,7 +27,7 @@
 package com.tencent.devops.common.es
 
 import com.tencent.devops.common.web.WebAutoConfiguration
-import org.elasticsearch.client.transport.TransportClient
+import org.elasticsearch.client.support.AbstractClient
 import org.elasticsearch.common.settings.Settings
 import org.elasticsearch.common.transport.InetSocketTransportAddress
 import org.elasticsearch.transport.client.PreBuiltTransportClient
@@ -55,7 +55,7 @@ class ESAutoConfiguration {
 
     @Bean
     @Primary
-    fun transportClient(): TransportClient {
+    fun abstractClient(): AbstractClient {
         if (ip == null || ip!!.isBlank()) {
             throw IllegalArgumentException("ES集群地址尚未配置")
         }
