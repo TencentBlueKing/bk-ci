@@ -1643,7 +1643,7 @@ class PipelineBuildService(
                 )
 
             val buildId = pipelineRuntimeService.startBuild(readyToBuildPipelineInfo, fullModel, paramsWithType)
-            startParams = paramsWithType.map { it.key to it.value }.toMap().toMutableMap()
+            startParams = startParamsWithType.map { it.key to it.value }.toMap().toMutableMap()
             startParams[BUILD_NO] = (fullModel.stages[0].containers[0] as TriggerContainer).buildNo?.buildNo.toString()
             if (startParams.isNotEmpty()) {
                 buildStartupParamService.addParam(
