@@ -221,6 +221,7 @@
         }
         .progress-content {
             flex: 1;
+            max-width: calc(100% - 100px);
             color: $fontBlack;
             word-break: break-all;
             /deep/ .v-note-panel {
