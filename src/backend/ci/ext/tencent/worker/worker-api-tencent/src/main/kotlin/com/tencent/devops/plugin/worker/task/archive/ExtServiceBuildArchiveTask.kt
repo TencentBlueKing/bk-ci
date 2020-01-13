@@ -67,17 +67,18 @@ class ExtServiceBuildArchiveTask : ITask() {
             errorType = ErrorType.SYSTEM,
             errorCode = ErrorCode.SYSTEM_SERVICE_ERROR
         )
-        val serviceVersion = buildVariableMap["serviceVersion"] ?: throw TaskExecuteException(
-            errorMsg = "param [serviceVersion] is empty",
+        val serviceVersion = buildVariableMap["version"] ?: throw TaskExecuteException(
+            errorMsg = "param [version] is empty",
             errorType = ErrorType.SYSTEM,
             errorCode = ErrorCode.SYSTEM_SERVICE_ERROR
         )
-        val filePath = buildVariableMap["filePath"] ?: throw TaskExecuteException(
+        val taskParams = buildTask.params ?: mapOf()
+        val filePath = taskParams["filePath"] ?: throw TaskExecuteException(
             errorMsg = "param [filePath] is empty",
             errorType = ErrorType.SYSTEM,
             errorCode = ErrorCode.SYSTEM_SERVICE_ERROR
         )
-        val destPath = buildVariableMap["destPath"] ?: throw TaskExecuteException(
+        val destPath = taskParams["destPath"] ?: throw TaskExecuteException(
             errorMsg = "param [destPath] is empty",
             errorType = ErrorType.SYSTEM,
             errorCode = ErrorCode.SYSTEM_SERVICE_ERROR
