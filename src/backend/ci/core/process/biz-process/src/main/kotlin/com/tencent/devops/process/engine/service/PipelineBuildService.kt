@@ -80,21 +80,7 @@ import com.tencent.devops.process.pojo.pipeline.PipelineLatestBuild
 import com.tencent.devops.process.service.BuildStartupParamService
 import com.tencent.devops.process.service.ParamService
 import com.tencent.devops.process.util.PswParameterUtils
-import com.tencent.devops.process.utils.PIPELINE_NAME
-import com.tencent.devops.process.utils.PIPELINE_RETRY_BUILD_ID
-import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
-import com.tencent.devops.process.utils.PIPELINE_RETRY_START_TASK_ID
-import com.tencent.devops.process.utils.PIPELINE_START_CHANNEL
-import com.tencent.devops.process.utils.PIPELINE_START_MOBILE
-import com.tencent.devops.process.utils.PIPELINE_START_PARENT_BUILD_ID
-import com.tencent.devops.process.utils.PIPELINE_START_PARENT_BUILD_TASK_ID
-import com.tencent.devops.process.utils.PIPELINE_START_PARENT_PIPELINE_ID
-import com.tencent.devops.process.utils.PIPELINE_START_PIPELINE_USER_ID
-import com.tencent.devops.process.utils.PIPELINE_START_TYPE
-import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
-import com.tencent.devops.process.utils.PIPELINE_START_USER_NAME
-import com.tencent.devops.process.utils.PIPELINE_START_WEBHOOK_USER_ID
-import com.tencent.devops.process.utils.PIPELINE_VERSION
+import com.tencent.devops.process.utils.*
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.stereotype.Service
@@ -1564,7 +1550,7 @@ class PipelineBuildService(
             // 如果指定了版本号，则设置指定的版本号
             readyToBuildPipelineInfo.version = signPipelineVersion ?: readyToBuildPipelineInfo.version
 
-            var startParams = startParamsWithType.map { it.key to it.value }.toMap()
+            var startParams = startParamsWithType.map { it.key to it.value }.toMap().toMutableMap()
             val fullModel = pipelineBuildQualityService.fillingRuleInOutElement(
                 projectId = readyToBuildPipelineInfo.projectId,
                 pipelineId = pipelineId,
@@ -1657,7 +1643,8 @@ class PipelineBuildService(
                 )
 
             val buildId = pipelineRuntimeService.startBuild(readyToBuildPipelineInfo, fullModel, paramsWithType)
-            startParams = paramsWithType.map { it.key to it.value }.toMap()
+            startParams = paramsWithType.map { it.key to it.value }.toMap().toMutableMap()
+            startParams[BUILD_NO] = (fullModel.stages[0].containers[0] as TriggerContainer).buildNo?.buildNo.toString()
             if (startParams.isNotEmpty()) {
                 buildStartupParamService.addParam(
                     projectId = readyToBuildPipelineInfo.projectId,
