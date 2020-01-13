@@ -269,7 +269,7 @@ class MutexControl @Autowired constructor(
                 logContainerMutex(container, "Job互斥组:Job(${buildId}_$containerId),互斥组(${mutexGroup.mutexGroupName})队列已经超过最大任务数(${mutexGroup.queue})，正在运行的Job($lockedContainerMutexId)，该Job取消。")
                 false
             } else {
-                logContainerMutex(container, "Job互斥组:Job(${buildId}_$containerId),进入互斥组(${mutexGroup.mutexGroupName})的排队队列，正在运行的Job($lockedContainerMutexId)，目前还有${queueSize+1}个任务在排队。")
+                logContainerMutex(container, "Job互斥组:Job(${buildId}_$containerId),进入互斥组(${mutexGroup.mutexGroupName})的排队队列，正在运行的Job($lockedContainerMutexId)，目前还有${queueSize + 1}个任务在排队。")
                 // 则进入队列,并返回成功
                 enterMutexQueue(
                     projectId = projectId,
@@ -309,7 +309,6 @@ class MutexControl @Autowired constructor(
         val mutexGroupName = mutexGroup.mutexGroupName ?: ""
         return "lock:container:mutex:$projectId:$mutexGroupName:queue"
     }
-
 
     private fun getMutexContainerId(buildId: String, containerId: String): String {
         return "${buildId}_$containerId"
