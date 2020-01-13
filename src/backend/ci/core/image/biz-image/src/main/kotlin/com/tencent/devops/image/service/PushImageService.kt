@@ -162,7 +162,12 @@ class PushImageService @Autowired constructor(
     }
 
     private fun pullImage(image: String) {
-        dockerClient.pullImageCmd(image).exec(PullImageResultCallback()).awaitCompletion()
+        val authConfig = AuthConfig()
+            .withUsername(dockerConfig.registryUsername)
+            .withPassword(SecurityUtil.decrypt(dockerConfig.registryPassword!!))
+            .withRegistryAddress(dockerConfig.registryUrl)
+
+        dockerClient.pullImageCmd(image).withAuthConfig(authConfig).exec(PullImageResultCallback()).awaitCompletion()
     }
 
     private fun pushImageToRepo(pushImageParam: PushImageParam) {
