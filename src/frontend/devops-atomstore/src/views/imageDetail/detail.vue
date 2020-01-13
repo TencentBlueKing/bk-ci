@@ -134,6 +134,7 @@
         overflow: hidden;
         .detail-main {
             height: calc(100% - 60px);
+            width: calc(100vw - 261px);
             overflow: hidden auto;
             padding: 20px 0;
         }
