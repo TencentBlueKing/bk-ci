@@ -114,6 +114,7 @@ class BkAtomReleaseServiceImpl : BkAtomReleaseService, AtomReleaseServiceImpl() 
         processInfo.add(ReleaseProcessItem(MessageCodeUtil.getCodeLanMessage(END), END, NUM_FOUR, UNDO))
         return processInfo
     }
+
     /**
      * 检查版本发布过程中的操作权限
      */
@@ -125,7 +126,10 @@ class BkAtomReleaseServiceImpl : BkAtomReleaseService, AtomReleaseServiceImpl() 
     ): Pair<Boolean, String> {
         logger.info("checkAtomVersionOptRight, userId=$userId, atomId=$atomId, status=$status, isNormalUpgrade=$isNormalUpgrade")
         val record =
-            marketAtomDao.getAtomRecordById(dslContext, atomId) ?: return Pair(false, CommonMessageCode.PARAMETER_IS_INVALID)
+            marketAtomDao.getAtomRecordById(dslContext, atomId) ?: return Pair(
+                false,
+                CommonMessageCode.PARAMETER_IS_INVALID
+            )
         val atomCode = record.atomCode
         val creator = record.creator
         val recordStatus = record.atomStatus

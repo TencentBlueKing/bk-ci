@@ -229,7 +229,8 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
         val atomName = atomRecord.name
         val atomVersion = atomRecord.version
         val repoId = atomRecord.repositoryHashId
-        val atomPackageSourceType = if (repoId.isBlank()) AtomPackageSourceTypeEnum.UPLOAD else AtomPackageSourceTypeEnum.REPO
+        val atomPackageSourceType =
+            if (repoId.isBlank()) AtomPackageSourceTypeEnum.UPLOAD else AtomPackageSourceTypeEnum.REPO
         val getAtomConfResult = getAtomConfig(
             atomPackageSourceType = atomPackageSourceType,
             projectCode = projectCode,
@@ -384,6 +385,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
         }
         return true
     }
+
     /**
      * 检查版本发布过程中的操作权限
      */
@@ -395,7 +397,10 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
     ): Pair<Boolean, String> {
         logger.info("checkAtomVersionOptRight, userId=$userId, atomId=$atomId, status=$status, isNormalUpgrade=$isNormalUpgrade")
         val record =
-            marketAtomDao.getAtomRecordById(dslContext, atomId) ?: return Pair(false, CommonMessageCode.PARAMETER_IS_INVALID)
+            marketAtomDao.getAtomRecordById(dslContext, atomId) ?: return Pair(
+                false,
+                CommonMessageCode.PARAMETER_IS_INVALID
+            )
         val atomCode = record.atomCode
         val creator = record.creator
         val recordStatus = record.atomStatus
