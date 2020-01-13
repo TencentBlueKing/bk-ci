@@ -195,12 +195,11 @@ class PipelineBuildCancelListener @Autowired constructor(
 
         // 释放互斥锁
         // 需要替换mutex中的变量。
-        val mutexGroupName = if(mutexGroup.mutexGroupName.isNullOrBlank()) {
+        val mutexGroupName = if (mutexGroup.mutexGroupName.isNullOrBlank()) {
             ""
         } else {
             val variables = pipelineRuntimeService.getAllVariable(buildId)
             EnvUtils.parseEnv(mutexGroup.mutexGroupName!!, variables)
-
         }
         val mutexEnable = mutexGroup.enable
         if (mutexGroupName.isNotBlank() && mutexEnable) {
