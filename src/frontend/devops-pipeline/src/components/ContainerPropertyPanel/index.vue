@@ -440,6 +440,7 @@
                             ...this.container.dispatchType,
                             imageType: 'BKSTORE'
                         }))
+                        data.historyVersion = data.version
                         if (data.code) this.choose(data)
                     }).catch((err) => this.$showTips({ theme: 'error', message: err.message || err })).finally(() => (this.isLoadingImage = false))
                 }
@@ -511,10 +512,11 @@
                     imageName: card.name
                 }))
                 return this.getVersionList(card.code).then(() => {
-                    const firstVersion = this.versionList[0] || {}
+                    let chooseVersion = this.versionList[0] || {}
+                    if (card.historyVersion) chooseVersion = this.versionList.find(x => x.versionValue === card.historyVersion) || {}
                     this.handleContainerChange('dispatchType', Object.assign({
                         ...this.container.dispatchType,
-                        imageVersion: firstVersion.versionValue,
+                        imageVersion: chooseVersion.versionValue,
                         value: card.code
                     }))
                 })
