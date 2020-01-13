@@ -83,6 +83,8 @@ import java.util.Base64
 @Service
 abstract class ImageReleaseService {
 
+    final val CATEGORY_PIPELINE_JOB = "PIPELINE_JOB"
+
     @Autowired
     lateinit var dslContext: DSLContext
     @Autowired
@@ -228,7 +230,7 @@ abstract class ImageReleaseService {
         runCheckPipeline: Boolean = true
     ): Result<String?> {
         logger.info("updateMarketImage userId is :$userId, marketImageUpdateRequest is :$marketImageUpdateRequest")
-        if (marketImageUpdateRequest.agentTypeScope.isEmpty()) {
+        if (marketImageUpdateRequest.category.equals(CATEGORY_PIPELINE_JOB) && marketImageUpdateRequest.agentTypeScope.isEmpty()) {
             throw InvalidParamException(
                 message = "agentTypeScope cannot be empty",
                 params = arrayOf("agentTypeScope=[]")
