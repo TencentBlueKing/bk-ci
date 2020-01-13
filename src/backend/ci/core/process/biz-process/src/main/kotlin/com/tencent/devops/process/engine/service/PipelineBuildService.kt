@@ -1643,8 +1643,33 @@ class PipelineBuildService(
                 )
 
             val buildId = pipelineRuntimeService.startBuild(readyToBuildPipelineInfo, fullModel, paramsWithType)
+
+            logger.info("[$pipelineId]|START_PIPELINE|BEFORE_FILTER|buildId=$buildId|startType=$startType|startParams=$startParams")
+
+            val triggerContainer = fullModel.stages[0].containers[0] as TriggerContainer
             startParams = startParamsWithType.map { it.key to it.value }.toMap().toMutableMap()
-            startParams[BUILD_NO] = (fullModel.stages[0].containers[0] as TriggerContainer).buildNo?.buildNo.toString()
+            if (startParams[PIPELINE_RETRY_COUNT] == null) {
+                if (triggerContainer.buildNo != null) {
+                    val buildNo = pipelineRuntimeService.getBuildNo(pipelineId)
+                    pipelineRuntimeService.setVariable(
+                        projectId = readyToBuildPipelineInfo.projectId, pipelineId = pipelineId,
+                        buildId = buildId, varName = BUILD_NO, varValue = buildNo
+                    )
+                    startParams[BUILD_NO] = buildNo
+                }
+                // 只有在构建参数中的才设置
+                val params = startParams.filter {
+                    it.key.startsWith(SkipElementUtils.prefix) || it.key == BUILD_NO || it.key == PIPELINE_RETRY_COUNT
+                }
+                if (triggerContainer.params.isNotEmpty()) params.plus(
+                    triggerContainer.params.map {
+                        // 真实传值的替换
+                        if (startParams.containsKey(it.id)) it.id to startParams[it.id]
+                        else it.id to it.defaultValue
+                    }.toMap()
+                )
+            }
+
             if (startParams.isNotEmpty()) {
                 buildStartupParamService.addParam(
                     projectId = readyToBuildPipelineInfo.projectId,
@@ -1654,7 +1679,7 @@ class PipelineBuildService(
                 )
             }
 
-            logger.info("[$pipelineId]|START_PIPELINE|buildId=$buildId|startType=$startType|startParams=$startParams")
+            logger.info("[$pipelineId]|START_PIPELINE|AFTER_FILTER|buildId=$buildId|startType=$startType|startParams=$startParams")
 
             return buildId
         } finally {
