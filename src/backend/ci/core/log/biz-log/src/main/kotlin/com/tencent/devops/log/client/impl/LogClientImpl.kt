@@ -27,15 +27,15 @@
 package com.tencent.devops.log.client.impl
 
 import com.tencent.devops.log.client.LogClient
-import org.elasticsearch.client.support.AbstractClient
+import org.elasticsearch.client.Client
 import java.lang.RuntimeException
 
-class LogClientImpl constructor(private val abstractClient: AbstractClient) : LogClient {
-    override fun getClients(): Set<AbstractClient> {
-        return setOf(abstractClient)
+class LogClientImpl constructor(private val client: Client) : LogClient {
+    override fun getClients(): Set<Client> {
+        return setOf(client)
     }
 
-    override fun hashClient(buildId: String, client: Set<AbstractClient>): AbstractClient {
+    override fun hashClient(buildId: String, client: Set<Client>): Client {
         if (client.isEmpty()) {
             throw RuntimeException("Fail to get the log client")
         }
