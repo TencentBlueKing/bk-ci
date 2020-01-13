@@ -28,6 +28,7 @@ package com.tencent.devops.log.configuration
 
 import com.tencent.devops.common.es.ESProperties
 import com.tencent.devops.common.web.WebAutoConfiguration
+import org.elasticsearch.client.Client
 import org.elasticsearch.client.transport.TransportClient
 import org.elasticsearch.common.settings.Settings
 import org.elasticsearch.common.transport.InetSocketTransportAddress
@@ -42,6 +43,7 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Primary
 import org.springframework.core.Ordered
 import java.net.InetAddress
+import java.util.Base64
 
 @Configuration
 @AutoConfigureOrder(Ordered.HIGHEST_PRECEDENCE)
@@ -49,32 +51,71 @@ import java.net.InetAddress
 @EnableConfigurationProperties(ESProperties::class)
 class LogESAutoConfiguration {
     @Value("\${elasticsearch.ip}")
-    private val ip: String? = null
+    private val e1IP: String? = null
     @Value("\${elasticsearch.port}")
-    private val port: Int? = 0
+    private val e1Port: Int? = 0
     @Value("\${elasticsearch.cluster}")
-    private val cluster: String? = null
+    private val e1Cluster: String? = null
+
+    @Value("\${elasticsearch2.ip}")
+    private val e2IP: String? = null
+    @Value("\${elasticsearch2.port}")
+    private val e2Port: Int? = 0
+    @Value("\${elasticsearch2.cluster}")
+    private val e2Cluster: String? = null
+    @Value("\${elasticsearch2.username}")
+    private val e2Username: String? = null
+    @Value("\${elasticsearch2.password}")
+    private val e2Password: String? = null
 
     @Bean
     @Primary
-    fun transportClient(): TransportClient {
-        if (ip == null || ip!!.isBlank()) {
+    fun client(): Client {
+        if (e1IP.isNullOrBlank()) {
             throw IllegalArgumentException("ES集群地址尚未配置")
         }
-        if (port == null || port!! <= 0) {
+        if (e1Port == null || e1Port!! <= 0) {
             throw IllegalArgumentException("ES集群端口尚未配置")
         }
-        if (cluster == null || cluster!!.isBlank()) {
+        if (e1Cluster.isNullOrBlank()) {
             throw IllegalArgumentException("ES集群名称尚未配置")
         }
-        val settings = Settings.builder().put("cluster.name", cluster).build()
-        val ips = ip!!.split(",".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
+        val settings = Settings.builder().put("cluster.name", e1Cluster).build()
+        val ips = e1IP!!.split(",".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
         val client = PreBuiltTransportClient(settings)
         for (ipAddress in ips) {
-            client.addTransportAddress(InetSocketTransportAddress(InetAddress.getByName(ipAddress), port!!))
+            client.addTransportAddress(InetSocketTransportAddress(InetAddress.getByName(ipAddress), e1Port!!))
         }
-        logger.info("Init ES transport client with host($ip:$port) and cluster($cluster)")
+        logger.info("Init ES transport client with host($e1IP:$e1Port) and cluster($e1Cluster)")
         return client
+    }
+
+    @Bean
+    fun client2(): Client {
+        if (e2IP.isNullOrBlank()) {
+            throw IllegalArgumentException("ES2集群地址尚未配置")
+        }
+        if (e2Port == null || e2Port!! <= 0) {
+            throw IllegalArgumentException("ES2集群端口尚未配置")
+        }
+        if (e2Cluster.isNullOrBlank()) {
+            throw IllegalArgumentException("ES2集群名称尚未配置")
+        }
+        if (e2Username.isNullOrBlank()) {
+            throw IllegalArgumentException("ES2用户名尚未配置")
+        }
+        if (e2Password.isNullOrBlank()) {
+            throw IllegalArgumentException("ES2密码尚未配置")
+        }
+        val settings = Settings.builder().put("cluster.name", e2Cluster).build()
+        val ips = e2IP!!.split(",".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
+        val client = PreBuiltTransportClient(settings)
+        for (ipAddress in ips) {
+            client.addTransportAddress(InetSocketTransportAddress(InetAddress.getByName(ipAddress), e2Port!!))
+        }
+        val auth = Base64.getEncoder().encode(("$e2Username:$e2Password").toByteArray()).toString(Charsets.UTF_8)
+        logger.info("Init ES 2 transport client with host($e2IP:$e2Port) and cluster($e2Cluster)")
+        return client.filterWithHeader(mapOf("Authorization" to "Basic $auth"))
     }
     companion object {
         private val logger = LoggerFactory.getLogger(LogESAutoConfiguration::class.java)
