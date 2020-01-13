@@ -469,21 +469,21 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         atomEnvRequest: AtomEnvRequest
     ) {
         marketAtomDao.updateMarketAtom(
-            context,
-            userId,
-            atomId,
-            atomStatus,
-            classType,
-            props,
-            iconData,
-            marketAtomUpdateRequest
+            dslContext = context,
+            userId = userId,
+            id = atomId,
+            atomStatus = atomStatus,
+            classType = classType,
+            props = props,
+            iconData = iconData,
+            marketAtomUpdateRequest = marketAtomUpdateRequest
         )
         marketAtomVersionLogDao.addMarketAtomVersion(
-            context,
-            userId,
-            atomId,
-            releaseType,
-            marketAtomUpdateRequest.versionContent
+            dslContext = context,
+            userId = userId,
+            atomId = atomId,
+            releaseType = releaseType,
+            versionContent = marketAtomUpdateRequest.versionContent
         )
         marketAtomEnvInfoDao.updateMarketAtomEnvInfo(context, atomId, atomEnvRequest)
         // 通过websocket推送状态变更消息
