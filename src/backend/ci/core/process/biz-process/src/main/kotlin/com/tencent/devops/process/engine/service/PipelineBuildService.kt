@@ -1668,15 +1668,14 @@ class PipelineBuildService(
                         else it.id to it.defaultValue
                     }.toMap()
                 )
-            }
-
-            if (startParams.isNotEmpty()) {
-                buildStartupParamService.addParam(
-                    projectId = readyToBuildPipelineInfo.projectId,
-                    pipelineId = pipelineId,
-                    buildId = buildId,
-                    param = JsonUtil.toJson(startParams)
-                )
+                if (startParams.isNotEmpty()) {
+                    buildStartupParamService.addParam(
+                        projectId = readyToBuildPipelineInfo.projectId,
+                        pipelineId = pipelineId,
+                        buildId = buildId,
+                        param = JsonUtil.toJson(startParams)
+                    )
+                }
             }
 
             logger.info("[$pipelineId]|START_PIPELINE|AFTER_FILTER|buildId=$buildId|startType=$startType|startParams=$startParams")
