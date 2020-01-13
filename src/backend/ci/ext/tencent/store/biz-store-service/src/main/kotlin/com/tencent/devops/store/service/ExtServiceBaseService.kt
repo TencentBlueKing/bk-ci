@@ -30,6 +30,7 @@ import com.tencent.devops.store.pojo.common.enums.StoreMemberTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.dto.InitExtServiceDTO
+import com.tencent.devops.store.pojo.dto.ServiceOfflineDTO
 import com.tencent.devops.store.pojo.dto.SubmitDTO
 import com.tencent.devops.store.pojo.enums.ExtServiceStatusEnum
 import com.tencent.devops.store.pojo.vo.ExtensionAndVersionVO
@@ -366,6 +367,23 @@ abstract class ExtServiceBaseService @Autowired constructor() {
             )
         }
         return Result(ExtensionAndVersionVO(count, page, pageSize, myService))
+    }
+
+    fun offlineService(userId: String, serviceCode: String, serviceOfflineDTO: ServiceOfflineDTO): Result<Boolean>{
+        // 判断用户是否有权限下线
+        if (!storeMemberDao.isStoreAdmin(dslContext, userId, serviceCode, StoreTypeEnum.SERVICE.type.toByte())) {
+            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED)
+        }
+        // 设置插件状态为下架中
+        extServiceDao.setServiceStatusByCode(
+            dslContext, serviceCode, ExtServiceStatusEnum.RELEASED.status.toByte(),
+            ExtServiceStatusEnum.UNDERCARRIAGING.status.toByte(), userId, serviceOfflineDTO.reason
+        )
+        // 通过websocket推送状态变更消息
+//        storeWebsocketService.sendWebsocketMessageByAtomCodeAndUserId(serviceCode, userId)
+        // 通知使用方插件即将下架 -- todo
+
+        return Result(true)
     }
 
     abstract fun handleAtomPackage(

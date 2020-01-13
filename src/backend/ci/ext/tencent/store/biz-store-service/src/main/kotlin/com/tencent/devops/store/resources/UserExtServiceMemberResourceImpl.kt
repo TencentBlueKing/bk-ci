@@ -17,8 +17,7 @@ class UserExtServiceMemberResourceImpl @Autowired constructor(
         return txExtServiceMemberImpl.list(
             userId = userId,
             storeCode = serviceCode,
-            // TODO: 此处需在core内添加服务扩展类型
-            storeType = StoreTypeEnum.ATOM
+            storeType = StoreTypeEnum.SERVICE
         )
     }
 
@@ -27,8 +26,7 @@ class UserExtServiceMemberResourceImpl @Autowired constructor(
             userId = userId,
             storeMemberReq = storeMemberReq,
             sendNotify = true,
-            // TODO: 此处需在core内添加服务扩展类型
-            storeType = StoreTypeEnum.ATOM,
+            storeType = StoreTypeEnum.SERVICE,
             collaborationFlag = true
 
         )
@@ -38,8 +36,7 @@ class UserExtServiceMemberResourceImpl @Autowired constructor(
         return txExtServiceMemberImpl.delete(
             userId = userId,
             storeCode = serviceCode,
-            // TODO: 此处需在core内添加服务扩展类型
-            storeType = StoreTypeEnum.ATOM,
+            storeType = StoreTypeEnum.SERVICE,
             id = id
             )
     }
@@ -48,8 +45,7 @@ class UserExtServiceMemberResourceImpl @Autowired constructor(
         return txExtServiceMemberImpl.viewMemberInfo(
             userId = userId,
             storeCode = serviceCode,
-            // TODO: 此处需在core内添加服务扩展类型
-            storeType = StoreTypeEnum.ATOM
+            storeType = StoreTypeEnum.SERVICE
             )
     }
 
@@ -64,8 +60,7 @@ class UserExtServiceMemberResourceImpl @Autowired constructor(
             userId = userId,
             projectCode = projectCode,
             storeCode = serviceCode,
-            // TODO: 此处需在core内添加服务扩展类型
-            storeType = StoreTypeEnum.ATOM
+            storeType = StoreTypeEnum.SERVICE
         )
     }
 }

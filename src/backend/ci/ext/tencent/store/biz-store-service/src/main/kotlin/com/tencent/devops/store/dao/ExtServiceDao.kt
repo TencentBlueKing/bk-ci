@@ -1,5 +1,6 @@
 package com.tencent.devops.store.dao
 
+import com.tencent.devops.model.store.tables.TClassify
 import com.tencent.devops.model.store.tables.TExtensionService
 import com.tencent.devops.model.store.tables.TStoreMember
 import com.tencent.devops.model.store.tables.records.TExtensionServiceRecord
@@ -188,6 +189,12 @@ class ExtServiceDao {
         }
     }
 
+    fun getServiceLatestByCode(dslContext: DSLContext, serviceCode: String): TExtensionServiceRecord? {
+        return with(TExtensionService.T_EXTENSION_SERVICE) {
+            dslContext.selectFrom(this).where(DELETE_FLAG.eq(false)).and(SERVICE_CODE.eq(serviceCode)).and(LATEST_FLAG.eq(true)).fetchOne()
+        }
+    }
+
     fun listServiceByCode(dslContext: DSLContext, serviceCode: String): Result<TExtensionServiceRecord?> {
         return with(TExtensionService.T_EXTENSION_SERVICE) {
             dslContext.selectFrom(this).where(DELETE_FLAG.eq(false)).and(SERVICE_CODE.eq(serviceCode))
@@ -208,6 +215,58 @@ class ExtServiceDao {
         }
     }
 
+    /**
+     * 设置可用的扩展服务版本状态为下架中、已下架
+     */
+    fun setServiceStatusByCode(
+        dslContext: DSLContext,
+        serviceCode: String,
+        serviceOldStatus: Byte,
+        serviceNewStatus: Byte,
+        userId: String,
+        msg: String?
+    ) {
+        with(TExtensionService.T_EXTENSION_SERVICE) {
+            val baseStep = dslContext.update(this)
+                .set(SERVICE_STATUS, serviceNewStatus)
+            if (!msg.isNullOrEmpty()) {
+                baseStep.set(SERVICE_STATUS_MSG, msg)
+            }
+            baseStep.set(MODIFIER, userId)
+                .set(UPDATE_TIME, LocalDateTime.now())
+                .where(SERVICE_CODE.eq(serviceCode))
+                .and(SERVICE_STATUS.eq(serviceOldStatus))
+                .execute()
+        }
+    }
+
+    fun getAllServiceClassify(dslContext: DSLContext): Result<out Record>? {
+        val a = TExtensionService.T_EXTENSION_SERVICE.`as`("a")
+        val b = TClassify.T_CLASSIFY.`as`("b")
+        val conditions = setAtomVisibleCondition(a)
+        conditions.add(0, a.CLASSIFY_ID.eq(b.ID))
+        val atomNum = dslContext.selectCount().from(a).where(conditions).asField<Int>("atomNum")
+        return dslContext.select(
+            b.ID.`as`("id"),
+            b.CLASSIFY_CODE.`as`("classifyCode"),
+            b.CLASSIFY_NAME.`as`("classifyName"),
+            atomNum,
+            b.CREATE_TIME.`as`("createTime"),
+            b.UPDATE_TIME.`as`("updateTime")
+        ).from(b).where(b.TYPE.eq(0)).orderBy(b.WEIGHT.desc()).fetch()
+    }
+
+
+    /**
+     * 设置见插件查询条件
+     */
+    protected fun setAtomVisibleCondition(a: TExtensionService): MutableList<Condition> {
+        val conditions = mutableListOf<Condition>()
+//        conditions.add(a.DEFAULT_FLAG.eq(false)) // 需安装的
+        conditions.add(a.SERVICE_STATUS.eq(ExtServiceStatusEnum.RELEASED.status.toByte())) // 已发布的
+        conditions.add(a.LATEST_FLAG.eq(true)) // 最新版本
+        return conditions
+    }
     private fun generateGetMemberConditions(
         a: TExtensionService,
         userId: String,

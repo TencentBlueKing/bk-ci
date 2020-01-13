@@ -104,7 +104,7 @@ class CommonConfig {
     /**
      * 蓝盾新仓库API地址
      */
-    @Value("\${bkrepo.url:#{null}}")
+    @Value("\${bkrepo.apiUrl:#{null}}")
     val bkrepoApiUrl: String? = null
 
     /**

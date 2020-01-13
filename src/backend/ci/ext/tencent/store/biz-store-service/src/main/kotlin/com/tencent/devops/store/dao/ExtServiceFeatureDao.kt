@@ -1,8 +1,12 @@
 package com.tencent.devops.store.dao
 
 import com.tencent.devops.common.api.util.UUIDUtil
+import com.tencent.devops.model.store.tables.TAtom
+import com.tencent.devops.model.store.tables.TExtensionService
 import com.tencent.devops.model.store.tables.TExtensionServiceFeature
+import com.tencent.devops.model.store.tables.records.TAtomRecord
 import com.tencent.devops.model.store.tables.records.TExtensionServiceFeatureRecord
+import com.tencent.devops.model.store.tables.records.TExtensionServiceRecord
 import com.tencent.devops.store.pojo.ExtServiceFeatureCreateInfo
 import com.tencent.devops.store.pojo.ExtServiceFeatureUpdateInfo
 import org.jooq.DSLContext
@@ -92,6 +96,14 @@ class ExtServiceFeatureDao {
     fun getServiceByCode(dslContext: DSLContext, serviceCode: String): TExtensionServiceFeatureRecord? {
         return with(TExtensionServiceFeature.T_EXTENSION_SERVICE_FEATURE) {
             dslContext.selectFrom(this).where(DELETE_FLAG.eq(false)).and(ID.eq(serviceCode)).fetchOne()
+        }
+    }
+
+    fun getLatestServiceByCode(dslContext: DSLContext, serviceCode: String): TExtensionServiceFeatureRecord? {
+        return with(TExtensionServiceFeature.T_EXTENSION_SERVICE_FEATURE) {
+            dslContext.selectFrom(this)
+                .where(SERVICE_CODE.eq(serviceCode))
+                .fetchOne()
         }
     }
 }

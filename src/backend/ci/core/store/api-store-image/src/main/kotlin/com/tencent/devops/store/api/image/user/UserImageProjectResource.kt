@@ -59,7 +59,6 @@ interface UserImageProjectResource {
     @Path("/image/install")
     fun installImage(
         @ApiParam("token", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
         accessToken: String,
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)

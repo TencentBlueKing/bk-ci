@@ -28,7 +28,7 @@ abstract class ExtServiceMemberImpl : StoreMemberServiceImpl() {
     ): Result<Boolean> {
         logger.info("addExtensionMember userId is:$userId,storeMemberReq is:$storeMemberReq,storeType is:$storeType")
         val serviceCode = storeMemberReq.storeCode
-        val serviceRecord = extServiceFeatureDao.getServiceByCode(dslContext, serviceCode)
+        val serviceRecord = extServiceFeatureDao.getLatestServiceByCode(dslContext, serviceCode)
         logger.info("addExtensionMember serviceRecord is:$serviceRecord")
         if (null == serviceRecord) {
             return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_INVALID, arrayOf(serviceCode))
@@ -36,7 +36,6 @@ abstract class ExtServiceMemberImpl : StoreMemberServiceImpl() {
         if (!storeMemberDao.isStoreAdmin(dslContext, userId, serviceCode, storeType.type.toByte())) {
             return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED)
         }
-
         val repositoryHashId = serviceRecord.repositoryHashId
         val addRepoMemberResult = addRepoMember(storeMemberReq, userId, repositoryHashId)
         logger.info("addExtensionMember is:$addRepoMemberResult")
@@ -51,7 +50,7 @@ abstract class ExtServiceMemberImpl : StoreMemberServiceImpl() {
     override fun delete(userId: String, id: String, storeCode: String, storeType: StoreTypeEnum): Result<Boolean> {
         logger.info("deleteExtServiceMember userId is:$userId,id is:$id,storeCode is:$storeCode,storeType is:$storeType")
         val serviceRecord = extServiceFeatureDao.getServiceByCode(dslContext, storeCode)
-        logger.info("deleteExtServiceMember atomRecord is:$serviceRecord")
+        logger.info("deleteExtServiceMember serviceRecord is:$serviceRecord")
         if (null == serviceRecord) {
             return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_INVALID, arrayOf(storeCode))
         }
@@ -77,7 +76,7 @@ abstract class ExtServiceMemberImpl : StoreMemberServiceImpl() {
     abstract fun deleteRepoMember(userId: String, username: String, repositoryHashId: String): Result<Boolean>
 
     override fun getStoreName(storeCode: String): String {
-        return extServiceDao.getServiceByCode(dslContext, storeCode)?.serviceName ?: ""
+        return extServiceDao.getServiceLatestByCode(dslContext, storeCode)?.serviceName ?: ""
     }
 
     companion object {

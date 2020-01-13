@@ -31,21 +31,29 @@ package com.tencent.devops.process.api.service
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.pojo.pipeline.ExtServiceBuildInitPipelineReq
 import com.tencent.devops.process.pojo.pipeline.ExtServiceBuildInitPipelineResp
+import com.tencent.devops.process.service.ExtServiceBuildInitPipelineService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ServiceExtServiceBuildPipelineInitResourceImpl @Autowired constructor(
-    private val pipelineRepositoryService: PipelineRepositoryService
+    private val extServiceBuildInitPipelineService: ExtServiceBuildInitPipelineService
 ) : ServiceExtServiceBuildPipelineInitResource {
 
     override fun initExtServiceBuildPipeline(
-            userId: String,
-            projectCode: String,
-            extServiceBuildInitPipelineReq: ExtServiceBuildInitPipelineReq
+        userId: String,
+        projectCode: String,
+        extServiceBuildInitPipelineReq: ExtServiceBuildInitPipelineReq
     ): Result<ExtServiceBuildInitPipelineResp> {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        return extServiceBuildInitPipelineService.initPipeline(
+            userId,
+            projectCode,
+            extServiceBuildInitPipelineReq.extServiceBaseInfo,
+            extServiceBuildInitPipelineReq.repositoryHashId,
+            extServiceBuildInitPipelineReq.repositoryPath,
+            extServiceBuildInitPipelineReq.script,
+            extServiceBuildInitPipelineReq.buildEnv
+        )
     }
 }
