@@ -498,9 +498,9 @@ class BkRepoClient constructor(
     private fun getAllBkRepoFiles(userId: String, projectId: String, pipelineId: String, buildId: String, isCustom: Boolean): BkRepoData {
         logger.info("getAllBkrepoFiles, projectId: $projectId, pipelineId: $pipelineId, buildId: $buildId, isCustom: $isCustom")
         var url = if (isCustom) {
-            "${getGatewaytUrl()}/bkrepo/api/service/generic/list/$projectId/custom?includeFolder=true&deep=true"
+            "${getGatewaytUrl()}/bkrepo/api/service/generic/list/$projectId/custom?includeFolder=false&deep=true"
         } else {
-            "${getGatewaytUrl()}/bkrepo/api/service/generic/list/$projectId/pipeline/$pipelineId/$buildId?includeFolder=true&deep=true"
+            "${getGatewaytUrl()}/bkrepo/api/service/generic/list/$projectId/pipeline/$pipelineId/$buildId?includeFolder=false&deep=true"
         }
         val request = Request.Builder()
             .url(url)
@@ -513,13 +513,13 @@ class BkRepoClient constructor(
             val responseBody = response.body()!!.string()
             if (!response.isSuccessful) {
                 logger.error("get bkrepo files fail: $responseBody")
-                throw RuntimeException("构建分发获取文件失败")
+                throw RuntimeException("获取文件失败")
             }
             try {
                 return JsonUtil.getObjectMapper().readValue(responseBody, BkRepoData::class.java)
             } catch (e: Exception) {
                 logger.error("get bkrepo files fail: $responseBody")
-                throw RuntimeException("构建分发获取文件失败")
+                throw RuntimeException("获取文件失败")
             }
         }
     }
