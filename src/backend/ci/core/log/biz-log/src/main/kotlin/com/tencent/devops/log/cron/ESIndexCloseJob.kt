@@ -31,8 +31,7 @@ import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.log.client.LogClient
 import com.tencent.devops.log.util.IndexNameUtils.LOG_PREFIX
-import org.elasticsearch.client.support.AbstractClient
-import org.elasticsearch.client.transport.TransportClient
+import org.elasticsearch.client.Client
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.scheduling.annotation.Scheduled
@@ -102,7 +101,7 @@ class ESIndexCloseJob @Autowired constructor(
         }
     }
 
-    private fun closeESIndex(c: AbstractClient, index: String) {
+    private fun closeESIndex(c: Client, index: String) {
         logger.info("[$index] Start to close ES index")
         val resp = c.admin()
             .indices()
