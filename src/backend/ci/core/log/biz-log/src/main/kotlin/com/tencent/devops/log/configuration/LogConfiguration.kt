@@ -27,7 +27,7 @@
 package com.tencent.devops.log.configuration
 
 import com.tencent.devops.log.client.impl.LogClientImpl
-import org.elasticsearch.client.support.AbstractClient
+import org.elasticsearch.client.Client
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
@@ -41,5 +41,5 @@ import org.springframework.core.Ordered
 class LogConfiguration {
 
     @Bean
-    fun logClient(@Autowired abstractClient: AbstractClient) = LogClientImpl(abstractClient)
+    fun logClient(@Autowired client: Client) = LogClientImpl(client)
 }
