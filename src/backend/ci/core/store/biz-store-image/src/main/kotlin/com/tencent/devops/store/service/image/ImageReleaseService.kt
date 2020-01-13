@@ -432,11 +432,11 @@ abstract class ImageReleaseService {
         logger.info("passTest isNormalUpgrade is:$isNormalUpgrade")
         val imageStatus = getPassTestStatus(isNormalUpgrade)
         val (checkResult, code, params) = checkImageVersionOptRight(
-            userId,
-            imageId,
-            imageStatus,
-            validateUserFlag,
-            isNormalUpgrade
+            userId = userId,
+            imageId = imageId,
+            status = imageStatus,
+            validateUserFlag = validateUserFlag,
+            isNormalUpgrade = isNormalUpgrade
         )
         if (!checkResult) {
             return MessageCodeUtil.generateResponseDataObject(code!!, params, false)
