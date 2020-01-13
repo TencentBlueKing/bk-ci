@@ -29,7 +29,6 @@ package com.tencent.devops.log.configuration
 import com.tencent.devops.common.es.ESProperties
 import com.tencent.devops.common.web.WebAutoConfiguration
 import org.elasticsearch.client.Client
-import org.elasticsearch.client.transport.TransportClient
 import org.elasticsearch.common.settings.Settings
 import org.elasticsearch.common.transport.InetSocketTransportAddress
 import org.elasticsearch.transport.client.PreBuiltTransportClient
