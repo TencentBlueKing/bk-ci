@@ -24,22 +24,31 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo.template
+package com.tencent.devops.plugin.worker.task.codecc.util
 
-data class TemplateOperationMessage constructor(
-    val successPipelines: List<String>,
-    val failurePipelines: List<String>,
-    val failureMessages: Map<String/*PipelineName*/, String/*Message*/>,
-    val successPipelinesId: List<String>
-) {
-    constructor(
-        successPipelines: List<String>,
-        failurePipelines: List<String>,
-        failureMessages: Map<String, String>
-    ) : this(
-        successPipelines = successPipelines,
-        failurePipelines = failurePipelines,
-        failureMessages = failureMessages,
-        successPipelinesId = emptyList()
-    )
+import com.tencent.devops.plugin.worker.task.codecc.WindowsCodeccConstants.WINDOWS_GOMETALINTER_PATH
+import com.tencent.devops.plugin.worker.task.codecc.WindowsCodeccConstants.WINDOWS_GOROOT_PATH
+import com.tencent.devops.worker.common.CommonEnv
+
+class WindowsCodeccUtils : CodeccUtils() {
+
+    override fun coverityPreExecute(list: MutableList<String>) {
+        CommonEnv.getCommonEnv().forEach { (key, value) ->
+            list.add("set $key=$value\n")
+        }
+
+        list.add("python -V\n")
+        list.add("cd\n")
+    }
+
+    override fun toolPreExecute(list: MutableList<String>) {
+        list.add("set PATH=${WINDOWS_GOROOT_PATH.canonicalPath}\\bin;${WINDOWS_GOMETALINTER_PATH.canonicalPath};%PATH%\n")
+
+        CommonEnv.getCommonEnv().forEach { (key, value) ->
+            list.add("set $key=$value\n")
+        }
+
+        list.add("python -V\n")
+        list.add("cd\n")
+    }
 }
