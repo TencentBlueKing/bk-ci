@@ -326,20 +326,22 @@ abstract class ImageReleaseService {
                 arrayOf(version, requireVersion)
             )
         }
-        if (imageRecords.size > 1) {
-            // 判断最近一个镜像版本的状态，只有处于审核驳回、已发布、上架中止和已下架的状态才允许添加新的版本
-            val imageFinalStatusList = listOf(
-                ImageStatusEnum.AUDIT_REJECT.status.toByte(),
-                ImageStatusEnum.RELEASED.status.toByte(),
-                ImageStatusEnum.GROUNDING_SUSPENSION.status.toByte(),
-                ImageStatusEnum.UNDERCARRIAGED.status.toByte()
+        // 判断最近一个镜像版本的状态，如果不是首次发布，则只有处于审核驳回、已发布、上架中止和已下架的插件状态才允许添加新的版本
+        val imageFinalStatusList = mutableListOf(
+            ImageStatusEnum.AUDIT_REJECT.status.toByte(),
+            ImageStatusEnum.RELEASED.status.toByte(),
+            ImageStatusEnum.GROUNDING_SUSPENSION.status.toByte(),
+            ImageStatusEnum.UNDERCARRIAGED.status.toByte()
+        )
+        if (imageRecords.size == 1) {
+            // 如果是首次发布，处于初始化的镜像状态也允许添加新的版本
+            imageFinalStatusList.add(ImageStatusEnum.INIT.status.toByte())
+        }
+        if (!imageFinalStatusList.contains(imageRecord.imageStatus)) {
+            return MessageCodeUtil.generateResponseDataObject(
+                StoreMessageCode.USER_IMAGE_VERSION_IS_NOT_FINISH,
+                arrayOf(imageRecord.imageName, imageRecord.version)
             )
-            if (!imageFinalStatusList.contains(imageRecord.imageStatus)) {
-                return MessageCodeUtil.generateResponseDataObject(
-                    StoreMessageCode.USER_IMAGE_VERSION_IS_NOT_FINISH,
-                    arrayOf(imageRecord.imageName, imageRecord.version)
-                )
-            }
         }
         var imageId = UUIDUtil.generate()
         dslContext.transaction { t ->
@@ -438,7 +440,13 @@ abstract class ImageReleaseService {
         val isNormalUpgrade = getNormalUpgradeFlag(imageCode, imageRecord.imageStatus.toInt())
         logger.info("passTest isNormalUpgrade is:$isNormalUpgrade")
         val imageStatus = getPassTestStatus(isNormalUpgrade)
-        val (checkResult, code, params) = checkImageVersionOptRight(userId, imageId, imageStatus, validateUserFlag)
+        val (checkResult, code, params) = checkImageVersionOptRight(
+            userId = userId,
+            imageId = imageId,
+            status = imageStatus,
+            validateUserFlag = validateUserFlag,
+            isNormalUpgrade = isNormalUpgrade
+        )
         if (!checkResult) {
             return MessageCodeUtil.generateResponseDataObject(code!!, params, false)
         }
@@ -709,7 +717,7 @@ abstract class ImageReleaseService {
                 storeId = imageId,
                 storeCode = imageCode,
                 storeType = StoreTypeEnum.IMAGE,
-                modifier = record.modifier,
+                creator = record.creator,
                 processInfo = processInfo
             )
             logger.info("getProcessInfo storeProcessInfo: $storeProcessInfo")
@@ -735,15 +743,17 @@ abstract class ImageReleaseService {
     }
 
     /**
-     * 检查版本发布过程中的操作权限：重新构建、确认测试完成、取消发布
+     * 检查版本发布过程中的操作权限
      */
     protected fun checkImageVersionOptRight(
         userId: String,
         imageId: String,
         status: Byte,
-        validateUserFlag: Boolean = true
+        validateUserFlag: Boolean = true,
+        isNormalUpgrade: Boolean? = null
     ): Triple<Boolean, String?, Array<String>?> {
-        logger.info("checkImageVersionOptRight userId is:$userId, imageId is:$imageId, status is:$status, validateUserFlag is:$validateUserFlag")
+        logger.info("checkImageVersionOptRight userId is:$userId, imageId is:$imageId, status is:$status")
+        logger.info("checkImageVersionOptRight validateUserFlag is:$validateUserFlag, isNormalUpgrade is:$isNormalUpgrade")
         val imageRecord =
             imageDao.getImage(dslContext, imageId) ?: return Triple(
                 false,
@@ -751,36 +761,84 @@ abstract class ImageReleaseService {
                 arrayOf(imageId)
             )
         val imageCode = imageRecord.imageCode
-        val modifier = imageRecord.modifier
+        val creator = imageRecord.creator
         val imageStatus = imageRecord.imageStatus
-        // 判断用户是否有权限
+        // 判断用户是否有权限(当前版本的创建者和管理员可以操作)
         if (!(storeMemberDao.isStoreAdmin(
                 dslContext,
                 userId,
                 imageCode,
                 StoreTypeEnum.IMAGE.type.toByte()
-            ) || modifier == userId || !validateUserFlag)
+            ) || creator == userId || !validateUserFlag)
         ) {
             return Triple(false, CommonMessageCode.PERMISSION_DENIED, null)
         }
         logger.info("imageRecord status=$imageStatus, status=$status")
-        if (status == ImageStatusEnum.AUDITING.status.toByte() &&
+        val allowReleaseStatus = if (isNormalUpgrade != null && isNormalUpgrade) ImageStatusEnum.TESTING
+        else ImageStatusEnum.AUDITING
+        var validateFlag = true
+        if (status == ImageStatusEnum.COMMITTING.status.toByte() &&
+            imageStatus != ImageStatusEnum.INIT.status.toByte()
+        ) {
+            validateFlag = false
+        } else if (status == ImageStatusEnum.CHECKING.status.toByte() &&
+            imageStatus !in (
+                listOf(
+                    ImageStatusEnum.COMMITTING.status.toByte(),
+                    ImageStatusEnum.CHECK_FAIL.status.toByte(),
+                    ImageStatusEnum.TESTING.status.toByte()
+                ))
+        ) {
+            validateFlag = false
+        } else if (status == ImageStatusEnum.CHECK_FAIL.status.toByte() &&
+            imageStatus !in (
+                listOf(
+                    ImageStatusEnum.COMMITTING.status.toByte(),
+                    ImageStatusEnum.CHECKING.status.toByte(),
+                    ImageStatusEnum.CHECK_FAIL.status.toByte(),
+                    ImageStatusEnum.TESTING.status.toByte()
+                ))
+        ) {
+            validateFlag = false
+        } else if (status == ImageStatusEnum.TESTING.status.toByte() &&
+            imageStatus != ImageStatusEnum.CHECKING.status.toByte()
+        ) {
+            validateFlag = false
+        } else if (status == ImageStatusEnum.AUDITING.status.toByte() &&
             imageStatus != ImageStatusEnum.TESTING.status.toByte()
         ) {
-            return Triple(false, StoreMessageCode.USER_IMAGE_RELEASE_STEPS_ERROR, null)
-        } else if (status == ImageStatusEnum.CHECKING.status.toByte() &&
-            imageStatus !in (listOf(
-                ImageStatusEnum.CHECK_FAIL.status.toByte(),
-                ImageStatusEnum.TESTING.status.toByte()
-            ))
+            validateFlag = false
+        } else if (status == ImageStatusEnum.AUDIT_REJECT.status.toByte() &&
+            imageStatus != ImageStatusEnum.AUDITING.status.toByte()
         ) {
-            return Triple(false, StoreMessageCode.USER_IMAGE_RELEASE_STEPS_ERROR, null)
+            validateFlag = false
+        } else if (status == ImageStatusEnum.RELEASED.status.toByte() &&
+            imageStatus != allowReleaseStatus.status.toByte()
+        ) {
+            validateFlag = false
         } else if (status == ImageStatusEnum.GROUNDING_SUSPENSION.status.toByte() &&
-            imageStatus in (listOf(ImageStatusEnum.RELEASED.status.toByte()))
+            imageStatus == ImageStatusEnum.RELEASED.status.toByte()
         ) {
-            return Triple(false, StoreMessageCode.USER_IMAGE_RELEASE_STEPS_ERROR, null)
+            validateFlag = false
+        } else if (status == ImageStatusEnum.UNDERCARRIAGING.status.toByte() &&
+            imageStatus == ImageStatusEnum.RELEASED.status.toByte()
+        ) {
+            validateFlag = false
+        } else if (status == ImageStatusEnum.UNDERCARRIAGED.status.toByte() &&
+            imageStatus !in (
+                listOf(
+                    ImageStatusEnum.UNDERCARRIAGING.status.toByte(),
+                    ImageStatusEnum.RELEASED.status.toByte()
+                ))
+        ) {
+            validateFlag = false
         }
-        return Triple(true, null, null)
+
+        return if (validateFlag) Triple(true, null, null) else Triple(
+            false,
+            StoreMessageCode.USER_IMAGE_RELEASE_STEPS_ERROR,
+            null
+        )
     }
 
     private fun validateNameIsExist(
