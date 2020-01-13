@@ -25,7 +25,7 @@ class BuildVarResourceImpl @Autowired constructor(
     }
 
     fun checkPermission(projectId: String, pipelineId: String) {
-        val userId = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)?.lastModifyUser?:""
+        val userId = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)?.lastModifyUser ?: ""
         if (!pipelinePermissionService.checkPipelinePermission(
                 userId = userId,
                 projectId = projectId,
