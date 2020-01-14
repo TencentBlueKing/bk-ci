@@ -43,6 +43,7 @@ import com.tencent.bkrepo.repository.pojo.node.user.UserNodeRenameRequest
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.archive.config.ArtifactoryConfig
 import com.tencent.devops.common.archive.pojo.BkRepoData
 import com.tencent.devops.common.archive.pojo.BkRepoFile
 import com.tencent.devops.common.service.config.CommonConfig
@@ -63,7 +64,8 @@ import javax.ws.rs.NotFoundException
 
 class BkRepoClient @Autowired constructor(
     private val objectMapper: ObjectMapper,
-    private val commonConfig: CommonConfig
+    private val commonConfig: CommonConfig,
+    private val artifactoryConfig: ArtifactoryConfig
 ) {
     private fun getGatewaytUrl(): String {
         return HomeHostUtil.getHost(commonConfig.devopsHostGateway!!)
@@ -255,6 +257,17 @@ class BkRepoClient @Autowired constructor(
         }
     }
 
+    fun uploadLocalFile(userId: String, projectId: String, repoName: String, path: String, file: File) {
+        logger.info("uploadLocalFile, userId: $userId, projectId: $projectId, repoName: $repoName, path: $path, localFile: ${file.canonicalPath}")
+        uploadLocalFile(
+            userId = userId,
+            projectId = projectId,
+            repoName = repoName,
+            path = path,
+            file = file
+        )
+    }
+
     fun uploadLocalFile(
         userId: String,
         projectId: String,
@@ -267,7 +280,7 @@ class BkRepoClient @Autowired constructor(
     ) {
         logger.info("uploadLocalFile, projectId: $projectId, repoName: $repoName, path: $path, localFile: ${file.canonicalPath}")
         logger.info("uploadLocalFile, userName: $userName, password: $password")
-        val repoUrlPrefix = if (gatewayFlag) "${getGatewaytUrl()}/bkrepo/api/service/generic" else HomeHostUtil.bkrepoApiUrl()
+        val repoUrlPrefix = if (gatewayFlag) "${getGatewaytUrl()}/bkrepo/api/service/generic" else artifactoryConfig.bkrepoApiUrl
         val url = "$repoUrlPrefix/$projectId/$repoName/${path.removePrefix("/")}"
         val requestBuilder = Request.Builder()
             .url(url)

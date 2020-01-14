@@ -28,6 +28,7 @@ package com.tencent.devops.common.archive
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.archive.client.BkRepoClient
+import com.tencent.devops.common.archive.config.ArtifactoryConfig
 import com.tencent.devops.common.service.config.CommonConfig
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
@@ -48,6 +49,7 @@ class BkRepoAutoConfiguration {
     @Primary
     fun bkRepoClient(
         @Autowired objectMapper: ObjectMapper,
-        @Autowired commonConfig: CommonConfig
-    ) = BkRepoClient(objectMapper, commonConfig)
+        @Autowired commonConfig: CommonConfig,
+        @Autowired artifactoryConfig: ArtifactoryConfig
+    ) = BkRepoClient(objectMapper, commonConfig, artifactoryConfig)
 }

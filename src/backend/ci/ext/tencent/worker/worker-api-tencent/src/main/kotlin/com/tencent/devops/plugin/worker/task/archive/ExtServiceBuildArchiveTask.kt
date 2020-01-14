@@ -42,6 +42,8 @@ import com.tencent.devops.dockerhost.pojo.CheckImageResponse
 import com.tencent.devops.dockerhost.pojo.DockerBuildParam
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
+import com.tencent.devops.worker.common.api.ApiFactory
+import com.tencent.devops.worker.common.api.atom.AtomArchiveSDKApi
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.task.ITask
 import com.tencent.devops.worker.common.task.TaskClassType
@@ -54,6 +56,8 @@ import java.io.File
 
 @TaskClassType(classTypes = [ExtServiceBuildArchiveElement.classType])
 class ExtServiceBuildArchiveTask : ITask() {
+
+    private val atomApi = ApiFactory.create(AtomArchiveSDKApi::class)
 
     private val logger = LoggerFactory.getLogger(ExtServiceBuildArchiveTask::class.java)
 
