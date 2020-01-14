@@ -106,20 +106,20 @@ class StoreDeptRelDao {
                         CREATOR,
                         MODIFIER
                 )
-                        .values(
-                                UUIDUtil.generate(),
-                                storeCode,
-                                it.deptId,
-                                it.deptName,
-                                storeType,
-                                userId,
-                                userId
-                        )
-                        .onDuplicateKeyUpdate()
-                        .set(STATUS, DeptStatusEnum.APPROVED.status.toByte()) // 如果添加的机构之前被审核拒绝过，则会将之前拒绝过的记录更新为待审核状态
-                        .set(COMMENT, "")
-                        .set(MODIFIER, userId)
-                        .set(UPDATE_TIME, LocalDateTime.now())
+                    .values(
+                            UUIDUtil.generate(),
+                            storeCode,
+                            it.deptId,
+                            it.deptName,
+                            storeType,
+                            userId,
+                            userId
+                    )
+                    .onDuplicateKeyUpdate()
+                    .set(STATUS, status)
+                    .set(COMMENT, comment)
+                    .set(MODIFIER, userId)
+                    .set(UPDATE_TIME, LocalDateTime.now())
             }
             dslContext.batch(addStep).execute()
         }
