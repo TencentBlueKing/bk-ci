@@ -72,7 +72,7 @@ class ApigwRepositoryResourceV2Impl @Autowired constructor(private val client: C
     override fun getAuthUrl(
         projectId: String,
         userId: String,
-        repoHashId: String
+        repoHashId: String?
     ): Result<String> {
         logger.info("getAuthUrl projectId[$projectId] userId[$userId] repoHashId[$repoHashId]")
         val authParams = mapOf(

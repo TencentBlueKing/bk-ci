@@ -86,7 +86,7 @@ interface ApigwRepositoryResourceV2 {
         userId: String,
         @ApiParam("项目hashId")
         @QueryParam("repoHashId")
-        repoHashId: String
+        repoHashId: String?
     ): Result<String>
 
     @ApiOperation("获取git代码库accessToken信息")
