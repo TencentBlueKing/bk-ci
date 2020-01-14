@@ -82,7 +82,7 @@ class ArchiveExtServicePkgServiceImpl : ArchiveExtServicePkgService {
         try {
             bkRepoClient.uploadLocalFile(
                 userId = userId,
-                projectId = projectCode,
+                projectId = artifactoryConfig.bkrepoExtServiceProjectName,
                 repoName = artifactoryConfig.bkrepoExtServicePkgRepoName,
                 path = destPath,
                 file = file,
