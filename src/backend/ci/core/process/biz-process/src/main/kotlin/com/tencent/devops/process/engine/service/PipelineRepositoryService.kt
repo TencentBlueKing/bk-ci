@@ -140,7 +140,7 @@ class PipelineRepositoryService constructor(
         params.forEach {
             // 变量名从旧转新: 兼容从旧入口写入的数据转到新的流水线运行
             val newVarName = PipelineVarUtil.oldVarToNewVar(it.id)
-            if (!newVarName.isNullOrBlank() && paramIds.contains(newVarName)) {
+            if (!newVarName.isNullOrBlank()) {
                 newParams.add(BuildFormProperty(
                     id = newVarName!!,
                     required = it.required,
