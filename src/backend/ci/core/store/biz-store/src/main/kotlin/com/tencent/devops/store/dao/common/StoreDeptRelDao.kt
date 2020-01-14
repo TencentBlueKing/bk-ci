@@ -94,6 +94,37 @@ class StoreDeptRelDao {
         }
     }
 
+    fun batchAdd(dslContext: DSLContext, userId: String, storeCode: String, deptInfoList: List<DeptInfo>, status: Byte, comment: String, storeType: Byte) {
+        with(TStoreDeptRel.T_STORE_DEPT_REL) {
+            val addStep = deptInfoList.map {
+                dslContext.insertInto(this,
+                        ID,
+                        STORE_CODE,
+                        DEPT_ID,
+                        DEPT_NAME,
+                        STORE_TYPE,
+                        CREATOR,
+                        MODIFIER
+                )
+                        .values(
+                                UUIDUtil.generate(),
+                                storeCode,
+                                it.deptId,
+                                it.deptName,
+                                storeType,
+                                userId,
+                                userId
+                        )
+                        .onDuplicateKeyUpdate()
+                        .set(STATUS, DeptStatusEnum.APPROVED.status.toByte()) // 如果添加的机构之前被审核拒绝过，则会将之前拒绝过的记录更新为待审核状态
+                        .set(COMMENT, "")
+                        .set(MODIFIER, userId)
+                        .set(UPDATE_TIME, LocalDateTime.now())
+            }
+            dslContext.batch(addStep).execute()
+        }
+    }
+
     fun batchUpdate(dslContext: DSLContext, userId: String, storeCode: String, deptIdList: List<Int>, status: Byte, comment: String, storeType: Byte) {
         with(TStoreDeptRel.T_STORE_DEPT_REL) {
             dslContext.update(this)
