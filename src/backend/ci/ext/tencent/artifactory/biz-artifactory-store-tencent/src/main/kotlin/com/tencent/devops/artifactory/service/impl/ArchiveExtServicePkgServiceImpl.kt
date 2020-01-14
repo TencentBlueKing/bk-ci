@@ -39,10 +39,12 @@ import com.tencent.devops.store.api.ServiceExtServiceArchiveResource
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
 import java.io.InputStream
 import java.nio.charset.Charset
 import java.nio.file.Files
 
+@Service
 class ArchiveExtServicePkgServiceImpl : ArchiveExtServicePkgService {
 
     private val logger = LoggerFactory.getLogger(ArchiveExtServicePkgServiceImpl::class.java)
