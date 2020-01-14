@@ -42,6 +42,8 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.util.*
+import kotlin.collections.HashMap
 
 /**
  * store组件可见范围逻辑类
@@ -55,26 +57,7 @@ class StoreVisibleDeptServiceImpl @Autowired constructor(
 ) : StoreVisibleDeptService {
 
     private val logger = LoggerFactory.getLogger(StoreVisibleDeptServiceImpl::class.java)
-    private val approveList = mutableListOf<Int>()
-
-    init {
-        approveList.add(1)
-        approveList.add(78)
-        approveList.add(953)
-        approveList.add(954)
-        approveList.add(955)
-        approveList.add(956)
-        approveList.add(957)
-        approveList.add(958)
-        approveList.add(1669)
-        approveList.add(2233)
-        approveList.add(2234)
-        approveList.add(9832)
-        approveList.add(10336)
-        approveList.add(14129)
-        approveList.add(29292)
-        approveList.add(29294)
-    }
+    private val approveList = Arrays.asList(0,1,78,953,954,955,956,957,958,1669,2233,9832,10336,14129,29292,29294)
 
     /**
      * 查看store组件可见范围
