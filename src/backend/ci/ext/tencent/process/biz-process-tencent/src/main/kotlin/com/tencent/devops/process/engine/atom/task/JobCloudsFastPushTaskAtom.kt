@@ -30,12 +30,15 @@ import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.UUIDUtil
+import com.tencent.devops.common.archive.client.BkRepoClient
 import com.tencent.devops.common.archive.client.JfrogClient
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.pipeline.element.JobCloudsFastPushElement
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.config.CommonConfig
+import com.tencent.devops.common.service.gray.RepoGray
 import com.tencent.devops.log.utils.LogUtils
 import com.tencent.devops.process.bkjob.ClearJobTempFileEvent
 import com.tencent.devops.process.engine.atom.AtomResponse
@@ -69,15 +72,15 @@ class JobCloudsFastPushTaskAtom @Autowired constructor(
     private val jobFastPushFile: JobFastPushFile,
     private val rabbitTemplate: RabbitTemplate,
     private val client: Client,
-    private val commonConfig: CommonConfig
+    private val commonConfig: CommonConfig,
+    private val redisOperation: RedisOperation,
+    private val repoGray: RepoGray,
+    private val bkRepoClient: BkRepoClient
 ) : IAtomTask<JobCloudsFastPushElement> {
 
     override fun getParamElement(task: PipelineBuildTask): JobCloudsFastPushElement {
         return JsonUtil.mapTo(task.taskParams, JobCloudsFastPushElement::class.java)
     }
-
-//    @Value("\${gateway.url:#{null}}")
-//    private val gatewayUrl: String? = null
 
     @Value("\${clouds.esb.proxyIp}")
     private val cloudStoneIps = ""
@@ -257,6 +260,7 @@ class JobCloudsFastPushTaskAtom @Autowired constructor(
         runVariables: Map<String, String>,
         param: JobCloudsFastPushElement
     ): BuildStatus {
+        val userId = task.starter
         val buildId = task.buildId
         val projectId = task.projectId
         val pipelineId = task.pipelineId
@@ -274,20 +278,40 @@ class JobCloudsFastPushTaskAtom @Autowired constructor(
         var count = 0
 
         try {
-            val jfrogClinet = JfrogClient(commonConfig.devopsHostGateway!!, projectId, pipelineId, buildId)
-            regexPathsStr.split(",").forEach { regex ->
-                val files = jfrogClinet.downloadFile(regex.trim(), isCustom, workspace.canonicalPath)
-                count += files.size
-                files.forEach { file ->
-                    localFileList.add(file.absolutePath)
-                    cloudStoneFileList.add("$cloudStonePath/${file.name}")
+            val isRepoGray = repoGray.isGray(projectId, redisOperation)
+            LogUtils.addLine(rabbitTemplate, buildId, "use bkrepo: $isRepoGray", taskId, containerId, executeCount)
+            if (isRepoGray) {
+                regexPathsStr.split(",").forEach { regex ->
+                    val files = bkRepoClient.downloadFileByPattern(
+                        userId = userId,
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        buildId = buildId,
+                        repoName = if (isCustom) "custom" else "pipeline",
+                        pathPattern = regex.trim(),
+                        destPath = workspace.canonicalPath
+                    )
+                    count += files.size
+                    files.forEach { file ->
+                        localFileList.add(file.absolutePath)
+                        cloudStoneFileList.add("$cloudStonePath/${file.name}")
+                    }
+                }
+            } else {
+                val jfrogClinet = JfrogClient(commonConfig.devopsHostGateway!!, projectId, pipelineId, buildId)
+                regexPathsStr.split(",").forEach { regex ->
+                    val files = jfrogClinet.downloadFile(regex.trim(), isCustom, workspace.canonicalPath)
+                    count += files.size
+                    files.forEach { file ->
+                        localFileList.add(file.absolutePath)
+                        cloudStoneFileList.add("$cloudStonePath/${file.name}")
+                    }
                 }
             }
 
             LogUtils.addLine(rabbitTemplate, buildId, "Param cloudStonePath=$cloudStonePath", taskId, containerId, executeCount)
             LogUtils.addLine(rabbitTemplate, buildId, "Param isCustom=$isCustom", taskId, containerId, executeCount)
             LogUtils.addLine(rabbitTemplate, buildId, "Param cloudStoneFileList=$cloudStoneFileList", taskId, containerId, executeCount)
-
             LogUtils.addLine(rabbitTemplate, buildId, "$count 个文件将被分发/$count file(s) will be distribute...", taskId, containerId, executeCount)
             if (count == 0) {
                 LogUtils.addRedLine(

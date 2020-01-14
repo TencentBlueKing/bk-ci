@@ -114,4 +114,69 @@ class BkAtomReleaseServiceImpl : BkAtomReleaseService, AtomReleaseServiceImpl() 
         processInfo.add(ReleaseProcessItem(MessageCodeUtil.getCodeLanMessage(END), END, NUM_FOUR, UNDO))
         return processInfo
     }
+
+    /**
+     * 检查版本发布过程中的操作权限
+     */
+    override fun checkAtomVersionOptRight(
+        userId: String,
+        atomId: String,
+        status: Byte,
+        isNormalUpgrade: Boolean?
+    ): Pair<Boolean, String> {
+        logger.info("checkAtomVersionOptRight, userId=$userId, atomId=$atomId, status=$status, isNormalUpgrade=$isNormalUpgrade")
+        val record =
+            marketAtomDao.getAtomRecordById(dslContext, atomId) ?: return Pair(
+                false,
+                CommonMessageCode.PARAMETER_IS_INVALID
+            )
+        val atomCode = record.atomCode
+        val creator = record.creator
+        val recordStatus = record.atomStatus
+
+        // 判断用户是否有权限(当前版本的创建者和管理员可以操作)
+        if (!(storeMemberDao.isStoreAdmin(
+                dslContext,
+                userId,
+                atomCode,
+                StoreTypeEnum.ATOM.type.toByte()
+            ) || creator == userId)
+        ) {
+            return Pair(false, CommonMessageCode.PERMISSION_DENIED)
+        }
+
+        logger.info("record status=$recordStatus, status=$status")
+        var validateFlag = true
+        if (status == AtomStatusEnum.COMMITTING.status.toByte() &&
+            recordStatus != AtomStatusEnum.INIT.status.toByte()
+        ) {
+            validateFlag = false
+        } else if (status == AtomStatusEnum.TESTING.status.toByte() &&
+            recordStatus != AtomStatusEnum.COMMITTING.status.toByte()
+        ) {
+            validateFlag = false
+        } else if (status == AtomStatusEnum.RELEASED.status.toByte() &&
+            recordStatus != AtomStatusEnum.TESTING.status.toByte()
+        ) {
+            validateFlag = false
+        } else if (status == AtomStatusEnum.GROUNDING_SUSPENSION.status.toByte() &&
+            recordStatus == AtomStatusEnum.RELEASED.status.toByte()
+        ) {
+            validateFlag = false
+        } else if (status == AtomStatusEnum.UNDERCARRIAGING.status.toByte() &&
+            recordStatus != AtomStatusEnum.RELEASED.status.toByte()
+        ) {
+            validateFlag = false
+        } else if (status == AtomStatusEnum.UNDERCARRIAGED.status.toByte() &&
+            recordStatus !in (
+                listOf(
+                    AtomStatusEnum.UNDERCARRIAGING.status.toByte(),
+                    AtomStatusEnum.RELEASED.status.toByte()
+                ))
+        ) {
+            validateFlag = false
+        }
+
+        return if (validateFlag) Pair(true, "") else Pair(false, StoreMessageCode.USER_ATOM_RELEASE_STEPS_ERROR)
+    }
 }

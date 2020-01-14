@@ -24,12 +24,31 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":core:common:common-web")
-    compile("com.tencent.bkrepo:api-generic:0.7.0") {
-        changing(true)
+package com.tencent.devops.plugin.worker.task.codecc.util
+
+import com.tencent.devops.plugin.worker.task.codecc.WindowsCodeccConstants.WINDOWS_GOMETALINTER_PATH
+import com.tencent.devops.plugin.worker.task.codecc.WindowsCodeccConstants.WINDOWS_GOROOT_PATH
+import com.tencent.devops.worker.common.CommonEnv
+
+class WindowsCodeccUtils : CodeccUtils() {
+
+    override fun coverityPreExecute(list: MutableList<String>) {
+        CommonEnv.getCommonEnv().forEach { (key, value) ->
+            list.add("set $key=$value\n")
+        }
+
+        list.add("python -V\n")
+        list.add("cd\n")
     }
-    compile("com.tencent.bkrepo:api-repository:0.7.0") {
-        changing(true)
+
+    override fun toolPreExecute(list: MutableList<String>) {
+        list.add("set PATH=${WINDOWS_GOROOT_PATH.canonicalPath}\\bin;${WINDOWS_GOMETALINTER_PATH.canonicalPath};%PATH%\n")
+
+        CommonEnv.getCommonEnv().forEach { (key, value) ->
+            list.add("set $key=$value\n")
+        }
+
+        list.add("python -V\n")
+        list.add("cd\n")
     }
 }

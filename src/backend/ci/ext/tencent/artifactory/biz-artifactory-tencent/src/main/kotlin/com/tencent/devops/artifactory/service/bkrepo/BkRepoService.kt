@@ -49,9 +49,13 @@ import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_PIPELINE_ID
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_PIPELINE_NAME
 import com.tencent.devops.common.archive.pojo.ArtifactorySearchParam
 import com.tencent.devops.common.archive.shorturl.ShortUrlApi
+import com.tencent.devops.common.service.config.CommonConfig
+import com.tencent.devops.common.service.utils.HomeHostUtil
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import java.io.File
 import java.nio.file.FileSystems
 import java.nio.file.Paths
 import java.time.LocalDateTime
@@ -62,8 +66,14 @@ import javax.ws.rs.NotFoundException
 class BkRepoService @Autowired constructor(
     val pipelineService: PipelineService,
     val shortUrlApi: ShortUrlApi,
-    val bkRepoClient: BkRepoClient
+    val bkRepoClient: BkRepoClient,
+    val commonConfig: CommonConfig
 ) : RepoService {
+    @Value("\${bkrepo.devnetGatewayUrl:#{null}}")
+    private val DEVNET_GATEWAY_URL: String? = null
+
+    @Value("\${bkrepo.externalUrl:#{null}}")
+    private val EXTERNAL_URL: String? = null
 
     override fun list(userId: String, projectId: String, artifactoryType: ArtifactoryType, path: String): List<FileInfo> {
         logger.info("list, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType, path: $path")
@@ -267,8 +277,8 @@ class BkRepoService @Autowired constructor(
         }
     }
 
-    override fun createDockerUser(projectId: String): DockerUser {
-        logger.info("createDockerUser, projectId: $projectId")
+    override fun createDockerUser(projectCode: String): DockerUser {
+        logger.info("createDockerUser, projectCode: $projectCode")
         throw OperationException("Not Supported")
     }
 
@@ -370,16 +380,14 @@ class BkRepoService @Autowired constructor(
                 srcFile,
                 targetProjectId,
                 RepoUtils.CUSTOM_REPO,
-                destPathFolder
+                "$destPathFolder/${File(srcFile).name}"
             )
         }
         return Count(srcFiles.size)
     }
 
     fun getFileDownloadUrl(param: ArtifactorySearchParam): List<String> {
-        logger.info("getFileDownloadUrl, param: $param")
-        // todo
-        throw OperationException("not implemented")
+        return bkRepoClient.getFileDownloadUrl(param)
     }
 
     fun externalDownloadUrl(
@@ -392,16 +400,21 @@ class BkRepoService @Autowired constructor(
     ): String {
         logger.info("externalDownloadUrl, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType, " +
             "path: $path, ttl: $ttl, directed: $directed")
-
-        return bkRepoClient.externalDownloadUrl(
+        val fullPath = if (path.endsWith(".ipa") && directed == false) {
+            path.replace(".ipa", ".plist")
+        } else {
+            path
+        }
+        val shareUri = bkRepoClient.createShareUri(
             userId = userId,
             projectId = projectId,
             repoName = RepoUtils.getRepoByType(artifactoryType),
-            path = path,
-            downloadUser = userId,
-            ttl = ttl,
-            directed = directed
+            fullPath = fullPath,
+            downloadUsers = listOf(),
+            downloadIps = listOf(),
+            timeoutInSeconds = ttl.toLong()
         )
+        return "${HomeHostUtil.getHost(commonConfig.devopsOuterHostGateWay!!)}/bkrepo/api/external/repository$shareUri"
     }
 
     fun internalDownloadUrl(
@@ -409,13 +422,20 @@ class BkRepoService @Autowired constructor(
         projectId: String,
         artifactoryType: ArtifactoryType,
         path: String,
-        ttl: Int,
-        directed: Boolean
+        ttl: Int
     ): String {
         logger.info("internalDownloadUrl, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType, " +
-            "path: $path, ttl: $ttl, directed: $directed")
-        // todo
-        throw OperationException("not implemented")
+            "path: $path, ttl: $ttl")
+        val shareUri = bkRepoClient.createShareUri(
+            userId = userId,
+            projectId = projectId,
+            repoName = RepoUtils.getRepoByType(artifactoryType),
+            fullPath = path,
+            downloadUsers = listOf(),
+            downloadIps = listOf(),
+            timeoutInSeconds = ttl.toLong()
+        )
+        return "${HomeHostUtil.getHost(commonConfig.devopsHostGateway!!)}/bkrepo/api/external/repository$shareUri"
     }
 
     companion object {

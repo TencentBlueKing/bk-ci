@@ -30,8 +30,11 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.google.common.io.Files
 import com.tencent.devops.common.api.util.FileUtil
-import com.tencent.devops.common.archive.client.JfrogService
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.archive.client.BkRepoClient
+import com.tencent.devops.common.archive.client.JfrogService
+import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.gray.RepoGray
 import com.tencent.devops.log.utils.LogUtils
 import com.tencent.devops.plugin.pojo.luna.LunaUploadParam
 import okhttp3.MediaType
@@ -51,7 +54,10 @@ import java.util.Locale
 @Service
 class LunaService @Autowired constructor(
     private val jfrogService: JfrogService,
-    private val rabbitTemplate: RabbitTemplate
+    private val rabbitTemplate: RabbitTemplate,
+    private val redisOperation: RedisOperation,
+    private val repoGray: RepoGray,
+    private val bkRepoClient: BkRepoClient
 ) {
 
     val LUNA_URL = "http://100.115.8.10:8080/shupload/"
@@ -60,9 +66,32 @@ class LunaService @Autowired constructor(
         val fileParams = lunaUploadParam.fileParams
         logger.info("Luna upload param for build(${fileParams.buildId}): $lunaUploadParam")
 
+        val projectId = fileParams.projectId
+        val pipelineId = fileParams.pipelineId
+        val buildId = fileParams.buildId
+        val elementId = fileParams.elementId
+        val containerId = fileParams.containerId
+        val executeCount = fileParams.executeCount
+        val isCustom = fileParams.custom
+        val regexPath = fileParams.regexPath
+
         val tmpFolder = Files.createTempDir()
         try {
-            val files = jfrogService.downloadFile(fileParams, tmpFolder.canonicalPath)
+            val isRepoGray = repoGray.isGray(fileParams.projectId, redisOperation)
+            LogUtils.addLine(rabbitTemplate, fileParams.buildId, "use bkrepo: $isRepoGray", elementId, containerId, executeCount)
+            val files = if (isRepoGray) {
+                bkRepoClient.downloadFileByPattern(
+                    userId = "",
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    buildId = buildId,
+                    repoName = if (isCustom) "custom" else "pipeline",
+                    pathPattern = regexPath,
+                    destPath = tmpFolder.canonicalPath
+                )
+            } else {
+                jfrogService.downloadFile(fileParams, tmpFolder.canonicalPath)
+            }
             if (files.isEmpty()) {
                 logger.error("No file matches the regex: $fileParams")
                 LogUtils.addLine(rabbitTemplate, fileParams.buildId, "没有匹配到文件", fileParams.elementId, fileParams.containerId, fileParams.executeCount)
@@ -85,57 +114,57 @@ class LunaService @Autowired constructor(
                 try {
                     val fileTree: FileTreeWalk = fileDir.walk()
                     fileTree.maxDepth(Int.MAX_VALUE)
-                            .filter { it.isFile }
-                            .forEachIndexed { index, file ->
-                                logger.info("Upload file to luna, fileName: ${file.name}")
-                                LogUtils.addLine(rabbitTemplate, fileParams.buildId, "准备上传第${index + 1}个文件，文件名称: ${file.name}",
-                                    fileParams.elementId, fileParams.containerId, fileParams.executeCount)
-                                val request = with(lunaUploadParam) {
-                                    val mediaType = MediaType.parse("application/octet-stream")
-                                    val requestBody = object : RequestBody() {
-                                        override fun writeTo(sink: BufferedSink?) {
-                                            val source = Okio.source(file.inputStream())
-                                            sink!!.writeAll(source)
-                                        }
-
-                                        override fun contentType(): MediaType? {
-                                            return mediaType
-                                        }
+                        .filter { it.isFile }
+                        .forEachIndexed { index, file ->
+                            logger.info("Upload file to luna, fileName: ${file.name}")
+                            LogUtils.addLine(rabbitTemplate, fileParams.buildId, "准备上传第${index + 1}个文件，文件名称: ${file.name}",
+                                fileParams.elementId, fileParams.containerId, fileParams.executeCount)
+                            val request = with(lunaUploadParam) {
+                                val mediaType = MediaType.parse("application/octet-stream")
+                                val requestBody = object : RequestBody() {
+                                    override fun writeTo(sink: BufferedSink?) {
+                                        val source = Okio.source(file.inputStream())
+                                        sink!!.writeAll(source)
                                     }
-                                    val md5 = FileUtil.getSHA1(file)
-                                    val dateFormat = SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss 'GMT'", Locale.US)
-                                    val dateStr = dateFormat.format(file.lastModified())
-                                    val url = if (lunaUploadParam.para.destFileDir.isNullOrBlank()) {
-                                        "$LUNA_URL${urlEncode(file.canonicalPath.removePrefix(zipFileDecompressPath)).replace("%2F", "/")}"
-                                    } else {
-                                        "$LUNA_URL${urlEncode(lunaUploadParam.para.destFileDir!!).replace("%2F", "/").removePrefix("/")}/${urlEncode(file.canonicalPath.removePrefix(zipFileDecompressPath)).replace("%2F", "/")}"
-                                    }
-                                    logger.info("Upload file to luna, url: $url")
 
-                                    Request.Builder()
-                                            .header("access-path", lunaUploadParam.para.appName)
-                                            .header("access-token", lunaUploadParam.para.appSecret)
-                                            .header("file-md5", md5)
-                                            .header("Content-Type", "application/octet-stream")
-                                            .header("Content-Length", file.length().toString())
-                                            .header("Last-Modifed", dateStr)
-                                            .url(url)
-                                            .post(requestBody)
-                                            .build()
-                                }
-                                OkhttpUtils.doHttp(request).use { res ->
-                                    val response = res.body()!!.string() // {"ret":-1, "msg":"file content md5 check failed"}
-                                    val responseData: Map<String, Any> = jacksonObjectMapper().readValue(response)
-                                    val code = responseData["ret"] as Int
-                                    if (0 != code) {
-                                        val message = responseData["msg"] as String
-                                        logger.info("Upload file to luna failed, msg: $message")
-                                        throw RuntimeException(message)
+                                    override fun contentType(): MediaType? {
+                                        return mediaType
                                     }
                                 }
-                                LogUtils.addLine(rabbitTemplate, fileParams.buildId, "第${index + 1}个文件上传成功",
-                                    fileParams.elementId, fileParams.containerId, fileParams.executeCount)
+                                val md5 = FileUtil.getSHA1(file)
+                                val dateFormat = SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss 'GMT'", Locale.US)
+                                val dateStr = dateFormat.format(file.lastModified())
+                                val url = if (lunaUploadParam.para.destFileDir.isNullOrBlank()) {
+                                    "$LUNA_URL${urlEncode(file.canonicalPath.removePrefix(zipFileDecompressPath)).replace("%2F", "/")}"
+                                } else {
+                                    "$LUNA_URL${urlEncode(lunaUploadParam.para.destFileDir!!).replace("%2F", "/").removePrefix("/")}/${urlEncode(file.canonicalPath.removePrefix(zipFileDecompressPath)).replace("%2F", "/")}"
+                                }
+                                logger.info("Upload file to luna, url: $url")
+
+                                Request.Builder()
+                                    .header("access-path", lunaUploadParam.para.appName)
+                                    .header("access-token", lunaUploadParam.para.appSecret)
+                                    .header("file-md5", md5)
+                                    .header("Content-Type", "application/octet-stream")
+                                    .header("Content-Length", file.length().toString())
+                                    .header("Last-Modifed", dateStr)
+                                    .url(url)
+                                    .post(requestBody)
+                                    .build()
                             }
+                            OkhttpUtils.doHttp(request).use { res ->
+                                val response = res.body()!!.string() // {"ret":-1, "msg":"file content md5 check failed"}
+                                val responseData: Map<String, Any> = jacksonObjectMapper().readValue(response)
+                                val code = responseData["ret"] as Int
+                                if (0 != code) {
+                                    val message = responseData["msg"] as String
+                                    logger.info("Upload file to luna failed, msg: $message")
+                                    throw RuntimeException(message)
+                                }
+                            }
+                            LogUtils.addLine(rabbitTemplate, fileParams.buildId, "第${index + 1}个文件上传成功",
+                                fileParams.elementId, fileParams.containerId, fileParams.executeCount)
+                        }
                 } finally {
                     zipFile.deleteRecursively()
                     fileDir.deleteRecursively()

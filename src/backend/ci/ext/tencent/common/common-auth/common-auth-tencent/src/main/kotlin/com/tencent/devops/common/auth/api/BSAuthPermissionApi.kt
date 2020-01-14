@@ -130,7 +130,7 @@ class BSAuthPermissionApi @Autowired constructor(
             val accessToken = bsAuthTokenApi.getAccessToken(serviceCode)
             val url =
                 "${bkAuthProperties.url}/permission/project/service/policy/resource/user/verfiy?access_token=$accessToken"
-            logger.info("BSAuthPermissionApi url:$url")
+            logger.info("[$user|$serviceCode|$resourceType|$projectCode|$resourceCode|$permission] BSAuthPermissionApi url:$url")
             val bkAuthPermissionRequest = BkAuthPermissionVerifyRequest(
                 projectCode,
                 serviceCode.id(),
@@ -164,7 +164,11 @@ class BSAuthPermissionApi @Autowired constructor(
                     logger.error("Fail to validate user permission. $responseContent")
                     throw RemoteServiceException("Fail to validate user permission")
                 }
-                return responseObject.code == 0
+                val result = responseObject.code == 0
+                if (!result) {
+                    logger.warn("Fail to validate the user resource permission with response: $responseContent")
+                }
+                return result
             }
         } finally {
             jmxAuthApi.execute(VALIDATE_USER_RESOURCE, System.currentTimeMillis() - epoch, success)

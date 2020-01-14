@@ -30,11 +30,14 @@ import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.archive.client.BkRepoClient
 import com.tencent.devops.common.archive.client.JfrogClient
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.element.CloudStoneElement
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.config.CommonConfig
+import com.tencent.devops.common.service.gray.RepoGray
 import com.tencent.devops.log.utils.LogUtils
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.IAtomTask
@@ -58,14 +61,14 @@ class CloudStoneTaskAtom @Autowired constructor(
     private val cloudStoneService: CloudStoneService,
     private val rabbitTemplate: RabbitTemplate,
     private val client: Client,
-    private val commonConfig: CommonConfig
+    private val commonConfig: CommonConfig,
+    private val redisOperation: RedisOperation,
+    private val repoGray: RepoGray,
+    private val bkRepoClient: BkRepoClient
 ) : IAtomTask<CloudStoneElement> {
     override fun getParamElement(task: PipelineBuildTask): CloudStoneElement {
         return JsonUtil.mapTo(task.taskParams, CloudStoneElement::class.java)
     }
-
-//    @Value("\${gateway.url:#{null}}")
-//    private val gatewayUrl: String? = null
 
     override fun execute(task: PipelineBuildTask, param: CloudStoneElement, runVariables: Map<String, String>): AtomResponse {
         val executeCount = task.executeCount ?: 1
@@ -85,13 +88,27 @@ class CloudStoneTaskAtom @Autowired constructor(
         val userId = runVariables[PIPELINE_START_USER_ID]!!
 
         val destPath = Files.createTempDirectory("cloudStone_").toAbsolutePath().toString()
-        val matchFiles = JfrogClient(commonConfig.devopsHostGateway!!, projectId, pipelineId, buildId).downloadFile(sourcePath, isCustom, destPath)
+        val useBkRepo = repoGray.isGray(projectId, redisOperation)
+        logger.info("use bkrepo: $useBkRepo")
+        val matchFiles = if (useBkRepo) {
+            bkRepoClient.downloadFileByPattern(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                repoName = if (isCustom) "custom" else "pipeline",
+                pathPattern = sourcePath,
+                destPath = destPath
+            )
+        } else {
+            JfrogClient(commonConfig.devopsHostGateway!!, projectId, pipelineId, buildId).downloadFile(sourcePath, isCustom, destPath)
+        }
         if (matchFiles.isEmpty()) throw OperationException("There is 0 file find in $sourcePath(custom: $isCustom)")
         val appId = client.get(ServiceProjectResource::class).get(task.projectId).data?.ccAppId?.toInt()
             ?: run {
                 LogUtils.addLine(rabbitTemplate, task.buildId, "找不到绑定配置平台的业务ID/can not found CC Business ID", task.taskId,
-                task.containerHashId,
-                executeCount
+                    task.containerHashId,
+                    executeCount
                 )
                 return defaultFailAtomResponse
             }

@@ -39,6 +39,7 @@ import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAto
 import com.tencent.devops.common.pipeline.pojo.element.SubPipelineCallElement
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.engine.dao.PipelineBuildTaskDao
 import com.tencent.devops.process.engine.service.PipelineBuildService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
@@ -49,6 +50,7 @@ import com.tencent.devops.process.pojo.pipeline.SubPipelineStartUpInfo
 import com.tencent.devops.process.utils.PIPELINE_START_CHANNEL
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import com.tencent.devops.process.utils.PipelineVarUtil
+import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
@@ -57,7 +59,9 @@ class SubPipelineStartUpService(
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val buildService: PipelineBuildService,
-    private val pipelinePermissionService: PipelinePermissionService
+    private val pipelinePermissionService: PipelinePermissionService,
+    private val pipelineBuildTaskDao: PipelineBuildTaskDao,
+    private val dslContext: DSLContext
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(SubPipelineStartUpService::class.java)
@@ -129,6 +133,7 @@ class SubPipelineStartUpService(
                 checkPermission = false,
                 isMobile = false
         )
+        pipelineBuildTaskDao.updateSubBuildId(dslContext = dslContext, buildId = buildId, taskId = taskId, subBuildId = subBuildId)
 
         return Result(ProjectBuildId(id = subBuildId, projectId = project))
     }
