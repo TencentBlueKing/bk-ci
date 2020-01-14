@@ -68,7 +68,7 @@
                         </bk-select>
                     </section>
 
-                    <bk-input v-else @change="changeThirdImage" :value="buildResource" class="bk-image" :placeholder="$t('editPage.thirdImageHolder')" v-validate.initial="&quot;required&quot;" name="buildResource"></bk-input>
+                    <bk-input v-else @change="changeThirdImage" :value="buildResource" :disabled="!editable" class="bk-image" :placeholder="$t('editPage.thirdImageHolder')" v-validate.initial="&quot;required&quot;" name="buildResource"></bk-input>
                 </form-field>
 
                 <form-field :label="$t('editPage.assignResource')" v-if="buildResourceType !== 'MACOS' && !isPublicResourceType && containerModalId && !['DOCKER', 'IDC', 'PUBLIC_DEVCLOUD'].includes(buildResourceType)" :required="true" :is-error="errors.has(&quot;buildResource&quot;)" :error-msg="errors.first(&quot;buildResource&quot;)" :desc="buildResourceType === &quot;THIRD_PARTY_AGENT_ENV&quot; ? this.$t('editPage.thirdSlaveTips') : &quot;&quot;">
@@ -434,6 +434,7 @@
                             ...this.container.dispatchType,
                             imageType: 'BKSTORE'
                         }))
+                        data.historyVersion = data.version
                         if (data.code) this.choose(data)
                     }).catch((err) => this.$showTips({ theme: 'error', message: err.message || err })).finally(() => (this.isLoadingImage = false))
                 }
@@ -500,10 +501,11 @@
                     imageName: card.name
                 }))
                 return this.getVersionList(card.code).then(() => {
-                    const firstVersion = this.versionList[0] || {}
+                    let chooseVersion = this.versionList[0] || {}
+                    if (card.historyVersion) chooseVersion = this.versionList.find(x => x.versionValue === card.historyVersion) || {}
                     this.handleContainerChange('dispatchType', Object.assign({
                         ...this.container.dispatchType,
-                        imageVersion: firstVersion.versionValue,
+                        imageVersion: chooseVersion.versionValue,
                         value: card.code
                     }))
                 })
@@ -536,7 +538,6 @@
                     this.$bkMessage({ message: (err.message || err), theme: 'error' })
                 }).finally(() => (this.isLoadingMac = false))
             },
-
             chooseMacSystem (item) {
                 this.handleContainerChange('dispatchType', Object.assign({
                     ...this.container.dispatchType,
@@ -551,7 +552,6 @@
                     value: `${this.systemVersion}:${this.xcodeVersion}`
                 }))
             },
-
             setContainerValidate (addErrors, removeErrors) {
                 const { errors } = this
 
@@ -652,7 +652,7 @@
             align-items: center;
             margin-top: 15px;
             .image-name {
-                width: 44%;
+                width: 50%;
                 display: flex;
                 align-items: center;
                 .not-recommend {
@@ -677,7 +677,7 @@
                 }
             }
             .image-tag {
-                width: 44%;
+                width: 50%;
                 margin-left: 10px;
             }
         }

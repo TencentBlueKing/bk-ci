@@ -435,7 +435,17 @@
             "QUALITY_CHECK_FAIL": "Failed",
             "QUEUE": "Queue",
             "QUEUE_TIMEOUT": "Queue timeout",
-            "EXEC_TIMEOUT": "Run timeout"
+            "EXEC_TIMEOUT": "Run timeout",
+            "TERMINATE": "Terminate",
+            "REVIEWING": "Reviewing",
+            "REVIEW_PROCESSED": "Review Processed",
+            "UNEXEC": "Unexec",
+            "SKIP": "Skip",
+            "LOOP_WAITING": "Loop Waiting",
+            "CALL_WAITING": "Call Waiting",
+            "TRY_FINALLY": "Try Finally",
+            "QUEUE_CACHE": "Queue cache",
+            "UNKNOWN": "Unknow"
         },
         "toArtifactory": "locate",
         "saveToCustom": " Copy to custom artifactory",
