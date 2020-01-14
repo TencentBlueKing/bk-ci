@@ -40,7 +40,7 @@ import org.springframework.core.Ordered
  */
 @Configuration
 @ConditionalOnWebApplication
-@AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
+@AutoConfigureOrder(Ordered.HIGHEST_PRECEDENCE)
 class ArtifactoryConfig {
 
     // 蓝盾新仓库api接口地址
