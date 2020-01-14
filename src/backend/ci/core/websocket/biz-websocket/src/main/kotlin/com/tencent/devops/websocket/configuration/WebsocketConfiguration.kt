@@ -126,11 +126,11 @@ class WebsocketConfiguration {
     ): ConnectChannelInterceptor {
         return ConnectChannelInterceptor(redisOperation)
     }
-    
+
     @Bean
     fun transferDispatch(
         rabbitTemplate: RabbitTemplate
-    ): TransferDispatch{
+    ): TransferDispatch {
         return TransferDispatch(rabbitTemplate)
     }
 }

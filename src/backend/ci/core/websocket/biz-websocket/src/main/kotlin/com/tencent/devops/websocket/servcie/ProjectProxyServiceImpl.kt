@@ -43,10 +43,10 @@ class ProjectProxyServiceImpl @Autowired constructor(
 ) : ProjectProxyService {
     override fun checkProject(projectId: String, userId: String): Boolean {
         try {
-            val redisData = redisOperation.get(WebsocketKeys.PROJECT_USER_REDIS_KEY+userId)
-            if(redisData != null){
+            val redisData = redisOperation.get(WebsocketKeys.PROJECT_USER_REDIS_KEY + userId)
+            if (redisData != null) {
                 val redisProjectList = redisData.split(",")
-                if(redisProjectList.contains(projectId)){
+                if (redisProjectList.contains(projectId)) {
                     return true
                 }
             }
@@ -56,7 +56,10 @@ class ProjectProxyServiceImpl @Autowired constructor(
             projectList?.map {
                 privilegeProjectCodeList.add(it.projectCode)
             }
-            redisOperation.set(WebsocketKeys.PROJECT_USER_REDIS_KEY+userId, objectMapper.writeValueAsString(privilegeProjectCodeList))
+            redisOperation.set(
+                WebsocketKeys.PROJECT_USER_REDIS_KEY + userId,
+                objectMapper.writeValueAsString(privilegeProjectCodeList)
+            )
 
             return if (privilegeProjectCodeList.contains(projectId)) {
                 true
