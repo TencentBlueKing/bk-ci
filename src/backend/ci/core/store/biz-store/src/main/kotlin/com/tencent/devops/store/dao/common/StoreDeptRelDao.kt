@@ -94,7 +94,7 @@ class StoreDeptRelDao {
         }
     }
 
-    fun batchAdd(dslContext: DSLContext, userId: String, storeCode: String, deptInfoList: List<DeptInfo>, status: Byte, comment: String, storeType: Byte) {
+    fun batchAdd(dslContext: DSLContext, userId: String, storeCode: String, deptInfoList: List<DeptInfo>, status: Byte, comment: String, storeType: Byte): IntArray? {
         with(TStoreDeptRel.T_STORE_DEPT_REL) {
             val addStep = deptInfoList.map {
                 dslContext.insertInto(this,
@@ -121,7 +121,7 @@ class StoreDeptRelDao {
                     .set(MODIFIER, userId)
                     .set(UPDATE_TIME, LocalDateTime.now())
             }
-            dslContext.batch(addStep).execute()
+            return dslContext.batch(addStep).execute()
         }
     }
 

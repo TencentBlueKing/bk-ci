@@ -171,7 +171,7 @@ class StoreVisibleDeptServiceImpl @Autowired constructor(
         )
         logger.info("approved depts: $deptIdApprovedList")
         // 公司以及BG一下的范围直接审核通过
-        storeDeptRelDao.batchAdd(
+        val result = storeDeptRelDao.batchAdd(
             dslContext = dslContext,
             userId = userId,
             storeCode = storeCode,
@@ -180,6 +180,7 @@ class StoreVisibleDeptServiceImpl @Autowired constructor(
             comment = "AUTO APPROVE",
             storeType = storeType.type.toByte()
         )
+        logger.info("result: $result")
 
         return Result(true)
     }
