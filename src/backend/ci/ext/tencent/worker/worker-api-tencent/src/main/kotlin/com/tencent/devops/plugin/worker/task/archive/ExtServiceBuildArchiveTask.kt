@@ -89,7 +89,7 @@ class ExtServiceBuildArchiveTask : ITask() {
             errorCode = ErrorCode.SYSTEM_SERVICE_ERROR
         )
         //  开始上传扩展服务执行包到蓝盾新仓库
-        val file = File(filePath)
+        val file = File(workspace, filePath)
         val uploadFileUrl =
             "/ms/artifactory/api/build/artifactories/ext/services/projects/${buildVariables.projectId}/services/$serviceCode/versions/$serviceVersion/archive?destPath=$destPath"
         val userId = ParameterUtils.getListValueByKey(buildVariables.variablesWithType, PIPELINE_START_USER_ID) ?: throw TaskExecuteException(
@@ -106,7 +106,7 @@ class ExtServiceBuildArchiveTask : ITask() {
         )
         logger.info("ExtServiceBuildArchiveTask uploadResult: $uploadResult")
         val uploadFlag = uploadResult.data
-        if (uploadFlag == null || !uploadFlag){
+        if (uploadFlag == null || !uploadFlag) {
             throw TaskExecuteException(
                 errorMsg = "upload file:${file.name} fail",
                 errorType = ErrorType.SYSTEM,
