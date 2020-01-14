@@ -46,6 +46,9 @@ import org.springframework.core.Ordered
 class BkRepoAutoConfiguration {
 
     @Bean
+    fun bkRepoConfig() = BkRepoConfig()
+
+    @Bean
     @Primary
     fun bkRepoClient(
         @Autowired objectMapper: ObjectMapper,
