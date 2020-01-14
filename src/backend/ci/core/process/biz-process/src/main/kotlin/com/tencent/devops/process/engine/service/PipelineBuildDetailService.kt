@@ -44,7 +44,10 @@ import com.tencent.devops.model.process.tables.records.TPipelineBuildDetailRecor
 import com.tencent.devops.process.dao.BuildDetailDao
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.common.pipeline.container.TriggerContainer
+import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
+import com.tencent.devops.process.utils.PipelineVarUtil
 import com.tencent.devops.quality.QualityGateInElement
 import com.tencent.devops.quality.QualityGateOutElement
 import org.jooq.DSLContext
@@ -102,6 +105,33 @@ class PipelineBuildDetailService @Autowired constructor(
         if (refreshStatus) {
             ModelUtils.refreshCanRetry(model, canRetry, buildInfo.status)
         }
+
+        val triggerContainer = model.stages[0].containers[0] as TriggerContainer
+        val params = triggerContainer.params
+        val newParams = mutableListOf<BuildFormProperty>()
+        params.forEach {
+            // 变量名从旧转新: 兼容从旧入口写入的数据转到新的流水线运行
+            val newVarName = PipelineVarUtil.oldVarToNewVar(it.id)
+            if (!newVarName.isNullOrBlank()) {
+                newParams.add(
+                    BuildFormProperty(
+                        id = newVarName!!,
+                        required = it.required,
+                        type = it.type,
+                        defaultValue = it.defaultValue,
+                        options = it.options,
+                        desc = it.desc,
+                        repoHashId = it.repoHashId,
+                        relativePath = it.relativePath,
+                        scmType = it.scmType,
+                        containerType = it.containerType,
+                        glob = it.glob,
+                        properties = it.properties
+                    )
+                )
+            } else newParams.add(it)
+        }
+        triggerContainer.params = newParams
 
         return ModelDetail(
             id = record.buildId,
