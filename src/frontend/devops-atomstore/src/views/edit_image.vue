@@ -359,7 +359,12 @@
                         })
                 }).catch((err) => this.$bkMessage({ message: err.message || err, theme: 'error' })).finally(() => {
                     this.isLoading = false
-                    if (VERSION_TYPE === 'ee') this.form.imageSourceType = 'THIRD'
+                    this.$nextTick(() => {
+                        const ele = document.querySelector('.dockerfile')
+                        this.codeEditor = CodeMirror(ele, this.codeMirrorCon)
+                        this.codeEditor.setValue(this.form.dockerFileContent || '')
+                    })
+                    setTimeout(() => this.codeEditor.refresh(), 300)
                 })
             },
 

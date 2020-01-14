@@ -131,25 +131,6 @@ abstract class AbsOpProjectServiceImpl @Autowired constructor(
                     projectId,
                     labelIdList!!
             )
-            projectDispatcher.dispatch(ProjectUpdateBroadCastEvent(
-                userId = userId,
-                projectId = projectId,
-                projectInfo = ProjectUpdateInfo(
-                    projectName = projectInfoRequest.projectName,
-                    projectType = projectInfoRequest.projectType,
-                    bgId = projectInfoRequest.bgId,
-                    bgName = projectInfoRequest.bgName,
-                    centerId = projectInfoRequest.centerId,
-                    centerName = projectInfoRequest.centerName,
-                    deptId = projectInfoRequest.deptId,
-                    deptName = projectInfoRequest.deptName,
-                    description = dbProjectRecord.description ?: "",
-                    englishName = dbProjectRecord.englishName,
-                    ccAppId = projectInfoRequest.ccAppId,
-                    ccAppName = projectInfoRequest.cc_app_name,
-                    kind = projectInfoRequest.kind
-                )
-            ))
         }
         return if (!flag) {
             0 // 更新操作
