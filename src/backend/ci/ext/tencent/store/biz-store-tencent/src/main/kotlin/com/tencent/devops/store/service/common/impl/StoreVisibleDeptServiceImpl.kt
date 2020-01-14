@@ -140,7 +140,7 @@ class StoreVisibleDeptServiceImpl @Autowired constructor(
      override fun addVisibleDepts(userId: String, storeCode: String, deptInfos: List<DeptInfo>, storeType: StoreTypeEnum): Result<Boolean> {
         logger.info("the userId is :$userId,storeCode is :$storeCode,deptInfos is :$deptInfos,storeType is :$storeType")
         // 公司以及BG 范围的审核列表
-        val deptIdApproveList = mutableListOf<DeptInfo>()
+        val deptIdApprovedList = mutableListOf<DeptInfo>()
         // 公司以及BG以下 范围的审核列表
         val deptIdApprovingList = mutableListOf<DeptInfo>()
         // 判断用户是否有权限设置可见范围
@@ -154,11 +154,13 @@ class StoreVisibleDeptServiceImpl @Autowired constructor(
                 return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_EXIST, arrayOf(it.deptName), false)
             }
             if (!approveList.contains(it.deptId))
-                deptIdApproveList.add(it)
+                deptIdApprovedList.add(it)
             else
                 deptIdApprovingList.add(it)
         }
 
+        logger.info("approveList: $approveList")
+        logger.info("approving depts: $deptIdApprovingList")
         // 公司以及BG的范围需要等待审核
         storeDeptRelDao.batchAdd(
             dslContext = dslContext,
@@ -167,12 +169,13 @@ class StoreVisibleDeptServiceImpl @Autowired constructor(
             deptInfoList = deptIdApprovingList,
             storeType = storeType.type.toByte()
         )
+        logger.info("approved depts: $deptIdApprovedList")
         // 公司以及BG一下的范围直接审核通过
         storeDeptRelDao.batchAdd(
             dslContext = dslContext,
             userId = userId,
             storeCode = storeCode,
-            deptInfoList = deptIdApproveList,
+            deptInfoList = deptIdApprovedList,
             status = DeptStatusEnum.APPROVED.status.toByte(),
             comment = "AUTO APPROVE",
             storeType = storeType.type.toByte()
