@@ -30,5 +30,5 @@ data class LoginOutDTO(
     val userId: String,
     val sessionId: String,
     val page: String? = null,
-    val transferData: Map<String,Any>?
+    val transferData: Map<String, Any>?
 )
