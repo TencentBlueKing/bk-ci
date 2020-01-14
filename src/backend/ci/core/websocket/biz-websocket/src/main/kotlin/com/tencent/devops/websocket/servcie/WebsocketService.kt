@@ -210,7 +210,7 @@ class WebsocketService @Autowired constructor(
     fun createTimeoutSession(sessionId: String, userId: String) {
         val timeout = System.currentTimeMillis() + TimeUnit.DAYS.toMillis(sessionTimeOut!!)
         val redisData = "$sessionId#$userId&$timeout"
-        //hash后对1000取模，将数据打散到1000个桶内
+        // hash后对1000取模，将数据打散到1000个桶内
         var bucket = redisData.hashCode().rem(WebsocketKeys.REDIS_MO)
         if (bucket < 0) bucket *= -1
         val redisHashKey = WebsocketKeys.HASH_USER_TIMEOUT_REDIS_KEY + bucket
