@@ -26,7 +26,7 @@
 
 dependencies {
     compile project(":ext:tencent:common:common-archive-tencent")
-    compile project(":ext:tencent:artifactory:api-artifactory-store")
+    compile project(":ext:tencent:artifactory:api-artifactory-store-tencent")
     compile project(":core:artifactory:biz-artifactory")
 }
 
