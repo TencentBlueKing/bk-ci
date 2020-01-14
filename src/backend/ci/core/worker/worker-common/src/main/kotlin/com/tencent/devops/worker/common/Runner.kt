@@ -160,8 +160,7 @@ object Runner {
                                     errorCode = errorCode
                                 )
                             } finally {
-                                LoggerService.addFoldEndLine(taskName)
-                                LoggerService.addNormalLine("")
+                                LoggerService.addFoldEndLine("")
                                 LoggerService.elementId = ""
                             }
                         }
