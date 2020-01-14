@@ -94,7 +94,7 @@ interface CurrentBuildResource {
     ): Result<FileInfoPage<FileInfo>>
 
     @ApiOperation("创建下载链接")
-    @Path("/artifactories/{gitProjectId}/{artifactoryType}/downloadUrl")
+    @Path("/artifactories/projects/{gitProjectId}/artifactoryType/{artifactoryType}/downloadUrl")
     @POST
     fun downloadUrl(
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
