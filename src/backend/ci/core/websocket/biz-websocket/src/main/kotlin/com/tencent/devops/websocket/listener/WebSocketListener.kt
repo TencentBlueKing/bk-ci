@@ -59,7 +59,7 @@ class WebSocketListener @Autowired constructor(
                             "/topic/bk/notify/$session",
                             objectMapper.writeValueAsString(event.notifyPost)
                         )
-                        if(System.currentTimeMillis() - pushStartTime > 500){
+                        if (System.currentTimeMillis() - pushStartTime > 500) {
                             logger.warn("WebSocketListener push msg consuming 500ms, page[$event.page], session[$session]")
                         }
                     }
@@ -67,7 +67,7 @@ class WebSocketListener @Autowired constructor(
             } else {
                 logger.info("webSocketListener sessionList is empty. page:${event.page} user:${event.userId} ")
             }
-            if(System.currentTimeMillis() - startTime > 1000){
+            if (System.currentTimeMillis() - startTime > 1000) {
                 logger.warn("WebSocketListener push all message consuming 1s, page[$event.page], session[${event.sessionList}]")
             }
         } catch (ex: Exception) {
