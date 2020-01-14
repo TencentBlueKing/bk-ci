@@ -57,7 +57,7 @@ class PipelineFailureBuildService @Autowired constructor(
                 return
             }
             val startTime = buildInfo.startTime!!
-            val endTime = event.endTime ?: System.currentTimeMillis()
+            val endTime = buildInfo.endTime ?: System.currentTimeMillis()
             val count = pipelineFailureBuildDao.insert(
                 dslContext = dslContext,
                 projectId = event.projectId,
