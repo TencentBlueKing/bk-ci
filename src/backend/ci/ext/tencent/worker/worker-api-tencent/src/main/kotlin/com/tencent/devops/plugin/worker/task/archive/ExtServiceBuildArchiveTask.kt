@@ -125,7 +125,7 @@ class ExtServiceBuildArchiveTask : ITask() {
         )
         val dockerHostIp = System.getenv("docker_host_ip")
         val path =
-            "/api/dockernew/${buildVariables.projectId}/${buildVariables.pipelineId}/${buildVariables.vmSeqId}/${buildTask.buildId}?elementId=${buildTask.elementId}"
+            "/api/dockernew/build/${buildVariables.projectId}/${buildVariables.pipelineId}/${buildVariables.vmSeqId}/${buildTask.buildId}?elementId=${buildTask.elementId}"
         val body = RequestBody.create(
             MediaType.parse("application/json; charset=utf-8"),
             JsonUtil.toJson(dockerBuildParam)
