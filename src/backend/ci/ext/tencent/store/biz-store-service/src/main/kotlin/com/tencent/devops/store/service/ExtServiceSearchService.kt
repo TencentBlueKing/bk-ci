@@ -24,7 +24,7 @@ class ExtServiceSearchService @Autowired constructor(
         page: Int?,
         pageSize: Int?
     ): Result<List<ExtServiceMainItemVo>> {
-
+        return Result(emptyList())
     }
 
     companion object{
