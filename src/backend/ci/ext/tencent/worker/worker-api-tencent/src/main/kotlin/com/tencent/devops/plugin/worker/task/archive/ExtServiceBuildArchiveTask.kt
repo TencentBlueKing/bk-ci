@@ -31,6 +31,7 @@ package com.tencent.devops.plugin.worker.task.archive
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.bkrepo.common.api.constant.AUTH_HEADER_UID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
@@ -97,7 +98,7 @@ class ExtServiceBuildArchiveTask : ITask() {
             errorType = ErrorType.SYSTEM,
             errorCode = ErrorCode.SYSTEM_SERVICE_ERROR
         )
-        val headers = mapOf(AUTH_HEADER_UID to userId)
+        val headers = mapOf(AUTH_HEADER_USER_ID to userId)
         val uploadResult = archiveApi.uploadFile(
             url = uploadFileUrl,
             destPath = destPath,
