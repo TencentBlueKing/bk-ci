@@ -32,8 +32,11 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.v2.ApigwRepositoryResourceV2
 import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
+import com.tencent.devops.repository.api.ServiceGitRepositoryResource
+import com.tencent.devops.repository.api.ServiceOauthResource
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.pojo.RepositoryInfo
+import com.tencent.devops.repository.pojo.oauth.GitToken
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -59,6 +62,16 @@ class ApigwRepositoryResourceV2Impl @Autowired constructor(private val client: C
         } else {
             Result(data = null)
         }
+    }
+
+    override fun getAuthUrl(authParamJsonStr: String): Result<String> {
+        logger.info("getAuthUrl authParamJsonStr[$authParamJsonStr]")
+        return client.get(ServiceGitRepositoryResource::class).getAuthUrl(authParamJsonStr)
+    }
+
+    override fun gitGet(userId: String): Result<GitToken?> {
+        logger.info("gitGet userId[$userId]")
+        return client.get(ServiceOauthResource::class).gitGet(userId)
     }
 
     companion object {

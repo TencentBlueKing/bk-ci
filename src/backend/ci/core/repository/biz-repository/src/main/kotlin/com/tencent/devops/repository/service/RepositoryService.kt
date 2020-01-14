@@ -65,6 +65,7 @@ import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
 import com.tencent.devops.repository.pojo.git.GitProjectInfo
 import com.tencent.devops.repository.pojo.git.UpdateGitProjectInfo
+import com.tencent.devops.repository.resources.scm.ServiceGitResourceImpl
 import com.tencent.devops.repository.service.scm.IGitOauthService
 import com.tencent.devops.repository.service.scm.IGitService
 import com.tencent.devops.repository.service.scm.IScmService
@@ -72,6 +73,8 @@ import com.tencent.devops.repository.utils.CredentialUtils
 import com.tencent.devops.scm.enums.CodeSvnRegion
 import com.tencent.devops.scm.pojo.GitRepositoryResp
 import com.tencent.devops.ticket.api.ServiceCredentialResource
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -80,7 +83,10 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 import java.util.Base64
+import javax.ws.rs.GET
 import javax.ws.rs.NotFoundException
+import javax.ws.rs.Path
+import javax.ws.rs.QueryParam
 
 @Service
 class RepositoryService @Autowired constructor(
@@ -1075,6 +1081,12 @@ class RepositoryService @Autowired constructor(
             region = CodeSvnRegion.getRegion(record.url),
             userName = record.userId
         )
+    }
+
+    fun getAuthUrl(
+        authParamJsonStr: String
+    ): Result<String>{
+        return client.get(ServiceGitResourceImpl::class).getAuthUrl(authParamJsonStr)
     }
 
     private fun validatePermission(user: String, projectId: String, authPermission: AuthPermission): Boolean {

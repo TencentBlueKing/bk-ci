@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.repository.pojo.RepositoryInfo
+import com.tencent.devops.repository.pojo.oauth.GitToken
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -72,4 +73,22 @@ interface ApigwRepositoryResourceV2 {
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<Page<RepositoryInfo>?>
+
+    @ApiOperation("获取授权路径")
+    @GET
+    @Path("/getAuthUrl")
+    fun getAuthUrl(
+        @ApiParam("参数json串", required = true)
+        @QueryParam("authParamJsonStr")
+        authParamJsonStr: String
+    ): Result<String>
+
+    @ApiOperation("获取git代码库accessToken信息")
+    @GET
+    @Path("/git/{userId}")
+    fun gitGet(
+        @ApiParam("用户ID", required = true)
+        @PathParam("userId")
+        userId: String
+    ): Result<GitToken?>
 }
