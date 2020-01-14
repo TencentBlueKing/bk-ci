@@ -16,7 +16,7 @@ import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["USER_EXT_SERVICE_VERSION_LOG"], description = "扩展服务-版本日志")
-@Path("/user/market/extService/version/logs/")
+@Path("/user/market/extension/version/logs/")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserExtServiceVersionLogResource {
