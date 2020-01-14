@@ -160,7 +160,7 @@ object Runner {
                                     errorCode = errorCode
                                 )
                             } finally {
-                                LoggerService.addFoldEndLine(taskName)
+                                LoggerService.addFoldEndLine("")
                                 LoggerService.elementId = ""
                             }
                         }
@@ -224,10 +224,10 @@ object Runner {
         LoggerService.addNormalLine("")
         LoggerService.addFoldStartLine("[Machine Environment Properties]")
         System.getProperties().forEach { k, v ->
-            LoggerService.addYellowLine("$k: $v")
+            LoggerService.addNormalLine("$k: $v")
             logger.info("$k: $v")
         }
-        LoggerService.addFoldEndLine("env_machine")
+        LoggerService.addFoldEndLine("-----")
     }
 
     /**
@@ -238,7 +238,7 @@ object Runner {
         LoggerService.addFoldStartLine("[System Environment Properties]")
         val envs = System.getenv()
         envs.forEach { (k, v) ->
-            LoggerService.addYellowLine("$k: $v")
+            LoggerService.addNormalLine("$k: $v")
             logger.info("$k: $v")
         }
         LoggerService.addFoldEndLine("-----")
@@ -252,12 +252,13 @@ object Runner {
         LoggerService.addFoldStartLine("[Build Environment Properties]")
         variables.forEach { v ->
             if (v.valueType == BuildFormPropertyType.PASSWORD) {
-                LoggerService.addYellowLine(Ansi().a("${v.key}: ").reset().a("******").toString())
+                LoggerService.addNormalLine(Ansi().a("${v.key}: ").reset().a("******").toString())
             } else {
-                LoggerService.addYellowLine(Ansi().a("${v.key}: ").reset().a(v.value.toString()).toString())
+                LoggerService.addNormalLine(Ansi().a("${v.key}: ").reset().a(v.value.toString()).toString())
             }
             logger.info("${v.key}: ${v.value}")
         }
-        LoggerService.addFoldEndLine("env_user")
+        LoggerService.addFoldEndLine("-----")
+        LoggerService.addNormalLine("")
     }
 }
