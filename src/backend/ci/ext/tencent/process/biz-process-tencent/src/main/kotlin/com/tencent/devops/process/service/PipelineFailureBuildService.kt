@@ -48,12 +48,13 @@ class PipelineFailureBuildService @Autowired constructor(
             return
         }
         if (BuildStatus.isFailure(buildStatus)) {
-            pipelineFailureBuildDao.insert(
+            val count = pipelineFailureBuildDao.insert(
                 dslContext = dslContext,
                 projectId = event.projectId,
                 pipelineId = event.pipelineId,
                 buildId = event.buildId
             )
+            logger.info("[${event.projectId}|${event.pipelineId}|${event.buildId}] Insert $count records")
         } else {
             val count = pipelineFailureBuildDao.delete(
                 dslContext = dslContext,

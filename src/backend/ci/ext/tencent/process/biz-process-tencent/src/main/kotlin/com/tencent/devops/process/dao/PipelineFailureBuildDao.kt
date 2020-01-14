@@ -43,7 +43,9 @@ class PipelineFailureBuildDao {
                     projectId,
                     pipelineId,
                     buildId
-                ).execute()
+                )
+                .onDuplicateKeyIgnore()
+                .execute()
         }
     }
 
