@@ -25,6 +25,7 @@
  */
 package com.tencent.devops.openapi.resources.v2
 
+import com.tencent.devops.common.api.constant.HTTP_404
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
@@ -69,9 +70,13 @@ class ApigwRepositoryResourceV2Impl @Autowired constructor(private val client: C
         return client.get(ServiceGitRepositoryResource::class).getAuthUrl(authParamJsonStr)
     }
 
-    override fun gitGet(userId: String): Result<GitToken?> {
+    override fun gitGet(userId: String): Result<String?> {
         logger.info("gitGet userId[$userId]")
-        return client.get(ServiceOauthResource::class).gitGet(userId)
+        val gitToken = client.get(ServiceOauthResource::class).gitGet(userId)
+        if(gitToken?.data == null){
+            return Result(HTTP_404)
+        }
+        return Result(gitToken.data!!.accessToken)
     }
 
     companion object {

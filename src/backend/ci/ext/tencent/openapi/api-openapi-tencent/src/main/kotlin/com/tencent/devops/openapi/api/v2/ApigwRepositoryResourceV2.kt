@@ -90,5 +90,5 @@ interface ApigwRepositoryResourceV2 {
         @ApiParam("用户ID", required = true)
         @PathParam("userId")
         userId: String
-    ): Result<GitToken?>
+    ): Result<String?>
 }
