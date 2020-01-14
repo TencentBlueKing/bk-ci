@@ -34,12 +34,14 @@ import java.time.LocalDateTime
 @Repository
 class PipelineFailureBuildDao {
 
-    fun insert(dslContext: DSLContext,
+    fun insert(
+        dslContext: DSLContext,
         projectId: String,
         pipelineId: String,
         buildId: String,
         startTime: LocalDateTime,
-        endTime: LocalDateTime): Int {
+        endTime: LocalDateTime
+    ): Int {
         with(TPipelineFailureBuild.T_PIPELINE_FAILURE_BUILD) {
             return dslContext.insertInto(this,
                 PROJECT_ID,
