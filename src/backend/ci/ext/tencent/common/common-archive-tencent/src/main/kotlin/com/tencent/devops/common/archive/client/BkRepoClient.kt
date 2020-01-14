@@ -47,6 +47,7 @@ import com.tencent.devops.common.archive.pojo.BkRepoData
 import com.tencent.devops.common.archive.pojo.BkRepoFile
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.utils.HomeHostUtil
+import okhttp3.Credentials
 import okhttp3.MediaType
 import okhttp3.Request
 import okhttp3.RequestBody
@@ -254,16 +255,29 @@ class BkRepoClient @Autowired constructor(
         }
     }
 
-    fun uploadLocalFile(userId: String, projectId: String, repoName: String, path: String, file: File) {
+    fun uploadLocalFile(
+        userId: String,
+        projectId: String,
+        repoName: String,
+        path: String,
+        file: File,
+        gatewayFlag: Boolean = true,
+        userName: String? = null,
+        password: String? = null
+    ) {
         logger.info("uploadLocalFile, projectId: $projectId, repoName: $repoName, path: $path, localFile: ${file.canonicalPath}")
-        val url = "${getGatewaytUrl()}/bkrepo/api/service/generic/$projectId/$repoName/${path.removePrefix("/")}"
-        val request = Request.Builder()
+        logger.info("uploadLocalFile, userName: $userName, password: $password")
+        val repoUrlPrefix = if (gatewayFlag) "${getGatewaytUrl()}/bkrepo/api/service/generic" else HomeHostUtil.bkrepoApiUrl()
+        val url = "$repoUrlPrefix/$projectId/$repoName/${path.removePrefix("/")}"
+        val requestBuilder = Request.Builder()
             .url(url)
-            // .header("Authorization", makeCredential())
-            .header(AUTH_HEADER_USER_ID, userId)
+        if (userName != null && password != null) {
+            requestBuilder.header("Authorization", Credentials.basic(userName, password))
+        }
+        requestBuilder.header(AUTH_HEADER_USER_ID, userId)
             .header(BK_REPO_OVERRIDE, "true")
             .put(RequestBody.create(MediaType.parse("application/octet-stream"), file))
-            .build()
+        val request = requestBuilder.build()
         OkhttpUtils.doHttp(request).use { response ->
             if (!response.isSuccessful) {
                 logger.error("upload file failed, repoName: $repoName, path: $path, responseContent: ${response.body()!!.string()}")

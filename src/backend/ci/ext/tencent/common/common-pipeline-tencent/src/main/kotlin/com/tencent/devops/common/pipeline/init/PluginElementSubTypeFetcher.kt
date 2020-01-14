@@ -86,6 +86,7 @@ import com.tencent.devops.common.pipeline.element.XcodeBuildElement2
 import com.tencent.devops.common.pipeline.element.ZhiyunInstanceMaintenanceElement
 import com.tencent.devops.common.pipeline.element.ZhiyunPushFileElement
 import com.tencent.devops.common.pipeline.element.ZhiyunUpdateAsyncEXElement
+import com.tencent.devops.common.pipeline.element.market.ExtServiceBuildArchiveElement
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.market.AtomBuildArchiveElement
 
@@ -153,7 +154,8 @@ class PluginElementSubTypeFetcher : ElementSubTypeFetcher {
             Unity3dBuildElement.classType to Unity3dBuildElement::class.java,
             XcodeBuildElement.classType to XcodeBuildElement::class.java,
             XcodeBuildElement2.classType to XcodeBuildElement2::class.java,
-            SensitiveScanElement.classType to SensitiveScanElement::class.java
+            SensitiveScanElement.classType to SensitiveScanElement::class.java,
+            ExtServiceBuildArchiveElement.classType to ExtServiceBuildArchiveElement::class.java
         )
     }
 }

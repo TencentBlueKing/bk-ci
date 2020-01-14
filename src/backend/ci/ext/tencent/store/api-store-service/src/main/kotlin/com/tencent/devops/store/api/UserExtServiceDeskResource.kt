@@ -22,7 +22,7 @@ import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["USER_EXTENSION_SERVICE_DESK"], description = "服务扩展--工作台")
-@Path("/user/market/desk/extension")
+@Path("/user/extension/desk/services")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserExtServiceDeskResource {
@@ -73,7 +73,7 @@ interface UserExtServiceDeskResource {
 
     @GET
     @ApiOperation(value = "工作台--根据用户获取服务扩展列表")
-    @Path("/list/")
+    @Path("/extService/list/")
     fun listDeskExtService(
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
