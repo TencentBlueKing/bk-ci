@@ -33,7 +33,7 @@ import com.tencent.devops.artifactory.service.ArchiveExtServicePkgService
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.archive.client.BkRepoClient
-import com.tencent.devops.common.archive.config.ArtifactoryConfig
+import com.tencent.devops.common.archive.config.BkRepoConfig
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.store.api.ServiceExtServiceArchiveResource
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
@@ -48,7 +48,7 @@ class ArchiveExtServicePkgServiceImpl : ArchiveExtServicePkgService {
     private val logger = LoggerFactory.getLogger(ArchiveExtServicePkgServiceImpl::class.java)
 
     @Autowired
-    private lateinit var artifactoryConfig: ArtifactoryConfig
+    private lateinit var bkRepoConfig: BkRepoConfig
     @Autowired
     private lateinit var bkRepoClient: BkRepoClient
     @Autowired
@@ -82,13 +82,13 @@ class ArchiveExtServicePkgServiceImpl : ArchiveExtServicePkgService {
         try {
             bkRepoClient.uploadLocalFile(
                 userId = userId,
-                projectId = artifactoryConfig.bkrepoExtServiceProjectName,
-                repoName = artifactoryConfig.bkrepoExtServicePkgRepoName,
+                projectId = bkRepoConfig.bkrepoExtServiceProjectName,
+                repoName = bkRepoConfig.bkrepoExtServicePkgRepoName,
                 path = destPath,
                 file = file,
                 gatewayFlag = false,
-                userName = artifactoryConfig.bkrepoExtServiceUserName,
-                password = artifactoryConfig.bkrepoExtServicePassword
+                userName = bkRepoConfig.bkrepoExtServiceUserName,
+                password = bkRepoConfig.bkrepoExtServicePassword
             )
         } finally {
             file.delete()

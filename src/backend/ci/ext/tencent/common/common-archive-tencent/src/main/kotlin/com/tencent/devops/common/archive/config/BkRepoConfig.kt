@@ -30,18 +30,13 @@
 package com.tencent.devops.common.archive.config
 
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.boot.autoconfigure.AutoConfigureOrder
-import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
-import org.springframework.context.annotation.Configuration
-import org.springframework.core.Ordered
+import org.springframework.stereotype.Component
 
 /**
  * 仓库配置
  */
-@Configuration
-@ConditionalOnWebApplication
-@AutoConfigureOrder(Ordered.HIGHEST_PRECEDENCE)
-class ArtifactoryConfig {
+@Component
+class BkRepoConfig {
 
     // 蓝盾新仓库api接口地址
     @Value("\${bkrepo.bkrepoApiUrl}")
