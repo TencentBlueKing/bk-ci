@@ -8,10 +8,10 @@ import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import java.lang.Exception
 
-class TransferDispatch (
+class TransferDispatch(
     private val rabbitTemplate: RabbitTemplate
 ) : EventDispatcher<TransferPush> {
-    companion object{
+    companion object {
         val logger = LoggerFactory.getLogger(this::class.java)
     }
 
