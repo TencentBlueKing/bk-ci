@@ -30,6 +30,7 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.google.gson.JsonParser
 import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
+import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
@@ -48,6 +49,7 @@ import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.utils.IosUtils
 import net.dongliu.apk.parser.ApkFile
 import okhttp3.MediaType
+import okhttp3.MultipartBody
 import okhttp3.RequestBody
 import java.io.File
 import java.net.URLEncoder
@@ -389,5 +391,30 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
         } else {
             URLEncoder.encode(str, "UTF-8")
         }
+    }
+
+    override fun uploadFile(
+        url: String,
+        destPath: String,
+        file: File,
+        headers: Map<String, String>?
+    ): Result<Boolean> {
+        LoggerService.addNormalLine("upload file url >>> $url")
+        val fileBody = RequestBody.create(MultipartFormData, file)
+        val fileName = file.name
+        val requestBody = MultipartBody.Builder()
+            .setType(MultipartBody.FORM)
+            .addFormDataPart("file", fileName, fileBody)
+            .build()
+        val request = buildPost(url, requestBody, headers ?: emptyMap())
+        val response = request(request, "upload file:$fileName fail")
+        try {
+            val obj = JsonParser().parse(response).asJsonObject
+            if (obj.has("code") && obj["code"].asString != "200") throw RemoteServiceException("upload file:$fileName fail")
+        } catch (ignored: Exception) {
+            LoggerService.addNormalLine(ignored.message ?: "")
+            throw RemoteServiceException("archive fail: $response")
+        }
+        return Result(true)
     }
 }

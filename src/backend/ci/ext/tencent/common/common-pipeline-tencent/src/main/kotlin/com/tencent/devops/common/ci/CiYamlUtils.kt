@@ -146,6 +146,7 @@ object CiYamlUtils {
             logger.error("Invalid yaml: steps and stages conflict") // 不能并列存在steps和stages
             throw CustomException(Response.Status.BAD_REQUEST, "stages和steps不能并列存在!")
         }
+        val pipelineName = originYaml.pipelineName ?: ""
         val defaultTrigger = originYaml.trigger ?: Trigger(false, MatchRule(listOf("*"), null), null, null)
         val defaultMr = originYaml.mr ?: MergeRequest(disable = false, autoCancel = true, branches = MatchRule(listOf("*"), null), paths = null)
         val variable = originYaml.variables
@@ -164,7 +165,7 @@ object CiYamlUtils {
             }
         }
 
-        return CIBuildYaml(defaultTrigger, defaultMr, variable, services, stages, null)
+        return CIBuildYaml(pipelineName, defaultTrigger, defaultMr, variable, services, stages, null)
     }
 
     fun normalizePrebuildYaml(originYaml: CIBuildYaml): CIBuildYaml {
@@ -175,7 +176,7 @@ object CiYamlUtils {
 
         val stages = originYaml.stages ?: listOf(Stage(listOf(Job(JobDetail("job1", "vmBuild", Pool(null, null), originYaml.steps!!, null)))))
 
-        return CIBuildYaml(null, null, null, null, stages, null)
+        return CIBuildYaml(null, null, null, null, null, stages, null)
     }
 
     fun validateYaml(yamlStr: String): Pair<Boolean, String> {

@@ -27,6 +27,7 @@
 package com.tencent.devops.worker.common.api.archive
 
 import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.worker.common.api.WorkerRestApiSDK
 import java.io.File
@@ -98,4 +99,18 @@ interface ArchiveSDKApi : WorkerRestApiSDK {
      * 获取docker build 所需要的凭证
      */
     fun dockerBuildCredential(projectId: String): Map<String, String>
+
+    /**
+     * 通用上传文件接口
+     * @param url 请求地址
+     * @param destPath 上传目标文件路径
+     * @param file 上传的文件
+     * @param headers 请求头
+     */
+    fun uploadFile(
+        url: String,
+        destPath: String,
+        file: File,
+        headers: Map<String, String>? = emptyMap()
+    ): Result<Boolean>
 }

@@ -9,7 +9,7 @@
             <div class="title secondary" @click="toImageList"> {{ $t('store.工作台') }} </div>
             <i class="right-arrow"></i>
             <div class="title third-level">{{$t('store.上架/升级镜像')}}（{{form.imageCode}}）</div>
-            <a class="develop-guide-link" target="_blank" href="http://iwiki.oa.com/pages/viewpage.action?pageId=22118721"> {{ $t('store.镜像指引') }} </a>
+            <a class="develop-guide-link" target="_blank" href="http://tempdocklink/pages/viewpage.action?pageId=22118721"> {{ $t('store.镜像指引') }} </a>
         </div>
         <main v-bkloading="{ isLoading }" class="edit-content">
             <bk-form ref="imageForm" class="edit-image" label-width="125" :model="form" v-show="!isLoading">
@@ -71,59 +71,38 @@
                     <p class="form-title"> {{ $t('store.镜像信息') }} </p>
                     <hr class="cut-line">
                 </div>
-                <bk-form-item :label="$t('store.镜像源')" :required="true" property="imageSourceType" class="h32" :rules="[requireRule]" ref="imageSourceType" v-if="VERSION_TYPE !== 'ee'">
+                <bk-form-item :label="$t('store.镜像源')" :required="true" property="imageSourceType" class="h32" :rules="[requireRule]" ref="imageSourceType">
                     <bk-radio-group v-model="form.imageSourceType" @change="clearRepo">
-                        <bk-radio value="BKDEVOPS" class="mr12"> {{ $t('store.蓝盾源') }} </bk-radio>
                         <bk-radio value="THIRD"> {{ $t('store.第三方源') }} </bk-radio>
                     </bk-radio-group>
                 </bk-form-item>
-                <template v-if="form.imageSourceType === 'BKDEVOPS'">
-                    <bk-form-item :label="$t('store.源镜像')" :required="true" property="imageRepoName" :rules="[requireRule]" ref="imageRepoName">
-                        <bk-select v-model="form.imageRepoName" @toggle="getImageList" searchable>
-                            <bk-option v-for="(option, index) in imageList"
-                                :key="index"
-                                :id="option.repo"
-                                :name="option.repo"
-                                :placeholder="$t('store.请选择源镜像')"
-                                @click.native="getImageTagList(option)"
-                            >
-                            </bk-option>
-                        </bk-select>
-                    </bk-form-item>
-                    <bk-form-item :label="$t('store.源镜像Tag')" :desc="$t('store.请选择源镜像Tag，注意已发布过的Tag不能重复发布，请不要使用可变功能的Tag（如latest），避免镜像变更导致关联流水线不能正常执行')" :required="true" property="imageTag" :rules="[requireRule]" ref="imageTag">
-                        <bk-select v-model="form.imageTag" searchable :loading="isLoadingTag">
-                            <bk-option v-for="(option, index) in imageVersionList"
-                                :key="index"
-                                :id="option.tag"
-                                :name="option.tag"
-                                :disabled="option.storeFlag"
-                                :placeholder="$t('store.请选择源镜像Tag')"
-                            >
-                            </bk-option>
-                        </bk-select>
-                    </bk-form-item>
-                </template>
-                <template v-else>
-                    <bk-form-item :label="$t('store.源镜像库地址')" property="imageRepoUrl" :desc="$t('store.请输入源镜像库地址。若源为 docker hub，可留空不填')">
-                        <bk-input v-model="form.imageRepoUrl" :placeholder="$t('store.请输入源镜像库地址，如 csighub.tencentyun.com')"></bk-input>
-                    </bk-form-item>
-                    <bk-form-item :label="$t('store.源镜像名称')" property="imageRepoName" :required="true" :rules="[requireRule]" ref="imageRepoName">
-                        <bk-input v-model="form.imageRepoName" :placeholder="$t('store.请输入源镜像名称，如 XXX/XXXX')"></bk-input>
-                    </bk-form-item>
-                    <bk-form-item :label="$t('store.源镜像Tag')" property="imageTag" :desc="$t('store.请不要使用可变功能的Tag（如latest），避免镜像变更导致关联流水线不能正常执行')" :required="true" :rules="[requireRule, latestRule]" ref="imageTag">
-                        <bk-input v-model="form.imageTag" :placeholder="$t('store.请输入源镜像Tag，如 enterprise-6.0.3')"></bk-input>
-                    </bk-form-item>
-                    <bk-form-item :label="$t('store.凭证')" property="ticketId" :desc="$t('store.若为私有镜像，请提供凭证，用于流水线执行时拉取镜像')">
-                        <bk-select v-model="form.ticketId" searchable :placeholder="$t('store.请选择凭证')">
-                            <bk-option v-for="option in ticketList"
-                                :key="option.credentialId"
-                                :id="option.credentialId"
-                                :name="option.credentialId">
-                            </bk-option>
-                            <a v-if="form.projectCode" :href="`/console/ticket/${form.projectCode}/createCredential/USERNAME_PASSWORD/true`" slot="extension" target="_blank"> {{ $t('store.新增凭证') }} </a>
-                        </bk-select>
-                    </bk-form-item>
-                </template>
+                <bk-form-item :label="$t('store.源镜像库地址')" property="imageRepoUrl" :desc="$t('store.请输入源镜像库地址。若源为 docker hub，可留空不填')">
+                    <bk-input v-model="form.imageRepoUrl" :placeholder="$t('store.imageRepoUrl')"></bk-input>
+                </bk-form-item>
+                <bk-form-item :label="$t('store.源镜像名称')" property="imageRepoName" :required="true" :rules="[requireRule]" ref="imageRepoName">
+                    <bk-input v-model="form.imageRepoName" :placeholder="$t('store.请输入源镜像名称，如 XXX/XXXX')"></bk-input>
+                </bk-form-item>
+                <bk-form-item :label="$t('store.源镜像Tag')" property="imageTag" :desc="$t('store.请不要使用可变功能的Tag（如latest），避免镜像变更导致关联流水线不能正常执行')" :required="true" :rules="[requireRule, latestRule]" ref="imageTag">
+                    <bk-input v-model="form.imageTag" :placeholder="$t('store.imageTag')"></bk-input>
+                </bk-form-item>
+                <bk-form-item :label="$t('store.凭证')" property="ticketId" :desc="$t('store.若为私有镜像，请提供凭证，用于流水线执行时拉取镜像')">
+                    <bk-select v-model="form.ticketId" searchable :placeholder="$t('store.请选择凭证')">
+                        <bk-option v-for="option in ticketList"
+                            :key="option.credentialId"
+                            :id="option.credentialId"
+                            :name="option.credentialId">
+                        </bk-option>
+                        <a v-if="form.projectCode" :href="`/console/ticket/${form.projectCode}/createCredential/USERNAME_PASSWORD/true`" slot="extension" target="_blank"> {{ $t('store.新增凭证') }} </a>
+                    </bk-select>
+                </bk-form-item>
+                <bk-form-item label="Dockerfile Type" :required="true" property="dockerFileType" class="h32" :rules="[requireRule]" ref="dockerFileType">
+                    <bk-radio-group v-model="form.dockerFileType" @change="form.dockerFileContent = ''">
+                        <bk-radio value="INPUT" class="mr12"> {{ $t('store.手动录入') }} </bk-radio>
+                    </bk-radio-group>
+                </bk-form-item>
+                <bk-form-item label="Dockerfile" :required="true" property="dockerFileContent" :rules="[requireRule]" ref="dockerFileContent">
+                    <section class="dockerfile" @click="freshCodeMirror"></section>
+                </bk-form-item>
                 <div class="version-msg">
                     <p class="form-title"> {{ $t('store.版本信息') }} </p>
                     <hr class="cut-line">
@@ -163,6 +142,11 @@
     import { toolbars } from '@/utils/editor-options'
     import selectLogo from '@/components/common/selectLogo'
 
+    import CodeMirror from 'codemirror'
+    import 'codemirror/mode/yaml/yaml'
+    import 'codemirror/lib/codemirror.css'
+    import 'codemirror/theme/3024-night.css'
+
     export default {
         components: {
             selectLogo
@@ -179,7 +163,9 @@
                     summary: '',
                     description: '',
                     logoUrl: '',
-                    imageSourceType: 'BKDEVOPS',
+                    imageSourceType: 'THIRD',
+                    dockerFileType: 'INPUT',
+                    dockerFileContent: '',
                     imageRepoUrl: '',
                     imageRepoName: '',
                     imageTag: '',
@@ -220,6 +206,17 @@
                     trigger: 'blur'
                 },
                 logoErr: false,
+                codeMirrorCon: {
+                    lineNumbers: true,
+                    height: '400px',
+                    tabMode: 'indent',
+                    mode: 'yaml',
+                    theme: '3024-night',
+                    cursorHeight: 0.85,
+                    autoRefresh: true,
+                    autofocus: true
+                },
+                codeEditor: {},
                 toolbars
             }
         },
@@ -248,7 +245,7 @@
             }
         },
 
-        created () {
+        mounted () {
             this.getImageDetail()
         },
 
@@ -264,12 +261,18 @@
                 'requestReleaseImage'
             ]),
 
+            freshCodeMirror () {
+                this.codeEditor.refresh()
+                this.codeEditor.focus()
+            },
+
             changeShowAgentType (option) {
                 const settings = option.settings || {}
                 this.needAgentType = settings.needAgentType === 'NEED_AGENT_TYPE_TRUE'
             },
 
             submitImage () {
+                if (this.form.dockerFileType === 'INPUT') this.form.dockerFileContent = this.codeEditor.getValue()
                 this.$refs.imageForm.validate().then(() => {
                     if (!this.form.logoUrl) {
                         this.logoErr = true
@@ -321,6 +324,7 @@
                     this.form.description = this.form.description || this.$t('store.imageMdDesc')
                     this.originVersion = res.version
                     this.form.labelIdList = res.labelList.map(x => x.id)
+
                     switch (res.imageStatus) {
                         case 'INIT':
                             this.form.releaseType = 'NEW'
@@ -430,6 +434,18 @@
         overflow: hidden;
     }
 
+    .dockerfile {
+        height: 400px;
+        overflow: auto;
+        background: black;
+        /deep/ .CodeMirror {
+            font-family: Consolas, "Courier New", monospace;
+            line-height: 1.5;
+            padding: 10px;
+            height: auto;
+        }
+    }
+
     .button-padding {
         padding-left: 125px;
     }
@@ -444,6 +460,10 @@
 
     .lh30 {
         line-height: 30px;
+    }
+
+    .mt10 {
+        margin-top: 10px;
     }
 
     .edit-content {
