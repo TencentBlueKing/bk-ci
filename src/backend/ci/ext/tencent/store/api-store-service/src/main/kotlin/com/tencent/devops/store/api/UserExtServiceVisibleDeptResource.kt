@@ -19,7 +19,7 @@ import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["USER_EXT_SERVICE_VISIBLE_DEPT"], description = "扩展服务-可见范围")
-@Path("/user/extension/servcie/visible/dept")
+@Path("/user/market/extension/visible/dept")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserExtServiceVisibleDeptResource {
