@@ -30,6 +30,7 @@
 package com.tencent.devops.plugin.worker.task.archive
 
 import com.fasterxml.jackson.core.type.TypeReference
+import com.tencent.bkrepo.common.api.constant.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
@@ -37,17 +38,17 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.pipeline.element.market.ExtServiceBuildArchiveElement
-import com.tencent.devops.common.service.utils.HomeHostUtil
+import com.tencent.devops.common.pipeline.utils.ParameterUtils
 import com.tencent.devops.dockerhost.pojo.CheckImageResponse
 import com.tencent.devops.dockerhost.pojo.DockerBuildParam
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
+import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import com.tencent.devops.worker.common.api.ApiFactory
-import com.tencent.devops.worker.common.api.atom.AtomArchiveSDKApi
+import com.tencent.devops.worker.common.api.archive.ArchiveSDKApi
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.task.ITask
 import com.tencent.devops.worker.common.task.TaskClassType
-import okhttp3.Credentials
 import okhttp3.MediaType
 import okhttp3.Request
 import okhttp3.RequestBody
@@ -57,7 +58,7 @@ import java.io.File
 @TaskClassType(classTypes = [ExtServiceBuildArchiveElement.classType])
 class ExtServiceBuildArchiveTask : ITask() {
 
-    private val atomApi = ApiFactory.create(AtomArchiveSDKApi::class)
+    private val archiveApi = ApiFactory.create(ArchiveSDKApi::class)
 
     private val logger = LoggerFactory.getLogger(ExtServiceBuildArchiveTask::class.java)
 
@@ -89,24 +90,28 @@ class ExtServiceBuildArchiveTask : ITask() {
         )
         //  开始上传扩展服务执行包到蓝盾新仓库
         val file = File(filePath)
-        val mediaType = MediaType.parse("application/octet-stream")
-        val fileBody = RequestBody.create(mediaType, file)
-        val uploadFileRequest = Request.Builder().url("${HomeHostUtil.bkrepoApiUrl()}/bk-extension/generic-local/$destPath")
-            .header("Authorization", Credentials.basic("bk_extension", "blueking"))
-            .header("X-BKREPO-OVERWRITE", "true")
-            .put(fileBody)
-            .build()
-        OkhttpUtils.doLongHttp(uploadFileRequest).use { response ->
-            val responseContent = response.body()?.string()
-            if (!response.isSuccessful) {
-                logger.warn("Fail to request($uploadFileRequest) with code ${response.code()} , message ${response.message()} and response ($responseContent)")
-                LoggerService.addRedLine(response.message())
-                throw TaskExecuteException(
-                    errorMsg = "archive extService package fail: message ${response.message()} and response ($responseContent)",
-                    errorType = ErrorType.SYSTEM,
-                    errorCode = ErrorCode.SYSTEM_SERVICE_ERROR
-                )
-            }
+        val uploadFileUrl =
+            "/ms/artifactory/api/build/artifactories/ext/services/projects/${buildVariables.projectId}/services/$serviceCode/versions/$serviceVersion/archive?destPath=$destPath"
+        val userId = ParameterUtils.getListValueByKey(buildVariables.variablesWithType, PIPELINE_START_USER_ID) ?: throw TaskExecuteException(
+            errorMsg = "user basic info error, please check environment.",
+            errorType = ErrorType.SYSTEM,
+            errorCode = ErrorCode.SYSTEM_SERVICE_ERROR
+        )
+        val headers = mapOf(AUTH_HEADER_USER_ID to userId)
+        val uploadResult = archiveApi.uploadFile(
+            url = uploadFileUrl,
+            destPath = destPath,
+            file = file,
+            headers = headers
+        )
+        logger.info("ExtServiceBuildArchiveTask uploadResult: $uploadResult")
+        val uploadFlag = uploadResult.data
+        if (uploadFlag == null || !uploadFlag){
+            throw TaskExecuteException(
+                errorMsg = "upload file:${file.name} fail",
+                errorType = ErrorType.SYSTEM,
+                errorCode = ErrorCode.SYSTEM_SERVICE_ERROR
+            )
         }
         // 开始构建扩展服务的镜像并把镜像推送到新仓库(基础镜像是否只能用蓝盾提供的？)
         val dockerBuildParam = DockerBuildParam(
