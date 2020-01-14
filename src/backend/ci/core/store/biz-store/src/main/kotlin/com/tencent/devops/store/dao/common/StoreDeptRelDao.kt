@@ -98,28 +98,28 @@ class StoreDeptRelDao {
         with(TStoreDeptRel.T_STORE_DEPT_REL) {
             val addStep = deptInfoList.map {
                 dslContext.insertInto(this,
-                        ID,
-                        STORE_CODE,
-                        DEPT_ID,
-                        DEPT_NAME,
-                        STORE_TYPE,
-                        CREATOR,
-                        MODIFIER,
-                        STATUS,
-                        COMMENT,
-                        UPDATE_TIME
+                    ID,
+                    STORE_CODE,
+                    DEPT_ID,
+                    DEPT_NAME,
+                    STORE_TYPE,
+                    CREATOR,
+                    MODIFIER,
+                    STATUS,
+                    COMMENT,
+                    UPDATE_TIME
                 )
                     .values(
-                            UUIDUtil.generate(),
-                            storeCode,
-                            it.deptId,
-                            it.deptName,
-                            storeType,
-                            userId,
-                            userId,
-                            status,
-                            comment,
-                            LocalDateTime.now()
+                        UUIDUtil.generate(),
+                        storeCode,
+                        it.deptId,
+                        it.deptName,
+                        storeType,
+                        userId,
+                        userId,
+                        status,
+                        comment,
+                        LocalDateTime.now()
                     )
                     .onDuplicateKeyUpdate()
                     .set(STATUS, status)
