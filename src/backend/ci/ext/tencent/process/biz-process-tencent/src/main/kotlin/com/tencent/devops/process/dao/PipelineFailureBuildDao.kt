@@ -29,22 +29,34 @@ package com.tencent.devops.process.dao
 import com.tencent.devops.model.process.tables.TPipelineFailureBuild
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
+import java.time.LocalDateTime
 
 @Repository
 class PipelineFailureBuildDao {
 
-    fun insert(dslContext: DSLContext, projectId: String, pipelineId: String, buildId: String): Int {
+    fun insert(dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        startTime: LocalDateTime,
+        endTime: LocalDateTime): Int {
         with(TPipelineFailureBuild.T_PIPELINE_FAILURE_BUILD) {
             return dslContext.insertInto(this,
                 PROJECT_ID,
                 PIPELINE_ID,
-                BUILD_ID)
+                BUILD_ID,
+                START_TIME,
+                END_TIME)
                 .values(
                     projectId,
                     pipelineId,
-                    buildId
+                    buildId,
+                    startTime,
+                    endTime
                 )
-                .onDuplicateKeyIgnore()
+                .onDuplicateKeyUpdate()
+                .set(START_TIME, startTime)
+                .set(END_TIME, endTime)
                 .execute()
         }
     }

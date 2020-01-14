@@ -29,13 +29,16 @@ package com.tencent.devops.process.service
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.process.dao.PipelineFailureBuildDao
+import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.sql.Timestamp
 
 @Service
 class PipelineFailureBuildService @Autowired constructor(
+    private val pipelineRuntimeService: PipelineRuntimeService,
     private val dslContext: DSLContext,
     private val pipelineFailureBuildDao: PipelineFailureBuildDao
 ) {
@@ -48,11 +51,20 @@ class PipelineFailureBuildService @Autowired constructor(
             return
         }
         if (BuildStatus.isFailure(buildStatus)) {
+            val buildInfo = pipelineRuntimeService.getBuildInfo(event.buildId)
+            if (buildInfo == null) {
+                logger.warn("[${event.pipelineId}] build (${event.buildId}) is not exist")
+                return
+            }
+            val startTime = buildInfo.startTime!!
+            val endTime = event.endTime ?: System.currentTimeMillis()
             val count = pipelineFailureBuildDao.insert(
                 dslContext = dslContext,
                 projectId = event.projectId,
                 pipelineId = event.pipelineId,
-                buildId = event.buildId
+                buildId = event.buildId,
+                startTime = Timestamp(startTime).toLocalDateTime(),
+                endTime = Timestamp(endTime).toLocalDateTime()
             )
             logger.info("[${event.projectId}|${event.pipelineId}|${event.buildId}] Insert $count records")
         } else {
