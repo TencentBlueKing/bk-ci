@@ -33,9 +33,9 @@ import org.springframework.stereotype.Repository
 @Repository
 class PipelineFailureBuildDao {
 
-    fun insert(dslContext: DSLContext, projectId: String, pipelineId: String, buildId: String) {
+    fun insert(dslContext: DSLContext, projectId: String, pipelineId: String, buildId: String): Int {
         with(TPipelineFailureBuild.T_PIPELINE_FAILURE_BUILD) {
-            dslContext.insertInto(this,
+            return dslContext.insertInto(this,
                 PROJECT_ID,
                 PIPELINE_ID,
                 BUILD_ID)
