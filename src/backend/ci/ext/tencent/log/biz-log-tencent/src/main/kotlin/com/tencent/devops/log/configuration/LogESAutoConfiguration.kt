@@ -27,12 +27,16 @@
 package com.tencent.devops.log.configuration
 
 import com.tencent.devops.common.es.ESProperties
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.WebAutoConfiguration
+import com.tencent.devops.log.client.impl.MultiESLogClient
 import org.elasticsearch.client.Client
 import org.elasticsearch.common.settings.Settings
 import org.elasticsearch.common.transport.InetSocketTransportAddress
 import org.elasticsearch.transport.client.PreBuiltTransportClient
+import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.AutoConfigureBefore
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
@@ -116,6 +120,13 @@ class LogESAutoConfiguration {
         logger.info("Init ES 2 transport client with host($e2IP:$e2Port) and cluster($e2Cluster)")
         return client.filterWithHeader(mapOf("Authorization" to "Basic $auth"))
     }
+
+    @Bean
+    fun logClient(@Autowired client: Client,
+        @Autowired client2: Client,
+        @Autowired redisOperation: RedisOperation,
+        @Autowired dslContext: DSLContext) = MultiESLogClient(setOf(client, client2), redisOperation, dslContext)
+
     companion object {
         private val logger = LoggerFactory.getLogger(LogESAutoConfiguration::class.java)
     }

@@ -26,11 +26,17 @@
 
 package com.tencent.devops.log.client.impl
 
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.log.client.LogClient
 import org.elasticsearch.client.Client
+import org.jooq.DSLContext
 import java.lang.RuntimeException
 
-class MultiESLogClient constructor(private val clients: Set<Client>) : LogClient {
+class MultiESLogClient constructor(
+    private val clients: Set<Client>,
+    private val redisOperation: RedisOperation,
+    private val dslContext: DSLContext
+) : LogClient {
     override fun getClients(): Set<Client> {
         return clients
     }
