@@ -44,7 +44,7 @@ class UserMarketAtomVisibleDeptResourceImpl @Autowired constructor(private val s
     }
 
     override fun addVisibleDept(userId: String, atomVisibleDeptRequest: AtomVisibleDeptReq): Result<Boolean> {
-        return storeVisibleDeptService.addVisibleDept(userId, atomVisibleDeptRequest.atomCode, atomVisibleDeptRequest.deptInfos, StoreTypeEnum.ATOM)
+        return storeVisibleDeptService.addVisibleDepts(userId, atomVisibleDeptRequest.atomCode, atomVisibleDeptRequest.deptInfos, StoreTypeEnum.ATOM)
     }
 
     override fun getVisibleDept(atomCode: String): Result<StoreVisibleDeptResp?> {
