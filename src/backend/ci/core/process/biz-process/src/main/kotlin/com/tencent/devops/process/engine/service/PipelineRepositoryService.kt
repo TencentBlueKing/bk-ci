@@ -40,6 +40,7 @@ import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.extend.ModelCheckPlugin
+import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildNo
 import com.tencent.devops.common.pipeline.pojo.element.SubPipelineCallElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTriggerElement
@@ -66,6 +67,7 @@ import com.tencent.devops.process.plugin.load.ElementBizRegistrar
 import com.tencent.devops.process.pojo.setting.PipelineRunLockType
 import com.tencent.devops.process.pojo.setting.PipelineSetting
 import com.tencent.devops.process.pojo.setting.Subscription
+import com.tencent.devops.process.utils.PipelineVarUtil
 import org.joda.time.LocalDateTime
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -118,8 +120,9 @@ class PipelineRepositoryService constructor(
             channelCode = channelCode
         )
 
-        val buildNo = (model.stages[0].containers[0] as TriggerContainer).buildNo
         val container = model.stages[0].containers[0] as TriggerContainer
+        val buildNo = container.buildNo
+        val params = container.params
         var canManualStartup = false
         var canElementSkip = false
         run lit@{
@@ -131,6 +134,30 @@ class PipelineRepositoryService constructor(
                 }
             }
         }
+
+        val newParams = mutableListOf<BuildFormProperty>()
+        val paramIds = params.map { it.id }
+        params.forEach {
+            // 变量名从旧转新: 兼容从旧入口写入的数据转到新的流水线运行
+            val newVarName = PipelineVarUtil.oldVarToNewVar(it.id)
+            if (!newVarName.isNullOrBlank() && paramIds.contains(newVarName)) {
+                newParams.add(BuildFormProperty(
+                    id = newVarName!!,
+                    required = it.required,
+                    type = it.type,
+                    defaultValue = it.defaultValue,
+                    options = it.options,
+                    desc = it.desc,
+                    repoHashId = it.repoHashId,
+                    relativePath = it.relativePath,
+                    scmType = it.scmType,
+                    containerType = it.containerType,
+                    glob = it.glob,
+                    properties = it.properties
+                ))
+            } else newParams.add(it)
+        }
+        container.params = newParams
 
         return if (!create) {
             update(
