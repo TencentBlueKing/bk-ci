@@ -147,7 +147,7 @@ class ExtServiceBuildArchiveTask : ITask() {
             )
         }
         val dockerBuildAndPushImageResult =
-            JsonUtil.to(responseContent!!, object : TypeReference<Result<CheckImageResponse?>>() {
+            JsonUtil.to(responseContent!!, object : TypeReference<Result<Boolean>>() {
             })
         LoggerService.addNormalLine("dockerBuildAndPushImageResult: $dockerBuildAndPushImageResult")
         if (dockerBuildAndPushImageResult.isNotOk()) {
