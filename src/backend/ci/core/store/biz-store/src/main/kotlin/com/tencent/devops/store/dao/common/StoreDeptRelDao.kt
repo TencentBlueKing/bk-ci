@@ -104,7 +104,10 @@ class StoreDeptRelDao {
                         DEPT_NAME,
                         STORE_TYPE,
                         CREATOR,
-                        MODIFIER
+                        MODIFIER,
+                        STATUS,
+                        COMMENT,
+                        UPDATE_TIME
                 )
                     .values(
                             UUIDUtil.generate(),
@@ -113,7 +116,10 @@ class StoreDeptRelDao {
                             it.deptName,
                             storeType,
                             userId,
-                            userId
+                            userId,
+                            status,
+                            comment,
+                            LocalDateTime.now()
                     )
                     .onDuplicateKeyUpdate()
                     .set(STATUS, status)

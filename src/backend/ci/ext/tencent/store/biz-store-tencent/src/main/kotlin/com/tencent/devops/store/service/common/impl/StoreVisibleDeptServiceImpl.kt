@@ -159,7 +159,6 @@ class StoreVisibleDeptServiceImpl @Autowired constructor(
                 deptIdApprovingList.add(it)
         }
 
-        logger.info("approveList: $approveList")
         logger.info("approving depts: $deptIdApprovingList")
         // 公司以及BG的范围需要等待审核
         storeDeptRelDao.batchAdd(
@@ -171,7 +170,7 @@ class StoreVisibleDeptServiceImpl @Autowired constructor(
         )
         logger.info("approved depts: $deptIdApprovedList")
         // 公司以及BG一下的范围直接审核通过
-        val result = storeDeptRelDao.batchAdd(
+        storeDeptRelDao.batchAdd(
             dslContext = dslContext,
             userId = userId,
             storeCode = storeCode,
@@ -180,10 +179,6 @@ class StoreVisibleDeptServiceImpl @Autowired constructor(
             comment = "AUTO APPROVE",
             storeType = storeType.type.toByte()
         )
-        result?.forEach {
-            if (it != 0)
-                logger.info("result: $it")
-        }
 
         return Result(true)
     }
