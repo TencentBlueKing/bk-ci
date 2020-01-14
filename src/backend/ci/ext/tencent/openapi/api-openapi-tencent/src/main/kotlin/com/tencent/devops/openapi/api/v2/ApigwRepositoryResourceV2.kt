@@ -78,9 +78,15 @@ interface ApigwRepositoryResourceV2 {
     @GET
     @Path("/getAuthUrl")
     fun getAuthUrl(
-        @ApiParam("参数json串", required = true)
-        @QueryParam("authParamJsonStr")
-        authParamJsonStr: String
+        @ApiParam("项目id", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @ApiParam("用户Id", required = true)
+        @QueryParam("userId")
+        userId: String,
+        @ApiParam("项目hashId")
+        @QueryParam("repoHashId")
+        repoHashId: String
     ): Result<String>
 
     @ApiOperation("获取git代码库accessToken信息")

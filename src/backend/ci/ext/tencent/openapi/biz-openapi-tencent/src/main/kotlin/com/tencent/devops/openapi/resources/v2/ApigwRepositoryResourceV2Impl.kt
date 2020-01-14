@@ -29,6 +29,8 @@ import com.tencent.devops.common.api.constant.HTTP_404
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.v2.ApigwRepositoryResourceV2
@@ -38,8 +40,10 @@ import com.tencent.devops.repository.api.ServiceOauthResource
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.pojo.RepositoryInfo
 import com.tencent.devops.repository.pojo.oauth.GitToken
+import org.apache.commons.lang3.RandomStringUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import java.net.URLEncoder
 
 @RestResource
 class ApigwRepositoryResourceV2Impl @Autowired constructor(private val client: Client) : ApigwRepositoryResourceV2 {
@@ -65,8 +69,19 @@ class ApigwRepositoryResourceV2Impl @Autowired constructor(private val client: C
         }
     }
 
-    override fun getAuthUrl(authParamJsonStr: String): Result<String> {
-        logger.info("getAuthUrl authParamJsonStr[$authParamJsonStr]")
+    override fun getAuthUrl(
+        projectId: String,
+        userId: String,
+        repoHashId: String
+    ): Result<String> {
+        logger.info("getAuthUrl projectId[$projectId] userId[$userId] repoHashId[$repoHashId]")
+        val authParams = mapOf(
+            "projectId" to projectId,
+            "userId" to userId,
+            "repoId" to if (!repoHashId.isNullOrBlank()) HashUtil.decodeOtherIdToLong(repoHashId!!).toString() else "",
+            "randomStr" to "BK_DEVOPS__${RandomStringUtils.randomAlphanumeric(8)}"
+        )
+        val authParamJsonStr = URLEncoder.encode(JsonUtil.toJson(authParams), "UTF-8")
         return client.get(ServiceGitRepositoryResource::class).getAuthUrl(authParamJsonStr)
     }
 
