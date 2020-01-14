@@ -11,7 +11,7 @@
         <div v-bkloading="{ isLoading }">
             <bk-form form-type="vertical">
                 <bk-form-item v-if="data.desc" :label="$t('editPage.checkDesc')">
-                    <p style="white-space: pre-wrap;">{{data.desc}}</p>
+                    <div style="white-space: pre-wrap;word-break:break-all;">{{data.desc}}</div>
                 </bk-form-item>
                 <bk-form-item :label="$t('editPage.checkResult')">
                     <bk-radio-group v-model="data.status">

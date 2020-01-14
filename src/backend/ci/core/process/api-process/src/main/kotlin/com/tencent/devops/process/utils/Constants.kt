@@ -92,9 +92,9 @@ const val PIPELINE_MATERIAL_NEW_COMMIT_COMMENT =
 const val PIPELINE_MATERIAL_NEW_COMMIT_TIMES =
     "BK_CI_PIPELINE_MATERIAL_NEW_COMMIT_TIMES" // pipeline.material.new.commit.times
 
-const val MAJORVERSION = "BK_CI_MAJOR_VERSION" // majorVersion
-const val MINORVERSION = "BK_CI_MINOR_VERSION" // minorVersion
-const val FIXVERSION = "BK_CI_FIX_VERSION" // fixVersion
+const val MAJORVERSION = "BK_CI_MAJOR_VERSION" // MajorVersion
+const val MINORVERSION = "BK_CI_MINOR_VERSION" // MinorVersion
+const val FIXVERSION = "BK_CI_FIX_VERSION" // FixVersion
 const val BUILD_NO = "BK_CI_BUILD_NO" // "BuildNo"
 
 /**
