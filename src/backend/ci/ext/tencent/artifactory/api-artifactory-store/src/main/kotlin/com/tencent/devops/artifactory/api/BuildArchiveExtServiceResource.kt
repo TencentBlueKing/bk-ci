@@ -52,7 +52,7 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface BuildArchiveExtServiceResource {
 
-    @ApiOperation("归档插件包")
+    @ApiOperation("归档扩展服务执行包")
     @POST
     @Path("/projects/{projectCode}/services/{serviceCode}/versions/{version}/archive")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
