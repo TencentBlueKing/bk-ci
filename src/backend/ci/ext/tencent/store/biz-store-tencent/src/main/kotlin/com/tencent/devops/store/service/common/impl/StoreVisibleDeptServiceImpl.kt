@@ -180,7 +180,10 @@ class StoreVisibleDeptServiceImpl @Autowired constructor(
             comment = "AUTO APPROVE",
             storeType = storeType.type.toByte()
         )
-        logger.info("result: $result")
+        result?.forEach {
+            if (it != 0)
+                logger.info("result: $it")
+        }
 
         return Result(true)
     }
