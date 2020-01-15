@@ -31,7 +31,6 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Container
-import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.element.Element
@@ -309,13 +308,13 @@ class PipelineBuildDetailService @Autowired constructor(
     }
 
     fun normalContainerSkip(buildId: String, containerId: String) {
-        logger.info("Normal container skip of build $buildId")
+        logger.info("[$buildId|$containerId] Normal container skip")
         update(buildId, object : ModelInterface {
 
             var update = false
 
             override fun onFindContainer(id: Int, container: Container): Traverse {
-                if (container is NormalContainer) {
+                if (container !is TriggerContainer) {
                     // 兼容id字段
                     if (container.id == containerId || container.containerId == containerId) {
                         update = true
@@ -531,6 +530,28 @@ class PipelineBuildDetailService @Autowired constructor(
             }
 
             override fun needUpdate(): Boolean {
+                return update
+            }
+        }, BuildStatus.RUNNING)
+    }
+
+    fun taskSkip(buildId: String, taskId: String) {
+        logger.info("[$buildId|$taskId] Task skip")
+        update(buildId, object : ModelInterface {
+            var update = false
+            override fun onFindElement(e: Element, c: Container): Traverse {
+                if (e.id == taskId) {
+                    update = true
+                    e.status = BuildStatus.SKIP.name
+                    return Traverse.BREAK
+                }
+                return Traverse.CONTINUE
+            }
+
+            override fun needUpdate(): Boolean {
+                if (!update) {
+                    logger.info("The task start is not update of build $buildId with element $taskId")
+                }
                 return update
             }
         }, BuildStatus.RUNNING)
