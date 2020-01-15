@@ -24,29 +24,24 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-apply plugin: "maven"
+package com.tencent.devops.common.api.annotation
 
-dependencies {
-    compile "javax.ws.rs:javax.ws.rs-api"
-    compile "io.swagger:swagger-annotations"
-    compile "org.hashids:hashids"
-    compile "com.fasterxml.jackson.module:jackson-module-kotlin"
-    compile "com.fasterxml.jackson.core:jackson-databind"
-    compile "com.fasterxml.jackson.core:jackson-core"
-    compile "com.fasterxml.jackson.core:jackson-annotations"
-    compile "com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider"
-    compile "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml"
-    compile "com.fasterxml.jackson.jaxrs:jackson-jaxrs-base"
-    compile "org.bouncycastle:bcprov-jdk16"
-    compile("com.github.fge:json-schema-validator") {
-        exclude group: 'javax.mail', module: 'mailapi'
-        exclude group: 'com.google.guava', module: 'guava'
-    }
-    compile("com.google.guava:guava:${guavaVersion}")
-    compile "com.squareup.okhttp3:okhttp"
-    compile "commons-codec:commons-codec:1.9"
-    compile "org.springframework.boot:spring-boot-starter-data-redis"
-    compile "org.apache.commons:commons-compress:$compressVersion"
-    compile "org.apache.commons:commons-exec"
-    compile "javax.servlet:javax.servlet-api"
-}
+import com.fasterxml.jackson.annotation.JsonFilter
+
+@Target(AnnotationTarget.FIELD)
+@kotlin.annotation.Retention(AnnotationRetention.RUNTIME)
+@JsonFilter("SkipLogField")
+annotation class SkipLogField(
+    /**
+     * 要过滤的字段名称 -- 用于字段，不填写则会用所注解的字段的命名
+     * 默认一般不用填写，除非所用字段在序列化时采用了别的名字，例如以下情况，字段命名与序列化不同时需要填写
+     *
+     *  @SkipLogField("app_code")
+     *  @get:JsonProperty("app_code")
+     *  val appCode: String
+     *
+     *
+     * @return
+     */
+    val value: String = ""
+)
