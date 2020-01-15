@@ -229,6 +229,7 @@ class TOFService @Autowired constructor(private val objectMapper: ObjectMapper) 
                 logger.warn("Fail o get the child dept info of type $type and id $id with response $responseContent")
                 throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.QUERY_SUB_DEPARTMENT_FAIL))
             }
+            logger.info("warmli test: ${response.data}")
             return response.data!!
         } catch (t: Throwable) {
             logger.warn("Fail to get the organization info of type $type and id $id", t)
