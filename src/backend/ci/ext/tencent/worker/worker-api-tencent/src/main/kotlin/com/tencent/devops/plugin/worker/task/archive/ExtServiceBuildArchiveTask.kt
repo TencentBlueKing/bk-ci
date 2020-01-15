@@ -120,8 +120,7 @@ class ExtServiceBuildArchiveTask : ITask() {
             imageName = "bk-extension/docker-local/$serviceCode",
             imageTag = serviceVersion,
             userName = "bk_extension",
-            password = "blueking",
-            ticket = listOf(Triple("dev.artifactory.oa.com:8090", "admin", "password"))
+            password = "blueking"
         )
         val dockerHostIp = System.getenv("docker_host_ip")
         val path =
