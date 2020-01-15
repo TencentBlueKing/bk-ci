@@ -12,7 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class UserExtMediaResourceImpl @Autowired constructor(
-    private val storeMediaService: StoreMediaService
+    val storeMediaService: StoreMediaService
 ): UserExtMediaResource {
     override fun createServiceMedia(
         userId: String,
