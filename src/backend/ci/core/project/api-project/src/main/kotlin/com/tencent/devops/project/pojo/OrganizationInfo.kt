@@ -28,9 +28,9 @@ package com.tencent.devops.project.pojo
 
 data class OrganizationInfo(
     val id: String?,
-    val Name: String?
+    val name: String?
 ) {
     override fun toString(): String {
-        return "$id $Name"
+        return "$id $name"
     }
 }

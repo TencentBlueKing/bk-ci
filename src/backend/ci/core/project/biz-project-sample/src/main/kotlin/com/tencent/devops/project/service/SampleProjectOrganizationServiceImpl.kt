@@ -49,7 +49,7 @@ class SampleProjectOrganizationServiceImpl : ProjectOrganizationService {
         val mock = mutableListOf<OrganizationInfo>()
         mock.add(
             OrganizationInfo(
-                id = id.toString(), Name = "mock Corp"
+                id = id.toString(), name = "mock Corp"
             )
         )
         return mock
