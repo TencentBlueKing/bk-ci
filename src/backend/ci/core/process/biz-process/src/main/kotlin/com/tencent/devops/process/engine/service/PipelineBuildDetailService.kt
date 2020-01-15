@@ -536,6 +536,28 @@ class PipelineBuildDetailService @Autowired constructor(
         }, BuildStatus.RUNNING)
     }
 
+    fun taskSkip(buildId: String, taskId: String) {
+        logger.info("[$buildId|$taskId] Task skip")
+        update(buildId, object : ModelInterface {
+            var update = false
+            override fun onFindElement(e: Element, c: Container): Traverse {
+                if (e.id == taskId) {
+                    update = true
+                    e.status = BuildStatus.SKIP.name
+                    return Traverse.BREAK
+                }
+                return Traverse.CONTINUE
+            }
+
+            override fun needUpdate(): Boolean {
+                if (!update) {
+                    logger.info("The task start is not update of build $buildId with element $taskId")
+                }
+                return update
+            }
+        }, BuildStatus.RUNNING)
+    }
+
     fun taskStart(buildId: String, taskId: String) {
         logger.info("The task($taskId) start of build $buildId")
         val variables = pipelineRuntimeService.getAllVariable(buildId)
