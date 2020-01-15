@@ -160,7 +160,8 @@ class PipelineRuntimeService @Autowired constructor(
     private val pipelineBuildVarDao: PipelineBuildVarDao,
     private val buildDetailDao: BuildDetailDao,
     private val buildStartupParamService: BuildStartupParamService,
-    private val redisOperation: RedisOperation
+    private val redisOperation: RedisOperation,
+    private val pipelineBuildDetailService: PipelineBuildDetailService
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineRuntimeService::class.java)
@@ -938,6 +939,7 @@ class PipelineRuntimeService @Autowired constructor(
                             } else {
                                 // 如果当前原子之前是要求跳过的状态，则忽略不重试
                                 if (status == BuildStatus.SKIP) {
+                                    pipelineBuildDetailService.taskSkip(buildId = buildId, taskId = atomElement.id!!)
                                     return@nextElement
                                 }
 
