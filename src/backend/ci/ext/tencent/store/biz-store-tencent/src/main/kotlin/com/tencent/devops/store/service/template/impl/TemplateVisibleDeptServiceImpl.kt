@@ -75,7 +75,7 @@ class TemplateVisibleDeptServiceImpl @Autowired constructor(
         if (validateResult.isNotOk()) {
             return validateResult
         }
-        return storeVisibleDeptService.addVisibleDept(userId, templateCode, deptInfos, StoreTypeEnum.TEMPLATE)
+        return storeVisibleDeptService.addVisibleDepts(userId, templateCode, deptInfos, StoreTypeEnum.TEMPLATE)
     }
 
     private fun getTemplateModel(templateCode: String): Result<Model?> {
