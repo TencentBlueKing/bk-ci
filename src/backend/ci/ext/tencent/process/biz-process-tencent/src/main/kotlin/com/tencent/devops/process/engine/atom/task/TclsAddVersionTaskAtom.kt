@@ -29,7 +29,7 @@ package com.tencent.devops.process.engine.atom.task
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.tencent.devops.common.api.exception.ParamBlankException
+import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.DHUtil
@@ -210,13 +210,21 @@ class TclsAddVersionTaskAtom @Autowired constructor(
                 encoder.encodeToString(pair.publicKey))
         if (credentialResult.isNotOk() || credentialResult.data == null) {
             logger.error("Fail to get the credential($credentialId) of project($projectId) because of ${credentialResult.message}")
-            throw RuntimeException("Fail to get the credential($credentialId) of project($projectId)")
+            throw throw TaskExecuteException(
+                errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
+                errorType = ErrorType.USER,
+                errorMsg = "Fail to get the credential($credentialId) of project($projectId)"
+            )
         }
 
         val credential = credentialResult.data!!
         if (type != credential.credentialType) {
             logger.error("CredentialId is invalid, expect:${type.name}, but real:${credential.credentialType.name}")
-            throw ParamBlankException("Fail to get the credential($credentialId) of project($projectId)")
+            throw TaskExecuteException(
+                errorCode = ErrorCode.USER_INPUT_INVAILD,
+                errorType = ErrorType.USER,
+                errorMsg = "Fail to get the credential($credentialId) of project($projectId)"
+            )
         }
 
         val ticketMap = mutableMapOf<String, String>()

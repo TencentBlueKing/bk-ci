@@ -26,6 +26,8 @@
 
 package com.tencent.devops.process.engine.atom.task.deploy
 
+import com.tencent.devops.common.api.exception.TaskExecuteException
+import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.archive.client.BkRepoClient
@@ -218,7 +220,11 @@ class OpenStatePushFileTaskAtom @Autowired constructor(
             }
             count += files.size
         }
-        if (count == 0) throw RuntimeException("没有匹配到需要分发的文件/File not found")
+        if (count == 0) throw throw TaskExecuteException(
+            errorCode = ErrorCode.USER_RESOURCE_NOT_FOUND,
+            errorType = ErrorType.USER,
+            errorMsg = "没有匹配到需要分发的文件/File not found"
+        )
         LogUtils.addLine(rabbitTemplate, buildId, "$count 个文件将被分发/$count files will be distribute", taskId, task.containerHashId, executeCount)
 
         val localIp = CommonUtils.getInnerIP()

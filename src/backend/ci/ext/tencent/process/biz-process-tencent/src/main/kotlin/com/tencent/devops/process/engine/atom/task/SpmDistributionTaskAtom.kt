@@ -30,6 +30,7 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.google.common.io.Files
 import com.google.gson.JsonParser
+import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.FileUtil
@@ -144,7 +145,11 @@ class SpmDistributionTaskAtom @Autowired constructor(
             }
             logger.info("$count file(s) will be distribute...")
             LogUtils.addLine(rabbitTemplate, buildId, "$count file(s) will be distribute...", elementId, task.containerHashId, task.executeCount ?: 1)
-            if (count == 0) throw RuntimeException("No file to distribute")
+            if (count == 0) throw TaskExecuteException(
+                errorCode = ErrorCode.USER_RESOURCE_NOT_FOUND,
+                errorType = ErrorType.USER,
+                errorMsg = "No file to distribute"
+            )
             zipFile = FileUtil.zipToCurrentPath(workspace)
             logger.info("Zip file: ${zipFile.canonicalPath}")
             LogUtils.addLine(rabbitTemplate, buildId, "Zip file: $zipFile", elementId, task.containerHashId, task.executeCount ?: 1)
@@ -221,7 +226,11 @@ class SpmDistributionTaskAtom @Autowired constructor(
         try {
             val exitCode = executor.execute(cmdLine)
             if (exitCode != 0) {
-                throw RuntimeException("Script command execution failed with exit code($exitCode)")
+                throw TaskExecuteException(
+                    errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
+                    errorType = ErrorType.USER,
+                    errorMsg = "Script command execution failed with exit code($exitCode)"
+                )
             }
         } catch (t: Throwable) {
             logger.warn("Fail to execute the command($command)", t)
