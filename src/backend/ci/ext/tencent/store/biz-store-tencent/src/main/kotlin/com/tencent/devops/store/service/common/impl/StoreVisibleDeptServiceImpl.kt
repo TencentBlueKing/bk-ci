@@ -103,7 +103,7 @@ class StoreVisibleDeptServiceImpl @Autowired constructor(
     /**
      * 设置store组件可见范围，公司和BG以下的范围无需审核直接通过
      */
-     override fun addVisibleDepts(userId: String, storeCode: String, deptInfos: List<DeptInfo>, storeType: StoreTypeEnum): Result<Boolean> {
+     override fun addVisibleDept(userId: String, storeCode: String, deptInfos: List<DeptInfo>, storeType: StoreTypeEnum): Result<Boolean> {
         logger.info("the userId is :$userId,storeCode is :$storeCode,deptInfos is :$deptInfos,storeType is :$storeType")
         // 获取公司下各个BG的ID
         val deptInfoList = client.get(UserProjectOrganizationResource::class).getOrganizations(userId, OrganizationType.bg, 0).data
