@@ -37,7 +37,7 @@ import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.MessageCodeUtil
-import com.tencent.devops.project.api.user.UserProjectOrganizationResource
+import com.tencent.devops.project.api.service.service.ServiceProjectOrganizationResource
 import com.tencent.devops.project.pojo.enums.OrganizationType
 import com.tencent.devops.store.pojo.common.PASS
 import com.tencent.devops.store.service.common.StoreVisibleDeptService
@@ -106,7 +106,7 @@ class StoreVisibleDeptServiceImpl @Autowired constructor(
     override fun addVisibleDept(userId: String, storeCode: String, deptInfos: List<DeptInfo>, storeType: StoreTypeEnum): Result<Boolean> {
         logger.info("the userId is :$userId,storeCode is :$storeCode,deptInfos is :$deptInfos,storeType is :$storeType")
         // 获取公司下各个BG的ID
-        val deptInfoList = client.get(UserProjectOrganizationResource::class).getOrganizations(userId, OrganizationType.bg, 0).data
+        val deptInfoList = client.get(ServiceProjectOrganizationResource::class).getOrganizations(userId, OrganizationType.bg, 0).data
         val approveList = mutableListOf<Int>()
         deptInfoList?.forEach {
             approveList.add(Integer.parseInt(it.ID))
