@@ -50,7 +50,10 @@ class PipelineFailureBuildService @Autowired constructor(
             logger.warn("Fail to convert the build status(${event.status})", t)
             return
         }
-        if (BuildStatus.isFailure(buildStatus)) {
+        // 去掉Cancel的和人工审核打回的
+        if (BuildStatus.isFailure(buildStatus) &&
+            buildStatus != BuildStatus.CANCELED &&
+            buildStatus != BuildStatus.REVIEW_ABORT) {
             val buildInfo = pipelineRuntimeService.getBuildInfo(event.buildId)
             if (buildInfo == null) {
                 logger.warn("[${event.pipelineId}] build (${event.buildId}) is not exist")
