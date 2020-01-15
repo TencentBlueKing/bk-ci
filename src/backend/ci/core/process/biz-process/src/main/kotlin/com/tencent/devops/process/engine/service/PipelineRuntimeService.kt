@@ -97,6 +97,7 @@ import com.tencent.devops.process.engine.pojo.event.PipelineBuildStartEvent
 import com.tencent.devops.process.pojo.BuildBasicInfo
 import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.process.pojo.PipelineBuildMaterial
 import com.tencent.devops.process.pojo.ReviewParam
 import com.tencent.devops.process.pojo.VmInfo
@@ -160,8 +161,7 @@ class PipelineRuntimeService @Autowired constructor(
     private val pipelineBuildVarDao: PipelineBuildVarDao,
     private val buildDetailDao: BuildDetailDao,
     private val buildStartupParamService: BuildStartupParamService,
-    private val redisOperation: RedisOperation,
-    private val pipelineBuildDetailService: PipelineBuildDetailService
+    private val redisOperation: RedisOperation
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineRuntimeService::class.java)
@@ -900,6 +900,10 @@ class PipelineRuntimeService @Autowired constructor(
                             BuildStatus.QUEUE
                         }
 
+                        if (status == BuildStatus.SKIP) {
+                            SpringContextUtil.getBean(PipelineBuildDetailService::class.java).taskSkip(buildId, atomElement.id!!)
+                        }
+
                         if (lastTimeBuildTaskRecords.isNotEmpty()) {
                             if (!retryStartTaskId.isNullOrBlank()) {
                                 if (retryStartTaskId == atomElement.id) {
@@ -939,7 +943,6 @@ class PipelineRuntimeService @Autowired constructor(
                             } else {
                                 // 如果当前原子之前是要求跳过的状态，则忽略不重试
                                 if (status == BuildStatus.SKIP) {
-                                    pipelineBuildDetailService.taskSkip(buildId = buildId, taskId = atomElement.id!!)
                                     return@nextElement
                                 }
 
