@@ -1,6 +1,5 @@
 package com.tencent.devops.store.api
 
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BK_TICKET
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.enums.ExtServiceSortTypeEnum
@@ -13,7 +12,6 @@ import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.Path
-import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
@@ -67,31 +65,4 @@ interface UserExtServiceResource {
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<SearchExtServiceVO>
-//
-//    @ApiOperation("根据服务扩展版本ID获取服务扩展详情")
-//    @GET
-//    @Path("/desk/service/{serviceId}")
-//    fun getserviceById(
-//        @ApiParam("userId", required = true)
-//        @HeaderParam(AUTH_HEADER_USER_ID)
-//        userId: String,
-//        @ApiParam("serviceId", required = true)
-//        @PathParam("serviceId")
-//        serviceId: String
-//    ): Result<serviceVersion?>
-//
-//    @ApiOperation("根据服务扩展标识获取服务扩展正式版本详情")
-//    @GET
-//    @Path("/service/{serviceCode}")
-//    fun getserviceByCode(
-//        @ApiParam("userId", required = true)
-//        @HeaderParam(AUTH_HEADER_USER_ID)
-//        userId: String,
-//        @ApiParam("bk ticket", required = true)
-//        @HeaderParam(AUTH_HEADER_DEVOPS_BK_TICKET)
-//        bk_ticket: String,
-//        @ApiParam("serviceCode", required = true)
-//        @PathParam("serviceCode")
-//        serviceCode: String
-//    ): Result<serviceVersion?>
 }

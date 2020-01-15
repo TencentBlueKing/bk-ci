@@ -8,7 +8,5 @@ data class ExtServiceStatistic (
     @ApiModelProperty("评论量")
     val commentCnt: Int,
     @ApiModelProperty("星级评分")
-    val score: Double?,
-    @ApiModelProperty("扩展服务code")
-    val serviceCode: String
+    val score: Double?
 )

@@ -3,7 +3,6 @@ package com.tencent.devops.store.resources
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.UserExtServiceResource
-import com.tencent.devops.store.pojo.atom.enums.MarketAtomSortTypeEnum
 import com.tencent.devops.store.pojo.enums.ExtServiceSortTypeEnum
 import com.tencent.devops.store.pojo.vo.ExtServiceMainItemVo
 import com.tencent.devops.store.pojo.vo.SearchExtServiceVO
@@ -28,6 +27,15 @@ class UserExtServiceResourceImpl @Autowired constructor(
         page: Int?,
         pageSize: Int?
     ): Result<SearchExtServiceVO> {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        return Result(extServiceSearchService.list(
+            userId = userId,
+            serviceName = serviceName,
+            classifyCode = classifyCode,
+            labelCode = labelCode,
+            score = score,
+            sortType = sortType,
+            pageSize = pageSize,
+            page = page
+        ))
     }
 }
