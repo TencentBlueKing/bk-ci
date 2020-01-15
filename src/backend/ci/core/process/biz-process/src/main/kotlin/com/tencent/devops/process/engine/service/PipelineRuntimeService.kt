@@ -901,7 +901,8 @@ class PipelineRuntimeService @Autowired constructor(
                         }
 
                         if (status == BuildStatus.SKIP) {
-                            SpringContextUtil.getBean(PipelineBuildDetailService::class.java).taskSkip(buildId, atomElement.id!!)
+                            logger.info("[$buildId|${atomElement.id}] The element is skip")
+                            atomElement.status = BuildStatus.SKIP.name
                         }
 
                         if (lastTimeBuildTaskRecords.isNotEmpty()) {
@@ -1777,7 +1778,12 @@ class PipelineRuntimeService @Autowired constructor(
     ) {
         logger.info("[ERRORCODE] updateTaskStatus <$buildId>[$errorType][$errorCode][$errorMsg] ")
         val task = getBuildTask(buildId, taskId)
-        if (task != null) updateTaskStatus(buildId, task, userId, buildStatus, errorType, errorCode, errorMsg)
+        if (task != null) {
+            updateTaskStatus(buildId, task, userId, buildStatus, errorType, errorCode, errorMsg)
+            if (buildStatus == BuildStatus.SKIP) {
+                SpringContextUtil.getBean(PipelineBuildDetailService::class.java).taskSkip(buildId, taskId)
+            }
+        }
     }
 
     private fun updateTaskStatus(
