@@ -19,6 +19,7 @@ import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomTypeEnum
 import com.tencent.devops.store.pojo.atom.enums.MarketAtomSortTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.pojo.enums.ExtServiceSortTypeEnum
 import com.tencent.devops.store.pojo.enums.ExtServiceStatusEnum
 import org.jooq.Condition
 import org.jooq.DSLContext
@@ -320,7 +321,7 @@ class ExtServiceDao {
         classifyCode: String?,
         labelCodeList: List<String>?,
         score: Int?,
-        sortType: MarketAtomSortTypeEnum?,
+        sortType: ExtServiceSortTypeEnum?,
         desc: Boolean?,
         page: Int?,
         pageSize: Int?
@@ -365,13 +366,13 @@ class ExtServiceDao {
         }
 
         if (null != sortType) {
-            if (sortType == MarketAtomSortTypeEnum.DOWNLOAD_COUNT && score == null) {
+            if (sortType == ExtServiceSortTypeEnum.DOWNLOAD_COUNT && score == null) {
                 val tas = TStoreStatisticsTotal.T_STORE_STATISTICS_TOTAL.`as`("tas")
-                val t = dslContext.select(tas.STORE_CODE, tas.DOWNLOADS.`as`(MarketAtomSortTypeEnum.DOWNLOAD_COUNT.name)).from(tas).where(tas.STORE_TYPE.eq(storeType)).asTable("t")
+                val t = dslContext.select(tas.STORE_CODE, tas.DOWNLOADS.`as`(ExtServiceSortTypeEnum.DOWNLOAD_COUNT.name)).from(tas).where(tas.STORE_TYPE.eq(storeType)).asTable("t")
                 baseStep.leftJoin(t).on(ta.SERVICE_CODE.eq(t.field("STORE_CODE", String::class.java)))
             }
 
-            val realSortType = if (sortType == MarketAtomSortTypeEnum.DOWNLOAD_COUNT) {
+            val realSortType = if (sortType == ExtServiceSortTypeEnum.DOWNLOAD_COUNT) {
                 DSL.field(sortType.name)
             } else {
                 ta.field(sortType.name)

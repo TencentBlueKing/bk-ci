@@ -1,10 +1,8 @@
 package com.tencent.devops.store.service
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.process.api.service.ServiceMeasurePipelineResource
 import com.tencent.devops.store.dao.common.StoreStatisticDao
 import com.tencent.devops.store.pojo.ExtServiceStatistic
-import com.tencent.devops.store.pojo.atom.AtomStatistic
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.jooq.DSLContext
 import org.jooq.Record4
@@ -33,8 +31,7 @@ class StatisticService @Autowired constructor(
         return ExtServiceStatistic(
             downloads = downloads ?: 0,
             commentCnt = comments ?: 0,
-            score = String.format("%.1f", averageScore).toDoubleOrNull(),
-            serviceCode = serviceCode
+            score = String.format("%.1f", averageScore).toDoubleOrNull()
         )
     }
 }

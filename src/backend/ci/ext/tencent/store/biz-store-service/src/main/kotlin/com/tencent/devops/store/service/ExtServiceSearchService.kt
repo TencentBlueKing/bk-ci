@@ -9,10 +9,8 @@ import com.tencent.devops.store.dao.ExtServiceDao
 import com.tencent.devops.store.dao.common.StoreStatisticDao
 import com.tencent.devops.store.pojo.ExtServiceItem
 import com.tencent.devops.store.pojo.ExtServiceStatistic
-import com.tencent.devops.store.pojo.atom.MarketAtomResp
 import com.tencent.devops.store.pojo.atom.MarketMainItemLabel
 import com.tencent.devops.store.pojo.atom.enums.AtomCategoryEnum
-import com.tencent.devops.store.pojo.atom.enums.AtomTypeEnum
 import com.tencent.devops.store.pojo.atom.enums.MarketAtomSortTypeEnum
 import com.tencent.devops.store.pojo.common.HOTTEST
 import com.tencent.devops.store.pojo.common.LATEST
@@ -20,7 +18,6 @@ import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.enums.ExtServiceSortTypeEnum
 import com.tencent.devops.store.pojo.vo.ExtServiceMainItemVo
 import com.tencent.devops.store.pojo.vo.SearchExtServiceVO
-import com.tencent.devops.store.service.atom.impl.MarketAtomServiceImpl
 import com.tencent.devops.store.service.common.ClassifyService
 import com.tencent.devops.store.service.common.StoreUserService
 import com.tencent.devops.store.service.common.StoreVisibleDeptService
@@ -75,7 +72,7 @@ class ExtServiceSearchService @Autowired constructor(
                         serviceName = null,
                         labelCode = null,
                         score = null,
-                        sortType = MarketAtomSortTypeEnum.DOWNLOAD_COUNT,
+                        sortType = ExtServiceSortTypeEnum.DOWNLOAD_COUNT,
                         desc = true,
                         page = page,
                         pageSize = pageSize
