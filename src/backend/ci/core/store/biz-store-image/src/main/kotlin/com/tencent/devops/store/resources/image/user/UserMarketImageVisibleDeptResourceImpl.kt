@@ -48,7 +48,7 @@ class UserMarketImageVisibleDeptResourceImpl @Autowired constructor(private val 
     }
 
     override fun addVisibleDept(userId: String, imageVisibleDeptRequest: ImageVisibleDeptReq): Result<Boolean> {
-        return storeVisibleDeptService.addVisibleDept(
+        return storeVisibleDeptService.addVisibleDepts(
             userId = userId,
             storeCode = imageVisibleDeptRequest.imageCode,
             deptInfos = imageVisibleDeptRequest.deptInfos,
