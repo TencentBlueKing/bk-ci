@@ -234,5 +234,4 @@ interface ServiceGitRepositoryResource {
         @QueryParam("authParamJsonStr")
         authParamJsonStr: String
     ): Result<String>
-
 }

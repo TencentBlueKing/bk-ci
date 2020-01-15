@@ -39,7 +39,6 @@ import com.tencent.devops.repository.api.ServiceGitRepositoryResource
 import com.tencent.devops.repository.api.ServiceOauthResource
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.pojo.RepositoryInfo
-import com.tencent.devops.repository.pojo.oauth.GitToken
 import org.apache.commons.lang3.RandomStringUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -56,7 +55,8 @@ class ApigwRepositoryResourceV2Impl @Autowired constructor(private val client: C
         pageSize: Int?
     ): Result<Page<RepositoryInfo>?> {
         logger.info("get  repostitories list in project:,projectId=$projectId,repositoryType:$repositoryType,organizationId=$organizationId,organizationType=$organizationType")
-        val verify = client.get(ServiceTxProjectResource::class).verifyProjectByOrganization(projectId, organizationType, organizationId).data
+        val verify = client.get(ServiceTxProjectResource::class)
+            .verifyProjectByOrganization(projectId, organizationType, organizationId).data
         return if (verify != null && verify) {
             client.get(ServiceRepositoryResource::class).listByProject(
                 projectId = projectId,
@@ -88,7 +88,7 @@ class ApigwRepositoryResourceV2Impl @Autowired constructor(private val client: C
     override fun gitGet(userId: String): Result<String?> {
         logger.info("gitGet userId[$userId]")
         val gitToken = client.get(ServiceOauthResource::class).gitGet(userId)
-        if(gitToken?.data == null){
+        if (gitToken?.data == null) {
             return Result(HTTP_404)
         }
         return Result(gitToken.data!!.accessToken)
