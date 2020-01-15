@@ -45,7 +45,7 @@ class TencentPipelineBuildDao {
             return dslContext.selectFrom(this)
                 .where(PIPELINE_ID.eq(pipelineId))
                 .and(STATUS.eq(BuildStatus.SUCCEED.ordinal))
-                .and(BUILD_NUM.lt(buildNum))
+                .and(BUILD_NUM.gt(buildNum))
                 .fetch()
         }
     }
