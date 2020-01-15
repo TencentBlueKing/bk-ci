@@ -29,6 +29,7 @@ package com.tencent.devops.process.service
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.process.dao.PipelineFailureBuildDao
+import com.tencent.devops.process.dao.TencentPipelineBuildDao
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -40,7 +41,8 @@ import java.sql.Timestamp
 class PipelineFailureBuildService @Autowired constructor(
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val dslContext: DSLContext,
-    private val pipelineFailureBuildDao: PipelineFailureBuildDao
+    private val pipelineFailureBuildDao: PipelineFailureBuildDao,
+    private val tencentPipelineBuildDao: TencentPipelineBuildDao
 ) {
 
     fun onPipelineFinish(event: PipelineBuildFinishBroadCastEvent) {
@@ -50,13 +52,20 @@ class PipelineFailureBuildService @Autowired constructor(
             logger.warn("Fail to convert the build status(${event.status})", t)
             return
         }
+        val buildInfo = pipelineRuntimeService.getBuildInfo(event.buildId)
+        if (buildInfo == null) {
+            logger.warn("[${event.pipelineId}] build (${event.buildId}) is not exist")
+            return
+        }
         // 去掉Cancel的和人工审核打回的
         if (BuildStatus.isFailure(buildStatus) &&
             buildStatus != BuildStatus.CANCELED &&
             buildStatus != BuildStatus.REVIEW_ABORT) {
-            val buildInfo = pipelineRuntimeService.getBuildInfo(event.buildId)
-            if (buildInfo == null) {
-                logger.warn("[${event.pipelineId}] build (${event.buildId}) is not exist")
+            val successBuildHistory = tencentPipelineBuildDao.listSuccessBuild(dslContext,
+                event.pipelineId, buildInfo.buildNum)
+            // 比当前构建号大的构建已经执行成功了，那就不需要在写入当前的构建了
+            if (successBuildHistory.isNotEmpty) {
+                logger.info("There are success builds success finished - (${successBuildHistory.map { it.buildId }.toList()})")
                 return
             }
             val startTime = buildInfo.startTime!!
@@ -66,6 +75,7 @@ class PipelineFailureBuildService @Autowired constructor(
                 projectId = event.projectId,
                 pipelineId = event.pipelineId,
                 buildId = event.buildId,
+                buildNum = buildInfo.buildNum,
                 startTime = Timestamp(startTime).toLocalDateTime(),
                 endTime = Timestamp(endTime).toLocalDateTime()
             )
@@ -73,7 +83,8 @@ class PipelineFailureBuildService @Autowired constructor(
         } else {
             val count = pipelineFailureBuildDao.delete(
                 dslContext = dslContext,
-                pipelineId = event.pipelineId)
+                pipelineId = event.pipelineId,
+                buildNum = buildInfo.buildNum)
             logger.info("[${event.projectId}|${event.pipelineId}|${event.buildId}] Delete $count records")
         }
     }

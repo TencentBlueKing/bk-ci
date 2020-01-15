@@ -26,52 +26,27 @@
 
 package com.tencent.devops.process.dao
 
-import com.tencent.devops.model.process.tables.TPipelineFailureBuild
+import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.model.process.tables.TPipelineBuildHistory
+import com.tencent.devops.model.process.tables.records.TPipelineBuildHistoryRecord
 import org.jooq.DSLContext
+import org.jooq.Result
 import org.springframework.stereotype.Repository
-import java.time.LocalDateTime
 
 @Repository
-class PipelineFailureBuildDao {
+class TencentPipelineBuildDao {
 
-    fun insert(
+    fun listSuccessBuild(
         dslContext: DSLContext,
-        projectId: String,
         pipelineId: String,
-        buildId: String,
-        buildNum: Int,
-        startTime: LocalDateTime,
-        endTime: LocalDateTime
-    ): Int {
-        with(TPipelineFailureBuild.T_PIPELINE_FAILURE_BUILD) {
-            return dslContext.insertInto(this,
-                PROJECT_ID,
-                PIPELINE_ID,
-                BUILD_ID,
-                BUILD_NUM,
-                START_TIME,
-                END_TIME)
-                .values(
-                    projectId,
-                    pipelineId,
-                    buildId,
-                    buildNum,
-                    startTime,
-                    endTime
-                )
-                .onDuplicateKeyUpdate()
-                .set(START_TIME, startTime)
-                .set(END_TIME, endTime)
-                .execute()
-        }
-    }
-
-    fun delete(dslContext: DSLContext, pipelineId: String, buildNum: Int): Int {
-        with(TPipelineFailureBuild.T_PIPELINE_FAILURE_BUILD) {
-            return dslContext.deleteFrom(this)
+        buildNum: Int
+    ): Result<TPipelineBuildHistoryRecord> {
+        with(TPipelineBuildHistory.T_PIPELINE_BUILD_HISTORY) {
+            return dslContext.selectFrom(this)
                 .where(PIPELINE_ID.eq(pipelineId))
-                .and(BUILD_NUM.le(buildNum))
-                .execute()
+                .and(STATUS.eq(BuildStatus.SUCCEED.ordinal))
+                .and(BUILD_NUM.lt(buildNum))
+                .fetch()
         }
     }
 }
