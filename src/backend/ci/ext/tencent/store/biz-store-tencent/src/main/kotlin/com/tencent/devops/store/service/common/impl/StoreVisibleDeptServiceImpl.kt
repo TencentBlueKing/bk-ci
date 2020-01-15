@@ -107,7 +107,8 @@ class StoreVisibleDeptServiceImpl @Autowired constructor(
         logger.info("the userId is :$userId,storeCode is :$storeCode,deptInfos is :$deptInfos,storeType is :$storeType")
         // 获取公司下各个BG的ID
         val resourceClient = client.get(ServiceProjectOrganizationResource::class)
-        val deptInfoList = resourceClient.getOrganizations(userId, OrganizationType.bg, 0).data
+        val result = resourceClient.getOrganizations(userId, OrganizationType.bg, 0)
+        val deptInfoList = result.data
         val approveList = mutableListOf<Int>()
         deptInfoList?.forEach {
             approveList.add(Integer.parseInt(it.ID))
