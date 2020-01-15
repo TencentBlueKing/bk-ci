@@ -112,7 +112,7 @@ class StoreVisibleDeptServiceImpl @Autowired constructor(
         logger.info("deptInfo List: $deptInfoList")
         val approveList = mutableListOf<Int>()
         deptInfoList?.forEach {
-            approveList.add(Integer.parseInt(it.ID))
+            approveList.add(Integer.parseInt(it.id))
         }
         approveList.add(0)
         // 公司以及BG 范围的审核列表
