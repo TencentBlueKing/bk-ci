@@ -1667,19 +1667,19 @@ class PipelineRuntimeService @Autowired constructor(
     }
 
     fun getRecommendVersion(buildParameters: List<BuildParameters>): String? {
-        val majorVersion = if (!buildParameters.none { it.key == MAJORVERSION || it.key == "MajorVersion"}) {
+        val majorVersion = if (!buildParameters.none { it.key == MAJORVERSION || it.key == "MajorVersion" }) {
             buildParameters.filter { it.key == MAJORVERSION || it.key == "MajorVersion" }[0].value.toString()
         } else return null
 
-        val minorVersion = if (!buildParameters.none { it.key == MINORVERSION || it.key == "MinorVersion"}) {
+        val minorVersion = if (!buildParameters.none { it.key == MINORVERSION || it.key == "MinorVersion" }) {
             buildParameters.filter { it.key == MINORVERSION || it.key == "MinorVersion" }[0].value.toString()
         } else return null
 
-        val fixVersion = if (!buildParameters.none { it.key == FIXVERSION || it.key == "FixVersion"}) {
+        val fixVersion = if (!buildParameters.none { it.key == FIXVERSION || it.key == "FixVersion" }) {
             buildParameters.filter { it.key == FIXVERSION || it.key == "FixVersion" }[0].value.toString()
         } else return null
 
-        val buildNo = if (!buildParameters.none { it.key == BUILD_NO || it.key == "BuildNo"}) {
+        val buildNo = if (!buildParameters.none { it.key == BUILD_NO || it.key == "BuildNo" }) {
             buildParameters.filter { it.key == BUILD_NO || it.key == "BuildNo" }[0].value.toString()
         } else return null
 
