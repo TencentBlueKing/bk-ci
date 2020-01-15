@@ -27,9 +27,10 @@
 package com.tencent.devops.websocket.cron
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.websocket.utils.RedisUtlis
+import com.tencent.devops.websocket.keys.WebsocketKeys
+import com.tencent.devops.websocket.servcie.WebsocketService
 import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
@@ -37,7 +38,8 @@ import org.springframework.stereotype.Component
 @Component
 class ClearTimeoutCron(
     private val redisOperation: RedisOperation,
-    private val objectMapper: ObjectMapper
+    private val objectMapper: ObjectMapper,
+    private val websocketService: WebsocketService
 ) {
 
     companion object {
@@ -47,29 +49,86 @@ class ClearTimeoutCron(
     /**
      * 每分钟一次，计算session是否已经超时，若超时，剔除该session关联的所有websocket redis信息。
      */
+//    @Scheduled(cron = "0 */1 * * * ?")
+//    fun clearTimeoutAllCache() {
+//        val nowTime = System.currentTimeMillis()
+//        val sessionTimeoutStr = RedisUtlis.getSessionTimeOutFromRedis(redisOperation)
+//        if (sessionTimeoutStr != null) {
+//            val sessionTimeoutMap: MutableMap<String, String> = objectMapper.readValue(sessionTimeoutStr)
+//            val newSessionMap = mutableMapOf<String, String>()
+//            sessionTimeoutMap.forEach { (sessionId, key) ->
+//                val timeout: Long = key.substringBefore("#").toLong()
+//                val userId = key.substringAfter("#")
+//                if (nowTime < timeout) {
+//                    newSessionMap[sessionId] = key
+//                } else {
+//                    val sessionPage = RedisUtlis.getPageFromSessionPageBySession(redisOperation, sessionId)
+//                    RedisUtlis.cleanSessionPageBySessionId(redisOperation, sessionId)
+//                    if (sessionPage != null) {
+//                        RedisUtlis.cleanPageSessionBySessionId(redisOperation, sessionId, sessionPage)
+//                    }
+//                    RedisUtlis.cleanUserSessionBySessionId(redisOperation, userId, sessionId)
+//                    websocketService.removeCacheSession(sessionId)
+//                    logger.info("[clearTimeOutSession] sessionId:$sessionId,loadPage:$sessionPage,userId:$userId")
+//                }
+//            }
+//            RedisUtlis.saveSessionTimeOutAll(redisOperation, objectMapper.writeValueAsString(newSessionMap))
+//        }
+//    }
+
+    /**
+     * 每分钟一次，计算session是否已经超时，若超时，剔除该session关联的所有websocket redis信息。
+     */
     @Scheduled(cron = "0 */1 * * * ?")
-    fun clearTimeoutAllCache() {
+    fun newClearTimeoutCache() {
         val nowTime = System.currentTimeMillis()
-        val sessionTimeoutStr = RedisUtlis.getSessionTimeOutFromRedis(redisOperation)
-        if (sessionTimeoutStr != null) {
-            val sessionTimeoutMap: MutableMap<String, String> = objectMapper.readValue(sessionTimeoutStr)
-            val newSessionMap = mutableMapOf<String, String>()
-            sessionTimeoutMap.forEach { (sessionId, key) ->
-                val timeout: Long = key.substringBefore("#").toLong()
-                val userId = key.substringAfter("#")
-                if (nowTime < timeout) {
-                    newSessionMap[sessionId] = key
-                } else {
-                    val sessionPage = RedisUtlis.getPageFromSessionPageBySession(redisOperation, sessionId)
-                    RedisUtlis.cleanSessionPageBySessionId(redisOperation, sessionId)
-                    if (sessionPage != null) {
-                        RedisUtlis.cleanPageSessionBySessionId(redisOperation, sessionId, sessionPage)
+        for (bucket in 0..WebsocketKeys.REDIS_MO) {
+            val redisData = redisOperation.get(WebsocketKeys.HASH_USER_TIMEOUT_REDIS_KEY + bucket)
+            if (redisData != null) {
+                var newSessionList: String? = null
+                val sessionList = redisData.split(",")
+                if (sessionList == null || sessionList.isEmpty()) {
+                    logger.info("this bucket is empty,redisKey[${WebsocketKeys.HASH_USER_TIMEOUT_REDIS_KEY + bucket}]")
+                    continue
+                }
+                sessionList.forEach {
+                    logger.info("clearTimeout redisStr[$it],redisKey[${WebsocketKeys.HASH_USER_TIMEOUT_REDIS_KEY + bucket}")
+                    try {
+                        if (it != null) {
+                            val timeout: Long = it.substringAfter("&").toLong()
+                            val userId = it.substringAfter("#").substringBefore("&")
+                            val sessionId = it.substringBefore("#")
+                            logger.info("clearTimeout str[$it] timeout[$timeout] userId[$userId] sessionId[$sessionId]")
+                            if (nowTime > timeout) {
+                                val sessionPage = RedisUtlis.getPageFromSessionPageBySession(redisOperation, sessionId)
+                                RedisUtlis.cleanSessionPageBySessionId(redisOperation, sessionId)
+                                if (sessionPage != null) {
+                                    RedisUtlis.cleanPageSessionBySessionId(redisOperation, sessionId, sessionPage)
+                                }
+                                RedisUtlis.cleanUserSessionBySessionId(redisOperation, userId, sessionId)
+                                websocketService.removeCacheSession(sessionId)
+                                logger.info("[clearTimeOutSession] sessionId:$sessionId,loadPage:$sessionPage,userId:$userId")
+                            } else {
+                                newSessionList = if (newSessionList == null) {
+                                    it
+                                } else {
+                                    "$newSessionList,$it"
+                                }
+                            }
+                        }
+                    } catch (e: Exception) {
+                        logger.warn("fail msg: ${e.message}")
                     }
-                    RedisUtlis.cleanUserSessionBySessionId(redisOperation, userId, sessionId)
-                    logger.info("[clearTimeOutSession] sessionId:$sessionId,loadPage:$sessionPage,userId:$userId")
+                }
+                if (newSessionList != null) {
+                    redisOperation.set(
+                        WebsocketKeys.HASH_USER_TIMEOUT_REDIS_KEY + bucket,
+                        newSessionList!!,
+                        null,
+                        true
+                    )
                 }
             }
-            RedisUtlis.saveSessionTimeOutAll(redisOperation, objectMapper.writeValueAsString(newSessionMap))
         }
     }
 }
