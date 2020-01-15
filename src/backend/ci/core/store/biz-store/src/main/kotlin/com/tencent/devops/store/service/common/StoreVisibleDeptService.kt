@@ -50,11 +50,6 @@ interface StoreVisibleDeptService {
     fun batchGetVisibleDept(storeCodeList: List<String?>, storeType: StoreTypeEnum): Result<HashMap<String, MutableList<Int>>>
 
     /**
-     * 设置store组件可见范围
-     */
-    fun addVisibleDept(userId: String, storeCode: String, deptInfos: List<DeptInfo>, storeType: StoreTypeEnum): Result<Boolean>
-
-    /**
      * 设置store组件可见范围，公司以及BG范围以下无需审核
      */
     fun addVisibleDepts(userId: String, storeCode: String, deptInfos: List<DeptInfo>, storeType: StoreTypeEnum): Result<Boolean>
