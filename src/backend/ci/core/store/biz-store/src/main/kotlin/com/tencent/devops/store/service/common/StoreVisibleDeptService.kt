@@ -55,6 +55,11 @@ interface StoreVisibleDeptService {
     fun addVisibleDept(userId: String, storeCode: String, deptInfos: List<DeptInfo>, storeType: StoreTypeEnum): Result<Boolean>
 
     /**
+     * 设置store组件可见范围，公司以及BG范围以下无需审核
+     */
+    fun addVisibleDepts(userId: String, storeCode: String, deptInfos: List<DeptInfo>, storeType: StoreTypeEnum): Result<Boolean>
+
+    /**
      * 删除store组件可见范围
      */
     fun deleteVisibleDept(userId: String, storeCode: String, deptIds: String, storeType: StoreTypeEnum): Result<Boolean>
