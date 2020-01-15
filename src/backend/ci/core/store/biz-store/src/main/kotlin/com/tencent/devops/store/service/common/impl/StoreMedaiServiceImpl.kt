@@ -13,7 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
-abstract class StoreMedaiServiceImpl : StoreMediaService{
+class StoreMedaiServiceImpl : StoreMediaService{
 
     @Autowired
     lateinit var dslContext: DSLContext
