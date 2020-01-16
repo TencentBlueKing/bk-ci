@@ -24,13 +24,25 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.project.constant
+package com.tencent.devops.log.model.pojo
+
+import com.tencent.devops.log.model.pojo.enums.LogStatus
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+import java.util.TreeSet
 
 /**
- * 项目微服务模块常量
  *
- * since: 2018-12-18
+ * Powered By Tencent
  */
-object ProjectConstants {
-    const val PROJECT_GRAY_REDIS_KEY = "project:setting:gray" // 灰度项目列表存在redis的标识key
-}
+@ApiModel("日志查询模型")
+data class QueryLineNo(
+    @ApiModelProperty("构建ID", required = true)
+    val buildId: String,
+    @ApiModelProperty("所在行号列表", required = true)
+    val lines: TreeSet<Long> = TreeSet(),
+    @ApiModelProperty("所用时间", required = false)
+    var timeUsed: Long = 0,
+    @ApiModelProperty("日志查询状态", required = false)
+    var status: LogStatus = LogStatus.SUCCEED
+)

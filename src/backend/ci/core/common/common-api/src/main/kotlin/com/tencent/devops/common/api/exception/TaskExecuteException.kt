@@ -24,11 +24,12 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.worker.common.exception
+package com.tencent.devops.common.api.exception
 
-import com.tencent.devops.process.pojo.AtomErrorCode.USER_DEFAULT_ERROR
-import com.tencent.devops.process.pojo.ErrorType
+import com.tencent.devops.common.api.pojo.ErrorType
 
-class UserTaskExecuteException(
-    override val errorMsg: String
-) : TaskExecuteException(ErrorType.USER, USER_DEFAULT_ERROR, errorMsg)
+open class TaskExecuteException(
+    open val errorType: ErrorType,
+    open val errorCode: Int,
+    open val errorMsg: String
+) : Throwable(errorMsg)

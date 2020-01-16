@@ -95,6 +95,8 @@ import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import com.tencent.devops.process.utils.PIPELINE_START_USER_NAME
 import com.tencent.devops.process.utils.PIPELINE_START_WEBHOOK_USER_ID
 import com.tencent.devops.process.utils.PIPELINE_VERSION
+import com.tencent.devops.process.utils.BUILD_NO
+import com.tencent.devops.process.utils.PipelineVarUtil
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.stereotype.Service
@@ -164,13 +166,13 @@ class PipelineBuildService(
 
         val model = getModel(projectId, pipelineId)
 
-        val container = model.stages[0].containers[0] as TriggerContainer
+        val triggerContainer = model.stages[0].containers[0] as TriggerContainer
 
         var canManualStartup = false
         var canElementSkip = false
         var useLatestParameters = false
         run lit@{
-            container.elements.forEach {
+            triggerContainer.elements.forEach {
                 if (it is ManualTriggerElement && it.isElementEnable()) {
                     canManualStartup = true
                     canElementSkip = it.canElementSkip ?: false
@@ -190,7 +192,7 @@ class PipelineBuildService(
                 if (latestParamsStr != null) {
                     val latestParams =
                         JsonUtil.to(latestParamsStr, object : TypeReference<MutableMap<String, Any>>() {})
-                    container.params.forEach { param ->
+                    triggerContainer.params.forEach { param ->
                         val realValue = latestParams[param.id]
                         if (realValue != null) {
                             // 有上一次的构建参数的时候才设置成默认值，否者依然使用默认值。
@@ -210,15 +212,38 @@ class PipelineBuildService(
             userId = if (checkPermission && userId != null) userId else null,
             projectId = projectId,
             pipelineId = pipelineId,
-            params = container.params
+            params = triggerContainer.params
         )
-
-        val currentBuildNo = (model.stages[0].containers[0] as TriggerContainer).buildNo
+        val newParams = mutableListOf<BuildFormProperty>()
+        params.forEach {
+            // 变量名从旧转新: 兼容从旧入口写入的数据转到新的流水线运行
+            val newVarName = PipelineVarUtil.oldVarToNewVar(it.id)
+            if (!newVarName.isNullOrBlank()) {
+                newParams.add(
+                    BuildFormProperty(
+                        id = newVarName!!,
+                        required = it.required,
+                        type = it.type,
+                        defaultValue = it.defaultValue,
+                        options = it.options,
+                        desc = it.desc,
+                        repoHashId = it.repoHashId,
+                        relativePath = it.relativePath,
+                        scmType = it.scmType,
+                        containerType = it.containerType,
+                        glob = it.glob,
+                        properties = it.properties
+                    )
+                )
+            } else newParams.add(it)
+        }
+        triggerContainer.params = newParams
+        val currentBuildNo = triggerContainer.buildNo
         if (currentBuildNo != null) {
             currentBuildNo.buildNo = pipelineRepositoryService.getBuildNo(projectId, pipelineId) ?: currentBuildNo.buildNo
         }
 
-        return BuildManualStartupInfo(canManualStartup, canElementSkip, params, currentBuildNo)
+        return BuildManualStartupInfo(canManualStartup, canElementSkip, newParams, currentBuildNo)
     }
 
     fun getBuildParameters(
@@ -335,16 +360,17 @@ class PipelineBuildService(
                     }
                 }
             } else {
-                // 完整构建重试
+                // 完整构建重试，去掉启动参数中的重试插件ID保证不冲突
                 try {
                     val startupParam = buildStartupParamService.getParam(buildId)
                     if (startupParam != null && startupParam.isNotEmpty()) {
-                        params.putAll(JsonUtil.toMap(startupParam))
+                        params.putAll(JsonUtil.toMap(startupParam).filter { it.key != PIPELINE_RETRY_START_TASK_ID })
                     }
                 } catch (e: Exception) {
                     logger.warn("Fail to get the startup param for the build($buildId)", e)
                 }
             }
+            logger.info("[$pipelineId]|RETRY_PIPELINE_ORIGIN|taskId=$taskId|buildId=$buildId|originRetryCount=${params[PIPELINE_RETRY_COUNT]}|startParams=$params")
 
             params[PIPELINE_RETRY_COUNT] = if (params[PIPELINE_RETRY_COUNT] != null) {
                 params[PIPELINE_RETRY_COUNT].toString().toInt() + 1
@@ -918,11 +944,15 @@ class PipelineBuildService(
         channelCode: ChannelCode,
         checkPermission: Boolean
     ): ModelDetail {
-        return buildDetailService.get(buildId) ?: throw ErrorCodeException(
+        val newModel = buildDetailService.get(buildId) ?: throw ErrorCodeException(
             statusCode = Response.Status.NOT_FOUND.statusCode,
             errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS,
             defaultMessage = "流水线编排不存在"
         )
+
+        pipelineBuildQualityService.addQualityGateReviewUsers(projectId, pipelineId, buildId, newModel.model)
+
+        return newModel
     }
 
     fun getBuildDetailByBuildNo(
@@ -1314,8 +1344,8 @@ class PipelineBuildService(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
-            permission = AuthPermission.EDIT,
-            message = "用户（$userId) 无权限修改流水线($pipelineId)历史构建"
+            permission = AuthPermission.EXECUTE,
+            message = "用户（$userId) 没有流水线($pipelineId)的执行权限，无法修改备注"
         )
         pipelineRuntimeService.updateBuildRemark(projectId, pipelineId, buildId, remark)
     }
@@ -1559,7 +1589,7 @@ class PipelineBuildService(
             // 如果指定了版本号，则设置指定的版本号
             readyToBuildPipelineInfo.version = signPipelineVersion ?: readyToBuildPipelineInfo.version
 
-            var startParams = startParamsWithType.map { it.key to it.value }.toMap()
+            var startParams = startParamsWithType.map { it.key to it.value }.toMap().toMutableMap()
             val fullModel = pipelineBuildQualityService.fillingRuleInOutElement(
                 projectId = readyToBuildPipelineInfo.projectId,
                 pipelineId = pipelineId,
@@ -1652,17 +1682,42 @@ class PipelineBuildService(
                 )
 
             val buildId = pipelineRuntimeService.startBuild(readyToBuildPipelineInfo, fullModel, paramsWithType)
-            startParams = paramsWithType.map { it.key to it.value }.toMap()
-            if (startParams.isNotEmpty()) {
-                buildStartupParamService.addParam(
-                    projectId = readyToBuildPipelineInfo.projectId,
-                    pipelineId = pipelineId,
-                    buildId = buildId,
-                    param = JsonUtil.toJson(startParams)
+
+            logger.info("[$pipelineId]|START_PIPELINE|BEFORE_FILTER|buildId=$buildId|startType=$startType|startParams=$startParams")
+
+            val triggerContainer = fullModel.stages[0].containers[0] as TriggerContainer
+            startParams = startParamsWithType.map { it.key to it.value }.toMap().toMutableMap()
+            if (startParams[PIPELINE_RETRY_COUNT] == null) {
+                if (triggerContainer.buildNo != null) {
+                    val buildNo = pipelineRuntimeService.getBuildNo(pipelineId)
+                    pipelineRuntimeService.setVariable(
+                        projectId = readyToBuildPipelineInfo.projectId, pipelineId = pipelineId,
+                        buildId = buildId, varName = BUILD_NO, varValue = buildNo
+                    )
+                    startParams[BUILD_NO] = buildNo
+                }
+                // 只有在构建参数中的才设置
+                val params = startParams.filter {
+                    it.key.startsWith(SkipElementUtils.prefix) || it.key == BUILD_NO || it.key == PIPELINE_RETRY_COUNT
+                }
+                if (triggerContainer.params.isNotEmpty()) params.plus(
+                    triggerContainer.params.map {
+                        // 真实传值的替换
+                        if (startParams.containsKey(it.id)) it.id to startParams[it.id]
+                        else it.id to it.defaultValue
+                    }.toMap()
                 )
+                if (startParams.isNotEmpty()) {
+                    buildStartupParamService.addParam(
+                        projectId = readyToBuildPipelineInfo.projectId,
+                        pipelineId = pipelineId,
+                        buildId = buildId,
+                        param = JsonUtil.toJson(startParams)
+                    )
+                }
             }
 
-            logger.info("[$pipelineId]|START_PIPELINE|buildId=$buildId|startType=$startType|startParams=$startParams")
+            logger.info("[$pipelineId]|START_PIPELINE|AFTER_FILTER|buildId=$buildId|startType=$startType|startParams=$startParams")
 
             return buildId
         } finally {

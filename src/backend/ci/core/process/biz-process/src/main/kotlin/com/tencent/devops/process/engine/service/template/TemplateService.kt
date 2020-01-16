@@ -88,6 +88,7 @@ import com.tencent.devops.process.pojo.template.SaveAsTemplateReq
 import com.tencent.devops.process.pojo.template.TemplateCompareModel
 import com.tencent.devops.process.pojo.template.TemplateCompareModelResult
 import com.tencent.devops.process.pojo.template.TemplateInstanceCreate
+import com.tencent.devops.process.pojo.template.TemplateInstancePage
 import com.tencent.devops.process.pojo.template.TemplateInstanceParams
 import com.tencent.devops.process.pojo.template.TemplateInstanceUpdate
 import com.tencent.devops.process.pojo.template.TemplateInstances
@@ -99,7 +100,6 @@ import com.tencent.devops.process.pojo.template.TemplateOperationRet
 import com.tencent.devops.process.pojo.template.TemplatePipeline
 import com.tencent.devops.process.pojo.template.TemplateType
 import com.tencent.devops.process.pojo.template.TemplateVersion
-import com.tencent.devops.process.pojo.template.TemplateInstancePage
 import com.tencent.devops.process.service.ParamService
 import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.template.dao.PipelineTemplateDao
@@ -374,7 +374,7 @@ class TemplateService @Autowired constructor(
         }
 
 //        if (latestTemplate.storeFlag) {
-            // 将更新信息推送给使用模版的项目管理员 -- todo
+        // 将更新信息推送给使用模版的项目管理员 -- todo
 //        }
 
         return true
@@ -674,10 +674,12 @@ class TemplateService @Autowired constructor(
                 container.elements.forEach element@{ element ->
                     when (element) {
                         is CodeGitElement -> codes.add(
-                            getCode(projectId = projectId, repositoryConfig = RepositoryConfigUtils.buildConfig(element)) ?: return@element
+                            getCode(projectId = projectId, repositoryConfig = RepositoryConfigUtils.buildConfig(element))
+                                ?: return@element
                         )
                         is GithubElement -> codes.add(
-                            getCode(projectId = projectId, repositoryConfig = RepositoryConfigUtils.buildConfig(element)) ?: return@element
+                            getCode(projectId = projectId, repositoryConfig = RepositoryConfigUtils.buildConfig(element))
+                                ?: return@element
                         )
                         is CodeSvnElement -> codes.add(
                             getCode(projectId, RepositoryConfigUtils.buildConfig(element)) ?: return@element
@@ -1120,6 +1122,7 @@ class TemplateService @Autowired constructor(
 
         val successPipelines = ArrayList<String>()
         val failurePipelines = ArrayList<String>()
+        val successPipelinesId = ArrayList<String>()
         val messages = HashMap<String, String>()
 
         instances.forEach { instance ->
@@ -1179,6 +1182,7 @@ class TemplateService @Autowired constructor(
                         )
                     }
                     successPipelines.add(instance.pipelineName)
+                    successPipelinesId.add(pipelineId)
                 }
             } catch (t: DuplicateKeyException) {
                 logger.warn("Fail to update the pipeline $instance of project $projectId by user $userId", t)
@@ -1191,7 +1195,12 @@ class TemplateService @Autowired constructor(
             }
         }
 
-        return TemplateOperationRet(0, TemplateOperationMessage(successPipelines, failurePipelines, messages), "")
+        return TemplateOperationRet(0, TemplateOperationMessage(
+            successPipelines = successPipelines,
+            failurePipelines = failurePipelines,
+            failureMessages = messages,
+            successPipelinesId = successPipelinesId
+        ), "")
     }
 
     /**
@@ -1663,6 +1672,7 @@ class TemplateService @Autowired constructor(
             )
         }
     }
+
     /**
      * 检查模板是不是合法
      */
@@ -1826,6 +1836,7 @@ class TemplateService @Autowired constructor(
         }
         return com.tencent.devops.common.api.pojo.Result(projectTemplateMap)
     }
+
     fun updateMarketTemplateReference(
         userId: String,
         updateMarketTemplateRequest: AddMarketTemplateRequest
