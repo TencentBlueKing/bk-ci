@@ -144,17 +144,22 @@ abstract class TemplateReleaseServiceImpl @Autowired constructor() : TemplateRel
                     arrayOf(templateName)
             )
             val templateRecord = templateRecords[0]
-            if (templateRecords.size > 1) {
-                // 判断最近一个模板版本的状态，只有处于审核驳回、已发布、上架中止和已下架的状态才允许添加新的版本
-                val templateFinalStatusList = listOf(
+            // 判断最近一个模板版本的状态，如果不是首次发布，则只有处于审核驳回、已发布、上架中止和已下架的插件状态才允许添加新的版本
+            val templateFinalStatusList = mutableListOf(
                     TemplateStatusEnum.AUDIT_REJECT.status.toByte(),
                     TemplateStatusEnum.RELEASED.status.toByte(),
                     TemplateStatusEnum.GROUNDING_SUSPENSION.status.toByte(),
                     TemplateStatusEnum.UNDERCARRIAGED.status.toByte()
+            )
+            if (templateRecords.size == 1) {
+                // 如果是首次发布，处于初始化的模板状态也允许添加新的版本
+                templateFinalStatusList.add(TemplateStatusEnum.INIT.status.toByte())
+            }
+            if (!templateFinalStatusList.contains(templateRecord.templateStatus)) {
+                return MessageCodeUtil.generateResponseDataObject(
+                        StoreMessageCode.USER_TEMPLATE_VERSION_IS_NOT_FINISH,
+                        arrayOf(templateRecord.templateName, templateRecord.version)
                 )
-                if (!templateFinalStatusList.contains(templateRecord.templateStatus)) {
-                    return MessageCodeUtil.generateResponseDataObject(StoreMessageCode.USER_TEMPLATE_VERSION_IS_NOT_FINISH, arrayOf(templateRecord.templateName, templateRecord.version))
-                }
             }
             // todo 检查源模板模型的合法性
             val isNormalUpgrade = getNormalUpgradeFlag(templateRecord.templateCode, templateRecord.templateStatus.toInt())
@@ -334,7 +339,7 @@ abstract class TemplateReleaseServiceImpl @Autowired constructor() : TemplateRel
                 storeId = templateId,
                 storeCode = templateCode,
                 storeType = StoreTypeEnum.TEMPLATE,
-                modifier = record.modifier,
+                creator = record.creator,
                 processInfo = processInfo
             )
             logger.info("getProcessInfo storeProcessInfo: $storeProcessInfo")
@@ -434,7 +439,7 @@ abstract class TemplateReleaseServiceImpl @Autowired constructor() : TemplateRel
                 }
             }
         } else {
-            // 把IDE插件所有已发布的版本全部下架
+            // 把所有已发布的版本全部下架
             dslContext.transaction { t ->
                 val context = DSL.using(t)
                 marketTemplateDao.updateTemplateStatusByCode(

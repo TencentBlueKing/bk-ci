@@ -28,6 +28,9 @@ package com.tencent.devops.plugin.worker.task.scm.git
 
 import com.tencent.devops.common.api.enums.RepositoryConfig
 import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.common.api.exception.TaskExecuteException
+import com.tencent.devops.common.api.pojo.ErrorCode
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.log.Ansi
 import com.tencent.devops.common.pipeline.enums.GitPullModeType
 import com.tencent.devops.common.pipeline.enums.StartType
@@ -302,7 +305,11 @@ open class GitUpdateTask constructor(
         val branchPrefix = when (gitType) {
             ScmType.CODE_GIT -> "mr-"
             ScmType.GITHUB -> "pr-"
-            else -> throw RuntimeException("Invalid scm type $gitType")
+            else -> throw TaskExecuteException(
+                errorCode = ErrorCode.USER_INPUT_INVAILD,
+                errorType = ErrorType.USER,
+                errorMsg = "Invalid scm type $gitType"
+            )
         }
 
         val refList = git.branchList().call()
@@ -324,7 +331,11 @@ open class GitUpdateTask constructor(
                 val prNumber = variables[GITHUB_PR_NUMBER]!!
                 "pr-$prNumber"
             }
-            else -> throw RuntimeException("Invalid scm type $gitType")
+            else -> throw TaskExecuteException(
+                errorCode = ErrorCode.USER_INPUT_INVAILD,
+                errorType = ErrorType.USER,
+                errorMsg = "Invalid scm type $gitType"
+            )
         }
 
         createBranch(git, branch)
@@ -356,7 +367,11 @@ open class GitUpdateTask constructor(
                 GitPullModeType.BRANCH.name -> {
                     if (revision.isNullOrBlank()) {
                         val remoteBranch = getRemoteBranch(git, modeValue!!)
-                            ?: throw RuntimeException("Can't find the branch($modeValue) of git repository($url)")
+                            ?: throw TaskExecuteException(
+                                errorCode = ErrorCode.USER_RESOURCE_NOT_FOUND,
+                                errorType = ErrorType.USER,
+                                errorMsg = "Can't find the branch($modeValue) of git repository($url)"
+                            )
                         checkoutBranch(git, remoteBranch)
                     } else {
                         checkoutCommitId(git, revision!!)
@@ -366,7 +381,11 @@ open class GitUpdateTask constructor(
                 GitPullModeType.TAG.name -> {
                     if (revision.isNullOrBlank()) {
                         val tag = getRemoteTag(git, modeValue!!)
-                            ?: throw RuntimeException("Can't find the tag($modeValue) of git repository($url)")
+                            ?: throw TaskExecuteException(
+                                errorCode = ErrorCode.USER_RESOURCE_NOT_FOUND,
+                                errorType = ErrorType.USER,
+                                errorMsg = "Can't find the tag($modeValue) of git repository($url)"
+                            )
                         checkoutTag(git, tag)
                     } else {
                         checkoutCommitId(git, revision!!)
@@ -379,7 +398,11 @@ open class GitUpdateTask constructor(
 
                 else -> {
                     logger.warn("Unknown checkout mode type($modeType)")
-                    throw RuntimeException("错误的GIT指定拉取方式（$modeType）")
+                    throw TaskExecuteException(
+                        errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
+                        errorType = ErrorType.USER,
+                        errorMsg = "错误的GIT指定拉取方式（$modeType）"
+                    )
                 }
             }
         }
@@ -471,7 +494,11 @@ open class GitUpdateTask constructor(
             pullResult.mergeResult.conflicts.forEach { (file, value) ->
                 LoggerService.addRedLine("Conflict file $file")
             }
-            throw RuntimeException("Merge branch $branchName conflict")
+            throw TaskExecuteException(
+                errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
+                errorType = ErrorType.USER,
+                errorMsg = "Merge branch $branchName conflict"
+            )
         } else {
             LoggerService.addNormalLine("Merge branch $branchName succeed")
         }
@@ -664,7 +691,11 @@ open class GitUpdateTask constructor(
             return actualUrl.substring("git@".length, actualUrl.indexOf(":"))
         } catch (e: Exception) {
             logger.warn("Fail to get the url host - ($url)", e)
-            throw RuntimeException("获取git代码库主机信息失败: $url")
+            throw TaskExecuteException(
+                errorCode = ErrorCode.SYSTEM_SERVICE_ERROR,
+                errorType = ErrorType.SYSTEM,
+                errorMsg = "获取git代码库主机信息失败: $url"
+            )
         }
     }
 

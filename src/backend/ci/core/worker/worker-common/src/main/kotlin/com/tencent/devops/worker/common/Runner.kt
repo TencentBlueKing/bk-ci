@@ -32,12 +32,12 @@ import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.enums.BuildTaskStatus
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.pipeline.utils.ParameterUtils
-import com.tencent.devops.process.pojo.AtomErrorCode
-import com.tencent.devops.process.pojo.ErrorType
+import com.tencent.devops.common.api.pojo.ErrorCode
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
 import com.tencent.devops.worker.common.env.BuildEnv
 import com.tencent.devops.worker.common.env.BuildType
-import com.tencent.devops.worker.common.exception.TaskExecuteException
+import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.worker.common.heartbeat.Heartbeat
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.service.ProcessService
@@ -141,7 +141,7 @@ object Runner {
                                     }
                                     message = e.message ?: defaultMessage.toString()
                                     errorType = ErrorType.SYSTEM.name
-                                    errorCode = AtomErrorCode.SYSTEM_WORKER_LOADING_ERROR
+                                    errorCode = ErrorCode.SYSTEM_WORKER_LOADING_ERROR
                                 }
 
                                 val env = taskDaemon.getAllEnv()
@@ -160,7 +160,7 @@ object Runner {
                                     errorCode = errorCode
                                 )
                             } finally {
-                                LoggerService.addFoldEndLine(taskName)
+                                LoggerService.addFoldEndLine("")
                                 LoggerService.elementId = ""
                             }
                         }
@@ -224,10 +224,10 @@ object Runner {
         LoggerService.addNormalLine("")
         LoggerService.addFoldStartLine("[Machine Environment Properties]")
         System.getProperties().forEach { k, v ->
-            LoggerService.addYellowLine("$k: $v")
+            LoggerService.addNormalLine("$k: $v")
             logger.info("$k: $v")
         }
-        LoggerService.addFoldEndLine("env_machine")
+        LoggerService.addFoldEndLine("-----")
     }
 
     /**
@@ -238,7 +238,7 @@ object Runner {
         LoggerService.addFoldStartLine("[System Environment Properties]")
         val envs = System.getenv()
         envs.forEach { (k, v) ->
-            LoggerService.addYellowLine("$k: $v")
+            LoggerService.addNormalLine("$k: $v")
             logger.info("$k: $v")
         }
         LoggerService.addFoldEndLine("-----")
@@ -252,12 +252,13 @@ object Runner {
         LoggerService.addFoldStartLine("[Build Environment Properties]")
         variables.forEach { v ->
             if (v.valueType == BuildFormPropertyType.PASSWORD) {
-                LoggerService.addYellowLine(Ansi().a("${v.key}: ").reset().a("******").toString())
+                LoggerService.addNormalLine(Ansi().a("${v.key}: ").reset().a("******").toString())
             } else {
-                LoggerService.addYellowLine(Ansi().a("${v.key}: ").reset().a(v.value.toString()).toString())
+                LoggerService.addNormalLine(Ansi().a("${v.key}: ").reset().a(v.value.toString()).toString())
             }
             logger.info("${v.key}: ${v.value}")
         }
-        LoggerService.addFoldEndLine("env_user")
+        LoggerService.addFoldEndLine("-----")
+        LoggerService.addNormalLine("")
     }
 }
