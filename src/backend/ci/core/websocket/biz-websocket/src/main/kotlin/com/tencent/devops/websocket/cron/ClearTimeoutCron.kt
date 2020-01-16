@@ -95,7 +95,7 @@ class ClearTimeoutCron(
         }
     }
 
-    private fun clearTimeoutSession(){
+    private fun clearTimeoutSession() {
         val nowTime = System.currentTimeMillis()
         for (bucket in 0..WebsocketKeys.REDIS_MO) {
             val redisData = redisOperation.get(WebsocketKeys.HASH_USER_TIMEOUT_REDIS_KEY + bucket)

@@ -209,15 +209,15 @@ class WebsocketService @Autowired constructor(
         return false
     }
 
-    fun createLongSessionPage(page: String){
+    fun createLongSessionPage(page: String) {
         longSessionList.add(page)
     }
 
-    fun getLongSessionPage(): Set<String>{
+    fun getLongSessionPage(): Set<String> {
         return longSessionList
     }
 
-    fun clearLongSessionPage(){
+    fun clearLongSessionPage() {
         longSessionList.clear()
     }
 
