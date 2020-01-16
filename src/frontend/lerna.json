@@ -6,7 +6,8 @@
     "devops-environment",
     "devops-ticket",
     "devops-atomstore",
-    "devops-quality"
+    "devops-quality",
+    "devops-log"
   ],
   "npmClient": "yarn",
   "version": "independent",

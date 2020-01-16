@@ -577,7 +577,7 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
                         storeType = StoreTypeEnum.ATOM.type.toByte()
                     )
                     if (!installFlag) {
-                        return storeProjectService.installStoreComponent(
+                        storeProjectService.installStoreComponent(
                             userId = userId,
                             projectCodeList = arrayListOf(projectCode),
                             storeId = atomRecord.id,
