@@ -92,9 +92,9 @@ const val PIPELINE_MATERIAL_NEW_COMMIT_COMMENT =
 const val PIPELINE_MATERIAL_NEW_COMMIT_TIMES =
     "BK_CI_PIPELINE_MATERIAL_NEW_COMMIT_TIMES" // pipeline.material.new.commit.times
 
-const val MAJORVERSION = "BK_CI_MAJOR_VERSION" // majorVersion
-const val MINORVERSION = "BK_CI_MINOR_VERSION" // minorVersion
-const val FIXVERSION = "BK_CI_FIX_VERSION" // fixVersion
+const val MAJORVERSION = "BK_CI_MAJOR_VERSION" // MajorVersion
+const val MINORVERSION = "BK_CI_MINOR_VERSION" // MinorVersion
+const val FIXVERSION = "BK_CI_FIX_VERSION" // FixVersion
 const val BUILD_NO = "BK_CI_BUILD_NO" // "BuildNo"
 
 /**
@@ -159,9 +159,9 @@ object PipelineVarUtil {
         "pipeline.version" to PIPELINE_VERSION,
         "pipeline.start.parent.build.task.id" to PIPELINE_START_PARENT_BUILD_TASK_ID,
         "pipeline.start.parent.build.id" to PIPELINE_START_PARENT_BUILD_ID,
-        "majorVersion" to MAJORVERSION,
-        "minorVersion" to MINORVERSION,
-        "fixVersion" to FIXVERSION,
+        "MajorVersion" to MAJORVERSION,
+        "MinorVersion" to MINORVERSION,
+        "FixVersion" to FIXVERSION,
         "BuildNo" to BUILD_NO,
         "pipeline.start.channel" to PIPELINE_START_CHANNEL,
         "pipeline.build.last.update" to PIPELINE_BUILD_LAST_UPDATE,

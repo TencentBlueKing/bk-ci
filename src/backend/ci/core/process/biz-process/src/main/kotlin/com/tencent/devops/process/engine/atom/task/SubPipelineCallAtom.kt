@@ -44,8 +44,8 @@ import com.tencent.devops.process.engine.service.PipelineBuildService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineService
-import com.tencent.devops.process.pojo.AtomErrorCode
-import com.tencent.devops.process.pojo.ErrorType
+import com.tencent.devops.common.api.pojo.ErrorCode
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.process.utils.PIPELINE_START_CHANNEL
 import com.tencent.devops.process.utils.PIPELINE_START_PIPELINE_USER_ID
 import com.tencent.devops.process.utils.PIPELINE_START_TYPE
@@ -72,7 +72,7 @@ class SubPipelineCallAtom constructor(
             AtomResponse(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.USER,
-                errorCode = AtomErrorCode.USER_RESOURCE_NOT_FOUND,
+                errorCode = ErrorCode.USER_RESOURCE_NOT_FOUND,
                 errorMsg = "找不到对应子流水线"
             )
         } else {
@@ -90,7 +90,7 @@ class SubPipelineCallAtom constructor(
                 AtomResponse(
                     buildStatus = BuildStatus.FAILED,
                     errorType = ErrorType.USER,
-                    errorCode = AtomErrorCode.USER_RESOURCE_NOT_FOUND,
+                    errorCode = ErrorCode.USER_RESOURCE_NOT_FOUND,
                     errorMsg = "找不到对应子流水线"
                 )
             } else {

@@ -165,11 +165,8 @@ abstract class AbsOpProjectServiceImpl @Autowired constructor(
     override fun getProjectList(projectName: String?, englishName: String?, projectType: Int?, isSecrecy: Boolean?, creator: String?, approver: String?, approvalStatus: Int?, offset: Int, limit: Int, grayFlag: Boolean): Result<Map<String, Any?>?> {
         val dataObj = mutableMapOf<String, Any?>()
 
-        val projectCodeSet = if (grayFlag) {
-            redisOperation.getSetMembers(gray.getGrayRedisKey())
-        } else {
-            null
-        }
+        val projectCodeSet = gray.grayProjectSet(redisOperation)
+
         val projectInfos = projectDao.getProjectList(
                 dslContext = dslContext,
                 projectName = projectName,
@@ -211,11 +208,7 @@ abstract class AbsOpProjectServiceImpl @Autowired constructor(
     override fun getProjectList(projectName: String?, englishName: String?, projectType: Int?, isSecrecy: Boolean?, creator: String?, approver: String?, approvalStatus: Int?, offset: Int, limit: Int, grayFlag: Boolean, repoGrayFlag: Boolean): Result<Map<String, Any?>?> {
         val dataObj = mutableMapOf<String, Any?>()
 
-        val grayProject = if (grayFlag) {
-            redisOperation.getSetMembers(gray.getGrayRedisKey())
-        } else {
-            null
-        }
+        val grayProject = gray.grayProjectSet(redisOperation)
 
         val repoGrayProject = if (repoGrayFlag) {
             redisOperation.getSetMembers(repoGray.getRepoGrayRedisKey())
@@ -283,8 +276,7 @@ abstract class AbsOpProjectServiceImpl @Autowired constructor(
         )
     }
 
-    fun grayProjectSet() =
-            (redisOperation.getSetMembers(gray.getGrayRedisKey()) ?: emptySet()).filter { !it.isBlank() }.toSet()
+    fun grayProjectSet() = gray.grayProjectSet(redisOperation)
 
     fun repoGrayProjectSet() =
             (redisOperation.getSetMembers(repoGray.getRepoGrayRedisKey()) ?: emptySet()).filter { !it.isBlank() }.toSet()

@@ -24,11 +24,31 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.worker.common.exception
+package com.tencent.devops.plugin.worker.task.codecc.util
 
-import com.tencent.devops.process.pojo.AtomErrorCode.SYSTEM_SERVICE_ERROR
-import com.tencent.devops.process.pojo.ErrorType
+import com.tencent.devops.plugin.worker.task.codecc.WindowsCodeccConstants.WINDOWS_GOMETALINTER_PATH
+import com.tencent.devops.plugin.worker.task.codecc.WindowsCodeccConstants.WINDOWS_GOROOT_PATH
+import com.tencent.devops.worker.common.CommonEnv
 
-class SystemServiceExecuteException(
-    override val errorMsg: String
-) : TaskExecuteException(ErrorType.SYSTEM, SYSTEM_SERVICE_ERROR, errorMsg)
+class WindowsCodeccUtils : CodeccUtils() {
+
+    override fun coverityPreExecute(list: MutableList<String>) {
+        CommonEnv.getCommonEnv().forEach { (key, value) ->
+            list.add("set $key=$value\n")
+        }
+
+        list.add("python -V\n")
+        list.add("cd\n")
+    }
+
+    override fun toolPreExecute(list: MutableList<String>) {
+        list.add("set PATH=${WINDOWS_GOROOT_PATH.canonicalPath}\\bin;${WINDOWS_GOMETALINTER_PATH.canonicalPath};%PATH%\n")
+
+        CommonEnv.getCommonEnv().forEach { (key, value) ->
+            list.add("set $key=$value\n")
+        }
+
+        list.add("python -V\n")
+        list.add("cd\n")
+    }
+}
