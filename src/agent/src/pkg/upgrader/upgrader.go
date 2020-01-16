@@ -107,9 +107,9 @@ func tryKillAgentProcess() {
 		logs.Warn("find process failed")
 		return
 	} else {
-		println("ddd", process.Pid)
+		logs.Info("kill agent process, pid: ", intPid)
+		process.Kill()
 	}
-	process.Kill()
 }
 
 func DoUninstallAgent() error {
