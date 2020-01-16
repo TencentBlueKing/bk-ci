@@ -132,7 +132,7 @@ class OPProjectResourceImpl @Autowired constructor(
         repoGrayFlag: Boolean,
         request: HttpServletRequest
     ): Result<Map<String, Any?>?> {
-        return opProjectService.getProjectList(projectName, englishName, projectType, isSecrecy, creator, approver, approvalStatus, offset, limit, grayFlag)
+        return opProjectService.getProjectList(projectName = projectName, englishName = englishName, projectType = projectType, isSecrecy = isSecrecy, creator = creator, approver = approver, approvalStatus = approvalStatus, offset = offset, limit = limit, grayFlag = grayFlag, repoGrayFlag = repoGrayFlag)
     }
 
     override fun setRepoGrayProject(projectGraySetRequest: OpProjectGraySetRequest): Result<Boolean> {
