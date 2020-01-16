@@ -61,6 +61,8 @@ class WebsocketService @Autowired constructor(
 
     private val cacheSessionList = mutableListOf<String>()
 
+    private val longSessionList = mutableSetOf<String>()
+
     // 用户切换页面，需调整sessionId-page,page-sessionIdList两个map
     fun changePage(
         userId: String,
@@ -207,6 +209,18 @@ class WebsocketService @Autowired constructor(
         return false
     }
 
+    fun createLongSessionPage(page: String){
+        longSessionList.add(page)
+    }
+
+    fun getLongSessionPage(): Set<String>{
+        return longSessionList
+    }
+
+    fun clearLongSessionPage(){
+        longSessionList.clear()
+    }
+
     fun createTimeoutSession(sessionId: String, userId: String) {
         val timeout = System.currentTimeMillis() + TimeUnit.DAYS.toMillis(sessionTimeOut!!)
         val redisData = "$sessionId#$userId&$timeout"
@@ -216,8 +230,8 @@ class WebsocketService @Autowired constructor(
         val redisHashKey = WebsocketKeys.HASH_USER_TIMEOUT_REDIS_KEY + bucket
         logger.info("redis hash sessionId[$sessionId] userId[$userId] redisHashKey[$redisHashKey]")
         var timeoutData = redisOperation.get(redisHashKey)
-        if (timeoutData != null) {
-            redisOperation.set(redisHashKey, timeoutData, null, true)
+        if (timeoutData == null) {
+            redisOperation.set(redisHashKey, redisData, null, true)
         } else {
             timeoutData = "$timeoutData,$redisData"
             redisOperation.set(redisHashKey, timeoutData, null, true)
