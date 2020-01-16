@@ -65,7 +65,7 @@ class PipelineFailureBuildService @Autowired constructor(
                 event.pipelineId, buildInfo.buildNum)
             // 比当前构建号大的构建已经执行成功了，那就不需要在写入当前的构建了
             if (successBuildHistory.isNotEmpty) {
-                logger.info("[${event.projectId}|${event.pipelineId}|${event.buildId}] There are success builds success finished - (${successBuildHistory.map { it.buildId }.toList()})")
+                logger.info("[${event.projectId}|${event.pipelineId}|${event.buildId}] There are success builds success finished - (${successBuildHistory.map { "${it.buildId}|${it.buildNum}" }.toList()})")
                 return
             }
             val startTime = buildInfo.startTime!!
