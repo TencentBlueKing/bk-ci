@@ -94,6 +94,43 @@ class StoreDeptRelDao {
         }
     }
 
+    fun batchAdd(dslContext: DSLContext, userId: String, storeCode: String, deptInfoList: List<DeptInfo>, status: Byte, comment: String, storeType: Byte): IntArray? {
+        with(TStoreDeptRel.T_STORE_DEPT_REL) {
+            val addStep = deptInfoList.map {
+                dslContext.insertInto(this,
+                    ID,
+                    STORE_CODE,
+                    DEPT_ID,
+                    DEPT_NAME,
+                    STORE_TYPE,
+                    CREATOR,
+                    MODIFIER,
+                    STATUS,
+                    COMMENT,
+                    UPDATE_TIME
+                )
+                    .values(
+                        UUIDUtil.generate(),
+                        storeCode,
+                        it.deptId,
+                        it.deptName,
+                        storeType,
+                        userId,
+                        userId,
+                        status,
+                        comment,
+                        LocalDateTime.now()
+                    )
+                    .onDuplicateKeyUpdate()
+                    .set(STATUS, status)
+                    .set(COMMENT, comment)
+                    .set(MODIFIER, userId)
+                    .set(UPDATE_TIME, LocalDateTime.now())
+            }
+            return dslContext.batch(addStep).execute()
+        }
+    }
+
     fun batchUpdate(dslContext: DSLContext, userId: String, storeCode: String, deptIdList: List<Int>, status: Byte, comment: String, storeType: Byte) {
         with(TStoreDeptRel.T_STORE_DEPT_REL) {
             dslContext.update(this)
