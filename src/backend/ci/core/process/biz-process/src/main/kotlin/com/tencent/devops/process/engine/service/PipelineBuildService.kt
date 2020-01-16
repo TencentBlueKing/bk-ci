@@ -96,6 +96,7 @@ import com.tencent.devops.process.utils.PIPELINE_START_USER_NAME
 import com.tencent.devops.process.utils.PIPELINE_START_WEBHOOK_USER_ID
 import com.tencent.devops.process.utils.PIPELINE_VERSION
 import com.tencent.devops.process.utils.BUILD_NO
+import com.tencent.devops.process.utils.PipelineVarUtil
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.stereotype.Service
@@ -165,13 +166,13 @@ class PipelineBuildService(
 
         val model = getModel(projectId, pipelineId)
 
-        val container = model.stages[0].containers[0] as TriggerContainer
+        val triggerContainer = model.stages[0].containers[0] as TriggerContainer
 
         var canManualStartup = false
         var canElementSkip = false
         var useLatestParameters = false
         run lit@{
-            container.elements.forEach {
+            triggerContainer.elements.forEach {
                 if (it is ManualTriggerElement && it.isElementEnable()) {
                     canManualStartup = true
                     canElementSkip = it.canElementSkip ?: false
@@ -191,7 +192,7 @@ class PipelineBuildService(
                 if (latestParamsStr != null) {
                     val latestParams =
                         JsonUtil.to(latestParamsStr, object : TypeReference<MutableMap<String, Any>>() {})
-                    container.params.forEach { param ->
+                    triggerContainer.params.forEach { param ->
                         val realValue = latestParams[param.id]
                         if (realValue != null) {
                             // 有上一次的构建参数的时候才设置成默认值，否者依然使用默认值。
@@ -211,15 +212,38 @@ class PipelineBuildService(
             userId = if (checkPermission && userId != null) userId else null,
             projectId = projectId,
             pipelineId = pipelineId,
-            params = container.params
+            params = triggerContainer.params
         )
-
-        val currentBuildNo = (model.stages[0].containers[0] as TriggerContainer).buildNo
+        val newParams = mutableListOf<BuildFormProperty>()
+        params.forEach {
+            // 变量名从旧转新: 兼容从旧入口写入的数据转到新的流水线运行
+            val newVarName = PipelineVarUtil.oldVarToNewVar(it.id)
+            if (!newVarName.isNullOrBlank()) {
+                newParams.add(
+                    BuildFormProperty(
+                        id = newVarName!!,
+                        required = it.required,
+                        type = it.type,
+                        defaultValue = it.defaultValue,
+                        options = it.options,
+                        desc = it.desc,
+                        repoHashId = it.repoHashId,
+                        relativePath = it.relativePath,
+                        scmType = it.scmType,
+                        containerType = it.containerType,
+                        glob = it.glob,
+                        properties = it.properties
+                    )
+                )
+            } else newParams.add(it)
+        }
+        triggerContainer.params = newParams
+        val currentBuildNo = triggerContainer.buildNo
         if (currentBuildNo != null) {
             currentBuildNo.buildNo = pipelineRepositoryService.getBuildNo(projectId, pipelineId) ?: currentBuildNo.buildNo
         }
 
-        return BuildManualStartupInfo(canManualStartup, canElementSkip, params, currentBuildNo)
+        return BuildManualStartupInfo(canManualStartup, canElementSkip, newParams, currentBuildNo)
     }
 
     fun getBuildParameters(
@@ -1320,8 +1344,8 @@ class PipelineBuildService(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
-            permission = AuthPermission.EDIT,
-            message = "用户（$userId) 无权限修改流水线($pipelineId)历史构建"
+            permission = AuthPermission.EXECUTE,
+            message = "用户（$userId) 没有流水线($pipelineId)的执行权限，无法修改备注"
         )
         pipelineRuntimeService.updateBuildRemark(projectId, pipelineId, buildId, remark)
     }
