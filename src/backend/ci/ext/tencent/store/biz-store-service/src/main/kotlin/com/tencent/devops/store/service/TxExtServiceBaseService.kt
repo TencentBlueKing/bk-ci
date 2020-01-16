@@ -64,8 +64,7 @@ class TxExtServiceBaseService: ExtServiceBaseService() {
                 storeBuildInfoDao.getStoreBuildInfoByLanguage(
                     dslContext,
                     extensionInfo.language,
-                    //TODO: 此处等carl添加完数据需改成service枚举
-                    StoreTypeEnum.ATOM
+                    StoreTypeEnum.SERVICE
                 ).sampleProjectPath,
                 serviceNameSpaceId.toInt(),
                 extensionInfo.visibilityLevel,
