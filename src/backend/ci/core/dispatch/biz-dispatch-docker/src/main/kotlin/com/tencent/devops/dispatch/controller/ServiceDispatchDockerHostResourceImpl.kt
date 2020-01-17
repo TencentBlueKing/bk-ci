@@ -24,35 +24,45 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.api
+package com.tencent.devops.dispatch.controller
 
+import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Page
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.dispatch.api.ServiceDispatchDockerHostResource
 import com.tencent.devops.dispatch.pojo.DockerHostZone
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
-import javax.ws.rs.Consumes
-import javax.ws.rs.GET
-import javax.ws.rs.Path
-import javax.ws.rs.Produces
-import javax.ws.rs.QueryParam
-import javax.ws.rs.core.MediaType
+import com.tencent.devops.dispatch.service.DockerHostZoneTaskService
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
 
-@Api(tags = ["SERVICE_DOCKER_HOST"], description = "服务-获取构建容器信息")
-@Path("/service/dockerhost")
-@Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
-interface ServiceDockerHostResource {
+@RestResource
+class ServiceDispatchDockerHostResourceImpl @Autowired constructor(
+    private val dockerHostZoneTaskService: DockerHostZoneTaskService
+) : ServiceDispatchDockerHostResource {
+    override fun list(page: Int?, pageSize: Int?): Page<DockerHostZone> {
+        checkParams(page, pageSize)
+        val realPage = page ?: 1
+        val realPageSize = pageSize ?: 20
+        val dockerHostList = dockerHostZoneTaskService.list(realPage, realPageSize)
+        val count = dockerHostZoneTaskService.count()
+        return Page(
+            page = realPage,
+            pageSize = realPageSize,
+            count = count.toLong(),
+            records = dockerHostList
+        )
+    }
 
-    @ApiOperation("获取dockerhost列表")
-    @GET
-    @Path("/list")
-    fun list(
-        @ApiParam("第几页", required = false)
-        @QueryParam("page")
-        page: Int?,
-        @ApiParam("每页条数", required = false)
-        @QueryParam("pageSize")
-        pageSize: Int?
-    ): Page<DockerHostZone>
+    companion object {
+        private val logger = LoggerFactory.getLogger(ServiceDispatchDockerHostResourceImpl::class.java)
+    }
+
+    fun checkParams(page: Int?, pageSize: Int?) {
+        if (page != null && page < 1) {
+            throw ParamBlankException("Invalid page")
+        }
+        if (pageSize != null && pageSize < 1) {
+            throw ParamBlankException("Invalid pageSize")
+        }
+    }
 }
