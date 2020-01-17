@@ -493,8 +493,8 @@ class PipelineBuildService(
                 val v = values[it.id]
                 if (v == null) {
                     if (it.required) {
-                        throw ErrorCodeException(defaultMessage = "参数(${it.id})是必填启动参数",
-                            errorCode = ProcessMessageCode.DENY_START_BY_REMOTE)
+                        throw ErrorCodeException(defaultMessage = "启动时必填变量(${it.id})",
+                            errorCode = CommonMessageCode.PARAMETER_IS_NULL, params = arrayOf(it.id))
                     }
                     value = when (it.type) {
                         BuildFormPropertyType.PASSWORD -> {
@@ -1343,8 +1343,8 @@ class PipelineBuildService(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
-            permission = AuthPermission.EDIT,
-            message = "用户（$userId) 无权限修改流水线($pipelineId)历史构建"
+            permission = AuthPermission.EXECUTE,
+            message = "用户（$userId) 没有流水线($pipelineId)的执行权限，无法修改备注"
         )
         pipelineRuntimeService.updateBuildRemark(projectId, pipelineId, buildId, remark)
     }
