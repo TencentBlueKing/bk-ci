@@ -59,6 +59,7 @@ import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.service.PipelineUserService
 import com.tencent.devops.process.service.ProjectOauthTokenService
 import com.tencent.devops.process.service.scm.ScmProxyService
+import com.tencent.devops.process.utils.BUILD_NO
 import com.tencent.devops.process.utils.PIPELINE_BUILD_ID
 import com.tencent.devops.process.utils.PIPELINE_CREATE_USER
 import com.tencent.devops.process.utils.PIPELINE_ID
@@ -152,7 +153,13 @@ class BuildStartControl @Autowired constructor(
         )
 
         if (BuildStatus.isReadyToRun(buildInfo.status)) {
-
+            if ((model.stages[0].containers[0] as TriggerContainer).buildNo != null) {
+                val buildNo = pipelineRuntimeService.getBuildNo(pipelineId)
+                pipelineRuntimeService.setVariable(
+                    projectId = projectId, pipelineId = pipelineId,
+                    buildId = buildId, varName = BUILD_NO, varValue = buildNo
+                )
+            }
             updateModel(model, pipelineId, buildId, taskId)
 
             val projectName = projectOauthTokenService.getProjectName(projectId) ?: ""

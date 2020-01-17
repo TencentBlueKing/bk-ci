@@ -1688,14 +1688,14 @@ class PipelineBuildService(
             val triggerContainer = fullModel.stages[0].containers[0] as TriggerContainer
             startParams = startParamsWithType.map { it.key to it.value }.toMap().toMutableMap()
             if (startParams[PIPELINE_RETRY_COUNT] == null) {
-                if (triggerContainer.buildNo != null) {
-                    val buildNo = pipelineRuntimeService.getBuildNo(pipelineId)
-                    pipelineRuntimeService.setVariable(
-                        projectId = readyToBuildPipelineInfo.projectId, pipelineId = pipelineId,
-                        buildId = buildId, varName = BUILD_NO, varValue = buildNo
-                    )
-                    startParams[BUILD_NO] = buildNo
-                }
+//                if (triggerContainer.buildNo != null) {
+//                    val buildNo = pipelineRuntimeService.getBuildNo(pipelineId)
+//                    pipelineRuntimeService.setVariable(
+//                        projectId = readyToBuildPipelineInfo.projectId, pipelineId = pipelineId,
+//                        buildId = buildId, varName = BUILD_NO, varValue = buildNo
+//                    )
+//                    startParams[BUILD_NO] = buildNo
+//                }
                 // 只有在构建参数中的才设置
                 val params = startParams.filter {
                     it.key.startsWith(SkipElementUtils.prefix) || it.key == BUILD_NO || it.key == PIPELINE_RETRY_COUNT
