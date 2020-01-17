@@ -5,13 +5,17 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.UserExtServiceResource
 import com.tencent.devops.store.pojo.enums.ExtServiceSortTypeEnum
 import com.tencent.devops.store.pojo.vo.ExtServiceMainItemVo
+import com.tencent.devops.store.pojo.vo.MyServiceVO
 import com.tencent.devops.store.pojo.vo.SearchExtServiceVO
+import com.tencent.devops.store.pojo.vo.ServiceVersionVO
+import com.tencent.devops.store.service.ExtServiceBaseService
 import com.tencent.devops.store.service.ExtServiceSearchService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class UserExtServiceResourceImpl @Autowired constructor(
-    val extServiceSearchService: ExtServiceSearchService
+    val extServiceSearchService: ExtServiceSearchService,
+    val extServiceBaseService: ExtServiceBaseService
 ) : UserExtServiceResource {
     override fun mainPageList(userId: String, page: Int?, pageSize: Int?): Result<List<ExtServiceMainItemVo>> {
         return extServiceSearchService.mainPageList(userId, page, pageSize)
@@ -37,5 +41,31 @@ class UserExtServiceResourceImpl @Autowired constructor(
             pageSize = pageSize,
             page = page
         ))
+    }
+
+    override fun listDeskExtService(
+        accessToken: String,
+        userId: String,
+        serviceName: String?,
+        page: Int?,
+        pageSize: Int?
+    ): Result<MyServiceVO> {
+        return extServiceBaseService.getMyService(
+            userId = userId,
+            serviceName = serviceName,
+            page = page,
+            pageSize = pageSize
+        )
+    }
+
+    override fun getServiceById(userId: String, serviceId: String): Result<ServiceVersionVO?> {
+        return extServiceBaseService.getServiceById(userId, serviceId)
+    }
+
+    override fun getServiceByCode(userId: String, bk_ticket: String, serviceCode: String): Result<ServiceVersionVO?> {
+        return extServiceBaseService.getServiceByCode(
+            userId = userId,
+            serviceCode = serviceCode
+        )
     }
 }

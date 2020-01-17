@@ -1,12 +1,17 @@
 package com.tencent.devops.store.api
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ACCESS_TOKEN
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BK_TICKET
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.store.pojo.atom.AtomVersion
+import com.tencent.devops.store.pojo.common.StoreProcessInfo
 import com.tencent.devops.store.pojo.dto.InitExtServiceDTO
 import com.tencent.devops.store.pojo.dto.ServiceOfflineDTO
 import com.tencent.devops.store.pojo.dto.SubmitDTO
-import com.tencent.devops.store.pojo.vo.ExtensionAndVersionVO
+import com.tencent.devops.store.pojo.vo.MyServiceVO
 import com.tencent.devops.store.pojo.vo.ExtensionServiceVO
+import com.tencent.devops.store.pojo.vo.ServiceVersionVO
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -22,35 +27,29 @@ import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["USER_EXTENSION_SERVICE_DESK"], description = "服务扩展--工作台")
-@Path("/user/extension/desk/services")
+@Path("/user/market/desk/extension")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserExtServiceDeskResource {
 
     @POST
     @ApiOperation(value = "工作台--初始化扩展服务")
-    @Path("/{serviceCode}/init")
+    @Path("/")
     fun initExtensionService(
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("扩展服务编码")
-        @PathParam("serviceCode")
-        serviceCode: String,
         @ApiParam("扩展服务信息")
         extensionInfo: InitExtServiceDTO
     ): Result<Boolean>
 
     @PUT
-    @ApiOperation(value = "工作台--提交服务扩展")
-    @Path("/{serviceId}/submit")
+    @ApiOperation(value = "工作台-升级扩展")
+    @Path("/")
     fun submitExtensionService(
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("扩展服务Id")
-        @PathParam("serviceId")
-        serviceId: String,
         @ApiParam("服务编码")
         @QueryParam("projectCode")
         projectCode: String,
@@ -60,8 +59,8 @@ interface UserExtServiceDeskResource {
 
 
     @GET
-    @ApiOperation(value = "获取单条扩展服务信息")
-    @Path("/{serviceId}")
+    @ApiOperation(value = "根据扩展ID获取扩展版本进度")
+    @Path("/release/process/{serviceId}")
     fun getExtensionServiceInfo(
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -69,43 +68,7 @@ interface UserExtServiceDeskResource {
         @ApiParam("扩展服务Id")
         @PathParam("serviceId")
         serviceId: String
-    ): Result<ExtensionServiceVO>
-
-    @GET
-    @ApiOperation(value = "工作台--根据用户获取服务扩展列表")
-    @Path("/extService/list/")
-    fun listDeskExtService(
-        @ApiParam("userId", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam("扩展服务Id")
-        @QueryParam("serviceCode")
-        serviceCode: String?,
-        @ApiParam("页码", required = false)
-        @QueryParam("page")
-        page: Int?,
-        @ApiParam("每页数量", required = false)
-        @QueryParam("pageSize")
-        pageSize: Int?
-    ): Result<ExtensionAndVersionVO>
-
-    @GET
-    @ApiOperation(value = "获取扩展服务列表")
-    @Path("/{serviceId}/list")
-    fun getExtensionServiceInfoList(
-        @ApiParam("扩展服务Id")
-        @PathParam("serviceId")
-        serviceId: String?,
-        @ApiParam("扩展分类", required = false)
-        @QueryParam("category")
-        category: String?,
-        @ApiParam("页码", required = false)
-        @QueryParam("page")
-        page: Int?,
-        @ApiParam("每页数量", required = false)
-        @QueryParam("pageSize")
-        pageSize: Int?
-    ): Result<ExtensionServiceVO>
+    ): Result<StoreProcessInfo>
 
     @ApiOperation("工作台--下架扩展服务")
     @PUT
@@ -120,4 +83,5 @@ interface UserExtServiceDeskResource {
         @ApiParam("下架请求报文")
         serviceOffline: ServiceOfflineDTO
     ): Result<Boolean>
+
 }

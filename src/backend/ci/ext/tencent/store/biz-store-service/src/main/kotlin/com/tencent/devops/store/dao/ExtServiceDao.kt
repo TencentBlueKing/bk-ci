@@ -124,11 +124,11 @@ class ExtServiceDao {
     fun countByUser(
         dslContext: DSLContext,
         userId: String,
-        serviceCode: String?
+        serviceName: String?
     ): Int {
         val a = TExtensionService.T_EXTENSION_SERVICE.`as`("a")
         val b = TStoreMember.T_STORE_MEMBER.`as`("b")
-        val conditions = generateGetMemberConditions(a, userId, b, serviceCode)
+        val conditions = generateGetMemberConditions(a, userId, b, serviceName)
         return dslContext.select(a.SERVICE_CODE.countDistinct())
             .from(a)
             .leftJoin(b)
@@ -146,7 +146,7 @@ class ExtServiceDao {
     fun getMyService(
         dslContext: DSLContext,
         userId: String,
-        serviceCode: String?,
+        serviceName: String?,
         page: Int?,
         pageSize: Int?
     ): Result<out Record>? {
@@ -154,7 +154,7 @@ class ExtServiceDao {
         val b = TStoreMember.T_STORE_MEMBER.`as`("b")
         val t = dslContext.select(a.SERVICE_CODE.`as`("serviceCode"), a.CREATE_TIME.max().`as`("createTime")).from(a)
             .groupBy(a.SERVICE_CODE) // 查找每组serviceCode最新的记录
-        val conditions = generateGetMemberConditions(a, userId, b, serviceCode)
+        val conditions = generateGetMemberConditions(a, userId, b, serviceName)
         val baseStep = dslContext.select(
             a.ID.`as`("serviceId"),
             a.SERVICE_CODE.`as`("serviceCode"),
@@ -542,14 +542,14 @@ class ExtServiceDao {
         a: TExtensionService,
         userId: String,
         b: TStoreMember,
-        serviceCode: String?
+        serviceName: String?
     ): MutableList<Condition> {
         val conditions = mutableListOf<Condition>()
         conditions.add(a.DELETE_FLAG.eq(false)) // 只查没有被删除的插件
         conditions.add(b.USERNAME.eq(userId))
         conditions.add(b.STORE_TYPE.eq(StoreTypeEnum.SERVICE.type.toByte()))
         if (null != serviceCode) {
-            conditions.add(a.SERVICE_CODE.contains(serviceCode))
+            conditions.add(a.SERVICE_NAME.contains(serviceName))
         }
         return conditions
     }

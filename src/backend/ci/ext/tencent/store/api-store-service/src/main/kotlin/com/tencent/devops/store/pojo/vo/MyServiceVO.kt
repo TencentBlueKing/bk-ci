@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import io.swagger.annotations.ApiModelProperty
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-data class ExtensionAndVersionVO(
+data class MyServiceVO(
     @ApiModelProperty("总记录数", required = true)
     val count: Int,
     @ApiModelProperty("当前页码值", required = false)

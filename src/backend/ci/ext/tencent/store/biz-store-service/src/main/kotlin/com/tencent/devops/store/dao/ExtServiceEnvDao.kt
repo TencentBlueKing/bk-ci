@@ -1,7 +1,10 @@
 package com.tencent.devops.store.dao
 
 import com.tencent.devops.common.api.util.UUIDUtil
+import com.tencent.devops.model.store.tables.TAtomEnvInfo
 import com.tencent.devops.model.store.tables.TExtensionServiceEnvInfo
+import com.tencent.devops.model.store.tables.records.TAtomEnvInfoRecord
+import com.tencent.devops.model.store.tables.records.TExtensionServiceEnvInfoRecord
 import com.tencent.devops.store.pojo.ExtServiceEnvCreateInfo
 import com.tencent.devops.store.pojo.ExtServiceEnvUpdateInfo
 import org.jooq.DSLContext
@@ -83,6 +86,14 @@ class ExtServiceEnvDao {
             baseStep.set(MODIFIER, userId).set(UPDATE_TIME, LocalDateTime.now())
                 .where(SERVICE_ID.eq(serviceId))
                 .execute()
+        }
+    }
+
+    fun getMarketServiceEnvInfoByServiceId(dslContext: DSLContext, serviceId: String): TExtensionServiceEnvInfoRecord? {
+        return with(TExtensionServiceEnvInfo.T_EXTENSION_SERVICE_ENV_INFO) {
+            dslContext.selectFrom(this)
+                .where(SERVICE_ID.eq(serviceId))
+                .fetchOne()
         }
     }
 }
