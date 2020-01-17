@@ -5,6 +5,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.repository.api.ServiceGitRepositoryResource
+import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.RepositoryInfo
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
@@ -89,5 +90,9 @@ class TxExtServiceBaseService: ExtServiceBaseService() {
     override fun getExtServicePackageSourceType(atomCode: String): ExtServicePackageSourceTypeEnum {
         // 内部版暂时只支持代码库打包的方式，后续支持用户传可执行包的方式
         return ExtServicePackageSourceTypeEnum.REPO
+    }
+
+    override fun getRepositoryInfo(projectCode: String?, repositoryHashId: String?): Result<Repository?> {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 }

@@ -548,7 +548,7 @@ class ExtServiceDao {
         conditions.add(a.DELETE_FLAG.eq(false)) // 只查没有被删除的插件
         conditions.add(b.USERNAME.eq(userId))
         conditions.add(b.STORE_TYPE.eq(StoreTypeEnum.SERVICE.type.toByte()))
-        if (null != serviceCode) {
+        if (null != serviceName) {
             conditions.add(a.SERVICE_NAME.contains(serviceName))
         }
         return conditions
