@@ -81,6 +81,21 @@ class ClearTimeoutCron(
      */
     @Scheduled(cron = "0 */1 * * * ?")
     fun newClearTimeoutCache() {
+        longSessionLog()
+        clearTimeoutSession()
+    }
+
+    private fun longSessionLog() {
+        val longSessionList = websocketService.getLongSessionPage()
+        longSessionList.forEach {
+            logger.warn("this page[$it] sessionSize more 20")
+        }
+        if (longSessionList.size > 20) {
+            websocketService.clearLongSessionPage()
+        }
+    }
+
+    private fun clearTimeoutSession() {
         val nowTime = System.currentTimeMillis()
         for (bucket in 0..WebsocketKeys.REDIS_MO) {
             val redisData = redisOperation.get(WebsocketKeys.HASH_USER_TIMEOUT_REDIS_KEY + bucket)
@@ -92,7 +107,6 @@ class ClearTimeoutCron(
                     continue
                 }
                 sessionList.forEach {
-                    logger.info("clearTimeout redisStr[$it],redisKey[${WebsocketKeys.HASH_USER_TIMEOUT_REDIS_KEY + bucket}")
                     try {
                         if (it != null) {
                             val timeout: Long = it.substringAfter("&").toLong()
