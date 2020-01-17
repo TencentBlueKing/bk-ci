@@ -1965,7 +1965,7 @@ class PipelineRuntimeService @Autowired constructor(
             )
             params[BUILD_NO] = buildNo.toString()
         }
-        // 写
+
         if (triggerContainer.params.isNotEmpty()) {
             // 只有在构建参数中的才设置
             params.plus(
