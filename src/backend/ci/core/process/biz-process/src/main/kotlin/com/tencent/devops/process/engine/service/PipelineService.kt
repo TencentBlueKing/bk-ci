@@ -49,6 +49,7 @@ import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildNo
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.dao.PipelineSettingDao
+import com.tencent.devops.process.engine.compatibility.BuildPropertyCompatibilityTools
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.dao.template.TemplatePipelineDao
@@ -76,7 +77,6 @@ import com.tencent.devops.process.service.view.PipelineViewService
 import com.tencent.devops.process.utils.PIPELINE_VIEW_ALL_PIPELINES
 import com.tencent.devops.process.utils.PIPELINE_VIEW_FAVORITE_PIPELINES
 import com.tencent.devops.process.utils.PIPELINE_VIEW_MY_PIPELINES
-import com.tencent.devops.process.utils.PipelineVarUtil
 import com.tencent.devops.store.api.common.ServiceStoreResource
 import org.jooq.DSLContext
 import org.jooq.Record
@@ -610,32 +610,11 @@ class PipelineService @Autowired constructor(
         try {
             val triggerContainer = model.stages[0].containers[0] as TriggerContainer
             val buildNo = triggerContainer.buildNo
-            val params = triggerContainer.params
             if (buildNo != null) {
                 buildNo.buildNo = pipelineRepositoryService.getBuildNo(projectId = projectId, pipelineId = pipelineId) ?: buildNo.buildNo
             }
-            val newParams = mutableListOf<BuildFormProperty>()
-            params.forEach {
-                // 变量名从旧转新: 兼容从旧入口写入的数据转到新的流水线运行
-                val newVarName = PipelineVarUtil.oldVarToNewVar(it.id)
-                if (!newVarName.isNullOrBlank()) {
-                    newParams.add(BuildFormProperty(
-                        id = newVarName!!,
-                        required = it.required,
-                        type = it.type,
-                        defaultValue = it.defaultValue,
-                        options = it.options,
-                        desc = it.desc,
-                        repoHashId = it.repoHashId,
-                        relativePath = it.relativePath,
-                        scmType = it.scmType,
-                        containerType = it.containerType,
-                        glob = it.glob,
-                        properties = it.properties
-                    ))
-                } else newParams.add(it)
-            }
-            triggerContainer.params = newParams
+            // 兼容性处理
+            BuildPropertyCompatibilityTools.fix(triggerContainer.params)
 
             // 获取流水线labels
             val groups = pipelineGroupService.getGroups(userId = userId, projectId = projectId, pipelineId = pipelineId)
