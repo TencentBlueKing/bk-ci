@@ -1948,4 +1948,39 @@ class PipelineRuntimeService @Autowired constructor(
             buildId = buildId
         ) == 1
     }
+
+    fun writeStartParam(projectId: String, pipelineId: String, buildId: String, model: Model) {
+        val allVariable = getAllVariable(buildId)
+        if (allVariable[PIPELINE_RETRY_COUNT] != null) return
+
+        val triggerContainer = model.stages[0].containers[0] as TriggerContainer
+        val params = allVariable.filter {
+            it.key.startsWith(SkipElementUtils.prefix) || it.key == BUILD_NO || it.key == PIPELINE_RETRY_COUNT
+        }.toMutableMap()
+        if (triggerContainer.buildNo != null) {
+            val buildNo = getBuildNo(pipelineId)
+            setVariable(
+                projectId = projectId, pipelineId = pipelineId,
+                buildId = buildId, varName = BUILD_NO, varValue = buildNo
+            )
+            params[BUILD_NO] = buildNo.toString()
+        }
+
+        if (triggerContainer.params.isNotEmpty()) {
+            // 只有在构建参数中的才设置
+            params.putAll(
+                triggerContainer.params.map {
+                    // 做下真实传值的替换
+                    if (allVariable.containsKey(it.id)) it.id to allVariable[it.id].toString()
+                    else it.id to it.defaultValue.toString()
+                }.toMap()
+            )
+            buildStartupParamService.addParam(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                param = JsonUtil.getObjectMapper().writeValueAsString(params)
+            )
+        }
+    }
 }
