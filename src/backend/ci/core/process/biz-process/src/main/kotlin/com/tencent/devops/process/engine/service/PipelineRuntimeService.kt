@@ -1943,27 +1943,27 @@ class PipelineRuntimeService @Autowired constructor(
         if (allVariable[PIPELINE_RETRY_COUNT] != null) return
 
         val triggerContainer = model.stages[0].containers[0] as TriggerContainer
-
+        val params = allVariable.filter {
+            it.key.startsWith(SkipElementUtils.prefix) || it.key == BUILD_NO || it.key == PIPELINE_RETRY_COUNT
+        }.toMutableMap()
         if (triggerContainer.buildNo != null) {
             val buildNo = getBuildNo(pipelineId)
             setVariable(
                 projectId = projectId, pipelineId = pipelineId,
                 buildId = buildId, varName = BUILD_NO, varValue = buildNo
             )
+            params[BUILD_NO] = buildNo.toString()
         }
         // 写
         if (triggerContainer.params.isNotEmpty()) {
             // 只有在构建参数中的才设置
-
-            val params = allVariable.filter {
-                it.key.startsWith(SkipElementUtils.prefix) || it.key == BUILD_NO || it.key == PIPELINE_RETRY_COUNT
-            }.plus(triggerContainer.params.map {
-                if (allVariable.containsKey(it.id)) { // 做下真实传值的替换
-                    it.id to allVariable[it.id]
-                } else {
-                    it.id to it.defaultValue
-                }
-            }.toMap())
+            params.plus(
+                triggerContainer.params.map {
+                    // 做下真实传值的替换
+                    if (allVariable.containsKey(it.id)) it.id to allVariable[it.id]
+                    else it.id to it.defaultValue
+                }.toMap()
+            )
             buildStartupParamService.addParam(
                 projectId = projectId,
                 pipelineId = pipelineId,
