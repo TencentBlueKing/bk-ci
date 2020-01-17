@@ -24,40 +24,24 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.pipeline.pojo
+package com.tencent.devops.process.engine.compatibility
 
-import com.tencent.devops.common.api.enums.ScmType
-import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
+import com.tencent.devops.process.utils.PipelineVarUtil
 
-@ApiModel("构建模型-表单元素属性")
-data class BuildFormProperty(
-    @ApiModelProperty("元素ID-标识符", required = true)
-    var id: String,
-    @ApiModelProperty("是否必须", required = true)
-    var required: Boolean,
-    @ApiModelProperty("元素类型", required = true)
-    val type: BuildFormPropertyType,
-    @ApiModelProperty("默认值", required = true)
-    var defaultValue: Any,
-    @ApiModelProperty("下拉框列表", required = false)
-    var options: List<BuildFormValue>?,
-    @ApiModelProperty("描述", required = false)
-    var desc: String?,
+object BuildPropertyCompatibilityTools {
 
-    // 针对 SVN_TAG 新增字段
-    @ApiModelProperty("repoHashId", required = false)
-    val repoHashId: String?,
-    @ApiModelProperty("relativePath", required = false)
-    val relativePath: String?,
-    @ApiModelProperty("代码库类型下拉", required = false)
-    val scmType: ScmType?,
-    @ApiModelProperty("构建机类型下拉", required = false)
-    val containerType: BuildContainerType?,
+    private val compatibleSet = setOf("MajorVersion", "MinorVersion", "FixVersion")
 
-    @ApiModelProperty("自定义仓库通配符", required = false)
-    val glob: String?,
-    @ApiModelProperty("文件元数据", required = false)
-    val properties: Map<String, String>?
-)
+    fun fix(params: List<BuildFormProperty>) {
+        params.forEach {
+            // 只有在需要兼容的命名才做替换，防止替换范围过大，出现兼容性问题
+            if (compatibleSet.contains(it.id)) {
+                val newVarName = PipelineVarUtil.oldVarToNewVar(it.id)
+                if (!newVarName.isNullOrBlank()) {
+                    it.id = newVarName!!
+                }
+            }
+        }
+    }
+}
