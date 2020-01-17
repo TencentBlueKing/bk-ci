@@ -1968,11 +1968,11 @@ class PipelineRuntimeService @Autowired constructor(
 
         if (triggerContainer.params.isNotEmpty()) {
             // 只有在构建参数中的才设置
-            params.plus(
+            params.putAll(
                 triggerContainer.params.map {
                     // 做下真实传值的替换
-                    if (allVariable.containsKey(it.id)) it.id to allVariable[it.id]
-                    else it.id to it.defaultValue
+                    if (allVariable.containsKey(it.id)) it.id to allVariable[it.id].toString()
+                    else it.id to it.defaultValue.toString()
                 }.toMap()
             )
             buildStartupParamService.addParam(
