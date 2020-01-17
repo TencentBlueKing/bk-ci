@@ -153,8 +153,9 @@ class BuildStartControl @Autowired constructor(
         )
 
         if (BuildStatus.isReadyToRun(buildInfo.status)) {
+            val buildNo: Int?
             if ((model.stages[0].containers[0] as TriggerContainer).buildNo != null) {
-                val buildNo = pipelineRuntimeService.getBuildNo(pipelineId)
+                buildNo = pipelineRuntimeService.getBuildNo(pipelineId)
                 pipelineRuntimeService.setVariable(
                     projectId = projectId, pipelineId = pipelineId,
                     buildId = buildId, varName = BUILD_NO, varValue = buildNo
