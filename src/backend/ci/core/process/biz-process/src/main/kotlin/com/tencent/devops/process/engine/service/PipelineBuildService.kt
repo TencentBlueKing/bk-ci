@@ -494,8 +494,8 @@ class PipelineBuildService(
                 val v = values[it.id]
                 if (v == null) {
                     if (it.required) {
-                        throw ErrorCodeException(defaultMessage = "参数(${it.id})是必填启动参数",
-                            errorCode = ProcessMessageCode.DENY_START_BY_REMOTE)
+                        throw ErrorCodeException(defaultMessage = "启动时必填变量(${it.id})",
+                            errorCode = CommonMessageCode.PARAMETER_IS_NULL, params = arrayOf(it.id))
                     }
                     value = when (it.type) {
                         BuildFormPropertyType.PASSWORD -> {
