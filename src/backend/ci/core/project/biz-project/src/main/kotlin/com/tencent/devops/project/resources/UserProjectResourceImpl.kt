@@ -71,7 +71,8 @@ class UserProjectResourceImpl @Autowired constructor(
     override fun enable(
         userId: String,
         projectId: String,
-        enabled: Boolean): Result<Boolean> {
+        enabled: Boolean
+    ): Result<Boolean> {
         projectService.updateUsableStatus(userId, projectId, enabled)
         return Result(true)
     }
