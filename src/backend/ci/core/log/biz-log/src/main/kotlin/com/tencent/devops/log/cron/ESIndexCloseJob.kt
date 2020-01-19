@@ -81,7 +81,7 @@ class ESIndexCloseJob @Autowired constructor(
 
     private fun closeESIndexes() {
         client.getClients().forEach { c ->
-            val indexes = c.admin()
+            val indexes = c.client.admin()
                 .indices()
                 .prepareGetIndex()
                 .get()
@@ -95,7 +95,7 @@ class ESIndexCloseJob @Autowired constructor(
             logger.info("Get the death line - ($deathLine)")
             indexes.indices.forEach { index ->
                 if (expire(deathLine, index)) {
-                    closeESIndex(c, index)
+                    closeESIndex(c.client, index)
                 }
             }
         }
