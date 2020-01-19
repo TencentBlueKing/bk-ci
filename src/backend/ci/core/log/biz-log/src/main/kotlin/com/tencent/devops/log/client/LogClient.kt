@@ -28,7 +28,6 @@ package com.tencent.devops.log.client
 
 import com.tencent.devops.common.es.ESClient
 import org.elasticsearch.client.Client
-import org.elasticsearch.client.support.AbstractClient
 
 interface LogClient {
 
