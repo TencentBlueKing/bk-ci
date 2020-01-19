@@ -26,6 +26,7 @@
 
 package com.tencent.devops.log.client
 
+import com.tencent.devops.common.es.ESClient
 import org.elasticsearch.client.Client
 import org.elasticsearch.client.support.AbstractClient
 
@@ -44,10 +45,10 @@ interface LogClient {
     fun prepareIndex(buildId: String, index: String, type: String) = getClient(buildId).prepareIndex(index, type)
 
     private fun getClient(buildId: String): Client {
-        return hashClient(buildId, getClients())
+        return hashClient(buildId, getClients()).client
     }
 
-    fun getClients(): Set<Client>
+    fun getClients(): List<ESClient>
 
-    fun hashClient(buildId: String, client: Set<Client>): Client
+    fun hashClient(buildId: String, client: List<ESClient>): ESClient
 }
