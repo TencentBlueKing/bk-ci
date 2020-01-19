@@ -31,7 +31,6 @@ import com.google.common.cache.CacheLoader
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.MacOSGray
 import com.tencent.devops.store.service.container.MacOSService
-import okhttp3.Request
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.cloud.context.config.annotation.RefreshScope
@@ -68,7 +67,6 @@ class MacOSServiceImpl @Autowired constructor(
             }
         )
 
-
     override fun enableProject(projectId: String) {
         logger.info("[$projectId] Enable the macos project in redis.")
         redisOperation.addSetValue(macOSGray.getRepoGrayRedisKey(), projectId)
@@ -91,5 +89,4 @@ class MacOSServiceImpl @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(MacOSServiceImpl::class.java)
     }
-
 }

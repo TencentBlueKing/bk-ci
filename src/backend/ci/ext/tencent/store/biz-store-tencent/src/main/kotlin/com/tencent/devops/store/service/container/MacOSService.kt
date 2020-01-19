@@ -26,8 +26,6 @@
 
 package com.tencent.devops.store.service.container
 
-import com.tencent.devops.store.pojo.container.pcg.PCGDockerImage
-
 interface MacOSService {
 
     fun enableProject(projectId: String)

@@ -29,7 +29,6 @@ package com.tencent.devops.store.resources.container
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.container.OpMacOSProjectResource
-import com.tencent.devops.store.api.container.OpPCGProjectResource
 import com.tencent.devops.store.service.container.PCGImageService
 import org.springframework.beans.factory.annotation.Autowired
 
