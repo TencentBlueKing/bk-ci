@@ -126,8 +126,7 @@ open class CodeccApi constructor(
                 DevOpsToolParams("py_version", pyVersion ?: ""),
                 DevOpsToolParams("ccn_threshold", ccnThreshold ?: ""),
                 DevOpsToolParams("needCodeContent", needCodeContent ?: ""),
-                DevOpsToolParams("eslint_rc", eslintRc ?: ""),
-                DevOpsToolParams("SHELL", script)
+                DevOpsToolParams("eslint_rc", eslintRc ?: "")
             )
             if (!element.projectBuildType.isNullOrBlank()) {
                 devopsToolParams.add(DevOpsToolParams("PROJECT_BUILD_TYPE", projectBuildType!!))
@@ -141,7 +140,9 @@ open class CodeccApi constructor(
                 "taskId" to codeCCTaskId!!,
                 "devopsToolParams" to devopsToolParams,
                 "toolCheckerSets" to genToolChecker(element),
-                "nameCn" to pipelineName
+                "nameCn" to pipelineName,
+                "projectBuildType" to scriptType.name,
+                "projectBuildCommand" to script
             )
             logger.info("Update the coverity task($body)")
             val header = mapOf(
