@@ -28,7 +28,6 @@ package com.tencent.devops.log.client.impl
 
 import com.tencent.devops.common.es.ESClient
 import com.tencent.devops.log.client.LogClient
-import org.elasticsearch.client.Client
 import java.lang.RuntimeException
 
 class LogClientImpl constructor(private val client: ESClient) : LogClient {
