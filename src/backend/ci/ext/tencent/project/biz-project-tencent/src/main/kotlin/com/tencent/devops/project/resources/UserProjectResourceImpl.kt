@@ -104,15 +104,6 @@ class UserProjectResourceImpl @Autowired constructor(
         return Result(true)
     }
 
-    override fun enable(
-        userId: String,
-        projectId: String,
-        enabled: Boolean
-    ): Result<Boolean> {
-        projectLocalService.updateUsableStatus(userId, projectId, enabled)
-        return Result(true)
-    }
-
     override fun validate(
         userId: String,
         validateType: ProjectValidateType,
