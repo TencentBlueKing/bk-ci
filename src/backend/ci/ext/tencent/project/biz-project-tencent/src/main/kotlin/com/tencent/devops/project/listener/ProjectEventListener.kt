@@ -47,7 +47,7 @@ class ProjectEventListener @Autowired constructor(
     fun onReceiveProjectCreate(event: ProjectCreateBroadCastEvent) {
         val accessToken = bsAuthTokenApi.getAccessToken(bsPipelineAuthServiceCode)
         // 过渡期间让新建项目直接设置为灰度v2
-        opProjectService.setGrayProject(projectCodeList = listOf(event.projectId), operateFlag = 1)
+        opProjectService.setGrayProject(projectCodeList = listOf(event.projectInfo.englishName), operateFlag = 1)
         projectPaasCCService.createPaasCCProject(
             userId = event.userId,
             projectId = event.projectId,
