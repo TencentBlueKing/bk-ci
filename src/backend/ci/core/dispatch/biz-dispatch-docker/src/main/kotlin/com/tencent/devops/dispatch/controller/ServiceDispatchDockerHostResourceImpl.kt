@@ -29,16 +29,16 @@ package com.tencent.devops.dispatch.controller
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.dispatch.api.ServiceDockerHostResource
+import com.tencent.devops.dispatch.api.ServiceDispatchDockerHostResource
 import com.tencent.devops.dispatch.pojo.DockerHostZone
 import com.tencent.devops.dispatch.service.DockerHostZoneTaskService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class ServiceDockerHostResourceImpl @Autowired constructor(
+class ServiceDispatchDockerHostResourceImpl @Autowired constructor(
     private val dockerHostZoneTaskService: DockerHostZoneTaskService
-) : ServiceDockerHostResource {
+) : ServiceDispatchDockerHostResource {
     override fun list(page: Int?, pageSize: Int?): Page<DockerHostZone> {
         checkParams(page, pageSize)
         val realPage = page ?: 1
@@ -54,7 +54,7 @@ class ServiceDockerHostResourceImpl @Autowired constructor(
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(ServiceDockerHostResourceImpl::class.java)
+        private val logger = LoggerFactory.getLogger(ServiceDispatchDockerHostResourceImpl::class.java)
     }
 
     fun checkParams(page: Int?, pageSize: Int?) {

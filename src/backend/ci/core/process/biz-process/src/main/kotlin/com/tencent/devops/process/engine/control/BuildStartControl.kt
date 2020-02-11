@@ -154,6 +154,8 @@ class BuildStartControl @Autowired constructor(
         if (BuildStatus.isReadyToRun(buildInfo.status)) {
 
             updateModel(model, pipelineId, buildId, taskId)
+            // 写入启动参数
+            pipelineRuntimeService.writeStartParam(projectId, pipelineId, buildId, model)
 
             val projectName = projectOauthTokenService.getProjectName(projectId) ?: ""
             val pipelineUserInfo = pipelineUserService.get(pipelineId)!!
@@ -337,7 +339,7 @@ class BuildStartControl @Autowired constructor(
                     }
                     if (!ele.status.isNullOrBlank()) {
                         val eleStatus = BuildStatus.valueOf(ele.status!!)
-                        if (BuildStatus.isFinish(eleStatus)) {
+                        if (BuildStatus.isFinish(eleStatus) && eleStatus != BuildStatus.SKIP) {
                             callScm = false
                             ele.status = ""
                             ele.elapsed = null
