@@ -63,7 +63,6 @@ public class ObjectReplaceEnvVarUtil {
                 }
             }
         } else if (obj instanceof Set) {
-            System.out.println(obj.getClass());
             Set objSet = (Set) obj;
             Iterator it = objSet.iterator();
             List replaceObjList = new ArrayList();
