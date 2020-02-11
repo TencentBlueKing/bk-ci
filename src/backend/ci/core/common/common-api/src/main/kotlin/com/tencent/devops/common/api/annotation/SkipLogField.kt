@@ -24,50 +24,24 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.project.service
+package com.tencent.devops.common.api.annotation
 
-import com.tencent.devops.project.pojo.DeptInfo
-import com.tencent.devops.project.pojo.OrganizationInfo
-import com.tencent.devops.project.pojo.enums.OrganizationType
-import org.springframework.stereotype.Service
+import com.fasterxml.jackson.annotation.JsonFilter
 
-@Service
-class SampleProjectOrganizationServiceImpl : ProjectOrganizationService {
-    override fun getDeptInfo(userId: String, id: Int): DeptInfo {
-        return DeptInfo(
-            typeId = "0",
-            leaderId = "0",
-            name = "mock Dept",
-            level = "2",
-            enabled = "true",
-            parentId = "1",
-            id = id.toString()
-        )
-    }
-
-    override fun getOrganizations(userId: String, type: OrganizationType, id: Int): List<OrganizationInfo> {
-        val mock = mutableListOf<OrganizationInfo>()
-        mock.add(
-            OrganizationInfo(
-                id = id.toString(), name = "mock Corp"
-            )
-        )
-        return mock
-    }
-
-    override fun getParentDeptInfos(deptId: String, level: Int): List<DeptInfo> {
-        val mock = mutableListOf<DeptInfo>()
-        mock.add(
-            DeptInfo(
-                typeId = "0",
-                leaderId = "0",
-                name = "mock Dept",
-                level = level.toString(),
-                enabled = "true",
-                parentId = "1",
-                id = deptId
-            )
-        )
-        return mock
-    }
-}
+@Target(AnnotationTarget.FIELD)
+@kotlin.annotation.Retention(AnnotationRetention.RUNTIME)
+@JsonFilter("SkipLogField")
+annotation class SkipLogField(
+    /**
+     * 要过滤的字段名称 -- 用于字段，不填写则会用所注解的字段的命名
+     * 默认一般不用填写，除非所用字段在序列化时采用了别的名字，例如以下情况，字段命名与序列化不同时需要填写
+     *
+     *  @SkipLogField("app_code")
+     *  @get:JsonProperty("app_code")
+     *  val appCode: String
+     *
+     *
+     * @return
+     */
+    val value: String = ""
+)

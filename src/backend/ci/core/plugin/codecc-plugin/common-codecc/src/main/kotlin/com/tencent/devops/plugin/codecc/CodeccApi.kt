@@ -141,7 +141,9 @@ open class CodeccApi constructor(
                 "taskId" to codeCCTaskId!!,
                 "devopsToolParams" to devopsToolParams,
                 "toolCheckerSets" to genToolChecker(element),
-                "nameCn" to pipelineName
+                "nameCn" to pipelineName,
+                "projectBuildType" to scriptType.name,
+                "projectBuildCommand" to script
             )
             logger.info("Update the coverity task($body)")
             val header = mapOf(
