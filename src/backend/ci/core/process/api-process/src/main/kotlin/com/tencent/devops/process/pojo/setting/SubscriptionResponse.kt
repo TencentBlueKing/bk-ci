@@ -42,6 +42,8 @@ data class SubscriptionResponse(
     val wechatGroupFlag: Boolean = false,
     @ApiModelProperty("企业微信群通知群ID", required = false)
     val wechatGroup: String = "",
+    @ApiModelProperty("企业微信群通知转为Markdown格式开关", required = false)
+    val wechatGroupMarkDownFlag: Boolean = false,
     @ApiModelProperty("通知内容带上流水线详情连接", required = false)
     val detailFlag: Boolean = false,
     @ApiModelProperty("自定义通知内容", required = false)
