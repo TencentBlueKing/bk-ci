@@ -72,4 +72,28 @@ interface ApigwRepositoryResourceV2 {
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<Page<RepositoryInfo>?>
+
+    @ApiOperation("获取授权路径")
+    @GET
+    @Path("/getAuthUrl")
+    fun getAuthUrl(
+        @ApiParam("项目id", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @ApiParam("用户Id", required = true)
+        @QueryParam("userId")
+        userId: String,
+        @ApiParam("项目hashId")
+        @QueryParam("repoHashId")
+        repoHashId: String?
+    ): Result<String>
+
+    @ApiOperation("获取git代码库accessToken信息")
+    @GET
+    @Path("/git/{userId}")
+    fun gitGet(
+        @ApiParam("用户ID", required = true)
+        @PathParam("userId")
+        userId: String
+    ): Result<String?>
 }
