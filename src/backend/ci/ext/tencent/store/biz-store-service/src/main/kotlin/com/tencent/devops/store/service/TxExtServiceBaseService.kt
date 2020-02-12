@@ -64,7 +64,7 @@ class TxExtServiceBaseService : ExtServiceBaseService() {
                 serviceCode,
                 storeBuildInfoDao.getStoreBuildInfoByLanguage(
                     dslContext,
-                    extensionInfo.language ?: "java",
+                    extensionInfo.language!!,
                     StoreTypeEnum.SERVICE
                 ).sampleProjectPath,
                 serviceNameSpaceId.toInt(),
