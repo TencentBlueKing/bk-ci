@@ -60,7 +60,7 @@ class TxExtServiceBaseService: ExtServiceBaseService() {
         try {
             val createGitRepositoryResult = client.get(ServiceGitRepositoryResource::class).createGitCodeRepository(
                 userId,
-                extensionInfo.itemCode,
+                extensionInfo.projectCode,
                 serviceCode,
                 storeBuildInfoDao.getStoreBuildInfoByLanguage(
                     dslContext,

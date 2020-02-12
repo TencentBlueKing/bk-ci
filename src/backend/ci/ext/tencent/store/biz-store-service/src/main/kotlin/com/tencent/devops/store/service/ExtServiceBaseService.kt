@@ -42,7 +42,6 @@ import com.tencent.devops.store.pojo.ExtServiceItemRelCreateInfo
 import com.tencent.devops.store.pojo.ExtServiceUpdateInfo
 import com.tencent.devops.store.pojo.ExtServiceVersionLogCreateInfo
 import com.tencent.devops.store.pojo.atom.enums.AtomCategoryEnum
-import com.tencent.devops.store.pojo.common.Label
 import com.tencent.devops.store.pojo.common.ReleaseProcessItem
 import com.tencent.devops.store.pojo.common.StoreProcessInfo
 import com.tencent.devops.store.pojo.enums.ExtServicePackageSourceTypeEnum
@@ -138,7 +137,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
                 dslContext = context,
                 userId = userId,
                 storeCode = serviceCode,
-                projectCode = extensionInfo.itemCode,
+                projectCode = extensionInfo.projectCode,
                 type = StoreProjectTypeEnum.INIT.type.toByte(),
                 storeType = StoreTypeEnum.SERVICE.type.toByte()
             )
@@ -146,7 +145,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
                 dslContext = context,
                 userId = userId,
                 storeCode = serviceCode,
-                projectCode = extensionInfo.itemCode,
+                projectCode = extensionInfo.projectCode,
                 type = StoreProjectTypeEnum.TEST.type.toByte(),
                 storeType = StoreTypeEnum.SERVICE.type.toByte()
             )

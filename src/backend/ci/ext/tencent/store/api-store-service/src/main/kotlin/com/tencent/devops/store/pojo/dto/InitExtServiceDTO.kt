@@ -11,10 +11,10 @@ data class InitExtServiceDTO(
     val serviceCode: String,
     @ApiModelProperty("扩展服务Name")
     val serviceName: String,
-    @ApiModelProperty("调试项目Id")
+    @ApiModelProperty("扩展项ID")
     val itemId: String,
-    @ApiModelProperty("调试项目Name")
-    val itemCode: String,
+    @ApiModelProperty("调试项目Code")
+    val projectCode: String,
     @ApiModelProperty("服务语言")
     val language: String,
     @ApiModelProperty("认证方式", required = false)
