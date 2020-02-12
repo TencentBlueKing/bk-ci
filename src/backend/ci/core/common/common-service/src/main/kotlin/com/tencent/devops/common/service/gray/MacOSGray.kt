@@ -24,48 +24,21 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.service
+package com.tencent.devops.common.service.gray
 
-import com.tencent.devops.common.service.config.CommonConfig
-import com.tencent.devops.common.service.gray.Gray
-import com.tencent.devops.common.service.gray.MacOSGray
-import com.tencent.devops.common.service.gray.RepoGray
-import com.tencent.devops.common.service.utils.SpringContextUtil
-import org.springframework.boot.autoconfigure.AutoConfigureBefore
-import org.springframework.boot.autoconfigure.AutoConfigureOrder
-import org.springframework.cloud.client.discovery.EnableDiscoveryClient
-import org.springframework.cloud.consul.ConsulAutoConfiguration
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
-import org.springframework.context.annotation.PropertySource
-import org.springframework.core.Ordered
-import org.springframework.core.env.Environment
+import com.tencent.devops.common.redis.RedisOperation
 
-/**
- *
- * Powered By Tencent
- */
-@Configuration
-@PropertySource("classpath:/common-service.properties")
-@AutoConfigureOrder(Ordered.HIGHEST_PRECEDENCE)
-@AutoConfigureBefore(ConsulAutoConfiguration::class)
-@EnableDiscoveryClient
-class ServiceAutoConfiguration {
-    @Bean
-    fun profile(environment: Environment) = Profile(environment)
+class MacOSGray {
+    companion object {
+        const val repoGrayRedisKey = "project:setting:macosGray"
+    }
 
-    @Bean
-    fun springContextUtil() = SpringContextUtil()
+    fun isGray(projectId: String, redisOperation: RedisOperation): Boolean {
+        return grayProjectSet(redisOperation).contains(projectId)
+    }
 
-    @Bean
-    fun gray() = Gray()
+    fun grayProjectSet(redisOperation: RedisOperation) =
+        (redisOperation.getSetMembers(repoGrayRedisKey) ?: emptySet()).filter { !it.isBlank() }.toSet()
 
-    @Bean
-    fun commonConfig() = CommonConfig()
-
-    @Bean
-    fun repoGray() = RepoGray()
-
-    @Bean
-    fun macosGray() = MacOSGray()
+    fun getRepoGrayRedisKey() = repoGrayRedisKey
 }
