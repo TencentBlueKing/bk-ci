@@ -13,7 +13,7 @@ import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["USER_EXTENSION_SERVICE"], description = "服务扩展-统计")
-@Path("/user/market/extension/stat")
+@Path("/user/market/service/stat")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserExtServiceStatResource {

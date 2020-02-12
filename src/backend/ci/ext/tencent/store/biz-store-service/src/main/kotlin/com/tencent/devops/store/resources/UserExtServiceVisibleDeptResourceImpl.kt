@@ -4,7 +4,6 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.UserExtServiceVisibleDeptResource
 import com.tencent.devops.store.pojo.ExtsionServiceVisibleDeptReq
-import com.tencent.devops.store.pojo.atom.AtomVisibleDeptReq
 import com.tencent.devops.store.pojo.common.StoreVisibleDeptResp
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.common.StoreVisibleDeptService

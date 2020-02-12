@@ -5,7 +5,6 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.UserExtServiceResource
 import com.tencent.devops.store.pojo.enums.ExtServiceSortTypeEnum
 import com.tencent.devops.store.pojo.vo.ExtServiceMainItemVo
-import com.tencent.devops.store.pojo.vo.MyServiceVO
 import com.tencent.devops.store.pojo.vo.SearchExtServiceVO
 import com.tencent.devops.store.pojo.vo.ServiceVersionVO
 import com.tencent.devops.store.service.ExtServiceBaseService

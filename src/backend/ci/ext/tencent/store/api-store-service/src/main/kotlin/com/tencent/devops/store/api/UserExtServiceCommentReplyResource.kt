@@ -21,7 +21,7 @@ import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["USER_EXTENSION_SERVICE_COMMENT"], description = "服务扩展_评论")
-@Path("/user/market/extension/comments")
+@Path("/user/market/service/comments")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserExtServiceCommentReplyResource {

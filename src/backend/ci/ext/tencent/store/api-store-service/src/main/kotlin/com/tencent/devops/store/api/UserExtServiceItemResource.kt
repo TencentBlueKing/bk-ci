@@ -67,7 +67,7 @@ import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["USER_EXTENSION_SERVICE"], description = "服务扩展")
-@Path("/user/market/extension/items")
+@Path("/user/market/service/items")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserExtServiceItemResource {

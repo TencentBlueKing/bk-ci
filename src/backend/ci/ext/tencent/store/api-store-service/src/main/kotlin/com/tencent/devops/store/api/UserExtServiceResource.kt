@@ -27,7 +27,7 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserExtServiceResource {
     @ApiOperation("获取服务扩展市场首页的数据")
-    @Path("/extension/list/main")
+    @Path("/service/list/main")
     @GET
     fun mainPageList(
         @ApiParam("userId", required = true)
@@ -43,7 +43,7 @@ interface UserExtServiceResource {
 
     @ApiOperation("服务扩展市场搜索服务扩展")
     @GET
-    @Path("/extension/list/")
+    @Path("/service/list/")
     fun list(
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)

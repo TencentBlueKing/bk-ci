@@ -22,7 +22,7 @@ import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["USER_EXTENSION_MEDIA"], description = "服务扩展_媒体信息")
-@Path("/user/market/extension/media")
+@Path("/user/market/service/media")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserExtMediaResource {

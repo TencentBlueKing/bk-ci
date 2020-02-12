@@ -18,7 +18,7 @@ import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["USER_EXT_SERVICE_PROJECT"], description = "研发商店-扩展服务项目间关系")
-@Path("/user/market/extension/project")
+@Path("/user/market/service/project")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserExtServiceProjectResource {
