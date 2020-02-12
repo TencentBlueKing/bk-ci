@@ -151,7 +151,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
             )
             val extServiceEnvCreateInfo = ExtServiceEnvCreateInfo(
                 serviceId = id,
-                language = "",
+                language = extensionInfo.language,
                 pkgPath = "",
                 pkgShaContent = "",
                 dockerFileContent = "",
@@ -182,17 +182,19 @@ abstract class ExtServiceBaseService @Autowired constructor() {
                     modifierUser = userId
                 )
             )
-            // 添加扩展服务扩展点
-            extServiceItemRelDao.create(
-                dslContext = dslContext,
-                userId = userId,
-                extServiceItemRelCreateInfo = ExtServiceItemRelCreateInfo(
-                    serviceId = id,
-                    itemId = extensionInfo.itemId,
-                    creatorUser = userId,
-                    modifierUser = userId
+            extensionInfo.extensionItemList.forEach {
+                // 添加扩展服务扩展点
+                extServiceItemRelDao.create(
+                    dslContext = dslContext,
+                    userId = userId,
+                    extServiceItemRelCreateInfo = ExtServiceItemRelCreateInfo(
+                        serviceId = id,
+                        itemId = it,
+                        creatorUser = userId,
+                        modifierUser = userId
+                    )
                 )
-            )
+            }
         }
         return Result(true)
     }

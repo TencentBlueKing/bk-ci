@@ -11,20 +11,18 @@ data class InitExtServiceDTO(
     val serviceCode: String,
     @ApiModelProperty("扩展服务Name")
     val serviceName: String,
-    @ApiModelProperty("扩展项ID")
-    val itemId: String,
     @ApiModelProperty("调试项目Code")
     val projectCode: String,
     @ApiModelProperty("服务语言")
-    val language: String,
+    val language: String?,
     @ApiModelProperty("认证方式", required = false)
     val authType: String? = null,
     @ApiModelProperty(value = "插件代码库不开源原因", required = false)
     val privateReason: String? = null,
     @ApiModelProperty("扩展点列表")
-    val extensionList: List<ExtsionInfoReq>,
+    val extensionItemList: List<String>,
     @ApiModelProperty(value = "项目可视范围", required = false)
-    val visibilityLevel: VisibilityLevelEnum? = VisibilityLevelEnum.PRIVATE,
+    val visibilityLevel: VisibilityLevelEnum? = VisibilityLevelEnum.LOGIN_PUBLIC,
     @ApiModelProperty("添加用户")
     val creatorUser: String
 
