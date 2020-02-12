@@ -1,6 +1,7 @@
 package com.tencent.devops.store.pojo.dto
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
 import com.tencent.devops.store.pojo.ExtsionInfoReq
 import io.swagger.annotations.ApiModelProperty
@@ -16,7 +17,7 @@ data class InitExtServiceDTO(
     @ApiModelProperty("服务语言")
     val language: String?,
     @ApiModelProperty("认证方式", required = false)
-    val authType: String? = null,
+    val authType: String? = TokenTypeEnum.OAUTH.toString(),
     @ApiModelProperty(value = "插件代码库不开源原因", required = false)
     val privateReason: String? = null,
     @ApiModelProperty("扩展点列表")
