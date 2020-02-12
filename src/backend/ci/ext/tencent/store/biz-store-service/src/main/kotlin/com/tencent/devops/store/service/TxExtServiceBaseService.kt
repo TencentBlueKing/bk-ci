@@ -19,7 +19,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 @Service
-class TxExtServiceBaseService: ExtServiceBaseService() {
+class TxExtServiceBaseService : ExtServiceBaseService() {
 
     @Autowired
     override lateinit var client: Client
@@ -64,7 +64,7 @@ class TxExtServiceBaseService: ExtServiceBaseService() {
                 serviceCode,
                 storeBuildInfoDao.getStoreBuildInfoByLanguage(
                     dslContext,
-                    extensionInfo.language,
+                    extensionInfo.language ?: "",
                     StoreTypeEnum.SERVICE
                 ).sampleProjectPath,
                 serviceNameSpaceId.toInt(),
