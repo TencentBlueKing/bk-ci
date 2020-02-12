@@ -44,11 +44,13 @@ import com.tencent.bkrepo.repository.pojo.share.ShareRecordCreateRequest
 import com.tencent.bkrepo.repository.pojo.share.ShareRecordInfo
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.archive.config.BkRepoConfig
 import com.tencent.devops.common.archive.pojo.ArtifactorySearchParam
 import com.tencent.devops.common.archive.pojo.BkRepoData
 import com.tencent.devops.common.archive.pojo.BkRepoFile
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.utils.HomeHostUtil
+import okhttp3.Credentials
 import okhttp3.MediaType
 import okhttp3.Request
 import okhttp3.RequestBody
@@ -63,7 +65,8 @@ import javax.ws.rs.NotFoundException
 
 class BkRepoClient constructor(
     private val objectMapper: ObjectMapper,
-    private val commonConfig: CommonConfig
+    private val commonConfig: CommonConfig,
+    private val bkRepoConfig: BkRepoConfig
 ) {
     private fun getGatewaytUrl(): String {
         return HomeHostUtil.getHost(commonConfig.devopsHostGateway!!)
@@ -258,14 +261,38 @@ class BkRepoClient constructor(
 
     fun uploadLocalFile(userId: String, projectId: String, repoName: String, path: String, file: File) {
         logger.info("uploadLocalFile, userId: $userId, projectId: $projectId, repoName: $repoName, path: $path, localFile: ${file.canonicalPath}")
-        val url = "${getGatewaytUrl()}/bkrepo/api/service/generic/$projectId/$repoName/${path.removePrefix("/")}"
-        val request = Request.Builder()
+        uploadLocalFile(
+            userId = userId,
+            projectId = projectId,
+            repoName = repoName,
+            path = path,
+            file = file
+        )
+    }
+
+    fun uploadLocalFile(
+        userId: String,
+        projectId: String,
+        repoName: String,
+        path: String,
+        file: File,
+        gatewayFlag: Boolean = true,
+        userName: String? = null,
+        password: String? = null
+    ) {
+        logger.info("uploadLocalFile, projectId: $projectId, repoName: $repoName, path: $path, localFile: ${file.canonicalPath}")
+        logger.info("uploadLocalFile, userName: $userName, password: $password")
+        val repoUrlPrefix = if (gatewayFlag) "${getGatewaytUrl()}/bkrepo/api/service/generic" else bkRepoConfig.bkrepoApiUrl
+        val url = "$repoUrlPrefix/$projectId/$repoName/${path.removePrefix("/")}"
+        val requestBuilder = Request.Builder()
             .url(url)
-            // .header("Authorization", makeCredential())
-            .header(AUTH_HEADER_UID, userId)
+        if (userName != null && password != null) {
+            requestBuilder.header("Authorization", Credentials.basic(userName, password))
+        }
+        requestBuilder.header(AUTH_HEADER_UID, userId)
             .header(BK_REPO_OVERRIDE, "true")
             .put(RequestBody.create(MediaType.parse("application/octet-stream"), file))
-            .build()
+        val request = requestBuilder.build()
         OkhttpUtils.doHttp(request).use { response ->
             if (!response.isSuccessful) {
                 logger.error("upload file failed, responseContent: ${response.body()!!.string()}")

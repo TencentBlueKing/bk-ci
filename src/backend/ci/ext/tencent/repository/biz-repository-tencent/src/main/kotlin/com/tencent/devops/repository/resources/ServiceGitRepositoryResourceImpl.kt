@@ -85,4 +85,8 @@ class ServiceGitRepositoryResourceImpl @Autowired constructor(
         repositoryService.userDelete(userId, projectId, repositoryHashId)
         return Result(true)
     }
+
+    override fun getAuthUrl(authParamJsonStr: String): Result<String> {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
 }

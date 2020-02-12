@@ -225,4 +225,13 @@ interface ServiceGitRepositoryResource {
         @PathParam("repositoryHashId")
         repositoryHashId: String
     ): Result<Boolean>
+
+    @ApiOperation("获取授权路径")
+    @GET
+    @Path("/getAuthUrl")
+    fun getAuthUrl(
+        @ApiParam("参数json串", required = true)
+        @QueryParam("authParamJsonStr")
+        authParamJsonStr: String
+    ): Result<String>
 }
