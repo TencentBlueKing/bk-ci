@@ -7,6 +7,7 @@ import com.tencent.devops.store.pojo.common.StoreProcessInfo
 import com.tencent.devops.store.pojo.dto.InitExtServiceDTO
 import com.tencent.devops.store.pojo.dto.ServiceOfflineDTO
 import com.tencent.devops.store.pojo.dto.SubmitDTO
+import com.tencent.devops.store.pojo.vo.MyServiceVO
 import com.tencent.devops.store.service.ExtServiceBaseService
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -45,6 +46,21 @@ class UserExtServiceDeskResourceImpl @Autowired constructor(
             userId = userId,
             serviceCode = serviceCode,
             serviceOfflineDTO = serviceOffline
+        )
+    }
+
+    override fun listDeskExtService(
+        accessToken: String,
+        userId: String,
+        serviceName: String?,
+        page: Int?,
+        pageSize: Int?
+    ): Result<MyServiceVO> {
+        return extServiceBaseService.getMyService(
+            userId = userId,
+            serviceName = serviceName,
+            page = page,
+            pageSize = pageSize
         )
     }
 }

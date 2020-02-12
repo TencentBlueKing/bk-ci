@@ -43,21 +43,6 @@ class UserExtServiceResourceImpl @Autowired constructor(
         ))
     }
 
-    override fun listDeskExtService(
-        accessToken: String,
-        userId: String,
-        serviceName: String?,
-        page: Int?,
-        pageSize: Int?
-    ): Result<MyServiceVO> {
-        return extServiceBaseService.getMyService(
-            userId = userId,
-            serviceName = serviceName,
-            page = page,
-            pageSize = pageSize
-        )
-    }
-
     override fun getServiceById(userId: String, serviceId: String): Result<ServiceVersionVO?> {
         return extServiceBaseService.getServiceById(userId, serviceId)
     }

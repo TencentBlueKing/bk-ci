@@ -57,7 +57,6 @@ interface UserExtServiceDeskResource {
         extensionInfo: SubmitDTO
     ): Result<String>
 
-
     @GET
     @ApiOperation(value = "根据扩展ID获取扩展版本进度")
     @Path("/release/process/{serviceId}")
@@ -84,4 +83,24 @@ interface UserExtServiceDeskResource {
         serviceOffline: ServiceOfflineDTO
     ): Result<Boolean>
 
+    @GET
+    @ApiOperation(value = "工作台--根据用户获取服务扩展列表")
+    @Path("/list")
+    fun listDeskExtService(
+        @ApiParam("token", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
+        accessToken: String,
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("扩展服务name", required = false)
+        @QueryParam("serviceName")
+        serviceName: String?,
+        @ApiParam("页码", required = false)
+        @QueryParam("page")
+        page: Int?,
+        @ApiParam("每页数量", required = false)
+        @QueryParam("pageSize")
+        pageSize: Int?
+    ): Result<MyServiceVO>
 }

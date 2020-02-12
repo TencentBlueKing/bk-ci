@@ -372,7 +372,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         pageSize: Int?
     ): Result<MyServiceVO> {
         logger.info("the getMyService userId is :$userId,serviceName is :$serviceName")
-        // 获取有权限的插件代码列表
+        // 获取有权限的扩展服务列表
         val records = extServiceDao.getMyService(dslContext, userId, serviceName, page, pageSize)
         val count = extServiceDao.countByUser(dslContext, userId, serviceName)
         logger.info("the getMyService userId is :$userId,records is :$records,count is :$count")

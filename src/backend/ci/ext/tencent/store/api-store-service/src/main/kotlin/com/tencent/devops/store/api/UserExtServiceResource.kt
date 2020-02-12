@@ -71,28 +71,6 @@ interface UserExtServiceResource {
         pageSize: Int?
     ): Result<SearchExtServiceVO>
 
-    @GET
-    @ApiOperation(value = "工作台--根据用户获取服务扩展列表")
-    @Path("/desk/extension/list/")
-    fun listDeskExtService(
-        @ApiParam("token", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
-        accessToken: String,
-        @ApiParam("userId", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam("扩展服务Id")
-        @QueryParam("serviceName")
-        serviceName: String?,
-        @ApiParam("页码", required = false)
-        @QueryParam("page")
-        page: Int?,
-        @ApiParam("每页数量", required = false)
-        @QueryParam("pageSize")
-        pageSize: Int?
-    ): Result<MyServiceVO>
-
-
     @ApiOperation("根据插件版本ID获取插件详情")
     @GET
     @Path("/desk/service/{serviceId}")
