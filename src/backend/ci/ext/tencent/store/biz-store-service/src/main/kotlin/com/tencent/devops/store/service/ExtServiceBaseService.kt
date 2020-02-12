@@ -125,7 +125,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
                 extServiceCreateInfo = ExtServiceCreateInfo(
                     serviceCode = extensionInfo.serviceCode,
                     serviceName = extensionInfo.serviceName,
-                    creatorUser = extensionInfo.creatorUser,
+                    creatorUser = userId,
                     publisher = userId,
                     publishTime = System.currentTimeMillis(),
                     status = 0,
