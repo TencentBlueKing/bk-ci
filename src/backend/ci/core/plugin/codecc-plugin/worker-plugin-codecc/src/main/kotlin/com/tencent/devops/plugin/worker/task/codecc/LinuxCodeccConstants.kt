@@ -197,4 +197,13 @@ object LinuxCodeccConstants {
         return if (BuildEnv.isThirdParty()) File(THIRD_CODECC_FOLDER, toolPyFile)
         else File(CODECC_FOLDER, toolPyFile)
     }
+
+    fun getSinglePyFile(): String {
+        return when {
+            AgentEnv.isDev() -> "build_tool_external_rule_dev.py"
+            AgentEnv.isTest() -> "build_tool_external_rule_test.py"
+            else -> "build_tool_external_rule_prod.py"
+        }
+
+    }
 }
