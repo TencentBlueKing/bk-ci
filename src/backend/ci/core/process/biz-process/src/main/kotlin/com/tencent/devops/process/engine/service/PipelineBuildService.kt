@@ -1722,18 +1722,20 @@ class PipelineBuildService(
         vmSeqId: String,
         simpleResult: SimpleResult
     ) {
+        // success do nothing just log
+        if (simpleResult.success) {
+            logger.info("[$buildId]|Job#$vmSeqId|${simpleResult.success}| worker had been exit.")
+            return
+        }
+
         val buildInfo = pipelineRuntimeService.getBuildInfo(buildId) ?: return
         if (BuildStatus.isFinish(buildInfo.status)) {
             logger.info("[$buildId]|The build is ${buildInfo.status}")
             return
         }
 
-        val msg = if (simpleResult.success) {
-            "构建任务对应的Agent进程已退出"
-        } else {
-            "构建任务对应的Agent进程已退出: ${simpleResult.message}"
-        }
-        logger.info("worker build($buildId|$vmSeqId|${simpleResult.success}) $msg")
+        val msg = "Job#$vmSeqId's worker exception: ${simpleResult.message}"
+        logger.info("[$buildId]|Job#$vmSeqId|${simpleResult.success}|$msg")
 
         var stageId: String? = null
         var containerType = "vmBuild"
