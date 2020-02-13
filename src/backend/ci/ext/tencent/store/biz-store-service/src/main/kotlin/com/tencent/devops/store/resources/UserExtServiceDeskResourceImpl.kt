@@ -66,6 +66,6 @@ class UserExtServiceDeskResourceImpl @Autowired constructor(
     }
 
     override fun getServiceById(userId: String, serviceId: String): Result<ServiceVersionVO?> {
-        return extServiceBaseService.getServiceById(userId, serviceId)
+        return extServiceBaseService.getServiceById(serviceId, userId)
     }
 }
