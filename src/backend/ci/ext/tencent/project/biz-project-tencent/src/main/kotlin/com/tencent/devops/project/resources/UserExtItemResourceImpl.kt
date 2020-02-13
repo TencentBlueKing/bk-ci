@@ -13,7 +13,6 @@ class UserExtItemResourceImpl @Autowired constructor(
     private val serviceItemService: ServiceItemService
 ) : UserExtItemResource {
     override fun getItemList(userId: String): Result<List<ExtItemDTO>?> {
-        logger.warn("this is impl:${Result(serviceItemService.getServiceList())}")
         return Result(serviceItemService.getServiceList())
     }
 
