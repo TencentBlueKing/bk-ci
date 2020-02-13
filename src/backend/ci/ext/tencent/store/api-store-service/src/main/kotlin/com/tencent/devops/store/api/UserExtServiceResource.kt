@@ -1,12 +1,10 @@
 package com.tencent.devops.store.api
 
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ACCESS_TOKEN
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BK_TICKET
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.enums.ExtServiceSortTypeEnum
 import com.tencent.devops.store.pojo.vo.ExtServiceMainItemVo
-import com.tencent.devops.store.pojo.vo.MyServiceVO
 import com.tencent.devops.store.pojo.vo.SearchExtServiceVO
 import com.tencent.devops.store.pojo.vo.ServiceVersionVO
 import io.swagger.annotations.Api
@@ -70,18 +68,6 @@ interface UserExtServiceResource {
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<SearchExtServiceVO>
-
-    @ApiOperation("根据插件版本ID获取插件详情")
-    @GET
-    @Path("/desk/service/{serviceId}")
-    fun getServiceById(
-        @ApiParam("userId", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam("serviceId", required = true)
-        @PathParam("serviceId")
-        serviceId: String
-    ): Result<ServiceVersionVO?>
 
     @ApiOperation("根据插件标识获取插件正式版本详情")
     @GET

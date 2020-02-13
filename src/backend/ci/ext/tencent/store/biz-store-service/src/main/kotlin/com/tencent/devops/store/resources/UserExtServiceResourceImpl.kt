@@ -42,10 +42,6 @@ class UserExtServiceResourceImpl @Autowired constructor(
         ))
     }
 
-    override fun getServiceById(userId: String, serviceId: String): Result<ServiceVersionVO?> {
-        return extServiceBaseService.getServiceById(userId, serviceId)
-    }
-
     override fun getServiceByCode(userId: String, bk_ticket: String, serviceCode: String): Result<ServiceVersionVO?> {
         return extServiceBaseService.getServiceByCode(
             userId = userId,

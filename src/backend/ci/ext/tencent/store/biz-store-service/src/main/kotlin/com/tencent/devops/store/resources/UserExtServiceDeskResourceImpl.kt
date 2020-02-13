@@ -8,6 +8,7 @@ import com.tencent.devops.store.pojo.dto.InitExtServiceDTO
 import com.tencent.devops.store.pojo.dto.ServiceOfflineDTO
 import com.tencent.devops.store.pojo.dto.SubmitDTO
 import com.tencent.devops.store.pojo.vo.MyServiceVO
+import com.tencent.devops.store.pojo.vo.ServiceVersionVO
 import com.tencent.devops.store.service.ExtServiceBaseService
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -62,5 +63,9 @@ class UserExtServiceDeskResourceImpl @Autowired constructor(
             page = page,
             pageSize = pageSize
         )
+    }
+
+    override fun getServiceById(userId: String, serviceId: String): Result<ServiceVersionVO?> {
+        return extServiceBaseService.getServiceById(userId, serviceId)
     }
 }

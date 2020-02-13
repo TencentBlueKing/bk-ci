@@ -103,4 +103,16 @@ interface UserExtServiceDeskResource {
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<MyServiceVO>
+
+    @ApiOperation("根据插件版本ID获取插件详情")
+    @GET
+    @Path("/desk/service/{serviceId}")
+    fun getServiceById(
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("serviceId", required = true)
+        @PathParam("serviceId")
+        serviceId: String
+    ): Result<ServiceVersionVO?>
 }
