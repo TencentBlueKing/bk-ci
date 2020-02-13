@@ -445,6 +445,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         return Result(true)
     }
 
+    @Suppress("UNCHECKED_CAST")
     fun getServiceById(serviceId: String, userId: String): Result<ServiceVersionVO?> {
         return getServiceVersion(serviceId, userId)
     }
@@ -458,6 +459,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         })
     }
 
+    @Suppress("UNCHECKED_CAST")
     private fun getServiceVersion(serviceId: String, userId: String): Result<ServiceVersionVO?> {
         logger.info("getServiceVersion serviceID[$serviceId], userID[$userId]")
         val record = extServiceDao.getServiceById(dslContext, serviceId)
@@ -477,11 +479,11 @@ abstract class ExtServiceBaseService @Autowired constructor() {
             logger.info("getServiceVersion featureInfoRecord: $featureInfoRecord")
 
             val repositoryHashId = featureInfoRecord!!.repositoryHashId
-            val repositoryInfoResult = getRepositoryInfo(projectCode, repositoryHashId)
-            if (repositoryInfoResult.isNotOk()) {
-                Result(repositoryInfoResult.status, repositoryInfoResult.message, null)
-            }
-            val repositoryInfo = repositoryInfoResult.data
+//            val repositoryInfoResult = getRepositoryInfo(projectCode, repositoryHashId)
+//            if (repositoryInfoResult.isNotOk()) {
+//                Result(repositoryInfoResult.status, repositoryInfoResult.message, null)
+//            }
+//            val repositoryInfo = repositoryInfoResult.data
             val flag = storeUserService.isCanInstallStoreComponent(defaultFlag , userId, serviceCode, StoreTypeEnum.SERVICE)
             val userCommentInfo = storeCommentService.getStoreUserCommentInfo(userId, serviceCode, StoreTypeEnum.SERVICE)
             val feature = extFeatureDao.getServiceByCode(dslContext, serviceCode)
@@ -511,7 +513,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
                     createTime = DateTimeUtil.toDateTime(record.createTime as LocalDateTime),
                     updateTime = DateTimeUtil.toDateTime(record.updateTime as LocalDateTime),
                     flag = flag,
-                    repositoryAuthorizer = repositoryInfo?.userName,
+                    repositoryAuthorizer = record.publisher,
                     defaultFlag = defaultFlag,
                     projectCode = storeProjectRelDao.getUserStoreTestProjectCode(
                         dslContext,
