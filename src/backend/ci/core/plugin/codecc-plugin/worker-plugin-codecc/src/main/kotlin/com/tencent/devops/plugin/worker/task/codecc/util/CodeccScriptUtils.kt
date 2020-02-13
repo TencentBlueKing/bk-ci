@@ -5,6 +5,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.plugin.worker.task.codecc.LinuxCodeccConstants
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
+import com.tencent.devops.worker.common.logger.LoggerService
 import okhttp3.MediaType
 import okhttp3.RequestBody
 import java.io.File
@@ -29,7 +30,7 @@ class CodeccScriptUtils: AbstractBuildResourceApi() {
             .build()
         val fileSize = OkhttpUtils.doHttp(fileSizeRequest).use {
             val data = it.body()!!.string()
-            println("get file size data: $data")
+            LoggerService.addNormalLine("get file size data: $data")
             val jsonData = JsonUtil.getObjectMapper().readValue<Map<String, Any>>(data)
             if (jsonData["status"] != 0) {
                 throw RuntimeException("get file size fail!")
@@ -50,7 +51,7 @@ class CodeccScriptUtils: AbstractBuildResourceApi() {
             .build()
         OkhttpUtils.doHttp(downloadRequest).use {
             val data = it.body()!!.string()
-            println("get file content: $data")
+            LoggerService.addNormalLine("get file content: $data")
             val file = File(codeccWorkspace, LinuxCodeccConstants.getSinglePyFile())
             file.writeText(data)
             return file
