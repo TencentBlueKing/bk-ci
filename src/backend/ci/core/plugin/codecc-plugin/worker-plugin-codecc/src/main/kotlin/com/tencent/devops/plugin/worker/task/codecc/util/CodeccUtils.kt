@@ -260,6 +260,11 @@ open class CodeccUtils {
         command.add("export PATH=${getPython3Path(BuildScriptType.SHELL)}:\$PATH\n")
         command.add("export LANG=zh_CN.UTF-8\n")
         command.add("export PATH=/data/bkdevops/apps/codecc/go/bin:/data/bkdevops/apps/codecc/gometalinter/bin:\$PATH\n")
+
+        CommonEnv.getCommonEnv().forEach { (key, value) ->
+            command.add("export $key=$value\n")
+        }
+
         command.add("python -V\n")
         command.add("pwd\n")
     }
@@ -282,20 +287,20 @@ open class CodeccUtils {
         } else {
             codeccExecuteConfig.tools
         }
+        if (scanTools.isEmpty()) return "scan tools is empty"
+
         val finalScanTools = scanTools.filter { it in COV_TOOLS }
 
-        val list = mutableListOf<String>()
-        coverityPreExecute(list)
-        list.add("python")
-        list.add(codeccStartFile)
+        command.add("python")
+        command.add(codeccStartFile)
 
         // 添加公共参数
-        addCommonParams(list, codeccExecuteConfig)
+        addCommonParams(command, codeccExecuteConfig)
 
-        // 添加具体业务参数
-        list.add("-DIS_SPEC_CONFIG=true")
-        list.add("-DSCAN_TOOLS=${finalScanTools.joinToString(",").toLowerCase()}")
-        list.add("-DCOVERITY_RESULT_PATH=${File(coverityStartFile).parent}")
+        // 添加coverity/klockwork参数
+        command.add("-DIS_SPEC_CONFIG=true")
+        command.add("-DSCAN_TOOLS=${finalScanTools.joinToString(",").toLowerCase()}")
+        command.add("-DCOVERITY_RESULT_PATH=${File(coverityStartFile).parent}")
 
         val buildCmd = when (CodeccParamsHelper.getProjectType(taskParams["languages"]!!)) {
             CoverityProjectType.UN_COMPILE -> {
@@ -310,44 +315,44 @@ open class CodeccUtils {
         val coreCount = if (channelCode == ChannelCode.GONGFENGSCAN.name) Runtime.getRuntime().availableProcessors()
         else max(Runtime.getRuntime().availableProcessors() / 2, 1) // 用一半的核
 
-        list.add("-DPROJECT_BUILD_COMMAND=\"--parallel-translate=$coreCount $buildCmd\"")
-        if (!BuildEnv.isThirdParty()) list.add("-DCOVERITY_HOME_BIN=${getCovToolPath(scriptType)}/bin")
-        list.add("-DPROJECT_BUILD_PATH=${workspace.canonicalPath}")
-        list.add("-DSYNC_TYPE=${taskParams["asynchronous"] != "true"}")
-        if (!BuildEnv.isThirdParty() && scanTools.contains("KLOCWORK")) list.add(
+        command.add("-DPROJECT_BUILD_COMMAND=\"--parallel-translate=$coreCount $buildCmd\"")
+        if (!BuildEnv.isThirdParty()) command.add("-DCOVERITY_HOME_BIN=${getCovToolPath(scriptType)}/bin")
+        command.add("-DPROJECT_BUILD_PATH=${workspace.canonicalPath}")
+        command.add("-DSYNC_TYPE=${taskParams["asynchronous"] != "true"}")
+        if (!BuildEnv.isThirdParty() && scanTools.contains("KLOCWORK")) command.add(
                 "-DKLOCWORK_HOME_BIN=${getKlocToolPath(
                         scriptType
                 )}"
         )
-        if (taskParams.containsKey("goPath")) list.add("-DGO_PATH=${taskParams["goPath"]}")
+        if (taskParams.containsKey("goPath")) command.add("-DGO_PATH=${taskParams["goPath"]}")
 
         // 多工具
-        list.add("-DOFFLINE=true")
-        list.add("-DDATA_ROOT_PATH=${File(toolsStartFile).parent}")
-        list.add("-DSTREAM_CODE_PATH=${workspace.canonicalPath}")
-        list.add("-DPY27_PATH=${getPython2Path(scriptType)}")
-        list.add("-DPY35_PATH=${getPython3Path(scriptType)}")
+        command.add("-DOFFLINE=true")
+        command.add("-DDATA_ROOT_PATH=${File(toolsStartFile).parent}")
+        command.add("-DSTREAM_CODE_PATH=${workspace.canonicalPath}")
+        command.add("-DPY27_PATH=${getPython2Path(scriptType)}")
+        command.add("-DPY35_PATH=${getPython3Path(scriptType)}")
         if (finalScanTools.contains("PYLINT")) {
-            list.add("-DPY27_PYLINT_PATH=${getPyLint2Path(scriptType)}")
-            list.add("-DPY35_PYLINT_PATH=${getPyLint3Path(scriptType)}")
+            command.add("-DPY27_PYLINT_PATH=${getPyLint2Path(scriptType)}")
+            command.add("-DPY35_PYLINT_PATH=${getPyLint3Path(scriptType)}")
         } else {
             // 两个参数是必填的
             // 把路径配置成其他可用路径就可以
-            list.add("-DPY27_PYLINT_PATH=${workspace.canonicalPath}")
-            list.add("-DPY35_PYLINT_PATH=${workspace.canonicalPath}")
+            command.add("-DPY27_PYLINT_PATH=${workspace.canonicalPath}")
+            command.add("-DPY35_PYLINT_PATH=${workspace.canonicalPath}")
         }
         var subPath = if (BuildEnv.isThirdParty()) "" else
-            "/usr/local/svn/bin:/usr/local/bin:/data/bkdevops/apps/coverity:"
+            "/usr/local/svn/bin:/usr/local/bin:/data/bkdevops/apps/coverity"
         subPath = "$subPath:${getJdkPath(scriptType)}:${getNodePath(scriptType)}:" +
                 "${getGoMetaLinterPath(scriptType)}:${getGoRootPath(scriptType)}:$STYLE_TOOL_PATH:$PHPCS_TOOL_PATH:${getGoRootPath(scriptType)}:$GO_CI_LINT_PATH"
         command.add("-DSUB_PATH=$subPath")
-        list.add("-DGOROOT=/data/bkdevops/apps/codecc/go")
+        command.add("-DGOROOT=/data/bkdevops/apps/codecc/go")
 
         printLog(command, "[codecc] ")
 
         return executeScript(
                 codeccExecuteConfig = codeccExecuteConfig,
-                list = list,
+                list = command,
                 prefix = "[codecc] "
         )
     }
