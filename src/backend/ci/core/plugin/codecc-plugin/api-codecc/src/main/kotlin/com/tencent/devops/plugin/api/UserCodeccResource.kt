@@ -71,16 +71,15 @@ interface UserCodeccResource {
         toolName: String
     ): Result<Map<String, Any>>
 
-
     @ApiOperation("获取codecc语言的规则集")
     @GET
     @Path("/project/{projectId}/languageCodeccRuleSet")
     fun languageCodeccRuleSet(
-            @ApiParam("项目ID", required = true)
-            @PathParam(value = "projectId")
-            projectId: String,
-            @ApiParam("用户ID", required = true)
-            @HeaderParam(AUTH_HEADER_USER_ID)
-            userId: String
+        @ApiParam("项目ID", required = true)
+        @PathParam(value = "projectId")
+        projectId: String,
+        @ApiParam("用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String
     ): Result<Map<String, Any>>
 }
