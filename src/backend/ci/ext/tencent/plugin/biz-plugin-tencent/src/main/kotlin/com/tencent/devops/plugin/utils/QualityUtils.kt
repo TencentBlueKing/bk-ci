@@ -87,10 +87,10 @@ object QualityUtils {
     private fun getActualValue(projectId: String, pipelineId: String, detail: String?, value: String, client: Client): String {
         val taskId = client.get(ServiceCodeccElementResource::class).get(projectId, pipelineId).data?.taskId
         return if (detail.isNullOrBlank()) {
-            "<a target='_blank' href='${HomeHostUtil.innerServerHost()}/console/codecc/$projectId/procontrol/prodesc?proj_id=$taskId&projectId=$projectId'>$value</a>"
+            "<a target='_blank' href='${HomeHostUtil.innerServerHost()}/console/codecc/$projectId/task/$taskId/detail'>$value</a>"
         } else {
-            val detailValue = codeccToolUrlPathMap[detail] ?: "procontrol/multidefectmanage"
-            "<a target='_blank' href='${HomeHostUtil.innerServerHost()}/console/codecc/$projectId/$detailValue?proj_id=$taskId&toolName=$detail&projectId=$projectId'>$value</a>"
+            val detailValue = codeccToolUrlPathMap[detail] ?: "defect/lint"
+            "<a target='_blank' href='${HomeHostUtil.innerServerHost()}/console/codecc/$projectId/task/$taskId/$detailValue/$detail/list'>$value</a>"
         }
     }
 }
