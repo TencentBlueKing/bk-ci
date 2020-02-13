@@ -61,9 +61,9 @@ class ServiceItemService @Autowired constructor(
                 itemList.add(data)
             }
         }
-        logger.info("getServiceItem itemList:${itemList}")
+        logger.info("getServiceItem itemList:${itemList.toList()}")
 
-        return itemList
+        return itemList.toList()
     }
 
     companion object{

@@ -6,15 +6,15 @@ data class ExtServiceFeatureCreateInfo(
     @ApiModelProperty("扩展服务code")
     val serviceCode: String,
     @ApiModelProperty("是否为公共扩展服务， TRUE：是 FALSE：不是  ")
-    val publicFlag: Boolean? = null,
+    val publicFlag: Boolean? = false,
     @ApiModelProperty("是否推荐， TRUE：是 FALSE：不是 ")
-    val recommentFlag: Boolean? = null,
+    val recommentFlag: Boolean? = false,
     @ApiModelProperty("是否官方认证， TRUE：是 FALSE：不是  ")
-    val certificationFlag: Boolean? = null,
+    val certificationFlag: Boolean? = false,
     @ApiModelProperty("权重（数值越大代表权重越高）")
     val weight: Int? = null,
     @ApiModelProperty("扩展服务可见范围 0：私有 10：登录用户开源")
-    val visibilityLevel: Int? = null,
+    val visibilityLevel: Int? = 10,
     @ApiModelProperty("代码库hashId")
     val repositoryHashId: String? = null,
     @ApiModelProperty("代码库地址")
