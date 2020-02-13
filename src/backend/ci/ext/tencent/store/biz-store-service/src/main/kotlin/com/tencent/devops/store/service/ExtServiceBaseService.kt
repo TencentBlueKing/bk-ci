@@ -486,8 +486,8 @@ abstract class ExtServiceBaseService @Autowired constructor() {
 //            val repositoryInfo = repositoryInfoResult.data
             val flag = storeUserService.isCanInstallStoreComponent(defaultFlag , userId, serviceCode, StoreTypeEnum.SERVICE)
             val userCommentInfo = storeCommentService.getStoreUserCommentInfo(userId, serviceCode, StoreTypeEnum.SERVICE)
-            val feature = extFeatureDao.getServiceByCode(dslContext, serviceCode)
             val serviceEnv = extServiceEnvDao.getMarketServiceEnvInfoByServiceId(dslContext, serviceId)
+            logger.info("getServiceVersion serviceEnv: $serviceEnv")
 
             Result(
                 ServiceVersionVO(
@@ -498,14 +498,14 @@ abstract class ExtServiceBaseService @Autowired constructor() {
 //                    classifyCode = classifyCode,
 //                    classifyName = classifyLanName,
 //                    category = AtomCategoryEnum.getAtomCategory((record["category"] as Byte).toInt()),
-                    summary = record.summary,
-                    description = record.description,
+                    summary = record.summary ?: "",
+                    description = record.description ?: "",
                     version = record.version,
                     serviceStatus = ExtServiceStatusEnum.getServiceStatus((record.serviceStatus).toInt()),
 //                    releaseType = if (record["releaseType"] != null) ReleaseTypeEnum.getReleaseType((record["releaseType"] as Byte).toInt()) else null,
 //                    versionContent = record["versionContent"] as? String,
                     language = serviceEnv!!.language,
-                    codeSrc = feature!!.codeSrc,
+                    codeSrc = featureInfoRecord!!.codeSrc ?: "",
                     publisher = record.publisher,
                     modifier = record.modifier,
                     creator = record.creator,
@@ -523,8 +523,8 @@ abstract class ExtServiceBaseService @Autowired constructor() {
                     // TODO:带补充逻辑
 //                    labelList = null,
 //                    userCommentInfo = userCommentInfo,
-                    visibilityLevel = VisibilityLevelEnum.getVisibilityLevel(feature.visibilityLevel),
-                    recommendFlag = feature?.recommendFlag
+                    visibilityLevel = VisibilityLevelEnum.getVisibilityLevel(featureInfoRecord.visibilityLevel),
+                    recommendFlag = featureInfoRecord?.recommendFlag
                 )
             )
         }
