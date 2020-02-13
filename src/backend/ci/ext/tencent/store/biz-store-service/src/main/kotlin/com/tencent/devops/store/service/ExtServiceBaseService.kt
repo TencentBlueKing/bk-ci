@@ -501,7 +501,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
                     summary = record.summary,
                     description = record.description,
                     version = record.version,
-                    serviceStatus = ExtServiceStatusEnum.getServiceStatus((record["serviceStatus"] as Byte).toInt()),
+                    serviceStatus = ExtServiceStatusEnum.getServiceStatus((record.serviceStatus).toInt()),
 //                    releaseType = if (record["releaseType"] != null) ReleaseTypeEnum.getReleaseType((record["releaseType"] as Byte).toInt()) else null,
 //                    versionContent = record["versionContent"] as? String,
                     language = serviceEnv!!.language,
