@@ -462,18 +462,22 @@ abstract class ExtServiceBaseService @Autowired constructor() {
 
     @Suppress("UNCHECKED_CAST")
     private fun getServiceVersion(serviceId: String, userId: String): Result<ServiceVersionVO?> {
+        logger.info("getServiceVersion serviceID[$serviceId], userID[$userId]")
         val record = extServiceDao.getServiceById(dslContext, serviceId)
         return if (null == record) {
             Result(data = null)
         } else {
             val serviceCode = record["serviceCode"] as String
             val defaultFlag = record["defaultFlag"] as Boolean
+            logger.info("getServiceVersion ServiceRecord: $record")
             val projectCode = storeProjectRelDao.getInitProjectCodeByStoreCode(
                     dslContext,
                     serviceCode,
                     StoreTypeEnum.SERVICE.type.toByte()
                 )
+            logger.info("getServiceVersion projectCode: $projectCode")
             val featureInfoRecord = extFeatureDao.getLatestServiceByCode(dslContext, serviceCode)
+            logger.info("getServiceVersion featureInfoRecord: $featureInfoRecord")
 
             val repositoryHashId = featureInfoRecord!!.repositoryHashId
             val repositoryInfoResult = getRepositoryInfo(projectCode, repositoryHashId)
@@ -481,9 +485,9 @@ abstract class ExtServiceBaseService @Autowired constructor() {
                 Result(repositoryInfoResult.status, repositoryInfoResult.message, null)
             }
             val repositoryInfo = repositoryInfoResult.data
-            val flag = storeUserService.isCanInstallStoreComponent(defaultFlag, userId, serviceCode, StoreTypeEnum.ATOM)
+            val flag = storeUserService.isCanInstallStoreComponent(defaultFlag, userId, serviceCode, StoreTypeEnum.SERVICE)
 //            val atomLabelRecords = extServiceLabelDao.getLabelsByServiceId(dslContext, serviceId) // 查找标签列表
-            val userCommentInfo = storeCommentService.getStoreUserCommentInfo(userId, serviceCode, StoreTypeEnum.ATOM)
+            val userCommentInfo = storeCommentService.getStoreUserCommentInfo(userId, serviceCode, StoreTypeEnum.SERVICE)
             val feature = extFeatureDao.getServiceByCode(dslContext, serviceCode)
             val classifyCode = record["classifyCode"] as? String
             val classifyName = record["classifyName"] as? String
