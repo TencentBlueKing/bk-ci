@@ -41,7 +41,6 @@ import com.tencent.devops.store.pojo.ExtServiceFeatureCreateInfo
 import com.tencent.devops.store.pojo.ExtServiceItemRelCreateInfo
 import com.tencent.devops.store.pojo.ExtServiceUpdateInfo
 import com.tencent.devops.store.pojo.ExtServiceVersionLogCreateInfo
-import com.tencent.devops.store.pojo.atom.enums.AtomCategoryEnum
 import com.tencent.devops.store.pojo.common.ReleaseProcessItem
 import com.tencent.devops.store.pojo.common.StoreProcessInfo
 import com.tencent.devops.store.pojo.enums.ExtServicePackageSourceTypeEnum
@@ -467,9 +466,9 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         return if (null == record) {
             Result(data = null)
         } else {
-            val serviceCode = record["serviceCode"] as String
-            val defaultFlag = record["defaultFlag"] as Boolean
             logger.info("getServiceVersion ServiceRecord: $record")
+            val serviceCode = record.serviceCode
+            val defaultFlag = record.deleteFlag
             val projectCode = storeProjectRelDao.getInitProjectCodeByStoreCode(
                     dslContext,
                     serviceCode,
@@ -485,41 +484,34 @@ abstract class ExtServiceBaseService @Autowired constructor() {
                 Result(repositoryInfoResult.status, repositoryInfoResult.message, null)
             }
             val repositoryInfo = repositoryInfoResult.data
-            val flag = storeUserService.isCanInstallStoreComponent(defaultFlag, userId, serviceCode, StoreTypeEnum.SERVICE)
-//            val atomLabelRecords = extServiceLabelDao.getLabelsByServiceId(dslContext, serviceId) // 查找标签列表
+            val flag = storeUserService.isCanInstallStoreComponent(defaultFlag , userId, serviceCode, StoreTypeEnum.SERVICE)
             val userCommentInfo = storeCommentService.getStoreUserCommentInfo(userId, serviceCode, StoreTypeEnum.SERVICE)
             val feature = extFeatureDao.getServiceByCode(dslContext, serviceCode)
-            val classifyCode = record["classifyCode"] as? String
-            val classifyName = record["classifyName"] as? String
-            val classifyLanName = MessageCodeUtil.getCodeLanMessage(
-                messageCode = "${StoreMessageCode.MSG_CODE_STORE_CLASSIFY_PREFIX}$classifyCode",
-                defaultMessage = classifyName
-            )
+            val serviceEnv = extServiceEnvDao.getMarketServiceEnvInfoByServiceId(dslContext, serviceId)
+            val versionLog = extServiceVersionLogDao.getVersionLogByServiceId(dslContext, serviceId)
 
             Result(
                 ServiceVersionVO(
                     serviceId = serviceId,
                     serviceCode = serviceCode,
-                    name = record["name"] as String,
-                    logoUrl = record["logoUrl"] as? String,
-                    classifyCode = classifyCode,
-                    classifyName = classifyLanName,
-                    category = AtomCategoryEnum.getAtomCategory((record["category"] as Byte).toInt()),
-                    docsLink = record["docsLink"] as? String,
-                    serviceType = ExtServiceStatusEnum.getServiceStatus((record["serviceType"] as Byte).toInt()),
-                    summary = record["summary"] as? String,
-                    description = record["description"] as? String,
-                    version = record["version"] as? String,
+                    serviceName = record.serviceName,
+                    logoUrl = record.logoUrl,
+//                    classifyCode = classifyCode,
+//                    classifyName = classifyLanName,
+//                    category = AtomCategoryEnum.getAtomCategory((record["category"] as Byte).toInt()),
+                    summary = record.summary,
+                    description = record.description,
+                    version = record.version,
                     serviceStatus = ExtServiceStatusEnum.getServiceStatus((record["serviceStatus"] as Byte).toInt()),
-                    releaseType = if (record["releaseType"] != null) ReleaseTypeEnum.getReleaseType((record["releaseType"] as Byte).toInt()) else null,
-                    versionContent = record["versionContent"] as? String,
-                    language = record["language"] as? String,
-                    codeSrc = record["codeSrc"] as? String,
-                    publisher = record["publisher"] as String,
-                    modifier = record["modifier"] as String,
-                    creator = record["creator"] as String,
-                    createTime = DateTimeUtil.toDateTime(record["createTime"] as LocalDateTime),
-                    updateTime = DateTimeUtil.toDateTime(record["updateTime"] as LocalDateTime),
+//                    releaseType = if (record["releaseType"] != null) ReleaseTypeEnum.getReleaseType((record["releaseType"] as Byte).toInt()) else null,
+//                    versionContent = record["versionContent"] as? String,
+                    language = serviceEnv!!.language,
+                    codeSrc = feature!!.codeSrc,
+                    publisher = record.publisher,
+                    modifier = record.modifier,
+                    creator = record.creator,
+                    createTime = DateTimeUtil.toDateTime(record.createTime as LocalDateTime),
+                    updateTime = DateTimeUtil.toDateTime(record.updateTime as LocalDateTime),
                     flag = flag,
                     repositoryAuthorizer = repositoryInfo?.userName,
                     defaultFlag = defaultFlag,
@@ -527,13 +519,12 @@ abstract class ExtServiceBaseService @Autowired constructor() {
                         dslContext,
                         userId,
                         serviceCode,
-                        StoreTypeEnum.ATOM
+                        StoreTypeEnum.SERVICE
                     ),
                     // TODO:带补充逻辑
-                    labelList = null,
-                    userCommentInfo = userCommentInfo,
-                    visibilityLevel = VisibilityLevelEnum.getVisibilityLevel(record["visibilityLevel"] as Int),
-                    privateReason = record["privateReason"] as? String,
+//                    labelList = null,
+//                    userCommentInfo = userCommentInfo,
+                    visibilityLevel = VisibilityLevelEnum.getVisibilityLevel(feature.visibilityLevel),
                     recommendFlag = feature?.recommendFlag
                 )
             )
