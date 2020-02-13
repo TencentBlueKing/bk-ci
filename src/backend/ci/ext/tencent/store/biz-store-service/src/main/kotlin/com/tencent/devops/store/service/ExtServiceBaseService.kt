@@ -402,7 +402,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
             myService.add(
                 MyExtServiceRespItem(
                     serviceId = it["serviceId"] as String,
-                    name = it["serviceName"] as String,
+                    serviceName = it["serviceName"] as String,
                     serviceCode = it["serviceCode"] as String,
                     version = it["version"] as String,
                     category = it["category"] as String,

@@ -6,7 +6,7 @@ data class MyExtServiceRespItem (
     @ApiModelProperty("扩展服务ID", required = true)
     val serviceId: String,
     @ApiModelProperty("扩展服务名称", required = true)
-    val name: String,
+    val serviceName: String,
     @ApiModelProperty("扩展服务代码", required = true)
     val serviceCode: String,
     @ApiModelProperty("开发语言", required = true)
