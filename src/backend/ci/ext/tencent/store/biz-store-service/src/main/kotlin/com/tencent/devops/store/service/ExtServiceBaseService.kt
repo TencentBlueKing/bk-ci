@@ -445,7 +445,6 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         return Result(true)
     }
 
-    @Suppress("UNCHECKED_CAST")
     fun getServiceById(serviceId: String, userId: String): Result<ServiceVersionVO?> {
         return getServiceVersion(serviceId, userId)
     }
@@ -459,7 +458,6 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         })
     }
 
-    @Suppress("UNCHECKED_CAST")
     private fun getServiceVersion(serviceId: String, userId: String): Result<ServiceVersionVO?> {
         logger.info("getServiceVersion serviceID[$serviceId], userID[$userId]")
         val record = extServiceDao.getServiceById(dslContext, serviceId)
