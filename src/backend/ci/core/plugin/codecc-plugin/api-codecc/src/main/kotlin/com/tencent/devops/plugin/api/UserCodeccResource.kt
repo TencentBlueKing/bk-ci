@@ -73,7 +73,7 @@ interface UserCodeccResource {
 
     @ApiOperation("获取codecc语言的规则集")
     @GET
-    @Path("/project/{projectId}/languageCodeccRuleSet")
+    @Path("/projects/{projectId}/languageCodeccRuleSet")
     fun languageCodeccRuleSet(
         @ApiParam("项目ID", required = true)
         @PathParam(value = "projectId")
