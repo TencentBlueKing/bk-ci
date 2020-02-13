@@ -106,7 +106,7 @@ interface UserExtServiceDeskResource {
 
     @ApiOperation("根据插件版本ID获取插件详情")
     @GET
-    @Path("/desk/service/{serviceId}")
+    @Path("/{serviceId}")
     fun getServiceById(
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
