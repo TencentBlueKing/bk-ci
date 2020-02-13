@@ -488,7 +488,6 @@ abstract class ExtServiceBaseService @Autowired constructor() {
             val userCommentInfo = storeCommentService.getStoreUserCommentInfo(userId, serviceCode, StoreTypeEnum.SERVICE)
             val feature = extFeatureDao.getServiceByCode(dslContext, serviceCode)
             val serviceEnv = extServiceEnvDao.getMarketServiceEnvInfoByServiceId(dslContext, serviceId)
-            val versionLog = extServiceVersionLogDao.getVersionLogByServiceId(dslContext, serviceId)
 
             Result(
                 ServiceVersionVO(
