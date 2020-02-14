@@ -26,6 +26,7 @@
 
 dependencies {
     compile project(":core:store:biz-store-sample")
+    compile project(":core:store:biz-store-image-sample")
 }
 
 apply from: "$rootDir/task_spring_boot_package.gradle"
