@@ -26,7 +26,6 @@
 
 package com.tencent.devops.plugin.worker.task.codecc.util
 
-import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.enums.OSType
 import com.tencent.devops.common.pipeline.enums.BuildScriptType
 import com.tencent.devops.common.pipeline.enums.ChannelCode
@@ -57,7 +56,6 @@ import com.tencent.devops.worker.common.utils.BatScriptUtil
 import com.tencent.devops.worker.common.utils.ShellUtil
 import org.slf4j.LoggerFactory
 import java.io.File
-import java.net.URLDecoder
 import kotlin.math.max
 
 open class CodeccUtils {
@@ -143,6 +141,7 @@ open class CodeccUtils {
         } else {
             codeccExecuteConfig.tools
         }
+        val finalScanTools = scanTools.filter { it in COV_TOOLS }
 
         val list = mutableListOf<String>()
         coverityPreExecute(list)
@@ -154,7 +153,7 @@ open class CodeccUtils {
 
         // 添加具体业务参数
         list.add("-DIS_SPEC_CONFIG=true")
-        list.add("-DSCAN_TOOLS=${scanTools.joinToString(",").toLowerCase()}")
+        list.add("-DSCAN_TOOLS=${finalScanTools.joinToString(",").toLowerCase()}")
         list.add("-DCOVERITY_RESULT_PATH=${File(coverityStartFile).parent}")
 
         val buildCmd = when (CodeccParamsHelper.getProjectType(taskParams["languages"]!!)) {
@@ -269,7 +268,7 @@ open class CodeccUtils {
     }
 
     fun doCodeccSingleCommand(
-            codeccExecuteConfig: CodeccExecuteConfig
+        codeccExecuteConfig: CodeccExecuteConfig
     ): String {
         val command = mutableListOf<String>()
         doPreCodeccSingleCommand(command)
@@ -288,8 +287,6 @@ open class CodeccUtils {
         }
         if (scanTools.isEmpty()) return "scan tools is empty"
 
-        val finalScanTools = scanTools.filter { it in COV_TOOLS }
-
         command.add("python")
         command.add(codeccStartFile)
 
@@ -298,7 +295,7 @@ open class CodeccUtils {
 
         // 添加coverity/klockwork参数
         command.add("-DIS_SPEC_CONFIG=true")
-        command.add("-DSCAN_TOOLS=${finalScanTools.joinToString(",").toLowerCase()}")
+        command.add("-DSCAN_TOOLS=${scanTools.joinToString(",").toLowerCase()}")
         command.add("-DCOVERITY_RESULT_PATH=${File(coverityStartFile).parent}")
 
         val buildCmd = when (CodeccParamsHelper.getProjectType(taskParams["languages"]!!)) {
@@ -319,9 +316,9 @@ open class CodeccUtils {
         command.add("-DPROJECT_BUILD_PATH=${workspace.canonicalPath}")
         command.add("-DSYNC_TYPE=${taskParams["asynchronous"] != "true"}")
         if (!BuildEnv.isThirdParty() && scanTools.contains("KLOCWORK")) command.add(
-                "-DKLOCWORK_HOME_BIN=${getKlocToolPath(
-                        scriptType
-                )}"
+            "-DKLOCWORK_HOME_BIN=${getKlocToolPath(
+                scriptType
+            )}"
         )
         if (taskParams.containsKey("goPath")) command.add("-DGO_PATH=${taskParams["goPath"]}")
 
@@ -343,16 +340,16 @@ open class CodeccUtils {
         var subPath = if (BuildEnv.isThirdParty()) "" else
             "/usr/local/svn/bin:/usr/local/bin:/data/bkdevops/apps/coverity"
         subPath = "$subPath:${getJdkPath(scriptType)}:${getNodePath(scriptType)}:" +
-                "${getGoMetaLinterPath(scriptType)}:${getGoRootPath(scriptType)}:$STYLE_TOOL_PATH:$PHPCS_TOOL_PATH:${getGoRootPath(scriptType)}:$GO_CI_LINT_PATH"
+            "${getGoMetaLinterPath(scriptType)}:${getGoRootPath(scriptType)}:$STYLE_TOOL_PATH:$PHPCS_TOOL_PATH:${getGoRootPath(scriptType)}:$GO_CI_LINT_PATH"
         command.add("-DSUB_PATH=$subPath")
         command.add("-DGOROOT=/data/bkdevops/apps/codecc/go")
 
         printLog(command, "[codecc] ")
 
         return executeScript(
-                codeccExecuteConfig = codeccExecuteConfig,
-                list = command,
-                prefix = "[codecc] "
+            codeccExecuteConfig = codeccExecuteConfig,
+            list = command,
+            prefix = "[codecc] "
         )
     }
 
