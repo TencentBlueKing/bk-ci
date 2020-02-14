@@ -27,7 +27,6 @@ package com.tencent.devops.store.service.image.impl
 
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.image.ImageService
-import org.springframework.stereotype.Service
 
 class SampleImageService : ImageService() {
     override fun batchGetVisibleDept(imageCodeList: List<String>, image: StoreTypeEnum): HashMap<String, MutableList<Int>>? {

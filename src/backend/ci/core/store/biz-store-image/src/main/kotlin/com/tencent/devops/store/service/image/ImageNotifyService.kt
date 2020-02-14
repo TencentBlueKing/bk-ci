@@ -26,7 +26,6 @@
 package com.tencent.devops.store.service.image
 
 import com.tencent.devops.store.pojo.common.enums.AuditTypeEnum
-import org.springframework.stereotype.Service
 
 interface ImageNotifyService {
 
