@@ -99,12 +99,16 @@ open class CodeccUtils {
     }
 
     private fun doRun(codeccExecuteConfig: CodeccExecuteConfig): String {
-//        return CodeccExecuteHelper.executeCodecc(
-//            codeccExecuteConfig = codeccExecuteConfig,
-//            covFun = this::doCoverityCommand,
-//            toolFun = this::doCodeccToolCommand
-//        )
-        return doCodeccSingleCommand(codeccExecuteConfig)
+        val scriptType = codeccExecuteConfig.scriptType
+        return if (scriptType == BuildScriptType.BAT) {
+            CodeccExecuteHelper.executeCodecc(
+                codeccExecuteConfig = codeccExecuteConfig,
+                covFun = this::doCoverityCommand,
+                toolFun = this::doCodeccToolCommand
+            )
+        } else {
+            doCodeccSingleCommand(codeccExecuteConfig)
+        }
     }
 
     private fun initData(scriptType: BuildScriptType, codeccWorkspace: File) {
