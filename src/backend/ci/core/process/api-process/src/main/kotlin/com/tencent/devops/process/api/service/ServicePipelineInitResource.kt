@@ -45,7 +45,7 @@ import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["SERVICE_PIPELINE"], description = "服务-流水线资源")
-@Path("/service/pipelines")
+@Path("/service/pipelines/store")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServicePipelineInitResource {
