@@ -69,7 +69,6 @@ class ServiceItemService @Autowired constructor(
         logger.info("getServiceItem childMap:${childMap}")
 
 
-        val itemList = mutableListOf<ExtItemDTO>()
         parentMap.forEach { (parentId, childList) ->
             val itemData = allItemMap[parentId]
             if (itemData != null) {
@@ -95,6 +94,7 @@ class ServiceItemService @Autowired constructor(
     }
 
     fun getItemById(itemId: String): ExtItemDTO? {
+        logger.info("getItemById: itemId[$itemId]")
         val record = serviceItemDao.getItemById(dslContext, itemId) ?: return null
         val serviceItem = ServiceItem(
             itemId = record.id,
@@ -106,6 +106,7 @@ class ServiceItemService @Autowired constructor(
     }
 
     fun getItemByIds(itemIds: List<String>): List<ExtItemDTO> {
+        logger.info("getItemById: itemIds[$itemIds]")
         val ids = itemIds.joinToString(",")
         val itemList = mutableListOf<ExtItemDTO>()
         serviceItemDao.getItemByIds(dslContext, ids)?.forEach {
@@ -122,6 +123,7 @@ class ServiceItemService @Autowired constructor(
     }
 
     private fun findParent(serviceItem: ServiceItem): ExtItemDTO {
+        logger.info("findParent: serviceItemId: ${serviceItem.itemId}, parentId:${serviceItem.parentId}")
         val result: ExtItemDTO
         result = if (serviceItem.parentId != null) {
             val childList = mutableListOf<ServiceItem>()
@@ -136,6 +138,7 @@ class ServiceItemService @Autowired constructor(
                 childItem = emptyList()
             )
         }
+        logger.info("findParent: result: $result")
         return result
     }
 
