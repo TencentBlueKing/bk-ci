@@ -33,7 +33,7 @@ interface ServiceItemResource {
     ): Result<ExtItemDTO?>
 
     @GET
-    @Path("/{itemIds}")
+    @Path("/{itemIds}/byIds")
     @ApiOperation("获取扩展项目列表")
     fun getItemListsByIds(
         @ApiParam("项目Id", required = true)
