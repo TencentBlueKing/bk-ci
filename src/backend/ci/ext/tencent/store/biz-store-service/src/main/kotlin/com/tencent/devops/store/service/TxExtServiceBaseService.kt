@@ -26,7 +26,7 @@ class TxExtServiceBaseService : ExtServiceBaseService() {
     @Value("\${git.service.nameSpaceId}")
     private lateinit var serviceNameSpaceId: String
 
-    override fun handleAtomPackage(
+    override fun handleServicePackage(
         extensionInfo: InitExtServiceDTO,
         userId: String,
         serviceCode: String

@@ -6,6 +6,7 @@ import com.tencent.devops.model.store.tables.records.TExtensionServiceItemRelRec
 import com.tencent.devops.store.pojo.ExtServiceItemRelCreateInfo
 import com.tencent.devops.store.pojo.ExtServiceItemRelUpdateInfo
 import org.jooq.DSLContext
+import org.jooq.Result
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
@@ -59,12 +60,12 @@ class ExtServiceItemRelDao {
         }
     }
 
-    fun getVersionLogByServiceId(
+    fun getItemByServiceId(
         dslContext: DSLContext,
         serviceId: String
-    ): TExtensionServiceItemRelRecord {
+    ): Result<TExtensionServiceItemRelRecord>? {
         with(TExtensionServiceItemRel.T_EXTENSION_SERVICE_ITEM_REL) {
-            return dslContext.selectFrom(this).where(SERVICE_ID.eq(serviceId)).fetchOne()
+            return dslContext.selectFrom(this).where(SERVICE_ID.eq(serviceId)).fetch()
         }
     }
 }

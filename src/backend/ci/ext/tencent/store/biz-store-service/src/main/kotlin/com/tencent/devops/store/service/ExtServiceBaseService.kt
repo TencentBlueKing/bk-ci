@@ -24,6 +24,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.project.api.service.ServiceProjectResource
+import com.tencent.devops.project.api.service.service.ServiceItemResource
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
 import com.tencent.devops.store.constant.StoreMessageCode
@@ -42,7 +43,7 @@ import com.tencent.devops.store.pojo.ExtServiceFeatureCreateInfo
 import com.tencent.devops.store.pojo.ExtServiceItemRelCreateInfo
 import com.tencent.devops.store.pojo.ExtServiceUpdateInfo
 import com.tencent.devops.store.pojo.ExtServiceVersionLogCreateInfo
-import com.tencent.devops.store.pojo.atom.AtomDevLanguage
+import com.tencent.devops.store.pojo.StoreServiceItem
 import com.tencent.devops.store.pojo.common.ReleaseProcessItem
 import com.tencent.devops.store.pojo.common.StoreProcessInfo
 import com.tencent.devops.store.pojo.enums.ExtServicePackageSourceTypeEnum
@@ -111,12 +112,12 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         logger.info("addExtService user[$userId], serviceCode[$serviceCode], info[$extensionInfo]")
         //校验信息
         validateAddServiceReq(userId, extensionInfo)
-        val handleAtomPackageResult = handleAtomPackage(extensionInfo, userId, serviceCode)
-        logger.info("addExtService the handleAtomPackageResult is :$handleAtomPackageResult")
-        if (handleAtomPackageResult.isNotOk()) {
-            return Result(handleAtomPackageResult.status, handleAtomPackageResult.message, null)
+        val handleServicePackageResult = handleServicePackage(extensionInfo, userId, serviceCode)
+        logger.info("addExtService the handleServicePackage is :$handleServicePackageResult")
+        if (handleServicePackageResult.isNotOk()) {
+            return Result(handleServicePackageResult.status, handleServicePackageResult.message, null)
         }
-        val handleAtomPackageMap = handleAtomPackageResult.data
+        val handleServicePackageMap = handleServicePackageResult.data
         dslContext.transaction { t ->
             val context = DSL.using(t)
             val id = UUIDUtil.generate()
@@ -179,10 +180,11 @@ abstract class ExtServiceBaseService @Autowired constructor() {
                 userId = userId,
                 extServiceFeatureCreateInfo = ExtServiceFeatureCreateInfo(
                     serviceCode = serviceCode,
-                    repositoryHashId = handleAtomPackageMap?.get("repositoryHashId") ?: "",
-                    codeSrc = handleAtomPackageMap?.get("codeSrc") ?: "",
+                    repositoryHashId = handleServicePackageMap?.get("repositoryHashId") ?: "",
+                    codeSrc = handleServicePackageMap?.get("codeSrc") ?: "",
                     creatorUser = userId,
-                    modifierUser = userId
+                    modifierUser = userId,
+                    visibilityLevel = extensionInfo.visibilityLevel!!.level
                 )
             )
             extensionInfo.extensionItemList.forEach {
@@ -210,7 +212,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         logger.info("updateExtService userId[$userId],submitDTO[$submitDTO]")
         val serviceCode = submitDTO.serviceCode
         val extPackageSourceType = getExtServicePackageSourceType(serviceCode)
-        logger.info("updateExtService atomPackageSourceType is :$extPackageSourceType")
+        logger.info("updateExtService servicePackageSourceType is :$extPackageSourceType")
         val version = submitDTO.version
 
         // 判断扩展服务是不是首次创建版本
@@ -391,22 +393,26 @@ abstract class ExtServiceBaseService @Autowired constructor() {
             )
             if (null != testProjectCode) projectCodeList.add(testProjectCode)
         }
+
         logger.info("the getMyService userId is :$userId,projectCodeList is :$projectCodeList")
         val projectMap = client.get(ServiceProjectResource::class).getNameByCode(projectCodeList.joinToString(",")).data
         logger.info("the getMyService userId is :$userId,projectMap is :$projectMap")
         val myService = mutableListOf<MyExtServiceRespItem?>()
         records?.forEach {
             val serviceCode = it["serviceCode"] as String
+            val serviceId = it["serviceId"] as String
             var releaseFlag = false // 是否有处于上架状态的插件插件版本
-            val releaseAtomNum = extServiceDao.countReleaseServiceByCode(dslContext, serviceCode)
-            if (releaseAtomNum > 0) {
+            val releaseServiceNum = extServiceDao.countReleaseServiceByCode(dslContext, serviceCode)
+            if (releaseServiceNum > 0) {
                 releaseFlag = true
             }
+            val language = extServiceEnvDao.getMarketServiceEnvInfoByServiceId(dslContext, serviceId)?.language
+
             myService.add(
                 MyExtServiceRespItem(
-                    serviceId = it["serviceId"] as String,
+                    serviceId = serviceId,
                     serviceName = it["serviceName"] as String,
-                    serviceCode = it["serviceCode"] as String,
+                    serviceCode = serviceCode,
                     version = it["version"] as String,
                     category = it["category"] as String,
                     logoUrl = it["logoUrl"] as String?,
@@ -423,8 +429,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
                             StoreTypeEnum.SERVICE
                         )
                     ) ?: "",
-                    //TODO: 从第三张表获取数据
-                    language = "此处要完善",
+                    language = language ?: "",
                     releaseFlag = releaseFlag
                 )
             )
@@ -500,9 +505,9 @@ abstract class ExtServiceBaseService @Autowired constructor() {
 //            }
 //            val repositoryInfo = repositoryInfoResult.data
             val flag = storeUserService.isCanInstallStoreComponent(defaultFlag , userId, serviceCode, StoreTypeEnum.SERVICE)
-            val userCommentInfo = storeCommentService.getStoreUserCommentInfo(userId, serviceCode, StoreTypeEnum.SERVICE)
             val serviceEnv = extServiceEnvDao.getMarketServiceEnvInfoByServiceId(dslContext, serviceId)
             logger.info("getServiceVersion serviceEnv: $serviceEnv")
+            val itemList = getItemByItems(serviceId)
 
             Result(
                 ServiceVersionVO(
@@ -539,7 +544,8 @@ abstract class ExtServiceBaseService @Autowired constructor() {
 //                    labelList = null,
 //                    userCommentInfo = userCommentInfo,
                     visibilityLevel = VisibilityLevelEnum.getVisibilityLevel(featureInfoRecord.visibilityLevel),
-                    recommendFlag = featureInfoRecord?.recommendFlag
+                    recommendFlag = featureInfoRecord?.recommendFlag,
+                    itemListStore = itemList
                 )
             )
         }
@@ -547,7 +553,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
     abstract fun getRepositoryInfo(projectCode: String?, repositoryHashId: String?): Result<Repository?>
 
 
-    abstract fun handleAtomPackage(
+    abstract fun handleServicePackage(
         extensionInfo: InitExtServiceDTO,
         userId: String,
         serviceCode: String
@@ -587,6 +593,29 @@ abstract class ExtServiceBaseService @Autowired constructor() {
 //            serviceId = serviceId,
 //            extServiceEnvUpdateInfo = extServiceEnvUpdateInfo
 //        )
+    }
+
+    private fun getItemByItems(serviceId: String) : List<StoreServiceItem>{
+        val serviceItems = extServiceItemRelDao.getItemByServiceId(dslContext, serviceId)
+        val itemIds = mutableListOf<String>()
+        serviceItems?.forEach { it ->
+            itemIds.add(it.id)
+        }
+        val itemList = mutableListOf<StoreServiceItem>()
+        client.get(ServiceItemResource::class).getItemListsByIds(itemIds).data?.forEach {
+            val childItem = it.childItem?.get(0)
+            itemList.add(
+                StoreServiceItem(
+                    parentItemCode = it.serviceItem.itemCode,
+                    parentItemId = it.serviceItem.itemId,
+                    parentItemName = it.serviceItem.itemName,
+                    childItemCode = childItem.itemCode,
+                    childItemId = childItem.itemId,
+                    childItemName = childItem.itemName
+                )
+            )
+        }
+        return itemList
     }
 
     private fun upgradeMarketAtom(
