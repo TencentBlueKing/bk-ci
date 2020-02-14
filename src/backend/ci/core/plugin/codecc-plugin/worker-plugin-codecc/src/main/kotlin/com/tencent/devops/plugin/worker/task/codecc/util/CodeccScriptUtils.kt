@@ -10,7 +10,7 @@ import okhttp3.MediaType
 import okhttp3.RequestBody
 import java.io.File
 
-class CodeccScriptUtils: AbstractBuildResourceApi() {
+class CodeccScriptUtils : AbstractBuildResourceApi() {
 
     private val CODECC_HOST = "http://v2.dev.devnet-backend.devops.oa.com"
     private val fileSizeUrl = "/ms/schedule/api/build/cfs/download/fileSize"
@@ -57,5 +57,4 @@ class CodeccScriptUtils: AbstractBuildResourceApi() {
             return file
         }
     }
-
 }

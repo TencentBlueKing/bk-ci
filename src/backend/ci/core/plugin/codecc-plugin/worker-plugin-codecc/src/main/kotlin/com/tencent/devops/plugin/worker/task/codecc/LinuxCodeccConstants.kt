@@ -204,6 +204,5 @@ object LinuxCodeccConstants {
             AgentEnv.isTest() -> "build_tool_external_test.py"
             else -> "build_tool_external_prod.py"
         }
-
     }
 }
