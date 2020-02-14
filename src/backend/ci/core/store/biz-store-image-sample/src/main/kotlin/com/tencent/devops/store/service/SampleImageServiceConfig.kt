@@ -24,8 +24,11 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.service.image.impl
+package com.tencent.devops.store.service
 
+import com.tencent.devops.store.service.image.impl.SampleImageNotifyService
+import com.tencent.devops.store.service.image.impl.SampleImageReleaseService
+import com.tencent.devops.store.service.image.impl.SampleImageService
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
