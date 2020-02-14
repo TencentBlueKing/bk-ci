@@ -62,6 +62,7 @@ open class CodeccUtils {
 
     private lateinit var coverityStartFile: String
     private lateinit var toolsStartFile: String
+    private lateinit var codeccStartFile: String
 
     private val logger = LoggerFactory.getLogger(CodeccUtils::class.java)
 
@@ -98,19 +99,26 @@ open class CodeccUtils {
     }
 
     private fun doRun(codeccExecuteConfig: CodeccExecuteConfig): String {
-        return CodeccExecuteHelper.executeCodecc(
-            codeccExecuteConfig = codeccExecuteConfig,
-            covFun = this::doCoverityCommand,
-            toolFun = this::doCodeccToolCommand
-        )
+        val scriptType = codeccExecuteConfig.scriptType
+        return if (scriptType == BuildScriptType.BAT) {
+            CodeccExecuteHelper.executeCodecc(
+                codeccExecuteConfig = codeccExecuteConfig,
+                covFun = this::doCoverityCommand,
+                toolFun = this::doCodeccToolCommand
+            )
+        } else {
+            doCodeccSingleCommand(codeccExecuteConfig)
+        }
     }
 
     private fun initData(scriptType: BuildScriptType, codeccWorkspace: File) {
         coverityStartFile = CodeccParamsHelper.getCovPyFile(scriptType, codeccWorkspace)
         toolsStartFile = CodeccParamsHelper.getToolPyFile(scriptType, codeccWorkspace)
+        codeccStartFile = CodeccScriptUtils().downloadScriptFile(codeccWorkspace).canonicalPath
         LoggerService.addNormalLine(
             "Get the coverity start file($coverityStartFile), " +
-                "tools start file($toolsStartFile)"
+                "tools start file($toolsStartFile)," +
+                "codecc start file($codeccStartFile)"
         )
     }
 
@@ -247,9 +255,106 @@ open class CodeccUtils {
         // 打印日志
         printLog(list, "[tools]")
 
-        val variables =
-            codeccExecuteConfig.buildVariables.variables.plus(codeccExecuteConfig.buildTask.buildVariable ?: mapOf())
         return executeScript(codeccExecuteConfig, list, "[tool] ")
+    }
+
+    open fun doPreCodeccSingleCommand(command: MutableList<String>) {
+        command.add("export PATH=${getPython3Path(BuildScriptType.SHELL)}:\$PATH\n")
+        command.add("export LANG=zh_CN.UTF-8\n")
+        command.add("export PATH=/data/bkdevops/apps/codecc/go/bin:/data/bkdevops/apps/codecc/gometalinter/bin:\$PATH\n")
+
+        CommonEnv.getCommonEnv().forEach { (key, value) ->
+            command.add("export $key=$value\n")
+        }
+
+        command.add("python -V\n")
+        command.add("pwd\n")
+    }
+
+    fun doCodeccSingleCommand(
+        codeccExecuteConfig: CodeccExecuteConfig
+    ): String {
+        val command = mutableListOf<String>()
+        doPreCodeccSingleCommand(command)
+
+        val workspace = codeccExecuteConfig.workspace
+        val taskParams = codeccExecuteConfig.buildTask.params ?: mapOf()
+        val script = taskParams["script"] ?: ""
+        val scriptType = codeccExecuteConfig.scriptType
+        val scriptFile = getScriptFile(codeccExecuteConfig, script)
+        logger.info("Start to execute the script file for script($script)")
+
+        val scanTools = if (codeccExecuteConfig.filterTools.isNotEmpty()) {
+            codeccExecuteConfig.filterTools
+        } else {
+            codeccExecuteConfig.tools
+        }
+        if (scanTools.isEmpty()) return "scan tools is empty"
+
+        command.add("python")
+        command.add(codeccStartFile)
+
+        // 添加公共参数
+        addCommonParams(command, codeccExecuteConfig)
+
+        // 添加coverity/klockwork参数
+        command.add("-DIS_SPEC_CONFIG=true")
+        command.add("-DSCAN_TOOLS=${scanTools.joinToString(",").toLowerCase()}")
+        command.add("-DCOVERITY_RESULT_PATH=${File(coverityStartFile).parent}")
+
+        val buildCmd = when (CodeccParamsHelper.getProjectType(taskParams["languages"]!!)) {
+            CoverityProjectType.UN_COMPILE -> {
+                "--no-command --fs-capture-search ."
+            }
+            CoverityProjectType.COMPILE -> scriptFile.canonicalPath
+            CoverityProjectType.COMBINE -> "--fs-capture-search . ${scriptFile.canonicalPath}"
+        }
+
+        // 工蜂开源扫描就不做限制
+        val channelCode = codeccExecuteConfig.buildVariables.variables["pipeline.start.channel"] ?: ""
+        val coreCount = if (channelCode == ChannelCode.GONGFENGSCAN.name) Runtime.getRuntime().availableProcessors()
+        else max(Runtime.getRuntime().availableProcessors() / 2, 1) // 用一半的核
+
+        command.add("-DPROJECT_BUILD_COMMAND=\"--parallel-translate=$coreCount $buildCmd\"")
+        if (!BuildEnv.isThirdParty()) command.add("-DCOVERITY_HOME_BIN=${getCovToolPath(scriptType)}/bin")
+        command.add("-DPROJECT_BUILD_PATH=${workspace.canonicalPath}")
+        command.add("-DSYNC_TYPE=${taskParams["asynchronous"] != "true"}")
+        if (!BuildEnv.isThirdParty() && scanTools.contains("KLOCWORK")) command.add(
+            "-DKLOCWORK_HOME_BIN=${getKlocToolPath(
+                scriptType
+            )}"
+        )
+        if (taskParams.containsKey("goPath")) command.add("-DGO_PATH=${taskParams["goPath"]}")
+
+        // 多工具
+        command.add("-DOFFLINE=true")
+        command.add("-DDATA_ROOT_PATH=${File(toolsStartFile).parent}")
+        command.add("-DSTREAM_CODE_PATH=${workspace.canonicalPath}")
+        command.add("-DPY27_PATH=${getPython2Path(scriptType)}")
+        command.add("-DPY35_PATH=${getPython3Path(scriptType)}")
+        if (scanTools.contains("PYLINT")) {
+            command.add("-DPY27_PYLINT_PATH=${getPyLint2Path(scriptType)}")
+            command.add("-DPY35_PYLINT_PATH=${getPyLint3Path(scriptType)}")
+        } else {
+            // 两个参数是必填的
+            // 把路径配置成其他可用路径就可以
+            command.add("-DPY27_PYLINT_PATH=${workspace.canonicalPath}")
+            command.add("-DPY35_PYLINT_PATH=${workspace.canonicalPath}")
+        }
+        var subPath = if (BuildEnv.isThirdParty()) "" else
+            "/usr/local/svn/bin:/usr/local/bin:/data/bkdevops/apps/coverity"
+        subPath = "$subPath:${getJdkPath(scriptType)}:${getNodePath(scriptType)}:" +
+            "${getGoMetaLinterPath(scriptType)}:${getGoRootPath(scriptType)}:$STYLE_TOOL_PATH:$PHPCS_TOOL_PATH:${getGoRootPath(scriptType)}:$GO_CI_LINT_PATH"
+        command.add("-DSUB_PATH=$subPath")
+        command.add("-DGOROOT=/data/bkdevops/apps/codecc/go")
+
+        printLog(command, "[codecc] ")
+
+        return executeScript(
+            codeccExecuteConfig = codeccExecuteConfig,
+            list = command,
+            prefix = "[codecc] "
+        )
     }
 
     private fun printLog(list: List<String>, tag: String) {
