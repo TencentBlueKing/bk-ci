@@ -10,7 +10,6 @@ import com.tencent.devops.repository.pojo.RepositoryInfo
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
 import com.tencent.devops.store.constant.StoreMessageCode
-import com.tencent.devops.store.dao.common.StoreBuildInfoDao
 import com.tencent.devops.store.pojo.enums.ExtServicePackageSourceTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.dto.InitExtServiceDTO
@@ -26,9 +25,6 @@ class TxExtServiceBaseService : ExtServiceBaseService() {
 
     @Value("\${git.service.nameSpaceId}")
     private lateinit var serviceNameSpaceId: String
-
-    @Autowired
-    lateinit var storeBuildInfoDao: StoreBuildInfoDao
 
     override fun handleAtomPackage(
         extensionInfo: InitExtServiceDTO,
