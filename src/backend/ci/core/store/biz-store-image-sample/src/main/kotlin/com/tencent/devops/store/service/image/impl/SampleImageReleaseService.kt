@@ -43,7 +43,6 @@ import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.store.pojo.common.ReleaseProcessItem
 import com.tencent.devops.store.pojo.image.enums.ImageStatusEnum
 import com.tencent.devops.store.service.image.ImageReleaseService
-import org.springframework.stereotype.Service
 
 class SampleImageReleaseService : ImageReleaseService() {
     override fun getPassTestStatus(isNormalUpgrade: Boolean): Byte {
