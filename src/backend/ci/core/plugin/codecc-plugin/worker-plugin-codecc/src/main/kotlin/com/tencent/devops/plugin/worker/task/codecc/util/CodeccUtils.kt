@@ -143,7 +143,6 @@ open class CodeccUtils {
         } else {
             codeccExecuteConfig.tools
         }
-        val finalScanTools = scanTools.filter { it in COV_TOOLS }
 
         val list = mutableListOf<String>()
         coverityPreExecute(list)
@@ -155,7 +154,7 @@ open class CodeccUtils {
 
         // 添加具体业务参数
         list.add("-DIS_SPEC_CONFIG=true")
-        list.add("-DSCAN_TOOLS=${finalScanTools.joinToString(",").toLowerCase()}")
+        list.add("-DSCAN_TOOLS=${scanTools.joinToString(",").toLowerCase()}")
         list.add("-DCOVERITY_RESULT_PATH=${File(coverityStartFile).parent}")
 
         val buildCmd = when (CodeccParamsHelper.getProjectType(taskParams["languages"]!!)) {
@@ -332,7 +331,7 @@ open class CodeccUtils {
         command.add("-DSTREAM_CODE_PATH=${workspace.canonicalPath}")
         command.add("-DPY27_PATH=${getPython2Path(scriptType)}")
         command.add("-DPY35_PATH=${getPython3Path(scriptType)}")
-        if (finalScanTools.contains("PYLINT")) {
+        if (scanTools.contains("PYLINT")) {
             command.add("-DPY27_PYLINT_PATH=${getPyLint2Path(scriptType)}")
             command.add("-DPY35_PYLINT_PATH=${getPyLint3Path(scriptType)}")
         } else {
