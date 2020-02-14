@@ -33,6 +33,7 @@ import com.tencent.devops.store.dao.ExtServiceFeatureDao
 import com.tencent.devops.store.dao.ExtServiceItemRelDao
 import com.tencent.devops.store.dao.ExtServiceLableRelDao
 import com.tencent.devops.store.dao.ExtServiceVersionLogDao
+import com.tencent.devops.store.dao.common.StoreBuildInfoDao
 import com.tencent.devops.store.dao.common.StoreMemberDao
 import com.tencent.devops.store.dao.common.StoreProjectRelDao
 import com.tencent.devops.store.pojo.ExtServiceCreateInfo
@@ -41,6 +42,7 @@ import com.tencent.devops.store.pojo.ExtServiceFeatureCreateInfo
 import com.tencent.devops.store.pojo.ExtServiceItemRelCreateInfo
 import com.tencent.devops.store.pojo.ExtServiceUpdateInfo
 import com.tencent.devops.store.pojo.ExtServiceVersionLogCreateInfo
+import com.tencent.devops.store.pojo.atom.AtomDevLanguage
 import com.tencent.devops.store.pojo.common.ReleaseProcessItem
 import com.tencent.devops.store.pojo.common.StoreProcessInfo
 import com.tencent.devops.store.pojo.enums.ExtServicePackageSourceTypeEnum
@@ -77,6 +79,8 @@ abstract class ExtServiceBaseService @Autowired constructor() {
     lateinit var storeProjectRelDao: StoreProjectRelDao
     @Autowired
     lateinit var extServiceEnvDao: ExtServiceEnvDao
+    @Autowired
+    lateinit var storeBuildInfoDao: StoreBuildInfoDao
     @Autowired
     lateinit var storeMemberDao: StoreMemberDao
     @Autowired
@@ -443,6 +447,17 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         // 通知使用方插件即将下架 -- todo
 
         return Result(true)
+    }
+
+    fun listLanguage(): List<String?> {
+        val records = storeBuildInfoDao.list(dslContext, StoreTypeEnum.SERVICE)
+        val ret = mutableListOf<String>()
+        records?.forEach {
+            ret.add(
+                it.language
+            )
+        }
+        return ret
     }
 
     @Suppress("UNCHECKED_CAST")

@@ -4,6 +4,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ACCESS_TOKEN
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BK_TICKET
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.store.pojo.atom.AtomDevLanguage
 import com.tencent.devops.store.pojo.atom.AtomVersion
 import com.tencent.devops.store.pojo.common.StoreProcessInfo
 import com.tencent.devops.store.pojo.dto.InitExtServiceDTO
@@ -115,4 +116,9 @@ interface UserExtServiceDeskResource {
         @PathParam("serviceId")
         serviceId: String
     ): Result<ServiceVersionVO?>
+
+    @ApiOperation("获取扩展服务支持的语言列表")
+    @GET
+    @Path("/desk/service/language")
+    fun listLanguage(): Result<List<String?>>
 }

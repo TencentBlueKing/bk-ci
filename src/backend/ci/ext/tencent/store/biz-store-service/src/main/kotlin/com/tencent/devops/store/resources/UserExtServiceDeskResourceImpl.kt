@@ -68,4 +68,8 @@ class UserExtServiceDeskResourceImpl @Autowired constructor(
     override fun getServiceDetails(userId: String, serviceId: String): Result<ServiceVersionVO?> {
         return extServiceBaseService.getServiceById(serviceId, userId)
     }
+
+    override fun listLanguage(): Result<List<String?>> {
+        return Result(extServiceBaseService.listLanguage())
+    }
 }
