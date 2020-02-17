@@ -436,6 +436,7 @@ class TemplateService @Autowired constructor(
                         users = it.get(SUCCESS_RECEIVER),
                         wechatGroupFlag = it.get(SUCCESS_WECHAT_GROUP_FLAG),
                         wechatGroup = it.get(SUCCESS_WECHAT_GROUP),
+                        wechatGroupMarkdownFlag = it.get(SUCCESS_WECHAT_GROUP_MARKDOWN_FLAG),
                         detailFlag = it.get(SUCCESS_DETAIL_FLAG),
                         content = it.get(SUCCESS_CONTENT) ?: ""
                     ),
@@ -445,6 +446,7 @@ class TemplateService @Autowired constructor(
                         users = it.get(FAIL_RECEIVER),
                         wechatGroupFlag = it.get(FAIL_WECHAT_GROUP_FLAG),
                         wechatGroup = it.get(FAIL_WECHAT_GROUP),
+                        wechatGroupMarkdownFlag = it.get(FAIL_WECHAT_GROUP_MARKDOWN_FLAG),
                         detailFlag = it.get(FAIL_DETAIL_FLAG),
                         content = it.get(FAIL_CONTENT) ?: ""
                     ),
