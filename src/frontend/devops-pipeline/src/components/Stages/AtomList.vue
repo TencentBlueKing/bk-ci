@@ -8,7 +8,7 @@
                                                                              &quot;arrival-atom&quot;: atom.status,
                                                                              &quot;qualitt-next-atom&quot;: handlePreviousAtomCheck(atomList, index)
             }"
-                @click="showPropertyPanel(index)"
+                @click.stop="showPropertyPanel(index)"
             >
                 <section class="atom-item atom-section normal-atom" :class="{ [atom.status]: atom.status,
                                                                               &quot;is-error&quot;: atom.isError,
