@@ -28,7 +28,6 @@ package com.tencent.devops.plugin.codecc.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
@@ -39,6 +38,7 @@ import com.tencent.devops.plugin.codecc.pojo.BlueShieldRequest
 import com.tencent.devops.plugin.codecc.pojo.BlueShieldResponse
 import com.tencent.devops.plugin.codecc.pojo.CodeccBuildInfo
 import com.tencent.devops.plugin.codecc.pojo.CodeccCallback
+import com.tencent.devops.plugin.codecc.config.CodeccScriptConfig
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServiceMetadataResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
@@ -51,7 +51,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
 
@@ -70,8 +69,8 @@ class CodeccService @Autowired constructor(
     @Value("\${codecc.host:#{null}}")
     private lateinit var codeccHost: String
 
-    @Value("\${codeccGateway.gateway:}")
-    private lateinit var codeccApiGateWay: String
+    @Value("\${devopsGateway.devnet:}")
+    private lateinit var devopsDevnetGateway: String
 
     @Value("\${codeccGateway.scriptName:build_tool_external_dev.py}")
     private lateinit var codeccScript: String
@@ -283,42 +282,12 @@ class CodeccService @Autowired constructor(
         return response.data
     }
 
-    fun getSingleCodeccScript(): Map<String, String> {
-        // 1) get file size
-        val fileSizeParams = mapOf(
-            "fileName" to codeccScript,
-            "downloadType" to "BUILD_SCRIPT"
+    fun getSingleCodeccScriptConfig(): CodeccScriptConfig {
+        return CodeccScriptConfig(
+            devnetHost = devopsDevnetGateway,
+            scriptFileName = codeccScript,
+            fileSizeUrl = fileSizePath,
+            downloadUrl = scriptPath
         )
-
-        val fileSizeRequest = Request.Builder()
-            .url(codeccApiGateWay + fileSizePath)
-            .post(RequestBody.create(MediaType.parse("application/json; charset=utf-8"),
-                JsonUtil.getObjectMapper().writeValueAsString(fileSizeParams)))
-            .build()
-        val fileSize = OkhttpUtils.doHttp(fileSizeRequest).use {
-            val data = it.body()!!.string()
-            logger.info("get file size data: $data")
-            val jsonData = JsonUtil.getObjectMapper().readValue<Map<String, Any>>(data)
-            if (jsonData["status"] != 0) {
-                throw RuntimeException("get file size fail!")
-            }
-            jsonData["data"] as Int
-        }
-
-        // 2) download
-        val downloadParams = mapOf(
-            "fileName" to codeccScript,
-            "downloadType" to "BUILD_SCRIPT",
-            "beginIndex" to "0",
-            "btyeSize" to fileSize
-        )
-        val downloadRequest = Request.Builder().url(codeccApiGateWay + scriptPath)
-            .post(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), JsonUtil.getObjectMapper().writeValueAsString(downloadParams)))
-            .build()
-        OkhttpUtils.doHttp(downloadRequest).use {
-             val script = it.body()!!.string()
-            return mapOf("scriptName" to codeccScript,
-                "script" to script)
-        }
     }
 }

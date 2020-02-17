@@ -33,6 +33,7 @@ import com.tencent.devops.plugin.api.BuildCodeccResource
 import com.tencent.devops.plugin.codecc.pojo.CodeccCallback
 import com.tencent.devops.plugin.codecc.service.CodeccDownloaderService
 import com.tencent.devops.plugin.codecc.service.CodeccService
+import com.tencent.devops.plugin.codecc.config.CodeccScriptConfig
 import org.springframework.beans.factory.annotation.Autowired
 import javax.ws.rs.core.Response
 
@@ -62,7 +63,7 @@ class BuildCodeccResourceImpl @Autowired constructor(
         return Result(codeccService.getCodeccReport(buildId))
     }
 
-    override fun getCodeccSingleScript(): Result<Map<String, String>> {
-        return Result(codeccService.getSingleCodeccScript())
+    override fun getCodeccSingleScriptConfig(): Result<CodeccScriptConfig> {
+        return Result(codeccService.getSingleCodeccScriptConfig())
     }
 }
