@@ -77,7 +77,7 @@ open class CodeccUtils {
     fun executeCommand(codeccExecuteConfig: CodeccExecuteConfig): String {
         val codeccWorkspace = getCodeccWorkspace(codeccExecuteConfig)
         initData(codeccExecuteConfig.scriptType, codeccWorkspace)
-        return doRun(codeccExecuteConfig)
+        return doRun(codeccExecuteConfig, codeccWorkspace)
     }
 
     private fun getCodeccWorkspace(codeccExecuteConfig: CodeccExecuteConfig): File {
@@ -98,7 +98,10 @@ open class CodeccUtils {
         return codeccWorkspace
     }
 
-    private fun doRun(codeccExecuteConfig: CodeccExecuteConfig): String {
+    private fun doRun(
+        codeccExecuteConfig: CodeccExecuteConfig,
+        codeccWorkspace: File
+    ): String {
         val scriptType = codeccExecuteConfig.scriptType
         return if (scriptType == BuildScriptType.BAT) {
             CodeccExecuteHelper.executeCodecc(
@@ -107,6 +110,7 @@ open class CodeccUtils {
                 toolFun = this::doCodeccToolCommand
             )
         } else {
+            codeccStartFile = CodeccScriptUtils().downloadScriptFile(codeccWorkspace).canonicalPath
             doCodeccSingleCommand(codeccExecuteConfig)
         }
     }
@@ -114,7 +118,6 @@ open class CodeccUtils {
     private fun initData(scriptType: BuildScriptType, codeccWorkspace: File) {
         coverityStartFile = CodeccParamsHelper.getCovPyFile(scriptType, codeccWorkspace)
         toolsStartFile = CodeccParamsHelper.getToolPyFile(scriptType, codeccWorkspace)
-        codeccStartFile = CodeccScriptUtils().downloadScriptFile(codeccWorkspace).canonicalPath
         LoggerService.addNormalLine(
             "Get the coverity start file($coverityStartFile), " +
                 "tools start file($toolsStartFile)," +

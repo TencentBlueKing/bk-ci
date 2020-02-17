@@ -26,6 +26,7 @@
 
 package com.tencent.devops.worker.common.api.codecc
 
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.enums.OSType
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.Result
@@ -81,5 +82,12 @@ class PluginCodeccResourceApi : AbstractBuildResourceApi(), CodeccSDKApi {
             throw RemoteServiceException("下载codecc的多工具执行脚本失败")
         }
         return response
+    }
+
+    override fun getSingleCodeccScript(): Result<Map<String, String>> {
+        val path = "/ms/plugin/api/build/codecc/singleScript"
+        val request = buildGet(path)
+        val response = request(request, "获取codecc脚本失败")
+        return objectMapper.readValue(response)
     }
 }

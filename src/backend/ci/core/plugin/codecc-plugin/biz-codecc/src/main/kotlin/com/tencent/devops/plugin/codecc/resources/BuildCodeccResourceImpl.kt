@@ -61,4 +61,8 @@ class BuildCodeccResourceImpl @Autowired constructor(
     override fun getCodeccReport(buildId: String): Result<CodeccCallback?> {
         return Result(codeccService.getCodeccReport(buildId))
     }
+
+    override fun getCodeccSingleScript(): Result<Map<String, String>> {
+        return Result(codeccService.getSingleCodeccScript())
+    }
 }

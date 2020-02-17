@@ -128,4 +128,9 @@ interface BuildCodeccResource {
         @PathParam(value = "buildId")
         buildId: String
     ): Result<CodeccCallback?>
+
+    @ApiOperation("获取codecc执行脚本")
+    @GET
+    @Path("/singleScript")
+    fun getCodeccSingleScript(): Result<Map<String, String>>
 }
