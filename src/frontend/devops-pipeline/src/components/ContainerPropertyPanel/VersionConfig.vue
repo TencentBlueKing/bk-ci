@@ -25,7 +25,7 @@
                     <pipeline-versions-form ref="versionForm"
                         v-if="showVersions"
                         :build-no="buildNo"
-                        :disabled="!showVersions"
+                        :disabled="!showVersions || disabled"
                         :version-param-values="versionValues"
                         :handle-version-change="handleVersionsChange"
                         :handle-build-no-change="handleBuildNoChange"
