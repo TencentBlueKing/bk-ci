@@ -892,6 +892,9 @@ class TemplateService @Autowired constructor(
             labels.addAll(it.labels)
         }
         model.labels = labels
+        val templateResult = instanceParamModel(userId, projectId, model)
+        val params = (templateResult.stages[0].containers[0] as TriggerContainer).params
+        val templateParams = (templateResult.stages[0].containers[0] as TriggerContainer).templateParams
         return TemplateModelDetail(
             versions = versions,
             currentVersion = currentVersion,
@@ -904,7 +907,9 @@ class TemplateService @Autowired constructor(
             logoUrl = if (isConstrainedFlag) constrainedTemplate.logoUrl ?: "" else {
                 if (template!!.logoUrl.isNullOrEmpty()) "" else template!!.logoUrl
             },
-            hasPermission = hasManagerPermission(projectId, userId)
+            hasPermission = hasManagerPermission(projectId, userId),
+            params = params,
+            templateParams = templateParams
         )
     }
 
