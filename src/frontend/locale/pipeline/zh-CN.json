@@ -2,6 +2,7 @@
     "pipeline": "流水线",
     "pipelineName": "流水线名称",
     "labelManage": "标签管理",
+    "label": "标签",
     "viewManage": "视图管理",
     "templateManage": "模板管理",
     "pluginManage": "插件管理",
@@ -76,6 +77,9 @@
     "loadingTips": "数据加载中，请稍候",
     "metaData": "元数据",
     "download": "下载",
+    "enableStage": "启用本Stage",
+    "stageFastKill": "启用FastKill",
+    "stageOptionLabel": "本Stage执行条件",
     "timeMap": {
         "days": "天",
         "hours": "小时",
@@ -686,7 +690,8 @@
             "serviceId": "业务ID",
             "templateDownload": "模板下载",
             "otherChoice": "其他选项"
-        }
+        },
+        "stageOption": "高级流程控制"
     },
     "storeMap": {
         "string": "字符串",
@@ -732,6 +737,8 @@
         "mutualTimeoutPlaceholder": "请填写1-10080之间的整数",
         "queueLabel": "队列最大任务数",
         "queuePlaceholder": "请填写1-10之间的整数",
-        "noEnv": "无编译环境" 
+        "noEnv": "无编译环境",
+        "afterPreStageSuccess": "前一个Stage成功时运行",
+        "manualRunStage": "手动触发运行"       
     }
 }

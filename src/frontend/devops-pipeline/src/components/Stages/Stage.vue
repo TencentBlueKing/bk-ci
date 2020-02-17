@@ -1,5 +1,6 @@
 <template>
-    <div :class="[{ 'pipeline-drag': editable }, 'pipeline-stage']" ref="stageRef">
+    <div :class="[{ 'pipeline-drag': editable && !isTriggerStage, 'show-stage-area': editable && !isTriggerStage }, 'pipeline-stage']" ref="stageRef">
+        <bk-button v-if="editable && !isTriggerStage" class="pipeline-stage-entry" @click="showStagePanel">{{stage.name}}</bk-button>
         <draggable v-model="compitedContainer" v-bind="dragOptions" :move="checkMove" tag="ul" class="soda-process-stage">
             <stage-container v-for="(container, index) in compitedContainer"
                 :key="`${container.id}-${index}`"
@@ -13,9 +14,9 @@
                 :container="container">
             </stage-container>
         </draggable>
-        <template v-if="editable">
-            <span v-bk-clickoutside="toggleAddMenu" v-if="!isFirstStage" class="add-menu" @click.stop="toggleAddMenu(!isAddMenuShow)">
-                <i :class="{ 'add-plus-icon': !isAddMenuShow, 'minus-icon': isAddMenuShow, 'active': isAddMenuShow }" />
+        <template v-if="editable || isPreStageDone">
+            <span v-bk-clickoutside="toggleAddMenu" v-if="!isFirstStage" class="add-menu" @click.stop="handleClick">
+                <i :class="{ [iconCls]: true, 'active': isAddMenuShow }" />
                 <template v-if="isAddMenuShow">
                     <span class="insert-tip direction line-add" @click.stop="showStageSelectPopup(false)">
                         <i class="tip-icon" />
@@ -32,7 +33,7 @@
                     </div>
                 </template>
             </span>
-            <span v-if="isLastStage" @click="appendStage" class="append-stage pointer">
+            <span v-if="isLastStage && editable" @click="appendStage" class="append-stage pointer">
                 <i class="add-plus-icon" />
             </span>
         </template>
@@ -40,7 +41,7 @@
 </template>
 
 <script>
-    import { mapActions, mapState } from 'vuex'
+    import { mapActions, mapState, mapGetters } from 'vuex'
     import StageContainer from './StageContainer'
     import { getOuterHeight } from '@/utils/util'
     export default {
@@ -52,6 +53,7 @@
                 type: Array,
                 default: []
             },
+            stage: Object,
             stageIndex: Number,
             stageLength: Number,
             editable: {
@@ -61,6 +63,9 @@
             isPreview: {
                 type: Boolean,
                 default: false
+            },
+            preStatus: {
+                type: String
             },
             canSkipElement: {
                 type: Boolean,
@@ -77,11 +82,17 @@
                 'insertStageIndex',
                 'pipeline'
             ]),
+            ...mapGetters('atom', [
+                'isTriggerContainer'
+            ]),
             isFirstStage () {
                 return this.stageIndex === 0
             },
             isLastStage () {
                 return this.stageIndex === this.stageLength - 1
+            },
+            isTriggerStage () {
+                return this.checkIsTriggerStage(this.stage)
             },
             compitedContainer: {
                 get () {
@@ -105,6 +116,26 @@
                     animation: 130,
                     disabled: !this.editable
                 }
+            },
+            isPreStageDone () {
+                try {
+                    console.log(this.preStatus)
+                    return this.preStatus === 'SUCCEED'
+                } catch (error) {
+                    return false
+                }
+            },
+            iconCls () {
+                switch (true) {
+                    case this.isPreStageDone:
+                        return 'play-icon'
+                    case !this.isAddMenuShow:
+                        return 'add-plus-icon'
+                    case this.isAddMenuShow:
+                        return 'minus-icon'
+                    default:
+                        return 'add-plus-icon'
+                }
             }
         },
         mounted () {
@@ -116,10 +147,28 @@
         methods: {
             ...mapActions('atom', [
                 'setInertStageIndex',
+                'togglePropertyPanel',
                 'toggleStageSelectPopup',
                 'setPipelineContainer',
                 'setPipelineEditing'
             ]),
+            checkIsTriggerStage (stage) {
+                try {
+                    return this.isTriggerContainer(stage.containers[0])
+                } catch (e) {
+                    return false
+                }
+            },
+
+            showStagePanel () {
+                const { stageIndex } = this
+                this.togglePropertyPanel({
+                    isShow: true,
+                    editingElementPos: {
+                        stageIndex
+                    }
+                })
+            },
 
             checkMove (event) {
                 const dragContext = event.draggedContext || {}
@@ -129,7 +178,7 @@
                 const relatedContext = event.relatedContext || {}
                 const relatedelement = relatedContext.element || {}
                 const isRelatedTrigger = relatedelement['@type'] === 'trigger'
-                const isTriggerStage = relatedelement.containers && relatedelement.containers[0]['@type'] === 'trigger'
+                const isTriggerStage = this.checkIsTriggerStage(relatedelement)
 
                 return !isTrigger && !isRelatedTrigger && !isTriggerStage
             },
@@ -148,6 +197,7 @@
                 })
             },
             toggleAddMenu (isAddMenuShow) {
+                if (!this.editable) return
                 const { stageIndex, setInertStageIndex } = this
                 this.isAddMenuShow = typeof isAddMenuShow === 'boolean' ? isAddMenuShow : false
                 if (this.isAddMenuShow) {
@@ -155,6 +205,17 @@
                         insertStageIndex: stageIndex
                     })
                 }
+            },
+            handleClick () {
+                if (this.isPreStageDone) {
+                    this.startNextStage()
+                } else if (this.editable) {
+                    this.toggleAddMenu(!this.isAddMenuShow)
+                }
+            },
+
+            startNextStage () {
+                console.log('go next stage')
             },
             updateHeight () {
                 const parentEle = this.$refs.stageRef
@@ -174,15 +235,38 @@
 
 <style lang='scss'>
     @import 'Stage';
+    $addIconTop: $itemHeight / 2 - $addBtnSize / 2 + $StagepaddingTop;
     .pipeline-drag {
         cursor: url('../../images/grab.cur'), default;
     }
     .pipeline-stage {
         position: relative;
         margin: 0;
+        padding-top: $StagepaddingTop;
+        &.show-stage-area:hover {
+            background: $stageBGColor;
+            .pipeline-stage-entry {
+                display: block;
+            }
+        }
+        .pipeline-stage-entry {
+            position: absolute;
+            display: none;
+            width: 100%;
+            left: 0;
+            top: 0;
+            height: 32px;
+            line-height: 32px;
+            background-color: $stageBGColor;
+            border-color: #e4e4e4;
+            &:hover {
+                color: $primaryColor;
+                border-color: #e4e4e4;
+            }
+        }
         .append-stage {
             position: absolute;
-            top: $itemHeight / 2 - $addBtnSize / 2;
+            top: $addIconTop;
             right: -$StagePadding - $addBtnSize / 2 + $StageMargin / 2;
             z-index: 3;
             .add-plus-icon {
@@ -191,7 +275,7 @@
         }
         .add-menu {
             position: absolute;
-            top: $itemHeight / 2 - $addBtnSize / 2;
+            top: $addIconTop;
             left: -9px;
             cursor: pointer;
             z-index: 3;

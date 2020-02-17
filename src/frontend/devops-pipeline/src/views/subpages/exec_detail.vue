@@ -166,7 +166,361 @@
                     className: 'exec-pipeline',
                     bindData: {
                         editable: false,
-                        stages: this.execDetail && this.execDetail.model && this.execDetail.model.stages
+                        stages: [{
+                            'containers': [{
+                                '@type': 'trigger',
+                                'id': '0',
+                                'name': '构建触发',
+                                'elements': [{
+                                    '@type': 'manualTrigger',
+                                    'name': '手动触发',
+                                    'id': 'T-1-1-1',
+                                    'status': 'SUCCEED',
+                                    'canElementSkip': false,
+                                    'useLatestParameters': false,
+                                    'executeCount': 1,
+                                    'canRetry': false,
+                                    'version': '1.*',
+                                    'classType': 'manualTrigger',
+                                    'elementEnable': true,
+                                    'taskAtom': '',
+                                    'atomCode': 'manualTrigger'
+                                }],
+                                'status': 'SUCCEED',
+                                'systemElapsed': 0,
+                                'elementElapsed': 0,
+                                'params': [{
+                                    'id': 'BK_CI_MAJOR_VERSION',
+                                    'required': false,
+                                    'type': 'STRING',
+                                    'defaultValue': '1',
+                                    'desc': 'BK_CI_MAJOR_VERSION'
+                                }, {
+                                    'id': 'BK_CI_MINOR_VERSION',
+                                    'required': false,
+                                    'type': 'STRING',
+                                    'defaultValue': '2',
+                                    'desc': 'BK_CI_MINOR_VERSION'
+                                }, {
+                                    'id': 'BK_CI_FIX_VERSION',
+                                    'required': false,
+                                    'type': 'STRING',
+                                    'defaultValue': '3',
+                                    'desc': 'BK_CI_FIX_VERSION'
+                                }, {
+                                    'id': 'BK_CI_MAJOR_VERSION',
+                                    'required': false,
+                                    'type': 'STRING',
+                                    'defaultValue': '1',
+                                    'desc': 'MajorVersion'
+                                }, {
+                                    'id': 'BK_CI_MINOR_VERSION',
+                                    'required': false,
+                                    'type': 'STRING',
+                                    'defaultValue': '3',
+                                    'desc': 'MinorVersion'
+                                }, {
+                                    'id': 'BK_CI_FIX_VERSION',
+                                    'required': false,
+                                    'type': 'STRING',
+                                    'defaultValue': '4',
+                                    'desc': 'FixVersion'
+                                }],
+                                'templateParams': [],
+                                'buildNo': {
+                                    'buildNo': 5,
+                                    'buildNoType': 'CONSISTENT',
+                                    'required': false
+                                },
+                                'canRetry': false,
+                                'containerId': '50e46fa512c54891b692bac9babeb4bc',
+                                'classType': 'trigger'
+                            }],
+                            'id': 'stage-1',
+                            'name': 'stage1',
+                            'label': 'label1',
+                            'status': 'SUCCEED'
+                        }, {
+                            'containers': [{
+                                '@type': 'vmBuild',
+                                'id': '1',
+                                'name': '构建环境-LINUX',
+                                'elements': [{
+                                    '@type': 'linuxScript',
+                                    'name': 'Bash',
+                                    'id': 'e-a74495f5659445d8b3a275e228735558',
+                                    'scriptType': 'SHELL',
+                                    'script': "# 您可以通过setEnv函数设置原子间传递的参数\n# setEnv \"FILENAME\" \"package.zip\"\n# 然后在后续的原子的表单中使用${FILENAME}引用这个变量\n\n# 您可以在质量红线中创建自定义指标，然后通过setGateValue函数设置指标值\n# setGateValue \"CodeCoverage\" $myValue\n# 然后在质量红线选择相应指标和阈值。若不满足，流水线在执行时将会被卡住\n\n# cd ${WORKSPACE} 可进入当前工作空间目录\n\necho 'hello world' > 1.txt\necho 'hello world' > 2.txt",
+                                    'continueNoneZero': false,
+                                    'enableArchiveFile': false,
+                                    'archiveFile': '',
+                                    'executeCount': 1,
+                                    'canRetry': false,
+                                    'version': '1.*',
+                                    'additionalOptions': {
+                                        'enable': true,
+                                        'continueWhenFailed': false,
+                                        'timeout': 900,
+                                        'runCondition': 'PRE_TASK_SUCCESS',
+                                        'otherTask': '',
+                                        'customVariables': [{
+                                            'key': 'param1',
+                                            'value': ''
+                                        }],
+                                        'customCondition': ''
+                                    },
+                                    'classType': 'linuxScript',
+                                    'elementEnable': true,
+                                    'taskAtom': '',
+                                    'atomCode': 'linuxScript'
+                                }, {
+                                    '@type': 'singleArchive',
+                                    'name': '归档构件',
+                                    'id': 'e-07ee20598445422a9538f1319a7e8976',
+                                    'filePath': '*.txt',
+                                    'destPath': './',
+                                    'customize': false,
+                                    'executeCount': 1,
+                                    'canRetry': false,
+                                    'version': '1.*',
+                                    'additionalOptions': {
+                                        'enable': true,
+                                        'continueWhenFailed': false,
+                                        'timeout': 900,
+                                        'runCondition': 'PRE_TASK_SUCCESS',
+                                        'otherTask': '',
+                                        'customVariables': [{
+                                            'key': 'param1',
+                                            'value': ''
+                                        }],
+                                        'customCondition': ''
+                                    },
+                                    'classType': 'singleArchive',
+                                    'elementEnable': true,
+                                    'taskAtom': '',
+                                    'atomCode': 'singleArchive'
+                                }, {
+                                    '@type': 'marketBuild',
+                                    'name': 'demo',
+                                    'id': 'e-c13363791f994147988c258059ade6fe',
+                                    'atomCode': 'atomDemoTest',
+                                    'version': '1.*',
+                                    'data': {
+                                        'input': {
+                                            'subPip': 'p-a3be6672be9648f4b6ef4f264cf704cc',
+                                            'runMode': 'syn',
+                                            'params': '[{"key":"param72","value":["a","b","c"]}]'
+                                        },
+                                        'output': { }
+                                    },
+                                    'executeCount': 1,
+                                    'canRetry': false,
+                                    'additionalOptions': {
+                                        'enable': true,
+                                        'continueWhenFailed': false,
+                                        'timeout': 900,
+                                        'runCondition': 'PRE_TASK_SUCCESS',
+                                        'otherTask': '',
+                                        'customVariables': [{
+                                            'key': 'param1',
+                                            'value': ''
+                                        }],
+                                        'customCondition': ''
+                                    },
+                                    'classType': 'marketBuild',
+                                    'elementEnable': true,
+                                    'taskAtom': ''
+                                }],
+                                'status': 'FAILED',
+                                'startEpoch': 1581908536875,
+                                'baseOS': 'LINUX',
+                                'vmNames': [],
+                                'maxQueueMinutes': 60,
+                                'maxRunningMinutes': 900,
+                                'buildEnv': { },
+                                'thirdPartyAgentId': '',
+                                'thirdPartyAgentEnvId': '',
+                                'tstackAgentId': '',
+                                'dispatchType': {
+                                    'buildType': 'DOCKER',
+                                    'value': 'dev.artifactory.oa.com:8090/paas/bkdevops/docker-builder2.2:v1',
+                                    'imageType': 'BKSTORE',
+                                    'credentialId': '',
+                                    'credentialProject': '',
+                                    'imageCode': 'tlinux2_2',
+                                    'imageVersion': '1.*',
+                                    'imageName': 'TLinux2.2公共镜像',
+                                    'imagePublicFlag': false,
+                                    'imageRDType': ''
+                                },
+                                'showBuildResource': false,
+                                'canRetry': false,
+                                'enableExternal': false,
+                                'containerId': 'a4040a5fc7c24580928a2ca21398cc1b',
+                                'jobControlOption': {
+                                    'enable': true,
+                                    'prepareTimeout': 10,
+                                    'timeout': 900,
+                                    'runCondition': 'STAGE_RUNNING',
+                                    'customVariables': [{
+                                        'key': 'param1',
+                                        'value': ''
+                                    }],
+                                    'customCondition': ''
+                                },
+                                'mutexGroup': {
+                                    'enable': false,
+                                    'mutexGroupName': '',
+                                    'queueEnable': false,
+                                    'timeout': 900,
+                                    'queue': 5
+                                },
+                                'classType': 'vmBuild'
+                            }, {
+                                '@type': 'vmBuild',
+                                'id': '2',
+                                'name': '构建环境-LINUX',
+                                'elements': [{
+                                    '@type': 'linuxScript',
+                                    'name': 'Bash',
+                                    'id': 'e-e82886d525914958be854a1ffe61a3d5',
+                                    'status': 'SUCCEED',
+                                    'scriptType': 'SHELL',
+                                    'script': '# 您可以通过setEnv函数设置原子间传递的参数\n# setEnv "FILENAME" "package.zip"\n# 然后在后续的原子的表单中使用${FILENAME}引用这个变量\n\n# 您可以在质量红线中创建自定义指标，然后通过setGateValue函数设置指标值\n# setGateValue "CodeCoverage" $myValue\n# 然后在质量红线选择相应指标和阈值。若不满足，流水线在执行时将会被卡住\n\n# cd ${WORKSPACE} 可进入当前工作空间目录\necho $WORKSPACE',
+                                    'continueNoneZero': false,
+                                    'enableArchiveFile': false,
+                                    'archiveFile': '',
+                                    'executeCount': 1,
+                                    'canRetry': false,
+                                    'elapsed': 251,
+                                    'startEpoch': 1581908543660,
+                                    'version': '1.*',
+                                    'additionalOptions': {
+                                        'enable': true,
+                                        'continueWhenFailed': false,
+                                        'timeout': 900,
+                                        'runCondition': 'PRE_TASK_SUCCESS',
+                                        'otherTask': '',
+                                        'customVariables': [{
+                                            'key': 'param1',
+                                            'value': ''
+                                        }],
+                                        'customCondition': ''
+                                    },
+                                    'classType': 'linuxScript',
+                                    'elementEnable': true,
+                                    'taskAtom': '',
+                                    'atomCode': 'linuxScript'
+                                }],
+                                'status': 'SUCCEED',
+                                'startEpoch': 1581908536662,
+                                'elementElapsed': 251,
+                                'baseOS': 'LINUX',
+                                'vmNames': [],
+                                'maxQueueMinutes': 60,
+                                'maxRunningMinutes': 900,
+                                'buildEnv': { },
+                                'dispatchType': {
+                                    'buildType': 'DOCKER',
+                                    'value': 'dev.artifactory.oa.com:8090/paas/bkdevops/docker-builder2.2:v1',
+                                    'imageType': 'BKSTORE',
+                                    'credentialId': '',
+                                    'credentialProject': '',
+                                    'imageCode': 'tlinux2_2',
+                                    'imageVersion': '1.*',
+                                    'imageName': 'TLinux2.2公共镜像',
+                                    'imagePublicFlag': false,
+                                    'imageRDType': ''
+                                },
+                                'showBuildResource': false,
+                                'canRetry': false,
+                                'enableExternal': false,
+                                'containerId': '36bab9fe90e745d9ba356ad4dddfe531',
+                                'jobControlOption': {
+                                    'enable': true,
+                                    'prepareTimeout': 10,
+                                    'timeout': 900,
+                                    'runCondition': 'STAGE_RUNNING',
+                                    'customVariables': [{
+                                        'key': 'param1',
+                                        'value': ''
+                                    }],
+                                    'customCondition': ''
+                                },
+                                'mutexGroup': {
+                                    'enable': false,
+                                    'mutexGroupName': '',
+                                    'queueEnable': false,
+                                    'timeout': 900,
+                                    'queue': 5
+                                },
+                                'classType': 'vmBuild'
+                            }],
+                            'id': 'stage-2',
+                            'name': 'stage2',
+                            'label': 'label2',
+                            'status': 'SUCCEED'
+                        }, {
+                            'containers': [{
+                                '@type': 'normal',
+                                'id': '3',
+                                'name': '无编译环境',
+                                'elements': [{
+                                    '@type': 'subPipelineCall',
+                                    'name': '子流水线调用',
+                                    'id': 'e-807c64f29e3946fcb197b4211dbaa2be',
+                                    'subPipelineId': '',
+                                    'asynchronous': false,
+                                    'subPipelineType': 'ID',
+                                    'executeCount': 1,
+                                    'canRetry': false,
+                                    'version': '1.0.0',
+                                    'additionalOptions': {
+                                        'enable': true,
+                                        'continueWhenFailed': false,
+                                        'timeout': 900,
+                                        'runCondition': 'PRE_TASK_SUCCESS',
+                                        'otherTask': '',
+                                        'customVariables': [{
+                                            'key': 'param1',
+                                            'value': ''
+                                        }],
+                                        'customCondition': ''
+                                    },
+                                    'classType': 'subPipelineCall',
+                                    'taskAtom': 'subPipelineCallAtom',
+                                    'elementEnable': true,
+                                    'atomCode': 'subPipelineCall'
+                                }],
+                                'canRetry': false,
+                                'containerId': 'f0c2c759af224c2189be13ef484f219d',
+                                'maxQueueMinutes': 60,
+                                'maxRunningMinutes': 1440,
+                                'jobControlOption': {
+                                    'enable': true,
+                                    'prepareTimeout': 10,
+                                    'timeout': 900,
+                                    'runCondition': 'STAGE_RUNNING',
+                                    'customVariables': [{
+                                        'key': 'param1',
+                                        'value': ''
+                                    }],
+                                    'customCondition': ''
+                                },
+                                'mutexGroup': {
+                                    'enable': false,
+                                    'mutexGroupName': '',
+                                    'queueEnable': false,
+                                    'timeout': 900,
+                                    'queue': 5
+                                },
+                                'classType': 'normal'
+                            }],
+                            'id': 'stage-3',
+                            'name': 'stage3',
+                            'label': 'label3',
+                            'status': 'SUCCEED'
+                        }]
                     }
                 }, {
                     name: 'partView',
@@ -265,7 +619,7 @@
                     width: 820
                 } : {
                     title: this.$t('propertyBar'),
-                    class: 'sodaci-property-panel',
+                    class: 'bkci-property-panel',
                     width: 640
                 }
             },

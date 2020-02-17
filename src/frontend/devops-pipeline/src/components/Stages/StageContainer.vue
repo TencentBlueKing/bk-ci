@@ -7,7 +7,7 @@
             <span class="connect-line left" :class="{ &quot;cruve&quot;: containerIndex === 0 }"></span>
             <span class="connect-line right" :class="{ &quot;cruve&quot;: containerIndex === 0 }"></span>
         </template>
-        <h3 :class="{ &quot;container-title&quot;: true, &quot;first-ctitle&quot;: containerIndex === 0, [container.status]: container.status }" @click="showContainerPanel">
+        <h3 :class="{ &quot;container-title&quot;: true, &quot;first-ctitle&quot;: containerIndex === 0, [container.status]: container.status }" @click.stop="showContainerPanel">
             <status-icon type="container" :editable="editable" :job-option="container.jobControlOption" :status="container.status">
                 {{ containerSerialNum }}
             </status-icon>

@@ -384,7 +384,7 @@
                 }
             }
         }
-        .sodaci-property-panel {
+        .bkci-property-panel {
             .bk-sideslider-wrapper {
                 top: 0;
                 .bk-sideslider-title {
