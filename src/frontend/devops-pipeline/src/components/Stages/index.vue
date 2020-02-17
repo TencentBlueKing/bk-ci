@@ -4,6 +4,8 @@
             :key="`${stage.id}-${index}`"
             class="list-item"
             :editable="editable"
+            :pre-status="getPreStatus(computedStage[index - 1])"
+            :stage="stage"
             :is-preview="isPreview"
             :can-skip-element="canSkipElement"
             :stage-index="index"
@@ -41,7 +43,10 @@
         computed: {
             computedStage: {
                 get () {
-                    return this.stages
+                    return this.stages.map(stage => ({
+                        name: stage.id,
+                        ...stage
+                    }))
                 },
                 set (stages) {
                     const data = []
@@ -69,7 +74,14 @@
         },
         methods: {
             ...mapActions('atom', ['setPipelineStage', 'setPipelineEditing']),
-
+            getPreStatus (preStage) {
+                try {
+                    console.log('preStage', preStage)
+                    return preStage.status
+                } catch (error) {
+                    return undefined
+                }
+            },
             checkMove (event) {
                 const dragContext = event.draggedContext || {}
                 const element = dragContext.element || {}

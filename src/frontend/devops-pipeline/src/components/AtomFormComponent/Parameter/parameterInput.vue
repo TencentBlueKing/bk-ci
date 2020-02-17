@@ -16,7 +16,7 @@
                 type: String
             },
             value: {
-                type: String
+                type: [String, Array]
             },
             disabled: {
                 type: Boolean,
