@@ -64,6 +64,11 @@ const customeRules = {
         validate: function (value, args) {
             return !/^\${(.*)}$/g.test(value)
         }
+    },
+    notStartWithBKCI: {
+        validate: function (value, args) {
+            return !/^BK_CI/.test(value)
+        }
     }
 }
 
