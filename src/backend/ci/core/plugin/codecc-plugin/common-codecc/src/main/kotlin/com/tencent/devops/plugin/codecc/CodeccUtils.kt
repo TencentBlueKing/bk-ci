@@ -24,16 +24,17 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.worker.common.api.codecc
+package com.tencent.devops.plugin.codecc
 
-import com.tencent.devops.common.api.enums.OSType
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.plugin.codecc.config.CodeccScriptConfig
-import okhttp3.Response
+import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxCodeCCScriptElement
+import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxPaasCodeCCScriptElement
 
-interface CodeccSDKApi {
-    fun saveTask(projectId: String, pipelineId: String, buildId: String): Result<String>
-    fun downloadTool(tool: String, osType: OSType, fileMd5: String, is32Bit: Boolean = false): Response
-    fun downloadToolScript(osType: OSType, fileMd5: String): Response
-    fun getSingleCodeccScript(): Result<CodeccScriptConfig>
+object CodeccUtils {
+
+    fun isCodeccAtom(atomName: String?): Boolean {
+        return atomName == LinuxCodeCCScriptElement.classType ||
+            atomName == LinuxPaasCodeCCScriptElement.classType ||
+            atomName == "CodeccCheckAtom"
+    }
+
 }
