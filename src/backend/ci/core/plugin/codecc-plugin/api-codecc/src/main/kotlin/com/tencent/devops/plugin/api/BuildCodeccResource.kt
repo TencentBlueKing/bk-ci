@@ -134,5 +134,4 @@ interface BuildCodeccResource {
     @GET
     @Path("/singleScript")
     fun getCodeccSingleScriptConfig(): Result<CodeccScriptConfig>
-
 }
