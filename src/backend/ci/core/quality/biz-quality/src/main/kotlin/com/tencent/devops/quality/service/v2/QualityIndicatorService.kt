@@ -30,8 +30,6 @@ import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxCodeCCScriptElement
-import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxPaasCodeCCScriptElement
 import com.tencent.devops.model.quality.tables.records.TQualityIndicatorRecord
 import com.tencent.devops.plugin.codecc.CodeccUtils
 import com.tencent.devops.quality.api.v2.pojo.QualityIndicator
@@ -56,7 +54,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.util.Base64
-import kotlin.Comparator
 
 @Service
 class QualityIndicatorService @Autowired constructor(
