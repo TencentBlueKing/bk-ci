@@ -24,26 +24,43 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.pipeline.type
+package com.tencent.devops.common.api.util
 
-import com.tencent.devops.common.api.pojo.OS
+import org.junit.Assert.assertTrue
+import org.junit.Test
 
-enum class BuildType(
-    val value: String,
-    val osList: List<OS>,
-    val enableApp: Boolean/*是否支持选择对应的构建依赖*/,
-    val clickable: Boolean/*是否可点击*/,
-    val visable: Boolean? = true // 是否页面可见
-) {
-    ESXi("蓝盾公共构建资源", listOf(OS.MACOS), true, false, false),
-    MACOS("蓝盾公共构建资源(NEW)", listOf(OS.MACOS), true, false, false),
-    DOCKER("公共：Docker on Devnet 物理机", listOf(OS.LINUX), true, true, true),
-    IDC("公共：Docker on IDC CVM", listOf(OS.LINUX), true, false, false),
-    PUBLIC_DEVCLOUD("公共：Docker on DevCloud", listOf(OS.LINUX), true, false, false),
-    TSTACK("Windows构建", listOf(OS.WINDOWS), false, false, false), // tstack is deleted
-    THIRD_PARTY_AGENT_ID("私有：单构建机", listOf(OS.MACOS, OS.LINUX, OS.WINDOWS), false, true, true),
-    THIRD_PARTY_AGENT_ENV("私有：构建集群", listOf(OS.MACOS, OS.LINUX, OS.WINDOWS), false, true, true),
-    THIRD_PARTY_PCG("PCG公共构建资源", listOf(OS.LINUX), false, false, false),
-    THIRD_PARTY_DEVCLOUD("腾讯自研云（云devnet资源）", listOf(OS.LINUX), false, false, false),
-    GIT_CI("工蜂CI", listOf(OS.LINUX), false, false, false)
+class ReflectUtilTest {
+
+    @Test
+    fun isNativeType() {
+        val stock = 700
+        val boxing: Int? = stock
+        val native: Int = stock
+        assertTrue(native !== boxing)
+        println("boxing=${boxing!!::class.java}")
+        println("native=${native::class.java}")
+
+        val native1: Int = stock
+        val native2: Int = stock
+        assertTrue(native1 === native2)
+        println("native1=${native1::class.java}")
+        println("native2=${native2::class.java}")
+
+        assertTrue(ReflectUtil.isNativeType(1))
+        assertTrue(ReflectUtil.isNativeType(1.2))
+        assertTrue(ReflectUtil.isNativeType(1.2f))
+        assertTrue(ReflectUtil.isNativeType(1L))
+        assertTrue(ReflectUtil.isNativeType(true))
+        // boxing
+        val integer: Int? = 1
+        assertTrue(ReflectUtil.isNativeType(integer!!))
+        val boolean: Boolean? = false
+        assertTrue(ReflectUtil.isNativeType(boolean!!))
+        val float: Float? = 1.2f
+        assertTrue(ReflectUtil.isNativeType(float!!))
+        val double: Double? = 1.2
+        assertTrue(ReflectUtil.isNativeType(double!!))
+        val long: Long? = 1L
+        assertTrue(ReflectUtil.isNativeType(long!!))
+    }
 }
