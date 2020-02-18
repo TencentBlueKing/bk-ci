@@ -79,9 +79,9 @@ abstract class ContainerServiceImpl @Autowired constructor() : ContainerService 
     private val logger = LoggerFactory.getLogger(ContainerServiceImpl::class.java)
 
     private val OSDefaultBuildType = mapOf(
-        OS.LINUX to BuildType.DOCKER,
-        OS.WINDOWS to BuildType.THIRD_PARTY_AGENT_ID,
-        OS.MACOS to BuildType.ESXi
+        OS.LINUX to BuildType.valueOf(BuildType.DOCKER.name),
+        OS.WINDOWS to BuildType.valueOf(BuildType.THIRD_PARTY_AGENT_ID.name),
+        OS.MACOS to BuildType.valueOf(BuildType.ESXi.name)
     )
 
     /**
