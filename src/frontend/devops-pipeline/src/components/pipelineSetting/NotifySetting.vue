@@ -47,7 +47,7 @@
                     :handle-change="updateSubscription"
                     name="wechatGroup"
                     :value="subscription.wechatGroup"
-                    placeholder="$t('settings.groupIdTips')"
+                    :placeholder="$t('settings.groupIdTips')"
                     icon-class="icon-question-circle"
                     desc-direction="top">
                 </group-id-selector>

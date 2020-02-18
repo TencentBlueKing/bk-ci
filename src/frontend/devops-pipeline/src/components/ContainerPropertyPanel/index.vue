@@ -455,7 +455,7 @@
             if (this.container.dispatchType && this.container.dispatchType.imageCode) {
                 this.getVersionList(this.container.dispatchType.imageCode)
             }
-            this.getMacOsData()
+            if (this.buildResourceType === 'MACOS') this.getMacOsData()
         },
         methods: {
             ...mapActions('atom', [
@@ -487,6 +487,7 @@
                     imageName: '',
                     [name]: val
                 }))
+                if (val === 'MACOS') this.getMacOsData()
             },
 
             changeThirdImage (val) {
