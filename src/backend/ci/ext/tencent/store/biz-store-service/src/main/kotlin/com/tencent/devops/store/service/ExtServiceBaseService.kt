@@ -499,11 +499,6 @@ abstract class ExtServiceBaseService @Autowired constructor() {
             logger.info("getServiceVersion featureInfoRecord: $featureInfoRecord")
 
             val repositoryHashId = featureInfoRecord!!.repositoryHashId
-//            val repositoryInfoResult = getRepositoryInfo(projectCode, repositoryHashId)
-//            if (repositoryInfoResult.isNotOk()) {
-//                Result(repositoryInfoResult.status, repositoryInfoResult.message, null)
-//            }
-//            val repositoryInfo = repositoryInfoResult.data
             val flag = storeUserService.isCanInstallStoreComponent(defaultFlag , userId, serviceCode, StoreTypeEnum.SERVICE)
             val serviceEnv = extServiceEnvDao.getMarketServiceEnvInfoByServiceId(dslContext, serviceId)
             logger.info("getServiceVersion serviceEnv: $serviceEnv")
@@ -601,6 +596,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         serviceItems?.forEach { it ->
             itemIds.add(it.id)
         }
+        logger.info("getItemByItems serviceId[$serviceId] items[$itemIds]")
         val itemList = mutableListOf<StoreServiceItem>()
         client.get(ServiceItemResource::class).getItemListsByIds(itemIds).data?.forEach {
             val childItem = it.childItem?.get(0)
@@ -615,6 +611,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
                 )
             )
         }
+        logger.info("getItemByItems itemList[$itemList]")
         return itemList
     }
 

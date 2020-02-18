@@ -106,7 +106,7 @@ class ServiceItemService @Autowired constructor(
     }
 
     fun getItemByIds(itemIds: List<String>): List<ExtItemDTO> {
-        logger.info("getItemById: itemIds[$itemIds]")
+        logger.info("getItemByIds: itemIds[$itemIds]")
         val ids = itemIds.joinToString(",")
         val itemList = mutableListOf<ExtItemDTO>()
         serviceItemDao.getItemByIds(dslContext, ids)?.forEach {
