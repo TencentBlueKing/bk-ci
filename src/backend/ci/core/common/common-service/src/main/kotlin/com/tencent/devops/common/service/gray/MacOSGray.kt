@@ -24,9 +24,21 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":core:store:biz-store-sample")
-    compile project(":core:store:biz-store-image-sample")
-}
+package com.tencent.devops.common.service.gray
 
-apply from: "$rootDir/task_spring_boot_package.gradle"
+import com.tencent.devops.common.redis.RedisOperation
+
+class MacOSGray {
+    companion object {
+        const val repoGrayRedisKey = "project:setting:macosGray"
+    }
+
+    fun isGray(projectId: String, redisOperation: RedisOperation): Boolean {
+        return grayProjectSet(redisOperation).contains(projectId)
+    }
+
+    fun grayProjectSet(redisOperation: RedisOperation) =
+        (redisOperation.getSetMembers(repoGrayRedisKey) ?: emptySet()).filter { !it.isBlank() }.toSet()
+
+    fun getRepoGrayRedisKey() = repoGrayRedisKey
+}
