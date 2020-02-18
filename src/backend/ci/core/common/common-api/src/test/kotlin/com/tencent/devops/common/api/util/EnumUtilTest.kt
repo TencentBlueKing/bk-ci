@@ -24,26 +24,41 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.pipeline.type
+package com.tencent.devops.common.api.util
 
-import com.tencent.devops.common.api.pojo.OS
+import com.tencent.devops.common.api.enums.MyEnum
+import org.junit.Assert.assertArrayEquals
+import org.junit.Assert.assertNotEquals
+import org.junit.Assert.assertNotNull
+import org.junit.Test
 
-enum class BuildType(
-    val value: String,
-    val osList: List<OS>,
-    val enableApp: Boolean/*是否支持选择对应的构建依赖*/,
-    val clickable: Boolean/*是否可点击*/,
-    val visable: Boolean? = true // 是否页面可见
-) {
-    ESXi("蓝盾公共构建资源", listOf(OS.MACOS), true, false, false),
-    MACOS("蓝盾公共构建资源(NEW)", listOf(OS.MACOS), true, false, false),
-    DOCKER("公共：Docker on Devnet 物理机", listOf(OS.LINUX), true, true, true),
-    IDC("公共：Docker on IDC CVM", listOf(OS.LINUX), true, false, false),
-    PUBLIC_DEVCLOUD("公共：Docker on DevCloud", listOf(OS.LINUX), true, false, false),
-    TSTACK("Windows构建", listOf(OS.WINDOWS), false, false, false), // tstack is deleted
-    THIRD_PARTY_AGENT_ID("私有：单构建机", listOf(OS.MACOS, OS.LINUX, OS.WINDOWS), false, true, true),
-    THIRD_PARTY_AGENT_ENV("私有：构建集群", listOf(OS.MACOS, OS.LINUX, OS.WINDOWS), false, true, true),
-    THIRD_PARTY_PCG("PCG公共构建资源", listOf(OS.LINUX), false, false, false),
-    THIRD_PARTY_DEVCLOUD("腾讯自研云（云devnet资源）", listOf(OS.LINUX), false, false, false),
-    GIT_CI("工蜂CI", listOf(OS.LINUX), false, false, false)
+class EnumUtilTest {
+
+    @Test
+    fun getReflectionFactory() {
+        assertNotNull(EnumUtil.reflectionFactory)
+    }
+
+    @Test
+    fun changeEnum() {
+        val additionalValues = arrayOf("橘子", "水果", false)
+        EnumUtil.addEnum(MyEnum::class.java, "ORANGE", additionalValues)
+
+        MyEnum.values().forEach {
+            println("${it.cnName} ${it.ordinal} ${it.check} ${it.type}")
+        }
+
+        assertNotNull(MyEnum.valueOf("ORANGE"))
+        // 动态实例
+        val orange = MyEnum.valueOf("ORANGE")
+        assertArrayEquals(additionalValues, arrayOf(orange.cnName, orange.type, orange.check))
+
+        // 修改现有枚举
+        EnumUtil.addEnum(MyEnum::class.java, MyEnum.APPLE.name, additionalValues)
+        val newApple = MyEnum.valueOf(MyEnum.APPLE.name)
+        assertNotEquals(MyEnum.APPLE, newApple)
+        assertNotEquals(MyEnum.APPLE.type/*这里被编译时已经替换成了常量"公司"*/, newApple.type)
+        assertNotEquals(MyEnum.APPLE.cnName/*这里被编译时已经替换成了常量"苹果"*/, newApple.cnName)
+        assertNotEquals(MyEnum.APPLE.check/*这里被编译时已经替换成了常量true*/, newApple.check)
+    }
 }
