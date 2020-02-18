@@ -418,7 +418,7 @@
                 this.isInitLog = true
                 this.getInitLog(this.logPostData).then((res) => {
                     this.handleLogRes(res)
-                    if (!res.finished || res.hasMore) this.$refs.log.scrollPageToBottom()
+                    if (!res.finished || res.hasMore) this.$refs.log && this.$refs.log.scrollPageToBottom()
                 }).catch((err) => {
                     this.$bkMessage({ theme: 'error', message: err.message || err })
                     this.isInitLog = false
