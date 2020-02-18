@@ -41,5 +41,5 @@ data class MacOSDispatchType(
         macOSEvn = EnvUtils.parseEnv(macOSEvn, variables)
     }
 
-    override fun buildType() = BuildType.MACOS
+    override fun buildType() = BuildType.valueOf(BuildType.MACOS.name)
 }
