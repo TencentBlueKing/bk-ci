@@ -139,6 +139,7 @@
     import EnumInput from '@/components/atomFormField/EnumInput'
     import FormField from '@/components/AtomPropertyPanel/FormField'
     import Logo from '@/components/Logo'
+    import { allVersionKeyList } from '@/utils/pipelineConst'
 
     export default {
         components: {
@@ -167,9 +168,7 @@
                 failList: [],
                 failMessage: {},
                 buildNoParams: [
-                    'MajorVersion',
-                    'MinorVersion',
-                    'FixVersion'
+                    ...allVersionKeyList
                 ],
                 loading: {
                     isLoading: false,
