@@ -36,5 +36,4 @@ object CodeccUtils {
             atomName == LinuxPaasCodeCCScriptElement.classType ||
             atomName == "CodeccCheckAtom"
     }
-
 }
