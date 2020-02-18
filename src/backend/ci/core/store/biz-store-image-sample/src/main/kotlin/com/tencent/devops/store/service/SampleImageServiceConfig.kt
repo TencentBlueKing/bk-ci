@@ -24,9 +24,23 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":core:store:biz-store-sample")
-    compile project(":core:store:biz-store-image-sample")
-}
+package com.tencent.devops.store.service
 
-apply from: "$rootDir/task_spring_boot_package.gradle"
+import com.tencent.devops.store.service.image.impl.SampleImageNotifyService
+import com.tencent.devops.store.service.image.impl.SampleImageReleaseService
+import com.tencent.devops.store.service.image.impl.SampleImageService
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
+
+@Configuration
+class SampleImageServiceConfig {
+
+    @Bean
+    fun imageNotifyService() = SampleImageNotifyService()
+
+    @Bean
+    fun imageReleaseService() = SampleImageReleaseService()
+
+    @Bean
+    fun imageService() = SampleImageService()
+}

@@ -436,6 +436,7 @@ class TemplateService @Autowired constructor(
                         users = it.get(SUCCESS_RECEIVER),
                         wechatGroupFlag = it.get(SUCCESS_WECHAT_GROUP_FLAG),
                         wechatGroup = it.get(SUCCESS_WECHAT_GROUP),
+                        wechatGroupMarkdownFlag = it.get(SUCCESS_WECHAT_GROUP_MARKDOWN_FLAG),
                         detailFlag = it.get(SUCCESS_DETAIL_FLAG),
                         content = it.get(SUCCESS_CONTENT) ?: ""
                     ),
@@ -445,6 +446,7 @@ class TemplateService @Autowired constructor(
                         users = it.get(FAIL_RECEIVER),
                         wechatGroupFlag = it.get(FAIL_WECHAT_GROUP_FLAG),
                         wechatGroup = it.get(FAIL_WECHAT_GROUP),
+                        wechatGroupMarkdownFlag = it.get(FAIL_WECHAT_GROUP_MARKDOWN_FLAG),
                         detailFlag = it.get(FAIL_DETAIL_FLAG),
                         content = it.get(FAIL_CONTENT) ?: ""
                     ),
@@ -890,6 +892,9 @@ class TemplateService @Autowired constructor(
             labels.addAll(it.labels)
         }
         model.labels = labels
+        val templateResult = instanceParamModel(userId, projectId, model)
+        val params = (templateResult.stages[0].containers[0] as TriggerContainer).params
+        val templateParams = (templateResult.stages[0].containers[0] as TriggerContainer).templateParams
         return TemplateModelDetail(
             versions = versions,
             currentVersion = currentVersion,
@@ -902,7 +907,9 @@ class TemplateService @Autowired constructor(
             logoUrl = if (isConstrainedFlag) constrainedTemplate.logoUrl ?: "" else {
                 if (template!!.logoUrl.isNullOrEmpty()) "" else template!!.logoUrl
             },
-            hasPermission = hasManagerPermission(projectId, userId)
+            hasPermission = hasManagerPermission(projectId, userId),
+            params = params,
+            templateParams = templateParams
         )
     }
 
