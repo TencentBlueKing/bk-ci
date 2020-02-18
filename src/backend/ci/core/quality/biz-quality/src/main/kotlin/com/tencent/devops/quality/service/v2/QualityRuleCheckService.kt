@@ -34,6 +34,7 @@ import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxPaasCodeCCScri
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.notify.api.service.ServiceNotifyResource
 import com.tencent.devops.plugin.api.ServiceCodeccElementResource
+import com.tencent.devops.plugin.codecc.CodeccUtils
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.quality.api.v2.pojo.QualityHisMetadata
@@ -384,7 +385,7 @@ class QualityRuleCheckService @Autowired constructor(
 
     private fun getDetailMsg(record: QualityRuleInterceptRecord, params: Map<String, String>): String {
         // codecc跳到独立入口页面
-        return if (record.indicatorType == LinuxPaasCodeCCScriptElement.classType) {
+        return if (CodeccUtils.isCodeccAtom(record.indicatorType)) {
             val projectId = params["projectId"] ?: ""
             val pipelineId = params["pipelineId"] ?: ""
             val taskId = client.get(ServiceCodeccElementResource::class).get(projectId, pipelineId).data?.taskId
