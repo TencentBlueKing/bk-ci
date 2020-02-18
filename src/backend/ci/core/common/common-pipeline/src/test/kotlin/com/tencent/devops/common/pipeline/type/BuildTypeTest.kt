@@ -80,6 +80,14 @@ class BuildTypeTest {
 
         // 支持 valueOf 动态实例化
         val newDOCKER = BuildType.valueOf(BuildType.DOCKER.name)
+        Assert.assertNotEquals(BuildType.DOCKER/*编译时期确定了，与后来修改的不是同一个实例，不相等*/, newDOCKER)
+        val whenCaseEquals = when (newDOCKER) {
+            BuildType.DOCKER -> {
+                true
+            }
+            else -> false
+        }
+        Assert.assertTrue(whenCaseEquals)
         Assert.assertEquals("蓝盾公共构建资源666", newDOCKER.value)
         Assert.assertArrayEquals(
             additionalValues,
