@@ -30,6 +30,7 @@ import com.tencent.devops.common.api.enums.MyEnum
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class EnumUtilTest {
@@ -56,9 +57,17 @@ class EnumUtilTest {
         // 修改现有枚举
         EnumUtil.addEnum(MyEnum::class.java, MyEnum.APPLE.name, additionalValues)
         val newApple = MyEnum.valueOf(MyEnum.APPLE.name)
-        assertNotEquals(MyEnum.APPLE, newApple)
+        assertNotEquals(MyEnum.APPLE/*编译时期确定了，与后来修改的不是同一个实例，不相等*/, newApple)
         assertNotEquals(MyEnum.APPLE.type/*这里被编译时已经替换成了常量"公司"*/, newApple.type)
         assertNotEquals(MyEnum.APPLE.cnName/*这里被编译时已经替换成了常量"苹果"*/, newApple.cnName)
         assertNotEquals(MyEnum.APPLE.check/*这里被编译时已经替换成了常量true*/, newApple.check)
+
+        val whenCaseEquals = when (newApple) {
+            MyEnum.APPLE /*这里是对比name所以会成立*/ -> {
+                true
+            }
+            else -> false
+        }
+        assertTrue(whenCaseEquals)
     }
 }
