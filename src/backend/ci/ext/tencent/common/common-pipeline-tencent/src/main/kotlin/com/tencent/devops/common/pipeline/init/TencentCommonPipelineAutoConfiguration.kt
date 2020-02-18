@@ -89,6 +89,5 @@ class TencentCommonPipelineAutoConfiguration {
             enumName = BuildType.THIRD_PARTY_DEVCLOUD.name,
             additionalValues = arrayOf("腾讯自研云（云devnet资源）", listOf(OS.LINUX), false, true, true)
         )
-
     }
 }
