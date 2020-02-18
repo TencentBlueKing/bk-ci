@@ -594,7 +594,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         val serviceItems = extServiceItemRelDao.getItemByServiceId(dslContext, serviceId)
         val itemIds = mutableListOf<String>()
         serviceItems?.forEach { it ->
-            itemIds.add(it.id)
+            itemIds.add(it.itemId)
         }
         logger.info("getItemByItems serviceId[$serviceId] items[$itemIds]")
         val itemList = mutableListOf<StoreServiceItem>()
