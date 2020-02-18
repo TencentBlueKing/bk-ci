@@ -28,7 +28,8 @@ package com.tencent.devops.common.api.enums;
 
 public enum MyEnum {
 
-    APPLE("苹果", "手机", true);
+    APPLE("苹果", "手机", true),
+    BANANA("香蕉", "水果", true);
 
     public final String cnName;
     public final String type;
