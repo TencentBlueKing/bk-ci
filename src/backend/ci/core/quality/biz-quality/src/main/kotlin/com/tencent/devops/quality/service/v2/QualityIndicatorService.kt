@@ -33,6 +33,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxCodeCCScriptElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxPaasCodeCCScriptElement
 import com.tencent.devops.model.quality.tables.records.TQualityIndicatorRecord
+import com.tencent.devops.plugin.codecc.CodeccUtils
 import com.tencent.devops.quality.api.v2.pojo.QualityIndicator
 import com.tencent.devops.quality.api.v2.pojo.enums.IndicatorType
 import com.tencent.devops.quality.api.v2.pojo.enums.QualityDataType
@@ -96,7 +97,7 @@ class QualityIndicatorService @Autowired constructor(
                 val elementType = controlPoint.key
 
                 // 根据codeccToolNameMap的key顺序排序
-                if (isCodeccControlPoint(elementType)) {
+                if (CodeccUtils.isCodeccAtom(elementType)) {
                     val propertyMap = codeccToolNameMap.entries.mapIndexed { index, entry ->
                         entry.key to index
                     }.toMap()
@@ -112,7 +113,7 @@ class QualityIndicatorService @Autowired constructor(
                     val indicatorList: List<QualityIndicator> = detailEntry.value
 
                     // codecc的指标要排序和中文特殊处理
-                    if (isCodeccControlPoint(elementType)) {
+                    if (CodeccUtils.isCodeccAtom(elementType)) {
                         detailCnName = codeccToolNameMap[elementDetail] ?: elementDetail
                     }
 
@@ -130,10 +131,6 @@ class QualityIndicatorService @Autowired constructor(
                 controlPoints = stageGroup
             )
         }
-    }
-
-    private fun isCodeccControlPoint(elementType: String): Boolean {
-        return elementType == LinuxCodeCCScriptElement.classType || elementType == LinuxPaasCodeCCScriptElement.classType
     }
 
     fun serviceList(indicatorIds: Collection<Long>): List<QualityIndicator> {
