@@ -4,7 +4,7 @@ import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("扩展服务首页信息")
-data class ExtServiceItem (
+data class ExtServiceItem(
     @ApiModelProperty("ID")
     val id: String,
     @ApiModelProperty("名称")

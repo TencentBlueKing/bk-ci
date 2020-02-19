@@ -2,7 +2,7 @@ package com.tencent.devops.store.pojo
 
 import io.swagger.annotations.ApiModelProperty
 
-data class StoreServiceItem (
+data class StoreServiceItem(
     @ApiModelProperty("扩展项目根Id", required = true)
     val parentItemId: String,
     @ApiModelProperty("扩展项目根code", required = true)

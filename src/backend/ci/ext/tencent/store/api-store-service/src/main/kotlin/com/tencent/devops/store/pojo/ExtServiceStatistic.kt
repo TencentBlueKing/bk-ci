@@ -2,7 +2,7 @@ package com.tencent.devops.store.pojo
 
 import io.swagger.annotations.ApiModelProperty
 
-data class ExtServiceStatistic (
+data class ExtServiceStatistic(
     @ApiModelProperty("下载量")
     val downloads: Int,
     @ApiModelProperty("评论量")

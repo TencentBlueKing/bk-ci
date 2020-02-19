@@ -79,7 +79,7 @@ class ExtServiceVersionLogDao {
         serviceId: String
     ): TExtensionServiceVersionLogRecord {
         with(TExtensionServiceVersionLog.T_EXTENSION_SERVICE_VERSION_LOG) {
-            return dslContext.selectFrom(this).where(SERVICE_ID.eq(serviceId)).orderBy(CREATE_TIME.desc()).limit(0,1).fetchOne()
+            return dslContext.selectFrom(this).where(SERVICE_ID.eq(serviceId)).orderBy(CREATE_TIME.desc()).limit(0, 1).fetchOne()
         }
     }
 

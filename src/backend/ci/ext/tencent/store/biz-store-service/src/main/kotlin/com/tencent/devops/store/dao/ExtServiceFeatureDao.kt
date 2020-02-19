@@ -1,12 +1,8 @@
 package com.tencent.devops.store.dao
 
 import com.tencent.devops.common.api.util.UUIDUtil
-import com.tencent.devops.model.store.tables.TAtom
-import com.tencent.devops.model.store.tables.TExtensionService
 import com.tencent.devops.model.store.tables.TExtensionServiceFeature
-import com.tencent.devops.model.store.tables.records.TAtomRecord
 import com.tencent.devops.model.store.tables.records.TExtensionServiceFeatureRecord
-import com.tencent.devops.model.store.tables.records.TExtensionServiceRecord
 import com.tencent.devops.store.pojo.ExtServiceFeatureCreateInfo
 import com.tencent.devops.store.pojo.ExtServiceFeatureUpdateInfo
 import org.jooq.DSLContext

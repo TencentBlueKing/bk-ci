@@ -45,7 +45,7 @@ class ExtServiceVersionLogService @Autowired constructor() {
 
     fun getVersionLog(
         logId: String
-    ): Result<VersionLog>{
+    ): Result<VersionLog> {
         val logRecord = extServiceVersionDao.getVersionLogById(
             dslContext, logId
         )

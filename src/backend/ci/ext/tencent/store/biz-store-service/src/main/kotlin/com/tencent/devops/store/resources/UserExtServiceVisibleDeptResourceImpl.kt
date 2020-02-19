@@ -12,7 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired
 @RestResource
 class UserExtServiceVisibleDeptResourceImpl @Autowired constructor(
     val storeVisibleDeptService: StoreVisibleDeptService
-): UserExtServiceVisibleDeptResource {
+) : UserExtServiceVisibleDeptResource {
 
     override fun addVisibleDept(userId: String, serviceVisibleDeptRequest: ExtsionServiceVisibleDeptReq): Result<Boolean> {
         return storeVisibleDeptService.addVisibleDept(userId, serviceVisibleDeptRequest.serviceCode, serviceVisibleDeptRequest.deptInfos, StoreTypeEnum.SERVICE)

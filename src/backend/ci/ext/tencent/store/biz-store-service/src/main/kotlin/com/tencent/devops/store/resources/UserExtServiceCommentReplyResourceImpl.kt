@@ -16,7 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired
 class UserExtServiceCommentReplyResourceImpl @Autowired constructor(
     private val storeStatisticService: StoreStatisticService,
     private val storeCommentService: StoreCommentService
-): UserExtServiceCommentReplyResource {
+) : UserExtServiceCommentReplyResource {
     override fun createServiceComment(
         userId: String,
         serviceId: String,

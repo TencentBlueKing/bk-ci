@@ -2,7 +2,6 @@ package com.tencent.devops.store.dao
 
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.model.store.tables.TExtensionServiceItemRel
-import com.tencent.devops.model.store.tables.TExtensionServiceLabelRel
 import com.tencent.devops.model.store.tables.records.TExtensionServiceItemRelRecord
 import com.tencent.devops.store.pojo.ExtServiceItemRelCreateInfo
 import com.tencent.devops.store.pojo.ExtServiceItemRelUpdateInfo

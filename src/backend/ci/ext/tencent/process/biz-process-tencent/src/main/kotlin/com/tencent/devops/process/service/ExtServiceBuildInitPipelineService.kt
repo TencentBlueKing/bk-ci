@@ -30,6 +30,7 @@
 package com.tencent.devops.process.service
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.Stage
@@ -81,8 +82,7 @@ class ExtServiceBuildInitPipelineService @Autowired constructor(
         repositoryHashId: String,
         repositoryPath: String?,
         script: String,
-        buildEnv: Map<String, String>?,
-        customBuildEnv: Map<String, String>?
+        buildEnv: Map<String, String>?
     ): Result<ExtServiceBuildInitPipelineResp> {
         var containerSeqId = 0
         // stage-1
@@ -98,6 +98,12 @@ class ExtServiceBuildInitPipelineService @Autowired constructor(
         params.add(
             BuildFormProperty(
                 "version", true, BuildFormPropertyType.STRING, extServiceBaseInfo.version, null, null,
+                null, null, null, null, null, null
+            )
+        )
+        params.add(
+            BuildFormProperty(
+                "extServiceImageInfo", true, BuildFormPropertyType.STRING, JsonUtil.toJson(extServiceBaseInfo.extServiceImageInfo), null, null,
                 null, null, null, null, null, null
             )
         )
@@ -152,7 +158,7 @@ class ExtServiceBuildInitPipelineService @Autowired constructor(
             maxQueueMinutes = 60,
             maxRunningMinutes = 480,
             buildEnv = buildEnv,
-            customBuildEnv = customBuildEnv,
+            customBuildEnv = null,
             thirdPartyAgentId = null,
             thirdPartyAgentEnvId = null,
             thirdPartyWorkspace = null,
@@ -174,6 +180,7 @@ class ExtServiceBuildInitPipelineService @Autowired constructor(
         val startParams = mutableMapOf<String, String>() // 启动参数
         startParams["serviceCode"] = serviceCode
         startParams["version"] = extServiceBaseInfo.version
+        startParams["extServiceImageInfo"] = JsonUtil.toJson(extServiceBaseInfo.extServiceImageInfo)
         startParams["script"] = script
         var extServiceStatus = ExtServiceStatusEnum.BUILDING
         var buildId: String? = null

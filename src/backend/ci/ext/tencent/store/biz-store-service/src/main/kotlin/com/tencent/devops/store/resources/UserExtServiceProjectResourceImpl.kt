@@ -13,7 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired
 @RestResource
 class UserExtServiceProjectResourceImpl @Autowired constructor(
     val extServiceProjectService: ExtServiceProjectService
-): UserExtServiceProjectResource {
+) : UserExtServiceProjectResource {
     override fun installImage(
         accessToken: String,
         userId: String,
@@ -35,7 +35,7 @@ class UserExtServiceProjectResourceImpl @Autowired constructor(
         return extServiceProjectService.getInstalledProjects(
             userId = userId,
             accessToken = accessToken,
-            storeCode= serviceCode,
+            storeCode = serviceCode,
             storeType = StoreTypeEnum.SERVICE
         )
     }

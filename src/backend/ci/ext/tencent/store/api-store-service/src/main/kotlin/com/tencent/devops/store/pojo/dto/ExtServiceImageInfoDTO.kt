@@ -23,26 +23,25 @@
  *  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  *  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  *  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
+ *  
  *
  */
 
-package com.tencent.devops.process.pojo.pipeline
+package com.tencent.devops.store.pojo.dto
 
-import com.tencent.devops.store.pojo.dto.ExtServiceBaseInfoDTO
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("扩展服务构建初始化流水线请求报文体")
-data class ExtServiceBuildInitPipelineReq(
-    @ApiModelProperty("代码仓库hashId", required = true)
-    val repositoryHashId: String,
-    @ApiModelProperty("代码仓库路径", required = true)
-    val repositoryPath: String?,
-    @ApiModelProperty("脚本任务插件Shell执行脚本", required = true)
-    val script: String,
-    @ApiModelProperty("扩展服务基本信息", required = true)
-    val extServiceBaseInfo: ExtServiceBaseInfoDTO,
-    @ApiModelProperty("构建环境依赖环境变量", required = false)
-    val buildEnv: Map<String, String>?
+@ApiModel("扩展服务镜像信息")
+data class ExtServiceImageInfoDTO(
+    @ApiModelProperty("镜像名称", required = true)
+    val imageName: String,
+    @ApiModelProperty("镜像TAG", required = true)
+    val imageTag: String,
+    @ApiModelProperty("镜像仓库地址", required = true)
+    val repoAddr: String,
+    @ApiModelProperty("镜像仓库用户名", required = true)
+    val userName: String,
+    @ApiModelProperty("镜像仓库密码", required = true)
+    val password: String
 )

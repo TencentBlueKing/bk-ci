@@ -2,7 +2,7 @@ package com.tencent.devops.store.pojo.vo
 
 import io.swagger.annotations.ApiModelProperty
 
-data class MyExtServiceRespItem (
+data class MyExtServiceRespItem(
     @ApiModelProperty("扩展服务ID", required = true)
     val serviceId: String,
     @ApiModelProperty("扩展服务名称", required = true)
@@ -14,7 +14,7 @@ data class MyExtServiceRespItem (
     @ApiModelProperty("扩展服务所属范畴，TRIGGER：触发器类扩展服务 TASK：任务类扩展服务", required = true)
     val category: String,
     @ApiModelProperty("logo链接")
-    val logoUrl: String?= null,
+    val logoUrl: String? = null,
     @ApiModelProperty("版本号", required = true)
     val version: String,
     @ApiModelProperty(

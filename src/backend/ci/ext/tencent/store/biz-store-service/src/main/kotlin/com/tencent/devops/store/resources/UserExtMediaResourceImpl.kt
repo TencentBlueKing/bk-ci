@@ -13,7 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired
 @RestResource
 class UserExtMediaResourceImpl @Autowired constructor(
     val storeMediaService: StoreMediaService
-): UserExtMediaResource {
+) : UserExtMediaResource {
     override fun createServiceMedia(
         userId: String,
         serviceCodes: String,
@@ -22,9 +22,9 @@ class UserExtMediaResourceImpl @Autowired constructor(
         mediaInfoList.forEach {
             val storeMediaInfoRequest = StoreMediaInfoRequest(
                 storeCode = it.storeCode,
-                mediaUrl= it.mediaUrl,
-                mediaType= it.mediaType,
-                modifier= userId
+                mediaUrl = it.mediaUrl,
+                mediaType = it.mediaType,
+                modifier = userId
             )
             storeMediaService.add(
                 userId = userId,
