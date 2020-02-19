@@ -24,4 +24,4 @@
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 
-com.tencent.devops.common.api.enums.EnumModifier
+com.tencent.devops.common.pipeline.init.BuildTypeEnumModifier
