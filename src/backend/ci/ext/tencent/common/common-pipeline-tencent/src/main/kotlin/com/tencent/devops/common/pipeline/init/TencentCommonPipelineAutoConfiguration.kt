@@ -26,9 +26,6 @@
 
 package com.tencent.devops.common.pipeline.init
 
-import com.tencent.devops.common.api.pojo.OS
-import com.tencent.devops.common.api.util.EnumUtil
-import com.tencent.devops.common.pipeline.type.BuildType
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.Ordered
@@ -43,51 +40,6 @@ class TencentCommonPipelineAutoConfiguration {
      */
     @PostConstruct
     fun buildTypeChange() {
-
-        EnumUtil.addEnum(
-            enumType = BuildType::class.java,
-            enumName = BuildType.ESXi.name,
-            additionalValues = arrayOf("蓝盾公共构建资源", listOf(OS.MACOS), true, true, false)
-        )
-        EnumUtil.addEnum(
-            enumType = BuildType::class.java,
-            enumName = BuildType.MACOS.name,
-            additionalValues = arrayOf("蓝盾公共构建资源(NEW)", listOf(OS.MACOS), true, true, true)
-        )
-        EnumUtil.addEnum(
-            enumType = BuildType::class.java,
-            enumName = BuildType.DOCKER.name,
-            additionalValues = arrayOf("公共：Docker on Devnet 物理机", listOf(OS.LINUX), true, true, true)
-        )
-        EnumUtil.addEnum(
-            enumType = BuildType::class.java,
-            enumName = BuildType.IDC.name,
-            additionalValues = arrayOf("公共：Docker on IDC CVM", listOf(OS.LINUX), true, false, true)
-        )
-        EnumUtil.addEnum(
-            enumType = BuildType::class.java,
-            enumName = BuildType.PUBLIC_DEVCLOUD.name,
-            additionalValues = arrayOf("公共：Docker on DevCloud", listOf(OS.LINUX), true, true, true)
-        )
-        EnumUtil.addEnum(
-            enumType = BuildType::class.java,
-            enumName = BuildType.THIRD_PARTY_AGENT_ID.name,
-            additionalValues = arrayOf("私有：单构建机", listOf(OS.MACOS, OS.LINUX, OS.WINDOWS), false, true, true)
-        )
-        EnumUtil.addEnum(
-            enumType = BuildType::class.java,
-            enumName = BuildType.THIRD_PARTY_AGENT_ENV.name,
-            additionalValues = arrayOf("私有：构建集群", listOf(OS.MACOS, OS.LINUX, OS.WINDOWS), false, true, true)
-        )
-        EnumUtil.addEnum(
-            enumType = BuildType::class.java,
-            enumName = BuildType.THIRD_PARTY_PCG.name,
-            additionalValues = arrayOf("PCG公共构建资源", listOf(OS.LINUX), false, true, true)
-        )
-        EnumUtil.addEnum(
-            enumType = BuildType::class.java,
-            enumName = BuildType.THIRD_PARTY_DEVCLOUD.name,
-            additionalValues = arrayOf("腾讯自研云（云devnet资源）", listOf(OS.LINUX), false, true, true)
-        )
+        BuildTypeEnumModifier().modified()
     }
 }
