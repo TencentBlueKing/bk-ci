@@ -19,6 +19,7 @@
 import request from '@/utils/request'
 import {
     FETCH_ERROR,
+    PROJECT_API_URL_PREFIX,
     PROCESS_API_URL_PREFIX,
     STORE_API_URL_PREFIX,
     LOG_API_URL_PREFIX,
@@ -44,7 +45,7 @@ function getMapByKey (list, key) {
 export default {
     async fetchStageTagList ({ commit }, { projectCode }) {
         try {
-            const res = await request.get(`${PROCESS_API_URL_PREFIX}/user/pipelines/projects/${projectCode}/stageTag`)
+            const res = await request.get(`/${PROJECT_API_URL_PREFIX}/user/projects/${projectCode}/stageTag`)
             console.log(res)
             commit(SET_STAGE_TAG_LIST, res.data)
         } catch (error) {
