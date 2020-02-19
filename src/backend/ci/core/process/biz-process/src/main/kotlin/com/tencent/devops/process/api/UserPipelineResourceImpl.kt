@@ -28,6 +28,7 @@ package com.tencent.devops.process.api
 
 import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.exception.ParamBlankException
+import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.model.SQLLimit
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
@@ -260,6 +261,10 @@ class UserPipelineResourceImpl @Autowired constructor(
     override fun restore(userId: String, projectId: String, pipelineId: String): Result<Boolean> {
         checkParam(userId, projectId)
         checkPipelineId(pipelineId)
+        //判断用户是否为项目成员
+        if (!pipelinePermissionService.isProjectUser(userId, projectId, null)) {
+            throw PermissionForbiddenException("$userId is not member of project $projectId")
+        }
         pipelineService.restorePipeline(userId, projectId, pipelineId, ChannelCode.BS)
         return Result(true)
     }
