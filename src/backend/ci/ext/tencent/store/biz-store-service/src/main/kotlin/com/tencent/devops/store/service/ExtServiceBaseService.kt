@@ -44,6 +44,9 @@ import com.tencent.devops.store.pojo.ExtServiceItemRelCreateInfo
 import com.tencent.devops.store.pojo.ExtServiceUpdateInfo
 import com.tencent.devops.store.pojo.ExtServiceVersionLogCreateInfo
 import com.tencent.devops.store.pojo.StoreServiceItem
+import com.tencent.devops.store.pojo.atom.AtomVersionListResp
+import com.tencent.devops.store.pojo.atom.enums.AtomCategoryEnum
+import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.common.ReleaseProcessItem
 import com.tencent.devops.store.pojo.common.StoreProcessInfo
 import com.tencent.devops.store.pojo.enums.ExtServicePackageSourceTypeEnum
@@ -57,6 +60,8 @@ import com.tencent.devops.store.pojo.dto.SubmitDTO
 import com.tencent.devops.store.pojo.enums.ExtServiceStatusEnum
 import com.tencent.devops.store.pojo.vo.MyServiceVO
 import com.tencent.devops.store.pojo.vo.MyExtServiceRespItem
+import com.tencent.devops.store.pojo.vo.ServiceVersionListItem
+import com.tencent.devops.store.pojo.vo.ServiceVersionListResp
 import com.tencent.devops.store.pojo.vo.ServiceVersionVO
 import com.tencent.devops.store.service.common.StoreCommentService
 import com.tencent.devops.store.service.common.StoreCommonService
@@ -295,6 +300,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
                         serviceName = submitDTO.serviceName,
                         sunmmary = submitDTO.sunmmary,
                         description = submitDTO.description,
+                        version = submitDTO.version,
                         logoUrl = submitDTO.logoUrl,
                         modifierUser = userId,
                         status = serviceStatus.status,
@@ -355,7 +361,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
             }
 
             //TODO: 此处等carl完善
-            //asyncHandleUpdateAtom(context, serviceId, userId)
+            //asyncHandleUpdateService(context, serviceId, userId)
         }
         return Result(serviceId)
     }
@@ -497,6 +503,27 @@ abstract class ExtServiceBaseService @Autowired constructor() {
             getServiceVersion(record.id, userId)
         })
     }
+
+    fun getServiceVersionListByCode(serviceCode: String, userId: String): Result<ServiceVersionListResp>{
+        val records = extServiceDao.listServiceByCode(dslContext, serviceCode)
+        val serviceVersions = mutableListOf<ServiceVersionListItem?>()
+        records?.forEach {
+            serviceVersions.add(
+                ServiceVersionListItem(
+                    serviceId = it!!.id,
+                    serviceCode = it.serviceCode,
+                    serviceName = it.serviceName,
+                    version = it.version,
+                    serviceStatus = ExtServiceStatusEnum.getServiceStatus((it.serviceStatus as Byte).toInt()),
+                    creator = it.creator,
+                    createTime = DateTimeUtil.toDateTime(it.createTime)
+                )
+            )
+        }
+        return Result(ServiceVersionListResp(serviceVersions.size, serviceVersions))
+
+    }
+
 
     @Suppress("UNCHECKED_CAST")
     private fun getServiceVersion(serviceId: String, userId: String): Result<ServiceVersionVO?> {
@@ -679,7 +706,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         }
         val serviceCode = extensionInfo.serviceCode
         // 判断扩展服务是否存在
-        val codeInfo = extServiceDao.getServiceByCode(dslContext, serviceCode)
+        val codeInfo = extServiceDao.getServiceLatestByCode(dslContext, serviceCode)
         if (codeInfo != null) {
             // 抛出错误提示
             return MessageCodeUtil.generateResponseDataObject(
