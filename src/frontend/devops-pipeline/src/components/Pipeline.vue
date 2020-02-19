@@ -131,7 +131,6 @@
                 if (isObject(this.editingElementPos)) {
                     const { stageIndex } = this.editingElementPos
                     const stage = this.getStageByIndex(stageIndex)
-                    console.log(stage)
                     return stage
                 }
                 return null

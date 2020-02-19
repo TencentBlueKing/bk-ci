@@ -119,7 +119,6 @@
             },
             isPreStageDone () {
                 try {
-                    console.log(this.preStatus)
                     return this.preStatus === 'SUCCEED'
                 } catch (error) {
                     return false
