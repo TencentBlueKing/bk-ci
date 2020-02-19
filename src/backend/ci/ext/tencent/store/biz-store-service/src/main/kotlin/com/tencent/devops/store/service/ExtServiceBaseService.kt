@@ -217,7 +217,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         // 判断扩展服务是不是首次创建版本
         val serviceRecords = extServiceDao.listServiceByCode(dslContext, serviceCode)
         logger.info("the serviceRecords is :$serviceRecords")
-        if (null == serviceRecords) {
+        if (null == serviceRecords || serviceRecords.size < 1) {
             return MessageCodeUtil.generateResponseDataObject(
                 CommonMessageCode.PARAMETER_IS_INVALID,
                 arrayOf(serviceCode)
@@ -253,13 +253,19 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         }
 
         // 判断最近一个插件版本的状态，只有处于审核驳回、已发布、上架中止和已下架的状态才允许添加新的版本
-        val serviceFinalStatusList = listOf(
+        val serviceFinalStatusList = mutableListOf(
             ExtServiceStatusEnum.AUDIT_REJECT.status.toByte(),
             ExtServiceStatusEnum.RELEASED.status.toByte(),
             ExtServiceStatusEnum.GROUNDING_SUSPENSION.status.toByte(),
             ExtServiceStatusEnum.UNDERCARRIAGED.status.toByte()
         )
-        if (!serviceFinalStatusList.contains(serviceRecord.serviceStatus)) {
+
+        if (serviceRecords.size == 1) {
+            // 如果是首次发布，处于初始化的插件状态也允许添加新的版本
+            serviceFinalStatusList.add(ExtServiceStatusEnum.INIT.status.toByte())
+        }
+
+        if(!serviceFinalStatusList.contains(serviceRecord.serviceStatus)) {
             return MessageCodeUtil.generateResponseDataObject(
                 //TODO: 需在core内添加新状态码
                 StoreMessageCode.USER_ATOM_VERSION_IS_NOT_FINISH,
