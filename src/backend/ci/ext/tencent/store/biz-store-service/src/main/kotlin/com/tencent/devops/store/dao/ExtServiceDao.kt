@@ -2,8 +2,6 @@ package com.tencent.devops.store.dao
 
 import com.tencent.devops.model.store.tables.TAtom
 import com.tencent.devops.model.store.tables.TAtomEnvInfo
-import com.tencent.devops.model.store.tables.TAtomFeature
-import com.tencent.devops.model.store.tables.TAtomLabelRel
 import com.tencent.devops.model.store.tables.TClassify
 import com.tencent.devops.model.store.tables.TExtensionService
 import com.tencent.devops.model.store.tables.TExtensionServiceFeature
@@ -66,7 +64,7 @@ class ExtServiceDao {
                     id,
                     extServiceCreateInfo.serviceName,
                     extServiceCreateInfo.serviceCode,
-                    extServiceCreateInfo.category,
+                    extServiceCreateInfo.classify,
                     extServiceCreateInfo.version,
                     extServiceCreateInfo.status.toByte(),
                     extServiceCreateInfo.statusMsg,

@@ -278,8 +278,8 @@ abstract class ExtServiceBaseService @Autowired constructor() {
                 // 首次创建版本或者取消发布后不变更版本号重新上架，则在该版本的记录上做更新操作
                 serviceId = serviceRecord.id
                 val finalReleaseType = if (releaseType == ReleaseTypeEnum.CANCEL_RE_RELEASE) {
-                    val atomVersion = extServiceVersionLogDao.getVersionLogByServiceId(context, serviceId)
-                    atomVersion.releaseType
+                    val serviceVersion = extServiceVersionLogDao.getVersionLogByServiceId(context, serviceId)
+                    serviceVersion.releaseType
                 } else {
                     releaseType.releaseType.toByte()
                 }
@@ -300,14 +300,14 @@ abstract class ExtServiceBaseService @Autowired constructor() {
                     extServiceVersionLogCreateInfo = ExtServiceVersionLogCreateInfo(
                         serviceId = serviceId,
                         releaseType = finalReleaseType,
-                        content = submitDTO.versionContent,
+                        content = submitDTO.versionContent?: "",
                         creatorUser = userId,
                         modifierUser = userId
                     )
                 )
             } else {
                 // 升级插件
-                upgradeMarketAtom(
+                upgradeMarketExtService(
                     userId = userId,
                     serviceId = serviceId,
                     extServiceCreateInfo = ExtServiceCreateInfo(
@@ -322,7 +322,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
                     extServiceVersionLogCreateInfo = ExtServiceVersionLogCreateInfo(
                         serviceId = serviceId,
                         releaseType = submitDTO.releaseType.releaseType.toByte(),
-                        content = submitDTO.versionContent,
+                        content = submitDTO.versionContent?: "",
                         creatorUser = userId,
                         modifierUser = userId
                     )
@@ -629,7 +629,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         return itemList
     }
 
-    private fun upgradeMarketAtom(
+    private fun upgradeMarketExtService(
         userId: String,
         serviceId: String,
         extServiceCreateInfo: ExtServiceCreateInfo,

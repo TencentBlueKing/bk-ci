@@ -11,9 +11,9 @@ data class SubmitDTO(
     @ApiModelProperty("扩展服务Name")
     val serviceName: String,
     @ApiModelProperty("所属分类")
-    val category: String?,
+    val classify: String? = null,
     @ApiModelProperty("插件标签列表")
-    val labelIdList: ArrayList<String>?,
+    val labelIdList: List<String>?,
     @ApiModelProperty("服务版本")
     val version: String,
     @ApiModelProperty("LOGO url")
@@ -26,10 +26,8 @@ data class SubmitDTO(
     val description: String?= null,
     @ApiModelProperty("扩展服务发布者")
     val publisher: String?,
-    @ApiModelProperty("发布时间")
-    val publishTime: Long?,
     @ApiModelProperty("是否是最后版本")
-    val latestFlag: Int,
+    val latestFlag: Int? = 0,
     @ApiModelProperty("扩展服务id", required = true)
     val serviceId: String,
     @ApiModelProperty(
@@ -38,7 +36,7 @@ data class SubmitDTO(
     )
     val releaseType: ReleaseTypeEnum,
     @ApiModelProperty("版本日志内容", required = true)
-    val versionContent: String,
+    val versionContent: String? = "",
     @ApiModelProperty("扩展点列表")
     val extensionItemList: List<String>
 )

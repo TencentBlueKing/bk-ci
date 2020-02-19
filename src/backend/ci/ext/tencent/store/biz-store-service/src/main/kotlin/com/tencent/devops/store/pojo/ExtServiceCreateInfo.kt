@@ -8,7 +8,7 @@ data class ExtServiceCreateInfo(
     @ApiModelProperty("扩展服务Name")
     val serviceName: String,
     @ApiModelProperty("所属分类")
-    val category: String? ="",
+    val classify: String? = "",
     @ApiModelProperty("服务版本")
     val version: String,
     @ApiModelProperty("状态")
@@ -24,7 +24,7 @@ data class ExtServiceCreateInfo(
     @ApiModelProperty("扩展服务描述")
     val description: String? = null,
     @ApiModelProperty("扩展服务发布者")
-    val publisher: String?= null,
+    val publisher: String? = null,
     @ApiModelProperty("发布时间")
     val publishTime: Long,
     @ApiModelProperty("是否是最后版本")
