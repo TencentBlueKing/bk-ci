@@ -30,7 +30,6 @@
 package com.tencent.devops.plugin.worker.task.archive
 
 import com.fasterxml.jackson.core.type.TypeReference
-import com.tencent.bkrepo.common.api.constant.AUTH_HEADER_UID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
@@ -40,7 +39,6 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.pipeline.element.market.ExtServiceBuildArchiveElement
 import com.tencent.devops.common.pipeline.utils.ParameterUtils
-import com.tencent.devops.dockerhost.pojo.CheckImageResponse
 import com.tencent.devops.dockerhost.pojo.DockerBuildParam
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
@@ -78,7 +76,17 @@ class ExtServiceBuildArchiveTask : ITask() {
             errorType = ErrorType.SYSTEM,
             errorCode = ErrorCode.SYSTEM_SERVICE_ERROR
         )
+        val extServiceImageInfo = buildVariableMap["extServiceImageInfo"] ?: throw TaskExecuteException(
+            errorMsg = "param [extServiceImageInfo] is empty",
+            errorType = ErrorType.SYSTEM,
+            errorCode = ErrorCode.SYSTEM_SERVICE_ERROR
+        )
         val taskParams = buildTask.params ?: mapOf()
+        val packageName = taskParams["packageName"] ?: throw TaskExecuteException(
+            errorMsg = "param [packageName] is empty",
+            errorType = ErrorType.SYSTEM,
+            errorCode = ErrorCode.SYSTEM_SERVICE_ERROR
+        )
         val filePath = taskParams["filePath"] ?: throw TaskExecuteException(
             errorMsg = "param [filePath] is empty",
             errorType = ErrorType.SYSTEM,
@@ -114,13 +122,15 @@ class ExtServiceBuildArchiveTask : ITask() {
                 errorCode = ErrorCode.SYSTEM_SERVICE_ERROR
             )
         }
-        // 开始构建扩展服务的镜像并把镜像推送到新仓库(基础镜像是否只能用蓝盾提供的？)
+        // 开始构建扩展服务的镜像并把镜像推送到新仓库
+        val extServiceImageInfoMap = JsonUtil.toMap(extServiceImageInfo)
         val dockerBuildParam = DockerBuildParam(
-            repoAddr = "docker.dev.bkrepo.oa.com",
-            imageName = "bk-extension/docker-local/$serviceCode",
-            imageTag = serviceVersion,
-            userName = "bk_extension",
-            password = "blueking"
+            repoAddr = extServiceImageInfoMap["repoAddr"] as String,
+            imageName = extServiceImageInfoMap["imageName"] as String,
+            imageTag = extServiceImageInfoMap["imageTag"] as String,
+            userName = extServiceImageInfoMap["userName"] as String,
+            password = extServiceImageInfoMap["password"] as String,
+            args = listOf("packageName=$packageName", "filePath=$=filePath")
         )
         val dockerHostIp = System.getenv("docker_host_ip")
         val path =

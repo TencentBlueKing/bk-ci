@@ -45,7 +45,9 @@ data class ExtServiceBuildArchiveElement(
     val serviceCode: String = "\${serviceCode}",
     @ApiModelProperty("扩展服务版本号", required = true)
     val serviceVersion: String = "\${version}",
-    @ApiModelProperty("插件发布包所在相对路径", required = true)
+    @ApiModelProperty("扩展服务发布包名称", required = true)
+    val packageName: String = "\${packageName}",
+    @ApiModelProperty("扩展服务发布包所在相对路径", required = true)
     val filePath: String = "\${filePath}",
     @ApiModelProperty("目标", required = false)
     val destPath: String = "\${serviceCode}/\${version}/\${packageName}"

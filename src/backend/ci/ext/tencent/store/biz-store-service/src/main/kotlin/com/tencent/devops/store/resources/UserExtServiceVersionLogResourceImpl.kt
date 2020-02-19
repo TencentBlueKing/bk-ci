@@ -11,7 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired
 @RestResource
 class UserExtServiceVersionLogResourceImpl @Autowired constructor(
     private val extServiceVersionLogService: ExtServiceVersionLogService
-): UserExtServiceVersionLogResource {
+) : UserExtServiceVersionLogResource {
 
     override fun getVersionLogList(userId: String, serviceId: String): Result<VersionLogVO?> {
         return extServiceVersionLogService.listVersionLog(serviceId)

@@ -53,8 +53,7 @@ class ServiceExtServiceBuildPipelineInitResourceImpl @Autowired constructor(
             extServiceBuildInitPipelineReq.repositoryHashId,
             extServiceBuildInitPipelineReq.repositoryPath,
             extServiceBuildInitPipelineReq.script,
-            extServiceBuildInitPipelineReq.buildEnv,
-            extServiceBuildInitPipelineReq.customBuildEnv
+            extServiceBuildInitPipelineReq.buildEnv
         )
     }
 }

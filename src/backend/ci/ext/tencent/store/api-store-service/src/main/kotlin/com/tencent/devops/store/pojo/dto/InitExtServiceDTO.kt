@@ -3,7 +3,6 @@ package com.tencent.devops.store.pojo.dto
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
-import com.tencent.devops.store.pojo.ExtsionInfoReq
 import io.swagger.annotations.ApiModelProperty
 
 @JsonIgnoreProperties(ignoreUnknown = true)

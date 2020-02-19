@@ -43,7 +43,7 @@ class ExtServiceProjectService @Autowired constructor(
             ?: throw RuntimeException("serviceCode=$serviceCode")
         val serviceFeature = extServiceFeatureDao.getServiceByCode(dslContext, serviceCode)
         val validateInstallResult = storeProjectService.validateInstallPermission(
-            publicFlag = serviceFeature?.publicFlag?:false,
+            publicFlag = serviceFeature?.publicFlag ?: false,
             userId = userId,
             storeCode = serviceRecord.serviceCode,
             storeType = StoreTypeEnum.SERVICE,
@@ -59,7 +59,7 @@ class ExtServiceProjectService @Autowired constructor(
             storeId = serviceRecord.id,
             storeCode = serviceRecord.serviceCode,
             storeType = StoreTypeEnum.SERVICE,
-            publicFlag = serviceFeature?.publicFlag?: false,
+            publicFlag = serviceFeature?.publicFlag ?: false,
             channelCode = channelCode
         )
     }
@@ -104,7 +104,7 @@ class ExtServiceProjectService @Autowired constructor(
         return Result(result)
     }
 
-    companion object{
+    companion object {
         val logger = LoggerFactory.getLogger(this::class.java)
     }
 }

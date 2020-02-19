@@ -23,9 +23,9 @@ data class SubmitDTO(
     @ApiModelProperty("ICON")
     val icon: String?,
     @ApiModelProperty("扩展服务简介")
-    val sunmmary: String?= null,
+    val sunmmary: String? = null,
     @ApiModelProperty("扩展服务描述")
-    val description: String?= null,
+    val description: String? = null,
     @ApiModelProperty("扩展服务发布者")
     val publisher: String?,
     @ApiModelProperty("是否是最后版本")

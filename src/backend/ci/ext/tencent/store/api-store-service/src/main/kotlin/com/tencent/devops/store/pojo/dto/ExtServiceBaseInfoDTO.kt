@@ -39,5 +39,7 @@ data class ExtServiceBaseInfoDTO(
     @ApiModelProperty("扩展服务代码", required = true)
     val serviceCode: String,
     @ApiModelProperty("扩展服务版本号", required = true)
-    val version: String
+    val version: String,
+    @ApiModelProperty("扩展服务镜像信息", required = true)
+    val extServiceImageInfo: ExtServiceImageInfoDTO
 )

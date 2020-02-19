@@ -10,7 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired
 @RestResource
 class UserExtServiceStatResourceImpl @Autowired constructor(
     val statisticService: StatisticService
-): UserExtServiceStatResource {
+) : UserExtServiceStatResource {
     override fun getServiceStat(serviceCode: String): Result<ExtServiceStatistic> {
         return statisticService.getStatisticByServiceCode(serviceCode)
     }

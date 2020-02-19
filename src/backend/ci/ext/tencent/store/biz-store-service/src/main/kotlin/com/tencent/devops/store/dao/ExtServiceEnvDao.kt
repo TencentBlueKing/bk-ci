@@ -1,9 +1,7 @@
 package com.tencent.devops.store.dao
 
 import com.tencent.devops.common.api.util.UUIDUtil
-import com.tencent.devops.model.store.tables.TAtomEnvInfo
 import com.tencent.devops.model.store.tables.TExtensionServiceEnvInfo
-import com.tencent.devops.model.store.tables.records.TAtomEnvInfoRecord
 import com.tencent.devops.model.store.tables.records.TExtensionServiceEnvInfoRecord
 import com.tencent.devops.store.pojo.ExtServiceEnvCreateInfo
 import com.tencent.devops.store.pojo.ExtServiceEnvUpdateInfo

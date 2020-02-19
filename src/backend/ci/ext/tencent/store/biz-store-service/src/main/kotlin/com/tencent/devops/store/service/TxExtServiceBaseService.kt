@@ -89,6 +89,6 @@ class TxExtServiceBaseService : ExtServiceBaseService() {
     }
 
     override fun getRepositoryInfo(projectCode: String?, repositoryHashId: String?): Result<Repository?> {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        TODO("not implemented") // To change body of created functions use File | Settings | File Templates.
     }
 }

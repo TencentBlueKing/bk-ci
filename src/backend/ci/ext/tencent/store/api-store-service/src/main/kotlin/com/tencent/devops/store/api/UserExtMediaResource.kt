@@ -1,11 +1,8 @@
 package com.tencent.devops.store.api
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
-import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.MediaInfoReq
-import com.tencent.devops.store.pojo.common.StoreCommentInfo
-import com.tencent.devops.store.pojo.common.StoreCommentRequest
 import com.tencent.devops.store.pojo.common.StoreMediaInfo
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation

@@ -204,7 +204,6 @@ class ExtServiceSearchService @Autowired constructor(
 
         logger.info("[list]end")
         return SearchExtServiceVO(count, page, pageSize, results)
-
     }
 
     fun generateInstallFlag(
