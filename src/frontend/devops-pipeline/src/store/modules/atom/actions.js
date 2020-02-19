@@ -42,9 +42,9 @@ function getMapByKey (list, key) {
 }
 
 export default {
-    async fetchStageTagList ({ commit }) {
+    async fetchStageTagList ({ commit }, { projectCode }) {
         try {
-            const res = await request.get('/stageTagList')
+            const res = await request.get(`${PROCESS_API_URL_PREFIX}/user/pipelines/projects/${projectCode}/stageTag`)
             console.log(res)
             commit(SET_STAGE_TAG_LIST, res.data)
         } catch (error) {

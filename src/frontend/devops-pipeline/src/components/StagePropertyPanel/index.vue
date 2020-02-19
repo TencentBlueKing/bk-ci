@@ -80,7 +80,9 @@
             }
         },
         created () {
-            this.fetchStageTagList()
+            this.fetchStageTagList({
+                projectCode: this.$route.params && this.$route.params.projectId
+            })
         },
         methods: {
             ...mapActions('atom', [
