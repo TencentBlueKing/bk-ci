@@ -138,7 +138,7 @@ class ExtServiceSearchService @Autowired constructor(
         pageSize: Int?
     ): SearchExtServiceVO {
         val results = mutableListOf<ExtServiceItem>()
-        // 获取插件
+        // 获取扩展服务
         val labelCodeList = if (labelCode.isNullOrEmpty()) listOf() else labelCode?.split(",")
         val count = extServiceDao.count(dslContext, serviceName, classifyCode, labelCodeList, score)
         val services = extServiceDao.list(

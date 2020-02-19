@@ -24,9 +24,21 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":core:store:api-store")
-    compile project(":ext:tencent:store:biz-store-service")
-}
+package com.tencent.devops.store.pojo.enums
 
-apply from: "$rootDir/task_deploy_to_maven.gradle"
+enum class ServiceTypeEnum(val type: Int) {
+    SELF_DEVELOPED(0), // 自研
+    THIRD_PARTY(1); // 第三方
+
+    override fun toString() = type.toString()
+
+    companion object {
+        fun getServiceType(type: Int): String {
+            return when (type) {
+                0 -> SELF_DEVELOPED.name
+                1 -> THIRD_PARTY.name
+                else -> THIRD_PARTY.name
+            }
+        }
+    }
+}

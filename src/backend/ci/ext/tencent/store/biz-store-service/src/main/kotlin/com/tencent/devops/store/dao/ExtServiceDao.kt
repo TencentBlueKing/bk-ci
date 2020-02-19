@@ -1,7 +1,5 @@
 package com.tencent.devops.store.dao
 
-import com.tencent.devops.model.store.tables.TAtom
-import com.tencent.devops.model.store.tables.TAtomEnvInfo
 import com.tencent.devops.model.store.tables.TClassify
 import com.tencent.devops.model.store.tables.TExtensionService
 import com.tencent.devops.model.store.tables.TExtensionServiceFeature
@@ -12,11 +10,10 @@ import com.tencent.devops.model.store.tables.TStoreStatisticsTotal
 import com.tencent.devops.model.store.tables.records.TExtensionServiceRecord
 import com.tencent.devops.store.pojo.ExtServiceCreateInfo
 import com.tencent.devops.store.pojo.ExtServiceUpdateInfo
-import com.tencent.devops.store.pojo.atom.MarketAtomCreateRequest
-import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
-import com.tencent.devops.store.pojo.atom.enums.AtomTypeEnum
+import com.tencent.devops.store.pojo.atom.enums.AtomCategoryEnum
 import com.tencent.devops.store.pojo.atom.enums.MarketAtomSortTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.pojo.dto.ServiceApproveReq
 import com.tencent.devops.store.pojo.enums.ExtServiceSortTypeEnum
 import com.tencent.devops.store.pojo.enums.ExtServiceStatusEnum
 import org.jooq.Condition
@@ -25,7 +22,9 @@ import org.jooq.Record
 import org.jooq.Result
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
+import org.springframework.util.StringUtils
 import java.math.BigDecimal
+import java.net.URLDecoder
 import java.time.LocalDateTime
 
 @Repository
@@ -223,6 +222,32 @@ class ExtServiceDao {
     }
 
     /**
+     * 审核原子时，更新状态、类型等信息
+     */
+    fun approveServiceFromOp(
+        dslContext: DSLContext,
+        userId: String,
+        serviceId: String,
+        serviceStatus: Byte,
+        approveReq: ServiceApproveReq,
+        latestFlag: Boolean,
+        pubTime: LocalDateTime? = null
+    ) {
+        with(TExtensionService.T_EXTENSION_SERVICE) {
+            dslContext.update(this)
+                .set(SERVICE_STATUS, serviceStatus)
+                .set(SERVICE_STATUS_MSG, approveReq.message)
+                .set(DELETE_FLAG, approveReq.defaultFlag)
+                .set(LATEST_FLAG, latestFlag)
+                .set(PUB_TIME, pubTime)
+                .set(MODIFIER, userId)
+                .set(UPDATE_TIME, LocalDateTime.now())
+                .where(ID.eq(serviceId))
+                .execute()
+        }
+    }
+
+    /**
      * 设置可用的扩展服务版本状态为下架中、已下架
      */
     fun setServiceStatusByCode(
@@ -304,8 +329,49 @@ class ExtServiceDao {
         return baseStep.where(conditions).fetchOne(0, Int::class.java)
     }
 
+
+    fun getOpPipelineServices(
+        dslContext: DSLContext,
+        serviceName: String?,
+        itemId: String?,
+        lableId: String?,
+        serviceStatus: ExtServiceStatusEnum?,
+        sortType: String?,
+        desc: Boolean?,
+        page: Int?,
+        pageSize: Int?
+    ): Result<TExtensionServiceRecord> {
+        with(TExtensionService.T_EXTENSION_SERVICE) {
+            val conditions = mutableListOf<Condition>()
+            if(!serviceName.isNullOrEmpty()){
+                conditions.add(SERVICE_NAME.eq(serviceName))
+            }
+
+            if(serviceStatus != null){
+                conditions.add(SERVICE_STATUS.eq(serviceStatus.status.toByte()))
+            }
+
+            val baseStep = dslContext.selectFrom(this)
+            if (null != sortType) {
+                if (desc != null && desc) {
+                    baseStep.where(conditions).orderBy(DSL.field(sortType).desc())
+                } else {
+                    baseStep.where(conditions).orderBy(DSL.field(sortType).asc())
+                }
+            } else {
+                baseStep.where(conditions)
+            }
+
+            return if (null != page && null != pageSize) {
+                baseStep.limit((page - 1) * pageSize, pageSize).fetch()
+            } else {
+                baseStep.fetch()
+            }
+        }
+    }
+
     /**
-     * 插件商店搜索结果列表
+     * 研发商店搜索结果列表
      */
     fun list(
         dslContext: DSLContext,
@@ -382,142 +448,6 @@ class ExtServiceDao {
             baseStep.limit((page - 1) * pageSize, pageSize).fetch()
         } else {
             baseStep.fetch()
-        }
-    }
-
-    fun countReleaseAtomByCode(dslContext: DSLContext, atomCode: String): Int {
-        with(TAtom.T_ATOM) {
-            return dslContext.selectCount().from(this).where(ATOM_CODE.eq(atomCode).and(ATOM_STATUS.eq(AtomStatusEnum.RELEASED.status.toByte()))).fetchOne(0, Int::class.java)
-        }
-    }
-
-    private fun generateGetMyAtomConditions(a: TAtom, userId: String, b: TStoreMember, atomName: String?): MutableList<Condition> {
-        val conditions = mutableListOf<Condition>()
-        conditions.add(a.DELETE_FLAG.eq(false)) // 只查没有被删除的插件
-        conditions.add(b.USERNAME.eq(userId))
-        conditions.add(b.STORE_TYPE.eq(StoreTypeEnum.ATOM.type.toByte()))
-        if (null != atomName) {
-            conditions.add(a.NAME.contains(atomName))
-        }
-        return conditions
-    }
-
-    fun countMyAtoms(
-        dslContext: DSLContext,
-        userId: String,
-        atomName: String?
-    ): Int {
-        val a = TAtom.T_ATOM.`as`("a")
-        val b = TStoreMember.T_STORE_MEMBER.`as`("b")
-        val conditions = generateGetMyAtomConditions(a, userId, b, atomName)
-        return dslContext.select(a.ATOM_CODE.countDistinct())
-            .from(a)
-            .leftJoin(b)
-            .on(a.ATOM_CODE.eq(b.STORE_CODE))
-            .where(conditions)
-            .fetchOne(0, Int::class.java)
-    }
-
-    fun getMyAtoms(
-        dslContext: DSLContext,
-        userId: String,
-        atomName: String?,
-        page: Int?,
-        pageSize: Int?
-    ): Result<out Record>? {
-        val a = TAtom.T_ATOM.`as`("a")
-        val b = TStoreMember.T_STORE_MEMBER.`as`("b")
-        val d = TAtomEnvInfo.T_ATOM_ENV_INFO.`as`("d")
-        val t = dslContext.select(a.ATOM_CODE.`as`("atomCode"), a.CREATE_TIME.max().`as`("createTime")).from(a).groupBy(a.ATOM_CODE) // 查找每组atomCode最新的记录
-        val conditions = generateGetMyAtomConditions(a, userId, b, atomName)
-        val baseStep = dslContext.select(
-            a.ID.`as`("atomId"),
-            a.ATOM_CODE.`as`("atomCode"),
-            a.NAME.`as`("name"),
-            a.CATEGROY.`as`("category"),
-            d.LANGUAGE.`as`("language"),
-            a.LOGO_URL.`as`("logoUrl"),
-            a.VERSION.`as`("version"),
-            a.ATOM_STATUS.`as`("atomStatus"),
-            a.CREATOR.`as`("creator"),
-            a.CREATE_TIME.`as`("createTime"),
-            a.MODIFIER.`as`("modifier"),
-            a.UPDATE_TIME.`as`("updateTime")
-        )
-            .from(a)
-            .join(t)
-            .on(a.ATOM_CODE.eq(t.field("atomCode", String::class.java)).and(a.CREATE_TIME.eq(t.field("createTime", LocalDateTime::class.java))))
-            .join(b)
-            .on(a.ATOM_CODE.eq(b.STORE_CODE))
-            .leftJoin(d)
-            .on(a.ID.eq(d.ATOM_ID))
-            .where(conditions)
-            .groupBy(a.ATOM_CODE)
-            .orderBy(a.UPDATE_TIME.desc())
-        return if (null != page && null != pageSize) {
-            baseStep.limit((page - 1) * pageSize, pageSize).fetch()
-        } else {
-            baseStep.fetch()
-        }
-    }
-
-    fun addMarketAtom(
-        dslContext: DSLContext,
-        userId: String,
-        id: String,
-        repositoryHashId: String?,
-        codeSrc: String?,
-        docsLink: String,
-        marketAtomCreateRequest: MarketAtomCreateRequest
-    ) {
-        with(TAtom.T_ATOM) {
-            dslContext.insertInto(this,
-                ID,
-                NAME,
-                ATOM_CODE,
-                CLASS_TYPE,
-                SERVICE_SCOPE,
-                OS,
-                CLASSIFY_ID,
-                DOCS_LINK,
-                ATOM_TYPE,
-                ATOM_STATUS,
-                VERSION,
-                DEFAULT_FLAG,
-                LATEST_FLAG,
-                REPOSITORY_HASH_ID,
-                CODE_SRC,
-                DOCS_LINK,
-                VISIBILITY_LEVEL,
-                PRIVATE_REASON,
-                PUBLISHER,
-                CREATOR,
-                MODIFIER
-            )
-                .values(
-                    id,
-                    marketAtomCreateRequest.name,
-                    marketAtomCreateRequest.atomCode,
-                    "",
-                    "",
-                    "",
-                    "",
-                    "",
-                    AtomTypeEnum.THIRD_PARTY.type.toByte(),
-                    AtomStatusEnum.INIT.status.toByte(),
-                    "",
-                    false,
-                    true,
-                    repositoryHashId,
-                    codeSrc,
-                    docsLink,
-                    marketAtomCreateRequest.visibilityLevel?.level,
-                    marketAtomCreateRequest.privateReason,
-                    userId,
-                    userId,
-                    userId
-                )
-                .execute()
         }
     }
 

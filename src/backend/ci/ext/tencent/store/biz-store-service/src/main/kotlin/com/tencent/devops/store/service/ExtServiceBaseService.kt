@@ -505,6 +505,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
     }
 
     fun getServiceVersionListByCode(serviceCode: String, userId: String): Result<ServiceVersionListResp>{
+        logger.info("getServiceVersionListByCode serviceCode[$serviceCode]")
         val records = extServiceDao.listServiceByCode(dslContext, serviceCode)
         val serviceVersions = mutableListOf<ServiceVersionListItem?>()
         records?.forEach {
@@ -520,6 +521,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
                 )
             )
         }
+        logger.info("getServiceVersionListByCode serviceVersions[$serviceVersions]")
         return Result(ServiceVersionListResp(serviceVersions.size, serviceVersions))
 
     }

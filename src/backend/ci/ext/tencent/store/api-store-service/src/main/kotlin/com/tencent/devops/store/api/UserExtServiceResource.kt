@@ -3,11 +3,9 @@ package com.tencent.devops.store.api
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BK_TICKET
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.pojo.atom.AtomVersionListResp
 import com.tencent.devops.store.pojo.enums.ExtServiceSortTypeEnum
 import com.tencent.devops.store.pojo.vo.ExtServiceMainItemVo
 import com.tencent.devops.store.pojo.vo.SearchExtServiceVO
-import com.tencent.devops.store.pojo.vo.ServiceVersionListItem
 import com.tencent.devops.store.pojo.vo.ServiceVersionListResp
 import com.tencent.devops.store.pojo.vo.ServiceVersionVO
 import io.swagger.annotations.Api
