@@ -31,6 +31,8 @@ import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxPaasCodeCCScri
 
 object CodeccUtils {
 
+    const val BK_CI_CODECC_TASK_ID = "BK_CI_CODECC_TASK_ID"
+
     fun isCodeccAtom(atomName: String?): Boolean {
         return atomName == LinuxCodeCCScriptElement.classType ||
             atomName == LinuxPaasCodeCCScriptElement.classType ||
