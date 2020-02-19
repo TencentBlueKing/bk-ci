@@ -225,7 +225,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
             )
         }
         val serviceRecord = serviceRecords[0]
-        // 判断更新的插件名称是否重复
+        // 判断更新的扩展服务名称是否重复
         if (validateAddServiceReqByName(
                 submitDTO.serviceName,
                 submitDTO.serviceCode
@@ -328,6 +328,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
                     )
                 )
             }
+
             // 更新标签信息
             val labelIdList = submitDTO.labelIdList
             if (null != labelIdList) {
@@ -335,6 +336,19 @@ abstract class ExtServiceBaseService @Autowired constructor() {
                 if (labelIdList.isNotEmpty())
                     extServiceLabelDao.batchAdd(context, userId, serviceId, labelIdList)
             }
+
+            // 添加扩展点
+            val itemIdList = submitDTO.extensionItemList
+            if(null != itemIdList) {
+                extServiceItemRelDao.deleteByServiceId(context, serviceId)
+                extServiceItemRelDao.batchAdd(
+                    dslContext = dslContext,
+                    userId = userId,
+                    serviceId = serviceId,
+                    itemIdList = itemIdList
+                )
+            }
+
             //TODO: 此处等carl完善
             //asyncHandleUpdateAtom(context, serviceId, userId)
         }
