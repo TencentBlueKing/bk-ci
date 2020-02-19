@@ -470,13 +470,3 @@ export function getWindowHeight () {
 
     return windowHeight
 }
-
-/**
- * 根据域名判断使用检测当前网络环境url域名
- *
- * @return {string}
- */
-export function getCheckEnvPrefix () {
-    const prefix = CHECK_ENV_URL
-    return prefix
-}
