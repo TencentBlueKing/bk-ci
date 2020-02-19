@@ -6,6 +6,8 @@ import io.swagger.annotations.ApiModelProperty
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class SubmitDTO(
+    @ApiModelProperty("扩展服务id", required = true)
+    val serviceId: String,
     @ApiModelProperty("扩展服务Code")
     val serviceCode: String,
     @ApiModelProperty("扩展服务Name")
@@ -28,8 +30,6 @@ data class SubmitDTO(
     val publisher: String?,
     @ApiModelProperty("是否是最后版本")
     val latestFlag: Int? = 0,
-    @ApiModelProperty("扩展服务id", required = true)
-    val serviceId: String,
     @ApiModelProperty(
         "发布类型，NEW：新上架 INCOMPATIBILITY_UPGRADE：非兼容性升级 COMPATIBILITY_UPGRADE：兼容性功能更新 COMPATIBILITY_FIX：兼容性问题修正",
         required = true

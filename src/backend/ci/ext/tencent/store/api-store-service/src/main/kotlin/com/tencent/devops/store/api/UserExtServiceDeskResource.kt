@@ -47,9 +47,6 @@ interface UserExtServiceDeskResource {
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("服务编码")
-        @QueryParam("projectCode")
-        projectCode: String,
         @ApiParam("扩展服务信息")
         extensionInfo: SubmitDTO
     ): Result<String>

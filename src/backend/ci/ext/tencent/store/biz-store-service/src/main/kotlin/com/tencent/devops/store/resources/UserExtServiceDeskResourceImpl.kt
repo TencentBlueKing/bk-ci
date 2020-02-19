@@ -28,12 +28,10 @@ class UserExtServiceDeskResourceImpl @Autowired constructor(
 
     override fun submitExtensionService(
         userId: String,
-        projectCode: String,
         extensionInfo: SubmitDTO
     ): Result<String> {
         return extServiceBaseService.updateExtService(
             userId = userId,
-            projectCode = projectCode,
             submitDTO = extensionInfo
         )
     }

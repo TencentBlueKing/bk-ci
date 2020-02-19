@@ -206,7 +206,6 @@ abstract class ExtServiceBaseService @Autowired constructor() {
 
     fun updateExtService(
         userId: String,
-        projectCode: String,
         submitDTO: SubmitDTO
     ): Result<String> {
         logger.info("updateExtService userId[$userId],submitDTO[$submitDTO]")
