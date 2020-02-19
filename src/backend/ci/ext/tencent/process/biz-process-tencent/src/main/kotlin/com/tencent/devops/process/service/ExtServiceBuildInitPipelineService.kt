@@ -81,7 +81,8 @@ class ExtServiceBuildInitPipelineService @Autowired constructor(
         repositoryHashId: String,
         repositoryPath: String?,
         script: String,
-        buildEnv: Map<String, String>?
+        buildEnv: Map<String, String>?,
+        customBuildEnv: Map<String, String>?
     ): Result<ExtServiceBuildInitPipelineResp> {
         var containerSeqId = 0
         // stage-1
@@ -151,7 +152,7 @@ class ExtServiceBuildInitPipelineService @Autowired constructor(
             maxQueueMinutes = 60,
             maxRunningMinutes = 480,
             buildEnv = buildEnv,
-            customBuildEnv = null,
+            customBuildEnv = customBuildEnv,
             thirdPartyAgentId = null,
             thirdPartyAgentEnvId = null,
             thirdPartyWorkspace = null,
