@@ -43,6 +43,8 @@ data class ExtServiceBuildInitPipelineReq(
     val script: String,
     @ApiModelProperty("扩展服务基本信息", required = true)
     val extServiceBaseInfo: ExtServiceBaseInfoDTO,
-    @ApiModelProperty("构建环境依赖环境变量", required = true)
-    val buildEnv: Map<String, String>
+    @ApiModelProperty("构建环境依赖环境变量", required = false)
+    val buildEnv: Map<String, String>?,
+    @ApiModelProperty("用户自定义环境变量", required = false)
+    val customBuildEnv: Map<String, String>?
 )
