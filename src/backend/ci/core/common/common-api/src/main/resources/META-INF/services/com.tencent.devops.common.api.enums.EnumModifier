@@ -23,5 +23,5 @@
 # WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
-
-com.tencent.devops.common.api.enums.EnumModifier
+# 扩展请自行在自己的模块中增加此类文件
+#com.tencent.devops.common.api.enums.YourEnumModifier
