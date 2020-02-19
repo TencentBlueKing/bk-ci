@@ -130,7 +130,7 @@ class ExtServiceBuildArchiveTask : ITask() {
             imageTag = extServiceImageInfoMap["imageTag"] as String,
             userName = extServiceImageInfoMap["userName"] as String,
             password = extServiceImageInfoMap["password"] as String,
-            args = listOf("packageName=$packageName", "filePath=$=filePath")
+            args = listOf("packageName=$packageName", "filePath=$filePath")
         )
         val dockerHostIp = System.getenv("docker_host_ip")
         val path =
