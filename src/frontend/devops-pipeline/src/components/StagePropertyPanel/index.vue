@@ -6,21 +6,28 @@
         <section v-if="stage" slot="content" :class="{ 'readonly': !editable }" class="stage-property-panel bk-form bk-form-vertical">
             <form-field :required="true" :label="$t('name')" :is-error="errors.has('name')" :error-msg="errors.first('name')">
                 <div class="stage-name">
-                    <vuex-input :disabled="!editable" input-type="text" :placeholder="$t('nameInputTips')" name="name" v-validate.initial="'required'" :value="stage.name" :handle-change="handleStageChange" />
+                    <vuex-input :disabled="!editable" input-type="text" :placeholder="$t('nameInputTips')" name="name" v-validate.initial="'required'" :value="stageTitle" :handle-change="handleStageChange" />
                 </div>
             </form-field>
-            <form-field :required="true" :label="$t('label')" :is-error="errors.has('label')" :error-msg="errors.first('label')">
-                <div class="stage-label">
-                    <vuex-input :disabled="!editable" input-type="text" :placeholder="$t('nameInputTips')" name="label" :value="stage.label" :handle-change="handleStageChange" />
+            <form-field :required="true" :label="$t('label')" :is-error="errors.has('tag')" :error-msg="errors.first('tag')">
+                <div class="stage-tag">
+                    <bk-select v-model="stageTag" name="tag" :disabled="!editable" multiple searchable>
+                        <bk-option v-for="tag in stageTagList"
+                            :key="tag"
+                            :id="tag"
+                            :name="tag">
+                        </bk-option>
+                    </bk-select>
                 </div>
             </form-field>
-            <stage-control :stage-control="stage.stageControl" :handle-stage-change="handleStageChange"></stage-control>
+            <stage-control :stage-control="stage.stageControlOption" :handle-stage-change="handleStageChange"></stage-control>
         </section>
     </bk-sideslider>
 </template>
 
 <script>
     import { mapActions, mapState } from 'vuex'
+    import Vue from 'vue'
     import VuexInput from '@/components/atomFormField/VuexInput'
     import FormField from '@/components/AtomPropertyPanel/FormField'
     import StageControl from './StageControl'
@@ -38,7 +45,8 @@
         },
         computed: {
             ...mapState('atom', [
-                'isPropertyPanelVisible'
+                'isPropertyPanelVisible',
+                'stageTagList'
             ]),
             visible: {
                 get () {
@@ -50,8 +58,16 @@
                     })
                 }
             },
+            stageTag: {
+                get () {
+                    return this.stage.tag
+                },
+                set (tag) {
+                    this.handleStageChange('tag', tag)
+                }
+            },
             stageTitle () {
-                return typeof this.stageIndex !== 'undefined' ? this.stage.name : this.$t('propertyBar')
+                return typeof this.stageIndex !== 'undefined' ? (this.stage.name || this.stage.id) : this.$t('propertyBar')
             }
         },
         watch: {
@@ -63,12 +79,19 @@
                 }
             }
         },
+        created () {
+            this.fetchStageTagList()
+        },
         methods: {
             ...mapActions('atom', [
                 'updateStage',
-                'togglePropertyPanel'
+                'togglePropertyPanel',
+                'fetchStageTagList'
             ]),
             handleStageChange (name, value) {
+                if (!this.stage.hasOwnProperty(name)) {
+                    Vue.set(this.stage, name, value)
+                }
                 this.updateStage({
                     stage: this.stage,
                     newParam: {
