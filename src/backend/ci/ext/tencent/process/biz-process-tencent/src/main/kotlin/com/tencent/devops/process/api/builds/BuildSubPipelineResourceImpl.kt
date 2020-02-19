@@ -32,6 +32,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.engine.service.PipelineBuildService
 import com.tencent.devops.process.pojo.pipeline.ProjectBuildId
 import com.tencent.devops.process.pojo.pipeline.SubPipelineStatus
+import com.tencent.devops.process.pojo.pipeline.SubPipelineStartUpInfo
 import com.tencent.devops.process.service.SubPipelineStartUpService
 import org.springframework.beans.factory.annotation.Autowired
 
