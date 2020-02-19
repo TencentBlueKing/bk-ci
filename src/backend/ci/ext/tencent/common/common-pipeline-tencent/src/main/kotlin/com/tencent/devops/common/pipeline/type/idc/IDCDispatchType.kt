@@ -56,5 +56,5 @@ data class IDCDispatchType(
         image = JsonUtil.toJson(valueMap)
     }
 
-    override fun buildType() = BuildType.IDC
+    override fun buildType() = BuildType.valueOf(BuildType.IDC.name)
 }
