@@ -25,6 +25,9 @@
                         </bk-option>
                     </bk-select>
                 </bk-form-item>
+                <bk-form-item v-if="showVariable">
+                    <key-value-normal :value="variables" :allow-null="false" name="customVariables" :handle-change="handleUpdateStageControl"></key-value-normal>
+                </bk-form-item>
             </bk-form>
         </div>
     </accordion>
@@ -33,11 +36,12 @@
 <script>
     import { mapActions } from 'vuex'
     import Accordion from '@/components/atomFormField/Accordion'
-
+    import KeyValueNormal from '@/components/atomFormField/KeyValueNormal'
     export default {
         name: 'stage-control',
         components: {
-            Accordion
+            Accordion,
+            KeyValueNormal
         },
         props: {
             stageControl: {
@@ -78,10 +82,13 @@
                     this.handleUpdateStageControl('runCondition', runCondition)
                 }
             },
+            variables () {
+                return this.stageControl && Array.isArray(this.stageControl.customVariables) ? this.stageControl.customVariables : []
+            },
             conditionConf () {
                 return [
                     {
-                        id: 'MANUAL_STAGE_RUNNING',
+                        id: 'MANUAL_TRIGGER',
                         name: this.$t('storeMap.manualRunStage')
                     },
                     {
@@ -97,6 +104,9 @@
                         name: this.$t('storeMap.varNotMatch')
                     }
                 ]
+            },
+            showVariable () {
+                return ['CUSTOM_VARIABLE_MATCH', 'CUSTOM_VARIABLE_MATCH_NOT_RUN'].indexOf(this.stageCondition) > -1
             }
         },
         created () {
@@ -110,14 +120,14 @@
             ]),
             handleUpdateStageControl (name, value) {
                 this.setPipelineEditing(true)
-                this.handleStageChange('stageControl', {
+                this.handleStageChange('stageControlOption', {
                     ...(this.stageControl || {}),
                     [name]: value
                 })
             },
             initStageControl () {
                 if (this.stageControl === undefined || JSON.stringify(this.stageControl) === '{}') {
-                    this.handleStageChange('stageControl', {
+                    this.handleStageChange('stageControlOption', {
                         enable: true,
                         fastKill: false,
                         runCondition: 'STAGE_RUNNING',

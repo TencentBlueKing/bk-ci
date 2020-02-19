@@ -218,12 +218,6 @@ export default {
     },
     getStage: state => (stages, stageIndex) => {
         const stage = Array.isArray(stages) ? stages[stageIndex] : null
-        if (stage !== null) {
-            if (typeof stage.name === 'undefined') {
-                Vue.set(stage, 'name', stage.id)
-                Vue.set(stage, 'label', '')
-            }
-        }
         return stage
     },
     getContainers: state => stage => {
