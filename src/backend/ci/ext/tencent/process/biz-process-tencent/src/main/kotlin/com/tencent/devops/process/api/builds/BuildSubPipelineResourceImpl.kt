@@ -78,4 +78,15 @@ class BuildSubPipelineResourceImpl @Autowired constructor(
         val result = SubPipelineStatus(status)
         return Result(result)
     }
+
+    override fun subpipManualStartupInfo(userId: String, projectId: String, pipelineId: String): Result<List<SubPipelineStartUpInfo>> {
+        checkParam(userId)
+        return subPipeService.subpipManualStartupInfo(userId, projectId, pipelineId)
+    }
+
+    private fun checkParam(userId: String) {
+        if (userId.isBlank()) {
+            throw ParamBlankException("Invalid userId")
+        }
+    }
 }

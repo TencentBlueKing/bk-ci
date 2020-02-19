@@ -128,4 +128,19 @@ interface BuildSubPipelineResource {
         @ApiParam("启动参数", required = true)
         values: Map<String, String>
     ): Result<ProjectBuildId>
+
+    @ApiOperation("获取子流水线启动参数")
+    @GET
+    @Path("/manualStartupInfo")
+    fun subpipManualStartupInfo(
+        @ApiParam(value = "用户ID", required = true)
+        @QueryParam("userId")
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @ApiParam("流水线ID", required = false, defaultValue = "")
+        @QueryParam("subPip")
+        pipelineId: String
+    ): Result<List<SubPipelineStartUpInfo>>
 }
