@@ -45,5 +45,5 @@ data class ThirdPartyAgentEnvDispatchType(
         }
     }
 
-    override fun buildType() = BuildType.THIRD_PARTY_AGENT_ENV
+    override fun buildType() = BuildType.valueOf(BuildType.THIRD_PARTY_AGENT_ENV.name)
 }
