@@ -56,8 +56,7 @@ class PipelineBuildStageDao {
                     START_TIME,
                     END_TIME,
                     COST,
-                    EXECUTE_COUNT,
-                    CONDITIONS
+                    EXECUTE_COUNT
                 )
                     .values(
                         buildStage.projectId,
@@ -69,8 +68,7 @@ class PipelineBuildStageDao {
                         buildStage.startTime,
                         buildStage.endTime,
                         buildStage.cost,
-                        buildStage.executeCount,
-                        null
+                        buildStage.executeCount
                     )
                     .execute()
             }
@@ -84,7 +82,7 @@ class PipelineBuildStageDao {
                 records.add(
                     TPipelineBuildStageRecord(
                         projectId, pipelineId, buildId, stageId, seq,
-                        status.ordinal, startTime, endTime, cost, executeCount, null
+                        status.ordinal, startTime, endTime, cost, executeCount
                     )
                 )
             }
