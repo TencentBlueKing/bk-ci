@@ -764,7 +764,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
     private fun initProcessInfo(isNormalUpgrade: Boolean): List<ReleaseProcessItem> {
         val processInfo = mutableListOf<ReleaseProcessItem>()
         processInfo.add(ReleaseProcessItem(MessageCodeUtil.getCodeLanMessage(BEGIN), BEGIN, NUM_ONE, SUCCESS))
-        processInfo.add(ReleaseProcessItem("构建版本", BUILD, NUM_TWO, SUCCESS))
+        processInfo.add(ReleaseProcessItem("构建版本", BUILD, NUM_TWO, UNDO))
         processInfo.add(ReleaseProcessItem("版本测试", TEST, NUM_THREE, UNDO))
         processInfo.add(ReleaseProcessItem("填写相关信息", COMMIT, NUM_FOUR, UNDO))
         if (isNormalUpgrade) {

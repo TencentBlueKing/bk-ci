@@ -51,6 +51,6 @@ class UserExtServiceResourceImpl @Autowired constructor(
     }
 
     override fun getServiceVersionsByCode(userId: String, serviceCode: String): Result<ServiceVersionListResp> {
-        return extServiceBaseService.getServiceVersionListByCode(userId, serviceCode)
+        return extServiceBaseService.getServiceVersionListByCode(serviceCode , userId)
     }
 }
