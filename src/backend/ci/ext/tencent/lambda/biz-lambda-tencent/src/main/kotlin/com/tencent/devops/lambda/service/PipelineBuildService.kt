@@ -140,7 +140,8 @@ class PipelineBuildService @Autowired constructor(
             if (task != null) {
                 var gitUrl = ""
                 val taskParamsMap = JsonUtil.toMap(task.taskParams)
-                when (taskParamsMap["atomCode"]) {
+                val atomCode = taskParamsMap["atomCode"]
+                when (atomCode) {
                     "CODE_GIT" -> {
                         val repositoryHashId = taskParamsMap["repositoryHashId"]
                         val gitRepository = client.get(ServiceRepositoryResource::class)
@@ -154,12 +155,16 @@ class PipelineBuildService @Autowired constructor(
                         gitUrl = inputMap["repositoryUrl"].toString()
                         sendKafka(task, gitUrl)
                     }
-                    "gitCodeRepo" -> {
+                    "gitCodeRepo", "PullFromGithub", "GitLab" -> {
                         val dataMap = JsonUtil.toMap(taskParamsMap["data"] ?: error(""))
                         val inputMap = JsonUtil.toMap(dataMap["input"] ?: error(""))
-                        val repositoryHashId = inputMap["repositoryHashId"]
+                        val repositoryHashId = if (atomCode == "Gitlab") {
+                            inputMap["repository"].toString()
+                        } else {
+                            inputMap["repositoryHashId"].toString()
+                        }
                         val gitRepository = client.get(ServiceRepositoryResource::class)
-                            .get(event.projectId, repositoryHashId.toString(), RepositoryType.ID)
+                            .get(event.projectId, repositoryHashId, RepositoryType.ID)
                         gitUrl = gitRepository.data!!.url
                         sendKafka(task, gitUrl)
                     }
