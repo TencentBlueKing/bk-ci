@@ -37,7 +37,7 @@ class UserExtServiceDeskResourceImpl @Autowired constructor(
     }
 
     override fun getExtensionServiceInfo(userId: String, serviceId: String): Result<StoreProcessInfo> {
-        return extServiceBaseService.getProcessInfo(userId, serviceId)
+        return extServiceBaseService.getExtensionServiceInfo(userId, serviceId)
     }
 
     override fun offlineAtom(userId: String, serviceCode: String, serviceOffline: ServiceOfflineDTO): Result<Boolean> {

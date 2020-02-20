@@ -27,6 +27,7 @@
 dependencies {
     compile project(":core:project:biz-project")
     compile project(":ext:tencent:project:api-project-op")
+    compile project(":ext:tencent:project:biz-project-tencent")
     compile project(":ext:tencent:common:common-auth:common-auth-tencent")
 }
 

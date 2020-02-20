@@ -44,9 +44,6 @@ import com.tencent.devops.store.pojo.ExtServiceItemRelCreateInfo
 import com.tencent.devops.store.pojo.ExtServiceUpdateInfo
 import com.tencent.devops.store.pojo.ExtServiceVersionLogCreateInfo
 import com.tencent.devops.store.pojo.StoreServiceItem
-import com.tencent.devops.store.pojo.atom.AtomVersionListResp
-import com.tencent.devops.store.pojo.atom.enums.AtomCategoryEnum
-import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.common.ReleaseProcessItem
 import com.tencent.devops.store.pojo.common.StoreProcessInfo
 import com.tencent.devops.store.pojo.enums.ExtServicePackageSourceTypeEnum
@@ -366,7 +363,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         return Result(serviceId)
     }
 
-    fun getProcessInfo(userId: String, serviceId: String): Result<StoreProcessInfo> {
+    fun getExtensionServiceInfo(userId: String, serviceId: String): Result<StoreProcessInfo> {
         logger.info("getProcessInfo userId is $userId,serviceId is $serviceId")
         val record = extServiceDao.getServiceById(dslContext, serviceId)
         logger.info("getProcessInfo record is $record")
@@ -735,16 +732,19 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         val totalStep = if (isNormalUpgrade) NUM_FIVE else NUM_SIX
         when (status) {
             ExtServiceStatusEnum.INIT.status, ExtServiceStatusEnum.COMMITTING.status -> {
-                storeCommonService.setProcessInfo(processInfo, totalStep, NUM_TWO, DOING)
+                storeCommonService.setProcessInfo(processInfo, totalStep, NUM_ONE, DOING)
             }
             ExtServiceStatusEnum.BUILDING.status -> {
-                storeCommonService.setProcessInfo(processInfo, totalStep, NUM_THREE, DOING)
+                storeCommonService.setProcessInfo(processInfo, totalStep, NUM_TWO, DOING)
             }
             ExtServiceStatusEnum.BUILD_FAIL.status -> {
-                storeCommonService.setProcessInfo(processInfo, totalStep, NUM_THREE, FAIL)
+                storeCommonService.setProcessInfo(processInfo, totalStep, NUM_TWO, FAIL)
             }
             ExtServiceStatusEnum.TESTING.status -> {
-                storeCommonService.setProcessInfo(processInfo, totalStep, NUM_FOUR, DOING)
+                storeCommonService.setProcessInfo(processInfo, totalStep, NUM_THREE, DOING)
+            }
+            ExtServiceStatusEnum.EDIT.status -> {
+                storeCommonService.setProcessInfo(processInfo, totalStep, NUM_FOUR, FAIL)
             }
             ExtServiceStatusEnum.AUDITING.status -> {
                 storeCommonService.setProcessInfo(processInfo, totalStep, NUM_FIVE, DOING)
@@ -752,6 +752,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
             ExtServiceStatusEnum.AUDIT_REJECT.status -> {
                 storeCommonService.setProcessInfo(processInfo, totalStep, NUM_FIVE, FAIL)
             }
+
             ExtServiceStatusEnum.RELEASED.status -> {
                 val currStep = if (isNormalUpgrade) NUM_FIVE else NUM_SIX
                 storeCommonService.setProcessInfo(processInfo, totalStep, currStep, SUCCESS)
@@ -763,13 +764,13 @@ abstract class ExtServiceBaseService @Autowired constructor() {
     private fun initProcessInfo(isNormalUpgrade: Boolean): List<ReleaseProcessItem> {
         val processInfo = mutableListOf<ReleaseProcessItem>()
         processInfo.add(ReleaseProcessItem(MessageCodeUtil.getCodeLanMessage(BEGIN), BEGIN, NUM_ONE, SUCCESS))
-        processInfo.add(ReleaseProcessItem(MessageCodeUtil.getCodeLanMessage(COMMIT), COMMIT, NUM_TWO, UNDO))
-        processInfo.add(ReleaseProcessItem(MessageCodeUtil.getCodeLanMessage(BUILD), BUILD, NUM_THREE, UNDO))
-        processInfo.add(ReleaseProcessItem(MessageCodeUtil.getCodeLanMessage(TEST), TEST, NUM_FOUR, UNDO))
+        processInfo.add(ReleaseProcessItem("构建版本", BUILD, NUM_TWO, SUCCESS))
+        processInfo.add(ReleaseProcessItem("版本测试", TEST, NUM_THREE, UNDO))
+        processInfo.add(ReleaseProcessItem("填写相关信息", COMMIT, NUM_FOUR, UNDO))
         if (isNormalUpgrade) {
             processInfo.add(ReleaseProcessItem(MessageCodeUtil.getCodeLanMessage(END), END, NUM_FIVE, UNDO))
         } else {
-            processInfo.add(ReleaseProcessItem(MessageCodeUtil.getCodeLanMessage(APPROVE), APPROVE, NUM_FIVE, UNDO))
+            processInfo.add(ReleaseProcessItem("版本审核", APPROVE, NUM_FIVE, UNDO))
             processInfo.add(ReleaseProcessItem(MessageCodeUtil.getCodeLanMessage(END), END, NUM_SIX, UNDO))
         }
         return processInfo
