@@ -44,7 +44,7 @@ class ServiceIptResourceImpl @Autowired constructor(
     private val artifactorySearchService: ArtifactorySearchService,
     private val redisOperation: RedisOperation,
     private val repoGray: RepoGray
-): ServiceIptResource {
+) : ServiceIptResource {
     override fun searchFileAndProperty(userId: String, projectId: String, searchProps: SearchProps): Result<FileInfoPage<FileInfo>> {
         return if (repoGray.isGray(projectId, redisOperation)) {
             val result = bkRepoSearchService.searchFileAndProperty(userId, projectId, searchProps)
