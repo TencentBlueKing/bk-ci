@@ -26,11 +26,8 @@
 
 package com.tencent.devops.process.service.ipt
 
-import com.tencent.devops.artifactory.api.service.ServiceArtifactoryResource
-import com.tencent.devops.artifactory.pojo.Property
+import com.tencent.devops.artifactory.api.service.ServiceIptResource
 import com.tencent.devops.artifactory.pojo.SearchProps
-import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
-import com.tencent.devops.common.archive.util.JFrogUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceType
@@ -66,8 +63,8 @@ class IptRepoService @Autowired constructor(
 
         val searchFiles = if (filePath != null) listOf(filePath) else null
         val searchProperty = SearchProps(searchFiles, mapOf("buildId" to buildId, "pipelineId" to pipelineId))
-        val fileList = client.get(ServiceArtifactoryResource::class)
-            .searchFile(userId, projectId, null, null, searchProperty).data?.records ?: listOf()
+        val fileList = client.get(ServiceIptResource::class)
+            .searchFileAndProperty(userId, projectId, searchProperty).data?.records ?: listOf()
 
         return IptBuildArtifactoryInfo(buildId, fileList)
     }
