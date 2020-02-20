@@ -138,7 +138,7 @@ class PipelineBuildService @Autowired constructor(
     private fun pushGitTaskInfo(event: PipelineBuildTaskFinishBroadCastEvent, task: TPipelineBuildTaskRecord?) {
         try {
             if (task != null) {
-                var gitUrl = ""
+                val gitUrl: String
                 val taskParamsMap = JsonUtil.toMap(task.taskParams)
                 val atomCode = taskParamsMap["atomCode"]
                 when (atomCode) {
