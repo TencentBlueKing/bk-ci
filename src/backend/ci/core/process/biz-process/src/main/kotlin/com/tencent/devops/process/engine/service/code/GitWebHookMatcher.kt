@@ -260,7 +260,6 @@ class GitWebHookMatcher(val event: GitEvent) : ScmWebhookMatcher {
             logger.info("Do tag match success for pipeline: $pipelineId")
             return ScmWebhookMatcher.MatchResult(true, mapOf(MATCH_BRANCH to matchBranch, MATCH_PATHS to ""))
         }
-
     }
 
     // null 表示没匹配上
