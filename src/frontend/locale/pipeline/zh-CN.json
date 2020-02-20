@@ -149,6 +149,16 @@
         "conditionEmpty": "视图条件不能为空",
         "deleteViewTips": "是否确认删除 ( {0} ) ? "
     },
+    "restore": {
+        "recycleBin": "回收站",
+        "restore": "恢复",
+        "title": "可恢复流水线列表",
+        "deleteTime": "删除时间",
+        "createTime": "创建时间",
+        "restoreSuc": "恢复成功",
+        "emptyTitle": "暂无可恢复的流水线",
+        "emptyDesc": "30天内被删除的流水线可在此页面恢复"
+    },
     "atomManage": {
         "installedAtom": "已安装插件",
         "moreAtom": "发现更多插件",

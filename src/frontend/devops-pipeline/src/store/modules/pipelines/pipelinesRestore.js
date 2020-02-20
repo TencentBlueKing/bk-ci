@@ -17,40 +17,32 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-import staticList from './staticList'
-import build from './build'
-import pipelines from './pipelines'
-import pipelinesGroup from './pipelinesGroup'
-import pipelinesView from './pipelinesView'
-import pipelinesTemplate from './pipelinesTemplate'
-import pipelinesRestore from './pipelinesRestore'
+import ajax from '@/utils/request'
+import {
+    PROCESS_API_URL_PREFIX
+} from '@/store/constants'
 
-const assign = Object.assign
+const prefix = `/${PROCESS_API_URL_PREFIX}/user`
 
-const modules = [
-    // view,
-    staticList,
-    build,
-    pipelines,
-    pipelinesGroup,
-    pipelinesView,
-    pipelinesTemplate,
-    pipelinesRestore
-]
+const state = {}
 
-const state = {
-    replay: false
-}
 const getters = {}
-const mutations = {}
-const actions = {}
 
-modules.map(v => {
-    assign(state, v.state)
-    assign(getters, v.getters)
-    assign(mutations, v.mutations)
-    assign(actions, v.actions)
-})
+const mutations = {}
+
+const actions = {
+    requestRecyclePipelineList ({ commit }, { projectId }) {
+        console.log('ajax')
+        return ajax.get(`${prefix}/pipelines/${projectId}/pipelineRecycleList?page=1&pageSize=-1`).then(response => {
+            return response.data
+        })
+    },
+    restorePipeline ({ commit }, { projectId, pipelineId }) {
+        return ajax.put(`${prefix}/pipelines/${projectId}/${pipelineId}/restore`).then(response => {
+            return response.data
+        })
+    }
+}
 
 export default {
     namespaced: true,

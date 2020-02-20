@@ -149,6 +149,16 @@
         "conditionEmpty": "View conditions must be filled",
         "deleteViewTips": "Delete ( {0} ) ? "
     },
+    "restore": {
+        "recycleBin": "Recycle bin",
+        "restore": "Restore pipeline",
+        "title": "Pipelines can be restored",
+        "deleteTime": "Delete time",
+        "createTime": "Create time",
+        "restoreSuc": "Restored successfully",
+        "emptyTitle": "No pipeline can be restored",
+        "emptyDesc": "You can restore the pipeline deleted in last a month"
+    },
     "atomManage": {
         "installedAtom": "Installed plugins",
         "moreAtom": "More plugins",
