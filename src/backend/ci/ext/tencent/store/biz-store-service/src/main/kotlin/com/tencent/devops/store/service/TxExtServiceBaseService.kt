@@ -74,7 +74,7 @@ class TxExtServiceBaseService : ExtServiceBaseService() {
                 return Result(createGitRepositoryResult.status, createGitRepositoryResult.message, null)
             }
         } catch (e: Exception) {
-            logger.info("createGitCodeRepository error  is :$e", e)
+            logger.error("createGitCodeRepository error  is :$e", e)
             return MessageCodeUtil.generateResponseDataObject(StoreMessageCode.USER_CREATE_REPOSITORY_FAIL)
         }
         if (null == repositoryInfo) {

@@ -100,6 +100,18 @@ class ExtServiceDao {
             if (null != summary) {
                 baseStep.set(SUMMARY, summary)
             }
+            val status = extServiceUpdateInfo.status
+            if (null != status) {
+                baseStep.set(SERVICE_STATUS, status.toByte())
+            }
+            val statusMsg = extServiceUpdateInfo.statusMsg
+            if (null != statusMsg) {
+                baseStep.set(SERVICE_STATUS_MSG, statusMsg)
+            }
+            val version = extServiceUpdateInfo.version
+            if(null != version){
+                baseStep.set(VERSION, version)
+            }
             val description = extServiceUpdateInfo.description
             if (null != description) {
                 baseStep.set(DESCRIPTION, description)
@@ -108,10 +120,16 @@ class ExtServiceDao {
             if (null != logoUrl) {
                 baseStep.set(LOGO_URL, logoUrl)
             }
+            val icon = extServiceUpdateInfo.icon
+            if (null != icon) {
+                baseStep.set(ICON, icon)
+            }
             val publisher = extServiceUpdateInfo.publisher
             if (null != publisher) {
                 baseStep.set(PUBLISHER, publisher)
+                baseStep.set(PUB_TIME, LocalDateTime.now())
             }
+
             baseStep.set(MODIFIER, userId).set(UPDATE_TIME, LocalDateTime.now())
                 .where(ID.eq(serviceId))
                 .execute()
