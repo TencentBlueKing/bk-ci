@@ -731,10 +731,10 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         val processInfo = initProcessInfo(isNormalUpgrade)
         val totalStep = if (isNormalUpgrade) NUM_FIVE else NUM_SIX
         when (status) {
-            ExtServiceStatusEnum.INIT.status, ExtServiceStatusEnum.COMMITTING.status -> {
+            ExtServiceStatusEnum.INIT.status -> {
                 storeCommonService.setProcessInfo(processInfo, totalStep, NUM_ONE, DOING)
             }
-            ExtServiceStatusEnum.BUILDING.status -> {
+            ExtServiceStatusEnum.BUILDING.status, ExtServiceStatusEnum.COMMITTING.status -> {
                 storeCommonService.setProcessInfo(processInfo, totalStep, NUM_TWO, DOING)
             }
             ExtServiceStatusEnum.BUILD_FAIL.status -> {
