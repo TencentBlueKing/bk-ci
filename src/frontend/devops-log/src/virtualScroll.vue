@@ -395,8 +395,20 @@
                 lDiv.style.fontWeight = 'normal'
                 lDiv.style.letterSpacing = '0px'
                 lDiv.style.opacity = 0
-                lDiv.innerHTML = text.replace(/\s/g, '&nbsp;').replace(/<a[^>]*>/g, (a) => a.replace(/&nbsp;/g, ' ')).replace(/<br\/>/g, '')
-                const res = lDiv.clientWidth + 100
+                lDiv.innerHTML = text.replace(/\s|<|>/g, (str) => {
+                    switch (str) {
+                        case ' ':
+                            return '&nbsp;'
+                            break;
+                        case '<':
+                            return '&lt;'
+                            break;
+                        case '>':
+                            return '&gt;'
+                            break;
+                    }
+                }).replace(/&lt;a.+?href=["']?([^"']+)["']?.*&gt;(.+)&lt;\/a&gt;/g, "<a href='$1' target='_blank'>$2</a>")
+                const res = lDiv.clientWidth + 200
                 document.body.removeChild(lDiv)
                 return res
             },
