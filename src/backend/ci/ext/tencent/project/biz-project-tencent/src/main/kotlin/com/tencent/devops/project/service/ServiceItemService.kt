@@ -1,18 +1,26 @@
 package com.tencent.devops.project.service
 
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.project.api.pojo.ExtItemDTO
+import com.tencent.devops.project.api.pojo.ItemInfoResponse
 import com.tencent.devops.project.api.pojo.ServiceItem
 import com.tencent.devops.project.dao.ServiceItemDao
+import com.tencent.devops.project.pojo.ItemCreateInfo
+import com.tencent.devops.project.pojo.ItemQueryInfo
+import com.tencent.devops.project.pojo.ItemUpdateInfo
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.lang.RuntimeException
 import javax.annotation.PostConstruct
 
 @Service
 class ServiceItemService @Autowired constructor(
     private val dslContext: DSLContext,
-    private val serviceItemDao: ServiceItemDao
+    private val serviceItemDao: ServiceItemDao,
+    private val redisOperation: RedisOperation
 ) {
     // 用于存放所有服务父子关系的map
     private val parentMap = mutableMapOf<String, MutableList<ServiceItem>>()
@@ -58,7 +66,7 @@ class ServiceItemService @Autowired constructor(
                     )
                 )
             }
-            if(childItem.parentId != null){
+            if (childItem.parentId != null) {
                 val parentItem = allItemMap[childItem.parentId]
                 if (parentItem != null) {
                     childMap[childItem.id] = parentItem
@@ -87,7 +95,7 @@ class ServiceItemService @Autowired constructor(
     }
 
     fun getItemList(): List<ExtItemDTO>? {
-        if(itemList != null){
+        if (itemList != null) {
             return itemList
         }
         return getServiceList()
@@ -140,6 +148,92 @@ class ServiceItemService @Autowired constructor(
         }
         logger.info("findParent: result: $result")
         return result
+    }
+
+    fun getParentList(): Result<List<ServiceItem>>{
+        val parentItemList = mutableListOf<ServiceItem>()
+        serviceItemDao.getItemParent(dslContext)?.forEach {
+            parentItemList.add(
+                ServiceItem(
+                    itemId = it!!.id,
+                    itemCode = it.itemCode,
+                    itemName = it.itemName,
+                    serviceCount = it.serviceNum,
+                    htmlType = it.htmlComponentType,
+                    htmlPath = it.htmlPath,
+                    parentId = it.parentId
+                )
+            )
+        }
+        return Result(parentItemList)
+    }
+
+    fun queryItem(itemName: String?, pid: String?): Result<List<ServiceItem>> {
+        val query = ItemQueryInfo(
+            itemName = itemName,
+            pid = pid
+        )
+        val itemList = mutableListOf<ServiceItem>()
+        serviceItemDao.queryItem(dslContext, query)?.forEach {
+            itemList.add(
+                ServiceItem(
+                    itemId = it!!.id,
+                    itemCode = it.itemCode,
+                    itemName = it.itemName,
+                    serviceCount = it.serviceNum,
+                    htmlType = it.htmlComponentType,
+                    htmlPath = it.htmlPath,
+                    parentId = it.parentId
+                )
+            )
+        }
+        return Result(itemList)
+    }
+
+    fun createItem(userId: String, itemInfo: ItemInfoResponse): Result<Boolean> {
+        val itemCode = itemInfo.itemCode
+        val itemRecord = serviceItemDao.getItemByCode(dslContext, itemCode)
+        if (itemRecord != null) {
+            logger.warn("createItem itemCode is exsit, itemCode[$itemCode]")
+            throw RuntimeException("扩展点已存在")
+        }
+        val createInfo = ItemCreateInfo(
+            itemCode = itemInfo.itemCode,
+            itemName = itemInfo.itemName,
+            htmlPath = itemInfo.htmlPath,
+            inputPath = itemInfo.inputPath,
+            creator = userId,
+            pid = itemInfo.pid,
+            UIType = itemInfo.UIType
+        )
+        serviceItemDao.add(dslContext, userId, createInfo)
+        return Result(true)
+    }
+
+    fun updateItem(userId: String, itemId: String, itemInfo: ItemInfoResponse): Result<Boolean> {
+        val updateInfo = ItemUpdateInfo(
+            itemName = itemInfo.itemName,
+            htmlPath = itemInfo.htmlPath,
+            inputPath = itemInfo.inputPath,
+            pid = itemInfo.pid,
+            UIType = itemInfo.UIType
+        )
+        serviceItemDao.update(dslContext, itemId, userId, updateInfo)
+        return Result(true)
+    }
+
+    fun getItem(itemId: String): Result<ServiceItem?> {
+        val itemRecord = serviceItemDao.getItemById(dslContext, itemId) ?: throw RuntimeException("数据不存在")
+        val itemInfo = ServiceItem(
+            itemId = itemRecord!!.id,
+            itemName = itemRecord.itemName,
+            itemCode = itemRecord.itemCode,
+            htmlPath = itemRecord.htmlPath,
+            htmlType = itemRecord.htmlComponentType,
+            serviceCount = itemRecord.serviceNum,
+            parentId = itemRecord.parentId
+        )
+        return Result(itemInfo)
     }
 
     companion object {

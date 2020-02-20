@@ -6,5 +6,6 @@ data class ServiceItem (
     val itemCode: String,
     val parentId: String,
     val htmlPath: String? = null,
-    val htmlType: String? = null
+    val htmlType: String? = null,
+    val serviceCount: Int? = 0
 )

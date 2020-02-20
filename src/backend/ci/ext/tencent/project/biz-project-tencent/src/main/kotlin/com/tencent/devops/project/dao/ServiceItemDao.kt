@@ -4,6 +4,7 @@ import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.model.project.tables.TServiceItem
 import com.tencent.devops.model.project.tables.records.TServiceItemRecord
 import com.tencent.devops.project.pojo.ItemCreateInfo
+import com.tencent.devops.project.pojo.ItemQueryInfo
 import com.tencent.devops.project.pojo.ItemUpdateInfo
 import org.jooq.DSLContext
 import org.jooq.Result
@@ -61,6 +62,20 @@ class ServiceItemDao {
         }
     }
 
+    fun queryItem(dslContext: DSLContext, itemQueryInfo: ItemQueryInfo): Result<TServiceItemRecord?>{
+        return with(TServiceItem.T_SERVICE_ITEM) {
+            val whereStep = dslContext.selectFrom(this)
+            if(itemQueryInfo.itemName != null){
+                whereStep.where(ITEM_NAME.like(itemQueryInfo.itemName))
+            }
+
+            if(itemQueryInfo.pid != null){
+                whereStep.where(PARENT_ID.eq(itemQueryInfo.pid))
+            }
+            whereStep.orderBy(UPDATE_TIME).fetch()
+        }
+    }
+
     fun getItemById(dslContext: DSLContext, itemId: String): TServiceItemRecord? {
         return with(TServiceItem.T_SERVICE_ITEM) {
             dslContext.selectFrom(this).where(
@@ -69,11 +84,19 @@ class ServiceItemDao {
         }
     }
 
-    fun getItemByParentId(dslContext: DSLContext, pid: String): TServiceItemRecord? {
+    fun getItemByCode(dslContext: DSLContext, itemCode: String): TServiceItemRecord? {
         return with(TServiceItem.T_SERVICE_ITEM) {
             dslContext.selectFrom(this).where(
-                PARENT_ID.eq(pid)
+                ITEM_CODE.eq(itemCode)
             ).fetchOne()
+        }
+    }
+
+    fun getItemParent(dslContext: DSLContext): Result<TServiceItemRecord?> {
+        return with(TServiceItem.T_SERVICE_ITEM) {
+            dslContext.selectFrom(this).where(
+                PARENT_ID.isNotNull
+            ).fetch()
         }
     }
 

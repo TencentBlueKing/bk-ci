@@ -2,9 +2,9 @@ package com.tencent.devops.project.api.op
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.project.api.pojo.ItemInfoResponse
 import com.tencent.devops.project.api.pojo.ServiceItem
-import com.tencent.devops.project.pojo.Result
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -29,6 +29,18 @@ interface OPItemResource {
     fun parentList(
     ): Result<List<ServiceItem>>
 
+    @GET
+    @Path("/list")
+    @ApiOperation("查询根服务")
+    fun list(
+        @ApiParam("扩展名称")
+        @QueryParam("itemName")
+        itemName: String?,
+        @ApiParam("蓝盾服务Id")
+        @QueryParam("pid")
+        pid: String?
+    ): Result<List<ServiceItem>>
+
     @POST
     @Path("/")
     @ApiOperation("添加扩展点")
@@ -38,12 +50,12 @@ interface OPItemResource {
         userId: String,
         @ApiParam("扩展点信息", required = true )
         createInfo: ItemInfoResponse
-    ) : Result<String>
+    ) : Result<Boolean>
 
     @PUT
     @Path("/{itemId}")
     @ApiOperation("修改扩展点")
-    fun update(
+    fun get(
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
@@ -51,15 +63,15 @@ interface OPItemResource {
         @QueryParam("itemId")
         itemId: String,
         @ApiParam("扩展点信息", required = true )
-        createInfo: ItemInfoResponse
-    ) : Result<String>
+        updateInfo: ItemInfoResponse
+    ) : Result<Boolean>
 
     @GET
     @Path("/{itemId}")
     @ApiOperation("获取扩展点")
-    fun update(
+    fun get(
         @ApiParam("扩展点Id", required = true)
         @QueryParam("itemId")
         itemId: String
-    ) : Result<ServiceItem>
+    ) : Result<ServiceItem?>
 }

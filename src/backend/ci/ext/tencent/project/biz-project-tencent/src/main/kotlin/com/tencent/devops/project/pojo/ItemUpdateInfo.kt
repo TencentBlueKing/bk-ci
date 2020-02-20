@@ -12,7 +12,5 @@ data class ItemUpdateInfo (
     @ApiModelProperty("页面路径")
     val htmlPath: String?,
     @ApiModelProperty("入口字段路径")
-    val inputPath: String?,
-    @ApiModelProperty("修改人")
-    val updator: String
+    val inputPath: String?
 )

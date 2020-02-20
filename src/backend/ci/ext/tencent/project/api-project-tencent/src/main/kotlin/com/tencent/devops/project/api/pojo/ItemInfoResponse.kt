@@ -9,6 +9,8 @@ data class ItemInfoResponse (
     val itemName: String,
     @ApiModelProperty("扩展点标示")
     val itemCode: String,
+    @ApiModelProperty("扩展服务Id")
+    val pid: String,
     @ApiModelProperty("UI组件类型")
     val UIType: String,
     @ApiModelProperty("页面路径")
