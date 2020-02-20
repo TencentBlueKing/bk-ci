@@ -24,43 +24,41 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.api.ipt
+package com.tencent.devops.artifactory.api.service
 
-import com.tencent.devops.common.api.auth.AUTH_HEADER_PROJECT_ID
+import com.tencent.devops.artifactory.pojo.FileInfo
+import com.tencent.devops.artifactory.pojo.FileInfoPage
+import com.tencent.devops.artifactory.pojo.SearchProps
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.process.pojo.ipt.IptBuildArtifactoryInfo
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
-import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
+import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
-import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["BUILD_IPT_REPO_RESOURCE"], description = "IPT插件构建资源")
-@Path("/build/ipt/repo")
+@Api(tags = ["SERVICE_IPT"], description = "版本仓库-ipt-仓库资源")
+@Path("/service/ipt")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface BuildIptRepoResource {
-
-    @ApiOperation("")
-    @GET
-    @Path("/pipeline/{pipelineId}/commit/{commitId}/artifactorytInfo")
-    fun getCommitBuildArtifactorytInfo(
-        @HeaderParam(AUTH_HEADER_PROJECT_ID)
-        projectId: String,
-        @PathParam("pipelineId")
-        pipelineId: String,
-        @QueryParam("userId")
+interface ServiceIptResource {
+    @ApiOperation("根据元数据获取文件和属性")
+    @Path("/{projectId}/searchFileAndProperty")
+    @POST
+    fun searchFileAndProperty(
+        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @PathParam("commitId")
-        commitId: String,
-        @ApiParam("路径", required = true)
-        @QueryParam("filePath")
-        filePath: String?
-    ): Result<IptBuildArtifactoryInfo>
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("元数据", required = true)
+        searchProps: SearchProps
+    ): Result<FileInfoPage<FileInfo>>
 }

@@ -24,26 +24,34 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.api.ipt
+package com.tencent.devops.artifactory.resources.service
 
+import com.tencent.devops.artifactory.api.service.ServiceIptResource
+import com.tencent.devops.artifactory.pojo.FileInfo
+import com.tencent.devops.artifactory.pojo.FileInfoPage
+import com.tencent.devops.artifactory.pojo.SearchProps
+import com.tencent.devops.artifactory.service.artifactory.ArtifactorySearchService
+import com.tencent.devops.artifactory.service.bkrepo.BkRepoSearchService
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.gray.RepoGray
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.process.pojo.ipt.IptBuildArtifactoryInfo
-import com.tencent.devops.process.service.ipt.IptRepoService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class BuildIptRepoResourceImpl @Autowired constructor(
-    private val iptRepoService: IptRepoService
-) : BuildIptRepoResource {
-
-    override fun getCommitBuildArtifactorytInfo(
-        projectId: String,
-        pipelineId: String,
-        userId: String,
-        commitId: String,
-        filePath: String?
-    ): Result<IptBuildArtifactoryInfo> {
-        return Result(iptRepoService.getCommitBuildArtifactorytInfo(projectId, pipelineId, userId, commitId, filePath))
+class ServiceIptResourceImpl @Autowired constructor(
+    private val bkRepoSearchService: BkRepoSearchService,
+    private val artifactorySearchService: ArtifactorySearchService,
+    private val redisOperation: RedisOperation,
+    private val repoGray: RepoGray
+) : ServiceIptResource {
+    override fun searchFileAndProperty(userId: String, projectId: String, searchProps: SearchProps): Result<FileInfoPage<FileInfo>> {
+        return if (repoGray.isGray(projectId, redisOperation)) {
+            val result = bkRepoSearchService.searchFileAndProperty(userId, projectId, searchProps)
+            Result(FileInfoPage(result.second.size.toLong(), 0, 0, result.second, result.first))
+        } else {
+            val result = artifactorySearchService.searchFileAndProperty(userId, projectId, searchProps)
+            Result(FileInfoPage(result.second.size.toLong(), 0, 0, result.second, result.first))
+        }
     }
 }
