@@ -27,8 +27,6 @@ data class ExtServiceUpdateInfo(
     val publishTime: Long? = 0,
     @ApiModelProperty("是否是最后版本")
     val latestFlag: Boolean,
-    @ApiModelProperty("删除标签")
-    val deleteFlag: Boolean,
     @ApiModelProperty("修改用户")
     val modifierUser: String
 )

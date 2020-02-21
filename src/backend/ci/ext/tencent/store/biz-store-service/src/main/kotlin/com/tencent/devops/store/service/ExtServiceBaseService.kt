@@ -37,6 +37,7 @@ import com.tencent.devops.store.dao.ExtServiceVersionLogDao
 import com.tencent.devops.store.dao.common.StoreBuildInfoDao
 import com.tencent.devops.store.dao.common.StoreMemberDao
 import com.tencent.devops.store.dao.common.StoreProjectRelDao
+import com.tencent.devops.store.dao.common.StoreReleaseDao
 import com.tencent.devops.store.pojo.ExtServiceCreateInfo
 import com.tencent.devops.store.pojo.ExtServiceEnvCreateInfo
 import com.tencent.devops.store.pojo.ExtServiceFeatureCreateInfo
@@ -46,6 +47,9 @@ import com.tencent.devops.store.pojo.ExtServiceVersionLogCreateInfo
 import com.tencent.devops.store.pojo.StoreServiceItem
 import com.tencent.devops.store.pojo.common.ReleaseProcessItem
 import com.tencent.devops.store.pojo.common.StoreProcessInfo
+import com.tencent.devops.store.pojo.common.StoreReleaseCreateRequest
+import com.tencent.devops.store.pojo.common.UN_RELEASE
+import com.tencent.devops.store.pojo.common.enums.AuditTypeEnum
 import com.tencent.devops.store.pojo.enums.ExtServicePackageSourceTypeEnum
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreMemberTypeEnum
@@ -87,6 +91,8 @@ abstract class ExtServiceBaseService @Autowired constructor() {
     @Autowired
     lateinit var storeMemberDao: StoreMemberDao
     @Autowired
+    lateinit var storeReleaseDao: StoreReleaseDao
+    @Autowired
     lateinit var extFeatureDao: ExtServiceFeatureDao
     @Autowired
     lateinit var extServiceItemRelDao: ExtServiceItemRelDao
@@ -103,8 +109,9 @@ abstract class ExtServiceBaseService @Autowired constructor() {
     @Autowired
     lateinit var storeUserService: StoreUserService
     @Autowired
+    lateinit var serviceNotifyService: ExtServiceNotifyService
+    @Autowired
     lateinit var storeCommentService: StoreCommentService
-
 
     fun addExtService(
         userId: String,
@@ -202,6 +209,8 @@ abstract class ExtServiceBaseService @Autowired constructor() {
                     )
                 )
             }
+            // 添加扩展点使用记录
+            client.get(ServiceItemResource:: class).addServiceNum(extensionInfo.extensionItemList)
         }
         return Result(true)
     }
@@ -267,7 +276,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
             serviceFinalStatusList.add(ExtServiceStatusEnum.INIT.status.toByte())
         }
 
-        if(!serviceFinalStatusList.contains(serviceRecord.serviceStatus)) {
+        if (!serviceFinalStatusList.contains(serviceRecord.serviceStatus)) {
             return MessageCodeUtil.generateResponseDataObject(
                 //TODO: 需在core内添加新状态码
                 StoreMessageCode.USER_ATOM_VERSION_IS_NOT_FINISH,
@@ -295,20 +304,19 @@ abstract class ExtServiceBaseService @Autowired constructor() {
                     serviceId = serviceId,
                     extServiceUpdateInfo = ExtServiceUpdateInfo(
                         serviceName = submitDTO.serviceName,
-                        sunmmary = submitDTO.sunmmary,
-                        description = submitDTO.description,
                         version = submitDTO.version,
-                        logoUrl = submitDTO.logoUrl,
-                        modifierUser = userId,
                         status = serviceStatus.status,
                         statusMsg = "",
-                        deleteFlag = false,
-                        latestFlag = true
+                        logoUrl = submitDTO.logoUrl,
+                        sunmmary = submitDTO.sunmmary,
+                        description = submitDTO.description,
+                        latestFlag = true,
+                        modifierUser = userId
                     ),
                     extServiceVersionLogCreateInfo = ExtServiceVersionLogCreateInfo(
                         serviceId = serviceId,
                         releaseType = finalReleaseType,
-                        content = submitDTO.versionContent?: "",
+                        content = submitDTO.versionContent ?: "",
                         creatorUser = userId,
                         modifierUser = userId
                     )
@@ -330,7 +338,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
                     extServiceVersionLogCreateInfo = ExtServiceVersionLogCreateInfo(
                         serviceId = serviceId,
                         releaseType = submitDTO.releaseType.releaseType.toByte(),
-                        content = submitDTO.versionContent?: "",
+                        content = submitDTO.versionContent ?: "",
                         creatorUser = userId,
                         modifierUser = userId
                     )
@@ -347,7 +355,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
 
             // 添加扩展点
             val itemIdList = submitDTO.extensionItemList
-            if(null != itemIdList) {
+            if (null != itemIdList) {
                 extServiceItemRelDao.deleteByServiceId(context, serviceId)
                 extServiceItemRelDao.batchAdd(
                     dslContext = dslContext,
@@ -356,6 +364,8 @@ abstract class ExtServiceBaseService @Autowired constructor() {
                     itemIdList = itemIdList
                 )
             }
+            // 添加扩展点使用记录
+            client.get(ServiceItemResource:: class).addServiceNum(itemIdList)
 
             //TODO: 此处等carl完善
             //asyncHandleUpdateService(context, serviceId, userId)
@@ -372,7 +382,8 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         } else {
             val serviceCode = record.serviceCode
             // 判断用户是否有查询权限
-            val queryFlag = storeMemberDao.isStoreMember(dslContext, userId, serviceCode, StoreTypeEnum.SERVICE.type.toByte())
+            val queryFlag =
+                storeMemberDao.isStoreMember(dslContext, userId, serviceCode, StoreTypeEnum.SERVICE.type.toByte())
             if (!queryFlag) {
                 return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED)
             }
@@ -459,7 +470,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         return Result(MyServiceVO(count, page, pageSize, myService))
     }
 
-    fun offlineService(userId: String, serviceCode: String, serviceOfflineDTO: ServiceOfflineDTO): Result<Boolean>{
+    fun offlineService(userId: String, serviceCode: String, serviceOfflineDTO: ServiceOfflineDTO): Result<Boolean> {
         // 判断用户是否有权限下线
         if (!storeMemberDao.isStoreAdmin(dslContext, userId, serviceCode, StoreTypeEnum.SERVICE.type.toByte())) {
             return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED)
@@ -501,7 +512,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         })
     }
 
-    fun getServiceVersionListByCode(serviceCode: String, userId: String): Result<ServiceVersionListResp>{
+    fun getServiceVersionListByCode(serviceCode: String, userId: String): Result<ServiceVersionListResp> {
         logger.info("getServiceVersionListByCode serviceCode[$serviceCode]")
         val records = extServiceDao.listServiceByCode(dslContext, serviceCode)
         val serviceVersions = mutableListOf<ServiceVersionListItem?>()
@@ -520,9 +531,112 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         }
         logger.info("getServiceVersionListByCode serviceVersions[$serviceVersions]")
         return Result(ServiceVersionListResp(serviceVersions.size, serviceVersions))
-
     }
 
+    /**
+     * 取消发布
+     */
+    fun cancelRelease(userId: String, serviceId: String): Result<Boolean> {
+        logger.info("extService cancelRelease, userId=$userId, serviceId=$serviceId")
+        val status = ExtServiceStatusEnum.GROUNDING_SUSPENSION.status.toByte()
+        val (checkResult, code) = checkServiceVersionOptRight(userId, serviceId, status)
+        if (!checkResult) {
+            return MessageCodeUtil.generateResponseDataObject(code)
+        }
+        extServiceDao.setServiceStatusById(
+            dslContext,
+            serviceId,
+            status,
+            userId,
+            MessageCodeUtil.getCodeLanMessage(UN_RELEASE)
+        )
+//        // 通过websocket推送状态变更消息
+//        storeWebsocketService.sendWebsocketMessage(userId, serviceId)
+
+        return Result(true)
+    }
+
+    /**
+     * 确认通过测试，继续发布
+     */
+    fun passTest(userId: String, serviceId: String): Result<Boolean> {
+        logger.info("passTest, userId=$userId, serviceId=$serviceId")
+        val serviceRecord = extServiceDao.getServiceById(dslContext, serviceId)
+        logger.info("passTest serviceRecord is:$serviceRecord")
+        if (null == serviceRecord) {
+            return MessageCodeUtil.generateResponseDataObject(
+                CommonMessageCode.PARAMETER_IS_INVALID,
+                arrayOf(serviceId),
+                false
+            )
+        }
+        // 查看当前版本之前的版本是否有已发布的，如果有已发布的版本则只是普通的升级操作而不需要审核
+        val isNormalUpgrade = getNormalUpgradeFlag(serviceRecord.serviceCode, serviceRecord.serviceStatus.toInt())
+        logger.info("passTest isNormalUpgrade is:$isNormalUpgrade")
+        val serviceStatus = getPassTestStatus(isNormalUpgrade)
+        val (checkResult, code) = checkServiceVersionOptRight(userId, serviceId, serviceStatus, isNormalUpgrade)
+        if (!checkResult) {
+            return MessageCodeUtil.generateResponseDataObject(code)
+        }
+        if (isNormalUpgrade) {
+            val creator = serviceRecord.creator
+            dslContext.transaction { t ->
+                val context = DSL.using(t)
+                // 清空旧版本LATEST_FLAG
+                extServiceDao.cleanLatestFlag(context, serviceRecord.serviceCode)
+                // 记录发布信息
+                val pubTime = LocalDateTime.now()
+                storeReleaseDao.addStoreReleaseInfo(
+                    dslContext = context,
+                    userId = userId,
+                    storeReleaseCreateRequest = StoreReleaseCreateRequest(
+                        storeCode = serviceRecord.serviceCode,
+                        storeType = StoreTypeEnum.SERVICE,
+                        latestUpgrader = creator,
+                        latestUpgradeTime = pubTime
+                    )
+                )
+                extServiceDao.updateExtServiceBaseInfo(
+                    dslContext = dslContext,
+                    userId = userId,
+                    serviceId = serviceId,
+                    extServiceUpdateInfo = ExtServiceUpdateInfo(
+                        status = serviceStatus.toInt(), latestFlag = true, modifierUser = userId
+                    )
+                )
+//                // 通过websocket推送状态变更消息
+//                storeWebsocketService.sendWebsocketMessage(userId, serviceId)
+            }
+            // 发送版本发布邮件
+            serviceNotifyService.sendAtomReleaseAuditNotifyMessage(serviceId, AuditTypeEnum.AUDIT_SUCCESS)
+        } else {
+            extServiceDao.setServiceStatusById(dslContext, serviceId, serviceStatus, userId, "")
+//            // 通过websocket推送状态变更消息
+//            storeWebsocketService.sendWebsocketMessage(userId, serviceId)
+        }
+        return Result(true)
+    }
+
+    fun rebuild(projectCode: String, userId: String, serviceId: String): Result<Boolean> {
+        logger.info("rebuild, projectCode=$projectCode, userId=$userId, serviceId=$serviceId")
+        // 判断是否可以启动构建
+        val status = ExtServiceStatusEnum.BUILDING.status.toByte()
+        val (checkResult, code) = checkServiceVersionOptRight(userId, serviceId, status)
+        if (!checkResult) {
+            return MessageCodeUtil.generateResponseDataObject(code)
+        }
+        // 拉取task.json，检查格式，更新入库
+        val serviceRecord = extServiceDao.getServiceById(dslContext, serviceId) ?: return Result(false)
+        val serviceCode = serviceRecord.serviceCode
+        val serviceName = serviceRecord.serviceName
+        val serviceVersion = serviceRecord.version
+        // TODO 此处等carl完善
+        return Result(true)
+    }
+
+    fun getPassTestStatus(isNormalUpgrade: Boolean): Byte {
+        return if (isNormalUpgrade) ExtServiceStatusEnum.RELEASED.status.toByte() else ExtServiceStatusEnum.AUDITING.status.toByte()
+    }
 
     @Suppress("UNCHECKED_CAST")
     private fun getServiceVersion(serviceId: String, userId: String): Result<ServiceVersionVO?> {
@@ -535,16 +649,17 @@ abstract class ExtServiceBaseService @Autowired constructor() {
             val serviceCode = record.serviceCode
             val defaultFlag = record.deleteFlag
             val projectCode = storeProjectRelDao.getInitProjectCodeByStoreCode(
-                    dslContext,
-                    serviceCode,
-                    StoreTypeEnum.SERVICE.type.toByte()
-                )
+                dslContext,
+                serviceCode,
+                StoreTypeEnum.SERVICE.type.toByte()
+            )
             logger.info("getServiceVersion projectCode: $projectCode")
             val featureInfoRecord = extFeatureDao.getLatestServiceByCode(dslContext, serviceCode)
             logger.info("getServiceVersion featureInfoRecord: $featureInfoRecord")
 
             val repositoryHashId = featureInfoRecord!!.repositoryHashId
-            val flag = storeUserService.isCanInstallStoreComponent(defaultFlag , userId, serviceCode, StoreTypeEnum.SERVICE)
+            val flag =
+                storeUserService.isCanInstallStoreComponent(defaultFlag, userId, serviceCode, StoreTypeEnum.SERVICE)
             val serviceEnv = extServiceEnvDao.getMarketServiceEnvInfoByServiceId(dslContext, serviceId)
             logger.info("getServiceVersion serviceEnv: $serviceEnv")
             val itemList = getItemByItems(serviceId)
@@ -590,8 +705,8 @@ abstract class ExtServiceBaseService @Autowired constructor() {
             )
         }
     }
-    abstract fun getRepositoryInfo(projectCode: String?, repositoryHashId: String?): Result<Repository?>
 
+    abstract fun getRepositoryInfo(projectCode: String?, repositoryHashId: String?): Result<Repository?>
 
     abstract fun handleServicePackage(
         extensionInfo: InitExtServiceDTO,
@@ -635,7 +750,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
 //        )
     }
 
-    private fun getItemByItems(serviceId: String) : List<StoreServiceItem>{
+    private fun getItemByItems(serviceId: String): List<StoreServiceItem> {
         val serviceItems = extServiceItemRelDao.getItemByServiceId(dslContext, serviceId)
         val itemIds = mutableListOf<String>()
         serviceItems?.forEach { it ->
@@ -734,7 +849,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
             ExtServiceStatusEnum.INIT.status -> {
                 storeCommonService.setProcessInfo(processInfo, totalStep, NUM_ONE, DOING)
             }
-            ExtServiceStatusEnum.BUILDING.status, ExtServiceStatusEnum.COMMITTING.status -> {
+            ExtServiceStatusEnum.BUILDING.status, ExtServiceStatusEnum.COMMITTING.status, ExtServiceStatusEnum.DEPLOY.status -> {
                 storeCommonService.setProcessInfo(processInfo, totalStep, NUM_TWO, DOING)
             }
             ExtServiceStatusEnum.BUILD_FAIL.status -> {
@@ -788,6 +903,99 @@ abstract class ExtServiceBaseService @Autowired constructor() {
             }
         }
         return false
+    }
+
+    /**
+     * 检查版本发布过程中的操作权限
+     */
+    fun checkServiceVersionOptRight(
+        userId: String,
+        serviceId: String,
+        status: Byte,
+        isNormalUpgrade: Boolean? = null
+    ): Pair<Boolean, String> {
+        logger.info("checkAtomVersionOptRight, userId=$userId, serviceId=$serviceId, status=$status, isNormalUpgrade=$isNormalUpgrade")
+        val record =
+            extServiceDao.getServiceById(dslContext, serviceId) ?: return Pair(
+                false,
+                CommonMessageCode.PARAMETER_IS_INVALID
+            )
+        val servcieCode = record.serviceCode
+        val creator = record.creator
+        val recordStatus = record.serviceStatus
+
+        // 判断用户是否有权限(当前版本的创建者和管理员可以操作)
+        if (!(storeMemberDao.isStoreAdmin(
+                dslContext,
+                userId,
+                servcieCode,
+                StoreTypeEnum.SERVICE.type.toByte()
+            ) || creator == userId)
+        ) {
+            return Pair(false, CommonMessageCode.PERMISSION_DENIED)
+        }
+        logger.info("record status=$recordStatus, status=$status")
+        val allowReleaseStatus = if (isNormalUpgrade != null && isNormalUpgrade) ExtServiceStatusEnum.TESTING
+        else ExtServiceStatusEnum.AUDITING
+        var validateFlag = true
+        if (status == ExtServiceStatusEnum.COMMITTING.status.toByte() &&
+            recordStatus != ExtServiceStatusEnum.INIT.status.toByte()
+        ) {
+            validateFlag = false
+        } else if (status == ExtServiceStatusEnum.BUILDING.status.toByte() &&
+            recordStatus !in (
+                listOf(
+                    ExtServiceStatusEnum.COMMITTING.status.toByte(),
+                    ExtServiceStatusEnum.BUILD_FAIL.status.toByte(),
+                    ExtServiceStatusEnum.TESTING.status.toByte()
+                ))
+        ) {
+            validateFlag = false
+        } else if (status == ExtServiceStatusEnum.BUILD_FAIL.status.toByte() &&
+            recordStatus !in (
+                listOf(
+                    ExtServiceStatusEnum.COMMITTING.status.toByte(),
+                    ExtServiceStatusEnum.BUILDING.status.toByte(),
+                    ExtServiceStatusEnum.BUILD_FAIL.status.toByte(),
+                    ExtServiceStatusEnum.TESTING.status.toByte()
+                ))
+        ) {
+            validateFlag = false
+        } else if (status == ExtServiceStatusEnum.TESTING.status.toByte() &&
+            recordStatus != ExtServiceStatusEnum.BUILDING.status.toByte()
+        ) {
+            validateFlag = false
+        } else if (status == ExtServiceStatusEnum.AUDITING.status.toByte() &&
+            recordStatus != ExtServiceStatusEnum.TESTING.status.toByte()
+        ) {
+            validateFlag = false
+        } else if (status == ExtServiceStatusEnum.AUDIT_REJECT.status.toByte() &&
+            recordStatus != ExtServiceStatusEnum.AUDITING.status.toByte()
+        ) {
+            validateFlag = false
+        } else if (status == ExtServiceStatusEnum.RELEASED.status.toByte() &&
+            recordStatus != allowReleaseStatus.status.toByte()
+        ) {
+            validateFlag = false
+        } else if (status == ExtServiceStatusEnum.GROUNDING_SUSPENSION.status.toByte() &&
+            recordStatus == ExtServiceStatusEnum.RELEASED.status.toByte()
+        ) {
+            validateFlag = false
+        } else if (status == ExtServiceStatusEnum.UNDERCARRIAGING.status.toByte() &&
+            recordStatus == ExtServiceStatusEnum.RELEASED.status.toByte()
+        ) {
+            validateFlag = false
+        } else if (status == ExtServiceStatusEnum.UNDERCARRIAGED.status.toByte() &&
+            recordStatus !in (
+                listOf(
+                    ExtServiceStatusEnum.UNDERCARRIAGING.status.toByte(),
+                    ExtServiceStatusEnum.RELEASED.status.toByte()
+                ))
+        ) {
+            validateFlag = false
+        }
+
+        return if (validateFlag) Pair(true, "") else Pair(false, StoreMessageCode.USER_ATOM_RELEASE_STEPS_ERROR)
     }
 
     companion object {

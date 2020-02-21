@@ -3,9 +3,11 @@ package com.tencent.devops.store.api
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ACCESS_TOKEN
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.store.pojo.atom.AtomOfflineReq
 import com.tencent.devops.store.pojo.common.StoreProcessInfo
 import com.tencent.devops.store.pojo.dto.InitExtServiceDTO
 import com.tencent.devops.store.pojo.dto.ServiceOfflineDTO
+import com.tencent.devops.store.pojo.dto.ServiceOfflineReq
 import com.tencent.devops.store.pojo.dto.SubmitDTO
 import com.tencent.devops.store.pojo.vo.MyServiceVO
 import com.tencent.devops.store.pojo.vo.ServiceVersionVO
@@ -66,7 +68,7 @@ interface UserExtServiceDeskResource {
     @ApiOperation("工作台--下架扩展服务")
     @PUT
     @Path("/{serviceCode}/offline/")
-    fun offlineAtom(
+    fun offlineService(
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
@@ -114,4 +116,48 @@ interface UserExtServiceDeskResource {
     @GET
     @Path("/desk/service/language")
     fun listLanguage(): Result<List<String?>>
+
+
+    @ApiOperation("扩展服务取消发布")
+    @PathParam("serviceId")
+    @PUT
+    @Path("/release/cancel/{serviceId}")
+    fun cancelRelease(
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("serviceId", required = true)
+        @PathParam("serviceId")
+        serviceId: String
+    ): Result<Boolean>
+
+    @ApiOperation("扩展服务确认通过测试")
+    @PathParam("serviceId")
+    @PUT
+    @Path("/release/passTest/{serviceId}")
+    fun passTest(
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("serviceId", required = true)
+        @PathParam("serviceId")
+        serviceId: String
+    ): Result<Boolean>
+
+    @ApiOperation("重新构建")
+    @PathParam("serviceId")
+    @PUT
+    @Path("/release/rebuild/{serviceId}")
+    fun rebuild(
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目代码", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @ApiParam("serviceId", required = true)
+        @PathParam("serviceId")
+        serviceId: String
+    ): Result<Boolean>
+
 }

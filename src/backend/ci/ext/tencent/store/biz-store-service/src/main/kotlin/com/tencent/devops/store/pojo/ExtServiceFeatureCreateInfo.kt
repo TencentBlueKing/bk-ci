@@ -20,7 +20,7 @@ data class ExtServiceFeatureCreateInfo(
     @ApiModelProperty("代码库地址")
     val codeSrc: String? = null,
     @ApiModelProperty("删除标签")
-    val deleteFlag: Boolean? = null,
+    val deleteFlag: Boolean? = false,
     @ApiModelProperty("添加用户")
     val creatorUser: String,
     @ApiModelProperty("修改用户")

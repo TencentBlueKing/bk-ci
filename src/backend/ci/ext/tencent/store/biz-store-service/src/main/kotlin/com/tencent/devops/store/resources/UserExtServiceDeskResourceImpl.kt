@@ -6,6 +6,7 @@ import com.tencent.devops.store.api.UserExtServiceDeskResource
 import com.tencent.devops.store.pojo.common.StoreProcessInfo
 import com.tencent.devops.store.pojo.dto.InitExtServiceDTO
 import com.tencent.devops.store.pojo.dto.ServiceOfflineDTO
+import com.tencent.devops.store.pojo.dto.ServiceOfflineReq
 import com.tencent.devops.store.pojo.dto.SubmitDTO
 import com.tencent.devops.store.pojo.vo.MyServiceVO
 import com.tencent.devops.store.pojo.vo.ServiceVersionVO
@@ -40,7 +41,7 @@ class UserExtServiceDeskResourceImpl @Autowired constructor(
         return extServiceBaseService.getExtensionServiceInfo(userId, serviceId)
     }
 
-    override fun offlineAtom(userId: String, serviceCode: String, serviceOffline: ServiceOfflineDTO): Result<Boolean> {
+    override fun offlineService(userId: String, serviceCode: String, serviceOffline: ServiceOfflineDTO): Result<Boolean> {
         return extServiceBaseService.offlineService(
             userId = userId,
             serviceCode = serviceCode,
@@ -69,5 +70,17 @@ class UserExtServiceDeskResourceImpl @Autowired constructor(
 
     override fun listLanguage(): Result<List<String?>> {
         return Result(extServiceBaseService.listLanguage())
+    }
+
+    override fun cancelRelease(userId: String, serviceId: String): Result<Boolean> {
+        return extServiceBaseService.cancelRelease(userId, serviceId)
+    }
+
+    override fun passTest(userId: String, serviceId: String): Result<Boolean> {
+        return extServiceBaseService.passTest(userId, serviceId)
+    }
+
+    override fun rebuild(userId: String, projectId: String, serviceId: String): Result<Boolean> {
+        return extServiceBaseService.rebuild(projectId, userId, serviceId)
     }
 }

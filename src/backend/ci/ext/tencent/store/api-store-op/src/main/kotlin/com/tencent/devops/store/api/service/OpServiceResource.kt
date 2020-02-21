@@ -27,7 +27,7 @@ import javax.ws.rs.core.MediaType
 interface OpServiceResource {
 
 
-    @ApiOperation("获取所有扩展服务信息")
+    @ApiOperation("获取扩展服务信息")
     @GET
     @Path("/")
     fun listAllExtsionServices(
@@ -43,9 +43,9 @@ interface OpServiceResource {
         @ApiParam("扩展服务状态", required = false)
         @QueryParam("serviceStatus")
         serviceStatus: ExtServiceStatusEnum?,
-//        @ApiParam("是否推荐", required = false)
-//        @QueryParam("classifyId")
-//        classifyId: Int?,
+        @ApiParam("是否推荐", required = false)
+        @QueryParam("isRecommend")
+        isRecommend: Int?,
         @ApiParam("是否公共", required = false)
         @QueryParam("isPublic")
         isPublic: Int?,

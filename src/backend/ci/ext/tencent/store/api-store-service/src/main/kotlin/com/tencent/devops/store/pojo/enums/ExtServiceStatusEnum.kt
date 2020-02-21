@@ -35,6 +35,7 @@ enum class ExtServiceStatusEnum(val status: Int) {
     BUILDING(2), // 构建中
     BUILD_FAIL(3), // 构建失败
     EDIT(4), // 提交资料
+    DEPLOY(5), // 部署中
     TESTING(6), // 测试中
     AUDITING(7), // 审核中
     AUDIT_REJECT(8), // 审核驳回

@@ -3,6 +3,7 @@ package com.tencent.devops.store.dao
 import com.tencent.devops.model.store.tables.TClassify
 import com.tencent.devops.model.store.tables.TExtensionService
 import com.tencent.devops.model.store.tables.TExtensionServiceFeature
+import com.tencent.devops.model.store.tables.TExtensionServiceItemRel
 import com.tencent.devops.model.store.tables.TExtensionServiceLabelRel
 import com.tencent.devops.model.store.tables.TLabel
 import com.tencent.devops.model.store.tables.TStoreMember
@@ -10,7 +11,6 @@ import com.tencent.devops.model.store.tables.TStoreStatisticsTotal
 import com.tencent.devops.model.store.tables.records.TExtensionServiceRecord
 import com.tencent.devops.store.pojo.ExtServiceCreateInfo
 import com.tencent.devops.store.pojo.ExtServiceUpdateInfo
-import com.tencent.devops.store.pojo.atom.enums.AtomCategoryEnum
 import com.tencent.devops.store.pojo.atom.enums.MarketAtomSortTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.dto.ServiceApproveReq
@@ -22,9 +22,7 @@ import org.jooq.Record
 import org.jooq.Result
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
-import org.springframework.util.StringUtils
 import java.math.BigDecimal
-import java.net.URLDecoder
 import java.time.LocalDateTime
 
 @Repository
@@ -80,6 +78,18 @@ class ExtServiceDao {
                     LocalDateTime.now(),
                     LocalDateTime.now()
                 )
+                .execute()
+        }
+    }
+
+    /**
+     * 清空LATEST_FLAG
+     */
+    fun cleanLatestFlag(dslContext: DSLContext, serviceCode: String) {
+        with(TExtensionService.T_EXTENSION_SERVICE) {
+            dslContext.update(this)
+                .set(LATEST_FLAG, false)
+                .where(SERVICE_CODE.eq(serviceCode))
                 .execute()
         }
     }
@@ -347,44 +357,85 @@ class ExtServiceDao {
         return baseStep.where(conditions).fetchOne(0, Int::class.java)
     }
 
+    /**
+     * 设置原子状态（单个版本）
+     */
+    fun setServiceStatusById(dslContext: DSLContext, serviceId: String, serviceStatus: Byte, userId: String, msg: String?) {
+        with(TExtensionService.T_EXTENSION_SERVICE) {
+            val baseStep = dslContext.update(this)
+                .set(SERVICE_STATUS, serviceStatus)
+            if (!msg.isNullOrEmpty()) {
+                baseStep.set(SERVICE_STATUS_MSG, msg)
+            }
+            baseStep.set(MODIFIER, userId)
+                .set(UPDATE_TIME, LocalDateTime.now())
+                .where(ID.eq(serviceId))
+                .execute()
+        }
+    }
 
-    fun getOpPipelineServices(
+    fun queryServicesFromOp(
         dslContext: DSLContext,
         serviceName: String?,
         itemId: String?,
+        isRecommend: Boolean?,
+        isPublic: Boolean?,
         lableId: String?,
-        serviceStatus: ExtServiceStatusEnum?,
+        serviceStatus: Boolean?,
         sortType: String?,
-        desc: Boolean?,
         page: Int?,
         pageSize: Int?
-    ): Result<TExtensionServiceRecord> {
-        with(TExtensionService.T_EXTENSION_SERVICE) {
-            val conditions = mutableListOf<Condition>()
-            if(!serviceName.isNullOrEmpty()){
-                conditions.add(SERVICE_NAME.eq(serviceName))
-            }
+    ): Result<Record> {
+        val a = TExtensionService.T_EXTENSION_SERVICE.`as`("a")
+        val b = TExtensionServiceFeature.T_EXTENSION_SERVICE_FEATURE.`as`("b")
+        val c = TExtensionServiceItemRel.T_EXTENSION_SERVICE_ITEM_REL.`as`("c")
+        val d = TExtensionServiceLabelRel.T_EXTENSION_SERVICE_LABEL_REL.`as`("d")
+        val conditions = mutableListOf<Condition>()
+        if(null != serviceName){
+            conditions.add(a.SERVICE_NAME.like(serviceName))
+        }
+        if(null != itemId){
+            conditions.add(c.ITEM_ID.eq(itemId))
+        }
 
-            if(serviceStatus != null){
-                conditions.add(SERVICE_STATUS.eq(serviceStatus.status.toByte()))
-            }
+        if(null != lableId){
+            conditions.add(d.LABEL_ID.eq(lableId))
+        }
 
-            val baseStep = dslContext.selectFrom(this)
-            if (null != sortType) {
-                if (desc != null && desc) {
-                    baseStep.where(conditions).orderBy(DSL.field(sortType).desc())
-                } else {
-                    baseStep.where(conditions).orderBy(DSL.field(sortType).asc())
-                }
-            } else {
-                baseStep.where(conditions)
-            }
+        if(null != isPublic){
+            conditions.add(b.PUBLIC_FLAG.eq(isPublic))
+        }
 
-            return if (null != page && null != pageSize) {
-                baseStep.limit((page - 1) * pageSize, pageSize).fetch()
-            } else {
-                baseStep.fetch()
+        if(null != isRecommend){
+            conditions.add(b.RECOMMEND_FLAG.eq(isRecommend))
+        }
+
+        if(null != serviceStatus){
+            if(serviceStatus){
+                conditions.add(a.SERVICE_STATUS.eq(ExtServiceStatusEnum.AUDITING.status.toByte()))
             }
+            else{
+                conditions.add(a.SERVICE_STATUS.notEqual(ExtServiceStatusEnum.AUDITING.status.toByte()))
+            }
+        }
+        val t = dslContext.select(
+            a.ID.`as`("itemId"),
+            a.SERVICE_STATUS.`as`("serviceStatus"),
+            a.SERVICE_NAME.`as`("serviceName"),
+            a.SERVICE_CODE.`as`("serviceCode"),
+            d.LABEL_ID.`as`("labelId"),
+            a.VERSION.`as`("version"),
+            a.PUB_TIME.`as`("pubTime"),
+            a.PUBLISHER.`as`("publisher"),
+            a.UPDATE_TIME.`as`("updateTime")
+        ).from(a).join(b).on(a.SERVICE_CODE.eq(a.SERVICE_CODE)).
+            join(c).on(a.ID.eq(c.SERVICE_ID)).
+            join(d).on(a.ID.eq(d.SERVICE_ID)).where(conditions)
+        val baseStep = dslContext.select().from(t).orderBy(a.UPDATE_TIME.desc())
+        return if (null != page && null != pageSize) {
+            baseStep.limit((page - 1) * pageSize, pageSize).fetch()
+        } else {
+            baseStep.fetch()
         }
     }
 

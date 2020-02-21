@@ -31,4 +31,12 @@ class OPItemResourceImpl @Autowired constructor(
     override fun get(itemId: String): Result<ServiceItem?> {
         return itemService.getItem(itemId)
     }
+
+    override fun delete(userId: String, itemId: String): Result<Boolean> {
+        return itemService.delete(userId, itemId)
+    }
+
+    override fun disable(userId: String, itemId: String): Result<Boolean> {
+        return itemService.disable(userId, itemId)
+    }
 }

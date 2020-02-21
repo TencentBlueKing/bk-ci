@@ -19,8 +19,6 @@ data class ExtensionServiceVO(
     val serviceStatus: Int,
     @ApiModelProperty("扩展服务发布者")
     val publisher: String?,
-    @ApiModelProperty("删除标签")
-    val deleteFlag: Boolean,
     @ApiModelProperty("修改时间")
     val modifierTime: String
 )

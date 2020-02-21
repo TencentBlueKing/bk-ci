@@ -18,4 +18,9 @@ class ServiceItemResourceImpl @Autowired constructor(
     override fun getItemListsByIds(itemIds: List<String>): Result<List<ExtItemDTO>?> {
         return Result(serviceItemService.getItemByIds(itemIds))
     }
+
+    override fun addServiceNum(itemIds: List<String>): Result<Boolean> {
+        return Result(serviceItemService.addServiceNum(itemIds))
+
+    }
 }

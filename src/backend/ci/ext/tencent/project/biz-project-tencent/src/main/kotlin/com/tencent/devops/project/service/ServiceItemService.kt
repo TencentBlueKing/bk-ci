@@ -130,6 +130,16 @@ class ServiceItemService @Autowired constructor(
         return itemList
     }
 
+    fun addServiceNum(itemIds: List<String>): Boolean {
+        logger.info("addServiceNum: itemIds[$itemIds]")
+        val ids = itemIds.joinToString(",")
+        serviceItemDao.getItemByIds(dslContext, ids)?.forEach {
+            val serviceNum = it!!.serviceNum + 1
+            serviceItemDao.addCount(dslContext, it.id, serviceNum)
+        }
+        return true
+    }
+
     private fun findParent(serviceItem: ServiceItem): ExtItemDTO {
         logger.info("findParent: serviceItemId: ${serviceItem.itemId}, parentId:${serviceItem.parentId}")
         val result: ExtItemDTO
@@ -150,7 +160,7 @@ class ServiceItemService @Autowired constructor(
         return result
     }
 
-    fun getParentList(): Result<List<ServiceItem>>{
+    fun getParentList(): Result<List<ServiceItem>> {
         val parentItemList = mutableListOf<ServiceItem>()
         serviceItemDao.getItemParent(dslContext)?.forEach {
             parentItemList.add(
@@ -234,6 +244,31 @@ class ServiceItemService @Autowired constructor(
             parentId = itemRecord.parentId
         )
         return Result(itemInfo)
+    }
+
+    fun delete(userId: String, itemId: String): Result<Boolean> {
+        if (!isItemCanDeleteOrDisable(itemId)) {
+            throw  RuntimeException("扩展点已绑定扩展服务，不能操作")
+        }
+        serviceItemDao.delete(dslContext, userId, itemId)
+        return Result(true)
+    }
+
+    fun disable(userId: String, itemId: String): Result<Boolean> {
+        if (!isItemCanDeleteOrDisable(itemId)) {
+            throw  RuntimeException("扩展点已绑定扩展服务，不能禁用")
+        }
+        serviceItemDao.disable(dslContext, userId, itemId)
+        return Result(true)
+    }
+
+    private fun isItemCanDeleteOrDisable(itemId: String): Boolean {
+        val itemRecord = serviceItemDao.getItemById(dslContext, itemId) ?: throw RuntimeException("数据不存在")
+        val count = itemRecord.serviceNum
+        if (count == 0) {
+            return true
+        }
+        return false
     }
 
     companion object {

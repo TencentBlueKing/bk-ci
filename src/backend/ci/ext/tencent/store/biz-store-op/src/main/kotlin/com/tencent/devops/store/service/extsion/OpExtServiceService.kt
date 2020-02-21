@@ -2,7 +2,6 @@ package com.tencent.devops.store.service.extsion
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.store.dao.ExtServiceDao
 import com.tencent.devops.store.dao.common.StoreReleaseDao
@@ -34,20 +33,23 @@ class OpExtServiceService @Autowired constructor(
         serviceName: String?,
         itemId: String?,
         lableId: String?,
-        serviceStatus: ExtServiceStatusEnum?,
+        isRecommend: Boolean?,
+        isPublic: Boolean?,
+        serviceStatus: Boolean?,
         sortType: String?,
         desc: Boolean?,
         page: Int?,
         pageSize: Int?
     ): Result<ExtServiceInfoResp?> {
-        val serviceRecords = extServiceDao.getOpPipelineServices(
+        val serviceRecords = extServiceDao.queryServicesFromOp(
             dslContext = dslContext,
             serviceName = serviceName,
+            isPublic = isPublic,
+            isRecommend = isRecommend,
             itemId = itemId,
             lableId = lableId,
             serviceStatus = serviceStatus,
             sortType = sortType,
-            desc = desc,
             page = page,
             pageSize = pageSize
         )
@@ -55,19 +57,19 @@ class OpExtServiceService @Autowired constructor(
         serviceRecords?.forEach {
             extensionServiceInfoList.add(
                 ExtensionServiceVO(
-                    serviceId =  it.id,
-                    serviceName = it.serviceName,
-                    serviceCode = it.serviceCode,
-                    serviceStatus = it.serviceStatus.toInt(),
-                    version = it.version,
-                    publisher = it.publisher,
-                    // TODO: 添加调试项目
-                    projectCode = it.serviceCode,
-                    deleteFlag = it.deleteFlag,
-                    modifierTime = DateTimeUtil.toDateTime(it.updateTime as LocalDateTime)
+                    serviceId = it["itemId"] as String,
+                    serviceCode = it["serviceCode"] as String,
+                    serviceName = it["serviceName"] as String,
+                    serviceStatus = it["serviceStatus"] as Int,
+                    publisher = it["publisher"] as String,
+                    // TODO: 还需要添加label
+                    projectCode = "",
+                    modifierTime = it["updateTime"] as String,
+                    version = it["version"] as String
                 )
             )
         }
+
         return Result(ExtServiceInfoResp(serviceRecords.size, page, pageSize, extensionServiceInfoList))
     }
 

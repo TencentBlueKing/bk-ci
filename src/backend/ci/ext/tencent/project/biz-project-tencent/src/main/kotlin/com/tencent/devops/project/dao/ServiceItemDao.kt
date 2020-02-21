@@ -16,7 +16,8 @@ class ServiceItemDao {
 
     fun add(dslContext: DSLContext, userId: String, info: ItemCreateInfo) {
         with(TServiceItem.T_SERVICE_ITEM) {
-            dslContext.insertInto(this,
+            dslContext.insertInto(
+                this,
                 ID,
                 ITEM_CODE,
                 ITEM_NAME,
@@ -43,16 +44,16 @@ class ServiceItemDao {
     fun update(dslContext: DSLContext, itemId: String, userId: String, info: ItemUpdateInfo) {
         with(TServiceItem.T_SERVICE_ITEM) {
             val baseStep = dslContext.update(this)
-            if(null != info.itemName){
+            if (null != info.itemName) {
                 baseStep.set(ITEM_NAME, info.itemName)
             }
-            if(null != info.htmlPath){
+            if (null != info.htmlPath) {
                 baseStep.set(HTML_PATH, info.htmlPath)
             }
-            if(null != info.pid){
+            if (null != info.pid) {
                 baseStep.set(PARENT_ID, info.pid)
             }
-            if(null != info.UIType){
+            if (null != info.UIType) {
                 baseStep.set(HTML_COMPONENT_TYPE, info.UIType)
             }
             baseStep.set(MODIFIER, userId)
@@ -62,14 +63,46 @@ class ServiceItemDao {
         }
     }
 
-    fun queryItem(dslContext: DSLContext, itemQueryInfo: ItemQueryInfo): Result<TServiceItemRecord?>{
+    fun delete(dslContext: DSLContext, userId: String, itemId: String) {
+        with(TServiceItem.T_SERVICE_ITEM) {
+            val baseStep = dslContext.update(this)
+            baseStep.set(ITEM_STATUS, "DELETE")
+            baseStep.set(MODIFIER, userId)
+            baseStep.set(UPDATE_TIME, LocalDateTime.now())
+                .where(ID.eq(itemId))
+                .execute()
+        }
+    }
+
+    fun disable(dslContext: DSLContext, userId: String, itemId: String) {
+        with(TServiceItem.T_SERVICE_ITEM) {
+            val baseStep = dslContext.update(this)
+            baseStep.set(ITEM_STATUS, "DISABLE")
+            baseStep.set(MODIFIER, userId)
+            baseStep.set(UPDATE_TIME, LocalDateTime.now())
+                .where(ID.eq(itemId))
+                .execute()
+        }
+    }
+
+    fun addCount(dslContext: DSLContext, itemId: String, serviceNum: Int) {
+        with(TServiceItem.T_SERVICE_ITEM) {
+            val baseStep = dslContext.update(this)
+            baseStep.set(SERVICE_NUM, serviceNum)
+            baseStep.set(UPDATE_TIME, LocalDateTime.now())
+                .where(ID.eq(itemId))
+                .execute()
+        }
+    }
+
+    fun queryItem(dslContext: DSLContext, itemQueryInfo: ItemQueryInfo): Result<TServiceItemRecord?> {
         return with(TServiceItem.T_SERVICE_ITEM) {
             val whereStep = dslContext.selectFrom(this)
-            if(itemQueryInfo.itemName != null){
+            if (itemQueryInfo.itemName != null) {
                 whereStep.where(ITEM_NAME.like(itemQueryInfo.itemName))
             }
 
-            if(itemQueryInfo.pid != null){
+            if (itemQueryInfo.pid != null) {
                 whereStep.where(PARENT_ID.eq(itemQueryInfo.pid))
             }
             whereStep.orderBy(UPDATE_TIME).fetch()

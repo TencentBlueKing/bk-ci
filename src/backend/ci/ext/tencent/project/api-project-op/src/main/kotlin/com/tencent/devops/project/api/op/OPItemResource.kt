@@ -9,6 +9,7 @@ import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
+import javax.ws.rs.DELETE
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
@@ -31,7 +32,7 @@ interface OPItemResource {
 
     @GET
     @Path("/list")
-    @ApiOperation("查询根服务")
+    @ApiOperation("列表查询")
     fun list(
         @ApiParam("扩展名称")
         @QueryParam("itemName")
@@ -74,4 +75,28 @@ interface OPItemResource {
         @QueryParam("itemId")
         itemId: String
     ) : Result<ServiceItem?>
+
+    @DELETE
+    @Path("/{itemId}")
+    @ApiOperation("删除扩展点")
+    fun delete(
+        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @ApiParam("扩展点Id", required = true)
+        @QueryParam("itemId")
+        itemId: String
+    ) : Result<Boolean>
+
+    @PUT
+    @Path("/{itemId}/forbidden")
+    @ApiOperation("禁用扩展点")
+    fun disable(
+        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @ApiParam("扩展点Id", required = true)
+        @QueryParam("itemId")
+        itemId: String
+    ) : Result<Boolean>
 }
