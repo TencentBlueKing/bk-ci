@@ -1,6 +1,6 @@
 <template>
     <div :class="[{ 'pipeline-drag': editable && !isTriggerStage, 'show-stage-area': editable && !isTriggerStage }, 'pipeline-stage']" ref="stageRef">
-        <bk-button v-if="editable && !isTriggerStage" class="pipeline-stage-entry" @click="showStagePanel">{{stage.name}}</bk-button>
+        <bk-button v-if="editable && !isTriggerStage" class="pipeline-stage-entry" @click="showStagePanel">{{ stageTitle }}</bk-button>
         <draggable v-model="compitedContainer" v-bind="dragOptions" :move="checkMove" tag="ul" class="soda-process-stage">
             <stage-container v-for="(container, index) in compitedContainer"
                 :key="`${container.id}-${index}`"
@@ -93,6 +93,9 @@
             },
             isTriggerStage () {
                 return this.checkIsTriggerStage(this.stage)
+            },
+            stageTitle () {
+                return this.stage ? (this.stage.name || this.stage.id) : 'stage'
             },
             compitedContainer: {
                 get () {

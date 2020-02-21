@@ -71,7 +71,7 @@
                     return this.stageControl.fastKill
                 },
                 set (fastKill) {
-                    this.handleUpdateStageControl('fastKill', fastKill)
+                    this.handleStageChange('fastKill', fastKill)
                 }
             },
             stageCondition: {
@@ -129,10 +129,10 @@
                 if (this.stageControl === undefined || JSON.stringify(this.stageControl) === '{}') {
                     this.handleStageChange('stageControlOption', {
                         enable: true,
-                        fastKill: false,
                         runCondition: 'STAGE_RUNNING',
                         customVariables: [{ key: 'param1', value: '' }]
                     })
+                    this.handleStageChange('fastKill', false)
                 }
             },
             setKeyValueValidate (addErrors, removeErrors) {
