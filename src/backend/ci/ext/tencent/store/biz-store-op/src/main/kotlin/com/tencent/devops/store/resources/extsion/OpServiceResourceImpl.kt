@@ -5,7 +5,6 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.service.OpServiceResource
 import com.tencent.devops.store.pojo.atom.enums.OpSortTypeEnum
 import com.tencent.devops.store.pojo.dto.ServiceApproveReq
-import com.tencent.devops.store.pojo.enums.ExtServiceStatusEnum
 import com.tencent.devops.store.pojo.vo.ExtServiceInfoResp
 import com.tencent.devops.store.pojo.vo.ExtensionServiceVO
 import com.tencent.devops.store.service.extsion.OpExtServiceService
@@ -20,9 +19,9 @@ class OpServiceResourceImpl @Autowired constructor(
         serviceName: String?,
         itemId: String?,
         lableId: String?,
-        serviceStatus: ExtServiceStatusEnum?,
-        isRecommend: Int?,
-        isPublic: Int?,
+        serviceStatus: Boolean?,
+        isRecommend: Boolean?,
+        isPublic: Boolean?,
         sortType: OpSortTypeEnum?,
         desc: Boolean?,
         page: Int?,

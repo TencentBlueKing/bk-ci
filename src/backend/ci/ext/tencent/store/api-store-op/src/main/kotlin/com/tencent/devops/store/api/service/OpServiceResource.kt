@@ -42,13 +42,13 @@ interface OpServiceResource {
         lableId: String?,
         @ApiParam("扩展服务状态", required = false)
         @QueryParam("serviceStatus")
-        serviceStatus: ExtServiceStatusEnum?,
+        serviceStatus: Boolean?,
         @ApiParam("是否推荐", required = false)
         @QueryParam("isRecommend")
-        isRecommend: Int?,
+        isRecommend: Boolean?,
         @ApiParam("是否公共", required = false)
         @QueryParam("isPublic")
-        isPublic: Int?,
+        isPublic: Boolean?,
         @ApiParam("排序", required = false)
         @QueryParam("sortType")
         sortType: OpSortTypeEnum? = OpSortTypeEnum.UPDATE_TIME,
