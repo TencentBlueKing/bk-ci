@@ -185,7 +185,7 @@ class ExtServiceBuildDeployTask : ITask() {
             env = null
         )
         val dockerRunPath =
-            "/api/dockernew/build/$projectId/$pipelineId/$vmSeqId/$buildId?elementId=${buildTask.elementId}"
+            "/api/docker/run/$projectId/$pipelineId/$vmSeqId/$buildId"
         val dockerRunBody = RequestBody.create(
             MediaType.parse("application/json; charset=utf-8"),
             JsonUtil.toJson(dockerRunParam)
