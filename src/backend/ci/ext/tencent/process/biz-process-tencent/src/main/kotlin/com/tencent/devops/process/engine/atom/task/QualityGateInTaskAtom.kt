@@ -146,7 +146,7 @@ class QualityGateInTaskAtom @Autowired constructor(
         val templateId = template?.templateId
 
         val buildCheckParams = BuildCheckParams(projectId, pipelineId, buildId, buildNo, interceptTaskName,
-            startTime.timestamp(), interceptTask, ControlPointPosition.BEFORE_POSITION, templateId)
+            startTime.timestamp(), interceptTask, ControlPointPosition.BEFORE_POSITION, templateId, runVariables)
         val checkResult = pipelineBuildQualityService.check(client, buildCheckParams)
         pipelineBuildDetailService.pipelineDetailChangeEvent(buildId)
 

@@ -70,5 +70,5 @@ data class PublicDevCloudDispathcType(
         image = EnvUtils.parseEnv(image!!, variables)
     }
 
-    override fun buildType() = BuildType.PUBLIC_DEVCLOUD
+    override fun buildType() = BuildType.valueOf(BuildType.PUBLIC_DEVCLOUD.name)
 }

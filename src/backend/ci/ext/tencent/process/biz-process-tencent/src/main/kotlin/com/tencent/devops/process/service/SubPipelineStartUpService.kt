@@ -27,23 +27,20 @@
 package com.tencent.devops.process.service
 
 import com.tencent.devops.common.api.exception.OperationException
-import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.EnvUtils
-import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
-import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.SubPipelineCallElement
+import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.dao.PipelineBuildTaskDao
 import com.tencent.devops.process.engine.service.PipelineBuildService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
-import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.pipeline.ProjectBuildId
 import com.tencent.devops.process.pojo.pipeline.StartUpInfo
 import com.tencent.devops.process.pojo.pipeline.SubPipelineStartUpInfo
@@ -59,7 +56,6 @@ class SubPipelineStartUpService(
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val buildService: PipelineBuildService,
-    private val pipelinePermissionService: PipelinePermissionService,
     private val pipelineBuildTaskDao: PipelineBuildTaskDao,
     private val dslContext: DSLContext
 ) {
@@ -88,52 +84,59 @@ class SubPipelineStartUpService(
         runMode: String,
         values: Map<String, String>
     ): Result<ProjectBuildId> {
-        val project = if (callProjectId.isNotBlank()) { callProjectId } else { projectId }
+        val project = if (callProjectId.isNotBlank()) {
+            callProjectId
+        } else {
+            projectId
+        }
 
         // 通过 runVariables获取 userId 和 channelCode
         val runVariables = pipelineRuntimeService.getAllVariable(buildId)
-        val userId = runVariables[PIPELINE_START_USER_ID] ?: runVariables[PipelineVarUtil.newVarToOldVar(PIPELINE_START_USER_ID)] ?: "null"
+        val userId =
+            runVariables[PIPELINE_START_USER_ID] ?: runVariables[PipelineVarUtil.newVarToOldVar(PIPELINE_START_USER_ID)]
+            ?: "null"
 
-        logger.info("callPipelineStartup: $userId | $project | $callProjectId | $projectId | $parentPipelineId | $buildId | $callPipelineId | $taskId | $runMode")
-
-        if (!pipelinePermissionService.checkPipelinePermission(userId = userId, projectId = project, pipelineId = callPipelineId, permission = AuthPermission.EXECUTE))
-            throw PermissionForbiddenException("用户$userId 无权在工程$project 下运行流水线$callPipelineId")
-
-        logger.info("runVariables: $runVariables")
-        val channelCode = ChannelCode.valueOf(runVariables[PIPELINE_START_CHANNEL]
-                ?: return MessageCodeUtil.generateResponseDataObject(ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID.toString(), arrayOf(buildId)))
+        logger.info("[$buildId]|callPipelineStartup|$userId|$project|$callProjectId|$projectId|$parentPipelineId|$callPipelineId|$taskId")
+        val channelCode = ChannelCode.valueOf(
+            runVariables[PIPELINE_START_CHANNEL]
+                ?: return MessageCodeUtil.generateResponseDataObject(
+                    messageCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
+                    params = arrayOf(buildId)
+                )
+        )
         // 获取子流水线启动参数
         val startParams = mutableMapOf<String, Any>()
         values.forEach {
             startParams[it.key] = parseVariable(it.value, runVariables)
         }
-        val pipelineInfo = (pipelineRepositoryService.getPipelineInfo(project, callPipelineId)
-                ?: return MessageCodeUtil.generateResponseDataObject(ProcessMessageCode.ERROR_NO_PIPELINE_EXISTS_BY_ID.toString(), arrayOf(buildId)))
-
-        logger.info("pipelineInfo: $pipelineInfo")
 
         val existPipelines = HashSet<String>()
         existPipelines.add(parentPipelineId)
         try {
             checkSubpipeline(atomCode, project, callPipelineId, existPipelines)
         } catch (e: OperationException) {
-            return MessageCodeUtil.generateResponseDataObject(ProcessMessageCode.ERROR_SUBPIPELINE_CYCLE_CALL.toString())
+            return MessageCodeUtil.generateResponseDataObject(ProcessMessageCode.ERROR_SUBPIPELINE_CYCLE_CALL)
         }
 
         val subBuildId = buildService.subpipelineStartup(
-                userId = userId,
-                startType = StartType.PIPELINE,
-                projectId = project,
-                parentPipelineId = parentPipelineId,
-                parentBuildId = buildId,
-                parentTaskId = taskId,
-                pipelineId = callPipelineId,
-                channelCode = channelCode,
-                parameters = startParams,
-                checkPermission = false,
-                isMobile = false
+            userId = userId,
+            startType = StartType.PIPELINE,
+            projectId = project,
+            parentPipelineId = parentPipelineId,
+            parentBuildId = buildId,
+            parentTaskId = taskId,
+            pipelineId = callPipelineId,
+            channelCode = channelCode,
+            parameters = startParams,
+            checkPermission = false,
+            isMobile = false
         )
-        pipelineBuildTaskDao.updateSubBuildId(dslContext = dslContext, buildId = buildId, taskId = taskId, subBuildId = subBuildId)
+        pipelineBuildTaskDao.updateSubBuildId(
+            dslContext = dslContext,
+            buildId = buildId,
+            taskId = taskId,
+            subBuildId = subBuildId
+        )
 
         return Result(ProjectBuildId(id = subBuildId, projectId = project))
     }
@@ -196,7 +199,8 @@ class SubPipelineStartUpService(
                         val msg = map["input"] as? Map<*, *> ?: return@element
                         val subPip = msg["subPip"]
                         logger.info("callPipelineStartup: ${msg["projectId"]} $projectId")
-                        val subPro = if (msg["projectId"] == null || msg["projectId"].toString().isBlank())projectId else msg["projectId"]
+                        val subPro =
+                            if (msg["projectId"] == null || msg["projectId"].toString().isBlank()) projectId else msg["projectId"]
                         val exist = HashSet(currentExistPipelines)
                         checkSubpipeline(atomCode, subPro as String, subPip as String, exist)
                         existPipelines.addAll(exist)
@@ -216,7 +220,11 @@ class SubPipelineStartUpService(
      * @param projectId 流水线所在项目ID
      * @param pipelineId 流水线ID
      */
-    fun subpipManualStartupInfo(userId: String, projectId: String, pipelineId: String): Result<List<SubPipelineStartUpInfo>> {
+    fun subpipManualStartupInfo(
+        userId: String,
+        projectId: String,
+        pipelineId: String
+    ): Result<List<SubPipelineStartUpInfo>> {
         if (pipelineId.isBlank() || projectId.isBlank())
             return Result(ArrayList())
         val result = buildService.buildManualStartupInfo(userId, projectId, pipelineId, ChannelCode.BS)
@@ -229,9 +237,24 @@ class SubPipelineStartUpService(
                 val valueList = ArrayList<StartUpInfo>()
                 keyList.add(StartUpInfo(item.id, item.defaultValue))
                 valueList.add(StartUpInfo(item.id, item.defaultValue))
-                val info = SubPipelineStartUpInfo(item.id, true, "input", "list", "",
-                        ArrayList(), keyList, false, item.defaultValue, false, "input", "list",
-                        "", ArrayList(), valueList, false)
+                val info = SubPipelineStartUpInfo(
+                    key = item.id,
+                    keyDisable = true,
+                    keyType = "input",
+                    keyListType = "list",
+                    keyUrl = "",
+                    keyUrlQuery = ArrayList(),
+                    keyList = keyList,
+                    keyMultiple = false,
+                    value = item.defaultValue,
+                    valueDisable = false,
+                    valueType = "input",
+                    valueListType = "list",
+                    valueUrl = "",
+                    valueUrlQuery = ArrayList(),
+                    valueList = valueList,
+                    valueMultiple = false
+                )
                 parameter.add(info)
             } else {
                 val keyList = ArrayList<StartUpInfo>()
@@ -241,9 +264,24 @@ class SubPipelineStartUpService(
                 for (option in item.options!!) {
                     valueList.add(StartUpInfo(option.key, option.value))
                 }
-                val info = SubPipelineStartUpInfo(item.id, true, "input", "list", "",
-                        ArrayList(), keyList, false, defaultValue.split(","), false, "select", "list",
-                        "", ArrayList(), valueList, true)
+                val info = SubPipelineStartUpInfo(
+                    key = item.id,
+                    keyDisable = true,
+                    keyType = "input",
+                    keyListType = "list",
+                    keyUrl = "",
+                    keyUrlQuery = ArrayList(),
+                    keyList = keyList,
+                    keyMultiple = false,
+                    value = defaultValue.split(","),
+                    valueDisable = false,
+                    valueType = "select",
+                    valueListType = "list",
+                    valueUrl = "",
+                    valueUrlQuery = ArrayList(),
+                    valueList = valueList,
+                    valueMultiple = true
+                )
                 parameter.add(info)
             }
         }

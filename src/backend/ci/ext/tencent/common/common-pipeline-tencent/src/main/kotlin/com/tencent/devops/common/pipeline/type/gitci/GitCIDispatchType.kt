@@ -41,5 +41,5 @@ data class GitCIDispatchType(@JsonProperty("value") var image: String)
         image = EnvUtils.parseEnv(image, variables)
     }
 
-    override fun buildType() = BuildType.GIT_CI
+    override fun buildType() = BuildType.valueOf(BuildType.GIT_CI.name)
 }

@@ -38,6 +38,7 @@ object ReflectUtil {
             bean is Double ||
             bean is Float ||
             bean is Short ||
-            bean is Byte
+            bean is Byte ||
+            bean is Boolean
     }
 }

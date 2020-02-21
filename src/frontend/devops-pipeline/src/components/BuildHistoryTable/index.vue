@@ -13,7 +13,7 @@
                     <span class="build-num-status">
                         <router-link :class="{ [props.row.status]: true }" style="line-height: 42px;" :to="getArchiveUrl(props.row)">#{{ props.row.buildNum }}</router-link>
                         <i v-if="retryable(props.row)" title="rebuild" class="bk-icon icon-retry" @click.stop="retry(props.row.id)" />
-                        <i v-else-if="props.row.status === 'QUEUE' || props.row.status === 'RUNNING' || !props.row.endTime" :title="$t('history.stopBuild')" @click.stop="stopExecute(props.row.id)"
+                        <i v-else-if="props.row.status === 'QUEUE' || props.row.status === 'RUNNING' || !props.row.endTime"
                             :class="{
                                 'bk-icon': true,
                                 'spin-icon': true,
@@ -447,47 +447,6 @@
                         theme
                     })
                 }
-            },
-            /**
-             *  终止流水线
-             */
-            async stopExecute (buildId) {
-                if (this.stoping[buildId]) return
-
-                let message, theme
-
-                try {
-                    const { $store } = this
-                    this.stoping[buildId] = true
-                    const res = await $store.dispatch('pipelines/requestTerminatePipeline', {
-                        ...this.$route.params,
-                        buildId
-                    })
-
-                    this.status = 'ready'
-                    if (res) {
-                        message = this.$t('subpage.stopSuc')
-                        theme = 'success'
-
-                        this.$emit('update-table')
-                    } else {
-                        message = this.$t('subpage.stopFail')
-                        theme = 'error'
-                    }
-                } catch (err) {
-                    if (err.code === 403) { // 没有权限执行
-                        // this.setPermissionConfig(`流水线：${this.curPipeline.pipelineName}`, '执行')
-                    } else {
-                        message = err.message || err
-                        theme = 'error'
-                    }
-                } finally {
-                    // delete this.stoping[buildId]
-                    message && this.$showTips({
-                        message,
-                        theme
-                    })
-                }
             }
         }
     }
@@ -547,23 +506,6 @@
             tr:hover {
                 .remark-entry {
                     display: inline-block;
-                }
-                .bk-icon.running-icon {
-                    cursor: pointer;
-                    animation: none;
-                    font-size: 8px;
-                    &:before {
-                        content: "\E953";
-                        border: 1px solid #333333;
-                        padding: 2px;
-                        border-radius: 50%;
-                    }
-                    &:hover {
-                        color: $primaryColor;
-                        &:before {
-                            border: 1px solid $primaryColor;
-                        }
-                    }
                 }
             }
         }
