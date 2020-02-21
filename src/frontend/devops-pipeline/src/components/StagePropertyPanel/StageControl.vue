@@ -92,7 +92,7 @@
                         name: this.$t('storeMap.manualRunStage')
                     },
                     {
-                        id: 'STAGE_RUNNING',
+                        id: 'AFTER_LAST_FINISHED',
                         name: this.$t('storeMap.afterPreStageSuccess')
                     },
                     {
