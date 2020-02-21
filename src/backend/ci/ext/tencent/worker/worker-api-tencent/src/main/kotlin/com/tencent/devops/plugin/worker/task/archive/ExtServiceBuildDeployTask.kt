@@ -126,12 +126,13 @@ class ExtServiceBuildDeployTask : ITask() {
         // 开始构建扩展服务的镜像并把镜像推送到新仓库
         val extServiceImageInfoMap = JsonUtil.toMap(extServiceImageInfo)
         val imageName = extServiceImageInfoMap["imageName"] as String
+        val imageTag = extServiceImageInfoMap["imageTag"] as String
         val userName = extServiceImageInfoMap["userName"] as String
         val password = extServiceImageInfoMap["password"] as String
         val dockerBuildParam = DockerBuildParam(
             repoAddr = extServiceImageInfoMap["repoAddr"] as String,
             imageName = imageName,
-            imageTag = extServiceImageInfoMap["imageTag"] as String,
+            imageTag = imageTag,
             userName = userName,
             password = password,
             args = listOf("packageName=$packageName", "filePath=$filePath")
@@ -178,7 +179,7 @@ class ExtServiceBuildDeployTask : ITask() {
         // 开始部署扩展服务
         LoggerService.addNormalLine("start deploy extService:$serviceCode(version:$serviceVersion)")
         val dockerRunParam = DockerRunParam(
-            imageName = imageName,
+            imageName = "$imageName:$imageTag",
             registryUser = userName,
             registryPwd = password,
             command = listOf(),
@@ -196,7 +197,7 @@ class ExtServiceBuildDeployTask : ITask() {
             .post(dockerRunBody)
             .build()
         val dockerRunResponse = OkhttpUtils.doLongHttp(dockerRunRequest)
-        val dockerRunResponseContent = response.body()?.string()
+        val dockerRunResponseContent = dockerRunResponse.body()?.string()
         if (!dockerRunResponse.isSuccessful) {
             logger.warn("Fail to request($dockerRunRequest) with code ${dockerRunResponse.code()} , message ${dockerRunResponse.message()} and response ($dockerRunResponseContent)")
             LoggerService.addRedLine(dockerRunResponse.message())
