@@ -37,9 +37,10 @@ import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
-import com.tencent.devops.common.pipeline.element.market.ExtServiceBuildArchiveElement
+import com.tencent.devops.common.pipeline.element.market.ExtServiceBuildDeployElement
 import com.tencent.devops.common.pipeline.utils.ParameterUtils
 import com.tencent.devops.dockerhost.pojo.DockerBuildParam
+import com.tencent.devops.dockerhost.pojo.DockerRunParam
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
@@ -54,15 +55,15 @@ import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
 import java.io.File
 
-@TaskClassType(classTypes = [ExtServiceBuildArchiveElement.classType])
-class ExtServiceBuildArchiveTask : ITask() {
+@TaskClassType(classTypes = [ExtServiceBuildDeployElement.classType])
+class ExtServiceBuildDeployTask : ITask() {
 
     private val archiveApi = ApiFactory.create(ArchiveSDKApi::class)
 
-    private val logger = LoggerFactory.getLogger(ExtServiceBuildArchiveTask::class.java)
+    private val logger = LoggerFactory.getLogger(ExtServiceBuildDeployTask::class.java)
 
     override fun execute(buildTask: BuildTask, buildVariables: BuildVariables, workspace: File) {
-        logger.info("ExtServiceBuildArchiveTask buildTask: $buildTask,buildVariables: $buildVariables")
+        logger.info("ExtServiceBuildDeployTask buildTask: $buildTask,buildVariables: $buildVariables")
         val buildId = buildTask.buildId
         LoggerService.addNormalLine("buildId:$buildId begin archive extService package")
         val buildVariableMap = buildTask.buildVariable!!
@@ -113,7 +114,7 @@ class ExtServiceBuildArchiveTask : ITask() {
             file = file,
             headers = headers
         )
-        logger.info("ExtServiceBuildArchiveTask uploadResult: $uploadResult")
+        logger.info("ExtServiceBuildDeployTask uploadResult: $uploadResult")
         val uploadFlag = uploadResult.data
         if (uploadFlag == null || !uploadFlag) {
             throw TaskExecuteException(
@@ -124,25 +125,32 @@ class ExtServiceBuildArchiveTask : ITask() {
         }
         // 开始构建扩展服务的镜像并把镜像推送到新仓库
         val extServiceImageInfoMap = JsonUtil.toMap(extServiceImageInfo)
+        val imageName = extServiceImageInfoMap["imageName"] as String
+        val imageTag = extServiceImageInfoMap["imageTag"] as String
+        val userName = extServiceImageInfoMap["userName"] as String
+        val password = extServiceImageInfoMap["password"] as String
         val dockerBuildParam = DockerBuildParam(
             repoAddr = extServiceImageInfoMap["repoAddr"] as String,
-            imageName = extServiceImageInfoMap["imageName"] as String,
-            imageTag = extServiceImageInfoMap["imageTag"] as String,
-            userName = extServiceImageInfoMap["userName"] as String,
-            password = extServiceImageInfoMap["password"] as String,
+            imageName = imageName,
+            imageTag = imageTag,
+            userName = userName,
+            password = password,
             args = listOf("packageName=$packageName", "filePath=$filePath")
         )
         val dockerHostIp = System.getenv("docker_host_ip")
-        val path =
-            "/api/dockernew/build/${buildVariables.projectId}/${buildVariables.pipelineId}/${buildVariables.vmSeqId}/${buildTask.buildId}?elementId=${buildTask.elementId}"
-        val body = RequestBody.create(
+        val projectId = buildVariables.projectId
+        val pipelineId = buildVariables.pipelineId
+        val vmSeqId = buildVariables.vmSeqId
+        val dockerBuildAndPushImagePath =
+            "/api/dockernew/build/$projectId/$pipelineId/$vmSeqId/$buildId?elementId=${buildTask.elementId}&syncFlag=true"
+        val dockerBuildAndPushImageBody = RequestBody.create(
             MediaType.parse("application/json; charset=utf-8"),
             JsonUtil.toJson(dockerBuildParam)
         )
-        val url = "http://$dockerHostIp$path"
+        val dockerBuildAndPushImageUrl = "http://$dockerHostIp$dockerBuildAndPushImagePath"
         val request = Request.Builder()
-            .url(url)
-            .post(body)
+            .url(dockerBuildAndPushImageUrl)
+            .post(dockerBuildAndPushImageBody)
             .build()
         val response = OkhttpUtils.doLongHttp(request)
         val responseContent = response.body()?.string()
@@ -168,5 +176,50 @@ class ExtServiceBuildArchiveTask : ITask() {
             )
         }
         LoggerService.addNormalLine("dockerBuildAndPushImage success")
+        // 开始部署扩展服务
+        LoggerService.addNormalLine("start deploy extService:$serviceCode(version:$serviceVersion)")
+        val dockerRunParam = DockerRunParam(
+            imageName = "$imageName:$imageTag",
+            registryUser = userName,
+            registryPwd = password,
+            command = listOf(),
+            env = null
+        )
+        val dockerRunPath =
+            "/api/docker/run/$projectId/$pipelineId/$vmSeqId/$buildId"
+        val dockerRunBody = RequestBody.create(
+            MediaType.parse("application/json; charset=utf-8"),
+            JsonUtil.toJson(dockerRunParam)
+        )
+        // todo 启动docker服务的服务器IP算法待完善
+        val dockerRunUrl = "http://$dockerHostIp$dockerRunPath"
+        val dockerRunRequest = Request.Builder()
+            .url(dockerRunUrl)
+            .post(dockerRunBody)
+            .build()
+        val dockerRunResponse = OkhttpUtils.doLongHttp(dockerRunRequest)
+        val dockerRunResponseContent = dockerRunResponse.body()?.string()
+        if (!dockerRunResponse.isSuccessful) {
+            logger.warn("Fail to request($dockerRunRequest) with code ${dockerRunResponse.code()} , message ${dockerRunResponse.message()} and response ($dockerRunResponseContent)")
+            LoggerService.addRedLine(dockerRunResponse.message())
+            throw TaskExecuteException(
+                errorMsg = "dockerRun fail: message ${dockerRunResponse.message()} and response ($dockerRunResponseContent)",
+                errorType = ErrorType.SYSTEM,
+                errorCode = ErrorCode.SYSTEM_SERVICE_ERROR
+            )
+        }
+        val dockerRunResult =
+            JsonUtil.to(dockerRunResponseContent!!, object : TypeReference<Result<Boolean>>() {
+            })
+        LoggerService.addNormalLine("dockerRunResult: $dockerRunResult")
+        if (dockerRunResult.isNotOk()) {
+            LoggerService.addRedLine(JsonUtil.toJson(dockerRunResult))
+            throw TaskExecuteException(
+                errorMsg = "dockerRun fail: ${dockerRunResult.message}",
+                errorType = ErrorType.SYSTEM,
+                errorCode = ErrorCode.SYSTEM_SERVICE_ERROR
+            )
+        }
+        LoggerService.addNormalLine("deploy extService:$serviceCode(version:$serviceVersion) success")
     }
 }

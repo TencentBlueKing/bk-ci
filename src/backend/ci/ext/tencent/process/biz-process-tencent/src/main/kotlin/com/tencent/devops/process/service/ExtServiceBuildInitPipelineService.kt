@@ -36,7 +36,7 @@ import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
-import com.tencent.devops.common.pipeline.element.market.ExtServiceBuildArchiveElement
+import com.tencent.devops.common.pipeline.element.market.ExtServiceBuildDeployElement
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.enums.BuildScriptType
 import com.tencent.devops.common.pipeline.enums.ChannelCode
@@ -147,9 +147,9 @@ class ExtServiceBuildInitPipelineService @Autowired constructor(
             script = "\${script}",
             continueNoneZero = false
         )
-        val stageSecondExtServiceBuildArchiveElement = ExtServiceBuildArchiveElement(id = "T-2-1-3")
+        val stageSecondExtServiceBuildDeployElement = ExtServiceBuildDeployElement(id = "T-2-1-3")
         val stageSecondElements =
-            listOf(stageSecondPullCodeElement, stageSecondLinuxScriptElement, stageSecondExtServiceBuildArchiveElement)
+            listOf(stageSecondPullCodeElement, stageSecondLinuxScriptElement, stageSecondExtServiceBuildDeployElement)
         val stageSecondContainer = VMBuildContainer(
             id = containerSeqId.toString(),
             elements = stageSecondElements,

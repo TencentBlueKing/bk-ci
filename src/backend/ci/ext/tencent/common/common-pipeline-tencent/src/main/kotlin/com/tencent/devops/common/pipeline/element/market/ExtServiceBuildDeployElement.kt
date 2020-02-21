@@ -33,8 +33,8 @@ import com.tencent.devops.common.pipeline.pojo.element.Element
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("扩展服务发布归档", description = ExtServiceBuildArchiveElement.classType)
-data class ExtServiceBuildArchiveElement(
+@ApiModel("扩展服务构建部署", description = ExtServiceBuildDeployElement.classType)
+data class ExtServiceBuildDeployElement(
     @ApiModelProperty("任务名称", required = true)
     override val name: String = "扩展服务发布归档",
     @ApiModelProperty("id", required = false)
@@ -54,7 +54,7 @@ data class ExtServiceBuildArchiveElement(
 ) : Element(name, id, status) {
 
     companion object {
-        const val classType = "extServiceBuildArchive"
+        const val classType = "extServiceBuildDeploy"
     }
 
     override fun getClassType() = classType
