@@ -142,7 +142,7 @@ class ExtServiceBuildDeployTask : ITask() {
         val pipelineId = buildVariables.pipelineId
         val vmSeqId = buildVariables.vmSeqId
         val dockerBuildAndPushImagePath =
-            "/api/dockernew/build/$projectId/$pipelineId/$vmSeqId/$buildId?elementId=${buildTask.elementId}"
+            "/api/dockernew/build/$projectId/$pipelineId/$vmSeqId/$buildId?elementId=${buildTask.elementId}&syncFlag=true"
         val dockerBuildAndPushImageBody = RequestBody.create(
             MediaType.parse("application/json; charset=utf-8"),
             JsonUtil.toJson(dockerBuildParam)
@@ -191,6 +191,7 @@ class ExtServiceBuildDeployTask : ITask() {
             MediaType.parse("application/json; charset=utf-8"),
             JsonUtil.toJson(dockerRunParam)
         )
+        // todo 启动docker服务的服务器IP算法待完善
         val dockerRunUrl = "http://$dockerHostIp$dockerRunPath"
         val dockerRunRequest = Request.Builder()
             .url(dockerRunUrl)
