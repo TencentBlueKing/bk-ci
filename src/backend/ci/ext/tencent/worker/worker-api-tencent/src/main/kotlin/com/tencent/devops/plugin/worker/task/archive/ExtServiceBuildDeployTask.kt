@@ -125,12 +125,13 @@ class ExtServiceBuildDeployTask : ITask() {
         }
         // 开始构建扩展服务的镜像并把镜像推送到新仓库
         val extServiceImageInfoMap = JsonUtil.toMap(extServiceImageInfo)
+        val repoAddr = extServiceImageInfoMap["repoAddr"] as String
         val imageName = extServiceImageInfoMap["imageName"] as String
         val imageTag = extServiceImageInfoMap["imageTag"] as String
         val userName = extServiceImageInfoMap["userName"] as String
         val password = extServiceImageInfoMap["password"] as String
         val dockerBuildParam = DockerBuildParam(
-            repoAddr = extServiceImageInfoMap["repoAddr"] as String,
+            repoAddr = repoAddr,
             imageName = imageName,
             imageTag = imageTag,
             userName = userName,
@@ -179,7 +180,7 @@ class ExtServiceBuildDeployTask : ITask() {
         // 开始部署扩展服务
         LoggerService.addNormalLine("start deploy extService:$serviceCode(version:$serviceVersion)")
         val dockerRunParam = DockerRunParam(
-            imageName = "$imageName:$imageTag",
+            imageName = "$repoAddr/$imageName:$imageTag",
             registryUser = userName,
             registryPwd = password,
             command = listOf(),
