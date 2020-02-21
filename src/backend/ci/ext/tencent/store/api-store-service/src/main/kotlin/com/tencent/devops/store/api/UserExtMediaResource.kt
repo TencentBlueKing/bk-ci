@@ -19,20 +19,20 @@ import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["USER_EXTENSION_MEDIA"], description = "服务扩展_媒体信息")
-@Path("/user/market/service/media")
+@Path("/user/market/common/media")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserExtMediaResource {
     @ApiOperation("添加媒体信息")
-    @Path("/serviceCodes/{serviceCodes}/media")
+    @Path("/serviceCodes/{serviceCode}/media")
     @POST
     fun createServiceMedia(
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @ApiParam("扩展服务代码", required = true)
-        @PathParam("serviceCodes")
-        serviceCodes: String,
+        @PathParam("serviceCode")
+        serviceCode: String,
         @ApiParam("评论信息", required = true)
         mediaInfoList: List<MediaInfoReq>
     ): Result<Boolean>
@@ -47,7 +47,10 @@ interface UserExtMediaResource {
         @ApiParam("媒体ID", required = true)
         @QueryParam("mediaId")
         mediaId: String,
-        @ApiParam("评论信息", required = true)
+        @ApiParam("扩展服务代码", required = true)
+        @QueryParam("serviceCode")
+        serviceCode: String,
+        @ApiParam("媒体信息", required = true)
         mediaInfoReq: MediaInfoReq
     ): Result<Boolean>
 

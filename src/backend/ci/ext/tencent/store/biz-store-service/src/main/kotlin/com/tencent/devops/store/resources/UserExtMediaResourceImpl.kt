@@ -16,14 +16,14 @@ class UserExtMediaResourceImpl @Autowired constructor(
 ) : UserExtMediaResource {
     override fun createServiceMedia(
         userId: String,
-        serviceCodes: String,
+        serviceCode: String,
         mediaInfoList: List<MediaInfoReq>
     ): Result<Boolean> {
         mediaInfoList.forEach {
             val storeMediaInfoRequest = StoreMediaInfoRequest(
-                storeCode = it.storeCode,
+                storeCode = serviceCode,
                 mediaUrl = it.mediaUrl,
-                mediaType = it.mediaType,
+                mediaType = it.mediaType.toString(),
                 modifier = userId
             )
             storeMediaService.add(
@@ -35,14 +35,14 @@ class UserExtMediaResourceImpl @Autowired constructor(
         return Result(true)
     }
 
-    override fun updateSericeMedia(userId: String, mediaId: String, mediaInfoReq: MediaInfoReq): Result<Boolean> {
+    override fun updateSericeMedia(userId: String, mediaId: String, serviceCode: String, mediaInfoReq: MediaInfoReq): Result<Boolean> {
         return storeMediaService.update(
             userId = userId,
             id = mediaId,
             storeMediaInfo = StoreMediaInfoRequest(
-                storeCode = mediaInfoReq.storeCode,
+                storeCode = serviceCode,
                 mediaUrl = mediaInfoReq.mediaUrl,
-                mediaType = mediaInfoReq.mediaType,
+                mediaType = mediaInfoReq.mediaType.toString(),
                 modifier = userId
             )
         )

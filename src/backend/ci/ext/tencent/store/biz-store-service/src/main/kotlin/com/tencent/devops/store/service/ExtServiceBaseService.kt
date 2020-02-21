@@ -700,7 +700,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
 //                    userCommentInfo = userCommentInfo,
                     visibilityLevel = VisibilityLevelEnum.getVisibilityLevel(featureInfoRecord.visibilityLevel),
                     recommendFlag = featureInfoRecord?.recommendFlag,
-                    itemListStore = itemList
+                    extensionItemList = itemList
                 )
             )
         }
