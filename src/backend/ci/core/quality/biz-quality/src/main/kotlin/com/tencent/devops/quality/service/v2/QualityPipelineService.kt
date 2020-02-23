@@ -29,7 +29,7 @@ package com.tencent.devops.quality.service.v2
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.pojo.element.Element
-import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxPaasCodeCCScriptElement
+import com.tencent.devops.plugin.codecc.CodeccUtils
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.api.service.ServicePipelineTaskResource
 import com.tencent.devops.process.api.template.ServiceTemplateResource
@@ -59,7 +59,7 @@ class QualityPipelineService @Autowired constructor(
 
         // 剔除已删除的流水线
         return pipelineElementsMap.entries.filter { pipelineNameMap.containsKey(it.key) }.map {
-            val pipelineElement = it.value.map { it.classType to it.taskParams }
+            val pipelineElement = it.value.map { it.atomCode to it.taskParams }
             // 获取原子信息
             val elementResult = getExistAndLackElements(projectId, checkElements, pipelineElement)
             val existElements = elementResult.first
@@ -119,12 +119,12 @@ class QualityPipelineService @Autowired constructor(
     ): Pair<List<RangeExistElement>, Set<String>> {
         val originElements = originElementList.map { it.first }
         val existElements = mutableListOf<RangeExistElement>()
-        val codeccElement = originElementList.firstOrNull { it.first == LinuxPaasCodeCCScriptElement.classType }
+        val codeccElement = originElementList.firstOrNull { CodeccUtils.isCodeccAtom(it.first) }
         if (codeccElement != null) {
             val asynchronous = codeccElement.second["asynchronous"] as? Boolean
             val e = RangeExistElement(
-                name = LinuxPaasCodeCCScriptElement.classType,
-                cnName = ElementUtils.getElementCnName(LinuxPaasCodeCCScriptElement.classType, projectId),
+                name = codeccElement.first,
+                cnName = ElementUtils.getElementCnName(codeccElement.first, projectId),
                 count = 1,
                 params = mapOf("asynchronous" to (asynchronous ?: false))
             )

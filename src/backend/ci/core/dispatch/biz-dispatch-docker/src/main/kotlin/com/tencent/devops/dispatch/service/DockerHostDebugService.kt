@@ -210,7 +210,6 @@ class DockerHostDebugService @Autowired constructor(
         try {
             val gray = !grayFlag.isNullOrBlank() && grayFlag!!.toBoolean()
             val grayProjectSet = this.gray.grayProjectSet(redisOperation)
-            logger.info("gray environment: $gray")
             redisLock.lock()
             if (gray) {
                 // 优先取设置了IP的任务（可能是固定构建机，也可能是上次用的构建机）
