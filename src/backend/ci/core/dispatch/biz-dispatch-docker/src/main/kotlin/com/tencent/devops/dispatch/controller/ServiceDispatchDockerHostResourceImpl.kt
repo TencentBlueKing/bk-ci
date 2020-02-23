@@ -23,44 +23,46 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.store.resources.image.user
 
-import com.tencent.devops.common.api.pojo.Result
+package com.tencent.devops.dispatch.controller
+
+import com.tencent.devops.common.api.exception.ParamBlankException
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.store.api.image.user.UserMarketImageVisibleDeptResource
-import com.tencent.devops.store.pojo.common.StoreVisibleDeptResp
-import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import com.tencent.devops.store.pojo.image.request.ImageVisibleDeptReq
-import com.tencent.devops.store.service.common.StoreVisibleDeptService
+import com.tencent.devops.dispatch.api.ServiceDispatchDockerHostResource
+import com.tencent.devops.dispatch.pojo.DockerHostZone
+import com.tencent.devops.dispatch.service.DockerHostZoneTaskService
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class UserMarketImageVisibleDeptResourceImpl @Autowired constructor(private val storeVisibleDeptService: StoreVisibleDeptService) :
-    UserMarketImageVisibleDeptResource {
-
-    override fun deleteVisibleDept(userId: String, imageCode: String, deptIds: String): Result<Boolean> {
-        return storeVisibleDeptService.deleteVisibleDept(
-            userId = userId,
-            storeCode = imageCode,
-            deptIds = deptIds,
-            storeType = StoreTypeEnum.IMAGE
+class ServiceDispatchDockerHostResourceImpl @Autowired constructor(
+    private val dockerHostZoneTaskService: DockerHostZoneTaskService
+) : ServiceDispatchDockerHostResource {
+    override fun list(page: Int?, pageSize: Int?): Page<DockerHostZone> {
+        checkParams(page, pageSize)
+        val realPage = page ?: 1
+        val realPageSize = pageSize ?: 20
+        val dockerHostList = dockerHostZoneTaskService.list(realPage, realPageSize)
+        val count = dockerHostZoneTaskService.count()
+        return Page(
+            page = realPage,
+            pageSize = realPageSize,
+            count = count.toLong(),
+            records = dockerHostList
         )
     }
 
-    override fun addVisibleDept(userId: String, imageVisibleDeptRequest: ImageVisibleDeptReq): Result<Boolean> {
-        return storeVisibleDeptService.addVisibleDept(
-            userId = userId,
-            storeCode = imageVisibleDeptRequest.imageCode,
-            deptInfos = imageVisibleDeptRequest.deptInfos,
-            storeType = StoreTypeEnum.IMAGE
-        )
+    companion object {
+        private val logger = LoggerFactory.getLogger(ServiceDispatchDockerHostResourceImpl::class.java)
     }
 
-    override fun getVisibleDept(imageCode: String): Result<StoreVisibleDeptResp?> {
-        return storeVisibleDeptService.getVisibleDept(
-            storeCode = imageCode,
-            storeType = StoreTypeEnum.IMAGE,
-            deptStatus = null
-        )
+    fun checkParams(page: Int?, pageSize: Int?) {
+        if (page != null && page < 1) {
+            throw ParamBlankException("Invalid page")
+        }
+        if (pageSize != null && pageSize < 1) {
+            throw ParamBlankException("Invalid pageSize")
+        }
     }
 }

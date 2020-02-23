@@ -183,15 +183,10 @@ class DefaultModelCheckPlugin constructor(val client: Client) : ModelCheckPlugin
         if (vmBuildContainer.thirdPartyAgentId.isNullOrBlank() && vmBuildContainer.thirdPartyAgentEnvId.isNullOrBlank()) {
             // New logic
             val dispatchType = vmBuildContainer.dispatchType ?: return true
-            if (dispatchType.buildType() == BuildType.THIRD_PARTY_AGENT_ID ||
-                dispatchType.buildType() == BuildType.THIRD_PARTY_AGENT_ENV
-            ) {
-                if (dispatchType.value.isBlank()) {
-                    return true
-                }
-                return false
+            return when (dispatchType.buildType()) {
+                BuildType.THIRD_PARTY_AGENT_ID, BuildType.THIRD_PARTY_AGENT_ENV -> dispatchType.value.isBlank()
+                else -> true
             }
-            return true
         }
 
         return false
