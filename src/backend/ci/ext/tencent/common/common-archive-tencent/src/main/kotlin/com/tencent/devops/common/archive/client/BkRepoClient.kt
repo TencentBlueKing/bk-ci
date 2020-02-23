@@ -49,8 +49,8 @@ import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.archive.pojo.ArtifactorySearchParam
 import com.tencent.devops.common.archive.pojo.BkRepoData
 import com.tencent.devops.common.archive.pojo.BkRepoFile
-import com.tencent.devops.common.archive.pojo.BkRepoNodeInfo
-import com.tencent.devops.common.archive.pojo.BkRepoQueryData
+import com.tencent.devops.common.archive.pojo.QueryNodeInfo
+import com.tencent.devops.common.archive.pojo.QueryData
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import okhttp3.MediaType
@@ -623,7 +623,7 @@ class BkRepoClient constructor(
         metadata: Map<String, String>,
         page: Int,
         pageSize: Int
-    ): List<BkRepoNodeInfo>{
+    ): List<QueryNodeInfo>{
         logger.info("queryByRepoAndMetadata, userId: $userId, projectId: $projectId, repoNames: $repoNames, metadata: $metadata")
 
         val projectRule = Rule.QueryRule("projectId", projectId, OperationType.EQ)
@@ -648,7 +648,7 @@ class BkRepoClient constructor(
         repoNames: List<String>,
         fullPathPatterns: List<String>,
         metadata: Map<String, String>
-    ): List<BkRepoNodeInfo>{
+    ): List<QueryNodeInfo>{
         logger.info("queryByPattern, userId: $userId, projectId: $projectId, repoNames: $repoNames, fullPathPatterns: $fullPathPatterns, metadata: $metadata")
 
         val projectRule = Rule.QueryRule("projectId", projectId, OperationType.EQ)
@@ -668,7 +668,7 @@ class BkRepoClient constructor(
         return query(userId, rule, 0, 10000)
     }
 
-    private fun query(userId: String, rule: Rule, page: Int, pageSize: Int): List<BkRepoNodeInfo> {
+    private fun query(userId: String, rule: Rule, page: Int, pageSize: Int): List<QueryNodeInfo> {
         logger.info("query, userId: $userId, rule: $rule, page: $page, pageSize: $pageSize")
         val url = "${getGatewaytUrl()}/bkrepo/api/service/repository/api/node/query"
         val queryModel = QueryModel(
@@ -697,7 +697,7 @@ class BkRepoClient constructor(
                 throw RuntimeException("create share uri failed")
             }
 
-            val responseData = objectMapper.readValue<Response<BkRepoQueryData>>(responseContent)
+            val responseData = objectMapper.readValue<Response<QueryData>>(responseContent)
             if (responseData.isNotOk()) {
                 throw RuntimeException("create share uri failed: ${responseData.message}")
             }

@@ -33,7 +33,7 @@ import com.tencent.devops.artifactory.pojo.FileDetail
 import com.tencent.devops.artifactory.pojo.FileInfo
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.common.api.util.timestamp
-import com.tencent.devops.common.archive.pojo.BkRepoNodeInfo
+import com.tencent.devops.common.archive.pojo.QueryNodeInfo
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
@@ -61,7 +61,7 @@ object RepoUtils {
         return nodeInfo.repoName == PIPELINE_REPO
     }
 
-    fun isPipelineFile(nodeInfo: BkRepoNodeInfo): Boolean {
+    fun isPipelineFile(nodeInfo: QueryNodeInfo): Boolean {
         return nodeInfo.repoName == PIPELINE_REPO
     }
 
