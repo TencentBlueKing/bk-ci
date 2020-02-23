@@ -26,7 +26,6 @@
 
 package com.tencent.devops.artifactory.service.bkrepo
 
-import com.tencent.bkrepo.repository.pojo.node.NodeInfo
 import com.tencent.devops.artifactory.pojo.AppFileInfo
 import com.tencent.devops.artifactory.pojo.CopyToCustomReq
 import com.tencent.devops.artifactory.pojo.Count
@@ -45,6 +44,7 @@ import com.tencent.devops.artifactory.util.RepoUtils
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.archive.client.BkRepoClient
+import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_BUILD_ID
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_PIPELINE_ID
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_PIPELINE_NAME
 import com.tencent.devops.common.archive.pojo.ArtifactorySearchParam
@@ -158,8 +158,89 @@ class BkRepoService @Autowired constructor(
 
     override fun getBuildFileList(userId: String, projectId: String, pipelineId: String, buildId: String): List<AppFileInfo> {
         logger.info("getBuildFileList, userId: $userId, projectId: $projectId, pipelineId: $pipelineId, buildId: $buildId")
-        // todo 实现
-        return listOf()
+
+        val startTimestamp = System.currentTimeMillis()
+        try {
+            val nodeList = bkRepoClient.queryByNameAndMetadata(
+                userId,
+                projectId,
+                listOf(RepoUtils.PIPELINE_REPO, RepoUtils.CUSTOM_REPO),
+                listOf(),
+                mapOf(
+                    ARCHIVE_PROPS_PIPELINE_ID to pipelineId,
+                    ARCHIVE_PROPS_BUILD_ID to buildId
+                ),
+                0,
+                10000
+            )
+
+            val fileInfoList = transferFileInfo(projectId, nodeList, listOf(), false)
+            val pipelineCanDownloadList = pipelineService.filterPipeline(userId, projectId, AuthPermission.DOWNLOAD)
+            return fileInfoList.map {
+                val show = when {
+                    it.name.endsWith(".apk") && !it.name.endsWith(".shell.apk") -> {
+                        val shellFileName = "${it.path.removeSuffix(".apk")}.shell.apk"
+                        var flag = true
+                        fileInfoList.forEach { file ->
+                            if (file.path == shellFileName) {
+                                flag = false
+                            }
+                        }
+                        flag
+                    }
+                    it.name.endsWith(".shell.apk") -> {
+                        true
+                    }
+                    it.name.endsWith(".ipa") && !it.name.endsWith("_enterprise_sign.ipa") -> {
+                        val enterpriseSignFileName = "${it.path.removeSuffix(".ipa")}_enterprise_sign.ipa"
+                        var flag = true
+                        fileInfoList.forEach { file ->
+                            if (file.path == enterpriseSignFileName) {
+                                flag = false
+                            }
+                        }
+                        flag
+                    }
+                    it.name.endsWith("_enterprise_sign.ipa") -> {
+                        true
+                    }
+                    else -> {
+                        false
+                    }
+                }
+
+                var canDownload = false
+                if (it.properties != null) {
+                    kotlin.run checkProperty@{
+                        it.properties!!.forEach {
+                            if (it.key == ARCHIVE_PROPS_PIPELINE_ID && pipelineCanDownloadList.contains(it.value)) {
+                                canDownload = true
+                                return@checkProperty
+                            }
+                        }
+                    }
+                }
+
+                var appVersion: String? = null
+                appVersion = it.appVersion
+
+                AppFileInfo(
+                    name = it.name,
+                    fullName = it.fullName,
+                    path = it.path,
+                    fullPath = it.fullPath,
+                    size = it.size,
+                    folder = it.folder,
+                    modifiedTime = it.modifiedTime,
+                    artifactoryType = it.artifactoryType,
+                    show = show,
+                    canDownload = canDownload,
+                    version = appVersion
+                )
+            }
+        } finally {
+            logger.info("getBuildFileList cost ${System.currentTimeMillis() - startTimestamp}ms")
+        }
     }
 
     override fun getFilePipelineInfo(
@@ -198,7 +279,7 @@ class BkRepoService @Autowired constructor(
 
     fun transferFileInfo(
         projectId: String,
-        fileList: List<NodeInfo>,
+        fileList: List<BkRepoNodeInfo>,
         pipelineHasPermissionList: List<String>,
         checkPermission: Boolean = true
     ): List<FileInfo> {
@@ -217,21 +298,22 @@ class BkRepoService @Autowired constructor(
 
             val fileInfoList = mutableListOf<FileInfo>()
             fileList.forEach {
-
-                //                var appVersion: String? = null
-//                val properties = it.properties!!.map { itp ->
-//                    if (itp.key == "appVersion") {
-//                        appVersion = itp.value ?: ""
-//                    }
-//                    Property(itp.key, itp.value ?: "")
-//                }
+                var appVersion: String? = null
+                val properties = it.metadata.map { itp ->
+                    if (itp.key == "appVersion") {
+                        appVersion = itp.value ?: ""
+                    }
+                    Property(itp.key, itp.value ?: "")
+                }
                 if (RepoUtils.isPipelineFile(it)) {
                     val pipelineId = pipelineService.getPipelineId(it.path)
                     val buildId = pipelineService.getBuildId(it.path)
-//                    外部URL?
-//                    val url =
-//                        "${HomeHostUtil.outerServerHost()}/app/download/devops_app_forward.html?flag=buildArchive&projectId=$projectId&pipelineId=$pipelineId&buildId=$buildId"
-//                    val shortUrl = shortUrlApi.getShortUrl(url, 300)
+                    val shortUrl = if (it.name.endsWith(".ipa") || it.name.endsWith(".apk")) {
+                        val url = "${HomeHostUtil.outerServerHost()}/app/download/devops_app_forward.html?flag=buildArchive&projectId=$projectId&pipelineId=$pipelineId&buildId=$buildId"
+                        shortUrlApi.getShortUrl(url, 300)
+                    } else {
+                        ""
+                    }
 
                     if ((!checkPermission || pipelineHasPermissionList.contains(pipelineId)) &&
                         pipelineIdToNameMap.containsKey(pipelineId) && buildIdToNameMap.containsKey(buildId)
@@ -248,9 +330,9 @@ class BkRepoService @Autowired constructor(
                                 folder = it.folder,
                                 modifiedTime = LocalDateTime.parse(it.lastModifiedDate, DateTimeFormatter.ISO_DATE_TIME).timestamp(),
                                 artifactoryType = RepoUtils.getTypeByRepo(it.repoName),
-                                properties = listOf() //
-                                // appVersion?
-                                // shortUrl?
+                                properties = properties,
+                                appVersion = appVersion,
+                                shortUrl = shortUrl
                             )
                         )
                     }
@@ -265,8 +347,8 @@ class BkRepoService @Autowired constructor(
                             folder = it.folder,
                             modifiedTime = LocalDateTime.parse(it.lastModifiedDate, DateTimeFormatter.ISO_DATE_TIME).timestamp(),
                             artifactoryType = RepoUtils.getTypeByRepo(it.repoName),
-                            properties = listOf() //
-                            // appVersion?
+                            properties = properties,
+                            appVersion = appVersion
                         )
                     )
                 }
@@ -284,27 +366,26 @@ class BkRepoService @Autowired constructor(
 
     override fun listCustomFiles(projectId: String, condition: CustomFileSearchCondition): List<String> {
         logger.info("listCustomFiles, projectId: $projectId, condition: $condition")
-        val allFiles = bkRepoClient.searchFile(
+        val allFiles = bkRepoClient.queryByNameAndMetadata(
             "",
             projectId,
             listOf(RepoUtils.CUSTOM_REPO),
             listOf(),
             condition.properties,
             0,
-            10000
-        ).records
+            30000
+        )
 
         if (condition.glob.isNullOrEmpty()) {
             return allFiles.map { it.path }
         }
-
         val globs = condition.glob!!.split(",").map {
             it.trim().removePrefix("/").removePrefix("./")
         }.filter { it.isNotEmpty() }
         val matchers = globs.map {
             FileSystems.getDefault().getPathMatcher("glob:$it")
         }
-        val matchedFiles = mutableListOf<NodeInfo>()
+        val matchedFiles = mutableListOf<BkRepoNodeInfo>()
         matchers.forEach { matcher ->
             allFiles.forEach {
                 if (matcher.matches(Paths.get(it.path.removePrefix("/")))) {
@@ -313,7 +394,7 @@ class BkRepoService @Autowired constructor(
             }
         }
 
-        return matchedFiles.toSet().toList().sortedByDescending { it.lastModifiedDate }.map { it.path }
+        return matchedFiles.toSet().toList().sortedByDescending { it.lastModifiedDate }.map { it.fullPath }
     }
 
     override fun copyToCustom(userId: String, projectId: String, pipelineId: String, buildId: String, copyToCustomReq: CopyToCustomReq) {

@@ -56,7 +56,7 @@ class BkRepoSearchService @Autowired constructor(
         page: Int,
         pageSize: Int
     ): Pair<Long, List<FileInfo>> {
-        logger.info("search, projectId: $projectId, searchProps: $searchProps")
+        logger.info("search, projectId: $projectId, searchProps: $searchProps, page: $page, pageSize: $pageSize")
 
         val fileNameSet = mutableSetOf<String>()
         searchProps.fileNames?.forEach {
@@ -73,7 +73,7 @@ class BkRepoSearchService @Autowired constructor(
             }
         }
 
-        val fileList = bkRepoClient.searchFile(
+        val nodeList = bkRepoClient.queryByNameAndMetadata(
             userId,
             projectId,
             listOf(RepoUtils.PIPELINE_REPO, RepoUtils.CUSTOM_REPO),
@@ -81,21 +81,22 @@ class BkRepoSearchService @Autowired constructor(
             props.associate { it },
             page,
             pageSize
-        ).records
+        )
 
         val pipelineHasPermissionList = pipelineService.filterPipeline(userId, projectId, AuthPermission.LIST)
-        val fileInfoList = bkRepoService.transferFileInfo(projectId, fileList, pipelineHasPermissionList)
+        val fileInfoList = bkRepoService.transferFileInfo(projectId, nodeList, pipelineHasPermissionList)
         return Pair(LocalDateTime.now().timestamp(), fileInfoList)
     }
 
     fun serviceSearch(
         projectId: String,
         searchProps: List<Property>,
-        offset: Int,
-        limit: Int
+        page: Int,
+        pageSize: Int
     ): Pair<Long, List<FileInfo>> {
         logger.info("serviceSearch, projectId: $projectId, searchProps: $searchProps")
 
+        // 属性为 fileName 要按文件名搜索？
         val fileNameSet = mutableSetOf<String>()
         val props = mutableListOf<Pair<String, String>>()
         searchProps.forEach {
@@ -106,20 +107,17 @@ class BkRepoSearchService @Autowired constructor(
             }
         }
 
-        val finalOffset = if (limit == -1) null else offset
-        val finalLimit = if (limit == -1) null else limit
-
-        val fileList = bkRepoClient.searchFile(
+        val nodeList = bkRepoClient.queryByNameAndMetadata(
             "",
             projectId,
             listOf(RepoUtils.PIPELINE_REPO, RepoUtils.CUSTOM_REPO),
             fileNameSet.toList(),
             props.associate { it },
-            0,
-            10000
-        ).records
+            page,
+            pageSize
+        )
 
-        val fileInfoList = bkRepoService.transferFileInfo(projectId, fileList, emptyList(), false)
+        val fileInfoList = bkRepoService.transferFileInfo(projectId, nodeList, emptyList(), false)
         return Pair(LocalDateTime.now().timestamp(), fileInfoList)
     }
 
@@ -140,7 +138,7 @@ class BkRepoSearchService @Autowired constructor(
             }
         }
 
-        val fileList = bkRepoClient.searchFile(
+        val nodeList = bkRepoClient.queryByNameAndMetadata(
             "",
             projectId,
             listOf(RepoUtils.PIPELINE_REPO, RepoUtils.CUSTOM_REPO),
@@ -148,10 +146,10 @@ class BkRepoSearchService @Autowired constructor(
             props.associate { it },
             0,
             10000
-        ).records
+        )
 
         val pipelineHasPermissionList = pipelineService.filterPipeline(userId, projectId, AuthPermission.LIST)
-        val fileInfoList = bkRepoService.transferFileInfo(projectId, fileList, pipelineHasPermissionList)
+        val fileInfoList = bkRepoService.transferFileInfo(projectId, nodeList, pipelineHasPermissionList)
             .sortedWith(
                 Comparator { file1, file2 -> -file1.modifiedTime.compareTo(file2.modifiedTime) }
             )
@@ -166,8 +164,22 @@ class BkRepoSearchService @Autowired constructor(
         customized: Boolean
     ): Pair<Long, List<FileInfo>> {
         logger.info("serviceSearchFileByRegex, projectId: $projectId, pipelineId: $pipelineId, buildId: $buildId, regexPath: $regexPath")
-        // todo 根据场景补充查询方式
-        throw OperationException("not supported")
+
+        var queryPath = regexPath
+        if (!regexPath.startsWith("/")) {
+            queryPath = "/$queryPath"
+        }
+
+        val nodeList = bkRepoClient.queryByPattern(
+            "",
+            projectId,
+            if (customized) listOf(RepoUtils.CUSTOM_REPO) else listOf(RepoUtils.PIPELINE_REPO),
+            listOf(queryPath),
+            mapOf()
+        )
+
+        val fileInfoList = bkRepoService.transferFileInfo(projectId, nodeList, emptyList(), false)
+        return Pair(LocalDateTime.now().timestamp(), fileInfoList)
     }
 
     override fun serviceSearchFileAndProperty(
@@ -177,10 +189,10 @@ class BkRepoSearchService @Autowired constructor(
     ): Pair<Long, List<FileInfo>> {
         logger.info("serviceSearchFileAndProperty, projectId: $projectId, searchProps: $searchProps, customized: $customized")
 
-        val repos = when (customized) {
-            null -> setOf(RepoUtils.PIPELINE_REPO, RepoUtils.CUSTOM_REPO)
-            true -> setOf(RepoUtils.CUSTOM_REPO)
-            false -> setOf(RepoUtils.PIPELINE_REPO)
+        val repoNames = when (customized) {
+            null -> listOf(RepoUtils.PIPELINE_REPO, RepoUtils.CUSTOM_REPO)
+            true -> listOf(RepoUtils.CUSTOM_REPO)
+            false -> listOf(RepoUtils.PIPELINE_REPO)
         }
 
         val fileNameSet = mutableSetOf<String>()
@@ -193,20 +205,17 @@ class BkRepoSearchService @Autowired constructor(
             }
         }
 
-        val fileList = bkRepoClient.searchFile(
+        val nodeList = bkRepoClient.queryByNameAndMetadata(
             "",
             projectId,
-            listOf(RepoUtils.PIPELINE_REPO, RepoUtils.CUSTOM_REPO),
+            repoNames,
             fileNameSet.toList(),
             props.associate { it },
             0,
             10000
-        ).records
+        )
 
-        val fileInfoList =
-            bkRepoService.transferFileInfo(projectId, fileList, emptyList(), false).sortedWith(
-                Comparator { file1, file2 -> -file1.modifiedTime.compareTo(file2.modifiedTime) }
-            )
+        val fileInfoList = bkRepoService.transferFileInfo(projectId, nodeList, emptyList(), false)
         return Pair(LocalDateTime.now().timestamp(), fileInfoList)
     }
 

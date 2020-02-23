@@ -95,28 +95,7 @@ class BkRepoAppService @Autowired constructor(
         ttl: Int,
         directed: Boolean
     ): Url {
-        logger.info("getExternalPlistDownloadUrl, userId: $userId, projectId: $projectId, " +
-            "artifactoryType: $artifactoryType, path: $path, ttl: $ttl, directed: $directed")
-        val normalizedPath = PathUtils.checkAndNormalizeAbsPath(path)
-
-        val properties = bkRepoClient.listMetadata(userId, projectId, RepoUtils.getRepoByType(artifactoryType), normalizedPath)
-        if (properties[ARCHIVE_PROPS_PIPELINE_ID].isNullOrBlank()) {
-            throw CustomException(Response.Status.INTERNAL_SERVER_ERROR, "元数据(pipelineId)不存在，请通过共享下载文件")
-        }
-
-        val pipelineId = properties[ARCHIVE_PROPS_PIPELINE_ID]
-        pipelineService.validatePermission(
-            userId,
-            projectId,
-            pipelineId!!,
-            AuthPermission.DOWNLOAD,
-            "用户($userId)在工程($projectId)下没有流水线${pipelineId}下载构建权限"
-        )
-
-        // todo
-        throw OperationException("not implemented")
-//        val url = "${HomeHostUtil.outerApiServerHost()}/artifactory/api/app/artifactories/$projectId/$artifactoryType/filePlist?path=$normalizedPath"
-//        return Url(url)
+        return getExternalDownloadUrl(userId, projectId, artifactoryType, path, ttl, false)
     }
 
     override fun getPlistFile(userId: String, projectId: String, artifactoryType: ArtifactoryType, argPath: String, ttl: Int, directed: Boolean, experienceHashId: String?): String {

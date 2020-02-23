@@ -29,13 +29,17 @@ package com.tencent.devops.artifactory.mq
 import com.tencent.devops.artifactory.Constants
 import com.tencent.devops.artifactory.pojo.FileInfo
 import com.tencent.devops.artifactory.pojo.Property
+import com.tencent.devops.artifactory.pojo.SearchProps
 import com.tencent.devops.artifactory.service.ArtifactoryInfoService
 import com.tencent.devops.artifactory.service.artifactory.ArtifactorySearchService
+import com.tencent.devops.artifactory.service.bkrepo.BkRepoSearchService
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.listener.pipeline.BaseListener
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
+import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.gray.RepoGray
 import com.tencent.devops.process.api.service.ServicePipelineRuntimeResource
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -46,6 +50,9 @@ class PipelineBuildExtListener @Autowired constructor(
     pipelineEventDispatcher: PipelineEventDispatcher,
     private val artifactoryInfoService: ArtifactoryInfoService,
     private val artifactorySearchService: ArtifactorySearchService,
+    private val bkRepoSearchService: BkRepoSearchService,
+    private val repoGray: RepoGray,
+    private val redisOperation: RedisOperation,
     private val client: Client
 ) : BaseListener<PipelineBuildFinishBroadCastEvent>(pipelineEventDispatcher) {
 
@@ -110,16 +117,28 @@ class PipelineBuildExtListener @Autowired constructor(
 
     fun getArtifactList(projectId: String, pipelineId: String, buildId: String): List<FileInfo> {
         val fileInfoList = mutableListOf<FileInfo>()
-
-        val propertyList = mutableListOf<Property>()
-        propertyList.add(Property("pipelineId", pipelineId))
-        propertyList.add(Property("buildId", buildId))
-
         fileInfoList.addAll(
-            artifactorySearchService.serviceSearchFileAndProperty(
-                projectId = projectId,
-                searchProps = propertyList
-            ).second
+            if (repoGray.isGray(projectId, redisOperation)) {
+                bkRepoSearchService.searchFileAndProperty(
+                    userId = "",
+                    projectId = projectId,
+                    searchProps = SearchProps(
+                        listOf(),
+                        mapOf(
+                            "pipelineId" to pipelineId,
+                            "buildId" to pipelineId
+                        )
+                    )
+                ).second
+            } else {
+                artifactorySearchService.serviceSearchFileAndProperty(
+                    projectId = projectId,
+                    searchProps = listOf(
+                        Property("pipelineId", pipelineId),
+                        Property("buildId", buildId)
+                    )
+                ).second
+            }
         )
         logger.info("ArtifactFileList size: ${fileInfoList.size}")
         return fileInfoList.sorted()
