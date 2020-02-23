@@ -87,15 +87,16 @@ class BkRepoAppService @Autowired constructor(
     override fun getExternalDownloadUrlDirected(userId: String, projectId: String, artifactoryType: ArtifactoryType, argPath: String, ttl: Int): Url {
         return getExternalDownloadUrl(userId, projectId, artifactoryType, argPath, ttl, true)
     }
+
     override fun getExternalPlistDownloadUrl(
         userId: String,
         projectId: String,
         artifactoryType: ArtifactoryType,
-        path: String,
+        argPath: String,
         ttl: Int,
         directed: Boolean
     ): Url {
-        return getExternalDownloadUrl(userId, projectId, artifactoryType, path, ttl, false)
+        return getExternalDownloadUrl(userId, projectId, artifactoryType, argPath, ttl, false)
     }
 
     override fun getPlistFile(userId: String, projectId: String, artifactoryType: ArtifactoryType, argPath: String, ttl: Int, directed: Boolean, experienceHashId: String?): String {

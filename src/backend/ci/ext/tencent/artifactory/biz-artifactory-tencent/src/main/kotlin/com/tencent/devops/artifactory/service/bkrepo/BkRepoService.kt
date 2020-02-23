@@ -48,6 +48,7 @@ import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_BUILD_ID
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_PIPELINE_ID
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_PIPELINE_NAME
 import com.tencent.devops.common.archive.pojo.ArtifactorySearchParam
+import com.tencent.devops.common.archive.pojo.QueryNodeInfo
 import com.tencent.devops.common.archive.shorturl.ShortUrlApi
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.service.config.CommonConfig
@@ -280,7 +281,7 @@ class BkRepoService @Autowired constructor(
 
     fun transferFileInfo(
         projectId: String,
-        fileList: List<BkRepoNodeInfo>,
+        fileList: List<QueryNodeInfo>,
         pipelineHasPermissionList: List<String>,
         checkPermission: Boolean = true
     ): List<FileInfo> {
@@ -386,7 +387,7 @@ class BkRepoService @Autowired constructor(
         val matchers = globs.map {
             FileSystems.getDefault().getPathMatcher("glob:$it")
         }
-        val matchedFiles = mutableListOf<BkRepoNodeInfo>()
+        val matchedFiles = mutableListOf<QueryNodeInfo>()
         matchers.forEach { matcher ->
             allFiles.forEach {
                 if (matcher.matches(Paths.get(it.path.removePrefix("/")))) {
