@@ -45,5 +45,5 @@ data class ThirdPartyDevCloudDispatchType(
         }
     }
 
-    override fun buildType() = BuildType.THIRD_PARTY_DEVCLOUD
+    override fun buildType() = BuildType.valueOf(BuildType.THIRD_PARTY_DEVCLOUD.name)
 }
