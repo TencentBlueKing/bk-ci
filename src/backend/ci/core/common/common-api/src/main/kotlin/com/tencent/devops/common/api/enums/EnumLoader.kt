@@ -24,45 +24,38 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.controller
+package com.tencent.devops.common.api.enums
 
-import com.tencent.devops.common.api.exception.ParamBlankException
-import com.tencent.devops.common.api.pojo.Page
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.dispatch.api.ServiceDockerHostResource
-import com.tencent.devops.dispatch.pojo.DockerHostZone
-import com.tencent.devops.dispatch.service.DockerHostZoneTaskService
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
+import java.util.ServiceLoader
+import java.util.concurrent.atomic.AtomicBoolean
 
-@RestResource
-class ServiceDockerHostResourceImpl @Autowired constructor(
-    private val dockerHostZoneTaskService: DockerHostZoneTaskService
-) : ServiceDockerHostResource {
-    override fun list(page: Int?, pageSize: Int?): Page<DockerHostZone> {
-        checkParams(page, pageSize)
-        val realPage = page ?: 1
-        val realPageSize = pageSize ?: 20
-        val dockerHostList = dockerHostZoneTaskService.list(realPage, realPageSize)
-        val count = dockerHostZoneTaskService.count()
-        return Page(
-            page = realPage,
-            pageSize = realPageSize,
-            count = count.toLong(),
-            records = dockerHostList
-        )
-    }
+/**
+ * 仅在初始化时调用一次，不可重复使用
+ */
+object EnumLoader {
 
-    companion object {
-        private val logger = LoggerFactory.getLogger(ServiceDockerHostResourceImpl::class.java)
-    }
+    private var modify = AtomicBoolean(false)
 
-    fun checkParams(page: Int?, pageSize: Int?) {
-        if (page != null && page < 1) {
-            throw ParamBlankException("Invalid page")
+    private val logger = LoggerFactory.getLogger(EnumLoader::class.java)
+
+    fun enumModified() {
+        // 同一JVM中防止多次重复加载，造成Enum实例不一致
+        if (!modify.compareAndSet(false, true)) {
+            return
         }
-        if (pageSize != null && pageSize < 1) {
-            throw ParamBlankException("Invalid pageSize")
+        val clazz = EnumModifier::class.java
+        var fetcheries = ServiceLoader.load(clazz)
+        if (!fetcheries.iterator().hasNext()) {
+            fetcheries = ServiceLoader.load(clazz, ServiceLoader::class.java.classLoader)
+        }
+        fetcheries.forEach { modifier ->
+            logger.info("[ENUM MODIFIER]: $modifier")
+            try {
+                modifier.modified()
+            } catch (e: Exception) {
+                logger.error("[ENUM MODIFIER]| load fail| ${e.message}", e)
+            }
         }
     }
 }
