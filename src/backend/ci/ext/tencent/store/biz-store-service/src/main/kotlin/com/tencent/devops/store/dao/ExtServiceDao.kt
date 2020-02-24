@@ -457,7 +457,7 @@ class ExtServiceDao {
         val (ta, conditions) = formatConditions(serviceName, classifyCode, dslContext)
         val taf = TExtensionServiceFeature.T_EXTENSION_SERVICE_FEATURE.`as`("taf")
         val baseStep = dslContext.select(
-            ta.ID,
+            ta.ID.`as`("SERVICE_ID"),
             ta.SERVICE_NAME,
             ta.CLASSIFY_ID,
             ta.SERVICE_CODE,
