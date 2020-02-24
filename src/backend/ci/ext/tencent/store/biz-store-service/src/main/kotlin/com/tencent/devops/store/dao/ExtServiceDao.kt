@@ -1,5 +1,6 @@
 package com.tencent.devops.store.dao
 
+import com.nhaarman.mockito_kotlin.stub
 import com.tencent.devops.model.store.tables.TClassify
 import com.tencent.devops.model.store.tables.TExtensionService
 import com.tencent.devops.model.store.tables.TExtensionServiceFeature
@@ -305,7 +306,7 @@ class ExtServiceDao {
         val b = TClassify.T_CLASSIFY.`as`("b")
         val conditions = setExtServiceVisibleCondition(a)
         conditions.add(0, a.CLASSIFY_ID.eq(b.ID))
-        val serviceNum = dslContext.selectCount().from(a).where(conditions).asField<Int>("atomNum")
+        val serviceNum = dslContext.selectCount().from(a).where(conditions).asField<Int>("serviceNum")
         return dslContext.select(
             b.ID.`as`("id"),
             b.CLASSIFY_CODE.`as`("classifyCode"),
@@ -313,7 +314,7 @@ class ExtServiceDao {
             serviceNum,
             b.CREATE_TIME.`as`("createTime"),
             b.UPDATE_TIME.`as`("updateTime")
-        ).from(b).where(b.TYPE.eq(0)).orderBy(b.WEIGHT.desc()).fetch()
+        ).from(b).where(b.TYPE.eq(StoreTypeEnum.SERVICE.type.toByte())).orderBy(b.WEIGHT.desc()).fetch()
     }
 
     /**
@@ -346,7 +347,7 @@ class ExtServiceDao {
             val t = dslContext.select(
                 tas.STORE_CODE,
                 tas.STORE_TYPE,
-                tas.DOWNLOADS.`as`(MarketAtomSortTypeEnum.DOWNLOAD_COUNT.name),
+                tas.DOWNLOADS.`as`(ExtServiceSortTypeEnum.DOWNLOAD_COUNT.name),
                 tas.SCORE_AVERAGE
             ).from(tas).asTable("t")
             baseStep.leftJoin(t).on(ta.SERVICE_CODE.eq(t.field("STORE_CODE", String::class.java)))

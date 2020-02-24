@@ -3,7 +3,9 @@ package com.tencent.devops.store.api.service
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.atom.enums.OpSortTypeEnum
+import com.tencent.devops.store.pojo.common.VisibleApproveReq
 import com.tencent.devops.store.pojo.dto.ServiceApproveReq
+import com.tencent.devops.store.pojo.dto.ServiceOfflineDTO
 import com.tencent.devops.store.pojo.enums.ExtServiceStatusEnum
 import com.tencent.devops.store.pojo.vo.ExtServiceInfoResp
 import com.tencent.devops.store.pojo.vo.ExtensionServiceVO
@@ -85,5 +87,33 @@ interface OpServiceResource {
         serviceId: String,
         @ApiParam("审核扩展服务请求报文")
         approveReq: ServiceApproveReq
+    ): Result<Boolean>
+
+    @ApiOperation("下架扩展服务")
+    @PUT
+    @Path("/{serviceCode}/offline/")
+    fun offlineService(
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("serviceCode", required = true)
+        @PathParam("serviceCode")
+        serviceCode: String,
+        @ApiParam("下架请求报文")
+        serviceOffline: ServiceOfflineDTO
+    ): Result<Boolean>
+
+    @ApiOperation("审核可见范围")
+    @PUT
+    @Path("/{serviceCode}/visible/approve/")
+    fun approveVisibleDept(
+        @ApiParam(value = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("扩展标识", required = true)
+        @PathParam("serviceCode")
+        serviceCode: String,
+        @ApiParam("可见范围审核请求报文", required = true)
+        visibleApproveReq: VisibleApproveReq
     ): Result<Boolean>
 }

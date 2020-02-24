@@ -3,7 +3,6 @@ package com.tencent.devops.store.service
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.MessageCodeUtil
-import com.tencent.devops.process.api.service.ServiceMeasurePipelineResource
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.dao.ExtServiceDao
 import com.tencent.devops.store.dao.common.StoreStatisticDao
@@ -50,7 +49,7 @@ class ExtServiceSearchService @Autowired constructor(
         val labelInfoList = mutableListOf<MarketMainItemLabel>()
         // 最新标签
         labelInfoList.add(MarketMainItemLabel(LATEST, MessageCodeUtil.getCodeLanMessage(LATEST)))
-        // 最后标签
+        // 最火标签
         labelInfoList.add(MarketMainItemLabel(HOTTEST, MessageCodeUtil.getCodeLanMessage(HOTTEST)))
         val futureList = mutableListOf<SearchExtServiceVO>()
         val classifyList = extServiceDao.getAllServiceClassify(dslContext)
@@ -141,6 +140,7 @@ class ExtServiceSearchService @Autowired constructor(
         // 获取扩展服务
         val labelCodeList = if (labelCode.isNullOrEmpty()) listOf() else labelCode?.split(",")
         val count = extServiceDao.count(dslContext, serviceName, classifyCode, labelCodeList, score)
+        logger.info("doList userId[$userId],userDeptList[$userDeptList],serviceName[$serviceName],classifyCode[$classifyCode],labelCode[$labelCode] count[$count]")
         val services = extServiceDao.list(
             dslContext,
             serviceName,
@@ -225,23 +225,23 @@ class ExtServiceSearchService @Autowired constructor(
     private fun getStatisticByCodeList(serviceCodeList: List<String>, statFiledList: List<String>): Result<HashMap<String, ExtServiceStatistic>> {
         val records = storeStatisticDao.batchGetStatisticByStoreCode(dslContext, serviceCodeList, StoreTypeEnum.SERVICE.type.toByte())
         val serviceCodes = serviceCodeList.joinToString(",")
-        val isStatPipeline = statFiledList.contains("PIPELINE")
-        val pipelineStat = if (isStatPipeline) {
-            client.get(ServiceMeasurePipelineResource::class).batchGetPipelineCountByAtomCode(serviceCodes, null).data
-        } else {
-            mutableMapOf()
-        }
+//        val isStatPipeline = statFiledList.contains("PIPELINE")
+//        val pipelineStat = if (isStatPipeline) {
+//            client.get(ServiceMeasurePipelineResource::class).batchGetPipelineCountByAtomCode(serviceCodes, null).data
+//        } else {
+//            mutableMapOf()
+//        }
         val serviceStatistic = hashMapOf<String, ExtServiceStatistic>()
         records.map {
             if (it.value4() != null) {
                 val serviceCode = it.value4()
-                serviceStatistic[serviceCode] = formatAtomStatistic(it, pipelineStat?.get(serviceCode) ?: 0)
+                serviceStatistic[serviceCode] = formatServiceStatistic(it)
             }
         }
         return Result(serviceStatistic)
     }
 
-    private fun formatAtomStatistic(record: Record4<BigDecimal, BigDecimal, BigDecimal, String>, pipelineCnt: Int): ExtServiceStatistic {
+    private fun formatServiceStatistic(record: Record4<BigDecimal, BigDecimal, BigDecimal, String>): ExtServiceStatistic {
         val downloads = record.value1()?.toInt()
         val comments = record.value2()?.toInt()
         val score = record.value3()?.toDouble()
