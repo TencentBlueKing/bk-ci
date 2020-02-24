@@ -81,7 +81,6 @@ class UpgradeService @Autowired constructor(
         return value!!
     }
 
-
     fun setUpgrade(agentVersion: String) = redisOperation.set(agentGrayUtils.getAgentVersionKey(), agentVersion, TimeUnit.DAYS.toSeconds(120))
 
     fun setMasterVersion(masterVersion: String) = redisOperation.set(agentGrayUtils.getAgentMasterVersionKey(), masterVersion, TimeUnit.DAYS.toSeconds(120))
