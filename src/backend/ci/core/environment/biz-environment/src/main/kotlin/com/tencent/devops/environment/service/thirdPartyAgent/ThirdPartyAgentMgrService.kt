@@ -82,9 +82,8 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.time.format.DateTimeFormatter
-import java.util.*
+import java.util.Date
 import javax.ws.rs.NotFoundException
-import kotlin.collections.ArrayList
 
 @Service
 class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
