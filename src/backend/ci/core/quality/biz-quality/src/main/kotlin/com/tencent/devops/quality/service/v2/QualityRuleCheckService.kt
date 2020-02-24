@@ -183,7 +183,10 @@ class QualityRuleCheckService @Autowired constructor(
                 val result = checkIndicator(rule, buildCheckParams, metadataList)
                 val interceptRecordList = result.second
                 val interceptResult = result.first
-                val params = mapOf("projectId" to buildCheckParams.projectId, "pipelineId" to buildCheckParams.pipelineId)
+                val params = mapOf("projectId" to buildCheckParams.projectId,
+                    "pipelineId" to buildCheckParams.pipelineId,
+                    CodeccUtils.BK_CI_CODECC_TASK_ID to (buildCheckParams.runtimeVariable?.get(CodeccUtils.BK_CI_CODECC_TASK_ID) ?: "")
+                )
 
                 resultList.add(getRuleCheckSingleResult(rule.name, interceptRecordList, params))
                 ruleInterceptList.add(Triple(rule, interceptResult, interceptRecordList))
@@ -387,7 +390,7 @@ class QualityRuleCheckService @Autowired constructor(
         return if (CodeccUtils.isCodeccAtom(record.indicatorType)) {
             val projectId = params["projectId"] ?: ""
             val pipelineId = params["pipelineId"] ?: ""
-            val taskId = client.get(ServiceCodeccElementResource::class).get(projectId, pipelineId).data?.taskId
+            val taskId = params[CodeccUtils.BK_CI_CODECC_TASK_ID] ?: client.get(ServiceCodeccElementResource::class).get(projectId, pipelineId).data?.taskId
             if (taskId.isNullOrBlank()) {
                 logger.warn("taskId is null or blank for project($projectId) pipeline($pipelineId)")
                 return ""
