@@ -82,8 +82,9 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.time.format.DateTimeFormatter
-import java.util.Date
+import java.util.*
 import javax.ws.rs.NotFoundException
+import kotlin.collections.ArrayList
 
 @Service
 class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
@@ -1065,7 +1066,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                     val envVar: List<EnvVar> = objectMapper.readValue(agentRecord.agentEnvs)
                     envVar.associate { it.name to it.value }
                 },
-                gateway = if(gray.isGray()){
+                gateway = if (gray.isGray()) {
                     val gateWayMapping = upgradeService.getGatewayMapping()
                     gateWayMapping[agentRecord.gateway] ?: agentRecord.gateway
                 } else {
