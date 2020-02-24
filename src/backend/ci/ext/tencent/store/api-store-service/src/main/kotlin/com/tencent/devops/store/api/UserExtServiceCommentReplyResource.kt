@@ -21,7 +21,7 @@ import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["USER_EXTENSION_SERVICE_COMMENT"], description = "服务扩展_评论")
-@Path("/user/market/service/comments")
+@Path("/user/market/service/comment")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserExtServiceCommentReplyResource {
@@ -44,7 +44,7 @@ interface UserExtServiceCommentReplyResource {
     ): Result<StoreCommentInfo?>
 
     @ApiOperation("修改评论")
-    @Path("/{commentId}")
+    @Path("/comments/{commentId}")
     @PUT
     fun updateServiceComment(
         @ApiParam("userId", required = true)
@@ -58,7 +58,7 @@ interface UserExtServiceCommentReplyResource {
     ): Result<Boolean>
 
     @ApiOperation("获取单条评论")
-    @Path("/{commentId}")
+    @Path("/comments/{commentId}")
     @GET
     fun getServiceComment(
         @ApiParam("userId", required = true)
@@ -70,7 +70,7 @@ interface UserExtServiceCommentReplyResource {
     ): Result<StoreCommentInfo?>
 
     @ApiOperation("获取扩展服务所有评论")
-    @Path("/services/{serviceCode}")
+    @Path("/services/{serviceCode}/comments")
     @GET
     fun getServiceCommentByServiceCode(
         @ApiParam("userId", required = true)
