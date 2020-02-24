@@ -24,18 +24,29 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":core:common:common-client")
-    compile project(":core:common:common-service")
-    compile project(":core:common:common-db")
-    compile project(":core:common:common-websocket")
-    compile project(":core:store:api-store")
-    compile project(":core:project:api-project")
-    compile project(":core:process:api-process")
-    compile project(":core:quality:api-quality")
-    compile project(":core:artifactory:api-artifactory-store")
-    compile project(":core:store:model-store")
-    testCompile project(":core:common:common-test")
-}
+package com.tencent.devops.log.dao
 
-//apply from: "$rootDir/task_deploy_to_maven.gradle"
+import com.tencent.devops.model.log.tables.TLogIndicesV2
+import org.jooq.DSLContext
+import org.springframework.stereotype.Repository
+
+@Repository
+class TencentIndexDao {
+
+    fun getClusterName(dslContext: DSLContext, buildId: String): String? {
+        with(TLogIndicesV2.T_LOG_INDICES_V2) {
+            return dslContext.selectFrom(this)
+                .where(BUILD_ID.eq(buildId))
+                .fetchOne()?.logClusterName
+        }
+    }
+
+    fun updateClusterName(dslContext: DSLContext, buildId: String, clusterName: String): Int {
+        with(TLogIndicesV2.T_LOG_INDICES_V2) {
+            return dslContext.update(this)
+                .set(LOG_CLUSTER_NAME, clusterName)
+                .where(BUILD_ID.eq(buildId))
+                .execute()
+        }
+    }
+}

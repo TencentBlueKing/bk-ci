@@ -26,25 +26,74 @@
 
 package com.tencent.devops.log.client.impl
 
+import com.google.common.cache.CacheBuilder
+import com.tencent.devops.common.es.ESClient
+import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.log.client.LogClient
-import org.elasticsearch.client.Client
+import com.tencent.devops.log.dao.TencentIndexDao
 import org.jooq.DSLContext
-import java.lang.RuntimeException
+import org.slf4j.LoggerFactory
+import java.util.concurrent.TimeUnit
+import kotlin.math.abs
 
 class MultiESLogClient constructor(
-    private val clients: Set<Client>,
+    private val clients: List<ESClient>,
     private val redisOperation: RedisOperation,
-    private val dslContext: DSLContext
+    private val dslContext: DSLContext,
+    private val tencentIndexDao: TencentIndexDao
 ) : LogClient {
-    override fun getClients(): Set<Client> {
+
+    private val cache = CacheBuilder.newBuilder()
+        .maximumSize(300000)
+        .expireAfterWrite(2, TimeUnit.DAYS)
+        .build<String/*buildId*/, String/*ES NAME*/>()
+
+    override fun getClients(): List<ESClient> {
         return clients
     }
 
-    override fun hashClient(buildId: String, client: Set<Client>): Client {
+    /**
+     * 1. Get es name from local cache
+     * 2. If local cache is not exist, then try to get from DB
+     * 3. If DB is not exist, then hash the build id to the ESClients
+     * 4.
+     */
+    override fun hashClient(buildId: String, client: List<ESClient>): ESClient {
         if (client.isEmpty()) {
             throw RuntimeException("Fail to get the log client")
         }
+        var esName = cache.getIfPresent(buildId)
+        if (esName.isNullOrBlank()) {
+            val redisLock = RedisLock(redisOperation, "$MULTI_LOG_CLIENT_LOCK_KEY:$buildId", 10)
+            try {
+                redisLock.lock()
+                esName = tencentIndexDao.getClusterName(dslContext, buildId)
+                if (esName.isNullOrBlank()) {
+                    // hash from build
+                } else {
+                    // set to cache
+                    logger.info("[$buildId] The build ID already bind to the ES: ($esName)")
+                    cache.put(buildId, esName!!)
+                }
+
+
+            } finally {
+                redisLock.unlock()
+            }
+        }
         return client.first()
+    }
+
+    private fun hashBuildId(buildId: String, size: Int): Int {
+        if (size == 1) {
+            return 0
+        }
+        return abs(buildId.hashCode()) % size
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(MultiESLogClient::class.java)
+        private const val MULTI_LOG_CLIENT_LOCK_KEY = "log:multi:log:client:lock:key"
     }
 }

@@ -26,11 +26,11 @@
 
 package com.tencent.devops.log.configuration
 
+import com.tencent.devops.common.es.ESClient
 import com.tencent.devops.common.es.ESProperties
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.WebAutoConfiguration
 import com.tencent.devops.log.client.impl.MultiESLogClient
-import org.elasticsearch.client.Client
 import org.elasticsearch.common.settings.Settings
 import org.elasticsearch.common.transport.InetSocketTransportAddress
 import org.elasticsearch.transport.client.PreBuiltTransportClient
@@ -59,6 +59,8 @@ class LogESAutoConfiguration {
     private val e1Port: Int? = 0
     @Value("\${elasticsearch.cluster}")
     private val e1Cluster: String? = null
+    @Value("\${elasticsearch.name}")
+    private val name: String? = null
 
     @Value("\${elasticsearch2.ip}")
     private val e2IP: String? = null
@@ -70,10 +72,12 @@ class LogESAutoConfiguration {
     private val e2Username: String? = null
     @Value("\${elasticsearch2.password}")
     private val e2Password: String? = null
+    @Value("\${elasticsearch2.name}")
+    private val e2Name: String? = null
 
     @Bean
     @Primary
-    fun client(): Client {
+    fun client(): ESClient {
         if (e1IP.isNullOrBlank()) {
             throw IllegalArgumentException("ES集群地址尚未配置")
         }
@@ -83,6 +87,9 @@ class LogESAutoConfiguration {
         if (e1Cluster.isNullOrBlank()) {
             throw IllegalArgumentException("ES集群名称尚未配置")
         }
+        if (name.isNullOrBlank()) {
+            throw IllegalArgumentException("ES唯一名称尚未配置")
+        }
         val settings = Settings.builder().put("cluster.name", e1Cluster).build()
         val ips = e1IP!!.split(",".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
         val client = PreBuiltTransportClient(settings)
@@ -90,11 +97,11 @@ class LogESAutoConfiguration {
             client.addTransportAddress(InetSocketTransportAddress(InetAddress.getByName(ipAddress), e1Port!!))
         }
         logger.info("Init ES transport client with host($e1IP:$e1Port) and cluster($e1Cluster)")
-        return client
+        return ESClient(name!!, client)
     }
 
     @Bean
-    fun client2(): Client {
+    fun client2(): ESClient {
         if (e2IP.isNullOrBlank()) {
             throw IllegalArgumentException("ES2集群地址尚未配置")
         }
@@ -110,6 +117,9 @@ class LogESAutoConfiguration {
         if (e2Password.isNullOrBlank()) {
             throw IllegalArgumentException("ES2密码尚未配置")
         }
+        if (e2Name.isNullOrBlank()) {
+            throw IllegalArgumentException("ES2唯一名称尚未配置")
+        }
         val settings = Settings.builder().put("cluster.name", e2Cluster).build()
         val ips = e2IP!!.split(",".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
         val client = PreBuiltTransportClient(settings)
@@ -118,14 +128,16 @@ class LogESAutoConfiguration {
         }
         val auth = Base64.getEncoder().encode(("$e2Username:$e2Password").toByteArray()).toString(Charsets.UTF_8)
         logger.info("Init ES 2 transport client with host($e2IP:$e2Port) and cluster($e2Cluster)")
-        return client.filterWithHeader(mapOf("Authorization" to "Basic $auth"))
+        return ESClient(e2Name!!, client.filterWithHeader(mapOf("Authorization" to "Basic $auth")))
     }
 
     @Bean
-    fun logClient(@Autowired client: Client,
-        @Autowired client2: Client,
+    fun logClient(
+        @Autowired client: ESClient,
+        @Autowired client2: ESClient,
         @Autowired redisOperation: RedisOperation,
-        @Autowired dslContext: DSLContext) = MultiESLogClient(setOf(client, client2), redisOperation, dslContext)
+        @Autowired dslContext: DSLContext
+    ) = MultiESLogClient(listOf(client, client2), redisOperation, dslContext)
 
     companion object {
         private val logger = LoggerFactory.getLogger(LogESAutoConfiguration::class.java)
