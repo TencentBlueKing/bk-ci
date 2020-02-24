@@ -31,7 +31,9 @@ package com.tencent.devops.process.engine.atom.task
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
+import com.tencent.devops.common.api.pojo.ErrorCode.USER_TASK_OPERATE_FAIL
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
@@ -227,7 +229,10 @@ class JobExecuteTaskExtAtom @Autowired constructor(
             }
         } catch (e: Exception) {
             logger.error("execute job error", e)
-            throw RuntimeException("execute job error: ${e.message}")
+            throw TaskExecuteException(
+                    errorCode = USER_TASK_OPERATE_FAIL,
+                    errorType = ErrorType.USER,
+                    errorMsg = "execute job error: ${e.message}")
         }
     }
 
@@ -345,7 +350,11 @@ class JobExecuteTaskExtAtom @Autowired constructor(
                     jobId = task.containerHashId,
                 executeCount = executeCount
             )
-            throw RuntimeException("start job exception")
+            throw TaskExecuteException(
+                    errorCode = USER_TASK_OPERATE_FAIL,
+                    errorType = ErrorType.USER,
+                    errorMsg = "start job exception"
+            )
         }
     }
 

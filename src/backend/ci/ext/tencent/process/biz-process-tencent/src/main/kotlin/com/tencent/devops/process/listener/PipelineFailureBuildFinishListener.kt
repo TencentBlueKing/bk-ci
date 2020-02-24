@@ -24,35 +24,28 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.api
+package com.tencent.devops.process.listener
 
-import com.tencent.devops.common.api.pojo.Page
-import com.tencent.devops.dispatch.pojo.DockerHostZone
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
-import javax.ws.rs.Consumes
-import javax.ws.rs.GET
-import javax.ws.rs.Path
-import javax.ws.rs.Produces
-import javax.ws.rs.QueryParam
-import javax.ws.rs.core.MediaType
+import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
+import com.tencent.devops.common.event.listener.pipeline.BaseListener
+import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
+import com.tencent.devops.process.service.PipelineFailureBuildService
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Component
 
-@Api(tags = ["SERVICE_DOCKER_HOST"], description = "服务-获取构建容器信息")
-@Path("/service/dockerhost")
-@Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
-interface ServiceDockerHostResource {
+/**
+ *  MQ实现的流水线构建完成事件
+ * @author irwinsun
+ * @version 1.0
+ */
+@Component
+class PipelineFailureBuildFinishListener @Autowired constructor(
+    private val pipelineFailureBuildService: PipelineFailureBuildService,
+    pipelineEventDispatcher: PipelineEventDispatcher
+) : BaseListener<PipelineBuildFinishBroadCastEvent>(pipelineEventDispatcher) {
 
-    @ApiOperation("获取dockerhost列表")
-    @GET
-    @Path("/list")
-    fun list(
-        @ApiParam("第几页", required = false)
-        @QueryParam("page")
-        page: Int?,
-        @ApiParam("每页条数", required = false)
-        @QueryParam("pageSize")
-        pageSize: Int?
-    ): Page<DockerHostZone>
+    override fun run(event: PipelineBuildFinishBroadCastEvent) {
+        logger.info("[${event.projectId}|${event.pipelineId}|${event.buildId}] Pipeline failure build finish listener")
+        pipelineFailureBuildService.onPipelineFinish(event)
+    }
 }

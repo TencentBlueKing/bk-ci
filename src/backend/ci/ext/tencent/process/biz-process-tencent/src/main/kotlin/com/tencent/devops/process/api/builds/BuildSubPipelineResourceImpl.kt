@@ -26,12 +26,14 @@
 
 package com.tencent.devops.process.api.builds
 
+import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.engine.service.PipelineBuildService
 import com.tencent.devops.process.pojo.pipeline.ProjectBuildId
 import com.tencent.devops.process.pojo.pipeline.SubPipelineStatus
+import com.tencent.devops.process.pojo.pipeline.SubPipelineStartUpInfo
 import com.tencent.devops.process.service.SubPipelineStartUpService
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -77,5 +79,16 @@ class BuildSubPipelineResourceImpl @Autowired constructor(
             status = "ERROR"
         val result = SubPipelineStatus(status)
         return Result(result)
+    }
+
+    override fun subpipManualStartupInfo(userId: String, projectId: String, pipelineId: String): Result<List<SubPipelineStartUpInfo>> {
+        checkParam(userId)
+        return subPipeService.subpipManualStartupInfo(userId, projectId, pipelineId)
+    }
+
+    private fun checkParam(userId: String) {
+        if (userId.isBlank()) {
+            throw ParamBlankException("Invalid userId")
+        }
     }
 }

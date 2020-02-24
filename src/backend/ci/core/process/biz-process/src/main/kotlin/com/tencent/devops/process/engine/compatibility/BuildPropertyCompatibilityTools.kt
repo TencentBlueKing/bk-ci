@@ -24,23 +24,24 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.project.api.pojo
+package com.tencent.devops.process.engine.compatibility
 
-import com.fasterxml.jackson.annotation.JsonProperty
+import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
+import com.tencent.devops.process.utils.PipelineVarUtil
 
-data class DeptInfo(
-    @JsonProperty("TypeId")
-    val typeId: String,
-    @JsonProperty("LeaderId")
-    val leaderId: String,
-    @JsonProperty("Name")
-    val name: String,
-    @JsonProperty("Level")
-    val level: String,
-    @JsonProperty("Enabled")
-    val enabled: String,
-    @JsonProperty("ParentId")
-    val parentId: String,
-    @JsonProperty("ID")
-    val id: String
-)
+object BuildPropertyCompatibilityTools {
+
+    private val compatibleSet = setOf("MajorVersion", "MinorVersion", "FixVersion")
+
+    fun fix(params: List<BuildFormProperty>) {
+        params.forEach {
+            // 只有在需要兼容的命名才做替换，防止替换范围过大，出现兼容性问题
+            if (compatibleSet.contains(it.id)) {
+                val newVarName = PipelineVarUtil.oldVarToNewVar(it.id)
+                if (!newVarName.isNullOrBlank()) {
+                    it.id = newVarName!!
+                }
+            }
+        }
+    }
+}

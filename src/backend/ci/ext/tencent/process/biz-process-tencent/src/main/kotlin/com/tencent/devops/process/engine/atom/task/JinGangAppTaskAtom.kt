@@ -26,6 +26,7 @@
 
 package com.tencent.devops.process.engine.atom.task
 
+import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.HashUtil
@@ -90,7 +91,11 @@ class JinGangAppTaskAtom @Autowired constructor(
             val path = if (isCustom) "/${it.removePrefix("/")}" else "/$pipelineId/$buildId/${it.removePrefix("/")}"
             val data = client.get(ServiceJinGangAppResource::class).scanApp(userId, projectId, pipelineId, buildId, buildNo, taskId, path, isCustom, runType)
             val resourceName = File(it).name + "($buildNo)"
-            val jinGangTaskId = data.data ?: throw RuntimeException("task id is null for ($it)")
+            val jinGangTaskId = data.data ?: throw TaskExecuteException(
+                errorCode = ErrorCode.USER_RESOURCE_NOT_FOUND,
+                errorType = ErrorType.USER,
+                errorMsg = "task id is null for ($it)"
+            )
             // 权限中心注册资源
             bkAuthResourceApi.createResource(userId, serviceCode, AuthResourceType.SCAN_TASK,
                     projectId, HashUtil.encodeLongId(jinGangTaskId.toLong()), resourceName)

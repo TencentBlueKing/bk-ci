@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.process.pojo.ipt.IptBuildArtifactoryInfo
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -57,6 +58,9 @@ interface BuildIptRepoResource {
         @QueryParam("userId")
         userId: String,
         @PathParam("commitId")
-        commitId: String
+        commitId: String,
+        @ApiParam("路径", required = true)
+        @QueryParam("filePath")
+        filePath: String?
     ): Result<IptBuildArtifactoryInfo>
 }

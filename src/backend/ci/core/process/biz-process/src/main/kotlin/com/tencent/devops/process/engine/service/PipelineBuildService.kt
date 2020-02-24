@@ -60,6 +60,7 @@ import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.log.utils.LogUtils
 import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.engine.compatibility.BuildPropertyCompatibilityTools
 import com.tencent.devops.process.engine.control.lock.BuildIdLock
 import com.tencent.devops.process.engine.interceptor.InterceptData
 import com.tencent.devops.process.engine.interceptor.PipelineInterceptorChain
@@ -164,13 +165,13 @@ class PipelineBuildService(
 
         val model = getModel(projectId, pipelineId)
 
-        val container = model.stages[0].containers[0] as TriggerContainer
+        val triggerContainer = model.stages[0].containers[0] as TriggerContainer
 
         var canManualStartup = false
         var canElementSkip = false
         var useLatestParameters = false
         run lit@{
-            container.elements.forEach {
+            triggerContainer.elements.forEach {
                 if (it is ManualTriggerElement && it.isElementEnable()) {
                     canManualStartup = true
                     canElementSkip = it.canElementSkip ?: false
@@ -190,7 +191,7 @@ class PipelineBuildService(
                 if (latestParamsStr != null) {
                     val latestParams =
                         JsonUtil.to(latestParamsStr, object : TypeReference<MutableMap<String, Any>>() {})
-                    container.params.forEach { param ->
+                    triggerContainer.params.forEach { param ->
                         val realValue = latestParams[param.id]
                         if (realValue != null) {
                             // 有上一次的构建参数的时候才设置成默认值，否者依然使用默认值。
@@ -210,15 +211,22 @@ class PipelineBuildService(
             userId = if (checkPermission && userId != null) userId else null,
             projectId = projectId,
             pipelineId = pipelineId,
-            params = container.params
+            params = triggerContainer.params
         )
 
-        val currentBuildNo = (model.stages[0].containers[0] as TriggerContainer).buildNo
+        BuildPropertyCompatibilityTools.fix(params)
+
+        val currentBuildNo = triggerContainer.buildNo
         if (currentBuildNo != null) {
             currentBuildNo.buildNo = pipelineRepositoryService.getBuildNo(projectId, pipelineId) ?: currentBuildNo.buildNo
         }
 
-        return BuildManualStartupInfo(canManualStartup, canElementSkip, params, currentBuildNo)
+        return BuildManualStartupInfo(
+            canManualStartup = canManualStartup,
+            canElementSkip = canElementSkip,
+            properties = params,
+            buildNo = currentBuildNo
+        )
     }
 
     fun getBuildParameters(
@@ -335,16 +343,17 @@ class PipelineBuildService(
                     }
                 }
             } else {
-                // 完整构建重试
+                // 完整构建重试，去掉启动参数中的重试插件ID保证不冲突
                 try {
                     val startupParam = buildStartupParamService.getParam(buildId)
                     if (startupParam != null && startupParam.isNotEmpty()) {
-                        params.putAll(JsonUtil.toMap(startupParam))
+                        params.putAll(JsonUtil.toMap(startupParam).filter { it.key != PIPELINE_RETRY_START_TASK_ID })
                     }
                 } catch (e: Exception) {
                     logger.warn("Fail to get the startup param for the build($buildId)", e)
                 }
             }
+            logger.info("[$pipelineId]|RETRY_PIPELINE_ORIGIN|taskId=$taskId|buildId=$buildId|originRetryCount=${params[PIPELINE_RETRY_COUNT]}|startParams=$params")
 
             params[PIPELINE_RETRY_COUNT] = if (params[PIPELINE_RETRY_COUNT] != null) {
                 params[PIPELINE_RETRY_COUNT].toString().toInt() + 1
@@ -468,8 +477,8 @@ class PipelineBuildService(
                 val v = values[it.id]
                 if (v == null) {
                     if (it.required) {
-                        throw ErrorCodeException(defaultMessage = "参数(${it.id})是必填启动参数",
-                            errorCode = ProcessMessageCode.DENY_START_BY_REMOTE)
+                        throw ErrorCodeException(defaultMessage = "启动时必填变量(${it.id})",
+                            errorCode = CommonMessageCode.PARAMETER_IS_NULL, params = arrayOf(it.id))
                     }
                     value = when (it.type) {
                         BuildFormPropertyType.PASSWORD -> {
@@ -1318,8 +1327,8 @@ class PipelineBuildService(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
-            permission = AuthPermission.EDIT,
-            message = "用户（$userId) 无权限修改流水线($pipelineId)历史构建"
+            permission = AuthPermission.EXECUTE,
+            message = "用户（$userId) 没有流水线($pipelineId)的执行权限，无法修改备注"
         )
         pipelineRuntimeService.updateBuildRemark(projectId, pipelineId, buildId, remark)
     }
@@ -1656,7 +1665,7 @@ class PipelineBuildService(
                 )
 
             val buildId = pipelineRuntimeService.startBuild(readyToBuildPipelineInfo, fullModel, paramsWithType)
-            startParams = paramsWithType.map { it.key to it.value }.toMap()
+            startParams = startParamsWithType.map { it.key to it.value }.toMap()
             if (startParams.isNotEmpty()) {
                 buildStartupParamService.addParam(
                     projectId = readyToBuildPipelineInfo.projectId,
@@ -1665,8 +1674,6 @@ class PipelineBuildService(
                     param = JsonUtil.toJson(startParams)
                 )
             }
-
-            logger.info("[$pipelineId]|START_PIPELINE|buildId=$buildId|startType=$startType|startParams=$startParams")
 
             return buildId
         } finally {
@@ -1687,18 +1694,20 @@ class PipelineBuildService(
         vmSeqId: String,
         simpleResult: SimpleResult
     ) {
+        // success do nothing just log
+        if (simpleResult.success) {
+            logger.info("[$buildId]|Job#$vmSeqId|${simpleResult.success}| worker had been exit.")
+            return
+        }
+
         val buildInfo = pipelineRuntimeService.getBuildInfo(buildId) ?: return
         if (BuildStatus.isFinish(buildInfo.status)) {
             logger.info("[$buildId]|The build is ${buildInfo.status}")
             return
         }
 
-        val msg = if (simpleResult.success) {
-            "构建任务对应的Agent进程已退出"
-        } else {
-            "构建任务对应的Agent进程已退出: ${simpleResult.message}"
-        }
-        logger.info("worker build($buildId|$vmSeqId|${simpleResult.success}) $msg")
+        val msg = "Job#$vmSeqId's worker exception: ${simpleResult.message}"
+        logger.info("[$buildId]|Job#$vmSeqId|${simpleResult.success}|$msg")
 
         var stageId: String? = null
         var containerType = "vmBuild"

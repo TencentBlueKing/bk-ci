@@ -31,6 +31,7 @@ package com.tencent.devops.process.engine.atom.task
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode.USER_INPUT_INVAILD
 import com.tencent.devops.common.api.pojo.ErrorCode.USER_TASK_OPERATE_FAIL
 import com.tencent.devops.common.api.pojo.ErrorType
@@ -324,7 +325,11 @@ class BcsContainerOpAtom @Autowired constructor(
             val data = response.body()!!.string()
             logger.info("Get instance status, response: $data")
             if (!response.isSuccessful) {
-                throw RuntimeException(data)
+                throw TaskExecuteException(
+                    errorCode = USER_TASK_OPERATE_FAIL,
+                    errorType = ErrorType.USER,
+                    errorMsg = "Get instance status, response: $data"
+                )
             }
 
             val responseData: Map<String, Any> = jacksonObjectMapper().readValue(data)
@@ -450,7 +455,6 @@ class BcsContainerOpAtom @Autowired constructor(
             if (!response.isSuccessful) {
                 logger.error("Create instance failed, msg: $data")
                 LogUtils.addRedLine(rabbitTemplate, task.buildId, "Create instance failed, msg: $data", task.taskId, task.containerHashId, task.executeCount ?: 1)
-//                throw RuntimeException(data)
                 return AtomResponse(
                     buildStatus = BuildStatus.FAILED,
                     errorType = ErrorType.USER,
@@ -517,7 +521,11 @@ class BcsContainerOpAtom @Autowired constructor(
             val data = response.body()!!.string()
             logger.info("Recreate instance, response: $data")
             if (!response.isSuccessful) {
-                throw RuntimeException(data)
+                throw TaskExecuteException(
+                    errorCode = USER_TASK_OPERATE_FAIL,
+                    errorType = ErrorType.USER,
+                    errorMsg = "Recreate instance, response: $data"
+                )
             }
             val responseData: Map<String, Any> = jacksonObjectMapper().readValue(data)
             val code = responseData["code"] as Int
@@ -547,7 +555,11 @@ class BcsContainerOpAtom @Autowired constructor(
             val data = response.body()!!.string()
             logger.info("delete instance, response: $data")
             if (!response.isSuccessful) {
-                throw RuntimeException(data)
+                throw TaskExecuteException(
+                    errorCode = USER_TASK_OPERATE_FAIL,
+                    errorType = ErrorType.USER,
+                    errorMsg = "delete instance, response: $data"
+                )
             }
             val responseData: Map<String, Any> = jacksonObjectMapper().readValue(data)
             val code = responseData["code"] as Int
@@ -578,7 +590,11 @@ class BcsContainerOpAtom @Autowired constructor(
             val data = response.body()!!.string()
             logger.info("Scale instance, response: $data")
             if (!response.isSuccessful) {
-                throw RuntimeException(data)
+                throw TaskExecuteException(
+                    errorCode = USER_TASK_OPERATE_FAIL,
+                    errorType = ErrorType.USER,
+                    errorMsg = "Scale instance, response: $data"
+                )
             }
             val responseData: Map<String, Any> = jacksonObjectMapper().readValue(data)
             val code = responseData["code"] as Int
@@ -612,7 +628,11 @@ class BcsContainerOpAtom @Autowired constructor(
             val data = response.body()!!.string()
             logger.info("Update application instance, response: $data")
             if (!response.isSuccessful) {
-                throw RuntimeException(data)
+                throw TaskExecuteException(
+                    errorCode = USER_TASK_OPERATE_FAIL,
+                    errorType = ErrorType.USER,
+                    errorMsg = "Update application instance, response: $data"
+                )
             }
             val responseData: Map<String, Any> = jacksonObjectMapper().readValue(data)
             val code = responseData["code"] as Int
@@ -648,7 +668,11 @@ class BcsContainerOpAtom @Autowired constructor(
             val data = response.body()!!.string()
             logger.info("Update instance, response: $data")
             if (!response.isSuccessful) {
-                throw RuntimeException(data)
+                throw TaskExecuteException(
+                    errorCode = USER_TASK_OPERATE_FAIL,
+                    errorType = ErrorType.USER,
+                    errorMsg = "Update instance, response: $data"
+                )
             }
             val responseData: Map<String, Any> = jacksonObjectMapper().readValue(data)
             val code = responseData["code"] as Int
@@ -669,7 +693,11 @@ class BcsContainerOpAtom @Autowired constructor(
             val data = response.body()!!.string()
             logger.info("Get project info, response: $data")
             if (!response.isSuccessful) {
-                throw RuntimeException(data)
+                throw TaskExecuteException(
+                    errorCode = USER_TASK_OPERATE_FAIL,
+                    errorType = ErrorType.USER,
+                    errorMsg = "Get project info, response: $data"
+                )
             }
             val responseData: Map<String, Any> = jacksonObjectMapper().readValue(data)
             val code = responseData["code"] as Int
@@ -677,7 +705,11 @@ class BcsContainerOpAtom @Autowired constructor(
                 val dataMap = responseData["data"] as Map<String, Any>
                 return dataMap["project_id"] as String
             } else {
-                throw RuntimeException(data)
+                throw TaskExecuteException(
+                    errorCode = USER_TASK_OPERATE_FAIL,
+                    errorType = ErrorType.USER,
+                    errorMsg = data
+                )
             }
         }
     }

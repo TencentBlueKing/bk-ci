@@ -60,7 +60,7 @@ class ApigwProjectResourceImpl @Autowired constructor(private val client: Client
 
     override fun getProjectByUser(userId: String): Result<List<ProjectVO>> {
         logger.info("Get user's project info ,userId:$userId")
-        return client.get(ServiceProjectResource::class).getProjectByUser(userId)
+        return client.get(ServiceProjectResource::class).list(userId)
     }
 
     companion object {

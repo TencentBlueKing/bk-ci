@@ -61,5 +61,5 @@ data class PCGDispatchType(@JsonProperty("value") var image: String)
         image = EnvUtils.parseEnv(image, variables)
     }
 
-    override fun buildType() = BuildType.THIRD_PARTY_PCG
+    override fun buildType() = BuildType.valueOf(BuildType.THIRD_PARTY_PCG.name)
 }
