@@ -66,6 +66,7 @@ import com.tencent.devops.store.pojo.vo.ServiceVersionListResp
 import com.tencent.devops.store.pojo.vo.ServiceVersionVO
 import com.tencent.devops.store.service.common.StoreCommentService
 import com.tencent.devops.store.service.common.StoreCommonService
+import com.tencent.devops.store.service.common.StoreMediaService
 import com.tencent.devops.store.service.common.StoreUserService
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -112,6 +113,8 @@ abstract class ExtServiceBaseService @Autowired constructor() {
     lateinit var serviceNotifyService: ExtServiceNotifyService
     @Autowired
     lateinit var storeCommentService: StoreCommentService
+    @Autowired
+    lateinit var mediaService: StoreMediaService
 
     fun addExtService(
         userId: String,
@@ -660,9 +663,11 @@ abstract class ExtServiceBaseService @Autowired constructor() {
             val repositoryHashId = featureInfoRecord!!.repositoryHashId
             val flag =
                 storeUserService.isCanInstallStoreComponent(defaultFlag, userId, serviceCode, StoreTypeEnum.SERVICE)
+            val userCommentInfo = storeCommentService.getStoreUserCommentInfo(userId, serviceCode, StoreTypeEnum.SERVICE)
             val serviceEnv = extServiceEnvDao.getMarketServiceEnvInfoByServiceId(dslContext, serviceId)
             logger.info("getServiceVersion serviceEnv: $serviceEnv")
             val itemList = getItemByItems(serviceId)
+            val mediaList = mediaService.getByCode(serviceCode, StoreTypeEnum.SERVICE).data
 
             Result(
                 ServiceVersionVO(
@@ -697,10 +702,11 @@ abstract class ExtServiceBaseService @Autowired constructor() {
                     ),
                     // TODO:带补充逻辑
 //                    labelList = null,
-//                    userCommentInfo = userCommentInfo,
+                    userCommentInfo = userCommentInfo,
                     visibilityLevel = VisibilityLevelEnum.getVisibilityLevel(featureInfoRecord.visibilityLevel),
                     recommendFlag = featureInfoRecord?.recommendFlag,
-                    extensionItemList = itemList
+                    extensionItemList = itemList,
+                    mediaList = mediaList
                 )
             )
         }

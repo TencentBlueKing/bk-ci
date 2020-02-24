@@ -1,6 +1,9 @@
 package com.tencent.devops.store.pojo.vo
 
+import com.tencent.devops.store.pojo.MediaInfoReq
 import com.tencent.devops.store.pojo.StoreServiceItem
+import com.tencent.devops.store.pojo.common.StoreMediaInfo
+import com.tencent.devops.store.pojo.common.StoreUserCommentInfo
 import io.swagger.annotations.ApiModelProperty
 
 data class ServiceVersionVO(
@@ -54,10 +57,8 @@ data class ServiceVersionVO(
     val repositoryAuthorizer: String?,
     @ApiModelProperty("扩展服务的调试项目")
     val projectCode: String?,
-//    @ApiModelProperty("标签列表", required = false)
-//    val labelList: List<Label>?,
-//    @ApiModelProperty("用户评论信息")
-//    val userCommentInfo: StoreUserCommentInfo,
+    @ApiModelProperty("用户评论信息")
+    val userCommentInfo: StoreUserCommentInfo,
     @ApiModelProperty("项目可视范围,PRIVATE:私有 LOGIN_PUBLIC:登录用户开源")
     val visibilityLevel: String?,
 //    @ApiModelProperty("扩展服务代码库不开源原因")
@@ -65,5 +66,7 @@ data class ServiceVersionVO(
     @ApiModelProperty("是否推荐标识 true：推荐，false：不推荐", required = false)
     val recommendFlag: Boolean? = null,
     @ApiModelProperty("扩展点列表")
-    val extensionItemList: List<StoreServiceItem>
+    val extensionItemList: List<StoreServiceItem>,
+    @ApiModelProperty("媒体信息")
+    val mediaList: List<StoreMediaInfo>?
 )
