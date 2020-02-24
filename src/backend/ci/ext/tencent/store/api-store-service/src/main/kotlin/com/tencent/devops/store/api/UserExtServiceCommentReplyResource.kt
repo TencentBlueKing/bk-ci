@@ -70,7 +70,7 @@ interface UserExtServiceCommentReplyResource {
     ): Result<StoreCommentInfo?>
 
     @ApiOperation("获取扩展服务所有评论")
-    @Path("/services/{serviceCode}/comments")
+    @Path("/serviceCodes/{serviceCode}/comments")
     @GET
     fun getServiceCommentByServiceCode(
         @ApiParam("userId", required = true)
