@@ -47,7 +47,6 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.extend.ModelCheckPlugin
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildNo
-import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.dao.PipelineSettingDao
 import com.tencent.devops.process.engine.compatibility.BuildPropertyCompatibilityTools
@@ -55,6 +54,7 @@ import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.dao.template.TemplatePipelineDao
 import com.tencent.devops.process.engine.pojo.PipelineInfo
+import com.tencent.devops.process.engine.utils.PipelineUtils
 import com.tencent.devops.process.jmx.api.ProcessJmxApi
 import com.tencent.devops.process.jmx.pipeline.PipelineBean
 import com.tencent.devops.process.permission.PipelinePermissionService
@@ -89,7 +89,6 @@ import org.springframework.stereotype.Service
 import org.springframework.util.StopWatch
 import java.time.LocalDateTime
 import java.util.Collections
-import java.util.regex.Pattern
 import javax.ws.rs.core.Response
 
 @Service
@@ -116,25 +115,6 @@ class PipelineService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineService::class.java)
-        private const val ENGLISH_NAME_PATTERN = "[A-Za-z_0-9]+"
-    }
-
-    private fun checkPipelineName(name: String) {
-        if (name.toCharArray().size > 64) {
-            throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_PIPELINE_NAME_TOO_LONG,
-                defaultMessage = "流水线名称过长"
-            )
-        }
-    }
-
-    private fun checkPipelineParams(params: List<BuildFormProperty>) {
-        params.forEach {
-            if (!Pattern.matches(ENGLISH_NAME_PATTERN, it.id)) {
-                logger.warn("Pipeline's start params Name is iregular")
-                throw OperationException(MessageCodeUtil.getCodeLanMessage(ProcessMessageCode.ERROR_PIPELINE_PARAMS_NAME_ERROR))
-            }
-        }
     }
 
     fun sortPipelines(pipelines: List<Pipeline>, sortType: PipelineSortType) {
@@ -164,7 +144,7 @@ class PipelineService @Autowired constructor(
         val apiStartEpoch = System.currentTimeMillis()
         var success = false
         try {
-            checkPipelineName(model.name)
+            PipelineUtils.checkPipelineName(model.name)
 
             if (checkPermission) {
                 pipelinePermissionService.validPipelinePermission(
@@ -186,7 +166,7 @@ class PipelineService @Autowired constructor(
             }
 
             val triggerContainer = model.stages[0].containers[0] as TriggerContainer
-            checkPipelineParams(triggerContainer.params)
+            PipelineUtils.checkPipelineParams(triggerContainer.params)
 
             // 检查用户是否有插件的使用权限
             if (model.srcTemplateId != null) {
@@ -356,7 +336,7 @@ class PipelineService @Autowired constructor(
             )
 
         logger.info("Start to copy the pipeline $pipelineId")
-        checkPipelineName(name)
+        PipelineUtils.checkPipelineName(name)
         if (checkPermission) {
             pipelinePermissionService.validPipelinePermission(
                 userId = userId,
@@ -434,8 +414,8 @@ class PipelineService @Autowired constructor(
         var success = false
         logger.info("Start to edit the pipeline $pipelineId of project $projectId with channel $channelCode and permission $checkPermission by user $userId")
         try {
-            checkPipelineName(model.name)
-            checkPipelineParams((model.stages[0].containers[0] as TriggerContainer).params)
+            PipelineUtils.checkPipelineName(model.name)
+            PipelineUtils.checkPipelineParams((model.stages[0].containers[0] as TriggerContainer).params)
             if (checkPermission) {
                 pipelinePermissionService.validPipelinePermission(
                     userId = userId,
