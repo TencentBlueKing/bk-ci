@@ -46,6 +46,7 @@ import com.tencent.devops.store.pojo.ExtServiceUpdateInfo
 import com.tencent.devops.store.pojo.ExtServiceVersionLogCreateInfo
 import com.tencent.devops.store.pojo.StoreServiceItem
 import com.tencent.devops.store.pojo.common.ReleaseProcessItem
+import com.tencent.devops.store.pojo.common.StoreMediaInfoRequest
 import com.tencent.devops.store.pojo.common.StoreProcessInfo
 import com.tencent.devops.store.pojo.common.StoreReleaseCreateRequest
 import com.tencent.devops.store.pojo.common.UN_RELEASE
@@ -55,6 +56,7 @@ import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreMemberTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.pojo.dto.ExtSubmitDTO
 import com.tencent.devops.store.pojo.dto.InitExtServiceDTO
 import com.tencent.devops.store.pojo.dto.ServiceOfflineDTO
 import com.tencent.devops.store.pojo.dto.SubmitDTO
@@ -68,6 +70,7 @@ import com.tencent.devops.store.service.common.StoreCommentService
 import com.tencent.devops.store.service.common.StoreCommonService
 import com.tencent.devops.store.service.common.StoreMediaService
 import com.tencent.devops.store.service.common.StoreUserService
+import com.tencent.devops.store.service.common.StoreVisibleDeptService
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -115,6 +118,8 @@ abstract class ExtServiceBaseService @Autowired constructor() {
     lateinit var storeCommentService: StoreCommentService
     @Autowired
     lateinit var mediaService: StoreMediaService
+    @Autowired
+    lateinit var deptService: StoreVisibleDeptService
 
     fun addExtService(
         userId: String,
@@ -639,6 +644,30 @@ abstract class ExtServiceBaseService @Autowired constructor() {
 
     fun getPassTestStatus(isNormalUpgrade: Boolean): Byte {
         return if (isNormalUpgrade) ExtServiceStatusEnum.RELEASED.status.toByte() else ExtServiceStatusEnum.AUDITING.status.toByte()
+    }
+
+    fun createMediaAndVisible(userId: String, serviceCode: String, submitInfo: ExtSubmitDTO): Result<Boolean> {
+        val mediaList = submitInfo.mediaInfoList
+        val deptList = submitInfo.deptInfoList
+        mediaList?.forEach {
+            mediaService.add(
+                userId = userId,
+                type = StoreTypeEnum.SERVICE,
+                storeMediaInfo = StoreMediaInfoRequest(
+                    storeCode = serviceCode,
+                    mediaUrl = it.mediaUrl,
+                    mediaType = it.mediaType.name,
+                    modifier =  userId
+                )
+            )
+        }
+        deptService.addVisibleDept(
+            userId = userId,
+            storeType = StoreTypeEnum.SERVICE,
+            storeCode = serviceCode,
+            deptInfos = deptList
+        )
+        return Result(true)
     }
 
     @Suppress("UNCHECKED_CAST")

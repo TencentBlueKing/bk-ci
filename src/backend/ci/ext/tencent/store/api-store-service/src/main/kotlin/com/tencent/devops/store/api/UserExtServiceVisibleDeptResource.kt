@@ -30,7 +30,7 @@ interface UserExtServiceVisibleDeptResource {
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("插件市场-插件可见范围请求报文体", required = true)
+        @ApiParam("研发商店-扩展服务可见范围请求报文体", required = true)
         serviceVisibleDeptRequest: ExtsionServiceVisibleDeptReq
     ): Result<Boolean>
 

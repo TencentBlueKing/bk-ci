@@ -3,6 +3,7 @@ package com.tencent.devops.store.api
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BK_TICKET
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.store.pojo.dto.ExtSubmitDTO
 import com.tencent.devops.store.pojo.enums.ExtServiceSortTypeEnum
 import com.tencent.devops.store.pojo.vo.ExtServiceMainItemVo
 import com.tencent.devops.store.pojo.vo.SearchExtServiceVO
@@ -14,6 +15,7 @@ import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
+import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
@@ -96,4 +98,18 @@ interface UserExtServiceResource {
         @QueryParam("serviceCode")
         serviceCode: String
     ): Result<ServiceVersionListResp>
+
+    @ApiOperation("添加媒体信息、可见范围")
+    @POST
+    @Path("/serviceCodes/{serviceCode}/ext/submitInfo")
+    fun createMediaAndVisible(
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("serviceCode", required = true)
+        @QueryParam("serviceCode")
+        serviceCode: String,
+        @ApiParam("媒体、可见范围信息")
+        submitInfo: ExtSubmitDTO
+    ): Result<Boolean>
 }

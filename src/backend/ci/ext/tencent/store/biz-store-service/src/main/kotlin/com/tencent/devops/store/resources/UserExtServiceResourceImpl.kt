@@ -3,6 +3,7 @@ package com.tencent.devops.store.resources
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.UserExtServiceResource
+import com.tencent.devops.store.pojo.dto.ExtSubmitDTO
 import com.tencent.devops.store.pojo.enums.ExtServiceSortTypeEnum
 import com.tencent.devops.store.pojo.vo.ExtServiceMainItemVo
 import com.tencent.devops.store.pojo.vo.SearchExtServiceVO
@@ -52,5 +53,9 @@ class UserExtServiceResourceImpl @Autowired constructor(
 
     override fun getServiceVersionsByCode(userId: String, serviceCode: String): Result<ServiceVersionListResp> {
         return extServiceBaseService.getServiceVersionListByCode(serviceCode , userId)
+    }
+
+    override fun createMediaAndVisible(userId: String, serviceCode: String, submitInfo: ExtSubmitDTO): Result<Boolean> {
+        return extServiceBaseService.createMediaAndVisible(userId, serviceCode, submitInfo)
     }
 }
