@@ -89,7 +89,7 @@ interface UserExtServiceCommentReplyResource {
 
     @ApiOperation("获取扩展服务的评分详情")
     @GET
-    @Path("/score/serviceCode/{serviceCode}")
+    @Path("/score/serviceCodes/{serviceCode}")
     fun getServiceCommentScoreInfo(
         @ApiParam("扩展服务代码", required = true)
         @PathParam("serviceCode")
