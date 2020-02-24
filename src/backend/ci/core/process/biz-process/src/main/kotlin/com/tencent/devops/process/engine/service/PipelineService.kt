@@ -47,6 +47,7 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.extend.ModelCheckPlugin
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildNo
+import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.dao.PipelineSettingDao
 import com.tencent.devops.process.engine.compatibility.BuildPropertyCompatibilityTools
@@ -88,6 +89,7 @@ import org.springframework.stereotype.Service
 import org.springframework.util.StopWatch
 import java.time.LocalDateTime
 import java.util.Collections
+import java.util.regex.Pattern
 import javax.ws.rs.core.Response
 
 @Service
@@ -114,6 +116,7 @@ class PipelineService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineService::class.java)
+        private const val ENGLISH_NAME_PATTERN = "[A-Za-z_0-9]+"
     }
 
     private fun checkPipelineName(name: String) {
@@ -122,6 +125,15 @@ class PipelineService @Autowired constructor(
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_NAME_TOO_LONG,
                 defaultMessage = "流水线名称过长"
             )
+        }
+    }
+
+    private fun checkPipelineParams(params: List<BuildFormProperty>) {
+        params.forEach {
+            if (!Pattern.matches(ENGLISH_NAME_PATTERN, it.id)) {
+                logger.warn("Pipeline's start params Name is iregular")
+                throw OperationException(MessageCodeUtil.getCodeLanMessage(ProcessMessageCode.ERROR_PIPELINE_PARAMS_NAME_ERROR))
+            }
         }
     }
 
@@ -173,6 +185,9 @@ class PipelineService @Autowired constructor(
                 )
             }
 
+            val triggerContainer = model.stages[0].containers[0] as TriggerContainer
+            checkPipelineParams(triggerContainer.params)
+
             // 检查用户是否有插件的使用权限
             if (model.srcTemplateId != null) {
                 val srcTemplateId = model.srcTemplateId as String
@@ -187,7 +202,6 @@ class PipelineService @Autowired constructor(
             try {
                 val instance = if (model.instanceFromTemplate == null || !model.instanceFromTemplate!!) {
                     // 将模版常量变更实例化为流水线变量
-                    val triggerContainer = model.stages[0].containers[0] as TriggerContainer
                     instanceModel(
                         templateModel = model,
                         pipelineName = model.name,
@@ -421,6 +435,7 @@ class PipelineService @Autowired constructor(
         logger.info("Start to edit the pipeline $pipelineId of project $projectId with channel $channelCode and permission $checkPermission by user $userId")
         try {
             checkPipelineName(model.name)
+            checkPipelineParams((model.stages[0].containers[0] as TriggerContainer).params)
             if (checkPermission) {
                 pipelinePermissionService.validPipelinePermission(
                     userId = userId,
