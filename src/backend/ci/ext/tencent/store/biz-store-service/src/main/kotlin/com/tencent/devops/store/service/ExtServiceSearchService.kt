@@ -179,24 +179,21 @@ class ExtServiceSearchService @Autowired constructor(
             val visibleList = serviceVisibleData?.get(serviceCode)
             val statistic = serviceStatisticData?.get(serviceCode)
             val members = memberData?.get(serviceCode)
-            val defaultFlag = it["DEFAULT_FLAG"] as Boolean
-            val flag = generateInstallFlag(defaultFlag, members, userId, visibleList, userDeptList)
+            val flag = generateInstallFlag(members, userId, visibleList, userDeptList)
             val classifyId = it["CLASSIFY_ID"] as String
             results.add(
                 ExtServiceItem(
-                    id = it["ID"] as String,
-                    name = it["NAME"] as String,
+                    id = it["SERVICE_ID"] as String,
+                    name = it["SERVICE_NAME"] as String,
                     code = serviceCode,
-                    type = it["JOB_TYPE"] as String,
                     classifyCode = if (classifyMap.containsKey(classifyId)) classifyMap[classifyId] else "",
-                    category = AtomCategoryEnum.getAtomCategory((it["CATEGROY"] as Byte).toInt()),
                     logoUrl = it["LOGO_URL"] as? String,
                     publisher = it["PUBLISHER"] as String,
                     downloads = statistic?.downloads ?: 0,
                     score = statistic?.score ?: 0.toDouble(),
                     summary = it["SUMMARY"] as? String,
                     flag = flag,
-                    publicFlag = it["DEFAULT_FLAG"] as Boolean,
+                    publicFlag = it["PUBLIC_FLAG"] as Boolean,
                     recommendFlag = it["RECOMMEND_FLAG"] as? Boolean
                 )
             )
@@ -207,15 +204,14 @@ class ExtServiceSearchService @Autowired constructor(
     }
 
     fun generateInstallFlag(
-        defaultFlag: Boolean,
         members: MutableList<String>?,
         userId: String,
         visibleList: MutableList<Int>?,
         userDeptList: List<Int>
     ): Boolean {
-        logger.info("generateInstallFlag defaultFlag is:$defaultFlag,members is:$members,userId is:$userId")
+        logger.info("generateInstallFlag members is:$members,userId is:$userId")
         logger.info("generateInstallFlag visibleList is:$visibleList,userDeptList is:$userDeptList")
-        return if (defaultFlag || (members != null && members.contains(userId))) {
+        return if (members != null && members.contains(userId)) {
             true
         } else {
             visibleList != null && (visibleList.contains(0) || visibleList.intersect(userDeptList).count() > 0)

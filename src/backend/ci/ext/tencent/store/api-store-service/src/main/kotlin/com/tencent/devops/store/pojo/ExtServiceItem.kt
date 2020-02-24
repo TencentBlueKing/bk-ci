@@ -11,12 +11,8 @@ data class ExtServiceItem(
     val name: String,
     @ApiModelProperty("标识")
     val code: String,
-    @ApiModelProperty("类型")
-    val type: String,
     @ApiModelProperty("分类")
     val classifyCode: String?,
-    @ApiModelProperty("所属范畴")
-    val category: String? = null,
     @ApiModelProperty("logo链接")
     val logoUrl: String?,
     @ApiModelProperty("发布者")

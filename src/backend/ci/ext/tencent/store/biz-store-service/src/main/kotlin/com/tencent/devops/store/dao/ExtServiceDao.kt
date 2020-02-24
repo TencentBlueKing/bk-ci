@@ -464,7 +464,8 @@ class ExtServiceDao {
             ta.LOGO_URL,
             ta.PUBLISHER,
             ta.SUMMARY,
-            taf.RECOMMEND_FLAG
+            taf.RECOMMEND_FLAG,
+            taf.PUBLIC_FLAG
         ).from(ta)
             .leftJoin(taf)
             .on(ta.SERVICE_CODE.eq(taf.SERVICE_CODE))
