@@ -129,7 +129,7 @@
                 if (this.stageControl === undefined || JSON.stringify(this.stageControl) === '{}') {
                     this.handleStageChange('stageControlOption', {
                         enable: true,
-                        runCondition: 'STAGE_RUNNING',
+                        runCondition: 'AFTER_LAST_FINISHED',
                         customVariables: [{ key: 'param1', value: '' }]
                     })
                     this.handleStageChange('fastKill', false)
