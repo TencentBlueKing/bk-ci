@@ -3,6 +3,7 @@ package com.tencent.devops.project.resources
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.project.api.pojo.ExtItemDTO
+import com.tencent.devops.project.api.pojo.ServiceItemInfoVO
 import com.tencent.devops.project.api.service.user.UserExtItemResource
 import com.tencent.devops.project.service.ServiceItemService
 import org.slf4j.LoggerFactory
@@ -16,7 +17,7 @@ class UserExtItemResourceImpl @Autowired constructor(
         return Result(serviceItemService.getItemList())
     }
 
-    companion object{
-        val logger = LoggerFactory.getLogger(this::class.java)
+    override fun getServiceItemList(userId: String, serviceId: String?): Result<List<ServiceItemInfoVO>?> {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 }

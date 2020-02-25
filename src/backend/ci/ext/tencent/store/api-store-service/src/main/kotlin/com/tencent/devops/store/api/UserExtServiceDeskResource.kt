@@ -3,11 +3,9 @@ package com.tencent.devops.store.api
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ACCESS_TOKEN
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.pojo.atom.AtomOfflineReq
 import com.tencent.devops.store.pojo.common.StoreProcessInfo
 import com.tencent.devops.store.pojo.dto.InitExtServiceDTO
 import com.tencent.devops.store.pojo.dto.ServiceOfflineDTO
-import com.tencent.devops.store.pojo.dto.ServiceOfflineReq
 import com.tencent.devops.store.pojo.dto.SubmitDTO
 import com.tencent.devops.store.pojo.vo.MyServiceVO
 import com.tencent.devops.store.pojo.vo.ServiceVersionVO
@@ -117,7 +115,6 @@ interface UserExtServiceDeskResource {
     @Path("/desk/service/language")
     fun listLanguage(): Result<List<String?>>
 
-
     @ApiOperation("扩展服务取消发布")
     @PathParam("serviceId")
     @PUT
@@ -159,5 +156,4 @@ interface UserExtServiceDeskResource {
         @PathParam("serviceId")
         serviceId: String
     ): Result<Boolean>
-
 }

@@ -9,7 +9,6 @@ import com.tencent.devops.store.dao.common.StoreStatisticDao
 import com.tencent.devops.store.pojo.ExtServiceItem
 import com.tencent.devops.store.pojo.ExtServiceStatistic
 import com.tencent.devops.store.pojo.atom.MarketMainItemLabel
-import com.tencent.devops.store.pojo.atom.enums.AtomCategoryEnum
 import com.tencent.devops.store.pojo.common.HOTTEST
 import com.tencent.devops.store.pojo.common.LATEST
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum

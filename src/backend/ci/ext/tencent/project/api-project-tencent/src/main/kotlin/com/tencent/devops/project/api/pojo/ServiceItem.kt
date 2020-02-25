@@ -1,6 +1,6 @@
 package com.tencent.devops.project.api.pojo
 
-data class ServiceItem (
+data class ServiceItem(
     val itemId: String,
     val itemName: String,
     val itemCode: String,

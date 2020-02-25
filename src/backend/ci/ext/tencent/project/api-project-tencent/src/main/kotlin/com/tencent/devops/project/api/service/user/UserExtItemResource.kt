@@ -4,6 +4,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.project.api.pojo.ExtItemDTO
+import com.tencent.devops.project.api.pojo.ServiceItemInfoVO
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -12,9 +13,10 @@ import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.Path
 import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["USER_EXT_ITEM"], description = "服务扩展-项目信息")
+@Api(tags = ["USER_EXT_ITEM"], description = "服务扩展功能点")
 @Path("/user/ext/items")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
@@ -27,4 +29,16 @@ interface UserExtItemResource {
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String
     ): Result<List<ExtItemDTO>?>
+
+    @GET
+    @Path("/list")
+    @ApiOperation("获取蓝盾服务下扩展功能点列表")
+    fun getServiceItemList(
+        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @ApiParam("蓝盾服务Id", required = false)
+        @QueryParam("serviceId")
+        serviceId: String?
+    ): Result<List<ServiceItemInfoVO>?>
 }

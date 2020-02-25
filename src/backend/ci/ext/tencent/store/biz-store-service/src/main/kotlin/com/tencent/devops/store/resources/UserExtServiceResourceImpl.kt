@@ -52,7 +52,7 @@ class UserExtServiceResourceImpl @Autowired constructor(
     }
 
     override fun getServiceVersionsByCode(userId: String, serviceCode: String): Result<ServiceVersionListResp> {
-        return extServiceBaseService.getServiceVersionListByCode(serviceCode , userId)
+        return extServiceBaseService.getServiceVersionListByCode(serviceCode, userId)
     }
 
     override fun createMediaAndVisible(userId: String, serviceCode: String, submitInfo: ExtSubmitDTO): Result<Boolean> {

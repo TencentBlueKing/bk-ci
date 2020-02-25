@@ -5,7 +5,7 @@ import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("审核请求报文")
-data class ServiceApproveReq (
+data class ServiceApproveReq(
     @ApiModelProperty("插件标识")
     val serviceCode: String,
     @ApiModelProperty("审核结果：PASS：通过|REJECT：驳回")

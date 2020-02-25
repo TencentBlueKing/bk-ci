@@ -53,7 +53,7 @@ class ServiceItemService @Autowired constructor(
             )
             allItemMap[parentItem.id] = item
         }
-        logger.info("getServiceItem allItemMap:${allItemMap}")
+        logger.info("getServiceItem allItemMap:$allItemMap")
         allItemData.forEach { childItem ->
             if (parentMap.containsKey(childItem.parentId)) {
                 val existList = parentMap[childItem.parentId]
@@ -73,9 +73,8 @@ class ServiceItemService @Autowired constructor(
                 }
             }
         }
-        logger.info("getServiceItem parentMap:${parentMap}")
-        logger.info("getServiceItem childMap:${childMap}")
-
+        logger.info("getServiceItem parentMap:$parentMap")
+        logger.info("getServiceItem childMap:$childMap")
 
         parentMap.forEach { (parentId, childList) ->
             val itemData = allItemMap[parentId]
@@ -84,7 +83,7 @@ class ServiceItemService @Autowired constructor(
                     serviceItem = itemData,
                     childItem = childList
                 )
-                logger.info("getServiceItem data:${data}")
+                logger.info("getServiceItem data:$data")
 
                 itemList.add(data)
             }
@@ -248,7 +247,7 @@ class ServiceItemService @Autowired constructor(
 
     fun delete(userId: String, itemId: String): Result<Boolean> {
         if (!isItemCanDeleteOrDisable(itemId)) {
-            throw  RuntimeException("扩展点已绑定扩展服务，不能操作")
+            throw RuntimeException("扩展点已绑定扩展服务，不能操作")
         }
         serviceItemDao.delete(dslContext, userId, itemId)
         return Result(true)
@@ -256,7 +255,7 @@ class ServiceItemService @Autowired constructor(
 
     fun disable(userId: String, itemId: String): Result<Boolean> {
         if (!isItemCanDeleteOrDisable(itemId)) {
-            throw  RuntimeException("扩展点已绑定扩展服务，不能禁用")
+            throw RuntimeException("扩展点已绑定扩展服务，不能禁用")
         }
         serviceItemDao.disable(dslContext, userId, itemId)
         return Result(true)

@@ -21,6 +21,5 @@ class ServiceItemResourceImpl @Autowired constructor(
 
     override fun addServiceNum(itemIds: List<String>): Result<Boolean> {
         return Result(serviceItemService.addServiceNum(itemIds))
-
     }
 }
