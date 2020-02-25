@@ -6,6 +6,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.log.api.ServiceLogResource
 import com.tencent.devops.log.model.pojo.QueryLogs
 import com.tencent.devops.openapi.api.v2.ApigwLogResourceV2
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -22,6 +23,8 @@ class ApigwLogResourceV2Impl @Autowired constructor(
         jobId: String?,
         executeCount: Int?
     ): Result<QueryLogs> {
+        logger.info("getInitLogs project[$projectId] pipelineId[$pipelineId] buildId[$buildId] queryKeywords[$queryKeywords] " +
+            "elementId[$elementId] jobId[$jobId]")
         return client.get(ServiceLogResource::class).getInitLogs(
             projectId = projectId,
             pipelineId = pipelineId,
@@ -32,5 +35,9 @@ class ApigwLogResourceV2Impl @Autowired constructor(
             isAnalysis = isAnalysis,
             queryKeywords = queryKeywords
         )
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(this::class.java)
     }
 }
