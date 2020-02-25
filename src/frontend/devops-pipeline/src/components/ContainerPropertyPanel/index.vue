@@ -90,7 +90,7 @@
 
                 <template v-if="buildResourceType === 'MACOS'">
                     <form-field :label="$t('editPage.macSystemVersion')" :required="true" :is-error="errors.has('systemVersion')" :error-msg="errors.first(`systemVersion`)">
-                        <bk-select :value="systemVersion" searchable :loading="isLoadingMac" name="systemVersion" v-validate.initial="'required'">
+                        <bk-select :disabled="!editable" :value="systemVersion" searchable :loading="isLoadingMac" name="systemVersion" v-validate.initial="'required'">
                             <bk-option v-for="item in systemVersionList"
                                 :key="item"
                                 :id="item"
@@ -100,7 +100,7 @@
                         </bk-select>
                     </form-field>
                     <form-field :label="$t('editPage.xcodeVersion')" :required="true" :is-error="errors.has('xcodeVersion')" :error-msg="errors.first(`xcodeVersion`)">
-                        <bk-select :value="xcodeVersion" searchable :loading="isLoadingMac" name="xcodeVersion" v-validate.initial="'required'">
+                        <bk-select :disabled="!editable" :value="xcodeVersion" searchable :loading="isLoadingMac" name="xcodeVersion" v-validate.initial="'required'">
                             <bk-option v-for="item in xcodeVersionList"
                                 :key="item"
                                 :id="item"
