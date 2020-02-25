@@ -27,7 +27,7 @@ import com.tencent.devops.store.pojo.service.OpEditInfoDTO
 import com.tencent.devops.store.pojo.vo.ExtServiceInfoResp
 import com.tencent.devops.store.pojo.vo.ExtensionServiceVO
 import com.tencent.devops.store.service.ExtServiceNotifyService
-import com.tencent.devops.store.service.common.StoreMemberService
+import com.tencent.devops.store.service.TxExtServiceMemberImpl
 import org.jooq.impl.DSL
 import org.jooq.impl.DefaultDSLContext
 import org.slf4j.LoggerFactory
@@ -41,7 +41,7 @@ class OpExtServiceService @Autowired constructor(
     private val extServiceFeatureDao: ExtServiceFeatureDao,
     private val storeReleaseDao: StoreReleaseDao,
     private val storeProjectRelDao: StoreProjectRelDao,
-    private val storeMemberService: StoreMemberService,
+    private val storeMemberService: TxExtServiceMemberImpl,
     private val extServiceItemDao: ExtServiceItemRelDao,
     private val storeMediaInfoDao: StoreMediaInfoDao,
     private val extServiceLableRelDao: ExtServiceLableRelDao,
