@@ -37,8 +37,8 @@ interface UserExtItemResource {
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @ApiParam("蓝盾服务Id", required = true)
+        @ApiParam("蓝盾服务Id", required = false)
         @QueryParam("serviceId")
-        serviceId: String
+        serviceId: String?
     ): Result<List<ServiceItemInfoVO>?>
 }
