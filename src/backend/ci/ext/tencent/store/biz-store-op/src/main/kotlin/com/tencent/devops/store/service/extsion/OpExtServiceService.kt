@@ -2,12 +2,14 @@ package com.tencent.devops.store.service.extsion
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.dao.ExtServiceDao
 import com.tencent.devops.store.dao.ExtServiceFeatureDao
 import com.tencent.devops.store.dao.ExtServiceItemRelDao
 import com.tencent.devops.store.dao.ExtServiceLableRelDao
+import com.tencent.devops.store.dao.common.StoreMediaInfoDao
 import com.tencent.devops.store.dao.common.StoreProjectRelDao
 import com.tencent.devops.store.dao.common.StoreReleaseDao
 import com.tencent.devops.store.pojo.ExtServiceFeatureUpdateInfo
@@ -15,6 +17,7 @@ import com.tencent.devops.store.pojo.ExtServiceItemRelCreateInfo
 import com.tencent.devops.store.pojo.ExtServiceUpdateInfo
 import com.tencent.devops.store.pojo.common.PASS
 import com.tencent.devops.store.pojo.common.REJECT
+import com.tencent.devops.store.pojo.common.StoreMediaInfoRequest
 import com.tencent.devops.store.pojo.common.StoreReleaseCreateRequest
 import com.tencent.devops.store.pojo.common.enums.AuditTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
@@ -40,6 +43,7 @@ class OpExtServiceService @Autowired constructor(
     private val storeProjectRelDao: StoreProjectRelDao,
     private val storeMemberService: StoreMemberService,
     private val extServiceItemDao: ExtServiceItemRelDao,
+    private val storeMediaInfoDao: StoreMediaInfoDao,
     private val extServiceLableRelDao: ExtServiceLableRelDao,
     private val dslContext: DefaultDSLContext,
     private val serviceNotifyService: ExtServiceNotifyService
@@ -91,7 +95,6 @@ class OpExtServiceService @Autowired constructor(
 
     fun editExtInfo(userId: String, serviceId: String, serviceCode: String, infoResp: OpEditInfoDTO) : Result<Boolean> {
         val baseInfo = infoResp.baseInfo
-        ,
         val settingInfo = infoResp.settingInfo
         if(baseInfo != null) {
             extServiceDao.updateExtServiceBaseInfo(
@@ -133,7 +136,33 @@ class OpExtServiceService @Autowired constructor(
         }
 
         infoResp.mediaInfo?.forEach {
-
+            if(it.id != null) {
+                storeMediaInfoDao.updateById(
+                    dslContext = dslContext,
+                    userId = userId,
+                    id = it.id!!,
+                    storeMediaInfoReq = StoreMediaInfoRequest(
+                        storeCode = serviceCode,
+                        modifier = userId,
+                        mediaType = it.mediaType.name,
+                        mediaUrl = it.mediaUrl
+                    )
+                )
+            }
+            else {
+                storeMediaInfoDao.add(
+                    dslContext = dslContext,
+                    userId = userId,
+                    type = StoreTypeEnum.SERVICE.type.toByte(),
+                    id = UUIDUtil.generate(),
+                    storeMediaInfoReq = StoreMediaInfoRequest(
+                        storeCode = serviceCode,
+                        mediaUrl = it.mediaUrl,
+                        mediaType = it.mediaType.name,
+                        modifier = userId
+                    )
+                )
+            }
         }
 
         if(settingInfo != null) {
@@ -142,7 +171,10 @@ class OpExtServiceService @Autowired constructor(
                 userId = userId,
                 serviceCode = serviceCode,
                 extServiceFeatureUpdateInfo = ExtServiceFeatureUpdateInfo(
-                    publicFlag = settingInfo.p
+                    publicFlag = settingInfo.publicFlag,
+                    recommentFlag = settingInfo.recommendFlag,
+                    certificationFlag = settingInfo.certificationFlag,
+                    modifierUser = userId
                 )
             )
         }

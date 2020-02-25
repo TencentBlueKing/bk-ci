@@ -20,7 +20,7 @@ data class ExtServiceFeatureUpdateInfo(
     @ApiModelProperty("删除标签")
     val deleteFlag: Boolean? = null,
     @ApiModelProperty("添加用户")
-    val creatorUser: String,
+    val creatorUser: String? = null,
     @ApiModelProperty("修改用户")
-    val modifierUser: String
+    val modifierUser: String? = null
 )

@@ -60,7 +60,7 @@ class OpServiceResourceImpl @Autowired constructor(
         serviceCode: String,
         updateInfo: OpEditInfoDTO
     ): Result<Boolean> {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        return opExtServiceService.editExtInfo(userId, serviceId, serviceCode, updateInfo)
     }
 
     override fun getExtsionServiceByCode(userId: String, serviceCode: String): Result<ServiceVersionVO?> {
