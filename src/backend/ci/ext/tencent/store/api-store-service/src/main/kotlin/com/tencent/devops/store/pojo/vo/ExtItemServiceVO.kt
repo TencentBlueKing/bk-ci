@@ -43,10 +43,8 @@ data class ExtItemServiceVO(
     val summary: String?,
     @ApiModelProperty("扩展服务开发者信息", required = true)
     val vendor: ExtServiceVendorVO,
-    @ApiModelProperty("扩展服务所需字段", required = false)
-    val data: Map<String, Any>?,
     @ApiModelProperty("扩展服务访问路径前缀", required = true)
     val baseUrl: String,
-    @ApiModelProperty("扩展服务针对该扩展的前端入口资源路径", required = true)
-    val entryResUrl: String
+    @ApiModelProperty("自扩展服务前端针对该扩展点的配置信息Json串", required = false)
+    val props: Map<String, Any>?
 )
