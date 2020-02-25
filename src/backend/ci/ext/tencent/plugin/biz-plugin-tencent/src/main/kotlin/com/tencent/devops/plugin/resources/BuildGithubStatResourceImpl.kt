@@ -29,7 +29,7 @@ package com.tencent.devops.plugin.resources
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.plugin.api.BuildGithubStatResource
-import com.tencent.devops.plugin.api.pojo.GitGroupStatRequest
+import com.tencent.devops.plugin.api.pojo.GithubStatRequest
 import com.tencent.devops.plugin.service.GithubStatService
 import org.springframework.beans.factory.annotation.Autowired
 
