@@ -66,6 +66,7 @@ class GithubDevStatDao {
             )
                     .onDuplicateKeyUpdate()
                     .set(COMMITS, commits)
+                    .set(UPDATE_TIME, java.time.LocalDateTime.now())
                     .execute()
         }
     }
