@@ -6,15 +6,17 @@ import com.tencent.devops.store.pojo.atom.enums.OpSortTypeEnum
 import com.tencent.devops.store.pojo.common.VisibleApproveReq
 import com.tencent.devops.store.pojo.dto.ServiceApproveReq
 import com.tencent.devops.store.pojo.dto.ServiceOfflineDTO
-import com.tencent.devops.store.pojo.enums.ExtServiceStatusEnum
+import com.tencent.devops.store.pojo.service.OpEditInfoDTO
 import com.tencent.devops.store.pojo.vo.ExtServiceInfoResp
-import com.tencent.devops.store.pojo.vo.ExtensionServiceVO
+import com.tencent.devops.store.pojo.vo.ServiceVersionVO
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
+import javax.ws.rs.DELETE
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
+import javax.ws.rs.POST
 import javax.ws.rs.PUT
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
@@ -67,13 +69,44 @@ interface OpServiceResource {
 
     @ApiOperation("根据ID获取扩展服务信息")
     @GET
-    @Path("/{serviceId}")
-    fun getPipelineServiceById(
+    @Path("/serviceIds/{serviceId}")
+    fun getExtsionServiceById(
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
         @ApiParam("扩展服务ID", required = true)
         @QueryParam("serviceId")
         serviceId: String
-    ): Result<ExtensionServiceVO?>
+    ): Result<ServiceVersionVO?>
 
+    @ApiOperation("编辑扩展服务")
+    @POST
+    @Path("/serviceIds/{serviceId}/serviceCodes/{serviceCode}")
+    fun editExtService(
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("扩展服务ID", required = true)
+        @QueryParam("serviceId")
+        serviceId: String,
+        @ApiParam("扩展服务Code", required = true)
+        @QueryParam("serviceCode")
+        serviceCode: String,
+        @ApiParam("修改信息", required = true)
+        updateInfo: OpEditInfoDTO
+    ): Result<Boolean>
+
+    @ApiOperation("根据ID获取扩展服务信息")
+    @GET
+    @Path("/serviceCodes/{serviceCode}")
+    fun getExtsionServiceByCode(
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("扩展服务ID", required = true)
+        @QueryParam("serviceId")
+        serviceCode: String
+    ): Result<ServiceVersionVO?>
 
     @ApiOperation("审核扩展服务")
     @Path("/{serviceId}/approve")
@@ -115,5 +148,17 @@ interface OpServiceResource {
         serviceCode: String,
         @ApiParam("可见范围审核请求报文", required = true)
         visibleApproveReq: VisibleApproveReq
+    ): Result<Boolean>
+
+    @ApiOperation("删除工作台插件")
+    @DELETE
+    @Path("/serviceCodes/{serviceCode}")
+    fun deleteAtom(
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("插件代码", required = true)
+        @PathParam("serviceCode")
+        serviceCode: String
     ): Result<Boolean>
 }

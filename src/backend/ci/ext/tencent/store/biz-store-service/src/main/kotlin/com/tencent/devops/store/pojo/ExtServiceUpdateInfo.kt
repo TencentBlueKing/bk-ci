@@ -10,7 +10,7 @@ data class ExtServiceUpdateInfo(
     @ApiModelProperty("服务版本")
     val version: String? = null,
     @ApiModelProperty("状态")
-    val status: Int,
+    val status: Int?,
     @ApiModelProperty("状态对应的描述")
     val statusMsg: String? = null,
     @ApiModelProperty("LOGO url")
@@ -26,7 +26,7 @@ data class ExtServiceUpdateInfo(
     @ApiModelProperty("发布时间")
     val publishTime: Long? = 0,
     @ApiModelProperty("是否是最后版本")
-    val latestFlag: Boolean,
+    val latestFlag: Boolean? = true,
     @ApiModelProperty("修改用户")
     val modifierUser: String
 )

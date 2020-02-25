@@ -3,8 +3,16 @@ package com.tencent.devops.store.service.extsion
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.dao.ExtServiceDao
+import com.tencent.devops.store.dao.ExtServiceFeatureDao
+import com.tencent.devops.store.dao.ExtServiceItemRelDao
+import com.tencent.devops.store.dao.ExtServiceLableRelDao
+import com.tencent.devops.store.dao.common.StoreProjectRelDao
 import com.tencent.devops.store.dao.common.StoreReleaseDao
+import com.tencent.devops.store.pojo.ExtServiceFeatureUpdateInfo
+import com.tencent.devops.store.pojo.ExtServiceItemRelCreateInfo
+import com.tencent.devops.store.pojo.ExtServiceUpdateInfo
 import com.tencent.devops.store.pojo.common.PASS
 import com.tencent.devops.store.pojo.common.REJECT
 import com.tencent.devops.store.pojo.common.StoreReleaseCreateRequest
@@ -12,11 +20,14 @@ import com.tencent.devops.store.pojo.common.enums.AuditTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.enums.ExtServiceStatusEnum
 import com.tencent.devops.store.pojo.dto.ServiceApproveReq
+import com.tencent.devops.store.pojo.service.OpEditInfoDTO
 import com.tencent.devops.store.pojo.vo.ExtServiceInfoResp
 import com.tencent.devops.store.pojo.vo.ExtensionServiceVO
 import com.tencent.devops.store.service.ExtServiceNotifyService
+import com.tencent.devops.store.service.common.StoreMemberService
 import org.jooq.impl.DSL
 import org.jooq.impl.DefaultDSLContext
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
@@ -24,7 +35,12 @@ import java.time.LocalDateTime
 @Service
 class OpExtServiceService @Autowired constructor(
     private val extServiceDao: ExtServiceDao,
+    private val extServiceFeatureDao: ExtServiceFeatureDao,
     private val storeReleaseDao: StoreReleaseDao,
+    private val storeProjectRelDao: StoreProjectRelDao,
+    private val storeMemberService: StoreMemberService,
+    private val extServiceItemDao: ExtServiceItemRelDao,
+    private val extServiceLableRelDao: ExtServiceLableRelDao,
     private val dslContext: DefaultDSLContext,
     private val serviceNotifyService: ExtServiceNotifyService
 ) {
@@ -71,6 +87,67 @@ class OpExtServiceService @Autowired constructor(
         }
 
         return Result(ExtServiceInfoResp(serviceRecords.size, page, pageSize, extensionServiceInfoList))
+    }
+
+    fun editExtInfo(userId: String, serviceId: String, serviceCode: String, infoResp: OpEditInfoDTO) : Result<Boolean> {
+        val baseInfo = infoResp.baseInfo
+        ,
+        val settingInfo = infoResp.settingInfo
+        if(baseInfo != null) {
+            extServiceDao.updateExtServiceBaseInfo(
+                dslContext = dslContext,
+                userId = userId,
+                serviceId = serviceId,
+                extServiceUpdateInfo = ExtServiceUpdateInfo(
+                    serviceName = baseInfo.serviceName,
+                    logoUrl = baseInfo.logoUrl,
+                    sunmmary = baseInfo.sunmmary,
+                    description = baseInfo.description,
+                    modifierUser = userId,
+                    status = null
+                )
+            )
+            val itemIds = baseInfo.itemIds
+            val lables = baseInfo.lables
+            if(itemIds != null) {
+                val existenceItems = extServiceItemDao.getItemByServiceId(dslContext, serviceId)
+                val existenceItemIds = mutableListOf<String>()
+                existenceItems?.forEach {
+                    existenceItemIds.add(it.itemId)
+                }
+                itemIds.forEach { itemId ->
+                    if(!existenceItemIds.contains(itemId)){
+                        extServiceItemDao.create(
+                            userId = userId,
+                            dslContext = dslContext,
+                            extServiceItemRelCreateInfo = ExtServiceItemRelCreateInfo(
+                                serviceId = serviceId,
+                                modifierUser = userId,
+                                creatorUser = userId,
+                                itemId = itemId
+                            )
+                        )
+                    }
+                }
+            }
+        }
+
+        infoResp.mediaInfo?.forEach {
+
+        }
+
+        if(settingInfo != null) {
+            extServiceFeatureDao.updateExtServiceFeatureBaseInfo(
+                dslContext = dslContext,
+                userId = userId,
+                serviceCode = serviceCode,
+                extServiceFeatureUpdateInfo = ExtServiceFeatureUpdateInfo(
+                    publicFlag = settingInfo.p
+                )
+            )
+        }
+
+        return Result(true)
     }
 
     fun approveService(userId: String, serviceId: String, approveReq: ServiceApproveReq): Result<Boolean> {
@@ -131,5 +208,42 @@ class OpExtServiceService @Autowired constructor(
         // 发送通知消息
         serviceNotifyService.sendAtomReleaseAuditNotifyMessage(serviceId, type)
         return Result(true)
+    }
+
+    fun deleteService(userId: String, serviceCode: String): Result<Boolean> {
+        logger.info("deleteAtom userId: $userId , serviceCode: $serviceCode")
+        val type = StoreTypeEnum.SERVICE.type.toByte()
+        val isOwner = storeMemberService.isStoreAdmin(userId, serviceCode, StoreTypeEnum.SERVICE.type.toByte())
+        if (!isOwner) {
+            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED, arrayOf())
+        }
+        val releasedCount = extServiceDao.countReleaseServiceByCode(dslContext, serviceCode)
+        logger.info("releasedCount: $releasedCount")
+        if (releasedCount > 0) {
+            return MessageCodeUtil.generateResponseDataObject(
+                // TODO: 此处应在core添加扩展服务相关异常信息
+                StoreMessageCode.USER_ATOM_RELEASED_IS_NOT_ALLOW_DELETE,
+                arrayOf()
+            )
+        }
+        // 如果已经被安装到其他项目下使用，不能删除
+        val installedCount = storeProjectRelDao.countInstalledProject(dslContext, serviceCode , type)
+        if (installedCount > 0) {
+            return MessageCodeUtil.generateResponseDataObject(
+                // TODO: 此处应在core添加扩展服务相关异常信息
+                StoreMessageCode.USER_ATOM_USED_IS_NOT_ALLOW_DELETE,
+                arrayOf()
+            )
+        }
+        dslContext.transaction { t ->
+            val context = DSL.using(t)
+            extServiceDao.deleteExtService(context, userId, serviceCode)
+            extServiceFeatureDao.deleteExtFeatureService(context, userId, serviceCode)
+        }
+        return Result(true)
+    }
+
+    companion object{
+        val logger = LoggerFactory.getLogger(this::class.java)
     }
 }

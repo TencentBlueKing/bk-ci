@@ -8,8 +8,9 @@ import com.tencent.devops.store.pojo.common.VisibleApproveReq
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.dto.ServiceApproveReq
 import com.tencent.devops.store.pojo.dto.ServiceOfflineDTO
+import com.tencent.devops.store.pojo.service.OpEditInfoDTO
 import com.tencent.devops.store.pojo.vo.ExtServiceInfoResp
-import com.tencent.devops.store.pojo.vo.ExtensionServiceVO
+import com.tencent.devops.store.pojo.vo.ServiceVersionVO
 import com.tencent.devops.store.service.ExtServiceBaseService
 import com.tencent.devops.store.service.common.StoreVisibleDeptService
 import com.tencent.devops.store.service.extsion.OpExtServiceService
@@ -49,8 +50,21 @@ class OpServiceResourceImpl @Autowired constructor(
         )
     }
 
-    override fun getPipelineServiceById(serviceId: String): Result<ExtensionServiceVO?> {
+    override fun getExtsionServiceById(userId: String, serviceId: String): Result<ServiceVersionVO?> {
+        return extServiceBaseService.getServiceById(serviceId, userId)
+    }
+
+    override fun editExtService(
+        userId: String,
+        serviceId: String,
+        serviceCode: String,
+        updateInfo: OpEditInfoDTO
+    ): Result<Boolean> {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
+    override fun getExtsionServiceByCode(userId: String, serviceCode: String): Result<ServiceVersionVO?> {
+        return extServiceBaseService.getServiceByCode(userId, serviceCode)
     }
 
     override fun approveService(userId: String, serviceId: String, approveReq: ServiceApproveReq): Result<Boolean> {
@@ -75,5 +89,9 @@ class OpServiceResourceImpl @Autowired constructor(
         visibleApproveReq: VisibleApproveReq
     ): Result<Boolean> {
         return storeVisibleDeptService.approveVisibleDept(userId, serviceCode, visibleApproveReq, StoreTypeEnum.SERVICE)
+    }
+
+    override fun deleteAtom(userId: String, serviceCode: String): Result<Boolean> {
+        return opExtServiceService.deleteService(userId, serviceCode)
     }
 }

@@ -1,6 +1,7 @@
 package com.tencent.devops.store.dao
 
 import com.tencent.devops.common.api.util.UUIDUtil
+import com.tencent.devops.model.store.tables.TExtensionService
 import com.tencent.devops.model.store.tables.TExtensionServiceFeature
 import com.tencent.devops.model.store.tables.records.TExtensionServiceFeatureRecord
 import com.tencent.devops.store.pojo.ExtServiceFeatureCreateInfo
@@ -86,6 +87,17 @@ class ExtServiceFeatureDao {
             baseStep.set(MODIFIER, userId).set(UPDATE_TIME, LocalDateTime.now())
                 .where(SERVICE_CODE.eq(serviceCode))
                 .execute()
+        }
+    }
+
+    fun deleteExtFeatureService(
+        dslContext: DSLContext,
+        userId: String,
+        serviceCode: String
+    ) {
+        with(TExtensionServiceFeature.T_EXTENSION_SERVICE_FEATURE) {
+            dslContext.update(this).set(DELETE_FLAG, true).set(MODIFIER, userId).set(UPDATE_TIME, LocalDateTime.now())
+                .where(SERVICE_CODE.eq(serviceCode))
         }
     }
 

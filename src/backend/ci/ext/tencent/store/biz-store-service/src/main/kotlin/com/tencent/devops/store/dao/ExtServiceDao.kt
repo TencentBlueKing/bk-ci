@@ -1,6 +1,5 @@
 package com.tencent.devops.store.dao
 
-import com.nhaarman.mockito_kotlin.stub
 import com.tencent.devops.model.store.tables.TClassify
 import com.tencent.devops.model.store.tables.TExtensionService
 import com.tencent.devops.model.store.tables.TExtensionServiceFeature
@@ -92,6 +91,17 @@ class ExtServiceDao {
                 .set(LATEST_FLAG, false)
                 .where(SERVICE_CODE.eq(serviceCode))
                 .execute()
+        }
+    }
+
+    fun deleteExtService(
+        dslContext: DSLContext,
+        userId: String,
+        serviceCode: String
+    ) {
+        with(TExtensionService.T_EXTENSION_SERVICE) {
+            dslContext.update(this).set(DELETE_FLAG, true).set(MODIFIER, userId).set(UPDATE_TIME, LocalDateTime.now())
+                .where(SERVICE_CODE.eq(serviceCode))
         }
     }
 
