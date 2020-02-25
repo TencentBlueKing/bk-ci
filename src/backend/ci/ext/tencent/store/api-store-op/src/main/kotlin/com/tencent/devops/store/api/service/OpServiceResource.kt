@@ -6,7 +6,6 @@ import com.tencent.devops.store.pojo.atom.enums.OpSortTypeEnum
 import com.tencent.devops.store.pojo.common.VisibleApproveReq
 import com.tencent.devops.store.pojo.dto.ServiceApproveReq
 import com.tencent.devops.store.pojo.dto.ServiceOfflineDTO
-import com.tencent.devops.store.pojo.enums.ExtServiceStatusEnum
 import com.tencent.devops.store.pojo.vo.ExtServiceInfoResp
 import com.tencent.devops.store.pojo.vo.ExtensionServiceVO
 import io.swagger.annotations.Api
@@ -27,7 +26,6 @@ import javax.ws.rs.core.MediaType
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface OpServiceResource {
-
 
     @ApiOperation("获取扩展服务信息")
     @GET
@@ -73,7 +71,6 @@ interface OpServiceResource {
         @QueryParam("serviceId")
         serviceId: String
     ): Result<ExtensionServiceVO?>
-
 
     @ApiOperation("审核扩展服务")
     @Path("/{serviceId}/approve")

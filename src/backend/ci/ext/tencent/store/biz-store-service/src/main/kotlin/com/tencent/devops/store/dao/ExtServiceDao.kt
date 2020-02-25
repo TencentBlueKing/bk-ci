@@ -1,6 +1,5 @@
 package com.tencent.devops.store.dao
 
-import com.nhaarman.mockito_kotlin.stub
 import com.tencent.devops.model.store.tables.TClassify
 import com.tencent.devops.model.store.tables.TExtensionService
 import com.tencent.devops.model.store.tables.TExtensionServiceFeature
@@ -120,7 +119,7 @@ class ExtServiceDao {
                 baseStep.set(SERVICE_STATUS_MSG, statusMsg)
             }
             val version = extServiceUpdateInfo.version
-            if(null != version){
+            if (null != version) {
                 baseStep.set(VERSION, version)
             }
             val description = extServiceUpdateInfo.description
@@ -392,30 +391,29 @@ class ExtServiceDao {
         val c = TExtensionServiceItemRel.T_EXTENSION_SERVICE_ITEM_REL.`as`("c")
         val d = TExtensionServiceLabelRel.T_EXTENSION_SERVICE_LABEL_REL.`as`("d")
         val conditions = mutableListOf<Condition>()
-        if(null != serviceName){
+        if (null != serviceName) {
             conditions.add(a.SERVICE_NAME.like(serviceName))
         }
-        if(null != itemId){
+        if (null != itemId) {
             conditions.add(c.ITEM_ID.eq(itemId))
         }
 
-        if(null != lableId){
+        if (null != lableId) {
             conditions.add(d.LABEL_ID.eq(lableId))
         }
 
-        if(null != isPublic){
+        if (null != isPublic) {
             conditions.add(b.PUBLIC_FLAG.eq(isPublic))
         }
 
-        if(null != isRecommend){
+        if (null != isRecommend) {
             conditions.add(b.RECOMMEND_FLAG.eq(isRecommend))
         }
 
-        if(null != serviceStatus){
-            if(serviceStatus){
+        if (null != serviceStatus) {
+            if (serviceStatus) {
                 conditions.add(a.SERVICE_STATUS.eq(ExtServiceStatusEnum.AUDITING.status.toByte()))
-            }
-            else{
+            } else {
                 conditions.add(a.SERVICE_STATUS.notEqual(ExtServiceStatusEnum.AUDITING.status.toByte()))
             }
         }
@@ -429,9 +427,9 @@ class ExtServiceDao {
             a.PUB_TIME.`as`("pubTime"),
             a.PUBLISHER.`as`("publisher"),
             a.UPDATE_TIME.`as`("updateTime")
-        ).from(a).join(b).on(a.SERVICE_CODE.eq(a.SERVICE_CODE)).
-            join(c).on(a.ID.eq(c.SERVICE_ID)).
-            join(d).on(a.ID.eq(d.SERVICE_ID)).where(conditions)
+        ).from(a).join(b).on(a.SERVICE_CODE.eq(a.SERVICE_CODE))
+            .join(c).on(a.ID.eq(c.SERVICE_ID))
+            .join(d).on(a.ID.eq(d.SERVICE_ID)).where(conditions)
         val baseStep = dslContext.select().from(t).orderBy(a.UPDATE_TIME.desc())
         return if (null != page && null != pageSize) {
             baseStep.limit((page - 1) * pageSize, pageSize).fetch()

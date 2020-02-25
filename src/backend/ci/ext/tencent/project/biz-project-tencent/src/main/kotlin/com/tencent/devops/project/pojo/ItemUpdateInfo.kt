@@ -2,7 +2,7 @@ package com.tencent.devops.project.pojo
 
 import io.swagger.annotations.ApiModelProperty
 
-data class ItemUpdateInfo (
+data class ItemUpdateInfo(
     @ApiModelProperty("扩展点名称")
     val itemName: String?,
     @ApiModelProperty("父级Id")

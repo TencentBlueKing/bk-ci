@@ -27,8 +27,7 @@ interface OPItemResource {
     @GET
     @Path("/parentServices")
     @ApiOperation("查询根服务")
-    fun parentList(
-    ): Result<List<ServiceItem>>
+    fun parentList(): Result<List<ServiceItem>>
 
     @GET
     @Path("/list")
@@ -49,9 +48,9 @@ interface OPItemResource {
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @ApiParam("扩展点信息", required = true )
+        @ApiParam("扩展点信息", required = true)
         createInfo: ItemInfoResponse
-    ) : Result<Boolean>
+    ): Result<Boolean>
 
     @PUT
     @Path("/{itemId}")
@@ -63,9 +62,9 @@ interface OPItemResource {
         @ApiParam("扩展点Id", required = true)
         @QueryParam("itemId")
         itemId: String,
-        @ApiParam("扩展点信息", required = true )
+        @ApiParam("扩展点信息", required = true)
         updateInfo: ItemInfoResponse
-    ) : Result<Boolean>
+    ): Result<Boolean>
 
     @GET
     @Path("/{itemId}")
@@ -74,7 +73,7 @@ interface OPItemResource {
         @ApiParam("扩展点Id", required = true)
         @QueryParam("itemId")
         itemId: String
-    ) : Result<ServiceItem?>
+    ): Result<ServiceItem?>
 
     @DELETE
     @Path("/{itemId}")
@@ -86,7 +85,7 @@ interface OPItemResource {
         @ApiParam("扩展点Id", required = true)
         @QueryParam("itemId")
         itemId: String
-    ) : Result<Boolean>
+    ): Result<Boolean>
 
     @PUT
     @Path("/{itemId}/forbidden")
@@ -98,5 +97,5 @@ interface OPItemResource {
         @ApiParam("扩展点Id", required = true)
         @QueryParam("itemId")
         itemId: String
-    ) : Result<Boolean>
+    ): Result<Boolean>
 }

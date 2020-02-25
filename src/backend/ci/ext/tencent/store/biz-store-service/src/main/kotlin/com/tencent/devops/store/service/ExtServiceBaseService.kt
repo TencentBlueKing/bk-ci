@@ -127,7 +127,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
     ): Result<Boolean> {
         val serviceCode = extensionInfo.serviceCode
         logger.info("addExtService user[$userId], serviceCode[$serviceCode], info[$extensionInfo]")
-        //校验信息
+        // 校验信息
         validateAddServiceReq(userId, extensionInfo)
         val handleServicePackageResult = handleServicePackage(extensionInfo, userId, serviceCode)
         logger.info("addExtService the handleServicePackage is :$handleServicePackageResult")
@@ -265,7 +265,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
 
         if (version != requireVersion) {
             return MessageCodeUtil.generateResponseDataObject(
-                //TODO: 需在core内添加新状态码
+                // TODO: 需在core内添加新状态码
                 StoreMessageCode.USER_ATOM_VERSION_IS_INVALID,
                 arrayOf(version, requireVersion)
             )
@@ -286,7 +286,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
 
         if (!serviceFinalStatusList.contains(serviceRecord.serviceStatus)) {
             return MessageCodeUtil.generateResponseDataObject(
-                //TODO: 需在core内添加新状态码
+                // TODO: 需在core内添加新状态码
                 StoreMessageCode.USER_ATOM_VERSION_IS_NOT_FINISH,
                 arrayOf(serviceRecord.serviceName, serviceRecord.version)
             )
@@ -375,8 +375,8 @@ abstract class ExtServiceBaseService @Autowired constructor() {
             // 添加扩展点使用记录
             client.get(ServiceItemResource:: class).addServiceNum(itemIdList)
 
-            //TODO: 此处等carl完善
-            //asyncHandleUpdateService(context, serviceId, userId)
+            // TODO: 此处等carl完善
+            // asyncHandleUpdateService(context, serviceId, userId)
         }
         return Result(serviceId)
     }
@@ -657,7 +657,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
                     storeCode = serviceCode,
                     mediaUrl = it.mediaUrl,
                     mediaType = it.mediaType.name,
-                    modifier =  userId
+                    modifier = userId
                 )
             )
         }
@@ -762,7 +762,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         serviceId: String,
         extServiceUpdateInfo: ExtServiceUpdateInfo,
         extServiceVersionLogCreateInfo: ExtServiceVersionLogCreateInfo
-        //TODO: 此处等carl完善
+        // TODO: 此处等carl完善
 //        extServiceEnvUpdateInfo: ExtServiceEnvUpdateInfo
     ) {
         extServiceDao.updateExtServiceBaseInfo(
@@ -822,7 +822,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
             id = serviceId,
             extServiceCreateInfo = extServiceCreateInfo
         )
-        //TODO: 此处等carl完善
+        // TODO: 此处等carl完善
 //        extServiceEnvDao.create(context, atomId, atomEnvRequest)
         extServiceVersionLogDao.create(
             dslContext = dslContext,
@@ -926,7 +926,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         return processInfo
     }
 
-    //TODO 此处需调整为： 同一个名称只支持在同一个服务内相同
+    // TODO 此处需调整为： 同一个名称只支持在同一个服务内相同
     private fun validateAddServiceReqByName(serviceName: String, serviceCode: String): Boolean {
         // 判断扩展服务是否存在
         val nameInfo = extServiceDao.listServiceByName(dslContext, serviceName)

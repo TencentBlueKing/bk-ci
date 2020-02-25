@@ -6,7 +6,6 @@ import com.tencent.devops.store.api.UserExtServiceDeskResource
 import com.tencent.devops.store.pojo.common.StoreProcessInfo
 import com.tencent.devops.store.pojo.dto.InitExtServiceDTO
 import com.tencent.devops.store.pojo.dto.ServiceOfflineDTO
-import com.tencent.devops.store.pojo.dto.ServiceOfflineReq
 import com.tencent.devops.store.pojo.dto.SubmitDTO
 import com.tencent.devops.store.pojo.vo.MyServiceVO
 import com.tencent.devops.store.pojo.vo.ServiceVersionVO

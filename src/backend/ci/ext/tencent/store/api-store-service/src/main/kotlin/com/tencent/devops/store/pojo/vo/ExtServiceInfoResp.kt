@@ -2,7 +2,7 @@ package com.tencent.devops.store.pojo.vo
 
 import io.swagger.annotations.ApiModelProperty
 
-data class ExtServiceInfoResp (
+data class ExtServiceInfoResp(
     @ApiModelProperty("总记录数", required = true)
     val count: Int,
     @ApiModelProperty("当前页码值", required = false)

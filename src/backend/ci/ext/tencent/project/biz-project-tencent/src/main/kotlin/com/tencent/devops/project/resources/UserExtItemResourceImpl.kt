@@ -16,7 +16,7 @@ class UserExtItemResourceImpl @Autowired constructor(
         return Result(serviceItemService.getItemList())
     }
 
-    companion object{
+    companion object {
         val logger = LoggerFactory.getLogger(this::class.java)
     }
 }

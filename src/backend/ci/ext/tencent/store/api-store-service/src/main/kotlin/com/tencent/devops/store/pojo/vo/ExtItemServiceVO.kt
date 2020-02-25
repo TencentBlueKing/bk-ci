@@ -24,9 +24,29 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.pojo.enums
+package com.tencent.devops.store.pojo.vo
 
-enum class HtmlComponentTypeEnum {
-    SIMPLE, // 简单的前端组件类型
-    IFRAME  // ifrmae前端组件类型
-}
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+
+@ApiModel("扩展点对应的扩展服务信息")
+data class ExtItemServiceVO(
+    @ApiModelProperty("扩展服务Id", required = true)
+    val serviceId: String,
+    @ApiModelProperty("扩展服务名称", required = true)
+    val serviceName: String,
+    @ApiModelProperty("扩展服务code", required = true)
+    val serviceCode: String,
+    @ApiModelProperty("版本", required = true)
+    val version: String,
+    @ApiModelProperty("扩展服务简介", required = false)
+    val summary: String?,
+    @ApiModelProperty("扩展服务开发者信息", required = true)
+    val vendor: ExtServiceVendorVO,
+    @ApiModelProperty("扩展服务所需字段", required = false)
+    val data: Map<String, Any>?,
+    @ApiModelProperty("扩展服务访问路径前缀", required = true)
+    val baseUrl: String,
+    @ApiModelProperty("扩展服务针对该扩展的前端入口资源路径", required = true)
+    val entryResUrl: String
+)

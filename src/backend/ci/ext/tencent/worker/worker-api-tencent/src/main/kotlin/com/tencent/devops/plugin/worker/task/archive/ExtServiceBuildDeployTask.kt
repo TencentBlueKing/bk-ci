@@ -193,7 +193,7 @@ class ExtServiceBuildDeployTask : ITask() {
             JsonUtil.toJson(dockerRunParam)
         )
         // todo 启动docker服务的服务器IP算法待完善
-        val dockerRunUrl = "http://$dockerHostIp$dockerRunPath"
+        val dockerRunUrl = "http://9.2.142.144$dockerRunPath"
         val dockerRunRequest = Request.Builder()
             .url(dockerRunUrl)
             .post(dockerRunBody)

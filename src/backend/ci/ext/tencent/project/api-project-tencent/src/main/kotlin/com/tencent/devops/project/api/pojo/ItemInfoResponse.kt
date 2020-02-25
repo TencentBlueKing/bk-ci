@@ -4,7 +4,7 @@ import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("添加扩展点入参")
-data class ItemInfoResponse (
+data class ItemInfoResponse(
     @ApiModelProperty("扩展点名称")
     val itemName: String,
     @ApiModelProperty("扩展点标示")

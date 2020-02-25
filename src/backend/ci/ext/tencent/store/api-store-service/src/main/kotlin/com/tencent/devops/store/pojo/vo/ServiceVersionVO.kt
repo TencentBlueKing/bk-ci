@@ -1,6 +1,5 @@
 package com.tencent.devops.store.pojo.vo
 
-import com.tencent.devops.store.pojo.MediaInfoReq
 import com.tencent.devops.store.pojo.StoreServiceItem
 import com.tencent.devops.store.pojo.common.StoreMediaInfo
 import com.tencent.devops.store.pojo.common.StoreUserCommentInfo

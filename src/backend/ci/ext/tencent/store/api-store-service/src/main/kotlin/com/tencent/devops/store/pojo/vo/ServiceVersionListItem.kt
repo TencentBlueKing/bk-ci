@@ -4,7 +4,7 @@ import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("扩展版本列表")
-data class ServiceVersionListItem (
+data class ServiceVersionListItem(
     @ApiModelProperty("扩展服务ID")
     val serviceId: String,
     @ApiModelProperty("扩展服务标识")
