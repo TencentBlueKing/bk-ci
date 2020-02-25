@@ -65,7 +65,7 @@ class GithubStatDao {
                     owner,
                     repo,
                     LocalDate.parse(githubStatRequest.statDate, DateTimeFormatter.ISO_DATE),
-                    githubStatRequest.issueCntAll，
+                    githubStatRequest.issueCntAll,
                     githubStatRequest.issueCntOpen,
                     githubStatRequest.issueCntClosed,
                     githubStatRequest.prCntAll,

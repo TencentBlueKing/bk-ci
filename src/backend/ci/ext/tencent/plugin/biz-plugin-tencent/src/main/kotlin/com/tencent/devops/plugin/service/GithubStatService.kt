@@ -30,6 +30,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.plugin.api.pojo.GithubStatRequest
 import com.tencent.devops.plugin.api.pojo.GithubDevStat
 import com.tencent.devops.plugin.dao.GithubStatDao
+import com.tencent.devops.plugin.dao.GithubDevStatDao
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -55,14 +56,15 @@ class GithubStatService @Autowired constructor(
     ): Result<Boolean> {
         logger.info("githubStatRequest: $githubStatRequest")
 
-        githubStatDao.createOrUpdate(owner, repo, githubStatRequest)
+        githubStatDao.createOrUpdate(dslContext, owner, repo, githubStatRequest)
         githubStatRequest.perDevStatList.forEach {
             githubDevStatDao.createOrUpdate(
+                dslContext=dslContext,
                 owner=owner,
                 repo=repo,
-                statDate=githubStatRequest.date,
-                author=it.author,
-                commits=it.commits)
+                statDate=githubStatRequest.statDate,
+                author=it!!.author,
+                commits=it!!.commits)
         }
 
         return Result(true)
