@@ -112,6 +112,17 @@ class ServiceItemService @Autowired constructor(
         return findParent(serviceItem)
     }
 
+    fun getItemByCode(itemCode: String): ServiceItem? {
+        logger.info("getItemByCode: itemCode[$itemCode]")
+        val record = serviceItemDao.getItemByCode(dslContext, itemCode) ?: return null
+        return ServiceItem(
+            itemId = record.id,
+            itemCode = record.itemCode,
+            itemName = record.itemName,
+            parentId = record.parentId
+        )
+    }
+
     fun getItemByIds(itemIds: List<String>): List<ExtItemDTO> {
         logger.info("getItemByIds: itemIds[$itemIds]")
         val ids = itemIds.joinToString(",")
@@ -129,6 +140,22 @@ class ServiceItemService @Autowired constructor(
         return itemList
     }
 
+    fun getItemInfoByIds(itemIds: List<String>): List<ServiceItem> {
+        logger.info("getItemInfoByIds: itemIds[$itemIds]")
+        val ids = itemIds.joinToString(",")
+        val itemList = mutableListOf<ServiceItem>()
+        serviceItemDao.getItemByIds(dslContext, ids)?.forEach {
+            val serviceItem = ServiceItem(
+                itemId = it!!.id,
+                itemCode = it.itemCode,
+                itemName = it.itemName,
+                parentId = it.parentId
+            )
+            itemList.add(serviceItem)
+        }
+        return itemList
+    }
+
     fun addServiceNum(itemIds: List<String>): Boolean {
         logger.info("addServiceNum: itemIds[$itemIds]")
         val ids = itemIds.joinToString(",")
@@ -138,6 +165,7 @@ class ServiceItemService @Autowired constructor(
         }
         return true
     }
+
 
     private fun findParent(serviceItem: ServiceItem): ExtItemDTO {
         logger.info("findParent: serviceItemId: ${serviceItem.itemId}, parentId:${serviceItem.parentId}")

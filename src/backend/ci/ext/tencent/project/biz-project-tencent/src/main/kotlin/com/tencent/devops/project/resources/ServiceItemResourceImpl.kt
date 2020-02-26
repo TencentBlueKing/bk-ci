@@ -3,6 +3,7 @@ package com.tencent.devops.project.resources
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.project.api.pojo.ExtItemDTO
+import com.tencent.devops.project.api.pojo.ServiceItem
 import com.tencent.devops.project.api.service.service.ServiceItemResource
 import com.tencent.devops.project.service.ServiceItemService
 import org.springframework.beans.factory.annotation.Autowired
@@ -19,7 +20,15 @@ class ServiceItemResourceImpl @Autowired constructor(
         return Result(serviceItemService.getItemByIds(itemIds))
     }
 
+    override fun getItemByCode(itemCode: String): Result<ServiceItem?> {
+        return Result(serviceItemService.getItemByCode(itemCode))
+    }
+
     override fun addServiceNum(itemIds: List<String>): Result<Boolean> {
         return Result(serviceItemService.addServiceNum(itemIds))
+    }
+
+    override fun getItemInfoByIds(itemIds: List<String>): Result<List<ServiceItem>?> {
+        return Result(serviceItemService.getItemInfoByIds(itemIds))
     }
 }

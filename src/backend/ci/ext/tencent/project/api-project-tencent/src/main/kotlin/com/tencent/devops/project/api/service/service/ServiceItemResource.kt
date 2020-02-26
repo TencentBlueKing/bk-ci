@@ -4,6 +4,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.project.api.pojo.ExtItemDTO
+import com.tencent.devops.project.api.pojo.ServiceItem
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -32,6 +33,24 @@ interface ServiceItemResource {
         @QueryParam("itemId")
         itemId: String
     ): Result<ExtItemDTO?>
+
+    @GET
+    @Path("itemCodes/{itemCode}")
+    @ApiOperation("获取扩展项目列表")
+    fun getItemByCode(
+        @ApiParam("项目Code", required = true)
+        @QueryParam("itemCode")
+        itemCode: String
+    ): Result<ServiceItem?>
+
+    @GET
+    @Path("itemIds/{itemIds}/itemInfo")
+    @ApiOperation("获取扩展项目列表")
+    fun getItemInfoByIds(
+        @ApiParam("项目id串", required = true)
+        @QueryParam("itemIds")
+        itemIds: List<String>
+    ): Result<List<ServiceItem>?>
 
     @GET
     @Path("/{itemIds}/byIds")
