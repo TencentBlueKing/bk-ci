@@ -8,4 +8,5 @@ data class ServiceItem(
     val htmlPath: String? = null,
     val htmlType: String? = null,
     val serviceCount: Int? = 0
+
 )

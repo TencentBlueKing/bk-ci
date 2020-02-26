@@ -213,7 +213,10 @@ class ServiceItemService @Autowired constructor(
             inputPath = itemInfo.inputPath,
             creator = userId,
             pid = itemInfo.pid,
-            UIType = itemInfo.UIType
+            UIType = itemInfo.UIType,
+            iconUrl = itemInfo.iconUrl,
+            props = itemInfo.props,
+            tooltip = itemInfo.tooltip
         )
         serviceItemDao.add(dslContext, userId, createInfo)
         return Result(true)
@@ -225,7 +228,10 @@ class ServiceItemService @Autowired constructor(
             htmlPath = itemInfo.htmlPath,
             inputPath = itemInfo.inputPath,
             pid = itemInfo.pid,
-            UIType = itemInfo.UIType
+            UIType = itemInfo.UIType,
+            iconUrl = itemInfo.iconUrl,
+            props = itemInfo.props,
+            tooltip = itemInfo.tooltip
         )
         serviceItemDao.update(dslContext, itemId, userId, updateInfo)
         return Result(true)

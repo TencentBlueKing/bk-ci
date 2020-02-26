@@ -3,7 +3,7 @@ package com.tencent.devops.project.api.pojo
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("添加扩展点入参")
+@ApiModel("扩展点操作入参")
 data class ItemInfoResponse(
     @ApiModelProperty("扩展点名称")
     val itemName: String,
@@ -16,5 +16,11 @@ data class ItemInfoResponse(
     @ApiModelProperty("页面路径")
     val htmlPath: String,
     @ApiModelProperty("入口字段路径")
-    val inputPath: String
+    val inputPath: String,
+    @ApiModelProperty("icon地址")
+    val iconUrl: String?,
+    @ApiModelProperty("提示信息")
+    val tooltip: String?,
+    @ApiModelProperty("自定义扩展点前端表单属性配置Json串")
+    val props: String?
 )
