@@ -357,7 +357,7 @@ class ExtServiceDao {
             val t = dslContext.select(
                 tas.STORE_CODE,
                 tas.STORE_TYPE,
-                tas.DOWNLOADS.`as`(ExtServiceSortTypeEnum.DOWNLOAD_COUNT.name),
+//                tas.DOWNLOADS.`as`(ExtServiceSortTypeEnum.DOWNLOAD_COUNT.name),
                 tas.SCORE_AVERAGE
             ).from(tas).asTable("t")
             baseStep.leftJoin(t).on(ta.SERVICE_CODE.eq(t.field("STORE_CODE", String::class.java)))

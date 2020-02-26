@@ -9,7 +9,7 @@ data class ServiceItem(
     val htmlPath: String? = null,
     val htmlType: String? = null,
     val serviceCount: Int? = 0,
-    val tooltip: String?,
-    val icon: String?,
-    val props: Map<String, Any>?
+    val tooltip: String? = "",
+    val icon: String? = "",
+    val props: Map<String, Any>? = emptyMap()
 )
