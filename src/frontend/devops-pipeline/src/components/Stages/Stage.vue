@@ -1,5 +1,5 @@
 <template>
-    <div :class="[{ 'pipeline-drag': editable && !isTriggerStage, 'show-stage-area': editable && !isTriggerStage }, 'pipeline-stage']" ref="stageRef">
+    <div :class="[{ 'pipeline-drag': editable && !isTriggerStage, 'show-stage-area': editable && !isTriggerStage, 'is-error': stage.isError }, 'pipeline-stage']" ref="stageRef">
         <bk-button v-if="editable && !isTriggerStage" class="pipeline-stage-entry" @click="showStagePanel">{{ stageTitle }}</bk-button>
         <draggable v-model="compitedContainer" v-bind="dragOptions" :move="checkMove" tag="ul" class="soda-process-stage">
             <stage-container v-for="(container, index) in compitedContainer"
@@ -14,7 +14,7 @@
                 :container="container">
             </stage-container>
         </draggable>
-        <template v-if="editable || isPreStageDone">
+        <template v-if="editable || isStagePause">
             <span v-bk-clickoutside="toggleAddMenu" v-if="!isFirstStage" class="add-menu" @click.stop="handleClick">
                 <i :class="{ [iconCls]: true, 'active': isAddMenuShow }" />
                 <template v-if="isAddMenuShow">
@@ -64,9 +64,6 @@
                 type: Boolean,
                 default: false
             },
-            preStatus: {
-                type: String
-            },
             canSkipElement: {
                 type: Boolean,
                 default: false
@@ -95,7 +92,7 @@
                 return this.checkIsTriggerStage(this.stage)
             },
             stageTitle () {
-                return this.stage ? (this.stage.name || this.stage.id) : 'stage'
+                return this.stage ? this.stage.name : 'stage'
             },
             compitedContainer: {
                 get () {
@@ -120,16 +117,16 @@
                     disabled: !this.editable
                 }
             },
-            isPreStageDone () {
+            isStagePause () {
                 try {
-                    return this.preStatus === 'SUCCEED'
+                    return this.stage.status === 'PAUSE'
                 } catch (error) {
                     return false
                 }
             },
             iconCls () {
                 switch (true) {
-                    case this.isPreStageDone:
+                    case this.isStagePause:
                         return 'play-icon'
                     case !this.isAddMenuShow:
                         return 'add-plus-icon'
@@ -152,7 +149,8 @@
                 'togglePropertyPanel',
                 'toggleStageSelectPopup',
                 'setPipelineContainer',
-                'setPipelineEditing'
+                'setPipelineEditing',
+                'triggerStage'
             ]),
             checkIsTriggerStage (stage) {
                 try {
@@ -209,7 +207,7 @@
                 }
             },
             handleClick () {
-                if (this.isPreStageDone) {
+                if (this.isStagePause) {
                     this.startNextStage()
                 } else if (this.editable) {
                     this.toggleAddMenu(!this.isAddMenuShow)
@@ -217,7 +215,11 @@
             },
 
             startNextStage () {
-                console.log('go next stage')
+                console.log(this.$route.params)
+                this.triggerStage({
+                    ...this.$route.params,
+                    stageId: this.stage.id
+                })
             },
             updateHeight () {
                 const parentEle = this.$refs.stageRef
@@ -245,6 +247,19 @@
         position: relative;
         margin: 0;
         padding-top: $StagepaddingTop;
+        &.is-error {
+            border: 1px dashed $dangerColor;
+            border-radius: 2px;
+            background-color: rgba(255, 86, 86, .1) !important;
+            .pipeline-stage-entry {
+                background-color: rgba(255, 86, 86, .1);
+                border-color: rgba(255, 86, 86, .1);
+                &:hover {
+                    color: $dangerColor;
+                    border-color: rgba(255, 86, 86, .1);
+                }
+            }
+        }
         &.show-stage-area:hover {
             background: $stageBGColor;
             .pipeline-stage-entry {
