@@ -12,7 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired
 @RestResource
 class ApigwLogResourceV2Impl @Autowired constructor(
     private val client: Client
-): ApigwLogResourceV2 {
+) : ApigwLogResourceV2 {
     override fun getInitLogs(
         projectId: String,
         pipelineId: String,
@@ -23,8 +23,10 @@ class ApigwLogResourceV2Impl @Autowired constructor(
         jobId: String?,
         executeCount: Int?
     ): Result<QueryLogs> {
-        logger.info("getInitLogs project[$projectId] pipelineId[$pipelineId] buildId[$buildId] queryKeywords[$queryKeywords] " +
-            "elementId[$elementId] jobId[$jobId]")
+        logger.info(
+            "getInitLogs project[$projectId] pipelineId[$pipelineId] buildId[$buildId] queryKeywords[$queryKeywords] " +
+                "elementId[$elementId] jobId[$jobId]"
+        )
         return client.get(ServiceLogResource::class).getInitLogs(
             projectId = projectId,
             pipelineId = pipelineId,
