@@ -30,7 +30,7 @@ import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("GitHub开发者统计")
-data class GithubDevStat(    
+data class GithubDevStat(
     @ApiModelProperty("author", required = true)
     val author: String,
     @ApiModelProperty("commits", required = true)

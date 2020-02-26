@@ -28,7 +28,6 @@ package com.tencent.devops.plugin.service
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.plugin.api.pojo.GithubStatRequest
-import com.tencent.devops.plugin.api.pojo.GithubDevStat
 import com.tencent.devops.plugin.dao.GithubStatDao
 import com.tencent.devops.plugin.dao.GithubDevStatDao
 import org.jooq.DSLContext
@@ -59,12 +58,12 @@ class GithubStatService @Autowired constructor(
         githubStatDao.createOrUpdate(dslContext, owner, repo, githubStatRequest)
         githubStatRequest.perDevStatList.forEach {
             githubDevStatDao.createOrUpdate(
-                dslContext=dslContext,
-                owner=owner,
-                repo=repo,
-                statDate=githubStatRequest.statDate,
-                author=it!!.author,
-                commits=it!!.commits)
+                dslContext = dslContext,
+                owner = owner,
+                repo = repo,
+                statDate = githubStatRequest.statDate,
+                author = it!!.author,
+                commits = it!!.commits)
         }
 
         return Result(true)

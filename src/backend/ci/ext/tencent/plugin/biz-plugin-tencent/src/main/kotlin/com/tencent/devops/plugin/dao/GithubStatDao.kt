@@ -28,7 +28,6 @@ package com.tencent.devops.plugin.dao
 
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.model.plugin.tables.TPluginGithubStat
-import com.tencent.devops.model.plugin.tables.records.TPluginGithubStatRecord
 import com.tencent.devops.plugin.api.pojo.GithubStatRequest
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
