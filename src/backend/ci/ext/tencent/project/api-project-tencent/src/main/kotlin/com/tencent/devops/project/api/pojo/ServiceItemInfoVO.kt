@@ -46,6 +46,6 @@ data class ServiceItemInfoVO(
     val tooltip: String?,
     @ApiModelProperty("扩展点对应的图标", required = false)
     val icon: String?,
-    @ApiModelProperty("自定义扩展点前端表单属性字段的Json串", required = false)
+    @ApiModelProperty("自定义扩展点前端表单属性配置Json串", required = false)
     val props: Map<String, Any>?
 )
