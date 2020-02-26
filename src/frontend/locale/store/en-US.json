@@ -485,7 +485,7 @@
     "镜像大小": "Image size",
     "镜像在研发商店中的别名": "Image alias in Store",
     "镜像标识": "Image ID",
-    "镜像在研发商店中的唯一标识": "The unique ID of the image in the Store",
+    "镜像英文名，为当前镜像在研发商店中的唯一标识": "The English name of the image, which is the unique identifier of the current image in the R&D store",
     "请输入镜像标识": "Please enter the image ID",
     "在发布过程中，可以在该项目下调试镜像": "During the release process, you can debug the image under this project",
     "镜像版本": "Image version",
