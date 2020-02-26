@@ -67,7 +67,7 @@
                 }
             },
             stageTitle () {
-                return typeof this.stageIndex !== 'undefined' ? (this.stage.name || this.stage.id) : this.$t('propertyBar')
+                return typeof this.stage.name !== 'undefined' ? this.stage.name : this.stage.id
             }
         },
         watch: {
