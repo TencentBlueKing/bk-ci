@@ -165,9 +165,6 @@ class PipelineService @Autowired constructor(
                 )
             }
 
-            val triggerContainer = model.stages[0].containers[0] as TriggerContainer
-            PipelineUtils.checkPipelineParams(triggerContainer.params)
-
             // 检查用户是否有插件的使用权限
             if (model.srcTemplateId != null) {
                 val srcTemplateId = model.srcTemplateId as String
@@ -182,6 +179,7 @@ class PipelineService @Autowired constructor(
             try {
                 val instance = if (model.instanceFromTemplate == null || !model.instanceFromTemplate!!) {
                     // 将模版常量变更实例化为流水线变量
+                    val triggerContainer = model.stages[0].containers[0] as TriggerContainer
                     instanceModel(
                         templateModel = model,
                         pipelineName = model.name,
@@ -415,7 +413,6 @@ class PipelineService @Autowired constructor(
         logger.info("Start to edit the pipeline $pipelineId of project $projectId with channel $channelCode and permission $checkPermission by user $userId")
         try {
             PipelineUtils.checkPipelineName(model.name)
-            PipelineUtils.checkPipelineParams((model.stages[0].containers[0] as TriggerContainer).params)
             if (checkPermission) {
                 pipelinePermissionService.validPipelinePermission(
                     userId = userId,
