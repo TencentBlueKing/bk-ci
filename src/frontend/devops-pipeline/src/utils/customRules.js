@@ -69,6 +69,11 @@ const customeRules = {
         validate: function (value, args) {
             return !/^BK_CI/.test(value)
         }
+    },
+    paramsRule: {
+        validate: function (value, args) {
+            return /^[a-zA-Z0-9_]+$/g.test(value)
+        }
     }
 }
 
