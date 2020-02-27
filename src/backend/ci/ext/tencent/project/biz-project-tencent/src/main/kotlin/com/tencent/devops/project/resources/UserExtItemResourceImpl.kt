@@ -6,7 +6,6 @@ import com.tencent.devops.project.api.pojo.ExtItemDTO
 import com.tencent.devops.project.api.pojo.ServiceItemInfoVO
 import com.tencent.devops.project.api.service.user.UserExtItemResource
 import com.tencent.devops.project.service.ServiceItemService
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -18,6 +17,6 @@ class UserExtItemResourceImpl @Autowired constructor(
     }
 
     override fun getServiceItemList(userId: String, serviceId: String?): Result<List<ServiceItemInfoVO>?> {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        return Result(serviceItemService.getItemsByServiceId(serviceId))
     }
 }

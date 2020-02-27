@@ -5,6 +5,9 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.project.api.pojo.ExtItemDTO
 import com.tencent.devops.project.api.pojo.ItemInfoResponse
 import com.tencent.devops.project.api.pojo.ServiceItem
+import com.tencent.devops.project.api.pojo.ServiceItemInfoVO
+import com.tencent.devops.project.api.pojo.enums.HtmlComponentTypeEnum
+import com.tencent.devops.project.api.pojo.enums.ServiceItemStatusEnum
 import com.tencent.devops.project.dao.ServiceItemDao
 import com.tencent.devops.project.pojo.ItemCreateInfo
 import com.tencent.devops.project.pojo.ItemQueryInfo
@@ -214,7 +217,7 @@ class ServiceItemService @Autowired constructor(
         serviceItemDao.queryItem(dslContext, query)?.forEach {
             itemList.add(
                 ServiceItem(
-                    itemId = it!!.id,
+                    itemId = it.id,
                     itemCode = it.itemCode,
                     itemName = it.itemName,
                     serviceCount = it.serviceNum,
@@ -268,7 +271,7 @@ class ServiceItemService @Autowired constructor(
     fun getItem(itemId: String): Result<ServiceItem?> {
         val itemRecord = serviceItemDao.getItemById(dslContext, itemId) ?: throw RuntimeException("数据不存在")
         val itemInfo = ServiceItem(
-            itemId = itemRecord!!.id,
+            itemId = itemRecord.id,
             itemName = itemRecord.itemName,
             itemCode = itemRecord.itemCode,
             htmlPath = itemRecord.htmlPath,
@@ -302,6 +305,31 @@ class ServiceItemService @Autowired constructor(
             return true
         }
         return false
+    }
+
+    fun getItemsByServiceId(serviceId: String?): List<ServiceItemInfoVO>? {
+        logger.info("getItemsByServiceId serviceId is:$serviceId")
+        val itemQueryInfo = ItemQueryInfo(
+            pid = serviceId,
+            itemStatus = ServiceItemStatusEnum.ENABLE
+        )
+        val itemList = mutableListOf<ServiceItemInfoVO>()
+        serviceItemDao.queryItem(dslContext, itemQueryInfo)?.forEach {
+            itemList.add(
+                ServiceItemInfoVO(
+                    itemId = it.id,
+                    itemCode = it.itemCode,
+                    itemName = it.itemName,
+                    htmlPath = it.htmlPath,
+                    htmlComponentType = HtmlComponentTypeEnum.valueOf(it.htmlComponentType),
+                    tooltip = it.tooltip,
+                    iconUrl = it.iconUrl,
+                    entryResUrl = it.entryResUrl,
+                    props = serviceItemDao.convertString(it.props)
+                )
+            )
+        }
+        return itemList
     }
 
     companion object {

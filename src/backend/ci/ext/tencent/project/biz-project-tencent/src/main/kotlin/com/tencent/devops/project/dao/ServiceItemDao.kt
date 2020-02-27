@@ -1,5 +1,6 @@
 package com.tencent.devops.project.dao
 
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.model.project.tables.TServiceItem
 import com.tencent.devops.model.project.tables.records.TServiceItemRecord
@@ -9,6 +10,7 @@ import com.tencent.devops.project.pojo.ItemUpdateInfo
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository
+import org.springframework.util.StringUtils
 import java.time.LocalDateTime
 
 @Repository
@@ -110,7 +112,7 @@ class ServiceItemDao {
         }
     }
 
-    fun queryItem(dslContext: DSLContext, itemQueryInfo: ItemQueryInfo): Result<TServiceItemRecord?> {
+    fun queryItem(dslContext: DSLContext, itemQueryInfo: ItemQueryInfo): Result<TServiceItemRecord>? {
         return with(TServiceItem.T_SERVICE_ITEM) {
             val whereStep = dslContext.selectFrom(this)
             if (itemQueryInfo.itemName != null) {
@@ -119,6 +121,10 @@ class ServiceItemDao {
 
             if (itemQueryInfo.pid != null) {
                 whereStep.where(PARENT_ID.eq(itemQueryInfo.pid))
+            }
+
+            if (itemQueryInfo.itemStatus != null) {
+                whereStep.where(ITEM_STATUS.eq(itemQueryInfo.itemStatus.name))
             }
             whereStep.orderBy(UPDATE_TIME).fetch()
         }
@@ -161,6 +167,15 @@ class ServiceItemDao {
             dslContext.selectFrom(this)
                 .orderBy(CREATE_TIME.desc())
                 .fetch()
+        }
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    fun convertString(str: String?): Map<String, Any> {
+        return if (!StringUtils.isEmpty(str)) {
+            JsonUtil.getObjectMapper().readValue(str, Map::class.java) as Map<String, Any>
+        } else {
+            mapOf()
         }
     }
 }

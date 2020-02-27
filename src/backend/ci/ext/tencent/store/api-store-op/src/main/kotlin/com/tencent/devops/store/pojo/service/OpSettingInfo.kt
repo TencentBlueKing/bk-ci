@@ -3,9 +3,9 @@ package com.tencent.devops.store.pojo.service
 import com.tencent.devops.store.pojo.enums.ServiceTypeEnum
 import io.swagger.annotations.ApiModelProperty
 
-data class OpSettingInfo (
+data class OpSettingInfo(
     @ApiModelProperty("扩展类型")
-    val type : ServiceTypeEnum?,
+    val type: ServiceTypeEnum?,
     @ApiModelProperty("是否公共", required = true)
     val publicFlag: Boolean,
     @ApiModelProperty("是否推荐", required = true)

@@ -30,7 +30,6 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface OpServiceResource {
 
-
     @ApiOperation("获取扩展服务信息")
     @GET
     @Path("/")
