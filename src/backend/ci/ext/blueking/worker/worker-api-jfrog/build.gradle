@@ -26,7 +26,6 @@
 
 dependencies {
     compile project(":core:worker:worker-common")
-    //compile project(":ext:tencent:common:common-archive-jfrog")
     compile project(":core:artifactory:api-artifactory-store")
 }
 
