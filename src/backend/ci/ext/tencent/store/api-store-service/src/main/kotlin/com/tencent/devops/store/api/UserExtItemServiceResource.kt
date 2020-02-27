@@ -27,7 +27,6 @@
 package com.tencent.devops.store.api
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
-import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.vo.ExtItemServiceVO
 import io.swagger.annotations.Api
@@ -48,24 +47,18 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserExtItemServiceResource {
 
-    @ApiOperation("获取扩展点对应的扩展服务信息列表")
-    @Path("/items/{itemId}/list")
+    @ApiOperation("获取扩展点下项目对应的扩展服务信息列表")
+    @Path("/items/projects/{projectCode}/list")
     @GET
     fun getExtItemServiceList(
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("扩展点ID", required = true)
-        @PathParam("itemId")
-        itemId: String,
-        @ApiParam("项目代码", required = false)
-        @QueryParam("projectCode")
-        projectCode: String?,
-        @ApiParam("页码", required = false)
-        @QueryParam("page")
-        page: Int?,
-        @ApiParam("每页数量", required = false)
-        @QueryParam("pageSize")
-        pageSize: Int?
-    ): Result<Page<ExtItemServiceVO>>
+        @ApiParam("项目代码", required = true)
+        @PathParam("projectCode")
+        projectCode: String,
+        @ApiParam("扩展点ID（如果存在多个请用逗号分隔拼接）", required = true)
+        @QueryParam("itemIds")
+        itemIds: String
+    ): Result<List<ExtItemServiceVO>>
 }

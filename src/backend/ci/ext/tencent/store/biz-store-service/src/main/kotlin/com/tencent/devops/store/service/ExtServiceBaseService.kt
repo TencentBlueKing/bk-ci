@@ -124,7 +124,6 @@ abstract class ExtServiceBaseService @Autowired constructor() {
     @Autowired
     lateinit var deptService: StoreVisibleDeptService
 
-
     fun addExtService(
         userId: String,
         extensionInfo: InitExtServiceDTO
@@ -894,7 +893,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
             ExtServiceStatusEnum.BUILDING.status, ExtServiceStatusEnum.COMMITTING.status, ExtServiceStatusEnum.DEPLOY.status -> {
                 storeCommonService.setProcessInfo(processInfo, totalStep, NUM_TWO, DOING)
             }
-            ExtServiceStatusEnum.BUILD_FAIL.status,ExtServiceStatusEnum.DEPLOY_FAIL.status -> {
+            ExtServiceStatusEnum.BUILD_FAIL.status, ExtServiceStatusEnum.DEPLOY_FAIL.status -> {
                 storeCommonService.setProcessInfo(processInfo, totalStep, NUM_TWO, FAIL)
             }
             ExtServiceStatusEnum.TESTING.status -> {
@@ -987,7 +986,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
             val props = itemMap["props"] as String
             var fileServiceItem = dbItemMapIndexCode[itemCode]
             // 可能存在extension.json内配置了但页面没有选中的扩展点
-            if(fileServiceItem == null) {
+            if (fileServiceItem == null) {
                 fileServiceItem = client.get(ServiceItemResource::class).getItemByCode(itemCode).data
                 // extension.json独立存在的扩展点加入遍历列表
                 dbItemMapIndexId[fileServiceItem!!.itemId] = fileServiceItem
@@ -996,8 +995,8 @@ abstract class ExtServiceBaseService @Autowired constructor() {
             fileItemMap[fileItemId] = props
         }
         dbItemMapIndexId.forEach { (key, info) ->
-            if(fileItemMap.containsKey(key)) {
-                saveItemPropMap[key] = fileItemMap[key]?: ""
+            if (fileItemMap.containsKey(key)) {
+                saveItemPropMap[key] = fileItemMap[key] ?: ""
             } else {
                 saveItemPropMap[key] = info.props.toString()
             }
