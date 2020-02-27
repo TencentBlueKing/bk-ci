@@ -89,7 +89,7 @@ class PipelineBuildExtListener @Autowired constructor(
                 synArtifactoryInfo(
                     userId = event.userId,
                     artifactList = artifactList as List<FileInfo>,
-                    projectId = buildId,
+                    projectId = projectId,
                     pipelineId = pipelineId,
                     buildId = buildId,
                     buildNum = result.data!!.buildNum ?: 0
