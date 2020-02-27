@@ -894,14 +894,14 @@ abstract class ExtServiceBaseService @Autowired constructor() {
             ExtServiceStatusEnum.BUILDING.status, ExtServiceStatusEnum.COMMITTING.status, ExtServiceStatusEnum.DEPLOY.status -> {
                 storeCommonService.setProcessInfo(processInfo, totalStep, NUM_TWO, DOING)
             }
-            ExtServiceStatusEnum.BUILD_FAIL.status -> {
+            ExtServiceStatusEnum.BUILD_FAIL.status,ExtServiceStatusEnum.DEPLOY_FAIL.status -> {
                 storeCommonService.setProcessInfo(processInfo, totalStep, NUM_TWO, FAIL)
             }
             ExtServiceStatusEnum.TESTING.status -> {
                 storeCommonService.setProcessInfo(processInfo, totalStep, NUM_THREE, DOING)
             }
             ExtServiceStatusEnum.EDIT.status -> {
-                storeCommonService.setProcessInfo(processInfo, totalStep, NUM_FOUR, FAIL)
+                storeCommonService.setProcessInfo(processInfo, totalStep, NUM_FOUR, DOING)
             }
             ExtServiceStatusEnum.AUDITING.status -> {
                 storeCommonService.setProcessInfo(processInfo, totalStep, NUM_FIVE, DOING)

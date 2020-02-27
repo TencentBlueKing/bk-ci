@@ -34,15 +34,16 @@ enum class ExtServiceStatusEnum(val status: Int) {
     COMMITTING(1), // 提交中
     BUILDING(2), // 构建中
     BUILD_FAIL(3), // 构建失败
-    EDIT(4), // 提交资料
-    DEPLOY(5), // 部署中
+    DEPLOY(4), // 部署中
+    DEPLOY_FAIL(5), //部署失败
     TESTING(6), // 测试中
-    AUDITING(7), // 审核中
-    AUDIT_REJECT(8), // 审核驳回
-    RELEASED(9), // 已发布
-    GROUNDING_SUSPENSION(10), // 上架中止
-    UNDERCARRIAGING(11), // 下架中
-    UNDERCARRIAGED(12); // 已下架
+    EDIT(7), // 提交资料
+    AUDITING(8), // 审核中
+    AUDIT_REJECT(9), // 审核驳回
+    RELEASED(10), // 已发布
+    GROUNDING_SUSPENSION(11), // 上架中止
+    UNDERCARRIAGING(12), // 下架中
+    UNDERCARRIAGED(13); // 已下架
 
     companion object {
 
