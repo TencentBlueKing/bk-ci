@@ -24,7 +24,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package package com.tencent.devops.common.pipeline.enums
+package com.tencent.devops.common.pipeline.enums
 
 enum class PipelineInstanceTypeEnum(val type: String) {
     FREEDOM("FREEDOM"), // 自由模式
@@ -35,9 +35,9 @@ enum class PipelineInstanceTypeEnum(val type: String) {
     companion object {
         fun getTemplateType(type: String): String {
             return when (type) {
-                "FREEDOM" -> TemplateTypeEnum.FREEDOM.name
-                "CONSTRAINT" -> TemplateTypeEnum.CONSTRAINT.name
-                else -> TemplateTypeEnum.FREEDOM.name
+                "FREEDOM" -> PipelineInstanceTypeEnum.FREEDOM.name
+                "CONSTRAINT" -> PipelineInstanceTypeEnum.CONSTRAINT.name
+                else -> PipelineInstanceTypeEnum.FREEDOM.name
             }
         }
     }
