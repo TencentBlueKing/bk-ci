@@ -69,7 +69,7 @@ class ArtifactoryAppService @Autowired constructor(
         val pipelineId = properties[ARCHIVE_PROPS_PIPELINE_ID]!!.first()
         pipelineService.validatePermission(userId, projectId, pipelineId, AuthPermission.DOWNLOAD, "用户($userId)在工程($projectId)下没有流水线${pipelineId}下载构建权限")
 
-        val url = jFrogApiService.externalDownloadUrl(realPath, userId, ttl, directed)
+        val url = StringUtil.chineseUrlEncode(jFrogApiService.externalDownloadUrl(realPath, userId, ttl, directed))
         return Url(url)
     }
 
@@ -92,7 +92,7 @@ class ArtifactoryAppService @Autowired constructor(
         pipelineService.validatePermission(userId, projectId, pipelineId, AuthPermission.DOWNLOAD, "用户($userId)在工程($projectId)下没有流水线${pipelineId}下载构建权限")
 
 //        val url = jFrogApiService.externalDownloadUrl(realPath, userId, ttl, directed)
-        val url = "${HomeHostUtil.outerApiServerHost()}/artifactory/api/app/artifactories/$projectId/$artifactoryType/filePlist?path=$argPath"
+        val url = StringUtil.chineseUrlEncode("${HomeHostUtil.outerApiServerHost()}/artifactory/api/app/artifactories/$projectId/$artifactoryType/filePlist?path=$argPath")
         return Url(url)
     }
 
