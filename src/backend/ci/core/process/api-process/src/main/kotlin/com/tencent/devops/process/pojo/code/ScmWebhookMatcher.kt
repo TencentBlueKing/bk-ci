@@ -88,7 +88,7 @@ interface ScmWebhookMatcher {
     }
 
     fun getTag(ref: String): String {
-        return ref.removePrefix("refs/heads/")
+        return ref.removePrefix("refs/tags/")
     }
 
     fun getMergeRequestId(): Long? = null
