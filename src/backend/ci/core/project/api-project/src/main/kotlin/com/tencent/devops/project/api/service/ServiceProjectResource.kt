@@ -51,7 +51,7 @@ interface ServiceProjectResource {
 
     @GET
     @Path("/")
-    @ApiOperation("查询所有项目")
+    @ApiOperation("查询当前用户有权限的项目列表")
     fun list(
         @ApiParam("用户ID", required = false)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
