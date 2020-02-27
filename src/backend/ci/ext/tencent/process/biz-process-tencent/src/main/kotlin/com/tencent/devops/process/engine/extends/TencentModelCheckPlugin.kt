@@ -24,29 +24,23 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.config
+package com.tencent.devops.process.engine.extends
 
-import com.tencent.devops.common.archive.shorturl.ShortUrlApi
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.service.config.CommonConfig
-import com.tencent.devops.process.engine.bean.TencentPipelineUrlBeanImpl
-import com.tencent.devops.process.engine.extends.TencentModelCheckPlugin
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
-import org.springframework.context.annotation.Primary
+import com.tencent.devops.common.pipeline.container.Stage
+import com.tencent.devops.common.pipeline.container.TriggerContainer
+import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.engine.extend.DefaultModelCheckPlugin
 
-@Configuration
-class TencentAtomConfig {
+class TencentModelCheckPlugin constructor(
+    override val client: Client
+) : DefaultModelCheckPlugin(client) {
 
-    @Bean
-    @Primary
-    fun pipelineUrlBean(
-        @Autowired commonConfig: CommonConfig,
-        @Autowired shortUrlApi: ShortUrlApi
-    ) = TencentPipelineUrlBeanImpl(commonConfig = commonConfig, shortUrlApi = shortUrlApi)
-
-    @Bean
-    @Primary
-    fun modelContainerAgentCheckPlugin(@Autowired client: Client) = TencentModelCheckPlugin(client)
+    override fun checkTriggerContainer(stage: Stage) {
+        (stage.containers.getOrNull(0) ?: throw ErrorCodeException(
+            defaultMessage = "流水线Stage为空",
+            errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NEED_JOB
+        )) as TriggerContainer
+    }
 }
