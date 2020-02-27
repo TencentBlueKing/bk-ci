@@ -47,7 +47,7 @@ import com.tencent.devops.process.plugin.load.ContainerBizRegistrar
 import com.tencent.devops.process.plugin.load.ElementBizRegistrar
 import org.slf4j.LoggerFactory
 
-open class DefaultModelCheckPlugin constructor(val client: Client) : ModelCheckPlugin {
+open class DefaultModelCheckPlugin constructor(open val client: Client) : ModelCheckPlugin {
 
     override fun checkModelIntegrity(model: Model) {
 
@@ -163,7 +163,7 @@ open class DefaultModelCheckPlugin constructor(val client: Client) : ModelCheckP
         if (jobContainer is VMBuildContainer && jobContainer.baseOS == VMBaseOS.WINDOWS) {
             if (isThirdPartyAgentEmpty(jobContainer)) {
                 throw ErrorCodeException(
-                    errorCode = ERROR_NO_PUBLIC_WINDOWS_BUILDER.toString(),
+                    errorCode = ERROR_NO_PUBLIC_WINDOWS_BUILDER,
                     defaultMessage = "请设置Windows构建机"
                 )
             }
@@ -182,7 +182,7 @@ open class DefaultModelCheckPlugin constructor(val client: Client) : ModelCheckP
                 jobControlOption.customVariables!!.isEmpty()
             ) {
                 throw ErrorCodeException(
-                    errorCode = ERROR_NO_PARAM_IN_JOB_CONDITION.toString(),
+                    errorCode = ERROR_NO_PARAM_IN_JOB_CONDITION,
                     defaultMessage = "请设置Job运行条件时的自定义变量"
                 )
             }
