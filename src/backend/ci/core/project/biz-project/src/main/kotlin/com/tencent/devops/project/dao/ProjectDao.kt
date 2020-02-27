@@ -491,8 +491,7 @@ class ProjectDao {
         if (!StringUtils.isEmpty(projectName))
             conditions.add(PROJECT_NAME.like("%${URLDecoder.decode(projectName, "UTF-8")}%"))
         if (!StringUtils.isEmpty(englishName))
-            conditions.add(ENGLISH_NAME.like("%${URLDecoder.decode(englishName, "UTF-8")}%")
-        )
+            conditions.add(ENGLISH_NAME.like("%${URLDecoder.decode(englishName, "UTF-8")}%"))
         if (!StringUtils.isEmpty(projectType)) conditions.add(PROJECT_TYPE.eq(projectType))
         if (!StringUtils.isEmpty(isSecrecy)) conditions.add(IS_SECRECY.eq(isSecrecy))
         if (!StringUtils.isEmpty(creator)) conditions.add(CREATOR.eq(creator))
@@ -632,18 +631,11 @@ class ProjectDao {
         }
     }
 
-    fun listByEnglishName(
-        dslContext: DSLContext,
-        englishNameList: List<String?>?
-    ): Result<TProjectRecord> {
+    fun listByEnglishName(dslContext: DSLContext, englishNameList: List<String>): Result<TProjectRecord> {
         with(TProject.T_PROJECT) {
-            val condition = dslContext.selectFrom(this)
-                .where(APPROVAL_STATUS.eq(2))
-
-            if (englishNameList != null && englishNameList.isNotEmpty()) {
-                condition.and(ENGLISH_NAME.`in`(englishNameList))
-            }
-            return condition.and(IS_OFFLINED.eq(false)).fetch()
+            return dslContext.selectFrom(this)
+                .where(APPROVAL_STATUS.eq(2)).and(ENGLISH_NAME.`in`(englishNameList))
+                .and(IS_OFFLINED.eq(false)).fetch()
         }
     }
 
