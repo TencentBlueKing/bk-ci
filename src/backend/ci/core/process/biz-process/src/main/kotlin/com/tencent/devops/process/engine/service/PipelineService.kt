@@ -44,6 +44,7 @@ import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.pipeline.enums.PipelineInstanceTypeEnum
 import com.tencent.devops.common.pipeline.extend.ModelCheckPlugin
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildNo
@@ -171,7 +172,7 @@ class PipelineService @Autowired constructor(
             PipelineUtils.checkPipelineParams(triggerContainer.params)
 
             // 检查用户是否有插件的使用权限
-            if (model.templateId != null) {
+            if (model.srcTemplateId != null) {
                 val srcTemplateId = model.srcTemplateId as String
                 val validateRet = client.get(ServiceStoreResource::class)
                     .validateUserTemplateAtomVisibleDept(userId, srcTemplateId, projectId)
@@ -221,7 +222,7 @@ class PipelineService @Autowired constructor(
                 }
                 pipelineGroupService.addPipelineLabel(userId = userId, pipelineId = pipelineId, labelIds = model.labels)
                 pipelineUserService.create(pipelineId, userId)
-                createRelationBtwTemplate(userId, model.templateId, pipelineId)
+                createRelationBtwTemplate(userId, model.templateId!!, pipelineId)
                 success = true
                 return pipelineId
             } catch (duplicateKeyException: DuplicateKeyException) {
@@ -260,7 +261,7 @@ class PipelineService @Autowired constructor(
             templatePipelineDao.create(
                 dslContext = dslContext,
                 pipelineId = pipelineId,
-                instanceType = PipelineInstanceTypeEnum.FREEDOM.value,
+                instanceType = PipelineInstanceTypeEnum.FREEDOM.type,
                 rootTemplateId = templateId,
                 templateVersion = template.version,
                 versionName = template.versionName,
@@ -270,11 +271,11 @@ class PipelineService @Autowired constructor(
                 param = null
             )
         } else {
-            val rootTemplate = templateDao.getLatestTemplate(dslContext, temptemplate.srcTemplateIdlateId)
+            val rootTemplate = templateDao.getLatestTemplate(dslContext, template.srcTemplateId)
             templatePipelineDao.create(
                 dslContext = dslContext,
                 pipelineId = pipelineId,
-                instanceType = PipelineInstanceTypeEnum.FREEDOM.value,
+                instanceType = PipelineInstanceTypeEnum.FREEDOM.type,
                 rootTemplateId = rootTemplate.id,
                 templateVersion = rootTemplate.version,
                 versionName = rootTemplate.versionName,
@@ -284,6 +285,7 @@ class PipelineService @Autowired constructor(
                 param = null
             )
         }
+        return true
     }
 
     /**
@@ -752,7 +754,8 @@ class PipelineService @Autowired constructor(
         }
 
         if (templateIdList != null) {
-            val templatePipelineIds = templatePipelineDao.listPipeline(dslContext, templateIdList).map { it.pipelineId }
+            val templatePipelineIds = 
+                templatePipelineDao.listPipeline(dslContext, PipelineInstanceTypeEnum.CONSTRAINT.type, templateIdList).map { it.pipelineId }
             resultPipelineIds.addAll(templatePipelineIds)
         }
 
