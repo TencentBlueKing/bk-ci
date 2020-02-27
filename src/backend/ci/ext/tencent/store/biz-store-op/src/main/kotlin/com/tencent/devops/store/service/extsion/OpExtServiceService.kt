@@ -261,6 +261,17 @@ class OpExtServiceService @Autowired constructor(
                 latestFlag,
                 pubTime
             )
+            extServiceFeatureDao.updateExtServiceFeatureBaseInfo(
+                dslContext = dslContext,
+                serviceCode = serviceCode,
+                userId = userId,
+                extServiceFeatureUpdateInfo = ExtServiceFeatureUpdateInfo(
+                    weight = approveReq.weight,
+                    recommentFlag = approveReq.recommendFlag,
+                    publicFlag = approveReq.publicFlag,
+                    certificationFlag = approveReq.certificationFlag
+                )
+            )
         }
 //        // 通过websocket推送状态变更消息,推送所有有该插件权限的用户
 //        storeWebsocketService.sendWebsocketMessageByAtomCodeAndAtomId(serviceCode, atomId)

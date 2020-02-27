@@ -14,12 +14,12 @@ data class ServiceApproveReq(
     val message: String,
     @ApiModelProperty("权重（数值越大代表权重越高）")
     val weight: Int?,
-    @ApiModelProperty("插件类型，SELF_DEVELOPED：自研 THIRD_PARTY：第三方开发", required = true)
+    @ApiModelProperty("扩展类型，SELF_DEVELOPED：自研 THIRD_PARTY：第三方开发", required = true)
     val serviceType: ServiceTypeEnum,
-    @ApiModelProperty("是否为默认插件（默认插件默认所有项目可见）true：默认插件 false：普通插件", required = true)
-    val defaultFlag: Boolean,
-    @ApiModelProperty("服务范围", required = true)
-    val serviceScope: List<String>,
-    @ApiModelProperty("无构建环境插件是否可以在有构建环境运行标识， TRUE：可以 FALSE：不可以", required = false)
-    val buildLessRunFlag: Boolean? = null
+    @ApiModelProperty("是否官方认证，true：官方推荐 false：官方不推荐", required = true)
+    val certificationFlag: Boolean,
+    @ApiModelProperty("是否公共， TRUE：是 FALSE：否", required = false)
+    val publicFlag: Boolean? = null,
+    @ApiModelProperty("是否推荐， TRUE：可以 FALSE：不可以", required = false)
+    val recommendFlag: Boolean? = null
 )

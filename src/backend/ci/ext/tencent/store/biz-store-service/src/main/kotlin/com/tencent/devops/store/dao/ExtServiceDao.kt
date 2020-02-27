@@ -276,7 +276,6 @@ class ExtServiceDao {
             dslContext.update(this)
                 .set(SERVICE_STATUS, serviceStatus)
                 .set(SERVICE_STATUS_MSG, approveReq.message)
-                .set(DELETE_FLAG, approveReq.defaultFlag)
                 .set(LATEST_FLAG, latestFlag)
                 .set(PUB_TIME, pubTime)
                 .set(MODIFIER, userId)
