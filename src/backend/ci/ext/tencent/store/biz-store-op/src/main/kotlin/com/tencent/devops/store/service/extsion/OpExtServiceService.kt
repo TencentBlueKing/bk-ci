@@ -93,10 +93,10 @@ class OpExtServiceService @Autowired constructor(
         return Result(ExtServiceInfoResp(serviceRecords.size, page, pageSize, extensionServiceInfoList))
     }
 
-    fun editExtInfo(userId: String, serviceId: String, serviceCode: String, infoResp: OpEditInfoDTO) : Result<Boolean> {
+    fun editExtInfo(userId: String, serviceId: String, serviceCode: String, infoResp: OpEditInfoDTO): Result<Boolean> {
         val baseInfo = infoResp.baseInfo
         val settingInfo = infoResp.settingInfo
-        if(baseInfo != null) {
+        if (baseInfo != null) {
             extServiceDao.updateExtServiceBaseInfo(
                 dslContext = dslContext,
                 userId = userId,
@@ -112,14 +112,14 @@ class OpExtServiceService @Autowired constructor(
             )
             val itemIds = baseInfo.itemIds
             val lables = baseInfo.lables
-            if(itemIds != null) {
+            if (itemIds != null) {
                 val existenceItems = extServiceItemDao.getItemByServiceId(dslContext, serviceId)
                 val existenceItemIds = mutableListOf<String>()
                 existenceItems?.forEach {
                     existenceItemIds.add(it.itemId)
                 }
                 itemIds.forEach { itemId ->
-                    if(!existenceItemIds.contains(itemId)){
+                    if (!existenceItemIds.contains(itemId)) {
                         extServiceItemDao.create(
                             userId = userId,
                             dslContext = dslContext,
@@ -136,7 +136,7 @@ class OpExtServiceService @Autowired constructor(
         }
 
         infoResp.mediaInfo?.forEach {
-            if(it.id != null) {
+            if (it.id != null) {
                 storeMediaInfoDao.updateById(
                     dslContext = dslContext,
                     userId = userId,
@@ -148,8 +148,7 @@ class OpExtServiceService @Autowired constructor(
                         mediaUrl = it.mediaUrl
                     )
                 )
-            }
-            else {
+            } else {
                 storeMediaInfoDao.add(
                     dslContext = dslContext,
                     userId = userId,
@@ -165,7 +164,7 @@ class OpExtServiceService @Autowired constructor(
             }
         }
 
-        if(settingInfo != null) {
+        if (settingInfo != null) {
             extServiceFeatureDao.updateExtServiceFeatureBaseInfo(
                 dslContext = dslContext,
                 userId = userId,
@@ -259,7 +258,7 @@ class OpExtServiceService @Autowired constructor(
             )
         }
         // 如果已经被安装到其他项目下使用，不能删除
-        val installedCount = storeProjectRelDao.countInstalledProject(dslContext, serviceCode , type)
+        val installedCount = storeProjectRelDao.countInstalledProject(dslContext, serviceCode, type)
         if (installedCount > 0) {
             return MessageCodeUtil.generateResponseDataObject(
                 // TODO: 此处应在core添加扩展服务相关异常信息
@@ -275,7 +274,7 @@ class OpExtServiceService @Autowired constructor(
         return Result(true)
     }
 
-    companion object{
+    companion object {
         val logger = LoggerFactory.getLogger(this::class.java)
     }
 }

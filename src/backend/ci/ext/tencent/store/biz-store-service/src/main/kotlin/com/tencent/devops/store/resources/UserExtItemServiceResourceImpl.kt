@@ -24,48 +24,28 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.api
+package com.tencent.devops.store.resources
 
-import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.store.api.UserExtItemServiceResource
 import com.tencent.devops.store.pojo.vo.ExtItemServiceVO
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
-import javax.ws.rs.Consumes
-import javax.ws.rs.GET
-import javax.ws.rs.HeaderParam
-import javax.ws.rs.Path
-import javax.ws.rs.PathParam
-import javax.ws.rs.Produces
-import javax.ws.rs.QueryParam
-import javax.ws.rs.core.MediaType
+import com.tencent.devops.store.service.ExtItemServiceService
+import org.springframework.beans.factory.annotation.Autowired
 
-@Api(tags = ["USER_EXTENSION_ITEM_SERVICE"], description = "服务扩展-扩展点对应的扩展服务")
-@Path("/user/ext/services")
-@Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
-interface UserExtItemServiceResource {
+@RestResource
+class UserExtItemServiceResourceImpl @Autowired constructor(
+    val extItemServiceService: ExtItemServiceService
+) : UserExtItemServiceResource {
 
-    @ApiOperation("获取扩展点对应的扩展服务信息列表")
-    @Path("/items/{itemId}/list")
-    @GET
-    fun getExtItemServiceList(
-        @ApiParam("userId", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
+    override fun getExtItemServiceList(
         userId: String,
-        @ApiParam("扩展点ID", required = true)
-        @PathParam("itemId")
         itemId: String,
-        @ApiParam("项目代码", required = false)
-        @QueryParam("projectCode")
         projectCode: String?,
-        @ApiParam("页码", required = false)
-        @QueryParam("page")
         page: Int?,
-        @ApiParam("每页数量", required = false)
-        @QueryParam("pageSize")
         pageSize: Int?
-    ): Result<Page<ExtItemServiceVO>>
+    ): Result<Page<ExtItemServiceVO>> {
+        return extItemServiceService.getExtItemServiceList(userId, itemId, projectCode, page, pageSize)
+    }
 }
