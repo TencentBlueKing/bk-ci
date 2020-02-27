@@ -38,7 +38,7 @@ object PipelineUtils {
 
     private val logger = LoggerFactory.getLogger(PipelineUtils::class.java)
 
-    private const val ENGLISH_NAME_PATTERN = "[A-Za-z_0-9]+"
+    private const val ENGLISH_NAME_PATTERN = "[A-Za-z_][A-Za-z_0-9]+"
 
     fun checkPipelineName(name: String) {
         if (name.toCharArray().size > 64) {
