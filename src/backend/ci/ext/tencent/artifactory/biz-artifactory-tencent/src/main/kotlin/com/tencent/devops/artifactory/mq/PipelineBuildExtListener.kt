@@ -91,7 +91,7 @@ class PipelineBuildExtListener @Autowired constructor(
                     artifactList = artifactList as List<FileInfo>,
                     projectId = buildId,
                     pipelineId = pipelineId,
-                    buildId = projectId,
+                    buildId = buildId,
                     buildNum = result.data!!.buildNum ?: 0
                 )
             }
