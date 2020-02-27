@@ -31,6 +31,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.NormalContainer
+import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.JobRunCondition
@@ -46,7 +47,7 @@ import com.tencent.devops.process.plugin.load.ContainerBizRegistrar
 import com.tencent.devops.process.plugin.load.ElementBizRegistrar
 import org.slf4j.LoggerFactory
 
-class DefaultModelCheckPlugin constructor(val client: Client) : ModelCheckPlugin {
+open class DefaultModelCheckPlugin constructor(val client: Client) : ModelCheckPlugin {
 
     override fun checkModelIntegrity(model: Model) {
 
@@ -66,13 +67,8 @@ class DefaultModelCheckPlugin constructor(val client: Client) : ModelCheckPlugin
             )
         }
 
-        val triggerContainer = (stage.containers.getOrNull(0) ?: throw ErrorCodeException(
-            defaultMessage = "流水线Stage为空",
-            errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NEED_JOB
-        )) as TriggerContainer
-
-        // 检查参数命名
-        PipelineUtils.checkPipelineParams(triggerContainer.params)
+        // 检查触发容器
+        checkTriggerContainer(stage)
 
         val elementCnt = mutableMapOf<String, Int>()
         val containerCnt = mutableMapOf<String, Int>()
@@ -94,6 +90,14 @@ class DefaultModelCheckPlugin constructor(val client: Client) : ModelCheckPlugin
                 }
             }
         }
+    }
+
+    open fun checkTriggerContainer(stage: Stage) {
+        val triggerContainer = (stage.containers.getOrNull(0) ?: throw ErrorCodeException(
+            defaultMessage = "流水线Stage为空",
+            errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NEED_JOB
+        )) as TriggerContainer
+        PipelineUtils.checkPipelineParams(triggerContainer.params)
     }
 
     companion object {
