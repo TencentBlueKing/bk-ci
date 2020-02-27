@@ -52,6 +52,7 @@ import com.tencent.devops.process.dao.PipelineSettingDao
 import com.tencent.devops.process.engine.compatibility.BuildPropertyCompatibilityTools
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
+import com.tencent.devops.process.engine.dao.template.TemplateDao
 import com.tencent.devops.process.engine.dao.template.TemplatePipelineDao
 import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.engine.utils.PipelineUtils
@@ -102,6 +103,7 @@ class PipelineService @Autowired constructor(
     private val pipelineBean: PipelineBean,
     private val processJmxApi: ProcessJmxApi,
     private val dslContext: DSLContext,
+    private val templateDao: TemplateDao,
     private val templatePipelineDao: TemplatePipelineDao,
     private val pipelineInfoDao: PipelineInfoDao,
     private val pipelineSettingDao: PipelineSettingDao,
@@ -169,7 +171,7 @@ class PipelineService @Autowired constructor(
             PipelineUtils.checkPipelineParams(triggerContainer.params)
 
             // 检查用户是否有插件的使用权限
-            if (model.srcTemplateId != null) {
+            if (model.templateId != null) {
                 val srcTemplateId = model.srcTemplateId as String
                 val validateRet = client.get(ServiceStoreResource::class)
                     .validateUserTemplateAtomVisibleDept(userId, srcTemplateId, projectId)
@@ -219,6 +221,7 @@ class PipelineService @Autowired constructor(
                 }
                 pipelineGroupService.addPipelineLabel(userId = userId, pipelineId = pipelineId, labelIds = model.labels)
                 pipelineUserService.create(pipelineId, userId)
+                createRelationBtwTemplate(userId, model.templateId, pipelineId)
                 success = true
                 return pipelineId
             } catch (duplicateKeyException: DuplicateKeyException) {
@@ -241,6 +244,45 @@ class PipelineService @Autowired constructor(
         } finally {
             pipelineBean.create(success)
             processJmxApi.execute(ProcessJmxApi.NEW_PIPELINE_CREATE, System.currentTimeMillis() - apiStartEpoch)
+        }
+    }
+
+    /**
+     * 创建模板和流水线关联关系
+     */
+    fun createRelationBtwTemplate(
+        userId: String,
+        templateId: String,
+        pipelineId: String
+    ): Boolean {
+        val template = templateDao.getLatestTemplate(dslContext, templateId)
+        if (template.srcTemplateId.isNullOrEmpty()) {
+            templatePipelineDao.create(
+                dslContext = dslContext,
+                pipelineId = pipelineId,
+                instanceType = PipelineInstanceTypeEnum.FREEDOM.value,
+                rootTemplateId = templateId,
+                templateVersion = template.version,
+                versionName = template.versionName,
+                templateId = templateId,
+                userId = userId,
+                buildNo = null,
+                param = null
+            )
+        } else {
+            val rootTemplate = templateDao.getLatestTemplate(dslContext, temptemplate.srcTemplateIdlateId)
+            templatePipelineDao.create(
+                dslContext = dslContext,
+                pipelineId = pipelineId,
+                instanceType = PipelineInstanceTypeEnum.FREEDOM.value,
+                rootTemplateId = rootTemplate.id,
+                templateVersion = rootTemplate.version,
+                versionName = rootTemplate.versionName,
+                templateId = templateId,
+                userId = userId,
+                buildNo = null,
+                param = null
+            )
         }
     }
 

@@ -50,6 +50,8 @@ class TemplatePipelineDao @Autowired constructor(private val objectMapper: Objec
     fun create(
         dslContext: DSLContext,
         pipelineId: String,
+        instanceType: String,
+        rootTemplateId: String,
         templateVersion: Long,
         versionName: String,
         templateId: String,
@@ -62,6 +64,8 @@ class TemplatePipelineDao @Autowired constructor(private val objectMapper: Objec
             dslContext.insertInto(
                 this,
                 PIPELINE_ID,
+                INSTANCE_TYPE,
+                ROOT_TEMPLATE_ID,
                 VERSION,
                 VERSION_NAME,
                 TEMPLATE_ID,
@@ -74,6 +78,8 @@ class TemplatePipelineDao @Autowired constructor(private val objectMapper: Objec
             )
                 .values(
                     pipelineId,
+                    instanceType,
+                    rootTemplateId,
                     templateVersion,
                     versionName,
                     templateId,
@@ -109,11 +115,13 @@ class TemplatePipelineDao @Autowired constructor(private val objectMapper: Objec
 
     fun listPipeline(
         dslContext: DSLContext,
+        instanceType: String,
         templateIds: Collection<String>
     ): Result<TTemplatePipelineRecord> {
         with(TTemplatePipeline.T_TEMPLATE_PIPELINE) {
             return dslContext.selectFrom(this)
                 .where(TEMPLATE_ID.`in`(templateIds))
+                .and(INSTANCE_TYPE.eq(instanceType))
                 .fetch()
         }
     }
@@ -122,6 +130,7 @@ class TemplatePipelineDao @Autowired constructor(private val objectMapper: Objec
         dslContext: DSLContext,
         projectId: String,
         templateId: String,
+        instanceType: String,
         page: Int? = null,
         pageSize: Int? = null,
         searchKey: String? = null
@@ -141,6 +150,7 @@ class TemplatePipelineDao @Autowired constructor(private val objectMapper: Objec
                 val baseStep = dslContext.selectFrom(this)
                     .where(TEMPLATE_ID.eq(templateId))
                     .and(PIPELINE_ID.`in`(nameLikedPipelineIds))
+                    .and(INSTANCE_TYPE.eq(instanceType))
                 val allCount = baseStep.count()
                 val records = if (null != page && null != pageSize) {
                     baseStep.limit((page - 1) * pageSize, pageSize).fetch()
@@ -154,6 +164,7 @@ class TemplatePipelineDao @Autowired constructor(private val objectMapper: Objec
         with(TTemplatePipeline.T_TEMPLATE_PIPELINE) {
             val baseStep = dslContext.selectFrom(this)
                 .where(TEMPLATE_ID.eq(templateId))
+                .and(INSTANCE_TYPE.eq(instanceType))
             val allCount = baseStep.count()
             val records = if (null != page && null != pageSize) {
                 baseStep.limit((page - 1) * pageSize, pageSize).fetch()
