@@ -32,6 +32,7 @@ import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.artifactory.service.AppService
 import com.tencent.devops.artifactory.service.PipelineService
 import com.tencent.devops.artifactory.util.JFrogUtil
+import com.tencent.devops.artifactory.util.StringUtil
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.archive.api.JFrogPropertiesApi
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_PIPELINE_ID
@@ -109,6 +110,7 @@ class ArtifactoryAppService @Autowired constructor(
         }
 
         val ipaExternalDownloadUrl = getExternalDownloadUrlDirected(userName, projectId, artifactoryType, argPath, ttl)
+        val ipaExternalDownloadUrlEncode = StringUtil.chineseUrlEncode(ipaExternalDownloadUrl.url.replace(" ", ""))
         val fileProperties = artifactoryService.getProperties(projectId, artifactoryType, argPath)
         var bundleIdentifier = ""
         var appTitle = ""
@@ -134,7 +136,7 @@ class ArtifactoryAppService @Autowired constructor(
             "                    <key>kind</key>\n" +
             "                    <string>software-package</string>\n" +
             "                    <key>url</key>\n" +
-            "                    <string>${ipaExternalDownloadUrl.url.replace(" ","")}</string>\n" +
+            "                    <string>$ipaExternalDownloadUrlEncode</string>\n" +
             "                </dict>\n" +
             "            </array>\n" +
             "            <key>metadata</key>\n" +
