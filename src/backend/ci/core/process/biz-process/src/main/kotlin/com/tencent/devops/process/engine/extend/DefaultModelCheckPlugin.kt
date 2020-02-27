@@ -41,6 +41,7 @@ import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_NO_PARAM_IN_JOB_CONDITION
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_NO_PUBLIC_WINDOWS_BUILDER
+import com.tencent.devops.process.engine.utils.PipelineUtils
 import com.tencent.devops.process.plugin.load.ContainerBizRegistrar
 import com.tencent.devops.process.plugin.load.ElementBizRegistrar
 import org.slf4j.LoggerFactory
@@ -48,6 +49,9 @@ import org.slf4j.LoggerFactory
 class DefaultModelCheckPlugin constructor(val client: Client) : ModelCheckPlugin {
 
     override fun checkModelIntegrity(model: Model) {
+
+        // 检查流水线名称
+        PipelineUtils.checkPipelineName(model.name)
 
         val stage = model.stages.getOrNull(0)
             ?: throw ErrorCodeException(
@@ -62,10 +66,13 @@ class DefaultModelCheckPlugin constructor(val client: Client) : ModelCheckPlugin
             )
         }
 
-        (stage.containers.getOrNull(0) ?: throw ErrorCodeException(
+        val triggerContainer = (stage.containers.getOrNull(0) ?: throw ErrorCodeException(
             defaultMessage = "流水线Stage为空",
             errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NEED_JOB
         )) as TriggerContainer
+
+        // 检查参数命名
+        PipelineUtils.checkPipelineParams(triggerContainer.params)
 
         val elementCnt = mutableMapOf<String, Int>()
         val containerCnt = mutableMapOf<String, Int>()
