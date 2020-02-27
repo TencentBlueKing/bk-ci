@@ -3,6 +3,7 @@ package com.tencent.devops.project.resources
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.project.api.op.OPItemResource
+import com.tencent.devops.project.api.pojo.ExtItemDTO
 import com.tencent.devops.project.api.pojo.ItemInfoResponse
 import com.tencent.devops.project.api.pojo.ServiceItem
 import com.tencent.devops.project.service.ServiceItemService
@@ -18,6 +19,10 @@ class OPItemResourceImpl @Autowired constructor(
 
     override fun list(itemName: String?, pid: String?): Result<List<ServiceItem>> {
         return itemService.queryItem(itemName, pid)
+    }
+
+    override fun getItemList(userId: String): Result<List<ExtItemDTO>?> {
+        return Result(itemService.getItemList())
     }
 
     override fun create(userId: String, createInfo: ItemInfoResponse): Result<Boolean> {

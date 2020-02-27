@@ -18,12 +18,12 @@ class ExtServiceLableService @Autowired constructor(
 
     fun getLabelsByServiceId(serviceId: String): Result<List<Label>?> {
         logger.info("the serviceId is :$serviceId")
-        val atomLabelList = mutableListOf<Label>()
-        val atomLabelRecords = lableRelDao.getLabelsByServiceId(dslContext, serviceId) // 查询插件标签信息
-        atomLabelRecords?.forEach {
-            labelService.addLabelToLabelList(it, atomLabelList)
+        val serviceLabelList = mutableListOf<Label>()
+        val serviceLabelRecords = lableRelDao.getLabelsByServiceId(dslContext, serviceId) // 查询插件标签信息
+        serviceLabelRecords?.forEach {
+            labelService.addLabelToLabelList(it, serviceLabelList)
         }
-        return Result(atomLabelList)
+        return Result(serviceLabelList)
     }
 
     companion object {

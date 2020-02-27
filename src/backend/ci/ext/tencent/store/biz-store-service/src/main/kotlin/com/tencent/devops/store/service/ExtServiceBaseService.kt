@@ -19,12 +19,15 @@ import com.tencent.devops.common.api.constant.TEST
 import com.tencent.devops.common.api.constant.UNDO
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.project.api.pojo.ServiceItem
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.api.service.service.ServiceItemResource
+import com.tencent.devops.repository.api.ServiceGitRepositoryResource
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
 import com.tencent.devops.store.constant.StoreMessageCode
@@ -120,6 +123,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
     lateinit var mediaService: StoreMediaService
     @Autowired
     lateinit var deptService: StoreVisibleDeptService
+
 
     fun addExtService(
         userId: String,
@@ -218,7 +222,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
                 )
             }
             // 添加扩展点使用记录
-            client.get(ServiceItemResource:: class).addServiceNum(extensionInfo.extensionItemList)
+            client.get(ServiceItemResource::class).addServiceNum(extensionInfo.extensionItemList)
         }
         return Result(true)
     }
@@ -362,18 +366,20 @@ abstract class ExtServiceBaseService @Autowired constructor() {
             }
 
             // 添加扩展点
+            val featureInfoRecord = extFeatureDao.getLatestServiceByCode(dslContext, serviceCode)
             val itemIdList = submitDTO.extensionItemList
+            val itemProps = getServiceProps(serviceCode, featureInfoRecord!!.repositoryHashId, EXTENSION_JSON_NAME, itemIdList)
             if (null != itemIdList) {
                 extServiceItemRelDao.deleteByServiceId(context, serviceId)
                 extServiceItemRelDao.batchAdd(
                     dslContext = dslContext,
                     userId = userId,
                     serviceId = serviceId,
-                    itemIdList = itemIdList
+                    propsMap = itemProps!!
                 )
             }
             // 添加扩展点使用记录
-            client.get(ServiceItemResource:: class).addServiceNum(itemIdList)
+            client.get(ServiceItemResource::class).addServiceNum(itemIdList)
 
             // TODO: 此处等carl完善
             // asyncHandleUpdateService(context, serviceId, userId)
@@ -692,7 +698,8 @@ abstract class ExtServiceBaseService @Autowired constructor() {
             val repositoryHashId = featureInfoRecord!!.repositoryHashId
             val flag =
                 storeUserService.isCanInstallStoreComponent(defaultFlag, userId, serviceCode, StoreTypeEnum.SERVICE)
-            val userCommentInfo = storeCommentService.getStoreUserCommentInfo(userId, serviceCode, StoreTypeEnum.SERVICE)
+            val userCommentInfo =
+                storeCommentService.getStoreUserCommentInfo(userId, serviceCode, StoreTypeEnum.SERVICE)
             val serviceEnv = extServiceEnvDao.getMarketServiceEnvInfoByServiceId(dslContext, serviceId)
             logger.info("getServiceVersion serviceEnv: $serviceEnv")
             val itemList = getItemByItems(serviceId)
@@ -887,14 +894,14 @@ abstract class ExtServiceBaseService @Autowired constructor() {
             ExtServiceStatusEnum.BUILDING.status, ExtServiceStatusEnum.COMMITTING.status, ExtServiceStatusEnum.DEPLOY.status -> {
                 storeCommonService.setProcessInfo(processInfo, totalStep, NUM_TWO, DOING)
             }
-            ExtServiceStatusEnum.BUILD_FAIL.status -> {
+            ExtServiceStatusEnum.BUILD_FAIL.status,ExtServiceStatusEnum.DEPLOY_FAIL.status -> {
                 storeCommonService.setProcessInfo(processInfo, totalStep, NUM_TWO, FAIL)
             }
             ExtServiceStatusEnum.TESTING.status -> {
                 storeCommonService.setProcessInfo(processInfo, totalStep, NUM_THREE, DOING)
             }
             ExtServiceStatusEnum.EDIT.status -> {
-                storeCommonService.setProcessInfo(processInfo, totalStep, NUM_FOUR, FAIL)
+                storeCommonService.setProcessInfo(processInfo, totalStep, NUM_FOUR, DOING)
             }
             ExtServiceStatusEnum.AUDITING.status -> {
                 storeCommonService.setProcessInfo(processInfo, totalStep, NUM_FIVE, DOING)
@@ -938,6 +945,64 @@ abstract class ExtServiceBaseService @Autowired constructor() {
             }
         }
         return false
+    }
+
+    private fun getServiceProps(
+        serviceCode: String,
+        repositoryHashId: String,
+        fileName: String,
+        itemIds: List<String>
+    ): Map<String, String>? {
+        val saveItemPropMap = mutableMapOf<String, String>()
+        // 从工蜂拉取文件
+        val fileStr = client.get(ServiceGitRepositoryResource::class).getFileContent(
+            repositoryHashId,
+            fileName, null, null, null
+        ).data
+        logger.info("getFileStr fileStr is:$fileStr")
+        if (fileStr.isNullOrEmpty()) {
+            return mutableMapOf()
+        }
+        val taskDataMap = JsonUtil.toMap(fileStr!!)
+        val propsMap = mutableMapOf<String, Any?>()
+        val fileServiceCode = taskDataMap["serviceCode"] as String
+        if (fileServiceCode != serviceCode) {
+            // TODO: 此处需要抛异常，扩展编码不一致
+        }
+
+        // 若 extension.json存在则用 extension.json内的配置，否则使用扩展点默认props
+        val inputItemRecords = client.get(ServiceItemResource::class).getItemInfoByIds(itemIds).data
+        val fileItemList = taskDataMap["itemList"] as List<String>
+        val dbItemMapIndexId = mutableMapOf<String, ServiceItem>()
+        val dbItemMapIndexCode = mutableMapOf<String, ServiceItem>()
+        val fileItemMap = mutableMapOf<String, String>()
+        inputItemRecords?.forEach {
+            dbItemMapIndexId[it.itemId] = it
+            dbItemMapIndexCode[it.itemCode] = it
+        }
+        // 解析extension.json内对应的itemId
+        fileItemList?.forEach {
+            val itemMap = JsonUtil.toMap(it!!)
+            val itemCode = itemMap["itemCode"] as String
+            val props = itemMap["props"] as String
+            var fileServiceItem = dbItemMapIndexCode[itemCode]
+            // 可能存在extension.json内配置了但页面没有选中的扩展点
+            if(fileServiceItem == null) {
+                fileServiceItem = client.get(ServiceItemResource::class).getItemByCode(itemCode).data
+                // extension.json独立存在的扩展点加入遍历列表
+                dbItemMapIndexId[fileServiceItem!!.itemId] = fileServiceItem
+            }
+            val fileItemId = fileServiceItem!!.itemId
+            fileItemMap[fileItemId] = props
+        }
+        dbItemMapIndexId.forEach { (key, info) ->
+            if(fileItemMap.containsKey(key)) {
+                saveItemPropMap[key] = fileItemMap[key]?: ""
+            } else {
+                saveItemPropMap[key] = info.props.toString()
+            }
+        }
+        return saveItemPropMap
     }
 
     /**
@@ -1035,5 +1100,6 @@ abstract class ExtServiceBaseService @Autowired constructor() {
 
     companion object {
         val logger = LoggerFactory.getLogger(ExtServiceBaseService::class.java)
+        const val EXTENSION_JSON_NAME = "extension.json"
     }
 }

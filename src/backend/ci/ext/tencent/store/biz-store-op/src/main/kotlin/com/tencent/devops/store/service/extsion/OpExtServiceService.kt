@@ -3,12 +3,15 @@ package com.tencent.devops.store.service.extsion
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.UUIDUtil
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.project.api.service.service.ServiceItemResource
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.dao.ExtServiceDao
 import com.tencent.devops.store.dao.ExtServiceFeatureDao
 import com.tencent.devops.store.dao.ExtServiceItemRelDao
 import com.tencent.devops.store.dao.ExtServiceLableRelDao
+import com.tencent.devops.store.dao.common.LabelDao
 import com.tencent.devops.store.dao.common.StoreMediaInfoDao
 import com.tencent.devops.store.dao.common.StoreProjectRelDao
 import com.tencent.devops.store.dao.common.StoreReleaseDao
@@ -23,6 +26,7 @@ import com.tencent.devops.store.pojo.common.enums.AuditTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.enums.ExtServiceStatusEnum
 import com.tencent.devops.store.pojo.dto.ServiceApproveReq
+import com.tencent.devops.store.pojo.enums.ExtServiceSortTypeEnum
 import com.tencent.devops.store.pojo.service.OpEditInfoDTO
 import com.tencent.devops.store.pojo.vo.ExtServiceInfoResp
 import com.tencent.devops.store.pojo.vo.ExtensionServiceVO
@@ -38,6 +42,8 @@ import java.time.LocalDateTime
 @Service
 class OpExtServiceService @Autowired constructor(
     private val extServiceDao: ExtServiceDao,
+    private val labelDao: LabelDao,
+    private val client: Client,
     private val extServiceFeatureDao: ExtServiceFeatureDao,
     private val storeReleaseDao: StoreReleaseDao,
     private val storeProjectRelDao: StoreProjectRelDao,
@@ -69,12 +75,21 @@ class OpExtServiceService @Autowired constructor(
             itemId = itemId,
             lableId = lableId,
             serviceStatus = serviceStatus,
-            sortType = sortType,
+            sortType = sortType ?: ExtServiceSortTypeEnum.UPDATE_TIME.sortType,
+            desc = desc ?: true,
             page = page,
             pageSize = pageSize
         )
+
+        val allLable = labelDao.getAllLabel(dslContext, StoreTypeEnum.SERVICE.type.toByte())
+        val lableMap = mutableMapOf<String, String>()
+        allLable!!.forEach {
+            lableMap[it.id] = it.labelName
+        }
+
         val extensionServiceInfoList = mutableListOf<ExtensionServiceVO>()
         serviceRecords?.forEach {
+            val lableId = lableMap[it["labelId"] as String]
             extensionServiceInfoList.add(
                 ExtensionServiceVO(
                     serviceId = it["itemId"] as String,
@@ -82,7 +97,7 @@ class OpExtServiceService @Autowired constructor(
                     serviceName = it["serviceName"] as String,
                     serviceStatus = it["serviceStatus"] as Int,
                     publisher = it["publisher"] as String,
-                    // TODO: 还需要添加label
+                    lable = lableId ?: "",
                     projectCode = "",
                     modifierTime = it["updateTime"] as String,
                     version = it["version"] as String
@@ -132,6 +147,8 @@ class OpExtServiceService @Autowired constructor(
                         )
                     }
                 }
+                // 添加扩展点使用记录
+                client.get(ServiceItemResource::class).addServiceNum(itemIds)
             }
         }
 
@@ -191,7 +208,10 @@ class OpExtServiceService @Autowired constructor(
 
         val oldStatus = serviceRecord.serviceStatus
         if (oldStatus != ExtServiceStatusEnum.AUDITING.status.toByte()) {
-            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_INVALID, arrayOf(serviceId))
+            return MessageCodeUtil.generateResponseDataObject(
+                CommonMessageCode.PARAMETER_IS_INVALID,
+                arrayOf(serviceId)
+            )
         }
 
         if (approveReq.result != PASS && approveReq.result != REJECT) {
@@ -232,7 +252,15 @@ class OpExtServiceService @Autowired constructor(
             }
 
             // 入库信息，并设置当前版本的LATEST_FLAG
-            extServiceDao.approveServiceFromOp(context, userId, serviceId, serviceStatus, approveReq, latestFlag, pubTime)
+            extServiceDao.approveServiceFromOp(
+                context,
+                userId,
+                serviceId,
+                serviceStatus,
+                approveReq,
+                latestFlag,
+                pubTime
+            )
         }
 //        // 通过websocket推送状态变更消息,推送所有有该插件权限的用户
 //        storeWebsocketService.sendWebsocketMessageByAtomCodeAndAtomId(serviceCode, atomId)

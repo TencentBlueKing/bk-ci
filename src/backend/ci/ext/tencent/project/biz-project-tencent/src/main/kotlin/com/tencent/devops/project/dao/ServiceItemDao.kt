@@ -26,6 +26,9 @@ class ServiceItemDao {
                 PARENT_ID,
                 HTML_COMPONENT_TYPE,
                 HTML_PATH,
+                ICON_URL,
+                PROPS,
+                TOOLTIP,
                 CREATOR,
                 CREATE_TIME
             )
@@ -36,6 +39,9 @@ class ServiceItemDao {
                     info.pid,
                     info.UIType,
                     info.htmlPath,
+                    info.iconUrl,
+                    info.props,
+                    info.tooltip,
                     userId,
                     LocalDateTime.now()
                 )
@@ -57,6 +63,15 @@ class ServiceItemDao {
             }
             if (null != info.UIType) {
                 baseStep.set(HTML_COMPONENT_TYPE, info.UIType)
+            }
+            if (null != info.iconUrl) {
+                baseStep.set(ICON_URL, info.iconUrl)
+            }
+            if (null != info.tooltip) {
+                baseStep.set(TOOLTIP, info.tooltip)
+            }
+            if (null != info.props) {
+                baseStep.set(PROPS, info.props)
             }
             baseStep.set(MODIFIER, userId)
             baseStep.set(UPDATE_TIME, LocalDateTime.now())

@@ -77,21 +77,24 @@ class ExtServiceItemRelDao {
         }
     }
 
-    fun batchAdd(dslContext: DSLContext, userId: String, serviceId: String, itemIdList: List<String>) {
+    fun batchAdd(dslContext: DSLContext, userId: String, serviceId: String, propsMap: Map<String, String>) {
         with(TExtensionServiceItemRel.T_EXTENSION_SERVICE_ITEM_REL) {
-            val addStep = itemIdList.map {
+
+            val addStep = propsMap.map {
                 dslContext.insertInto(
                     this,
                     ID,
                     SERVICE_ID,
                     ITEM_ID,
+                    PROPS,
                     CREATOR,
                     MODIFIER
                 )
                     .values(
                         UUIDUtil.generate(),
                         serviceId,
-                        it,
+                        it.key,
+                        it.value ?: "",
                         userId,
                         userId
                     )

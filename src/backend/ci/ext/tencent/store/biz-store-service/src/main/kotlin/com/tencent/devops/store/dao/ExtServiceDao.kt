@@ -357,7 +357,7 @@ class ExtServiceDao {
             val t = dslContext.select(
                 tas.STORE_CODE,
                 tas.STORE_TYPE,
-                tas.DOWNLOADS.`as`(ExtServiceSortTypeEnum.DOWNLOAD_COUNT.name),
+//                tas.DOWNLOADS.`as`(ExtServiceSortTypeEnum.DOWNLOAD_COUNT.name),
                 tas.SCORE_AVERAGE
             ).from(tas).asTable("t")
             baseStep.leftJoin(t).on(ta.SERVICE_CODE.eq(t.field("STORE_CODE", String::class.java)))
@@ -394,6 +394,7 @@ class ExtServiceDao {
         lableId: String?,
         serviceStatus: Boolean?,
         sortType: String?,
+        desc: Boolean?,
         page: Int?,
         pageSize: Int?
     ): Result<Record> {
@@ -428,6 +429,12 @@ class ExtServiceDao {
                 conditions.add(a.SERVICE_STATUS.notEqual(ExtServiceStatusEnum.AUDITING.status.toByte()))
             }
         }
+        val realSortType = a.field(sortType)
+        val orderByStep = if (desc != null && desc) {
+            realSortType.desc()
+        } else {
+           realSortType.asc()
+        }
         val t = dslContext.select(
             a.ID.`as`("itemId"),
             a.SERVICE_STATUS.`as`("serviceStatus"),
@@ -441,7 +448,7 @@ class ExtServiceDao {
         ).from(a).join(b).on(a.SERVICE_CODE.eq(a.SERVICE_CODE))
             .join(c).on(a.ID.eq(c.SERVICE_ID))
             .join(d).on(a.ID.eq(d.SERVICE_ID)).where(conditions)
-        val baseStep = dslContext.select().from(t).orderBy(a.UPDATE_TIME.desc())
+        val baseStep = dslContext.select().from(t).orderBy(orderByStep)
         return if (null != page && null != pageSize) {
             baseStep.limit((page - 1) * pageSize, pageSize).fetch()
         } else {

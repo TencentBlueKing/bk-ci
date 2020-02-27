@@ -3,6 +3,7 @@ package com.tencent.devops.project.api.op
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.project.api.pojo.ExtItemDTO
 import com.tencent.devops.project.api.pojo.ItemInfoResponse
 import com.tencent.devops.project.api.pojo.ServiceItem
 import io.swagger.annotations.Api
@@ -28,6 +29,15 @@ interface OPItemResource {
     @Path("/parentServices")
     @ApiOperation("查询根服务")
     fun parentList(): Result<List<ServiceItem>>
+
+    @GET
+    @Path("/")
+    @ApiOperation("获取扩展点完整列表")
+    fun getItemList(
+        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String
+    ): Result<List<ExtItemDTO>?>
 
     @GET
     @Path("/list")
