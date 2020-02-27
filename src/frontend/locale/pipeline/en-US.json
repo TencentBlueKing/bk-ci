@@ -188,6 +188,7 @@
         "enableGroup": "Enable group notification on Wechat Work",
         "groupIdTips": "Please enter the ID of the group. If there are multiple groups, please separate IDs with semicolons",
         "groupIdDesc": "Capable of sending notifications to groups on Wechat Work. How to obtain group ID: add 'DevOpsRobot' into the group, @ it and send '会话ID', then you will get the group ID.", 
+        "wechatGroupMarkdownFlag": "Show group message with Markdown format",
         "buildSuc": "Build successfully",
         "buildFail": "Build failed",
         "rtxNotice": "Wechat Work",
