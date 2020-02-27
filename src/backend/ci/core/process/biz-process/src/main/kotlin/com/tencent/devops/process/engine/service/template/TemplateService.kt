@@ -332,7 +332,7 @@ class TemplateService @Autowired constructor(
         return dslContext.transactionResult { configuration ->
             val context = DSL.using(configuration)
             val pipelines = 
-                templatePipelineDao.listPipeline(context, PipelineInstanceTypeEnum.CONSTRAINT.type, templateId, version)
+                templatePipelineDao.listPipeline(context, templateId, PipelineInstanceTypeEnum.CONSTRAINT.type, version)
             if (pipelines.isNotEmpty) {
                 logger.warn("There are ${pipelines.size} pipeline attach to $templateId of version $version")
                 throw ErrorCodeException(

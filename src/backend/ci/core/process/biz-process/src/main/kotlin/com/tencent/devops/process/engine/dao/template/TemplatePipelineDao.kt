@@ -178,12 +178,14 @@ class TemplatePipelineDao @Autowired constructor(private val objectMapper: Objec
     fun listPipeline(
         dslContext: DSLContext,
         templateId: String,
+        instanceType: String,
         version: Long
     ): Result<TTemplatePipelineRecord> {
         with(TTemplatePipeline.T_TEMPLATE_PIPELINE) {
             return dslContext.selectFrom(this)
                 .where(TEMPLATE_ID.eq(templateId))
                 .and(VERSION.eq(version))
+                .and(INSTANCE_TYPE.eq(instanceType))
                 .fetch()
         }
     }
