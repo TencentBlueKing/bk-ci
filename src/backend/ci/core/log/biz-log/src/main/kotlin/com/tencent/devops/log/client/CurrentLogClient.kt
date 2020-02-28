@@ -24,38 +24,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.log.client.impl
+package com.tencent.devops.log.client
 
 import com.tencent.devops.common.es.ESClient
-import com.tencent.devops.log.client.CurrentLogClient
-import com.tencent.devops.log.client.LogClient
-import org.slf4j.LoggerFactory
-import java.lang.RuntimeException
 
-class LogClientImpl constructor(private val client: ESClient) : LogClient {
+object CurrentLogClient {
 
-    override fun getActiveClients(): List<ESClient> {
-        return listOf(client)
+    private val currentClient = ThreadLocal<ESClient>()
+
+    fun setClient(client: ESClient) {
+        currentClient.set(client)
     }
 
-    override fun hashClient(buildId: String): ESClient {
-        val clients = getActiveClients()
-        if (clients.isEmpty()) {
-            throw RuntimeException("Fail to get the log client")
-        }
-        return clients.first()
-    }
-
-    override fun markESDisconnect() {
-        // for the default implements just println the log
-        val client = CurrentLogClient.getClient()
-        if (client == null) {
-            logger.warn("Fail to get the es client")
-            return
-        }
-    }
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(LogClientImpl::class.java)
+    fun getClient(): ESClient? {
+        return currentClient.get()
     }
 }

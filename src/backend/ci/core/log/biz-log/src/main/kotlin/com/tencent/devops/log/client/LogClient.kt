@@ -43,11 +43,15 @@ interface LogClient {
 
     fun prepareIndex(buildId: String, index: String, type: String) = getClient(buildId).prepareIndex(index, type)
 
+    fun markESDisconnect()
+
     private fun getClient(buildId: String): Client {
-        return hashClient(buildId, getClients()).client
+        val client = hashClient(buildId)
+        CurrentLogClient.setClient(client)
+        return client.client
     }
 
-    fun getClients(): List<ESClient>
+    fun getActiveClients(): List<ESClient>
 
-    fun hashClient(buildId: String, client: List<ESClient>): ESClient
+    fun hashClient(buildId: String): ESClient
 }
