@@ -43,7 +43,9 @@ interface LogClient {
 
     fun prepareIndex(buildId: String, index: String, type: String) = getClient(buildId).prepareIndex(index, type)
 
-    fun markESDisconnect()
+    fun markESInactive(buildId: String)
+
+    fun markESActive(buildId: String)
 
     private fun getClient(buildId: String): Client {
         val client = hashClient(buildId)

@@ -30,7 +30,8 @@ import com.tencent.devops.common.es.ESClient
 
 object CurrentLogClient {
 
-    private val currentClient = ThreadLocal<ESClient>()
+    private val currentClient: ThreadLocal<ESClient> = ThreadLocal.withInitial(null)
+    private val inactiveESName: ThreadLocal<String> = ThreadLocal.withInitial(null)
 
     fun setClient(client: ESClient) {
         currentClient.set(client)
@@ -38,5 +39,13 @@ object CurrentLogClient {
 
     fun getClient(): ESClient? {
         return currentClient.get()
+    }
+
+    fun setInactiveESName(esName: String) {
+        inactiveESName.set(esName)
+    }
+
+    fun getInactiveESName(): String? {
+        return inactiveESName.get()
     }
 }

@@ -24,22 +24,6 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.log.model.pojo
+package com.tencent.devops.log.exceptions
 
-import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
-
-/**
- * deng
- * 2019-01-23
- */
-@Event(MQ.EXCHANGE_LOG_STATUS_BUILD_EVENT, MQ.ROUTE_LOG_STATUS_BUILD_EVENT)
-data class LogStatusEvent(
-    override val buildId: String,
-    val finished: Boolean,
-    val tag: String,
-    val jobId: String,
-    val executeCount: Int?,
-    override val retryTime: Int = 2,
-    override val delayMills: Int = 0
-) : ILogEvent(buildId, retryTime, delayMills, null)
+class IndexCreateFailureException(message: String): RuntimeException(message)
