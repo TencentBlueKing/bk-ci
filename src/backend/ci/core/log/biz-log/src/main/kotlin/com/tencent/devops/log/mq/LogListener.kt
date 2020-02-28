@@ -33,6 +33,7 @@ import com.tencent.devops.log.model.pojo.LogBatchEvent
 import com.tencent.devops.log.model.pojo.LogEvent
 import com.tencent.devops.log.model.pojo.LogStatusEvent
 import com.tencent.devops.log.service.LogServiceDispatcher
+import com.tencent.devops.log.service.v2.LogServiceV2
 import com.tencent.devops.log.utils.LogDispatcher
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.core.ExchangeTypes
@@ -46,7 +47,7 @@ import org.springframework.stereotype.Component
 @Component
 class LogListener constructor(
     private val rabbitTemplate: RabbitTemplate,
-    private val logServiceDispatcher: LogServiceDispatcher
+    private val logServiceV2: LogServiceV2
 ) {
 
     fun logEvent(event: LogEvent) {
@@ -55,10 +56,14 @@ class LogListener constructor(
             if (!event.esName.isNullOrBlank()) {
                 CurrentLogClient.setInactiveESName(event.esName!!)
             }
-            logServiceDispatcher.logEvent(event)
+            logServiceV2.addLogEvent(event)
+            if (!event.esName.isNullOrBlank()) {
+                logServiceV2.markESActive(event.buildId)
+            }
             result = true
         } catch (e: IndexCreateFailureException) {
             logger.warn("Fail to add the log event [${event.buildId}|${event.retryTime}]", e)
+            logServiceV2.markESInactive(event.buildId)
             if (event.retryTime <= 0) {
                 val esName = CurrentLogClient.getClient()?.name
                 if (!esName.isNullOrBlank()) {
@@ -86,7 +91,10 @@ class LogListener constructor(
             if (!event.esName.isNullOrBlank()) {
                 CurrentLogClient.setInactiveESName(event.esName!!)
             }
-            logServiceDispatcher.logBatchEvent(event)
+            logServiceV2.addBatchLogEvent(event)
+            if (!event.esName.isNullOrBlank()) {
+                logServiceV2.markESActive(event.buildId)
+            }
             result = true
         } catch (ignored: Throwable) {
             logger.warn("Fail to add the log batch event [${event.buildId}|${event.retryTime}]", ignored)
@@ -98,6 +106,7 @@ class LogListener constructor(
                         LogDispatcher.dispatch(rabbitTemplate, LogBatchEvent(buildId, logs, retryTime - 1, DelayMills))
                     }
                 } else {
+                    logServiceV2.markESInactive(event.buildId)
                     val esName = CurrentLogClient.getClient()?.name
                     if (!esName.isNullOrBlank()) {
                         with(event) {
@@ -122,7 +131,7 @@ class LogListener constructor(
     fun logStatusEvent(event: LogStatusEvent) {
         var result = false
         try {
-            logServiceDispatcher.logStatusEvent(event)
+            logServiceV2.updateLogStatus(event)
             result = true
         } catch (ignored: Throwable) {
             logger.warn("Fail to add the multi lines [${event.buildId}|${event.retryTime}]", ignored)
