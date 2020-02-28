@@ -28,6 +28,7 @@ package com.tencent.devops.process.engine.dao.template
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.model.SQLPage
+import com.tencent.devops.common.pipeline.enums.PipelineInstanceTypeEnum
 import com.tencent.devops.model.process.tables.TPipelineInfo
 import com.tencent.devops.model.process.tables.TPipelineSetting
 import com.tencent.devops.model.process.tables.TTemplatePipeline
@@ -94,10 +95,15 @@ class TemplatePipelineDao @Autowired constructor(private val objectMapper: Objec
         }
     }
 
-    fun get(dslContext: DSLContext, pipelineId: String): TTemplatePipelineRecord? {
+    fun get(
+        dslContext: DSLContext, 
+        pipelineId: String,
+        instanceType: String? = PipelineInstanceTypeEnum.CONSTRAINT.type
+    ): TTemplatePipelineRecord? {
         with(TTemplatePipeline.T_TEMPLATE_PIPELINE) {
             return dslContext.selectFrom(this)
                 .where(PIPELINE_ID.eq(pipelineId))
+                .and(INSTANCE_TYPE.eq(instanceType))
                 .fetchOne()
         }
     }
