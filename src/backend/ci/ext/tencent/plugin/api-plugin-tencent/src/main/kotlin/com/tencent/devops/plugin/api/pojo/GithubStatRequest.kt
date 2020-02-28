@@ -24,29 +24,29 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.config
+package com.tencent.devops.plugin.api.pojo
 
-import com.tencent.devops.common.archive.shorturl.ShortUrlApi
-import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.service.config.CommonConfig
-import com.tencent.devops.process.engine.bean.TencentPipelineUrlBeanImpl
-import com.tencent.devops.process.engine.extends.TencentModelCheckPlugin
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
-import org.springframework.context.annotation.Primary
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-@Configuration
-class TencentAtomConfig {
-
-    @Bean
-    @Primary
-    fun pipelineUrlBean(
-        @Autowired commonConfig: CommonConfig,
-        @Autowired shortUrlApi: ShortUrlApi
-    ) = TencentPipelineUrlBeanImpl(commonConfig = commonConfig, shortUrlApi = shortUrlApi)
-
-    @Bean
-    @Primary
-    fun modelContainerAgentCheckPlugin(@Autowired client: Client) = TencentModelCheckPlugin(client)
-}
+@ApiModel("Github统计数据请求包")
+data class GithubStatRequest(
+    @ApiModelProperty("日期", required = true)
+    val statDate: String,
+    @ApiModelProperty("issue总数", required = true)
+    val issueCntAll: Int,
+    @ApiModelProperty("open 状态的issue数", required = true)
+    val issueCntOpen: Int,
+    @ApiModelProperty("已关闭的issue数", required = true)
+    var issueCntClosed: Int,
+    @ApiModelProperty("pr总数", required = true)
+    var prCntAll: Int,
+    @ApiModelProperty("open状态的pr数", required = true)
+    val prCntOpen: Int,
+    @ApiModelProperty("已关闭的pr数", required = true)
+    val prCntClosed: Int,
+    @ApiModelProperty("提交总量", required = false)
+    var commitsCnt: Int,
+    @ApiModelProperty("每个开发者的提交统计", required = false)
+    var perDevStatList: List<GithubDevStat?>
+)

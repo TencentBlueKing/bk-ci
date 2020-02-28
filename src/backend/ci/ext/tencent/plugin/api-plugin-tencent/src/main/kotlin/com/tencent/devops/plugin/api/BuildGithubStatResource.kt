@@ -24,29 +24,37 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.config
+package com.tencent.devops.plugin.api
 
-import com.tencent.devops.common.archive.shorturl.ShortUrlApi
-import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.service.config.CommonConfig
-import com.tencent.devops.process.engine.bean.TencentPipelineUrlBeanImpl
-import com.tencent.devops.process.engine.extends.TencentModelCheckPlugin
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
-import org.springframework.context.annotation.Primary
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.plugin.api.pojo.GithubStatRequest
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.POST
+import javax.ws.rs.Path
+import javax.ws.rs.PathParam
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
 
-@Configuration
-class TencentAtomConfig {
+@Api(tags = ["BUILD_GITHUB_STAT_PLUGIN"], description = "Github统计信息")
+@Path("/build/githubStat/")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface BuildGithubStatResource {
 
-    @Bean
-    @Primary
-    fun pipelineUrlBean(
-        @Autowired commonConfig: CommonConfig,
-        @Autowired shortUrlApi: ShortUrlApi
-    ) = TencentPipelineUrlBeanImpl(commonConfig = commonConfig, shortUrlApi = shortUrlApi)
-
-    @Bean
-    @Primary
-    fun modelContainerAgentCheckPlugin(@Autowired client: Client) = TencentModelCheckPlugin(client)
+    @ApiOperation("上报github项目统计数据")
+    @POST
+    @Path("/owners/{owner}/repos/{repo}")
+    fun reportGithubStat(
+        @ApiParam("github项目拥有者", required = true)
+        @PathParam("owner")
+        owner: String,
+        @ApiParam("github repo name", required = true)
+        @PathParam("repo")
+        repo: String,
+        @ApiParam("统计数据", required = true)
+        githubStatRequest: GithubStatRequest
+    ): Result<Boolean>
 }

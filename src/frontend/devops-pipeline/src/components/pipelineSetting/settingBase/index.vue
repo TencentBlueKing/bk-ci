@@ -121,6 +121,14 @@
                                 icon-class="icon-question-circle"
                                 desc-direction="top">
                             </group-id-selector>
+                            <atom-checkbox
+                                v-if="pipelineSubscription.wechatGroupFlag"
+                                style="width: auto;margin-top: -45px;margin-left: 155px;"
+                                name="wechatGroupMarkdownFlag"
+                                :text="$t('settings.wechatGroupMarkdownFlag')"
+                                :handle-change="toggleEnable"
+                                :value="pipelineSubscription.wechatGroupMarkdownFlag">
+                            </atom-checkbox>
                         </div>
                     </bk-tab-panel>
                 </bk-tab>

@@ -24,29 +24,48 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.config
+package com.tencent.devops.plugin.service
 
-import com.tencent.devops.common.archive.shorturl.ShortUrlApi
-import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.service.config.CommonConfig
-import com.tencent.devops.process.engine.bean.TencentPipelineUrlBeanImpl
-import com.tencent.devops.process.engine.extends.TencentModelCheckPlugin
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.plugin.api.pojo.GithubStatRequest
+import com.tencent.devops.plugin.dao.GithubStatDao
+import com.tencent.devops.plugin.dao.GithubDevStatDao
+import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
-import org.springframework.context.annotation.Primary
+import org.springframework.stereotype.Service
 
-@Configuration
-class TencentAtomConfig {
+@Service
+class GithubStatService @Autowired constructor(
+    private val githubStatDao: GithubStatDao,
+    private val githubDevStatDao: GithubDevStatDao,
+    private val dslContext: DSLContext
+) {
+    companion object {
+        private val logger = LoggerFactory.getLogger(GithubStatService::class.java)
+    }
 
-    @Bean
-    @Primary
-    fun pipelineUrlBean(
-        @Autowired commonConfig: CommonConfig,
-        @Autowired shortUrlApi: ShortUrlApi
-    ) = TencentPipelineUrlBeanImpl(commonConfig = commonConfig, shortUrlApi = shortUrlApi)
+    /**
+     * 上报github统计数据
+     */
+    fun reportGithubStat(
+        owner: String,
+        repo: String,
+        githubStatRequest: GithubStatRequest
+    ): Result<Boolean> {
+        logger.info("githubStatRequest: $githubStatRequest")
 
-    @Bean
-    @Primary
-    fun modelContainerAgentCheckPlugin(@Autowired client: Client) = TencentModelCheckPlugin(client)
+        githubStatDao.createOrUpdate(dslContext, owner, repo, githubStatRequest)
+        githubStatRequest.perDevStatList.forEach {
+            githubDevStatDao.createOrUpdate(
+                dslContext = dslContext,
+                owner = owner,
+                repo = repo,
+                statDate = githubStatRequest.statDate,
+                author = it!!.author,
+                commits = it!!.commits)
+        }
+
+        return Result(true)
+    }
 }

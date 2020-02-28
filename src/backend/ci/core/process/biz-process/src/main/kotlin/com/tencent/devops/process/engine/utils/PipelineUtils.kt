@@ -24,29 +24,37 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.config
+package com.tencent.devops.process.engine.utils
 
-import com.tencent.devops.common.archive.shorturl.ShortUrlApi
-import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.service.config.CommonConfig
-import com.tencent.devops.process.engine.bean.TencentPipelineUrlBeanImpl
-import com.tencent.devops.process.engine.extends.TencentModelCheckPlugin
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
-import org.springframework.context.annotation.Primary
+import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
+import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.process.constant.ProcessMessageCode
+import org.slf4j.LoggerFactory
+import java.util.regex.Pattern
 
-@Configuration
-class TencentAtomConfig {
+object PipelineUtils {
 
-    @Bean
-    @Primary
-    fun pipelineUrlBean(
-        @Autowired commonConfig: CommonConfig,
-        @Autowired shortUrlApi: ShortUrlApi
-    ) = TencentPipelineUrlBeanImpl(commonConfig = commonConfig, shortUrlApi = shortUrlApi)
+    private val logger = LoggerFactory.getLogger(PipelineUtils::class.java)
 
-    @Bean
-    @Primary
-    fun modelContainerAgentCheckPlugin(@Autowired client: Client) = TencentModelCheckPlugin(client)
+    private const val ENGLISH_NAME_PATTERN = "[A-Za-z_][A-Za-z_0-9]+"
+
+    fun checkPipelineName(name: String) {
+        if (name.toCharArray().size > 64) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_NAME_TOO_LONG,
+                defaultMessage = "Pipeline's name is too long"
+            )
+        }
+    }
+
+    fun checkPipelineParams(params: List<BuildFormProperty>) {
+        params.forEach {
+            if (!Pattern.matches(ENGLISH_NAME_PATTERN, it.id)) {
+                logger.warn("Pipeline's start params Name is iregular")
+                throw OperationException(MessageCodeUtil.getCodeLanMessage(ProcessMessageCode.ERROR_PIPELINE_PARAMS_NAME_ERROR))
+            }
+        }
+    }
 }

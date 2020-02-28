@@ -24,29 +24,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.config
+package com.tencent.devops.plugin.api.pojo
 
-import com.tencent.devops.common.archive.shorturl.ShortUrlApi
-import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.service.config.CommonConfig
-import com.tencent.devops.process.engine.bean.TencentPipelineUrlBeanImpl
-import com.tencent.devops.process.engine.extends.TencentModelCheckPlugin
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
-import org.springframework.context.annotation.Primary
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-@Configuration
-class TencentAtomConfig {
-
-    @Bean
-    @Primary
-    fun pipelineUrlBean(
-        @Autowired commonConfig: CommonConfig,
-        @Autowired shortUrlApi: ShortUrlApi
-    ) = TencentPipelineUrlBeanImpl(commonConfig = commonConfig, shortUrlApi = shortUrlApi)
-
-    @Bean
-    @Primary
-    fun modelContainerAgentCheckPlugin(@Autowired client: Client) = TencentModelCheckPlugin(client)
-}
+@ApiModel("GitHub开发者统计")
+data class GithubDevStat(
+    @ApiModelProperty("author", required = true)
+    val author: String,
+    @ApiModelProperty("commits", required = true)
+    val commits: Int
+)

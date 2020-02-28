@@ -116,15 +116,6 @@ class PipelineService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(PipelineService::class.java)
     }
 
-    private fun checkPipelineName(name: String) {
-        if (name.toCharArray().size > 64) {
-            throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_PIPELINE_NAME_TOO_LONG,
-                defaultMessage = "流水线名称过长"
-            )
-        }
-    }
-
     fun sortPipelines(pipelines: List<Pipeline>, sortType: PipelineSortType) {
         Collections.sort(pipelines) { a, b ->
             when (sortType) {
@@ -152,7 +143,6 @@ class PipelineService @Autowired constructor(
         val apiStartEpoch = System.currentTimeMillis()
         var success = false
         try {
-            checkPipelineName(model.name)
 
             if (checkPermission) {
                 pipelinePermissionService.validPipelinePermission(
@@ -342,7 +332,6 @@ class PipelineService @Autowired constructor(
             )
 
         logger.info("Start to copy the pipeline $pipelineId")
-        checkPipelineName(name)
         if (checkPermission) {
             pipelinePermissionService.validPipelinePermission(
                 userId = userId,
@@ -420,7 +409,6 @@ class PipelineService @Autowired constructor(
         var success = false
         logger.info("Start to edit the pipeline $pipelineId of project $projectId with channel $channelCode and permission $checkPermission by user $userId")
         try {
-            checkPipelineName(model.name)
             if (checkPermission) {
                 pipelinePermissionService.validPipelinePermission(
                     userId = userId,

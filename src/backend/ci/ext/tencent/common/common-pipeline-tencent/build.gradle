@@ -28,6 +28,8 @@ dependencies {
     compile project(":core:common:common-archive")
     compile project(":core:common:common-notify")
     compile project(":core:common:common-pipeline")
+    compile project(":core:quality:common-quality")
+    compile project(":ext:tencent:common:common-archive-tencent")
     compile project(":core:plugin:codecc-plugin:common-codecc")
     compile group: 'org.apache.ant', name: 'ant', version: '1.10.5'
     compile "com.github.fge:json-schema-validator"

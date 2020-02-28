@@ -237,7 +237,6 @@ include ":ext:tencent:artifactory"
 include ":ext:tencent:artifactory:api-artifactory-tencent"
 include ":ext:tencent:artifactory:biz-artifactory-tencent"
 include ":ext:tencent:artifactory:boot-artifactory-tencent"
-include ":ext:tencent:artifactory:model-artifactory-tencent"
 
 include ":ext:tencent:dockerhost"
 include ":ext:tencent:dockerhost:api-dockerhost-tencent"

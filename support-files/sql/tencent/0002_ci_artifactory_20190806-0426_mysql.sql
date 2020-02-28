@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS `T_TIPELINE_ARTIFACETORY_INFO`
     `PROJECT_ID`       varchar(64)  NOT NULL DEFAULT '',
     `BUNDLE_ID`        varchar(200) NULL     DEFAULT NULL,
     `BUILD_NUM`        int(11)      NOT NULL DEFAULT 0,
-    `NAME`             varchar(100) NOT NULL DEFAULT '',
+    `NAME`             varchar(255) NOT NULL DEFAULT '',
     `FULL_NAME`        varchar(200) NOT NULL DEFAULT '',
     `PATH`             varchar(200) NOT NULL DEFAULT '',
     `FULL_PATH`        varchar(200) NOT NULL DEFAULT '',

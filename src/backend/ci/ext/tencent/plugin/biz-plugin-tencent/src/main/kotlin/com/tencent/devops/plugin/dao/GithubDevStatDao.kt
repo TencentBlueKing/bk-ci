@@ -24,29 +24,49 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.config
+package com.tencent.devops.plugin.dao
 
-import com.tencent.devops.common.archive.shorturl.ShortUrlApi
-import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.service.config.CommonConfig
-import com.tencent.devops.process.engine.bean.TencentPipelineUrlBeanImpl
-import com.tencent.devops.process.engine.extends.TencentModelCheckPlugin
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
-import org.springframework.context.annotation.Primary
+import com.tencent.devops.common.api.util.UUIDUtil
+import com.tencent.devops.model.plugin.tables.TPluginGithubDevStat
+import org.jooq.DSLContext
+import org.springframework.stereotype.Repository
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
-@Configuration
-class TencentAtomConfig {
+@Repository
+class GithubDevStatDao {
 
-    @Bean
-    @Primary
-    fun pipelineUrlBean(
-        @Autowired commonConfig: CommonConfig,
-        @Autowired shortUrlApi: ShortUrlApi
-    ) = TencentPipelineUrlBeanImpl(commonConfig = commonConfig, shortUrlApi = shortUrlApi)
-
-    @Bean
-    @Primary
-    fun modelContainerAgentCheckPlugin(@Autowired client: Client) = TencentModelCheckPlugin(client)
+    /**
+     * 不存在则新增，否则更新
+     */
+    fun createOrUpdate(
+        dslContext: DSLContext,
+        owner: String,
+        repo: String,
+        statDate: String,
+        author: String,
+        commits: Int
+    ) {
+        with(TPluginGithubDevStat.T_PLUGIN_GITHUB_DEV_STAT) {
+            dslContext.insertInto(this,
+                    ID,
+                    OWNER,
+                    REPO,
+                    STAT_DATE,
+                    AUTHOR,
+                    COMMITS
+            ).values(
+                    UUIDUtil.generate(),
+                    owner,
+                    repo,
+                    LocalDate.parse(statDate, DateTimeFormatter.ISO_DATE),
+                    author,
+                    commits
+            )
+                    .onDuplicateKeyUpdate()
+                    .set(COMMITS, commits)
+                    .set(UPDATE_TIME, java.time.LocalDateTime.now())
+                    .execute()
+        }
+    }
 }

@@ -24,29 +24,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.config
+package com.tencent.devops.plugin.resources
 
-import com.tencent.devops.common.archive.shorturl.ShortUrlApi
-import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.service.config.CommonConfig
-import com.tencent.devops.process.engine.bean.TencentPipelineUrlBeanImpl
-import com.tencent.devops.process.engine.extends.TencentModelCheckPlugin
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.plugin.api.BuildGithubStatResource
+import com.tencent.devops.plugin.api.pojo.GithubStatRequest
+import com.tencent.devops.plugin.service.GithubStatService
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
-import org.springframework.context.annotation.Primary
 
-@Configuration
-class TencentAtomConfig {
-
-    @Bean
-    @Primary
-    fun pipelineUrlBean(
-        @Autowired commonConfig: CommonConfig,
-        @Autowired shortUrlApi: ShortUrlApi
-    ) = TencentPipelineUrlBeanImpl(commonConfig = commonConfig, shortUrlApi = shortUrlApi)
-
-    @Bean
-    @Primary
-    fun modelContainerAgentCheckPlugin(@Autowired client: Client) = TencentModelCheckPlugin(client)
+@RestResource
+class BuildGithubStatResourceImpl @Autowired constructor(
+    private val githubStatService: GithubStatService
+) : BuildGithubStatResource {
+    override fun reportGithubStat(owner: String, repo: String, githubStatRequest: GithubStatRequest): Result<Boolean> {
+        return githubStatService.reportGithubStat(owner, repo, githubStatRequest)
+    }
 }

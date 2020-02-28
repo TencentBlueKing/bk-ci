@@ -166,7 +166,7 @@ class PipelineSettingDao {
                 .set(FAIL_WECHAT_GROUP_MARKDOWN_FLAG, setting.failSubscription.wechatGroupMarkdownFlag)
                 .set(SUCCESS_WECHAT_GROUP_FLAG, setting.successSubscription.wechatGroupFlag)
                 .set(SUCCESS_WECHAT_GROUP, setting.successSubscription.wechatGroup)
-                .set(FAIL_WECHAT_GROUP_MARKDOWN_FLAG, setting.successSubscription.wechatGroupMarkdownFlag)
+                .set(SUCCESS_WECHAT_GROUP_MARKDOWN_FLAG, setting.successSubscription.wechatGroupMarkdownFlag)
                 .set(SUCCESS_DETAIL_FLAG, setting.successSubscription.detailFlag)
                 .set(FAIL_DETAIL_FLAG, setting.failSubscription.detailFlag)
                 .set(SUCCESS_CONTENT, setting.successSubscription.content)
