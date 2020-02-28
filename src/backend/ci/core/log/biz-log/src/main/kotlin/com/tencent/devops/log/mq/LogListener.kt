@@ -27,6 +27,8 @@
 package com.tencent.devops.log.mq
 
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
+import com.tencent.devops.log.client.CurrentLogClient
+import com.tencent.devops.log.exceptions.IndexCreateFailureException
 import com.tencent.devops.log.model.pojo.LogBatchEvent
 import com.tencent.devops.log.model.pojo.LogEvent
 import com.tencent.devops.log.model.pojo.LogStatusEvent
@@ -50,8 +52,21 @@ class LogListener constructor(
     fun logEvent(event: LogEvent) {
         var result = false
         try {
+            if (!event.esName.isNullOrBlank()) {
+                CurrentLogClient.setInactiveESName(event.esName!!)
+            }
             logServiceDispatcher.logEvent(event)
             result = true
+        } catch (e: IndexCreateFailureException) {
+            logger.warn("Fail to add the log event [${event.buildId}|${event.retryTime}]", e)
+            if (event.retryTime <= 0) {
+                val esName = CurrentLogClient.getClient()?.name
+                if (!esName.isNullOrBlank()) {
+                    with(event) {
+                        LogDispatcher.dispatch(rabbitTemplate, LogEvent(buildId, logs, retryTime, DelayMills, esName!!))
+                    }
+                }
+            }
         } catch (ignored: Throwable) {
             logger.warn("Fail to add the log event [${event.buildId}|${event.retryTime}]", ignored)
         } finally {
@@ -68,15 +83,27 @@ class LogListener constructor(
     fun logBatchEvent(event: LogBatchEvent) {
         var result = false
         try {
+            if (!event.esName.isNullOrBlank()) {
+                CurrentLogClient.setInactiveESName(event.esName!!)
+            }
             logServiceDispatcher.logBatchEvent(event)
             result = true
         } catch (ignored: Throwable) {
             logger.warn("Fail to add the log batch event [${event.buildId}|${event.retryTime}]", ignored)
         } finally {
-            if (!result && event.retryTime >= 0) {
-                logger.warn("Retry to add log batch event [${event.buildId}|${event.retryTime}]")
-                with(event) {
-                    LogDispatcher.dispatch(rabbitTemplate, LogBatchEvent(buildId, logs, retryTime - 1, DelayMills))
+            if (!result) {
+                if (event.retryTime >= 0) {
+                    logger.warn("Retry to add log batch event [${event.buildId}|${event.retryTime}]")
+                    with(event) {
+                        LogDispatcher.dispatch(rabbitTemplate, LogBatchEvent(buildId, logs, retryTime - 1, DelayMills))
+                    }
+                } else {
+                    val esName = CurrentLogClient.getClient()?.name
+                    if (!esName.isNullOrBlank()) {
+                        with(event) {
+                            LogDispatcher.dispatch(rabbitTemplate, LogBatchEvent(buildId, logs, retryTime, DelayMills, esName))
+                        }
+                    }
                 }
             }
         }
