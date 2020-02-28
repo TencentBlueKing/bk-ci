@@ -184,16 +184,4 @@ class LogServiceDispatcher @Autowired constructor(
     ): Result<EndPageQueryLogs> {
         return Result(logServiceV2.getEndLogs(pipelineId, buildId, tag, jobId, executeCount, size))
     }
-
-    fun logEvent(event: LogEvent) {
-        logServiceV2.addLogEvent(event)
-    }
-
-    fun logBatchEvent(event: LogBatchEvent) {
-        logServiceV2.addBatchLogEvent(event)
-    }
-
-    fun logStatusEvent(event: LogStatusEvent) {
-        logServiceV2.updateLogStatus(event)
-    }
 }
