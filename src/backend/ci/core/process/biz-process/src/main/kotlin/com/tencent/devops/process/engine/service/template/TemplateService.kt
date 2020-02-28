@@ -1164,7 +1164,7 @@ class TemplateService @Autowired constructor(
                         dslContext = context,
                         pipelineId = pipelineId,
                         instanceType = PipelineInstanceTypeEnum.CONSTRAINT.type,
-                        rootTemplateId = if (template.srcTemplateId.isNullOrEmpty()) templateId  else template.srcTemplateId,
+                        rootTemplateId = template.id,
                         templateVersion = template.version,
                         versionName = template.versionName,
                         templateId = templateId,
