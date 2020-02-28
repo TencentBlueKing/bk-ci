@@ -142,7 +142,8 @@ class PipelineService @Autowired constructor(
         model: Model,
         channelCode: ChannelCode,
         checkPermission: Boolean = true,
-        fixPipelineId: String? = null
+        fixPipelineId: String? = null,
+        instanceType: String? = PipelineInstanceTypeEnum.FREEDOM.type
     ): String {
         val apiStartEpoch = System.currentTimeMillis()
         var success = false
@@ -222,7 +223,9 @@ class PipelineService @Autowired constructor(
                 }
                 pipelineGroupService.addPipelineLabel(userId = userId, pipelineId = pipelineId, labelIds = model.labels)
                 pipelineUserService.create(pipelineId, userId)
-                createRelationBtwTemplate(userId, model.templateId!!, pipelineId)
+                if (instanceType == PipelineInstanceTypeEnum.FREEDOM.type) {
+                    createRelationBtwTemplate(userId, model.templateId!!, pipelineId)
+                }
                 success = true
                 return pipelineId
             } catch (duplicateKeyException: DuplicateKeyException) {
@@ -256,8 +259,10 @@ class PipelineService @Autowired constructor(
         templateId: String,
         pipelineId: String
     ): Boolean {
+        logger.info("start createRelationBtwTemplate: $userId|$templateId|$pipelineId")
         val template = templateDao.getLatestTemplate(dslContext, templateId)
         if (template.srcTemplateId.isNullOrEmpty()) {
+            logger.info("[$templateId]template is CUSTOMIZE or PUBLIC")
             templatePipelineDao.create(
                 dslContext = dslContext,
                 pipelineId = pipelineId,
@@ -271,6 +276,7 @@ class PipelineService @Autowired constructor(
                 param = null
             )
         } else {
+            logger.info("[$templateId]template is from store, srcTemplateId is ${template.srcTemplateId}")
             val rootTemplate = templateDao.getLatestTemplate(dslContext, template.srcTemplateId)
             templatePipelineDao.create(
                 dslContext = dslContext,

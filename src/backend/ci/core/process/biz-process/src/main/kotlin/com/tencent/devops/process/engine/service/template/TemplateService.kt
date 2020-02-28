@@ -1156,7 +1156,9 @@ class TemplateService @Autowired constructor(
                         projectId = projectId,
                         model = instanceModel,
                         channelCode = ChannelCode.BS,
-                        checkPermission = true
+                        checkPermission = true,
+                        fixPipelineId = null,
+                        instanceType = PipelineInstanceTypeEnum.CONSTRAINT.type
                     )
                     templatePipelineDao.create(
                         dslContext = context,
