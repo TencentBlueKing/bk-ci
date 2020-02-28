@@ -20,7 +20,7 @@
                     </bk-select>
                 </div>
             </form-field>
-            <stage-control :stage-control="stage.stageControlOption" :handle-stage-change="handleStageChange"></stage-control>
+            <stage-control :stage-control="stageControl" :handle-stage-change="handleStageChange"></stage-control>
         </section>
     </bk-sideslider>
 </template>
@@ -68,6 +68,15 @@
             },
             stageTitle () {
                 return typeof this.stage.name !== 'undefined' ? this.stage.name : this.stage.id
+            },
+            stageControl () {
+                if (this.stage && this.stage.stageControlOption) {
+                    return {
+                        ...this.stage.stageControlOption,
+                        fastKill: this.stage.fastKill
+                    }
+                }
+                return undefined
             }
         },
         watch: {
