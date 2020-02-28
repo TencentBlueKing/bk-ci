@@ -44,6 +44,7 @@ import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.pipeline.enums.PipelineInstanceTypeEnum
 import com.tencent.devops.common.pipeline.extend.ModelCheckPlugin
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildNo
@@ -52,6 +53,7 @@ import com.tencent.devops.process.dao.PipelineSettingDao
 import com.tencent.devops.process.engine.compatibility.BuildPropertyCompatibilityTools
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
+import com.tencent.devops.process.engine.dao.template.TemplateDao
 import com.tencent.devops.process.engine.dao.template.TemplatePipelineDao
 import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.jmx.api.ProcessJmxApi
@@ -101,6 +103,7 @@ class PipelineService @Autowired constructor(
     private val pipelineBean: PipelineBean,
     private val processJmxApi: ProcessJmxApi,
     private val dslContext: DSLContext,
+    private val templateDao: TemplateDao,
     private val templatePipelineDao: TemplatePipelineDao,
     private val pipelineInfoDao: PipelineInfoDao,
     private val pipelineSettingDao: PipelineSettingDao,
@@ -138,7 +141,8 @@ class PipelineService @Autowired constructor(
         model: Model,
         channelCode: ChannelCode,
         checkPermission: Boolean = true,
-        fixPipelineId: String? = null
+        fixPipelineId: String? = null,
+        instanceType: String? = PipelineInstanceTypeEnum.FREEDOM.type
     ): String {
         val apiStartEpoch = System.currentTimeMillis()
         var success = false
@@ -215,6 +219,9 @@ class PipelineService @Autowired constructor(
                 }
                 pipelineGroupService.addPipelineLabel(userId = userId, pipelineId = pipelineId, labelIds = model.labels)
                 pipelineUserService.create(pipelineId, userId)
+                if (instanceType == PipelineInstanceTypeEnum.FREEDOM.type) {
+                    createRelationBtwTemplate(userId, model.templateId!!, pipelineId)
+                }
                 success = true
                 return pipelineId
             } catch (duplicateKeyException: DuplicateKeyException) {
@@ -238,6 +245,49 @@ class PipelineService @Autowired constructor(
             pipelineBean.create(success)
             processJmxApi.execute(ProcessJmxApi.NEW_PIPELINE_CREATE, System.currentTimeMillis() - apiStartEpoch)
         }
+    }
+
+    /**
+     * 创建模板和流水线关联关系
+     */
+    fun createRelationBtwTemplate(
+        userId: String,
+        templateId: String,
+        pipelineId: String
+    ): Boolean {
+        logger.info("start createRelationBtwTemplate: $userId|$templateId|$pipelineId")
+        val template = templateDao.getLatestTemplate(dslContext, templateId)
+        if (template.srcTemplateId.isNullOrEmpty()) {
+            logger.info("[$templateId]template is CUSTOMIZE or PUBLIC")
+            templatePipelineDao.create(
+                dslContext = dslContext,
+                pipelineId = pipelineId,
+                instanceType = PipelineInstanceTypeEnum.FREEDOM.type,
+                rootTemplateId = templateId,
+                templateVersion = template.version,
+                versionName = template.versionName,
+                templateId = templateId,
+                userId = userId,
+                buildNo = null,
+                param = null
+            )
+        } else {
+            logger.info("[$templateId]template is from store, srcTemplateId is ${template.srcTemplateId}")
+            val rootTemplate = templateDao.getLatestTemplate(dslContext, template.srcTemplateId)
+            templatePipelineDao.create(
+                dslContext = dslContext,
+                pipelineId = pipelineId,
+                instanceType = PipelineInstanceTypeEnum.FREEDOM.type,
+                rootTemplateId = rootTemplate.id,
+                templateVersion = rootTemplate.version,
+                versionName = rootTemplate.versionName,
+                templateId = templateId,
+                userId = userId,
+                buildNo = null,
+                param = null
+            )
+        }
+        return true
     }
 
     /**
@@ -703,7 +753,8 @@ class PipelineService @Autowired constructor(
         }
 
         if (templateIdList != null) {
-            val templatePipelineIds = templatePipelineDao.listPipeline(dslContext, templateIdList).map { it.pipelineId }
+            val templatePipelineIds = 
+                templatePipelineDao.listPipeline(dslContext, PipelineInstanceTypeEnum.CONSTRAINT.type, templateIdList).map { it.pipelineId }
             resultPipelineIds.addAll(templatePipelineIds)
         }
 
