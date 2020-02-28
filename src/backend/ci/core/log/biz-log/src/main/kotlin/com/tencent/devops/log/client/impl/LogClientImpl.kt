@@ -46,22 +46,6 @@ class LogClientImpl constructor(private val client: ESClient) : LogClient {
         return clients.first()
     }
 
-    override fun markESInactive(buildId: String) {
-        // for the default implements just println the log
-        val client = CurrentLogClient.getClient()
-        if (client == null) {
-            logger.warn("[$buildId] Fail to get the es client")
-            return
-        }
-        logger.warn("[$buildId|${client.name}] Mark the es as inactive")
-    }
-
-    override fun markESActive(buildId: String) {
-        // for the default implement just println the log
-        val esName = CurrentLogClient.getInactiveESName()
-        logger.info("[$buildId|$esName] Mark the es as active")
-    }
-
     companion object {
         private val logger = LoggerFactory.getLogger(LogClientImpl::class.java)
     }
