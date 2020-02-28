@@ -32,6 +32,7 @@ import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.artifactory.service.AppService
 import com.tencent.devops.artifactory.service.PipelineService
 import com.tencent.devops.artifactory.util.JFrogUtil
+import com.tencent.devops.artifactory.util.StringUtil
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.archive.api.JFrogPropertiesApi
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_PIPELINE_ID
@@ -68,7 +69,7 @@ class ArtifactoryAppService @Autowired constructor(
         val pipelineId = properties[ARCHIVE_PROPS_PIPELINE_ID]!!.first()
         pipelineService.validatePermission(userId, projectId, pipelineId, AuthPermission.DOWNLOAD, "用户($userId)在工程($projectId)下没有流水线${pipelineId}下载构建权限")
 
-        val url = jFrogApiService.externalDownloadUrl(realPath, userId, ttl, directed)
+        val url = StringUtil.chineseUrlEncode(jFrogApiService.externalDownloadUrl(realPath, userId, ttl, directed))
         return Url(url)
     }
 
@@ -91,7 +92,7 @@ class ArtifactoryAppService @Autowired constructor(
         pipelineService.validatePermission(userId, projectId, pipelineId, AuthPermission.DOWNLOAD, "用户($userId)在工程($projectId)下没有流水线${pipelineId}下载构建权限")
 
 //        val url = jFrogApiService.externalDownloadUrl(realPath, userId, ttl, directed)
-        val url = "${HomeHostUtil.outerApiServerHost()}/artifactory/api/app/artifactories/$projectId/$artifactoryType/filePlist?path=$argPath"
+        val url = StringUtil.chineseUrlEncode("${HomeHostUtil.outerApiServerHost()}/artifactory/api/app/artifactories/$projectId/$artifactoryType/filePlist?path=$argPath")
         return Url(url)
     }
 
@@ -109,6 +110,7 @@ class ArtifactoryAppService @Autowired constructor(
         }
 
         val ipaExternalDownloadUrl = getExternalDownloadUrlDirected(userName, projectId, artifactoryType, argPath, ttl)
+        val ipaExternalDownloadUrlEncode = StringUtil.chineseUrlEncode(ipaExternalDownloadUrl.url.replace(" ", ""))
         val fileProperties = artifactoryService.getProperties(projectId, artifactoryType, argPath)
         var bundleIdentifier = ""
         var appTitle = ""
@@ -134,7 +136,7 @@ class ArtifactoryAppService @Autowired constructor(
             "                    <key>kind</key>\n" +
             "                    <string>software-package</string>\n" +
             "                    <key>url</key>\n" +
-            "                    <string>${ipaExternalDownloadUrl.url.replace(" ","")}</string>\n" +
+            "                    <string>$ipaExternalDownloadUrlEncode</string>\n" +
             "                </dict>\n" +
             "            </array>\n" +
             "            <key>metadata</key>\n" +
