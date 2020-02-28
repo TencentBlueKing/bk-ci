@@ -108,13 +108,18 @@ class LogServiceV2 @Autowired constructor(
         }
     }
 
+    fun markESInactive(buildId: String) {
+        client.markESInactive(buildId)
+    }
+
+    fun markESActive(buildId: String) {
+        client.markESActive(buildId)
+    }
+
     fun addLogEvent(event: LogEvent) {
         startLog(event.buildId)
         val logMessage = addLineNo(event.buildId, event.logs)
         LogDispatcher.dispatch(rabbitTemplate, LogBatchEvent(event.buildId, logMessage))
-        if (!event.esName.isNullOrBlank()) {
-            client.markESActive(event.buildId)
-        }
     }
 
     fun addBatchLogEvent(event: LogBatchEvent) {
@@ -132,9 +137,6 @@ class LogServiceV2 @Autowired constructor(
             }
             if (buf.isNotEmpty()) doAddMultiLines(buf, event.buildId)
             success = true
-            if (!event.esName.isNullOrBlank()) {
-                client.markESActive(event.buildId)
-            }
         } finally {
             val elapse = System.currentTimeMillis() - currentEpoch
             logBeanV2.execute(elapse, success)
