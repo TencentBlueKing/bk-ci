@@ -41,8 +41,12 @@ object CurrentLogClient {
         return currentClient.get()
     }
 
-    fun setInactiveESName(esName: String) {
-        inactiveESName.set(esName)
+    fun setInactiveESName(esName: String?) {
+        if (esName.isNullOrBlank()) {
+            inactiveESName.remove()
+        } else {
+            inactiveESName.set(esName)
+        }
     }
 
     fun getInactiveESName(): String? {
