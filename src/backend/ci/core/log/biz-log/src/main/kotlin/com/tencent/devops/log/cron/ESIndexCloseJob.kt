@@ -80,7 +80,7 @@ class ESIndexCloseJob @Autowired constructor(
     fun getExpireIndexDay() = expireIndexInDay
 
     private fun closeESIndexes() {
-        client.getClients().forEach { c ->
+        client.getActiveClients().forEach { c ->
             val indexes = c.client.admin()
                 .indices()
                 .prepareGetIndex()
