@@ -27,6 +27,7 @@
 package com.tencent.devops.log.client.impl
 
 import com.google.common.cache.CacheBuilder
+import com.google.common.cache.CacheLoader
 import com.tencent.devops.common.es.ESClient
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
@@ -49,6 +50,18 @@ class MultiESLogClient constructor(
         .expireAfterWrite(2, TimeUnit.DAYS)
         .build<String/*buildId*/, String/*ES NAME*/>()
 
+    // The cache store the bad ES
+    private val disconnectESCache = CacheBuilder.newBuilder()
+            .maximumSize(10)
+            .expireAfterWrite(1, TimeUnit.MINUTES)
+            .build<String/*ES Name*/, Boolean>(
+                    object: CacheLoader<String, Boolean>() {
+                        override fun load(esName: String): Boolean {
+                            return getDisconnectESFromRedis().contains(esName)
+                        }
+                    }
+            )
+
     override fun getClients(): List<ESClient> {
         return clients
     }
@@ -63,25 +76,50 @@ class MultiESLogClient constructor(
         if (client.isEmpty()) {
             throw RuntimeException("Fail to get the log client")
         }
+        val activeClients = client.filter { disconnectESCache.get(it.name) }
+        val activeESNames = activeClients.map { it.name }.toSet()
+        if (activeClients.isEmpty()) {
+            logger.warn("All clients(${client.map { it.name }}) are not active, return the first one")
+            return client.first()
+        }
         var esName = cache.getIfPresent(buildId)
+        if (!activeESNames.contains(esName)) {
+            logger.warn("The es($esName|$buildId) is not be active any more, retry other clients")
+            cache.invalidate(buildId)
+            esName = null
+        }
         if (esName.isNullOrBlank()) {
             val redisLock = RedisLock(redisOperation, "$MULTI_LOG_CLIENT_LOCK_KEY:$buildId", 10)
             try {
                 redisLock.lock()
-                esName = tencentIndexDao.getClusterName(dslContext, buildId)
+                esName = cache.getIfPresent(buildId)
                 if (esName.isNullOrBlank()) {
-                    // hash from build
-                } else {
-                    // set to cache
-                    logger.info("[$buildId] The build ID already bind to the ES: ($esName)")
-                    cache.put(buildId, esName!!)
+                    esName = tencentIndexDao.getClusterName(dslContext, buildId)
+                    if (esName.isNullOrBlank()) {
+                        // hash from build
+                        val c = activeClients[hashBuildId(buildId, activeClients.size)]
+                        esName = c.name
+                    } else {
+                        // set to cache
+                        logger.info("[$buildId] The build ID already bind to the ES: ($esName)")
+                    }
                 }
 
-
+                if (!activeESNames.contains(esName)) {
+                    esName = activeClients[hashBuildId(buildId, activeClients.size)].name
+                }
+                tencentIndexDao.updateClusterName(dslContext, buildId, esName!!)
+                cache.put(buildId, esName!!)
             } finally {
                 redisLock.unlock()
             }
         }
+        activeClients.forEach {
+            if (it.name == esName) {
+                return it
+            }
+        }
+        logger.warn("[$buildId] Fail to get the es name for the build, return the first one")
         return client.first()
     }
 
@@ -92,8 +130,13 @@ class MultiESLogClient constructor(
         return abs(buildId.hashCode()) % size
     }
 
+    private fun getDisconnectESFromRedis(): Set<String> {
+        return redisOperation.getSetMembers(MULTI_LOG_CLIENT_BAD_ES_KEY) ?: emptySet()
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(MultiESLogClient::class.java)
         private const val MULTI_LOG_CLIENT_LOCK_KEY = "log:multi:log:client:lock:key"
+        private const val MULTI_LOG_CLIENT_BAD_ES_KEY = "log::multi::log:client:bad:es:key"
     }
 }
