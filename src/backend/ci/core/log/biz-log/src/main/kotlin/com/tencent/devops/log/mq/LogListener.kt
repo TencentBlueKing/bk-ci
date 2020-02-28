@@ -63,8 +63,8 @@ class LogListener constructor(
             result = true
         } catch (e: IndexCreateFailureException) {
             logger.warn("Fail to add the log event [${event.buildId}|${event.retryTime}]", e)
-            logServiceV2.markESInactive(event.buildId)
             if (event.retryTime <= 0) {
+                logServiceV2.markESInactive(event.buildId)
                 val esName = CurrentLogClient.getClient()?.name
                 if (!esName.isNullOrBlank()) {
                     with(event) {
