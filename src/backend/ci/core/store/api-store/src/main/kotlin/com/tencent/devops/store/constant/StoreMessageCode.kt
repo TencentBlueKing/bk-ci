@@ -92,6 +92,14 @@ object StoreMessageCode {
     const val USER_IMAGE_NOT_EXIST = "2120309" // 镜像不存在：{0}
     const val USER_IMAGE_VERSION_NOT_EXIST = "2120310" // 标识为{0}版本号为{1}的镜像不存在
 
+    // 扩展服务相关的错误提示
+    const val USER_SERVICE_RELEASED_IS_NOT_ALLOW_DELETE = "2120301" // 研发商店：扩展服务{0}已发布到商店，请先下架再删除
+    const val USER_SERVICE_USED_IS_NOT_ALLOW_DELETE = "2120302" // 研发商店：扩展服务{0}已安装到其他项目下使用，请勿移除
+    const val USER_SERVICE_VERSION_IS_INVALID = "2120303" // 研发商店：扩展服务升级的版本号{0}错误，应为{1}
+    const val USER_SERVICE_VERSION_IS_NOT_FINISH = "2120304" // 研发商店：扩展服务{0}的{1}版本发布未结束，请稍后再试
+    const val USER_SERVICE_CODE_DIFF = "2120305" // 研发商店：扩展编码与extension.json文件内编码不一致
+
+
     // store公共业务相关的错误提示
     const val USER_PRAISE_IS_INVALID = "2120901" // 研发商店：你已点赞过
     const val USER_PROJECT_IS_NOT_ALLOW_INSTALL = "2120902" // 研发商店：你没有权限将组件安装到项目：{0}
