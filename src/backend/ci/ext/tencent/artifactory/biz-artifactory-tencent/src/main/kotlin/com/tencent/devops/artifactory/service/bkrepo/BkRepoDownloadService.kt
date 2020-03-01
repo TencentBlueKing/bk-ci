@@ -33,7 +33,6 @@ import com.tencent.devops.artifactory.service.PipelineService
 import com.tencent.devops.artifactory.service.RepoDownloadService
 import com.tencent.devops.artifactory.service.pojo.FileShareInfo
 import com.tencent.devops.artifactory.util.EmailUtil
-import com.tencent.devops.artifactory.util.JFrogUtil
 import com.tencent.devops.artifactory.util.PathUtils
 import com.tencent.devops.artifactory.util.RepoUtils
 import com.tencent.devops.common.api.exception.OperationException
@@ -102,8 +101,7 @@ class BkRepoDownloadService @Autowired constructor(
             projectId,
             artifactoryType,
             normalizedPath,
-            ttl,
-            directed
+            ttl
         )
         return Url(url)
     }

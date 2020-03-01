@@ -29,7 +29,6 @@ package com.tencent.devops.artifactory.mq
 import com.tencent.devops.artifactory.Constants
 import com.tencent.devops.artifactory.pojo.FileInfo
 import com.tencent.devops.artifactory.pojo.Property
-import com.tencent.devops.artifactory.pojo.SearchProps
 import com.tencent.devops.artifactory.service.ArtifactoryInfoService
 import com.tencent.devops.artifactory.service.artifactory.ArtifactorySearchService
 import com.tencent.devops.artifactory.service.bkrepo.BkRepoSearchService
@@ -92,7 +91,6 @@ class PipelineBuildExtListener @Autowired constructor(
             logger.info("[$buildId]|update artifact result: ${result.status} ${result.message}")
 
             if (result.isOk() && result.data != null) {
-
                 synArtifactoryInfo(
                     userId = event.userId,
                     artifactList = artifactList as List<FileInfo>,
@@ -119,15 +117,11 @@ class PipelineBuildExtListener @Autowired constructor(
         val fileInfoList = mutableListOf<FileInfo>()
         fileInfoList.addAll(
             if (repoGray.isGray(projectId, redisOperation)) {
-                bkRepoSearchService.searchFileAndProperty(
-                    userId = "",
+                bkRepoSearchService.serviceSearchFileAndProperty(
                     projectId = projectId,
-                    searchProps = SearchProps(
-                        listOf(),
-                        mapOf(
-                            "pipelineId" to pipelineId,
-                            "buildId" to pipelineId
-                        )
+                    searchProps = listOf(
+                        Property("pipelineId", pipelineId),
+                        Property("buildId", buildId)
                     )
                 ).second
             } else {

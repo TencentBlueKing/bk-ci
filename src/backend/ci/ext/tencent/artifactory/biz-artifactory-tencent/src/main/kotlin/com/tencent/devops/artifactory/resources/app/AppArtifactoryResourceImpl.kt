@@ -158,7 +158,7 @@ class AppArtifactoryResourceImpl @Autowired constructor(
             if (path.endsWith(".ipa")) {
                 bkRepoAppService.getExternalPlistDownloadUrl(userId, projectId, artifactoryType, path, 24*3600, false)
             } else {
-                bkRepoAppService.getExternalDownloadUrl(userId, projectId, artifactoryType, path, 24*3600, false)
+                bkRepoAppService.getExternalDownloadUrl(userId, projectId, artifactoryType, path, 24*3600, true)
             }
         } else {
             if (path.endsWith(".ipa")) {

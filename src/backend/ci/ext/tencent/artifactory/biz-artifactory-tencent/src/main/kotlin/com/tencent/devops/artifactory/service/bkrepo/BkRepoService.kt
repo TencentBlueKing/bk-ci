@@ -41,6 +41,7 @@ import com.tencent.devops.artifactory.service.PipelineService
 import com.tencent.devops.artifactory.service.RepoService
 import com.tencent.devops.artifactory.util.PathUtils
 import com.tencent.devops.artifactory.util.RepoUtils
+import com.tencent.devops.artifactory.util.StringUtil
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.archive.client.BkRepoClient
@@ -357,7 +358,7 @@ class BkRepoService @Autowired constructor(
             }
             return fileInfoList
         } finally {
-            logger.info("transferJFrogAQLFileInfo cost: ${System.currentTimeMillis() - startTimestamp}ms")
+            logger.info("transferFileInfo cost: ${System.currentTimeMillis() - startTimestamp}ms")
         }
     }
 
@@ -477,17 +478,10 @@ class BkRepoService @Autowired constructor(
         userId: String,
         projectId: String,
         artifactoryType: ArtifactoryType,
-        path: String,
-        ttl: Int,
-        directed: Boolean
+        fullPath: String,
+        ttl: Int
     ): String {
-        logger.info("externalDownloadUrl, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType, " +
-            "path: $path, ttl: $ttl, directed: $directed")
-        val fullPath = if (path.endsWith(".ipa") && directed == false) {
-            path.replace(".ipa", ".plist")
-        } else {
-            path
-        }
+        logger.info("externalDownloadUrl, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType, fullPath: $fullPath, ttl: $ttl")
         val shareUri = bkRepoClient.createShareUri(
             userId = userId,
             projectId = projectId,
@@ -497,7 +491,7 @@ class BkRepoService @Autowired constructor(
             downloadIps = listOf(),
             timeoutInSeconds = ttl.toLong()
         )
-        return "${HomeHostUtil.getHost(commonConfig.devopsOuterHostGateWay!!)}/bkrepo/api/external/repository$shareUri"
+        return StringUtil.chineseUrlEncode("${HomeHostUtil.getHost(commonConfig.devopsOuterHostGateWay!!)}/bkrepo/api/external/repository$shareUri")
     }
 
     fun internalDownloadUrl(
@@ -507,8 +501,7 @@ class BkRepoService @Autowired constructor(
         path: String,
         ttl: Int
     ): String {
-        logger.info("internalDownloadUrl, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType, " +
-            "path: $path, ttl: $ttl")
+        logger.info("internalDownloadUrl, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType, path: $path, ttl: $ttl")
         val shareUri = bkRepoClient.createShareUri(
             userId = userId,
             projectId = projectId,
