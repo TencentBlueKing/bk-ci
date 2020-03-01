@@ -49,8 +49,8 @@ import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.archive.pojo.ArtifactorySearchParam
 import com.tencent.devops.common.archive.pojo.BkRepoData
 import com.tencent.devops.common.archive.pojo.BkRepoFile
-import com.tencent.devops.common.archive.pojo.QueryNodeInfo
 import com.tencent.devops.common.archive.pojo.QueryData
+import com.tencent.devops.common.archive.pojo.QueryNodeInfo
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import okhttp3.MediaType
@@ -623,18 +623,18 @@ class BkRepoClient constructor(
         metadata: Map<String, String>,
         page: Int,
         pageSize: Int
-    ): List<QueryNodeInfo>{
+    ): List<QueryNodeInfo> {
         logger.info("queryByRepoAndMetadata, userId: $userId, projectId: $projectId, repoNames: $repoNames, metadata: $metadata")
 
         val projectRule = Rule.QueryRule("projectId", projectId, OperationType.EQ)
-        val repoRule = Rule.NestedRule(repoNames.map { Rule.QueryRule("repoName", it, OperationType.EQ) }.toMutableList(), Rule.NestedRule.RelationType.OR)
-        var ruleList = mutableListOf(projectRule, repoRule)
-        if(fileNamePatterns.isNotEmpty()){
+        val repoRule = Rule.QueryRule("repoName", repoNames, OperationType.IN)
+        var ruleList = mutableListOf<Rule>(projectRule, repoRule)
+        if (fileNamePatterns.isNotEmpty()) {
             val fileNameRule = Rule.NestedRule(fileNamePatterns.map { Rule.QueryRule("name", it, OperationType.MATCH) }.toMutableList(), Rule.NestedRule.RelationType.OR)
             ruleList.add(fileNameRule)
         }
-        if(metadata.isNotEmpty()){
-            val metadataRule = Rule.NestedRule(metadata.map{Rule.QueryRule("metadata.${it.key}", it.value, OperationType.EQ)}.toMutableList())
+        if (metadata.isNotEmpty()) {
+            val metadataRule = Rule.NestedRule(metadata.map { Rule.QueryRule("metadata.${it.key}", it.value, OperationType.EQ) }.toMutableList())
             ruleList.add(metadataRule)
         }
         var rule = Rule.NestedRule(ruleList, Rule.NestedRule.RelationType.AND)
@@ -648,19 +648,18 @@ class BkRepoClient constructor(
         repoNames: List<String>,
         fullPathPatterns: List<String>,
         metadata: Map<String, String>
-    ): List<QueryNodeInfo>{
+    ): List<QueryNodeInfo> {
         logger.info("queryByPattern, userId: $userId, projectId: $projectId, repoNames: $repoNames, fullPathPatterns: $fullPathPatterns, metadata: $metadata")
 
         val projectRule = Rule.QueryRule("projectId", projectId, OperationType.EQ)
-        val repoRule = Rule.NestedRule(repoNames.map { Rule.QueryRule("repoName", it, OperationType.EQ) }.toMutableList(), Rule.NestedRule.RelationType.OR)
-        var ruleList = mutableListOf(projectRule, repoRule)
-
-        if(fullPathPatterns.isNotEmpty()){
+        val repoRule = Rule.QueryRule("repoName", repoNames, OperationType.IN)
+        var ruleList = mutableListOf<Rule>(projectRule, repoRule)
+        if (fullPathPatterns.isNotEmpty()) {
             val fullPathRule = Rule.NestedRule(fullPathPatterns.map { Rule.QueryRule("fullPath", it, OperationType.MATCH) }.toMutableList(), Rule.NestedRule.RelationType.OR)
             ruleList.add(fullPathRule)
         }
-        if(metadata.isNotEmpty()){
-            val metadataRule = Rule.NestedRule(metadata.map{Rule.QueryRule("metadata.${it.key}", it.value, OperationType.EQ)}.toMutableList())
+        if (metadata.isNotEmpty()) {
+            val metadataRule = Rule.NestedRule(metadata.map { Rule.QueryRule("metadata.${it.key}", it.value, OperationType.EQ) }.toMutableList())
             ruleList.add(metadataRule)
         }
         var rule = Rule.NestedRule(ruleList, Rule.NestedRule.RelationType.AND)
@@ -693,13 +692,13 @@ class BkRepoClient constructor(
         OkhttpUtils.doHttp(request).use { response ->
             val responseContent = response.body()!!.string()
             if (!response.isSuccessful) {
-                logger.error("create share uri failed, requestBody: $requestBody, responseContent: $responseContent")
-                throw RuntimeException("create share uri failed")
+                logger.error("query failed, responseContent: $responseContent")
+                throw RuntimeException("query failed")
             }
 
             val responseData = objectMapper.readValue<Response<QueryData>>(responseContent)
             if (responseData.isNotOk()) {
-                throw RuntimeException("create share uri failed: ${responseData.message}")
+                throw RuntimeException("query failed: ${responseData.message}")
             }
 
             return responseData.data!!.records
