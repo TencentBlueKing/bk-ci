@@ -191,14 +191,17 @@ class RepoFileService @Autowired constructor(
         val pathArr = uri.path.split("/")
         val projectName = StringBuilder()
         for (item in pathArr) {
+            if (item.isBlank()) continue
             projectName.append(item).append("/")
             if (item.endsWith("_proj")) break
         }
-        val projectUrl = uri.scheme + "://" + uri.host.removeSuffix("/") + "/" + projectName.toString()
+        val projectNameStr = projectName.toString().removePrefix("/").removeSuffix("/")
+        val projectUrl = uri.scheme + "://" + uri.host + "/" + projectNameStr
 
-        // 3节项目名的话，Codecc传的filePath会带项目名，需要去掉
-        val filterFilePath = if (projectName.length == 3) {
-            filePath.removePrefix("/").removePrefix(pathArr[2])
+        // 三节项目名的话，Codecc传的filePath会带项目名，需要去掉
+        val projectNameArr = projectNameStr.split("/")
+        val filterFilePath = if (projectNameArr.size == 3) {
+            filePath.removePrefix("/").removePrefix(projectNameArr.last())
         } else {
             filePath
         }
