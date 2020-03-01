@@ -158,6 +158,7 @@ class AppArtifactoryResourceImpl @Autowired constructor(
             if (path.endsWith(".ipa")) {
                 bkRepoAppService.getExternalPlistDownloadUrl(userId, projectId, artifactoryType, path, 24*3600, false)
             } else {
+                // jfrog 对 android app 只有 derected方式
                 bkRepoAppService.getExternalDownloadUrl(userId, projectId, artifactoryType, path, 24*3600, true)
             }
         } else {

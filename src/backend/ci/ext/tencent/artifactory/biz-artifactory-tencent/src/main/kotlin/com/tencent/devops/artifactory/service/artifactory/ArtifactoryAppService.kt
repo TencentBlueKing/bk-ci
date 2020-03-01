@@ -97,7 +97,6 @@ class ArtifactoryAppService @Autowired constructor(
     }
 
     override fun getPlistFile(userId: String, projectId: String, artifactoryType: ArtifactoryType, argPath: String, ttl: Int, directed: Boolean, experienceHashId: String?): String {
-
         val userName = if (experienceHashId != null) {
             val experience = client.get(ServiceExperienceResource::class).get(userId, projectId, experienceHashId)
             if (experience.isOk() && experience.data != null) {

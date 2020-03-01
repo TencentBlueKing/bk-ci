@@ -84,7 +84,7 @@ class BkRepoAppService @Autowired constructor(
             normalizedPath,
             ttl
         )
-        return Url(url)
+        return Url(StringUtil.chineseUrlEncode(url))
     }
 
     override fun getExternalDownloadUrlDirected(userId: String, projectId: String, artifactoryType: ArtifactoryType, argPath: String, ttl: Int): Url {
@@ -105,7 +105,6 @@ class BkRepoAppService @Autowired constructor(
         pipelineService.validatePermission(userId, projectId, pipelineId, AuthPermission.DOWNLOAD, "用户($userId)在工程($projectId)下没有流水线${pipelineId}下载构建权限")
 
         val url = StringUtil.chineseUrlEncode("${HomeHostUtil.outerApiServerHost()}/artifactory/api/app/artifactories/$projectId/$artifactoryType/filePlist?path=$normalizePath")
-        val url = "${HomeHostUtil.outerApiServerHost()}/artifactory/api/app/artifactories/$projectId/$artifactoryType/filePlist?path=$normalizePath"
         return Url(url)
     }
 
