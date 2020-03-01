@@ -28,10 +28,12 @@ package com.tencent.devops.process.engine.dao.template
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.model.SQLPage
+import com.tencent.devops.common.pipeline.pojo.PipelineBuildBaseInfo
 import com.tencent.devops.model.process.tables.TPipelineInfo
 import com.tencent.devops.model.process.tables.TPipelineSetting
 import com.tencent.devops.model.process.tables.TTemplatePipeline
 import com.tencent.devops.model.process.tables.records.TTemplatePipelineRecord
+import com.tencent.devops.process.listener.PipelineHardDeleteListener
 import com.tencent.devops.process.pojo.template.TemplateInstanceUpdate
 import org.jooq.DSLContext
 import org.jooq.Record1
@@ -45,7 +47,13 @@ import java.time.LocalDateTime
  * 2019-01-07
  */
 @Repository
-class TemplatePipelineDao @Autowired constructor(private val objectMapper: ObjectMapper) {
+class TemplatePipelineDao @Autowired constructor(private val objectMapper: ObjectMapper) : PipelineHardDeleteListener {
+    override fun onPipelineDeleteHardly(dslContext: DSLContext, operator: String, pipelineBuildBaseInfoList: List<PipelineBuildBaseInfo>): Boolean {
+        pipelineBuildBaseInfoList.forEach {
+            delete(dslContext, it.pipelineId)
+        }
+        return true
+    }
 
     fun create(
         dslContext: DSLContext,

@@ -26,12 +26,20 @@
 
 package com.tencent.devops.process.dao
 
+import com.tencent.devops.common.pipeline.pojo.PipelineBuildBaseInfo
 import com.tencent.devops.model.process.tables.TBuildStartupParam
+import com.tencent.devops.process.listener.PipelineHardDeleteListener
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 
 @Repository
-class BuildStartupParamDao {
+class BuildStartupParamDao : PipelineHardDeleteListener {
+    override fun onPipelineDeleteHardly(dslContext: DSLContext, operator: String, pipelineBuildBaseInfoList: List<PipelineBuildBaseInfo>): Boolean {
+        pipelineBuildBaseInfoList.forEach {
+            deletePipelineBuildParams(dslContext, it.projectCode, it.pipelineId)
+        }
+        return true
+    }
 
     fun add(dslContext: DSLContext, buildId: String, param: String, projectId: String, pipelineId: String) {
         with(TBuildStartupParam.T_BUILD_STARTUP_PARAM) {

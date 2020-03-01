@@ -28,11 +28,13 @@ package com.tencent.devops.process.engine.dao
 
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.BuildNo
+import com.tencent.devops.common.pipeline.pojo.PipelineBuildBaseInfo
 import com.tencent.devops.model.process.Tables.T_PIPELINE_BUILD_SUMMARY
 import com.tencent.devops.model.process.Tables.T_PIPELINE_INFO
 import com.tencent.devops.model.process.Tables.T_PIPELINE_SETTING
 import com.tencent.devops.model.process.tables.records.TPipelineBuildSummaryRecord
 import com.tencent.devops.process.engine.pojo.LatestRunningBuild
+import com.tencent.devops.process.listener.PipelineHardDeleteListener
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
@@ -42,7 +44,13 @@ import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
 @Repository
-class PipelineBuildSummaryDao {
+class PipelineBuildSummaryDao : PipelineHardDeleteListener {
+    override fun onPipelineDeleteHardly(dslContext: DSLContext, operator: String, pipelineBuildBaseInfoList: List<PipelineBuildBaseInfo>): Boolean {
+        pipelineBuildBaseInfoList.forEach {
+            delete(dslContext, it.projectCode, it.pipelineId)
+        }
+        return true
+    }
 
     fun create(
         dslContext: DSLContext,
@@ -185,8 +193,8 @@ class PipelineBuildSummaryDao {
     }
 
     /**
-    * 获取PipelineInfo与BuildSummary Join后的表
-    */
+     * 获取PipelineInfo与BuildSummary Join后的表
+     */
     fun getPipelineInfoBuildSummaryBaseQuery(dslContext: DSLContext): SelectOnConditionStep<Record> {
         return dslContext.select(
             T_PIPELINE_INFO.PIPELINE_ID,

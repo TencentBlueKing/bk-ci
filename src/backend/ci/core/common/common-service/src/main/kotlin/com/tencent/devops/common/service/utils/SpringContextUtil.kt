@@ -99,5 +99,9 @@ class SpringContextUtil : ApplicationContextAware {
         fun <T : Any> getBeansWithClass(clazz: Class<T>): List<Any> {
             return applicationContext!!.getBeansOfType(clazz).values.toList()
         }
+
+        fun getApplicationContext(): ApplicationContext? {
+            return applicationContext
+        }
     }
 }

@@ -28,8 +28,11 @@ package com.tencent.devops.process.engine.dao
 
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
+import com.tencent.devops.common.pipeline.pojo.PipelineBuildBaseInfo
 import com.tencent.devops.model.process.Tables.T_PIPELINE_BUILD_VAR
+import com.tencent.devops.model.process.tables.TPipelineBuildVar
 import com.tencent.devops.model.process.tables.records.TPipelineBuildVarRecord
+import com.tencent.devops.process.listener.PipelineHardDeleteListener
 import org.jooq.DSLContext
 import org.jooq.InsertOnDuplicateSetMoreStep
 import org.jooq.Result
@@ -38,7 +41,18 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Repository
 
 @Repository
-class PipelineBuildVarDao @Autowired constructor() {
+class PipelineBuildVarDao @Autowired constructor() : PipelineHardDeleteListener {
+    override fun onPipelineDeleteHardly(dslContext: DSLContext, operator: String, pipelineBuildBaseInfoList: List<PipelineBuildBaseInfo>): Boolean {
+        pipelineBuildBaseInfoList.forEach {
+            with(TPipelineBuildVar.T_PIPELINE_BUILD_VAR) {
+                dslContext.deleteFrom(this)
+                    .where(PROJECT_ID.eq(it.projectCode))
+                    .and(PIPELINE_ID.eq(it.pipelineId))
+                    .execute()
+            }
+        }
+        return true
+    }
 
     fun save(
         dslContext: DSLContext,

@@ -26,14 +26,26 @@
 
 package com.tencent.devops.process.dao
 
+import com.tencent.devops.common.pipeline.pojo.PipelineBuildBaseInfo
 import com.tencent.devops.model.process.tables.TPipelineRemoteAuth
 import com.tencent.devops.model.process.tables.records.TPipelineRemoteAuthRecord
+import com.tencent.devops.process.listener.PipelineHardDeleteListener
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
 @Repository
-class PipelineRemoteAuthDao {
+class PipelineRemoteAuthDao : PipelineHardDeleteListener {
+    override fun onPipelineDeleteHardly(dslContext: DSLContext, operator: String, pipelineBuildBaseInfoList: List<PipelineBuildBaseInfo>): Boolean {
+        pipelineBuildBaseInfoList.forEach { pipelineBuildBaseInfo ->
+            with(TPipelineRemoteAuth.T_PIPELINE_REMOTE_AUTH) {
+                dslContext.deleteFrom(this)
+                    .where(PIPELINE_ID.eq(pipelineBuildBaseInfo.pipelineId))
+                    .execute()
+            }
+        }
+        return true
+    }
 
     fun addAuth(
         dslContext: DSLContext,

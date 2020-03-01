@@ -27,8 +27,10 @@
 package com.tencent.devops.process.dao
 
 import com.tencent.devops.common.notify.enums.NotifyTypeEnum
+import com.tencent.devops.common.pipeline.pojo.PipelineBuildBaseInfo
 import com.tencent.devops.model.process.tables.TPipelineSetting
 import com.tencent.devops.model.process.tables.records.TPipelineSettingRecord
+import com.tencent.devops.process.listener.PipelineHardDeleteListener
 import com.tencent.devops.process.pojo.setting.PipelineRunLockType
 import com.tencent.devops.process.pojo.setting.PipelineSetting
 import com.tencent.devops.process.util.DateTimeUtils
@@ -43,7 +45,13 @@ import org.jooq.Result
 import org.springframework.stereotype.Repository
 
 @Repository
-class PipelineSettingDao {
+class PipelineSettingDao : PipelineHardDeleteListener {
+    override fun onPipelineDeleteHardly(dslContext: DSLContext, operator: String, pipelineBuildBaseInfoList: List<PipelineBuildBaseInfo>): Boolean {
+        pipelineBuildBaseInfoList.forEach {
+            delete(dslContext, it.pipelineId)
+        }
+        return true
+    }
 
     // 新流水线创建的时候，设置默认的通知配置。
     fun insertNewSetting(

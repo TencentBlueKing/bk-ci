@@ -28,16 +28,24 @@ package com.tencent.devops.process.engine.dao
 
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.common.pipeline.pojo.PipelineBuildBaseInfo
 import com.tencent.devops.model.process.Tables.T_PIPELINE_WEBHOOK
 import com.tencent.devops.model.process.tables.records.TPipelineWebhookRecord
 import com.tencent.devops.process.engine.pojo.PipelineWebhook
+import com.tencent.devops.process.listener.PipelineHardDeleteListener
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
 
 @Repository
-class PipelineWebhookDao {
+class PipelineWebhookDao : PipelineHardDeleteListener {
+    override fun onPipelineDeleteHardly(dslContext: DSLContext, operator: String, pipelineBuildBaseInfoList: List<PipelineBuildBaseInfo>): Boolean {
+        pipelineBuildBaseInfoList.forEach {
+            delete(dslContext, it.pipelineId)
+        }
+        return true
+    }
 
     fun save(dslContext: DSLContext, pipelineWebhook: PipelineWebhook): Int {
         logger.info("save the pipeline webhook=$pipelineWebhook")

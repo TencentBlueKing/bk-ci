@@ -27,16 +27,29 @@
 package com.tencent.devops.process.engine.dao
 
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.pipeline.pojo.PipelineBuildBaseInfo
 import com.tencent.devops.model.process.Tables.T_PIPELINE_BUILD_STAGE
+import com.tencent.devops.model.process.tables.TPipelineBuildStage
 import com.tencent.devops.model.process.tables.records.TPipelineBuildStageRecord
 import com.tencent.devops.process.engine.pojo.PipelineBuildStage
+import com.tencent.devops.process.listener.PipelineHardDeleteListener
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
 @Repository
-class PipelineBuildStageDao {
+class PipelineBuildStageDao : PipelineHardDeleteListener {
+    override fun onPipelineDeleteHardly(dslContext: DSLContext, operator: String, pipelineBuildBaseInfoList: List<PipelineBuildBaseInfo>): Boolean {
+        pipelineBuildBaseInfoList.forEach { pipelineBuildBaseInfo ->
+            with(TPipelineBuildStage.T_PIPELINE_BUILD_STAGE) {
+                dslContext.deleteFrom(this)
+                    .where(PROJECT_ID.eq(pipelineBuildBaseInfo.projectCode).and(PIPELINE_ID.eq(pipelineBuildBaseInfo.pipelineId)))
+                    .execute()
+            }
+        }
+        return true
+    }
 
     fun create(
         dslContext: DSLContext,

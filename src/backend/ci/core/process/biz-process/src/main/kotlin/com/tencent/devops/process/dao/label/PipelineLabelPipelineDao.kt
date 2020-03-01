@@ -26,8 +26,10 @@
 
 package com.tencent.devops.process.dao.label
 
+import com.tencent.devops.common.pipeline.pojo.PipelineBuildBaseInfo
 import com.tencent.devops.model.process.tables.TPipelineLabelPipeline
 import com.tencent.devops.model.process.tables.records.TPipelineLabelPipelineRecord
+import com.tencent.devops.process.listener.PipelineHardDeleteListener
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.slf4j.LoggerFactory
@@ -38,7 +40,17 @@ import java.time.LocalDateTime
  * 流水线和标签对应关系表
  */
 @Repository
-class PipelineLabelPipelineDao {
+class PipelineLabelPipelineDao : PipelineHardDeleteListener {
+    override fun onPipelineDeleteHardly(dslContext: DSLContext, operator: String, pipelineBuildBaseInfoList: List<PipelineBuildBaseInfo>): Boolean {
+        pipelineBuildBaseInfoList.forEach { pipelineBuildBaseInfo ->
+            with(TPipelineLabelPipeline.T_PIPELINE_LABEL_PIPELINE) {
+                dslContext.deleteFrom(this)
+                    .where(PIPELINE_ID.eq(pipelineBuildBaseInfo.pipelineId))
+                    .execute()
+            }
+        }
+        return true
+    }
 
     fun create(
         dslContext: DSLContext,

@@ -27,11 +27,13 @@
 package com.tencent.devops.process.engine.dao
 
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.pipeline.pojo.PipelineBuildBaseInfo
 import com.tencent.devops.model.process.Tables.T_PIPELINE_MODEL_TASK
 import com.tencent.devops.model.process.tables.TPipelineInfo
 import com.tencent.devops.model.process.tables.TPipelineModelTask
 import com.tencent.devops.model.process.tables.records.TPipelineModelTaskRecord
 import com.tencent.devops.process.engine.pojo.PipelineModelTask
+import com.tencent.devops.process.listener.PipelineHardDeleteListener
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.InsertOnDuplicateSetMoreStep
@@ -42,7 +44,17 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
 
 @Repository
-class PipelineModelTaskDao {
+class PipelineModelTaskDao : PipelineHardDeleteListener {
+    override fun onPipelineDeleteHardly(dslContext: DSLContext, operator: String, pipelineBuildBaseInfoList: List<PipelineBuildBaseInfo>): Boolean {
+        pipelineBuildBaseInfoList.forEach {
+            deletePipelineTasks(
+                dslContext,
+                projectId = it.projectCode,
+                pipelineId = it.pipelineId
+            )
+        }
+        return true
+    }
 
     fun batchSave(dslContext: DSLContext, modelTasks: Collection<PipelineModelTask>) {
         val records = mutableListOf<InsertOnDuplicateSetMoreStep<TPipelineModelTaskRecord>>()

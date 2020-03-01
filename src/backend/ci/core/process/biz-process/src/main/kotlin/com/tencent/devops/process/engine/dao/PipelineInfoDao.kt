@@ -29,9 +29,11 @@ package com.tencent.devops.process.engine.dao
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.BuildNo
+import com.tencent.devops.common.pipeline.pojo.PipelineBuildBaseInfo
 import com.tencent.devops.model.process.Tables.T_PIPELINE_INFO
 import com.tencent.devops.model.process.tables.records.TPipelineInfoRecord
 import com.tencent.devops.process.engine.pojo.PipelineInfo
+import com.tencent.devops.process.listener.PipelineHardDeleteListener
 import org.jooq.DSLContext
 import org.jooq.Record1
 import org.jooq.Result
@@ -40,7 +42,13 @@ import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
 @Repository
-class PipelineInfoDao {
+class PipelineInfoDao : PipelineHardDeleteListener {
+    override fun onPipelineDeleteHardly(dslContext: DSLContext, operator: String, pipelineBuildBaseInfoList: List<PipelineBuildBaseInfo>): Boolean {
+        pipelineBuildBaseInfoList.forEach { pipelineBuildBaseInfo ->
+            delete(dslContext, pipelineBuildBaseInfo.projectCode, pipelineBuildBaseInfo.pipelineId)
+        }
+        return true
+    }
 
     fun create(
         dslContext: DSLContext,
@@ -258,7 +266,7 @@ class PipelineInfoDao {
         return with(T_PIPELINE_INFO) {
             val query = if (!projectId.isNullOrBlank()) {
                 dslContext.selectFrom(this).where(PROJECT_ID.eq(projectId))
-                .and(PIPELINE_ID.eq(pipelineId))
+                    .and(PIPELINE_ID.eq(pipelineId))
             } else {
                 dslContext.selectFrom(this).where(PIPELINE_ID.eq(pipelineId))
             }

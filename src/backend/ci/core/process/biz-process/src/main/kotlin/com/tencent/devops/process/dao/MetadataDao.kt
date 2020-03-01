@@ -26,15 +26,34 @@
 
 package com.tencent.devops.process.dao
 
+import com.tencent.devops.common.pipeline.pojo.PipelineBuildBaseInfo
 import com.tencent.devops.model.process.tables.TMetadata
 import com.tencent.devops.model.process.tables.records.TMetadataRecord
+import com.tencent.devops.process.listener.PipelineHardDeleteListener
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
 @Repository
-class MetadataDao {
+class MetadataDao : PipelineHardDeleteListener {
+    override fun onPipelineDeleteHardly(dslContext: DSLContext, operator: String, pipelineBuildBaseInfoList: List<PipelineBuildBaseInfo>): Boolean {
+        pipelineBuildBaseInfoList.forEach { pipelineBuildBaseInfo ->
+            pipelineBuildBaseInfo.buildIdList.forEach {
+                delete(dslContext, it)
+            }
+        }
+        return true
+    }
+
+    fun delete(dslContext: DSLContext, buildId: String): Int {
+        with(TMetadata.T_METADATA) {
+            return dslContext.deleteFrom(this)
+                .where(BUILD_ID.eq(buildId))
+                .execute()
+        }
+    }
+
     fun create(
         dslContext: DSLContext,
         projectId: String,

@@ -47,6 +47,7 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHook
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitlabWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeSVNWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
+import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.dao.PipelineSettingDao
 import com.tencent.devops.process.engine.cfg.ModelContainerIdGenerator
@@ -62,6 +63,7 @@ import com.tencent.devops.process.engine.pojo.PipelineModelTask
 import com.tencent.devops.process.engine.pojo.event.PipelineCreateEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineDeleteEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineUpdateEvent
+import com.tencent.devops.process.listener.PipelineHardDeleteListener
 import com.tencent.devops.process.plugin.load.ElementBizRegistrar
 import com.tencent.devops.process.pojo.setting.PipelineRunLockType
 import com.tencent.devops.process.pojo.setting.PipelineSetting
@@ -611,6 +613,33 @@ class PipelineRepositoryService constructor(
                     channelCode = record.channel
                 )
             )
+        }
+    }
+
+    /**
+     * 硬删除流水线及其所有关联资源
+     */
+    fun deletePipelineHardly(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        channelCode: ChannelCode?
+    ) {
+        val applicationContext = SpringContextUtil.getApplicationContext()!!
+        val beanNames = applicationContext.beanDefinitionNames
+        //查出流水线的所有构建
+
+        beanNames.forEach { beanName->
+            val beanType=applicationContext.getType(beanName)
+            if(beanType is PipelineHardDeleteListener){
+                val bean=applicationContext.getBean(beanName,PipelineHardDeleteListener::class.java)
+                var deleteResult=false
+                var retryCount=0
+                while(!deleteResult&&retryCount<3){
+                    retryCount+=1
+                    deleteResult=bean.onPipelineDeleteHardly(dslContext,userId,pipelineBuildBaseInfoList)
+                }
+            }
         }
     }
 

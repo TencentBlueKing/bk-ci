@@ -32,17 +32,25 @@ import com.tencent.devops.common.pipeline.NameAndValue
 import com.tencent.devops.common.pipeline.container.JobControlOption
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.JobRunCondition
+import com.tencent.devops.common.pipeline.pojo.PipelineBuildBaseInfo
 import com.tencent.devops.model.process.Tables.T_PIPELINE_BUILD_CONTAINER
 import com.tencent.devops.model.process.tables.records.TPipelineBuildContainerRecord
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainerControlOption
+import com.tencent.devops.process.listener.PipelineHardDeleteListener
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
 @Repository
-class PipelineBuildContainerDao {
+class PipelineBuildContainerDao : PipelineHardDeleteListener {
+    override fun onPipelineDeleteHardly(dslContext: DSLContext, operator: String, pipelineBuildBaseInfoList: List<PipelineBuildBaseInfo>): Boolean {
+        for (pipelineBuildBaseInfo in pipelineBuildBaseInfoList) {
+            deletePipelineBuildContainers(dslContext, pipelineBuildBaseInfo.projectCode, pipelineBuildBaseInfo.pipelineId)
+        }
+        return true
+    }
 
     fun create(
         dslContext: DSLContext,

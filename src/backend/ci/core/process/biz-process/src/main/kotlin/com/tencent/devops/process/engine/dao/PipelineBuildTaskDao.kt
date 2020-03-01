@@ -27,14 +27,16 @@
 package com.tencent.devops.process.engine.dao
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.pipeline.pojo.PipelineBuildBaseInfo
 import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
 import com.tencent.devops.model.process.Tables.T_PIPELINE_BUILD_TASK
 import com.tencent.devops.model.process.tables.TPipelineBuildTask
 import com.tencent.devops.model.process.tables.records.TPipelineBuildTaskRecord
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
-import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.process.listener.PipelineHardDeleteListener
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.slf4j.LoggerFactory
@@ -44,7 +46,13 @@ import java.time.Duration
 import java.time.LocalDateTime
 
 @Repository
-class PipelineBuildTaskDao @Autowired constructor(private val objectMapper: ObjectMapper) {
+class PipelineBuildTaskDao @Autowired constructor(private val objectMapper: ObjectMapper) : PipelineHardDeleteListener {
+    override fun onPipelineDeleteHardly(dslContext: DSLContext, operator: String, pipelineBuildBaseInfoList: List<PipelineBuildBaseInfo>): Boolean {
+        pipelineBuildBaseInfoList.forEach {
+            deletePipelineBuildTasks(dslContext, it.projectCode, it.pipelineId)
+        }
+        return true
+    }
 
     fun create(
         dslContext: DSLContext,

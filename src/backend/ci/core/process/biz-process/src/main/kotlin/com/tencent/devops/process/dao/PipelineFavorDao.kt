@@ -26,8 +26,10 @@
 
 package com.tencent.devops.process.dao
 
+import com.tencent.devops.common.pipeline.pojo.PipelineBuildBaseInfo
 import com.tencent.devops.model.process.tables.TPipelineFavor
 import com.tencent.devops.model.process.tables.records.TPipelineFavorRecord
+import com.tencent.devops.process.listener.PipelineHardDeleteListener
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.slf4j.LoggerFactory
@@ -38,7 +40,17 @@ import java.time.LocalDateTime
  * 用户收藏流水线
  */
 @Repository
-class PipelineFavorDao {
+class PipelineFavorDao : PipelineHardDeleteListener {
+    override fun onPipelineDeleteHardly(dslContext: DSLContext, operator: String, pipelineBuildBaseInfoList: List<PipelineBuildBaseInfo>): Boolean {
+        pipelineBuildBaseInfoList.forEach { pipelineBuildBaseInfo ->
+            with(TPipelineFavor.T_PIPELINE_FAVOR) {
+                dslContext.deleteFrom(this)
+                    .where(PIPELINE_ID.eq(pipelineBuildBaseInfo.pipelineId))
+                    .execute()
+            }
+        }
+        return true
+    }
 
     fun create(
         dslContext: DSLContext,
