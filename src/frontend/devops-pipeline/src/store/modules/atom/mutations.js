@@ -32,9 +32,11 @@ export default {
         const stages = state.pipeline.stages || []
         const stageIndex = stages.findIndex(stage => stage.containers === oldContainers)
         if (containers.length > 0) {
-            const currentStages = state.pipeline.stages[stageIndex] || {}
-            currentStages.containers = containers
+            const currentStage = state.pipeline.stages[stageIndex] || {}
+            currentStage.containers = containers
+            console.log('currentStage', currentStage)
         } else {
+            console.log('slice')
             state.pipeline.stages.splice(stageIndex, 1)
         }
     },
