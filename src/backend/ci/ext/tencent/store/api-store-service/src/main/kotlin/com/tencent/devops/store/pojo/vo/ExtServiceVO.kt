@@ -24,25 +24,27 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.resources
+package com.tencent.devops.store.pojo.vo
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.store.api.UserExtItemServiceResource
-import com.tencent.devops.store.pojo.vo.ExtItemServiceVO
-import com.tencent.devops.store.service.ExtItemServiceService
-import org.springframework.beans.factory.annotation.Autowired
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-@RestResource
-class UserExtItemServiceResourceImpl @Autowired constructor(
-    val extItemServiceService: ExtItemServiceService
-) : UserExtItemServiceResource {
-
-    override fun getExtItemServiceList(
-        userId: String,
-        projectCode: String,
-        itemIds: String
-    ): Result<List<ExtItemServiceVO>> {
-        return extItemServiceService.getExtItemServiceList(userId, projectCode, itemIds)
-    }
-}
+@ApiModel("扩展点对应的扩展服务信息")
+data class ExtServiceVO(
+    @ApiModelProperty("扩展服务Id", required = true)
+    val serviceId: String,
+    @ApiModelProperty("扩展服务名称", required = true)
+    val serviceName: String,
+    @ApiModelProperty("扩展服务code", required = true)
+    val serviceCode: String,
+    @ApiModelProperty("版本", required = true)
+    val version: String,
+    @ApiModelProperty("扩展服务简介", required = false)
+    val summary: String?,
+    @ApiModelProperty("扩展服务开发者信息", required = true)
+    val vendor: ExtServiceVendorVO,
+    @ApiModelProperty("扩展服务访问路径前缀", required = true)
+    val baseUrl: String,
+    @ApiModelProperty("自扩展服务前端针对该扩展点的配置信息Json串", required = false)
+    val props: Map<String, Any>?
+)

@@ -36,7 +36,7 @@ import com.tencent.devops.store.pojo.enums.ExtServiceStatusEnum
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
-import org.jooq.Record8
+import org.jooq.Record9
 import org.jooq.Result
 import org.jooq.SelectOnConditionStep
 import org.springframework.stereotype.Repository
@@ -111,7 +111,7 @@ class ExtItemServiceDao {
         val tspr = TStoreProjectRel.T_STORE_PROJECT_REL.`as`("tspr")
         val baseStep = getExtItemServiceBaseStep(dslContext, tes, tesir, tesf)
         val conditions = setQueryExtItemServiceBaseCondition(tes, tesir, itemId)
-        if (!projectCode.isNullOrBlank()) {
+        val t = if (!projectCode.isNullOrBlank()) {
             // 查询项目下的扩展服务（包含自已开发和研发商店安装）
             // 查询公共扩展服务
             val publicConditions =
@@ -133,17 +133,17 @@ class ExtItemServiceDao {
                     getExtItemServiceBaseStep(dslContext, tes, tesir, tesf)
                         .leftJoin(tspr).on(tes.SERVICE_CODE.eq(tspr.STORE_CODE))
                         .where(initTestConditions)
-                )
+                ).asTable("t")
         } else {
             // 只查已发布的扩展服务
             conditions.add(tes.SERVICE_STATUS.eq(ExtServiceStatusEnum.RELEASED.status.toByte()))
-            baseStep.where(conditions)
+            baseStep.where(conditions).asTable("t")
         }
-        baseStep.orderBy(tesf.WEIGHT.desc(), tes.SERVICE_NAME.asc())
+        val sql = dslContext.select().from(t).orderBy(t.field("weight").desc(), t.field("serviceName").asc())
         return if (null != page && null != pageSize) {
-            baseStep.limit((page - 1) * pageSize, pageSize).fetch()
+            sql.limit((page - 1) * pageSize, pageSize).fetch()
         } else {
-            baseStep.fetch()
+            sql.fetch()
         }
     }
 
@@ -248,7 +248,7 @@ class ExtItemServiceDao {
         tes: TExtensionService,
         tesir: TExtensionServiceItemRel,
         tesf: TExtensionServiceFeature
-    ): SelectOnConditionStep<Record8<String, String, String, String, String, String, String, String>> {
+    ): SelectOnConditionStep<Record9<String, String, String, String, String, String, String, String, Int>> {
         return dslContext.select(
             tes.ID.`as`("serviceId"),
             tes.SERVICE_CODE.`as`("serviceCode"),
@@ -257,7 +257,8 @@ class ExtItemServiceDao {
             tes.VERSION.`as`("version"),
             tes.SUMMARY.`as`("summary"),
             tes.PUBLISHER.`as`("publisher"),
-            tesir.PROPS.`as`("props")
+            tesir.PROPS.`as`("props"),
+            tesf.WEIGHT.`as`("weight")
         )
             .from(tes)
             .join(tesir)

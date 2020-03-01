@@ -26,12 +26,11 @@
 
 package com.tencent.devops.store.service
 
-import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.store.dao.ExtItemServiceDao
 import com.tencent.devops.store.pojo.vo.ExtItemServiceVO
+import com.tencent.devops.store.pojo.vo.ExtServiceVO
 import com.tencent.devops.store.pojo.vo.ExtServiceVendorVO
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -46,35 +45,42 @@ class ExtItemServiceService @Autowired constructor(
 
     fun getExtItemServiceList(
         userId: String,
-        itemId: String,
-        projectCode: String?,
-        page: Int?,
-        pageSize: Int?
-    ): Result<Page<ExtItemServiceVO>> {
-        logger.info("getExtItemServiceList userId is :$userId,itemId is :$itemId,projectCode is :$projectCode")
-        logger.info("getExtItemServiceList page is :$page,pageSize is :$pageSize")
-        val serviceCount = extItemServiceDao.getExtItemServiceCount(dslContext, userId, itemId, projectCode)
-        val serviceRecords = extItemServiceDao.getExtItemServiceList(dslContext, userId, itemId, projectCode, page, pageSize)
-        val serviceList = mutableListOf<ExtItemServiceVO>()
-        serviceRecords?.forEach {
-            val props = it["props"] as? String
-            serviceList.add(
-                ExtItemServiceVO(
-                    serviceId = it["serviceId"] as String,
-                    serviceName = it["serviceName"] as String,
-                    serviceCode = it["serviceCode"] as String,
-                    version = it["version"] as String,
-                    summary = it["summary"] as? String,
-                    vendor = ExtServiceVendorVO(
-                        name = it["publisher"] as String
-                    ),
-                    baseUrl = "", // todo 待网关完善好后把扩展服务访问地址前缀逻辑补上
-                    props = if (!props.isNullOrBlank()) JsonUtil.toMap(props!!) else null
-                )
+        projectCode: String,
+        itemIds: String
+    ): Result<List<ExtItemServiceVO>> {
+        logger.info("getExtItemServiceList userId is :$userId,itemIds is :$itemIds,projectCode is :$projectCode")
+        val extServiceList = mutableListOf<ExtItemServiceVO>()
+        val itemIdList = itemIds.split(",")
+        itemIdList.forEach {
+            val serviceRecords = extItemServiceDao.getExtItemServiceList(
+                dslContext = dslContext,
+                userId = userId,
+                itemId = it,
+                projectCode = projectCode,
+                page = null,
+                pageSize = null
             )
+            val serviceList = mutableListOf<ExtServiceVO>()
+            serviceRecords?.forEach {
+                val props = it["props"] as? String
+                serviceList.add(
+                    ExtServiceVO(
+                        serviceId = it["serviceId"] as String,
+                        serviceName = it["serviceName"] as String,
+                        serviceCode = it["serviceCode"] as String,
+                        version = it["version"] as String,
+                        summary = it["summary"] as? String,
+                        vendor = ExtServiceVendorVO(
+                            name = it["publisher"] as String
+                        ),
+                        baseUrl = "", // todo 待网关完善好后把扩展服务访问地址前缀逻辑补上
+                        props = if (!props.isNullOrBlank()) JsonUtil.toMap(props!!) else null
+                    )
+                )
+            }
+            extServiceList.add(ExtItemServiceVO(itemId = it, extServiceList = serviceList))
         }
-        val totalPages = PageUtil.calTotalPage(pageSize, serviceCount)
-        return Result(Page(count = serviceCount, page = page ?: 1, pageSize = pageSize ?: -1, totalPages = totalPages, records = serviceList))
+        return Result(extServiceList)
     }
 
     companion object {
