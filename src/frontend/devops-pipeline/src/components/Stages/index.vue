@@ -51,9 +51,15 @@
                 set (stages) {
                     const data = []
                     stages.forEach((stage, index) => {
-                        const containers = stage.containers || [stage]
+                        const containers = stage.containers || []
                         const id = `stage-${index + 1}`
-                        if (containers.length) data.push({ containers, id })
+                        if (containers.length) {
+                            data.push({
+                                id,
+                                ...stage,
+                                containers
+                            })
+                        }
                     })
                     this.setPipelineStage(data)
                     this.setPipelineEditing(true)

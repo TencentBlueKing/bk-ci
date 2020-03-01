@@ -1,8 +1,16 @@
 <template>
-    <div :class="[{ 'pipeline-drag': editable && !isTriggerStage, 'show-stage-area': editable && !isTriggerStage, 'is-error': stage.isError }, 'pipeline-stage']" ref="stageRef">
-        <bk-button v-if="editable && !isTriggerStage" class="pipeline-stage-entry" @click="showStagePanel">{{ stageTitle }}</bk-button>
-        <draggable v-model="compitedContainer" v-bind="dragOptions" :move="checkMove" tag="ul" class="soda-process-stage">
-            <stage-container v-for="(container, index) in compitedContainer"
+    <div :class="[{ 'pipeline-drag': editable && !isTriggerStage, 'show-stage-area': !isTriggerStage, 'is-error': stage.isError }, 'pipeline-stage']" ref="stageRef">
+        <bk-button v-if="!isTriggerStage" :class="['pipeline-stage-entry', { 'editable-stage-entry': editable }]" @click="showStagePanel">
+            <span class="stage-entry-name">{{ stageTitle }}</span>
+            <span class="stage-entry-btns">
+                <span :title="$t('editPage.copyStage')" v-if="showCopyStage && !stage.isError" class="bk-icon copy-stage" @click.stop="copyStage">
+                    <Logo name="copy" size="16"></Logo>
+                </span>
+                <i v-if="showCopyStage" @click.stop="deleteStageHandler" class="add-plus-icon close" />
+            </span>
+        </bk-button>
+        <draggable v-model="computedContainer" v-bind="dragOptions" :move="checkMove" tag="ul" class="soda-process-stage">
+            <stage-container v-for="(container, index) in computedContainer"
                 :key="`${container.id}-${index}`"
                 :stage-index="stageIndex"
                 :container-index="index"
@@ -10,7 +18,7 @@
                 :editable="editable"
                 :is-preview="isPreview"
                 :can-skip-element="canSkipElement"
-                :container-length="compitedContainer.length"
+                :container-length="computedContainer.length"
                 :container="container">
             </stage-container>
         </draggable>
@@ -44,9 +52,12 @@
     import { mapActions, mapState, mapGetters } from 'vuex'
     import StageContainer from './StageContainer'
     import { getOuterHeight } from '@/utils/util'
+    import Logo from '@/components/Logo'
+
     export default {
         components: {
-            StageContainer
+            StageContainer,
+            Logo
         },
         props: {
             containers: {
@@ -82,6 +93,9 @@
             ...mapGetters('atom', [
                 'isTriggerContainer'
             ]),
+            showCopyStage () {
+                return !this.isTriggerStage && this.editable
+            },
             isFirstStage () {
                 return this.stageIndex === 0
             },
@@ -94,12 +108,13 @@
             stageTitle () {
                 return this.stage ? this.stage.name : 'stage'
             },
-            compitedContainer: {
+            computedContainer: {
                 get () {
                     return this.containers
                 },
                 set (containers) {
                     let data = []
+                    console.log(containers)
                     containers.forEach((container) => {
                         if (container.containers) data = [...data, ...container.containers]
                         else data.push(container)
@@ -150,7 +165,8 @@
                 'toggleStageSelectPopup',
                 'setPipelineContainer',
                 'setPipelineEditing',
-                'triggerStage'
+                'triggerStage',
+                'deleteStage'
             ]),
             checkIsTriggerStage (stage) {
                 try {
@@ -232,6 +248,37 @@
                 if (parallelAddTip) {
                     parallelAddTip.style.top = `${height + 10}px`
                 }
+            },
+            deleteStageHandler () {
+                const { stageIndex } = this
+
+                this.deleteStage({
+                    stageIndex
+                })
+            },
+            copyStage () {
+                try {
+                    const copyStage = JSON.parse(JSON.stringify(this.stage))
+                    const { id, ...stage } = copyStage
+                    stage.containers = stage.containers.map(container => {
+                        const { id, ...job } = container
+
+                        job.elements = job.elements.map(element => {
+                            const { id, ...ele } = element
+                            return ele
+                        })
+                        return job
+                    })
+                    
+                    this.pipeline.stages.splice(this.stageIndex + 1, 0, JSON.parse(JSON.stringify(stage)))
+                    this.setPipelineEditing(true)
+                } catch (e) {
+                    console.error(e)
+                    this.$showTips({
+                        theme: 'error',
+                        message: this.$t('editPage.copyStageFail')
+                    })
+                }
             }
         }
     }
@@ -254,33 +301,79 @@
             .pipeline-stage-entry {
                 background-color: rgba(255, 86, 86, .1);
                 border-color: rgba(255, 86, 86, .1);
-                &:hover {
+                &:not(.editable-stage-entry) {
+                    background-color: rgba(255, 86, 86, .1);
+                    border-color: rgba(255, 86, 86, .1);
+                }
+                &.editable-stage-entry:hover {
                     color: $dangerColor;
                     border-color: rgba(255, 86, 86, .1);
                 }
             }
         }
-        &.show-stage-area:hover {
-            background: $stageBGColor;
-            .pipeline-stage-entry {
-                display: block;
-            }
-        }
+
         .pipeline-stage-entry {
             position: absolute;
-            display: none;
-            width: 100%;
-            left: 0;
+            display: block;
+            width: 88%;
+            left: 6%;
             top: 0;
             height: 32px;
             line-height: 32px;
-            background-color: $stageBGColor;
-            border-color: #e4e4e4;
-            &:hover {
+            background-color: #EFF5FF;
+            border-color: #D4E8FF;
+            color: $primaryColor;
+            z-index: 1;
+            &:not(.editable-stage-entry) {
+                background-color: #EFF5FF;
+                border-color: #D4E8FF;
                 color: $primaryColor;
-                border-color: #e4e4e4;
+            }
+            &.editable-stage-entry:hover {
+                color: black;
+                border-color: #1A6DF3;
+                background-color: #D1E2FD;
+                .stage-entry-btns {
+                    display: flex;
+                }
+            }
+
+            .stage-entry-btns {
+                position: absolute;
+                right: 0;
+                top: 6px;
+                display: none;
+                .copy-stage {
+                    margin-right: 8px;
+                    fill: white;
+                }
+                .close {
+                    @include add-plus-icon(#2E2E3A, #2E2E3A, white, 16px, true);
+                    @include add-plus-icon-hover($dangerColor, $dangerColor, white);
+                    border: none;
+                    margin-right: 10px;
+                    transform: rotate(45deg);
+                    cursor: pointer;
+                    &:before, &:after {
+                        left: 7px;
+                        top: 4px;
+                    }
+                }
             }
         }
+
+        &.show-stage-area {
+            .soda-process-stage:before {
+                position: absolute;
+                content: '';
+                width: 88%;
+                top: 0;
+                left: 6%;
+                height: 100%;
+                background: $stageBGColor;
+            }
+        }
+
         .append-stage {
             position: absolute;
             top: $addIconTop;

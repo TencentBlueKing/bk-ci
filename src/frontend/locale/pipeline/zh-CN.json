@@ -516,6 +516,8 @@
         "prepareEnv": "准备构建环境中",
         "copyJob": "复制job",
         "copyJobFail": "复制job失败",
+        "copyStage": "复制stage",
+        "copyStageFail": "复制stage失败",
         "triggerTooltips": "点击构建触发可配置推荐版本号、流水线变量",
         "userTime": "用户耗时",
         "systemTime": "系统耗时",
