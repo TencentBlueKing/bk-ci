@@ -4,6 +4,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.service.OpServiceResource
 import com.tencent.devops.store.pojo.atom.enums.OpSortTypeEnum
+import com.tencent.devops.store.pojo.common.StoreVisibleDeptResp
 import com.tencent.devops.store.pojo.common.VisibleApproveReq
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.dto.ServiceApproveReq
@@ -93,5 +94,9 @@ class OpServiceResourceImpl @Autowired constructor(
 
     override fun deleteAtom(userId: String, serviceCode: String): Result<Boolean> {
         return opExtServiceService.deleteService(userId, serviceCode)
+    }
+
+    override fun getVisibleDept(userId: String, serviceCode: String): Result<StoreVisibleDeptResp?> {
+        return storeVisibleDeptService.getVisibleDept(serviceCode, StoreTypeEnum.SERVICE, null)
     }
 }

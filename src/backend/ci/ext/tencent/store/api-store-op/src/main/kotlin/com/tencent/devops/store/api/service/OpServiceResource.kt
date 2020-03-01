@@ -1,8 +1,10 @@
 package com.tencent.devops.store.api.service
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.atom.enums.OpSortTypeEnum
+import com.tencent.devops.store.pojo.common.StoreVisibleDeptResp
 import com.tencent.devops.store.pojo.common.VisibleApproveReq
 import com.tencent.devops.store.pojo.dto.ServiceApproveReq
 import com.tencent.devops.store.pojo.dto.ServiceOfflineDTO
@@ -160,4 +162,17 @@ interface OpServiceResource {
         @PathParam("serviceCode")
         serviceCode: String
     ): Result<Boolean>
+
+    @ApiOperation("查看可见范围")
+    @GET
+    @Path("/{serviceCode}/visible")
+    fun getVisibleDept(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("代码", required = true)
+        @PathParam("serviceCode")
+        serviceCode: String
+    ): Result<StoreVisibleDeptResp?>
+
 }
