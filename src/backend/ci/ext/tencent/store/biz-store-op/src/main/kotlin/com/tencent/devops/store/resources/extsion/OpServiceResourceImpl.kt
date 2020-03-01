@@ -99,4 +99,8 @@ class OpServiceResourceImpl @Autowired constructor(
     override fun getVisibleDept(userId: String, serviceCode: String): Result<StoreVisibleDeptResp?> {
         return storeVisibleDeptService.getVisibleDept(serviceCode, StoreTypeEnum.SERVICE, null)
     }
+
+    override fun deleteVisibleDept(userId: String, serviceCode: String, deptIds: String): Result<Boolean> {
+        return storeVisibleDeptService.deleteVisibleDept(userId, serviceCode, deptIds, StoreTypeEnum.SERVICE)
+    }
 }

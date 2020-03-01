@@ -175,4 +175,19 @@ interface OpServiceResource {
         serviceCode: String
     ): Result<StoreVisibleDeptResp?>
 
+
+    @ApiOperation("删除扩展服务可见范围")
+    @DELETE
+    @Path("/{serviceCode}")
+    fun deleteVisibleDept(
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("扩展服务Code", required = true)
+        @PathParam("serviceCode")
+        serviceCode: String,
+        @ApiParam("机构Id集合，用\",\"分隔进行拼接（如1,2,3）", required = true)
+        @QueryParam("deptIds")
+        deptIds: String
+    ): Result<Boolean>
 }
