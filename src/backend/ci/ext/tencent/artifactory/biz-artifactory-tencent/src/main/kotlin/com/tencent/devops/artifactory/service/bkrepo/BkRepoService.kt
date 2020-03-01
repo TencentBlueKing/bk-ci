@@ -68,6 +68,8 @@ import javax.ws.rs.NotFoundException
 @Service
 class BkRepoService @Autowired constructor(
     val pipelineService: PipelineService,
+    val bkRepoCustomDirService: BkRepoCustomDirService,
+    val bkRepoPipelineDirService: BkRepoPipelineDirService,
     val shortUrlApi: ShortUrlApi,
     val bkRepoClient: BkRepoClient,
     val commonConfig: CommonConfig
@@ -79,9 +81,13 @@ class BkRepoService @Autowired constructor(
     private val EXTERNAL_URL: String? = null
 
     override fun list(userId: String, projectId: String, artifactoryType: ArtifactoryType, path: String): List<FileInfo> {
-        logger.info("list, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType, path: $path")
-        return bkRepoClient.listFile(userId, projectId, RepoUtils.getRepoByType(artifactoryType), path, includeFolders = true, deep = false).map {
-            RepoUtils.toFileInfo(it)
+        return when (artifactoryType) {
+            ArtifactoryType.PIPELINE -> {
+                bkRepoPipelineDirService.list(userId, projectId, path)
+            }
+            ArtifactoryType.CUSTOM_DIR -> {
+                bkRepoCustomDirService.list(userId, projectId, path)
+            }
         }
     }
 
