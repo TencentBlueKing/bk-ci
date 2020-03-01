@@ -73,7 +73,6 @@ import java.time.format.DateTimeFormatter
 import java.util.regex.Pattern
 import javax.ws.rs.BadRequestException
 
-@Suppress("PARAMETER_NAME_CHANGED_ON_OVERRIDE")
 @Service
 class ArtifactoryService @Autowired constructor(
     val jFrogApiService: JFrogApiService,

@@ -57,7 +57,6 @@ class BkRepoSearchService @Autowired constructor(
         pageSize: Int
     ): Pair<Long, List<FileInfo>> {
         logger.info("search, projectId: $projectId, searchProps: $searchProps, page: $page, pageSize: $pageSize")
-
         val fileNameSet = mutableSetOf<String>()
         searchProps.fileNames?.forEach {
             fileNameSet.add(it)
@@ -95,7 +94,6 @@ class BkRepoSearchService @Autowired constructor(
         pageSize: Int
     ): Pair<Long, List<FileInfo>> {
         logger.info("serviceSearch, projectId: $projectId, searchProps: $searchProps")
-
         // 属性为 fileName 要按文件名搜索？
         val fileNameSet = mutableSetOf<String>()
         val props = mutableListOf<Pair<String, String>>()
@@ -123,7 +121,6 @@ class BkRepoSearchService @Autowired constructor(
 
     override fun searchFileAndProperty(userId: String, projectId: String, searchProps: SearchProps): Pair<Long, List<FileInfo>> {
         logger.info("searchFileAndProperty, projectId: $projectId, searchProps: $searchProps")
-
         val fileNameSet = mutableSetOf<String>()
         searchProps.fileNames?.forEach {
             fileNameSet.add(it)
@@ -164,7 +161,6 @@ class BkRepoSearchService @Autowired constructor(
         customized: Boolean
     ): Pair<Long, List<FileInfo>> {
         logger.info("serviceSearchFileByRegex, projectId: $projectId, pipelineId: $pipelineId, buildId: $buildId, regexPath: $regexPath")
-
         var queryPath = regexPath
         if (!regexPath.startsWith("/")) {
             queryPath = "/$queryPath"
@@ -188,7 +184,6 @@ class BkRepoSearchService @Autowired constructor(
         customized: Boolean?
     ): Pair<Long, List<FileInfo>> {
         logger.info("serviceSearchFileAndProperty, projectId: $projectId, searchProps: $searchProps, customized: $customized")
-
         val repoNames = when (customized) {
             null -> listOf(RepoUtils.PIPELINE_REPO, RepoUtils.CUSTOM_REPO)
             true -> listOf(RepoUtils.CUSTOM_REPO)
