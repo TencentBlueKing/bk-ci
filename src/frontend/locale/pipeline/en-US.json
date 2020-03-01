@@ -516,6 +516,8 @@
         "prepareEnv": " Preparing build resource",
         "copyJob": "Duplicate job",
         "copyJobFail": "Duplicate job failed",
+        "copyStage": "Duplicate stage",
+        "copyStageFail": "Duplicate stage failed",
         "triggerTooltips": " Click builds to trigger the configurable recommended version and pipeline variables",
         "userTime": "User time",
         "systemTime": "System time",
