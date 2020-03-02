@@ -222,8 +222,8 @@ class PipelineService @Autowired constructor(
                 pipelineGroupService.addPipelineLabel(userId = userId, pipelineId = pipelineId, labelIds = model.labels)
                 pipelineUserService.create(pipelineId, userId)
                 logger.info("instanceType: $instanceType")
-                if (instanceType == PipelineInstanceTypeEnum.FREEDOM.type) {
-                    createRelationBtwTemplate(userId, model.templateId!!, pipelineId)
+                if (instanceType == PipelineInstanceTypeEnum.FREEDOM.type && model.templateId.isNotBlank()) {
+                    createRelationBtwTemplate(userId, model.templateId, pipelineId)
                 }
                 success = true
                 return pipelineId
