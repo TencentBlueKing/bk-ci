@@ -7,17 +7,17 @@
         <div slot="content" class="bk-form bk-form-vertical">
             <bk-form :label-width="200" form-type="vertical">
                 <bk-form-item>
-                    <bk-checkbox v-model="stageEnable">
+                    <bk-checkbox :disabled="disabled" v-model="stageEnable">
                         {{ $t('enableStage') }}
                     </bk-checkbox>
                 </bk-form-item>
                 <bk-form-item>
-                    <bk-checkbox v-model="stageFastKill">
+                    <bk-checkbox :disabled="disabled" v-model="stageFastKill">
                         {{ $t('stageFastKill') }}
                     </bk-checkbox>
                 </bk-form-item>
                 <bk-form-item :label="$t('stageOptionLabel')">
-                    <bk-select v-model="stageCondition" searchable>
+                    <bk-select :disabled="disabled" v-model="stageCondition" searchable>
                         <bk-option v-for="option in conditionConf"
                             :key="option.id"
                             :id="option.id"
@@ -26,7 +26,7 @@
                     </bk-select>
                 </bk-form-item>
                 <bk-form-item v-if="showVariable">
-                    <key-value-normal :value="variables" :allow-null="false" name="customVariables" :handle-change="handleUpdateStageControl"></key-value-normal>
+                    <key-value-normal :disabled="disabled" :value="variables" :allow-null="false" name="customVariables" :handle-change="handleUpdateStageControl"></key-value-normal>
                 </bk-form-item>
             </bk-form>
         </div>
