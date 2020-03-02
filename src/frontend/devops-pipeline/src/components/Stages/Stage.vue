@@ -1,7 +1,11 @@
 <template>
-    <div :class="[{ 'pipeline-drag': editable && !isTriggerStage, 'show-stage-area': !isTriggerStage, 'is-error': stage.isError }, 'pipeline-stage']" ref="stageRef">
+    <div :class="[{ 'pipeline-drag': editable && !isTriggerStage, 'show-stage-area': !isTriggerStage }, 'pipeline-stage']" ref="stageRef">
         <bk-button v-if="!isTriggerStage" :class="['pipeline-stage-entry', { 'editable-stage-entry': editable }]" @click="showStagePanel">
             <span class="stage-entry-name">{{ stageTitle }}</span>
+            <i v-if="stage.isError" class="bk-icon icon-exclamation-triangle-shape stage-entry-error-icon" />
+            <span @click.stop v-if="showCheckedToatal && canSkipElement" class="check-total-stage">
+                <bk-checkbox class="atom-canskip-checkbox" v-model="stage.runStage" :disabled="stageDisabled"></bk-checkbox>
+            </span>
             <span class="stage-entry-btns">
                 <span :title="$t('editPage.copyStage')" v-if="showCopyStage && !stage.isError" class="bk-icon copy-stage" @click.stop="copyStage">
                     <Logo name="copy" size="16"></Logo>
@@ -49,6 +53,7 @@
 </template>
 
 <script>
+    import Vue from 'vue'
     import { mapActions, mapState, mapGetters } from 'vuex'
     import StageContainer from './StageContainer'
     import { getOuterHeight } from '@/utils/util'
@@ -108,15 +113,21 @@
             stageTitle () {
                 return this.stage ? this.stage.name : 'stage'
             },
+            showCheckedToatal () {
+                const { isTriggerStage, $route } = this
+                return $route.path.indexOf('preview') > 0 && !isTriggerStage
+            },
+            stageDisabled () {
+                return !!(this.stage.stageControlOption && this.stage.stageControlOption.enable === false)
+            },
             computedContainer: {
                 get () {
                     return this.containers
                 },
                 set (containers) {
                     let data = []
-                    console.log(containers)
                     containers.forEach((container) => {
-                        if (container.containers) data = [...data, ...container.containers]
+                        if (container.containers) data = [...data, ...container.containers] // 拖动的是stage
                         else data.push(container)
                     })
                     this.setPipelineContainer({ oldContainers: this.containers, containers: data })
@@ -152,8 +163,26 @@
                 }
             }
         },
+        watch: {
+            'stage.runStage' (newVal) {
+                const { stage, updateStage } = this
+                const { containers } = stage
+                if (this.stageDisabled) return
+                containers.filter(container => (container.jobControlOption === undefined || container.jobControlOption.enable)).map(container => {
+                    container.runContainer = newVal
+                    return false
+                })
+                updateStage({
+                    stage,
+                    newParam: {
+                        containers
+                    }
+                })
+            }
+        },
         mounted () {
             this.updateHeight()
+            Vue.set(this.stage, 'runStage', !this.stageDisabled)
         },
         updated () {
             this.updateHeight()
@@ -165,6 +194,7 @@
                 'toggleStageSelectPopup',
                 'setPipelineContainer',
                 'setPipelineEditing',
+                'updateStage',
                 'triggerStage',
                 'deleteStage'
             ]),
@@ -177,6 +207,7 @@
             },
 
             showStagePanel () {
+                console.log(1, this.stageIndex)
                 const { stageIndex } = this
                 this.togglePropertyPanel({
                     isShow: true,
@@ -269,7 +300,7 @@
                         })
                         return job
                     })
-                    
+
                     this.pipeline.stages.splice(this.stageIndex + 1, 0, JSON.parse(JSON.stringify(stage)))
                     this.setPipelineEditing(true)
                 } catch (e) {
@@ -294,24 +325,6 @@
         position: relative;
         margin: 0;
         padding-top: $StagepaddingTop;
-        &.is-error {
-            border: 1px dashed $dangerColor;
-            border-radius: 2px;
-            background-color: rgba(255, 86, 86, .1) !important;
-            .pipeline-stage-entry {
-                background-color: rgba(255, 86, 86, .1);
-                border-color: rgba(255, 86, 86, .1);
-                &:not(.editable-stage-entry) {
-                    background-color: rgba(255, 86, 86, .1);
-                    border-color: rgba(255, 86, 86, .1);
-                }
-                &.editable-stage-entry:hover {
-                    color: $dangerColor;
-                    border-color: rgba(255, 86, 86, .1);
-                }
-            }
-        }
-
         .pipeline-stage-entry {
             position: absolute;
             display: block;
@@ -336,12 +349,26 @@
                 .stage-entry-btns {
                     display: flex;
                 }
+                .stage-entry-error-icon {
+                    display: none;
+                }
+            }
+
+            .stage-entry-error-icon,
+            .check-total-stage {
+                position: absolute;
+                right: 27px;
+                &.stage-entry-error-icon {
+                    top: 7px;
+                    right: 8px;
+                    color: $dangerColor;
+                }
             }
 
             .stage-entry-btns {
                 position: absolute;
                 right: 0;
-                top: 6px;
+                top: 7px;
                 display: none;
                 .copy-stage {
                     margin-right: 8px;

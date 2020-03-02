@@ -34,9 +34,7 @@ export default {
         if (containers.length > 0) {
             const currentStage = state.pipeline.stages[stageIndex] || {}
             currentStage.containers = containers
-            console.log('currentStage', currentStage)
         } else {
-            console.log('slice')
             state.pipeline.stages.splice(stageIndex, 1)
         }
     },
