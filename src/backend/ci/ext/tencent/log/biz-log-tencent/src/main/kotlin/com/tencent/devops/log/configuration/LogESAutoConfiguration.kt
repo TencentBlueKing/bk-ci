@@ -26,6 +26,8 @@
 
 package com.tencent.devops.log.configuration
 
+import com.floragunn.searchguard.ssl.SearchGuardSSLPlugin
+import com.floragunn.searchguard.ssl.util.SSLConfigConstants
 import com.tencent.devops.common.es.ESClient
 import com.tencent.devops.common.es.ESProperties
 import com.tencent.devops.common.redis.RedisOperation
@@ -34,6 +36,7 @@ import com.tencent.devops.log.client.impl.MultiESLogClient
 import com.tencent.devops.log.dao.TencentIndexDao
 import org.elasticsearch.common.settings.Settings
 import org.elasticsearch.common.transport.InetSocketTransportAddress
+import org.elasticsearch.plugins.Plugin
 import org.elasticsearch.transport.client.PreBuiltTransportClient
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -47,7 +50,6 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Primary
 import org.springframework.core.Ordered
 import java.net.InetAddress
-import java.util.Base64
 
 @Configuration
 @AutoConfigureOrder(Ordered.HIGHEST_PRECEDENCE)
@@ -69,10 +71,14 @@ class LogESAutoConfiguration {
     private val e2Port: Int? = 0
     @Value("\${elasticsearch2.cluster}")
     private val e2Cluster: String? = null
-//    @Value("\${elasticsearch2.username}")
-//    private val e2Username: String? = null
-//    @Value("\${elasticsearch2.password}")
-//    private val e2Password: String? = null
+    @Value("\${elasticsearch2.keystore.filePath:#{null}}")
+    private val e2KeystoreFilePath: String? = null
+    @Value("\${elasticsearch2.keystore.password:#{null}}")
+    private val e2KeystorePassword: String? = null
+    @Value("\${elasticsearch2.truststore.filePath:#{null}}")
+    private val e2TruststoreFilePath: String? = null
+    @Value("\${elasticsearch2.truststore.password:#{null}}")
+    private val e2TruststorePassword: String? = null
     @Value("\${elasticsearch2.name}")
     private val e2Name: String? = null
 
@@ -112,24 +118,44 @@ class LogESAutoConfiguration {
         if (e2Cluster.isNullOrBlank()) {
             throw IllegalArgumentException("ES2集群名称尚未配置")
         }
-//        if (e2Username.isNullOrBlank()) {
-//            throw IllegalArgumentException("ES2用户名尚未配置")
-//        }
-//        if (e2Password.isNullOrBlank()) {
-//            throw IllegalArgumentException("ES2密码尚未配置")
-//        }
+
         if (e2Name.isNullOrBlank()) {
             throw IllegalArgumentException("ES2唯一名称尚未配置")
         }
-        val settings = Settings.builder().put("cluster.name", e2Cluster).build()
+
+        val builder = Settings.builder()
+
+        var plugin: Class<out Plugin>? = null
+
+        if (!e2KeystoreFilePath.isNullOrBlank()) {
+            builder.put(SSLConfigConstants.SEARCHGUARD_SSL_TRANSPORT_KEYSTORE_FILEPATH, e2KeystoreFilePath)
+                    .put(SSLConfigConstants.SEARCHGUARD_SSL_TRANSPORT_ENFORCE_HOSTNAME_VERIFICATION, false)
+                    .put(SSLConfigConstants.SEARCHGUARD_SSL_TRANSPORT_ENABLED, true)
+                    .put(SSLConfigConstants.SEARCHGUARD_SSL_TRANSPORT_ENFORCE_HOSTNAME_VERIFICATION_RESOLVE_HOST_NAME, true)
+        }
+        if (!e2TruststoreFilePath.isNullOrBlank()) {
+            builder.put(SSLConfigConstants.SEARCHGUARD_SSL_TRANSPORT_TRUSTSTORE_FILEPATH, e2TruststoreFilePath)
+        }
+        if (!e2KeystorePassword.isNullOrBlank()) {
+            builder.put(SSLConfigConstants.SEARCHGUARD_SSL_TRANSPORT_KEYSTORE_PASSWORD, e2KeystorePassword)
+        }
+        if (!e2TruststorePassword.isNullOrBlank()) {
+            builder.put(SSLConfigConstants.SEARCHGUARD_SSL_TRANSPORT_TRUSTSTORE_PASSWORD, e2TruststorePassword)
+            plugin = SearchGuardSSLPlugin::class.java
+        }
+
+        val settings = builder.build()
         val ips = e2IP!!.split(",".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
-        val client = PreBuiltTransportClient(settings)
+
+        val client = if (plugin != null) {
+            PreBuiltTransportClient(settings, plugin)
+        } else {
+            PreBuiltTransportClient(settings)
+        }
         for (ipAddress in ips) {
             client.addTransportAddress(InetSocketTransportAddress(InetAddress.getByName(ipAddress), e2Port!!))
         }
-        // val auth = Base64.getEncoder().encode(("$e2Username:$e2Password").toByteArray()).toString(Charsets.UTF_8)
-        logger.info("Init ES 2 transport client with host($e2IP:$e2Port) and cluster($e2Cluster)")
-        // return ESClient(e2Name!!, client.filterWithHeader(mapOf("Authorization" to "Basic $auth")))
+        logger.info("Init the log es transport client with host($e2Name:$e2IP:$e2Port), cluster($e2Cluster), keystore($e2KeystoreFilePath|$e2KeystorePassword), truststore($e2TruststoreFilePath|$e2TruststorePassword)")
         return ESClient(e2Name!!, client)
     }
 
