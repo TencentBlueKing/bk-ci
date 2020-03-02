@@ -44,20 +44,22 @@ interface LogClient {
 
     fun prepareIndex(buildId: String, index: String, type: String) = getClient(buildId).prepareIndex(index, type)
 
-    fun markESInactive(buildId: String) {
+    fun markESInactive(buildId: String): Boolean {
         // for the default implements just println the log
         val client = CurrentLogClient.getClient()
         if (client == null) {
             logger.warn("[$buildId] Fail to get the es client")
-            return
+            return false
         }
         logger.warn("[$buildId|${client.name}] Mark the es as inactive")
+        return false
     }
 
-    fun markESActive(buildId: String) {
+    fun markESActive(buildId: String): Boolean {
         // for the default implement just println the log
         val esName = CurrentLogClient.getInactiveESName()
         logger.info("[$buildId|$esName] Mark the es as active")
+        return true
     }
 
     private fun getClient(buildId: String): Client {

@@ -108,12 +108,12 @@ class LogServiceV2 @Autowired constructor(
         }
     }
 
-    fun markESInactive(buildId: String) {
-        client.markESInactive(buildId)
+    fun markESInactive(buildId: String): Boolean {
+        return client.markESInactive(buildId)
     }
 
-    fun markESActive(buildId: String) {
-        client.markESActive(buildId)
+    fun markESActive(buildId: String): Boolean {
+        return client.markESActive(buildId)
     }
 
     fun addLogEvent(event: LogEvent) {
