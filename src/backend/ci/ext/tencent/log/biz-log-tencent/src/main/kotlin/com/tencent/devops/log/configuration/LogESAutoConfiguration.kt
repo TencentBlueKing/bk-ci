@@ -31,6 +31,7 @@ import com.tencent.devops.common.es.ESProperties
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.WebAutoConfiguration
 import com.tencent.devops.log.client.impl.MultiESLogClient
+import com.tencent.devops.log.dao.TencentIndexDao
 import org.elasticsearch.common.settings.Settings
 import org.elasticsearch.common.transport.InetSocketTransportAddress
 import org.elasticsearch.transport.client.PreBuiltTransportClient
@@ -68,10 +69,10 @@ class LogESAutoConfiguration {
     private val e2Port: Int? = 0
     @Value("\${elasticsearch2.cluster}")
     private val e2Cluster: String? = null
-    @Value("\${elasticsearch2.username}")
-    private val e2Username: String? = null
-    @Value("\${elasticsearch2.password}")
-    private val e2Password: String? = null
+//    @Value("\${elasticsearch2.username}")
+//    private val e2Username: String? = null
+//    @Value("\${elasticsearch2.password}")
+//    private val e2Password: String? = null
     @Value("\${elasticsearch2.name}")
     private val e2Name: String? = null
 
@@ -111,12 +112,12 @@ class LogESAutoConfiguration {
         if (e2Cluster.isNullOrBlank()) {
             throw IllegalArgumentException("ES2集群名称尚未配置")
         }
-        if (e2Username.isNullOrBlank()) {
-            throw IllegalArgumentException("ES2用户名尚未配置")
-        }
-        if (e2Password.isNullOrBlank()) {
-            throw IllegalArgumentException("ES2密码尚未配置")
-        }
+//        if (e2Username.isNullOrBlank()) {
+//            throw IllegalArgumentException("ES2用户名尚未配置")
+//        }
+//        if (e2Password.isNullOrBlank()) {
+//            throw IllegalArgumentException("ES2密码尚未配置")
+//        }
         if (e2Name.isNullOrBlank()) {
             throw IllegalArgumentException("ES2唯一名称尚未配置")
         }
@@ -126,9 +127,10 @@ class LogESAutoConfiguration {
         for (ipAddress in ips) {
             client.addTransportAddress(InetSocketTransportAddress(InetAddress.getByName(ipAddress), e2Port!!))
         }
-        val auth = Base64.getEncoder().encode(("$e2Username:$e2Password").toByteArray()).toString(Charsets.UTF_8)
+        // val auth = Base64.getEncoder().encode(("$e2Username:$e2Password").toByteArray()).toString(Charsets.UTF_8)
         logger.info("Init ES 2 transport client with host($e2IP:$e2Port) and cluster($e2Cluster)")
-        return ESClient(e2Name!!, client.filterWithHeader(mapOf("Authorization" to "Basic $auth")))
+        // return ESClient(e2Name!!, client.filterWithHeader(mapOf("Authorization" to "Basic $auth")))
+        return ESClient(e2Name!!, client)
     }
 
     @Bean
@@ -136,8 +138,9 @@ class LogESAutoConfiguration {
         @Autowired client: ESClient,
         @Autowired client2: ESClient,
         @Autowired redisOperation: RedisOperation,
+        @Autowired tencentIndexDao: TencentIndexDao,
         @Autowired dslContext: DSLContext
-    ) = MultiESLogClient(listOf(client, client2), redisOperation, dslContext)
+    ) = MultiESLogClient(listOf(client, client2), redisOperation, dslContext, tencentIndexDao)
 
     companion object {
         private val logger = LoggerFactory.getLogger(LogESAutoConfiguration::class.java)

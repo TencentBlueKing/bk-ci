@@ -31,6 +31,7 @@ import com.google.common.cache.CacheLoader
 import com.tencent.devops.common.es.ESClient
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.log.client.CurrentLogClient
 import com.tencent.devops.log.client.LogClient
 import com.tencent.devops.log.dao.TencentIndexDao
 import org.jooq.DSLContext
@@ -45,25 +46,51 @@ class MultiESLogClient constructor(
     private val tencentIndexDao: TencentIndexDao
 ) : LogClient {
 
+    init {
+        val names = clients.map { it.name }.toSet()
+        if (names.size != clients.size) {
+            logger.warn("There are same es names between es cluster")
+            throw RuntimeException("There are same es names between es cluster")
+        }
+    }
+
     private val cache = CacheBuilder.newBuilder()
         .maximumSize(300000)
         .expireAfterWrite(2, TimeUnit.DAYS)
         .build<String/*buildId*/, String/*ES NAME*/>()
 
     // The cache store the bad ES
-    private val disconnectESCache = CacheBuilder.newBuilder()
+    private val inactiveESCache = CacheBuilder.newBuilder()
             .maximumSize(10)
             .expireAfterWrite(1, TimeUnit.MINUTES)
             .build<String/*ES Name*/, Boolean>(
                     object: CacheLoader<String, Boolean>() {
                         override fun load(esName: String): Boolean {
-                            return getDisconnectESFromRedis().contains(esName)
+                            return getInactiveESFromRedis().contains(esName)
                         }
                     }
             )
 
-    override fun getClients(): List<ESClient> {
-        return clients
+    override fun getActiveClients(): List<ESClient> {
+        return clients.filter { !inactiveESCache.get(it.name) }
+    }
+
+    override fun markESInactive(buildId: String) {
+        val client = CurrentLogClient.getClient()
+        if (client == null) {
+            logger.warn("[$buildId] Fail to get the es client")
+            return
+        }
+        logger.warn("[$buildId|${client.name}] Mark the es as inactive")
+        setInactiveES(client.name)
+    }
+
+    override fun markESActive(buildId: String) {
+        val esName = CurrentLogClient.getInactiveESName()
+        logger.info("[$buildId|$esName] Mark the es as active")
+        if (!esName.isNullOrBlank()) {
+            removeInactiveES(esName!!)
+        }
     }
 
     /**
@@ -72,21 +99,35 @@ class MultiESLogClient constructor(
      * 3. If DB is not exist, then hash the build id to the ESClients
      * 4.
      */
-    override fun hashClient(buildId: String, client: List<ESClient>): ESClient {
-        if (client.isEmpty()) {
-            throw RuntimeException("Fail to get the log client")
+    override fun hashClient(buildId: String): ESClient {
+        val inactiveESName = CurrentLogClient.getInactiveESName()
+        if (!inactiveESName.isNullOrBlank()) {
+            val client = getClientByName(inactiveESName!!)
+            if (client == null) {
+                logger.warn("[$buildId|$inactiveESName] Fail to find the es client")
+                CurrentLogClient.setInactiveESName(null)
+            } else {
+                return client
+            }
         }
-        val activeClients = client.filter { disconnectESCache.get(it.name) }
-        val activeESNames = activeClients.map { it.name }.toSet()
+        val activeClients = getActiveClients()
         if (activeClients.isEmpty()) {
-            logger.warn("All clients(${client.map { it.name }}) are not active, return the first one")
-            return client.first()
+            logger.warn("All client is deactive, try to use the first one")
+            if (clients.isEmpty()) {
+                throw RuntimeException("Empty es clients")
+            }
+            return clients.first()
         }
+        val activeESNames = activeClients.map { it.name }.toSet()
         var esName = cache.getIfPresent(buildId)
-        if (!activeESNames.contains(esName)) {
-            logger.warn("The es($esName|$buildId) is not be active any more, retry other clients")
-            cache.invalidate(buildId)
-            esName = null
+        if (!esName.isNullOrBlank()) {
+            synchronized(this) {
+                if (!activeESNames.contains(esName)) {
+                    logger.warn("The es($esName|$buildId) is not be active any more, retry other clients")
+                    cache.invalidate(buildId)
+                    esName = null
+                }
+            }
         }
         if (esName.isNullOrBlank()) {
             val redisLock = RedisLock(redisOperation, "$MULTI_LOG_CLIENT_LOCK_KEY:$buildId", 10)
@@ -95,21 +136,19 @@ class MultiESLogClient constructor(
                 esName = cache.getIfPresent(buildId)
                 if (esName.isNullOrBlank()) {
                     esName = tencentIndexDao.getClusterName(dslContext, buildId)
-                    if (esName.isNullOrBlank()) {
+                    if (esName.isNullOrBlank() || (!activeESNames.contains(esName))) {
                         // hash from build
-                        val c = activeClients[hashBuildId(buildId, activeClients.size)]
+                        logger.info("[$buildId|$esName] Rehash the build id")
+                        val c = getClient(activeClients, buildId)
                         esName = c.name
+                        tencentIndexDao.updateClusterName(dslContext, buildId, esName!!)
                     } else {
                         // set to cache
                         logger.info("[$buildId] The build ID already bind to the ES: ($esName)")
                     }
+                    cache.put(buildId, esName!!)
                 }
 
-                if (!activeESNames.contains(esName)) {
-                    esName = activeClients[hashBuildId(buildId, activeClients.size)].name
-                }
-                tencentIndexDao.updateClusterName(dslContext, buildId, esName!!)
-                cache.put(buildId, esName!!)
             } finally {
                 redisLock.unlock()
             }
@@ -119,9 +158,12 @@ class MultiESLogClient constructor(
                 return it
             }
         }
-        logger.warn("[$buildId] Fail to get the es name for the build, return the first one")
-        return client.first()
+        logger.warn("[$buildId|$esName] Fail to get the es name for the build, return the first one")
+        return this.clients.first()
     }
+
+    private fun getClient(activeClients: List<ESClient>, buildId: String) =
+            activeClients[hashBuildId(buildId, activeClients.size)]
 
     private fun hashBuildId(buildId: String, size: Int): Int {
         if (size == 1) {
@@ -130,8 +172,27 @@ class MultiESLogClient constructor(
         return abs(buildId.hashCode()) % size
     }
 
-    private fun getDisconnectESFromRedis(): Set<String> {
-        return redisOperation.getSetMembers(MULTI_LOG_CLIENT_BAD_ES_KEY) ?: emptySet()
+    private fun getInactiveESFromRedis(): Set<String> {
+        val tmp = redisOperation.getSetMembers(MULTI_LOG_CLIENT_BAD_ES_KEY)
+        logger.info("Get the inactive es: $tmp")
+        return tmp ?: emptySet()
+    }
+    
+    private fun setInactiveES(esName: String) {
+        redisOperation.addSetValue(MULTI_LOG_CLIENT_BAD_ES_KEY, esName)
+    }
+
+    private fun removeInactiveES(esName: String) {
+        redisOperation.removeSetMember(MULTI_LOG_CLIENT_BAD_ES_KEY, esName)
+    }
+
+    private fun getClientByName(esName: String): ESClient? {
+        clients.forEach {
+            if (it.name == esName) {
+                return it
+            }
+        }
+        return null
     }
 
     companion object {
