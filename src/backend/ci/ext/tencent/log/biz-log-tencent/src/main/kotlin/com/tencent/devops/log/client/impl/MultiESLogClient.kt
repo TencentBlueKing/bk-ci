@@ -34,6 +34,7 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.log.client.CurrentLogClient
 import com.tencent.devops.log.client.LogClient
 import com.tencent.devops.log.dao.TencentIndexDao
+import com.tencent.devops.log.dao.v2.IndexDaoV2
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import java.util.concurrent.TimeUnit
@@ -43,7 +44,8 @@ class MultiESLogClient constructor(
     private val clients: List<ESClient>,
     private val redisOperation: RedisOperation,
     private val dslContext: DSLContext,
-    private val tencentIndexDao: TencentIndexDao
+    private val tencentIndexDao: TencentIndexDao,
+    private val indexDaoV2: IndexDaoV2
 ) : LogClient {
 
     init {
@@ -116,7 +118,7 @@ class MultiESLogClient constructor(
             if (clients.isEmpty()) {
                 throw RuntimeException("Empty es clients")
             }
-            return clients.first()
+            return mainCluster()
         }
         val activeESNames = activeClients.map { it.name }.toSet()
         var esName = cache.getIfPresent(buildId)
@@ -135,8 +137,15 @@ class MultiESLogClient constructor(
                 redisLock.lock()
                 esName = cache.getIfPresent(buildId)
                 if (esName.isNullOrBlank()) {
-                    esName = tencentIndexDao.getClusterName(dslContext, buildId)
-                    if (esName.isNullOrBlank() || (!activeESNames.contains(esName))) {
+                    // 兼容老的日志， 如果这个日志之前已经被写入了， 那么默认返回mainCluster对应的集群的数据， 要不然就会导致前端查询不到数据
+                    val buildIndex = indexDaoV2.getBuild(dslContext, buildId)
+                    if (buildIndex == null || (!buildIndex.useCluster)) {
+                        val c = mainCluster()
+                        cache.put(buildId, c.name)
+                        return c
+                    }
+                    esName = buildIndex.logClusterName
+                    if (esName.isNullOrBlank() || (!activeESNames.contains(esName!!))) {
                         // hash from build
                         logger.info("[$buildId|$esName] Rehash the build id")
                         val c = getClient(activeClients, buildId)
@@ -160,7 +169,7 @@ class MultiESLogClient constructor(
             }
         }
         logger.warn("[$buildId|$esName] Fail to get the es name for the build, return the first one")
-        return this.clients.first()
+        return mainCluster()
     }
 
     private fun getClient(activeClients: List<ESClient>, buildId: String) =
@@ -194,6 +203,15 @@ class MultiESLogClient constructor(
             }
         }
         return null
+    }
+
+    private fun mainCluster(): ESClient {
+        clients.forEach {
+            if (it.mainCluster == true) {
+                return it
+            }
+        }
+        return clients.first()
     }
 
     companion object {

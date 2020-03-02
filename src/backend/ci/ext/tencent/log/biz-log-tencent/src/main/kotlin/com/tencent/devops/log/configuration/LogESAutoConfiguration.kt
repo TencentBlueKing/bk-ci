@@ -63,7 +63,9 @@ class LogESAutoConfiguration {
     @Value("\${elasticsearch.cluster}")
     private val e1Cluster: String? = null
     @Value("\${elasticsearch.name}")
-    private val name: String? = null
+    private val e1Name: String? = null
+    @Value("\${elasticsearch.mainCluster:#{null}}")
+    private val e1MainCluster: String? = null
 
     @Value("\${elasticsearch2.ip}")
     private val e2IP: String? = null
@@ -81,6 +83,8 @@ class LogESAutoConfiguration {
     private val e2TruststorePassword: String? = null
     @Value("\${elasticsearch2.name}")
     private val e2Name: String? = null
+    @Value("\${elasticsearch2.mainCluster:#{null}}")
+    private val e2MainCluster: String? = null
 
     @Bean
     @Primary
@@ -94,7 +98,7 @@ class LogESAutoConfiguration {
         if (e1Cluster.isNullOrBlank()) {
             throw IllegalArgumentException("ES集群名称尚未配置")
         }
-        if (name.isNullOrBlank()) {
+        if (e1Name.isNullOrBlank()) {
             throw IllegalArgumentException("ES唯一名称尚未配置")
         }
         val settings = Settings.builder().put("cluster.name", e1Cluster).build()
@@ -103,8 +107,13 @@ class LogESAutoConfiguration {
         for (ipAddress in ips) {
             client.addTransportAddress(InetSocketTransportAddress(InetAddress.getByName(ipAddress), e1Port!!))
         }
-        logger.info("Init ES transport client with host($e1IP:$e1Port) and cluster($e1Cluster)")
-        return ESClient(name!!, client)
+        val mainCluster = if (!e1MainCluster.isNullOrBlank()) {
+            e1MainCluster!!.toBoolean()
+        } else {
+            false
+        }
+        logger.info("Init ES transport client with host($e1IP:$e1Port) and cluster($e1Cluster|$mainCluster)")
+        return ESClient(e1Name!!, client, mainCluster)
     }
 
     @Bean
@@ -155,8 +164,13 @@ class LogESAutoConfiguration {
         for (ipAddress in ips) {
             client.addTransportAddress(InetSocketTransportAddress(InetAddress.getByName(ipAddress), e2Port!!))
         }
-        logger.info("Init the log es transport client with host($e2Name:$e2IP:$e2Port), cluster($e2Cluster), keystore($e2KeystoreFilePath|$e2KeystorePassword), truststore($e2TruststoreFilePath|$e2TruststorePassword)")
-        return ESClient(e2Name!!, client)
+        val mainCluster = if (!e2MainCluster.isNullOrBlank()) {
+            e2MainCluster!!.toBoolean()
+        } else {
+            false
+        }
+        logger.info("Init the log es transport client with host($e2Name:$mainCluster:$e2IP:$e2Port), cluster($e2Cluster), keystore($e2KeystoreFilePath|$e2KeystorePassword), truststore($e2TruststoreFilePath|$e2TruststorePassword)")
+        return ESClient(e2Name!!, client, mainCluster)
     }
 
     @Bean
