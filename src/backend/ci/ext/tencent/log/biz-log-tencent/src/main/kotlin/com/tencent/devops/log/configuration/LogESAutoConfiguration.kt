@@ -133,7 +133,7 @@ class LogESAutoConfiguration {
             throw IllegalArgumentException("ES2唯一名称尚未配置")
         }
 
-        val builder = Settings.builder()
+        val builder = Settings.builder().put("cluster.name", e2Cluster)
 
         var plugin: Class<out Plugin>? = null
 
