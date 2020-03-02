@@ -27,15 +27,23 @@
 package com.tencent.devops.process.plugin.trigger.dao
 
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.pipeline.pojo.PipelineBuildBaseInfo
 import com.tencent.devops.model.process.Tables.T_PIPELINE_TIMER
 import com.tencent.devops.model.process.tables.records.TPipelineTimerRecord
+import com.tencent.devops.process.listener.PipelineHardDeleteListener
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
 @Repository
-open class PipelineTimerDao {
+open class PipelineTimerDao : PipelineHardDeleteListener {
+    override fun onPipelineDeleteHardly(dslContext: DSLContext, operator: String, pipelineBuildBaseInfoList: List<PipelineBuildBaseInfo>): Boolean {
+        pipelineBuildBaseInfoList.forEach {
+            delete(dslContext, it.pipelineId)
+        }
+        return true
+    }
 
     open fun save(
         dslContext: DSLContext,

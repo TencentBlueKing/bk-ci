@@ -215,6 +215,18 @@ class PipelineInfoDao : PipelineHardDeleteListener {
         }
     }
 
+    /**
+     * 查找updateTime之前被删除的流水线
+     */
+    fun listDeletePipelineBefore(dslContext: DSLContext, updateTime: LocalDateTime): Result<TPipelineInfoRecord>? {
+        return with(T_PIPELINE_INFO) {
+            dslContext.selectFrom(this)
+                .where(DELETE.eq(true))
+                .and(UPDATE_TIME.le(updateTime))
+                .fetch()
+        }
+    }
+
     fun isNameExist(dslContext: DSLContext, projectId: String, pipelineName: String, channelCode: ChannelCode) =
         isNameExist(dslContext, projectId, pipelineName, channelCode, null)
 

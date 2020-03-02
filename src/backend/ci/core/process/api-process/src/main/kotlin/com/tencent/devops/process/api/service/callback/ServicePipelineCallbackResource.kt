@@ -43,6 +43,6 @@ interface ServicePipelineCallbackResource {
 
     @ApiOperation("定期清理已删除超过一定时间的流水线")
     @DELETE
-    @Path("/")
+    @Path("/clear")
     fun clear(): Result<Boolean>
 }

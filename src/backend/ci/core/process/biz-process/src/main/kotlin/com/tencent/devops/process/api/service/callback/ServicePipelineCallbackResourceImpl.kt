@@ -27,18 +27,39 @@
 package com.tencent.devops.process.api.service.callback
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
-import com.tencent.devops.process.permission.PipelinePermissionService
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
+import java.time.LocalDateTime
 
 @RestResource
 class ServicePipelineCallbackResourceImpl @Autowired constructor(
+    private val client: Client,
     private val pipelineRuntimeService: PipelineRuntimeService,
-    private val pipelinePermissionService: PipelinePermissionService
+    private val pipelineRepositoryService: PipelineRepositoryService
 ) : ServicePipelineCallbackResource {
+    private val logger = LoggerFactory.getLogger(ServicePipelineCallbackResourceImpl::class.java)
+
+    @Value("\${deletedPipelineStoreTime:30}")
+    private val deletedPipelineStoreTime: Int = 30
+
     override fun clear(): Result<Boolean> {
-        
+        logger.info("clear pipelines deleted before $deletedPipelineStoreTime days")
+        val deleteTime = LocalDateTime.now().minusDays(deletedPipelineStoreTime.toLong())
+        //查出所有被删除超过过期时间的流水线
+        val deletedPipelines = pipelineRepositoryService.listDeletePipelineBefore(deleteTime)
+        val deletedPipelineIds = deletedPipelines.map { it.pipelineId }
+        logger.info("deletedPipelineIds=${deletedPipelineIds.joinToString()}")
+        //依次删除
+        deletedPipelines.forEach {
+            pipelineRepositoryService.deletePipelineHardly(it.creator, it.projectId, it.pipelineId, ChannelCode.BS)
+        }
+        return Result(true)
     }
 
 }

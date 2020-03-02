@@ -100,7 +100,7 @@ class SpringContextUtil : ApplicationContextAware {
             return applicationContext!!.getBeansOfType(clazz).values.toList()
         }
 
-        fun getApplicationContext(): ApplicationContext? {
+        fun getApplicationCtx(): ApplicationContext? {
             return applicationContext
         }
     }

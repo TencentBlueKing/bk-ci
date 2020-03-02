@@ -41,6 +41,7 @@ import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.extend.ModelCheckPlugin
 import com.tencent.devops.common.pipeline.pojo.BuildNo
+import com.tencent.devops.common.pipeline.pojo.PipelineBuildBaseInfo
 import com.tencent.devops.common.pipeline.pojo.element.SubPipelineCallElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHookTriggerElement
@@ -53,6 +54,7 @@ import com.tencent.devops.process.dao.PipelineSettingDao
 import com.tencent.devops.process.engine.cfg.ModelContainerIdGenerator
 import com.tencent.devops.process.engine.cfg.ModelTaskIdGenerator
 import com.tencent.devops.process.engine.cfg.PipelineIdGenerator
+import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.dao.PipelineModelTaskDao
@@ -90,6 +92,7 @@ class PipelineRepositoryService constructor(
     private val objectMapper: ObjectMapper,
     private val dslContext: DSLContext,
     private val pipelineInfoDao: PipelineInfoDao,
+    private val pipelineBuildDao: PipelineBuildDao,
     private val pipelineResDao: PipelineResDao,
     private val pipelineModelTaskDao: PipelineModelTaskDao,
     private val pipelineSettingDao: PipelineSettingDao,
@@ -625,19 +628,29 @@ class PipelineRepositoryService constructor(
         pipelineId: String,
         channelCode: ChannelCode?
     ) {
-        val applicationContext = SpringContextUtil.getApplicationContext()!!
+        logger.info("Input:($userId,$projectId,$pipelineId,$channelCode)")
+        val applicationContext = SpringContextUtil.getApplicationCtx()!!
         val beanNames = applicationContext.beanDefinitionNames
         //查出流水线的所有构建
-
-        beanNames.forEach { beanName->
-            val beanType=applicationContext.getType(beanName)
-            if(beanType is PipelineHardDeleteListener){
-                val bean=applicationContext.getBean(beanName,PipelineHardDeleteListener::class.java)
-                var deleteResult=false
-                var retryCount=0
-                while(!deleteResult&&retryCount<3){
-                    retryCount+=1
-                    deleteResult=bean.onPipelineDeleteHardly(dslContext,userId,pipelineBuildBaseInfoList)
+        val pipelineBuildBaseInfoList = mutableListOf<PipelineBuildBaseInfo>()
+        val buildIds = pipelineBuildDao.listPipelineBuildInfo(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            offset = 0,
+            limit = Integer.MAX_VALUE
+        ).map { it.buildId }
+        logger.info("buildIds of pipeline[$pipelineId]:${buildIds.joinToString()}")
+        pipelineBuildBaseInfoList.add(PipelineBuildBaseInfo(projectCode = projectId, pipelineId = pipelineId, buildIdList = buildIds))
+        beanNames.forEach { beanName ->
+            val beanType = applicationContext.getType(beanName)
+            if (beanType is PipelineHardDeleteListener) {
+                val bean = applicationContext.getBean(beanName, PipelineHardDeleteListener::class.java)
+                var deleteResult = false
+                var retryCount = 0
+                while (!deleteResult && retryCount < 3) {
+                    retryCount += 1
+                    deleteResult = bean.onPipelineDeleteHardly(dslContext, userId, pipelineBuildBaseInfoList)
                 }
             }
         }
@@ -768,6 +781,19 @@ class PipelineRepositoryService constructor(
      */
     fun listDeletePipelineIdByProject(projectId: String): List<PipelineInfo> {
         val result = pipelineInfoDao.listDeletePipelineIdByProject(dslContext, projectId)
+        val list = mutableListOf<PipelineInfo>()
+        result?.forEach {
+            if (it != null)
+                list.add(pipelineInfoDao.convert(it, null)!!)
+        }
+        return list
+    }
+
+    /**
+     * 列出已经updateTime之前删除的流水线
+     */
+    fun listDeletePipelineBefore(updateTime: java.time.LocalDateTime): List<PipelineInfo> {
+        val result = pipelineInfoDao.listDeletePipelineBefore(dslContext, updateTime)
         val list = mutableListOf<PipelineInfo>()
         result?.forEach {
             if (it != null)
