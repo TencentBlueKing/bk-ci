@@ -208,6 +208,7 @@ export default {
     [ADD_STAGE]: (state, { stages, insertStageIndex }) => {
         stages.splice(insertStageIndex, 0, {
             id: `stage-${insertStageIndex + 1}`,
+            name: `stage-${insertStageIndex + 1}`,
             containers: []
         })
         return state
