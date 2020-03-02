@@ -1,5 +1,6 @@
 package com.tencent.devops.log.util
 
+import com.tencent.devops.log.model.message.LogMessageWithLineNo
 import org.elasticsearch.common.settings.Settings
 import org.elasticsearch.common.xcontent.XContentBuilder
 import org.elasticsearch.common.xcontent.XContentFactory
@@ -31,4 +32,24 @@ object ESIndexUtils {
             .endObject()
             .endObject()
     }
+
+    fun indexRequest(
+        buildId: String,
+        logMessage: LogMessageWithLineNo,
+        index: String,
+        type: String
+    ): XContentBuilder {
+        return XContentFactory.jsonBuilder()
+            .startObject()
+            .field("buildId", buildId)
+            .field("lineNo", logMessage.lineNo)
+            .field("message", logMessage.message)
+            .field("timestamp", logMessage.timestamp)
+            .field("tag", logMessage.tag)
+            .field("jobId", logMessage.jobId)
+            .field("logType", logMessage.logType.name)
+            .field("executeCount", logMessage.executeCount)
+            .endObject()
+    }
+
 }

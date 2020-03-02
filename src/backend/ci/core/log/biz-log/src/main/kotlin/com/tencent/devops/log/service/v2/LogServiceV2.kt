@@ -50,6 +50,7 @@ import com.tencent.devops.log.model.pojo.enums.LogType
 import com.tencent.devops.log.util.Constants
 import com.tencent.devops.log.util.ESIndexUtils.getIndexSettings
 import com.tencent.devops.log.util.ESIndexUtils.getTypeMappings
+import com.tencent.devops.log.util.ESIndexUtils.indexRequest
 import com.tencent.devops.log.utils.LogDispatcher
 import org.elasticsearch.action.index.IndexRequestBuilder
 import org.elasticsearch.common.settings.Settings
@@ -1638,19 +1639,8 @@ class LogServiceV2 @Autowired constructor(
         index: String,
         type: String
     ): IndexRequestBuilder? {
-        val builder: XContentBuilder
-        try {
-            builder = XContentFactory.jsonBuilder()
-                .startObject()
-                .field("buildId", buildId)
-                .field("lineNo", logMessage.lineNo)
-                .field("message", logMessage.message)
-                .field("timestamp", logMessage.timestamp)
-                .field("tag", logMessage.tag)
-                .field("jobId", logMessage.jobId)
-                .field("logType", logMessage.logType.name)
-                .field("executeCount", logMessage.executeCount)
-                .endObject()
+        val builder = try {
+            indexRequest(buildId, logMessage, index, type)
         } catch (e: IOException) {
             logger.error("[$buildId] Convert logMessage to es document failure", e)
             return null
