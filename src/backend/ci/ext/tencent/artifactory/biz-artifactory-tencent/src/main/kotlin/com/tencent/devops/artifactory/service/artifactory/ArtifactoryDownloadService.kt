@@ -41,6 +41,7 @@ import com.tencent.devops.artifactory.service.pojo.JFrogAQLFileInfo
 import com.tencent.devops.artifactory.util.EmailUtil
 import com.tencent.devops.artifactory.util.JFrogUtil
 import com.tencent.devops.artifactory.util.PathUtils
+import com.tencent.devops.artifactory.util.StringUtil
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.archive.api.JFrogPropertiesApi
@@ -102,7 +103,7 @@ class ArtifactoryDownloadService @Autowired constructor(
         val url = serviceGetExternalDownloadUrl(userId, projectId, artifactoryType, path, 300).url
         val platform = if (path.endsWith(".ipa")) Platform.IOS else Platform.ANDROID
 
-        return DownloadUrl(url, platform)
+        return DownloadUrl(StringUtil.chineseUrlEncode(url), platform)
     }
 
     override fun serviceGetExternalDownloadUrl(
@@ -118,7 +119,7 @@ class ArtifactoryDownloadService @Autowired constructor(
         val normalizedPath = PathUtils.checkAndNormalizeAbsPath(argPath)
         val realPath = JFrogUtil.getRealPath(projectId, artifactoryType, normalizedPath)
         val url = jFrogApiService.externalDownloadUrl(realPath, userId, ttl, directed)
-        return Url(url)
+        return Url(StringUtil.chineseUrlEncode(url))
     }
 
     override fun serviceGetInnerDownloadUrl(userId: String, projectId: String, artifactoryType: ArtifactoryType, argPath: String, ttl: Int, directed: Boolean): Url {
