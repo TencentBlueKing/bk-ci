@@ -65,6 +65,13 @@
                     :editable="false"
                 />
             </template>
+            <template v-else-if="typeof editingElementPos.stageIndex !== 'undefined'">
+                <stage-property-panel
+                    :stage="stage"
+                    :stage-index="editingElementPos.stageIndex"
+                    :editable="false"
+                />
+            </template>
         </template>
 
         <template v-if="execDetail">
@@ -93,6 +100,7 @@
     import codeRecord from '@/components/codeRecord'
     import outputOption from '@/components/outputOption'
     import ContainerPropertyPanel from '@/components/ContainerPropertyPanel/'
+    import StagePropertyPanel from '@/components/StagePropertyPanel'
     import emptyTips from '@/components/devops/emptyTips'
     import log from '../../../../devops-log'
     import pipelineOperateMixin from '@/mixins/pipeline-operate-mixin'
@@ -103,6 +111,7 @@
         components: {
             stages,
             ContainerPropertyPanel,
+            StagePropertyPanel,
             viewPart,
             codeRecord,
             outputOption,
@@ -220,6 +229,16 @@
                 const stages = model.stages || []
                 const currentStage = stages[editingElementPos.stageIndex] || []
                 return currentStage.containers[editingElementPos.containerIndex]
+            },
+            stage () {
+                const { editingElementPos, execDetail } = this
+                if (editingElementPos) {
+                    const model = execDetail.model || {}
+                    const stages = model.stages || []
+                    const stage = stages[editingElementPos.stageIndex]
+                    return stage
+                }
+                return null
             },
             currentElement () {
                 const {
