@@ -28,7 +28,6 @@ package com.tencent.devops.log.client
 
 import com.tencent.devops.common.es.ESClient
 import org.elasticsearch.client.Client
-import org.slf4j.LoggerFactory
 
 interface LogClient {
 
@@ -44,35 +43,11 @@ interface LogClient {
 
     fun prepareIndex(buildId: String, index: String, type: String) = getClient(buildId).prepareIndex(index, type)
 
-    fun markESInactive(buildId: String): Boolean {
-        // for the default implements just println the log
-        val client = CurrentLogClient.getClient()
-        if (client == null) {
-            logger.warn("[$buildId] Fail to get the es client")
-            return false
-        }
-        logger.warn("[$buildId|${client.name}] Mark the es as inactive")
-        return false
-    }
-
-    fun markESActive(buildId: String): Boolean {
-        // for the default implement just println the log
-        val esName = CurrentLogClient.getInactiveESName()
-        logger.info("[$buildId|$esName] Mark the es as active")
-        return true
-    }
-
     private fun getClient(buildId: String): Client {
-        val client = hashClient(buildId)
-        CurrentLogClient.setClient(client)
-        return client.client
+        return hashClient(buildId).client
     }
 
     fun getActiveClients(): List<ESClient>
 
     fun hashClient(buildId: String): ESClient
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(LogClient::class.java)
-    }
 }
