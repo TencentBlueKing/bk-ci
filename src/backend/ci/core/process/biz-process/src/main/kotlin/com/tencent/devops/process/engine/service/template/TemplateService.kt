@@ -1151,6 +1151,7 @@ class TemplateService @Autowired constructor(
                             param = param,
                             instanceFromTemplate = true
                         )
+                    instanceModel.templateId = templateId
                     val pipelineId = pipelineService.createPipeline(
                         userId = userId,
                         projectId = projectId,
@@ -1158,23 +1159,9 @@ class TemplateService @Autowired constructor(
                         channelCode = ChannelCode.BS,
                         checkPermission = true,
                         fixPipelineId = null,
-                        instanceType = PipelineInstanceTypeEnum.CONSTRAINT.type
-                    )
-                    templatePipelineDao.create(
-                        dslContext = context,
-                        pipelineId = pipelineId,
                         instanceType = PipelineInstanceTypeEnum.CONSTRAINT.type,
-                        rootTemplateId = template.id,
-                        templateVersion = template.version,
-                        versionName = template.versionName,
-                        templateId = templateId,
-                        userId = userId,
-                        buildNo = if (buildNo == null) {
-                            null
-                        } else {
-                            objectMapper.writeValueAsString(buildNo)
-                        },
-                        param = objectMapper.writeValueAsString(param)
+                        buildNo = buildNo,
+                        param = param
                     )
                     if (useTemplateSettings) {
                         val setting = copySetting(
