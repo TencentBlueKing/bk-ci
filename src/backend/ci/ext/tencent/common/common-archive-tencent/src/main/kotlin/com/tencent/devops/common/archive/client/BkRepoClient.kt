@@ -29,13 +29,15 @@ package com.tencent.devops.common.archive.client
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.bkrepo.common.api.constant.AUTH_HEADER_UID
-import com.tencent.bkrepo.common.api.pojo.Page
 import com.tencent.bkrepo.common.api.pojo.Response
+import com.tencent.bkrepo.common.query.enums.OperationType
+import com.tencent.bkrepo.common.query.model.PageLimit
+import com.tencent.bkrepo.common.query.model.QueryModel
+import com.tencent.bkrepo.common.query.model.Rule
+import com.tencent.bkrepo.common.query.model.Sort
 import com.tencent.bkrepo.generic.pojo.FileInfo
-import com.tencent.bkrepo.generic.pojo.FileSearchRequest
 import com.tencent.bkrepo.repository.pojo.metadata.UserMetadataSaveRequest
 import com.tencent.bkrepo.repository.pojo.node.NodeDetail
-import com.tencent.bkrepo.repository.pojo.node.NodeInfo
 import com.tencent.bkrepo.repository.pojo.node.NodeSizeInfo
 import com.tencent.bkrepo.repository.pojo.node.user.UserNodeCopyRequest
 import com.tencent.bkrepo.repository.pojo.node.user.UserNodeMoveRequest
@@ -47,6 +49,8 @@ import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.archive.pojo.ArtifactorySearchParam
 import com.tencent.devops.common.archive.pojo.BkRepoData
 import com.tencent.devops.common.archive.pojo.BkRepoFile
+import com.tencent.devops.common.archive.pojo.QueryData
+import com.tencent.devops.common.archive.pojo.QueryNodeInfo
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import okhttp3.MediaType
@@ -178,52 +182,6 @@ class BkRepoClient constructor(
             val responseData = objectMapper.readValue<Response<List<FileInfo>>>(responseContent)
             if (responseData.isNotOk()) {
                 throw RuntimeException("get file info failed: ${responseData.message}")
-            }
-
-            return responseData.data!!
-        }
-    }
-
-    fun searchFile(
-        userId: String,
-        projectId: String,
-        repoNames: List<String>,
-        filePaterns: List<String>,
-        metadatas: Map<String, String>,
-        page: Int,
-        pageSize: Int
-    ): Page<NodeInfo> {
-        logger.info("searchFile, userId: $userId, repoNames: $repoNames, filePaterns: $filePaterns, metadatas: $metadatas, page: $page, pageSize: $pageSize")
-        val url = "${getGatewaytUrl()}/bkrepo/api/service/generic/search"
-        val requestData = FileSearchRequest(
-            projectId = projectId,
-            repoNameList = repoNames,
-            pathPattern = listOf(),
-            metadataCondition = metadatas,
-            page = page,
-            size = pageSize
-        )
-        val requestBody = objectMapper.writeValueAsString(requestData)
-        val request = Request.Builder()
-            .url(url)
-            // .header("Authorization", makeCredential())
-            .header(AUTH_HEADER_UID, userId)
-            .post(
-                RequestBody.create(
-                    MediaType.parse("application/json; charset=utf-8"),
-                    objectMapper.writeValueAsString(requestData)
-                )
-            ).build()
-        OkhttpUtils.doHttp(request).use { response ->
-            val responseContent = response.body()!!.string()
-            if (!response.isSuccessful) {
-                logger.error("search file failed, requestBody: $requestBody, responseContent: $responseContent")
-                throw RuntimeException("get file info failed")
-            }
-
-            val responseData = objectMapper.readValue<Response<Page<NodeInfo>>>(responseContent)
-            if (responseData.isNotOk()) {
-                throw RuntimeException("search file failed: ${responseData.message}")
             }
 
             return responseData.data!!
@@ -638,7 +596,7 @@ class BkRepoClient constructor(
             .post(
                 RequestBody.create(
                     MediaType.parse("application/json; charset=utf-8"),
-                    objectMapper.writeValueAsString(requestData)
+                    requestBody
                 )
             ).build()
         OkhttpUtils.doHttp(request).use { response ->
@@ -654,6 +612,96 @@ class BkRepoClient constructor(
             }
 
             return responseData.data!!.shareUrl
+        }
+    }
+
+    fun queryByNameAndMetadata(
+        userId: String,
+        projectId: String,
+        repoNames: List<String>,
+        fileNamePatterns: List<String>,
+        metadata: Map<String, String>,
+        page: Int,
+        pageSize: Int
+    ): List<QueryNodeInfo> {
+        logger.info("queryByRepoAndMetadata, userId: $userId, projectId: $projectId, repoNames: $repoNames, metadata: $metadata")
+
+        val projectRule = Rule.QueryRule("projectId", projectId, OperationType.EQ)
+        val repoRule = Rule.QueryRule("repoName", repoNames, OperationType.IN)
+        var ruleList = mutableListOf<Rule>(projectRule, repoRule)
+        if (fileNamePatterns.isNotEmpty()) {
+            val fileNameRule = Rule.NestedRule(fileNamePatterns.map { Rule.QueryRule("name", it, OperationType.MATCH) }.toMutableList(), Rule.NestedRule.RelationType.OR)
+            ruleList.add(fileNameRule)
+        }
+        if (metadata.isNotEmpty()) {
+            val metadataRule = Rule.NestedRule(metadata.map { Rule.QueryRule("metadata.${it.key}", it.value, OperationType.EQ) }.toMutableList())
+            ruleList.add(metadataRule)
+        }
+        var rule = Rule.NestedRule(ruleList, Rule.NestedRule.RelationType.AND)
+
+        return query(userId, rule, page, pageSize)
+    }
+
+    fun queryByPattern(
+        userId: String,
+        projectId: String,
+        repoNames: List<String>,
+        fullPathPatterns: List<String>,
+        metadata: Map<String, String>
+    ): List<QueryNodeInfo> {
+        logger.info("queryByPattern, userId: $userId, projectId: $projectId, repoNames: $repoNames, fullPathPatterns: $fullPathPatterns, metadata: $metadata")
+
+        val projectRule = Rule.QueryRule("projectId", projectId, OperationType.EQ)
+        val repoRule = Rule.QueryRule("repoName", repoNames, OperationType.IN)
+        var ruleList = mutableListOf<Rule>(projectRule, repoRule)
+        if (fullPathPatterns.isNotEmpty()) {
+            val fullPathRule = Rule.NestedRule(fullPathPatterns.map { Rule.QueryRule("fullPath", it, OperationType.MATCH) }.toMutableList(), Rule.NestedRule.RelationType.OR)
+            ruleList.add(fullPathRule)
+        }
+        if (metadata.isNotEmpty()) {
+            val metadataRule = Rule.NestedRule(metadata.map { Rule.QueryRule("metadata.${it.key}", it.value, OperationType.EQ) }.toMutableList())
+            ruleList.add(metadataRule)
+        }
+        var rule = Rule.NestedRule(ruleList, Rule.NestedRule.RelationType.AND)
+
+        return query(userId, rule, 0, 10000)
+    }
+
+    private fun query(userId: String, rule: Rule, page: Int, pageSize: Int): List<QueryNodeInfo> {
+        logger.info("query, userId: $userId, rule: $rule, page: $page, pageSize: $pageSize")
+        val url = "${getGatewaytUrl()}/bkrepo/api/service/repository/api/node/query"
+        val queryModel = QueryModel(
+            page = PageLimit(0, 10000),
+            sort = Sort(listOf("fullPath"), Sort.Direction.ASC),
+            select = mutableListOf(),
+            rule = rule
+        )
+
+        val requestBody = objectMapper.writeValueAsString(queryModel)
+        logger.info("requestBody: $requestBody")
+        val request = Request.Builder()
+            .url(url)
+            // .header("Authorization", makeCredential())
+            .header(AUTH_HEADER_UID, userId)
+            .post(
+                RequestBody.create(
+                    MediaType.parse("application/json; charset=utf-8"),
+                    requestBody
+                )
+            ).build()
+        OkhttpUtils.doHttp(request).use { response ->
+            val responseContent = response.body()!!.string()
+            if (!response.isSuccessful) {
+                logger.error("query failed, responseContent: $responseContent")
+                throw RuntimeException("query failed")
+            }
+
+            val responseData = objectMapper.readValue<Response<QueryData>>(responseContent)
+            if (responseData.isNotOk()) {
+                throw RuntimeException("query failed: ${responseData.message}")
+            }
+
+            return responseData.data!!.records
         }
     }
 

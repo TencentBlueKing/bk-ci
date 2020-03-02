@@ -38,12 +38,16 @@ import com.tencent.devops.artifactory.util.RepoUtils
 import com.tencent.devops.artifactory.util.StringUtil
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.archive.client.BkRepoClient
+import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_BUILD_ID
+import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_PIPELINE_ID
 import com.tencent.devops.common.archive.pojo.BkRepoFile
+import com.tencent.devops.common.archive.shorturl.ShortUrlApi
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.BSAuthProjectApi
 import com.tencent.devops.common.auth.code.BSRepoAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.notify.api.service.ServiceNotifyResource
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
@@ -54,6 +58,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.util.regex.Pattern
 import javax.ws.rs.BadRequestException
+import javax.ws.rs.NotFoundException
 
 @Service
 class BkRepoDownloadService @Autowired constructor(
@@ -62,7 +67,8 @@ class BkRepoDownloadService @Autowired constructor(
     private val authProjectApi: BSAuthProjectApi,
     private val artifactoryAuthServiceCode: BSRepoAuthServiceCode,
     private val pipelineService: PipelineService,
-    private val bkRepoClient: BkRepoClient
+    private val bkRepoClient: BkRepoClient,
+    private val shortUrlApi: ShortUrlApi
 ) : RepoDownloadService {
     private val regex = Pattern.compile(",|;")
 
@@ -96,8 +102,7 @@ class BkRepoDownloadService @Autowired constructor(
             projectId,
             artifactoryType,
             normalizedPath,
-            ttl,
-            directed
+            ttl
         )
         return Url(StringUtil.chineseUrlEncode(url))
     }
@@ -158,9 +163,14 @@ class BkRepoDownloadService @Autowired constructor(
         logger.info("getExternalUrl, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType, " +
             "path: $path")
         val normalizedPath = PathUtils.checkAndNormalizeAbsPath(path)
-
-        // todo
-        throw OperationException("not implemented")
+        val fileInfo = bkRepoClient.getFileDetail(userId, projectId, RepoUtils.getRepoByType(artifactoryType), normalizedPath)
+            ?: throw NotFoundException("文件($path)不存在")
+        val properties = fileInfo.metadata
+        val pipelineId = properties[ARCHIVE_PROPS_PIPELINE_ID] ?: throw RuntimeException("元数据(pipelineId)不存在")
+        val buildId = properties[ARCHIVE_PROPS_BUILD_ID] ?: throw RuntimeException("元数据(buildId)不存在")
+        val url = "${HomeHostUtil.outerServerHost()}/app/download/devops_app_forward.html?flag=buildArchive&projectId=$projectId&pipelineId=$pipelineId&buildId=$buildId"
+        val shortUrl = shortUrlApi.getShortUrl(url, 300)
+        return Url(shortUrl)
     }
 
     override fun shareUrl(
