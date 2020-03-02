@@ -30,7 +30,10 @@ import com.tencent.devops.artifactory.api.service.ServiceIptResource
 import com.tencent.devops.artifactory.pojo.FileInfo
 import com.tencent.devops.artifactory.pojo.FileInfoPage
 import com.tencent.devops.artifactory.pojo.SearchProps
+import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
+import com.tencent.devops.artifactory.service.artifactory.ArtifactoryDownloadService
 import com.tencent.devops.artifactory.service.artifactory.ArtifactorySearchService
+import com.tencent.devops.artifactory.service.bkrepo.BkRepoDownloadService
 import com.tencent.devops.artifactory.service.bkrepo.BkRepoSearchService
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.redis.RedisOperation
@@ -42,16 +45,58 @@ import org.springframework.beans.factory.annotation.Autowired
 class ServiceIptResourceImpl @Autowired constructor(
     private val bkRepoSearchService: BkRepoSearchService,
     private val artifactorySearchService: ArtifactorySearchService,
+    private val artifactoryDownloadService: ArtifactoryDownloadService,
+    private val bkRepoDownloadService: BkRepoDownloadService,
     private val redisOperation: RedisOperation,
     private val repoGray: RepoGray
 ) : ServiceIptResource {
-    override fun searchFileAndProperty(userId: String, projectId: String, searchProps: SearchProps): Result<FileInfoPage<FileInfo>> {
-        return if (repoGray.isGray(projectId, redisOperation)) {
-            val result = bkRepoSearchService.searchFileAndProperty(userId, projectId, searchProps)
-            Result(FileInfoPage(result.second.size.toLong(), 0, 0, result.second, result.first))
+    override fun searchFileAndProperty(
+        userId: String,
+        projectId: String,
+        searchProps: SearchProps
+    ): Result<FileInfoPage<FileInfo>> {
+        val pipelineId = searchProps.props["pipelineId"]!!
+        val buildId = searchProps.props["buildId"]!!
+        val result = if (repoGray.isGray(projectId, redisOperation)) {
+            bkRepoSearchService.searchFileAndProperty(userId, projectId, searchProps)
         } else {
-            val result = artifactorySearchService.searchFileAndProperty(userId, projectId, searchProps)
-            Result(FileInfoPage(result.second.size.toLong(), 0, 0, result.second, result.first))
+            artifactorySearchService.searchFileAndProperty(userId, projectId, searchProps)
         }
+
+        // 获取第三方下载链接
+        result.second.forEach {
+            val path = if (it.artifactoryType == ArtifactoryType.PIPELINE) {
+                it.name
+            } else {
+                it.path
+            }
+            it.downloadUrl = if (repoGray.isGray(projectId, redisOperation)) {
+                bkRepoDownloadService.getThirdPartyDownloadUrl(
+                    projectId,
+                    pipelineId,
+                    buildId,
+                    it.artifactoryType,
+                    path,
+                    null,
+                    null,
+                    null,
+                    null
+                ).firstOrNull()
+            } else {
+                artifactoryDownloadService.getThirdPartyDownloadUrl(
+                    projectId,
+                    pipelineId,
+                    buildId,
+                    it.artifactoryType,
+                    path,
+                    null,
+                    null,
+                    null,
+                    null
+                ).firstOrNull()
+            }
+        }
+
+        return Result(FileInfoPage(result.second.size.toLong(), 0, 0, result.second, result.first))
     }
 }
