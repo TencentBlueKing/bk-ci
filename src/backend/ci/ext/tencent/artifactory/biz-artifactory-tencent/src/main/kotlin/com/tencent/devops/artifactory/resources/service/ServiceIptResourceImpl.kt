@@ -30,6 +30,7 @@ import com.tencent.devops.artifactory.api.service.ServiceIptResource
 import com.tencent.devops.artifactory.pojo.FileInfo
 import com.tencent.devops.artifactory.pojo.FileInfoPage
 import com.tencent.devops.artifactory.pojo.SearchProps
+import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.artifactory.service.artifactory.ArtifactoryDownloadService
 import com.tencent.devops.artifactory.service.artifactory.ArtifactorySearchService
 import com.tencent.devops.artifactory.service.bkrepo.BkRepoDownloadService
@@ -64,13 +65,18 @@ class ServiceIptResourceImpl @Autowired constructor(
 
         // 获取第三方下载链接
         result.second.forEach {
+            val path = if (it.artifactoryType == ArtifactoryType.PIPELINE) {
+                it.name
+            } else {
+                it.path
+            }
             it.downloadUrl = if (repoGray.isGray(projectId, redisOperation)) {
                 bkRepoDownloadService.getThirdPartyDownloadUrl(
                     projectId,
                     pipelineId,
                     buildId,
                     it.artifactoryType,
-                    it.path,
+                    path,
                     null,
                     null,
                     null,
@@ -82,7 +88,7 @@ class ServiceIptResourceImpl @Autowired constructor(
                     pipelineId,
                     buildId,
                     it.artifactoryType,
-                    it.path,
+                    path,
                     null,
                     null,
                     null,
