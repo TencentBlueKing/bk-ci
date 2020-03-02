@@ -233,7 +233,7 @@ class PipelineService @Autowired constructor(
                 if (model.templateId != null) {
                     var templateId = model.templateId as String
                     logger.info("templateId: $templateId")
-                    createRelationBtwTemplate(userId, templateId, pipelineId, instanceType, buildNo, param)
+                    createRelationBtwTemplate(userId, templateId, pipelineId, instanceType!!, buildNo, param)
                 }
                 success = true
                 return pipelineId
