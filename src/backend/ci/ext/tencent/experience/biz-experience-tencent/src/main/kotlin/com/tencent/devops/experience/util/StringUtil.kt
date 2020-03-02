@@ -24,7 +24,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.artifactory.util
+package com.tencent.devops.experience.util
 
 import java.net.URLEncoder
 import java.util.Random

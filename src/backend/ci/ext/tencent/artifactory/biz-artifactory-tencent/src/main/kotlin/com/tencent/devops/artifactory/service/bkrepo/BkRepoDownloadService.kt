@@ -35,6 +35,7 @@ import com.tencent.devops.artifactory.service.pojo.FileShareInfo
 import com.tencent.devops.artifactory.util.EmailUtil
 import com.tencent.devops.artifactory.util.PathUtils
 import com.tencent.devops.artifactory.util.RepoUtils
+import com.tencent.devops.artifactory.util.StringUtil
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.archive.client.BkRepoClient
 import com.tencent.devops.common.archive.pojo.BkRepoFile
@@ -98,7 +99,7 @@ class BkRepoDownloadService @Autowired constructor(
             ttl,
             directed
         )
-        return Url(url)
+        return Url(StringUtil.chineseUrlEncode(url))
     }
 
     override fun serviceGetInnerDownloadUrl(
