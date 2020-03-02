@@ -45,15 +45,20 @@
                     return this.stages
                 },
                 set (stages) {
-                    const data = []
-                    stages.forEach((stage, index) => {
-                        const containers = stage.containers || []
+                    const data = stages.map((stage, index) => {
                         const id = `stage-${index + 1}`
-                        data.push({
+                        if (!stage.containers) { // container
+                            return {
+                                id,
+                                name: id,
+                                containers: [stage]
+                            }
+                        }
+
+                        return {
                             id,
-                            ...stage,
-                            containers
-                        })
+                            ...stage
+                        }
                     })
                     this.setPipelineStage(data)
                     this.setPipelineEditing(true)
