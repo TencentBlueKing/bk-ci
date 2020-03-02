@@ -48,6 +48,8 @@ import com.tencent.devops.log.model.pojo.QueryLineNo
 import com.tencent.devops.log.model.pojo.enums.LogStatus
 import com.tencent.devops.log.model.pojo.enums.LogType
 import com.tencent.devops.log.util.Constants
+import com.tencent.devops.log.util.ESIndexUtils.getIndexSettings
+import com.tencent.devops.log.util.ESIndexUtils.getTypeMappings
 import com.tencent.devops.log.utils.LogDispatcher
 import org.elasticsearch.action.index.IndexRequestBuilder
 import org.elasticsearch.common.settings.Settings
@@ -1728,14 +1730,8 @@ class LogServiceV2 @Autowired constructor(
             val response = client.admin(buildId)
                 .indices()
                 .prepareCreate(index)
-                .setSettings(
-                    Settings.builder()
-                        .put("index.number_of_shards", 6)
-                        .put("index.number_of_replicas", 1)
-                        .put("index.refresh_interval", "3s")
-                        .put("index.queries.cache.enabled", false)
-                )
-                .addMapping(type, createTypeMapping())
+                .setSettings(getIndexSettings())
+                .addMapping(type, getTypeMappings())
                 .get()
             success = true
             response.isShardsAcked
@@ -1745,24 +1741,6 @@ class LogServiceV2 @Autowired constructor(
         } finally {
             createIndexBeanV2.execute(System.currentTimeMillis() - startEpoch, success)
         }
-    }
-
-    private fun createTypeMapping(): XContentBuilder {
-        return XContentFactory.jsonBuilder()
-            .startObject()
-            .startObject("properties")
-            .startObject("buildId").field("type", "keyword").endObject()
-            .startObject("timestamp").field("type", "long").endObject()
-            .startObject("lineNo").field("type", "long").endObject()
-            .startObject("tag").field("type", "keyword").endObject()
-            .startObject("jobId").field("type", "keyword").endObject()
-            .startObject("executeCount").field("type", "keyword").endObject()
-            .startObject("logType").field("type", "text").endObject()
-            .startObject("message").field("type", "text")
-            .field("analyzer", "standard")
-            .endObject()
-            .endObject()
-            .endObject()
     }
 
     private fun isExistIndex(buildId: String, index: String): Boolean {
