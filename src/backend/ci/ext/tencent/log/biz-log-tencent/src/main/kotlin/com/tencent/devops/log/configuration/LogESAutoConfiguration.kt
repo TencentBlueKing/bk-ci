@@ -34,6 +34,7 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.WebAutoConfiguration
 import com.tencent.devops.log.client.impl.MultiESLogClient
 import com.tencent.devops.log.dao.TencentIndexDao
+import com.tencent.devops.log.dao.v2.IndexDaoV2
 import org.elasticsearch.common.settings.Settings
 import org.elasticsearch.common.transport.InetSocketTransportAddress
 import org.elasticsearch.plugins.Plugin
@@ -179,8 +180,9 @@ class LogESAutoConfiguration {
         @Autowired client2: ESClient,
         @Autowired redisOperation: RedisOperation,
         @Autowired tencentIndexDao: TencentIndexDao,
+        @Autowired indexDaoV2: IndexDaoV2,
         @Autowired dslContext: DSLContext
-    ) = MultiESLogClient(listOf(client, client2), redisOperation, dslContext, tencentIndexDao)
+    ) = MultiESLogClient(listOf(client, client2), redisOperation, dslContext, tencentIndexDao, indexDaoV2)
 
     companion object {
         private val logger = LoggerFactory.getLogger(LogESAutoConfiguration::class.java)
