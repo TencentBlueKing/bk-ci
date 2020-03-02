@@ -20,7 +20,7 @@
                     </bk-select>
                 </div>
             </form-field>
-            <stage-control :stage-control="stageControl" :handle-stage-change="handleStageChange"></stage-control>
+            <stage-control :stage-control="stageControl" :disabled="!editable" :handle-stage-change="handleStageChange"></stage-control>
         </section>
     </bk-sideslider>
 </template>
