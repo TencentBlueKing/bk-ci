@@ -110,11 +110,13 @@ class TemplatePipelineDao @Autowired constructor(private val objectMapper: Objec
 
     fun listByPipelines(
         dslContext: DSLContext,
-        pipelineIds: Set<String>
+        pipelineIds: Set<String>,
+        instanceType: String? = PipelineInstanceTypeEnum.CONSTRAINT.type
     ): Result<TTemplatePipelineRecord> {
         with(TTemplatePipeline.T_TEMPLATE_PIPELINE) {
             return dslContext.selectFrom(this)
                 .where(PIPELINE_ID.`in`(pipelineIds))
+                .and(INSTANCE_TYPE.eq(instanceType))
                 .fetch()
         }
     }
