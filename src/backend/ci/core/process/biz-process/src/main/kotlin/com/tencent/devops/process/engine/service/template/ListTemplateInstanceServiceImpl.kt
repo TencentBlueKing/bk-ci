@@ -60,7 +60,7 @@ class ListTemplateInstanceServiceImpl @Autowired constructor(
 
     override fun listTemplateInstances(projectId: String, userId: String, templateId: String): TemplateInstances {
         logger.info("[$projectId|$userId|$templateId] List the template instances")
-        val associatePipelines = 
+        val associatePipelines =
             templatePipelineDao.listPipeline(dslContext, PipelineInstanceTypeEnum.CONSTRAINT.type, setOf(templateId))
 
         val pipelineIds = associatePipelines.map { it.pipelineId }.toSet()

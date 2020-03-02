@@ -96,7 +96,7 @@ class TemplatePipelineDao @Autowired constructor(private val objectMapper: Objec
     }
 
     fun get(
-        dslContext: DSLContext, 
+        dslContext: DSLContext,
         pipelineId: String,
         instanceType: String? = PipelineInstanceTypeEnum.CONSTRAINT.type
     ): TTemplatePipelineRecord? {
