@@ -141,6 +141,7 @@ class MultiESLogClient constructor(
                         logger.info("[$buildId|$esName] Rehash the build id")
                         val c = getClient(activeClients, buildId)
                         esName = c.name
+                        logger.info("[$buildId] Set the build id to es log cluster: $esName")
                         tencentIndexDao.updateClusterName(dslContext, buildId, esName!!)
                     } else {
                         // set to cache
