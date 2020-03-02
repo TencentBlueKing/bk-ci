@@ -95,7 +95,7 @@ class PipelineBuildStageDao : PipelineHardDeleteListener {
                 records.add(
                     TPipelineBuildStageRecord(
                         projectId, pipelineId, buildId, stageId, seq,
-                        status.ordinal, startTime, endTime, cost, executeCount
+                        status.ordinal, startTime, endTime, cost, executeCount, null
                     )
                 )
             }

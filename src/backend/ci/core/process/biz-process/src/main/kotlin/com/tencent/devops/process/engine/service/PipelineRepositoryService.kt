@@ -48,7 +48,6 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHook
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitlabWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeSVNWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
-import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.dao.PipelineSettingDao
 import com.tencent.devops.process.engine.cfg.ModelContainerIdGenerator
@@ -65,7 +64,7 @@ import com.tencent.devops.process.engine.pojo.PipelineModelTask
 import com.tencent.devops.process.engine.pojo.event.PipelineCreateEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineDeleteEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineUpdateEvent
-import com.tencent.devops.process.listener.PipelineHardDeleteListener
+import com.tencent.devops.process.listener.PipelineListenerUtil
 import com.tencent.devops.process.plugin.load.ElementBizRegistrar
 import com.tencent.devops.process.pojo.setting.PipelineRunLockType
 import com.tencent.devops.process.pojo.setting.PipelineSetting
@@ -101,6 +100,9 @@ class PipelineRepositoryService constructor(
     private val modelCheckPlugin: ModelCheckPlugin,
     private val templatePipelineDao: TemplatePipelineDao
 ) {
+
+
+    private val logger = LoggerFactory.getLogger(PipelineRepositoryService::class.java)
 
     fun deployPipeline(
         model: Model,
@@ -629,34 +631,37 @@ class PipelineRepositoryService constructor(
         channelCode: ChannelCode?
     ) {
         logger.info("Input:($userId,$projectId,$pipelineId,$channelCode)")
-        val applicationContext = SpringContextUtil.getApplicationCtx()!!
-        val beanNames = applicationContext.beanDefinitionNames
         //查出流水线的所有构建
         val pipelineBuildBaseInfoList = mutableListOf<PipelineBuildBaseInfo>()
-        val buildIds = pipelineBuildDao.listPipelineBuildInfo(
-            dslContext = dslContext,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            offset = 0,
-            limit = Integer.MAX_VALUE
-        ).map { it.buildId }
-        logger.info("buildIds of pipeline[$pipelineId]:${buildIds.joinToString()}")
-        pipelineBuildBaseInfoList.add(PipelineBuildBaseInfo(projectCode = projectId, pipelineId = pipelineId, buildIdList = buildIds))
-        beanNames.forEach { beanName ->
-            val beanType = applicationContext.getType(beanName)
-            logger.info("check $beanName")
-            if (beanType is PipelineHardDeleteListener) {
-                logger.info("invoke $beanName")
-                val bean = applicationContext.getBean(beanName, PipelineHardDeleteListener::class.java)
-                var deleteResult = false
-                var retryCount = 0
-                while (!deleteResult && retryCount < 3) {
-                    retryCount += 1
-                    deleteResult = bean.onPipelineDeleteHardly(dslContext, userId, pipelineBuildBaseInfoList)
+        var offset = 0
+        //每次删除一千条构建记录
+        val batchSize = 1000
+        var buildIds = listOf<String>()
+        do {
+            buildIds = pipelineBuildDao.listPipelineBuildInfo(
+                dslContext = dslContext,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                offset = 0,
+                limit = batchSize
+            ).map { it.buildId }
+            if (buildIds.isNotEmpty()) {
+                logger.info("[$offset,${offset + batchSize}] buildIds of pipeline[$pipelineId]:${buildIds.size},[${buildIds.joinToString()}]")
+                pipelineBuildBaseInfoList.add(PipelineBuildBaseInfo(projectCode = projectId, pipelineId = pipelineId, buildIdList = buildIds))
+                PipelineListenerUtil.pipelineHardDeleteListeners.forEach { listener ->
+                    logger.info("invoke $listener")
+                    var deleteResult = false
+                    var retryCount = 0
+                    while (!deleteResult && retryCount < 3) {
+                        retryCount += 1
+                        deleteResult = listener.onPipelineDeleteHardly(dslContext, userId, pipelineBuildBaseInfoList)
+                    }
                 }
+                offset += batchSize
             }
-        }
+        } while (buildIds.isNotEmpty())
     }
+
 
     fun isPipelineExist(
         projectId: String,

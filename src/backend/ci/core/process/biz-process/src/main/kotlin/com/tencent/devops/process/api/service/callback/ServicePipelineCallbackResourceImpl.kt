@@ -33,8 +33,11 @@ import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.util.StopWatch
 import java.time.LocalDateTime
-import java.util.concurrent.Executors
+import java.util.concurrent.LinkedBlockingQueue
+import java.util.concurrent.ThreadPoolExecutor
+import java.util.concurrent.TimeUnit
 
 @RestResource
 class ServicePipelineCallbackResourceImpl @Autowired constructor(
@@ -45,10 +48,12 @@ class ServicePipelineCallbackResourceImpl @Autowired constructor(
     @Value("\${deletedPipelineStoreTime:30}")
     private val deletedPipelineStoreTime: Int = 30
 
-    private val executorService = Executors.newFixedThreadPool(5)
+    //最多5线程，用完立即销毁
+    private val executorService = ThreadPoolExecutor(0, 5, 0, TimeUnit.SECONDS, LinkedBlockingQueue<Runnable>())
 
     override fun clear(): Result<Boolean> {
         executorService.submit {
+            val watch = StopWatch("clear deleted Task")
             try {
                 logger.info("clear pipelines deleted before $deletedPipelineStoreTime days")
                 val deleteTime = LocalDateTime.now().minusDays(deletedPipelineStoreTime.toLong())
@@ -58,13 +63,16 @@ class ServicePipelineCallbackResourceImpl @Autowired constructor(
                 logger.info("deletedPipelineIds=${deletedPipelineIds.size},(${deletedPipelineIds.joinToString()})")
                 //依次删除
                 deletedPipelines.forEach {
+                    watch.start("${it.pipelineId} delete Task")
                     pipelineRepositoryService.deletePipelineHardly(it.creator, it.projectId, it.pipelineId, ChannelCode.BS)
+                    watch.stop()
                 }
             } catch (e: Exception) {
                 logger.error("fail to clear deleted pipelines", e)
+            } finally {
+                logger.info("Clear Deleted Task Time Consuming:$watch")
             }
         }
         return Result(true)
     }
-
 }

@@ -22,3 +22,10 @@ class GrayPipelineBuildDao : PipelineHardDeleteListener {
         return true
     }
 }
+
+fun main(args: Array<String>) {
+
+    val dao = GrayPipelineBuildDao()
+    println(dao is PipelineHardDeleteListener)
+    println("hello")
+}
