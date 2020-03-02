@@ -146,6 +146,7 @@ class PipelineService @Autowired constructor(
         fixPipelineId: String? = null,
         instanceType: String? = PipelineInstanceTypeEnum.FREEDOM.type
     ): String {
+        logger.info("createPipeline: $userId|$projectId|$channelCode|$checkPermission|$fixPipelineId|$instanceType")
         val apiStartEpoch = System.currentTimeMillis()
         var success = false
         try {
@@ -224,6 +225,7 @@ class PipelineService @Autowired constructor(
                 }
                 pipelineGroupService.addPipelineLabel(userId = userId, pipelineId = pipelineId, labelIds = model.labels)
                 pipelineUserService.create(pipelineId, userId)
+                logger.info("instanceType: $instanceType")
                 if (instanceType == PipelineInstanceTypeEnum.FREEDOM.type) {
                     createRelationBtwTemplate(userId, model.templateId!!, pipelineId)
                 }
