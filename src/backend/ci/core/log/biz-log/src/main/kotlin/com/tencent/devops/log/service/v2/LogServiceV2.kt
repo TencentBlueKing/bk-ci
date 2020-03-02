@@ -31,7 +31,6 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.log.client.CurrentLogClient
 import com.tencent.devops.log.client.LogClient
 import com.tencent.devops.log.exceptions.IndexCreateFailureException
 import com.tencent.devops.log.jmx.v2.CreateIndexBeanV2
@@ -106,14 +105,6 @@ class LogServiceV2 @Autowired constructor(
             logger.info("[$projectId|$pipelineId|$buildId] build finish")
             indexServiceV2.flushLineNum2DB(buildId)
         }
-    }
-
-    fun markESInactive(buildId: String): Boolean {
-        return client.markESInactive(buildId)
-    }
-
-    fun markESActive(buildId: String): Boolean {
-        return client.markESActive(buildId)
     }
 
     fun addLogEvent(event: LogEvent) {

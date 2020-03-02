@@ -27,9 +27,7 @@
 package com.tencent.devops.log.client.impl
 
 import com.tencent.devops.common.es.ESClient
-import com.tencent.devops.log.client.CurrentLogClient
 import com.tencent.devops.log.client.LogClient
-import org.slf4j.LoggerFactory
 import java.lang.RuntimeException
 
 class LogClientImpl constructor(private val client: ESClient) : LogClient {
@@ -46,7 +44,4 @@ class LogClientImpl constructor(private val client: ESClient) : LogClient {
         return clients.first()
     }
 
-    companion object {
-        private val logger = LoggerFactory.getLogger(LogClientImpl::class.java)
-    }
 }

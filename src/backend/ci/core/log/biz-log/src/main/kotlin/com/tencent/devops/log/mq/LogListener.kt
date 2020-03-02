@@ -27,12 +27,10 @@
 package com.tencent.devops.log.mq
 
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
-import com.tencent.devops.log.client.CurrentLogClient
 import com.tencent.devops.log.exceptions.IndexCreateFailureException
 import com.tencent.devops.log.model.pojo.LogBatchEvent
 import com.tencent.devops.log.model.pojo.LogEvent
 import com.tencent.devops.log.model.pojo.LogStatusEvent
-import com.tencent.devops.log.service.LogServiceDispatcher
 import com.tencent.devops.log.service.v2.LogServiceV2
 import com.tencent.devops.log.utils.LogDispatcher
 import org.slf4j.LoggerFactory
@@ -53,28 +51,8 @@ class LogListener constructor(
     fun logEvent(event: LogEvent) {
         var result = false
         try {
-            if (!event.esName.isNullOrBlank()) {
-                logger.info("[${event.buildId}|${event.esName}] It's a detection package")
-                CurrentLogClient.setInactiveESName(event.esName!!)
-            }
             logServiceV2.addLogEvent(event)
-            if (!event.esName.isNullOrBlank()) {
-                logServiceV2.markESActive(event.buildId)
-            }
             result = true
-        } catch (e: IndexCreateFailureException) {
-            logger.warn("Fail to add the log event [${event.buildId}|${event.retryTime}]", e)
-            if (event.retryTime <= 0) {
-                if (logServiceV2.markESInactive(event.buildId)) {
-                    logger.info("[${event.buildId}] Retry this package to detect if the es cluster recover")
-                    val esName = CurrentLogClient.getClient()?.name
-                    if (!esName.isNullOrBlank()) {
-                        with(event) {
-                            LogDispatcher.dispatch(rabbitTemplate, LogEvent(buildId, logs, retryTime, DelayMills, esName!!))
-                        }
-                    }
-                }
-            }
         } catch (ignored: Throwable) {
             logger.warn("Fail to add the log event [${event.buildId}|${event.retryTime}]", ignored)
         } finally {
@@ -85,42 +63,23 @@ class LogListener constructor(
                     LogDispatcher.dispatch(rabbitTemplate, LogEvent(buildId, logs, retryTime - 1, DelayMills))
                 }
             }
-            CurrentLogClient.setInactiveESName(null)
         }
     }
 
     fun logBatchEvent(event: LogBatchEvent) {
         var result = false
         try {
-            if (!event.esName.isNullOrBlank()) {
-                CurrentLogClient.setInactiveESName(event.esName!!)
-            }
             logServiceV2.addBatchLogEvent(event)
-            if (!event.esName.isNullOrBlank()) {
-                logServiceV2.markESActive(event.buildId)
-            }
             result = true
         } catch (ignored: Throwable) {
             logger.warn("Fail to add the log batch event [${event.buildId}|${event.retryTime}]", ignored)
         } finally {
-            if (!result) {
-                if (event.retryTime >= 0) {
-                    logger.warn("Retry to add log batch event [${event.buildId}|${event.retryTime}]")
-                    with(event) {
-                        LogDispatcher.dispatch(rabbitTemplate, LogBatchEvent(buildId, logs, retryTime - 1, DelayMills))
-                    }
-                } else if (logServiceV2.markESInactive(event.buildId)) {
-                    logger.info("[${event.buildId}] Retry this package to detect if the es cluster recover")
-                    val esName = CurrentLogClient.getClient()?.name
-                    if (!esName.isNullOrBlank()) {
-                        with(event) {
-                            LogDispatcher.dispatch(rabbitTemplate, LogBatchEvent(buildId, logs, retryTime, DelayMills, esName))
-                        }
-                    }
-
+            if (!result && event.retryTime >= 0) {
+                logger.warn("Retry to add log batch event [${event.buildId}|${event.retryTime}]")
+                with(event) {
+                    LogDispatcher.dispatch(rabbitTemplate, LogBatchEvent(buildId, logs, retryTime - 1, DelayMills))
                 }
             }
-            CurrentLogClient.setInactiveESName(null)
         }
     }
 
