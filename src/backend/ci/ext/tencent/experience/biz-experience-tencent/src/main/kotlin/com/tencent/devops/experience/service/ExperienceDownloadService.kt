@@ -164,7 +164,7 @@ class ExperienceDownloadService @Autowired constructor(
         val fileDetail = client.get(ServiceArtifactoryResource::class).show(projectId, artifactoryType, path).data!!
 
         count(experienceId, userId)
-        return DownloadUrl(url, platform, fileDetail.size)
+        return DownloadUrl(StringUtil.chineseUrlEncode(url), platform, fileDetail.size)
     }
 
     fun serviceGetInnerDownloadUrl(userId: String, experienceId: Long): String {
