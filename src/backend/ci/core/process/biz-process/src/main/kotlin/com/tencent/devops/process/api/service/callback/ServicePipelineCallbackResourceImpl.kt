@@ -27,11 +27,9 @@
 package com.tencent.devops.process.api.service.callback
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
-import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
@@ -39,8 +37,6 @@ import java.time.LocalDateTime
 
 @RestResource
 class ServicePipelineCallbackResourceImpl @Autowired constructor(
-    private val client: Client,
-    private val pipelineRuntimeService: PipelineRuntimeService,
     private val pipelineRepositoryService: PipelineRepositoryService
 ) : ServicePipelineCallbackResource {
     private val logger = LoggerFactory.getLogger(ServicePipelineCallbackResourceImpl::class.java)
