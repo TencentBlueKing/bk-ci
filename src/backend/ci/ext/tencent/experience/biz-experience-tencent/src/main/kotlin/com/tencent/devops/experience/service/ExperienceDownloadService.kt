@@ -41,6 +41,7 @@ import com.tencent.devops.experience.pojo.ExperienceCount
 import com.tencent.devops.experience.pojo.ExperienceUserCount
 import com.tencent.devops.experience.pojo.enums.Platform
 import com.tencent.devops.experience.util.DateUtil
+import com.tencent.devops.experience.util.StringUtil
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -126,7 +127,7 @@ class ExperienceDownloadService @Autowired constructor(
         val fileDetail = client.get(ServiceArtifactoryResource::class).show(projectId, artifactoryType, path).data!!
 
         count(experienceId, userId)
-        return DownloadUrl(url, platform, fileDetail.size)
+        return DownloadUrl(StringUtil.chineseUrlEncode(url), platform, fileDetail.size)
     }
 
     fun serviceGetExternalPlistUrl(userId: String, experienceId: Long): DownloadUrl {
