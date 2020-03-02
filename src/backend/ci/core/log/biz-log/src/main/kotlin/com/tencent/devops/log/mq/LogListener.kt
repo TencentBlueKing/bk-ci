@@ -54,6 +54,7 @@ class LogListener constructor(
         var result = false
         try {
             if (!event.esName.isNullOrBlank()) {
+                logger.info("[${event.buildId}|${event.esName}] It's a detection package")
                 CurrentLogClient.setInactiveESName(event.esName!!)
             }
             logServiceV2.addLogEvent(event)
@@ -64,11 +65,13 @@ class LogListener constructor(
         } catch (e: IndexCreateFailureException) {
             logger.warn("Fail to add the log event [${event.buildId}|${event.retryTime}]", e)
             if (event.retryTime <= 0) {
-                logServiceV2.markESInactive(event.buildId)
-                val esName = CurrentLogClient.getClient()?.name
-                if (!esName.isNullOrBlank()) {
-                    with(event) {
-                        LogDispatcher.dispatch(rabbitTemplate, LogEvent(buildId, logs, retryTime, DelayMills, esName!!))
+                if (logServiceV2.markESInactive(event.buildId)) {
+                    logger.info("[${event.buildId}] Retry this package to detect if the es cluster recover")
+                    val esName = CurrentLogClient.getClient()?.name
+                    if (!esName.isNullOrBlank()) {
+                        with(event) {
+                            LogDispatcher.dispatch(rabbitTemplate, LogEvent(buildId, logs, retryTime, DelayMills, esName!!))
+                        }
                     }
                 }
             }
@@ -82,6 +85,7 @@ class LogListener constructor(
                     LogDispatcher.dispatch(rabbitTemplate, LogEvent(buildId, logs, retryTime - 1, DelayMills))
                 }
             }
+            CurrentLogClient.setInactiveESName(null)
         }
     }
 
@@ -105,16 +109,18 @@ class LogListener constructor(
                     with(event) {
                         LogDispatcher.dispatch(rabbitTemplate, LogBatchEvent(buildId, logs, retryTime - 1, DelayMills))
                     }
-                } else {
-                    logServiceV2.markESInactive(event.buildId)
+                } else if (logServiceV2.markESInactive(event.buildId)) {
+                    logger.info("[${event.buildId}] Retry this package to detect if the es cluster recover")
                     val esName = CurrentLogClient.getClient()?.name
                     if (!esName.isNullOrBlank()) {
                         with(event) {
                             LogDispatcher.dispatch(rabbitTemplate, LogBatchEvent(buildId, logs, retryTime, DelayMills, esName))
                         }
                     }
+
                 }
             }
+            CurrentLogClient.setInactiveESName(null)
         }
     }
 
