@@ -103,7 +103,7 @@ class ArtifactoryDownloadService @Autowired constructor(
         val url = serviceGetExternalDownloadUrl(userId, projectId, artifactoryType, path, 300).url
         val platform = if (path.endsWith(".ipa")) Platform.IOS else Platform.ANDROID
 
-        return DownloadUrl(url, platform)
+        return DownloadUrl(StringUtil.chineseUrlEncode(url), platform)
     }
 
     override fun serviceGetExternalDownloadUrl(
