@@ -72,6 +72,7 @@ import com.tencent.devops.process.pojo.classify.enums.Logic
 import com.tencent.devops.process.pojo.pipeline.SimplePipeline
 import com.tencent.devops.process.pojo.setting.PipelineRunLockType
 import com.tencent.devops.process.pojo.setting.PipelineSetting
+import com.tencent.devops.process.pojo.template.TemplateType
 import com.tencent.devops.process.service.PipelineSettingService
 import com.tencent.devops.process.service.PipelineUserService
 import com.tencent.devops.process.service.label.PipelineGroupService
@@ -257,7 +258,7 @@ class PipelineService @Autowired constructor(
     ): Boolean {
         logger.info("start createRelationBtwTemplate: $userId|$templateId|$pipelineId")
         val template = templateDao.getLatestTemplate(dslContext, templateId)
-        if (template.srcTemplateId.isNullOrEmpty()) {
+        if (template.type != TemplateType.CONSTRAINT.name) {
             logger.info("[$templateId]template is CUSTOMIZE or PUBLIC")
             templatePipelineDao.create(
                 dslContext = dslContext,
