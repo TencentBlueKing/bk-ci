@@ -293,7 +293,7 @@ class TemplateService @Autowired constructor(
         val template = templateDao.getLatestTemplate(dslContext, templateId)
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
-            val pipelines = 
+            val pipelines =
                 templatePipelineDao.listPipeline(context, PipelineInstanceTypeEnum.CONSTRAINT.type, setOf(templateId))
             if (pipelines.isNotEmpty) {
                 throw ErrorCodeException(
@@ -331,7 +331,7 @@ class TemplateService @Autowired constructor(
         checkPermission(projectId, userId)
         return dslContext.transactionResult { configuration ->
             val context = DSL.using(configuration)
-            val pipelines = 
+            val pipelines =
                 templatePipelineDao.listPipeline(context, templateId, PipelineInstanceTypeEnum.CONSTRAINT.type, version)
             if (pipelines.isNotEmpty) {
                 logger.warn("There are ${pipelines.size} pipeline attach to $templateId of version $version")
@@ -1566,7 +1566,7 @@ class TemplateService @Autowired constructor(
     ): TemplateInstancePage {
         logger.info("[$projectId|$userId|$templateId|$page|$pageSize] List the template instances with filter $searchKey")
 
-        val instancePage = 
+        val instancePage =
             templatePipelineDao.listPipelineInPage(dslContext, projectId, templateId, PipelineInstanceTypeEnum.CONSTRAINT.type, page, pageSize, searchKey)
         val associatePipelines = instancePage.records
         val pipelineIds = associatePipelines.map { it.pipelineId }.toSet()
