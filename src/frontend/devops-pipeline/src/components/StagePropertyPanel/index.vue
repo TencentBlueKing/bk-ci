@@ -67,7 +67,7 @@
                 }
             },
             stageTitle () {
-                return typeof this.stage.name !== 'undefined' ? this.stage.name : this.stage.id
+                return typeof this.stage !== 'undefined' ? this.stage.name : 'stage'
             },
             stageControl () {
                 if (this.stage && this.stage.stageControlOption) {
