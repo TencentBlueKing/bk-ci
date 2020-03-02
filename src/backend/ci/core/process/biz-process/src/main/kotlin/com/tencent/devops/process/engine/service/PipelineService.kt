@@ -27,6 +27,7 @@
 package com.tencent.devops.process.engine.service
 
 import com.fasterxml.jackson.core.JsonParseException
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.PipelineAlreadyExistException
@@ -113,6 +114,7 @@ class PipelineService @Autowired constructor(
     private val pipelineBuildDao: PipelineBuildDao,
     private val authPermissionApi: AuthPermissionApi,
     private val pipelineAuthServiceCode: PipelineAuthServiceCode,
+    private val objectMapper: ObjectMapper,
     private val client: Client
 ) {
 
@@ -143,7 +145,9 @@ class PipelineService @Autowired constructor(
         channelCode: ChannelCode,
         checkPermission: Boolean = true,
         fixPipelineId: String? = null,
-        instanceType: String? = PipelineInstanceTypeEnum.FREEDOM.type
+        instanceType: String? = PipelineInstanceTypeEnum.FREEDOM.type,
+        buildNo: BuildNo? = null,
+        param: List<BuildFormProperty>? = null
     ): String {
         logger.info("createPipeline: $userId|$projectId|$channelCode|$checkPermission|$fixPipelineId|$instanceType")
         val apiStartEpoch = System.currentTimeMillis()
@@ -181,7 +185,7 @@ class PipelineService @Autowired constructor(
 
             var pipelineId: String? = null
             try {
-                val instance = if (model.instanceFromTemplate == null || !model.instanceFromTemplate!!) {
+                val instance = if (instanceType == PipelineInstanceTypeEnum.FREEDOM.type) {
                     // 将模版常量变更实例化为流水线变量
                     val triggerContainer = model.stages[0].containers[0] as TriggerContainer
                     instanceModel(
@@ -222,10 +226,10 @@ class PipelineService @Autowired constructor(
                 pipelineGroupService.addPipelineLabel(userId = userId, pipelineId = pipelineId, labelIds = model.labels)
                 pipelineUserService.create(pipelineId, userId)
                 logger.info("instanceType: $instanceType")
-                if (instanceType == PipelineInstanceTypeEnum.FREEDOM.type && model.templateId != null) {
+                if (model.templateId != null) {
                     var templateId = model.templateId as String
                     logger.info("templateId: $templateId")
-                    createRelationBtwTemplate(userId, templateId, pipelineId)
+                    createRelationBtwTemplate(userId, templateId, pipelineId, instanceType, buildNo, param)
                 }
                 success = true
                 return pipelineId
@@ -258,40 +262,44 @@ class PipelineService @Autowired constructor(
     fun createRelationBtwTemplate(
         userId: String,
         templateId: String,
-        pipelineId: String
+        pipelineId: String,
+        instanceType: String,
+        buildNo: BuildNo? = null,
+        param: List<BuildFormProperty>? = null
     ): Boolean {
-        logger.info("start createRelationBtwTemplate: $userId|$templateId|$pipelineId")
+        logger.info("start createRelationBtwTemplate: $userId|$templateId|$pipelineId|$instanceType")
         val template = templateDao.getLatestTemplate(dslContext, templateId)
-        if (template.type != TemplateType.CONSTRAINT.name) {
-            logger.info("[$templateId]template is CUSTOMIZE or PUBLIC")
-            templatePipelineDao.create(
-                dslContext = dslContext,
-                pipelineId = pipelineId,
-                instanceType = PipelineInstanceTypeEnum.FREEDOM.type,
-                rootTemplateId = templateId,
-                templateVersion = template.version,
-                versionName = template.versionName,
-                templateId = templateId,
-                userId = userId,
-                buildNo = null,
-                param = null
-            )
-        } else {
-            logger.info("[$templateId]template is from store, srcTemplateId is ${template.srcTemplateId}")
+        var rootTemplateId = templateId
+        var templateVersion = template.version
+        var versionName = template.versionName
+        if (template.type == TemplateType.CONSTRAINT.name) {
+            logger.info("template[$templateId] is from store, srcTemplateId is ${template.srcTemplateId}")
             val rootTemplate = templateDao.getLatestTemplate(dslContext, template.srcTemplateId)
-            templatePipelineDao.create(
-                dslContext = dslContext,
-                pipelineId = pipelineId,
-                instanceType = PipelineInstanceTypeEnum.FREEDOM.type,
-                rootTemplateId = rootTemplate.id,
-                templateVersion = rootTemplate.version,
-                versionName = rootTemplate.versionName,
-                templateId = templateId,
-                userId = userId,
-                buildNo = null,
-                param = null
-            )
+            rootTemplateId = rootTemplate.id
+            templateVersion = rootTemplate.version
+            versionName = rootTemplate.versionName
         }
+
+        templatePipelineDao.create(
+            dslContext = dslContext,
+            pipelineId = pipelineId,
+            instanceType = instanceType,
+            rootTemplateId = rootTemplateId,
+            templateVersion = templateVersion,
+            versionName = versionName,
+            templateId = templateId,
+            userId = userId,
+            buildNo = if (buildNo == null) {
+                null
+            } else {
+                objectMapper.writeValueAsString(buildNo)
+            },
+            param = if (param == null) {
+                null
+            } else {
+                objectMapper.writeValueAsString(param)
+            }
+        )
         return true
     }
 
