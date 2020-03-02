@@ -47,7 +47,11 @@ import java.time.LocalDateTime
 class PipelineBuildContainerDao : PipelineHardDeleteListener {
     override fun onPipelineDeleteHardly(dslContext: DSLContext, operator: String, pipelineBuildBaseInfoList: List<PipelineBuildBaseInfo>): Boolean {
         for (pipelineBuildBaseInfo in pipelineBuildBaseInfoList) {
-            deletePipelineBuildContainers(dslContext, pipelineBuildBaseInfo.projectCode, pipelineBuildBaseInfo.pipelineId)
+            deletePipelineBuildContainers(
+                dslContext = dslContext,
+                projectId = pipelineBuildBaseInfo.projectCode,
+                pipelineId = pipelineBuildBaseInfo.pipelineId
+            )
         }
         return true
     }

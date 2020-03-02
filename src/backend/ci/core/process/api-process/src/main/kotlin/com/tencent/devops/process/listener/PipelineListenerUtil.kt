@@ -25,5 +25,6 @@ object PipelineListenerUtil {
                 pipelineHardDeleteListeners.add(beanInstance)
             }
         }
+        logger.info("There are ${pipelineHardDeleteListeners.size} pipelineHardDeleteListeners")
     }
 }

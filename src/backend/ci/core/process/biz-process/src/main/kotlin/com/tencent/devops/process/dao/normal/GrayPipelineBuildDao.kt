@@ -4,12 +4,14 @@ import com.tencent.devops.common.pipeline.pojo.PipelineBuildBaseInfo
 import com.tencent.devops.model.process.tables.TGrayPipelineBuild
 import com.tencent.devops.process.listener.PipelineHardDeleteListener
 import org.jooq.DSLContext
+import org.springframework.stereotype.Repository
 
 /**
  * @Description
  * @Date 2020/2/28
  * @Version 1.0
  */
+@Repository
 class GrayPipelineBuildDao : PipelineHardDeleteListener {
     override fun onPipelineDeleteHardly(dslContext: DSLContext, operator: String, pipelineBuildBaseInfoList: List<PipelineBuildBaseInfo>): Boolean {
         pipelineBuildBaseInfoList.forEach {
@@ -21,11 +23,4 @@ class GrayPipelineBuildDao : PipelineHardDeleteListener {
         }
         return true
     }
-}
-
-fun main(args: Array<String>) {
-
-    val dao = GrayPipelineBuildDao()
-    println(dao is PipelineHardDeleteListener)
-    println("hello")
 }

@@ -36,7 +36,11 @@ import org.springframework.stereotype.Repository
 class BuildStartupParamDao : PipelineHardDeleteListener {
     override fun onPipelineDeleteHardly(dslContext: DSLContext, operator: String, pipelineBuildBaseInfoList: List<PipelineBuildBaseInfo>): Boolean {
         pipelineBuildBaseInfoList.forEach {
-            deletePipelineBuildParams(dslContext, it.projectCode, it.pipelineId)
+            deletePipelineBuildParams(
+                dslContext = dslContext,
+                projectId = it.projectCode,
+                pipelineId = it.pipelineId
+            )
         }
         return true
     }

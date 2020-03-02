@@ -49,7 +49,11 @@ import java.time.LocalDateTime
 class PipelineBuildTaskDao @Autowired constructor(private val objectMapper: ObjectMapper) : PipelineHardDeleteListener {
     override fun onPipelineDeleteHardly(dslContext: DSLContext, operator: String, pipelineBuildBaseInfoList: List<PipelineBuildBaseInfo>): Boolean {
         pipelineBuildBaseInfoList.forEach {
-            deletePipelineBuildTasks(dslContext, it.projectCode, it.pipelineId)
+            deletePipelineBuildTasks(
+                dslContext = dslContext,
+                projectId = it.projectCode,
+                pipelineId = it.pipelineId
+            )
         }
         return true
     }
