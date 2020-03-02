@@ -34,6 +34,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import java.time.LocalDateTime
+import java.util.concurrent.Executors
 
 @RestResource
 class ServicePipelineCallbackResourceImpl @Autowired constructor(
@@ -44,16 +45,24 @@ class ServicePipelineCallbackResourceImpl @Autowired constructor(
     @Value("\${deletedPipelineStoreTime:30}")
     private val deletedPipelineStoreTime: Int = 30
 
+    private val executorService = Executors.newFixedThreadPool(5)
+
     override fun clear(): Result<Boolean> {
-        logger.info("clear pipelines deleted before $deletedPipelineStoreTime days")
-        val deleteTime = LocalDateTime.now().minusDays(deletedPipelineStoreTime.toLong())
-        //查出所有被删除超过过期时间的流水线
-        val deletedPipelines = pipelineRepositoryService.listDeletePipelineBefore(deleteTime)
-        val deletedPipelineIds = deletedPipelines.map { it.pipelineId }
-        logger.info("deletedPipelineIds=${deletedPipelineIds.joinToString()}")
-        //依次删除
-        deletedPipelines.forEach {
-            pipelineRepositoryService.deletePipelineHardly(it.creator, it.projectId, it.pipelineId, ChannelCode.BS)
+        executorService.submit {
+            try {
+                logger.info("clear pipelines deleted before $deletedPipelineStoreTime days")
+                val deleteTime = LocalDateTime.now().minusDays(deletedPipelineStoreTime.toLong())
+                //查出所有被删除超过过期时间的流水线
+                val deletedPipelines = pipelineRepositoryService.listDeletePipelineBefore(deleteTime)
+                val deletedPipelineIds = deletedPipelines.map { it.pipelineId }
+                logger.info("deletedPipelineIds=${deletedPipelineIds.size},(${deletedPipelineIds.joinToString()})")
+                //依次删除
+                deletedPipelines.forEach {
+                    pipelineRepositoryService.deletePipelineHardly(it.creator, it.projectId, it.pipelineId, ChannelCode.BS)
+                }
+            } catch (e: Exception) {
+                logger.error("fail to clear deleted pipelines", e)
+            }
         }
         return Result(true)
     }

@@ -644,7 +644,9 @@ class PipelineRepositoryService constructor(
         pipelineBuildBaseInfoList.add(PipelineBuildBaseInfo(projectCode = projectId, pipelineId = pipelineId, buildIdList = buildIds))
         beanNames.forEach { beanName ->
             val beanType = applicationContext.getType(beanName)
+            logger.info("check $beanName")
             if (beanType is PipelineHardDeleteListener) {
+                logger.info("invoke $beanName")
                 val bean = applicationContext.getBean(beanName, PipelineHardDeleteListener::class.java)
                 var deleteResult = false
                 var retryCount = 0
