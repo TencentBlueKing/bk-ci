@@ -74,7 +74,7 @@ enum class BuildStatus(val statusName: String, val visiable: Boolean) {
             status == SUCCEED || status == SKIP || status == REVIEW_PROCESSED
 
         fun isRunning(status: BuildStatus) =
-            isLoop(status) || status == REVIEWING || status == PREPARE_ENV || status == CALL_WAITING
+            isLoop(status) || isRetry(status) || status == REVIEWING || status == PREPARE_ENV || status == CALL_WAITING
 
         fun isCancel(status: BuildStatus) =
             status == TERMINATE || status == CANCELED || status == REVIEW_ABORT || status == QUALITY_CHECK_FAIL
@@ -86,6 +86,11 @@ enum class BuildStatus(val statusName: String, val visiable: Boolean) {
          * 是否处于循环中： 正在运行中或循环等待都属于循环
          */
         fun isLoop(status: BuildStatus) = status == RUNNING || status == LOOP_WAITING
+
+        /**
+         * 是否处于重试中
+         */
+        fun isRetry(status: BuildStatus) = status == RETRY
 
         /**
          * 能否重试执行
