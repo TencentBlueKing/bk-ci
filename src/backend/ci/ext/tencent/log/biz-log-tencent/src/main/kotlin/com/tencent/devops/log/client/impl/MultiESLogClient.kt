@@ -42,7 +42,7 @@ import com.tencent.devops.notify.pojo.EmailNotifyMessage
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Date
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import java.util.regex.Pattern
@@ -75,7 +75,7 @@ class MultiESLogClient constructor(
             .maximumSize(10)
             .expireAfterWrite(1, TimeUnit.MINUTES)
             .build<String/*ES Name*/, Boolean>(
-                object: CacheLoader<String, Boolean>() {
+                object : CacheLoader<String, Boolean>() {
                     override fun load(esName: String): Boolean {
                         return getInactiveESFromRedis().contains(esName)
                     }
@@ -174,7 +174,6 @@ class MultiESLogClient constructor(
                     }
                     cache.put(buildId, esName!!)
                 }
-
             } finally {
                 redisLock.unlock()
             }
@@ -203,7 +202,7 @@ class MultiESLogClient constructor(
         logger.info("Get the inactive es: $tmp")
         return tmp ?: emptySet()
     }
-    
+
     private fun setInactiveES(esName: String) {
         redisOperation.addSetValue(MULTI_LOG_CLIENT_BAD_ES_KEY, esName)
     }

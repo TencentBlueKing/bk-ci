@@ -80,7 +80,7 @@ class ESDetectionJob @Autowired constructor(
                 .addMapping(getTypeByIndex(index), getTypeMappings())
                 .get(TimeValue.timeValueSeconds(5))
             logger.info("Get the create index response: $response")
-        } catch(e: ResourceAlreadyExistsException) {
+        } catch (e: ResourceAlreadyExistsException) {
             logger.warn("Index already exist, ignore", e)
         }
     }
@@ -120,7 +120,7 @@ class ESDetectionJob @Autowired constructor(
         private val esClient: ESClient,
         private val index: String,
         private val buildId: String
-    ): Callable<List<String>> {
+    ) : Callable<List<String>> {
 
         override fun call(): List<String> {
             try {
@@ -143,9 +143,9 @@ class ESDetectionJob @Autowired constructor(
         private val index: String,
         private val buildId: String,
         private val documentIds: List<String>
-    ): Runnable {
+    ) : Runnable {
         override fun run() {
-            logger.info("[${esClient.name}|$index|$buildId|${documentIds}] Start to delete the record")
+            logger.info("[${esClient.name}|$index|$buildId|$documentIds] Start to delete the record")
             if (documentIds.isEmpty()) {
                 logger.info("Empty document ids")
                 return

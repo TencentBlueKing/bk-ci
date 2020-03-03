@@ -32,7 +32,7 @@ import com.tencent.devops.log.client.impl.MultiESLogClient
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class OpLogNotifyResourceImpl @Autowired constructor(private val multiESLogClient: MultiESLogClient): OpLogNotifyResource {
+class OpLogNotifyResourceImpl @Autowired constructor(private val multiESLogClient: MultiESLogClient) : OpLogNotifyResource {
     override fun get(): Result<Set<String>> {
         return Result(multiESLogClient.getNotifyUserFromRedis())
     }
