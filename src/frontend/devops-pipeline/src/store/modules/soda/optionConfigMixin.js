@@ -51,7 +51,6 @@ const optionConfigMixin = {
                     placeholder: this.$t('storeMap.retryCountPlaceholder'),
                     default: '1',
                     isHidden: (element) => {
-                        console.log(element.additionalOptions, 7)
                         return !(element.additionalOptions && (element.additionalOptions.retryWhenFailed === true))
                     }
                 },
