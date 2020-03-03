@@ -76,8 +76,12 @@ open class CodeccUtils {
 
     fun executeCommand(codeccExecuteConfig: CodeccExecuteConfig): String {
         val codeccWorkspace = getCodeccWorkspace(codeccExecuteConfig)
-        initData(codeccExecuteConfig.scriptType, codeccWorkspace)
-        return doRun(codeccExecuteConfig, codeccWorkspace)
+        try {
+            initData(codeccExecuteConfig.scriptType, codeccWorkspace)
+            return doRun(codeccExecuteConfig, codeccWorkspace)
+        } finally {
+            codeccWorkspace.deleteRecursively()
+        }
     }
 
     private fun getCodeccWorkspace(codeccExecuteConfig: CodeccExecuteConfig): File {

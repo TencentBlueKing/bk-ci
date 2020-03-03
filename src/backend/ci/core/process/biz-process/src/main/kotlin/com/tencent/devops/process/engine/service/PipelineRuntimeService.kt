@@ -1722,7 +1722,7 @@ class PipelineRuntimeService @Autowired constructor(
         val vars = pipelineBuildVarDao.getVars(dslContext, buildId)
         val materialList = mutableListOf<PipelineBuildMaterial>()
         vars.forEach {
-            if (it.key.startsWith(PIPELINE_MATERIAL_URL)) {
+            if (it.key.contains(PIPELINE_MATERIAL_URL)) {
                 val repoId = it.key.substringAfter(PIPELINE_MATERIAL_URL)
                 val commitTimes = vars["$PIPELINE_MATERIAL_NEW_COMMIT_TIMES$repoId"] ?: "0"
                 materialList.add(

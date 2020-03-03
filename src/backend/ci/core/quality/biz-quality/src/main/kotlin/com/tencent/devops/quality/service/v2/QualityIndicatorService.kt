@@ -289,7 +289,10 @@ class QualityIndicatorService @Autowired constructor(
         val systemIndicators = mutableListOf<IndicatorListResponse.IndicatorListItem>()
         val marketIndicators = mutableListOf<IndicatorListResponse.IndicatorListItem>()
 
-        listIndicatorByProject(projectId).groupBy { it.elementType }.forEach { elementType, indicators ->
+        listIndicatorByProject(projectId).filter {
+            if (keyword.isNullOrBlank()) true
+            else it.cnName.contains(keyword!!)
+        }.groupBy { it.elementType }.forEach { elementType, indicators ->
             indicators.map { indicator ->
                 val metadataIds = convertMetaIds(indicator.metadataIds)
                 val metadata = metadataService.serviceListMetadata(metadataIds).map {
