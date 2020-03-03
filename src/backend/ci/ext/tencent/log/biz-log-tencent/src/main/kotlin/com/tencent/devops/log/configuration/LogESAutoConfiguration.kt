@@ -64,6 +64,14 @@ class LogESAutoConfiguration {
     private val e1Port: Int? = 0
     @Value("\${elasticsearch.cluster}")
     private val e1Cluster: String? = null
+    @Value("\${elasticsearch.keystore.filePath:#{null}}")
+    private val e1KeystoreFilePath: String? = null
+    @Value("\${elasticsearch.keystore.password:#{null}}")
+    private val e1KeystorePassword: String? = null
+    @Value("\${elasticsearch.truststore.filePath:#{null}}")
+    private val e1TruststoreFilePath: String? = null
+    @Value("\${elasticsearch.truststore.password:#{null}}")
+    private val e1TruststorePassword: String? = null
     @Value("\${elasticsearch.name}")
     private val e1Name: String? = null
     @Value("\${elasticsearch.mainCluster:#{null}}")
@@ -101,9 +109,33 @@ class LogESAutoConfiguration {
         if (e1Name.isNullOrBlank()) {
             throw IllegalArgumentException("ES唯一名称尚未配置")
         }
-        val settings = Settings.builder().put("cluster.name", e1Cluster).build()
+
+        val builder = Settings.builder().put("cluster.name", e1Cluster)
+        var plugin: Class<out Plugin>? = null
+
+        if (!e2KeystoreFilePath.isNullOrBlank()) {
+            builder.put(SSLConfigConstants.SEARCHGUARD_SSL_TRANSPORT_KEYSTORE_FILEPATH, e2KeystoreFilePath)
+                .put(SSLConfigConstants.SEARCHGUARD_SSL_TRANSPORT_ENFORCE_HOSTNAME_VERIFICATION, false)
+                .put(SSLConfigConstants.SEARCHGUARD_SSL_TRANSPORT_ENABLED, true)
+                .put(SSLConfigConstants.SEARCHGUARD_SSL_TRANSPORT_ENFORCE_HOSTNAME_VERIFICATION_RESOLVE_HOST_NAME, true)
+        }
+        if (!e2TruststoreFilePath.isNullOrBlank()) {
+            builder.put(SSLConfigConstants.SEARCHGUARD_SSL_TRANSPORT_TRUSTSTORE_FILEPATH, e2TruststoreFilePath)
+        }
+        if (!e2KeystorePassword.isNullOrBlank()) {
+            builder.put(SSLConfigConstants.SEARCHGUARD_SSL_TRANSPORT_KEYSTORE_PASSWORD, e2KeystorePassword)
+        }
+        if (!e2TruststorePassword.isNullOrBlank()) {
+            builder.put(SSLConfigConstants.SEARCHGUARD_SSL_TRANSPORT_TRUSTSTORE_PASSWORD, e2TruststorePassword)
+            plugin = SearchGuardSSLPlugin::class.java
+        }
+        val settings = builder.build()
         val ips = e1IP!!.split(",".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
-        val client = PreBuiltTransportClient(settings)
+        val client = if (plugin != null) {
+            PreBuiltTransportClient(settings, plugin)
+        } else {
+            PreBuiltTransportClient(settings)
+        }
         for (ipAddress in ips) {
             client.addTransportAddress(InetSocketTransportAddress(InetAddress.getByName(ipAddress), e1Port!!))
         }
