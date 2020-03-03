@@ -29,6 +29,8 @@ package com.tencent.devops.store.resources
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.UserBcsServiceResource
+import io.fabric8.kubernetes.api.model.NamespaceBuilder
+import io.fabric8.kubernetes.api.model.ServiceAccountBuilder
 import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder
 import io.fabric8.kubernetes.client.ConfigBuilder
 import io.fabric8.kubernetes.client.DefaultKubernetesClient
@@ -61,6 +63,13 @@ class UserBcsServiceResourceImpl @Autowired constructor() : UserBcsServiceResour
             .withOauthToken("GPyspRYTYkhXpttRPWWAraHXGXnXZreq")
             .build()
         val client: KubernetesClient = DefaultKubernetesClient(config)
+
+      val ns = NamespaceBuilder().withNewMetadata().withName("thisisatest").addToLabels("this", "rocks").endMetadata().build();
+      logger.info("Created namespace", client.namespaces().createOrReplace(ns));
+
+      val fabric8 = ServiceAccountBuilder().withNewMetadata().withName("fabric8").endMetadata().build();
+
+      client.serviceAccounts().inNamespace("thisisatest").createOrReplace(fabric8);
         var deployment = DeploymentBuilder()
             .withNewMetadata()
             .withName("nginx")
