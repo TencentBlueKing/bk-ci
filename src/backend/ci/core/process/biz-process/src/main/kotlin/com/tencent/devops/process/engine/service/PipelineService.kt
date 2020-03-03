@@ -1372,6 +1372,7 @@ class PipelineService @Autowired constructor(
             val buildNum = it["BUILD_NUM"] as Int
             val version = it["VERSION"] as Int
             val taskCount = it["TASK_COUNT"] as Int
+            val creator = it["CREATOR"] as String
             val createTime = (it["CREATE_TIME"] as LocalDateTime?)?.timestampmilli() ?: 0
             val updateTime = (it["UPDATE_TIME"] as LocalDateTime?)?.timestampmilli() ?: 0
 
@@ -1422,7 +1423,8 @@ class PipelineService @Autowired constructor(
                     hasPermission = authPipelines.contains(pipelineId),
                     hasCollect = favorPipelines.contains(pipelineId),
                     latestBuildUserId = starter,
-                    instanceFromTemplate = templatePipelineDao.get(dslContext, pipelineId) != null
+                    instanceFromTemplate = templatePipelineDao.get(dslContext, pipelineId) != null,
+                    creator = creator
                 )
             )
         }
