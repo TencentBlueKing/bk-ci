@@ -51,5 +51,4 @@ object ESIndexUtils {
             .field("executeCount", logMessage.executeCount)
             .endObject()
     }
-
 }
