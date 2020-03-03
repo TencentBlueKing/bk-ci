@@ -1628,7 +1628,7 @@ class LogServiceV2 @Autowired constructor(
                 }
             } else {
                 logger.error("[$buildId] Add bulk lines failed because of unknown Exception. [$logMessages]", ex)
-                return 0
+                throw ex
             }
         }
     }
