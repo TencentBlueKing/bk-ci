@@ -15,6 +15,12 @@ object PipelineListenerUtil {
     val pipelineHardDeleteListeners: MutableList<PipelineHardDeleteListener> = mutableListOf()
 
     init {
+        if (pipelineHardDeleteListeners.isEmpty()) {
+            findListeners()
+        }
+    }
+
+    private fun findListeners() {
         val applicationContext = SpringContextUtil.getApplicationCtx()!!
         val beanNames = applicationContext.beanDefinitionNames
         beanNames.forEach { beanName ->
