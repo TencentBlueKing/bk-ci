@@ -109,15 +109,6 @@ class MultiESLogClient constructor(
         }
         val activeESNames = activeClients.map { it.name }.toSet()
         var esName = cache.getIfPresent(buildId)
-        if (!esName.isNullOrBlank()) {
-            synchronized(this) {
-                if (!activeESNames.contains(esName)) {
-                    logger.warn("The es($esName|$buildId) is not be active any more, retry other clients")
-                    cache.invalidate(buildId)
-                    esName = null
-                }
-            }
-        }
         if (esName.isNullOrBlank()) {
             val redisLock = RedisLock(redisOperation, "$MULTI_LOG_CLIENT_LOCK_KEY:$buildId", 10)
             try {
@@ -132,7 +123,7 @@ class MultiESLogClient constructor(
                         return c
                     }
                     esName = buildIndex.logClusterName
-                    if (esName.isNullOrBlank() || (!activeESNames.contains(esName!!))) {
+                    if (esName.isNullOrBlank()) {
                         // hash from build
                         logger.info("[$buildId|$esName] Rehash the build id")
                         val c = getClient(activeClients, buildId)

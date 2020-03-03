@@ -143,7 +143,7 @@ class ESDetectionJob @Autowired constructor(
         private val documentIds: List<String>
     ): Runnable {
         override fun run() {
-            logger.info("[${esClient.name}|$index|$buildId|${documentIds.size}] Start to delete the record")
+            logger.info("[${esClient.name}|$index|$buildId|${documentIds}] Start to delete the record")
             if (documentIds.isEmpty()) {
                 logger.info("Empty document ids")
                 return
