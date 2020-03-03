@@ -41,9 +41,9 @@
 </template>
 
 <script>
+    import language from './locale'
     // eslint-disable-next-line
     const Worker = require('worker-loader!./worker.js')
-    import language from './locale'
 
     export default {
         props: {
@@ -359,7 +359,7 @@
                     if (currentItem.color) canvasContext.font = `normal normal bold 2px Consolas`
                     else canvasContext.font = `normal normal normal 2px Consolas`
                     canvasContext.fillStyle = currentColor
-                    canvasContext.fillText(currentItem.message, 5, ((index + 1)* 2))
+                    canvasContext.fillText(currentItem.message, 5, ((index + 1) * 2))
                 }
                 this.isScrolling = false
             },
@@ -386,10 +386,10 @@
             getTextWidth (text) {
                 const lDiv = document.createElement('div')
                 document.body.appendChild(lDiv)
-                lDiv.style.fontFamily = "Consolas, 'Courier New', monospace"
-                lDiv.style.fontSize = "12px"
-                lDiv.style.height = "16px"
-                lDiv.style.position = "fixed"
+                lDiv.style.fontFamily = 'Consolas, "Courier New", monospace'
+                lDiv.style.fontSize = '12px'
+                lDiv.style.height = '16px'
+                lDiv.style.position = 'fixed'
                 lDiv.style.wordBreak = 'keep-all'
                 lDiv.style.whiteSpace = 'nowrap'
                 lDiv.style.fontWeight = 'normal'
@@ -400,13 +400,13 @@
                     switch (str) {
                         case '<':
                             res = '&lt;'
-                            break;
+                            break
                         case '>':
                             res = '&gt;'
-                            break;
+                            break
                         default:
                             res = '&nbsp;'
-                            break;
+                            break
                     }
                     return res
                 }).replace(/&lt;a.+?href=["']?([^"']+)["']?.*&gt;(.+)&lt;\/a&gt;/g, "<a href='$1' target='_blank'>$2</a>")
