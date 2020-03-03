@@ -41,5 +41,5 @@ import org.springframework.core.Ordered
 class LogConfiguration {
 
     @Bean
-    fun logClient(@Autowired client: ESClient) = LogClientImpl(client)
+    fun logClient(@Autowired transportClient: ESClient) = LogClientImpl(transportClient)
 }
