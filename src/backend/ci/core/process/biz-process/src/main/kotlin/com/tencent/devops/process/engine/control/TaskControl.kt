@@ -94,6 +94,8 @@ class TaskControl @Autowired constructor(
 
         buildTask.starter = userId
 
+        var delayMillsNext = delayMills
+
         if (taskParam.isNotEmpty()) { // 追加事件传递的参数变量值
             buildTask.taskParams.putAll(taskParam)
         }
@@ -139,7 +141,7 @@ class TaskControl @Autowired constructor(
                     logger.info("retry task [$buildId]|ATOM|stageId=$stageId|container=$containerId|taskId=$taskId, retryCount=$retryCount|vm atom will retry, even the task is failure")
                     redisOperation.set(getRedisKey(buildTask), (retryCount + 1).toString())
                     pipelineRuntimeService.updateTaskStatus(buildId, taskId, userId, BuildStatus.RETRY)
-                    delayMills = 5000
+                    delayMillsNext = 5000
                     ActionType.RETRY
                 } else if (ControlUtils.continueWhenFailure(buildTask.additionalOptions)) { // 如果配置了失败继续，则继续下去
                     logger.info("[$buildId]|ATOM|stageId=$stageId|container=$containerId|taskId=$taskId|vm atom will continue, even the task is failure")
@@ -166,7 +168,8 @@ class TaskControl @Autowired constructor(
                     stageId = stageId,
                     containerId = containerId,
                     containerType = containerType,
-                    actionType = nextActionType
+                    actionType = nextActionType,
+                    delayMills = delayMillsNext
                 )
             )
         }
