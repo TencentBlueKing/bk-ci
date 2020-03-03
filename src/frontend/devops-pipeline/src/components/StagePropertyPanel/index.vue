@@ -11,11 +11,11 @@
             </form-field>
             <form-field :required="true" :label="$t('label')" :is-error="errors.has('tag')" :error-msg="errors.first('tag')">
                 <div class="stage-tag">
-                    <bk-select v-model="stageTag" name="tag" :disabled="!editable" multiple searchable>
+                    <bk-select v-model="stageTag" v-validate.initial="'required'" name="tag" :disabled="!editable" multiple searchable>
                         <bk-option v-for="tag in stageTagList"
-                            :key="tag"
-                            :id="tag"
-                            :name="tag">
+                            :key="tag.id"
+                            :id="tag.id"
+                            :name="tag.stageTagName">
                         </bk-option>
                     </bk-select>
                 </div>
