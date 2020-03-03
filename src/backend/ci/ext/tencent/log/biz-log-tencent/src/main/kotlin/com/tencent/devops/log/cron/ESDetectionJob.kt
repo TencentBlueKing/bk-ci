@@ -12,6 +12,7 @@ import com.tencent.devops.log.util.ESIndexUtils.getTypeMappings
 import com.tencent.devops.log.util.ESIndexUtils.indexRequest
 import com.tencent.devops.log.util.IndexNameUtils
 import com.tencent.devops.log.util.IndexNameUtils.getTypeByIndex
+import org.elasticsearch.ResourceAlreadyExistsException
 import org.elasticsearch.common.unit.TimeValue
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -79,8 +80,8 @@ class ESDetectionJob @Autowired constructor(
                 .addMapping(getTypeByIndex(index), getTypeMappings())
                 .get(TimeValue.timeValueSeconds(5))
             logger.info("Get the create index response: $response")
-        } catch (t: Throwable) {
-            logger.warn("Fail to create the index, ignore", t)
+        } catch(e: ResourceAlreadyExistsException) {
+            logger.warn("Index already exist, ignore", e)
         }
     }
 
