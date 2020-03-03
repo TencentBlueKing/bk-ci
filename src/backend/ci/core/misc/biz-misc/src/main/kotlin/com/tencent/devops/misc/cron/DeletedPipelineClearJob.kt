@@ -47,7 +47,7 @@ class DeletedPipelineClearJob @Autowired constructor(
     }
 
     //每月15日00:00开始清理已删除流水线
-    @Scheduled(cron = "0 0 0 15 * ? *")
+    @Scheduled(cron = "0 0 0 15 * ?")
     fun clearDeletedPipelines() {
         logger.info("clearDeletedPipelines")
         val lock = RedisLock(redisOperation, KEY_LOCK, 60)
