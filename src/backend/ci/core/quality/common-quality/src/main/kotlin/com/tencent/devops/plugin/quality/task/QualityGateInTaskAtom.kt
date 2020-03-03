@@ -137,7 +137,7 @@ class QualityGateInTaskAtom @Autowired constructor(
 
         val checkResult = try {
             val buildCheckParams = BuildCheckParams(projectId, pipelineId, buildId, buildNo, interceptTaskName,
-                    startTime.timestamp(), interceptTask, ControlPointPosition.BEFORE_POSITION, templateId)
+                    startTime.timestamp(), interceptTask, ControlPointPosition.BEFORE_POSITION, templateId, runVariables)
             QualityUtils.check(client, buildCheckParams)
         } catch (t: Throwable) {
             logger.error("Quality Gate check in fail", t)

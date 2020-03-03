@@ -48,6 +48,8 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import java.lang.StringBuilder
+import java.net.URI
 import java.util.Base64
 
 @Service
@@ -73,7 +75,8 @@ class RepoFileService @Autowired constructor(
         filePath: String,
         reversion: String?,
         branch: String?,
-        subModule: String? = null
+        subModule: String? = null,
+        svnFullPath: Boolean = false
     ): String {
         val repo = repositoryService.serviceGet("", repositoryConfig)
         logger.info("get repo($repositoryConfig) file content in: $filePath (reversion:$reversion, branch:$branch)")
@@ -81,11 +84,19 @@ class RepoFileService @Autowired constructor(
             is CodeSvnRepository -> {
                 logger.info("get file content of svn repo:\n$repo")
                 if (reversion.isNullOrBlank()) throw RuntimeException("Illegal reversion: $reversion")
-                getSvnSingleFile(
-                    repo = repo,
-                    filePath = filePath.removePrefix("/"),
-                    reversion = reversion!!.toLong()
-                )
+                if (svnFullPath) {
+                    getSvnSingleFileV2(
+                        repo = repo,
+                        filePath = filePath.removePrefix("/"),
+                        reversion = reversion!!.toLong()
+                    )
+                } else {
+                    getSvnSingleFile(
+                        repo = repo,
+                        filePath = filePath.removePrefix("/"),
+                        reversion = reversion!!.toLong()
+                    )
+                }
             }
             is CodeGitRepository -> {
                 logger.info("get file content of git repo:\n$repo")
@@ -166,6 +177,51 @@ class RepoFileService @Autowired constructor(
                 userId = repo.userName,
                 svnType = if (svnType.isBlank()) "SSH" else svnType,
                 filePath = filePath,
+                reversion = reversion,
+                credential1 = credInfo.privateKey,
+                credential2 = credInfo.passPhrase
+            )
+        }
+    }
+
+    private fun getSvnSingleFileV2(repo: CodeSvnRepository, filePath: String, reversion: Long): String {
+        val credInfo = getCredential(repo.projectId ?: "", repo)
+        val svnType = repo.svnType?.toUpperCase() ?: "SSH"
+        val uri = URI(repo.url.trim())
+        val pathArr = uri.path.split("/")
+        val projectName = StringBuilder()
+        for (item in pathArr) {
+            if (item.isBlank()) continue
+            projectName.append(item).append("/")
+            if (item.endsWith("_proj")) break
+        }
+        val projectNameStr = projectName.toString().removePrefix("/").removeSuffix("/")
+        val projectUrl = uri.scheme + "://" + uri.host + "/" + projectNameStr
+
+        // 三节项目名的话，Codecc传的filePath会带项目名，需要去掉
+        val projectNameArr = projectNameStr.split("/")
+        val filterFilePath = if (projectNameArr.size == 3) {
+            filePath.removePrefix("/").removePrefix(projectNameArr.last())
+        } else {
+            filePath
+        }
+
+        return if (svnType == "HTTP") {
+            svnService.getFileContent(
+                url = projectUrl,
+                userId = repo.userName,
+                svnType = svnType,
+                filePath = filterFilePath,
+                reversion = reversion,
+                credential1 = credInfo.username,
+                credential2 = credInfo.privateKey
+            )
+        } else {
+            svnService.getFileContent(
+                url = projectUrl,
+                userId = repo.userName,
+                svnType = if (svnType.isBlank()) "SSH" else svnType,
+                filePath = filterFilePath,
                 reversion = reversion,
                 credential1 = credInfo.privateKey,
                 credential2 = credInfo.passPhrase
