@@ -35,15 +35,15 @@ export function parsePathAlias (type, path, authType, svnType) {
             msg = `${codelibLocaleObj.githubRule}${type}${codelibLocaleObj.address}`
             break
         case isSvn(type) && svnType === 'ssh':
-            reg = /^svn\+ssh\:\/\/([\@\-\.a-z0-9A-Z]+)\/([\w\W\.\-\_\/\+]+)$/i
+            reg = /^svn\+ssh\:\/\/([\@\-\.a-z0-9A-Z:]+)\/([\w\W\.\-\_\/\+]+)$/i
             msg = `${codelibLocaleObj.svnSshRule}${type}${codelibLocaleObj.address}`
             break
         case isSvn(type) && svnType === 'http':
-            reg = /^http\:\/\/([\-\.a-z0-9A-Z]+)\/([\w\W\.\-\_\/\+]+)$/i
+            reg = /^http\:\/\/([\-\.a-z0-9A-Z:]+)\/([\w\W\.\-\_\/\+]+)$/i
             msg = `${codelibLocaleObj.httpRule}${type}${codelibLocaleObj.address}`
             break
         case isGitLab(type):
-            reg = /^http\:\/\/([\-\.a-z0-9A-Z]+)\/([\w\W\.\-\_\/\+]+)\.git$/i
+            reg = /^http\:\/\/([\-\.a-z0-9A-Z:]+)\/([\w\W\.\-\_\/\+]+)\.git$/i
             msg = `${codelibLocaleObj.httpsRule}${type}${codelibLocaleObj.address}`
             break
     }
