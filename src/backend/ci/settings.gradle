@@ -358,6 +358,7 @@ include ":ext:tencent:openapi:boot-openapi-tencent"
 include ":ext:tencent:openapi:model-openapi"
 
 include ":ext:tencent:config-server"
+include ":ext:tencent:log:api-log-tencent"
 
 //  ==================== blueking ============================================================
 //include ":ext:blueking"
