@@ -32,7 +32,6 @@ import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCas
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.log.client.LogClient
-import com.tencent.devops.log.exceptions.IndexCreateFailureException
 import com.tencent.devops.log.jmx.v2.CreateIndexBeanV2
 import com.tencent.devops.log.jmx.v2.LogBeanV2
 import com.tencent.devops.log.model.message.LogMessage
@@ -244,7 +243,7 @@ class LogServiceV2 @Autowired constructor(
                     .addDocValueField("timestamp")
                     //                    .addDocValueField("message")
                     .addSort("lineNo", if (fromStart) SortOrder.ASC else SortOrder.DESC)
-                    .get()
+                    .get(TimeValue.timeValueSeconds(30))
                 searchResponse.hits.forEach { searchHitFields ->
                     val sourceMap = searchHitFields.source
                     val logLine = LogLine(
@@ -420,7 +419,7 @@ class LogServiceV2 @Autowired constructor(
             .addSort("lineNo", SortOrder.ASC)
             .setScroll(TimeValue(1000 * 32))
             .setSize(4000)
-            .get()
+            .get(TimeValue.timeValueSeconds(30))
 
         val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss:SSS")
         // 一边读一边流式下载
@@ -446,7 +445,7 @@ class LogServiceV2 @Autowired constructor(
                 output.write(sb.toString().toByteArray())
                 output.flush()
                 scrollResp = client.prepareSearchScroll(buildId, scrollResp.scrollId)
-                    .setScroll(TimeValue(1000 * 32)).execute().actionGet()
+                    .setScroll(TimeValue(1000 * 32)).execute().actionGet(TimeValue.timeValueSeconds(10))
             } while (scrollResp.hits.hits.isNotEmpty())
         }
 
@@ -538,7 +537,7 @@ class LogServiceV2 @Autowired constructor(
         return client.admin(buildId)
             .indices()
             .prepareOpen(index)
-            .get().isAcknowledged
+            .get(TimeValue.timeValueSeconds(10)).isAcknowledged
     }
 
     private fun queryInitLogsPage(
@@ -605,7 +604,7 @@ class LogServiceV2 @Autowired constructor(
             .addSort("lineNo", SortOrder.ASC)
             .setScroll(TimeValue(1000 * 8))
             .setSize(pageSize)
-            .get()
+            .get(TimeValue.timeValueSeconds(30))
         do {
             scrollResp.hits.hits.forEach { searchHit ->
                 val sourceMap = searchHit.source
@@ -618,7 +617,7 @@ class LogServiceV2 @Autowired constructor(
                 )
                 result.add(logLine)
             }
-            scrollResp = client.prepareSearchScroll(buildId, scrollResp.scrollId).setScroll(TimeValue(100)).execute().actionGet()
+            scrollResp = client.prepareSearchScroll(buildId, scrollResp.scrollId).setScroll(TimeValue(100)).execute().actionGet(TimeValue.timeValueSeconds(10))
         } while (scrollResp.hits.hits.isNotEmpty())
 
         return result
@@ -639,7 +638,7 @@ class LogServiceV2 @Autowired constructor(
             .addSort("timestamp", SortOrder.DESC)
             .setScroll(TimeValue(1000 * 32))
             .setSize(size)
-            .get()
+            .get(TimeValue.timeValueSeconds(30))
         val logs = mutableListOf<LogLine>()
         scrollResp.hits.hits.forEach { searchHit ->
             val sourceMap = searchHit.source
@@ -738,7 +737,7 @@ class LogServiceV2 @Autowired constructor(
 
             val timeStart = System.currentTimeMillis()
 
-            val multiSearchResponse = multiSearchRequestBuilder.get()
+            val multiSearchResponse = multiSearchRequestBuilder.get(TimeValue.timeValueSeconds(30))
             moreLogs.timeUsed = System.currentTimeMillis() - timeStart
             val lineNoSet = TreeSet<Long>()
             val highlights = HashMap<Long, String>()
@@ -1004,7 +1003,7 @@ class LogServiceV2 @Autowired constructor(
             .setTypes(type)
             .setQuery(query)
             .setSize(0)
-            .get()
+            .get(TimeValue.timeValueSeconds(10))
         return searchResponse.hits.getTotalHits()
     }
 
@@ -1068,7 +1067,7 @@ class LogServiceV2 @Autowired constructor(
                 .addDocValueField("lineNo")
                 .addDocValueField("timestamp")
                 .addSort("lineNo", SortOrder.ASC)
-                .get()
+                .get(TimeValue.timeValueSeconds(30))
             response.hits.forEach { searchHitFields ->
                 val sourceMap = searchHitFields.source
                 val ln = sourceMap["lineNo"].toString().toLong()
@@ -1165,7 +1164,7 @@ class LogServiceV2 @Autowired constructor(
 
         val lineNoSet = TreeSet<Long>()
 
-        val multiSearchResponse = multiSearchRequestBuilder.get()
+        val multiSearchResponse = multiSearchRequestBuilder.get(TimeValue.timeValueSeconds(30))
         multiSearchResponse.responses
             .map { it.response }
             .filter { it != null && it.hits != null }
@@ -1265,7 +1264,7 @@ class LogServiceV2 @Autowired constructor(
         val lineNoSet = java.util.TreeSet<Long>()
 
         val highlights = HashMap<Long, String>()
-        val multiSearchResponse = multiSearchRequestBuilder.get()
+        val multiSearchResponse = multiSearchRequestBuilder.get(TimeValue.timeValueSeconds(30))
         multiSearchResponse.responses
             .map { it.response }
             .filter { it != null && it.hits != null }
@@ -1619,7 +1618,7 @@ class LogServiceV2 @Autowired constructor(
 
                 startLog(buildId, true)
 
-                val bulkResponse = bulkRequestBuilder.get()
+                val bulkResponse = bulkRequestBuilder.get(TimeValue.timeValueSeconds(10))
                 return if (bulkResponse.hasFailures()) {
                     logger.error(bulkResponse.buildFailureMessage())
                     0
@@ -1722,12 +1721,12 @@ class LogServiceV2 @Autowired constructor(
                 .prepareCreate(index)
                 .setSettings(getIndexSettings())
                 .addMapping(type, getTypeMappings())
-                .get()
+                .get(TimeValue.timeValueSeconds(5))
             success = true
             response.isShardsAcked
         } catch (e: IOException) {
             logger.error("Create index $index type $type failure", e)
-            throw IndexCreateFailureException("Create index $index type $type failure: ${e.message}")
+            return false
         } finally {
             createIndexBeanV2.execute(System.currentTimeMillis() - startEpoch, success)
         }
@@ -1737,7 +1736,7 @@ class LogServiceV2 @Autowired constructor(
         val response = client.admin(buildId)
             .indices()
             .prepareExists(index)
-            .get()
+            .get(TimeValue.timeValueSeconds(5))
         return response.isExists
     }
 }
