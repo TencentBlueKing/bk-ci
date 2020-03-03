@@ -86,7 +86,7 @@ class MultiESLogClient constructor(
 
     private val notifyUsers = HashSet<String>()
     @Volatile
-    private var notifyUserLastUpdate = System.currentTimeMillis()
+    private var notifyUserLastUpdate = 0L
 
     @Synchronized
     fun markESInactive(esName: String) {
