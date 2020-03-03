@@ -3,15 +3,15 @@
         <ul class="scroll-index scroll" :style="`top: ${-totalScrollHeight}px; width: ${indexWidth}px`">
             <li class="scroll-item" :style="`height: ${itemHeight}px; top: ${item.top}px`" v-for="(item) in indexList" :key="item">
                 {{item.value}}
-                <span :class="[{ 'show-all': (item.tagData.list || []).length }, 'log-folder']" v-if="item.tagData" @click="foldListData(item.tagData || {})"></span>
+                <span :class="[{ 'show-all': item.tagDataLength }, 'log-folder']" v-if="item.startIndex != undefined" @click="foldListData(item.startIndex)"></span>
             </li>
         </ul>
         <ul class="scroll scroll-main" :style="`top: ${-totalScrollHeight}px;width: ${mainWidth}px; left: ${indexWidth}px`">
-            <li :class="[{ 'pointer': item.tagData }, 'scroll-item']"
+            <li :class="[{ 'pointer': item.startIndex != undefined }, 'scroll-item']"
                 :style="`height: ${itemHeight}px; top: ${item.top}px; left: ${-bottomScrollDis * (itemWidth - mainWidth) / (mainWidth - bottomScrollWidth) }px; width: ${itemWidth}px`"
                 v-for="item in listData"
                 :key="item.top + item.value"
-                @click="foldListData(item.tagData || {})"
+                @click="foldListData(item.startIndex)"
             ><slot :data="item"></slot>
             </li>
         </ul>
@@ -63,7 +63,6 @@
             return {
                 indexList: [],
                 listData: [],
-                foldList: [],
                 worker: {},
                 totalHeight: 0,
                 itemNumber: 0,
@@ -112,7 +111,6 @@
             language,
 
             resetData () {
-                this.foldList = []
                 this.totalNumber = 0
                 this.setStatus()
                 this.worker.postMessage({ type: 'resetData' })
@@ -143,8 +141,7 @@
                 }
             },
 
-            foldListData (tagData) {
-                const { startIndex } = tagData
+            foldListData (startIndex) {
                 if (typeof startIndex !== 'undefined') {
                     const postData = {
                         type: 'foldListData',
@@ -285,7 +282,6 @@
                     switch (data.type) {
                         case 'completeInit':
                             this.totalNumber = data.number
-                            this.foldList = data.foldList
                             this.setStatus()
                             this.initLink()
                             break
@@ -298,7 +294,6 @@
                             const oldMapHeight = this.mapHeight
                             const oldVisHeight = this.visHeight
                             this.totalNumber = data.number
-                            this.foldList = data.foldList
                             this.setStatus()
                             this.getNumberChangeList({ oldNumber, oldItemNumber, oldMapHeight, oldVisHeight })
                             break
@@ -364,8 +359,8 @@
                 this.isScrolling = false
             },
 
-            addListData (list, type, foldIndexs = []) {
-                const postData = { type, list, foldIndexs }
+            addListData (list, type) {
+                const postData = { type, list, mainWidth: this.mainWidth }
                 this.totalNumber += list.length
                 this.indexWidth = (Math.log10(this.totalNumber) + 1) * 7
                 list.forEach((item) => {
