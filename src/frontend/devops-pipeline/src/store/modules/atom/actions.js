@@ -19,7 +19,6 @@
 import request from '@/utils/request'
 import {
     FETCH_ERROR,
-    PROJECT_API_URL_PREFIX,
     PROCESS_API_URL_PREFIX,
     STORE_API_URL_PREFIX,
     LOG_API_URL_PREFIX,
@@ -48,17 +47,10 @@ export default {
     },
     async fetchStageTagList ({ commit }, { projectCode }) {
         try {
-            const res = await request.get(`/${PROJECT_API_URL_PREFIX}/user/projects/${projectCode}/stageTag`)
-            console.log(res)
+            const res = await request.get(`/${PROCESS_API_URL_PREFIX}/user/pipelines/stageTag`)
             commit(SET_STAGE_TAG_LIST, res.data)
         } catch (error) {
             console.log(error)
-            commit(SET_STAGE_TAG_LIST, [
-                '编译',
-                '测试'
-            ])
-        } finally {
-            // comment
         }
     },
     setExecuteStatus ({ commit }, status) {
