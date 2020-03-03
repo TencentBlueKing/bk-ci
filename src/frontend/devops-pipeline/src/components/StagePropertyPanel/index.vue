@@ -88,16 +88,10 @@
                 }
             }
         },
-        created () {
-            this.fetchStageTagList({
-                projectCode: this.$route.params && this.$route.params.projectId
-            })
-        },
         methods: {
             ...mapActions('atom', [
                 'updateStage',
-                'togglePropertyPanel',
-                'fetchStageTagList'
+                'togglePropertyPanel'
             ]),
             handleStageChange (name, value) {
                 if (!this.stage.hasOwnProperty(name)) {

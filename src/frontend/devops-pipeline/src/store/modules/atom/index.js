@@ -52,7 +52,8 @@ export default {
         executeStatus: false,
         saveStatus: false,
         authSettingEditing: false,
-        stageTagList: []
+        stageTagList: [],
+        defaultStageTags: []
     },
     mutations,
     actions,
