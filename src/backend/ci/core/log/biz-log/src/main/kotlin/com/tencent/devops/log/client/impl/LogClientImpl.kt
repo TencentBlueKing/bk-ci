@@ -43,5 +43,4 @@ class LogClientImpl constructor(private val client: ESClient) : LogClient {
         }
         return clients.first()
     }
-
 }
