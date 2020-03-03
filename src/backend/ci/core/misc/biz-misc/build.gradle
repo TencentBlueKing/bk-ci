@@ -27,6 +27,7 @@
 dependencies {
     compile project(":core:common:common-web")
     compile project(":core:common:common-db")
+    compile project(":core:process:api-process")
     compile project(":core:common:common-environment-thirdpartyagent")
     compile project(":core:common:common-client")
     compile project(":core:common:common-auth:common-auth-api")
