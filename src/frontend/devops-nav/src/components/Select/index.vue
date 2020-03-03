@@ -293,7 +293,7 @@
             this.setDropdownState()
         }
         @Watch('searchValue')
-        handleWatchSearchValue (val) {
+        async handleWatchSearchValue (val) {
             this.resetHighlightIndex()
             if (!this.isRemoteSearch) {
                 return
@@ -301,24 +301,8 @@
 
             if (this.isRemoteSearch) {
                 this.remoteSearchLoading = true
-                new Promise((resolve, reject) => {
-                    const func = this.remoteMethod(val)
-                    if (func instanceof Promise) {
-                        func.then(ret => {
-                            resolve(ret)
-                        }).catch(() => {
-                            reject(func)
-                        })
-                    } else {
-                        resolve(func)
-                    }
-                }).then(() => {
-                    // console.log('then')
-                }).catch(() => {
-                    // console.error('catch')
-                }).finally(() => {
-                    this.remoteSearchLoading = false
-                })
+                await this.remoteMethod(val).cache(e => {})
+                this.remoteSearchLoading = false
             }
         }
         @Watch('searchable')
