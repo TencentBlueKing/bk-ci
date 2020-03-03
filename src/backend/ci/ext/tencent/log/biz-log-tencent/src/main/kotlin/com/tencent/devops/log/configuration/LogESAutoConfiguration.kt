@@ -28,6 +28,7 @@ package com.tencent.devops.log.configuration
 
 import com.floragunn.searchguard.ssl.SearchGuardSSLPlugin
 import com.floragunn.searchguard.ssl.util.SSLConfigConstants
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.es.ESClient
 import com.tencent.devops.common.es.ESProperties
 import com.tencent.devops.common.redis.RedisOperation
@@ -87,8 +88,6 @@ class LogESAutoConfiguration {
     @Value("\${elasticsearch2.mainCluster:#{null}}")
     private val e2MainCluster: String? = null
 
-    @Bean
-    @Primary
     fun client(): ESClient {
         if (e1IP.isNullOrBlank()) {
             throw IllegalArgumentException("ES集群地址尚未配置")
@@ -117,7 +116,6 @@ class LogESAutoConfiguration {
         return ESClient(e1Name!!, client, mainCluster)
     }
 
-    @Bean
     fun client2(): ESClient {
         if (e2IP.isNullOrBlank()) {
             throw IllegalArgumentException("ES2集群地址尚未配置")
@@ -176,13 +174,12 @@ class LogESAutoConfiguration {
 
     @Bean
     fun logClient(
-        @Autowired client: ESClient,
-        @Autowired client2: ESClient,
+        @Autowired client: Client,
         @Autowired redisOperation: RedisOperation,
         @Autowired tencentIndexDao: TencentIndexDao,
         @Autowired indexDaoV2: IndexDaoV2,
         @Autowired dslContext: DSLContext
-    ) = MultiESLogClient(listOf(client, client2), redisOperation, dslContext, tencentIndexDao, indexDaoV2)
+    ) = MultiESLogClient(client, listOf(client(), client2()), redisOperation, dslContext, tencentIndexDao, indexDaoV2)
 
     companion object {
         private val logger = LoggerFactory.getLogger(LogESAutoConfiguration::class.java)
