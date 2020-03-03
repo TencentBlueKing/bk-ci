@@ -26,7 +26,6 @@
 
 dependencies {
     compile project(":core:store:biz-store")
-    compile project(":core:store:biz-store-image")
     compile project(":core:store:api-store-sample")
 }
 
