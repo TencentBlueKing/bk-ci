@@ -51,7 +51,10 @@ module.exports = {
         'PROXY_URL_PREFIX': true,
         'GW_URL_PREFIX': true,
         'WS_URL_PREFIX': true,
-        'BADGE_URL_PREFIX': true
+        'BADGE_URL_PREFIX': true,
+        'USER_IMG_URL': true,
+        'VERSION_TYPE': true,
+        'PERM_URL_PREFIX': true
     },
     // add your custom rules hered
     rules: {
