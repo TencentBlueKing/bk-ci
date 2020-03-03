@@ -70,8 +70,10 @@ object ControlUtils {
         if (additionalOptions == null) {
             return false
         }
-        return if(additionalOptions.retryWhenFailed) {
-            var settingRetryCount = additionalOptions!!.retryCount
+        val retryWhenFailed = additionalOptions.retryWhenFailed ?: false
+
+        return if (retryWhenFailed) {
+            var settingRetryCount = additionalOptions!!.retryCount ?: 1
             if (settingRetryCount > TASK_FAIL_RETRY_MAX_COUNT) {
                 settingRetryCount = TASK_FAIL_RETRY_MAX_COUNT
             }
