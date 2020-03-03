@@ -28,7 +28,6 @@ package com.tencent.devops.log.configuration
 
 import com.floragunn.searchguard.ssl.SearchGuardSSLPlugin
 import com.floragunn.searchguard.ssl.util.SSLConfigConstants
-import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.es.ESClient
 import com.tencent.devops.common.es.ESProperties
 import com.tencent.devops.common.redis.RedisOperation
@@ -44,6 +43,7 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.boot.autoconfigure.AutoConfigureAfter
 import org.springframework.boot.autoconfigure.AutoConfigureBefore
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.context.properties.EnableConfigurationProperties
@@ -54,8 +54,9 @@ import org.springframework.core.Ordered
 import java.net.InetAddress
 
 @Configuration
-@AutoConfigureOrder(Ordered.HIGHEST_PRECEDENCE)
+@AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
 @AutoConfigureBefore(WebAutoConfiguration::class)
+@AutoConfigureAfter(LogConfiguration::class)
 @EnableConfigurationProperties(ESProperties::class)
 class LogESAutoConfiguration {
     @Value("\${elasticsearch.ip}")
@@ -174,12 +175,11 @@ class LogESAutoConfiguration {
 
     @Bean
     fun logClient(
-        @Autowired client: Client,
         @Autowired redisOperation: RedisOperation,
         @Autowired tencentIndexDao: TencentIndexDao,
         @Autowired indexDaoV2: IndexDaoV2,
         @Autowired dslContext: DSLContext
-    ) = MultiESLogClient(client, listOf(client(), client2()), redisOperation, dslContext, tencentIndexDao, indexDaoV2)
+    ) = MultiESLogClient(listOf(client(), client2()), redisOperation, dslContext, tencentIndexDao, indexDaoV2)
 
     companion object {
         private val logger = LoggerFactory.getLogger(LogESAutoConfiguration::class.java)

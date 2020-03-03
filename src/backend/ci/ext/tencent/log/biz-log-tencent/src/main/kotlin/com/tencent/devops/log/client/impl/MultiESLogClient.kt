@@ -33,6 +33,7 @@ import com.tencent.devops.common.es.ESClient
 import com.tencent.devops.common.notify.enums.EnumEmailFormat
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.log.client.LogClient
 import com.tencent.devops.log.dao.TencentIndexDao
 import com.tencent.devops.log.dao.v2.IndexDaoV2
@@ -49,7 +50,6 @@ import kotlin.collections.HashSet
 import kotlin.math.abs
 
 class MultiESLogClient constructor(
-    private val client: Client,
     private val clients: List<ESClient>,
     private val redisOperation: RedisOperation,
     private val dslContext: DSLContext,
@@ -272,7 +272,7 @@ class MultiESLogClient constructor(
                 sender = "DevOps"
                 body = message
             }
-            client.get(ServiceNotifyResource::class).sendEmailNotify(emailMessage)
+            SpringContextUtil.getBean(Client::class.java).get(ServiceNotifyResource::class).sendEmailNotify(emailMessage)
         } catch (t: Throwable) {
             logger.warn("[$esName|$inactive] Fail to send the notify message", t)
         }
