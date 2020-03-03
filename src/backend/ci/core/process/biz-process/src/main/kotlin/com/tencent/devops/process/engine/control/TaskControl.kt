@@ -56,6 +56,8 @@ class TaskControl @Autowired constructor(
 
     private val logger = LoggerFactory.getLogger(javaClass)
 
+    private val retryCountRedisKey = "process:task:failRetry:count:"
+
     fun handle(event: PipelineBuildAtomTaskEvent): Boolean {
         with(event) {
             val taskIdLock = TaskIdLock(redisOperation, buildId, taskId)
@@ -130,8 +132,15 @@ class TaskControl @Autowired constructor(
             pipelineEventDispatcher.dispatch(this)
         } else {
             val nextActionType = if (BuildStatus.isFailure(buildStatus)) {
-                // 如果配置了失败继续，则继续下去
-                if (ControlUtils.continueWhenFailure(buildTask.additionalOptions)) {
+                val retryCount = redisOperation.get(retryCountRedisKey + buildTask.taskId)?.toInt() ?: 0
+                // 如果配置了失败重试，且重试次数上线未达上限，则进行重试
+                if (ControlUtils.retryWhenFailure(buildTask.additionalOptions, retryCount)) {
+                    logger.info("[$buildId]|ATOM|stageId=$stageId|container=$containerId|taskId=$taskId, retryCount=$retryCount|vm atom will retry, even the task is failure")
+                    redisOperation.set(retryCountRedisKey + buildTask.taskId, (retryCount + 1).toString())
+                    pipelineRuntimeService.updateTaskStatus(buildId, taskId, userId, BuildStatus.QUEUE)
+                    delayMills = 5000
+                    ActionType.RETRY
+                } else if (ControlUtils.continueWhenFailure(buildTask.additionalOptions)) { // 如果配置了失败继续，则继续下去
                     logger.info("[$buildId]|ATOM|stageId=$stageId|container=$containerId|taskId=$taskId|vm atom will continue, even the task is failure")
                     if (ActionType.isEnd(actionType)) ActionType.START
                     else actionType
@@ -140,6 +149,8 @@ class TaskControl @Autowired constructor(
                     else actionType // 如果是结束动作，继承它
                 }
             } else {
+                // 清除该原子内的重试记录
+                redisOperation.delete(retryCountRedisKey + buildTask.taskId)
                 // 当前原子成功结束后，继续继承动作，发消息请求执行
                 actionType
             }

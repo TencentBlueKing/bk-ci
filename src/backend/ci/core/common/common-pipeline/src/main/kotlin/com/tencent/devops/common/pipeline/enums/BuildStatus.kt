@@ -53,6 +53,7 @@ enum class BuildStatus(val statusName: String, val visiable: Boolean) {
     QUEUE_TIMEOUT("排队超时", true), // 17 排队超时
     EXEC_TIMEOUT("执行超时", true), // 18 执行超时
     QUEUE_CACHE("队列待处理", true), // 19 队列待处理，瞬间状态。只有在启动和取消过程中存在的中间状态
+    RETRY("重试", true), // 20 重试
     UNKNOWN("未知状态", false); // 99
 
     companion object {
