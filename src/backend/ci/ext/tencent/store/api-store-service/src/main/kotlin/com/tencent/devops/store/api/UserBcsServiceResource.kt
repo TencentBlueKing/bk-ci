@@ -45,7 +45,7 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserBcsServiceResource {
 
-    @ApiOperation("bcs接口测试")
+    @ApiOperation("bcs版本接口测试")
     @Path("/bcs/version/test")
     @GET
     fun bcsVersionTest(
@@ -53,4 +53,13 @@ interface UserBcsServiceResource {
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String
     ): Result<VersionInfo>
+
+    @ApiOperation("bcs部署接口测试")
+    @Path("/bcs/deploy/test")
+    @GET
+    fun bcsDeployTest(
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String
+    ): Result<Boolean>
 }

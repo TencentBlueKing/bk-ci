@@ -29,6 +29,7 @@ package com.tencent.devops.store.resources
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.UserBcsServiceResource
+import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder
 import io.fabric8.kubernetes.client.ConfigBuilder
 import io.fabric8.kubernetes.client.DefaultKubernetesClient
 import io.fabric8.kubernetes.client.KubernetesClient
@@ -43,7 +44,7 @@ class UserBcsServiceResourceImpl @Autowired constructor() : UserBcsServiceResour
 
     override fun bcsVersionTest(userId: String): Result<VersionInfo> {
         val config = ConfigBuilder()
-            .withMasterUrl("https://bcs.ied.com:30443/tunnels/clusters/bcs-bcs-k8s-25186-2fhixf36-eKzjvW1caBNijoL4")
+            .withMasterUrl("https://bcs.ied.com:30443/tunnels/clusters/bcs-bcs-k8s-40089-voucrpgo-eitbwFRzIgOZsxQs")
             .withTrustCerts(true)
             .withOauthToken("GPyspRYTYkhXpttRPWWAraHXGXnXZreq")
             .build()
@@ -51,5 +52,48 @@ class UserBcsServiceResourceImpl @Autowired constructor() : UserBcsServiceResour
         val versionInfo = client.version
         logger.info("the versionInfo is:$versionInfo")
         return Result(versionInfo)
+    }
+
+    override fun bcsDeployTest(userId: String): Result<Boolean> {
+        val config = ConfigBuilder()
+            .withMasterUrl("https://bcs.ied.com:30443/tunnels/clusters/bcs-bcs-k8s-40089-voucrpgo-eitbwFRzIgOZsxQs")
+            .withTrustCerts(true)
+            .withOauthToken("GPyspRYTYkhXpttRPWWAraHXGXnXZreq")
+            .build()
+        val client: KubernetesClient = DefaultKubernetesClient(config)
+        var deployment = DeploymentBuilder()
+            .withNewMetadata()
+            .withName("nginx")
+            .endMetadata()
+            .withNewSpec()
+            .withReplicas(2)
+            .withNewTemplate()
+            .withNewMetadata()
+            .addToLabels("app", "nginx")
+            .endMetadata()
+            .withNewSpec()
+            .addNewContainer()
+            .withName("nginx")
+            .withImage("nginx")
+            .addNewPort()
+            .withContainerPort(80)
+            .endPort()
+            .endContainer()
+            .endSpec()
+            .endTemplate()
+            .withNewSelector()
+            .addToMatchLabels("app", "nginx")
+            .endSelector()
+            .endSpec()
+            .build()
+
+
+        deployment = client.apps().deployments().inNamespace("thisisatest").create(deployment)
+        logger.info("Created deployment", deployment)
+
+        System.err.println("Scaling up:" + deployment.getMetadata().getName())
+        client.apps().deployments().inNamespace("thisisatest").withName("nginx").scale(2, true)
+        logger.info("Created replica sets:", client.apps().replicaSets().inNamespace("thisisatest").list().items)
+        return Result(true)
     }
 }
