@@ -11,6 +11,7 @@ import com.tencent.devops.log.util.ESIndexUtils.getIndexSettings
 import com.tencent.devops.log.util.ESIndexUtils.getTypeMappings
 import com.tencent.devops.log.util.ESIndexUtils.indexRequest
 import com.tencent.devops.log.util.IndexNameUtils
+import com.tencent.devops.log.util.IndexNameUtils.getTypeByIndex
 import org.elasticsearch.common.unit.TimeValue
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -75,7 +76,7 @@ class ESDetectionJob @Autowired constructor(
                 .indices()
                 .prepareCreate(index)
                 .setSettings(getIndexSettings())
-                .addMapping(getType(index), getTypeMappings())
+                .addMapping(getTypeByIndex(index), getTypeMappings())
                 .get(TimeValue.timeValueSeconds(5))
             logger.info("Get the create index response: $response")
         } catch (t: Throwable) {
@@ -85,7 +86,7 @@ class ESDetectionJob @Autowired constructor(
 
     private fun addLines(esClient: ESClient, index: String, buildId: String): List<String> {
         logger.info("[${esClient.name}|$index|$buildId] Start to add lines")
-        val type = getType(index)
+        val type = getTypeByIndex(index)
         val bulkRequestBuilder = esClient.client.prepareBulk()
         for (i in 1 until MULTI_LOG_LINES) {
             val log = LogMessageWithLineNo(
@@ -95,7 +96,7 @@ class ESDetectionJob @Autowired constructor(
                 timestamp = System.currentTimeMillis(),
                 lineNo = i.toLong()
             )
-            val builder = esClient.client.prepareIndex(buildId, index, type)
+            val builder = esClient.client.prepareIndex(buildId, index)
                 .setCreate(false)
                 .setSource(indexRequest(buildId, log, index, type))
             bulkRequestBuilder.add(builder)
@@ -148,7 +149,7 @@ class ESDetectionJob @Autowired constructor(
                 logger.info("Empty document ids")
                 return
             }
-            val type = getType(index)
+            val type = getTypeByIndex(index)
             val builder = esClient.client.prepareBulk()
             documentIds.forEach {
                 val deleteBuilder = esClient.client.prepareDelete(index, type, it)
@@ -163,8 +164,6 @@ class ESDetectionJob @Autowired constructor(
             }
         }
     }
-
-    private fun getType(index: String) = "$index-detection"
 
     companion object {
         private val logger = LoggerFactory.getLogger(ESDetectionJob::class.java)
