@@ -56,7 +56,7 @@ class ESAutoConfiguration {
 
     @Bean
     @Primary
-    fun client(): ESClient {
+    fun transportClient(): ESClient {
         if (ip.isNullOrBlank()) {
             throw IllegalArgumentException("ES集群地址尚未配置")
         }
