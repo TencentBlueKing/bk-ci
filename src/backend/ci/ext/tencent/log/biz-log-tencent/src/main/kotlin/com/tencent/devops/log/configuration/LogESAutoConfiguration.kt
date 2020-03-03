@@ -113,20 +113,20 @@ class LogESAutoConfiguration {
         val builder = Settings.builder().put("cluster.name", e1Cluster)
         var plugin: Class<out Plugin>? = null
 
-        if (!e2KeystoreFilePath.isNullOrBlank()) {
-            builder.put(SSLConfigConstants.SEARCHGUARD_SSL_TRANSPORT_KEYSTORE_FILEPATH, e2KeystoreFilePath)
+        if (!e1KeystoreFilePath.isNullOrBlank()) {
+            builder.put(SSLConfigConstants.SEARCHGUARD_SSL_TRANSPORT_KEYSTORE_FILEPATH, e1KeystoreFilePath)
                 .put(SSLConfigConstants.SEARCHGUARD_SSL_TRANSPORT_ENFORCE_HOSTNAME_VERIFICATION, false)
                 .put(SSLConfigConstants.SEARCHGUARD_SSL_TRANSPORT_ENABLED, true)
                 .put(SSLConfigConstants.SEARCHGUARD_SSL_TRANSPORT_ENFORCE_HOSTNAME_VERIFICATION_RESOLVE_HOST_NAME, true)
         }
-        if (!e2TruststoreFilePath.isNullOrBlank()) {
-            builder.put(SSLConfigConstants.SEARCHGUARD_SSL_TRANSPORT_TRUSTSTORE_FILEPATH, e2TruststoreFilePath)
+        if (!e1TruststoreFilePath.isNullOrBlank()) {
+            builder.put(SSLConfigConstants.SEARCHGUARD_SSL_TRANSPORT_TRUSTSTORE_FILEPATH, e1TruststoreFilePath)
         }
-        if (!e2KeystorePassword.isNullOrBlank()) {
-            builder.put(SSLConfigConstants.SEARCHGUARD_SSL_TRANSPORT_KEYSTORE_PASSWORD, e2KeystorePassword)
+        if (!e1KeystorePassword.isNullOrBlank()) {
+            builder.put(SSLConfigConstants.SEARCHGUARD_SSL_TRANSPORT_KEYSTORE_PASSWORD, e1KeystorePassword)
         }
-        if (!e2TruststorePassword.isNullOrBlank()) {
-            builder.put(SSLConfigConstants.SEARCHGUARD_SSL_TRANSPORT_TRUSTSTORE_PASSWORD, e2TruststorePassword)
+        if (!e1TruststorePassword.isNullOrBlank()) {
+            builder.put(SSLConfigConstants.SEARCHGUARD_SSL_TRANSPORT_TRUSTSTORE_PASSWORD, e1TruststorePassword)
             plugin = SearchGuardSSLPlugin::class.java
         }
         val settings = builder.build()
@@ -144,7 +144,7 @@ class LogESAutoConfiguration {
         } else {
             false
         }
-        logger.info("Init ES transport client with host($e1IP:$e1Port) and cluster($e1Cluster|$mainCluster)")
+        logger.info("Init the log es1 transport client with host($e1Name:$mainCluster:$e1IP:$e1Port), cluster($e1Cluster), keystore($e1KeystoreFilePath|$e1KeystorePassword), truststore($e1TruststoreFilePath|$e1TruststorePassword)")
         return ESClient(e1Name!!, client, mainCluster)
     }
 
@@ -200,7 +200,7 @@ class LogESAutoConfiguration {
         } else {
             false
         }
-        logger.info("Init the log es transport client with host($e2Name:$mainCluster:$e2IP:$e2Port), cluster($e2Cluster), keystore($e2KeystoreFilePath|$e2KeystorePassword), truststore($e2TruststoreFilePath|$e2TruststorePassword)")
+        logger.info("Init the log es2 transport client with host($e2Name:$mainCluster:$e2IP:$e2Port), cluster($e2Cluster), keystore($e2KeystoreFilePath|$e2KeystorePassword), truststore($e2TruststoreFilePath|$e2TruststorePassword)")
         return ESClient(e2Name!!, client, mainCluster)
     }
 
