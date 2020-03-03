@@ -24,9 +24,33 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":core:store:api-store")
-    compile("io.fabric8:kubernetes-client:4.8.0")
-}
+package com.tencent.devops.store.api
 
-apply from: "$rootDir/task_deploy_to_maven.gradle"
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.pojo.Result
+import io.fabric8.kubernetes.client.VersionInfo
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.GET
+import javax.ws.rs.HeaderParam
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
+
+@Api(tags = ["USER_EXTENSION_BCS_SERVICE"], description = "服务扩展-bcs")
+@Path("/user/ext/services")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface UserBcsServiceResource {
+
+    @ApiOperation("bcs接口测试")
+    @Path("/bcs/version/test")
+    @GET
+    fun bcsVersionTest(
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String
+    ): Result<VersionInfo>
+}

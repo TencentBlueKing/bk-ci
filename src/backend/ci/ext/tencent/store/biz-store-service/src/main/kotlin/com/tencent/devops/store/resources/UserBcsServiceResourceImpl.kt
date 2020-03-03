@@ -24,9 +24,32 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":core:store:api-store")
-    compile("io.fabric8:kubernetes-client:4.8.0")
-}
+package com.tencent.devops.store.resources
 
-apply from: "$rootDir/task_deploy_to_maven.gradle"
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.store.api.UserBcsServiceResource
+import io.fabric8.kubernetes.client.ConfigBuilder
+import io.fabric8.kubernetes.client.DefaultKubernetesClient
+import io.fabric8.kubernetes.client.KubernetesClient
+import io.fabric8.kubernetes.client.VersionInfo
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+
+@RestResource
+class UserBcsServiceResourceImpl @Autowired constructor() : UserBcsServiceResource {
+
+    private val logger = LoggerFactory.getLogger(UserBcsServiceResourceImpl::class.java)
+
+    override fun bcsVersionTest(userId: String): Result<VersionInfo> {
+        val config = ConfigBuilder()
+            .withMasterUrl("https://bcs.ied.com:30443/tunnels/clusters/bcs-bcs-k8s-25186-2fhixf36-eKzjvW1caBNijoL4")
+            .withTrustCerts(true)
+            .withOauthToken("GPyspRYTYkhXpttRPWWAraHXGXnXZreq")
+            .build()
+        val client: KubernetesClient = DefaultKubernetesClient(config)
+        val versionInfo = client.version
+        logger.info("the versionInfo is:$versionInfo")
+        return Result(versionInfo)
+    }
+}
