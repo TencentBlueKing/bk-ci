@@ -29,8 +29,6 @@
                 </template>
             </virtual-scroll>
 
-            <span class="share-icon" @mouseup="copyLink" ref="shareIcon"></span>
-
             <section class="log-loading" v-if="isInit">
                 <div class="lds-ring"><div></div><div></div><div></div><div></div></div>
             </section>
@@ -107,43 +105,31 @@
             return {
                 searchResult: [],
                 showSearchIndex: 0,
-                startShareIndex: -1,
-                endShareIndex: -1,
-                startOffset: 0,
-                endOffset: 0,
-                showShareIcon: false,
-                isShareMove: false,
-                showTime: this.$route.query.showTime === 'true',
-                offsetLeft: 0,
-                offsetTop: 0,
+                showTime: false,
                 currentExe: this.executeCount,
                 completeInit: false
             }
         },
 
         mounted () {
-            document.addEventListener('mousedown', this.startShare)
-            document.addEventListener('mousemove', this.shareMove)
-            document.addEventListener('mouseup', this.showShare)
-
-            const mainEle = document.querySelector('.log-main')
-            this.offsetLeft = mainEle.offsetLeft
-            this.offsetTop = mainEle.offsetTop
+            document.addEventListener('mousedown', this.closeLog)
 
             const query = this.$route.query || {}
-            const minMapTop = query.minMapTop
             const id = query.id
             if (id === this.id) this.currentExe = +query.currentExe
         },
 
         beforeDestroy () {
-            document.removeEventListener('mousedown', this.startShare)
-            document.removeEventListener('mousemove', this.shareMove)
-            document.removeEventListener('mouseup', this.showShare)
+            document.removeEventListener('mousedown', this.closeLog)
         },
 
         methods: {
             language,
+
+            closeLog (event) {
+                let curTarget = event.target
+                if (curTarget.classList.contains('log-home')) this.$emit('closeLog')
+            },
 
             valuefilter (val) {
                 return val.replace(/\s|<|>/g, (str) => {
@@ -198,101 +184,8 @@
                 this.$emit('changeExecute', execute)
             },
 
-            shareMove (event) {
-                if (!this.isShareMove) return
-                let curTarget = event.target
-                if (curTarget.classList.contains('selection-color') && !curTarget.classList.contains('item-txt')) curTarget = curTarget.parentNode.parentNode
-                if (curTarget.classList.contains('item-txt')) curTarget = curTarget.parentNode
-                if (curTarget.className && curTarget.classList.contains('scroll-item')) {
-                    const top = curTarget.style.top.slice(0, -2)
-                    if (this.startShareIndex === -1) this.startShareIndex = top
-                    this.endShareIndex = top
-                }
-            },
-
-            startShare (event) {
-                const time = new Date()
-                if (time - this.startShare.time < 350) {
-                    event.preventDefault()
-                }
-                this.startShare.time = time
-
-                let curTarget = event.target
-                if (curTarget === this.$refs.shareIcon) return
-                if (curTarget.classList.contains('log-home')) this.$emit('closeLog')
-                const selection = document.getSelection()
-                selection.removeAllRanges()
-                const eleShare = document.querySelector('.share-icon')
-                eleShare.style.display = 'none'
-                this.isShareMove = true
-                if (!curTarget.classList.contains('item-txt')) curTarget = curTarget.parentNode
-                if (curTarget.classList.contains('item-txt')) this.startShareIndex = curTarget.parentNode.style.top.slice(0, -2)
-            },
-
-            showShare (event) {
-                this.isShareMove = false
-                const eleShare = document.querySelector('.share-icon')
-                const selection = window.getSelection()
-                const txt = selection.toString()
-                if (txt && this.completeInit) {
-                    const left = event.clientX - this.offsetLeft + 15
-                    const top = event.clientY - this.offsetTop + 15
-                    eleShare.style.display = 'inline'
-                    eleShare.style.left = left + 'px'
-                    eleShare.style.top = top + 'px'
-                }
-            },
-
             copyLink (event) {
-                const { minMapTop, bottomScrollDis, foldList } = this.$refs.scroll
-                const eleShare = document.querySelector('.share-icon')
-                const selection = window.getSelection()
-                const startParentNode = selection.anchorNode.parentNode
-                const endParentNode = selection.focusNode.parentNode
-
-                eleShare.style.display = 'none'
-                let startShareIndex = +this.startShareIndex
-                let endShareIndex = +this.endShareIndex
-                let startOffset = selection.anchorOffset
-                let endOffset = selection.focusOffset
-                let isStartFirst = startParentNode.classList.contains('item-time') ? 0 : 1
-                let isEndFirst = endParentNode.classList.contains('item-time') ? 0 : 1
-
-                function changeTemp () {
-                    let temp = startOffset
-                    startOffset = endOffset
-                    endOffset = temp
-                    temp = isStartFirst
-                    isStartFirst = isEndFirst
-                    isEndFirst = temp
-                    temp = startShareIndex
-                    startShareIndex = endShareIndex
-                    endShareIndex = temp
-                }
-                if (startShareIndex > endShareIndex) changeTemp()
-                if (startShareIndex === endShareIndex && startOffset > endOffset) changeTemp()
-
-                const flodIndexs = []
-                foldList.forEach((x) => {
-                    const currentData = x.data.tagData
-                    if (currentData.list.length) flodIndexs.push(x.index)
-                })
-
-                const url = this.getLinkUrl({
-                    isStartFirst,
-                    isEndFirst,
-                    id: this.id || '',
-                    startShareIndex,
-                    endShareIndex,
-                    startOffset,
-                    endOffset,
-                    minMapTop,
-                    bottomScrollDis,
-                    showTime: this.showTime,
-                    flodIndexs,
-                    logType: this.logType,
-                    currentExe: this.currentExe
-                })
+                const url = this.getLinkUrl({})
                 const input = document.createElement('input')
                 document.body.appendChild(input)
                 input.setAttribute('value', url)
@@ -318,21 +211,19 @@
             addLogData (data, isInit) {
                 this.completeInit = isInit
                 const type = isInit ? 'initLog' : 'addListData'
-                const foldParam = this.$route.query.flodIndexs
                 const id = this.$route.query.id
-                let foldArr = []
-                if (typeof foldParam !== 'undefined' && foldParam && id === this.id) foldArr = foldParam.split(',')
                 const scroll = this.$refs.scroll
                 const lastIndex = scroll.indexList[scroll.indexList.length - 1] || {}
                 const isBottom = +lastIndex.value === +scroll.totalNumber
-                const addListPostData = {
-                    oldNumber: scroll.totalNumber,
-                    oldItemNumber: scroll.itemNumber,
-                    oldMapHeight: scroll.mapHeight,
-                    oldVisHeight: scroll.visHeight
-                }
-                scroll.addListData(data, type, foldArr.map(x => +x))
+
+                scroll.addListData(data, type)
                 if (!isBottom) {
+                    const addListPostData = {
+                        oldNumber: scroll.totalNumber,
+                        oldItemNumber: scroll.itemNumber,
+                        oldMapHeight: scroll.mapHeight,
+                        oldVisHeight: scroll.visHeight
+                    }
                     scroll.getNumberChangeList(addListPostData)
                 } else {
                     scroll.scrollPageByIndex(scroll.totalNumber - scroll.itemNumber)
@@ -429,7 +320,7 @@
         }
         .log-main {
             position: relative;
-            width: 75%;
+            width: 80%;
             height: calc(100% - 32px);
             float: right;
             display: flex;

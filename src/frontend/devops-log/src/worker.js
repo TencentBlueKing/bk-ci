@@ -18,7 +18,7 @@ const reg = (() => {
 })()
 
 function handleColor (val) {
-    const parseRes = ansiParse(val) || [{ message: '', hasHandle: false }]
+    const parseRes = ansiParse(val) || [{ message: '' }]
     const res = { message: '' }
     parseRes.forEach((item) => {
         res.message += item.message
@@ -29,24 +29,22 @@ function handleColor (val) {
     if (currentColor) res.color = currentColor.color
     if (res.color) res.fontWeight = 600
     res.message = String(res.message).replace(reg, '')
-    res.hasHandle = true
     return res
 }
 
 let allListData = []
 let tagList = []
 let foldList = []
+let mainWidth = 0
 
 onmessage = function (e) {
     const data = e.data
     const type = data.type
     switch (type) {
         case 'initLog':
+            mainWidth = data.mainWidth - 200
             addListData(data)
-            const foldArr = data.foldIndexs || []
-            const arr = foldArr.sort((a, b) => +a - +b)
-            arr.forEach(x => foldListData({ startIndex: +x }))
-            postMessage({ type: 'completeInit', number: allListData.length, foldList })
+            postMessage({ type: 'completeInit', number: allListData.length })
             break
         case 'addListData':
             addListData(data)
@@ -57,7 +55,7 @@ onmessage = function (e) {
             break
         case 'foldListData':
             foldListData(data)
-            postMessage({ type: 'completeFold', number: allListData.length, foldList })
+            postMessage({ type: 'completeFold', number: allListData.length })
             break
         case 'resetData':
             allListData = []
@@ -139,29 +137,34 @@ function updateFoldList (startIndex, endIndex, changeNum) {
 }
 
 function addListData ({ list }) {
-    list.forEach((item, index) => {
-        const message = item.message
-        const currentIndex = allListData.length + index
-        if (message.includes('##[group]')) {
-            tagList.push({ data: item, index: currentIndex })
-        }
-
-        if (message.includes('##[endgroup]') && tagList.length) {
-            item.message = item.message.replace('##[endgroup]', '')
-            const { data: linkItem, index: startIndex } = tagList.pop()
-            linkItem.tagData = {
-                endIndex: currentIndex,
-                startIndex,
-                list: []
+    list.forEach((item) => {
+        const { message, color } = handleColor(item.message || '')
+        const newItemArr = message.split(/\r\n|\n/)
+        newItemArr.forEach((message) => {
+            const currentIndex = allListData.length
+            const newItem = { message, color, realIndex: currentIndex, timestamp: item.timestamp }
+            if (message.includes('##[group]')) {
+                tagList.push({ data: newItem, index: currentIndex })
             }
-            foldList.push({ data: linkItem, index: startIndex })
-            linkItem.message = linkItem.message.replace('##[group]', '')
-        }
+
+            if (message.includes('##[endgroup]') && tagList.length) {
+                newItem.message = newItem.message.replace('##[endgroup]', '')
+                const { data: linkItem, index: startIndex } = tagList.pop()
+                linkItem.tagData = {
+                    endIndex: currentIndex,
+                    startIndex,
+                    list: []
+                }
+                foldList.push({ data: linkItem, index: startIndex })
+                linkItem.message = linkItem.message.replace('##[group]', '')
+            }
+
+            allListData.push(newItem)
+        })
     })
-    allListData = allListData.concat(list)
 }
 
-function getListData ({ totalScrollHeight, itemHeight, itemNumber, canvasHeight, canvasWidth, minMapTop, totalHeight, mapHeight, type }) {
+function getListData ({ totalScrollHeight, itemHeight, itemNumber, canvasHeight, minMapTop, totalHeight, mapHeight, type }) {
     const realHeight = minMapTop / ((mapHeight - canvasHeight / 8) || 1) * (totalHeight - canvasHeight)
     let startIndex = Math.floor(realHeight / itemHeight)
     const endIndex = startIndex + itemNumber
@@ -174,13 +177,21 @@ function getListData ({ totalScrollHeight, itemHeight, itemNumber, canvasHeight,
         const top = i * itemHeight - nums * 500000
         const currentItem = allListData[i]
         if (typeof currentItem === 'undefined') continue
-        if (!currentItem.hasHandle) {
-            const handleItem = handleColor(currentItem.message || '')
-            Object.assign(currentItem, handleItem)
-            allListData[i] = currentItem
-        }
-        indexList.push({ top, value: i + 1, tagData: currentItem.tagData })
-        listData.push({ top, value: currentItem.message, color: currentItem.color, fontWeight: currentItem.fontWeight, tagData: currentItem.tagData, timestamp: currentItem.timestamp })
+        const tagData = currentItem.tagData || {}
+        indexList.push({
+            top,
+            value: currentItem.realIndex + 1,
+            startIndex: tagData.startIndex,
+            tagDataLength: (tagData.list || []).length
+        })
+        listData.push({ 
+            top,
+            value: currentItem.message,
+            color: currentItem.color,
+            fontWeight: currentItem.fontWeight,
+            startIndex: tagData.startIndex,
+            timestamp: currentItem.timestamp
+        })
     }
 
     totalScrollHeight = totalScrollHeight - nums * 500000
@@ -192,11 +203,6 @@ function getListData ({ totalScrollHeight, itemHeight, itemNumber, canvasHeight,
     for (let i = minMapStartIndex; i <= minMapEndIndex; i++) {
         const currentItem = allListData[i]
         if (typeof currentItem === 'undefined') continue
-        if (!currentItem.hasHandle) {
-            const handleItem = handleColor(currentItem.message || '')
-            Object.assign(currentItem, handleItem)
-            allListData[i] = currentItem
-        }
         minMapList.push(currentItem)
     }
 
