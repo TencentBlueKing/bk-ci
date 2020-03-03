@@ -35,6 +35,7 @@ import com.tencent.devops.process.engine.atom.TaskAtomService
 import com.tencent.devops.process.engine.common.BS_ATOM_STATUS_REFRESH_DELAY_MILLS
 import com.tencent.devops.process.engine.common.BS_TASK_HOST
 import com.tencent.devops.process.engine.control.lock.TaskIdLock
+import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildAtomTaskEvent
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.pojo.mq.PipelineBuildContainerEvent
@@ -132,12 +133,12 @@ class TaskControl @Autowired constructor(
             pipelineEventDispatcher.dispatch(this)
         } else {
             val nextActionType = if (BuildStatus.isFailure(buildStatus)) {
-                val retryCount = redisOperation.get(retryCountRedisKey + buildTask.taskId)?.toInt() ?: 0
+                val retryCount = redisOperation.get(getRedisKey(buildTask))?.toInt() ?: 0
                 // 如果配置了失败重试，且重试次数上线未达上限，则进行重试
                 if (ControlUtils.retryWhenFailure(buildTask.additionalOptions, retryCount)) {
-                    logger.info("[$buildId]|ATOM|stageId=$stageId|container=$containerId|taskId=$taskId, retryCount=$retryCount|vm atom will retry, even the task is failure")
-                    redisOperation.set(retryCountRedisKey + buildTask.taskId, (retryCount + 1).toString())
-                    pipelineRuntimeService.updateTaskStatus(buildId, taskId, userId, BuildStatus.QUEUE)
+                    logger.info("retry task [$buildId]|ATOM|stageId=$stageId|container=$containerId|taskId=$taskId, retryCount=$retryCount|vm atom will retry, even the task is failure")
+                    redisOperation.set(getRedisKey(buildTask), (retryCount + 1).toString())
+                    pipelineRuntimeService.updateTaskStatus(buildId, taskId, userId, BuildStatus.RETRY)
                     delayMills = 5000
                     ActionType.RETRY
                 } else if (ControlUtils.continueWhenFailure(buildTask.additionalOptions)) { // 如果配置了失败继续，则继续下去
@@ -173,5 +174,9 @@ class TaskControl @Autowired constructor(
 
     private fun atomBuildStatus(response: AtomResponse): BuildStatus {
         return response.buildStatus
+    }
+
+    private fun getRedisKey(taskBuildInfo: PipelineBuildTask) : String {
+        return retryCountRedisKey + taskBuildInfo.buildId + ":" + taskBuildInfo.taskId
     }
 }
