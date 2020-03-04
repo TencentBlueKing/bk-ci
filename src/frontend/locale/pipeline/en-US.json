@@ -518,6 +518,7 @@
         "copyJobFail": "Duplicate job failed",
         "copyStage": "Duplicate stage",
         "copyStageFail": "Duplicate stage failed",
+        "stageManualTriggerUserNoEmptyTips": "Manual Trigger Stage User Field can not be empty",
         "triggerTooltips": " Click builds to trigger the configurable recommended version and pipeline variables",
         "userTime": "User time",
         "systemTime": "System time",

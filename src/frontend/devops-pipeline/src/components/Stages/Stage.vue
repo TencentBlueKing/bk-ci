@@ -1,6 +1,8 @@
 <template>
     <div :class="[{ 'pipeline-drag': editable && !isTriggerStage, 'show-stage-area': !isTriggerStage }, 'pipeline-stage']" ref="stageRef">
-        <bk-button v-if="!isTriggerStage" :class="['pipeline-stage-entry', { 'editable-stage-entry': editable }]" @click="showStagePanel">
+        <bk-button v-if="!isTriggerStage" :class="['pipeline-stage-entry', [stageStatusCls], { 'editable-stage-entry': editable }]" @click="showStagePanel">
+            <span v-if="stage.status === 'PAUSE'" class="bk-icon icon-play-circle-shape" v-bk-tooltips.top="canTriggerStage ? '去审核' : '无审核权限'" @click.stop="startNextStage"></span>
+            <span v-else :class="['bk-icon', 'stage-status-icon', { [stageStatusIcon]: true }]"></span>
             <span class="stage-entry-name">{{ stageTitle }}</span>
             <i v-if="stage.isError" class="bk-icon icon-exclamation-triangle-shape stage-entry-error-icon" />
             <span @click.stop v-if="showCheckedToatal && canSkipElement" class="check-total-stage">
@@ -26,8 +28,8 @@
                 :container="container">
             </stage-container>
         </draggable>
-        <template v-if="editable || isStagePause">
-            <span v-bk-clickoutside="toggleAddMenu" v-if="!isFirstStage" class="add-menu" @click.stop="handleClick">
+        <template v-if="editable">
+            <span v-bk-clickoutside="toggleAddMenu" v-if="!isFirstStage" class="add-menu" @click.stop="toggleAddMenu(!isAddMenuShow)">
                 <i :class="{ [iconCls]: true, 'active': isAddMenuShow }" />
                 <template v-if="isAddMenuShow">
                     <span class="insert-tip direction line-add" @click.stop="showStageSelectPopup(false)">
@@ -120,6 +122,13 @@
             stageDisabled () {
                 return !!(this.stage.stageControlOption && this.stage.stageControlOption.enable === false)
             },
+            canTriggerStage () {
+                try {
+                    return this.stage.stageControlOption.triggerUsers.includes(this.$userInfo.username)
+                } catch (e) {
+                    return false
+                }
+            },
             computedContainer: {
                 get () {
                     return this.containers
@@ -152,8 +161,6 @@
             },
             iconCls () {
                 switch (true) {
-                    case this.isStagePause:
-                        return 'play-icon'
                     case !this.isAddMenuShow:
                         return 'add-plus-icon'
                     case this.isAddMenuShow:
@@ -161,6 +168,18 @@
                     default:
                         return 'add-plus-icon'
                 }
+            },
+            stageStatusIcon () {
+                switch (this.stage.status) {
+                    case 'SUCCEED':
+                        return 'icon-check-circle'
+                    case 'FAILED':
+                        return 'icon-close-circle'
+                }
+                return ''
+            },
+            stageStatusCls () {
+                return this.stage && this.stage.status ? this.stage.status : ''
             }
         },
         watch: {
@@ -207,7 +226,6 @@
             },
 
             showStagePanel () {
-                console.log(1, this.stageIndex)
                 const { stageIndex } = this
                 this.togglePropertyPanel({
                     isShow: true,
@@ -253,20 +271,14 @@
                     })
                 }
             },
-            handleClick () {
-                if (this.isStagePause) {
-                    this.startNextStage()
-                } else if (this.editable) {
-                    this.toggleAddMenu(!this.isAddMenuShow)
-                }
-            },
 
             startNextStage () {
-                console.log(this.$route.params)
-                this.triggerStage({
-                    ...this.$route.params,
-                    stageId: this.stage.id
-                })
+                if (this.canTriggerStage) {
+                    this.triggerStage({
+                        ...this.$route.params,
+                        stageId: this.stage.id
+                    })
+                }
             },
             updateHeight () {
                 const parentEle = this.$refs.stageRef
@@ -337,11 +349,49 @@
             border-color: #D4E8FF;
             color: $primaryColor;
             z-index: 1;
+
             &:not(.editable-stage-entry) {
-                background-color: #EFF5FF;
-                border-color: #D4E8FF;
-                color: $primaryColor;
+                background-color: #F3F3F3;
+                border-color: #D0D8EA;
+                color: black;
+                &.RUNNING {
+                    background-color: #EFF5FF;
+                    border-color: #D4E8FF;
+                    color: $primaryColor;
+                }
+                &.PAUSE {
+                    background-color: #F3F3F3;
+                    border-color: #D0D8EA;
+                    color: black;
+
+                    .icon-play-circle-shape {
+                        color: $primaryColor;
+                        font-size: 20px;
+                        width: 20px;
+                        height: 20px;
+                        vertical-align: middle;
+                    }
+                }
+
+                &.FAILED {
+                    border-color: #FFD4D4;
+                    background-color: #FFF9F9;
+                    color: black;
+                    .stage-status-icon {
+                        color: #FF5656;
+                    }
+                }
+                &.SUCCEED {
+                    background-color: #F3FFF6;
+                    border-color: #BBEFC9;
+                    color: black;
+                    .stage-status-icon {
+                        color: #34DA7B;
+                    }
+
+                }
             }
+
             &.editable-stage-entry:hover {
                 color: black;
                 border-color: #1A6DF3;
