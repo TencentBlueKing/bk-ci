@@ -232,35 +232,10 @@ class SubPipelineStartUpService(
         val prop = result.properties
 
         for (item in prop) {
-            if (item.type != BuildFormPropertyType.MULTIPLE) {
-                val keyList = ArrayList<StartUpInfo>()
-                val valueList = ArrayList<StartUpInfo>()
-                keyList.add(StartUpInfo(item.id, item.defaultValue))
-                valueList.add(StartUpInfo(item.id, item.defaultValue))
-                val info = SubPipelineStartUpInfo(
-                    key = item.id,
-                    keyDisable = true,
-                    keyType = "input",
-                    keyListType = "list",
-                    keyUrl = "",
-                    keyUrlQuery = ArrayList(),
-                    keyList = keyList,
-                    keyMultiple = false,
-                    value = item.defaultValue,
-                    valueDisable = false,
-                    valueType = "input",
-                    valueListType = "list",
-                    valueUrl = "",
-                    valueUrlQuery = ArrayList(),
-                    valueList = valueList,
-                    valueMultiple = false
-                )
-                parameter.add(info)
-            } else {
+            if (item.type == BuildFormPropertyType.MULTIPLE || item.type == BuildFormPropertyType.ENUM) {
                 val keyList = ArrayList<StartUpInfo>()
                 val valueList = ArrayList<StartUpInfo>()
                 val defaultValue = item.defaultValue as String
-                keyList.add(StartUpInfo(item.id, item.defaultValue))
                 for (option in item.options!!) {
                     valueList.add(StartUpInfo(option.key, option.value))
                 }
@@ -268,19 +243,50 @@ class SubPipelineStartUpService(
                     key = item.id,
                     keyDisable = true,
                     keyType = "input",
-                    keyListType = "list",
+                    keyListType = "",
                     keyUrl = "",
                     keyUrlQuery = ArrayList(),
                     keyList = keyList,
                     keyMultiple = false,
-                    value = defaultValue.split(","),
+                    value = if (defaultValue.isBlank()) {
+                        ArrayList()
+                    } else {
+                        defaultValue.split(",")
+                    },
                     valueDisable = false,
                     valueType = "select",
                     valueListType = "list",
                     valueUrl = "",
                     valueUrlQuery = ArrayList(),
                     valueList = valueList,
-                    valueMultiple = true
+                    valueMultiple = if (item.type == BuildFormPropertyType.MULTIPLE) {
+                        true
+                    } else {
+                        false
+                    }
+                )
+                parameter.add(info)
+            } else {
+                val keyList = ArrayList<StartUpInfo>()
+                val valueList = ArrayList<StartUpInfo>()
+                val defaultValue = item.defaultValue as String
+                val info = SubPipelineStartUpInfo(
+                    key = item.id,
+                    keyDisable = true,
+                    keyType = "input",
+                    keyListType = "",
+                    keyUrl = "",
+                    keyUrlQuery = ArrayList(),
+                    keyList = keyList,
+                    keyMultiple = false,
+                    value = defaultValue,
+                    valueDisable = false,
+                    valueType = "input",
+                    valueListType = "",
+                    valueUrl = "",
+                    valueUrlQuery = ArrayList(),
+                    valueList = valueList,
+                    valueMultiple = false
                 )
                 parameter.add(info)
             }
