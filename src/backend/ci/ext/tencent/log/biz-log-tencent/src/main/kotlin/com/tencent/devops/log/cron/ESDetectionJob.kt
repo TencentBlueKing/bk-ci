@@ -69,24 +69,33 @@ class ESDetectionJob @Autowired constructor(
                 val buildId = UUIDUtil.generate()
                 val index = IndexNameUtils.getIndexName()
                 logClient.getActiveClients().forEach {
-                    val f = executor.submit(Detection(it, index, buildId))
-                    val documentIds = f.get(60, TimeUnit.SECONDS)
-                    if (documentIds.isEmpty()) {
-                        logger.warn("[${it.name}] Fail to insert data")
+                    try {
+                        val f = executor.submit(Detection(it, index, buildId))
+                        val documentIds = f.get(60, TimeUnit.SECONDS)
+                        if (documentIds.isEmpty()) {
+                            logger.warn("[${it.name}] Fail to insert data")
+                            logClient.markESInactive(it.name)
+                        } else {
+                            executor.submit(Deletion(it, index, buildId, documentIds))
+                        }
+                    } catch (t: Throwable) {
+                        logger.warn("[${it.name}] Fail to detect es status", t)
                         logClient.markESInactive(it.name)
-                    } else {
-                        executor.submit(Deletion(it, index, buildId, documentIds))
                     }
                 }
                 val inactiveClients = logClient.getInactiveClients()
                 logger.info("Start to check the inactive clients: ${inactiveClients.map { it.name }}")
                 logClient.getInactiveClients().forEach {
-                    val f = executor.submit(Detection(it, index, buildId))
-                    val documentIds = f.get(60, TimeUnit.SECONDS)
-                    if (documentIds.isNotEmpty()) {
-                        logger.warn("[${it.name}] Success to insert data")
-                        logClient.markESActive(it.name)
-                        executor.submit(Deletion(it, index, buildId, documentIds))
+                    try {
+                        val f = executor.submit(Detection(it, index, buildId))
+                        val documentIds = f.get(60, TimeUnit.SECONDS)
+                        if (documentIds.isNotEmpty()) {
+                            logger.warn("[${it.name}] Success to insert data")
+                            logClient.markESActive(it.name)
+                            executor.submit(Deletion(it, index, buildId, documentIds))
+                        }
+                    } catch (t: Throwable) {
+                        logger.warn("[${it.name}] Fail to detect the inactive es", t)
                     }
                 }
             } else {
