@@ -309,8 +309,17 @@ class UserPipelineResourceImpl @Autowired constructor(
         checkParam(userId, projectId)
         return Result(
             pipelineService.listViewPipelines(
-                userId, projectId, page, pageSize, sortType ?: PipelineSortType.CREATE_TIME,
-                ChannelCode.BS, viewId, true, filterByPipelineName, filterByCreator, filterByLabels
+                userId = userId,
+                projectId = projectId,
+                page = page,
+                pageSize = pageSize,
+                sortType = sortType ?: PipelineSortType.CREATE_TIME,
+                channelCode = ChannelCode.BS,
+                viewId = viewId,
+                checkPermission = true,
+                filterByPipelineName = filterByPipelineName,
+                filterByCreator = filterByCreator,
+                filterByLabels = filterByLabels
             )
         )
     }

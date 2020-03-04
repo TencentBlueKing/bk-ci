@@ -59,7 +59,7 @@ class QualityPipelineService @Autowired constructor(
 
         // 剔除已删除的流水线
         return pipelineElementsMap.entries.filter { pipelineNameMap.containsKey(it.key) }.map {
-            val pipelineElement = it.value.map { it.classType to it.taskParams }
+            val pipelineElement = it.value.map { it.atomCode to it.taskParams }
             // 获取原子信息
             val elementResult = getExistAndLackElements(projectId, checkElements, pipelineElement)
             val existElements = elementResult.first

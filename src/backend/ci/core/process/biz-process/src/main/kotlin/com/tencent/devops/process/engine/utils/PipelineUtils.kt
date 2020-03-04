@@ -24,20 +24,37 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.quality.api.v2.pojo.request
+package com.tencent.devops.process.engine.utils
 
-import io.swagger.annotations.ApiModel
+import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
+import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.process.constant.ProcessMessageCode
+import org.slf4j.LoggerFactory
+import java.util.regex.Pattern
 
-@ApiModel("构建检查参数")
-data class BuildCheckParams(
-    val projectId: String,
-    val pipelineId: String,
-    val buildId: String,
-    val buildNo: String,
-    val interceptTaskName: String,
-    val startTime: Long,
-    val taskId: String,
-    val position: String,
-    val templateId: String?,
-    val runtimeVariable: Map<String, String>?
-)
+object PipelineUtils {
+
+    private val logger = LoggerFactory.getLogger(PipelineUtils::class.java)
+
+    private const val ENGLISH_NAME_PATTERN = "[A-Za-z_][A-Za-z_0-9]+"
+
+    fun checkPipelineName(name: String) {
+        if (name.toCharArray().size > 64) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_NAME_TOO_LONG,
+                defaultMessage = "Pipeline's name is too long"
+            )
+        }
+    }
+
+    fun checkPipelineParams(params: List<BuildFormProperty>) {
+        params.forEach {
+            if (!Pattern.matches(ENGLISH_NAME_PATTERN, it.id)) {
+                logger.warn("Pipeline's start params Name is iregular")
+                throw OperationException(MessageCodeUtil.getCodeLanMessage(ProcessMessageCode.ERROR_PIPELINE_PARAMS_NAME_ERROR))
+            }
+        }
+    }
+}

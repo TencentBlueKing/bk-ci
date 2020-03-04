@@ -126,11 +126,11 @@ class PipelineRepositoryService constructor(
         )
 
         val buildNo = (model.stages[0].containers[0] as TriggerContainer).buildNo
-        val container = model.stages[0].containers[0] as TriggerContainer
+        val triggerContainer = model.stages[0].containers[0] as TriggerContainer
         var canManualStartup = false
         var canElementSkip = false
         run lit@{
-            container.elements.forEach {
+            triggerContainer.elements.forEach {
                 if (it is ManualTriggerElement && it.isElementEnable()) {
                     canManualStartup = true
                     canElementSkip = it.canElementSkip ?: false
