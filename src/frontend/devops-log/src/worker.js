@@ -34,19 +34,22 @@ function handleColor (val) {
 
 let allListData = []
 let tagList = []
-let foldList = []
 let mainWidth = 0
+let mainWordNum = 0
 
 onmessage = function (e) {
     const data = e.data
     const type = data.type
     switch (type) {
         case 'initLog':
-            mainWidth = data.mainWidth - 200
+            mainWidth = data.mainWidth - 70
+            mainWordNum = Math.floor(mainWidth / 6.8)
             addListData(data)
             postMessage({ type: 'completeInit', number: allListData.length })
             break
         case 'addListData':
+            mainWidth = data.mainWidth - 70
+            mainWordNum = Math.floor(mainWidth / 6.8)
             addListData(data)
             break
         case 'initLink':
@@ -60,80 +63,37 @@ onmessage = function (e) {
         case 'resetData':
             allListData = []
             tagList = []
-            foldList = []
             break
     }
 }
 
 function foldListData ({ startIndex }) {
-    const currentItem = allListData[startIndex]
-    let changeNum = 0
-    if (!currentItem || !currentItem.tagData) return
-    if (!currentItem.tagData.list.length) {
-        const subList = allListData.splice(startIndex + 1, currentItem.tagData.endIndex - startIndex)
-        currentItem.tagData.list = subList
-        currentItem.tagData.containList = []
-        changeNum = currentItem.tagData.endIndex - startIndex
+    const realIndex = allListData.findIndex(x => x.index === startIndex)
+    const currentItem = allListData[realIndex]
+    if (!currentItem || !currentItem.children) return
 
-        const containChangeList = foldList.filter((x) => {
-            const currentData = x.data.tagData
-            return x.index > startIndex && currentData.endIndex < currentItem.tagData.endIndex
-        }) || []
-
-        containChangeList.forEach((item) => {
-            const data = item.data || {}
-            item.index -= startIndex
-            data.tagData.endIndex -= startIndex
-            data.tagData.startIndex -= startIndex
-            const index = foldList.findIndex(x => x === item)
-            foldList.splice(index, 1)
-            currentItem.tagData.containList.push(item)
-        })
-    } else {
-        for (let index = 0; index < currentItem.tagData.list.length;) {
-            const someList = currentItem.tagData.list.slice(index, index + 10000)
-            allListData.splice(startIndex + 1 + index, 0, ...someList)
-            index = index + 10000
+    if (!currentItem.children.length) {
+        let totalNum = currentItem.endIndex - startIndex
+        while (totalNum > 0) {
+            let currentNum
+            if (totalNum > 10000) {
+                currentNum = 10000
+                totalNum -= 10000
+            } else {
+                currentNum = totalNum
+                totalNum = 0
+            }
+            const subList = allListData.splice(realIndex + 1, currentNum)
+            currentItem.children.push(...subList)
         }
-        changeNum = -currentItem.tagData.list.length
-        currentItem.tagData.list = []
+    } else {
+        for (let index = 0; index < currentItem.children.length;) {
+            const someList = currentItem.children.slice(index, index + 10000)
+            allListData.splice(realIndex + 1 + index, 0, ...someList)
+            index += 10000
+        }
+        currentItem.children = []
     }
-    currentItem.tagData.endIndex -= changeNum
-    updateFoldList(startIndex, currentItem.tagData.endIndex + changeNum, changeNum)
-    if (currentItem.tagData.containList.length && changeNum < 0) {
-        currentItem.tagData.containList.forEach((item) => {
-            const data = item.data || {}
-            item.index += startIndex
-            data.tagData.endIndex += startIndex
-            data.tagData.startIndex += startIndex
-            foldList.push(item)
-        })
-        currentItem.tagData.containList = []
-    }
-}
-
-function updateFoldList (startIndex, endIndex, changeNum) {
-    const needChangeAllList = foldList.filter((x) => {
-        const currentData = x.data.tagData
-        return x.index > startIndex && currentData.endIndex > endIndex
-    }) || []
-
-    const needChangeAfterList = foldList.filter((x) => {
-        const currentData = x.data.tagData
-        return x.index < startIndex && currentData.endIndex > endIndex
-    }) || []
-
-    needChangeAllList.forEach((item) => {
-        const data = item.data || {}
-        item.index -= changeNum
-        data.tagData.endIndex -= changeNum
-        data.tagData.startIndex -= changeNum
-    })
-
-    needChangeAfterList.forEach((item) => {
-        const data = item.data || {}
-        data.tagData.endIndex -= changeNum
-    })
 }
 
 function addListData ({ list }) {
@@ -141,27 +101,65 @@ function addListData ({ list }) {
         const { message, color } = handleColor(item.message || '')
         const newItemArr = message.split(/\r\n|\n/)
         newItemArr.forEach((message) => {
-            const currentIndex = allListData.length
-            const newItem = { message, color, realIndex: currentIndex, timestamp: item.timestamp }
-            if (message.includes('##[group]')) {
-                tagList.push({ data: newItem, index: currentIndex })
-            }
-
-            if (message.includes('##[endgroup]') && tagList.length) {
-                newItem.message = newItem.message.replace('##[endgroup]', '')
-                const { data: linkItem, index: startIndex } = tagList.pop()
-                linkItem.tagData = {
-                    endIndex: currentIndex,
-                    startIndex,
-                    list: []
+            const splitTextArr = splitText(message)
+            splitTextArr.forEach((message) => {
+                const currentIndex = allListData.length
+                const newItem = { message, color, index: currentIndex, realIndex: currentIndex, timestamp: item.timestamp }
+                if (message.includes('##[group]')) {
+                    newItem.message = newItem.message.replace('##[group]', '')
+                    tagList.push(newItem)
                 }
-                foldList.push({ data: linkItem, index: startIndex })
-                linkItem.message = linkItem.message.replace('##[group]', '')
-            }
 
-            allListData.push(newItem)
+                if (message.includes('##[endgroup]') && tagList.length) {
+                    newItem.message = newItem.message.replace('##[endgroup]', '')
+                    const linkItem = tagList.pop()
+                    linkItem.endIndex = currentIndex
+                    linkItem.children = []
+                }
+
+                allListData.push(newItem)
+            })
         })
     })
+}
+
+function splitText (message) {
+    let tempMes = ''
+    let totalWidth = getTextWidth(message)
+    const mesRes = []
+    if (totalWidth < mainWidth) {
+        mesRes.push(message)
+    } else {
+        while (totalWidth > mainWidth) {
+            tempMes = message.slice(0, mainWordNum)
+            message = message.slice(mainWordNum)
+            let tempWidth = getTextWidth(tempMes)
+            while (tempWidth > mainWidth || mainWidth - tempWidth > 10) {
+                if (tempWidth > mainWidth) {
+                    message = tempMes.slice(-1) + message
+                    tempMes = tempMes.slice(0, -1)
+                    tempWidth = getTextWidth(tempMes)
+                } else {
+                    tempMes += message.slice(0, 1)
+                    message = message.slice(1)
+                    tempWidth = getTextWidth(tempMes)
+                }
+            }
+            totalWidth = getTextWidth(message)
+            mesRes.push(tempMes)
+        }
+        mesRes.push(message)
+    }
+    return mesRes
+}
+
+
+const canvas = new OffscreenCanvas(100, 1)
+const context = canvas.getContext("2d")
+context.font = 'normal 12px Consolas, "Courier New", monospace'
+function getTextWidth(text) {
+    const metrics = context.measureText(text)
+    return metrics.width
 }
 
 function getListData ({ totalScrollHeight, itemHeight, itemNumber, canvasHeight, minMapTop, totalHeight, mapHeight, type }) {
@@ -177,19 +175,20 @@ function getListData ({ totalScrollHeight, itemHeight, itemNumber, canvasHeight,
         const top = i * itemHeight - nums * 500000
         const currentItem = allListData[i]
         if (typeof currentItem === 'undefined') continue
-        const tagData = currentItem.tagData || {}
         indexList.push({
             top,
             value: currentItem.realIndex + 1,
-            startIndex: tagData.startIndex,
-            tagDataLength: (tagData.list || []).length
+            index: currentItem.index,
+            isFold: currentItem.endIndex !== undefined,
+            hasFolded: (currentItem.children || []).length > 0
         })
         listData.push({ 
             top,
             value: currentItem.message,
             color: currentItem.color,
+            index: currentItem.index,
             fontWeight: currentItem.fontWeight,
-            startIndex: tagData.startIndex,
+            isFold: currentItem.endIndex !== undefined,
             timestamp: currentItem.timestamp
         })
     }
