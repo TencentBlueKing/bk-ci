@@ -138,7 +138,7 @@ class ESDetectionJob @Autowired constructor(
                     timestamp = System.currentTimeMillis(),
                     lineNo = i.toLong()
                 )
-                val builder = esClient.client.prepareIndex(buildId, index)
+                val builder = esClient.client.prepareIndex(index, type)
                     .setCreate(false)
                     .setSource(indexRequest(buildId, log, index, type))
                 bulkRequestBuilder.add(builder)
