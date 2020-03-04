@@ -225,12 +225,16 @@ class PipelineInfoDao : PipelineHardDeleteListener {
     /**
      * 查找updateTime之前被删除的流水线
      */
-    fun listDeletePipelineBefore(dslContext: DSLContext, updateTime: LocalDateTime): Result<TPipelineInfoRecord>? {
-        return with(T_PIPELINE_INFO) {
-            dslContext.selectFrom(this)
+    fun listDeletePipelineBefore(dslContext: DSLContext, updateTime: LocalDateTime, offset: Int?, limit: Int?): Result<TPipelineInfoRecord>? {
+        with(T_PIPELINE_INFO) {
+            val baseQuery = dslContext.selectFrom(this)
                 .where(DELETE.eq(true))
                 .and(UPDATE_TIME.le(updateTime))
-                .fetch()
+            return if (offset != null && offset >= 0 && limit != null && limit >= 0) {
+                baseQuery.limit(offset, limit).fetch()
+            } else {
+                baseQuery.fetch()
+            }
         }
     }
 
