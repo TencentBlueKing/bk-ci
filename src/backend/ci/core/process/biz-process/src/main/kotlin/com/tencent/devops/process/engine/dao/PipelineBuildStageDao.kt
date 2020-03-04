@@ -29,7 +29,6 @@ package com.tencent.devops.process.engine.dao
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.pojo.PipelineBuildBaseInfo
 import com.tencent.devops.model.process.Tables.T_PIPELINE_BUILD_STAGE
-import com.tencent.devops.model.process.tables.TPipelineBuildStage
 import com.tencent.devops.model.process.tables.records.TPipelineBuildStageRecord
 import com.tencent.devops.process.engine.pojo.PipelineBuildStage
 import com.tencent.devops.process.listener.PipelineHardDeleteListener
@@ -40,13 +39,15 @@ import java.time.LocalDateTime
 
 @Repository
 class PipelineBuildStageDao : PipelineHardDeleteListener {
-    override fun onPipelineDeleteHardly(dslContext: DSLContext, operator: String, pipelineBuildBaseInfoList: List<PipelineBuildBaseInfo>): Boolean {
+    override fun onPipelineDeleteHardly(dslContext: DSLContext, pipelineBuildBaseInfoList: List<PipelineBuildBaseInfo>): Boolean {
+        val buildIds = mutableListOf<String>()
         pipelineBuildBaseInfoList.forEach { pipelineBuildBaseInfo ->
-            with(TPipelineBuildStage.T_PIPELINE_BUILD_STAGE) {
-                dslContext.deleteFrom(this)
-                    .where(PROJECT_ID.eq(pipelineBuildBaseInfo.projectCode).and(PIPELINE_ID.eq(pipelineBuildBaseInfo.pipelineId)))
-                    .execute()
-            }
+            buildIds.addAll(pipelineBuildBaseInfo.buildIdList)
+        }
+        with(T_PIPELINE_BUILD_STAGE) {
+            dslContext.deleteFrom(this)
+                .where(BUILD_ID.`in`(buildIds))
+                .execute()
         }
         return true
     }

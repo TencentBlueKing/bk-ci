@@ -30,7 +30,6 @@ import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.pipeline.pojo.PipelineBuildBaseInfo
 import com.tencent.devops.model.process.Tables.T_PIPELINE_BUILD_VAR
-import com.tencent.devops.model.process.tables.TPipelineBuildVar
 import com.tencent.devops.model.process.tables.records.TPipelineBuildVarRecord
 import com.tencent.devops.process.listener.PipelineHardDeleteListener
 import org.jooq.DSLContext
@@ -42,14 +41,15 @@ import org.springframework.stereotype.Repository
 
 @Repository
 class PipelineBuildVarDao @Autowired constructor() : PipelineHardDeleteListener {
-    override fun onPipelineDeleteHardly(dslContext: DSLContext, operator: String, pipelineBuildBaseInfoList: List<PipelineBuildBaseInfo>): Boolean {
-        pipelineBuildBaseInfoList.forEach {
-            with(TPipelineBuildVar.T_PIPELINE_BUILD_VAR) {
-                dslContext.deleteFrom(this)
-                    .where(PROJECT_ID.eq(it.projectCode))
-                    .and(PIPELINE_ID.eq(it.pipelineId))
-                    .execute()
-            }
+    override fun onPipelineDeleteHardly(dslContext: DSLContext, pipelineBuildBaseInfoList: List<PipelineBuildBaseInfo>): Boolean {
+        val buildIds = mutableListOf<String>()
+        pipelineBuildBaseInfoList.forEach { pipelineBuildBaseInfo ->
+            buildIds.addAll(pipelineBuildBaseInfo.buildIdList)
+        }
+        with(T_PIPELINE_BUILD_VAR) {
+            dslContext.deleteFrom(this)
+                .where(BUILD_ID.`in`(buildIds))
+                .execute()
         }
         return true
     }

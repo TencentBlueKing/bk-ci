@@ -46,9 +46,11 @@ import org.springframework.stereotype.Repository
 
 @Repository
 class PipelineSettingDao : PipelineHardDeleteListener {
-    override fun onPipelineDeleteHardly(dslContext: DSLContext, operator: String, pipelineBuildBaseInfoList: List<PipelineBuildBaseInfo>): Boolean {
-        pipelineBuildBaseInfoList.forEach {
-            delete(dslContext, it.pipelineId)
+    override fun onPipelineDeleteHardly(dslContext: DSLContext, pipelineBuildBaseInfoList: List<PipelineBuildBaseInfo>): Boolean {
+        with(TPipelineSetting.T_PIPELINE_SETTING) {
+            dslContext.deleteFrom(this)
+                .where(PIPELINE_ID.`in`(pipelineBuildBaseInfoList.map { it.pipelineId }))
+                .execute()
         }
         return true
     }

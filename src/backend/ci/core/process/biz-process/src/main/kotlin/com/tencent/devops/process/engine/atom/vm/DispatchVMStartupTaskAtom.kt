@@ -343,7 +343,7 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
     ) {
         val agentResult = client.get(ServiceThirdPartyAgentResource::class).getAgentById(projectId, agentId!!)
         if (agentResult.isAgentDelete()) {
-            logger.warn("The agent($agentId) of project $projectId is already delete")
+            logger.warn("The agent($agentId) of project $projectId is already deleteRelatedAndBuildData")
             throw agentException(pipelineId, buildId)
         }
         val agent = agentResult.data ?: throw agentException(pipelineId, buildId)

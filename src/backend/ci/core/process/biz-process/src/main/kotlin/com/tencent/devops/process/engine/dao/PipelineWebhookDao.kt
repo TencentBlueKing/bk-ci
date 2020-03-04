@@ -40,9 +40,11 @@ import org.springframework.stereotype.Repository
 
 @Repository
 class PipelineWebhookDao : PipelineHardDeleteListener {
-    override fun onPipelineDeleteHardly(dslContext: DSLContext, operator: String, pipelineBuildBaseInfoList: List<PipelineBuildBaseInfo>): Boolean {
-        pipelineBuildBaseInfoList.forEach {
-            delete(dslContext, it.pipelineId)
+    override fun onPipelineDeleteHardly(dslContext: DSLContext, pipelineBuildBaseInfoList: List<PipelineBuildBaseInfo>): Boolean {
+        with(T_PIPELINE_WEBHOOK) {
+            dslContext.deleteFrom(this)
+                .where(PIPELINE_ID.`in`(pipelineBuildBaseInfoList.map { it.pipelineId }))
+                .execute()
         }
         return true
     }

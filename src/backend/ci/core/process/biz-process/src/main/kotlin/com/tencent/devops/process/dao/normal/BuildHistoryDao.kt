@@ -13,13 +13,16 @@ import org.springframework.stereotype.Repository
  */
 @Repository
 class BuildHistoryDao : PipelineHardDeleteListener {
-    override fun onPipelineDeleteHardly(dslContext: DSLContext, operator: String, pipelineBuildBaseInfoList: List<PipelineBuildBaseInfo>): Boolean {
-        pipelineBuildBaseInfoList.forEach { pipelineBuildBaseInfo ->
-            with(TPipelineBuildHistory.T_PIPELINE_BUILD_HISTORY) {
-                dslContext.deleteFrom(this)
-                    .where(PROJECT_ID.eq(pipelineBuildBaseInfo.projectCode).and(PIPELINE_ID.eq(pipelineBuildBaseInfo.pipelineId)))
-                    .execute()
-            }
+    override fun onPipelineDeleteHardly(dslContext: DSLContext, pipelineBuildBaseInfoList: List<PipelineBuildBaseInfo>): Boolean {
+        //主干数据，由调用方在关联数据删除完成后最后删除，此处不作处理
+        return true
+    }
+
+    fun deletePipelinesHardly(dslContext: DSLContext, pipelineBuildBaseInfoList: List<PipelineBuildBaseInfo>): Boolean {
+        with(TPipelineBuildHistory.T_PIPELINE_BUILD_HISTORY) {
+            dslContext.deleteFrom(this)
+                .where(PIPELINE_ID.`in`(pipelineBuildBaseInfoList.map { it.pipelineId }))
+                .execute()
         }
         return true
     }

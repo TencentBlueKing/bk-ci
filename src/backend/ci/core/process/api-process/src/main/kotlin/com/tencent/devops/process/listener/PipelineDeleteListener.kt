@@ -14,5 +14,5 @@ interface PipelineHardDeleteListener {
      * @param pipelineBuildBaseInfoList 流水线及其构建信息
      * @return 当前删除任务是否成功
      */
-    fun onPipelineDeleteHardly(dslContext: DSLContext, operator: String, pipelineBuildBaseInfoList: List<PipelineBuildBaseInfo>): Boolean
+    fun onPipelineDeleteHardly(dslContext: DSLContext, pipelineBuildBaseInfoList: List<PipelineBuildBaseInfo>): Boolean
 }

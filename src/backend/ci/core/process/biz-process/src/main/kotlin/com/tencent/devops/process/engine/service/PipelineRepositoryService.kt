@@ -621,6 +621,21 @@ class PipelineRepositoryService constructor(
         }
     }
 
+    fun deletePipelinesHardly(
+        pipelineBuildBaseInfoList: List<PipelineBuildBaseInfo>,
+        channelCode: ChannelCode?
+    ) {
+        PipelineListenerUtil.pipelineHardDeleteListeners.forEach { listener ->
+            logger.info("invoke $listener")
+            var deleteResult = false
+            var retryCount = 0
+            while (!deleteResult && retryCount < 3) {
+                retryCount += 1
+                deleteResult = listener.onPipelineDeleteHardly(dslContext, pipelineBuildBaseInfoList)
+            }
+        }
+    }
+
     /**
      * 硬删除流水线及其所有关联资源
      */
@@ -654,7 +669,7 @@ class PipelineRepositoryService constructor(
                     var retryCount = 0
                     while (!deleteResult && retryCount < 3) {
                         retryCount += 1
-                        deleteResult = listener.onPipelineDeleteHardly(dslContext, userId, pipelineBuildBaseInfoList)
+                        deleteResult = listener.onPipelineDeleteHardly(dslContext, pipelineBuildBaseInfoList)
                     }
                 }
                 offset += batchSize
@@ -799,8 +814,8 @@ class PipelineRepositoryService constructor(
     /**
      * 列出已经updateTime之前删除的流水线
      */
-    fun listDeletePipelineBefore(updateTime: java.time.LocalDateTime): List<PipelineInfo> {
-        val result = pipelineInfoDao.listDeletePipelineBefore(dslContext, updateTime)
+    fun listDeletePipelineBefore(updateTime: java.time.LocalDateTime, offset: Int?, limit: Int?): List<PipelineInfo> {
+        val result = pipelineInfoDao.listDeletePipelineBefore(dslContext, updateTime, offset, limit)
         val list = mutableListOf<PipelineInfo>()
         result?.forEach {
             if (it != null)

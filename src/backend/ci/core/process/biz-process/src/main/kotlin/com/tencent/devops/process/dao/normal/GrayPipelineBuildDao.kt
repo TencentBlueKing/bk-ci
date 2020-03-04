@@ -13,13 +13,11 @@ import org.springframework.stereotype.Repository
  */
 @Repository
 class GrayPipelineBuildDao : PipelineHardDeleteListener {
-    override fun onPipelineDeleteHardly(dslContext: DSLContext, operator: String, pipelineBuildBaseInfoList: List<PipelineBuildBaseInfo>): Boolean {
-        pipelineBuildBaseInfoList.forEach {
-            with(TGrayPipelineBuild.T_GRAY_PIPELINE_BUILD) {
-                dslContext.deleteFrom(this)
-                    .where(PIPELINE_ID.eq(it.pipelineId))
-                    .execute()
-            }
+    override fun onPipelineDeleteHardly(dslContext: DSLContext, pipelineBuildBaseInfoList: List<PipelineBuildBaseInfo>): Boolean {
+        with(TGrayPipelineBuild.T_GRAY_PIPELINE_BUILD) {
+            dslContext.deleteFrom(this)
+                .where(PIPELINE_ID.`in`(pipelineBuildBaseInfoList.map { it.pipelineId }))
+                .execute()
         }
         return true
     }

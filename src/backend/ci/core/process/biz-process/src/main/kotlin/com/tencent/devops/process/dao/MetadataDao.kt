@@ -37,11 +37,15 @@ import java.time.LocalDateTime
 
 @Repository
 class MetadataDao : PipelineHardDeleteListener {
-    override fun onPipelineDeleteHardly(dslContext: DSLContext, operator: String, pipelineBuildBaseInfoList: List<PipelineBuildBaseInfo>): Boolean {
+    override fun onPipelineDeleteHardly(dslContext: DSLContext, pipelineBuildBaseInfoList: List<PipelineBuildBaseInfo>): Boolean {
+        val buildIds = mutableListOf<String>()
         pipelineBuildBaseInfoList.forEach { pipelineBuildBaseInfo ->
-            pipelineBuildBaseInfo.buildIdList.forEach {
-                delete(dslContext, it)
-            }
+            buildIds.addAll(pipelineBuildBaseInfo.buildIdList)
+        }
+        with(TMetadata.T_METADATA) {
+            dslContext.deleteFrom(this)
+                .where(BUILD_ID.`in`(buildIds))
+                .execute()
         }
         return true
     }

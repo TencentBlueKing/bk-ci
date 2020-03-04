@@ -47,13 +47,15 @@ import java.time.LocalDateTime
 
 @Repository
 class PipelineBuildTaskDao @Autowired constructor(private val objectMapper: ObjectMapper) : PipelineHardDeleteListener {
-    override fun onPipelineDeleteHardly(dslContext: DSLContext, operator: String, pipelineBuildBaseInfoList: List<PipelineBuildBaseInfo>): Boolean {
-        pipelineBuildBaseInfoList.forEach {
-            deletePipelineBuildTasks(
-                dslContext = dslContext,
-                projectId = it.projectCode,
-                pipelineId = it.pipelineId
-            )
+    override fun onPipelineDeleteHardly(dslContext: DSLContext, pipelineBuildBaseInfoList: List<PipelineBuildBaseInfo>): Boolean {
+        val buildIds = mutableListOf<String>()
+        pipelineBuildBaseInfoList.forEach { pipelineBuildBaseInfo ->
+            buildIds.addAll(pipelineBuildBaseInfo.buildIdList)
+        }
+        with(T_PIPELINE_BUILD_TASK) {
+            dslContext.deleteFrom(this)
+                .where(BUILD_ID.`in`(buildIds))
+                .execute()
         }
         return true
     }

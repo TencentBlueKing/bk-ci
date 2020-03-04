@@ -43,9 +43,16 @@ import java.time.LocalDateTime
 
 @Repository
 class PipelineInfoDao : PipelineHardDeleteListener {
-    override fun onPipelineDeleteHardly(dslContext: DSLContext, operator: String, pipelineBuildBaseInfoList: List<PipelineBuildBaseInfo>): Boolean {
-        pipelineBuildBaseInfoList.forEach { pipelineBuildBaseInfo ->
-            delete(dslContext, pipelineBuildBaseInfo.projectCode, pipelineBuildBaseInfo.pipelineId)
+    override fun onPipelineDeleteHardly(dslContext: DSLContext, pipelineBuildBaseInfoList: List<PipelineBuildBaseInfo>): Boolean {
+        //主干数据，由调用处最后删除，此处不作处理
+        return true
+    }
+
+    fun deletePipelinesHardly(dslContext: DSLContext, pipelineIds: Collection<String>): Boolean {
+        with(T_PIPELINE_INFO) {
+            dslContext.deleteFrom(this)
+                .where(PIPELINE_ID.`in`(pipelineIds))
+                .execute()
         }
         return true
     }

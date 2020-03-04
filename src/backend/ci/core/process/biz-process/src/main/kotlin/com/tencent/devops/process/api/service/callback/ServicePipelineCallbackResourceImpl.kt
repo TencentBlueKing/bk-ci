@@ -28,8 +28,17 @@ package com.tencent.devops.process.api.service.callback
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.pipeline.pojo.PipelineBuildBaseInfo
+import com.tencent.devops.common.redis.RedisLock
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.process.dao.normal.BuildHistoryDao
+import com.tencent.devops.process.engine.dao.PipelineBuildDao
+import com.tencent.devops.process.engine.dao.PipelineInfoDao
+import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
+import com.tencent.devops.process.service.PipelineClearService
+import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
@@ -41,38 +50,10 @@ import java.util.concurrent.TimeUnit
 
 @RestResource
 class ServicePipelineCallbackResourceImpl @Autowired constructor(
-    private val pipelineRepositoryService: PipelineRepositoryService
+    private val pipelineClearService: PipelineClearService
 ) : ServicePipelineCallbackResource {
-    private val logger = LoggerFactory.getLogger(ServicePipelineCallbackResourceImpl::class.java)
-
-    @Value("\${deletedPipelineStoreTime:30}")
-    private val deletedPipelineStoreTime: Int = 30
-
-    //最多5线程，用完立即销毁
-    private val executorService = ThreadPoolExecutor(0, 5, 0, TimeUnit.SECONDS, LinkedBlockingQueue<Runnable>())
 
     override fun clear(): Result<Boolean> {
-        executorService.submit {
-            val watch = StopWatch("clear deleted Task")
-            try {
-                logger.info("clear pipelines deleted before $deletedPipelineStoreTime days")
-                val deleteTime = LocalDateTime.now().minusDays(deletedPipelineStoreTime.toLong())
-                //查出所有被删除超过过期时间的流水线
-                val deletedPipelines = pipelineRepositoryService.listDeletePipelineBefore(deleteTime)
-                val deletedPipelineIds = deletedPipelines.map { it.pipelineId }
-                logger.info("deletedPipelineIds=${deletedPipelineIds.size},(${deletedPipelineIds.joinToString()})")
-                //依次删除
-                deletedPipelines.forEach {
-                    watch.start("${it.pipelineId} delete Task")
-                    pipelineRepositoryService.deletePipelineHardly(it.creator, it.projectId, it.pipelineId, ChannelCode.BS)
-                    watch.stop()
-                }
-            } catch (e: Exception) {
-                logger.error("fail to clear deleted pipelines", e)
-            } finally {
-                logger.info("Clear Deleted Task Time Consuming:$watch")
-            }
-        }
-        return Result(true)
+        return Result(pipelineClearService.clear())
     }
 }

@@ -41,13 +41,11 @@ import java.time.LocalDateTime
  */
 @Repository
 class PipelineLabelPipelineDao : PipelineHardDeleteListener {
-    override fun onPipelineDeleteHardly(dslContext: DSLContext, operator: String, pipelineBuildBaseInfoList: List<PipelineBuildBaseInfo>): Boolean {
-        pipelineBuildBaseInfoList.forEach { pipelineBuildBaseInfo ->
-            with(TPipelineLabelPipeline.T_PIPELINE_LABEL_PIPELINE) {
-                dslContext.deleteFrom(this)
-                    .where(PIPELINE_ID.eq(pipelineBuildBaseInfo.pipelineId))
-                    .execute()
-            }
+    override fun onPipelineDeleteHardly(dslContext: DSLContext, pipelineBuildBaseInfoList: List<PipelineBuildBaseInfo>): Boolean {
+        with(TPipelineLabelPipeline.T_PIPELINE_LABEL_PIPELINE) {
+            dslContext.deleteFrom(this)
+                .where(PIPELINE_ID.`in`(pipelineBuildBaseInfoList.map { it.pipelineId }))
+                .execute()
         }
         return true
     }

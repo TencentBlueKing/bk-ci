@@ -36,13 +36,11 @@ import java.time.LocalDateTime
 
 @Repository
 class PipelineRemoteAuthDao : PipelineHardDeleteListener {
-    override fun onPipelineDeleteHardly(dslContext: DSLContext, operator: String, pipelineBuildBaseInfoList: List<PipelineBuildBaseInfo>): Boolean {
-        pipelineBuildBaseInfoList.forEach { pipelineBuildBaseInfo ->
-            with(TPipelineRemoteAuth.T_PIPELINE_REMOTE_AUTH) {
-                dslContext.deleteFrom(this)
-                    .where(PIPELINE_ID.eq(pipelineBuildBaseInfo.pipelineId))
-                    .execute()
-            }
+    override fun onPipelineDeleteHardly(dslContext: DSLContext, pipelineBuildBaseInfoList: List<PipelineBuildBaseInfo>): Boolean {
+        with(TPipelineRemoteAuth.T_PIPELINE_REMOTE_AUTH) {
+            dslContext.deleteFrom(this)
+                .where(PIPELINE_ID.`in`(pipelineBuildBaseInfoList.map { it.pipelineId }))
+                .execute()
         }
         return true
     }

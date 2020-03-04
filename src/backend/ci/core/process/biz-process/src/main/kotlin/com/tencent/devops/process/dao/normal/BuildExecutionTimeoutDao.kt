@@ -13,12 +13,11 @@ import org.springframework.stereotype.Repository
  */
 @Repository
 class BuildExecutionTimeoutDao : PipelineHardDeleteListener {
-    override fun onPipelineDeleteHardly(dslContext: DSLContext, operator: String, pipelineBuildBaseInfoList: List<PipelineBuildBaseInfo>): Boolean {
-        pipelineBuildBaseInfoList.forEach {
-            with(TPipelineBuildExecutionTimeout.T_PIPELINE_BUILD_EXECUTION_TIMEOUT) {
-                dslContext.deleteFrom(this)
-                    .where(PIPELINE_ID.eq(it.pipelineId))
-            }
+    override fun onPipelineDeleteHardly(dslContext: DSLContext, pipelineBuildBaseInfoList: List<PipelineBuildBaseInfo>): Boolean {
+        with(TPipelineBuildExecutionTimeout.T_PIPELINE_BUILD_EXECUTION_TIMEOUT) {
+            dslContext.deleteFrom(this)
+                .where(PIPELINE_ID.`in`(pipelineBuildBaseInfoList.map { it.pipelineId }))
+                .execute()
         }
         return true
     }

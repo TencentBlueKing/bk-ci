@@ -39,12 +39,15 @@ import java.time.LocalDateTime
 
 @Repository
 class BuildDetailDao : PipelineHardDeleteListener {
-    override fun onPipelineDeleteHardly(dslContext: DSLContext, operator: String, pipelineBuildBaseInfoList: List<PipelineBuildBaseInfo>): Boolean {
+    override fun onPipelineDeleteHardly(dslContext: DSLContext, pipelineBuildBaseInfoList: List<PipelineBuildBaseInfo>): Boolean {
+        val buildIds = mutableListOf<String>()
         pipelineBuildBaseInfoList.forEach { pipelineBuildBaseInfo ->
-            with(TPipelineBuildDetail.T_PIPELINE_BUILD_DETAIL) {
-                dslContext.deleteFrom(this)
-                    .where(BUILD_ID.`in`(pipelineBuildBaseInfo.buildIdList))
-            }
+            buildIds.addAll(pipelineBuildBaseInfo.buildIdList)
+        }
+        with(TPipelineBuildDetail.T_PIPELINE_BUILD_DETAIL) {
+            dslContext.deleteFrom(this)
+                .where(BUILD_ID.`in`(buildIds))
+                .execute()
         }
         return true
     }

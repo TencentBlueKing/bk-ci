@@ -48,9 +48,11 @@ import java.time.LocalDateTime
  */
 @Repository
 class TemplatePipelineDao @Autowired constructor(private val objectMapper: ObjectMapper) : PipelineHardDeleteListener {
-    override fun onPipelineDeleteHardly(dslContext: DSLContext, operator: String, pipelineBuildBaseInfoList: List<PipelineBuildBaseInfo>): Boolean {
-        pipelineBuildBaseInfoList.forEach {
-            delete(dslContext, it.pipelineId)
+    override fun onPipelineDeleteHardly(dslContext: DSLContext, pipelineBuildBaseInfoList: List<PipelineBuildBaseInfo>): Boolean {
+        with(TTemplatePipeline.T_TEMPLATE_PIPELINE) {
+            dslContext.deleteFrom(this)
+                .where(PIPELINE_ID.`in`(pipelineBuildBaseInfoList.map { it.pipelineId }))
+                .execute()
         }
         return true
     }

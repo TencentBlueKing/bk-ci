@@ -123,7 +123,7 @@ class PipelineWebhookService @Autowired constructor(
     }
 
     fun deleteWebhook(pipelineId: String, userId: String): Result<Boolean> {
-        logger.info("delete $pipelineId webhook by $userId")
+        logger.info("deleteRelatedAndBuildData $pipelineId webhook by $userId")
         pipelineWebhookDao.delete(dslContext, pipelineId)
         return Result(true)
     }

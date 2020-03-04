@@ -287,7 +287,7 @@ class TemplateService @Autowired constructor(
     }
 
     fun deleteTemplate(projectId: String, userId: String, templateId: String): Boolean {
-        logger.info("Start to delete the template $templateId by user $userId")
+        logger.info("Start to deleteRelatedAndBuildData the template $templateId by user $userId")
         checkPermission(projectId, userId)
         val template = templateDao.getLatestTemplate(dslContext, templateId)
         dslContext.transaction { configuration ->
@@ -325,7 +325,7 @@ class TemplateService @Autowired constructor(
     }
 
     fun deleteTemplate(projectId: String, userId: String, templateId: String, version: Long): Boolean {
-        logger.info("Start to delete the template [$projectId|$userId|$templateId|$version]")
+        logger.info("Start to deleteRelatedAndBuildData the template [$projectId|$userId|$templateId|$version]")
         checkPermission(projectId, userId)
         return dslContext.transactionResult { configuration ->
             val context = DSL.using(configuration)
