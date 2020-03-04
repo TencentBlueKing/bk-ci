@@ -152,7 +152,7 @@ class PipelineClearService @Autowired constructor(
                     }
                 } catch (e: InterruptedException) {
                     redisOperation.set(KEY_CLEAR_THREAD_RUNNING, VALUE_CLEAR_THREAD_RUNNING_FALSE, expiredInSecond = 5L)
-                    logger.info("pipeline deleteRelatedAndBuildData task finished")
+                    logger.info("deleted pipeline clear task finished")
                 }
             }
             heartBeatThread.start()
