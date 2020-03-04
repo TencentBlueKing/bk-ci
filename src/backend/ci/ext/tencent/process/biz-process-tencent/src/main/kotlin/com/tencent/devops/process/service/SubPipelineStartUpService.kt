@@ -236,9 +236,6 @@ class SubPipelineStartUpService(
                 val keyList = ArrayList<StartUpInfo>()
                 val valueList = ArrayList<StartUpInfo>()
                 val defaultValue = item.defaultValue as String
-                if (defaultValue.isNotBlank()) {
-                    keyList.add(StartUpInfo(item.id, defaultValue))
-                }
                 for (option in item.options!!) {
                     valueList.add(StartUpInfo(option.key, option.value))
                 }
@@ -273,9 +270,6 @@ class SubPipelineStartUpService(
                 val keyList = ArrayList<StartUpInfo>()
                 val valueList = ArrayList<StartUpInfo>()
                 val defaultValue = item.defaultValue as String
-                if (defaultValue.isNotBlank()) {
-                    keyList.add(StartUpInfo(item.id, defaultValue))
-                }
                 val info = SubPipelineStartUpInfo(
                     key = item.id,
                     keyDisable = true,
