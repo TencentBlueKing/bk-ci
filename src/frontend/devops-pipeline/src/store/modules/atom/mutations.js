@@ -205,7 +205,6 @@ export default {
         return state
     },
     [UPDATE_STAGE]: (state, { stage, newParam }) => {
-        console.log(stage)
         Object.assign(stage, newParam)
     },
     [ADD_STAGE]: (state, { stages, insertStageIndex }) => {
