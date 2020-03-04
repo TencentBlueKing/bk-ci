@@ -97,6 +97,7 @@ class ESDetectionJob @Autowired constructor(
     }
 
     private fun createIndex(esClient: ESClient, index: String) {
+        val startEpoch = System.currentTimeMillis()
         logger.info("[${esClient.name}|$index] Create the index")
         try {
             val response = esClient.client.admin()
@@ -108,38 +109,45 @@ class ESDetectionJob @Autowired constructor(
             logger.info("Get the create index response: $response")
         } catch (e: ResourceAlreadyExistsException) {
             logger.warn("Index already exist, ignore", e)
+        } finally {
+            logger.info("[${esClient.name}|$index] It took ${System.currentTimeMillis() - startEpoch}ms to create index")
         }
     }
 
     private fun addLines(esClient: ESClient, index: String, buildId: String): List<String> {
-        logger.info("[${esClient.name}|$index|$buildId] Start to add lines")
-        val type = getTypeByIndex(index)
-        val bulkRequestBuilder = esClient.client.prepareBulk()
-        for (i in 1 until MULTI_LOG_LINES) {
-            val log = LogMessageWithLineNo(
-                tag = "test-tag-$i",
-                jobId = "job-$i",
-                message = "message lines - $i",
-                timestamp = System.currentTimeMillis(),
-                lineNo = i.toLong()
-            )
-            val builder = esClient.client.prepareIndex(buildId, index)
-                .setCreate(false)
-                .setSource(indexRequest(buildId, log, index, type))
-            bulkRequestBuilder.add(builder)
-        }
+        val startEpoch = System.currentTimeMillis()
         try {
-            val bulkResponse = bulkRequestBuilder.get(TimeValue.timeValueSeconds(60))
-            if (bulkResponse.hasFailures()) {
-                logger.warn("[${esClient.name}|$index|$buildId] Fail to add lines: ${bulkResponse.buildFailureMessage()}")
-            } else {
-                logger.info("[${esClient.name}|$index|$buildId] Success to add lines")
+            logger.info("[${esClient.name}|$index|$buildId] Start to add lines")
+            val type = getTypeByIndex(index)
+            val bulkRequestBuilder = esClient.client.prepareBulk()
+            for (i in 1 until MULTI_LOG_LINES) {
+                val log = LogMessageWithLineNo(
+                    tag = "test-tag-$i",
+                    jobId = "job-$i",
+                    message = "message lines - $i",
+                    timestamp = System.currentTimeMillis(),
+                    lineNo = i.toLong()
+                )
+                val builder = esClient.client.prepareIndex(buildId, index)
+                    .setCreate(false)
+                    .setSource(indexRequest(buildId, log, index, type))
+                bulkRequestBuilder.add(builder)
             }
-            return bulkResponse.filter { !it.isFailed }.map { it.id }
-        } catch (e: Exception) {
-            logger.warn("[${esClient.name}|$index|$buildId] Fail to add lines", e)
+            try {
+                val bulkResponse = bulkRequestBuilder.get(TimeValue.timeValueSeconds(60))
+                if (bulkResponse.hasFailures()) {
+                    logger.warn("[${esClient.name}|$index|$buildId] Fail to add lines: ${bulkResponse.buildFailureMessage()}")
+                } else {
+                    logger.info("[${esClient.name}|$index|$buildId] Success to add lines")
+                }
+                return bulkResponse.filter { !it.isFailed }.map { it.id }
+            } catch (e: Exception) {
+                logger.warn("[${esClient.name}|$index|$buildId] Fail to add lines", e)
+            }
+            return emptyList()
+        } finally {
+            logger.info("[${esClient.name}|$index|$buildId] It took ${System.currentTimeMillis() - startEpoch}ms to add lines")
         }
-        return emptyList()
     }
 
     private inner class Detection(
@@ -171,23 +179,28 @@ class ESDetectionJob @Autowired constructor(
         private val documentIds: List<String>
     ) : Runnable {
         override fun run() {
-            logger.info("[${esClient.name}|$index|$buildId|$documentIds] Start to delete the record")
-            if (documentIds.isEmpty()) {
-                logger.info("Empty document ids")
-                return
-            }
-            val type = getTypeByIndex(index)
-            val builder = esClient.client.prepareBulk()
-            documentIds.forEach {
-                val deleteBuilder = esClient.client.prepareDelete(index, type, it)
-                builder.add(deleteBuilder)
-            }
+            val startEpoch = System.currentTimeMillis()
+            try {
+                logger.info("[${esClient.name}|$index|$buildId|$documentIds] Start to delete the record")
+                if (documentIds.isEmpty()) {
+                    logger.info("Empty document ids")
+                    return
+                }
+                val type = getTypeByIndex(index)
+                val builder = esClient.client.prepareBulk()
+                documentIds.forEach {
+                    val deleteBuilder = esClient.client.prepareDelete(index, type, it)
+                    builder.add(deleteBuilder)
+                }
 
-            val bulkResponse = builder.get(TimeValue.timeValueSeconds(30))
-            if (bulkResponse.hasFailures()) {
-                logger.warn("[${esClient.name}|$index|$buildId] Fail to delete lines: $documentIds, ${bulkResponse.buildFailureMessage()}")
-            } else {
-                logger.info("[${esClient.name}|$index|$buildId] Success to delete the records")
+                val bulkResponse = builder.get(TimeValue.timeValueSeconds(30))
+                if (bulkResponse.hasFailures()) {
+                    logger.warn("[${esClient.name}|$index|$buildId] Fail to delete lines: $documentIds, ${bulkResponse.buildFailureMessage()}")
+                } else {
+                    logger.info("[${esClient.name}|$index|$buildId] Success to delete the records")
+                }
+            } finally {
+                logger.info("[${esClient.name}|$index|$buildId] It took ${System.currentTimeMillis() - startEpoch}ms to delete the records ${documentIds.size}")
             }
         }
     }
