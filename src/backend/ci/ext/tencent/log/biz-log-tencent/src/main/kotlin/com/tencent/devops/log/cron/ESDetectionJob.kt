@@ -70,7 +70,7 @@ class ESDetectionJob @Autowired constructor(
                 val index = IndexNameUtils.getIndexName()
                 logClient.getActiveClients().forEach {
                     val f = executor.submit(Detection(it, index, buildId))
-                    val documentIds = f.get(20, TimeUnit.SECONDS)
+                    val documentIds = f.get(60, TimeUnit.SECONDS)
                     if (documentIds.isEmpty()) {
                         logger.warn("[${it.name}] Fail to insert data")
                         logClient.markESInactive(it.name)
@@ -104,7 +104,7 @@ class ESDetectionJob @Autowired constructor(
                 .prepareCreate(index)
                 .setSettings(getIndexSettings())
                 .addMapping(getTypeByIndex(index), getTypeMappings())
-                .get(TimeValue.timeValueSeconds(5))
+                .get(TimeValue.timeValueSeconds(20))
             logger.info("Get the create index response: $response")
         } catch (e: ResourceAlreadyExistsException) {
             logger.warn("Index already exist, ignore", e)
@@ -129,7 +129,7 @@ class ESDetectionJob @Autowired constructor(
             bulkRequestBuilder.add(builder)
         }
         try {
-            val bulkResponse = bulkRequestBuilder.get(TimeValue.timeValueSeconds(10))
+            val bulkResponse = bulkRequestBuilder.get(TimeValue.timeValueSeconds(60))
             if (bulkResponse.hasFailures()) {
                 logger.warn("[${esClient.name}|$index|$buildId] Fail to add lines: ${bulkResponse.buildFailureMessage()}")
             } else {
@@ -183,7 +183,7 @@ class ESDetectionJob @Autowired constructor(
                 builder.add(deleteBuilder)
             }
 
-            val bulkResponse = builder.get(TimeValue.timeValueSeconds(5))
+            val bulkResponse = builder.get(TimeValue.timeValueSeconds(30))
             if (bulkResponse.hasFailures()) {
                 logger.warn("[${esClient.name}|$index|$buildId] Fail to delete lines: $documentIds, ${bulkResponse.buildFailureMessage()}")
             } else {
