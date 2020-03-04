@@ -12,12 +12,13 @@ object PipelineListenerUtil {
 
     val logger = LoggerFactory.getLogger(PipelineListenerUtil::class.java)!!
 
-    val pipelineHardDeleteListeners: MutableList<PipelineHardDeleteListener> = mutableListOf()
+    private val pipelineHardDeleteListeners: MutableList<PipelineHardDeleteListener> = mutableListOf()
 
-    init {
+    fun getHardDeleteListeners(): MutableList<PipelineHardDeleteListener> {
         if (pipelineHardDeleteListeners.isEmpty()) {
             findListeners()
         }
+        return pipelineHardDeleteListeners
     }
 
     private fun findListeners() {

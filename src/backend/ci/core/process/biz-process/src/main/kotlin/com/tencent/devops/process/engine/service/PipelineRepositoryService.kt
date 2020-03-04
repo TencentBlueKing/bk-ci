@@ -625,7 +625,7 @@ class PipelineRepositoryService constructor(
         pipelineBuildBaseInfoList: List<PipelineBuildBaseInfo>,
         channelCode: ChannelCode?
     ) {
-        PipelineListenerUtil.pipelineHardDeleteListeners.forEach { listener ->
+        PipelineListenerUtil.getHardDeleteListeners().forEach { listener ->
             logger.info("invoke $listener")
             var deleteResult = false
             var retryCount = 0
@@ -635,48 +635,6 @@ class PipelineRepositoryService constructor(
             }
         }
     }
-
-    /**
-     * 硬删除流水线及其所有关联资源
-     */
-    fun deletePipelineHardly(
-        userId: String,
-        projectId: String,
-        pipelineId: String,
-        channelCode: ChannelCode?
-    ) {
-        logger.info("Input:($userId,$projectId,$pipelineId,$channelCode)")
-        //查出流水线的所有构建
-        val pipelineBuildBaseInfoList = mutableListOf<PipelineBuildBaseInfo>()
-        var offset = 0
-        //每次删除一千条构建记录
-        val batchSize = 1000
-        var buildIds = listOf<String>()
-        do {
-            buildIds = pipelineBuildDao.listPipelineBuildInfo(
-                dslContext = dslContext,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                offset = 0,
-                limit = batchSize
-            ).map { it.buildId }
-            if (buildIds.isNotEmpty()) {
-                logger.info("[$offset,${offset + batchSize}] buildIds of pipeline[$pipelineId]:${buildIds.size},[${buildIds.joinToString()}]")
-                pipelineBuildBaseInfoList.add(PipelineBuildBaseInfo(projectCode = projectId, pipelineId = pipelineId, buildIdList = buildIds))
-                PipelineListenerUtil.pipelineHardDeleteListeners.forEach { listener ->
-                    logger.info("invoke $listener")
-                    var deleteResult = false
-                    var retryCount = 0
-                    while (!deleteResult && retryCount < 3) {
-                        retryCount += 1
-                        deleteResult = listener.onPipelineDeleteHardly(dslContext, pipelineBuildBaseInfoList)
-                    }
-                }
-                offset += batchSize
-            }
-        } while (buildIds.isNotEmpty())
-    }
-
 
     fun isPipelineExist(
         projectId: String,
