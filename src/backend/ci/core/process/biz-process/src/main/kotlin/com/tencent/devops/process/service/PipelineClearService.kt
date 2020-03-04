@@ -70,8 +70,8 @@ class PipelineClearService @Autowired constructor(
 
     private val logger = LoggerFactory.getLogger(PipelineClearService::class.java)
 
-    @Value("\${deletedPipelineStoreTime:30}")
-    private val deletedPipelineStoreTime: Int = 30
+    @Value("\${deletedPipelineStoreDays:30}")
+    private val deletedPipelineStoreDays: Int = 30
 
     //最多5线程，用完立即销毁
     private val executorService = ThreadPoolExecutor(0, 5, 0, TimeUnit.SECONDS, LinkedBlockingQueue<Runnable>())
@@ -91,6 +91,7 @@ class PipelineClearService @Autowired constructor(
                 //上一次调用未完成
                 return if (clearThreadRunning == VALUE_CLEAR_THREAD_RUNNING_TRUE) {
                     //已有清理线程正在跑
+                    logger.info("pipeline clear thread already running")
                     false
                 } else {
                     //清理线程被意外终止，需要重启
@@ -160,8 +161,8 @@ class PipelineClearService @Autowired constructor(
             try {
                 redisOperation.set(KEY_CLEAR_THREAD_FINISHED, VALUE_CLEAR_THREAD_FINISHED_FALSE, expired = false)
 
-                logger.info("clear pipelines deleted before $deletedPipelineStoreTime days")
-                val deleteTime = LocalDateTime.now().minusDays(deletedPipelineStoreTime.toLong())
+                logger.info("clear pipelines deleted before $deletedPipelineStoreDays days")
+                val deleteTime = LocalDateTime.now().minusDays(deletedPipelineStoreDays.toLong())
                 //查出所有被删除超过过期时间的流水线
                 val pipelinesLimit = 500
                 var pipelineBatchNum = 0
@@ -183,7 +184,8 @@ class PipelineClearService @Autowired constructor(
                         var buildBatchNum = 0
                         do {
                             buildBatchNum += 1
-                            watch.start("${pipelineInfo.pipelineId} delete sub Task $buildBatchNum")
+                            val subWatch = StopWatch("clear pipeline ${pipelineInfo.pipelineId} batch $buildBatchNum")
+                            subWatch.start("${pipelineInfo.pipelineId} delete sub Task $buildBatchNum")
                             buildIds = pipelineBuildDao.listPipelineBuildInfo(
                                 dslContext = dslContext,
                                 projectId = pipelineInfo.projectId,
@@ -202,7 +204,8 @@ class PipelineClearService @Autowired constructor(
                                 offset = 0
                                 pipelineBuildBaseInfoList.clear()
                             }
-                            watch.stop()
+                            subWatch.stop()
+                            logger.info(subWatch.toString())
                         } while (buildIds.size == buildIdsLimit)
                     }
                     if (pipelineBuildBaseInfoList.isNotEmpty()) {
