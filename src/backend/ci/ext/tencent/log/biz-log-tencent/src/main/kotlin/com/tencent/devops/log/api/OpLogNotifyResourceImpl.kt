@@ -34,16 +34,16 @@ import org.springframework.beans.factory.annotation.Autowired
 @RestResource
 class OpLogNotifyResourceImpl @Autowired constructor(private val logClient: MultiESLogClient) : OpLogNotifyResource {
     override fun get(): Result<Set<String>> {
-        return Result(multiESLogClient.getNotifyUserFromRedis())
+        return Result(logClient.getNotifyUserFromRedis())
     }
 
     override fun addUser(userId: String): Result<Boolean> {
-        multiESLogClient.addNotifyUser(userId)
+        logClient.addNotifyUser(userId)
         return Result(true)
     }
 
     override fun deleteUser(userId: String): Result<Boolean> {
-        multiESLogClient.removeNotifyUser(userId)
+        logClient.removeNotifyUser(userId)
         return Result(true)
     }
 }
