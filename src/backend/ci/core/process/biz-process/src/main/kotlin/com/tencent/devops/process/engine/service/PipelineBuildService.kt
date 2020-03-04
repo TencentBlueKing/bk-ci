@@ -96,6 +96,7 @@ import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import com.tencent.devops.process.utils.PIPELINE_START_USER_NAME
 import com.tencent.devops.process.utils.PIPELINE_START_WEBHOOK_USER_ID
 import com.tencent.devops.process.utils.PIPELINE_VERSION
+import com.tencent.devops.process.utils.PipelineVarUtil
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.stereotype.Service
@@ -469,46 +470,31 @@ class PipelineBuildService(
                 logger.info("[$pipelineId] buildNo was changed to [$buildNo]")
             }
 
-            val startParams = mutableMapOf<String, Any>()
             val startParamsWithType = mutableListOf<BuildParameters>()
 
             triggerContainer.params.forEach {
                 val value: Any
-                val v = values[it.id]
-                if (v == null) {
+                // 通过对现有Model存在的旧变量替换成新变量， 如果已经是新的会为空，直接为it.id
+                val paramKey = PipelineVarUtil.oldVarToNewVar(it.id) ?: it.id
+                // 现有用户覆盖定义旧系统变量的，前端无法帮助转换，用户传的仍然是旧变量为key，则用新的Key无法找到，要用旧的id兜底
+                val userInputValue = values[paramKey] ?: values[it.id]
+                if (userInputValue == null) {
                     if (it.required) {
                         throw ErrorCodeException(defaultMessage = "启动时必填变量(${it.id})",
                             errorCode = CommonMessageCode.PARAMETER_IS_NULL, params = arrayOf(it.id))
                     }
                     value = when (it.type) {
-                        BuildFormPropertyType.PASSWORD -> {
-                            parameterUtils.decrypt(it.defaultValue.toString())
-                        }
-                        else -> {
-                            it.defaultValue
-                        }
+                        BuildFormPropertyType.PASSWORD -> parameterUtils.decrypt(it.defaultValue.toString())
+                        else -> it.defaultValue
                     }
                 } else {
                     value = when (it.type) {
-                        BuildFormPropertyType.ARTIFACTORY -> {
-                            getArtifactoryParamFileName(it.id, v)
-                        }
-                        BuildFormPropertyType.PASSWORD -> {
-                            parameterUtils.decrypt(v)
-                        }
-                        else -> {
-                            v
-                        }
+                        BuildFormPropertyType.ARTIFACTORY -> getArtifactoryParamFileName(it.id, userInputValue)
+                        BuildFormPropertyType.PASSWORD -> parameterUtils.decrypt(userInputValue)
+                        else -> userInputValue
                     }
                 }
-                startParams[it.id] = value
-                startParamsWithType.add(
-                    BuildParameters(
-                        it.id,
-                        value,
-                        it.type
-                    )
-                )
+                startParamsWithType.add(BuildParameters(key = paramKey, value = value, valueType = it.type))
             }
 
             model.stages.forEachIndexed { index, stage ->
@@ -520,14 +506,8 @@ class PipelineBuildService(
                         values.forEach { value ->
                             val key = SkipElementUtils.getSkipElementVariableName(e.id)
                             if (value.key == key && value.value == "true") {
-                                logger.info("${e.id} will be skipped.")
-                                startParams[key] = "true"
-                                startParamsWithType.add(
-                                    BuildParameters(
-                                        key,
-                                        "true"
-                                    )
-                                )
+                                logger.info("[$pipelineId]|${e.id}| ${e.name} will be skipped.")
+                                startParamsWithType.add(BuildParameters(key = key, value = "true"))
                             }
                         }
                     }
@@ -544,7 +524,7 @@ class PipelineBuildService(
                 model = model
             )
         } finally {
-            logger.info("It take(${System.currentTimeMillis() - startEpoch})ms to start pipeline($pipelineId)")
+            logger.info("[$pipelineId]|$userId|It take(${System.currentTimeMillis() - startEpoch})ms to start pipeline")
         }
     }
 
