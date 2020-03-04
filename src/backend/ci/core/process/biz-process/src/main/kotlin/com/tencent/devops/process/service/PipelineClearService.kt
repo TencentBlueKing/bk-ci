@@ -76,6 +76,36 @@ class PipelineClearService @Autowired constructor(
     //最多5线程，用完立即销毁
     private val executorService = ThreadPoolExecutor(0, 5, 0, TimeUnit.SECONDS, LinkedBlockingQueue<Runnable>())
 
+    //清理线程异常恢复
+    fun recover(): Boolean {
+        val lock = RedisLock(redisOperation, KEY_LOCK, 10)
+        try {
+            if (!lock.tryLock()) {
+                logger.info("get lock failed, skip")
+                return false
+            }
+            //获取锁后
+            val clearThreadRunning = redisOperation.get(KEY_CLEAR_THREAD_RUNNING)
+            val clearThreadFinished = redisOperation.get(KEY_CLEAR_THREAD_FINISHED)
+            if (clearThreadFinished == VALUE_CLEAR_THREAD_FINISHED_FALSE) {
+                //上一次调用未完成
+                return if (clearThreadRunning == VALUE_CLEAR_THREAD_RUNNING_TRUE) {
+                    //已有清理线程正在跑
+                    false
+                } else {
+                    //清理线程被意外终止，需要重启
+                    logger.info("recover pipeline clear thread")
+                    doClear()
+                }
+            }
+        } catch (t: Throwable) {
+            logger.warn("recover pipeline clear thread failed", t)
+        } finally {
+            lock.unlock()
+        }
+        return false
+    }
+
     fun clear(): Boolean {
         val lock = RedisLock(redisOperation, KEY_LOCK, 10)
         try {
@@ -103,7 +133,7 @@ class PipelineClearService @Autowired constructor(
                 }
             }
         } catch (t: Throwable) {
-            logger.warn("clearDeletedPipelines failed", t)
+            logger.warn("trigger pipeline clear thread failed", t)
         } finally {
             lock.unlock()
         }

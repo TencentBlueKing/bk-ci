@@ -22,6 +22,6 @@ class ThreadTaskConfig @Autowired constructor(
     @EventListener
     fun event(event: ApplicationReadyEvent) {
         logger.info("Application Ready")
-        pipelineClearService.clear()
+        pipelineClearService.recover()
     }
 }
