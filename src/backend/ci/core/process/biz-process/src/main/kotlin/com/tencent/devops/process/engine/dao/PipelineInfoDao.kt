@@ -34,6 +34,7 @@ import com.tencent.devops.model.process.Tables.T_PIPELINE_INFO
 import com.tencent.devops.model.process.tables.records.TPipelineInfoRecord
 import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.listener.PipelineHardDeleteListener
+import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record1
 import org.jooq.Result
@@ -213,12 +214,16 @@ class PipelineInfoDao : PipelineHardDeleteListener {
         }
     }
 
-    fun listDeletePipelineIdByProject(dslContext: DSLContext, projectId: String): Result<TPipelineInfoRecord>? {
-        return with(T_PIPELINE_INFO) {
-            dslContext.selectFrom(this)
-                .where(PROJECT_ID.eq(projectId))
-                .and(DELETE.eq(true))
-                .fetch()
+    fun listDeletePipelineIdByProject(dslContext: DSLContext, projectId: String, days: Long?): Result<TPipelineInfoRecord>? {
+        with(T_PIPELINE_INFO) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(PROJECT_ID.eq(projectId))
+            conditions.add(DELETE.eq(true))
+            if (days != null) {
+                conditions.add(UPDATE_TIME.greaterOrEqual(LocalDateTime.now().minusDays(days)))
+            }
+            return dslContext.selectFrom(this)
+                .where(conditions).fetch()
         }
     }
 

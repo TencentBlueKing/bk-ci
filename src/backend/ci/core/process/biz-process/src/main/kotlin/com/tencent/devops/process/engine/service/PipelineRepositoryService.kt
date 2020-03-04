@@ -758,8 +758,8 @@ class PipelineRepositoryService constructor(
     /**
      * 列出已经删除的流水线
      */
-    fun listDeletePipelineIdByProject(projectId: String): List<PipelineInfo> {
-        val result = pipelineInfoDao.listDeletePipelineIdByProject(dslContext, projectId)
+    fun listDeletePipelineIdByProject(projectId: String, days: Long?): List<PipelineInfo> {
+        val result = pipelineInfoDao.listDeletePipelineIdByProject(dslContext, projectId, days)
         val list = mutableListOf<PipelineInfo>()
         result?.forEach {
             if (it != null)

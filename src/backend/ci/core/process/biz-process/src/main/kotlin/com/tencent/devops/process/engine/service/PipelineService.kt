@@ -83,6 +83,7 @@ import org.jooq.Record
 import org.jooq.Result
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.dao.DuplicateKeyException
 import org.springframework.stereotype.Service
 import org.springframework.util.StopWatch
@@ -111,6 +112,9 @@ class PipelineService @Autowired constructor(
     private val pipelineAuthServiceCode: PipelineAuthServiceCode,
     private val client: Client
 ) {
+
+    @Value("\${deletedPipelineStoreDays:30}")
+    private val deletedPipelineStoreDays: Int = 30
 
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineService::class.java)
@@ -599,7 +603,8 @@ class PipelineService @Autowired constructor(
             val triggerContainer = model.stages[0].containers[0] as TriggerContainer
             val buildNo = triggerContainer.buildNo
             if (buildNo != null) {
-                buildNo.buildNo = pipelineRepositoryService.getBuildNo(projectId = projectId, pipelineId = pipelineId) ?: buildNo.buildNo
+                buildNo.buildNo = pipelineRepositoryService.getBuildNo(projectId = projectId, pipelineId = pipelineId)
+                    ?: buildNo.buildNo
             }
             // 兼容性处理
             BuildPropertyCompatibilityTools.fix(triggerContainer.params)
@@ -1528,7 +1533,7 @@ class PipelineService @Autowired constructor(
         val offset = slqLimit?.offset ?: 0
         val limit = slqLimit?.limit ?: -1
         // 数据量不多，直接全拉
-        val pipelines = pipelineRepositoryService.listDeletePipelineIdByProject(projectId)
+        val pipelines = pipelineRepositoryService.listDeletePipelineIdByProject(projectId, deletedPipelineStoreDays.toLong())
         val list: List<PipelineInfo> = when {
             offset >= pipelines.size -> emptyList()
             limit < 0 -> pipelines.subList(offset, pipelines.size)
