@@ -78,10 +78,11 @@ class ESDetectionJob @Autowired constructor(
                         executor.submit(Deletion(it, index, buildId, documentIds))
                     }
                 }
-                logger.info("Start to check the inactive clients")
+                val inactiveClients = logClient.getInactiveClients()
+                logger.info("Start to check the inactive clients: ${inactiveClients.map { it.name }}")
                 logClient.getInactiveClients().forEach {
                     val f = executor.submit(Detection(it, index, buildId))
-                    val documentIds = f.get(20, TimeUnit.SECONDS)
+                    val documentIds = f.get(60, TimeUnit.SECONDS)
                     if (documentIds.isNotEmpty()) {
                         logger.warn("[${it.name}] Success to insert data")
                         logClient.markESActive(it.name)
@@ -158,6 +159,7 @@ class ESDetectionJob @Autowired constructor(
 
         override fun call(): List<String> {
             try {
+                logger.info("[${esClient.name}|$index|$buildId] Start to the detection")
                 // 1. Check if need to create index
                 if (indexCache.getIfPresent(index) != true) {
                     createIndex(esClient, index)
