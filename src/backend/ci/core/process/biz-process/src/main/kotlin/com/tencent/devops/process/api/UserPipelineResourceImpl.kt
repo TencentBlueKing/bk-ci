@@ -261,7 +261,7 @@ class UserPipelineResourceImpl @Autowired constructor(
     override fun restore(userId: String, projectId: String, pipelineId: String): Result<Boolean> {
         checkParam(userId, projectId)
         checkPipelineId(pipelineId)
-        //判断用户是否为项目成员
+        // 判断用户是否为项目成员
         if (!pipelinePermissionService.isProjectUser(userId, projectId, null)) {
             throw PermissionForbiddenException("$userId is not member of project $projectId")
         }

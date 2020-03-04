@@ -73,10 +73,10 @@ class PipelineClearService @Autowired constructor(
     @Value("\${deletedPipelineStoreDays:30}")
     private val deletedPipelineStoreDays: Int = 30
 
-    //最多5线程，用完立即销毁
+    // 最多5线程，用完立即销毁
     private val executorService = ThreadPoolExecutor(0, 5, 0, TimeUnit.SECONDS, LinkedBlockingQueue<Runnable>())
 
-    //清理线程异常恢复
+    // 清理线程异常恢复
     fun recover(): Boolean {
         val lock = RedisLock(redisOperation, KEY_LOCK, 10)
         try {
@@ -84,17 +84,17 @@ class PipelineClearService @Autowired constructor(
                 logger.info("get lock failed, skip")
                 return false
             }
-            //获取锁后
+            // 获取锁后
             val clearThreadRunning = redisOperation.get(KEY_CLEAR_THREAD_RUNNING)
             val clearThreadFinished = redisOperation.get(KEY_CLEAR_THREAD_FINISHED)
             if (clearThreadFinished == VALUE_CLEAR_THREAD_FINISHED_FALSE) {
-                //上一次调用未完成
+                // 上一次调用未完成
                 return if (clearThreadRunning == VALUE_CLEAR_THREAD_RUNNING_TRUE) {
-                    //已有清理线程正在跑
+                    // 已有清理线程正在跑
                     logger.info("pipeline clear thread already running")
                     false
                 } else {
-                    //清理线程被意外终止，需要重启
+                    // 清理线程被意外终止，需要重启
                     logger.info("recover pipeline clear thread")
                     doClear()
                 }
@@ -114,22 +114,22 @@ class PipelineClearService @Autowired constructor(
                 logger.info("get lock failed, skip")
                 return false
             }
-            //获取锁后
+            // 获取锁后
             val clearThreadRunning = redisOperation.get(KEY_CLEAR_THREAD_RUNNING)
             val clearThreadFinished = redisOperation.get(KEY_CLEAR_THREAD_FINISHED)
             if (clearThreadFinished == null) {
-                //首次调用
+                // 首次调用
                 return doClear()
             } else if (clearThreadFinished == VALUE_CLEAR_THREAD_FINISHED_TRUE) {
-                //上一次清理已完成再次调用
+                // 上一次清理已完成再次调用
                 return doClear()
             } else {
-                //上一次调用未完成
+                // 上一次调用未完成
                 if (clearThreadRunning == VALUE_CLEAR_THREAD_RUNNING_TRUE) {
-                    //已有清理线程正在跑
+                    // 已有清理线程正在跑
                     return false
                 } else {
-                    //清理线程被意外终止，需要重启
+                    // 清理线程被意外终止，需要重启
                     return doClear()
                 }
             }
@@ -143,7 +143,7 @@ class PipelineClearService @Autowired constructor(
 
     private fun doClear(): Boolean {
         executorService.submit {
-            //开一个心跳子线程
+            // 开一个心跳子线程
             val heartBeatThread = Thread {
                 try {
                     while (true) {
@@ -163,7 +163,7 @@ class PipelineClearService @Autowired constructor(
 
                 logger.info("clear pipelines deleted before $deletedPipelineStoreDays days")
                 val deleteTime = LocalDateTime.now().minusDays(deletedPipelineStoreDays.toLong())
-                //查出所有被删除超过过期时间的流水线
+                // 查出所有被删除超过过期时间的流水线
                 val pipelinesLimit = 500
                 var pipelineBatchNum = 0
                 var deletedPipelines: List<PipelineInfo>
@@ -196,7 +196,7 @@ class PipelineClearService @Autowired constructor(
                             offset += buildIdsLimit
                             buildIdsCount += buildIds.size
                             pipelineBuildBaseInfoList.add(PipelineBuildBaseInfo(pipelineInfo.projectId, pipelineInfo.pipelineId, buildIds))
-                            //流水线数量/构建数量任意一个达到阈值就开始删除
+                            // 流水线数量/构建数量任意一个达到阈值就开始删除
                             if (pipelinesCount >= PIPELINE_DELETE_BATCH_SIZE || buildIdsCount >= BUILD_ID_DELETE_BATCH_SIZE) {
                                 deleteRelatedAndBuildData(pipelineBuildBaseInfoList)
                                 pipelinesCount = 0
@@ -211,7 +211,7 @@ class PipelineClearService @Autowired constructor(
                     if (pipelineBuildBaseInfoList.isNotEmpty()) {
                         deleteRelatedAndBuildData(pipelineBuildBaseInfoList)
                     }
-                    //删主干流水线数据
+                    // 删主干流水线数据
                     pipelineInfoDao.deletePipelinesHardly(dslContext, deletedPipelineIds)
                     watch.stop()
                 } while (deletedPipelines.size == pipelinesLimit)
@@ -227,9 +227,9 @@ class PipelineClearService @Autowired constructor(
     }
 
     fun deleteRelatedAndBuildData(pipelineBuildBaseInfoList: List<PipelineBuildBaseInfo>) {
-        //删关联数据
+        // 删关联数据
         pipelineRepositoryService.deletePipelinesHardly(pipelineBuildBaseInfoList, ChannelCode.BS)
-        //删主干构建数据
+        // 删主干构建数据
         buildHistoryDao.deletePipelinesHardly(dslContext, pipelineBuildBaseInfoList)
     }
 }

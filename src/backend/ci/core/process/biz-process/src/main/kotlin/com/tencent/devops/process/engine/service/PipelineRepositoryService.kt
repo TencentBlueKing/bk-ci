@@ -101,7 +101,6 @@ class PipelineRepositoryService constructor(
     private val templatePipelineDao: TemplatePipelineDao
 ) {
 
-
     private val logger = LoggerFactory.getLogger(PipelineRepositoryService::class.java)
 
     fun deployPipeline(

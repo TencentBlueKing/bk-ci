@@ -46,7 +46,7 @@ class DeletedPipelineClearJob @Autowired constructor(
         private const val KEY_LAST_TRIGGER_TIME = "misc:DeletedPipelineClearJob:lastTriggerTime"
     }
 
-    //每月15日00:00开始清理已删除流水线
+    // 每月15日00:00开始清理已删除流水线
     @Scheduled(cron = "0 0 0 15 * ?")
     fun clearDeletedPipelines() {
         logger.info("clearDeletedPipelines")
@@ -62,7 +62,7 @@ class DeletedPipelineClearJob @Autowired constructor(
                 logger.info("clearDeletedPipelines fires too frequently")
                 return
             }
-            //回调清理接口
+            // 回调清理接口
             val result = client.get(ServicePipelineCallbackResource::class).clear()
             logger.info("callback result=$result")
             redisOperation.set(KEY_LAST_TRIGGER_TIME, System.currentTimeMillis().toString(), expired = false)

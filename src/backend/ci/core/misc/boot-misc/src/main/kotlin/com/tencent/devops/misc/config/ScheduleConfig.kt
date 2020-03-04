@@ -12,7 +12,7 @@ import java.util.concurrent.Executors
  * @Version 1.0
  */
 
-//设定一个长度3的定时任务线程池
+// 设定一个长度3的定时任务线程池
 @Configuration
 class ScheduleConfig : SchedulingConfigurer {
     override fun configureTasks(taskRegistrar: ScheduledTaskRegistrar) {
