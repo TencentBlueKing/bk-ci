@@ -28,6 +28,12 @@
                 <bk-form-item v-if="showVariable">
                     <key-value-normal :disabled="disabled" :value="variables" :allow-null="false" name="customVariables" :handle-change="handleUpdateStageControl"></key-value-normal>
                 </bk-form-item>
+                <template v-if="showMemberInput">
+                    <bk-form-item class="stage-trigger-member-input" label="stage执行人:" :required="true" :class="{ 'is-error': !hasTriggerMember }">
+                        <bk-member-selector :disabled="disabled" v-model="triggerUsers"></bk-member-selector>
+                        <p v-if="!hasTriggerMember" class="mt5 mb0">{{ $t('editPage.stageManualTriggerUserNoEmptyTips') }}</p>
+                    </bk-form-item>
+                </template>
             </bk-form>
         </div>
     </accordion>
@@ -85,6 +91,16 @@
             variables () {
                 return this.stageControl && Array.isArray(this.stageControl.customVariables) ? this.stageControl.customVariables : []
             },
+            triggerUsers: {
+                get () {
+                    return this.stageControl && Array.isArray(this.stageControl.triggerUsers) ? this.stageControl.triggerUsers : []
+                },
+                set (triggerUsers) {
+                    console.log('set', triggerUsers)
+                    this.handleUpdateStageControl('triggerUsers', triggerUsers)
+                }
+
+            },
             conditionConf () {
                 return [
                     {
@@ -107,6 +123,27 @@
             },
             showVariable () {
                 return ['CUSTOM_VARIABLE_MATCH', 'CUSTOM_VARIABLE_MATCH_NOT_RUN'].indexOf(this.stageCondition) > -1
+            },
+            showMemberInput () {
+                return this.stageCondition === 'MANUAL_TRIGGER'
+            },
+            hasTriggerMember () {
+                try {
+                    return this.showMemberInput && this.triggerUsers.length > 0
+                } catch (e) {
+                    return false
+                }
+            }
+        },
+        watch: {
+            showVariable (val) {
+                !val && this.handleUpdateStageControl('customVariables', [{ key: 'param1', value: '' }])
+            },
+            showMemberInput (val) {
+                !val && this.handleUpdateStageControl('triggerUsers', [])
+            },
+            triggerUsers (triggerUsers) {
+                this.handleStageChange('isError', triggerUsers.length === 0 && this.showMemberInput)
             }
         },
         created () {
@@ -130,7 +167,8 @@
                     this.handleStageChange('stageControlOption', {
                         enable: true,
                         runCondition: 'AFTER_LAST_FINISHED',
-                        customVariables: [{ key: 'param1', value: '' }]
+                        customVariables: [{ key: 'param1', value: '' }],
+                        triggerUsers: []
                     })
                     this.handleStageChange('fastKill', false)
                 }
@@ -141,3 +179,9 @@
         }
     }
 </script>
+
+<style lang="scss">
+    .stage-trigger-member-input.is-error {
+        color: #ff5656;
+    }
+</style>
