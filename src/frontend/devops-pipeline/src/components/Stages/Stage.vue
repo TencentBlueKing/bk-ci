@@ -1,6 +1,6 @@
 <template>
     <div :class="[{ 'pipeline-drag': editable && !isTriggerStage, 'show-stage-area': !isTriggerStage }, 'pipeline-stage']" ref="stageRef">
-        <bk-button v-if="!isTriggerStage" :class="['pipeline-stage-entry', [stageStatusCls], { 'editable-stage-entry': editable }]" @click="showStagePanel">
+        <bk-button v-if="!isTriggerStage" :class="['pipeline-stage-entry', [stageStatusCls], { 'editable-stage-entry': editable, 'stage-disabled': stageDisabled }]" @click="showStagePanel">
             <span v-if="stage.status === 'PAUSE'" class="bk-icon icon-play-circle-shape" v-bk-tooltips.top="canTriggerStage ? '去审核' : '无审核权限'" @click.stop="startNextStage"></span>
             <span v-else :class="['bk-icon', 'stage-status-icon', { [stageStatusIcon]: true }]"></span>
             <span class="stage-entry-name">{{ stageTitle }}</span>
@@ -24,6 +24,7 @@
                 :editable="editable"
                 :is-preview="isPreview"
                 :can-skip-element="canSkipElement"
+                :stage-disabled="stageDisabled"
                 :container-length="computedContainer.length"
                 :container="container">
             </stage-container>
@@ -350,7 +351,8 @@
             color: $primaryColor;
             z-index: 1;
 
-            &:not(.editable-stage-entry) {
+            &:not(.editable-stage-entry),
+            &.stage-disabled {
                 background-color: #F3F3F3;
                 border-color: #D0D8EA;
                 color: black;
