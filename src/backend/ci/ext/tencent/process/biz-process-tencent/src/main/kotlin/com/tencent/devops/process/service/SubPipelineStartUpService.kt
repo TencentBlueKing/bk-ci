@@ -235,7 +235,7 @@ class SubPipelineStartUpService(
             if (item.type == BuildFormPropertyType.MULTIPLE || item.type == BuildFormPropertyType.ENUM) {
                 val keyList = ArrayList<StartUpInfo>()
                 val valueList = ArrayList<StartUpInfo>()
-                val defaultValue = item.defaultValue as String
+                val defaultValue = item.defaultValue.toString()
                 for (option in item.options!!) {
                     valueList.add(StartUpInfo(option.key, option.value))
                 }
@@ -269,7 +269,7 @@ class SubPipelineStartUpService(
             } else {
                 val keyList = ArrayList<StartUpInfo>()
                 val valueList = ArrayList<StartUpInfo>()
-                val defaultValue = item.defaultValue as String
+                val defaultValue = item.defaultValue.toString()
                 val info = SubPipelineStartUpInfo(
                     key = item.id,
                     keyDisable = true,
