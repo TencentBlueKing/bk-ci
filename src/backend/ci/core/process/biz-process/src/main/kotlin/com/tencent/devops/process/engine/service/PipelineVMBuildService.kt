@@ -55,6 +55,7 @@ import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildTaskResult
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.pojo.mq.PipelineBuildContainerEvent
+import com.tencent.devops.process.service.PipelineTaskService
 import com.tencent.devops.process.utils.PIPELINE_ELEMENT_ID
 import com.tencent.devops.process.utils.PIPELINE_TURBO_TASK_ID
 import com.tencent.devops.process.utils.PIPELINE_VMSEQ_ID
@@ -78,6 +79,7 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
     private val measureService: MeasureService?,
     private val rabbitTemplate: RabbitTemplate,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
+    private val pipelineTaskService: PipelineTaskService,
     private val redisOperation: RedisOperation,
     private val jmxElements: JmxElements,
     private val consulClient: ConsulDiscoveryClient?,
@@ -514,7 +516,18 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
             ErrorType.valueOf(result.errorType!!)
         } else null
 
-        val buildStatus = if (result.success) BuildStatus.SUCCEED else BuildStatus.FAILED
+        val buildStatus = if (result.success) {
+            pipelineTaskService.removeRetryCache(buildId, result.taskId)
+            BuildStatus.SUCCEED
+        } else {
+            if (pipelineTaskService.isRetryWhenFail(result.taskId, buildId)) {
+                logger.info("task fail,user setting retry, build[$buildId], taskId[${result.taskId}, elementId[${result.elementId}]]")
+                BuildStatus.RETRY
+            } else {
+                BuildStatus.FAILED
+            }
+        }
+
         buildDetailService.pipelineTaskEnd(
             buildId = buildId,
             elementId = result.elementId,

@@ -30,16 +30,18 @@ import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatch
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.log.utils.LogUtils
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.TaskAtomService
 import com.tencent.devops.process.engine.common.BS_ATOM_STATUS_REFRESH_DELAY_MILLS
 import com.tencent.devops.process.engine.common.BS_TASK_HOST
 import com.tencent.devops.process.engine.control.lock.TaskIdLock
-import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildAtomTaskEvent
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.pojo.mq.PipelineBuildContainerEvent
+import com.tencent.devops.process.service.PipelineTaskService
 import org.slf4j.LoggerFactory
+import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -50,14 +52,14 @@ import org.springframework.stereotype.Service
 @Service
 class TaskControl @Autowired constructor(
     private val redisOperation: RedisOperation,
+    private val rabbitTemplate: RabbitTemplate,
     private val taskAtomService: TaskAtomService,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
-    private val pipelineRuntimeService: PipelineRuntimeService
+    private val pipelineRuntimeService: PipelineRuntimeService,
+    private val pipelineTaskService: PipelineTaskService
 ) {
 
     private val logger = LoggerFactory.getLogger(javaClass)
-
-    private val retryCountRedisKey = "process:task:failRetry:count:"
 
     fun handle(event: PipelineBuildAtomTaskEvent): Boolean {
         with(event) {
@@ -135,11 +137,9 @@ class TaskControl @Autowired constructor(
             pipelineEventDispatcher.dispatch(this)
         } else {
             val nextActionType = if (BuildStatus.isFailure(buildStatus)) {
-                val retryCount = redisOperation.get(getRedisKey(buildTask))?.toInt() ?: 0
                 // 如果配置了失败重试，且重试次数上线未达上限，则进行重试
-                if (ControlUtils.retryWhenFailure(buildTask.additionalOptions, retryCount)) {
-                    logger.info("retry task [$buildId]|ATOM|stageId=$stageId|container=$containerId|taskId=$taskId, retryCount=$retryCount|vm atom will retry, even the task is failure")
-                    redisOperation.set(getRedisKey(buildTask), (retryCount + 1).toString())
+                if (pipelineTaskService.isRetryWhenFail(taskId, buildId)) {
+                    logger.info("retry task [$buildId]|ATOM|stageId=$stageId|container=$containerId|taskId=$taskId |vm atom will retry, even the task is failure")
                     pipelineRuntimeService.updateTaskStatus(buildId, taskId, userId, BuildStatus.RETRY)
                     delayMillsNext = 5000
                     ActionType.RETRY
@@ -153,7 +153,7 @@ class TaskControl @Autowired constructor(
                 }
             } else {
                 // 清除该原子内的重试记录
-                redisOperation.delete(retryCountRedisKey + buildTask.taskId)
+                pipelineTaskService.removeRetryCache(buildId, taskId)
                 // 当前原子成功结束后，继续继承动作，发消息请求执行
                 actionType
             }
@@ -179,7 +179,4 @@ class TaskControl @Autowired constructor(
         return response.buildStatus
     }
 
-    private fun getRedisKey(taskBuildInfo: PipelineBuildTask) : String {
-        return retryCountRedisKey + taskBuildInfo.buildId + ":" + taskBuildInfo.taskId
-    }
 }
