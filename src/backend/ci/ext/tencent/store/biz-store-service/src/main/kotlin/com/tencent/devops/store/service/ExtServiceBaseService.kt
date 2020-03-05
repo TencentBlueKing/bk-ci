@@ -981,6 +981,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         }
         // 解析extension.json内对应的itemId
         fileItemList?.forEach {
+            logger.info("extension.json item:$it")
             val itemMap = JsonUtil.toMap(it!!)
             val itemCode = itemMap["itemCode"] as String
             val props = itemMap["props"] as String
@@ -994,6 +995,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
             val fileItemId = fileServiceItem!!.itemId
             fileItemMap[fileItemId] = props
         }
+        logger.info("dbItemMapIndexId: $dbItemMapIndexId")
         dbItemMapIndexId.forEach { (key, info) ->
             if (fileItemMap.containsKey(key)) {
                 saveItemPropMap[key] = fileItemMap[key] ?: ""
@@ -1001,6 +1003,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
                 saveItemPropMap[key] = info.props.toString()
             }
         }
+        logger.info("saveItemPropMap: $saveItemPropMap")
         return saveItemPropMap
     }
 
