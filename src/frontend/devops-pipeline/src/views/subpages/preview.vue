@@ -150,7 +150,7 @@
 
                     stage.containers.forEach(container => {
                         if (container['@type'] !== 'trigger') {
-                            const containerDisabled = container.jobControlOption && container.jobControlOption.enable === false
+                            const containerDisabled = stageDisabled || (container.jobControlOption && container.jobControlOption.enable === false)
                             if (!containerDisabled) {
                                 container.runContainer = val
                             }
