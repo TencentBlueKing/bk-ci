@@ -27,22 +27,16 @@
 package com.tencent.devops.plugin.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import com.google.common.io.Files
-import com.tencent.devops.common.api.exception.OperationException
-import com.tencent.devops.common.archive.client.JfrogService
-import com.tencent.devops.common.archive.pojo.ArtifactorySearchParam
-import com.tencent.devops.plugin.client.WeTestClient
-import com.tencent.devops.plugin.pojo.wetest.WetestAutoTestRequest
-import net.dongliu.apk.parser.ApkFile
+import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.project.api.service.ServiceProjectResource
+import okhttp3.MediaType
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import java.io.File
 
 @Service
 class JobIedService @Autowired constructor(
@@ -63,15 +57,14 @@ class JobIedService @Autowired constructor(
     private val appSecret = "XybK7-.L*(o5lU~N?^)93H3nbV1=l>b,(3jvIAXH!7LolD&Zv<"
 
     fun taskList(projectId: String, operator: String): String {
-        val ccAppId = getCCAppId(projectId)
-        if(ccAppId == null) {
-            throw Exception("Project does not have cc appId.")
-        }
+        val ccAppId = getCCAppId(projectId) ?: throw Exception("Project does not have cc appId.")
         val requestData = emptyMap<String, Any>().toMutableMap()
         requestData["app_code"] = appCode
         requestData["app_secret"] = appSecret
         requestData["app_id"] = ccAppId
         requestData["operator"] = operator
+
+        val jsonMediaType = MediaType.parse("application/json; charset=utf-8")
 
         val json = ObjectMapper().writeValueAsString(requestData)
         try {
@@ -80,45 +73,44 @@ class JobIedService @Autowired constructor(
                 .post(RequestBody.create(jsonMediaType, json))
                 .build()
             OkhttpUtils.doHttp(httpReq).use { resp ->
-                val responseStr = resp.body()!!.string()
-//            val responseStr = HttpUtils.postJson(url, requestStr)
-
-                val response: Map<String, Any> = jacksonObjectMapper().readValue(responseStr)
-                if (response["code"] == "00") {
-                    val responseData = response["data"] as Map<String, Any>
-                    val isFinished = responseData["isFinished"] as Boolean
-                    logger.error("request success. taskInstanceId: $taskInstanceId")
-                    return if (isFinished) {
-                        val taskInstanceObj = responseData["taskInstance"] as Map<String, Any>
-                        val status = taskInstanceObj["status"] as Int
-                        if (status == SUCCESS) {
-                            logger.info("Job execute task finished and success")
-                            TaskResult(isFinish = true, success = true, msg = "Success")
-                        } else {
-                            logger.info("Job execute task finished but failed")
-                            TaskResult(isFinish = true, success = false, msg = "Job failed")
-                        }
-                    } else {
-                        TaskResult(isFinish = false, success = false, msg = "Job Running")
-                    }
-                } else {
-                    val msg = response["message"] as String
-                    logger.error("request failed, msg: $msg")
-                    return TaskResult(isFinish = true, success = false, msg = msg)
-                }
+                return resp.body()!!.string()
             }
         } catch (e: Exception) {
-            logger.error("execute job error", e)
-            throw TaskExecuteException(
-                errorCode = USER_TASK_OPERATE_FAIL,
-                errorType = ErrorType.USER,
-                errorMsg = "execute job error: ${e.message}")
+            logger.error("Get job task lis. error.", e)
+            throw Exception("Get job task lis. error.")
+        }
+    }
+
+
+    fun taskDetail(projectId: String, taskId:Int, operator: String): String {
+        val ccAppId = getCCAppId(projectId) ?: throw Exception("Project does not have cc appId.")
+        val requestData = emptyMap<String, Any>().toMutableMap()
+        requestData["app_code"] = appCode
+        requestData["app_secret"] = appSecret
+        requestData["app_id"] = ccAppId
+        requestData["task_id"] = taskId
+        requestData["operator"] = operator
+
+        val jsonMediaType = MediaType.parse("application/json; charset=utf-8")
+
+        val json = ObjectMapper().writeValueAsString(requestData)
+        try {
+            val httpReq = Request.Builder()
+                .url(esbUrl + "get_task_detail")
+                .post(RequestBody.create(jsonMediaType, json))
+                .build()
+            OkhttpUtils.doHttp(httpReq).use { resp ->
+                return resp.body()!!.string()
+            }
+        } catch (e: Exception) {
+            logger.error("Get job task lis. error.", e)
+            throw Exception("Get job task lis. error.")
         }
     }
 
     private fun getCCAppId(projectId:String): Long?{
         val projectInfo = client.get(ServiceProjectResource::class).get(projectId).data
-        return projectInfo?.ccAppId?
+        return projectInfo?.ccAppId
 
     }
 

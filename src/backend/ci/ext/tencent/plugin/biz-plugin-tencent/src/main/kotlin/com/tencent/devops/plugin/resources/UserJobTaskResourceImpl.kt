@@ -30,17 +30,18 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.plugin.api.UserJobResource
 import com.tencent.devops.plugin.service.JinGangService
+import com.tencent.devops.plugin.service.JobIedService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class UserJobTaskResourceImpl @Autowired constructor(
-    private val jinGangService: JinGangService
+    private val jobIedService: JobIedService
 ) : UserJobResource {
     override fun list(userId: String, projectId: String): String {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        return jobIedService.taskList(projectId, userId)
     }
 
-    override fun get(userId: String, projectId: String, taskId: String): String {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    override fun get(userId: String, projectId: String, taskId: Int): String {
+        return jobIedService.taskDetail(projectId, taskId, userId)
     }
 }
