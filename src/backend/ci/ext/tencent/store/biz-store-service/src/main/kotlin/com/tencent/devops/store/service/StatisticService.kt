@@ -1,6 +1,7 @@
 package com.tencent.devops.store.service
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.store.dao.ExtStoreProjectRelDao
 import com.tencent.devops.store.dao.common.StoreStatisticDao
 import com.tencent.devops.store.pojo.ExtServiceInstallTrendReq
@@ -8,9 +9,11 @@ import com.tencent.devops.store.pojo.ExtServiceStatistic
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.jooq.DSLContext
 import org.jooq.Record4
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.math.BigDecimal
+import java.time.LocalDateTime
 import java.util.concurrent.TimeUnit
 
 @Service
@@ -28,10 +31,11 @@ class StatisticService @Autowired constructor(
 
     fun getInstallTrend(serviceCode: String, days: Long): Result<List<ExtServiceInstallTrendReq>> {
         val startTime : Long = if(days > 30 ) {
-            TimeUnit.DAYS.toSeconds(30)
+            LocalDateTime.now().timestampmilli() - TimeUnit.DAYS.toSeconds(30)
         } else {
-            TimeUnit.DAYS.toSeconds(days)
+            LocalDateTime.now().timestampmilli() - TimeUnit.DAYS.toSeconds(days)
         }
+        logger.info("getInstallTrend startTime[$startTime], serviceCode[$serviceCode]")
         val installRecords = storeProjectRelDao.getStoreInstall(
             dslContext = dslContext,
             storeCode = serviceCode,
@@ -74,5 +78,9 @@ class StatisticService @Autowired constructor(
             commentCnt = comments ?: 0,
             score = String.format("%.1f", averageScore).toDoubleOrNull()
         )
+    }
+
+    companion object {
+        val logger = LoggerFactory.getLogger(this::class.java)
     }
 }
