@@ -24,15 +24,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.pipeline.container
+package com.tencent.devops.process.api.codecc
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.process.pojo.ipt.IptBuildArtifactoryInfo
+import com.tencent.devops.process.service.codecc.CodeccTransferService
+import org.springframework.beans.factory.annotation.Autowired
 
-@ApiModel("流水线模型-阶段")
-data class Stage(
-    @ApiModelProperty("容器集合", required = true)
-    var containers: List<Container> = listOf(),
-    @ApiModelProperty("Stage ID", required = false)
-    var id: String?
-)
+@RestResource
+class ServiceCodeccTransferResourceImpl @Autowired constructor(
+    private val codeccTransferService: CodeccTransferService
+) : ServiceCodeccTransferResource {
+    override fun transferToV2(projectId: String, pipelineIds: Set<String>): Result<Map<String, String>> {
+        return Result(codeccTransferService.transferToV2(projectId, pipelineIds))
+    }
+}

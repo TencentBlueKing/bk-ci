@@ -24,15 +24,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.pipeline.container
+package com.tencent.devops.common.api.util
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import java.util.concurrent.Executors
+import java.util.concurrent.Future
 
-@ApiModel("流水线模型-阶段")
-data class Stage(
-    @ApiModelProperty("容器集合", required = true)
-    var containers: List<Container> = listOf(),
-    @ApiModelProperty("Stage ID", required = false)
-    var id: String?
-)
+object ExecutorsUtils {
+
+    private val fixExecutors = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors())
+
+    fun executeFixThread(runnable: Runnable) {
+        fixExecutors.execute(runnable)
+    }
+
+    fun executeFixThreadFuture(runnable: Runnable): Future<*> {
+        return fixExecutors.submit(runnable)
+    }
+}

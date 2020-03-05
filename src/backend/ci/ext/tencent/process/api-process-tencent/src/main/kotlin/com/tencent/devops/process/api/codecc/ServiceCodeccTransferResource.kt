@@ -24,15 +24,32 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.pipeline.container
+package com.tencent.devops.process.api.codecc
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.common.api.pojo.Result
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.POST
+import javax.ws.rs.Path
+import javax.ws.rs.PathParam
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
 
-@ApiModel("流水线模型-阶段")
-data class Stage(
-    @ApiModelProperty("容器集合", required = true)
-    var containers: List<Container> = listOf(),
-    @ApiModelProperty("Stage ID", required = false)
-    var id: String?
-)
+@Api(tags = ["SERVICE_CODECC_TRANSFER_RESOURCE"], description = "codecc迁移资源")
+@Path("/service/codecc/transfer")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface ServiceCodeccTransferResource {
+
+    @ApiOperation("")
+    @POST
+    @Path("/projects/{projectId}/transferToV2")
+    fun transferToV2(
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("流水线Id", required = true)
+        pipelineIds: Set<String>
+    ): Result<Map<String, String>>
+}
