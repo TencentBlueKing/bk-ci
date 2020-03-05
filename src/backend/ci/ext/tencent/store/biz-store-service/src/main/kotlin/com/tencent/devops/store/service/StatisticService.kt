@@ -1,6 +1,7 @@
 package com.tencent.devops.store.service
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.store.dao.ExtStoreProjectRelDao
 import com.tencent.devops.store.dao.common.StoreStatisticDao
@@ -31,9 +32,9 @@ class StatisticService @Autowired constructor(
 
     fun getInstallTrend(serviceCode: String, days: Long): Result<List<ExtServiceInstallTrendReq>> {
         val startTime : Long = if(days > 30 ) {
-            LocalDateTime.now().timestampmilli() - TimeUnit.DAYS.toSeconds(30)
+            LocalDateTime.now().timestamp() - TimeUnit.DAYS.toSeconds(30)
         } else {
-            LocalDateTime.now().timestampmilli() - TimeUnit.DAYS.toSeconds(days)
+            LocalDateTime.now().timestamp() - TimeUnit.DAYS.toSeconds(days)
         }
         logger.info("getInstallTrend startTime[$startTime], serviceCode[$serviceCode]")
         val installRecords = storeProjectRelDao.getStoreInstall(
