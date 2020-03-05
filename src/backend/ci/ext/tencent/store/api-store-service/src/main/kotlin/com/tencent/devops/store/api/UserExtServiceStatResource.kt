@@ -31,7 +31,7 @@ interface UserExtServiceStatResource {
 
     @GET
     @ApiOperation("安装量趋势")
-    @Path("/serviceCodes/{serviceCode}")
+    @Path("/serviceCodes/{serviceCode}/install/trend")
     fun getInstallTrend(
         @ApiParam("扩展服务编码")
         @PathParam("serviceCode")
