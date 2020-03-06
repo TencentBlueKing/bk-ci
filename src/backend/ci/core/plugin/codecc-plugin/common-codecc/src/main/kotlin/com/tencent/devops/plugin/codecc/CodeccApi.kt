@@ -372,7 +372,7 @@ open class CodeccApi constructor(
 
     data class NotifyCustomVO(
         val rtxReceiverType: String?,
-        val rtxReceiverList: String?,
+        val rtxReceiverList: Set<String>?,
         val botWebhookUrl: String?,
         val botRemindSeverity: Int?,
         val botRemaindTools: Set<String>?,

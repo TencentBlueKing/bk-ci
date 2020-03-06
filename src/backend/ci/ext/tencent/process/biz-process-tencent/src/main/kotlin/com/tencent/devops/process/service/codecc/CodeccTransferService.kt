@@ -26,7 +26,8 @@
 
 package com.tencent.devops.process.service.codecc
 
-import com.tencent.devops.common.api.util.ExecutorsUtils
+import com.fasterxml.jackson.annotation.JsonProperty
+import com.tencent.devops.common.pipeline.enums.BuildScriptType
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxPaasCodeCCScriptElement
@@ -48,59 +49,56 @@ class CodeccTransferService @Autowired constructor(
 ) {
     fun transferToV2(projectId: String, pipelineIds: Set<String>): Map<String, String> {
         val result = mutableMapOf<String, String>()
-        val futureResult = pipelineTaskService.list(projectId, pipelineIds).map {
-            ExecutorsUtils.executeFixThreadFuture(Runnable {
-                val pipelineId = it.key
+        pipelineTaskService.list(projectId, pipelineIds).map {
+            val pipelineId = it.key
 
-                val codeccTask = it.value.filter { task -> task.classType == LinuxPaasCodeCCScriptElement.classType }
-                if (codeccTask.isEmpty()) {
-                    result[pipelineId] = "$pipelineId do not contains old codecc element"
-                    return@Runnable
-                }
+            val codeccTask = it.value.filter { task -> task.classType == LinuxPaasCodeCCScriptElement.classType }
+            if (codeccTask.isEmpty()) {
+                result[pipelineId] = "$pipelineId do not contains old codecc element"
+                return@map
+            }
 
-                val newCodeccTask = it.value.filter { task -> task.taskParams["atomCode"] == "CodeccCheckAtom" }
-                if (newCodeccTask.isNotEmpty()) {
-                    result[pipelineId] = "$pipelineId is already contains new codecc element"
-                    return@Runnable
-                }
+            val newCodeccTask = it.value.filter { task -> task.taskParams["atomCode"] == "CodeccCheckAtom" }
+            if (newCodeccTask.isNotEmpty()) {
+                result[pipelineId] = "$pipelineId is already contains new codecc element"
+                return@map
+            }
 
-                // start to transfer
-                val model = pipelineRepositoryService.getModel(pipelineId)!!
-                val pipelineInfo = pipelineRepositoryService.getPipelineInfo(pipelineId)
-                model.stages.forEach { stage ->
-                    stage.containers.forEach { container ->
-                        val elementList = mutableListOf<Element>()
-                        container.elements.forEach { element ->
-                            if (element.getClassType() == LinuxPaasCodeCCScriptElement.classType) {
-                                val newElement = getNewCodeccElement(element as LinuxPaasCodeCCScriptElement)
-                                if (newElement == null) {
-                                    result[pipelineId] = "get codecc new element fail"
-                                    return@Runnable
-                                }
-                                elementList.add(newElement)
-                            } else {
-                                elementList.add(element)
+            // start to transfer
+            val model = pipelineRepositoryService.getModel(pipelineId)!!
+            val pipelineInfo = pipelineRepositoryService.getPipelineInfo(pipelineId)
+            model.stages.forEach { stage ->
+                stage.containers.forEach { container ->
+                    val elementList = mutableListOf<Element>()
+                    container.elements.forEach { element ->
+                        if (element.getClassType() == LinuxPaasCodeCCScriptElement.classType) {
+                            val newElement = getNewCodeccElement(element as LinuxPaasCodeCCScriptElement)
+                            if (newElement == null) {
+                                result[pipelineId] = "get codecc new element fail"
+                                return@map
                             }
+                            elementList.add(newElement)
+                        } else {
+                            elementList.add(element)
                         }
-                        container.elements = elementList
                     }
+                    container.elements = elementList
                 }
+            }
 
-                // save pipeline
-                pipelineService.editPipeline(
-                    userId = pipelineInfo?.lastModifyUser ?: "",
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    model = model,
-                    channelCode = ChannelCode.BS,
-                    checkPermission = false,
-                    checkTemplate = false
-                )
+            // save pipeline
+            pipelineService.editPipeline(
+                userId = pipelineInfo?.lastModifyUser ?: "",
+                projectId = projectId,
+                pipelineId = pipelineId,
+                model = model,
+                channelCode = ChannelCode.BS,
+                checkPermission = false,
+                checkTemplate = false
+            )
 
-                result[pipelineId] = "update codecc to v1 success"
-            })
+            result[pipelineId] = "update codecc to v1 success"
         }
-        futureResult.forEach { it.get() }
         return result
     }
 
@@ -112,8 +110,10 @@ class CodeccTransferService @Autowired constructor(
             status = oldCodeccElement.status,
             atomCode = "CodeccCheckAtom",
             version = "1.*",
-            data = mapOf("input" to data,
-                "output" to mapOf<String, String>())
+            data = mapOf(
+                "input" to data,
+                "output" to mapOf<String, String>()
+            )
         )
     }
 
@@ -121,6 +121,7 @@ class CodeccTransferService @Autowired constructor(
         // 1.基础设置tab
         val params = CodeccCheckAtomParamV3()
         params.script = oldCodeccElement.script
+        params.scriptType = oldCodeccElement.scriptType
         params.languages = oldCodeccElement.languages
         params.asynchronous = oldCodeccElement.asynchronous
         params.path = oldCodeccElement.path
@@ -129,6 +130,7 @@ class CodeccTransferService @Autowired constructor(
         params.projectBuildType = oldCodeccElement.projectBuildType
         params.projectBuildCommand = oldCodeccElement.projectBuildCommand
         params.needCodeContent = oldCodeccElement.needCodeContent
+        params.tools = oldCodeccElement.tools
 
         val ruleSetMap = getNewRuleSetMap(oldCodeccElement)
         params.languageRuleSetMap = ruleSetMap
@@ -168,19 +170,19 @@ class CodeccTransferService @Autowired constructor(
         params.pathType = "CUSTOM"
         params.customPath = filterPaths?.filterPaths
 
-        params.C_CPP_RULE = ruleSetMap["C_CPP_RULE"]
-        params.JAVA_RULE = ruleSetMap["JAVA_RULE"]
-        params.JS_RULE = ruleSetMap["JS_RULE"]
-        params.C_SHARP_RULE = ruleSetMap["C_SHARP_RULE"]
-        params.PHP_RULE = ruleSetMap["PHP_RULE"]
-        params.OC_RULE = ruleSetMap["OC_RULE"]
-        params.PYTHON_RULE = ruleSetMap["PYTHON_RULE"]
-        params.GOLANG_RULE = ruleSetMap["GOLANG_RULE"]
-        params.SWIFT_RULE = ruleSetMap["SWIFT_RULE"]
-        params.RUBY_RULE = ruleSetMap["RUBY_RULE"]
-        params.TYPESCRIPT_RULE = ruleSetMap["TYPESCRIPT_RULE"]
-        params.KOTLIN_RULE = ruleSetMap["KOTLIN_RULE"]
-        params.OTHERS_RULE = ruleSetMap["OTHERS_RULE"]
+        params.cppRule = ruleSetMap["C_CPP_RULE"]
+        params.javaRule = ruleSetMap["JAVA_RULE"]
+        params.jsRule = ruleSetMap["JS_RULE"]
+        params.csharpRule = ruleSetMap["C_SHARP_RULE"]
+        params.phpRule = ruleSetMap["PHP_RULE"]
+        params.ocRule = ruleSetMap["OC_RULE"]
+        params.pythonRule = ruleSetMap["PYTHON_RULE"]
+        params.golangRule = ruleSetMap["GOLANG_RULE"]
+        params.swiftRule = ruleSetMap["SWIFT_RULE"]
+        params.rubyRule = ruleSetMap["RUBY_RULE"]
+        params.typeScriptRule = ruleSetMap["TYPESCRIPT_RULE"]
+        params.kotlinRule = ruleSetMap["KOTLIN_RULE"]
+        params.othersRule = ruleSetMap["OTHERS_RULE"]
 
         return params
     }
@@ -235,7 +237,7 @@ class CodeccTransferService @Autowired constructor(
 
         // 1.基础设置tab
         var script: String? = ""
-
+        var scriptType: BuildScriptType? = BuildScriptType.SHELL
         var codeCCTaskName: String? = ""
         var codeCCTaskCnName: String? = null // 暂时没用
         var codeCCTaskId: String? = null // 调用接口用到
@@ -254,7 +256,7 @@ class CodeccTransferService @Autowired constructor(
 
         // 2.通知报告tab
         var rtxReceiverType: String? = null // rtx接收人类型：0-所有项目成员；1-接口人；2-自定义；3-无
-        var rtxReceiverList: String? = null // rtx接收人列表，rtxReceiverType=2时，自定义的接收人保存在该字段
+        var rtxReceiverList: Set<String>? = null // rtx接收人列表，rtxReceiverType=2时，自定义的接收人保存在该字段
         var emailReceiverType: String? = null // 邮件收件人类型：0-所有项目成员；1-接口人；2-自定义；3-无
         var emailReceiverList: Set<String>? = null // 邮件收件人列表，当emailReceiverType=2时，自定义的收件人保存在该字段
         var emailCCReceiverList: Set<String>? = null
@@ -283,18 +285,31 @@ class CodeccTransferService @Autowired constructor(
 
         // 前端显示参数
         var tools: List<String>? = null
-        var C_CPP_RULE: List<String>? = null
-        var JAVA_RULE: List<String>? = null
-        var JS_RULE: List<String>? = null
-        var C_SHARP_RULE: List<String>? = null
-        var PHP_RULE: List<String>? = null
-        var OC_RULE: List<String>? = null
-        var PYTHON_RULE: List<String>? = null
-        var GOLANG_RULE: List<String>? = null
-        var SWIFT_RULE: List<String>? = null
-        var RUBY_RULE: List<String>? = null
-        var TYPESCRIPT_RULE: List<String>? = null
-        var KOTLIN_RULE: List<String>? = null
-        var OTHERS_RULE: List<String>? = null
+        @JsonProperty("C_CPP_RULE")
+        var cppRule: List<String>? = null
+        @JsonProperty("JAVA_RULE")
+        var javaRule: List<String>? = null
+        @JsonProperty("JS_RULE")
+        var jsRule: List<String>? = null
+        @JsonProperty("C_SHARP_RULE")
+        var csharpRule: List<String>? = null
+        @JsonProperty("PHP_RULE")
+        var phpRule: List<String>? = null
+        @JsonProperty("OC_RULE")
+        var ocRule: List<String>? = null
+        @JsonProperty("PYTHON_RULE")
+        var pythonRule: List<String>? = null
+        @JsonProperty("GOLANG_RULE")
+        var golangRule: List<String>? = null
+        @JsonProperty("SWIFT_RULE")
+        var swiftRule: List<String>? = null
+        @JsonProperty("RUBY_RULE")
+        var rubyRule: List<String>? = null
+        @JsonProperty("TYPESCRIPT_RULE")
+        var typeScriptRule: List<String>? = null
+        @JsonProperty("KOTLIN_RULE")
+        var kotlinRule: List<String>? = null
+        @JsonProperty("OTHERS_RULE")
+        var othersRule: List<String>? = null
     }
 }
