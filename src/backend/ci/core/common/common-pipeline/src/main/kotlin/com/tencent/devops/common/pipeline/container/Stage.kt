@@ -32,7 +32,7 @@ import io.swagger.annotations.ApiModelProperty
 @ApiModel("流水线模型-阶段")
 data class Stage(
     @ApiModelProperty("容器集合", required = true)
-    var containers: List<Container> = listOf(),
+    val containers: List<Container> = listOf(),
     @ApiModelProperty("Stage ID", required = false)
     var id: String?
 )

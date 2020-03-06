@@ -28,7 +28,6 @@ package com.tencent.devops.process.api.codecc
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.process.pojo.ipt.IptBuildArtifactoryInfo
 import com.tencent.devops.process.service.codecc.CodeccTransferService
 import org.springframework.beans.factory.annotation.Autowired
 

@@ -41,7 +41,7 @@ data class Model(
     @ApiModelProperty("描述", required = false)
     var desc: String?,
     @ApiModelProperty("阶段集合", required = true)
-    var stages: List<Stage>,
+    val stages: List<Stage>,
     @ApiModelProperty("标签", required = false)
     var labels: List<String> = emptyList(),
     @ApiModelProperty("是否从模板中实例化出来的", required = false)

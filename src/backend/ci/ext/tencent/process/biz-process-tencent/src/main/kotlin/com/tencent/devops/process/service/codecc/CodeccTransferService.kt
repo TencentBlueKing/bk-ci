@@ -164,9 +164,9 @@ class CodeccTransferService @Autowired constructor(
             params.emailCCReceiverList = notifyCustomInfo?.emailCCReceiverList
             params.instantReportStatus = notifyCustomInfo?.instantReportStatus
             params.reportDate = notifyCustomInfo?.reportDate
-            if (notifyCustomInfo?.reportTime != null && notifyCustomInfo?.reportMinute != null) {
+            if (notifyCustomInfo?.reportTime != null) {
                 params.reportTime =
-                    notifyCustomInfo?.reportTime!!.toString() + ":" + notifyCustomInfo?.reportMinute!!.toString()
+                    notifyCustomInfo?.reportTime!!.toString() + ":" + (notifyCustomInfo?.reportMinute ?: 0)
             }
             params.reportTools = notifyCustomInfo?.reportTools
         }
