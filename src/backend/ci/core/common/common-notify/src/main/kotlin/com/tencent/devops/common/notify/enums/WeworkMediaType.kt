@@ -23,25 +23,12 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.notify.pojo
 
-import com.tencent.devops.common.notify.enums.WeworkMediaType
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
-import java.io.InputStream
+package com.tencent.devops.common.notify.enums
 
-@ApiModel("企业微信群消息类型")
-open class WeworkNotifyMessage : BaseMessage() {
-
-    @ApiModelProperty("企业微信群Ids")
-    val receivers: String = ""
-    @ApiModelProperty("媒体内容")
-    lateinit var mediaInputStream: InputStream
-    @ApiModelProperty("媒体内容类型")
-    var mediaType: WeworkMediaType = WeworkMediaType.image
-
-    override fun toString(): String {
-        return String.format("receivers(%s), mediaType(%s)",
-                receivers, mediaType.toString())
-    }
+enum class WeworkMediaType(private val type: String) {
+    image("image"),
+    voice("voice"),
+    video("video"),
+    file("file")
 }
