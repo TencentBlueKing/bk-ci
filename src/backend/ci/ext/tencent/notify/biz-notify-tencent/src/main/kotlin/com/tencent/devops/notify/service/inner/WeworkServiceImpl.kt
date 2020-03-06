@@ -92,11 +92,12 @@ class WeworkServiceImpl @Autowired constructor(
                     weworkNotifyMessage.mediaType,
                     uploadMediaResponse.media_id
                 )
+                logger.info(sendString)
                 val sendResult = wechatWorkService.sendMessage(sendString)
                 if (sendResult) {
-                    logger.info("Send media success.")
+                    logger.info("Send wework media success.")
                 } else {
-                    logger.error("Send media failed.")
+                    logger.error("Send wework  media failed.")
                 }
             }
         }
