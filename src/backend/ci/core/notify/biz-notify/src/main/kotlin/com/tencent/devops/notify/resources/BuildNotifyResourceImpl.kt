@@ -26,6 +26,7 @@
 package com.tencent.devops.notify.resources
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.notify.enums.WeworkMediaType
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.notify.api.BuildNotifyResource
 import com.tencent.devops.notify.pojo.EmailNotifyMessage
@@ -40,6 +41,7 @@ import com.tencent.devops.notify.service.WechatService
 import com.tencent.devops.notify.service.WeworkService
 import com.tencent.devops.notify.util.MessageCheckUtil
 import org.springframework.beans.factory.annotation.Autowired
+import java.io.InputStream
 
 /**
  * @author ajackyu
@@ -61,9 +63,15 @@ class BuildNotifyResourceImpl @Autowired constructor(
         return Result(true)
     }
 
-    override fun sendWeworkNotify(message: WeworkNotifyMessage): Result<Boolean> {
-        weworkService.sendMqMsg(message)
-        return Result(true)
+    override fun sendWeworkNotify(
+        receivers: String,
+        mediaType: WeworkMediaType,
+        inputStream: InputStream
+    ): Result<Boolean> {
+        val weworkNotifyMessage = WeworkNotifyMessage(
+
+        )
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
     override fun sendEmailNotify(message: EmailNotifyMessage): Result<Boolean> {
