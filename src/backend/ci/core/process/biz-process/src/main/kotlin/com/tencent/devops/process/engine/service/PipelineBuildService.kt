@@ -509,7 +509,8 @@ class PipelineBuildService(
         channelCode: ChannelCode,
         parameters: Map<String, Any>,
         checkPermission: Boolean = true,
-        isMobile: Boolean = false
+        isMobile: Boolean = false,
+        triggerUser: String ?= null
     ): String {
 
         if (checkPermission) {
@@ -546,7 +547,7 @@ class PipelineBuildService(
                 }
                 startParams[it.id] = it.defaultValue
             }
-            startParams[PIPELINE_START_PIPELINE_USER_ID] = userId
+            startParams[PIPELINE_START_PIPELINE_USER_ID] = triggerUser ?: userId
             startParams[PIPELINE_START_PARENT_PIPELINE_ID] = parentPipelineId
             startParams[PIPELINE_START_PARENT_BUILD_ID] = parentBuildId
             startParams[PIPELINE_START_PARENT_BUILD_TASK_ID] = parentTaskId

@@ -95,8 +95,11 @@ class SubPipelineStartUpService(
         val userId =
             runVariables[PIPELINE_START_USER_ID] ?: runVariables[PipelineVarUtil.newVarToOldVar(PIPELINE_START_USER_ID)]
             ?: "null"
+        val triggerUser =
+            runVariables[PIPELINE_START_USER_NAME] ?: runVariables[PipelineVarUtil.newVarToOldVar(PIPELINE_START_USER_NAME)]
+            ?: userId
 
-        logger.info("[$buildId]|callPipelineStartup|$userId|$project|$callProjectId|$projectId|$parentPipelineId|$callPipelineId|$taskId")
+        logger.info("[$buildId]|callPipelineStartup|$userId|$triggerUser|$project|$callProjectId|$projectId|$parentPipelineId|$callPipelineId|$taskId")
         val channelCode = ChannelCode.valueOf(
             runVariables[PIPELINE_START_CHANNEL]
                 ?: return MessageCodeUtil.generateResponseDataObject(
@@ -129,7 +132,8 @@ class SubPipelineStartUpService(
             channelCode = channelCode,
             parameters = startParams,
             checkPermission = false,
-            isMobile = false
+            isMobile = false,
+            triggerUser = triggerUser
         )
         pipelineBuildTaskDao.updateSubBuildId(
             dslContext = dslContext,
@@ -248,10 +252,14 @@ class SubPipelineStartUpService(
                     keyUrlQuery = ArrayList(),
                     keyList = keyList,
                     keyMultiple = false,
-                    value = if (defaultValue.isBlank()) {
-                        ArrayList()
+                    value = if (item.type == BuildFormPropertyType.MULTIPLE) {
+                        if (defaultValue.isNullOrBlank()) {
+                            ArrayList()
+                        } else {
+                            defaultValue.split(",")
+                        }
                     } else {
-                        defaultValue.split(",")
+                        defaultValue
                     },
                     valueDisable = false,
                     valueType = "select",
@@ -269,7 +277,6 @@ class SubPipelineStartUpService(
             } else {
                 val keyList = ArrayList<StartUpInfo>()
                 val valueList = ArrayList<StartUpInfo>()
-                val defaultValue = item.defaultValue.toString()
                 val info = SubPipelineStartUpInfo(
                     key = item.id,
                     keyDisable = true,
@@ -279,7 +286,7 @@ class SubPipelineStartUpService(
                     keyUrlQuery = ArrayList(),
                     keyList = keyList,
                     keyMultiple = false,
-                    value = defaultValue,
+                    value = item.defaultValue,
                     valueDisable = false,
                     valueType = "input",
                     valueListType = "",
