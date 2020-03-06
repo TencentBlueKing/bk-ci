@@ -67,6 +67,7 @@ interface BuildNotifyResource {
     @ApiOperation("发送企业微信群信息")
     @POST
     @Path("/wework")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
     fun sendWeworkNotify(
         @ApiParam("企业微信群Id", required = true)
         @QueryParam("receivers")
