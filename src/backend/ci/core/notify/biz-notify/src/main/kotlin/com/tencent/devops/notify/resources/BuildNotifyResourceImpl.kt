@@ -32,10 +32,12 @@ import com.tencent.devops.notify.pojo.EmailNotifyMessage
 import com.tencent.devops.notify.pojo.RtxNotifyMessage
 import com.tencent.devops.notify.pojo.SmsNotifyMessage
 import com.tencent.devops.notify.pojo.WechatNotifyMessage
+import com.tencent.devops.notify.pojo.WeworkNotifyMessage
 import com.tencent.devops.notify.service.EmailService
 import com.tencent.devops.notify.service.RtxService
 import com.tencent.devops.notify.service.SmsService
 import com.tencent.devops.notify.service.WechatService
+import com.tencent.devops.notify.service.WeworkService
 import com.tencent.devops.notify.util.MessageCheckUtil
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -49,12 +51,18 @@ class BuildNotifyResourceImpl @Autowired constructor(
     private val emailService: EmailService,
     private val rtxService: RtxService,
     private val smsService: SmsService,
-    private val wechatService: WechatService
+    private val wechatService: WechatService,
+    private val weworkService: WeworkService
 ) : BuildNotifyResource {
 
     override fun sendRtxNotify(message: RtxNotifyMessage): Result<Boolean> {
         MessageCheckUtil.checkRtxMessage(message)
         rtxService.sendMqMsg(message)
+        return Result(true)
+    }
+
+    override fun sendWeworkNotify(message: WeworkNotifyMessage): Result<Boolean> {
+        weworkService.sendMqMsg(message)
         return Result(true)
     }
 

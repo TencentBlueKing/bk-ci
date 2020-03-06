@@ -30,6 +30,7 @@ import com.tencent.devops.notify.pojo.EmailNotifyMessage
 import com.tencent.devops.notify.pojo.RtxNotifyMessage
 import com.tencent.devops.notify.pojo.SmsNotifyMessage
 import com.tencent.devops.notify.pojo.WechatNotifyMessage
+import com.tencent.devops.notify.pojo.WeworkNotifyMessage
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -57,6 +58,14 @@ interface BuildNotifyResource {
         @ApiParam(value = "RTX信息内容", required = true)
         message: RtxNotifyMessage
 
+    ): Result<Boolean>
+
+    @ApiOperation("发送企业微信群信息")
+    @POST
+    @Path("/wework")
+    fun sendWeworkNotify(
+        @ApiParam(value = "企业微信群信息", required = true)
+        notifyMessage: WeworkNotifyMessage
     ): Result<Boolean>
 
     @ApiOperation("发送电子邮件通知")
