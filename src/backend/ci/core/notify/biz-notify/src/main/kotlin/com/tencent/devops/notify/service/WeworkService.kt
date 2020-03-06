@@ -32,9 +32,7 @@ import com.tencent.devops.notify.pojo.WechatNotifyMessage
 import com.tencent.devops.notify.pojo.WeworkNotifyMessage
 
 interface WeworkService {
-    fun sendMqMsg(message: WeworkNotifyMessage)
 
-    fun sendMessage(weworkNotifyMessageWithOperation: WeworkNotifyMessageWithOperation)
+    fun sendMessage(weworkNotifyMessage: WeworkNotifyMessage)
 
-    fun listByCreatedTime(page: Int, pageSize: Int, success: Boolean?, fromSysId: String?, createdTimeSortOrder: String?): NotificationResponseWithPage<WeworkNotifyMessageWithOperation>
 }
