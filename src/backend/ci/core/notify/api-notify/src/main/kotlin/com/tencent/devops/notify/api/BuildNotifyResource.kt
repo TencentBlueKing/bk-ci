@@ -26,6 +26,7 @@
 package com.tencent.devops.notify.api
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.notify.enums.WeworkMediaType
 import com.tencent.devops.notify.pojo.EmailNotifyMessage
 import com.tencent.devops.notify.pojo.RtxNotifyMessage
 import com.tencent.devops.notify.pojo.SmsNotifyMessage
@@ -34,6 +35,8 @@ import com.tencent.devops.notify.pojo.WeworkNotifyMessage
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
+import org.glassfish.jersey.media.multipart.FormDataParam
+import java.io.InputStream
 import javax.ws.rs.Consumes
 import javax.ws.rs.POST
 import javax.ws.rs.Path
@@ -64,8 +67,15 @@ interface BuildNotifyResource {
     @POST
     @Path("/wework")
     fun sendWeworkNotify(
-        @ApiParam(value = "企业微信群信息", required = true)
-        notifyMessage: WeworkNotifyMessage
+        @ApiParam("企业微信群Id", required = true)
+        @FormDataParam("receivers")
+        receivers: String,
+        @ApiParam("文件类型", required = true)
+        @FormDataParam("mediaType")
+        mediaType: WeworkMediaType,
+        @ApiParam("文件", required = true)
+        @FormDataParam("file")
+        inputStream: InputStream
     ): Result<Boolean>
 
     @ApiOperation("发送电子邮件通知")
