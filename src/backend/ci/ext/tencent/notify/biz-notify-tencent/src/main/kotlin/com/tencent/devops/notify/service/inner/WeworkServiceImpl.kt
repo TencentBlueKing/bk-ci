@@ -46,9 +46,11 @@ import com.tencent.devops.notify.pojo.WechatNotifyMessage
 import com.tencent.devops.notify.service.WechatService
 import com.tencent.devops.common.notify.utils.TOFService.Companion.WECHAT_URL
 import com.tencent.devops.common.wechatwork.WechatWorkService
+import com.tencent.devops.common.wechatwork.model.enums.UploadMediaType
 import com.tencent.devops.notify.model.WeworkNotifyMessageWithOperation
 import com.tencent.devops.notify.pojo.WeworkNotifyMessage
 import com.tencent.devops.notify.service.WeworkService
+import com.tencent.devops.support.model.wechatwork.result.UploadMediaResult
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
@@ -63,9 +65,28 @@ class WeworkServiceImpl @Autowired constructor(
 
     private val logger = LoggerFactory.getLogger(WeworkServiceImpl::class.java)
     override fun sendMessage(weworkNotifyMessage: WeworkNotifyMessage) {
-        wechatWorkService.uploadMedia(
-            mediaType = weworkNotifyMessage.mediaType,
-            mediaName =
+        val uploadMediaResponse = wechatWorkService.uploadMedia(
+            mediaType = UploadMediaType.valueOf(weworkNotifyMessage.mediaType.name),
+            mediaName = weworkNotifyMessage.mediaName,
+            mediaInputStream = weworkNotifyMessage.mediaInputStream
         )
+        if (uploadMediaResponse == null) {
+            logger.error("Upload media failed.")
+        } else {
+            weworkNotifyMessage.receivers.forEach{
+                val sendString = String.format("""{
+   "receiver":
+   {
+       "type": "group",
+       "id": "%s"
+   },
+   "msgtype": "%s",
+   "image" : {
+        "media_id" : "%s"
+   }
+}""",it,weworkNotifyMessage.mediaType,uploadMediaResponse.media_id)
+                wechatWorkService.sendMessage(sendString)
+            }
+        }
     }
 }
