@@ -308,7 +308,7 @@ open class CodeccUtils {
         command.add("-DSCAN_TOOLS=${scanTools.joinToString(",").toLowerCase()}")
         command.add("-DCOVERITY_RESULT_PATH=${File(coverityStartFile).parent}")
 
-        val buildCmd = when (CodeccParamsHelper.getProjectType(taskParams["languages"]!!)) {
+        val buildCmd = when (CodeccParamsHelper.getProjectType(taskParams["languages"])) {
             CoverityProjectType.UN_COMPILE -> {
                 "--no-command --fs-capture-search ."
             }
