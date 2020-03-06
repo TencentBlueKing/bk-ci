@@ -37,5 +37,7 @@ data class WeworkNotifyMessage(
     @ApiModelProperty("媒体内容", required = true)
     var mediaInputStream: InputStream,
     @ApiModelProperty("媒体内容类型", required = true)
-    var mediaType: WeworkMediaType
+    var mediaType: WeworkMediaType,
+    @ApiModelProperty("媒体名称", required = true)
+    var mediaName: String
 )
