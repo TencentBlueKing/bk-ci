@@ -26,10 +26,8 @@
 
 package com.tencent.devops.plugin.resources
 
-import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.plugin.api.UserJobResource
-import com.tencent.devops.plugin.service.JinGangService
 import com.tencent.devops.plugin.service.JobIedService
 import org.springframework.beans.factory.annotation.Autowired
 

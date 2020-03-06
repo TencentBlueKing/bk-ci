@@ -81,8 +81,7 @@ class JobIedService @Autowired constructor(
         }
     }
 
-
-    fun taskDetail(projectId: String, taskId:Int, operator: String): String {
+    fun taskDetail(projectId: String, taskId: Int, operator: String): String {
         val ccAppId = getCCAppId(projectId) ?: throw Exception("Project does not have cc appId.")
         val requestData = emptyMap<String, Any>().toMutableMap()
         requestData["app_code"] = appCode
@@ -108,11 +107,8 @@ class JobIedService @Autowired constructor(
         }
     }
 
-    private fun getCCAppId(projectId:String): Long?{
+    private fun getCCAppId(projectId: String): Long? {
         val projectInfo = client.get(ServiceProjectResource::class).get(projectId).data
         return projectInfo?.ccAppId
-
     }
-
-
 }
