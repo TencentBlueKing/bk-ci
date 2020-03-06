@@ -43,17 +43,13 @@
         </template>
         <template v-if="editingElementPos && execDetail">
             <template v-if="showLog">
-                <log :is-init="isInitLog"
-                    :title="currentElement.name"
+                <log :title="currentElement.name"
                     :status="currentElement.status"
-                    :id="currentElement.id"
                     :execute-count="currentElement.executeCount"
                     :down-load-name="`${editingElementPos.stageIndex + 1}-${editingElementPos.containerIndex + 1}-${editingElementPos.elementIndex + 1}-${currentElement.name}`"
                     @changeExecute="changeExecute"
-                    :link-url="linkUrl"
                     :down-load-link="downLoadPluginLink"
                     @closeLog="closeLog"
-                    log-type="plugin"
                     ref="log"
                 />
             </template>
@@ -70,15 +66,11 @@
 
         <template v-if="execDetail">
             <log v-if="showCompleteLog"
-                :is-init="isInitLog"
                 :title="execDetail.pipelineName"
                 :status="execDetail.status"
-                :id="execDetail.id"
-                :link-url="linkUrl"
                 :down-load-name="execDetail.pipelineName"
                 :down-load-link="downLoadAllLink"
                 @closeLog="closeLog"
-                log-type="all"
                 ref="log"
             >
             </log>
@@ -116,7 +108,6 @@
             return {
                 isLoading: true,
                 hasNoPermission: false,
-                isInitLog: false,
                 logPostData: {},
                 linkUrl: WEB_URL_PIRFIX + location.pathname,
                 noPermissionTipsConfig: {
@@ -288,11 +279,6 @@
         watch: {
             execDetail (val) {
                 this.isLoading = val === null
-                const query = this.$route.query || {}
-                const logType = query.logType
-                const id = query.id
-                if (logType === 'plugin') this.showElementLog(id)
-                if (logType === 'all') this.showAllLog(id)
             },
             'routerParams.buildNo': {
                 handler (val, oldVal) {
@@ -349,27 +335,6 @@
                 })
             },
 
-            showElementLog (elementId) {
-                let eleIndex, conIndex
-                const staIndex = this.execDetail.model.stages.findIndex(stage => {
-                    conIndex = stage.containers.findIndex(container => {
-                        eleIndex = container.elements.findIndex(element => element.id === elementId)
-                        return eleIndex > -1
-                    })
-                    return conIndex > -1
-                })
-                if (staIndex > -1) {
-                    this.togglePropertyPanel({
-                        isShow: true,
-                        editingElementPos: {
-                            stageIndex: staIndex,
-                            containerIndex: conIndex,
-                            elementIndex: eleIndex
-                        }
-                    })
-                }
-            },
-
             changeExecute (currentExe) {
                 this.logPostData.currentExe = currentExe
                 this.openLogApi.hasOpen = false
@@ -377,23 +342,14 @@
                 this.openLogApi()
             },
 
-            showAllLog () {
-                this.togglePropertyPanel({
-                    isShow: true,
-                    isComplete: true
-                })
-            },
-
             initAllLog () {
                 if (this.openLogApi.hasOpen) return
                 const route = this.$route.params || {}
-                const query = this.$route.query || {}
-                const currentExe = query.id === this.execDetail.id ? +query.currentExe : 1
                 this.logPostData = {
                     projectId: route.projectId,
                     pipelineId: route.pipelineId,
                     buildId: this.execDetail.id,
-                    currentExe
+                    currentExe: 1
                 }
                 this.openLogApi()
             },
@@ -401,14 +357,12 @@
             initLog () {
                 if (this.openLogApi.hasOpen) return
                 const route = this.$route.params || {}
-                const query = this.$route.query || {}
-                const currentExe = query.id === this.currentElement.id ? +query.currentExe : (this.currentElement.executeCount || 1)
                 this.logPostData = {
                     projectId: route.projectId,
                     pipelineId: route.pipelineId,
                     buildId: this.execDetail.id,
                     tag: this.currentElement.id,
-                    currentExe
+                    currentExe: 1
                 }
                 this.openLogApi()
             },
@@ -416,13 +370,12 @@
             openLogApi () {
                 if (this.openLogApi.hasOpen) return
                 this.openLogApi.hasOpen = true
-                this.isInitLog = true
                 this.getInitLog(this.logPostData).then((res) => {
                     this.handleLogRes(res)
-                    if (!res.finished || res.hasMore) this.$refs.log && this.$refs.log.scrollPageToBottom()
                 }).catch((err) => {
                     this.$bkMessage({ theme: 'error', message: err.message || err })
-                    this.isInitLog = false
+                    const logEle = this.$refs.log
+                    logEle.handleApiErr(err)
                 })
             },
 
@@ -438,16 +391,13 @@
 
                 if (res.finished) {
                     if (res.hasMore) {
-                        this.isInitLog = false
                         logEle.addLogData(logs)
                         this.getAfterLogApi(100)
                     } else {
-                        logEle.addLogData(logs, true)
-                        this.isInitLog = false
+                        logEle.addLogData(logs)
                     }
                 } else {
                     logEle.addLogData(logs)
-                    this.isInitLog = false
                     this.getAfterLogApi(1000)
                 }
             },

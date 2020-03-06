@@ -18,20 +18,14 @@
                 </p>
             </header>
 
-            <virtual-scroll class="log-scroll" ref="scroll" :id="id" :currentExe="currentExe">
+            <virtual-scroll class="log-scroll" ref="scroll">
                 <template slot-scope="item">
-                    <span class="item-txt selection-color"
-                        v-if="!isInit"
-                    >
-                        <span class="item-time selection-color">{{(showTime ? item.data.timestamp : '')|timeFilter}}</span>
+                    <span class="item-txt selection-color">
+                        <span class="item-time selection-color" v-if="showTime">{{(item.data.isNewLine ? '' : item.data.timestamp)|timeFilter}}</span>
                         <span class="selection-color" :style="`color: ${item.data.color};font-weight: ${item.data.fontWeight}`" v-html="valuefilter(item.data.value)"></span>
                     </span>
                 </template>
             </virtual-scroll>
-
-            <section class="log-loading" v-if="isInit">
-                <div class="lds-ring"><div></div><div></div><div></div><div></div></div>
-            </section>
         </section>
     </article>
 </template>
@@ -69,10 +63,6 @@
         },
 
         props: {
-            isInit: {
-                type: Boolean,
-                default: false
-            },
             downLoadLink: {
                 type: String
             },
@@ -83,20 +73,10 @@
                 type: Number,
                 default: 0
             },
-            logType: {
-                type: String
-            },
             status: {
                 type: String
             },
             title: {
-                type: String
-            },
-            id: {
-                type: String,
-                default: null
-            },
-            linkUrl: {
                 type: String
             }
         },
@@ -106,17 +86,12 @@
                 searchResult: [],
                 showSearchIndex: 0,
                 showTime: false,
-                currentExe: this.executeCount,
-                completeInit: false
+                currentExe: this.executeCount
             }
         },
 
         mounted () {
             document.addEventListener('mousedown', this.closeLog)
-
-            const query = this.$route.query || {}
-            const id = query.id
-            if (id === this.id) this.currentExe = +query.currentExe
         },
 
         beforeDestroy () {
@@ -146,7 +121,7 @@
                             break;
                     }
                     return res
-                }).replace(/&lt;a.+?href=["']?([^"']+)["']?.*&gt;(.+)&lt;\/a&gt;/g, "<a href='$1' target='_blank'>$2</a>")
+                }).replace(/&lt;a((?!&gt;).)+?href=["']?([^"']+)["']?((?!&gt;).)*&gt;(((?!&lt;).)+)&lt;\/a&gt;/gi, "<a href='$2' target='_blank'>$4</a>")
             },
 
             downLoad () {
@@ -184,108 +159,20 @@
                 this.$emit('changeExecute', execute)
             },
 
-            copyLink (event) {
-                const url = this.getLinkUrl({})
-                const input = document.createElement('input')
-                document.body.appendChild(input)
-                input.setAttribute('value', url)
-                input.select()
-                if (document.execCommand('copy')) {
-                    document.execCommand('copy')
-                    this.$bkMessage({ theme: 'success', message: '复制链接成功' })
-                }
-                document.body.removeChild(input)
-            },
-
-            getLinkUrl (params = {}) {
-                const keys = Object.keys(params)
-                const urlArr = this.linkUrl.split('?')
-                const firstEle = keys.shift()
-                let url = `${urlArr[0]}?${urlArr[1] ? (urlArr[1] + '&') : ''}${firstEle}=${params[firstEle]}`
-                keys.forEach((key) => {
-                    url = `${url}&${key}=${params[key]}`
-                })
-                return url
-            },
-
-            addLogData (data, isInit) {
-                this.completeInit = isInit
-                const type = isInit ? 'initLog' : 'addListData'
-                const id = this.$route.query.id
+            addLogData (data) {
                 const scroll = this.$refs.scroll
-                const lastIndex = scroll.indexList[scroll.indexList.length - 1] || {}
-                const isBottom = +lastIndex.value === +scroll.totalNumber
-
-                scroll.addListData(data, type)
-                if (!isBottom) {
-                    const addListPostData = {
-                        oldNumber: scroll.totalNumber,
-                        oldItemNumber: scroll.itemNumber,
-                        oldMapHeight: scroll.mapHeight,
-                        oldVisHeight: scroll.visHeight
-                    }
-                    scroll.getNumberChangeList(addListPostData)
-                } else {
-                    scroll.scrollPageByIndex(scroll.totalNumber - scroll.itemNumber)
-                }
+                scroll.addListData(data)
             },
 
-            scrollPageToBottom () {
+            handleApiErr (err) {
                 const scroll = this.$refs.scroll
-                scroll.scrollPageByIndex(scroll.totalNumber - scroll.itemNumber)
+                scroll.handleApiErr(err)
             }
         }
     }
 </script>
 
 <style lang="scss" scoped>
-    .log-loading {
-        position: absolute;
-        bottom: 0;
-        height: calc(100% - 84px);
-        width: 100%;
-        background: #1e1e1e;
-        z-index: 100;
-        .lds-ring {
-            display: inline-block;
-            position: relative;
-            width: 80px;
-            height: 80px;
-            top: 50%;
-            left: 50%;
-            transform: translate3d(-50%, -50%, 0);
-        }
-        .lds-ring div {
-            box-sizing: border-box;
-            display: block;
-            position: absolute;
-            width: 37px;
-            height: 37px;
-            margin: 8px;
-            border: 3px solid #fff;
-            border-radius: 50%;
-            animation: lds-ring 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
-            border-color: #fff transparent transparent transparent;
-        }
-        .lds-ring div:nth-child(1) {
-            animation-delay: -0.45s;
-        }
-        .lds-ring div:nth-child(2) {
-            animation-delay: -0.3s;
-        }
-        .lds-ring div:nth-child(3) {
-            animation-delay: -0.15s;
-        }
-        @keyframes lds-ring {
-            0% {
-                transform: rotate(0deg);
-            }
-            100% {
-                transform: rotate(360deg);
-            }
-        }
-    }
-
     .share-icon {
         position: absolute;
         display: none;
@@ -436,6 +323,8 @@
             padding: 0 5px;
         }
         .item-time {
+            display: inline-block;
+            min-width: 166px;
             color: #959da5;
             font-weight: 400;
             padding-right: 5px;
