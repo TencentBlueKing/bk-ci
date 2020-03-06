@@ -62,21 +62,10 @@ class WeworkServiceImpl @Autowired constructor(
 ) : WeworkService {
 
     private val logger = LoggerFactory.getLogger(WeworkServiceImpl::class.java)
-    override fun sendMqMsg(message: WeworkNotifyMessage) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
-
-    override fun sendMessage(weworkNotifyMessageWithOperation: WeworkNotifyMessageWithOperation) {
-        wechatWorkService.uploadMedia()
-    }
-
-    override fun listByCreatedTime(
-        page: Int,
-        pageSize: Int,
-        success: Boolean?,
-        fromSysId: String?,
-        createdTimeSortOrder: String?
-    ): NotificationResponseWithPage<WeworkNotifyMessageWithOperation> {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    override fun sendMessage(weworkNotifyMessage: WeworkNotifyMessage) {
+        wechatWorkService.uploadMedia(
+            mediaType = weworkNotifyMessage.mediaType,
+            mediaName =
+        )
     }
 }
