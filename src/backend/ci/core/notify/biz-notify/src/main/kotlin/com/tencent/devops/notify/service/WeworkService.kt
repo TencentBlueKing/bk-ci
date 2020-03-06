@@ -25,14 +25,9 @@
  */
 package com.tencent.devops.notify.service
 
-import com.tencent.devops.notify.model.WechatNotifyMessageWithOperation
-import com.tencent.devops.notify.model.WeworkNotifyMessageWithOperation
-import com.tencent.devops.notify.pojo.NotificationResponseWithPage
-import com.tencent.devops.notify.pojo.WechatNotifyMessage
 import com.tencent.devops.notify.pojo.WeworkNotifyMessage
 
 interface WeworkService {
 
     fun sendMessage(weworkNotifyMessage: WeworkNotifyMessage)
-
 }
