@@ -68,10 +68,14 @@ class BuildNotifyResourceImpl @Autowired constructor(
         mediaType: WeworkMediaType,
         inputStream: InputStream
     ): Result<Boolean> {
-        val weworkNotifyMessage = WeworkNotifyMessage(
 
+        val weworkNotifyMessage = WeworkNotifyMessage(
+            receivers = receivers.split(",|;"),
+            mediaInputStream = inputStream,
+            mediaType = mediaType
         )
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        weworkService.sendMessage(weworkNotifyMessage)
+        return Result(true)
     }
 
     override fun sendEmailNotify(message: EmailNotifyMessage): Result<Boolean> {

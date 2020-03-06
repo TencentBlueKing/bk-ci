@@ -31,17 +31,11 @@ import io.swagger.annotations.ApiModelProperty
 import java.io.InputStream
 
 @ApiModel("企业微信群消息类型")
-open class WeworkNotifyMessage : BaseMessage() {
-
-    @ApiModelProperty("企业微信群Ids")
-    val receivers: String = ""
-    @ApiModelProperty("媒体内容")
-    lateinit var mediaInputStream: InputStream
-    @ApiModelProperty("媒体内容类型")
-    var mediaType: WeworkMediaType = WeworkMediaType.image
-
-    override fun toString(): String {
-        return String.format("receivers(%s), mediaType(%s)",
-                receivers, mediaType.toString())
-    }
-}
+data class WeworkNotifyMessage(
+    @ApiModelProperty("企业微信群Ids", required = true)
+    val receivers: List<String>,
+    @ApiModelProperty("媒体内容", required = true)
+    var mediaInputStream: InputStream,
+    @ApiModelProperty("媒体内容类型", required = true)
+    var mediaType: WeworkMediaType
+)
