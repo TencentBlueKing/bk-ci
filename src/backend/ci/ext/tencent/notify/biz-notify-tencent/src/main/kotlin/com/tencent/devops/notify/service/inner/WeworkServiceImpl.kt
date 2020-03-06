@@ -73,19 +73,31 @@ class WeworkServiceImpl @Autowired constructor(
         if (uploadMediaResponse == null) {
             logger.error("Upload media failed.")
         } else {
-            weworkNotifyMessage.receivers.forEach{
-                val sendString = String.format("""{
+            weworkNotifyMessage.receivers.forEach {
+                val sendString = String.format(
+                    """{
    "receiver":
    {
-       "type": "group",
+       "type": "%s",
        "id": "%s"
    },
    "msgtype": "%s",
    "image" : {
         "media_id" : "%s"
    }
-}""",it,weworkNotifyMessage.mediaType,uploadMediaResponse.media_id)
-                wechatWorkService.sendMessage(sendString)
+}"""
+                    ,
+                    weworkNotifyMessage.receiverType,
+                    it,
+                    weworkNotifyMessage.mediaType,
+                    uploadMediaResponse.media_id
+                )
+                val sendResult = wechatWorkService.sendMessage(sendString)
+                if (sendResult) {
+                    logger.info("Send media success.")
+                } else {
+                    logger.error("Send media failed.")
+                }
             }
         }
     }
