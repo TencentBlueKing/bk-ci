@@ -428,7 +428,7 @@ class WechatWorkService @Autowired constructor(
         val accessToken = getAccessToken()
         val sendURL = "$url?access_token=$accessToken"
         logger.info("send to wework sendURL:$sendURL")
-        val jsonString = if(message is String) message else objectMapper.writeValueAsString(message)
+        val jsonString = if (message is String) message else objectMapper.writeValueAsString(message)
 
         logger.info("send to wework send json:$jsonString")
         val requestBody = RequestBody.create(MediaType.parse("application/json"), jsonString)
