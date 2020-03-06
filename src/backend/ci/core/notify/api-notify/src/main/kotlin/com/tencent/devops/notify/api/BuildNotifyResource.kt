@@ -59,6 +59,14 @@ interface BuildNotifyResource {
 
     ): Result<Boolean>
 
+    @ApiOperation("发送企业微信群信息")
+    @POST
+    @Path("/weworkGroup")
+    fun sendWeworkGroupNotify(
+        @ApiParam(value = "企业微信群信息", required = true)
+        message: RtxNotifyMessage
+    ): Result<Boolean>
+
     @ApiOperation("发送电子邮件通知")
     @POST
     @Path("/email")
