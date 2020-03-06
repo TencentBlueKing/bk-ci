@@ -97,6 +97,7 @@ import com.tencent.devops.process.engine.pojo.event.PipelineBuildStartEvent
 import com.tencent.devops.process.pojo.BuildBasicInfo
 import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.process.pojo.PipelineBuildMaterial
 import com.tencent.devops.process.pojo.ReviewParam
@@ -129,6 +130,8 @@ import com.tencent.devops.process.utils.PIPELINE_START_USER_NAME
 import com.tencent.devops.process.utils.PIPELINE_VERSION
 import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_TYPE
 import com.tencent.devops.process.utils.PipelineVarUtil
+import com.tencent.devops.repository.api.ServiceCommitResource
+import com.tencent.devops.store.api.common.ServiceStoreResource
 import org.apache.commons.lang3.math.NumberUtils
 import org.jooq.DSLContext
 import org.jooq.Record
@@ -161,7 +164,8 @@ class PipelineRuntimeService @Autowired constructor(
     private val pipelineBuildVarDao: PipelineBuildVarDao,
     private val buildDetailDao: BuildDetailDao,
     private val buildStartupParamService: BuildStartupParamService,
-    private val redisOperation: RedisOperation
+    private val redisOperation: RedisOperation,
+    private val client: Client
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineRuntimeService::class.java)
@@ -1719,20 +1723,23 @@ class PipelineRuntimeService @Autowired constructor(
     }
 
     fun getPipelineBuildMaterial(buildId: String): List<PipelineBuildMaterial> {
-        val vars = pipelineBuildVarDao.getVars(dslContext, buildId)
         val materialList = mutableListOf<PipelineBuildMaterial>()
-        vars.forEach {
-            if (it.key.startsWith(PIPELINE_MATERIAL_URL)) {
-                val repoId = it.key.substringAfter(PIPELINE_MATERIAL_URL)
-                val commitTimes = vars["$PIPELINE_MATERIAL_NEW_COMMIT_TIMES$repoId"] ?: "0"
+        val commitResponse = client.get(ServiceCommitResource::class)
+            .getCommitsByBuildId(buildId, "")
+        if (commitResponse.isNotOk()) {
+            throw Exception("getCommitsByBuildId failed")
+        }
+
+        commitResponse.data!!.forEach {
+            it.records.forEach { it1 ->
                 materialList.add(
                     PipelineBuildMaterial(
-                        url = it.value,
-                        aliasName = vars["$PIPELINE_MATERIAL_ALIASNAME$repoId"] ?: "",
-                        branchName = vars["$PIPELINE_MATERIAL_BRANCHNAME$repoId"] ?: "",
-                        newCommitId = vars["$PIPELINE_MATERIAL_NEW_COMMIT_ID$repoId"] ?: "",
-                        newCommitComment = vars["$PIPELINE_MATERIAL_NEW_COMMIT_COMMENT$repoId"] ?: "",
-                        commitTimes = if (NumberUtils.isDigits(commitTimes)) commitTimes.toInt() else 0
+                        url = it1.url ?: "",
+                        aliasName = it1.aliasName ?: "",
+                        branchName = it1.branchName ?: "",
+                        newCommitId = it1.commit,
+                        newCommitComment = it1.comment ?: "",
+                        commitTimes = if (NumberUtils.isDigits(it1.commitTimes) && it1.commitTimes != null) it1.commitTimes!!.toInt() else 0
                     )
                 )
             }
