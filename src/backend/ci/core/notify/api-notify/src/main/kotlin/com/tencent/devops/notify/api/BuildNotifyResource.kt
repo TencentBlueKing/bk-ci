@@ -27,6 +27,7 @@ package com.tencent.devops.notify.api
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.notify.enums.WeworkMediaType
+import com.tencent.devops.common.notify.enums.WeworkReceiverType
 import com.tencent.devops.notify.pojo.EmailNotifyMessage
 import com.tencent.devops.notify.pojo.RtxNotifyMessage
 import com.tencent.devops.notify.pojo.SmsNotifyMessage
@@ -40,6 +41,7 @@ import javax.ws.rs.Consumes
 import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 /**
@@ -67,13 +69,16 @@ interface BuildNotifyResource {
     @Path("/wework")
     fun sendWeworkNotify(
         @ApiParam("企业微信群Id", required = true)
-        @FormDataParam("receivers")
+        @QueryParam("receivers")
         receivers: String,
+        @ApiParam("接受人类型", required = true)
+        @QueryParam("receiverType")
+        receiverType: WeworkReceiverType,
         @ApiParam("文件类型", required = true)
-        @FormDataParam("mediaType")
+        @QueryParam("mediaType")
         mediaType: WeworkMediaType,
         @ApiParam("文件名称", required = true)
-        @FormDataParam("mediaTName")
+        @QueryParam("mediaTName")
         mediaTName: String,
         @ApiParam("文件", required = true)
         @FormDataParam("file")
