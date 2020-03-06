@@ -53,6 +53,7 @@ class CommitService @Autowired constructor(
 
         return commits?.map {
             val repoUrl = repoMap.get(it.repoId.toString())?.url
+            val aliasName = repoMap.get(it.repoId.toString())?.aliasName
             CommitData(
                 it.type,
                 it.pipelineId,
@@ -67,7 +68,10 @@ class CommitService @Autowired constructor(
                 if (it.type.toInt() == 2 && repoUrl != null) {
                     val urlAndRepo = GitUtils.getDomainAndRepoName(repoUrl)
                     "https://${urlAndRepo.first}/${urlAndRepo.second}/commit/${it.commit}"
-                } else null
+                } else null,
+                it.branchName,
+                it.commitTimes,
+                aliasName
             )
         }?.groupBy { it.elementId }?.map {
             val elementId = it.value[0].elementId
