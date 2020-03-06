@@ -189,7 +189,7 @@ open class CodeccApi constructor(
     fun getTaskInfo(taskEnName: String): Result<TaskDetailVO?> {
         val result = taskExecution(
             body = mapOf(),
-            path = "/ms/task/api/service/task/taskInfo?nameEn=taskEnName",
+            path = "/ms/task/api/service/task/taskInfo?nameEn=$taskEnName",
             method = "GET"
         )
         return objectMapper.readValue(result)

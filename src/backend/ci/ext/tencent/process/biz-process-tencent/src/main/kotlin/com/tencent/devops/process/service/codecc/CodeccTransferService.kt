@@ -28,6 +28,7 @@ package com.tencent.devops.process.service.codecc
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.tencent.devops.common.api.util.ExecutorsUtils
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxPaasCodeCCScriptElement
@@ -36,6 +37,7 @@ import com.tencent.devops.plugin.codecc.CodeccApi
 import com.tencent.devops.plugin.codecc.pojo.coverity.ProjectLanguage
 import com.tencent.devops.process.engine.service.PipelineService
 import com.tencent.devops.process.service.PipelineTaskService
+import org.apache.commons.beanutils.BeanUtils
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -94,6 +96,8 @@ class CodeccTransferService @Autowired constructor(
                     checkPermission = false,
                     checkTemplate = false
                 )
+
+                result[pipelineId] = "update codecc to v1 success"
             })
         }
         futureResult.forEach { it.get() }
@@ -113,8 +117,6 @@ class CodeccTransferService @Autowired constructor(
     }
 
     private fun getCodeccDataMap(oldCodeccElement: LinuxPaasCodeCCScriptElement): Map<String, Any>? {
-        val resultMap = mutableMapOf<String, Any>()
-
         // 1.基础设置tab
         val params = CodeccCheckAtomParamV3()
         params.script = oldCodeccElement.script
@@ -152,7 +154,8 @@ class CodeccTransferService @Autowired constructor(
 
         // 3.扫描配置tab
         val transferAuthors = codeccApi.getTransferAuthor(oldCodeccElement.codeCCTaskId!!).data
-        params.toolScanType = oldCodeccElement.scanType
+        // params.toolScanType = oldCodeccElement.scanType
+        params.toolScanType = "0"
         params.newDefectJudgeFromDate = taskInfo.newDefectJudge?.fromDate
         params.transferAuthorList = transferAuthors?.transferAuthorList
 
@@ -162,7 +165,7 @@ class CodeccTransferService @Autowired constructor(
         params.pathType = "CUSTOM"
         params.customPath = filterPaths?.filterPaths
 
-        return resultMap
+        return BeanUtils.describe(params)
     }
 
     private fun getNewRuleSetMap(oldCodeccElement: LinuxPaasCodeCCScriptElement): List<Map<String, List<String>>> {
