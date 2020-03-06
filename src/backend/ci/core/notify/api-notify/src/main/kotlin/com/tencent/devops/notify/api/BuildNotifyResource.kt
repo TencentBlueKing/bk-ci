@@ -72,6 +72,9 @@ interface BuildNotifyResource {
         @ApiParam("文件类型", required = true)
         @FormDataParam("mediaType")
         mediaType: WeworkMediaType,
+        @ApiParam("文件名称", required = true)
+        @FormDataParam("mediaTName")
+        mediaTName: String,
         @ApiParam("文件", required = true)
         @FormDataParam("file")
         inputStream: InputStream
