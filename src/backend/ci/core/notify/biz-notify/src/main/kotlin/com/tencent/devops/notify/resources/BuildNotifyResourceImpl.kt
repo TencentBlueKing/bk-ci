@@ -58,6 +58,10 @@ class BuildNotifyResourceImpl @Autowired constructor(
         return Result(true)
     }
 
+    override fun sendWeworkGroupNotify(message: RtxNotifyMessage): Result<Boolean> {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
     override fun sendEmailNotify(message: EmailNotifyMessage): Result<Boolean> {
         MessageCheckUtil.checkEmailMessage(message)
         emailService.sendMqMsg(message)
