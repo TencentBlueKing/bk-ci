@@ -66,13 +66,15 @@ class BuildNotifyResourceImpl @Autowired constructor(
     override fun sendWeworkNotify(
         receivers: String,
         mediaType: WeworkMediaType,
+        mediaName: String,
         inputStream: InputStream
     ): Result<Boolean> {
 
         val weworkNotifyMessage = WeworkNotifyMessage(
             receivers = receivers.split(",|;"),
             mediaInputStream = inputStream,
-            mediaType = mediaType
+            mediaType = mediaType,
+            mediaName = mediaName
         )
         weworkService.sendMessage(weworkNotifyMessage)
         return Result(true)
