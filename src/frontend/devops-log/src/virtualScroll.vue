@@ -2,16 +2,18 @@
     <section class="scroll-home" @mousewheel.prevent="handleWheel" @DOMMouseScroll.prevent="handleWheel">
         <ul class="scroll-index scroll" :style="`top: ${-totalScrollHeight}px; width: ${indexWidth}px`">
             <li class="scroll-item" :style="`height: ${itemHeight}px; top: ${item.top}px`" v-for="(item) in indexList" :key="item">
-                {{item.value}}
-                <span :class="[{ 'show-all': item.tagDataLength }, 'log-folder']" v-if="item.startIndex != undefined" @click="foldListData(item.startIndex)"></span>
+                {{item.isNewLine ? '' : item.value}}
+                <span :class="[{ 'show-all': item.hasFolded }, 'log-folder']" v-if="item.isFold" @click="foldListData(item.index, item.isFold)"></span>
             </li>
         </ul>
         <ul class="scroll scroll-main" :style="`top: ${-totalScrollHeight}px;width: ${mainWidth}px; left: ${indexWidth}px`">
-            <li :class="[{ 'pointer': item.startIndex != undefined }, 'scroll-item']"
+            <li :class="[{ 'pointer': item.isFold, hover: item.showIndex === curHoverIndex }, 'scroll-item']"
+                @mouseenter="curHoverIndex = item.showIndex"
+                @mouseleave="curHoverIndex = -1"
                 :style="`height: ${itemHeight}px; top: ${item.top}px; left: ${-bottomScrollDis * (itemWidth - mainWidth) / (mainWidth - bottomScrollWidth) }px; width: ${itemWidth}px`"
                 v-for="item in listData"
                 :key="item.top + item.value"
-                @click="foldListData(item.startIndex)"
+                @click="foldListData(item.index, item.isFold)"
             ><slot :data="item"></slot>
             </li>
         </ul>
@@ -36,7 +38,11 @@
             @mousedown="startBottomMove"
         >
         </span>
-        <p class="list-empty" v-if="!$parent.isInit && totalNumber <= 0">{{ language('日志内容为空') }}</p>
+        <p class="list-empty" v-if="hasCompleteInit && totalNumber <= 0">{{ language('日志内容为空') }}</p>
+
+        <section class="log-loading" v-if="!hasCompleteInit">
+            <div class="lds-ring"><div></div><div></div><div></div><div></div></div>
+        </section>
     </section>
 </template>
 
@@ -50,12 +56,6 @@
             itemHeight: {
                 type: Number,
                 default: 16
-            },
-            id: {
-                type: String
-            },
-            currentExe: {
-                type: Number
             }
         },
 
@@ -82,7 +82,9 @@
                 indexWidth: 0,
                 itemWidth: 0,
                 isScrolling: false,
-                isBottomMove: false
+                isBottomMove: false,
+                curHoverIndex: -1,
+                hasCompleteInit: false
             }
         },
 
@@ -110,6 +112,11 @@
         methods: {
             language,
 
+            handleApiErr (err) {
+                this.hasCompleteInit = true
+                console.log(err)
+            },
+
             resetData () {
                 this.totalNumber = 0
                 this.setStatus()
@@ -128,21 +135,9 @@
                 this.getListData(this.totalScrollHeight)
             },
 
-            initLink () {
-                const query = this.$route.query || {}
-                const minMapTop = query.minMapTop
-                const id = query.id
-                const currentExe = +query.currentExe
-                if (typeof minMapTop !== 'undefined' && id === this.id && currentExe === +this.currentExe) {
-                    this.minMapTop = +minMapTop
-                    this.totalScrollHeight = this.minMapTop / (this.mapHeight - this.visHeight / 8) * (this.totalHeight - this.visHeight)
-                    this.minNavTop = this.minMapTop * (this.visHeight - this.navHeight) / (this.mapHeight - this.visHeight / 8)
-                    this.getListData(this.totalScrollHeight, false, 'initLink')
-                }
-            },
-
-            foldListData (startIndex) {
-                if (typeof startIndex !== 'undefined') {
+            foldListData (startIndex, isFold) {
+                window.getSelection().removeAllRanges()
+                if (isFold) {
                     const postData = {
                         type: 'foldListData',
                         startIndex
@@ -248,7 +243,7 @@
                 this.getListData(totalScrollHeight)
                 this.isScrolling = true
             },
-            
+
             scrollPageByIndex (index) {
                 let height = this.itemHeight * (index + 1)
                 if (height <= 0) height = 0
@@ -281,30 +276,43 @@
                     const data = event.data
                     switch (data.type) {
                         case 'completeInit':
-                            this.totalNumber = data.number
-                            this.setStatus()
-                            this.initLink()
+                            this.freshDataScrollBottom(data)
+                            this.hasCompleteInit = true
+                            break
+                        case 'completeAdd':
+                            const lastIndexData = this.indexList[this.indexList.length - 1] || {}
+                            if (this.totalNumber - lastIndexData.index <= 3) {
+                                this.freshDataScrollBottom(data)
+                            } else {
+                                this.freshDataNoScroll(data)
+                                this.indexWidth = (Math.log10(this.totalNumber) + 1) * 7
+                            }
                             break
                         case 'wheelGetData':
                             this.drawList(data)
                             break
                         case 'completeFold':
-                            const oldNumber = this.totalNumber
-                            const oldItemNumber = this.itemNumber
-                            const oldMapHeight = this.mapHeight
-                            const oldVisHeight = this.visHeight
-                            this.totalNumber = data.number
-                            this.setStatus()
-                            this.getNumberChangeList({ oldNumber, oldItemNumber, oldMapHeight, oldVisHeight })
-                            break
-                        case 'initLink':
-                            this.drawList(data)
-                            setTimeout(() => {
-                                this.handleInitLink()
-                            }, 0)
+                            this.freshDataNoScroll(data)
                             break
                     }
                 })
+            },
+
+            freshDataScrollBottom (data) {
+                this.totalNumber = data.number
+                this.indexWidth = (Math.log10(this.totalNumber) + 1) * 7
+                this.setStatus()
+                this.scrollPageByIndex(this.totalNumber - this.itemNumber)
+            },
+
+            freshDataNoScroll (data) {
+                const oldNumber = this.totalNumber
+                const oldItemNumber = this.itemNumber
+                const oldMapHeight = this.mapHeight
+                const oldVisHeight = this.visHeight
+                this.totalNumber = data.number
+                this.setStatus()
+                this.getNumberChangeList({ oldNumber, oldItemNumber, oldMapHeight, oldVisHeight })
             },
 
             getNumberChangeList ({ oldNumber, oldItemNumber, oldMapHeight, oldVisHeight }) {
@@ -320,27 +328,6 @@
                 this.minMapTop = minMapTop
                 this.minNavTop = this.minMapTop * (this.visHeight - this.navHeight) / ((this.mapHeight - this.visHeight / 8) || 1)
                 this.getListData(totalScrollHeight)
-            },
-
-            handleInitLink () {
-                const { bottomScrollDis, startShareIndex, endShareIndex, startOffset, endOffset, isStartFirst, isEndFirst } = this.$route.query
-                this.bottomScrollDis = +bottomScrollDis || 0
-                const list = document.querySelectorAll('.item-txt')
-                const selection = window.getSelection()
-                const range = document.createRange()
-                const start = Array.from(list).find((x) => (x.parentNode.offsetTop === +startShareIndex))
-                const end = Array.from(list).find((x) => (x.parentNode.offsetTop === +endShareIndex))
-                if (!start || !end) return
-                const startElement = start.children[+isStartFirst]
-                const endElement = end.children[+isEndFirst]
-                let startRange = +startOffset
-                let endRange = +endOffset
-                if (startRange > startElement.childNodes[0].length) startRange = startElement.childNodes[0].length
-                if (endRange > endElement.childNodes[0].length) endRange = endElement.childNodes[0].length
-                range.setStart(startElement.childNodes[0], startRange)
-                range.setEnd(endElement.childNodes[0], endRange)
-                selection.removeAllRanges()
-                selection.addRange(range)
             },
 
             drawList (data) {
@@ -359,55 +346,10 @@
                 this.isScrolling = false
             },
 
-            addListData (list, type) {
+            addListData (list) {
+                const type = this.hasCompleteInit ? 'addListData' : 'initLog'
                 const postData = { type, list, mainWidth: this.mainWidth }
-                this.totalNumber += list.length
-                this.indexWidth = (Math.log10(this.totalNumber) + 1) * 7
-                list.forEach((item) => {
-                    const width = this.mainWidth / (item.message.length * 6.8) * this.mainWidth
-                    if (width < (this.addListData.tempWidth || Infinity) && width < this.mainWidth) {
-                        const textWidth = this.getTextWidth(item.message)
-                        let bottomScrollWidth = this.mainWidth / textWidth * this.mainWidth
-                        if (bottomScrollWidth < 100) bottomScrollWidth = 100
-                        this.itemWidth = textWidth
-                        this.bottomScrollWidth = bottomScrollWidth
-                        this.addListData.tempWidth = width
-                    }
-                })
-                this.setStatus()
                 this.worker.postMessage(postData)
-            },
-
-            getTextWidth (text) {
-                const lDiv = document.createElement('div')
-                document.body.appendChild(lDiv)
-                lDiv.style.fontFamily = "Consolas, 'Courier New', monospace"
-                lDiv.style.fontSize = "12px"
-                lDiv.style.height = "16px"
-                lDiv.style.position = "fixed"
-                lDiv.style.wordBreak = 'keep-all'
-                lDiv.style.whiteSpace = 'nowrap'
-                lDiv.style.fontWeight = 'normal'
-                lDiv.style.letterSpacing = '0px'
-                lDiv.style.opacity = 0
-                lDiv.innerHTML = text.replace(/\s|<|>/g, (str) => {
-                    let res = '&nbsp;'
-                    switch (str) {
-                        case '<':
-                            res = '&lt;'
-                            break;
-                        case '>':
-                            res = '&gt;'
-                            break;
-                        default:
-                            res = '&nbsp;'
-                            break;
-                    }
-                    return res
-                }).replace(/&lt;a.+?href=["']?([^"']+)["']?.*&gt;(.+)&lt;\/a&gt;/g, "<a href='$1' target='_blank'>$2</a>")
-                const res = lDiv.clientWidth + 200
-                document.body.removeChild(lDiv)
-                return res
             },
 
             setStatus () {
@@ -501,6 +443,53 @@
 </script>
 
 <style lang="scss" scoped>
+    .log-loading {
+        position: absolute;
+        bottom: 0;
+        height: calc(100% - 84px);
+        width: 100%;
+        background: #1e1e1e;
+        z-index: 100;
+        .lds-ring {
+            display: inline-block;
+            position: relative;
+            width: 80px;
+            height: 80px;
+            top: 50%;
+            left: 50%;
+            transform: translate3d(-50%, -50%, 0);
+        }
+        .lds-ring div {
+            box-sizing: border-box;
+            display: block;
+            position: absolute;
+            width: 37px;
+            height: 37px;
+            margin: 8px;
+            border: 3px solid #fff;
+            border-radius: 50%;
+            animation: lds-ring 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+            border-color: #fff transparent transparent transparent;
+        }
+        .lds-ring div:nth-child(1) {
+            animation-delay: -0.45s;
+        }
+        .lds-ring div:nth-child(2) {
+            animation-delay: -0.3s;
+        }
+        .lds-ring div:nth-child(3) {
+            animation-delay: -0.15s;
+        }
+        @keyframes lds-ring {
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    }
+
     ul, li {
         margin: 0;
         padding: 0;
@@ -555,7 +544,7 @@
             }
             .scroll-item {
                 min-width: 100%;
-                &:hover {
+                &.hover {
                     background: #333030;
                 }
             }

@@ -51,8 +51,8 @@ onmessage = function (e) {
             mainWidth = data.mainWidth - 70
             mainWordNum = Math.floor(mainWidth / 6.8)
             addListData(data)
+            postMessage({ type: 'completeAdd', number: allListData.length })
             break
-        case 'initLink':
         case 'wheelGetData':
             getListData(data)
             break
@@ -68,7 +68,7 @@ onmessage = function (e) {
 }
 
 function foldListData ({ startIndex }) {
-    const realIndex = allListData.findIndex(x => x.index === startIndex)
+    const realIndex = allListData.findIndex(x => x.realIndex === startIndex)
     const currentItem = allListData[realIndex]
     if (!currentItem || !currentItem.children) return
 
@@ -96,15 +96,22 @@ function foldListData ({ startIndex }) {
     }
 }
 
+let repeatLineNum = -1
 function addListData ({ list }) {
     list.forEach((item) => {
         const { message, color } = handleColor(item.message || '')
         const newItemArr = message.split(/\r\n|\n/)
         newItemArr.forEach((message) => {
             const splitTextArr = splitText(message)
-            splitTextArr.forEach((message) => {
+            splitTextArr.forEach((message, i) => {
                 const currentIndex = allListData.length
-                const newItem = { message, color, index: currentIndex, realIndex: currentIndex, timestamp: item.timestamp }
+                const newItem = {
+                    message, color,
+                    isNewLine: i > 0 ? (repeatLineNum++, true) : false,
+                    showIndex: allListData.length - repeatLineNum,
+                    realIndex: currentIndex,
+                    timestamp: item.timestamp
+                }
                 if (message.includes('##[group]')) {
                     newItem.message = newItem.message.replace('##[group]', '')
                     tagList.push(newItem)
@@ -125,34 +132,65 @@ function addListData ({ list }) {
 
 function splitText (message) {
     let tempMes = ''
-    let totalWidth = getTextWidth(message)
+    const totalWidth = getTextWidth(message)
     const mesRes = []
     if (totalWidth < mainWidth) {
         mesRes.push(message)
     } else {
-        while (totalWidth > mainWidth) {
-            tempMes = message.slice(0, mainWordNum)
-            message = message.slice(mainWordNum)
-            let tempWidth = getTextWidth(tempMes)
-            while (tempWidth > mainWidth || mainWidth - tempWidth > 10) {
-                if (tempWidth > mainWidth) {
-                    message = tempMes.slice(-1) + message
-                    tempMes = tempMes.slice(0, -1)
-                    tempWidth = getTextWidth(tempMes)
-                } else {
-                    tempMes += message.slice(0, 1)
-                    message = message.slice(1)
-                    tempWidth = getTextWidth(tempMes)
+        const regex = /<a[^>]+?href=["']?([^"']+)["']?[^>]*>([^<]+)<\/a>/gi
+        const aList = []
+        let tempA = null
+        let currentIndex = 0
+
+        while ((tempA = regex.exec(message)) != null) aList.push({
+            content: tempA[0],
+            href: tempA[1],
+            text: tempA[2],
+            startIndex: tempA.index
+        })
+        if (aList.length) message = message.replace(regex, '$2')
+
+        while (message !== '') {
+            [tempMes, message] = splitByChar(message)
+            // a标签单独处理
+            aList.forEach((x) => {
+                if (x.startIndex <= currentIndex + tempMes.length && x.startIndex >= currentIndex) {
+                    const curStartIndex = x.startIndex - currentIndex
+                    const curLength = x.text.length
+                    const diffDis = curStartIndex + curLength - tempMes.length
+                    if (diffDis > 0) {
+                        message = tempMes.slice(curStartIndex) + message
+                        tempMes = tempMes.slice(0, curStartIndex)
+                    } else {
+                        tempMes = (tempMes.slice(0, curStartIndex) + x.content + tempMes.slice(curStartIndex + curLength))
+                    }
                 }
-            }
-            totalWidth = getTextWidth(message)
+            })
+
+            currentIndex += tempMes.length
             mesRes.push(tempMes)
         }
-        mesRes.push(message)
     }
     return mesRes
 }
 
+function splitByChar (message) {
+    let tempMes = message.slice(0, mainWordNum)
+    message = message.slice(mainWordNum)
+    let tempWidth = getTextWidth(tempMes)
+    while (tempWidth > mainWidth || (mainWidth - tempWidth > 15 && message !== '')) {
+        if (tempWidth > mainWidth) {
+            message = tempMes.slice(-1) + message
+            tempMes = tempMes.slice(0, -1)
+            tempWidth = getTextWidth(tempMes)
+        } else {
+            tempMes += message.slice(0, 1)
+            message = message.slice(1)
+            tempWidth = getTextWidth(tempMes)
+        }
+    }
+    return [tempMes, message]
+}
 
 const canvas = new OffscreenCanvas(100, 1)
 const context = canvas.getContext("2d")
@@ -177,16 +215,19 @@ function getListData ({ totalScrollHeight, itemHeight, itemNumber, canvasHeight,
         if (typeof currentItem === 'undefined') continue
         indexList.push({
             top,
-            value: currentItem.realIndex + 1,
-            index: currentItem.index,
+            value: currentItem.showIndex,
+            isNewLine: currentItem.isNewLine,
+            index: currentItem.realIndex,
             isFold: currentItem.endIndex !== undefined,
             hasFolded: (currentItem.children || []).length > 0
         })
         listData.push({ 
             top,
+            isNewLine: currentItem.isNewLine,
             value: currentItem.message,
             color: currentItem.color,
-            index: currentItem.index,
+            index: currentItem.realIndex,
+            showIndex: currentItem.showIndex,
             fontWeight: currentItem.fontWeight,
             isFold: currentItem.endIndex !== undefined,
             timestamp: currentItem.timestamp
