@@ -27,6 +27,7 @@ package com.tencent.devops.notify.resources
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.notify.enums.WeworkMediaType
+import com.tencent.devops.common.notify.enums.WeworkReceiverType
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.notify.api.BuildNotifyResource
 import com.tencent.devops.notify.pojo.EmailNotifyMessage
@@ -65,6 +66,7 @@ class BuildNotifyResourceImpl @Autowired constructor(
 
     override fun sendWeworkNotify(
         receivers: String,
+        receiverType: WeworkReceiverType,
         mediaType: WeworkMediaType,
         mediaName: String,
         inputStream: InputStream
@@ -72,6 +74,7 @@ class BuildNotifyResourceImpl @Autowired constructor(
 
         val weworkNotifyMessage = WeworkNotifyMessage(
             receivers = receivers.split(",|;"),
+            receiverType = receiverType,
             mediaInputStream = inputStream,
             mediaType = mediaType,
             mediaName = mediaName
