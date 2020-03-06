@@ -26,18 +26,16 @@
 
 package com.tencent.devops.process.service.codecc
 
-import com.fasterxml.jackson.annotation.JsonProperty
 import com.tencent.devops.common.api.util.ExecutorsUtils
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxPaasCodeCCScriptElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.plugin.codecc.CodeccApi
 import com.tencent.devops.plugin.codecc.pojo.coverity.ProjectLanguage
+import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineService
 import com.tencent.devops.process.service.PipelineTaskService
-import org.apache.commons.beanutils.BeanUtils
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -45,6 +43,7 @@ import org.springframework.stereotype.Service
 class CodeccTransferService @Autowired constructor(
     private val pipelineTaskService: PipelineTaskService,
     private val pipelineService: PipelineService,
+    private val pipelineRepositoryService: PipelineRepositoryService,
     private val codeccApi: CodeccApi
 ) {
     fun transferToV2(projectId: String, pipelineIds: Set<String>): Map<String, String> {
@@ -66,7 +65,8 @@ class CodeccTransferService @Autowired constructor(
                 }
 
                 // start to transfer
-                val model = pipelineService.getPipeline("", projectId, pipelineId, ChannelCode.BS, false)
+                val model = pipelineRepositoryService.getModel(pipelineId)!!
+                val pipelineInfo = pipelineRepositoryService.getPipelineInfo(pipelineId)
                 model.stages.forEach { stage ->
                     stage.containers.forEach { container ->
                         val elementList = mutableListOf<Element>()
@@ -88,7 +88,7 @@ class CodeccTransferService @Autowired constructor(
 
                 // save pipeline
                 pipelineService.editPipeline(
-                    userId = "",
+                    userId = pipelineInfo?.lastModifyUser ?: "",
                     projectId = projectId,
                     pipelineId = pipelineId,
                     model = model,
@@ -121,7 +121,7 @@ class CodeccTransferService @Autowired constructor(
         // 1.基础设置tab
         val params = CodeccCheckAtomParamV3()
         params.script = oldCodeccElement.script
-        params.languages = collectionToJson(oldCodeccElement.languages)
+        params.languages = oldCodeccElement.languages
         params.asynchronous = oldCodeccElement.asynchronous
         params.path = oldCodeccElement.path
         params.pyVersion = oldCodeccElement.pyVersion
@@ -129,7 +129,9 @@ class CodeccTransferService @Autowired constructor(
         params.projectBuildType = oldCodeccElement.projectBuildType
         params.projectBuildCommand = oldCodeccElement.projectBuildCommand
         params.needCodeContent = oldCodeccElement.needCodeContent
-        params.languageRuleSetMap = collectionToJson(getNewRuleSetMap(oldCodeccElement))
+
+        val ruleSetMap = getNewRuleSetMap(oldCodeccElement)
+        params.languageRuleSetMap = ruleSetMap
 
         val taskInfo = codeccApi.getTaskInfo(oldCodeccElement.codeCCTaskName!!).data
             ?: return null
@@ -139,18 +141,18 @@ class CodeccTransferService @Autowired constructor(
             params.rtxReceiverList = notifyCustomInfo?.rtxReceiverList
             params.botWebhookUrl = notifyCustomInfo?.botWebhookUrl
             params.botRemindRange = notifyCustomInfo?.botRemindRange?.toString()
-            params.botRemaindTools = collectionToJson(notifyCustomInfo?.botRemaindTools)
+            params.botRemaindTools = notifyCustomInfo?.botRemaindTools
             params.botRemindSeverity = notifyCustomInfo?.botRemindSeverity?.toString()
             params.emailReceiverType = notifyCustomInfo?.emailReceiverType
-            params.emailReceiverList = collectionToJson(notifyCustomInfo?.emailReceiverList)
-            params.emailCCReceiverList = collectionToJson(notifyCustomInfo?.emailCCReceiverList)
+            params.emailReceiverList = notifyCustomInfo?.emailReceiverList
+            params.emailCCReceiverList = notifyCustomInfo?.emailCCReceiverList
             params.instantReportStatus = notifyCustomInfo?.instantReportStatus
-            params.reportDate = collectionToJson(notifyCustomInfo?.reportDate)
+            params.reportDate = notifyCustomInfo?.reportDate
             if (notifyCustomInfo?.reportTime != null && notifyCustomInfo?.reportMinute != null) {
                 params.reportTime =
                     notifyCustomInfo?.reportTime!!.toString() + ":" + notifyCustomInfo?.reportMinute!!.toString()
             }
-            params.reportTools = collectionToJson(notifyCustomInfo?.reportTools)
+            params.reportTools = notifyCustomInfo?.reportTools
         }
 
         // 3.扫描配置tab
@@ -158,18 +160,32 @@ class CodeccTransferService @Autowired constructor(
         // params.toolScanType = oldCodeccElement.scanType
         params.toolScanType = "0"
         params.newDefectJudgeFromDate = taskInfo.newDefectJudge?.fromDate
-        params.transferAuthorList = collectionToJson(transferAuthors?.transferAuthorList)
+        params.transferAuthorList = transferAuthors?.transferAuthorList
 
         // 4.路径屏蔽tab
         val filterPaths = codeccApi.getFilterPath(oldCodeccElement.codeCCTaskId!!).data
         params.path = oldCodeccElement.path
         params.pathType = "CUSTOM"
-        params.customPath = collectionToJson(filterPaths?.filterPaths)
+        params.customPath = filterPaths?.filterPaths
+
+        params.C_CPP_RULE = ruleSetMap["C_CPP_RULE"]
+        params.JAVA_RULE = ruleSetMap["JAVA_RULE"]
+        params.JS_RULE = ruleSetMap["JS_RULE"]
+        params.C_SHARP_RULE = ruleSetMap["C_SHARP_RULE"]
+        params.PHP_RULE = ruleSetMap["PHP_RULE"]
+        params.OC_RULE = ruleSetMap["OC_RULE"]
+        params.PYTHON_RULE = ruleSetMap["PYTHON_RULE"]
+        params.GOLANG_RULE = ruleSetMap["GOLANG_RULE"]
+        params.SWIFT_RULE = ruleSetMap["SWIFT_RULE"]
+        params.RUBY_RULE = ruleSetMap["RUBY_RULE"]
+        params.TYPESCRIPT_RULE = ruleSetMap["TYPESCRIPT_RULE"]
+        params.KOTLIN_RULE = ruleSetMap["KOTLIN_RULE"]
+        params.OTHERS_RULE = ruleSetMap["OTHERS_RULE"]
 
         return params
     }
 
-    private fun getNewRuleSetMap(oldCodeccElement: LinuxPaasCodeCCScriptElement): List<Map<String, List<String>>> {
+    private fun getNewRuleSetMap(oldCodeccElement: LinuxPaasCodeCCScriptElement): Map<String, List<String>> {
         return oldCodeccElement.languages.map { lang ->
             val ruleName = lang.name.toUpperCase() + "_RULE"
             val ruleSetIdList = mutableListOf<String>()
@@ -211,8 +227,8 @@ class CodeccTransferService @Autowired constructor(
             if (!oldCodeccElement.horuspyToolSetId.isNullOrBlank()) ruleSetIdList.add(oldCodeccElement.horuspyToolSetId!!)
             if (!oldCodeccElement.pinpointToolSetId.isNullOrBlank()) ruleSetIdList.add(oldCodeccElement.pinpointToolSetId!!)
 
-            mapOf(ruleName to ruleSetIdList.toList())
-        }
+            ruleName to ruleSetIdList.toList()
+        }.toMap()
     }
 
     class CodeccCheckAtomParamV3 {
@@ -224,7 +240,7 @@ class CodeccTransferService @Autowired constructor(
         var codeCCTaskCnName: String? = null // 暂时没用
         var codeCCTaskId: String? = null // 调用接口用到
 
-        var languages: String? = null // [PYTHON,KOTLIN]
+        var languages: List<ProjectLanguage>? = null // [PYTHON,KOTLIN]
         var asynchronous: Boolean? = true
         var path: String? = "" // 白名单
 
@@ -234,40 +250,51 @@ class CodeccTransferService @Autowired constructor(
         var projectBuildCommand: String? = null
         var needCodeContent: String? = null
 
-        var languageRuleSetMap: String? = null // 规则集
+        var languageRuleSetMap: Map<String, List<String>>? = mapOf() // 规则集
 
         // 2.通知报告tab
         var rtxReceiverType: String? = null // rtx接收人类型：0-所有项目成员；1-接口人；2-自定义；3-无
         var rtxReceiverList: String? = null // rtx接收人列表，rtxReceiverType=2时，自定义的接收人保存在该字段
         var emailReceiverType: String? = null // 邮件收件人类型：0-所有项目成员；1-接口人；2-自定义；3-无
-        var emailReceiverList: String? = null // 邮件收件人列表，当emailReceiverType=2时，自定义的收件人保存在该字段
-        var emailCCReceiverList: String? = null
+        var emailReceiverList: Set<String>? = null // 邮件收件人列表，当emailReceiverType=2时，自定义的收件人保存在该字段
+        var emailCCReceiverList: Set<String>? = null
         var reportStatus: String? = null // 定时报告任务的状态，有效：1，暂停：2 (目前看了都是1)
-        var reportDate: String? = null
+        var reportDate: Set<Int>? = null
         var reportTime: String? = null
         var instantReportStatus: String? = null // 即时报告状态，有效：1，暂停：2
-        var reportTools: String? = null
+        var reportTools: Set<String>? = null
         var botWebhookUrl: String? = null
         var botRemindSeverity: String? = null // 7-总告警数； 3-严重 + 一般告警数；1-严重告警数
-        var botRemaindTools: String? = null
+        var botRemaindTools: Set<String>? = null
         var botRemindRange: String? = null // 1-新增 2-遗留
 
         // 3.扫描配置tab
         var toolScanType: String? = null // 对应接口的scanType, 1：增量；0：全量
         var newDefectJudgeFromDate: String? = null
         var newDefectJudgeBy: String? = null // 判定方式1：按日期；2：按构建(目前都填1)
-        var transferAuthorList: String? = null
+        var transferAuthorList: List<CodeccApi.TransferAuthorPair>? = null
 
         // 4.路径屏蔽tab
         var whileScanPaths: List<String>? = listOf() // 目前暂时不用
         var pathType: String? = "" // CUSTOM - 自定义 ； DEFAULT - 系统默认（目前之用CUSTOM）
-        var customPath: String? = null // 黑名单，添加后的代码路径将不会产生告警
+        var customPath: List<String>? = null // 黑名单，添加后的代码路径将不会产生告警
         var filterDir: List<String>? = listOf() // 暂时不用
         var filterFile: List<String>? = listOf() // 暂时不用
-    }
 
-    private fun collectionToJson(coll: Collection<Any>?): String? {
-        if (coll == null) return null
-        return JsonUtil.getObjectMapper().writeValueAsString(coll)
+        // 前端显示参数
+        var tools: List<String>? = null
+        var C_CPP_RULE: List<String>? = null
+        var JAVA_RULE: List<String>? = null
+        var JS_RULE: List<String>? = null
+        var C_SHARP_RULE: List<String>? = null
+        var PHP_RULE: List<String>? = null
+        var OC_RULE: List<String>? = null
+        var PYTHON_RULE: List<String>? = null
+        var GOLANG_RULE: List<String>? = null
+        var SWIFT_RULE: List<String>? = null
+        var RUBY_RULE: List<String>? = null
+        var TYPESCRIPT_RULE: List<String>? = null
+        var KOTLIN_RULE: List<String>? = null
+        var OTHERS_RULE: List<String>? = null
     }
 }
