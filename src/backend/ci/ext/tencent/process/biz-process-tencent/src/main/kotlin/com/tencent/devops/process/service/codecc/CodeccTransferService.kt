@@ -34,9 +34,11 @@ import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxPaasCodeCCScri
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.plugin.codecc.CodeccApi
 import com.tencent.devops.plugin.codecc.pojo.coverity.ProjectLanguage
+import com.tencent.devops.process.engine.pojo.PipelineModelTask
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineService
 import com.tencent.devops.process.service.PipelineTaskService
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -47,59 +49,71 @@ class CodeccTransferService @Autowired constructor(
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val codeccApi: CodeccApi
 ) {
+    companion object {
+        private val logger = LoggerFactory.getLogger(CodeccTransferService::class.java)
+    }
+
     fun transferToV2(projectId: String, pipelineIds: Set<String>): Map<String, String> {
         val result = mutableMapOf<String, String>()
         pipelineTaskService.list(projectId, pipelineIds).map {
-            val pipelineId = it.key
-
-            val codeccTask = it.value.filter { task -> task.classType == LinuxPaasCodeCCScriptElement.classType }
-            if (codeccTask.isEmpty()) {
-                result[pipelineId] = "$pipelineId do not contains old codecc element"
-                return@map
+            val resultMsg = try {
+                doTransfer(projectId, it)
+            } catch (e: Exception) {
+                logger.error("transfer pipeline ${it.key} fail", e)
+                e.message ?: "unexpected error occur"
             }
-
-            val newCodeccTask = it.value.filter { task -> task.taskParams["atomCode"] == "CodeccCheckAtom" }
-            if (newCodeccTask.isNotEmpty()) {
-                result[pipelineId] = "$pipelineId is already contains new codecc element"
-                return@map
-            }
-
-            // start to transfer
-            val model = pipelineRepositoryService.getModel(pipelineId)!!
-            val pipelineInfo = pipelineRepositoryService.getPipelineInfo(pipelineId)
-            model.stages.forEach { stage ->
-                stage.containers.forEach { container ->
-                    val elementList = mutableListOf<Element>()
-                    container.elements.forEach { element ->
-                        if (element.getClassType() == LinuxPaasCodeCCScriptElement.classType) {
-                            val newElement = getNewCodeccElement(element as LinuxPaasCodeCCScriptElement)
-                            if (newElement == null) {
-                                result[pipelineId] = "get codecc new element fail"
-                                return@map
-                            }
-                            elementList.add(newElement)
-                        } else {
-                            elementList.add(element)
-                        }
-                    }
-                    container.elements = elementList
-                }
-            }
-
-            // save pipeline
-            pipelineService.editPipeline(
-                userId = pipelineInfo?.lastModifyUser ?: "",
-                projectId = projectId,
-                pipelineId = pipelineId,
-                model = model,
-                channelCode = ChannelCode.BS,
-                checkPermission = false,
-                checkTemplate = false
-            )
-
-            result[pipelineId] = "update codecc to v1 success"
+            result[it.key] = resultMsg
         }
         return result
+    }
+
+    fun doTransfer(projectId: String, it: Map.Entry<String, List<PipelineModelTask>>): String {
+        val pipelineId = it.key
+
+        val codeccTask = it.value.filter { task -> task.classType == LinuxPaasCodeCCScriptElement.classType }
+        if (codeccTask.isEmpty()) {
+            return "$pipelineId do not contains old codecc element"
+        }
+
+        val newCodeccTask = it.value.filter { task -> task.taskParams["atomCode"] == "CodeccCheckAtom" }
+        if (newCodeccTask.isNotEmpty()) {
+            return "$pipelineId is already contains new codecc element"
+        }
+
+        // start to transfer
+        val model = pipelineRepositoryService.getModel(pipelineId)!!
+        val pipelineInfo = pipelineRepositoryService.getPipelineInfo(pipelineId)
+        logger.info("get pipeline info for pipeline: $pipelineId, $pipelineInfo")
+        model.stages.forEach { stage ->
+            stage.containers.forEach { container ->
+                val elementList = mutableListOf<Element>()
+                container.elements.forEach { element ->
+                    if (element.getClassType() == LinuxPaasCodeCCScriptElement.classType) {
+                        logger.info("get new codecc element for pipeline: $pipelineId")
+                        val newElement = getNewCodeccElement(element as LinuxPaasCodeCCScriptElement)
+                            ?: return "get codecc new element fail"
+                        elementList.add(newElement)
+                    } else {
+                        elementList.add(element)
+                    }
+                }
+                container.elements = elementList
+            }
+        }
+
+        // save pipeline
+        logger.info("edit pipeline: $pipelineId")
+        pipelineService.editPipeline(
+            userId = pipelineInfo?.lastModifyUser ?: "",
+            projectId = projectId,
+            pipelineId = pipelineId,
+            model = model,
+            channelCode = ChannelCode.BS,
+            checkPermission = false,
+            checkTemplate = false
+        )
+
+        return "update codecc to v1 success"
     }
 
     private fun getNewCodeccElement(oldCodeccElement: LinuxPaasCodeCCScriptElement): Element? {
@@ -184,6 +198,8 @@ class CodeccTransferService @Autowired constructor(
         params.kotlinRule = ruleSetMap["KOTLIN_RULE"]
         params.othersRule = ruleSetMap["OTHERS_RULE"]
 
+        logger.info("get new codecc params for pipeline: $params")
+
         return params
     }
 
@@ -191,47 +207,38 @@ class CodeccTransferService @Autowired constructor(
         return oldCodeccElement.languages.map { lang ->
             val ruleName = lang.name.toUpperCase() + "_RULE"
             val ruleSetIdList = mutableListOf<String>()
-            if (!oldCodeccElement.coverityToolSetId.isNullOrBlank()) ruleSetIdList.add(oldCodeccElement.coverityToolSetId!!)
-            if (!oldCodeccElement.klocworkToolSetId.isNullOrBlank()) ruleSetIdList.add(oldCodeccElement.klocworkToolSetId!!)
 
-            // cpplint	腾讯代码规范(c++)
-            if (lang == ProjectLanguage.C_CPP) {
-                ruleSetIdList.add("standard_cpp")
-            } else {
-                if (!oldCodeccElement.cpplintToolSetId.isNullOrBlank()) ruleSetIdList.add(oldCodeccElement.cpplintToolSetId!!)
+            oldCodeccElement.tools?.forEach { tool ->
+                val newRuleId = newRuleIdMap[lang.name + "_" + tool]
+                    ?: throw RuntimeException("no new rule id found for ${lang.name}, $tool")
+                ruleSetIdList.add(newRuleId)
             }
-
-            if (!oldCodeccElement.eslintToolSetId.isNullOrBlank()) ruleSetIdList.add(oldCodeccElement.eslintToolSetId!!)
-
-            // pylint	腾讯代码规范(python)
-            if (lang == ProjectLanguage.PYTHON) {
-                ruleSetIdList.add("standard_python")
-            } else {
-                if (!oldCodeccElement.pylintToolSetId.isNullOrBlank()) ruleSetIdList.add(oldCodeccElement.pylintToolSetId!!)
-            }
-
-            if (!oldCodeccElement.gometalinterToolSetId.isNullOrBlank()) ruleSetIdList.add(oldCodeccElement.gometalinterToolSetId!!)
-            if (!oldCodeccElement.checkStyleToolSetId.isNullOrBlank()) ruleSetIdList.add(oldCodeccElement.checkStyleToolSetId!!)
-            if (!oldCodeccElement.styleCopToolSetId.isNullOrBlank()) ruleSetIdList.add(oldCodeccElement.styleCopToolSetId!!)
-            if (!oldCodeccElement.detektToolSetId.isNullOrBlank()) ruleSetIdList.add(oldCodeccElement.detektToolSetId!!)
-            if (!oldCodeccElement.phpcsToolSetId.isNullOrBlank()) ruleSetIdList.add(oldCodeccElement.phpcsToolSetId!!)
-            if (!oldCodeccElement.sensitiveToolSetId.isNullOrBlank()) ruleSetIdList.add(oldCodeccElement.sensitiveToolSetId!!)
-            if (!oldCodeccElement.occheckToolSetId.isNullOrBlank()) ruleSetIdList.add(oldCodeccElement.occheckToolSetId!!)
-
-            // gometalinter	腾讯代码规范(go)
-            if (lang == ProjectLanguage.GOLANG) {
-                ruleSetIdList.add("standard_go")
-            } else {
-                if (!oldCodeccElement.gociLintToolSetId.isNullOrBlank()) ruleSetIdList.add(oldCodeccElement.gociLintToolSetId!!)
-            }
-
-            if (!oldCodeccElement.woodpeckerToolSetId.isNullOrBlank()) ruleSetIdList.add(oldCodeccElement.woodpeckerToolSetId!!)
-            if (!oldCodeccElement.horuspyToolSetId.isNullOrBlank()) ruleSetIdList.add(oldCodeccElement.horuspyToolSetId!!)
-            if (!oldCodeccElement.pinpointToolSetId.isNullOrBlank()) ruleSetIdList.add(oldCodeccElement.pinpointToolSetId!!)
-
             ruleName to ruleSetIdList.toList()
         }.toMap()
     }
+
+    //  [ "COVERITY", "KLOCWORK", "PINPOINT", "CPPLINT", "CHECKSTYLE", "ESLINT", "STYLECOP", "PHPCS", "PYLINT", "GOML", "DETEKT", "OCCHECK", "SENSITIVE", "HORUSPY", "WOODPECKER_SENSITIVE", "RIPS", "CCN", "DUPC" ]
+    private val newRuleIdMap = mapOf(
+        ProjectLanguage.C_CPP.name + "_" + "COVERITY" to "codecc_default_coverity_cpp",
+        ProjectLanguage.C_CPP.name + "_" + "CPPLINT" to "standard_cpp",
+        ProjectLanguage.C_CPP.name + "_" + "CCN" to "codecc_default_ccn_cpp",
+        ProjectLanguage.C_CPP.name + "_" + "DUPC" to "codecc_default_dupc_cpp",
+        ProjectLanguage.C_CPP.name + "_" + "SENSITIVE" to "ieg_sensitive_cpp",
+        ProjectLanguage.C_CPP.name + "_" + "WOODPECKER_SENSITIVE" to "woodpecker_cpp",
+
+        ProjectLanguage.PYTHON.name + "_" + "PYLINT" to "standard_python",
+        ProjectLanguage.PYTHON.name + "_" + "CCN" to "codecc_default_ccn_python",
+        ProjectLanguage.PYTHON.name + "_" + "DUPC" to "codecc_default_dupc_python",
+        ProjectLanguage.PYTHON.name + "_" + "SENSITIVE" to "ieg_sensitive_python",
+        ProjectLanguage.PYTHON.name + "_" + "WOODPECKER_SENSITIVE" to "woodpecker_python",
+
+        ProjectLanguage.GOLANG.name + "_" + "COVERITY" to "codecc_default_coverity_cpp",
+        ProjectLanguage.GOLANG.name + "_" + "GOML" to "standard_go",
+        ProjectLanguage.GOLANG.name + "_" + "CCN" to "codecc_default_ccn_go",
+        ProjectLanguage.GOLANG.name + "_" + "DUPC" to "codecc_default_dupc_go",
+        ProjectLanguage.PYTHON.name + "_" + "SENSITIVE" to "ieg_sensitive_go",
+        ProjectLanguage.GOLANG.name + "_" + "WOODPECKER_SENSITIVE" to "woodpecker_go"
+    )
 
     class CodeccCheckAtomParamV3 {
 
