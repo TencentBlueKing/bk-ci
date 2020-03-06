@@ -204,14 +204,25 @@ class CodeccTransferService @Autowired constructor(
     }
 
     private fun getNewRuleSetMap(oldCodeccElement: LinuxPaasCodeCCScriptElement): Map<String, List<String>> {
+        // only support cpp/python/gplang
+        val checkLang = setOf(ProjectLanguage.GOLANG, ProjectLanguage.C_CPP, ProjectLanguage.PYTHON)
+        oldCodeccElement.languages.forEach {
+            if (it !in checkLang) throw RuntimeException("not support language to transfer: ${it.name}")
+        }
+
+        // only support some tools
+        val checkTool = setOf("COVERITY", "CPPLINT", "CCN", "DUPC", "SENSITIVE", "WOODPECKER_SENSITIVE", "PYLINT", "GOML")
+        oldCodeccElement.tools?.forEach {
+            if (it !in checkTool) throw RuntimeException("not support tool to transfer: $it")
+        }
+
         return oldCodeccElement.languages.map { lang ->
             val ruleName = lang.name.toUpperCase() + "_RULE"
             val ruleSetIdList = mutableListOf<String>()
 
             oldCodeccElement.tools?.forEach { tool ->
-                val newRuleId = newRuleIdMap[lang.name + "_" + tool]
-                    ?: throw RuntimeException("no new rule id found for ${lang.name}, $tool")
-                ruleSetIdList.add(newRuleId)
+                val newRuleId = newRuleIdMap[lang.name + "_" + tool] ?: return@forEach
+                ruleSetIdList.add(newRuleId!!)
             }
             ruleName to ruleSetIdList.toList()
         }.toMap()
@@ -236,7 +247,7 @@ class CodeccTransferService @Autowired constructor(
         ProjectLanguage.GOLANG.name + "_" + "GOML" to "standard_go",
         ProjectLanguage.GOLANG.name + "_" + "CCN" to "codecc_default_ccn_go",
         ProjectLanguage.GOLANG.name + "_" + "DUPC" to "codecc_default_dupc_go",
-        ProjectLanguage.PYTHON.name + "_" + "SENSITIVE" to "ieg_sensitive_go",
+        ProjectLanguage.GOLANG.name + "_" + "SENSITIVE" to "ieg_sensitive_go",
         ProjectLanguage.GOLANG.name + "_" + "WOODPECKER_SENSITIVE" to "woodpecker_go"
     )
 
