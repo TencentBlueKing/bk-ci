@@ -31,7 +31,7 @@ class StatisticService @Autowired constructor(
     }
 
     fun getInstallTrend(serviceCode: String, days: Long): Result<List<ExtServiceInstallTrendReq>> {
-        val startTime : Long = if(days > 30 ) {
+        val startTime : Long = if (days > 30 ) {
             LocalDateTime.now().timestamp() - TimeUnit.DAYS.toSeconds(30)
         } else {
             LocalDateTime.now().timestamp() - TimeUnit.DAYS.toSeconds(days)

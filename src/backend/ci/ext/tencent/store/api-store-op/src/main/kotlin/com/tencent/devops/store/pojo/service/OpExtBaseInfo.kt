@@ -12,7 +12,7 @@ data class OpExtBaseInfo(
     @ApiModelProperty("标签")
     val lables: List<String>?,
     @ApiModelProperty("简介")
-    val sunmmary: String? = null,
+    val summary: String? = null,
     @ApiModelProperty("LOGO url")
     val logoUrl: String?,
     @ApiModelProperty("扩展服务描述")

@@ -103,6 +103,36 @@ class ServiceItemService @Autowired constructor(
         return getServiceList()
     }
 
+    fun getItemListForOp(): List<ServiceItem> {
+        val serviceItemList = mutableListOf<ServiceItem>()
+        val serviceItemRecord = getServiceList()
+        if(serviceItemRecord.isNotEmpty()) {
+            serviceItemRecord.forEach {
+                val parentItemName = it.serviceItem.itemName
+                val childItemList = it.childItem
+                if(childItemList.isNotEmpty()) {
+                    childItemList.forEach { subItem ->
+                        val itemName = parentItemName+"-"+subItem.itemName
+                        serviceItemList.add(
+                            ServiceItem(
+                                itemId = subItem.itemId,
+                                itemName = itemName,
+                                itemCode = subItem.itemCode,
+                                parentId = subItem.parentId,
+                                htmlPath = subItem.htmlPath,
+                                htmlType = subItem.htmlType,
+                                props = subItem.props,
+                                serviceCount = subItem.serviceCount
+                            )
+                        )
+                    }
+                }
+            }
+        }
+        return serviceItemList
+
+    }
+
     fun getItemById(itemId: String): ExtItemDTO? {
         logger.info("getItemById: itemId[$itemId]")
         val record = serviceItemDao.getItemById(dslContext, itemId) ?: return null
@@ -324,7 +354,6 @@ class ServiceItemService @Autowired constructor(
                     htmlComponentType = HtmlComponentTypeEnum.valueOf(it.htmlComponentType),
                     tooltip = it.tooltip,
                     iconUrl = it.iconUrl,
-                    entryResUrl = it.entryResUrl,
                     props = serviceItemDao.convertString(it.props)
                 )
             )

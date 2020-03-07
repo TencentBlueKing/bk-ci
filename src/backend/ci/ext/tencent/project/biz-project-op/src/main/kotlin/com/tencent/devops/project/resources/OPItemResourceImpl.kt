@@ -21,8 +21,8 @@ class OPItemResourceImpl @Autowired constructor(
         return itemService.queryItem(itemName, pid)
     }
 
-    override fun getItemList(userId: String): Result<List<ExtItemDTO>?> {
-        return Result(itemService.getItemList())
+    override fun getItemList(userId: String): Result<List<ServiceItem>?> {
+        return Result(itemService.getItemListForOp())
     }
 
     override fun create(userId: String, createInfo: ItemInfoResponse): Result<Boolean> {
