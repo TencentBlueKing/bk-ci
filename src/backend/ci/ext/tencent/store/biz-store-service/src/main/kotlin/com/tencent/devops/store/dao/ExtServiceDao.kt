@@ -117,7 +117,7 @@ class ExtServiceDao {
             if (null != serviceName) {
                 baseStep.set(SERVICE_NAME, serviceName)
             }
-            val summary = extServiceUpdateInfo.sunmmary
+            val summary = extServiceUpdateInfo.summary
             if (null != summary) {
                 baseStep.set(SUMMARY, summary)
             }

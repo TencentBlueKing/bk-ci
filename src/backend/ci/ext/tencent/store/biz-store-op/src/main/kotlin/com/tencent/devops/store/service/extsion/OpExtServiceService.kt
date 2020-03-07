@@ -119,7 +119,7 @@ class OpExtServiceService @Autowired constructor(
                 extServiceUpdateInfo = ExtServiceUpdateInfo(
                     serviceName = baseInfo.serviceName,
                     logoUrl = baseInfo.logoUrl,
-                    sunmmary = baseInfo.sunmmary,
+                    summary = baseInfo.summary,
                     description = baseInfo.description,
                     modifierUser = userId,
                     status = null
