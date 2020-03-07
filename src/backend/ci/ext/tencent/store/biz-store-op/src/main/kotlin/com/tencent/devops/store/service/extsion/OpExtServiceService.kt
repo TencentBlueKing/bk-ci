@@ -126,7 +126,7 @@ class OpExtServiceService @Autowired constructor(
                 )
             )
             val itemIds = baseInfo.itemIds
-            val lables = baseInfo.lables
+            val lables = baseInfo.labels
             if (itemIds != null) {
                 val existenceItems = extServiceItemDao.getItemByServiceId(dslContext, serviceId)
                 val existenceItemIds = mutableListOf<String>()

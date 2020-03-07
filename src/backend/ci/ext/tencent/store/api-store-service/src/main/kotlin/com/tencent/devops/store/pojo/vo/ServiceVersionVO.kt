@@ -1,6 +1,7 @@
 package com.tencent.devops.store.pojo.vo
 
 import com.tencent.devops.store.pojo.StoreServiceItem
+import com.tencent.devops.store.pojo.common.Label
 import com.tencent.devops.store.pojo.common.StoreMediaInfo
 import com.tencent.devops.store.pojo.common.StoreUserCommentInfo
 import io.swagger.annotations.ApiModelProperty
@@ -55,5 +56,7 @@ data class ServiceVersionVO(
     @ApiModelProperty("扩展点列表")
     val extensionItemList: List<StoreServiceItem>,
     @ApiModelProperty("媒体信息")
-    val mediaList: List<StoreMediaInfo>?
+    val mediaList: List<StoreMediaInfo>?,
+    @ApiModelProperty("标签")
+    val labelList: List<Label>
 )

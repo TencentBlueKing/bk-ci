@@ -703,6 +703,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
             logger.info("getServiceVersion serviceEnv: $serviceEnv")
             val itemList = getItemByItems(serviceId)
             val mediaList = mediaService.getByCode(serviceCode, StoreTypeEnum.SERVICE).data
+//            val labelList = extServiceLabelDao.getLabelsByServiceId(dslContext, serviceId)?: emptyList<Label>()
 
             Result(
                 ServiceVersionVO(
@@ -710,15 +711,10 @@ abstract class ExtServiceBaseService @Autowired constructor() {
                     serviceCode = serviceCode,
                     serviceName = record.serviceName,
                     logoUrl = record.logoUrl,
-//                    classifyCode = classifyCode,
-//                    classifyName = classifyLanName,
-//                    category = AtomCategoryEnum.getAtomCategory((record["category"] as Byte).toInt()),
                     summary = record.summary ?: "",
                     description = record.description ?: "",
                     version = record.version,
                     serviceStatus = ExtServiceStatusEnum.getServiceStatus((record.serviceStatus).toInt()),
-//                    releaseType = if (record["releaseType"] != null) ReleaseTypeEnum.getReleaseType((record["releaseType"] as Byte).toInt()) else null,
-//                    versionContent = record["versionContent"] as? String,
                     language = serviceEnv!!.language,
                     codeSrc = featureInfoRecord!!.codeSrc ?: "",
                     publisher = record.publisher,
@@ -735,8 +731,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
                         serviceCode,
                         StoreTypeEnum.SERVICE
                     ),
-                    // TODO:带补充逻辑
-//                    labelList = null,
+                    labelList = emptyList(),
                     userCommentInfo = userCommentInfo,
                     visibilityLevel = VisibilityLevelEnum.getVisibilityLevel(featureInfoRecord.visibilityLevel),
                     recommendFlag = featureInfoRecord?.recommendFlag,

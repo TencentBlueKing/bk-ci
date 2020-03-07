@@ -10,7 +10,7 @@ data class OpExtBaseInfo(
     @ApiModelProperty("扩展点")
     val itemIds: List<String>?,
     @ApiModelProperty("标签")
-    val lables: List<String>?,
+    val labels: List<String>?,
     @ApiModelProperty("简介")
     val summary: String? = null,
     @ApiModelProperty("LOGO url")
