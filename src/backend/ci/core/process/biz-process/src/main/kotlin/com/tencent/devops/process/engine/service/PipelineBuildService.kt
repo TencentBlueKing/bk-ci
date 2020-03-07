@@ -510,7 +510,7 @@ class PipelineBuildService(
         parameters: Map<String, Any>,
         checkPermission: Boolean = true,
         isMobile: Boolean = false,
-        triggerUser: String ?= null
+        triggerUser: String? = null
     ): String {
 
         if (checkPermission) {
