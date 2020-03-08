@@ -113,7 +113,11 @@ abstract class AbsOpProjectServiceImpl @Autowired constructor(
         return true
     }
 
-    override fun updateProjectFromOp(userId: String, accessToken: String, projectInfoRequest: OpProjectUpdateInfoRequest): Int {
+    override fun updateProjectFromOp(
+        userId: String,
+        accessToken: String,
+        projectInfoRequest: OpProjectUpdateInfoRequest
+    ): Int {
         logger.info("the projectInfoRequest is: $projectInfoRequest")
         val projectId = projectInfoRequest.projectId
         val dbProjectRecord = projectDao.get(dslContext, projectId)
@@ -143,72 +147,87 @@ abstract class AbsOpProjectServiceImpl @Autowired constructor(
             // 先解除项目与标签的关联关系，然后再从新建立二者之间的关系
             projectLabelRelDao.deleteByProjectId(transactionContext, projectId)
             val labelIdList = projectInfoRequest.labelIdList
-            if (!CollectionUtils.isEmpty(labelIdList)) projectLabelRelDao.batchAdd(
-                    transactionContext,
-                    projectId,
-                    labelIdList!!
-            )
-            projectDispatcher.dispatch(ProjectUpdateBroadCastEvent(
-                userId = userId,
-                projectId = projectId,
-                projectInfo = ProjectUpdateInfo(
-                    projectName = projectInfoRequest.projectName,
-                    projectType = projectInfoRequest.projectType,
-                    bgId = projectInfoRequest.bgId,
-                    bgName = projectInfoRequest.bgName,
-                    centerId = projectInfoRequest.centerId,
-                    centerName = projectInfoRequest.centerName,
-                    deptId = projectInfoRequest.deptId,
-                    deptName = projectInfoRequest.deptName,
-                    description = dbProjectRecord.description ?: "",
-                    englishName = dbProjectRecord.englishName,
-                    ccAppId = projectInfoRequest.ccAppId,
-                    ccAppName = projectInfoRequest.cc_app_name,
-                    kind = projectInfoRequest.kind
+            if (!CollectionUtils.isEmpty(labelIdList)) {
+                projectLabelRelDao.batchAdd(
+                    dslContext = transactionContext,
+                    projectId = projectId,
+                    labelIdList = labelIdList!!
                 )
-            ))
+            }
+            projectDispatcher.dispatch(
+                ProjectUpdateBroadCastEvent(
+                    userId = userId,
+                    projectId = projectId,
+                    projectInfo = ProjectUpdateInfo(
+                        projectName = projectInfoRequest.projectName,
+                        projectType = projectInfoRequest.projectType,
+                        bgId = projectInfoRequest.bgId,
+                        bgName = projectInfoRequest.bgName,
+                        centerId = projectInfoRequest.centerId,
+                        centerName = projectInfoRequest.centerName,
+                        deptId = projectInfoRequest.deptId,
+                        deptName = projectInfoRequest.deptName,
+                        description = dbProjectRecord.description ?: "",
+                        englishName = dbProjectRecord.englishName,
+                        ccAppId = projectInfoRequest.ccAppId,
+                        ccAppName = projectInfoRequest.cc_app_name,
+                        kind = projectInfoRequest.kind
+                    )
+                )
+            )
         }
         return if (!flag) {
             0 // 更新操作
         } else {
-            return when {
-                2 == projectInfoRequest.approvalStatus -> 1 // 审批通过
-                3 == projectInfoRequest.approvalStatus -> 2 // 驳回
+            when (projectInfoRequest.approvalStatus) {
+                2 -> 1 // 审批通过
+                3 -> 2 // 驳回
                 else -> 0
             }
         }
     }
 
-    override fun getProjectList(projectName: String?, englishName: String?, projectType: Int?, isSecrecy: Boolean?, creator: String?, approver: String?, approvalStatus: Int?, offset: Int, limit: Int, grayFlag: Boolean): Result<Map<String, Any?>?> {
+    override fun getProjectList(
+        projectName: String?,
+        englishName: String?,
+        projectType: Int?,
+        isSecrecy: Boolean?,
+        creator: String?,
+        approver: String?,
+        approvalStatus: Int?,
+        offset: Int,
+        limit: Int,
+        grayFlag: Boolean
+    ): Result<Map<String, Any?>?> {
         val dataObj = mutableMapOf<String, Any?>()
 
         val projectCodeSet = gray.grayProjectSet(redisOperation)
 
         val projectInfos = projectDao.getProjectList(
-                dslContext = dslContext,
-                projectName = projectName,
-                englishName = englishName,
-                projectType = projectType,
-                isSecrecy = isSecrecy,
-                creator = creator,
-                approver = approver,
-                approvalStatus = approvalStatus,
-                offset = offset,
-                limit = limit,
-                grayFlag = grayFlag,
-                englishNames = projectCodeSet
+            dslContext = dslContext,
+            projectName = projectName,
+            englishName = englishName,
+            projectType = projectType,
+            isSecrecy = isSecrecy,
+            creator = creator,
+            approver = approver,
+            approvalStatus = approvalStatus,
+            offset = offset,
+            limit = limit,
+            grayFlag = grayFlag,
+            englishNames = projectCodeSet
         )
         val totalCount = projectDao.getProjectCount(
-                dslContext = dslContext,
-                projectName = projectName,
-                englishName = englishName,
-                projectType = projectType,
-                isSecrecy = isSecrecy,
-                creator = creator,
-                approver = approver,
-                approvalStatus = approvalStatus,
-                grayFlag = grayFlag,
-                englishNames = projectCodeSet
+            dslContext = dslContext,
+            projectName = projectName,
+            englishName = englishName,
+            projectType = projectType,
+            isSecrecy = isSecrecy,
+            creator = creator,
+            approver = approver,
+            approvalStatus = approvalStatus,
+            grayFlag = grayFlag,
+            englishNames = projectCodeSet
         )
         val dataList = mutableListOf<ProjectInfoResponse>()
         val grayProjectSet = grayProjectSet()
@@ -222,7 +241,19 @@ abstract class AbsOpProjectServiceImpl @Autowired constructor(
         return Result(dataObj)
     }
 
-    override fun getProjectList(projectName: String?, englishName: String?, projectType: Int?, isSecrecy: Boolean?, creator: String?, approver: String?, approvalStatus: Int?, offset: Int, limit: Int, grayFlag: Boolean, repoGrayFlag: Boolean): Result<Map<String, Any?>?> {
+    override fun getProjectList(
+        projectName: String?,
+        englishName: String?,
+        projectType: Int?,
+        isSecrecy: Boolean?,
+        creator: String?,
+        approver: String?,
+        approvalStatus: Int?,
+        offset: Int,
+        limit: Int,
+        grayFlag: Boolean,
+        repoGrayFlag: Boolean
+    ): Result<Map<String, Any?>?> {
         val dataObj = mutableMapOf<String, Any?>()
 
         val grayProject = gray.grayProjectSet(redisOperation)
@@ -234,41 +265,45 @@ abstract class AbsOpProjectServiceImpl @Autowired constructor(
         }
 
         val projectInfos = projectDao.getProjectList(
-                dslContext = dslContext,
-                projectName = projectName,
-                englishName = englishName,
-                projectType = projectType,
-                isSecrecy = isSecrecy,
-                creator = creator,
-                approver = approver,
-                approvalStatus = approvalStatus,
-                offset = offset,
-                limit = limit,
-                grayFlag = grayFlag,
-                repoGrayFlag = repoGrayFlag,
-                grayNames = grayProject,
-                repoGrayNames = repoGrayProject
+            dslContext = dslContext,
+            projectName = projectName,
+            englishName = englishName,
+            projectType = projectType,
+            isSecrecy = isSecrecy,
+            creator = creator,
+            approver = approver,
+            approvalStatus = approvalStatus,
+            offset = offset,
+            limit = limit,
+            grayFlag = grayFlag,
+            repoGrayFlag = repoGrayFlag,
+            grayNames = grayProject,
+            repoGrayNames = repoGrayProject
         )
         val totalCount = projectDao.getProjectCount(
-                dslContext = dslContext,
-                projectName = projectName,
-                englishName = englishName,
-                projectType = projectType,
-                isSecrecy = isSecrecy,
-                creator = creator,
-                approver = approver,
-                approvalStatus = approvalStatus,
-                grayFlag = grayFlag,
-                repoGrayFlag = repoGrayFlag,
-                grayNames = grayProject,
-                repoGrayNames = repoGrayProject
+            dslContext = dslContext,
+            projectName = projectName,
+            englishName = englishName,
+            projectType = projectType,
+            isSecrecy = isSecrecy,
+            creator = creator,
+            approver = approver,
+            approvalStatus = approvalStatus,
+            grayFlag = grayFlag,
+            repoGrayFlag = repoGrayFlag,
+            grayNames = grayProject,
+            repoGrayNames = repoGrayProject
         )
         val dataList = mutableListOf<ProjectInfoResponseRepoGray>()
         val grayProjectSet = grayProjectSet()
         val repoGrayProjectSet = repoGrayProjectSet()
         for (i in projectInfos.indices) {
             val projectData = projectInfos[i]
-            val projectInfo = getProjectInfoResponseRepoGray(projectData, grayProjectSet, repoGrayProjectSet)
+            val projectInfo = getProjectInfoResponseRepoGray(
+                projectData = projectData,
+                grayProjectSet = grayProjectSet,
+                repoProjectSet = repoGrayProjectSet
+            )
             dataList.add(projectInfo)
         }
         dataObj["projectList"] = dataList
@@ -276,7 +311,20 @@ abstract class AbsOpProjectServiceImpl @Autowired constructor(
         return Result(dataObj)
     }
 
-    override fun getProjectList(projectName: String?, englishName: String?, projectType: Int?, isSecrecy: Boolean?, creator: String?, approver: String?, approvalStatus: Int?, offset: Int, limit: Int, grayFlag: Boolean, repoGrayFlag: Boolean, macosGrayFlag: Boolean): Result<Map<String, Any?>?> {
+    override fun getProjectList(
+        projectName: String?,
+        englishName: String?,
+        projectType: Int?,
+        isSecrecy: Boolean?,
+        creator: String?,
+        approver: String?,
+        approvalStatus: Int?,
+        offset: Int,
+        limit: Int,
+        grayFlag: Boolean,
+        repoGrayFlag: Boolean,
+        macosGrayFlag: Boolean
+    ): Result<Map<String, Any?>?> {
         val dataObj = mutableMapOf<String, Any?>()
 
         val grayProject = gray.grayProjectSet(redisOperation)
@@ -333,7 +381,13 @@ abstract class AbsOpProjectServiceImpl @Autowired constructor(
         val macosGrayProjectSet = macosGray.grayProjectSet(redisOperation)
         for (i in projectInfos.indices) {
             val projectData = projectInfos[i]
-            val projectInfo = getProjectInfoResponseMacOSGray(projectData, grayProjectSet, repoGrayProjectSet, macosGrayProjectSet)
+            val projectInfo =
+                getProjectInfoResponseMacOSGray(
+                    projectData = projectData,
+                    grayProjectSet = grayProjectSet,
+                    repoProjectSet = repoGrayProjectSet,
+                    macosProjectSet = macosGrayProjectSet
+                )
             dataList.add(projectInfo)
         }
         dataObj["projectList"] = dataList
@@ -341,96 +395,114 @@ abstract class AbsOpProjectServiceImpl @Autowired constructor(
         return Result(dataObj)
     }
 
-    override fun getProjectCount(projectName: String?, englishName: String?, projectType: Int?, isSecrecy: Boolean?, creator: String?, approver: String?, approvalStatus: Int?, grayFlag: Boolean): Result<Int> {
+    override fun getProjectCount(
+        projectName: String?,
+        englishName: String?,
+        projectType: Int?,
+        isSecrecy: Boolean?,
+        creator: String?,
+        approver: String?,
+        approvalStatus: Int?,
+        grayFlag: Boolean
+    ): Result<Int> {
         return Result(
-                data = projectDao.getProjectCount(
-                        dslContext = dslContext,
-                        projectName = projectName,
-                        englishName = englishName,
-                        projectType = projectType,
-                        isSecrecy = isSecrecy,
-                        creator = creator,
-                        approver = approver,
-                        approvalStatus = approvalStatus,
-                        grayFlag = grayFlag,
-                        englishNames = grayProjectSet()
-                )
+            data = projectDao.getProjectCount(
+                dslContext = dslContext,
+                projectName = projectName,
+                englishName = englishName,
+                projectType = projectType,
+                isSecrecy = isSecrecy,
+                creator = creator,
+                approver = approver,
+                approvalStatus = approvalStatus,
+                grayFlag = grayFlag,
+                englishNames = grayProjectSet()
+            )
         )
     }
 
     fun grayProjectSet() = gray.grayProjectSet(redisOperation)
 
     fun repoGrayProjectSet() =
-            (redisOperation.getSetMembers(repoGray.getRepoGrayRedisKey()) ?: emptySet()).filter { !it.isBlank() }.toSet()
+        (redisOperation.getSetMembers(repoGray.getRepoGrayRedisKey()) ?: emptySet()).filter { !it.isBlank() }.toSet()
 
     private fun getProjectInfoResponse(projectData: TProjectRecord, grayProjectSet: Set<String>): ProjectInfoResponse {
         return ProjectInfoResponse(
-                projectId = projectData.projectId,
-                projectName = projectData.projectName,
-                projectEnglishName = projectData.englishName,
-                creatorBgName = projectData.creatorBgName,
-                creatorDeptName = projectData.creatorDeptName,
-                creatorCenterName = projectData.creatorCenterName,
-                bgId = projectData.bgId,
-                bgName = projectData.bgName,
-                deptId = projectData.deptId,
-                deptName = projectData.deptName,
-                centerId = projectData.centerId,
-                centerName = projectData.centerName,
-                projectType = projectData.projectType,
-                approver = projectData.approver,
-                approvalTime = projectData.approvalTime?.timestampmilli(),
-                approvalStatus = projectData.approvalStatus,
-                secrecyFlag = projectData.isSecrecy,
-                creator = projectData.creator,
-                createdAtTime = projectData.createdAt.timestampmilli(),
-                ccAppId = projectData.ccAppId,
-                useBk = projectData.useBk,
-                offlinedFlag = projectData.isOfflined,
-                kind = projectData.kind,
-                enabled = projectData.enabled ?: true,
-                grayFlag = grayProjectSet.contains(projectData.englishName),
-                hybridCCAppId = projectData.hybridCcAppId,
-                enableExternal = projectData.enableExternal,
-                enableIdc = projectData.enableIdc
+            projectId = projectData.projectId,
+            projectName = projectData.projectName,
+            projectEnglishName = projectData.englishName,
+            creatorBgName = projectData.creatorBgName,
+            creatorDeptName = projectData.creatorDeptName,
+            creatorCenterName = projectData.creatorCenterName,
+            bgId = projectData.bgId,
+            bgName = projectData.bgName,
+            deptId = projectData.deptId,
+            deptName = projectData.deptName,
+            centerId = projectData.centerId,
+            centerName = projectData.centerName,
+            projectType = projectData.projectType,
+            approver = projectData.approver,
+            approvalTime = projectData.approvalTime?.timestampmilli(),
+            approvalStatus = projectData.approvalStatus,
+            secrecyFlag = projectData.isSecrecy,
+            creator = projectData.creator,
+            createdAtTime = projectData.createdAt.timestampmilli(),
+            ccAppId = projectData.ccAppId,
+            useBk = projectData.useBk,
+            offlinedFlag = projectData.isOfflined,
+            kind = projectData.kind,
+            enabled = projectData.enabled ?: true,
+            grayFlag = grayProjectSet.contains(projectData.englishName),
+            hybridCCAppId = projectData.hybridCcAppId,
+            enableExternal = projectData.enableExternal,
+            enableIdc = projectData.enableIdc
         )
     }
 
-    private fun getProjectInfoResponseRepoGray(projectData: TProjectRecord, grayProjectSet: Set<String>, repoProjectSet: Set<String>): ProjectInfoResponseRepoGray {
+    private fun getProjectInfoResponseRepoGray(
+        projectData: TProjectRecord,
+        grayProjectSet: Set<String>,
+        repoProjectSet: Set<String>
+    ): ProjectInfoResponseRepoGray {
         return ProjectInfoResponseRepoGray(
-                projectId = projectData.projectId,
-                projectName = projectData.projectName,
-                projectEnglishName = projectData.englishName,
-                creatorBgName = projectData.creatorBgName,
-                creatorDeptName = projectData.creatorDeptName,
-                creatorCenterName = projectData.creatorCenterName,
-                bgId = projectData.bgId,
-                bgName = projectData.bgName,
-                deptId = projectData.deptId,
-                deptName = projectData.deptName,
-                centerId = projectData.centerId,
-                centerName = projectData.centerName,
-                projectType = projectData.projectType,
-                approver = projectData.approver,
-                approvalTime = projectData.approvalTime?.timestampmilli(),
-                approvalStatus = projectData.approvalStatus,
-                secrecyFlag = projectData.isSecrecy,
-                creator = projectData.creator,
-                createdAtTime = projectData.createdAt.timestampmilli(),
-                ccAppId = projectData.ccAppId,
-                useBk = projectData.useBk,
-                offlinedFlag = projectData.isOfflined,
-                kind = projectData.kind,
-                enabled = projectData.enabled ?: true,
-                grayFlag = grayProjectSet.contains(projectData.englishName),
-                repoGrayFlag = repoProjectSet.contains(projectData.englishName),
-                hybridCCAppId = projectData.hybridCcAppId,
-                enableExternal = projectData.enableExternal,
-                enableIdc = projectData.enableIdc
+            projectId = projectData.projectId,
+            projectName = projectData.projectName,
+            projectEnglishName = projectData.englishName,
+            creatorBgName = projectData.creatorBgName,
+            creatorDeptName = projectData.creatorDeptName,
+            creatorCenterName = projectData.creatorCenterName,
+            bgId = projectData.bgId,
+            bgName = projectData.bgName,
+            deptId = projectData.deptId,
+            deptName = projectData.deptName,
+            centerId = projectData.centerId,
+            centerName = projectData.centerName,
+            projectType = projectData.projectType,
+            approver = projectData.approver,
+            approvalTime = projectData.approvalTime?.timestampmilli(),
+            approvalStatus = projectData.approvalStatus,
+            secrecyFlag = projectData.isSecrecy,
+            creator = projectData.creator,
+            createdAtTime = projectData.createdAt.timestampmilli(),
+            ccAppId = projectData.ccAppId,
+            useBk = projectData.useBk,
+            offlinedFlag = projectData.isOfflined,
+            kind = projectData.kind,
+            enabled = projectData.enabled ?: true,
+            grayFlag = grayProjectSet.contains(projectData.englishName),
+            repoGrayFlag = repoProjectSet.contains(projectData.englishName),
+            hybridCCAppId = projectData.hybridCcAppId,
+            enableExternal = projectData.enableExternal,
+            enableIdc = projectData.enableIdc
         )
     }
 
-    private fun getProjectInfoResponseMacOSGray(projectData: TProjectRecord, grayProjectSet: Set<String>, repoProjectSet: Set<String>, macosProjectSet: Set<String>): ProjectInfoResponseMacOSGray {
+    private fun getProjectInfoResponseMacOSGray(
+        projectData: TProjectRecord,
+        grayProjectSet: Set<String>,
+        repoProjectSet: Set<String>,
+        macosProjectSet: Set<String>
+    ): ProjectInfoResponseMacOSGray {
         return ProjectInfoResponseMacOSGray(
             projectId = projectData.projectId,
             projectName = projectData.projectName,
@@ -466,6 +538,6 @@ abstract class AbsOpProjectServiceImpl @Autowired constructor(
     }
 
     companion object {
-        val logger = LoggerFactory.getLogger(this:: class.java)
+        val logger = LoggerFactory.getLogger(this::class.java)!!
     }
 }

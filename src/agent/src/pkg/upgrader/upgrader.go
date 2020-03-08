@@ -31,11 +31,13 @@ import (
 	"fmt"
 	"github.com/astaxie/beego/logs"
 	"github.com/gofrs/flock"
+	"os"
 	"pkg/api"
 	"pkg/config"
 	"pkg/util/command"
 	"pkg/util/fileutil"
 	"pkg/util/systemutil"
+	"strconv"
 	"time"
 )
 
@@ -80,10 +82,34 @@ func DoUpgradeAgent() error {
 			logs.Error("replace agent file failed: ", err.Error())
 			return errors.New("replace agent file failed")
 		}
+		tryKillAgentProcess()
 		totalLock.Unlock()
 	}
 	logs.Info("agent upgrade done, upgrade process exiting")
 	return nil
+}
+
+func tryKillAgentProcess() {
+	logs.Info("try kill agent process")
+	pidFile := fmt.Sprintf("%s/agent.pid", systemutil.GetRuntimeDir())
+	agentPid, err := fileutil.GetString(pidFile)
+	if err != nil {
+		logs.Warn("read pid failed")
+		return
+	}
+	intPid, err := strconv.Atoi(agentPid)
+	if err != nil {
+		logs.Warn("parse pid failed")
+		return
+	}
+	process, err := os.FindProcess(intPid)
+	if err != nil || process == nil {
+		logs.Warn("find process failed")
+		return
+	} else {
+		logs.Info("kill agent process, pid: ", intPid)
+		process.Kill()
+	}
 }
 
 func DoUninstallAgent() error {
