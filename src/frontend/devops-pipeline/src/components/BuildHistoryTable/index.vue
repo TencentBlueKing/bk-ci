@@ -12,7 +12,8 @@
                 <template v-if="col.prop === 'buildNum'" v-slot="props">
                     <span class="build-num-status">
                         <router-link :class="{ [props.row.status]: true }" style="line-height: 42px;" :to="getArchiveUrl(props.row)">#{{ props.row.buildNum }}</router-link>
-                        <i v-if="retryable(props.row)" title="rebuild" class="bk-icon icon-retry" @click.stop="retry(props.row.id)" />
+                        <i v-if="props.row.status === 'STAGE_SUCESS'" class="bk-icon icon-redo-arrow" />
+                        <i v-else-if="retryable(props.row)" title="rebuild" class="bk-icon icon-retry" @click.stop="retry(props.row.id)" />
                         <i v-else-if="props.row.status === 'QUEUE' || props.row.status === 'RUNNING' || !props.row.endTime" :title="$t('history.stopBuild')" @click.stop="stopExecute(props.row.id)"
                             :class="{
                                 'bk-icon': true,
@@ -23,7 +24,12 @@
                             }"
                         >
                         </i>
+                        
                     </span>
+                </template>
+                <template v-else-if="col.prop === 'stageStatus'" v-slot="props">
+                    <stage-steps v-if="props.row.stageStatus" :steps="props.row.stageStatus"></stage-steps>
+                    <span v-else>--</span>
                 </template>
                 <template v-else-if="col.prop === 'material'" v-slot="props">
                     <template v-if="Array.isArray(props.row.material) && props.row.material.length > 0">
@@ -115,18 +121,20 @@
 <script>
     import Logo from '@/components/Logo'
     import emptyTips from '@/components/devops/emptyTips'
-    import { convertFileSize, convertMStoStringByRule, convertMiniTime } from '@/utils/util'
+    import { convertFileSize, convertMStoStringByRule, convertMiniTime, convertMStoString } from '@/utils/util'
     import { BUILD_HISTORY_TABLE_DEFAULT_COLUMNS } from '@/utils/pipelineConst'
     import qrcode from '@/components/devops/qrcode'
     import { PROCESS_API_URL_PREFIX } from '@/store/constants'
     import pipelineConstMixin from '@/mixins/pipelineConstMixin'
+    import StageSteps from '@/components/StageSteps'
 
     export default {
         name: 'build-history-table',
         components: {
             Logo,
             qrcode,
-            emptyTips
+            emptyTips,
+            StageSteps
         },
         mixins: [pipelineConstMixin],
         props: {
@@ -165,8 +173,17 @@
             }
         },
         computed: {
+            statusIconMap () {
+                return {
+                    SUCCEED: 'check-circle-shape',
+                    FAILED: 'close-circle-shape',
+                    RUNNING: 'circle-2-1 spin-icon',
+                    PAUSE: 'play-circle-shape'
+                }
+            },
             data () {
                 return this.buildList.map((item, index) => {
+                    console.log(item)
                     const active = index === this.activeIndex
                     const hasArtifactories = Array.isArray(item.artifactList) && item.artifactList.length > 0
                     let shortUrl = ''
@@ -187,6 +204,13 @@
                         }
                     }) : []
                     const needShowAll = hasArtifactories && item.artifactList.length > 11 && !this.isShowAll
+                    const stageStatus = item.stageStatus ? item.stageStatus.slice(1).map(stage => ({
+                        ...stage,
+                        tooltip: stage.elapsed ? `${stage.name}: ${convertMStoString(stage.elapsed)}` : '',
+                        icon: this.statusIconMap[stage.status] || 'circle',
+                        status: stage.status
+                    })) : null
+                    console.log(stageStatus)
                     return {
                         ...item,
                         index,
@@ -202,7 +226,8 @@
                         material: !active && Array.isArray(item.material) && item.material.length > 1 ? item.material.slice(0, 1) : item.material,
                         sumSize: convertFileSize(sumSize, 'B'),
                         artifactories: needShowAll ? artifactories.slice(0, 11) : artifactories,
-                        visible: this.visibleIndex === index
+                        visible: this.visibleIndex === index,
+                        stageStatus
                     }
                 })
             },

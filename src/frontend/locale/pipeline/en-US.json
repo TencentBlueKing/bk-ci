@@ -342,6 +342,7 @@
         "stopFail": "cancel failed"
     },
     "history": {
+        "stageStatus": "Stage",
         "execHistory": "Builds",
         "trendData": "Artifacts size trending",
         "chooseDateRange": "Please select a date range",
@@ -449,7 +450,8 @@
             "CALL_WAITING": "Call Waiting",
             "TRY_FINALLY": "Try Finally",
             "QUEUE_CACHE": "Queue cache",
-            "UNKNOWN": "Unknow"
+            "UNKNOWN": "Unknow",
+            "STAGE_SUCESS": "STAGE_SUCESS"
         },
         "toArtifactory": "locate",
         "saveToCustom": " Copy to custom artifactory",

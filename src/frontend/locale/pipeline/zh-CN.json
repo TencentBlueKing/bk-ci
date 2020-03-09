@@ -342,6 +342,7 @@
         "stopFail": "终止失败"
     },
     "history": {
+        "stageStatus": "Stage",
         "execHistory": "执行历史",
         "trendData": "安装包趋势",
         "chooseDateRange": "请选择日期范围",
@@ -449,7 +450,8 @@
             "CALL_WAITING": "等待回调",
             "TRY_FINALLY": "补偿任务",
             "QUEUE_CACHE": "队列待处理",
-            "UNKNOWN": "未知状态"
+            "UNKNOWN": "未知状态",
+            "STAGE_SUCESS": "STAGE_SUCESS"
         },
         "toArtifactory": "到版本仓库查看",
         "saveToCustom": "保存到自定义仓库",
