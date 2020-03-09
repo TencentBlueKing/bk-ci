@@ -65,8 +65,7 @@ class CommitDao {
                     COMMIT_TIME,
                     COMMENT,
                     ELEMENT_ID,
-                    BRANCH_NAME,
-                    COMMIT_TIMES
+                    BRANCH_NAME
                 )
                     .values(
                         it.buildId,
@@ -82,8 +81,7 @@ class CommitDao {
                         ),
                         it.comment,
                         it.elementId,
-                        it.branchName,
-                        it.commitTimes
+                        it.branchName
                     )
             }
             return dslContext.batch(query).execute()

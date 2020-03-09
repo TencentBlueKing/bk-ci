@@ -1713,7 +1713,7 @@ class PipelineRuntimeService @Autowired constructor(
                         branchName = it1.branchName ?: "",
                         newCommitId = it1.commit,
                         newCommitComment = it1.comment ?: "",
-                        commitTimes = if (NumberUtils.isDigits(it1.commitTimes) && it1.commitTimes != null) it1.commitTimes!!.toInt() else 0
+                        commitTimes = it.records.size
                     )
                 )
             }
