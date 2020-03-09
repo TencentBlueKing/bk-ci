@@ -3,11 +3,12 @@
         <thead>
             <tr>
                 <th width="20%" class="pl30">{{ $t('pipelineName') }}</th>
-                <th width="30%"></th>
+                <th width="25%"></th>
                 <th width="8%">{{ $t('newlist.totalAtomNums') }}</th>
                 <th width="8%">{{ $t('newlist.execTimes') }}</th>
                 <th width="8%">{{ $t('lastBuildNum') }}</th>
-                <th width="15%">{{ $t('lastExecTime') }}</th>
+                <th width="12%">{{ $t('lastExecTime') }}</th>
+                <th width="8%">{{ $t('creator') }}</th>
                 <th width="10%">{{ $t('operate') }}</th>
             </tr>
         </thead>
@@ -81,6 +82,7 @@
                     </td>
                     <td>{{ row.feConfig && row.feConfig.content[0].value }}</td>
                     <td>{{ calcLatestStartBuildTime(row) }}</td>
+                    <td>{{ row.creator }}</td>
                     <td>
                         <ext-menu
                             v-if="row.hasPermission"

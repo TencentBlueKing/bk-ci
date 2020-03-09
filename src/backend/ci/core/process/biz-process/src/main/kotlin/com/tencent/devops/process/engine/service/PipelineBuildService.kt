@@ -27,7 +27,6 @@
 package com.tencent.devops.process.engine.service
 
 import com.fasterxml.jackson.core.type.TypeReference
-import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.pojo.BuildHistoryPage
@@ -42,7 +41,6 @@ import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatch
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.TriggerContainer
-import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.ManualReviewAction
@@ -80,7 +78,7 @@ import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import com.tencent.devops.process.pojo.pipeline.PipelineLatestBuild
 import com.tencent.devops.process.service.BuildStartupParamService
 import com.tencent.devops.process.service.ParamService
-import com.tencent.devops.process.util.PswParameterUtils
+import com.tencent.devops.process.util.BuildParameterUtils
 import com.tencent.devops.process.utils.PIPELINE_NAME
 import com.tencent.devops.process.utils.PIPELINE_RETRY_BUILD_ID
 import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
@@ -99,7 +97,6 @@ import com.tencent.devops.process.utils.PIPELINE_VERSION
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.stereotype.Service
-import java.io.File
 import javax.ws.rs.NotFoundException
 import javax.ws.rs.core.Response
 import javax.ws.rs.core.UriBuilder
@@ -122,7 +119,7 @@ class PipelineBuildService(
     private val paramService: ParamService,
     private val pipelineBuildQualityService: PipelineBuildQualityService,
     private val rabbitTemplate: RabbitTemplate,
-    private val parameterUtils: PswParameterUtils
+    private val buildParameterUtils: BuildParameterUtils
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineBuildService::class.java)
@@ -446,8 +443,7 @@ class PipelineBuildService(
                     throw ErrorCodeException(defaultMessage = "该流水线不能手动启动",
                         errorCode = ProcessMessageCode.DENY_START_BY_MANUAL)
                 }
-            }
-            if (startType == StartType.REMOTE) {
+            } else if (startType == StartType.REMOTE) {
                 var canRemoteStartup = false
                 run lit@{
                     triggerContainer.elements.forEach {
@@ -469,47 +465,8 @@ class PipelineBuildService(
                 logger.info("[$pipelineId] buildNo was changed to [$buildNo]")
             }
 
-            val startParams = mutableMapOf<String, Any>()
-            val startParamsWithType = mutableListOf<BuildParameters>()
-
-            triggerContainer.params.forEach {
-                val value: Any
-                val v = values[it.id]
-                if (v == null) {
-                    if (it.required) {
-                        throw ErrorCodeException(defaultMessage = "启动时必填变量(${it.id})",
-                            errorCode = CommonMessageCode.PARAMETER_IS_NULL, params = arrayOf(it.id))
-                    }
-                    value = when (it.type) {
-                        BuildFormPropertyType.PASSWORD -> {
-                            parameterUtils.decrypt(it.defaultValue.toString())
-                        }
-                        else -> {
-                            it.defaultValue
-                        }
-                    }
-                } else {
-                    value = when (it.type) {
-                        BuildFormPropertyType.ARTIFACTORY -> {
-                            getArtifactoryParamFileName(it.id, v)
-                        }
-                        BuildFormPropertyType.PASSWORD -> {
-                            parameterUtils.decrypt(v)
-                        }
-                        else -> {
-                            v
-                        }
-                    }
-                }
-                startParams[it.id] = value
-                startParamsWithType.add(
-                    BuildParameters(
-                        it.id,
-                        value,
-                        it.type
-                    )
-                )
-            }
+            // 为将来公用逻辑抽离
+            val startParamsWithType = buildParameterUtils.parseStartBuildParameter(triggerContainer.params, values)
 
             model.stages.forEachIndexed { index, stage ->
                 if (index == 0) {
@@ -517,18 +474,11 @@ class PipelineBuildService(
                 }
                 stage.containers.forEach { container ->
                     container.elements.forEach { e ->
-                        values.forEach { value ->
-                            val key = SkipElementUtils.getSkipElementVariableName(e.id)
-                            if (value.key == key && value.value == "true") {
-                                logger.info("${e.id} will be skipped.")
-                                startParams[key] = "true"
-                                startParamsWithType.add(
-                                    BuildParameters(
-                                        key,
-                                        "true"
-                                    )
-                                )
-                            }
+                        // 优化循环
+                        val key = SkipElementUtils.getSkipElementVariableName(e.id)
+                        if (values[key] == "true") {
+                            startParamsWithType.add(BuildParameters(key = key, value = "true"))
+                            logger.info("[$pipelineId]|${e.id}|${e.name} will be skipped.")
                         }
                     }
                 }
@@ -544,20 +494,7 @@ class PipelineBuildService(
                 model = model
             )
         } finally {
-            logger.info("It take(${System.currentTimeMillis() - startEpoch})ms to start pipeline($pipelineId)")
-        }
-    }
-
-    private fun getArtifactoryParamFileName(paramKey: String, path: String): String {
-        if (path.isBlank()) {
-            return ""
-        }
-        try {
-            return File(path).name
-        } catch (e: Exception) {
-            throw ErrorCodeException(defaultMessage = "仓库参数($paramKey)不合法",
-                errorCode = CommonMessageCode.ERROR_INVALID_PARAM_,
-                params = arrayOf(paramKey))
+            logger.info("[$pipelineId]|$userId|It take(${System.currentTimeMillis() - startEpoch})ms to start pipeline")
         }
     }
 
@@ -674,7 +611,7 @@ class PipelineBuildService(
 
             val startParams = mutableMapOf<String, Any>()
             startParams.putAll(parameters)
-
+            // TODO 子流水线调用暂时不需要做旧变量转新兼容，子流水线会做更新保存，或者出现跨项目的子流水线调用情况，反而会出现问题
             triggerContainer.params.forEach {
                 if (startParams.containsKey(it.id)) {
                     return@forEach
@@ -683,14 +620,7 @@ class PipelineBuildService(
             }
             // 子流水线的调用不受频率限制
             val startParamsWithType = mutableListOf<BuildParameters>()
-            startParams.forEach { t, u ->
-                startParamsWithType.add(
-                    BuildParameters(
-                        t,
-                        u
-                    )
-                )
-            }
+            startParams.forEach { (key, value) -> startParamsWithType.add(BuildParameters(key, value)) }
 
             return startPipeline(
                 userId = userId,
@@ -1572,7 +1502,7 @@ class PipelineBuildService(
             // 如果指定了版本号，则设置指定的版本号
             readyToBuildPipelineInfo.version = signPipelineVersion ?: readyToBuildPipelineInfo.version
 
-            var startParams = startParamsWithType.map { it.key to it.value }.toMap()
+            val startParams = startParamsWithType.map { it.key to it.value }.toMap()
             val fullModel = pipelineBuildQualityService.fillingRuleInOutElement(
                 projectId = readyToBuildPipelineInfo.projectId,
                 pipelineId = pipelineId,
@@ -1594,78 +1524,28 @@ class PipelineBuildService(
                 )
             }
 
+            val userName = when (startType) {
+                StartType.PIPELINE -> ParameterUtils.getListValueByKey(
+                    list = startParamsWithType,
+                    key = PIPELINE_START_PIPELINE_USER_ID
+                )
+                StartType.WEB_HOOK -> ParameterUtils.getListValueByKey(
+                    list = startParamsWithType,
+                    key = PIPELINE_START_WEBHOOK_USER_ID
+                )
+                StartType.MANUAL -> userId
+                else -> userId
+            }
             val paramsWithType = startParamsWithType.plus(
-                BuildParameters(
-                    PIPELINE_VERSION,
-                    readyToBuildPipelineInfo.version
-                )
-            )
+                BuildParameters(PIPELINE_VERSION, readyToBuildPipelineInfo.version))
                 .plus(BuildParameters(PIPELINE_START_USER_ID, userId))
-                .plus(
-                    BuildParameters(
-                        PIPELINE_START_TYPE,
-                        startType.name
-                    )
-                )
-                .plus(
-                    BuildParameters(
-                        PIPELINE_START_CHANNEL,
-                        channelCode.name
-                    )
-                )
+                .plus(BuildParameters(PIPELINE_START_TYPE, startType.name))
+                .plus(BuildParameters(PIPELINE_START_CHANNEL, channelCode.name))
                 .plus(BuildParameters(PIPELINE_START_MOBILE, isMobile))
-                .plus(
-                    BuildParameters(
-                        PIPELINE_NAME,
-                        readyToBuildPipelineInfo.pipelineName
-                    )
-                )
-                .plus(
-                    when (startType) {
-                        StartType.PIPELINE -> {
-                            val value = ParameterUtils.getListValueByKey(startParamsWithType, PIPELINE_START_PIPELINE_USER_ID)
-                            if (value != null) {
-                                BuildParameters(
-                                    PIPELINE_START_USER_NAME,
-                                    value
-                                )
-                            } else {
-                                BuildParameters(
-                                    PIPELINE_START_USER_NAME,
-                                    userId
-                                )
-                            }
-                        }
-                        StartType.MANUAL ->
-                            BuildParameters(
-                                PIPELINE_START_USER_NAME,
-                                userId
-                            )
-                        StartType.WEB_HOOK -> {
-                            val value = ParameterUtils.getListValueByKey(startParamsWithType, PIPELINE_START_WEBHOOK_USER_ID)
-                            if (value != null) {
-                                BuildParameters(
-                                    PIPELINE_START_USER_NAME,
-                                    value
-                                )
-                            } else {
-                                BuildParameters(
-                                    PIPELINE_START_USER_NAME,
-                                    userId
-                                )
-                            }
-                        }
-                        else -> {
-                            BuildParameters(
-                                PIPELINE_START_USER_NAME,
-                                userId
-                            )
-                        }
-                    }
-                )
+                .plus(BuildParameters(PIPELINE_NAME, readyToBuildPipelineInfo.pipelineName))
+                .plus(BuildParameters(PIPELINE_START_USER_NAME, userName ?: userId))
 
             val buildId = pipelineRuntimeService.startBuild(readyToBuildPipelineInfo, fullModel, paramsWithType)
-            startParams = startParamsWithType.map { it.key to it.value }.toMap()
             if (startParams.isNotEmpty()) {
                 buildStartupParamService.addParam(
                     projectId = readyToBuildPipelineInfo.projectId,
