@@ -24,18 +24,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.pipeline.pojo
+package com.tencent.devops.process.engine.compatibility
 
-import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.process.engine.compatibility.v2.V2BuildParametersCompatibilityTransformer
+import com.tencent.devops.process.util.PswParameterUtils
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
 
-@ApiModel("构建模型-构建参数")
-data class BuildParameters(
-    @ApiModelProperty("元素值ID-标识符", required = true)
-    var key: String,
-    @ApiModelProperty("元素值名称-显示用", required = true)
-    val value: Any,
-    @ApiModelProperty("元素值类型", required = false)
-    val valueType: BuildFormPropertyType? = null
-)
+@Configuration
+class CompatibilityConfig {
+
+    @Bean
+    @ConditionalOnMissingBean(BuildParametersCompatibilityTransformer::class)
+    fun buildParamCompatibilityTransformer(@Autowired pswParameterUtils: PswParameterUtils) =
+        V2BuildParametersCompatibilityTransformer(pswParameterUtils)
+}
