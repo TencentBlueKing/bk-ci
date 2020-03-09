@@ -71,7 +71,8 @@ object BcsClientUtils {
         logger.info("the namespace is: $ns")
         if (ns == null) {
             ns =
-                NamespaceBuilder().withNewMetadata().withName(namespaceName).addToLabels(labelInfo.labelKey, labelInfo.labelValue).endMetadata()
+                NamespaceBuilder().withNewMetadata().withName(namespaceName)
+                    .addToLabels(labelInfo.labelKey, labelInfo.labelValue).endMetadata()
                     .build()
             logger.info("created namespace:${bcsKubernetesClient.namespaces().createOrReplace(ns)}")
         }
@@ -93,39 +94,39 @@ object BcsClientUtils {
         var secret = bcsKubernetesClient.secrets().inNamespace(namespaceName).withName(secretName).get()
         logger.info("the secret is: $secret")
         if (secret == null) {
-                val secretData: HashMap<String, String> = HashMap(1)
-                val username = kubernetesRepoInfo.username
-                val password = kubernetesRepoInfo.password
-                val basicAuth = String(Base64.encodeBase64("$username:$password".toByteArray()))
-                var dockerCfg = String.format(
-                    "{ " +
-                        " \"auths\": { " +
-                        "  \"%s\": { " +
-                        "   \"username\": \"%s\", " +
-                        "   \"password\": \"%s\", " +
-                        "   \"email\": \"%s\", " +
-                        "   \"auth\": \"%s\" " +
-                        "  } " +
-                        " } " +
-                        "}",
-                    kubernetesRepoInfo.registryUrl,
-                    username,
-                    password,
-                    kubernetesRepoInfo.email,
-                    basicAuth
-                )
-                dockerCfg = String(Base64.encodeBase64(dockerCfg.toByteArray(Charsets.UTF_8)), Charsets.UTF_8)
-                secretData[".dockerconfigjson"] = dockerCfg
-                val secretBuilder = SecretBuilder()
-                    .withNewMetadata()
-                    .withName(secretName)
-                    .withNamespace(namespaceName)
-                    .endMetadata()
-                    .withData(secretData)
-                    .withType("kubernetes.io/dockerconfigjson")
-                secret = bcsKubernetesClient.secrets().inNamespace(namespaceName).create(secretBuilder.build())
-                logger.info("create new secret: $secret")
-            }
+            val secretData: HashMap<String, String> = HashMap(1)
+            val username = kubernetesRepoInfo.username
+            val password = kubernetesRepoInfo.password
+            val basicAuth = String(Base64.encodeBase64("$username:$password".toByteArray()))
+            var dockerCfg = String.format(
+                "{ " +
+                    " \"auths\": { " +
+                    "  \"%s\": { " +
+                    "   \"username\": \"%s\", " +
+                    "   \"password\": \"%s\", " +
+                    "   \"email\": \"%s\", " +
+                    "   \"auth\": \"%s\" " +
+                    "  } " +
+                    " } " +
+                    "}",
+                kubernetesRepoInfo.registryUrl,
+                username,
+                password,
+                kubernetesRepoInfo.email,
+                basicAuth
+            )
+            dockerCfg = String(Base64.encodeBase64(dockerCfg.toByteArray(Charsets.UTF_8)), Charsets.UTF_8)
+            secretData[".dockerconfigjson"] = dockerCfg
+            val secretBuilder = SecretBuilder()
+                .withNewMetadata()
+                .withName(secretName)
+                .withNamespace(namespaceName)
+                .endMetadata()
+                .withData(secretData)
+                .withType("kubernetes.io/dockerconfigjson")
+            secret = bcsKubernetesClient.secrets().inNamespace(namespaceName).create(secretBuilder.build())
+            logger.info("create new secret: $secret")
+        }
         return secret
     }
 

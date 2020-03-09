@@ -27,32 +27,26 @@
 package com.tencent.devops.store.service
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.store.pojo.dto.DeployExtServiceDTO
 import com.tencent.devops.store.resources.UserBcsServiceResourceImpl
 import com.tencent.devops.store.util.BcsClientUtils
-import io.fabric8.kubernetes.api.model.Container
-import io.fabric8.kubernetes.api.model.ContainerPort
 import io.fabric8.kubernetes.api.model.IntOrString
-import io.fabric8.kubernetes.api.model.LabelSelector
-import io.fabric8.kubernetes.api.model.LocalObjectReference
-import io.fabric8.kubernetes.api.model.ObjectMeta
-import io.fabric8.kubernetes.api.model.PodSpec
-import io.fabric8.kubernetes.api.model.PodTemplateSpec
 import io.fabric8.kubernetes.api.model.ServiceBuilder
-import io.fabric8.kubernetes.api.model.apps.Deployment
 import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder
-import io.fabric8.kubernetes.api.model.apps.DeploymentSpec
 import io.fabric8.kubernetes.api.model.extensions.HTTPIngressPathBuilder
+import io.fabric8.kubernetes.api.model.extensions.HTTPIngressRuleValue
 import io.fabric8.kubernetes.api.model.extensions.IngressBackend
 import io.fabric8.kubernetes.api.model.extensions.IngressBackendBuilder
 import io.fabric8.kubernetes.api.model.extensions.IngressBuilder
+import io.fabric8.kubernetes.api.model.extensions.IngressRule
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.util.Collections
 
 @Service
-class ExtServiceBcsService @Autowired constructor() {
+class ExtServiceBcsService @Autowired constructor(private val redisOperation: RedisOperation) {
 
     private val logger = LoggerFactory.getLogger(UserBcsServiceResourceImpl::class.java)
 
@@ -125,24 +119,49 @@ class ExtServiceBcsService @Autowired constructor() {
         val ingressPath = HTTPIngressPathBuilder()
             .withBackend(ingressBackend)
             .withPath(deployExtServiceDTO.contextPath).build()
-        val ingress = IngressBuilder()
-            .withNewMetadata()
-            .withName("$serviceCode-ingress")
-            .withNamespace(namespaceName)
-            .addToLabels("app", serviceCode)
-            .addToAnnotations(deployExtServiceDTO.ingressAnnotationMap)
-            .endMetadata()
-            .withNewSpec()
-            .addNewRule()
-            .withHost(deployExtServiceDTO.host)
-            .withNewHttp()
-            .withPaths(ingressPath)
-            .endHttp()
-            .endRule()
-            .endSpec()
-            .build()
-        BcsClientUtils.createIngress(ingress)
-        logger.info("created ingress:$ingress")
+        val ingressRule = IngressRule(
+            deployExtServiceDTO.host,
+            HTTPIngressRuleValue(
+                listOf(ingressPath)
+            )
+        )
+        val ingressRedisKey = "ext:service:ingress:$namespaceName"
+        val ingressName = redisOperation.get(ingressRedisKey)
+        logger.info("deployExtService ingressName is: $ingressName")
+        val bcsKubernetesClient = BcsClientUtils.getBcsKubernetesClient()
+        var ingress =
+            bcsKubernetesClient.extensions().ingresses().inNamespace(namespaceName).withName(ingressName).get()
+        if (ingressName.isNullOrBlank() || ingress == null) {
+            ingress = IngressBuilder()
+                .withNewMetadata()
+                .withName("$namespaceName-ingress")
+                .withNamespace(namespaceName)
+                .addToLabels("app", serviceCode)
+                .addToAnnotations(deployExtServiceDTO.ingressAnnotationMap)
+                .endMetadata()
+                .withNewSpec()
+                .withRules(listOf(ingressRule))
+                .addNewRule()
+                .withHost(deployExtServiceDTO.host)
+                .withNewHttp()
+                .withPaths(ingressPath)
+                .endHttp()
+                .endRule()
+                .endSpec()
+                .build()
+            BcsClientUtils.createIngress(ingress)
+            redisOperation.set(
+                key = ingressRedisKey,
+                value = "$namespaceName-ingress",
+                expiredInSecond = null,
+                expired = false
+            )
+            logger.info("created ingress:$ingress")
+        } else {
+            ingress.spec.rules.add(ingressRule)
+            BcsClientUtils.createIngress(ingress)
+            logger.info("update ingress:$ingressName success")
+        }
         return Result(true)
     }
 }
