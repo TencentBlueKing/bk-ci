@@ -70,7 +70,6 @@ class CommitService @Autowired constructor(
                     "https://${urlAndRepo.first}/${urlAndRepo.second}/commit/${it.commit}"
                 } else null,
                 it.branchName,
-                it.commitTimes,
                 aliasName
             )
         }?.groupBy { it.elementId }?.map {

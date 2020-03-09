@@ -39,6 +39,5 @@ data class CommitData(
     val elementId: String,
     var url: String? = null,
     var branchName: String? = null,
-    var commitTimes: String? = null, // 提交次数
     var aliasName: String? = null
 )
