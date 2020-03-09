@@ -26,10 +26,16 @@
 
 package com.tencent.devops.process.engine.dao
 
+import com.fasterxml.jackson.core.type.TypeReference
+import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.pipeline.NameAndValue
+import com.tencent.devops.common.pipeline.option.StageControlOption
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.pipeline.enums.StageRunCondition
 import com.tencent.devops.model.process.Tables.T_PIPELINE_BUILD_STAGE
 import com.tencent.devops.model.process.tables.records.TPipelineBuildStageRecord
 import com.tencent.devops.process.engine.pojo.PipelineBuildStage
+import com.tencent.devops.process.engine.pojo.PipelineBuildStageControlOption
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
@@ -56,7 +62,8 @@ class PipelineBuildStageDao {
                     START_TIME,
                     END_TIME,
                     COST,
-                    EXECUTE_COUNT
+                    EXECUTE_COUNT,
+                    CONDITIONS
                 )
                     .values(
                         buildStage.projectId,
@@ -68,7 +75,10 @@ class PipelineBuildStageDao {
                         buildStage.startTime,
                         buildStage.endTime,
                         buildStage.cost,
-                        buildStage.executeCount
+                        buildStage.executeCount,
+                        if (buildStage.controlOption != null)
+                            JsonUtil.toJson(buildStage.controlOption!!)
+                        else null
                     )
                     .execute()
             }
@@ -82,7 +92,8 @@ class PipelineBuildStageDao {
                 records.add(
                     TPipelineBuildStageRecord(
                         projectId, pipelineId, buildId, stageId, seq,
-                        status.ordinal, startTime, endTime, cost, executeCount
+                        status.ordinal, startTime, endTime, cost, executeCount,
+                        if (controlOption != null) JsonUtil.toJson(controlOption!!) else null
                     )
                 )
             }
@@ -123,9 +134,43 @@ class PipelineBuildStageDao {
 
     fun convert(tTPipelineBuildStageRecord: TPipelineBuildStageRecord): PipelineBuildStage? {
         return with(tTPipelineBuildStageRecord) {
+            val controlOption = if (!conditions.isNullOrBlank()) {
+                try {
+                    JsonUtil.to(conditions, PipelineBuildStageControlOption::class.java)
+                } catch (ignored: Throwable) { // TODO 旧数据兼容 ，后续删除掉
+                    val conditions = JsonUtil.to(conditions, object : TypeReference<List<NameAndValue>>() {})
+                    PipelineBuildStageControlOption(
+                        stageControlOption = StageControlOption(
+                            enable = true,
+                            customVariables = conditions,
+                            runCondition = StageRunCondition.AFTER_LAST_FINISHED
+                        ),
+                        fastKill = false
+                    )
+                }
+            } else {
+                PipelineBuildStageControlOption(
+                    stageControlOption = StageControlOption(
+                        enable = true,
+                        customVariables = emptyList(),
+                        runCondition = StageRunCondition.AFTER_LAST_FINISHED
+                    ),
+                    fastKill = false
+                )
+            }
+
             PipelineBuildStage(
-                projectId, pipelineId, buildId, stageId, seq, BuildStatus.values()[status],
-                startTime, endTime, cost ?: 0, executeCount ?: 1
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                stageId = stageId,
+                seq = seq,
+                status = BuildStatus.values()[status],
+                startTime = startTime,
+                endTime = endTime,
+                cost = cost ?: 0,
+                executeCount = executeCount ?: 1,
+                controlOption = controlOption
             )
         }
     }

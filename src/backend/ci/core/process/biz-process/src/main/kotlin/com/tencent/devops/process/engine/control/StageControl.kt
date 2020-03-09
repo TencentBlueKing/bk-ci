@@ -29,11 +29,14 @@ package com.tencent.devops.process.engine.control
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.pipeline.enums.EnvControlTaskType
+import com.tencent.devops.common.pipeline.enums.StageRunCondition
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
 import com.tencent.devops.process.engine.pojo.PipelineBuildStage
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildCancelEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildFinishEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildStageEvent
+import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.pojo.mq.PipelineBuildContainerEvent
 import org.slf4j.LoggerFactory
@@ -48,7 +51,8 @@ import java.time.LocalDateTime
 @Service
 class StageControl @Autowired constructor(
     private val pipelineEventDispatcher: PipelineEventDispatcher,
-    private val pipelineRuntimeService: PipelineRuntimeService
+    private val pipelineRuntimeService: PipelineRuntimeService,
+    private val pipelineBuildDetailService: PipelineBuildDetailService
 ) {
 
     private val logger = LoggerFactory.getLogger(javaClass)!!
@@ -69,17 +73,34 @@ class StageControl @Autowired constructor(
                 return
             }
 
+            val stage = pipelineRuntimeService.getStage(buildId, stageId) ?: run {
+                logger.warn("[$buildId]|[${buildInfo.status}]|bad stage|stage=$stageId")
+                return
+            }
+
+            val variables = pipelineRuntimeService.getAllVariable(buildId)
+
             val stages = pipelineRuntimeService.listStages(buildId)
+
+            val containerList = pipelineRuntimeService.listContainers(buildId, stageId)
 
             val allContainers = pipelineRuntimeService.listContainers(buildId)
 
             var buildStatus: BuildStatus = BuildStatus.SUCCEED
 
-            // 终止命令 不需要判断各个Stage的状态，可直接停止
-            if (ActionType.isTerminate(actionType)) {
+            val needPause = stage.controlOption?.stageControlOption?.runCondition == StageRunCondition.MANUAL_TRIGGER && source != "manual_trigger_stage"
+
+            val fastKill = stage.controlOption?.fastKill == true && source == "CONTAINER_END_FAILED"
+
+            logger.info("[$buildId]|[${buildInfo.status}]|STAGE_EVENT|event=$event|stage=$stage|needPause=$needPause|fastKill=$fastKill")
+
+            // 终止命令，不需要判断各个Stage的状态，可直接停止
+            if (ActionType.isTerminate(actionType) || fastKill) {
                 logger.info("[$buildId]|[${buildInfo.status}]|STAGE_TERMINATE|stageId=$stageId")
-                stages.forEach { stage ->
-                    pipelineRuntimeService.updateStageStatus(buildId, stage.stageId, BuildStatus.TERMINATE)
+
+                buildStatus = BuildStatus.TERMINATE
+                stages.forEach { s ->
+                    pipelineRuntimeService.updateStageStatus(buildId, s.stageId, buildStatus)
                 }
                 allContainers.forEach { c ->
                     if (BuildStatus.isRunning(c.status))
@@ -88,32 +109,66 @@ class StageControl @Autowired constructor(
                             stageId = c.stageId,
                             containerId = c.containerId,
                             endTime = LocalDateTime.now(),
-                            buildStatus = BuildStatus.TERMINATE
+                            buildStatus = buildStatus
                         )
                 }
-                return sendTerminateEvent(BuildStatus.TERMINATE)
+
+                // 如果是因fastKill强制终止，流水线状态标记为失败
+                if (fastKill) buildStatus = BuildStatus.FAILED
+
+                pipelineBuildDetailService.updateStageStatus(buildId, stageId, buildStatus)
+                return sendTerminateEvent(javaClass.simpleName, buildStatus)
             }
 
-            var nextStage = false
+            // 仅在初次进入Stage时进行跳过判断
+            if (BuildStatus.isReadyToRun(stage.status)) {
+                logger.info("[$buildId]|[${buildInfo.status}]|STAGE_START|stage=$stage|action=$actionType")
+
+                if (checkIfAllSkip(buildId, stage, containerList, variables)) {
+                    // 执行条件不满足或未启用该Stage
+                    logger.info("[$buildId]|[${buildInfo.status}]|STAGE_SKIP|stage=$stageId|action=$actionType")
+
+                    buildStatus = BuildStatus.SKIP
+                    pipelineRuntimeService.updateStageStatus(buildId, stageId, buildStatus)
+                    pipelineBuildDetailService.updateStageStatus(buildId, stageId, buildStatus)
+
+                    actionType = ActionType.SKIP
+                } else if (needPause) {
+                    // 进入暂停状态等待手动触发
+                    logger.info("[$buildId]|[${buildInfo.status}]|STAGE_PAUSE|stage=$stageId|action=$actionType")
+
+                    buildStatus = BuildStatus.PAUSE
+                    pipelineRuntimeService.updateStageStatus(buildId, stageId, buildStatus)
+                    pipelineBuildDetailService.updateStageStatus(buildId, stageId, buildStatus)
+
+                    return
+                }
+            }
+
             run outer@{
-                stages.forEach { stage ->
-                    if (stageId == stage.stageId || nextStage) {
+                stages.forEachIndexed { index, s ->
+                    if (stageId == s.stageId) {
                         // 执行成功则结束本次事件处理，否则要尝试下一stage
-                        buildStatus = stage.judgeStageContainer(allContainers, actionType, userId)
+                        buildStatus = s.judgeStageContainer(allContainers, actionType, userId)
 
-                        logger.info("[$buildId]|[${buildInfo.status}]|STAGE_DONE|stageId=${stage.stageId}|status=$buildStatus|action=$actionType")
+                        logger.info("[$buildId]|[${buildInfo.status}]|STAGE_DONE|stageId=${s.stageId}|status=$buildStatus|action=$actionType")
 
-                        // 如果当前Stage[还未结束]或者[执行失败]，则不尝试下一Stage
-                        if (BuildStatus.isRunning(buildStatus) || BuildStatus.isFailure(buildStatus)) {
-                            return@outer // 不尝试下一Stage
-                        } else {
-                            nextStage = true // 表示要执行下一个Stage
+                        // 如果当前Stage[还未结束]或者[执行失败]或[已经是最后一个]，则不尝试下一Stage
+                        if (BuildStatus.isRunning(buildStatus) || BuildStatus.isFailure(buildStatus) || index == stages.size - 1) {
+                            return@outer
                         }
+                        // 直接发送执行下一个Stage的消息
+                        return sendStartStageEvent("next_stage", stages[index + 1].stageId)
                     }
                 }
             }
             if (BuildStatus.isFinish(buildStatus)) { // 构建状态结束了
                 logger.info("[$buildId]|[${buildInfo.status}]|STAGE_FINALLY|stageId=$stageId|status=$buildStatus|action=$actionType")
+                pipelineBuildDetailService.updateStageStatus(
+                    buildId = buildId,
+                    stageId = stageId,
+                    buildStatus = buildStatus
+                )
                 sendFinishEvent("FINALLY", buildStatus)
             }
         }
@@ -144,11 +199,24 @@ class StageControl @Autowired constructor(
             if (ActionType.isStart(newActionType)) {
                 buildStatus = BuildStatus.RUNNING
                 pipelineRuntimeService.updateStageStatus(buildId, stageId, buildStatus)
+                pipelineBuildDetailService.updateStageStatus(buildId, stageId, buildStatus)
                 logger.info("[$buildId]|STAGE_INIT|stageId=$stageId|action=$newActionType")
             }
-            // 要终止或者跳过的Stage，直接设置为取消
-            else if (ActionType.isEnd(newActionType) || actionType == ActionType.SKIP) {
+            // 若为终止命令，直接设置为取消
+            else if (ActionType.isEnd(newActionType)) {
                 buildStatus = BuildStatus.CANCELED
+                val now = LocalDateTime.now()
+                pipelineRuntimeService.updateStage(
+                    buildId = buildId,
+                    stageId = stageId,
+                    startTime = now,
+                    endTime = now,
+                    buildStatus = buildStatus
+                )
+                logger.info("[$buildId]|STAGE_$actionType|stageId=$stageId|action=$newActionType")
+                return buildStatus
+            } else if (actionType == ActionType.SKIP) {
+                buildStatus = BuildStatus.SKIP
                 val now = LocalDateTime.now()
                 pipelineRuntimeService.updateStage(
                     buildId = buildId,
@@ -186,15 +254,79 @@ class StageControl @Autowired constructor(
                 BuildStatus.FAILED
             }
             pipelineRuntimeService.updateStageStatus(buildId, stageId, buildStatus)
+            pipelineBuildDetailService.updateStageStatus(buildId, stageId, buildStatus)
             logger.info("[$buildId]|STAGE_CONTAINER_FINISH|stageId=$stageId|status=$buildStatus|action=$actionType")
         }
         return buildStatus
     }
 
-    private fun PipelineBuildStageEvent.sendTerminateEvent(buildStatus: BuildStatus) {
+    fun checkIfAllSkip(
+        buildId: String,
+        stage: PipelineBuildStage,
+        containerList: Collection<PipelineBuildContainer>,
+        variables: Map<String, Any>
+    ): Boolean {
+
+        val stageId = stage.stageId
+        val pipelinebuildStageControlOption = stage.controlOption ?: return false
+        val stageControlOption = pipelinebuildStageControlOption.stageControlOption
+
+        var skip = !stageControlOption.enable
+        if (skip) {
+            logger.info("[$buildId]|STAGE_DISABLE|stageId=$stageId|enable=false")
+            return skip
+        }
+
+        if (stageControlOption.runCondition == StageRunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN ||
+            stageControlOption.runCondition == StageRunCondition.CUSTOM_VARIABLE_MATCH
+        ) {
+            val conditions = stageControlOption.customVariables ?: emptyList()
+            skip = ControlUtils.checkStageSkipCondition(conditions, variables, buildId, stageControlOption.runCondition)
+        }
+
+        if (skip) {
+            logger.info("[$buildId]|CONDITION_SKIP|stageId=$stageId|conditions=$stageControlOption")
+            return skip
+        }
+
+        skip = true
+        run manualSkip@{
+            containerList.forEach nextContainer@{ container ->
+                // 触发容器不参与判断
+                if (container.containerType == "trigger") {
+                    return@nextContainer
+                }
+                val containerTaskList = pipelineRuntimeService.listContainerBuildTasks(buildId, container.containerId)
+                if (container.status != BuildStatus.SKIP) { // 没有指定跳过
+                    if (container.controlOption?.jobControlOption?.enable != false) { // Job是启用的，则不跳过
+                        containerTaskList.forEach nextTask@{ task ->
+                            // 环境控制类的任务不参与判断
+                            if (task.taskType == EnvControlTaskType.NORMAL.name || task.taskType == EnvControlTaskType.VM.name) {
+                                return@nextTask
+                            }
+                            if (task.status != BuildStatus.SKIP) { // 没有指定跳过
+                                if (ControlUtils.isEnable(task.additionalOptions)) { // 插件是启用的，则不跳过
+                                    skip = false
+                                    return@manualSkip
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        if (skip) {
+            logger.info("[$buildId]|STAGE_MANUAL_SKIP|stageId=$stageId|skipped")
+        }
+
+        return skip
+    }
+
+    private fun PipelineBuildStageEvent.sendTerminateEvent(source: String, buildStatus: BuildStatus) {
         pipelineEventDispatcher.dispatch(
             PipelineBuildCancelEvent(
-                source = javaClass.simpleName,
+                source = source,
                 projectId = projectId,
                 pipelineId = pipelineId,
                 userId = userId,
@@ -260,6 +392,20 @@ class StageControl @Autowired constructor(
                 containerType = containerType,
                 containerId = containerId,
                 actionType = actionType
+            )
+        )
+    }
+
+    private fun PipelineBuildStageEvent.sendStartStageEvent(source: String, stageId: String) {
+        pipelineEventDispatcher.dispatch(
+            PipelineBuildStageEvent(
+                source = source,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                userId = "",
+                buildId = buildId,
+                stageId = stageId,
+                actionType = ActionType.START
             )
         )
     }
