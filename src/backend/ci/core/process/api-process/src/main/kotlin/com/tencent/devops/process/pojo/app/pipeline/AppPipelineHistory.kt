@@ -43,6 +43,6 @@ data class AppPipelineHistory(
     var fileCount: Int = 0,
     var allFileSize: Long = 0,
     val packageVersion: List<String> = listOf(),
-    var isMobileStart: Boolean = false
-
+    var isMobileStart: Boolean = false,
+    val appVersion: List<String?>?
 )
