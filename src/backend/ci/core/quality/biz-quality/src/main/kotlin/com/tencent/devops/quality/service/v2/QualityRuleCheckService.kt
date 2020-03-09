@@ -390,7 +390,9 @@ class QualityRuleCheckService @Autowired constructor(
         return if (CodeccUtils.isCodeccAtom(record.indicatorType)) {
             val projectId = params["projectId"] ?: ""
             val pipelineId = params["pipelineId"] ?: ""
-            val taskId = params[CodeccUtils.BK_CI_CODECC_TASK_ID] ?: client.get(ServiceCodeccElementResource::class).get(projectId, pipelineId).data?.taskId
+            val paramTaskId = params[CodeccUtils.BK_CI_CODECC_TASK_ID]
+            val taskId = if (paramTaskId.isNullOrBlank()) client.get(ServiceCodeccElementResource::class).get(projectId, pipelineId).data?.taskId
+            else paramTaskId
             if (taskId.isNullOrBlank()) {
                 logger.warn("taskId is null or blank for project($projectId) pipeline($pipelineId)")
                 return ""

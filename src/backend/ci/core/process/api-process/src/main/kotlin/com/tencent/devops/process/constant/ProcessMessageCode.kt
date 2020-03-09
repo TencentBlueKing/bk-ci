@@ -97,6 +97,7 @@ object ProcessMessageCode {
     const val ERROR_PIPELINE_REPO_ID_NULL = "2101045" // 仓库ID为空
     const val ERROR_PIPELINE_REPO_NAME_NULL = "2101046" // 仓库名为空
     const val ILLEGAL_TIMER_CRONTAB = "2101048" // 定时触发器的定时参数不合法
+    const val ERROR_PIPELINE_PARAMS_NAME_ERROR = "2101054" // 请使用英文命名流水线变量
 
     const val ERROR_PIPELINE_NOT_EXISTS = "2101038" // 流水线不存在
     const val ERROR_PIPELINE_MODEL_NOT_EXISTS = "2101039" // 流水线的模型不存在
