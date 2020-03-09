@@ -32,13 +32,14 @@ import com.tencent.devops.store.api.UserBcsServiceResource
 import io.fabric8.kubernetes.api.model.IntOrString
 import io.fabric8.kubernetes.api.model.NamespaceBuilder
 import io.fabric8.kubernetes.api.model.SecretBuilder
-import io.fabric8.kubernetes.api.model.ServiceAccountBuilder
 import io.fabric8.kubernetes.api.model.ServiceBuilder
 import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder
 import io.fabric8.kubernetes.api.model.extensions.HTTPIngressPathBuilder
+import io.fabric8.kubernetes.api.model.extensions.HTTPIngressRuleValue
 import io.fabric8.kubernetes.api.model.extensions.IngressBackend
 import io.fabric8.kubernetes.api.model.extensions.IngressBackendBuilder
 import io.fabric8.kubernetes.api.model.extensions.IngressBuilder
+import io.fabric8.kubernetes.api.model.extensions.IngressRule
 import io.fabric8.kubernetes.client.ConfigBuilder
 import io.fabric8.kubernetes.client.DefaultKubernetesClient
 import io.fabric8.kubernetes.client.KubernetesClient
@@ -74,19 +75,21 @@ class UserBcsServiceResourceImpl @Autowired constructor() : UserBcsServiceResour
             .build()
         val client: KubernetesClient = DefaultKubernetesClient(config)
         val testNameSpaceName = "ext-service-test"
-        val ns =
-            NamespaceBuilder().withNewMetadata().withName(testNameSpaceName).addToLabels("this", "rocks").endMetadata()
-                .build()
-        logger.info("Created namespace", client.namespaces().createOrReplace(ns))
-        val fabric8 = ServiceAccountBuilder().withNewMetadata().withName("fabric8").endMetadata().build()
-        client.serviceAccounts().inNamespace(testNameSpaceName).createOrReplace(fabric8)
-
-        val registryUrl = "bk.artifactory.oa.com:8090"
-        val name = "admin"
+        var ns = client.namespaces().withName(testNameSpaceName).get()
+        logger.info("the namespace is: $ns")
+        if (ns == null) {
+            ns =
+                NamespaceBuilder().withNewMetadata().withName(testNameSpaceName).addToLabels("this", "rocks").endMetadata()
+                    .build()
+            logger.info("Created namespace", client.namespaces().createOrReplace(ns))
+        }
+        val registryUrl = "docker.dev.bkrepo.oa.com"
+        val name = "bk_extension"
         val email = "devops@tencent.com"
-        val password = "pFvbq1wBgfHb7qcqgvPG0A=="
-        val secretName = "-docker-secret"
-        var secret = client.secrets().inNamespace(testNameSpaceName).withName("docker-registry1").get()
+        val password = "blueking"
+        val secretName = "-bk-docker-secret"
+        var secret = client.secrets().inNamespace(testNameSpaceName).withName(testNameSpaceName + secretName).get()
+        logger.info("the secret is: $secret")
         if (secret == null) {
             try {
                 val secretData: HashMap<String, String> = HashMap(1)
@@ -126,24 +129,24 @@ class UserBcsServiceResourceImpl @Autowired constructor() : UserBcsServiceResour
                 e.printStackTrace()
             }
         }
-
+        val deploymentName = "ext-service-demo2"
         var deployment = DeploymentBuilder()
             .withApiVersion("apps/v1")
             .withNewMetadata()
-            .withName("ext-service-demo")
+            .withName(deploymentName)
             .endMetadata()
             .withNewSpec()
             .withReplicas(2)
             .withNewTemplate()
             .withNewMetadata()
-            .addToLabels("app", "ext-service-demo")
+            .addToLabels("app", deploymentName)
             .endMetadata()
             .withNewSpec()
             .addNewContainer()
-            .withName("ext-service-demo")
-            .withImage("bk.artifactory.oa.com:8090/paas/public/nginx:1.15")
+            .withName(deploymentName)
+            .withImage("docker.dev.bkrepo.oa.com/bk-extension/docker-local/ext-service-demo:1.0.12")
             .addNewPort()
-            .withContainerPort(80)
+            .withContainerPort(8080)
             .endPort()
             .endContainer()
             .addNewImagePullSecret()
@@ -152,32 +155,30 @@ class UserBcsServiceResourceImpl @Autowired constructor() : UserBcsServiceResour
             .endSpec()
             .endTemplate()
             .withNewSelector()
-            .addToMatchLabels("app", "ext-service-demo")
+            .addToMatchLabels("app", deploymentName)
             .endSelector()
             .endSpec()
             .build()
 
 
         deployment = client.apps().deployments().inNamespace(testNameSpaceName).create(deployment)
-        logger.info("Created deployment", deployment)
-
-        System.err.println("Scaling up:" + deployment.getMetadata().getName())
-        client.apps().deployments().inNamespace(testNameSpaceName).withName("ext-service-demo").scale(2, true)
+        logger.info("Created deployment:$deployment")
         logger.info("Created replica sets:${client.apps().replicaSets().inNamespace(testNameSpaceName).list().items}")
 
         // 创建service
+        val serviceName = "ingress-service2"
         var service = ServiceBuilder()
             .withApiVersion("v1")
             .withNewMetadata()
-            .withName("ingress-service")
+            .withName(serviceName)
             .endMetadata()
             .withNewSpec()
-            .withSelector(Collections.singletonMap("app", "ext-service-demo"))
+            .withSelector(Collections.singletonMap("app", deploymentName))
             .addNewPort()
             .withName("test-port")
             .withProtocol("TCP")
             .withPort(8081)
-            .withTargetPort(IntOrString(80))
+            .withTargetPort(IntOrString(8080))
             .endPort()
             .withType("NodePort")
             .endSpec()
@@ -186,44 +187,59 @@ class UserBcsServiceResourceImpl @Autowired constructor() : UserBcsServiceResour
         service = client.services().inNamespace(testNameSpaceName).create(service)
         logger.info("Created service with name:${service.getMetadata().getName()} ")
 
-        val serviceURL =
-            client.services().inNamespace(client.namespace).withName(service.getMetadata().getName())
-                .getURL("test-port")
-        logger.info("Service URL:$serviceURL")
-
         // 创建ingress
-        val annotationMap = mapOf(
-            "kubernetes.io/ingress.class" to "qcloud",
-            "kubernetes.io/ingress.subnetId" to "subnet-4xew4yji"
-        )
-        //generate ingress backend
+        var ingress = client.extensions().ingresses().inNamespace(testNameSpaceName).withName("test-ingress").get()
+        logger.info("the ingress is: $ingress")
+        if(ingress == null) {
+            val annotationMap = mapOf(
+                "kubernetes.io/ingress.class" to "qcloud",
+                "kubernetes.io/ingress.subnetId" to "subnet-4xew4yji"
+            )
+            //generate ingress backend
+            val ingressBackend: IngressBackend = IngressBackendBuilder()
+                .withServiceName("ingress-service")
+                .withNewServicePort(8081)
+                .build()
+            //generate ingress path
+            val ingressPath = HTTPIngressPathBuilder()
+                .withBackend(ingressBackend)
+                .withPath("/").build()
+            ingress = IngressBuilder()
+                .withApiVersion("extensions/v1beta1")
+                .withNewMetadata()
+                .withName("test-ingress")
+                .withNamespace(testNameSpaceName)
+                .addToLabels("from", "bkdevops")
+                .addToAnnotations(annotationMap)
+                .endMetadata()
+                .withNewSpec()
+                .addNewRule()
+                .withHost("demo.ingress.devops.oa.com")
+                .withNewHttp()
+                .withPaths(ingressPath)
+                .endHttp()
+                .endRule()
+                .endSpec()
+                .build()
+            ingress = client.extensions().ingresses().inNamespace(testNameSpaceName).create(ingress)
+            logger.info("Created ingress with name:${ingress.getMetadata().getName()} ")
+        }
         val ingressBackend: IngressBackend = IngressBackendBuilder()
-            .withServiceName("ingress-service")
+            .withServiceName("ingress-service2")
             .withNewServicePort(8081)
             .build()
         //generate ingress path
-        val ingressPath = HTTPIngressPathBuilder()
+        val ingressPath1 = HTTPIngressPathBuilder()
             .withBackend(ingressBackend)
             .withPath("/").build()
-        var ingress = IngressBuilder()
-            .withApiVersion("extensions/v1beta1")
-            .withNewMetadata()
-            .withName("test-ingress")
-            .withNamespace(testNameSpaceName)
-            .addToLabels("from", "bkdevops")
-            .addToAnnotations(annotationMap)
-            .endMetadata()
-            .withNewSpec()
-            .addNewRule()
-            .withHost("demo.ingress.devops.oa.com")
-            .withNewHttp()
-            .withPaths(ingressPath)
-            .endHttp()
-            .endRule()
-            .endSpec()
-            .build()
-        ingress = client.extensions().ingresses().inNamespace(testNameSpaceName).create(ingress)
-        logger.info("Created ingress with name:${ingress.getMetadata().getName()} ")
+        val ingressRule1 = IngressRule(
+            "demo2.ingress.devops.oa.com",
+            HTTPIngressRuleValue(
+                listOf(ingressPath1)
+            )
+        )
+        ingress.spec.rules.add(ingressRule1)
+        client.extensions().ingresses().inNamespace(testNameSpaceName).createOrReplace(ingress)
         return Result(true)
     }
 }
