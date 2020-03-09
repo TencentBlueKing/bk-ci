@@ -190,7 +190,10 @@ class BuildStartControl @Autowired constructor(
         pipelineEventDispatcher.dispatch(
             PipelineBuildStageEvent(
                 source = tag,
-                projectId = projectId, pipelineId = pipelineId, userId = userId, buildId = buildId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                userId = userId,
+                buildId = buildId,
                 stageId = model.stages[1].id ?: modelStageIdGenerator.getNextId(),
                 actionType = actionType
             )
