@@ -26,21 +26,25 @@
 
 package com.tencent.devops.store.pojo.dto
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import io.swagger.annotations.ApiModelProperty
 
-@JsonIgnoreProperties(ignoreUnknown = true)
 data class DeployExtServiceDTO(
-    @ApiModelProperty("k8s命名空间名称")
+    @ApiModelProperty("k8s命名空间名称", required = true)
     val namespaceName: String,
-    @ApiModelProperty("扩展服务标识")
+    @ApiModelProperty("扩展服务标识", required = true)
     val serviceCode: String,
-    @ApiModelProperty("扩展服务镜像")
+    @ApiModelProperty("期望的pod数量", required = true)
+    val replicas: Int,
+    @ApiModelProperty("扩展服务镜像", required = true)
     val serviceImage: String,
     @ApiModelProperty(value = "拉取镜像秘钥名称", required = false)
     val pullImageSecretName: String?,
-    @ApiModelProperty("容器镜像端口列表")
-    val ports: List<Int>,
-    @ApiModelProperty("期望的pod数量")
-    val replicas: Int
+    @ApiModelProperty("容器端口", required = true)
+    val containerPort: Int,
+    @ApiModelProperty("容器对应的service端口", required = true)
+    val servicePort: Int,
+    @ApiModelProperty("虚拟主机", required = true)
+    val host: String,
+    @ApiModelProperty("虚拟主机对应的上下文路径", required = true)
+    val contextPath: String
 )

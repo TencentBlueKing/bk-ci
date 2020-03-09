@@ -32,15 +32,24 @@ import com.tencent.devops.store.resources.UserBcsServiceResourceImpl
 import com.tencent.devops.store.util.BcsClientUtils
 import io.fabric8.kubernetes.api.model.Container
 import io.fabric8.kubernetes.api.model.ContainerPort
+import io.fabric8.kubernetes.api.model.IntOrString
+import io.fabric8.kubernetes.api.model.LabelSelector
 import io.fabric8.kubernetes.api.model.LocalObjectReference
 import io.fabric8.kubernetes.api.model.ObjectMeta
 import io.fabric8.kubernetes.api.model.PodSpec
 import io.fabric8.kubernetes.api.model.PodTemplateSpec
+import io.fabric8.kubernetes.api.model.ServiceBuilder
 import io.fabric8.kubernetes.api.model.apps.Deployment
+import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder
 import io.fabric8.kubernetes.api.model.apps.DeploymentSpec
+import io.fabric8.kubernetes.api.model.extensions.HTTPIngressPathBuilder
+import io.fabric8.kubernetes.api.model.extensions.IngressBackend
+import io.fabric8.kubernetes.api.model.extensions.IngressBackendBuilder
+import io.fabric8.kubernetes.api.model.extensions.IngressBuilder
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.util.Collections
 
 @Service
 class ExtServiceBcsService @Autowired constructor() {
@@ -52,37 +61,91 @@ class ExtServiceBcsService @Autowired constructor() {
         deployExtServiceDTO: DeployExtServiceDTO
     ): Result<Boolean> {
         logger.info("deployExtService userId is: $userId,deployExtServiceDTO is: $deployExtServiceDTO")
+        val namespaceName = deployExtServiceDTO.namespaceName
         val serviceCode = deployExtServiceDTO.serviceCode
-        val deployment = Deployment()
-        val metadata = ObjectMeta()
-        metadata.name = serviceCode
-        metadata.namespace = deployExtServiceDTO.namespaceName
-        deployment.metadata = metadata
-        val deploymentSpec = DeploymentSpec()
-        deploymentSpec.replicas = deployExtServiceDTO.replicas
-        val podTemplateSpec = PodTemplateSpec()
-        val specMetadata = ObjectMeta()
-        specMetadata.labels = mapOf("app" to serviceCode)
-        podTemplateSpec.metadata = specMetadata
-        val podSpec = PodSpec()
-        val container = Container()
-        container.name = serviceCode
-        container.image = deployExtServiceDTO.serviceImage
-        val containerPortList = arrayListOf<ContainerPort>()
-        deployExtServiceDTO.ports.forEach {
-            val containerPort = ContainerPort()
-            containerPort.hostPort = it
-            containerPortList.add(containerPort)
-        }
-        container.ports = containerPortList
-        podSpec.containers = listOf(container)
-        if (deployExtServiceDTO.pullImageSecretName != null) {
-            val localObjectReference = LocalObjectReference(deployExtServiceDTO.pullImageSecretName)
-            podSpec.imagePullSecrets = listOf(localObjectReference)
-        }
-        podTemplateSpec.spec = podSpec
-        deploymentSpec.template = podTemplateSpec
+        val containerPort = deployExtServiceDTO.containerPort
+        // 创建deployment无状态部署
+        val deployment = DeploymentBuilder()
+            .withNewMetadata()
+            .withName(serviceCode)
+            .withNamespace(namespaceName)
+            .endMetadata()
+            .withNewSpec()
+            .withReplicas(deployExtServiceDTO.replicas)
+            .withNewTemplate()
+            .withNewMetadata()
+            .addToLabels("app", serviceCode)
+            .endMetadata()
+            .withNewSpec()
+            .addNewContainer()
+            .withName(serviceCode)
+            .withImage(deployExtServiceDTO.serviceImage)
+            .addNewPort()
+            .withContainerPort(containerPort)
+            .endPort()
+            .endContainer()
+            .addNewImagePullSecret()
+            .withName(deployExtServiceDTO.pullImageSecretName)
+            .endImagePullSecret()
+            .endSpec()
+            .endTemplate()
+            .withNewSelector()
+            .addToMatchLabels("app", serviceCode)
+            .endSelector()
+            .endSpec()
+            .build()
         BcsClientUtils.createDeployment(deployment)
+        logger.info("created deployment:$deployment")
+        val servicePort = deployExtServiceDTO.servicePort
+        val service = ServiceBuilder()
+            .withNewMetadata()
+            .withName("$serviceCode-service")
+            .withNamespace(namespaceName)
+            .endMetadata()
+            .withNewSpec()
+            .withSelector(Collections.singletonMap("app", serviceCode))
+            .addNewPort()
+            .withName("$serviceCode-port")
+            .withProtocol("TCP")
+            .withPort(servicePort)
+            .withTargetPort(IntOrString(containerPort))
+            .endPort()
+            .withType("NodePort")
+            .endSpec()
+            .build()
+        BcsClientUtils.createService(service)
+        logger.info("created service:$service")
+        // 创建ingress
+        val annotationMap = mapOf(
+            "kubernetes.io/ingress.class" to "qcloud",
+            "kubernetes.io/ingress.subnetId" to "subnet-4xew4yji"
+        )
+        //generate ingress backend
+        val ingressBackend: IngressBackend = IngressBackendBuilder()
+            .withServiceName("$serviceCode-service")
+            .withNewServicePort(servicePort)
+            .build()
+        //generate ingress path
+        val ingressPath = HTTPIngressPathBuilder()
+            .withBackend(ingressBackend)
+            .withPath(deployExtServiceDTO.contextPath).build()
+        val ingress = IngressBuilder()
+            .withNewMetadata()
+            .withName("$serviceCode-ingress")
+            .withNamespace(namespaceName)
+            .addToLabels("app", serviceCode)
+            .addToAnnotations(annotationMap)
+            .endMetadata()
+            .withNewSpec()
+            .addNewRule()
+            .withHost(deployExtServiceDTO.host)
+            .withNewHttp()
+            .withPaths(ingressPath)
+            .endHttp()
+            .endRule()
+            .endSpec()
+            .build()
+        logger.info("created ingress:$ingress")
         return Result(true)
     }
 }

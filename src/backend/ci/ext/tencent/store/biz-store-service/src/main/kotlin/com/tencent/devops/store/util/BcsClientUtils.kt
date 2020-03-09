@@ -32,7 +32,9 @@ import io.fabric8.kubernetes.api.model.Namespace
 import io.fabric8.kubernetes.api.model.NamespaceBuilder
 import io.fabric8.kubernetes.api.model.Secret
 import io.fabric8.kubernetes.api.model.SecretBuilder
+import io.fabric8.kubernetes.api.model.Service
 import io.fabric8.kubernetes.api.model.apps.Deployment
+import io.fabric8.kubernetes.api.model.extensions.Ingress
 import io.fabric8.kubernetes.client.ConfigBuilder
 import io.fabric8.kubernetes.client.DefaultKubernetesClient
 import io.fabric8.kubernetes.client.KubernetesClient
@@ -134,6 +136,26 @@ object BcsClientUtils {
     fun createDeployment(
         deployment: Deployment
     ): Deployment {
-        return bcsKubernetesClient.apps().deployments().create(deployment)
+        return bcsKubernetesClient.apps().deployments().createOrReplace(deployment)
+    }
+
+    /**
+     * 创建service
+     * @param service service对象
+     */
+    fun createService(
+        service: Service
+    ): Service {
+        return bcsKubernetesClient.services().createOrReplace(service)
+    }
+
+    /**
+     * 创建ingress
+     * @param ingress ingress对象
+     */
+    fun createService(
+        ingress: Ingress
+    ): Ingress {
+        return bcsKubernetesClient.extensions().ingresses().createOrReplace(ingress)
     }
 }
