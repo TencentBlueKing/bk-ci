@@ -58,6 +58,7 @@ import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.log.utils.LogUtils
 import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.engine.compatibility.BuildParametersCompatibilityTransformer
 import com.tencent.devops.process.engine.compatibility.BuildPropertyCompatibilityTools
 import com.tencent.devops.process.engine.control.lock.BuildIdLock
 import com.tencent.devops.process.engine.interceptor.InterceptData
@@ -78,7 +79,6 @@ import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import com.tencent.devops.process.pojo.pipeline.PipelineLatestBuild
 import com.tencent.devops.process.service.BuildStartupParamService
 import com.tencent.devops.process.service.ParamService
-import com.tencent.devops.process.util.BuildParameterUtils
 import com.tencent.devops.process.utils.PIPELINE_NAME
 import com.tencent.devops.process.utils.PIPELINE_RETRY_BUILD_ID
 import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
@@ -119,7 +119,7 @@ class PipelineBuildService(
     private val paramService: ParamService,
     private val pipelineBuildQualityService: PipelineBuildQualityService,
     private val rabbitTemplate: RabbitTemplate,
-    private val buildParameterUtils: BuildParameterUtils
+    private val buildParamCompatibilityTransformer: BuildParametersCompatibilityTransformer
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineBuildService::class.java)
@@ -465,8 +465,7 @@ class PipelineBuildService(
                 logger.info("[$pipelineId] buildNo was changed to [$buildNo]")
             }
 
-            // 为将来公用逻辑抽离
-            val startParamsWithType = buildParameterUtils.parseStartBuildParameter(triggerContainer.params, values)
+            val startParamsWithType = buildParamCompatibilityTransformer.parseManualStartParam(triggerContainer.params, values)
 
             model.stages.forEachIndexed { index, stage ->
                 if (index == 0) {
@@ -537,23 +536,38 @@ class PipelineBuildService(
              */
             val triggerContainer = model.stages[0].containers[0] as TriggerContainer
 
-            val startParams = mutableMapOf<String, Any>()
-            startParams.putAll(parameters)
+//            val startParams = mutableMapOf<String, Any>()
+//            startParams.putAll(parameters)
+//
+//            triggerContainer.params.forEach {
+//                if (startParams.containsKey(it.id)) {
+//                    return@forEach
+//                }
+//                startParams[it.id] = it.defaultValue
+//            }
+//            startParams[PIPELINE_START_PIPELINE_USER_ID] = userId
+//            startParams[PIPELINE_START_PARENT_PIPELINE_ID] = parentPipelineId
+//            startParams[PIPELINE_START_PARENT_BUILD_ID] = parentBuildId
+//            startParams[PIPELINE_START_PARENT_BUILD_TASK_ID] = parentTaskId
+//            val startParamsWithType = mutableListOf<BuildParameters>()
+//            startParams.forEach { (t, u) -> startParamsWithType.add(BuildParameters(key = t, value = u)) }
 
-            triggerContainer.params.forEach {
-                if (startParams.containsKey(it.id)) {
-                    return@forEach
-                }
-                startParams[it.id] = it.defaultValue
+            val inputBuildParam = mutableListOf<BuildParameters>()
+            inputBuildParam.add(BuildParameters(key = PIPELINE_START_PIPELINE_USER_ID, value = userId))
+            inputBuildParam.add(BuildParameters(key = PIPELINE_START_PARENT_PIPELINE_ID, value = parentPipelineId))
+            inputBuildParam.add(BuildParameters(key = PIPELINE_START_PARENT_BUILD_ID, value = parentBuildId))
+            inputBuildParam.add(BuildParameters(key = PIPELINE_START_PARENT_BUILD_TASK_ID, value = parentTaskId))
+            parameters.forEach {
+                inputBuildParam.add(BuildParameters(key = it.key, value = it.value))
             }
-            startParams[PIPELINE_START_PIPELINE_USER_ID] = userId
-            startParams[PIPELINE_START_PARENT_PIPELINE_ID] = parentPipelineId
-            startParams[PIPELINE_START_PARENT_BUILD_ID] = parentBuildId
-            startParams[PIPELINE_START_PARENT_BUILD_TASK_ID] = parentTaskId
-            // 子流水线的调用不受频率限制
-            val startParamsWithType = mutableListOf<BuildParameters>()
-            startParams.forEach { (t, u) -> startParamsWithType.add(BuildParameters(key = t, value = u)) }
 
+            val defaultParam = mutableListOf<BuildParameters>()
+            triggerContainer.params.forEach {
+                defaultParam.add(BuildParameters(key = it.id, value = it.defaultValue, valueType = it.type))
+            }
+            val startParamsWithType = buildParamCompatibilityTransformer.transform(inputBuildParam, defaultParam)
+
+            // 子流水线的调用不受频率限制
             val subBuildId = startPipeline(
                 userId = readyToBuildPipelineInfo.lastModifyUser,
                 readyToBuildPipelineInfo = readyToBuildPipelineInfo,
