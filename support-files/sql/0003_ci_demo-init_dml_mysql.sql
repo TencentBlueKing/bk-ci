@@ -1,6 +1,8 @@
 USE devops_ci_project;
 SET NAMES utf8mb4;
 
+-- 示例项目和构建机导入
+
 DROP PROCEDURE IF EXISTS ci_demo_date_update;
 
 DELIMITER <CI_UBF>
