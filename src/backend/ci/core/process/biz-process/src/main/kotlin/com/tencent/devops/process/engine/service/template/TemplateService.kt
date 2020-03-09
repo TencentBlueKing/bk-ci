@@ -48,6 +48,7 @@ import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.pipeline.enums.PipelineInstanceTypeEnum
 import com.tencent.devops.common.pipeline.extend.ModelCheckPlugin
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildNo
@@ -292,7 +293,8 @@ class TemplateService @Autowired constructor(
         val template = templateDao.getLatestTemplate(dslContext, templateId)
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
-            val pipelines = templatePipelineDao.listPipeline(context, setOf(templateId))
+            val pipelines =
+                templatePipelineDao.listPipeline(context, PipelineInstanceTypeEnum.CONSTRAINT.type, setOf(templateId))
             if (pipelines.isNotEmpty) {
                 throw ErrorCodeException(
                     errorCode = ProcessMessageCode.TEMPLATE_CAN_NOT_DELETE_WHEN_HAVE_INSTANCE,
@@ -329,7 +331,8 @@ class TemplateService @Autowired constructor(
         checkPermission(projectId, userId)
         return dslContext.transactionResult { configuration ->
             val context = DSL.using(configuration)
-            val pipelines = templatePipelineDao.listPipeline(context, templateId, version)
+            val pipelines =
+                templatePipelineDao.listPipeline(context, templateId, PipelineInstanceTypeEnum.CONSTRAINT.type, version)
             if (pipelines.isNotEmpty) {
                 logger.warn("There are ${pipelines.size} pipeline attach to $templateId of version $version")
                 throw ErrorCodeException(
@@ -572,7 +575,7 @@ class TemplateService @Autowired constructor(
 
                 val associateCodes = listAssociateCodes(record["projectId"] as String, model)
                 val associatePipeline =
-                    templatePipelineDao.listPipeline(context, setOf(templateId))
+                    templatePipelineDao.listPipeline(context, PipelineInstanceTypeEnum.CONSTRAINT.type, setOf(templateId))
 
                 val pipelineIds = associatePipeline.map { PipelineId(it.pipelineId) }
 
@@ -1148,26 +1151,17 @@ class TemplateService @Autowired constructor(
                             param = param,
                             instanceFromTemplate = true
                         )
+                    instanceModel.templateId = templateId
                     val pipelineId = pipelineService.createPipeline(
                         userId = userId,
                         projectId = projectId,
                         model = instanceModel,
                         channelCode = ChannelCode.BS,
-                        checkPermission = true
-                    )
-                    templatePipelineDao.create(
-                        dslContext = context,
-                        pipelineId = pipelineId,
-                        templateVersion = template.version,
-                        versionName = template.versionName,
-                        templateId = templateId,
-                        userId = userId,
-                        buildNo = if (buildNo == null) {
-                            null
-                        } else {
-                            objectMapper.writeValueAsString(buildNo)
-                        },
-                        param = objectMapper.writeValueAsString(param)
+                        checkPermission = true,
+                        fixPipelineId = null,
+                        instanceType = PipelineInstanceTypeEnum.CONSTRAINT.type,
+                        buildNo = buildNo,
+                        param = param
                     )
                     if (useTemplateSettings) {
                         val setting = copySetting(
@@ -1559,7 +1553,8 @@ class TemplateService @Autowired constructor(
     ): TemplateInstancePage {
         logger.info("[$projectId|$userId|$templateId|$page|$pageSize] List the template instances with filter $searchKey")
 
-        val instancePage = templatePipelineDao.listPipelineInPage(dslContext, projectId, templateId, page, pageSize, searchKey)
+        val instancePage =
+            templatePipelineDao.listPipelineInPage(dslContext, projectId, templateId, PipelineInstanceTypeEnum.CONSTRAINT.type, page, pageSize, searchKey)
         val associatePipelines = instancePage.records
         val pipelineIds = associatePipelines.map { it.pipelineId }.toSet()
         logger.info("Get the pipelineIds - $associatePipelines")
@@ -1612,13 +1607,13 @@ class TemplateService @Autowired constructor(
     fun serviceCountTemplateInstances(projectId: String, templateIds: Collection<String>): Int {
         logger.info("[$projectId|$templateIds] List the templates instances")
         if (templateIds.isEmpty()) return 0
-        return templatePipelineDao.listPipeline(dslContext, templateIds).size
+        return templatePipelineDao.listPipeline(dslContext, PipelineInstanceTypeEnum.CONSTRAINT.type, templateIds).size
     }
 
     fun serviceCountTemplateInstancesDetail(projectId: String, templateIds: Collection<String>): Map<String, Int> {
         logger.info("[$projectId|$templateIds] List the templates instances")
         if (templateIds.isEmpty()) return mapOf()
-        return templatePipelineDao.listPipeline(dslContext, templateIds).groupBy { it.templateId }.map { it.key to it.value.size }.toMap()
+        return templatePipelineDao.listPipeline(dslContext, PipelineInstanceTypeEnum.CONSTRAINT.type, templateIds).groupBy { it.templateId }.map { it.key to it.value.size }.toMap()
     }
 
     fun listTemplateInstances(projectId: String, userId: String, templateId: String): TemplateInstances {
@@ -1628,7 +1623,7 @@ class TemplateService @Autowired constructor(
     fun listTemplateInstances(projectId: String, userId: String, templateIds: Set<String>): List<TemplateInstances> {
         logger.info("[$projectId|$userId|$templateIds] List the templates instances")
         val associateTemplatePipelines =
-            templatePipelineDao.listPipeline(dslContext, templateIds).groupBy { it.templateId }
+            templatePipelineDao.listPipeline(dslContext, PipelineInstanceTypeEnum.CONSTRAINT.type, templateIds).groupBy { it.templateId }
         return templateIds.map { tid ->
             val associatePipelines = associateTemplatePipelines[tid] ?: listOf()
 

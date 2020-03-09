@@ -50,7 +50,7 @@
     import validMixins from '../validMixins'
     import { isMultipleParam, DEFAULT_PARAM, STRING } from '@/store/modules/atom/paramsConfig'
     import PipelineVersionsForm from '@/components/PipelineVersionsForm.vue'
-    import { allVersionKeyList, versionConfig } from '@/utils/pipelineConst'
+    import { allVersionKeyList, getVersionConfig } from '@/utils/pipelineConst'
 
     export default {
         name: 'version-config',
@@ -207,6 +207,7 @@
 
             toggleVersions (e) {
                 const isShow = e.target.checked
+                const versionConfig = getVersionConfig()
 
                 if (isShow) {
                     const newVersions = allVersionKeyList.map(v => ({
