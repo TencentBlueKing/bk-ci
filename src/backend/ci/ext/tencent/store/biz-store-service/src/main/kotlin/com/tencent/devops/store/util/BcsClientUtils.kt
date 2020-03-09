@@ -46,7 +46,9 @@ object BcsClientUtils {
 
     private val logger = LoggerFactory.getLogger(BcsClientUtils::class.java)
 
-    fun getBcsKubernetesClient(): KubernetesClient {
+    private val bcsKubernetesClient = createBcsKubernetesClient()
+
+    private fun createBcsKubernetesClient(): KubernetesClient {
         val config = ConfigBuilder()
             .withMasterUrl("https://bcs.ied.com:30443/tunnels/clusters/bcs-bcs-k8s-40089-voucrpgo-eitbwFRzIgOZsxQs")
             .withTrustCerts(true)
@@ -55,7 +57,9 @@ object BcsClientUtils {
         return DefaultKubernetesClient(config)
     }
 
-    private val bcsKubernetesClient = getBcsKubernetesClient()
+    fun getBcsKubernetesClient(): KubernetesClient {
+        return bcsKubernetesClient
+    }
 
     /**
      * 创建k8s命名空间
