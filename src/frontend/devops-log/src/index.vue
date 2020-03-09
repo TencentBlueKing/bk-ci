@@ -147,17 +147,19 @@
 
             valuefilter (val) {
                 return val.replace(/\s|<|>/g, (str) => {
+                    let res = '&nbsp;'
                     switch (str) {
-                        case ' ':
-                            return '&nbsp;'
-                            break;
                         case '<':
-                            return '&lt;'
+                            res = '&lt;'
                             break;
                         case '>':
-                            return '&gt;'
+                            res = '&gt;'
+                            break;
+                        default:
+                            res = '&nbsp;'
                             break;
                     }
+                    return res
                 }).replace(/&lt;a.+?href=["']?([^"']+)["']?.*&gt;(.+)&lt;\/a&gt;/g, "<a href='$1' target='_blank'>$2</a>")
             },
 
