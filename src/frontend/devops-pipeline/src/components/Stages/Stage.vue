@@ -200,23 +200,6 @@
                 })
             }
         },
-        watch: {
-            'stage.runStage' (newVal) {
-                const { stage, updateStage } = this
-                const { containers } = stage
-                if (this.stageDisabled) return
-                containers.filter(container => (container.jobControlOption === undefined || container.jobControlOption.enable)).map(container => {
-                    container.runContainer = newVal
-                    return false
-                })
-                updateStage({
-                    stage,
-                    newParam: {
-                        containers
-                    }
-                })
-            }
-        },
         mounted () {
             this.updateHeight()
             Vue.set(this.stage, 'runStage', !this.stageDisabled)

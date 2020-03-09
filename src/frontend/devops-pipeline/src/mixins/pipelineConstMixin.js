@@ -8,6 +8,11 @@ const pipelineConstMixin = {
                     label: this.$t('buildNum'),
                     width: 120
                 },
+                stageStatus: {
+                    index: 0,
+                    prop: 'stageStatus',
+                    label: this.$t('history.stageStatus')
+                },
                 material: {
                     index: 1,
                     prop: 'material',
