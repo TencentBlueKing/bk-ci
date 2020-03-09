@@ -24,21 +24,23 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.util
+package com.tencent.devops.process.engine.compatibility.v2
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
+import com.tencent.devops.process.engine.compatibility.BuildParametersCompatibilityTransformer
+import com.tencent.devops.process.util.PswParameterUtils
 import com.tencent.devops.process.utils.PipelineVarUtil
-import org.springframework.stereotype.Component
 import java.io.File
 
-@Component
-class BuildParameterUtils(private val parameterUtils: PswParameterUtils) {
+open class V2BuildParametersCompatibilityTransformer constructor(private val pswParameterUtils: PswParameterUtils) :
 
-    fun parseStartBuildParameter(
+    BuildParametersCompatibilityTransformer {
+
+    override fun parseManualStartParam(
         paramProperties: List<BuildFormProperty>,
         paramValues: Map<String, String>
     ): MutableList<BuildParameters> {
@@ -58,19 +60,41 @@ class BuildParameterUtils(private val parameterUtils: PswParameterUtils) {
                     )
                 }
                 value = when (it.type) {
-                    BuildFormPropertyType.PASSWORD -> parameterUtils.decrypt(it.defaultValue.toString())
+                    BuildFormPropertyType.PASSWORD -> pswParameterUtils.decrypt(it.defaultValue.toString())
                     else -> it.defaultValue
                 }
             } else {
                 value = when (it.type) {
                     BuildFormPropertyType.ARTIFACTORY -> getArtifactoryParamFileName(it.id, userInputValue)
-                    BuildFormPropertyType.PASSWORD -> parameterUtils.decrypt(userInputValue)
+                    BuildFormPropertyType.PASSWORD -> pswParameterUtils.decrypt(userInputValue)
                     else -> userInputValue
                 }
             }
             startParamsWithType.add(BuildParameters(key = paramKey, value = value, valueType = it.type))
         }
+
         return startParamsWithType
+    }
+
+    /**
+     * 转换旧变量为新变量
+     *
+     * 旧变量： v1旧的命名(不规范）的系统变量
+     * 新变量： v2新的命名的系统变量
+     * 转换原则： 后出现的旧变量在转换为新变量命名后不允许覆盖前面已经存在的新变量
+     *
+     * @param paramLists 参数列表，注意顺序和转换原则，后出现的同名变量将被抛异（同名： 旧变量转换为新变即与新变量同名)
+     */
+    override fun transform(vararg paramLists: List<BuildParameters>): List<BuildParameters> {
+        val startParamsWithType = mutableMapOf<String, BuildParameters>()
+        paramLists.forEach { paramList ->
+            paramList.forEach {
+                // 通过对现有Model存在的旧变量替换成新变量， 如果已经是新的会为空，直接为it.key
+                it.key = PipelineVarUtil.oldVarToNewVar(it.key) ?: it.key
+                startParamsWithType.putIfAbsent(it.key, it)
+            }
+        }
+        return startParamsWithType.values.toList()
     }
 
     private fun getArtifactoryParamFileName(paramKey: String, path: String): String {
@@ -80,7 +104,8 @@ class BuildParameterUtils(private val parameterUtils: PswParameterUtils) {
         try {
             return File(path).name
         } catch (e: Exception) {
-            throw ErrorCodeException(defaultMessage = "仓库参数($paramKey)不合法",
+            throw ErrorCodeException(
+                defaultMessage = "仓库参数($paramKey)不合法",
                 errorCode = CommonMessageCode.ERROR_INVALID_PARAM_,
                 params = arrayOf(paramKey)
             )
