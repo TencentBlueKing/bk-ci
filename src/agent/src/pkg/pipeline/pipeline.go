@@ -72,9 +72,11 @@ func parseAndRunCommandPipeline(pipelineData interface{}) (err error) {
 	buffer := bytes.Buffer{}
 	if strings.HasPrefix(strings.TrimSpace(lines[0]), "#!") {
 		buffer.WriteString(lines[0] + "\n")
+		buffer.WriteString("set -e\n")
 		buffer.WriteString("cd " + systemutil.GetWorkDir() + "\n")
 	} else {
 		buffer.WriteString("#!/bin/bash\n\n")
+		buffer.WriteString("set -e\n")
 		buffer.WriteString("cd " + systemutil.GetWorkDir() + "\n")
 		buffer.WriteString(lines[0] + "\n")
 	}
@@ -95,7 +97,7 @@ func parseAndRunCommandPipeline(pipelineData interface{}) (err error) {
 
 	output, err := command.RunCommand(scriptFile, []string{} /*args*/, systemutil.GetWorkDir(), nil)
 	if err != nil {
-		api.UpdatePipelineStatus(api.NewPipelineResponse(pipeline.SeqId, StatusFailure, "run pipeline failed: "+err.Error()))
+		api.UpdatePipelineStatus(api.NewPipelineResponse(pipeline.SeqId, StatusFailure, "run pipeline failed: "+err.Error()+"\noutput: "+string(output)))
 		return errors.New("run pipeline failed: " + err.Error())
 	}
 	api.UpdatePipelineStatus(api.NewPipelineResponse(pipeline.SeqId, StatusSuccess, string(output)))
