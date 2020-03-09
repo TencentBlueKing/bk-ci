@@ -111,7 +111,7 @@ CREATE TABLE IF NOT EXISTS `T_PROJECT` (
   `cc_app_name` varchar(64) DEFAULT NULL,
   `is_offlined` bit(1) DEFAULT b'0',
   `project_id` varchar(32) NOT NULL,
-  `project_name` varchar(64) NOT NULL,
+  `project_name` varchar(64) NOT NULL COLLATE utf8mb4_bin,
   `english_name` varchar(64) NOT NULL,
   `updator` varchar(32) DEFAULT NULL,
   `project_type` int(10) DEFAULT NULL,
