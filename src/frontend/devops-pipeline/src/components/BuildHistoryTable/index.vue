@@ -177,7 +177,7 @@
                 return {
                     SUCCEED: 'check-circle-shape',
                     FAILED: 'close-circle-shape',
-                    RUNNING: 'circle-2-1 spin-icon',
+                    RUNNING: 'circle-2-1',
                     PAUSE: 'play-circle-shape',
                     SKIP: 'redo-arrow'
                 }
