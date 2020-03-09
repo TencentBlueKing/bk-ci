@@ -12,7 +12,7 @@
                 <template v-if="col.prop === 'buildNum'" v-slot="props">
                     <span class="build-num-status">
                         <router-link :class="{ [props.row.status]: true }" style="line-height: 42px;" :to="getArchiveUrl(props.row)">#{{ props.row.buildNum }}</router-link>
-                        <i v-if="props.row.status === 'STAGE_SUCESS'" class="bk-icon icon-redo-arrow" />
+                        <logo v-if="props.row.status === 'STAGE_SUCESS'" name="flag" class="bk-icon" size="12" fill="#34d97b" />
                         <i v-else-if="retryable(props.row)" title="rebuild" class="bk-icon icon-retry" @click.stop="retry(props.row.id)" />
                         <i v-else-if="props.row.status === 'QUEUE' || props.row.status === 'RUNNING' || !props.row.endTime" :title="$t('history.stopBuild')" @click.stop="stopExecute(props.row.id)"
                             :class="{
@@ -178,7 +178,8 @@
                     SUCCEED: 'check-circle-shape',
                     FAILED: 'close-circle-shape',
                     RUNNING: 'circle-2-1 spin-icon',
-                    PAUSE: 'play-circle-shape'
+                    PAUSE: 'play-circle-shape',
+                    SKIP: 'redo-arrow'
                 }
             },
             data () {
@@ -208,7 +209,7 @@
                         ...stage,
                         tooltip: stage.elapsed ? `${stage.name}: ${convertMStoString(stage.elapsed)}` : '',
                         icon: this.statusIconMap[stage.status] || 'circle',
-                        status: stage.status
+                        statusCls: `${stage.status} ${stage.status === 'RUNNING' ? 'spin-icon' : ''}`
                     })) : null
                     console.log(stageStatus)
                     return {

@@ -2,18 +2,22 @@
     <div class="stage-steps">
         <template v-for="step in steps">
             <span v-if="step.tooltip" v-bk-tooltips="step.tooltip" class="stage-step" :key="step.icon">
-                <i :class="`bk-icon icon-${step.icon} ${step.status}`" />
+                <logo :class="`step-icon ${step.statusCls}`" :name="step.icon" size="16" />
             </span>
             <span v-else class="stage-step" :key="step.icon">
-                <i :class="`bk-icon icon-${step.icon} ${step.status}`" />
+                <logo :class="`step-icon ${step.statusCls}`" :name="step.icon" size="16" />
             </span>
         </template>
     </div>
 </template>
 
 <script>
+    import Logo from '@/components/Logo'
     export default {
         name: 'stage-steps',
+        components: {
+            Logo
+        },
         props: {
             steps: {
                 type: Array,
@@ -30,7 +34,7 @@
         margin-right: 8px;
         &:before {
             position: absolute;
-            top: 6px;
+            top: 5px;
             right: -7px;
             content: '';
             width: 6px;
@@ -41,20 +45,22 @@
             display: none;
         }
 
-        > i {
+        > .step-icon {
             display: inline-block;
-            font-size: 16px;
             &.SUCCEED {
-            color: $successColor;
+                fill: $successColor;
             }
             &.FAILED  {
-                color: $dangerColor;
+                fill: $dangerColor;
             }
             // &.RUNNING {
-            //     color: $primaryColor;
+            //     fill: $primaryColor;
             // }
+            &.SKIP {
+                fill: $borderLightColor;
+            }
             &.PAUSE  {
-                color: $iconPrimaryColor;
+                fill: $iconPrimaryColor;
             }
         }
     }
