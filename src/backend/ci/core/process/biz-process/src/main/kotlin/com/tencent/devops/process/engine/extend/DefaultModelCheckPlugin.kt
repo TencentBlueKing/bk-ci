@@ -35,6 +35,7 @@ import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.JobRunCondition
+import com.tencent.devops.common.pipeline.enums.StageRunCondition
 import com.tencent.devops.common.pipeline.enums.VMBaseOS
 import com.tencent.devops.common.pipeline.extend.ModelCheckPlugin
 import com.tencent.devops.common.pipeline.pojo.element.Element
@@ -79,6 +80,11 @@ open class DefaultModelCheckPlugin constructor(open val client: Client) : ModelC
                     errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NEED_JOB
                 )
             }
+            if (s.stageControlOption?.runCondition == StageRunCondition.MANUAL_TRIGGER && s.stageControlOption?.triggerUsers?.isEmpty() == true)
+                throw ErrorCodeException(
+                    defaultMessage = "手动触发的Stage没有未配置可执行人",
+                    errorCode = ProcessMessageCode.ERROR_PIPELINE_STAGE_NO_TRIGGER_USER
+                )
             s.containers.forEach { c ->
                 val cCnt = containerCnt.computeIfPresent(c.getClassType()) { _, oldValue -> oldValue + 1 }
                     ?: containerCnt.computeIfAbsent(c.getClassType()) { 1 } // 第一次时出现1次

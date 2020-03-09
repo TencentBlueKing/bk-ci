@@ -43,8 +43,10 @@ import com.tencent.devops.model.process.tables.records.TPipelineBuildDetailRecor
 import com.tencent.devops.process.dao.BuildDetailDao
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
+import com.tencent.devops.process.pojo.BuildStageStatus
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import com.tencent.devops.process.utils.PipelineVarUtil
 import com.tencent.devops.quality.QualityGateInElement
@@ -185,7 +187,7 @@ class PipelineBuildDetailService @Autowired constructor(
         logger.info("Update the container $containerId of build $buildId to prepare status")
         update(buildId, object : ModelInterface {
             var update = false
-            override fun onFindContainer(id: Int, container: Container): Traverse {
+            override fun onFindContainer(id: Int, container: Container, stage: Stage): Traverse {
                 if (id == containerId) {
                     container.startEpoch = System.currentTimeMillis()
                     container.status = BuildStatus.PREPARE_ENV.name
@@ -209,7 +211,7 @@ class PipelineBuildDetailService @Autowired constructor(
         update(buildId, object : ModelInterface {
             var update = false
 
-            override fun onFindContainer(id: Int, container: Container): Traverse {
+            override fun onFindContainer(id: Int, container: Container, stage: Stage): Traverse {
                 if (id == containerId) {
                     if (container.startEpoch == null) {
                         logger.warn("The start epoch of container $id is null of build $buildId")
@@ -313,7 +315,7 @@ class PipelineBuildDetailService @Autowired constructor(
 
             var update = false
 
-            override fun onFindContainer(id: Int, container: Container): Traverse {
+            override fun onFindContainer(id: Int, container: Container, stage: Stage): Traverse {
                 if (container !is TriggerContainer) {
                     // 兼容id字段
                     if (container.id == containerId || container.containerId == containerId) {
@@ -340,15 +342,40 @@ class PipelineBuildDetailService @Autowired constructor(
 
             var update = false
 
-            override fun onFindContainer(id: Int, container: Container): Traverse {
+            override fun onFindStage(stage: Stage, model: Model): Traverse {
+                if (stage.status == BuildStatus.RUNNING.name) {
+                    stage.status = buildStatus.name
+                    if (stage.startEpoch == null) {
+                        logger.warn("The stage(${stage.id}) of build $buildId start epoch is null")
+                        stage.elapsed = 0
+                    } else {
+                        stage.elapsed = System.currentTimeMillis() - stage.startEpoch!!
+                    }
+                    update = true
+                }
+                return Traverse.CONTINUE
+            }
+
+            override fun onFindContainer(id: Int, container: Container, stage: Stage): Traverse {
                 if (container.status == BuildStatus.PREPARE_ENV.name) {
-                    container.status = buildStatus.name
                     if (container.startEpoch == null) {
                         logger.warn("The container($id) of build $buildId start epoch is null")
                         container.systemElapsed = 0
                     } else {
                         container.systemElapsed = System.currentTimeMillis() - container.startEpoch!!
                     }
+
+                    var containerElapsed = 0L
+                    run lit@{
+                        stage.containers.forEach {
+                            containerElapsed += it.elementElapsed ?: 0
+                            if (it == container) {
+                                return@lit
+                            }
+                        }
+                    }
+
+                    stage.elapsed = containerElapsed
 
                     update = true
                 }
@@ -357,8 +384,11 @@ class PipelineBuildDetailService @Autowired constructor(
 
             override fun onFindElement(e: Element, c: Container): Traverse {
                 if (e.status == BuildStatus.RUNNING.name || e.status == BuildStatus.REVIEWING.name) {
-                    e.status = buildStatus.name
-                    c.status = buildStatus.name
+                    val status = if (e.status == BuildStatus.RUNNING.name) {
+                        BuildStatus.TERMINATE.name
+                    } else buildStatus.name
+                    e.status = status
+                    c.status = status
 
                     if (e.startEpoch == null) {
                         logger.warn("The element(${e.name}|${e.id}) start epoch is null of build $buildId")
@@ -427,7 +457,7 @@ class PipelineBuildDetailService @Autowired constructor(
                 }
             }
 
-            logger.info("[ERRORCODE] buildEnd <$buildId>[$errorType][$errorCode][$errorMsg]")
+            logger.info("[$buildId]|ERRORCODE|BUILD_END|errorType=$errorType|errorCode=$errorCode|errorMsg=$errorMsg")
             try {
                 val model: Model = JsonUtil.to(record.model, Model::class.java)
                 model.stages.forEach { stage ->
@@ -520,7 +550,7 @@ class PipelineBuildDetailService @Autowired constructor(
 
             var update = false
 
-            override fun onFindContainer(id: Int, container: Container): Traverse {
+            override fun onFindContainer(id: Int, container: Container, stage: Stage): Traverse {
                 if (container.id == containerId) {
                     update = true
                     container.status = buildStatus.name
@@ -533,6 +563,67 @@ class PipelineBuildDetailService @Autowired constructor(
                 return update
             }
         }, BuildStatus.RUNNING)
+    }
+
+    fun updateStageStatus(buildId: String, stageId: String, buildStatus: BuildStatus) {
+        logger.info("[$buildId]|update_stage_status|stageId=$stageId|status=$buildStatus")
+        update(buildId, object : ModelInterface {
+            var update = false
+
+            override fun onFindStage(stage: Stage, model: Model): Traverse {
+                if (stage.id == stageId) {
+                    update = true
+                    stage.status = buildStatus.name
+
+                    if (BuildStatus.isRunning(buildStatus) && stage.startEpoch == null) {
+                        if (buildStatus == BuildStatus.SKIP) {
+                            stage.containers.forEach {
+                                it.status = BuildStatus.SKIP.name
+                            }
+                        } else {
+                            stage.startEpoch = System.currentTimeMillis()
+                        }
+                    } else if (BuildStatus.isFinish(buildStatus) && stage.startEpoch != null) {
+                        stage.elapsed = System.currentTimeMillis() - stage.startEpoch!!
+                    } else if (BuildStatus.isReview(buildStatus)) {
+                        // 如果某个stage进入等待审核触发，流水线状态设为阶段性执行成功
+                        pipelineBuildDao.updateStatus(dslContext, buildId, BuildStatus.RUNNING, BuildStatus.STAGE_SUCESS)
+                    } else if (BuildStatus.isReadyToRun(buildStatus)) {
+                        // 如果某个stage被手动触发，流水线状态设为执行中
+                        pipelineBuildDao.updateStatus(dslContext, buildId, BuildStatus.STAGE_SUCESS, BuildStatus.RUNNING)
+                    }
+
+                    // 更新Stage状态至BuildHistory
+                    val allStageStatus = model.stages.map {
+                        BuildStageStatus(
+                            stageId = it.id!!,
+                            name = it.name ?: it.id!!,
+                            status = it.status,
+                            startEpoch = it.startEpoch,
+                            elapsed = it.elapsed
+                        )
+                    }
+                    pipelineBuildDao.updateBuildStageStatus(dslContext, buildId, allStageStatus)
+
+                    // Stage状态更新单独发送构建历史页的消息推送
+                    val pipelineBuildInfo = pipelineBuildDao.getBuildInfo(dslContext, buildId) ?: return Traverse.BREAK
+                    webSocketDispatcher.dispatch(
+                        pipelineWebsocketService.buildHistoryMessage(
+                            pipelineBuildInfo.buildId,
+                            pipelineBuildInfo.projectId,
+                            pipelineBuildInfo.pipelineId,
+                            pipelineBuildInfo.startUser
+                        )
+                    )
+                    return Traverse.BREAK
+                }
+                return Traverse.CONTINUE
+            }
+
+            override fun needUpdate(): Boolean {
+                return update
+            }
+        }, if (BuildStatus.isReview(buildStatus)) BuildStatus.STAGE_SUCESS else BuildStatus.RUNNING) // 除等待手动触发外，流水线都是RUNNING状态
     }
 
     fun taskSkip(buildId: String, taskId: String) {
@@ -645,8 +736,13 @@ class PipelineBuildDetailService @Autowired constructor(
             if (index == 0) {
                 return@forEachIndexed
             }
+
+            if (Traverse.BREAK == modelInterface.onFindStage(stage, model)) {
+                return
+            }
+
             stage.containers.forEach { c ->
-                if (Traverse.BREAK == modelInterface.onFindContainer(containerId, c)) {
+                if (Traverse.BREAK == modelInterface.onFindContainer(containerId, c, stage)) {
                     return
                 }
                 containerId++
@@ -661,7 +757,9 @@ class PipelineBuildDetailService @Autowired constructor(
 
     protected interface ModelInterface {
 
-        fun onFindContainer(id: Int, container: Container) = Traverse.CONTINUE
+        fun onFindStage(stage: Stage, model: Model) = Traverse.CONTINUE
+
+        fun onFindContainer(id: Int, container: Container, stage: Stage) = Traverse.CONTINUE
 
         fun onFindElement(e: Element, c: Container) = Traverse.CONTINUE
 

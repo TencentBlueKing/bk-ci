@@ -740,6 +740,45 @@ class PipelineBuildService(
         }
     }
 
+    fun buildManualStartStage(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        stageId: String
+    ) {
+        pipelineRuntimeService.getBuildInfo(buildId)
+            ?: throw ErrorCodeException(
+                statusCode = Response.Status.NOT_FOUND.statusCode,
+                errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
+                defaultMessage = "构建任务${buildId}不存在",
+                params = arrayOf(buildId))
+        val buildStage = pipelineRuntimeService.getStage(buildId, stageId)
+            ?: throw ErrorCodeException(
+                statusCode = Response.Status.NOT_FOUND.statusCode,
+                errorCode = ProcessMessageCode.ERROR_NO_STAGE_EXISTS_BY_ID,
+                defaultMessage = "构建阶段${stageId}不存在",
+                params = arrayOf(stageId))
+        if (buildStage.controlOption?.stageControlOption?.triggerUsers?.contains(userId) != true)
+            throw ErrorCodeException(
+                statusCode = Response.Status.FORBIDDEN.statusCode,
+                errorCode = ProcessMessageCode.USER_NEED_PIPELINE_X_PERMISSION.toString(),
+                defaultMessage = "用户($userId)不在阶段($stageId)可执行名单",
+                params = arrayOf(buildId))
+        if (buildStage.status.ordinal != 20) throw ErrorCodeException(
+            statusCode = Response.Status.NOT_FOUND.statusCode,
+            errorCode = ProcessMessageCode.ERROR_STAGE_IS_NOT_PAUSED,
+            defaultMessage = "阶段($stageId)未处于暂停状态",
+            params = arrayOf(buildId))
+        pipelineRuntimeService.startStage(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            stageId = stageId
+        )
+    }
+
     fun goToReview(userId: String, projectId: String, pipelineId: String, buildId: String, elementId: String): ReviewParam {
 
         pipelineRuntimeService.getBuildInfo(buildId)

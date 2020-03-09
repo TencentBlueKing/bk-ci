@@ -24,32 +24,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.pipeline.container
+package com.tencent.devops.common.pipeline.option
 
-import com.tencent.devops.common.pipeline.option.StageControlOption
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.common.pipeline.NameAndValue
+import com.tencent.devops.common.pipeline.enums.JobRunCondition
 
-@ApiModel("流水线模型-阶段")
-data class Stage(
-    @ApiModelProperty("容器集合", required = true)
-    val containers: List<Container> = listOf(),
-    @ApiModelProperty("阶段ID", required = false)
-    var id: String?,
-    @ApiModelProperty("阶段名称", required = true)
-    var name: String? = "",
-    @ApiModelProperty("阶段标签", required = false, hidden = true)
-    var tag: List<String>? = null,
-    @ApiModelProperty("阶段状态", required = false, hidden = true)
-    var status: String? = null,
-    @ApiModelProperty("阶段启动时间", required = false, hidden = true)
-    var startEpoch: Long? = null,
-    @ApiModelProperty("容器运行时间", required = false, hidden = true)
-    var elapsed: Long? = null,
-    @ApiModelProperty("用户自定义环境变量", required = false)
-    val customBuildEnv: Map<String, String>? = null,
-    @ApiModelProperty("是否启用容器失败快速终止阶段", required = false)
-    val fastKill: Boolean? = false,
-    @ApiModelProperty("流程控制选项", required = true)
-    var stageControlOption: StageControlOption? = null // 为了兼容旧数据，所以定义为可空以及var
+/**
+ * Job流程控制
+ * @version 1.0
+ */
+data class JobControlOption(
+    val enable: Boolean, // 是否启用Job
+    val prepareTimeout: Int? = 10, // Job准备环境的超时时间
+    val timeout: Int?, // Job执行的超时时间
+    val runCondition: JobRunCondition, // 运行条件
+    val customVariables: List<NameAndValue>? = null, // 自定义变量
+    val customCondition: String? = null // 自定义条件
 )

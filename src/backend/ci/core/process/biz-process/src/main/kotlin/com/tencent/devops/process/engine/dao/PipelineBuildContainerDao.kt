@@ -29,7 +29,7 @@ package com.tencent.devops.process.engine.dao
 import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.NameAndValue
-import com.tencent.devops.common.pipeline.container.JobControlOption
+import com.tencent.devops.common.pipeline.option.JobControlOption
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.JobRunCondition
 import com.tencent.devops.model.process.Tables.T_PIPELINE_BUILD_CONTAINER

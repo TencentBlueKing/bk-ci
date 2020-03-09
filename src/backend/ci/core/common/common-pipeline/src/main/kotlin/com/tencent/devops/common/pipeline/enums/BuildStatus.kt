@@ -53,6 +53,8 @@ enum class BuildStatus(val statusName: String, val visiable: Boolean) {
     QUEUE_TIMEOUT("排队超时", true), // 17 排队超时
     EXEC_TIMEOUT("执行超时", true), // 18 执行超时
     QUEUE_CACHE("队列待处理", true), // 19 队列待处理，瞬间状态。只有在启动和取消过程中存在的中间状态
+    PAUSE("暂停执行", true), // 20 暂停执行，等待事件
+    STAGE_SUCESS("阶段性完成", true), // 流水线阶段性完成
     UNKNOWN("未知状态", false); // 99
 
     companion object {
@@ -78,7 +80,7 @@ enum class BuildStatus(val statusName: String, val visiable: Boolean) {
         fun isCancel(status: BuildStatus) =
             status == TERMINATE || status == CANCELED || status == REVIEW_ABORT || status == QUALITY_CHECK_FAIL
 
-        fun isReview(status: BuildStatus) = status == REVIEW_ABORT || status == REVIEW_PROCESSED
+        fun isReview(status: BuildStatus) = status == REVIEW_ABORT || status == REVIEW_PROCESSED || status == PAUSE
 
         fun isReadyToRun(status: BuildStatus) = status == QUEUE || status == QUEUE_CACHE
         /**
