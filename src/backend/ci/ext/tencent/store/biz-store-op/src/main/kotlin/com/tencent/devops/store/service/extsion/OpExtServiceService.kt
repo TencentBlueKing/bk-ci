@@ -95,7 +95,7 @@ class OpExtServiceService @Autowired constructor(
                     serviceId = it["itemId"] as String,
                     serviceCode = it["serviceCode"] as String,
                     serviceName = it["serviceName"] as String,
-                    serviceStatus = it["serviceStatus"] as Int,
+                    serviceStatus = (it["serviceStatus"] as Byte).toInt(),
                     publisher = it["publisher"] as String,
                     lable = lableId ?: "",
                     projectCode = "",
