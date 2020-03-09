@@ -428,12 +428,7 @@ class ExtServiceDao {
                 conditions.add(a.SERVICE_STATUS.notEqual(ExtServiceStatusEnum.AUDITING.status.toByte()))
             }
         }
-        val realSortType = a.field(sortType)
-        val orderByStep = if (desc != null && desc) {
-            realSortType.desc()
-        } else {
-           realSortType.asc()
-        }
+
         val t = dslContext.select(
             a.ID.`as`("itemId"),
             a.SERVICE_STATUS.`as`("serviceStatus"),
@@ -447,6 +442,12 @@ class ExtServiceDao {
         ).from(a).join(b).on(a.SERVICE_CODE.eq(a.SERVICE_CODE))
             .join(c).on(a.ID.eq(c.SERVICE_ID))
             .join(d).on(a.ID.eq(d.SERVICE_ID)).where(conditions)
+        val realSortType = t.field(sortType)
+        val orderByStep = if (desc != null && desc) {
+            realSortType.desc()
+        } else {
+            realSortType.asc()
+        }
         val baseStep = dslContext.select().from(t).orderBy(orderByStep)
         return if (null != page && null != pageSize) {
             baseStep.limit((page - 1) * pageSize, pageSize).fetch()

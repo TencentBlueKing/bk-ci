@@ -19,7 +19,7 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["OP_COMMON_MEDIA"], description = "服务扩展_媒体信息")
+@Api(tags = ["OP_COMMON_MEDIA"], description = "研发商店_媒体信息")
 @Path("/op/store/media")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
