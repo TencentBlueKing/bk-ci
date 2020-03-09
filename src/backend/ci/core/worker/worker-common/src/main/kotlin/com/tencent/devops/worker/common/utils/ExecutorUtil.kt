@@ -26,7 +26,9 @@
 
 package com.tencent.devops.worker.common.utils
 
-import com.tencent.devops.common.api.exception.ExecuteException
+import com.tencent.devops.common.api.exception.TaskExecuteException
+import com.tencent.devops.common.api.pojo.ErrorCode
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.worker.common.logger.LoggerService
 import org.apache.commons.exec.CommandLine
 import org.apache.commons.exec.DefaultExecutor
@@ -63,7 +65,11 @@ object ExecutorUtil {
         val exitValue = executor.execute(commandLine)
         if (exitValue != 0) {
             LoggerService.addNormalLine("Fail to execute the command($maskCommand) with exit code ($exitValue)")
-            throw ExecuteException("Fail to run the command - $maskCommand")
+            throw TaskExecuteException(
+                errorType = ErrorType.SYSTEM,
+                errorCode = ErrorCode.SYSTEM_INNER_TASK_ERROR,
+                errorMsg = "Fail to run the command - $maskCommand"
+            )
         }
         LoggerService.addNormalLine("Finish the command, exitValue=$exitValue")
         return exitValue

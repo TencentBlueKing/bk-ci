@@ -51,6 +51,14 @@
                     icon-class="icon-question-circle"
                     desc-direction="top">
                 </group-id-selector>
+                <atom-checkbox
+                    v-if="subscription.wechatGroupFlag"
+                    style="width: auto;margin-top: -45px;"
+                    name="wechatGroupMarkdownFlag"
+                    :text="$t('settings.wechatGroupMarkdownFlag')"
+                    :handle-change="updateSubscription"
+                    :value="subscription.wechatGroupMarkdownFlag">
+                </atom-checkbox>
             </bk-form-item>
         </bk-form>
     </div>

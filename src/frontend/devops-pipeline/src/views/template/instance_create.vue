@@ -709,10 +709,14 @@
             padding-left: 20px;
             .bk-form-item {
                 float: left;
-                width: 300px;
+                width: 320px;
                 margin-top: 20px;
+                margin-left: 10px;
+                .bk-label {
+                    width: 160px;
+                }
                 .bk-form-input {
-                    width: 145px;
+                    width: 145px !important;
                 }
             }
         }
@@ -722,8 +726,7 @@
             background: #fff;
             .bk-form-item {
                 display: flex;
-                margin-top: 20px;
-                margin-right: 30px;
+                margin: 20px 30px 0 20px;
                 font-size: 14px;
                 .bk-label {
                     width: 108px;
