@@ -508,7 +508,8 @@ class PipelineBuildService(
         channelCode: ChannelCode,
         parameters: Map<String, Any>,
         checkPermission: Boolean = true,
-        isMobile: Boolean = false
+        isMobile: Boolean = false,
+        triggerUser: String? = null
     ): String {
 
         if (checkPermission) {
@@ -553,7 +554,7 @@ class PipelineBuildService(
 //            startParams.forEach { (t, u) -> startParamsWithType.add(BuildParameters(key = t, value = u)) }
 
             val inputBuildParam = mutableListOf<BuildParameters>()
-            inputBuildParam.add(BuildParameters(key = PIPELINE_START_PIPELINE_USER_ID, value = userId))
+            inputBuildParam.add(BuildParameters(key = PIPELINE_START_PIPELINE_USER_ID, value = triggerUser ?: userId))
             inputBuildParam.add(BuildParameters(key = PIPELINE_START_PARENT_PIPELINE_ID, value = parentPipelineId))
             inputBuildParam.add(BuildParameters(key = PIPELINE_START_PARENT_BUILD_ID, value = parentBuildId))
             inputBuildParam.add(BuildParameters(key = PIPELINE_START_PARENT_BUILD_TASK_ID, value = parentTaskId))
