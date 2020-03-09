@@ -3,6 +3,7 @@ package com.tencent.devops.store.service.extsion
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.UUIDUtil
+import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.project.api.service.service.ServiceItemResource
@@ -99,7 +100,7 @@ class OpExtServiceService @Autowired constructor(
                     publisher = it["publisher"] as String,
                     lable = lableId ?: "",
                     projectCode = "",
-                    modifierTime = it["updateTime"] as String,
+                    modifierTime = (it["updateTime"] as LocalDateTime).timestamp().toString(),
                     version = it["version"] as String
                 )
             )
