@@ -46,5 +46,7 @@ data class DeployExtServiceDTO(
     @ApiModelProperty("虚拟主机", required = true)
     val host: String,
     @ApiModelProperty("虚拟主机对应的上下文路径", required = true)
-    val contextPath: String
+    val contextPath: String,
+    @ApiModelProperty("ingress注解", required = false)
+    val ingressAnnotationMap: Map<String, String>? = mapOf()
 )

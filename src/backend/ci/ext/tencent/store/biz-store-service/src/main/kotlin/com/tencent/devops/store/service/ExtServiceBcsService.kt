@@ -116,10 +116,6 @@ class ExtServiceBcsService @Autowired constructor() {
         BcsClientUtils.createService(service)
         logger.info("created service:$service")
         // 创建ingress
-        val annotationMap = mapOf(
-            "kubernetes.io/ingress.class" to "qcloud",
-            "kubernetes.io/ingress.subnetId" to "subnet-4xew4yji"
-        )
         //generate ingress backend
         val ingressBackend: IngressBackend = IngressBackendBuilder()
             .withServiceName("$serviceCode-service")
@@ -134,7 +130,7 @@ class ExtServiceBcsService @Autowired constructor() {
             .withName("$serviceCode-ingress")
             .withNamespace(namespaceName)
             .addToLabels("app", serviceCode)
-            .addToAnnotations(annotationMap)
+            .addToAnnotations(deployExtServiceDTO.ingressAnnotationMap)
             .endMetadata()
             .withNewSpec()
             .addNewRule()
@@ -145,6 +141,7 @@ class ExtServiceBcsService @Autowired constructor() {
             .endRule()
             .endSpec()
             .build()
+        BcsClientUtils.createIngress(ingress)
         logger.info("created ingress:$ingress")
         return Result(true)
     }

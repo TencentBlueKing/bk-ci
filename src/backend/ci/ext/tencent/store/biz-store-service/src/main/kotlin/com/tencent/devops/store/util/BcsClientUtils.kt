@@ -153,7 +153,7 @@ object BcsClientUtils {
      * 创建ingress
      * @param ingress ingress对象
      */
-    fun createService(
+    fun createIngress(
         ingress: Ingress
     ): Ingress {
         return bcsKubernetesClient.extensions().ingresses().createOrReplace(ingress)
