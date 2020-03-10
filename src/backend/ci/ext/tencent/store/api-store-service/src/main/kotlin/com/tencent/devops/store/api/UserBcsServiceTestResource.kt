@@ -29,6 +29,8 @@ package com.tencent.devops.store.api
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.dto.DeployExtServiceDTO
+import com.tencent.devops.store.pojo.dto.kubernetes.KubernetesLabelInfoDTO
+import com.tencent.devops.store.pojo.dto.kubernetes.KubernetesRepoInfoDTO
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -36,6 +38,7 @@ import javax.ws.rs.Consumes
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
 import javax.ws.rs.Path
+import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
@@ -44,6 +47,37 @@ import javax.ws.rs.core.MediaType
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserBcsServiceTestResource {
+
+    @ApiOperation("bcs创建命名空间接口测试")
+    @Path("/bcs/namespaces/{namespaceName}/create/test")
+    @POST
+    fun createNamespaceTest(
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("命名空间名称")
+        @PathParam("namespaceName")
+        namespaceName: String,
+        @ApiParam("命名空间标签信息")
+        labelInfo: KubernetesLabelInfoDTO
+    ): Result<Boolean>
+
+    @ApiOperation("bcs创建k8s拉取镜像secret接口测试")
+    @Path("/bcs/namespaces/{namespaceName}/secrets/{secretName}/create/test")
+    @POST
+    fun createImagePullSecretTest(
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("命名空间名称")
+        @PathParam("namespaceName")
+        namespaceName: String,
+        @ApiParam("命名空间名称")
+        @PathParam("secretName")
+        secretName: String,
+        @ApiParam("k8s仓库信息")
+        kubernetesRepoInfo: KubernetesRepoInfoDTO
+    ): Result<Boolean>
 
     @ApiOperation("bcs部署接口测试")
     @Path("/bcs/deployment/test")

@@ -27,13 +27,13 @@
  *
  */
 
-package com.tencent.devops.store.pojo.kubernetes
+package com.tencent.devops.store.pojo.dto.kubernetes
 
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("k8s仓库信息")
-data class KubernetesRepoInfo(
+data class KubernetesRepoInfoDTO(
     @ApiModelProperty("仓库地址", required = true)
     val registryUrl: String,
     @ApiModelProperty("用户名", required = true)

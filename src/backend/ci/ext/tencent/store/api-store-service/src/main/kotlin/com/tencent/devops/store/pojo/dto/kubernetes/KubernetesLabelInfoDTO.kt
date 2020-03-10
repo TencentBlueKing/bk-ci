@@ -27,13 +27,13 @@
  *
  */
 
-package com.tencent.devops.store.pojo.kubernetes
+package com.tencent.devops.store.pojo.dto.kubernetes
 
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("k8s标签信息")
-data class KubernetesLabelInfo(
+data class KubernetesLabelInfoDTO(
     @ApiModelProperty("标签key", required = true)
     val labelKey: String,
     @ApiModelProperty("标签value", required = true)

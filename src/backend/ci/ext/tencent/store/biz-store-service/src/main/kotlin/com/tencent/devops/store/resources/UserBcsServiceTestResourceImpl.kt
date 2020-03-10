@@ -28,35 +28,37 @@ package com.tencent.devops.store.resources
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.store.api.UserBcsServiceResource
 import com.tencent.devops.store.api.UserBcsServiceTestResource
 import com.tencent.devops.store.pojo.dto.DeployExtServiceDTO
+import com.tencent.devops.store.pojo.dto.kubernetes.KubernetesLabelInfoDTO
+import com.tencent.devops.store.pojo.dto.kubernetes.KubernetesRepoInfoDTO
 import com.tencent.devops.store.service.ExtServiceBcsService
-import io.fabric8.kubernetes.api.model.IntOrString
-import io.fabric8.kubernetes.api.model.NamespaceBuilder
-import io.fabric8.kubernetes.api.model.SecretBuilder
-import io.fabric8.kubernetes.api.model.ServiceBuilder
-import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder
-import io.fabric8.kubernetes.api.model.extensions.HTTPIngressPathBuilder
-import io.fabric8.kubernetes.api.model.extensions.HTTPIngressRuleValue
-import io.fabric8.kubernetes.api.model.extensions.IngressBackend
-import io.fabric8.kubernetes.api.model.extensions.IngressBackendBuilder
-import io.fabric8.kubernetes.api.model.extensions.IngressBuilder
-import io.fabric8.kubernetes.api.model.extensions.IngressRule
-import io.fabric8.kubernetes.client.ConfigBuilder
-import io.fabric8.kubernetes.client.DefaultKubernetesClient
-import io.fabric8.kubernetes.client.KubernetesClient
-import io.fabric8.kubernetes.client.VersionInfo
-import org.apache.commons.codec.binary.Base64
-import org.slf4j.LoggerFactory
+import com.tencent.devops.store.util.BcsClientUtils
 import org.springframework.beans.factory.annotation.Autowired
-import java.io.UnsupportedEncodingException
-import java.util.Collections
 
 @RestResource
 class UserBcsServiceTestResourceImpl @Autowired constructor(
     private val extServiceBcsService: ExtServiceBcsService
 ) : UserBcsServiceTestResource {
+
+    override fun createNamespaceTest(
+        userId: String,
+        namespaceName: String,
+        labelInfo: KubernetesLabelInfoDTO
+    ): Result<Boolean> {
+        BcsClientUtils.createNamespace(namespaceName, labelInfo)
+        return Result(true)
+    }
+
+    override fun createImagePullSecretTest(
+        userId: String,
+        namespaceName: String,
+        secretName: String,
+        kubernetesRepoInfo: KubernetesRepoInfoDTO
+    ): Result<Boolean> {
+        BcsClientUtils.createImagePullSecret(secretName, namespaceName, kubernetesRepoInfo)
+        return Result(true)
+    }
 
     override fun bcsDeploymentTest(userId: String, deployExtServiceDTO: DeployExtServiceDTO): Result<Boolean> {
         return extServiceBcsService.deployExtService(userId, deployExtServiceDTO)
