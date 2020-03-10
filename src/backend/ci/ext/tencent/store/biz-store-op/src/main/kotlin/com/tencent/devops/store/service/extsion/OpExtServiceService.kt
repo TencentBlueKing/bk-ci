@@ -90,7 +90,13 @@ class OpExtServiceService @Autowired constructor(
 
         val extensionServiceInfoList = mutableSetOf<ExtensionServiceVO>()
         serviceRecords?.forEach {
-            val lableId = lableMap[it["labelId"] as String]
+            val labelId = it.get("labelId")?.toString()
+            val labelName = if (lableId.isNullOrEmpty()) {
+                    null
+                } else {
+                    lableMap[labelId]
+                }
+
             extensionServiceInfoList.add(
                 ExtensionServiceVO(
                     serviceId = it["itemId"] as String,
@@ -98,7 +104,7 @@ class OpExtServiceService @Autowired constructor(
                     serviceName = it["serviceName"] as String,
                     serviceStatus = (it["serviceStatus"] as Byte).toInt(),
                     publisher = it["publisher"] as String,
-                    lable = lableId ?: "",
+                    lable = labelName ?: "",
                     projectCode = "",
                     modifierTime = (it["updateTime"] as LocalDateTime).timestamp().toString(),
                     version = it["version"] as String
