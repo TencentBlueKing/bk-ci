@@ -1,5 +1,7 @@
 package com.tencent.devops.store.service
 
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.constant.APPROVE
 import com.tencent.devops.common.api.constant.BEGIN
 import com.tencent.devops.common.api.constant.BUILD
@@ -19,7 +21,6 @@ import com.tencent.devops.common.api.constant.TEST
 import com.tencent.devops.common.api.constant.UNDO
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DateTimeUtil
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
@@ -47,6 +48,7 @@ import com.tencent.devops.store.pojo.ExtServiceFeatureCreateInfo
 import com.tencent.devops.store.pojo.ExtServiceItemRelCreateInfo
 import com.tencent.devops.store.pojo.ExtServiceUpdateInfo
 import com.tencent.devops.store.pojo.ExtServiceVersionLogCreateInfo
+import com.tencent.devops.store.pojo.ExtensionJson
 import com.tencent.devops.store.pojo.StoreServiceItem
 import com.tencent.devops.store.pojo.common.ReleaseProcessItem
 import com.tencent.devops.store.pojo.common.StoreMediaInfoRequest
@@ -123,6 +125,8 @@ abstract class ExtServiceBaseService @Autowired constructor() {
     lateinit var mediaService: StoreMediaService
     @Autowired
     lateinit var deptService: StoreVisibleDeptService
+    @Autowired
+    lateinit var objectMapper: ObjectMapper
 
     fun addExtService(
         userId: String,
@@ -957,10 +961,10 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         if (fileStr.isNullOrEmpty()) {
             return mutableMapOf()
         }
-        val taskDataMap = JsonUtil.toMutableMapSkipEmpty(fileStr!!)
+        val taskDataMap = objectMapper.readValue<ExtensionJson>(fileStr!!)
         logger.info("getServiceProps taskDataMap[$taskDataMap]")
-        val fileServiceCode = taskDataMap["serviceCode"] as String
-        val fileItemList = taskDataMap["itemList"] as List<Any>
+        val fileServiceCode = taskDataMap.serviceCode
+        val fileItemList = taskDataMap.itemList
         if (fileServiceCode != serviceCode) {
             logger.warn("getServiceProps input serviceCode[$serviceCode], extension.json serviceCode[$fileServiceCode] ")
         }
@@ -974,24 +978,22 @@ abstract class ExtServiceBaseService @Autowired constructor() {
             dbItemMapIndexId[it.itemId] = it
             dbItemMapIndexCode[it.itemCode] = it
         }
-        // TODO: 此处为extension.json解析不了才TODO
 //        // 解析extension.json内对应的itemId
-//        fileItemList?.forEach {
-//            logger.info("extension.json item:$it")
-//            val itemMap = JsonUtil.toMap(it!!.toString())
-//            val itemCode = itemMap["itemCode"] as String
-//            val props = (itemMap["props"] as Any).toString()
-//            logger.info("getServiceProps fileItemList foreach itemCode[$itemCode] props[$props]")
-//            var fileServiceItem = dbItemMapIndexCode[itemCode]
-//            // 可能存在extension.json内配置了但页面没有选中的扩展点
-//            if (fileServiceItem == null) {
-//                fileServiceItem = client.get(ServiceItemResource::class).getItemByCode(itemCode).data
-//                // extension.json独立存在的扩展点加入遍历列表
-//                dbItemMapIndexId[fileServiceItem!!.itemId] = fileServiceItem
-//            }
-//            val fileItemId = fileServiceItem!!.itemId
-//            fileItemMap[fileItemId] = props
-//        }
+        fileItemList?.forEach {
+            logger.info("extension.json item:$it")
+            val itemCode = it.itemCode!!
+            val props = it.props
+            logger.info("getServiceProps fileItemList foreach itemCode[$itemCode] props[$props]")
+            var fileServiceItem = dbItemMapIndexCode[itemCode]
+            // 可能存在extension.json内配置了但页面没有选中的扩展点
+            if (fileServiceItem == null) {
+                fileServiceItem = client.get(ServiceItemResource::class).getItemByCode(itemCode).data
+                // extension.json独立存在的扩展点加入遍历列表
+                dbItemMapIndexId[fileServiceItem!!.itemId] = fileServiceItem
+            }
+            val fileItemId = fileServiceItem!!.itemId
+            fileItemMap[fileItemId] = props.toString()
+        }
         logger.info("dbItemMapIndexId: $dbItemMapIndexId")
         dbItemMapIndexId.forEach { (key, info) ->
             if (fileItemMap.containsKey(key)) {
