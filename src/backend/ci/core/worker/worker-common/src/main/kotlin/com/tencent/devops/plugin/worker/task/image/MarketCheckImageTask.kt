@@ -69,12 +69,13 @@ class MarketCheckImageTask : ITask() {
         val registryPwd = buildVariableMap["registryPwd"]
         val checkImageRequest = CheckImageRequest(imageType, imageName!!, registryUser, registryPwd)
         val dockerHostIp = System.getenv("docker_host_ip")
+        val dockerHostPort = System.getenv("docker_host_port")
         val path = "/api/docker/build/image/buildIds/${buildTask.buildId}/check?containerHashId=${buildVariables.containerId}"
         val body = RequestBody.create(
             MediaType.parse("application/json; charset=utf-8"),
             JsonUtil.toJson(checkImageRequest)
         )
-        val url = "http://$dockerHostIp$path"
+        val url = "http://$dockerHostIp:$dockerHostPort$path"
         val request = Request.Builder()
             .url(url)
             .post(body)
