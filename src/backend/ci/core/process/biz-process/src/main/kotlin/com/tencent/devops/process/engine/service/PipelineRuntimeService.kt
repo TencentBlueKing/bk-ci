@@ -97,6 +97,7 @@ import com.tencent.devops.process.engine.pojo.event.PipelineBuildStartEvent
 import com.tencent.devops.process.pojo.BuildBasicInfo
 import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.process.pojo.PipelineBuildMaterial
 import com.tencent.devops.process.pojo.ReviewParam
 import com.tencent.devops.process.pojo.VmInfo
@@ -303,26 +304,7 @@ class PipelineRuntimeService @Autowired constructor(
     }
 
     fun getAllVariable(buildId: String): Map<String, String> {
-        val vars = pipelineBuildVarDao.getVars(dslContext, buildId)
-        // 旧流水线的前缀变量追加 未来旧版下线该调用会移除
-        PipelineVarUtil.fillOldVarPrefixTurning(vars)
-
-        val allVars = mutableMapOf<String, String>()
-        vars.forEach {
-            // 从新转旧: 新流水线产生的变量 兼容在旧流水线中已经使用到的旧变量
-            val oldVarName = PipelineVarUtil.newVarToOldVar(it.key)
-            if (!oldVarName.isNullOrBlank()) {
-                allVars[oldVarName!!] = it.value
-            } else {
-                // 从旧转新: 兼容从旧入口写入的数据转到新的流水线运行
-                val newVarName = PipelineVarUtil.oldVarToNewVar(it.key)
-                if (!newVarName.isNullOrBlank() && !vars.contains(newVarName)) {
-                    allVars[newVarName!!] = it.value
-                }
-            }
-            allVars[it.key] = it.value
-        }
-        return allVars
+        return PipelineVarUtil.mixOldVarAndNewVar(pipelineBuildVarDao.getVars(dslContext, buildId))
     }
 
     fun getAllVariableWithType(buildId: String): List<BuildParameters> {
@@ -346,14 +328,7 @@ class PipelineRuntimeService @Autowired constructor(
         PipelineVarUtil.replaceOldByNewVar(vars)
 
         val pipelineBuildParameters = mutableListOf<BuildParameters>()
-        vars.forEach { t, u ->
-            pipelineBuildParameters.add(
-                BuildParameters(
-                    t,
-                    u
-                )
-            )
-        }
+        vars.forEach { (t, u) -> pipelineBuildParameters.add(BuildParameters(key = t, value = u)) }
 
         pipelineBuildVarDao.batchSave(
             dslContext = dslContext,
@@ -897,6 +872,11 @@ class PipelineRuntimeService @Autowired constructor(
                             BuildStatus.SKIP // 跳过
                         } else {
                             BuildStatus.QUEUE
+                        }
+
+                        if (status == BuildStatus.SKIP) {
+                            logger.info("[$buildId|${atomElement.id}] The element is skip")
+                            atomElement.status = BuildStatus.SKIP.name
                         }
 
                         if (lastTimeBuildTaskRecords.isNotEmpty()) {
@@ -1667,20 +1647,20 @@ class PipelineRuntimeService @Autowired constructor(
     }
 
     fun getRecommendVersion(buildParameters: List<BuildParameters>): String? {
-        val majorVersion = if (!buildParameters.none { it.key == MAJORVERSION }) {
-            buildParameters.filter { it.key == MAJORVERSION }[0].value.toString()
+        val majorVersion = if (!buildParameters.none { it.key == MAJORVERSION || it.key == "MajorVersion" }) {
+            buildParameters.filter { it.key == MAJORVERSION || it.key == "MajorVersion" }[0].value.toString()
         } else return null
 
-        val minorVersion = if (!buildParameters.none { it.key == MINORVERSION }) {
-            buildParameters.filter { it.key == MINORVERSION }[0].value.toString()
+        val minorVersion = if (!buildParameters.none { it.key == MINORVERSION || it.key == "MinorVersion" }) {
+            buildParameters.filter { it.key == MINORVERSION || it.key == "MinorVersion" }[0].value.toString()
         } else return null
 
-        val fixVersion = if (!buildParameters.none { it.key == FIXVERSION }) {
-            buildParameters.filter { it.key == FIXVERSION }[0].value.toString()
+        val fixVersion = if (!buildParameters.none { it.key == FIXVERSION || it.key == "FixVersion" }) {
+            buildParameters.filter { it.key == FIXVERSION || it.key == "FixVersion" }[0].value.toString()
         } else return null
 
-        val buildNo = if (!buildParameters.none { it.key == BUILD_NO }) {
-            buildParameters.filter { it.key == BUILD_NO }[0].value.toString()
+        val buildNo = if (!buildParameters.none { it.key == BUILD_NO || it.key == "BuildNo" }) {
+            buildParameters.filter { it.key == BUILD_NO || it.key == "BuildNo" }[0].value.toString()
         } else return null
 
         return "$majorVersion.$minorVersion.$fixVersion.$buildNo"
@@ -1716,7 +1696,7 @@ class PipelineRuntimeService @Autowired constructor(
         val vars = pipelineBuildVarDao.getVars(dslContext, buildId)
         val materialList = mutableListOf<PipelineBuildMaterial>()
         vars.forEach {
-            if (it.key.startsWith(PIPELINE_MATERIAL_URL)) {
+            if (it.key.contains(PIPELINE_MATERIAL_URL)) {
                 val repoId = it.key.substringAfter(PIPELINE_MATERIAL_URL)
                 val commitTimes = vars["$PIPELINE_MATERIAL_NEW_COMMIT_TIMES$repoId"] ?: "0"
                 materialList.add(
@@ -1772,7 +1752,12 @@ class PipelineRuntimeService @Autowired constructor(
     ) {
         logger.info("[ERRORCODE] updateTaskStatus <$buildId>[$errorType][$errorCode][$errorMsg] ")
         val task = getBuildTask(buildId, taskId)
-        if (task != null) updateTaskStatus(buildId, task, userId, buildStatus, errorType, errorCode, errorMsg)
+        if (task != null) {
+            updateTaskStatus(buildId, task, userId, buildStatus, errorType, errorCode, errorMsg)
+            if (buildStatus == BuildStatus.SKIP) {
+                SpringContextUtil.getBean(PipelineBuildDetailService::class.java).taskSkip(buildId, taskId)
+            }
+        }
     }
 
     private fun updateTaskStatus(
@@ -1936,5 +1921,40 @@ class PipelineRuntimeService @Autowired constructor(
             pipelineId = pipelineId,
             buildId = buildId
         ) == 1
+    }
+
+    fun writeStartParam(projectId: String, pipelineId: String, buildId: String, model: Model) {
+        val allVariable = getAllVariable(buildId)
+        if (allVariable[PIPELINE_RETRY_COUNT] != null) return
+
+        val triggerContainer = model.stages[0].containers[0] as TriggerContainer
+        val params = allVariable.filter {
+            it.key.startsWith(SkipElementUtils.prefix) || it.key == BUILD_NO || it.key == PIPELINE_RETRY_COUNT
+        }.toMutableMap()
+        if (triggerContainer.buildNo != null) {
+            val buildNo = getBuildNo(pipelineId)
+            setVariable(
+                projectId = projectId, pipelineId = pipelineId,
+                buildId = buildId, varName = BUILD_NO, varValue = buildNo
+            )
+            params[BUILD_NO] = buildNo.toString()
+        }
+
+        if (triggerContainer.params.isNotEmpty()) {
+            // 只有在构建参数中的才设置
+            params.putAll(
+                triggerContainer.params.map {
+                    // 做下真实传值的替换
+                    if (allVariable.containsKey(it.id)) it.id to allVariable[it.id].toString()
+                    else it.id to it.defaultValue.toString()
+                }.toMap()
+            )
+            buildStartupParamService.addParam(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                param = JsonUtil.getObjectMapper().writeValueAsString(params)
+            )
+        }
     }
 }
