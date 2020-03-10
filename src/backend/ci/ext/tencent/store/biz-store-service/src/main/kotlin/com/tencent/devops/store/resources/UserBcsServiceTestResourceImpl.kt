@@ -1,0 +1,64 @@
+/*
+ * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ *
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ *
+ * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
+ *
+ * A copy of the MIT License is included in this file.
+ *
+ *
+ * Terms of the MIT License:
+ * ---------------------------------------------------
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
+ * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+ * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+ * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
+package com.tencent.devops.store.resources
+
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.store.api.UserBcsServiceResource
+import com.tencent.devops.store.api.UserBcsServiceTestResource
+import com.tencent.devops.store.pojo.dto.DeployExtServiceDTO
+import com.tencent.devops.store.service.ExtServiceBcsService
+import io.fabric8.kubernetes.api.model.IntOrString
+import io.fabric8.kubernetes.api.model.NamespaceBuilder
+import io.fabric8.kubernetes.api.model.SecretBuilder
+import io.fabric8.kubernetes.api.model.ServiceBuilder
+import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder
+import io.fabric8.kubernetes.api.model.extensions.HTTPIngressPathBuilder
+import io.fabric8.kubernetes.api.model.extensions.HTTPIngressRuleValue
+import io.fabric8.kubernetes.api.model.extensions.IngressBackend
+import io.fabric8.kubernetes.api.model.extensions.IngressBackendBuilder
+import io.fabric8.kubernetes.api.model.extensions.IngressBuilder
+import io.fabric8.kubernetes.api.model.extensions.IngressRule
+import io.fabric8.kubernetes.client.ConfigBuilder
+import io.fabric8.kubernetes.client.DefaultKubernetesClient
+import io.fabric8.kubernetes.client.KubernetesClient
+import io.fabric8.kubernetes.client.VersionInfo
+import org.apache.commons.codec.binary.Base64
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import java.io.UnsupportedEncodingException
+import java.util.Collections
+
+@RestResource
+class UserBcsServiceTestResourceImpl @Autowired constructor(
+    private val extServiceBcsService: ExtServiceBcsService
+) : UserBcsServiceTestResource {
+
+    override fun bcsDeploymentTest(userId: String, deployExtServiceDTO: DeployExtServiceDTO): Result<Boolean> {
+        return extServiceBcsService.deployExtService(userId, deployExtServiceDTO)
+    }
+}
