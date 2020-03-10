@@ -72,6 +72,30 @@ interface ExternalCodeccRepoResource {
 
     @ApiOperation("获取仓库单个文件内容")
     @GET
+    @Path("/repositories/{repoId}/v2/getFileContent")
+    fun getFileContentV2(
+        @ApiParam(value = "仓库id")
+        @PathParam("repoId")
+        repoId: String,
+        @ApiParam(value = "文件路径")
+        @QueryParam("filePath")
+        filePath: String,
+        @ApiParam(value = "版本号（svn）")
+        @QueryParam("reversion")
+        reversion: String?,
+        @ApiParam(value = "分支（git）")
+        @QueryParam("branch")
+        branch: String?,
+        @ApiParam(value = "子模块项目名称")
+        @QueryParam("subModule")
+        subModule: String? = null,
+        @ApiParam("代码库请求类型", required = true)
+        @QueryParam("repositoryType")
+        repositoryType: RepositoryType?
+    ): Result<String>
+
+    @ApiOperation("获取仓库单个文件内容")
+    @GET
     @Path("/getGitFileContentCommon")
     fun getGitFileContentCommon(
         @ApiParam(value = "代码库url")
