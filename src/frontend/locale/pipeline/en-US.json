@@ -80,6 +80,7 @@
     "enableStage": "Enable Stage",
     "stageFastKill": "Enable FastKill",
     "stageOptionLabel": "Run this Stage",
+    "stageTriggerDesc": "Multiple people separated by commas",
     "timeMap": {
         "days": "days ",
         "hours": "h ",
