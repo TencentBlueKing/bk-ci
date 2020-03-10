@@ -107,6 +107,8 @@ import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_CREATE_TIMESTAMP
 import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_DESCRIPTION
 import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_ID
 import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_LABELS
+import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_LAST_COMMIT
+import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_LAST_COMMIT_MSG
 import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_MILESTONE
 import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_MILESTONE_DUE_DATE
 import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_NUMBER
@@ -592,6 +594,10 @@ class PipelineBuildWebhookService @Autowired constructor(
                 startParams[BK_REPO_GIT_WEBHOOK_MR_MILESTONE] = mrInfo?.milestone?.title ?: ""
                 startParams[BK_REPO_GIT_WEBHOOK_MR_MILESTONE_DUE_DATE] = mrInfo?.milestone?.dueDate ?: ""
                 startParams[BK_REPO_GIT_WEBHOOK_MR_LABELS] = mrInfo?.labels?.joinToString(",") ?: ""
+
+                val lastCommit = gitMatcher.event.object_attributes.last_commit
+                startParams[BK_REPO_GIT_WEBHOOK_MR_LAST_COMMIT] = lastCommit.id
+                startParams[BK_REPO_GIT_WEBHOOK_MR_LAST_COMMIT_MSG] = lastCommit.message
             }
 
             if (params.eventType == CodeEventType.TAG_PUSH) {
