@@ -27,7 +27,8 @@ package com.tencent.devops.notify.service.inner
 
 import com.tencent.devops.common.wechatwork.WechatWorkService
 import com.tencent.devops.common.wechatwork.model.enums.UploadMediaType
-import com.tencent.devops.notify.pojo.WeworkNotifyMessage
+import com.tencent.devops.notify.pojo.WeworkNotifyMediaMessage
+import com.tencent.devops.notify.pojo.WeworkNotifyTextMessage
 import com.tencent.devops.notify.service.WeworkService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -39,16 +40,16 @@ class WeworkServiceImpl @Autowired constructor(
 ) : WeworkService {
 
     private val logger = LoggerFactory.getLogger(WeworkServiceImpl::class.java)
-    override fun sendMessage(weworkNotifyMessage: WeworkNotifyMessage) {
+    override fun sendMediaMessage(weworkNotifyMediaMessage: WeworkNotifyMediaMessage) {
         val uploadMediaResponse = wechatWorkService.uploadMedia(
-            mediaType = UploadMediaType.valueOf(weworkNotifyMessage.mediaType.name),
-            mediaName = weworkNotifyMessage.mediaName,
-            mediaInputStream = weworkNotifyMessage.mediaInputStream
+            mediaType = UploadMediaType.valueOf(weworkNotifyMediaMessage.mediaType.name),
+            mediaName = weworkNotifyMediaMessage.mediaName,
+            mediaInputStream = weworkNotifyMediaMessage.mediaInputStream
         )
         if (uploadMediaResponse == null) {
             logger.error("Upload media failed.")
         } else {
-            weworkNotifyMessage.receivers.forEach {
+            weworkNotifyMediaMessage.receivers.forEach {
                 val sendString = String.format(
                     """{
    "receiver":
@@ -57,13 +58,14 @@ class WeworkServiceImpl @Autowired constructor(
        "id": "%s"
    },
    "msgtype": "%s",
-   "image" : {
+   "%s" : {
         "media_id" : "%s"
    }
 }""",
-                    weworkNotifyMessage.receiverType,
+                    weworkNotifyMediaMessage.receiverType,
                     it,
-                    weworkNotifyMessage.mediaType,
+                    weworkNotifyMediaMessage.mediaType,
+                    weworkNotifyMediaMessage.mediaType,
                     uploadMediaResponse.media_id
                 )
                 val sendResult = wechatWorkService.sendMessage(sendString)
@@ -72,6 +74,36 @@ class WeworkServiceImpl @Autowired constructor(
                 } else {
                     logger.error("Send wework  media failed.")
                 }
+            }
+        }
+    }
+
+    override fun sendTextMessage(weworkNotifyTextMessage: WeworkNotifyTextMessage) {
+
+        weworkNotifyTextMessage.receivers.forEach {
+            val sendString = String.format(
+                """{
+"receiver":
+{
+   "type": "%s",
+   "id": "%s"
+},
+"msgtype": "%s",
+"%s" : {
+    "content" : "%s"
+}
+}""",
+                weworkNotifyTextMessage.receiverType,
+                it,
+                weworkNotifyTextMessage.textType,
+                weworkNotifyTextMessage.textType,
+                weworkNotifyTextMessage.message
+            )
+            val sendResult = wechatWorkService.sendMessage(sendString)
+            if (sendResult) {
+                logger.info("Send wework text success.")
+            } else {
+                logger.error("Send wework  text failed.")
             }
         }
     }
