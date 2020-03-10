@@ -100,17 +100,21 @@ abstract class AbstractBuildResourceApi : WorkerRestApiSDK {
         writeTimeoutInSec: Long? = null
     ): String {
 
-        requestForResponse(request, connectTimeoutInSec, readTimeoutInSec, writeTimeoutInSec)
-            .use { response ->
-                if (!response.isSuccessful) {
-                    logger.warn(
-                        "Fail to request($request) with code ${response.code()} ," +
-                            " message ${response.message()} and response (${response.body()?.string()})"
-                    )
-                    throw RemoteServiceException(errorMessage)
-                }
-                return response.body()!!.string()
+        requestForResponse(
+            request = request,
+            connectTimeoutInSec = connectTimeoutInSec,
+            readTimeoutInSec = readTimeoutInSec,
+            writeTimeoutInSec = writeTimeoutInSec
+        ).use { response ->
+            if (!response.isSuccessful) {
+                logger.warn(
+                    "Fail to request($request) with code ${response.code()} ," +
+                        " message ${response.message()} and response (${response.body()?.string()})"
+                )
+                throw RemoteServiceException(errorMessage)
             }
+            return response.body()!!.string()
+        }
     }
 
     protected fun download(request: Request, destPath: File) {
