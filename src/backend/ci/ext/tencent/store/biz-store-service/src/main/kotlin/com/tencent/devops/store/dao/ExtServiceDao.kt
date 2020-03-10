@@ -21,6 +21,7 @@ import org.jooq.DSLContext
 import org.jooq.Record
 import org.jooq.Result
 import org.jooq.impl.DSL
+import org.jooq.impl.JoinTable
 import org.springframework.stereotype.Repository
 import java.math.BigDecimal
 import java.time.LocalDateTime
@@ -401,16 +402,31 @@ class ExtServiceDao {
         val b = TExtensionServiceFeature.T_EXTENSION_SERVICE_FEATURE.`as`("b")
         val c = TExtensionServiceItemRel.T_EXTENSION_SERVICE_ITEM_REL.`as`("c")
         val d = TExtensionServiceLabelRel.T_EXTENSION_SERVICE_LABEL_REL.`as`("d")
+
+        var selectFeild = dslContext.select(
+            a.ID.`as`("itemId"),
+            a.SERVICE_STATUS.`as`("serviceStatus"),
+            a.SERVICE_NAME.`as`("serviceName"),
+            a.SERVICE_CODE.`as`("serviceCode"),
+            d.LABEL_ID.`as`("labelId"),
+            a.VERSION.`as`("version"),
+            a.PUB_TIME.`as`("pubTime"),
+            a.PUBLISHER.`as`("publisher"),
+            a.UPDATE_TIME.`as`("updateTime")
+        ).from(a).join(b).on(a.SERVICE_CODE.eq(b.SERVICE_CODE))
+
         val conditions = mutableListOf<Condition>()
         if (null != serviceName) {
             conditions.add(a.SERVICE_NAME.like(serviceName))
         }
         if (null != itemId) {
             conditions.add(c.ITEM_ID.eq(itemId))
+            selectFeild.join(c).on(a.ID.eq(c.SERVICE_ID))
         }
 
         if (null != lableId) {
             conditions.add(d.LABEL_ID.eq(lableId))
+            selectFeild.join(d).on(a.ID.eq(d.SERVICE_ID))
         }
 
         if (null != isPublic) {
@@ -434,19 +450,7 @@ class ExtServiceDao {
         } else {
            realSortType.asc()
         }
-        val t = dslContext.select(
-            a.ID.`as`("itemId"),
-            a.SERVICE_STATUS.`as`("serviceStatus"),
-            a.SERVICE_NAME.`as`("serviceName"),
-            a.SERVICE_CODE.`as`("serviceCode"),
-            d.LABEL_ID.`as`("labelId"),
-            a.VERSION.`as`("version"),
-            a.PUB_TIME.`as`("pubTime"),
-            a.PUBLISHER.`as`("publisher"),
-            a.UPDATE_TIME.`as`("updateTime")
-        ).from(a).join(b).on(a.SERVICE_CODE.eq(a.SERVICE_CODE))
-            .join(c).on(a.ID.eq(c.SERVICE_ID))
-            .join(d).on(a.ID.eq(d.SERVICE_ID)).where(conditions).orderBy(orderByStep)
+        val t = selectFeild.where(conditions).orderBy(orderByStep)
         val baseStep = dslContext.select().from(t)
         return if (null != page && null != pageSize) {
             baseStep.limit((page - 1) * pageSize, pageSize).fetch()
