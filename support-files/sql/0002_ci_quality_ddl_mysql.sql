@@ -182,8 +182,8 @@ CREATE TABLE IF NOT EXISTS `T_QUALITY_CONTROL_POINT`
     `UPDATE_TIME`        datetime                              DEFAULT NULL COMMENT '更新时间',
     `ATOM_VERSION`       varchar(16)        DEFAULT '1.0.0' COMMENT '插件版本',
     `TEST_PROJECT`       varchar(64) NOT NULL DEFAULT '' COMMENT '测试的项目',
-    PRIMARY KEY (`ID`),
-    UNIQUE KEY `ELEMENT_TYPE_INDEX` (`ELEMENT_TYPE`)
+    `TAG` VARCHAR(64) NULL,
+    PRIMARY KEY (`ID`)
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4
   COLLATE = utf8mb4_bin COMMENT ='质量红线控制点表';
