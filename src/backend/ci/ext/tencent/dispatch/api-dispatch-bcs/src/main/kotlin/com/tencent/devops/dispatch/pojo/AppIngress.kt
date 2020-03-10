@@ -24,13 +24,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":ext:tencent:common:common-digest-tencent")
-    compile project(":ext:tencent:common:common-auth:common-auth-tencent")
-    compile project(":core:dispatch:biz-dispatch")
-    compile project(":core:dispatch:biz-dispatch-docker")
-    compile project(":ext:tencent:dispatch:biz-dispatch-tstack")
-    compile project(":ext:tencent:dispatch:biz-dispatch-bcs")
-}
+package com.tencent.devops.dispatch.pojo
 
-apply from: "$rootDir/task_spring_boot_package.gradle"
+import io.swagger.annotations.ApiModelProperty
+
+data class AppIngress(
+    @ApiModelProperty("虚拟主机", required = true)
+    val host: String,
+    @ApiModelProperty("虚拟主机对应的上下文路径", required = true)
+    val contextPath: String,
+    @ApiModelProperty("ingress注解", required = false)
+    val ingressAnnotationMap: Map<String, String>? = mapOf()
+)
