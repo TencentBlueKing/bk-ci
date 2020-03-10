@@ -23,11 +23,12 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.notify.api
+package com.tencent.devops.notify.api.builds
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.notify.enums.WeworkMediaType
 import com.tencent.devops.common.notify.enums.WeworkReceiverType
+import com.tencent.devops.common.notify.enums.WeworkTextType
 import com.tencent.devops.notify.pojo.EmailNotifyMessage
 import com.tencent.devops.notify.pojo.RtxNotifyMessage
 import com.tencent.devops.notify.pojo.SmsNotifyMessage
@@ -49,7 +50,7 @@ import javax.ws.rs.core.MediaType
  *  date 2019-06-27
  */
 
-@Api(tags = ["SERVICE_NOTIFIES"], description = "通知")
+@Api(tags = ["BUILD_NOTIFIES"], description = "通知")
 @Path("/build/notifies")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
@@ -62,28 +63,6 @@ interface BuildNotifyResource {
         @ApiParam(value = "RTX信息内容", required = true)
         message: RtxNotifyMessage
 
-    ): Result<Boolean>
-
-    @ApiOperation("发送企业微信群信息")
-    @POST
-    @Path("/wework")
-    @Consumes(MediaType.MULTIPART_FORM_DATA)
-    fun sendWeworkNotify(
-        @ApiParam("企业微信群Id", required = true)
-        @QueryParam("receivers")
-        receivers: String,
-        @ApiParam("接受人类型", required = true)
-        @QueryParam("receiverType")
-        receiverType: WeworkReceiverType,
-        @ApiParam("文件类型", required = true)
-        @QueryParam("mediaType")
-        mediaType: WeworkMediaType,
-        @ApiParam("文件名称", required = true)
-        @QueryParam("mediaTName")
-        mediaTName: String,
-        @ApiParam("文件", required = true)
-        @FormDataParam("file")
-        inputStream: InputStream
     ): Result<Boolean>
 
     @ApiOperation("发送电子邮件通知")
@@ -100,4 +79,43 @@ interface BuildNotifyResource {
     @POST
     @Path("/sms")
     fun sendSmsNotify(@ApiParam(value = "短信信息内容", required = true) message: SmsNotifyMessage): Result<Boolean>
+
+    @ApiOperation("发送企业微信多媒体信息")
+    @POST
+    @Path("/wework/media")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    fun sendWeworkMediaNotify(
+        @ApiParam("企业微信群Id", required = true)
+        @QueryParam("receivers")
+        receivers: String,
+        @ApiParam("接受人类型", required = true)
+        @QueryParam("receiverType")
+        receiverType: WeworkReceiverType,
+        @ApiParam("文件类型", required = true)
+        @QueryParam("mediaType")
+        mediaType: WeworkMediaType,
+        @ApiParam("文件名称", required = true)
+        @QueryParam("mediaName")
+        mediaName: String,
+        @ApiParam("文件", required = true)
+        @FormDataParam("file")
+        inputStream: InputStream
+    ): Result<Boolean>
+
+    @ApiOperation("发送企业微信文本信息")
+    @POST
+    @Path("/wework/text")
+    fun sendWeworkTextNotify(
+        @ApiParam("企业微信群Id", required = true)
+        @QueryParam("receivers")
+        receivers: String,
+        @ApiParam("接受人类型", required = true)
+        @QueryParam("receiverType")
+        receiverType: WeworkReceiverType,
+        @ApiParam("文本类型", required = true)
+        @QueryParam("textType")
+        textType: WeworkTextType,
+        @ApiParam("文件内容", required = true)
+        message: String
+    ): Result<Boolean>
 }
