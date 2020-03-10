@@ -34,7 +34,6 @@ import com.tencent.devops.store.util.BcsClientUtils
 import io.fabric8.kubernetes.api.model.IntOrString
 import io.fabric8.kubernetes.api.model.ServiceBuilder
 import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder
-import io.fabric8.kubernetes.api.model.extensions.HTTPIngressPath
 import io.fabric8.kubernetes.api.model.extensions.HTTPIngressPathBuilder
 import io.fabric8.kubernetes.api.model.extensions.HTTPIngressRuleValue
 import io.fabric8.kubernetes.api.model.extensions.Ingress
@@ -137,7 +136,6 @@ class ExtServiceBcsService @Autowired constructor(private val redisOperation: Re
                 serviceCode = serviceCode,
                 extServiceIngress = extServiceIngress,
                 ingressRule = ingressRule,
-                ingressPath = ingressPath,
                 ingressRedisKey = ingressRedisKey
             )
             logger.info("created ingress:$ingress")
@@ -152,7 +150,6 @@ class ExtServiceBcsService @Autowired constructor(private val redisOperation: Re
                     serviceCode = serviceCode,
                     extServiceIngress = extServiceIngress,
                     ingressRule = ingressRule,
-                    ingressPath = ingressPath,
                     ingressRedisKey = ingressRedisKey
                 )
                 logger.info("created ingress:$ingress")
@@ -161,7 +158,7 @@ class ExtServiceBcsService @Autowired constructor(private val redisOperation: Re
                     ingress.spec.rules.contains(ingressRule) -> return Result(true)
                     else -> {
                         ingress.spec.rules.add(ingressRule)
-                        bcsKubernetesClient.extensions().ingresses().inNamespace(namespaceName).createOrReplace(ingress)
+                        BcsClientUtils.createIngress(namespaceName, ingress)
                         logger.info("update ingress:$ingressName success")
                     }
                 }
@@ -175,7 +172,6 @@ class ExtServiceBcsService @Autowired constructor(private val redisOperation: Re
         serviceCode: String,
         extServiceIngress: ExtServiceIngressDTO,
         ingressRule: IngressRule,
-        ingressPath: HTTPIngressPath,
         ingressRedisKey: String
     ): Ingress {
         val ingress = IngressBuilder()
@@ -185,13 +181,7 @@ class ExtServiceBcsService @Autowired constructor(private val redisOperation: Re
             .addToAnnotations(extServiceIngress.ingressAnnotationMap)
             .endMetadata()
             .withNewSpec()
-            .withRules(listOf(ingressRule))
-            .addNewRule()
-            .withHost(extServiceIngress.host)
-            .withNewHttp()
-            .withPaths(ingressPath)
-            .endHttp()
-            .endRule()
+            .withRules(ingressRule)
             .endSpec()
             .build()
         BcsClientUtils.createIngress(namespaceName, ingress)
