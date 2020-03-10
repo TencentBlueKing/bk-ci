@@ -24,22 +24,30 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.log.model.pojo
+package com.tencent.devops.log.client
 
-import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
+import com.tencent.devops.common.es.ESClient
+import org.elasticsearch.client.Client
 
-/**
- * deng
- * 2019-01-23
- */
-@Event(MQ.EXCHANGE_LOG_STATUS_BUILD_EVENT, MQ.ROUTE_LOG_STATUS_BUILD_EVENT)
-data class LogStatusEvent(
-    override val buildId: String,
-    val finished: Boolean,
-    val tag: String,
-    val jobId: String,
-    val executeCount: Int?,
-    override val retryTime: Int = 2,
-    override val delayMills: Int = 0
-) : ILogEvent(buildId, retryTime, delayMills, null)
+interface LogClient {
+
+    fun admin(buildId: String) = getClient(buildId).admin()
+
+    fun prepareBulk(buildId: String) = getClient(buildId).prepareBulk()
+
+    fun prepareSearch(buildId: String, index: String) = getClient(buildId).prepareSearch()
+
+    fun prepareMultiSearch(buildId: String) = getClient(buildId).prepareMultiSearch()
+
+    fun prepareSearchScroll(buildId: String, scrollId: String) = getClient(buildId).prepareSearchScroll(buildId)
+
+    fun prepareIndex(buildId: String, index: String, type: String) = getClient(buildId).prepareIndex(index, type)
+
+    private fun getClient(buildId: String): Client {
+        return hashClient(buildId).client
+    }
+
+    fun getActiveClients(): List<ESClient>
+
+    fun hashClient(buildId: String): ESClient
+}
