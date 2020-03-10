@@ -192,6 +192,7 @@
         "enableGroup": "启用企业微信群通知",
         "groupIdTips": "请输入群ID,多个群ID以分号隔开",
         "groupIdDesc": "可发通知至企业微信群。群ID获取方法：将'DevOpsRobot(蓝盾机器人)' 拉进群，手动@DevOpsRobot(蓝盾机器人)并输入关键字'会话ID',发送后即可获取群ID ",
+        "wechatGroupMarkdownFlag": "群消息转为Markdown格式",
         "buildSuc": "构建成功",
         "buildFail": "构建失败",
         "rtxNotice": "企业微信通知",
