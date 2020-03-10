@@ -24,12 +24,29 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":ext:tencent:common:common-digest-tencent")
-    compile project(":core:log:biz-log")
-    compile project(":core:notify:api-notify")
-    compile project(":ext:tencent:common:common-auth:common-auth-tencent")
-    compile project(":ext:tencent:log:api-log-tencent")
-}
+package com.tencent.devops.log.dao
 
-apply from: "$rootDir/task_deploy_to_maven.gradle"
+import com.tencent.devops.model.log.tables.TLogIndicesV2
+import org.jooq.DSLContext
+import org.springframework.stereotype.Repository
+
+@Repository
+class TencentIndexDao {
+
+    fun getClusterName(dslContext: DSLContext, buildId: String): String? {
+        with(TLogIndicesV2.T_LOG_INDICES_V2) {
+            return dslContext.selectFrom(this)
+                .where(BUILD_ID.eq(buildId))
+                .fetchOne()?.logClusterName
+        }
+    }
+
+    fun updateClusterName(dslContext: DSLContext, buildId: String, clusterName: String): Int {
+        with(TLogIndicesV2.T_LOG_INDICES_V2) {
+            return dslContext.update(this)
+                .set(LOG_CLUSTER_NAME, clusterName)
+                .where(BUILD_ID.eq(buildId))
+                .execute()
+        }
+    }
+}

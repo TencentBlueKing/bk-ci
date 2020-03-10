@@ -24,12 +24,22 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":ext:tencent:common:common-digest-tencent")
-    compile project(":core:log:biz-log")
-    compile project(":core:notify:api-notify")
-    compile project(":ext:tencent:common:common-auth:common-auth-tencent")
-    compile project(":ext:tencent:log:api-log-tencent")
-}
+package com.tencent.devops.plugin.resources
 
-apply from: "$rootDir/task_deploy_to_maven.gradle"
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.plugin.api.UserJobResource
+import com.tencent.devops.plugin.service.JobIedService
+import org.springframework.beans.factory.annotation.Autowired
+
+@RestResource
+class UserJobTaskResourceImpl @Autowired constructor(
+    private val jobIedService: JobIedService
+) : UserJobResource {
+    override fun list(userId: String, projectId: String): String {
+        return jobIedService.taskList(projectId, userId)
+    }
+
+    override fun get(userId: String, projectId: String, taskId: Int): String {
+        return jobIedService.taskDetail(projectId, taskId, userId)
+    }
+}

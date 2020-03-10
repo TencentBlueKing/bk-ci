@@ -24,12 +24,32 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":ext:tencent:common:common-digest-tencent")
-    compile project(":core:log:biz-log")
-    compile project(":core:notify:api-notify")
-    compile project(":ext:tencent:common:common-auth:common-auth-tencent")
-    compile project(":ext:tencent:log:api-log-tencent")
-}
+package com.tencent.devops.process.api.codecc
 
-apply from: "$rootDir/task_deploy_to_maven.gradle"
+import com.tencent.devops.common.api.pojo.Result
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.POST
+import javax.ws.rs.Path
+import javax.ws.rs.PathParam
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
+
+@Api(tags = ["SERVICE_CODECC_TRANSFER_RESOURCE"], description = "codecc迁移资源")
+@Path("/service/codecc/transfer")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface ServiceCodeccTransferResource {
+
+    @ApiOperation("")
+    @POST
+    @Path("/projects/{projectId}/transferToV2")
+    fun transferToV2(
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("流水线Id", required = true)
+        pipelineIds: Set<String>
+    ): Result<Map<String, String>>
+}

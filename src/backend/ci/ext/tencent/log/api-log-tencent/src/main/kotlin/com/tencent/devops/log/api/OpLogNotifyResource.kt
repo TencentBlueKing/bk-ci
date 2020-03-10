@@ -24,12 +24,47 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":ext:tencent:common:common-digest-tencent")
-    compile project(":core:log:biz-log")
-    compile project(":core:notify:api-notify")
-    compile project(":ext:tencent:common:common-auth:common-auth-tencent")
-    compile project(":ext:tencent:log:api-log-tencent")
-}
+package com.tencent.devops.log.api
 
-apply from: "$rootDir/task_deploy_to_maven.gradle"
+import com.tencent.devops.common.api.pojo.Result
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.DELETE
+import javax.ws.rs.GET
+import javax.ws.rs.POST
+import javax.ws.rs.Path
+import javax.ws.rs.PathParam
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
+
+@Api(tags = ["OP_LOG_NOTIFY"], description = "OP-LOG-NOTIFY")
+@Path("/op/notifies")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface OpLogNotifyResource {
+
+    @ApiOperation("获取当前通知的用户")
+    @GET
+    @Path("/")
+    fun get(): Result<Set<String>>
+
+    @ApiOperation("添加新的通知用户")
+    @POST
+    @Path("/users/{userId}")
+    fun addUser(
+        @ApiParam("用户id", required = true)
+        @PathParam("userId")
+        userId: String
+    ): Result<Boolean>
+
+    @ApiOperation("删除通知用户")
+    @DELETE
+    @Path("/users/{userId}")
+    fun deleteUser(
+        @ApiParam("用户id", required = true)
+        @PathParam("userId")
+        userId: String
+    ): Result<Boolean>
+}

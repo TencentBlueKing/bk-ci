@@ -24,12 +24,18 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":ext:tencent:common:common-digest-tencent")
-    compile project(":core:log:biz-log")
-    compile project(":core:notify:api-notify")
-    compile project(":ext:tencent:common:common-auth:common-auth-tencent")
-    compile project(":ext:tencent:log:api-log-tencent")
-}
+package com.tencent.devops.process.api.codecc
 
-apply from: "$rootDir/task_deploy_to_maven.gradle"
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.process.service.codecc.CodeccTransferService
+import org.springframework.beans.factory.annotation.Autowired
+
+@RestResource
+class ServiceCodeccTransferResourceImpl @Autowired constructor(
+    private val codeccTransferService: CodeccTransferService
+) : ServiceCodeccTransferResource {
+    override fun transferToV2(projectId: String, pipelineIds: Set<String>): Result<Map<String, String>> {
+        return Result(codeccTransferService.transferToV2(projectId, pipelineIds))
+    }
+}
