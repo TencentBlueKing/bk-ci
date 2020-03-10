@@ -87,7 +87,7 @@ class ServiceNotifyResourceImpl @Autowired constructor(
         inputStream: InputStream
     ): Result<Boolean> {
         val weworkNotifyMediaMessage = WeworkNotifyMediaMessage(
-            receivers = receivers.split(",|;"),
+            receivers = receivers.split(",|;".toRegex()),
             receiverType = receiverType,
             mediaInputStream = inputStream,
             mediaType = mediaType,
@@ -104,7 +104,7 @@ class ServiceNotifyResourceImpl @Autowired constructor(
         message: String
     ): Result<Boolean> {
         val weworkNotifyTextMessage = WeworkNotifyTextMessage(
-            receivers = receivers.split(",|;"),
+            receivers = receivers.split(",|;".toRegex()),
             receiverType = receiverType,
             textType = textType,
             message = message
