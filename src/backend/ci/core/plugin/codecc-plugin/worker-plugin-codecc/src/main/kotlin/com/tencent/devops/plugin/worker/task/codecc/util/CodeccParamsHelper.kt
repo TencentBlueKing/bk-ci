@@ -175,10 +175,12 @@ object CodeccParamsHelper {
      * Ruby					    非编译型
      */
 
-    fun getProjectType(languagesStr: String): CoverityProjectType {
+    fun getProjectType(languagesStr: String?): CoverityProjectType {
+        if (languagesStr.isNullOrBlank()) return CoverityProjectType.UN_COMPILE
+
         // 此处为了新引擎兼容，新引擎传递的参数是真实类型json，而不是单纯的String
         // 而CodeCC是用x,y,z这种方式对待List，所以在这强转并写入params中供CodeCC读取
-        val languages = JsonUtil.to(languagesStr, object : TypeReference<List<String>>() {})
+        val languages = JsonUtil.to(languagesStr!!, object : TypeReference<List<String>>() {})
 
         if (languages.isEmpty()) {
             return CoverityProjectType.UN_COMPILE

@@ -187,7 +187,7 @@ class ThirdPartyAgentService @Autowired constructor(
         version: String?,
         masterVersion: String?
     ): AgentResult<Boolean> {
-        logger.info("Start to check if the agent($agentId) of version $version of project($projectId) can upgrade")
+        // logger.info("Start to check if the agent($agentId) of version $version of project($projectId) can upgrade")
         return try {
             val agentUpgradeResult = client.get(ServiceThirdPartyAgentResource::class)
                     .upgradeByVersion(projectId, agentId, secretKey, version, masterVersion)
