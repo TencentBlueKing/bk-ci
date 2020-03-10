@@ -63,7 +63,6 @@ class ExtServiceBcsService @Autowired constructor(private val redisOperation: Re
         val deployment = DeploymentBuilder()
             .withNewMetadata()
             .withName(serviceCode)
-            .withNamespace(namespaceName)
             .endMetadata()
             .withNewSpec()
             .withReplicas(deployExtServiceDTO.replicas)
@@ -95,7 +94,6 @@ class ExtServiceBcsService @Autowired constructor(private val redisOperation: Re
         val service = ServiceBuilder()
             .withNewMetadata()
             .withName("$serviceCode-service")
-            .withNamespace(namespaceName)
             .endMetadata()
             .withNewSpec()
             .withSelector(Collections.singletonMap("app", serviceCode))
@@ -141,6 +139,7 @@ class ExtServiceBcsService @Autowired constructor(private val redisOperation: Re
             val bcsKubernetesClient = BcsClientUtils.getBcsKubernetesClient()
             var ingress =
                 bcsKubernetesClient.extensions().ingresses().inNamespace(namespaceName).withName(ingressName).get()
+            logger.info("deployExtService ingress is: $ingress")
             if (ingress == null) {
                 ingress = createIngress(
                     deployExtServiceDTO = deployExtServiceDTO,
@@ -150,9 +149,14 @@ class ExtServiceBcsService @Autowired constructor(private val redisOperation: Re
                 )
                 logger.info("created ingress:$ingress")
             } else {
-                ingress.spec.rules.add(ingressRule)
-                BcsClientUtils.createIngress(namespaceName, ingress)
-                logger.info("update ingress:$ingressName success")
+                when {
+                    ingress.spec.rules.contains(ingressRule) -> return Result(true)
+                    else -> {
+                        ingress.spec.rules.add(ingressRule)
+                        BcsClientUtils.createIngress(namespaceName, ingress)
+                        logger.info("update ingress:$ingressName success")
+                    }
+                }
             }
         }
         return Result(true)
@@ -168,7 +172,6 @@ class ExtServiceBcsService @Autowired constructor(private val redisOperation: Re
         val ingress = IngressBuilder()
             .withNewMetadata()
             .withName("$namespaceName-ingress")
-            .withNamespace(namespaceName)
             .addToLabels("app", deployExtServiceDTO.serviceCode)
             .addToAnnotations(deployExtServiceDTO.ingressAnnotationMap)
             .endMetadata()
