@@ -30,5 +30,6 @@ import org.elasticsearch.client.Client
 
 data class ESClient(
     val name: String,
-    val client: Client
+    val client: Client,
+    val mainCluster: Boolean? = false
 )

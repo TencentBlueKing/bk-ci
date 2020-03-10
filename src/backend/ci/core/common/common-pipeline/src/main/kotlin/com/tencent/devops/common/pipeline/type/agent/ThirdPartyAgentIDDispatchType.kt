@@ -45,5 +45,5 @@ data class ThirdPartyAgentIDDispatchType(
         }
     }
 
-    override fun buildType() = BuildType.THIRD_PARTY_AGENT_ID
+    override fun buildType() = BuildType.valueOf(BuildType.THIRD_PARTY_AGENT_ID.name)
 }

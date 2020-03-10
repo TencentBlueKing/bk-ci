@@ -142,7 +142,7 @@ class ThirdPartyAgentBuildDao {
         vmSeqId: String
     ): Result<TDispatchThirdpartyAgentBuildRecord> {
         with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
-            return dslContext.selectFrom(this)
+            return dslContext.selectFrom(this.forceIndex("IDX_PROJECT_PIPELINE_SEQ_STATUS_TIME"))
                 .where(PROJECT_ID.eq(projectId))
                 .and(PIPELINE_ID.eq(pipelineId))
                 .and(VM_SEQ_ID.eq(vmSeqId))

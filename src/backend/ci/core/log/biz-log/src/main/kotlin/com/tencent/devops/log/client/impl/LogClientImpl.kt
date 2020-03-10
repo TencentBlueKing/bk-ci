@@ -32,14 +32,15 @@ import java.lang.RuntimeException
 
 class LogClientImpl constructor(private val client: ESClient) : LogClient {
 
-    override fun getClients(): List<ESClient> {
+    override fun getActiveClients(): List<ESClient> {
         return listOf(client)
     }
 
-    override fun hashClient(buildId: String, client: List<ESClient>): ESClient {
-        if (client.isEmpty()) {
+    override fun hashClient(buildId: String): ESClient {
+        val clients = getActiveClients()
+        if (clients.isEmpty()) {
             throw RuntimeException("Fail to get the log client")
         }
-        return client.first()
+        return clients.first()
     }
 }
