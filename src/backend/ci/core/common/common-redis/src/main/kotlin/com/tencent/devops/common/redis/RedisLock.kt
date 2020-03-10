@@ -84,9 +84,9 @@ open class RedisLock(
 
     fun tryLock(): Boolean {
         // 不存在则添加 且设置过期时间（单位ms）
-        logger.info("Start to lock($lockKey) of value($lockValue) for $expiredTimeInSeconds sec")
+        // logger.info("Start to lock($lockKey) of value($lockValue) for $expiredTimeInSeconds sec")
         val result = set(lockKey, lockValue, expiredTimeInSeconds)
-        logger.info("Get the lock result($result)")
+        // logger.info("Get the lock result($result)")
         locked = OK.equals(result, true)
         return locked
     }
