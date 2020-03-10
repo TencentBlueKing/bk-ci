@@ -133,6 +133,15 @@ BEGIN
     END IF;
 
 
+    IF EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_PROJECT'
+                    AND COLUMN_NAME = 'project_name'
+                    AND COLLATION_NAME= 'utf8mb4_general_ci') THEN
+        ALTER TABLE T_PROJECT MODIFY COLUMN `project_name` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL;
+    END IF;
+
     COMMIT;
 END <CI_UBF>
 DELIMITER ;

@@ -304,26 +304,7 @@ class PipelineRuntimeService @Autowired constructor(
     }
 
     fun getAllVariable(buildId: String): Map<String, String> {
-        val vars = pipelineBuildVarDao.getVars(dslContext, buildId)
-        // 旧流水线的前缀变量追加 未来旧版下线该调用会移除
-        PipelineVarUtil.fillOldVarPrefixTurning(vars)
-
-        val allVars = mutableMapOf<String, String>()
-        vars.forEach {
-            // 从新转旧: 新流水线产生的变量 兼容在旧流水线中已经使用到的旧变量
-            val oldVarName = PipelineVarUtil.newVarToOldVar(it.key)
-            if (!oldVarName.isNullOrBlank()) {
-                allVars[oldVarName!!] = it.value
-            } else {
-                // 从旧转新: 兼容从旧入口写入的数据转到新的流水线运行
-                val newVarName = PipelineVarUtil.oldVarToNewVar(it.key)
-                if (!newVarName.isNullOrBlank() && !vars.contains(newVarName)) {
-                    allVars[newVarName!!] = it.value
-                }
-            }
-            allVars[it.key] = it.value
-        }
-        return allVars
+        return PipelineVarUtil.mixOldVarAndNewVar(pipelineBuildVarDao.getVars(dslContext, buildId))
     }
 
     fun getAllVariableWithType(buildId: String): List<BuildParameters> {
@@ -347,14 +328,7 @@ class PipelineRuntimeService @Autowired constructor(
         PipelineVarUtil.replaceOldByNewVar(vars)
 
         val pipelineBuildParameters = mutableListOf<BuildParameters>()
-        vars.forEach { t, u ->
-            pipelineBuildParameters.add(
-                BuildParameters(
-                    t,
-                    u
-                )
-            )
-        }
+        vars.forEach { (t, u) -> pipelineBuildParameters.add(BuildParameters(key = t, value = u)) }
 
         pipelineBuildVarDao.batchSave(
             dslContext = dslContext,
@@ -1722,7 +1696,7 @@ class PipelineRuntimeService @Autowired constructor(
         val vars = pipelineBuildVarDao.getVars(dslContext, buildId)
         val materialList = mutableListOf<PipelineBuildMaterial>()
         vars.forEach {
-            if (it.key.startsWith(PIPELINE_MATERIAL_URL)) {
+            if (it.key.contains(PIPELINE_MATERIAL_URL)) {
                 val repoId = it.key.substringAfter(PIPELINE_MATERIAL_URL)
                 val commitTimes = vars["$PIPELINE_MATERIAL_NEW_COMMIT_TIMES$repoId"] ?: "0"
                 materialList.add(
