@@ -371,7 +371,8 @@ abstract class ExtServiceBaseService @Autowired constructor() {
             // 添加扩展点
             val featureInfoRecord = extFeatureDao.getLatestServiceByCode(dslContext, serviceCode)
             val itemIdList = submitDTO.extensionItemList
-            val itemProps = getServiceProps(serviceCode, featureInfoRecord!!.repositoryHashId, EXTENSION_JSON_NAME, itemIdList)
+            val itemProps =
+                getServiceProps(serviceCode, featureInfoRecord!!.repositoryHashId, EXTENSION_JSON_NAME, itemIdList)
             if (null != itemIdList) {
                 extServiceItemRelDao.deleteByServiceId(context, serviceId)
                 extServiceItemRelDao.batchAdd(
@@ -988,10 +989,12 @@ abstract class ExtServiceBaseService @Autowired constructor() {
             // 可能存在extension.json内配置了但页面没有选中的扩展点
             if (fileServiceItem == null) {
                 fileServiceItem = client.get(ServiceItemResource::class).getItemByCode(itemCode).data
-                // extension.json独立存在的扩展点加入遍历列表
-                dbItemMapIndexId[fileServiceItem!!.itemId] = fileServiceItem
+                if (fileServiceItem != null) {
+                    // extension.json独立存在的扩展点加入遍历列表
+                    dbItemMapIndexId[fileServiceItem!!.itemId] = fileServiceItem
+                }
             }
-            val fileItemId = fileServiceItem!!.itemId
+            val fileItemId = (fileServiceItem?.itemId) ?: ""
             fileItemMap[fileItemId] = props.toString()
         }
         logger.info("dbItemMapIndexId: $dbItemMapIndexId")
