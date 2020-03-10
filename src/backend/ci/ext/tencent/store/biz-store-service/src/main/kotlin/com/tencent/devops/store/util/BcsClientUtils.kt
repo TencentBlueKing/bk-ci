@@ -167,6 +167,6 @@ object BcsClientUtils {
         namespaceName: String,
         ingress: Ingress
     ): Ingress {
-        return bcsKubernetesClient.extensions().ingresses().inNamespace(namespaceName).createOrReplace(ingress)
+        return bcsKubernetesClient.extensions().ingresses().inNamespace(namespaceName).create(ingress)
     }
 }

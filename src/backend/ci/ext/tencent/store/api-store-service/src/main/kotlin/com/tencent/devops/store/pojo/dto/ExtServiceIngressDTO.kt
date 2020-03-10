@@ -28,15 +28,11 @@ package com.tencent.devops.store.pojo.dto
 
 import io.swagger.annotations.ApiModelProperty
 
-data class DeployExtServiceDTO(
-    @ApiModelProperty("k8s命名空间名称", required = true)
-    val namespaceName: String,
-    @ApiModelProperty("扩展服务标识", required = true)
-    val serviceCode: String,
-    @ApiModelProperty("扩展服务deployment", required = true)
-    val extServiceDeployment: ExtServiceDeploymentDTO,
-    @ApiModelProperty("扩展服务service", required = true)
-    val extServiceService: ExtServiceServiceDTO,
-    @ApiModelProperty(value = "扩展服务ingress", required = false)
-    val extServiceIngress: ExtServiceIngressDTO
+data class ExtServiceIngressDTO(
+    @ApiModelProperty("虚拟主机", required = true)
+    val host: String,
+    @ApiModelProperty("虚拟主机对应的上下文路径", required = true)
+    val contextPath: String,
+    @ApiModelProperty("ingress注解", required = false)
+    val ingressAnnotationMap: Map<String, String>? = mapOf()
 )
