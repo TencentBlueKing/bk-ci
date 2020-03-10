@@ -30,6 +30,7 @@ import com.tencent.devops.common.wechatwork.model.enums.UploadMediaType
 import com.tencent.devops.notify.pojo.WeworkNotifyMediaMessage
 import com.tencent.devops.notify.pojo.WeworkNotifyTextMessage
 import com.tencent.devops.notify.service.WeworkService
+import org.apache.commons.lang3.StringEscapeUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -97,7 +98,7 @@ class WeworkServiceImpl @Autowired constructor(
                 it,
                 weworkNotifyTextMessage.textType,
                 weworkNotifyTextMessage.textType,
-                weworkNotifyTextMessage.message
+                StringEscapeUtils.escapeJson(weworkNotifyTextMessage.message)
             )
             val sendResult = wechatWorkService.sendMessage(sendString)
             if (sendResult) {
