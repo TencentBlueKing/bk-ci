@@ -19,6 +19,7 @@ import com.tencent.devops.store.dao.common.StoreReleaseDao
 import com.tencent.devops.store.pojo.ExtServiceFeatureUpdateInfo
 import com.tencent.devops.store.pojo.ExtServiceItemRelCreateInfo
 import com.tencent.devops.store.pojo.ExtServiceUpdateInfo
+import com.tencent.devops.store.pojo.common.KEY_LABEL_NAME
 import com.tencent.devops.store.pojo.common.PASS
 import com.tencent.devops.store.pojo.common.REJECT
 import com.tencent.devops.store.pojo.common.StoreMediaInfoRequest
@@ -90,16 +91,17 @@ class OpExtServiceService @Autowired constructor(
 
         val extensionServiceInfoList = mutableSetOf<ExtensionServiceVO>()
         serviceRecords?.forEach {
-            val labelId = it.get("labelId")?.toString()
-            val labelName = if (lableId.isNullOrEmpty()) {
-                    null
-                } else {
-                    lableMap[labelId]
-                }
-
+            val serviceId = it["itemId"] as String
+            val labelRecord = extServiceLableRelDao.getLabelsByServiceId(dslContext, serviceId)
+            val labelName =
+            if(labelRecord != null) {
+                labelRecord[0]?.get(KEY_LABEL_NAME).toString()
+            } else {
+                null
+            }
             extensionServiceInfoList.add(
                 ExtensionServiceVO(
-                    serviceId = it["itemId"] as String,
+                    serviceId = serviceId,
                     serviceCode = it["serviceCode"] as String,
                     serviceName = it["serviceName"] as String,
                     serviceStatus = (it["serviceStatus"] as Byte).toInt(),
