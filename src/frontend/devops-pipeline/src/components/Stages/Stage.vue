@@ -2,7 +2,8 @@
     <div :class="[{ 'pipeline-drag': editable && !isTriggerStage, 'show-stage-area': !isTriggerStage }, 'pipeline-stage']" ref="stageRef">
         <bk-button v-if="!isTriggerStage" :class="['pipeline-stage-entry', [stageStatusCls], { 'editable-stage-entry': editable, 'stage-disabled': stageDisabled }]" @click="showStagePanel">
             <span v-if="stage.status === 'PAUSE'" class="bk-icon icon-play-circle-shape" v-bk-tooltips.top="canTriggerStage ? '去审核' : '无审核权限'" @click.stop="startNextStage"></span>
-            <span v-else :class="['bk-icon', 'stage-status-icon', { [stageStatusIcon]: true }]"></span>
+            <logo v-else-if="stage.status === 'SKIP'" v-bk-tooltips="$t('skipStageDesc')" :class="`stage-status-icon ${stageStatusIcon}`" :name="stageStatusIcon" size="16"></logo>
+            <logo v-else :class="`stage-status-icon ${stageStatusIcon}`" :name="stageStatusIcon" size="16"></logo>
             <span class="stage-entry-name">{{ stageTitle }}</span>
             <i v-if="stage.isError" class="bk-icon icon-exclamation-triangle-shape stage-entry-error-icon" />
             <span @click.stop v-if="showCheckedToatal && canSkipElement" class="check-total-stage">
@@ -173,9 +174,11 @@
             stageStatusIcon () {
                 switch (this.stage.status) {
                     case 'SUCCEED':
-                        return 'icon-check-circle'
+                        return 'check-circle'
                     case 'FAILED':
-                        return 'icon-close-circle'
+                        return 'close-circle'
+                    case 'SKIP':
+                        return 'redo-arrow'
                 }
                 return ''
             },
@@ -357,6 +360,17 @@
                 background-color: #F3F3F3;
                 border-color: #D0D8EA;
                 color: black;
+
+                .stage-status-icon,
+                .icon-play-circle-shape {
+                    vertical-align: middle;
+                }
+
+                &.SKIP {
+                    color: $borderLightColor;
+                    fill: $borderLightColor;
+                }
+
                 &.RUNNING {
                     background-color: #EFF5FF;
                     border-color: #D4E8FF;
@@ -372,7 +386,6 @@
                         font-size: 20px;
                         width: 20px;
                         height: 20px;
-                        vertical-align: middle;
                     }
                 }
 
