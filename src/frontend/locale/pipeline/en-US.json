@@ -451,7 +451,7 @@
             "TRY_FINALLY": "Try Finally",
             "QUEUE_CACHE": "Queue cache",
             "UNKNOWN": "Unknow",
-            "STAGE_SUCESS": "STAGE_SUCESS"
+            "STAGE_SUCCESS": "STAGE_SUCCESS"
         },
         "toArtifactory": "locate",
         "saveToCustom": " Copy to custom artifactory",

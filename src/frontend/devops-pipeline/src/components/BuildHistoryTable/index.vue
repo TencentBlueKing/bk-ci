@@ -12,7 +12,7 @@
                 <template v-if="col.prop === 'buildNum'" v-slot="props">
                     <span class="build-num-status">
                         <router-link :class="{ [props.row.status]: true }" style="line-height: 42px;" :to="getArchiveUrl(props.row)">#{{ props.row.buildNum }}</router-link>
-                        <logo v-if="props.row.status === 'STAGE_SUCESS'" name="flag" class="bk-icon" size="12" fill="#34d97b" />
+                        <logo v-if="props.row.status === 'STAGE_SUCCESS'" name="flag" class="bk-icon" size="12" fill="#34d97b" />
                         <i v-else-if="retryable(props.row)" title="rebuild" class="bk-icon icon-retry" @click.stop="retry(props.row.id)" />
                         <i v-else-if="props.row.status === 'QUEUE' || props.row.status === 'RUNNING' || !props.row.endTime" :title="$t('history.stopBuild')" @click.stop="stopExecute(props.row.id)"
                             :class="{
@@ -209,7 +209,7 @@
                         ...stage,
                         tooltip: stage.elapsed ? `${stage.name}: ${convertMStoString(stage.elapsed)}` : '',
                         icon: this.statusIconMap[stage.status] || 'circle',
-                        statusCls: `${stage.status} ${stage.status === 'RUNNING' ? 'spin-icon' : ''}`
+                        statusCls: `${stage.status}${stage.status === 'RUNNING' ? ' spin-icon' : ''}`
                     })) : null
                     console.log(stageStatus)
                     return {
@@ -251,6 +251,12 @@
                     if (item === 'material') {
                         const localStorageVal = localStorage.getItem('materialWidth')
                         this.BUILD_HISTORY_TABLE_COLUMNS_MAP[item].width = localStorageVal || 500
+                    }
+                    if (item === 'stageStatus') {
+                        const localStorageVal = localStorage.getItem('stageStatusWidth')
+                        if (localStorageVal) {
+                            this.BUILD_HISTORY_TABLE_COLUMNS_MAP[item].width = localStorageVal
+                        }
                     }
                 })
                 return this.BUILD_HISTORY_TABLE_COLUMNS_MAP
@@ -332,6 +338,7 @@
             },
             handleDragend (newWidth, oldWidth, column) {
                 if (column.property === 'material') localStorage.setItem('materialWidth', newWidth)
+                if (column.property === 'stageStatus') localStorage.setItem('stageStatusWidth', newWidth)
             },
             getArchiveUrl ({ id: buildNo }, type = '', codelib = '') {
                 const { projectId, pipelineId } = this.$route.params
