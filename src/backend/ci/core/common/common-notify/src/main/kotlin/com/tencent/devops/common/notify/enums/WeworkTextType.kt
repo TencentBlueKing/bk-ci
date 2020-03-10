@@ -23,14 +23,10 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.notify.service
 
-import com.tencent.devops.notify.pojo.WeworkNotifyMediaMessage
-import com.tencent.devops.notify.pojo.WeworkNotifyTextMessage
+package com.tencent.devops.common.notify.enums
 
-interface WeworkService {
-
-    fun sendMediaMessage(weworkNotifyMediaMessage: WeworkNotifyMediaMessage)
-
-    fun sendTextMessage(weworkNotifyTextMessage: WeworkNotifyTextMessage)
+enum class WeworkTextType(private val type: String) {
+    text("text"),
+    markdown("markdown")
 }

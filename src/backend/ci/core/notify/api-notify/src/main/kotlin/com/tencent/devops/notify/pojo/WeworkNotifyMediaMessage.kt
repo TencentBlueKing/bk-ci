@@ -31,8 +31,8 @@ import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 import java.io.InputStream
 
-@ApiModel("企业微信消息类型")
-data class WeworkNotifyMessage(
+@ApiModel("企业微信文本消息")
+data class WeworkNotifyMediaMessage(
     @ApiModelProperty("接收人Id", required = true)
     val receivers: List<String>,
     @ApiModelProperty("接收人类型", required = true)

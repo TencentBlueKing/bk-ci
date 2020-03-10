@@ -26,6 +26,9 @@
 package com.tencent.devops.notify.api.service
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.notify.enums.WeworkMediaType
+import com.tencent.devops.common.notify.enums.WeworkReceiverType
+import com.tencent.devops.common.notify.enums.WeworkTextType
 import com.tencent.devops.notify.pojo.EmailNotifyMessage
 import com.tencent.devops.notify.pojo.RtxNotifyMessage
 import com.tencent.devops.notify.pojo.SmsNotifyMessage
@@ -33,10 +36,13 @@ import com.tencent.devops.notify.pojo.WechatNotifyMessage
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
+import org.glassfish.jersey.media.multipart.FormDataParam
+import java.io.InputStream
 import javax.ws.rs.Consumes
 import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["SERVICE_NOTIFIES"], description = "通知")
@@ -66,4 +72,43 @@ interface ServiceNotifyResource {
     @POST
     @Path("/sms")
     fun sendSmsNotify(@ApiParam(value = "短信信息内容", required = true) message: SmsNotifyMessage): Result<Boolean>
+
+    @ApiOperation("发送企业微信多媒体信息")
+    @POST
+    @Path("/wework/media")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    fun sendWeworkMediaNotify(
+        @ApiParam("企业微信群Id", required = true)
+        @QueryParam("receivers")
+        receivers: String,
+        @ApiParam("接受人类型", required = true)
+        @QueryParam("receiverType")
+        receiverType: WeworkReceiverType,
+        @ApiParam("文件类型", required = true)
+        @QueryParam("mediaType")
+        mediaType: WeworkMediaType,
+        @ApiParam("文件名称", required = true)
+        @QueryParam("mediaName")
+        mediaName: String,
+        @ApiParam("文件", required = true)
+        @FormDataParam("file")
+        inputStream: InputStream
+    ): Result<Boolean>
+
+    @ApiOperation("发送企业微信文本信息")
+    @POST
+    @Path("/wework/text")
+    fun sendWeworkTextNotify(
+        @ApiParam("企业微信群Id", required = true)
+        @QueryParam("receivers")
+        receivers: String,
+        @ApiParam("接受人类型", required = true)
+        @QueryParam("receiverType")
+        receiverType: WeworkReceiverType,
+        @ApiParam("文本类型", required = true)
+        @QueryParam("textType")
+        textType: WeworkTextType,
+        @ApiParam("文件内容", required = true)
+        message: String
+    ): Result<Boolean>
 }
