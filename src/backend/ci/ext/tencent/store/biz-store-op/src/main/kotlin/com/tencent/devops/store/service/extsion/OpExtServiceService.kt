@@ -94,7 +94,7 @@ class OpExtServiceService @Autowired constructor(
             val serviceId = it["itemId"] as String
             val labelRecord = extServiceLableRelDao.getLabelsByServiceId(dslContext, serviceId)
             val labelName =
-            if(labelRecord != null) {
+            if(labelRecord != null && labelRecord.size > 1) {
                 labelRecord[0]?.get(KEY_LABEL_NAME).toString()
             } else {
                 null
