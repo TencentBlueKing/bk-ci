@@ -1,7 +1,7 @@
 <template>
     <div :class="[{ 'pipeline-drag': editable && !isTriggerStage, 'show-stage-area': !isTriggerStage }, 'pipeline-stage']" ref="stageRef">
         <bk-button v-if="!isTriggerStage" :class="['pipeline-stage-entry', [stageStatusCls], { 'editable-stage-entry': editable, 'stage-disabled': stageDisabled }]" @click="showStagePanel">
-            <span v-if="stage.status === 'PAUSE'" class="bk-icon icon-play-circle-shape" v-bk-tooltips.top="canTriggerStage ? '去审核' : '无审核权限'" @click.stop="startNextStage"></span>
+            <span v-if="stage.status === 'PAUSE'" class="bk-icon icon-play-circle-shape" v-bk-tooltips.top="canTriggerStage ? $t('editPage.toCheck') : $t('editPage.noAuthToCheck')" @click.stop="startNextStage"></span>
             <logo v-else-if="stage.status === 'SKIP'" v-bk-tooltips="$t('skipStageDesc')" :class="`stage-status-icon ${stageStatusIcon}`" :name="stageStatusIcon" size="16"></logo>
             <logo v-else :class="`stage-status-icon ${stageStatusIcon}`" :name="stageStatusIcon" size="16"></logo>
             <span class="stage-entry-name">{{ stageTitle }}</span>

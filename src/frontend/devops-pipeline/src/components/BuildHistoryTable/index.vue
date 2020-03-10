@@ -184,7 +184,6 @@
             },
             data () {
                 return this.buildList.map((item, index) => {
-                    console.log(item)
                     const active = index === this.activeIndex
                     const hasArtifactories = Array.isArray(item.artifactList) && item.artifactList.length > 0
                     let shortUrl = ''
@@ -207,7 +206,7 @@
                     const needShowAll = hasArtifactories && item.artifactList.length > 11 && !this.isShowAll
                     const stageStatus = item.stageStatus ? item.stageStatus.slice(1).map(stage => ({
                         ...stage,
-                        tooltip: stage.elapsed ? `${stage.name}: ${convertMStoString(stage.elapsed)}` : '',
+                        tooltip: this.getStageTooltip(stage),
                         icon: this.statusIconMap[stage.status] || 'circle',
                         statusCls: `${stage.status}${stage.status === 'RUNNING' ? ' spin-icon' : ''}`
                     })) : null
@@ -268,6 +267,16 @@
             }
         },
         methods: {
+            getStageTooltip (stage) {
+                switch (true) {
+                    case !!stage.elapsed:
+                        return `${stage.name}: ${convertMStoString(stage.elapsed)}`
+                    case stage.status === 'PAUSE':
+                        return this.$t('editPage.toCheck')
+                    case stage.status === 'SKIP':
+                        return this.$t('skipStageDesc')
+                }
+            },
             activeRemarkInput (row) {
                 this.activeRemarkIndex = row.index
                 this.tempRemark = row.remark
