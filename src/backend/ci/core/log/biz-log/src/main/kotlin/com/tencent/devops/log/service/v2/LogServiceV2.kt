@@ -414,9 +414,9 @@ class LogServiceV2 @Autowired constructor(
             .addDocValueField("lineNo")
             .addDocValueField("timestamp")
             .addSort("lineNo", SortOrder.ASC)
-            .setScroll(TimeValue(1000 * 32))
+            .setScroll(TimeValue(1000 * 64))
             .setSize(4000)
-            .get(TimeValue.timeValueSeconds(120))
+            .get()
 
         val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss:SSS")
         // 一边读一边流式下载
@@ -442,7 +442,7 @@ class LogServiceV2 @Autowired constructor(
                 output.write(sb.toString().toByteArray())
                 output.flush()
                 scrollResp = client.prepareSearchScroll(buildId, scrollResp.scrollId)
-                    .setScroll(TimeValue(1000 * 32)).execute().actionGet(TimeValue.timeValueSeconds(30))
+                    .setScroll(TimeValue(1000 * 64)).execute().actionGet()
             } while (scrollResp.hits.hits.isNotEmpty())
         }
 
