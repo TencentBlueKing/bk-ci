@@ -3,7 +3,6 @@ package com.tencent.devops.store.util
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.util.JacksonUtil
 import com.tencent.devops.store.pojo.Props
-import kotlin.jvm.java as java1
 
 class PropsUtils
 
@@ -30,8 +29,14 @@ class PropsUtils
     fun main(args: Array<String>) {
         println(file)
         val objectMapping = JacksonUtil.createObjectMapper()
-        val objMap =objectMapping.readValue<Props>(file)
-            println("serviceCode:${objMap.serviceCode}")
-            println("itemList:${objMap.itemList}")
-
+        val objMap =objectMapping.readValue<HashMap<String, Any>>(file)
+        println(objMap["serviceCode"])
+        println(objMap["itemList"])
+        val itemList = objMap["itemList"] as ArrayList<String>
+        println(itemList)
+        itemList.forEach {
+            println(it)
+//            println("key:${it.key}")
+//            println("value:${it.value}")
+        }
     }

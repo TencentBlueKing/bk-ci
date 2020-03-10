@@ -25,14 +25,13 @@ class ServiceItemService @Autowired constructor(
     // 用于存放所有服务父子关系的map
     private val parentMap = mutableMapOf<String, MutableList<ServiceItem>>()
     // 用于存放所有服务子父关系的map
-    private val childMap = mutableMapOf<String, ServiceItem>()
-    // 扩展点列表
-    private val itemList = mutableListOf<ExtItemDTO>()
+    private val childMap = mutableMapOf<String, ServiceItem>() // 扩展点列表
 
     fun getServiceList(): List<ExtItemDTO> {
         val allItemData = serviceItemDao.getAllServiceItem(dslContext) ?: return emptyList()
         // 用于放所有数据
         val allItemMap = mutableMapOf<String, ServiceItem>()
+        val itemList = mutableListOf<ExtItemDTO>()
 
         allItemData.forEach { parentItem ->
             if (parentItem.parentId == null || parentItem.parentId.isEmpty()) {

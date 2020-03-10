@@ -959,7 +959,6 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         }
         val taskDataMap = JsonUtil.toMutableMapSkipEmpty(fileStr!!)
         logger.info("getServiceProps taskDataMap[$taskDataMap]")
-        val propsMap = mutableMapOf<String, Any?>()
         val fileServiceCode = taskDataMap["serviceCode"] as String
         val fileItemList = taskDataMap["itemList"] as List<Any>
         if (fileServiceCode != serviceCode) {
@@ -975,23 +974,24 @@ abstract class ExtServiceBaseService @Autowired constructor() {
             dbItemMapIndexId[it.itemId] = it
             dbItemMapIndexCode[it.itemCode] = it
         }
-        // 解析extension.json内对应的itemId
-        fileItemList?.forEach {
-            logger.info("extension.json item:$it")
-            val itemMap = JsonUtil.toMap(it!!.toString())
-            val itemCode = itemMap["itemCode"] as String
-            val props = (itemMap["props"] as Any).toString()
-            logger.info("getServiceProps fileItemList foreach itemCode[$itemCode] props[$props]")
-            var fileServiceItem = dbItemMapIndexCode[itemCode]
-            // 可能存在extension.json内配置了但页面没有选中的扩展点
-            if (fileServiceItem == null) {
-                fileServiceItem = client.get(ServiceItemResource::class).getItemByCode(itemCode).data
-                // extension.json独立存在的扩展点加入遍历列表
-                dbItemMapIndexId[fileServiceItem!!.itemId] = fileServiceItem
-            }
-            val fileItemId = fileServiceItem!!.itemId
-            fileItemMap[fileItemId] = props
-        }
+        // TODO: 此处为extension.json解析不了才TODO
+//        // 解析extension.json内对应的itemId
+//        fileItemList?.forEach {
+//            logger.info("extension.json item:$it")
+//            val itemMap = JsonUtil.toMap(it!!.toString())
+//            val itemCode = itemMap["itemCode"] as String
+//            val props = (itemMap["props"] as Any).toString()
+//            logger.info("getServiceProps fileItemList foreach itemCode[$itemCode] props[$props]")
+//            var fileServiceItem = dbItemMapIndexCode[itemCode]
+//            // 可能存在extension.json内配置了但页面没有选中的扩展点
+//            if (fileServiceItem == null) {
+//                fileServiceItem = client.get(ServiceItemResource::class).getItemByCode(itemCode).data
+//                // extension.json独立存在的扩展点加入遍历列表
+//                dbItemMapIndexId[fileServiceItem!!.itemId] = fileServiceItem
+//            }
+//            val fileItemId = fileServiceItem!!.itemId
+//            fileItemMap[fileItemId] = props
+//        }
         logger.info("dbItemMapIndexId: $dbItemMapIndexId")
         dbItemMapIndexId.forEach { (key, info) ->
             if (fileItemMap.containsKey(key)) {
