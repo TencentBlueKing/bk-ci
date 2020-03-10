@@ -24,43 +24,35 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.resources
+package com.tencent.devops.dispatch.api
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.store.api.UserBcsServiceTestResource
-import com.tencent.devops.store.pojo.dto.DeployExtServiceDTO
-import com.tencent.devops.store.pojo.dto.kubernetes.KubernetesLabelInfoDTO
-import com.tencent.devops.store.pojo.dto.kubernetes.KubernetesRepoInfoDTO
-import com.tencent.devops.store.service.ExtServiceBcsService
-import com.tencent.devops.store.util.BcsClientUtils
-import org.springframework.beans.factory.annotation.Autowired
+import com.tencent.devops.dispatch.pojo.DeployApp
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.HeaderParam
+import javax.ws.rs.POST
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
 
-@RestResource
-class UserBcsServiceTestResourceImpl @Autowired constructor(
-    private val extServiceBcsService: ExtServiceBcsService
-) : UserBcsServiceTestResource {
+@Api(tags = ["BUILD_BCS"], description = "BCS服务")
+@Path("/build/bcs")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface BuildBcsResource {
 
-    override fun createNamespaceTest(
+    @ApiOperation("bcs部署应用")
+    @Path("/deploy/app")
+    @POST
+    fun bcsDeployApp(
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        namespaceName: String,
-        labelInfo: KubernetesLabelInfoDTO
-    ): Result<Boolean> {
-        BcsClientUtils.createNamespace(namespaceName, labelInfo)
-        return Result(true)
-    }
-
-    override fun createImagePullSecretTest(
-        userId: String,
-        namespaceName: String,
-        secretName: String,
-        kubernetesRepoInfo: KubernetesRepoInfoDTO
-    ): Result<Boolean> {
-        BcsClientUtils.createImagePullSecret(secretName, namespaceName, kubernetesRepoInfo)
-        return Result(true)
-    }
-
-    override fun bcsDeploymentTest(userId: String, deployExtService: DeployExtServiceDTO): Result<Boolean> {
-        return extServiceBcsService.deployExtService(userId, deployExtService)
-    }
+        @ApiParam("部署请求对象")
+        deployApp: DeployApp
+    ): Result<Boolean>
 }

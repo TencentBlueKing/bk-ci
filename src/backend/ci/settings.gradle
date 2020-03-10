@@ -294,6 +294,8 @@ include ":ext:tencent:process:boot-process-tencent"
 include ":ext:tencent:dispatch"
 include ":ext:tencent:dispatch:api-dispatch-tstack"
 include ":ext:tencent:dispatch:biz-dispatch-tstack"
+include ":ext:tencent:dispatch:api-dispatch-bcs"
+include ":ext:tencent:dispatch:biz-dispatch-bcs"
 include ":ext:tencent:dispatch:biz-dispatch-tencent"
 include ":ext:tencent:dispatch:boot-dispatch-tencent"
 

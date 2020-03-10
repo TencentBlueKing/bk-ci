@@ -24,13 +24,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":ext:tencent:common:common-digest-tencent")
-    compile project(":ext:tencent:common:common-auth:common-auth-tencent")
-    compile project(":core:dispatch:biz-dispatch")
-    compile project(":core:dispatch:biz-dispatch-docker")
-    compile project(":ext:tencent:dispatch:biz-dispatch-tstack")
-    compile project(":ext:tencent:dispatch:biz-dispatch-bcs")
-}
+package com.tencent.devops.dispatch.pojo
 
-apply from: "$rootDir/task_spring_boot_package.gradle"
+import io.swagger.annotations.ApiModelProperty
+
+data class DeployApp(
+    @ApiModelProperty("k8s命名空间名称", required = true)
+    val namespaceName: String,
+    @ApiModelProperty("应用标识", required = true)
+    val appCode: String,
+    @ApiModelProperty("应用deployment", required = true)
+    val appDeployment: AppDeployment,
+    @ApiModelProperty("应用service", required = true)
+    val appService: AppService,
+    @ApiModelProperty(value = "应用ingress", required = false)
+    val appIngress: AppIngress
+)

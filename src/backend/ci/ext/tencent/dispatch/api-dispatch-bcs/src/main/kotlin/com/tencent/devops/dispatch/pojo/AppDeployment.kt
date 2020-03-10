@@ -24,13 +24,17 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":ext:tencent:common:common-digest-tencent")
-    compile project(":ext:tencent:common:common-auth:common-auth-tencent")
-    compile project(":core:dispatch:biz-dispatch")
-    compile project(":core:dispatch:biz-dispatch-docker")
-    compile project(":ext:tencent:dispatch:biz-dispatch-tstack")
-    compile project(":ext:tencent:dispatch:biz-dispatch-bcs")
-}
+package com.tencent.devops.dispatch.pojo
 
-apply from: "$rootDir/task_spring_boot_package.gradle"
+import io.swagger.annotations.ApiModelProperty
+
+data class AppDeployment(
+    @ApiModelProperty("期望的pod数量", required = true)
+    val replicas: Int,
+    @ApiModelProperty("镜像", required = true)
+    val image: String,
+    @ApiModelProperty(value = "拉取镜像秘钥名称", required = false)
+    val pullImageSecretName: String?,
+    @ApiModelProperty("容器端口", required = true)
+    val containerPort: Int
+)

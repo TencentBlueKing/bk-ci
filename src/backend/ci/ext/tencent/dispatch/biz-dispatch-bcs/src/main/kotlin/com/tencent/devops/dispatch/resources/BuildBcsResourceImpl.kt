@@ -24,43 +24,21 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.resources
+package com.tencent.devops.dispatch.resources
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.store.api.UserBcsServiceTestResource
-import com.tencent.devops.store.pojo.dto.DeployExtServiceDTO
-import com.tencent.devops.store.pojo.dto.kubernetes.KubernetesLabelInfoDTO
-import com.tencent.devops.store.pojo.dto.kubernetes.KubernetesRepoInfoDTO
-import com.tencent.devops.store.service.ExtServiceBcsService
-import com.tencent.devops.store.util.BcsClientUtils
+import com.tencent.devops.dispatch.api.BuildBcsResource
+import com.tencent.devops.dispatch.pojo.DeployApp
+import com.tencent.devops.dispatch.service.BcsDeployService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class UserBcsServiceTestResourceImpl @Autowired constructor(
-    private val extServiceBcsService: ExtServiceBcsService
-) : UserBcsServiceTestResource {
+class BuildBcsResourceImpl @Autowired constructor(
+    val bcsDeployService: BcsDeployService
+) : BuildBcsResource {
 
-    override fun createNamespaceTest(
-        userId: String,
-        namespaceName: String,
-        labelInfo: KubernetesLabelInfoDTO
-    ): Result<Boolean> {
-        BcsClientUtils.createNamespace(namespaceName, labelInfo)
-        return Result(true)
-    }
-
-    override fun createImagePullSecretTest(
-        userId: String,
-        namespaceName: String,
-        secretName: String,
-        kubernetesRepoInfo: KubernetesRepoInfoDTO
-    ): Result<Boolean> {
-        BcsClientUtils.createImagePullSecret(secretName, namespaceName, kubernetesRepoInfo)
-        return Result(true)
-    }
-
-    override fun bcsDeploymentTest(userId: String, deployExtService: DeployExtServiceDTO): Result<Boolean> {
-        return extServiceBcsService.deployExtService(userId, deployExtService)
+    override fun bcsDeployApp(userId: String, deployApp: DeployApp): Result<Boolean> {
+        return bcsDeployService.deployApp(userId, deployApp)
     }
 }

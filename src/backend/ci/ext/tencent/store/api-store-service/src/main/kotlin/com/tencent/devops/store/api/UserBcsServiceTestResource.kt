@@ -86,7 +86,7 @@ interface UserBcsServiceTestResource {
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("容器端口列表")
-        deployExtServiceDTO: DeployExtServiceDTO
+        @ApiParam("扩展服务部署请求对象")
+        deployExtService: DeployExtServiceDTO
     ): Result<Boolean>
 }

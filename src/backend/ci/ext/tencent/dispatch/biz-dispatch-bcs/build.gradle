@@ -25,12 +25,9 @@
  */
 
 dependencies {
-    compile project(":ext:tencent:common:common-digest-tencent")
-    compile project(":ext:tencent:common:common-auth:common-auth-tencent")
     compile project(":core:dispatch:biz-dispatch")
-    compile project(":core:dispatch:biz-dispatch-docker")
-    compile project(":ext:tencent:dispatch:biz-dispatch-tstack")
-    compile project(":ext:tencent:dispatch:biz-dispatch-bcs")
+    compile project(":ext:tencent:dispatch:api-dispatch-bcs")
+    compile("io.fabric8:kubernetes-client:4.8.0")
 }
 
-apply from: "$rootDir/task_spring_boot_package.gradle"
+apply from: "$rootDir/task_deploy_to_maven.gradle"
