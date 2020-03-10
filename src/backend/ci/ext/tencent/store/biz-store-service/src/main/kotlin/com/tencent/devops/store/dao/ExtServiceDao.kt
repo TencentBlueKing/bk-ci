@@ -407,7 +407,6 @@ class ExtServiceDao {
             a.SERVICE_STATUS.`as`("serviceStatus"),
             a.SERVICE_NAME.`as`("serviceName"),
             a.SERVICE_CODE.`as`("serviceCode"),
-            d.LABEL_ID.`as`("labelId"),
             a.VERSION.`as`("version"),
             a.PUB_TIME.`as`("pubTime"),
             a.PUBLISHER.`as`("publisher"),
