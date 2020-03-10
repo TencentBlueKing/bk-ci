@@ -154,32 +154,19 @@ class OpExtServiceService @Autowired constructor(
         }
 
         infoResp.mediaInfo?.forEach {
-            if (it.id != null) {
-                storeMediaInfoDao.updateById(
-                    dslContext = dslContext,
-                    userId = userId,
-                    id = it.id!!,
-                    storeMediaInfoReq = StoreMediaInfoRequest(
-                        storeCode = serviceCode,
-                        modifier = userId,
-                        mediaType = it.mediaType.name,
-                        mediaUrl = it.mediaUrl
-                    )
+            storeMediaInfoDao.add(
+                dslContext = dslContext,
+                userId = userId,
+                type = StoreTypeEnum.SERVICE.type.toByte(),
+                id = UUIDUtil.generate(),
+                storeMediaInfoReq = StoreMediaInfoRequest(
+                    storeCode = serviceCode,
+                    mediaUrl = it.mediaUrl,
+                    mediaType = it.mediaType.name,
+                    modifier = userId
                 )
-            } else {
-                storeMediaInfoDao.add(
-                    dslContext = dslContext,
-                    userId = userId,
-                    type = StoreTypeEnum.SERVICE.type.toByte(),
-                    id = UUIDUtil.generate(),
-                    storeMediaInfoReq = StoreMediaInfoRequest(
-                        storeCode = serviceCode,
-                        mediaUrl = it.mediaUrl,
-                        mediaType = it.mediaType.name,
-                        modifier = userId
-                    )
-                )
-            }
+            )
+
         }
 
         if (settingInfo != null) {

@@ -958,15 +958,16 @@ abstract class ExtServiceBaseService @Autowired constructor() {
             return mutableMapOf()
         }
         val taskDataMap = JsonUtil.toMap(fileStr!!)
+        logger.info("getServiceProps taskDataMap[$taskDataMap]")
         val propsMap = mutableMapOf<String, Any?>()
         val fileServiceCode = taskDataMap["serviceCode"] as String
+        val fileItemList = taskDataMap["itemList"] as List<Any>
         if (fileServiceCode != serviceCode) {
-            // TODO: 此处需要抛异常，扩展编码不一致
+            logger.warn("getServiceProps input serviceCode[$serviceCode], extension.json serviceCode[$fileServiceCode] ")
         }
 
         // 若 extension.json存在则用 extension.json内的配置，否则使用扩展点默认props
         val inputItemRecords = client.get(ServiceItemResource::class).getItemInfoByIds(itemIds).data
-        val fileItemList = taskDataMap["itemList"] as List<String>
         val dbItemMapIndexId = mutableMapOf<String, ServiceItem>()
         val dbItemMapIndexCode = mutableMapOf<String, ServiceItem>()
         val fileItemMap = mutableMapOf<String, String>()
@@ -977,9 +978,10 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         // 解析extension.json内对应的itemId
         fileItemList?.forEach {
             logger.info("extension.json item:$it")
-            val itemMap = JsonUtil.toMap(it!!)
+            val itemMap = JsonUtil.toMap(it!!.toString())
             val itemCode = itemMap["itemCode"] as String
-            val props = itemMap["props"] as String
+            val props = (itemMap["props"] as Any).toString()
+            logger.info("getServiceProps fileItemList foreach itemCode[$itemCode] props[$props]")
             var fileServiceItem = dbItemMapIndexCode[itemCode]
             // 可能存在extension.json内配置了但页面没有选中的扩展点
             if (fileServiceItem == null) {
