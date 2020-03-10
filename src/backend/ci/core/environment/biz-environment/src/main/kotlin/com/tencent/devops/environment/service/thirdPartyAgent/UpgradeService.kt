@@ -26,6 +26,9 @@
 
 package com.tencent.devops.environment.service.thirdPartyAgent
 
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
+import com.google.common.cache.CacheBuilder
 import com.tencent.devops.common.api.enums.AgentStatus
 import com.tencent.devops.common.api.pojo.AgentResult
 import com.tencent.devops.common.api.util.HashUtil
@@ -49,19 +52,47 @@ class UpgradeService @Autowired constructor(
     private val thirdPartyAgentDao: ThirdPartyAgentDao,
     private val redisOperation: RedisOperation,
     private val downloadAgentInstallService: DownloadAgentInstallService,
-    private val agentGrayUtils: AgentGrayUtils
+    private val agentGrayUtils: AgentGrayUtils,
+    private val objectMapper: ObjectMapper
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(UpgradeService::class.java)
+    }
+
+    private val stringCache = CacheBuilder.newBuilder()
+        .maximumSize(100)
+        .expireAfterWrite(30, TimeUnit.SECONDS)
+        .build<String, String>()
+
+    fun getRedisValueWithCache(redisKey: String): String {
+        var value = stringCache.getIfPresent(redisKey)
+        if (value != null) {
+            return value
+        }
+        synchronized(this) {
+            value = stringCache.getIfPresent(redisKey)
+            if (value != null) {
+                return value!!
+            }
+            logger.info("refresh $redisKey from redis")
+            value = redisOperation.get(redisKey)
+            stringCache.put(redisKey, value ?: "")
+        }
+        return value!!
     }
 
     fun setUpgrade(agentVersion: String) = redisOperation.set(agentGrayUtils.getAgentVersionKey(), agentVersion, TimeUnit.DAYS.toSeconds(120))
 
     fun setMasterVersion(masterVersion: String) = redisOperation.set(agentGrayUtils.getAgentMasterVersionKey(), masterVersion, TimeUnit.DAYS.toSeconds(120))
 
-    fun getAgentVersion() = redisOperation.get(agentGrayUtils.getAgentVersionKey())
+    fun getWorkerVersion() = getRedisValueWithCache(agentGrayUtils.getAgentVersionKey())
 
-    fun getAgentMasterVersion() = redisOperation.get(agentGrayUtils.getAgentMasterVersionKey())
+    fun getAgentVersion() = getRedisValueWithCache(agentGrayUtils.getAgentMasterVersionKey())
+
+    fun getGatewayMapping(): Map<String, String> {
+        val mappingConfig = getRedisValueWithCache("environment.thirdparty.gateway.mapping") ?: return mapOf()
+        return objectMapper.readValue(mappingConfig)
+    }
 
     fun checkUpgrade(
         projectId: String,
@@ -73,20 +104,19 @@ class UpgradeService @Autowired constructor(
         logger.info("Checking if the agent($agentId) of masterVersion($masterVersion) | version($agentVersion) of project($projectId) can upgrade")
 
         val status = checkAgent(projectId, agentId, secretKey)
-
         if (status != AgentStatus.IMPORT_OK) {
             logger.warn("The agent($agentId) status($status) is not OK")
             return AgentResult(status, false)
         }
 
-        val currentVersion = redisOperation.get(agentGrayUtils.getAgentVersionKey())
+        val currentVersion = getWorkerVersion()
         if (currentVersion.isNullOrBlank()) {
-            logger.warn("The current agent version is not exist in redis")
+            logger.warn("The current agent version is not exist")
             return AgentResult(AgentStatus.IMPORT_OK, false)
         }
-        val currentMasterVersion = redisOperation.get(agentGrayUtils.getAgentMasterVersionKey())
+        val currentMasterVersion = getAgentVersion()
         if (currentMasterVersion.isNullOrBlank()) {
-            logger.warn("The current agent master version is not exist in redis")
+            logger.warn("The current agent master version is not exist")
             return AgentResult(AgentStatus.IMPORT_OK, false)
         }
 

@@ -38,5 +38,6 @@ data class BuildCheckParams(
     val startTime: Long,
     val taskId: String,
     val position: String,
-    val templateId: String?
+    val templateId: String?,
+    val runtimeVariable: Map<String, String>?
 )
