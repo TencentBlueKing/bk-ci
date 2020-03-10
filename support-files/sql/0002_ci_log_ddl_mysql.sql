@@ -24,6 +24,8 @@ CREATE TABLE IF NOT EXISTS `T_LOG_INDICES_V2`
     `CREATED_TIME`  timestamp   NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '创建时间',
     `UPDATED_TIME`  timestamp   NOT NULL DEFAULT '2019-11-11 00:00:00' COMMENT '修改时间',
     `ENABLE`        bit(1)      NOT NULL DEFAULT b'0' COMMENT 'build is enable v2 or not',
+    `LOG_CLUSTER_NAME` varchar(64) NOT NULL DEFAULT '' COMMENT 'multi es log cluster name',
+    `USE_CLUSTER` bit(1) NOT NULL DEFAULT b'0' COMMENT 'use multi es log cluster or not',
     PRIMARY KEY (`ID`),
     UNIQUE KEY `BUILD_ID` (`BUILD_ID`)
 ) ENGINE = InnoDB
