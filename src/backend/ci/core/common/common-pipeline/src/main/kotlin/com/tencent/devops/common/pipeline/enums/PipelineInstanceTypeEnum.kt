@@ -24,22 +24,21 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.log.model.pojo
+package com.tencent.devops.common.pipeline.enums
 
-import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
+enum class PipelineInstanceTypeEnum(val type: String) {
+    FREEDOM("FREEDOM"), // 自由模式
+    CONSTRAINT("CONSTRAINT"); // 约束模式
 
-/**
- * deng
- * 2019-01-23
- */
-@Event(MQ.EXCHANGE_LOG_STATUS_BUILD_EVENT, MQ.ROUTE_LOG_STATUS_BUILD_EVENT)
-data class LogStatusEvent(
-    override val buildId: String,
-    val finished: Boolean,
-    val tag: String,
-    val jobId: String,
-    val executeCount: Int?,
-    override val retryTime: Int = 2,
-    override val delayMills: Int = 0
-) : ILogEvent(buildId, retryTime, delayMills, null)
+    override fun toString() = type.toString()
+
+    companion object {
+        fun getTemplateType(type: String): String {
+            return when (type) {
+                "FREEDOM" -> PipelineInstanceTypeEnum.FREEDOM.name
+                "CONSTRAINT" -> PipelineInstanceTypeEnum.CONSTRAINT.name
+                else -> PipelineInstanceTypeEnum.FREEDOM.name
+            }
+        }
+    }
+}

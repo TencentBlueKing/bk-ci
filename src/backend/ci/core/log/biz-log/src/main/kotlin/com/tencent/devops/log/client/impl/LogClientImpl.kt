@@ -24,22 +24,23 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.log.model.pojo
+package com.tencent.devops.log.client.impl
 
-import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
+import com.tencent.devops.common.es.ESClient
+import com.tencent.devops.log.client.LogClient
+import java.lang.RuntimeException
 
-/**
- * deng
- * 2019-01-23
- */
-@Event(MQ.EXCHANGE_LOG_STATUS_BUILD_EVENT, MQ.ROUTE_LOG_STATUS_BUILD_EVENT)
-data class LogStatusEvent(
-    override val buildId: String,
-    val finished: Boolean,
-    val tag: String,
-    val jobId: String,
-    val executeCount: Int?,
-    override val retryTime: Int = 2,
-    override val delayMills: Int = 0
-) : ILogEvent(buildId, retryTime, delayMills, null)
+class LogClientImpl constructor(private val client: ESClient) : LogClient {
+
+    override fun getActiveClients(): List<ESClient> {
+        return listOf(client)
+    }
+
+    override fun hashClient(buildId: String): ESClient {
+        val clients = getActiveClients()
+        if (clients.isEmpty()) {
+            throw RuntimeException("Fail to get the log client")
+        }
+        return clients.first()
+    }
+}
