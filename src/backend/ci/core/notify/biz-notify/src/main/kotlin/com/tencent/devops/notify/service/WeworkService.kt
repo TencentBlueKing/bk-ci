@@ -25,9 +25,12 @@
  */
 package com.tencent.devops.notify.service
 
-import com.tencent.devops.notify.pojo.WeworkNotifyMessage
+import com.tencent.devops.notify.pojo.WeworkNotifyMediaMessage
+import com.tencent.devops.notify.pojo.WeworkNotifyTextMessage
 
 interface WeworkService {
 
-    fun sendMessage(weworkNotifyMessage: WeworkNotifyMessage)
+    fun sendMediaMessage(weworkNotifyMediaMessage: WeworkNotifyMediaMessage)
+
+    fun sendTextMessage(weworkNotifyTextMessage: WeworkNotifyTextMessage)
 }

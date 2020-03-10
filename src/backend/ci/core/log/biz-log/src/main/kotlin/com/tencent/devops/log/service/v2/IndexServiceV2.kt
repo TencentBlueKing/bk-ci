@@ -35,6 +35,7 @@ import com.tencent.devops.log.dao.v2.IndexDaoV2
 import com.tencent.devops.log.dao.v2.LogStatusDaoV2
 import com.tencent.devops.log.model.v2.IndexAndType
 import com.tencent.devops.log.util.IndexNameUtils
+import com.tencent.devops.log.util.IndexNameUtils.getTypeByIndex
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -102,7 +103,7 @@ class IndexServiceV2 @Autowired constructor(
         if (index.isNullOrBlank()) {
             throw OperationException("Fail to get the index of build $buildId")
         }
-        return IndexAndType(index!!, index)
+        return IndexAndType(index!!, getTypeByIndex(index))
     }
 
     fun getAndAddLineNum(buildId: String, size: Int): Long? {
