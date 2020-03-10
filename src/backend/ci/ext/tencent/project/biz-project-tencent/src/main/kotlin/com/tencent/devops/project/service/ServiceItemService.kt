@@ -1,7 +1,6 @@
 package com.tencent.devops.project.service
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.project.api.pojo.ExtItemDTO
 import com.tencent.devops.project.api.pojo.ItemInfoResponse
 import com.tencent.devops.project.api.pojo.ServiceItem
@@ -17,13 +16,11 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.lang.RuntimeException
-import javax.annotation.PostConstruct
 
 @Service
 class ServiceItemService @Autowired constructor(
     private val dslContext: DSLContext,
-    private val serviceItemDao: ServiceItemDao,
-    private val redisOperation: RedisOperation
+    private val serviceItemDao: ServiceItemDao
 ) {
     // 用于存放所有服务父子关系的map
     private val parentMap = mutableMapOf<String, MutableList<ServiceItem>>()
@@ -31,13 +28,6 @@ class ServiceItemService @Autowired constructor(
     private val childMap = mutableMapOf<String, ServiceItem>()
     // 扩展点列表
     private val itemList = mutableListOf<ExtItemDTO>()
-
-    @PostConstruct
-    fun init() {
-        logger.info("init serviceItemList start")
-        getServiceList()
-        logger.info("init serviceItemList end")
-    }
 
     fun getServiceList(): List<ExtItemDTO> {
         val allItemData = serviceItemDao.getAllServiceItem(dslContext) ?: return emptyList()
@@ -94,13 +84,6 @@ class ServiceItemService @Autowired constructor(
         logger.info("getServiceItem itemList:${itemList.toList()}")
 
         return itemList.toList()
-    }
-
-    fun getItemList(): List<ExtItemDTO>? {
-        if (itemList != null) {
-            return itemList
-        }
-        return getServiceList()
     }
 
     fun getItemListForOp(): List<ServiceItem> {

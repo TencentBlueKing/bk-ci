@@ -120,8 +120,12 @@ class GitService @Autowired constructor(
 //    @Value("\${git.redirectAtomMarketUrl}")
     private val redirectAtomMarketUrl: String = gitConfig.redirectAtomMarketUrl
 
-//    @Value("\${git.redirectAtomRepositoryUrl}")
+    private val redirectServiceMarketUrl: String = gitConfig.redirectServiceMarketUrl
+
+    //    @Value("\${git.redirectAtomRepositoryUrl}")
     private val redirectAtomRepositoryUrl: String = gitConfig.redirectAtomRepositoryUrl
+
+    private val redirectServiceRepositoryUrl: String = gitConfig.redirectServiceRepositoryUrl
 
     private val executorService = Executors.newFixedThreadPool(2)
 
@@ -375,6 +379,12 @@ class GitService @Autowired constructor(
                 val atomCode = authParams["atomCode"] as? String
                 mf.format(arrayOf(atomCode))
             }
+            RedirectUrlTypeEnum.EXT_SERVICE_MARKER -> {
+                val mf = MessageFormat(redirectServiceRepositoryUrl)
+                val atomCode = authParams["atomCode"] as? String
+                mf.format(arrayOf(atomCode))
+            }
+            RedirectUrlTypeEnum.EXT_SERVICE_MARKER -> redirectServiceMarketUrl
             RedirectUrlTypeEnum.DEFAULT -> redirectUrl
             else -> {
                 val projectId = authParams["projectId"] as String
