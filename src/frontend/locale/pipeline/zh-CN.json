@@ -81,6 +81,7 @@
     "stageFastKill": "启用FastKill",
     "stageOptionLabel": "本Stage执行条件",
     "stageTriggerDesc": "多个人员用英文逗号分隔",
+    "skipStageDesc": "已跳过",
     "timeMap": {
         "days": "天",
         "hours": "小时",
