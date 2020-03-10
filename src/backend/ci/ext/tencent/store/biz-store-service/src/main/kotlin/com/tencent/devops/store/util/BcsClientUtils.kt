@@ -26,8 +26,8 @@
 
 package com.tencent.devops.store.util
 
-import com.tencent.devops.store.pojo.kubernetes.KubernetesLabelInfo
-import com.tencent.devops.store.pojo.kubernetes.KubernetesRepoInfo
+import com.tencent.devops.store.pojo.dto.kubernetes.KubernetesLabelInfoDTO
+import com.tencent.devops.store.pojo.dto.kubernetes.KubernetesRepoInfoDTO
 import io.fabric8.kubernetes.api.model.Namespace
 import io.fabric8.kubernetes.api.model.NamespaceBuilder
 import io.fabric8.kubernetes.api.model.Secret
@@ -68,7 +68,7 @@ object BcsClientUtils {
      */
     fun createNamespace(
         namespaceName: String,
-        labelInfo: KubernetesLabelInfo
+        labelInfo: KubernetesLabelInfoDTO
     ): Namespace {
         logger.info("createNamespace namespaceName is: $namespaceName,labelInfo is: $labelInfo")
         var ns = bcsKubernetesClient.namespaces().withName(namespaceName).get()
@@ -84,7 +84,7 @@ object BcsClientUtils {
     }
 
     /**
-     * 创建k8s命名空间
+     * 创建k8s拉取镜像secret
      * @param namespaceName 命名空间名称
      * @param secretName 秘钥名称
      * @param kubernetesRepoInfo k8s仓库信息
@@ -92,7 +92,7 @@ object BcsClientUtils {
     fun createImagePullSecret(
         secretName: String,
         namespaceName: String,
-        kubernetesRepoInfo: KubernetesRepoInfo
+        kubernetesRepoInfo: KubernetesRepoInfoDTO
     ): Secret {
         logger.info("createImagePullSecret secretName is: $secretName,namespaceName is: $namespaceName")
         var secret = bcsKubernetesClient.secrets().inNamespace(namespaceName).withName(secretName).get()
@@ -136,31 +136,37 @@ object BcsClientUtils {
 
     /**
      * 创建deployment
+     * @param namespaceName 命名空间名称
      * @param deployment 无状态部署对象
      */
     fun createDeployment(
+        namespaceName: String,
         deployment: Deployment
     ): Deployment {
-        return bcsKubernetesClient.apps().deployments().createOrReplace(deployment)
+        return bcsKubernetesClient.apps().deployments().inNamespace(namespaceName).createOrReplace(deployment)
     }
 
     /**
      * 创建service
+     * @param namespaceName 命名空间名称
      * @param service service对象
      */
     fun createService(
+        namespaceName: String,
         service: Service
     ): Service {
-        return bcsKubernetesClient.services().createOrReplace(service)
+        return bcsKubernetesClient.services().inNamespace(namespaceName).createOrReplace(service)
     }
 
     /**
      * 创建ingress
+     * @param namespaceName 命名空间名称
      * @param ingress ingress对象
      */
     fun createIngress(
+        namespaceName: String,
         ingress: Ingress
     ): Ingress {
-        return bcsKubernetesClient.extensions().ingresses().createOrReplace(ingress)
+        return bcsKubernetesClient.extensions().ingresses().inNamespace(namespaceName).createOrReplace(ingress)
     }
 }

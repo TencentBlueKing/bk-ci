@@ -29,7 +29,6 @@ package com.tencent.devops.store.service
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.store.pojo.dto.DeployExtServiceDTO
-import com.tencent.devops.store.resources.UserBcsServiceResourceImpl
 import com.tencent.devops.store.util.BcsClientUtils
 import io.fabric8.kubernetes.api.model.IntOrString
 import io.fabric8.kubernetes.api.model.ServiceBuilder
@@ -50,7 +49,7 @@ import java.util.Collections
 @Service
 class ExtServiceBcsService @Autowired constructor(private val redisOperation: RedisOperation) {
 
-    private val logger = LoggerFactory.getLogger(UserBcsServiceResourceImpl::class.java)
+    private val logger = LoggerFactory.getLogger(ExtServiceBcsService::class.java)
 
     fun deployExtService(
         userId: String,
@@ -90,7 +89,7 @@ class ExtServiceBcsService @Autowired constructor(private val redisOperation: Re
             .endSelector()
             .endSpec()
             .build()
-        BcsClientUtils.createDeployment(deployment)
+        BcsClientUtils.createDeployment(namespaceName, deployment)
         logger.info("created deployment:$deployment")
         val servicePort = deployExtServiceDTO.servicePort
         val service = ServiceBuilder()
@@ -109,7 +108,7 @@ class ExtServiceBcsService @Autowired constructor(private val redisOperation: Re
             .withType("NodePort")
             .endSpec()
             .build()
-        BcsClientUtils.createService(service)
+        BcsClientUtils.createService(namespaceName, service)
         logger.info("created service:$service")
         // 创建ingress
         //generate ingress backend
@@ -152,7 +151,7 @@ class ExtServiceBcsService @Autowired constructor(private val redisOperation: Re
                 logger.info("created ingress:$ingress")
             } else {
                 ingress.spec.rules.add(ingressRule)
-                BcsClientUtils.createIngress(ingress)
+                BcsClientUtils.createIngress(namespaceName, ingress)
                 logger.info("update ingress:$ingressName success")
             }
         }
@@ -183,7 +182,7 @@ class ExtServiceBcsService @Autowired constructor(private val redisOperation: Re
             .endRule()
             .endSpec()
             .build()
-        BcsClientUtils.createIngress(ingress)
+        BcsClientUtils.createIngress(namespaceName, ingress)
         redisOperation.set(
             key = ingressRedisKey,
             value = "$namespaceName-ingress",
