@@ -29,8 +29,8 @@
                     <key-value-normal :disabled="disabled" :value="variables" :allow-null="false" name="customVariables" :handle-change="handleUpdateStageControl"></key-value-normal>
                 </bk-form-item>
                 <template v-if="showMemberInput">
-                    <bk-form-item class="stage-trigger-member-input" label="stage执行人:" :required="true" :class="{ 'is-error': !hasTriggerMember }">
-                        <bk-member-selector :disabled="disabled" v-model="triggerUsers"></bk-member-selector>
+                    <bk-form-item class="stage-trigger-member-input" label="stage执行人:" :required="true" :class="{ 'is-error': !hasTriggerMember }" :desc="$t('stageTriggerDesc')">
+                        <bk-input :clearable="true" :disabled="disabled" v-model="triggerUsers" />
                         <p v-if="!hasTriggerMember" class="mt5 mb0">{{ $t('editPage.stageManualTriggerUserNoEmptyTips') }}</p>
                     </bk-form-item>
                 </template>
@@ -93,11 +93,11 @@
             },
             triggerUsers: {
                 get () {
-                    return this.stageControl && Array.isArray(this.stageControl.triggerUsers) ? this.stageControl.triggerUsers : []
+                    return this.stageControl && Array.isArray(this.stageControl.triggerUsers) ? this.stageControl.triggerUsers.join(',') : ''
                 },
                 set (triggerUsers) {
                     console.log('set', triggerUsers)
-                    this.handleUpdateStageControl('triggerUsers', triggerUsers)
+                    this.handleUpdateStageControl('triggerUsers', triggerUsers.split(','))
                 }
 
             },

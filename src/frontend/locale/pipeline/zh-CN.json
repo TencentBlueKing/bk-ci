@@ -80,6 +80,7 @@
     "enableStage": "启用本Stage",
     "stageFastKill": "启用FastKill",
     "stageOptionLabel": "本Stage执行条件",
+    "stageTriggerDesc": "多个人员用英文逗号分隔",
     "timeMap": {
         "days": "天",
         "hours": "小时",
