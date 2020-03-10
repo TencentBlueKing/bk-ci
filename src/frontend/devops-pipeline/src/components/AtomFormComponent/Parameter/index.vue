@@ -1,7 +1,7 @@
 <template>
     <ul class="param-main" v-bkloading="{ isLoading }">
         <li class="param-input" v-for="(parameter, index) in parameters" :key="index">
-            <parameter-input class="input-com" @updateValue="(newValue) => updateValue(parameter, newValue, 'key')" :param-values="paramValues" :url-query="parameter.keyUrlQuery" :multiple="parameter.keyMultiple" :value="parameter.key" :disabled="true" :type="parameter.keyType" :list-type="parameter.keyListType" :url="parameter.keyUrl" :list="parameter.keyList"></parameter-input>
+            <parameter-input class="input-com" @updateValue="(newValue) => updateValue(parameter, newValue, 'key')" :param-values="paramValues" :url-query="parameter.keyUrlQuery" :multiple="parameter.keyMultiple" :value="parameter.key" :disabled="parameter.keyDisable" :type="parameter.keyType" :list-type="parameter.keyListType" :url="parameter.keyUrl" :list="parameter.keyList"></parameter-input>
             <span class="input-seg">=</span>
             <parameter-input class="input-com" @updateValue="(newValue) => updateValue(parameter, newValue, 'value')" :param-values="paramValues" :url-query="parameter.valueUrlQuery" :multiple="parameter.valueMultiple" :value="parameter.value" :disabled="parameter.valueDisable" :type="parameter.valueType" :list-type="parameter.valueListType" :url="parameter.valueUrl" :list="parameter.valueList"></parameter-input>
         </li>
@@ -62,7 +62,7 @@
             initData () {
                 if (this.param.paramType === 'list') {
                     const list = this.param.parameters || []
-                    this.parameters = [...list]
+                    this.parameters = JSON.parse(JSON.stringify(list))
                     this.setValue()
                     return
                 }
@@ -104,9 +104,17 @@
 
                 this.parameters.forEach((param) => {
                     const key = param.key
-                    const value = values.find(x => x.key === key) || {}
+                    const id = param.id
+                    const value = values.find((x) => {
+                        if (typeof id === 'undefined') {
+                            return x.key === key
+                        } else {
+                            return x.id === id
+                        }
+                    }) || {}
                     const defaultValue = defaultValues.find(x => x.key === key) || {}
                     param.value = value.value || defaultValue.value || param.value
+                    param.key = value.key || defaultValue.key || param.key
                 })
                 this.updateParameters()
             },
@@ -117,7 +125,7 @@
             },
 
             updateParameters () {
-                const res = this.parameters.map((x) => ({ key: x.key, value: x.value }))
+                const res = this.parameters.map((x) => ({ id: x.id, key: x.key, value: x.value }))
                 this.handleChange(this.name, String(JSON.stringify(res)))
             }
         }
