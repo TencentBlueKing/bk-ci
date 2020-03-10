@@ -45,9 +45,9 @@ interface OpServiceResource {
         @ApiParam("标签ID", required = false)
         @QueryParam("lableId")
         lableId: String?,
-        @ApiParam("扩展服务状态", required = false)
-        @QueryParam("serviceStatus")
-        serviceStatus: Boolean?,
+        @ApiParam("是否审核中", required = false)
+        @QueryParam("isApprove")
+        isApprove: Boolean?,
         @ApiParam("是否推荐", required = false)
         @QueryParam("isRecommend")
         isRecommend: Boolean?,

@@ -62,7 +62,7 @@ class OpExtServiceService @Autowired constructor(
         lableId: String?,
         isRecommend: Boolean?,
         isPublic: Boolean?,
-        serviceStatus: Boolean?,
+        isApprove: Boolean?,
         sortType: String?,
         desc: Boolean?,
         page: Int?,
@@ -75,7 +75,7 @@ class OpExtServiceService @Autowired constructor(
             isRecommend = isRecommend,
             itemId = itemId,
             lableId = lableId,
-            serviceStatus = serviceStatus,
+            isApprove = isApprove,
             sortType = sortType ?: ExtServiceSortTypeEnum.UPDATE_TIME.sortType,
             desc = desc ?: true,
             page = page,
@@ -88,7 +88,7 @@ class OpExtServiceService @Autowired constructor(
             lableMap[it.id] = it.labelName
         }
 
-        val extensionServiceInfoList = mutableListOf<ExtensionServiceVO>()
+        val extensionServiceInfoList = mutableSetOf<ExtensionServiceVO>()
         serviceRecords?.forEach {
             val lableId = lableMap[it["labelId"] as String]
             extensionServiceInfoList.add(
@@ -106,7 +106,7 @@ class OpExtServiceService @Autowired constructor(
             )
         }
 
-        return Result(ExtServiceInfoResp(serviceRecords.size, page, pageSize, extensionServiceInfoList))
+        return Result(ExtServiceInfoResp(extensionServiceInfoList.size, page, pageSize, extensionServiceInfoList))
     }
 
     fun editExtInfo(userId: String, serviceId: String, serviceCode: String, infoResp: OpEditInfoDTO): Result<Boolean> {

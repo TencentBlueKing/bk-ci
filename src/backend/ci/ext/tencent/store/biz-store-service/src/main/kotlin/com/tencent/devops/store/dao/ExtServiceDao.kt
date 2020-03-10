@@ -391,7 +391,7 @@ class ExtServiceDao {
         isRecommend: Boolean?,
         isPublic: Boolean?,
         lableId: String?,
-        serviceStatus: Boolean?,
+        isApprove: Boolean?,
         sortType: String?,
         desc: Boolean?,
         page: Int?,
@@ -421,8 +421,8 @@ class ExtServiceDao {
             conditions.add(b.RECOMMEND_FLAG.eq(isRecommend))
         }
 
-        if (null != serviceStatus) {
-            if (serviceStatus) {
+        if (null != isApprove) {
+            if (isApprove) {
                 conditions.add(a.SERVICE_STATUS.eq(ExtServiceStatusEnum.AUDITING.status.toByte()))
             } else {
                 conditions.add(a.SERVICE_STATUS.notEqual(ExtServiceStatusEnum.AUDITING.status.toByte()))

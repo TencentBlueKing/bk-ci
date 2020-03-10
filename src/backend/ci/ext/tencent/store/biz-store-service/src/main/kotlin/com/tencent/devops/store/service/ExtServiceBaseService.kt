@@ -957,7 +957,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         if (fileStr.isNullOrEmpty()) {
             return mutableMapOf()
         }
-        val taskDataMap = JsonUtil.toMap(fileStr!!)
+        val taskDataMap = JsonUtil.toMutableMapSkipEmpty(fileStr!!)
         logger.info("getServiceProps taskDataMap[$taskDataMap]")
         val propsMap = mutableMapOf<String, Any?>()
         val fileServiceCode = taskDataMap["serviceCode"] as String
