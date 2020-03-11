@@ -39,7 +39,7 @@ interface LogClient {
 
     fun prepareMultiSearch(buildId: String) = getClient(buildId).prepareMultiSearch()
 
-    fun prepareSearchScroll(buildId: String, scrollId: String) = getClient(buildId).prepareSearchScroll(buildId)
+    fun prepareSearchScroll(buildId: String, scrollId: String) = getClient(buildId).prepareSearchScroll(scrollId)
 
     fun prepareIndex(buildId: String, index: String, type: String) = getClient(buildId).prepareIndex(index, type)
 
