@@ -72,12 +72,6 @@ import com.tencent.devops.process.engine.atom.vm.DispatchBuildLessDockerStartupT
 import com.tencent.devops.process.engine.atom.vm.DispatchVMShutdownTaskAtom
 import com.tencent.devops.process.engine.atom.vm.DispatchVMStartupTaskAtom
 import com.tencent.devops.process.engine.cfg.BuildIdGenerator
-import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION
-import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION_DESC
-import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION_PARAMS
-import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION_SUGGEST
-import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION_USERID
-import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.dao.PipelineBuildContainerDao
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.dao.PipelineBuildStageDao
@@ -100,6 +94,7 @@ import com.tencent.devops.process.engine.pojo.event.PipelineBuildStageEvent
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.pipeline.option.StageControlOption
 import com.tencent.devops.common.service.utils.SpringContextUtil
+import com.tencent.devops.process.engine.common.*
 import com.tencent.devops.process.pojo.BuildBasicInfo
 import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.process.pojo.PipelineBuildMaterial
@@ -162,8 +157,8 @@ class PipelineRuntimeService @Autowired constructor(
     private val pipelineBuildDao: PipelineBuildDao,
     private val pipelineBuildSummaryDao: PipelineBuildSummaryDao,
     private val pipelineBuildTaskDao: PipelineBuildTaskDao,
-    private val pipelineBuildStageDao: PipelineBuildStageDao,
     private val pipelineBuildContainerDao: PipelineBuildContainerDao,
+    private val pipelineBuildStageDao: PipelineBuildStageDao,
     private val pipelineBuildVarDao: PipelineBuildVarDao,
     private val buildDetailDao: BuildDetailDao,
     private val buildStartupParamService: BuildStartupParamService,
@@ -846,9 +841,12 @@ class PipelineRuntimeService @Autowired constructor(
                 if (index != 0) PipelineBuildStageControlOption(
                     stageControlOption = stage.stageControlOption ?: StageControlOption(
                         enable = true,
-                        runCondition = StageRunCondition.AFTER_LAST_FINISHED
+                        runCondition = StageRunCondition.AFTER_LAST_FINISHED,
+                        timeout = Timeout.DEFAULT_STAGE_TIMEOUT_HOURS
                     ),
-                    fastKill = stage.fastKill
+                    fastKill = stage.fastKill,
+                    manualTrigger = stage.manualTrigger,
+                    triggerUsers = stage.triggerUsers
                 ) else null
             var needUpdateStage = false
             if (stage.name.isNullOrBlank()) stage.name = stage.id

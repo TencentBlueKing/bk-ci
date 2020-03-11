@@ -43,6 +43,9 @@ import com.tencent.devops.process.engine.service.PipelineRuntimeExtService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.process.engine.common.Timeout
+import com.tencent.devops.process.engine.pojo.PipelineBuildStage
+import com.tencent.devops.process.engine.pojo.event.PipelineBuildStageEvent
 import com.tencent.devops.process.pojo.mq.PipelineBuildContainerEvent
 import com.tencent.devops.process.service.PipelineSettingService
 import org.slf4j.LoggerFactory
@@ -88,15 +91,28 @@ class BuildMonitorControl @Autowired constructor(
                 !BuildStatus.isFinish(it.status)
             }
 
-        if (containers.isEmpty()) {
-            logger.info("[${event.buildId}]|monitor| have not need monitor job!")
+        val stages = pipelineRuntimeService.listStages(event.buildId)
+            .filter {
+                !BuildStatus.isFinish(it.status)
+            }
+
+        if (containers.isEmpty() && stages.isEmpty()) {
+            logger.info("[${event.buildId}]|monitor| have not need monitor job and stage!")
             return true
         }
 
         var minInterval = MAX_MILLS
 
         containers.forEach { container ->
-            val interval = container.checkNextMonitorIntervals(event.userId)
+            val interval = container.checkNextContainerMonitorIntervals(event.userId)
+            // 根据最小的超时时间来决定下一次监控执行的时间
+            if (interval in 1 until minInterval) {
+                minInterval = interval
+            }
+        }
+
+        stages.forEach { stage ->
+            val interval = stage.checkNextStageMonitorIntervals(event.userId)
             // 根据最小的超时时间来决定下一次监控执行的时间
             if (interval in 1 until minInterval) {
                 minInterval = interval
@@ -115,9 +131,10 @@ class BuildMonitorControl @Autowired constructor(
     companion object {
         val MAX_MINUTES = TimeUnit.DAYS.toMinutes(7L) // 7 * 24 * 60 = 10080 分钟 = 最多超时7天
         val MAX_MILLS = TimeUnit.MINUTES.toMillis(MAX_MINUTES).toInt() + 1 // 毫秒+1
+        val MAX_HOURS = TimeUnit.DAYS.toHours(30)
     }
 
-    private fun PipelineBuildContainer.checkNextMonitorIntervals(userId: String): Int {
+    private fun PipelineBuildContainer.checkNextContainerMonitorIntervals(userId: String): Int {
 
         var interval = 0
 
@@ -125,7 +142,7 @@ class BuildMonitorControl @Autowired constructor(
             logger.info("[$buildId]|container=$containerId| is $status")
             return interval
         }
-        var minute = controlOption?.jobControlOption?.timeout ?: 900
+        var minute = controlOption?.jobControlOption?.timeout ?: Timeout.DEFAULT_TIMEOUT_MIN
         if (minute <= 0 || minute > MAX_MINUTES) {
             minute = MAX_MINUTES.toInt()
         }
@@ -172,6 +189,56 @@ class BuildMonitorControl @Autowired constructor(
                     containerType = containerType,
                     actionType = ActionType.TERMINATE,
                     reason = errorInfo.message ?: "Job运行达到($minute)分钟，超时结束运行!"
+                )
+            )
+        }
+
+        return interval
+    }
+
+    private fun PipelineBuildStage.checkNextStageMonitorIntervals(userId: String): Int {
+
+        var interval = 0
+
+        if (BuildStatus.isFinish(status)) {
+            logger.info("[$buildId]|stage=$stageId| is $status")
+            return interval
+        }
+        var hours = controlOption?.stageControlOption?.timeout ?: Timeout.DEFAULT_STAGE_TIMEOUT_HOURS
+        if (hours <= 0 || hours > MAX_HOURS) {
+            hours = MAX_HOURS.toInt()
+        }
+        val timeoutMills = TimeUnit.HOURS.toMillis(hours.toLong())
+
+        val usedTimeMills: Long = if (BuildStatus.isRunning(status) && startTime != null) {
+            System.currentTimeMillis() - startTime!!.timestampmilli()
+        } else {
+            0
+        }
+
+        logger.info("[$buildId]|stage=$stageId|timeoutMills=$timeoutMills|useTimeMills=$usedTimeMills")
+
+        interval = (timeoutMills - usedTimeMills).toInt()
+        if (interval <= 0) {
+            LogUtils.addRedLine(
+                rabbitTemplate = rabbitTemplate,
+                buildId = buildId,
+                message = "审核触发时间超过($hours)小时，流水线将无法继续执行",
+                tag = stageId,
+                jobId = "",
+                executeCount = 1
+            )
+            logger.warn("[$buildId]|monitor_stage_timeout|stage=$stageId")
+            // 将改stage状态设为STAGE_SUCCESS
+            pipelineEventDispatcher.dispatch(
+                PipelineBuildStageEvent(
+                    source = "running_timeout",
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    userId = userId,
+                    buildId = buildId,
+                    stageId = stageId,
+                    actionType = ActionType.END
                 )
             )
         }

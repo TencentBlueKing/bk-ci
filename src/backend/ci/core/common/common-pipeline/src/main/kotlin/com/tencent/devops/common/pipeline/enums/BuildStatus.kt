@@ -72,7 +72,7 @@ enum class BuildStatus(val statusName: String, val visiable: Boolean) {
         fun isFinish(status: BuildStatus) = isFailure(status) || isSuccess(status)
 
         fun isSuccess(status: BuildStatus) =
-            status == SUCCEED || status == SKIP || status == REVIEW_PROCESSED
+            status == SUCCEED || status == SKIP || status == REVIEW_PROCESSED || status == STAGE_SUCCESS
 
         fun isRunning(status: BuildStatus) =
             isLoop(status) || status == REVIEWING || status == PREPARE_ENV || status == CALL_WAITING
