@@ -88,7 +88,7 @@ class StageControl @Autowired constructor(
 
             var buildStatus: BuildStatus = BuildStatus.SUCCEED
 
-            val needPause = stage.controlOption?.manualTrigger == true && source != "manual_trigger_stage"
+            val needPause = stage.controlOption?.stageControlOption?.manualTrigger == true && source != "manual_trigger_stage"
 
             val fastKill = stage.controlOption?.fastKill == true && source == "CONTAINER_END_FAILED"
 
