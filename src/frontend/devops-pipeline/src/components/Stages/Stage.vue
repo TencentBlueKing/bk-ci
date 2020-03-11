@@ -230,7 +230,6 @@
             },
 
             showStagePanel () {
-                console.log(1, this.stageIndex)
                 const { stageIndex } = this
                 this.togglePropertyPanel({
                     isShow: true,
