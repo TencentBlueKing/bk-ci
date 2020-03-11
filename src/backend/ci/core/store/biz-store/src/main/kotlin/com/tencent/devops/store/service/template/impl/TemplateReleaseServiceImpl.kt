@@ -210,6 +210,7 @@ abstract class TemplateReleaseServiceImpl @Autowired constructor() : TemplateRel
         templateStatus: Byte,
         marketTemplateUpdateRequest: MarketTemplateUpdateRequest
     ) {
+        logger.info("upgradeMarketTemplate： templateId=$templateId,templateStatus=$templateStatus")
         val dbVersion = templateRecord.version
         val version = (dbVersion.toInt() + 1).toString() // 每次升级模板版本号加1
         marketTemplateDao.upgradeMarketTemplate(
@@ -255,6 +256,7 @@ abstract class TemplateReleaseServiceImpl @Autowired constructor() : TemplateRel
         templateStatus: Byte,
         templateStatusMsg: String
     ) {
+        logger.info("handleTemplateRelease: userId=$userId,templateStatus=$templateStatus")
         val latestFlag = approveResult == PASS
         var pubTime: LocalDateTime? = null
         if (latestFlag) {
@@ -352,11 +354,13 @@ abstract class TemplateReleaseServiceImpl @Autowired constructor() : TemplateRel
     }
 
     private fun getNormalUpgradeFlag(templateCode: String, status: Int): Boolean {
+        logger.info("templateApproveSwitch: $templateApproveSwitch")
         if (templateApproveSwitch == "open") {
             val releaseTotalNum = marketTemplateDao.countReleaseTemplateByCode(dslContext, templateCode)
             val currentNum = if (status == TemplateStatusEnum.RELEASED.status) 1 else 0
             return releaseTotalNum > currentNum
         } else {
+            logger.info("no approve required")
             return true
         }
     }
