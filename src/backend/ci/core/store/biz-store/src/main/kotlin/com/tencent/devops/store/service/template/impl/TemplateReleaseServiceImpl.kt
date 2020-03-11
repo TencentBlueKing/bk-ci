@@ -88,6 +88,9 @@ abstract class TemplateReleaseServiceImpl @Autowired constructor() : TemplateRel
 
     private val logger = LoggerFactory.getLogger(TemplateReleaseServiceImpl::class.java)
 
+    @Value("\${store.templateApproveSwitch}")
+    protected lateinit var templateApproveSwitch: String
+
     override fun addMarketTemplate(userId: String, templateCode: String, marketTemplateRelRequest: MarketTemplateRelRequest): Result<Boolean> {
         logger.info("the userId is :$userId,templateCode is :$templateCode,marketTemplateRelRequest is :$marketTemplateRelRequest")
         // 判断模板代码是否存在
@@ -348,9 +351,13 @@ abstract class TemplateReleaseServiceImpl @Autowired constructor() : TemplateRel
     }
 
     private fun getNormalUpgradeFlag(templateCode: String, status: Int): Boolean {
-        val releaseTotalNum = marketTemplateDao.countReleaseTemplateByCode(dslContext, templateCode)
-        val currentNum = if (status == TemplateStatusEnum.RELEASED.status) 1 else 0
-        return releaseTotalNum > currentNum
+        if (templateApproveSwitch == "ON") {
+            val releaseTotalNum = marketTemplateDao.countReleaseTemplateByCode(dslContext, templateCode)
+            val currentNum = if (status == TemplateStatusEnum.RELEASED.status) 1 else 0
+            return releaseTotalNum > currentNum
+        } else {
+            return true
+        }
     }
 
     abstract fun handleProcessInfo(isNormalUpgrade: Boolean, status: Int): List<ReleaseProcessItem>
