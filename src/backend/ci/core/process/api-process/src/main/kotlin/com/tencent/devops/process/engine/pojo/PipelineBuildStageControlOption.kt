@@ -34,7 +34,5 @@ import com.tencent.devops.common.pipeline.option.StageControlOption
  */
 data class PipelineBuildStageControlOption(
     val stageControlOption: StageControlOption,
-    val fastKill: Boolean? = false,
-    val manualTrigger: Boolean? = false,
-    val triggerUsers: List<String>? = null
+    val fastKill: Boolean? = false
 )
