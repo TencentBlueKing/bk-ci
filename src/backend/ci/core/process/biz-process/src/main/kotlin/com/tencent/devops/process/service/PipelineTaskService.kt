@@ -31,6 +31,7 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.log.utils.LogUtils
 import com.tencent.devops.process.dao.PipelineTaskDao
 import com.tencent.devops.process.engine.control.ControlUtils
 import com.tencent.devops.process.engine.dao.PipelineModelTaskDao
@@ -39,6 +40,7 @@ import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.pojo.PipelineProjectRel
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
+import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -49,6 +51,7 @@ class PipelineTaskService @Autowired constructor(
     val objectMapper: ObjectMapper,
     val pipelineTaskDao: PipelineTaskDao,
     val pipelineModelTaskDao: PipelineModelTaskDao,
+    private val rabbitTemplate: RabbitTemplate,
     private val pipelineRuntimeService: PipelineRuntimeService
 ) {
 
@@ -111,11 +114,20 @@ class PipelineTaskService @Autowired constructor(
         val isRry = ControlUtils.retryWhenFailure(taskRecord!!.additionalOptions, retryCount)
         if (isRry) {
             logger.info("retry task [$buildId]|stageId=${taskRecord.stageId}|container=${taskRecord.containerId}|taskId=$taskId|retryCount=$retryCount |vm atom will retry, even the task is failure")
-
-            redisOperation.set(getRedisKey(taskRecord!!.buildId, taskRecord.taskId), (retryCount + 1).toString())
+            val nextCount = retryCount + 1
+            redisOperation.set(getRedisKey(taskRecord!!.buildId, taskRecord.taskId), nextCount.toString())
+            LogUtils.addYellowLine(
+                rabbitTemplate = rabbitTemplate,
+                buildId = buildId,
+                message = "插件${taskRecord.taskName}执行失败, 5s后开始执行第${nextCount}次重试",
+                tag = taskRecord.taskId,
+                jobId = taskRecord.containerId,
+                executeCount = 1
+            )
         }
         return isRry
     }
+
 
     fun removeRetryCache(buildId: String, taskId: String) {
         // 清除该原子内的重试记录

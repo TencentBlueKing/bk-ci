@@ -522,6 +522,8 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
         } else {
             if (pipelineTaskService.isRetryWhenFail(result.taskId, buildId)) {
                 logger.info("task fail,user setting retry, build[$buildId], taskId[${result.taskId}, elementId[${result.elementId}]]")
+                // 此处休眠5s作为重试的冷却时间
+                Thread.sleep(5000)
                 BuildStatus.RETRY
             } else {
                 BuildStatus.FAILED
