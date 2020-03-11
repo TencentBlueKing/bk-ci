@@ -541,7 +541,7 @@
         "customVar": "Custom variables",
         "abortSuc": "Abort successfully",
         "agreeSuc": "Approval successfully",
-        "toCheck": "To Review",
+        "toCheck": "Review",
         "noAuthToCheck": "No Access",
         "abortTips": "Review has not passed",
         "checkUser": "Reviewer",
