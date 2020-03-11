@@ -759,7 +759,7 @@ class PipelineBuildService(
                 errorCode = ProcessMessageCode.ERROR_NO_STAGE_EXISTS_BY_ID,
                 defaultMessage = "构建阶段${stageId}不存在",
                 params = arrayOf(stageId))
-        if (buildStage.controlOption?.stageControlOption?.triggerUsers?.contains(userId) != true)
+        if (buildStage.controlOption?.triggerUsers?.contains(userId) != true)
             throw ErrorCodeException(
                 statusCode = Response.Status.FORBIDDEN.statusCode,
                 errorCode = ProcessMessageCode.USER_NEED_PIPELINE_X_PERMISSION.toString(),
