@@ -43,6 +43,6 @@ data class ExtServiceBaseInfoDTO(
     val version: String,
     @ApiModelProperty("扩展服务镜像信息", required = true)
     val extServiceImageInfo: ExtServiceImageInfoDTO,
-    @ApiModelProperty("扩展服务镜像信息", required = true)
+    @ApiModelProperty("扩展服务部署信息", required = true)
     val extServiceDeployInfo: DeployApp
 )
