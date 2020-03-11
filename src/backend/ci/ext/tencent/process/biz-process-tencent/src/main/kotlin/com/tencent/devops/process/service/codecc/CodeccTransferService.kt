@@ -53,6 +53,68 @@ class CodeccTransferService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(CodeccTransferService::class.java)
     }
 
+    fun addToolSetToPipeline(projectId: String, pipelineIds: Set<String>, toolRuleSet: String): Map<String, String> {
+        val result = mutableMapOf<String, String>()
+        pipelineTaskService.list(projectId, pipelineIds).map {
+            val resultMsg = try {
+                doAddToolSetToPipeline(projectId, it, toolRuleSet)
+            } catch (e: Exception) {
+                logger.error("add pipeline ${it.key} rule($toolRuleSet) fail", e)
+                e.message ?: "unexpected error occur"
+            }
+            result[it.key] = resultMsg
+        }
+        return result
+    }
+
+    private fun doAddToolSetToPipeline(projectId: String, it: Map.Entry<String, List<PipelineModelTask>>, toolRuleSet: String): String {
+        val pipelineId = it.key
+
+        val newCodeccTask = it.value.filter { task -> task.taskParams["atomCode"] == "CodeccCheckAtom" }
+        if (newCodeccTask.isEmpty()) {
+            return "$pipelineId do not contains new codecc element"
+        }
+
+        val model = pipelineRepositoryService.getModel(pipelineId)!!
+        val pipelineInfo = pipelineRepositoryService.getPipelineInfo(pipelineId)
+        logger.info("get pipeline info for pipeline: $pipelineId, $pipelineInfo")
+        model.stages.forEach { stage ->
+            stage.containers.forEach { container ->
+                container.elements.forEach { element ->
+                    if (element.getAtomCode() == "CodeccCheckAtom") {
+                        logger.info("get new codecc element for pipeline: $pipelineId")
+                        val newElement = element as MarketBuildAtomElement
+                        val languages = newElement.data["languages"] as List<ProjectLanguage>
+                        if (languages.contains(ProjectLanguage.C_CPP)) {
+                            // add the first place
+                            val languageRuleSetMap = newElement.data["languageRuleSetMap"] as Map<String, List<String>>
+                            val cppRule = languageRuleSetMap["C_CPP_RULE"]?.toMutableList() ?: mutableListOf()
+                            cppRule.add(toolRuleSet)
+
+                            // add the second place
+                            val cppRule2 = newElement.data["C_CPP_RULE"] as List<String>
+                            cppRule2.toMutableList().add(toolRuleSet)
+                        }
+                    }
+                }
+            }
+        }
+
+        // save pipeline
+        logger.info("edit pipeline: $pipelineId")
+        pipelineService.editPipeline(
+            userId = pipelineInfo?.lastModifyUser ?: "",
+            projectId = projectId,
+            pipelineId = pipelineId,
+            model = model,
+            channelCode = ChannelCode.BS,
+            checkPermission = false,
+            checkTemplate = false
+        )
+
+        return "add rule($toolRuleSet) to pipeline($pipelineId) success"
+    }
+
     fun transferToV2(projectId: String, pipelineIds: Set<String>): Map<String, String> {
         val result = mutableMapOf<String, String>()
         pipelineTaskService.list(projectId, pipelineIds).map {
