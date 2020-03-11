@@ -28,16 +28,20 @@ package com.tencent.devops.artifactory.service.bkrepo
 
 import com.tencent.devops.artifactory.pojo.FileDetail
 import com.tencent.devops.artifactory.pojo.FileInfo
+import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.artifactory.service.PipelineDirService
 import com.tencent.devops.artifactory.service.PipelineService
+import com.tencent.devops.artifactory.util.JFrogUtil
 import com.tencent.devops.artifactory.util.PathUtils
 import com.tencent.devops.artifactory.util.RepoUtils
+import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.archive.client.BkRepoClient
-import com.tencent.devops.common.archive.pojo.JFrogFileInfo
 import com.tencent.devops.common.auth.api.AuthPermission
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import javax.ws.rs.NotFoundException
 
 @Service
@@ -50,38 +54,116 @@ class BkRepoPipelineDirService @Autowired constructor(
     }
 
     override fun list(userId: String, projectId: String, path: String, authPermission: AuthPermission): List<FileInfo> {
+        logger.info("list, userId: $userId, projectId: $projectId, path: $path, authPermission: $authPermission")
         val normalizedPath = PathUtils.checkAndNormalizeAbsPath(path)
-        val jFrogFileInfoList = bkRepoClient.listFile(
+        val fileList = bkRepoClient.listFile(
             userId,
             projectId,
             RepoUtils.PIPELINE_REPO,
             normalizedPath,
             includeFolders = true,
             deep = false
-        ).map {
-            JFrogFileInfo(
-                uri = it.fullPath.removePrefix("/"),
-                size = it.size,
-                lastModified = it.lastModifiedDate,
-                folder = it.folder
-            )
-        }
+        )
 
         return when {
             pipelineService.isRootDir(normalizedPath) -> {
-                pipelineService.getRootPathFileList(userId, projectId, normalizedPath, jFrogFileInfoList, authPermission)
+                getRootPathFileList(userId, projectId, normalizedPath, fileList, authPermission)
             }
             pipelineService.isPipelineDir(normalizedPath) -> {
                 val pipelineId = pipelineService.getPipelineId(normalizedPath)
                 pipelineService.validatePermission(userId, projectId, pipelineId, authPermission, "用户($userId)在工程($projectId)下没有流水线${authPermission.alias}权限")
-                pipelineService.getPipelinePathList(projectId, normalizedPath, jFrogFileInfoList)
+                getPipelinePathList(projectId, normalizedPath, fileList)
             }
             else -> {
                 val pipelineId = pipelineService.getPipelineId(normalizedPath)
                 pipelineService.validatePermission(userId, projectId, pipelineId, authPermission, "用户($userId)在工程($projectId)下没有流水线${authPermission.alias}权限")
-                pipelineService.getBuildPathList(projectId, normalizedPath, jFrogFileInfoList)
+                getBuildPathList(projectId, normalizedPath, fileList)
             }
         }
+    }
+
+    fun getRootPathFileList(userId: String, projectId: String, path: String, fileList: List<com.tencent.bkrepo.generic.pojo.FileInfo>, authPermission: AuthPermission): List<FileInfo> {
+        logger.info("getRootPathFileList: userId: $userId, projectId: $projectId, path: $path, fileList: $fileList, authPermission: $authPermission")
+        val hasPermissionList = pipelineService.filterPipeline(userId, projectId, authPermission)
+        val pipelineIdToNameMap = pipelineService.getPipelineNames(projectId, hasPermissionList.toSet())
+
+        val fileInfoList = mutableListOf<FileInfo>()
+        fileList.forEach {
+            val fullPath = it.fullPath
+            val pipelineId = pipelineService.getPipelineId(fullPath)
+            if (pipelineIdToNameMap.containsKey(pipelineId)) {
+                val pipelineName = pipelineIdToNameMap[pipelineId]!!
+                val fullName = pipelineService.getFullName(fullPath, pipelineId, pipelineName)
+                fileInfoList.add(
+                    FileInfo(
+                        name = pipelineName,
+                        fullName = fullName,
+                        path = it.path,
+                        fullPath = fullPath,
+                        size = it.size,
+                        folder = it.folder,
+                        modifiedTime = LocalDateTime.parse(it.lastModifiedDate, DateTimeFormatter.ISO_DATE_TIME).timestamp(),
+                        artifactoryType = ArtifactoryType.PIPELINE
+                    )
+                )
+            }
+        }
+        return JFrogUtil.sort(fileInfoList)
+    }
+
+    fun getPipelinePathList(projectId: String, path: String, fileList: List<com.tencent.bkrepo.generic.pojo.FileInfo>): List<FileInfo> {
+        logger.info("getPipelinePathList: projectId: $projectId, path: $path, fileList: $fileList")
+        val pipelineId = pipelineService.getPipelineId(path)
+        val pipelineName = pipelineService.getPipelineName(projectId, pipelineId)
+        val buildIdList = fileList.map { pipelineService.getBuildId(it.fullPath) }
+        val buildIdToNameMap = pipelineService.getBuildNames(buildIdList.toSet())
+
+        val fileInfoList = mutableListOf<FileInfo>()
+        fileList.forEach {
+            val fullPath = it.fullPath
+            val buildId = pipelineService.getBuildId(fullPath)
+            if (buildIdToNameMap.containsKey(buildId)) {
+                val buildName = buildIdToNameMap[buildId]!!
+                val fullName = pipelineService.getFullName(fullPath, pipelineId, pipelineName, buildId, buildName)
+                fileInfoList.add(
+                    FileInfo(
+                        name = buildName,
+                        fullName = fullName,
+                        path = it.path,
+                        fullPath = fullPath,
+                        size = it.size,
+                        folder = it.folder,
+                        modifiedTime = LocalDateTime.parse(it.lastModifiedDate, DateTimeFormatter.ISO_DATE_TIME).timestamp(),
+                        artifactoryType = ArtifactoryType.PIPELINE
+                    )
+                )
+            }
+        }
+        return JFrogUtil.sort(fileInfoList)
+    }
+
+    fun getBuildPathList(projectId: String, path: String, fileList: List<com.tencent.bkrepo.generic.pojo.FileInfo>): List<FileInfo> {
+        logger.info("getBuildPathList: projectId: $projectId, path: $path, fileList: $fileList")
+        val pipelineId = pipelineService.getPipelineId(path)
+        val buildId = pipelineService.getBuildId(path)
+        val pipelineName = pipelineService.getPipelineName(projectId, pipelineId)
+        val buildName = pipelineService.getBuildName(buildId)
+
+        val fileInfoList = fileList.map {
+            val fullPath = it.fullPath
+            val fullName = pipelineService.getFullName(fullPath, pipelineId, pipelineName, buildId, buildName)
+            FileInfo(
+                name = it.name,
+                fullName = fullName,
+                path = it.path,
+                fullPath = fullPath,
+                size = it.size,
+                folder = it.folder,
+                modifiedTime = LocalDateTime.parse(it.lastModifiedDate, DateTimeFormatter.ISO_DATE_TIME).timestamp(),
+                artifactoryType = ArtifactoryType.PIPELINE
+            )
+        }
+        return JFrogUtil.sort(fileInfoList)
     }
 
     override fun show(userId: String, projectId: String, path: String): FileDetail {
