@@ -22,7 +22,7 @@ store:
   imageAdminUsers: admin
   buildResultBaseUrl: __HTTP_SCHEMA__://__BKCI_FQDN__:__BKCI_HTTP_PORT__/console/pipeline
   defaultImageSourceType: bkdevops
-  defaultImageRepoUrl: artifactory.test.com:8090
+  defaultImageRepoUrl: __HTTP_SCHEMA__://__JFROG_FQDN__:__DOCKER_PORT__
   defaultImageRepoName: paas/bkdevops/docker-builder2.2
   defaultImageTag: v1
   defaultTicketId:
