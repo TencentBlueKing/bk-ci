@@ -73,7 +73,10 @@
                 if (this.stage && this.stage.stageControlOption) {
                     return {
                         ...this.stage.stageControlOption,
-                        fastKill: this.stage.fastKill
+                        fastKill: this.stage.fastKill,
+                        manualTrigger: this.stage.manualTrigger,
+                        triggerUsers: this.stage.triggerUsers,
+                        timeout: this.stage.timeout
                     }
                 }
                 return undefined

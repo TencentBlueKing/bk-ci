@@ -15,6 +15,27 @@
                     <bk-checkbox :disabled="disabled" v-model="stageFastKill">
                         {{ $t('stageFastKill') }}
                     </bk-checkbox>
+                    <i v-bk-tooltips="$t('stageFastKillDesc')" class="bk-icon icon-info-circle" />
+                </bk-form-item>
+                <bk-form-item>
+                    <bk-checkbox :disabled="disabled" v-model="manualTrigger">
+                        {{ $t('enableStageReview') }}
+                    </bk-checkbox>
+                    <i v-bk-tooltips="$t('stageReviewDesc')" class="bk-icon icon-info-circle" />
+                </bk-form-item>
+                <template v-if="manualTrigger">
+                    <bk-form-item class="stage-trigger-member-input" :label="$t('stageUserTriggers')" :required="true" :class="{ 'is-error': !hasTriggerMember }" :desc="$t('stageTriggerDesc')">
+                        <bk-input :clearable="true" :disabled="disabled" v-model="triggerUsers"></bk-input>
+                        <p v-if="!hasTriggerMember" class="mt5 mb0">{{ $t('editPage.stageManualTriggerUserNoEmptyTips') }}</p>
+                    </bk-form-item>
+                </template>
+                <bk-form-item class="stage-timeout-input" :label="$t('stageTimeoutLabel')" :required="true" :class="{ 'is-error': !validTimeout }" :desc="$t('storeMap.timeoutDesc')">
+                    <bk-input type="number" :disabled="disabled" v-model="timeout" :min="1" :max="10080">
+                        <template slot="append">
+                            <div class="group-text">{{ $t('settings.minutes') }}</div>
+                        </template>
+                    </bk-input>
+                    <p v-if="!validTimeout" class="mt5 mb0">{{ $t('stageTimeoutError') }}</p>
                 </bk-form-item>
                 <bk-form-item :label="$t('stageOptionLabel')">
                     <bk-select :disabled="disabled" v-model="stageCondition" searchable>
@@ -28,12 +49,6 @@
                 <bk-form-item v-if="showVariable">
                     <key-value-normal :disabled="disabled" :value="variables" :allow-null="false" name="customVariables" :handle-change="handleUpdateStageControl"></key-value-normal>
                 </bk-form-item>
-                <template v-if="showMemberInput">
-                    <bk-form-item class="stage-trigger-member-input" label="stage执行人:" :required="true" :class="{ 'is-error': !hasTriggerMember }" :desc="$t('stageTriggerDesc')">
-                        <bk-input :clearable="true" :disabled="disabled" v-model="triggerUsers" />
-                        <p v-if="!hasTriggerMember" class="mt5 mb0">{{ $t('editPage.stageManualTriggerUserNoEmptyTips') }}</p>
-                    </bk-form-item>
-                </template>
             </bk-form>
         </div>
     </accordion>
@@ -80,6 +95,22 @@
                     this.handleStageChange('fastKill', fastKill)
                 }
             },
+            manualTrigger: {
+                get () {
+                    return this.stageControl.manualTrigger
+                },
+                set (manualTrigger) {
+                    this.handleStageChange('manualTrigger', manualTrigger)
+                }
+            },
+            timeout: {
+                get () {
+                    return this.stageControl.timeout
+                },
+                set (timeout) {
+                    this.handleStageChange('timeout', timeout)
+                }
+            },
             stageCondition: {
                 get () {
                     return this.stageControl.runCondition
@@ -96,17 +127,12 @@
                     return this.stageControl && Array.isArray(this.stageControl.triggerUsers) ? this.stageControl.triggerUsers.join(',') : ''
                 },
                 set (triggerUsers) {
-                    console.log('set', triggerUsers)
-                    this.handleUpdateStageControl('triggerUsers', triggerUsers.split(','))
+                    this.handleStageChange('triggerUsers', triggerUsers.split(','))
                 }
 
             },
             conditionConf () {
                 return [
-                    {
-                        id: 'MANUAL_TRIGGER',
-                        name: this.$t('storeMap.manualRunStage')
-                    },
                     {
                         id: 'AFTER_LAST_FINISHED',
                         name: this.$t('storeMap.afterPreStageSuccess')
@@ -124,26 +150,26 @@
             showVariable () {
                 return ['CUSTOM_VARIABLE_MATCH', 'CUSTOM_VARIABLE_MATCH_NOT_RUN'].indexOf(this.stageCondition) > -1
             },
-            showMemberInput () {
-                return this.stageCondition === 'MANUAL_TRIGGER'
-            },
             hasTriggerMember () {
                 try {
-                    return this.showMemberInput && this.triggerUsers.length > 0
+                    return this.manualTrigger && this.triggerUsers.length > 0
                 } catch (e) {
                     return false
                 }
+            },
+            validTimeout () {
+                return /\d+/.test(this.timeout) && parseInt(this.timeout) > 0 && parseInt(this.timeout) <= 10080
             }
         },
         watch: {
             showVariable (val) {
                 !val && this.handleUpdateStageControl('customVariables', [{ key: 'param1', value: '' }])
             },
-            showMemberInput (val) {
+            manualTrigger (val) {
                 !val && this.handleUpdateStageControl('triggerUsers', [])
             },
             triggerUsers (triggerUsers) {
-                this.handleStageChange('isError', triggerUsers.length === 0 && this.showMemberInput)
+                this.handleStageChange('isError', triggerUsers.length === 0 && this.manualTrigger)
             }
         },
         created () {
@@ -167,10 +193,11 @@
                     this.handleStageChange('stageControlOption', {
                         enable: true,
                         runCondition: 'AFTER_LAST_FINISHED',
-                        customVariables: [{ key: 'param1', value: '' }],
-                        triggerUsers: []
+                        customVariables: [{ key: 'param1', value: '' }]
                     })
                     this.handleStageChange('fastKill', false)
+                    this.handleStageChange('manualTrigger', false)
+                    this.handleStageChange('timeout', 900)
                 }
             },
             setKeyValueValidate (addErrors, removeErrors) {
@@ -181,7 +208,8 @@
 </script>
 
 <style lang="scss">
-    .stage-trigger-member-input.is-error {
+    .stage-trigger-member-input.is-error,
+    .stage-timeout-input.is-error {
         color: #ff5656;
     }
 </style>
