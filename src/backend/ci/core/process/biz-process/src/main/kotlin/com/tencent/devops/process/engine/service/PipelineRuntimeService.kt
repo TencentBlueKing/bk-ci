@@ -842,11 +842,11 @@ class PipelineRuntimeService @Autowired constructor(
                     stageControlOption = stage.stageControlOption ?: StageControlOption(
                         enable = true,
                         runCondition = StageRunCondition.AFTER_LAST_FINISHED,
-                        timeout = Timeout.DEFAULT_STAGE_TIMEOUT_HOURS
+                        timeout = Timeout.DEFAULT_STAGE_TIMEOUT_HOURS,
+                        manualTrigger = false,
+                        triggerUsers = null
                     ),
-                    fastKill = stage.fastKill,
-                    manualTrigger = stage.manualTrigger,
-                    triggerUsers = stage.triggerUsers
+                    fastKill = stage.fastKill
                 ) else null
             var needUpdateStage = false
             if (stage.name.isNullOrBlank()) stage.name = stage.id
