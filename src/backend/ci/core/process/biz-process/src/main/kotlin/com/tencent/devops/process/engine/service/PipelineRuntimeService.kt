@@ -1704,6 +1704,8 @@ class PipelineRuntimeService @Autowired constructor(
             throw Exception("getCommitsByBuildId failed")
         }
 
+        logger.info("getCommitsByBuildId response: ${commitResponse.data}")
+
         commitResponse.data!!.forEach {
             it.records.forEach { it1 ->
                 materialList.add(
