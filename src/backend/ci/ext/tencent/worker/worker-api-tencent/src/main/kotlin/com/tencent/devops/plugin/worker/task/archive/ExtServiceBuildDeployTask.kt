@@ -40,12 +40,12 @@ import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.pipeline.element.market.ExtServiceBuildDeployElement
 import com.tencent.devops.common.pipeline.utils.ParameterUtils
 import com.tencent.devops.dockerhost.pojo.DockerBuildParam
-import com.tencent.devops.dockerhost.pojo.DockerRunParam
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import com.tencent.devops.worker.common.api.ApiFactory
 import com.tencent.devops.worker.common.api.archive.ArchiveSDKApi
+import com.tencent.devops.worker.common.api.dispatch.BcsResourceApi
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.task.ITask
 import com.tencent.devops.worker.common.task.TaskClassType
@@ -82,6 +82,11 @@ class ExtServiceBuildDeployTask : ITask() {
             errorType = ErrorType.SYSTEM,
             errorCode = ErrorCode.SYSTEM_SERVICE_ERROR
         )
+        val extServiceDeployInfo = buildVariableMap["extServiceDeployInfo"] ?: throw TaskExecuteException(
+            errorMsg = "param [extServiceDeployInfo] is empty",
+            errorType = ErrorType.SYSTEM,
+            errorCode = ErrorCode.SYSTEM_SERVICE_ERROR
+        )
         val taskParams = buildTask.params ?: mapOf()
         val packageName = taskParams["packageName"] ?: throw TaskExecuteException(
             errorMsg = "param [packageName] is empty",
@@ -102,11 +107,12 @@ class ExtServiceBuildDeployTask : ITask() {
         val file = File(workspace, filePath)
         val uploadFileUrl =
             "/ms/artifactory/api/build/artifactories/ext/services/projects/${buildVariables.projectId}/services/$serviceCode/versions/$serviceVersion/archive?destPath=$destPath"
-        val userId = ParameterUtils.getListValueByKey(buildVariables.variablesWithType, PIPELINE_START_USER_ID) ?: throw TaskExecuteException(
-            errorMsg = "user basic info error, please check environment.",
-            errorType = ErrorType.SYSTEM,
-            errorCode = ErrorCode.SYSTEM_SERVICE_ERROR
-        )
+        val userId = ParameterUtils.getListValueByKey(buildVariables.variablesWithType, PIPELINE_START_USER_ID)
+            ?: throw TaskExecuteException(
+                errorMsg = "user basic info error, please check environment.",
+                errorType = ErrorType.SYSTEM,
+                errorCode = ErrorCode.SYSTEM_SERVICE_ERROR
+            )
         val headers = mapOf(AUTH_HEADER_USER_ID to userId)
         val uploadResult = archiveApi.uploadFile(
             url = uploadFileUrl,
@@ -179,44 +185,15 @@ class ExtServiceBuildDeployTask : ITask() {
         LoggerService.addNormalLine("dockerBuildAndPushImage success")
         // 开始部署扩展服务
         LoggerService.addNormalLine("start deploy extService:$serviceCode(version:$serviceVersion)")
-        val dockerRunParam = DockerRunParam(
-            imageName = "$repoAddr/$imageName:$imageTag",
-            registryUser = userName,
-            registryPwd = password,
-            command = listOf(),
-            env = null
+        val deployAppResult = BcsResourceApi().deployApp(
+            userId = userId,
+            deployAppJsonStr = extServiceDeployInfo
         )
-        val dockerRunPath =
-            "/api/docker/run/$projectId/$pipelineId/$vmSeqId/$buildId"
-        val dockerRunBody = RequestBody.create(
-            MediaType.parse("application/json; charset=utf-8"),
-            JsonUtil.toJson(dockerRunParam)
-        )
-        // todo 启动docker服务的服务器IP算法待完善
-        val dockerRunUrl = "http://9.2.142.144$dockerRunPath"
-        val dockerRunRequest = Request.Builder()
-            .url(dockerRunUrl)
-            .post(dockerRunBody)
-            .build()
-        val dockerRunResponse = OkhttpUtils.doLongHttp(dockerRunRequest)
-        val dockerRunResponseContent = dockerRunResponse.body()?.string()
-        if (!dockerRunResponse.isSuccessful) {
-            logger.warn("Fail to request($dockerRunRequest) with code ${dockerRunResponse.code()} , message ${dockerRunResponse.message()} and response ($dockerRunResponseContent)")
-            LoggerService.addRedLine(dockerRunResponse.message())
+        logger.info("ExtServiceBuildDeployTask deployAppResult: $deployAppResult")
+        if (deployAppResult.isNotOk()) {
+            LoggerService.addRedLine(JsonUtil.toJson(deployAppResult))
             throw TaskExecuteException(
-                errorMsg = "dockerRun fail: message ${dockerRunResponse.message()} and response ($dockerRunResponseContent)",
-                errorType = ErrorType.SYSTEM,
-                errorCode = ErrorCode.SYSTEM_SERVICE_ERROR
-            )
-        }
-        val dockerRunResult =
-            JsonUtil.to(dockerRunResponseContent!!, object : TypeReference<Result<Boolean>>() {
-            })
-        LoggerService.addNormalLine("dockerRunResult: $dockerRunResult")
-        if (dockerRunResult.isNotOk()) {
-            LoggerService.addRedLine(JsonUtil.toJson(dockerRunResult))
-            throw TaskExecuteException(
-                errorMsg = "dockerRun fail: ${dockerRunResult.message}",
+                errorMsg = "deployApp fail: ${deployAppResult.message}",
                 errorType = ErrorType.SYSTEM,
                 errorCode = ErrorCode.SYSTEM_SERVICE_ERROR
             )

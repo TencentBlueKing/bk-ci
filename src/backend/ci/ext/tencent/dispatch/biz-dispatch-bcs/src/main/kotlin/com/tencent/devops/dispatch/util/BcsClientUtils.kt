@@ -40,24 +40,43 @@ import io.fabric8.kubernetes.client.DefaultKubernetesClient
 import io.fabric8.kubernetes.client.KubernetesClient
 import org.apache.commons.codec.binary.Base64
 import org.slf4j.LoggerFactory
+import java.util.concurrent.ConcurrentHashMap
 
 @SuppressWarnings("ALL")
 object BcsClientUtils {
 
     private val logger = LoggerFactory.getLogger(BcsClientUtils::class.java)
 
-    private val bcsKubernetesClient = createBcsKubernetesClient()
+    private val bcsKubernetesClientMap = ConcurrentHashMap<String, KubernetesClient>()
 
-    private fun createBcsKubernetesClient(): KubernetesClient {
+    fun getBcsKubernetesClientMap(): ConcurrentHashMap<String, KubernetesClient>{
+        return bcsKubernetesClientMap
+    }
+
+    private fun createBcsKubernetesClient(
+        bcsUrl: String,
+        token: String
+    ): KubernetesClient {
         val config = ConfigBuilder()
-            .withMasterUrl("https://bcs.ied.com:30443/tunnels/clusters/bcs-bcs-k8s-40089-voucrpgo-eitbwFRzIgOZsxQs")
+            .withMasterUrl(bcsUrl)
             .withTrustCerts(true)
-            .withOauthToken("GPyspRYTYkhXpttRPWWAraHXGXnXZreq")
+            .withOauthToken(token)
             .build()
         return DefaultKubernetesClient(config)
     }
 
-    fun getBcsKubernetesClient(): KubernetesClient {
+    fun getBcsKubernetesClient(
+        bcsUrl: String,
+        token: String
+    ): KubernetesClient {
+        val bcsKubernetesClientKey = "$bcsUrl;$token"
+        var bcsKubernetesClient = bcsKubernetesClientMap[bcsKubernetesClientKey]
+        if (bcsKubernetesClient == null) {
+            // 删除缓存中bcUrl相同但token因为过期不相同的记录
+            bcsKubernetesClientMap.entries.removeIf { entry -> entry.key.startsWith("$bcsUrl;") }
+            bcsKubernetesClient = createBcsKubernetesClient(bcsUrl, token)
+            bcsKubernetesClientMap[bcsKubernetesClientKey] = bcsKubernetesClient
+        }
         return bcsKubernetesClient
     }
 
@@ -67,6 +86,7 @@ object BcsClientUtils {
      * @param labelInfo 标签信息
      */
     fun createNamespace(
+        bcsKubernetesClient: KubernetesClient,
         namespaceName: String,
         labelInfo: KubernetesLabel
     ): Namespace {
@@ -90,6 +110,7 @@ object BcsClientUtils {
      * @param kubernetesRepoInfo k8s仓库信息
      */
     fun createImagePullSecret(
+        bcsKubernetesClient: KubernetesClient,
         secretName: String,
         namespaceName: String,
         kubernetesRepoInfo: KubernetesRepo
@@ -140,6 +161,7 @@ object BcsClientUtils {
      * @param deployment 无状态部署对象
      */
     fun createDeployment(
+        bcsKubernetesClient: KubernetesClient,
         namespaceName: String,
         deployment: Deployment
     ): Deployment {
@@ -152,6 +174,7 @@ object BcsClientUtils {
      * @param service service对象
      */
     fun createService(
+        bcsKubernetesClient: KubernetesClient,
         namespaceName: String,
         service: Service
     ): Service {
@@ -164,6 +187,7 @@ object BcsClientUtils {
      * @param ingress ingress对象
      */
     fun createIngress(
+        bcsKubernetesClient: KubernetesClient,
         namespaceName: String,
         ingress: Ingress
     ): Ingress {

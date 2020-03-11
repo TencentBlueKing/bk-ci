@@ -24,23 +24,26 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.pojo
+package com.tencent.devops.worker.common.api.dispatch
 
-import io.swagger.annotations.ApiModelProperty
+import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
+import okhttp3.MediaType
+import okhttp3.RequestBody
 
-data class DeployApp(
-    @ApiModelProperty("bcs请求路径", required = true)
-    val bcsUrl: String,
-    @ApiModelProperty("请求token", required = true)
-    val token: String,
-    @ApiModelProperty("k8s命名空间名称", required = true)
-    val namespaceName: String,
-    @ApiModelProperty("应用标识", required = true)
-    val appCode: String,
-    @ApiModelProperty("应用deployment", required = true)
-    val appDeployment: AppDeployment,
-    @ApiModelProperty("应用service", required = true)
-    val appService: AppService,
-    @ApiModelProperty(value = "应用ingress", required = false)
-    val appIngress: AppIngress
-)
+class BcsResourceApi : AbstractBuildResourceApi() {
+
+    fun deployApp(userId: String, deployAppJsonStr: String): Result<Boolean> {
+        val path = "/ms/dispatch/api/build/bcs/deploy/app"
+        val body = RequestBody.create(
+            MediaType.parse("application/json; charset=utf-8"),
+            deployAppJsonStr
+        )
+        val headMap = mapOf(AUTH_HEADER_USER_ID to userId)
+        val request = buildPost(path, body, headMap)
+        val responseContent = request(request, "部署应用失败")
+        return objectMapper.readValue(responseContent)
+    }
+}

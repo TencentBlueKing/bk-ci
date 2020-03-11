@@ -103,8 +103,34 @@ class ExtServiceBuildInitPipelineService @Autowired constructor(
         )
         params.add(
             BuildFormProperty(
-                "extServiceImageInfo", true, BuildFormPropertyType.STRING, JsonUtil.toJson(extServiceBaseInfo.extServiceImageInfo), null, null,
-                null, null, null, null, null, null
+                "extServiceImageInfo",
+                true,
+                BuildFormPropertyType.STRING,
+                JsonUtil.toJson(extServiceBaseInfo.extServiceImageInfo),
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+            )
+        )
+        params.add(
+            BuildFormProperty(
+                "extServiceDeployInfo",
+                true,
+                BuildFormPropertyType.STRING,
+                JsonUtil.toJson(extServiceBaseInfo.extServiceDeployInfo),
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
             )
         )
         params.add(
@@ -181,6 +207,7 @@ class ExtServiceBuildInitPipelineService @Autowired constructor(
         startParams["serviceCode"] = serviceCode
         startParams["version"] = extServiceBaseInfo.version
         startParams["extServiceImageInfo"] = JsonUtil.toJson(extServiceBaseInfo.extServiceImageInfo)
+        startParams["extServiceDeployInfo"] = JsonUtil.toJson(extServiceBaseInfo.extServiceDeployInfo)
         startParams["script"] = script
         var extServiceStatus = ExtServiceStatusEnum.BUILDING
         var buildId: String? = null
