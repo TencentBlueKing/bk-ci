@@ -80,7 +80,7 @@ open class DefaultModelCheckPlugin constructor(open val client: Client) : ModelC
                     errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NEED_JOB
                 )
             }
-            if (s.stageControlOption?.runCondition == StageRunCondition.MANUAL_TRIGGER && s.stageControlOption?.triggerUsers?.isEmpty() == true)
+            if (s.manualTrigger == true && s.triggerUsers?.isEmpty() == true)
                 throw ErrorCodeException(
                     defaultMessage = "手动触发的Stage没有未配置可执行人",
                     errorCode = ProcessMessageCode.ERROR_PIPELINE_STAGE_NO_TRIGGER_USER
