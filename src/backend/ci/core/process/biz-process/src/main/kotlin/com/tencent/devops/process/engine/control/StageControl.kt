@@ -164,6 +164,10 @@ class StageControl @Autowired constructor(
             }
             if (BuildStatus.isFinish(buildStatus)) { // 构建状态结束了
                 logger.info("[$buildId]|[${buildInfo.status}]|STAGE_FINALLY|stageId=$stageId|status=$buildStatus|action=$actionType")
+                // 如果最后一个stage被跳过，流水线最终设为成功
+                if (buildStatus == BuildStatus.SKIP) {
+                    buildStatus = BuildStatus.SUCCEED
+                }
                 pipelineBuildDetailService.updateStageStatus(
                     buildId = buildId,
                     stageId = stageId,
