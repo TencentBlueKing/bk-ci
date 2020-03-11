@@ -94,7 +94,13 @@ import com.tencent.devops.process.engine.pojo.event.PipelineBuildStageEvent
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.pipeline.option.StageControlOption
 import com.tencent.devops.common.service.utils.SpringContextUtil
-import com.tencent.devops.process.engine.common.*
+import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION
+import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION_DESC
+import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION_PARAMS
+import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION_SUGGEST
+import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION_USERID
+import com.tencent.devops.process.engine.common.VMUtils
+import com.tencent.devops.process.engine.common.Timeout
 import com.tencent.devops.process.pojo.BuildBasicInfo
 import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.process.pojo.PipelineBuildMaterial
