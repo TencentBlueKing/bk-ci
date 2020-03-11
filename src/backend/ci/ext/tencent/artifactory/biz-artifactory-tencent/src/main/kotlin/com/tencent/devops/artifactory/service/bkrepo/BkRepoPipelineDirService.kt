@@ -51,7 +51,14 @@ class BkRepoPipelineDirService @Autowired constructor(
 
     override fun list(userId: String, projectId: String, path: String, authPermission: AuthPermission): List<FileInfo> {
         val normalizedPath = PathUtils.checkAndNormalizeAbsPath(path)
-        val jFrogFileInfoList = bkRepoClient.listFile(userId, projectId, RepoUtils.PIPELINE_REPO, normalizedPath).map {
+        val jFrogFileInfoList = bkRepoClient.listFile(
+            userId,
+            projectId,
+            RepoUtils.PIPELINE_REPO,
+            normalizedPath,
+            includeFolders = true,
+            deep = false
+        ).map {
             JFrogFileInfo(
                 uri = it.fullPath.removePrefix("/"),
                 size = it.size,
