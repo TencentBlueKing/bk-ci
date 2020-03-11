@@ -56,6 +56,7 @@ import com.tencent.devops.store.dao.image.ImageLabelRelDao
 import com.tencent.devops.store.dao.image.MarketImageDao
 import com.tencent.devops.store.dao.image.MarketImageFeatureDao
 import com.tencent.devops.store.dao.image.MarketImageVersionLogDao
+import com.tencent.devops.store.pojo.common.OPEN
 import com.tencent.devops.store.pojo.common.ReleaseProcessItem
 import com.tencent.devops.store.pojo.common.StoreProcessInfo
 import com.tencent.devops.store.pojo.common.StoreReleaseCreateRequest
@@ -868,7 +869,7 @@ abstract class ImageReleaseService {
     private fun getNormalUpgradeFlag(imageCode: String, status: Int): Boolean {
         logger.info("imageApproveSwitch: $imageApproveSwitch")
         // 判断镜像是首次上架还是普通升级
-        if (imageApproveSwitch == "open") {
+        if (imageApproveSwitch == OPEN) {
             val releaseTotalNum = marketImageDao.countReleaseImageByCode(dslContext, imageCode)
             val currentNum = if (status == ImageStatusEnum.RELEASED.status) 1 else 0
             return releaseTotalNum > currentNum
