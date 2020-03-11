@@ -151,7 +151,7 @@ class StageControl @Autowired constructor(
                         // 执行成功则结束本次事件处理，否则要尝试下一stage
                         buildStatus = s.judgeStageContainer(allContainers, actionType, userId)
 
-                        logger.info("[$buildId]|[${buildInfo.status}]|STAGE_DONE|stageId=${s.stageId}|status=$buildStatus|action=$actionType")
+                        logger.info("[$buildId]|[${buildInfo.status}]|STAGE_DONE|stageId=${s.stageId}|status=$buildStatus|action=$actionType|stages=$stages|index=$index")
 
                         // 如果当前Stage[还未结束]或者[执行失败]或[已经是最后一个]，则不尝试下一Stage
                         if (BuildStatus.isRunning(buildStatus) || BuildStatus.isFailure(buildStatus) || index == stages.size - 1) {
