@@ -42,6 +42,8 @@ import com.tencent.devops.store.dao.template.MarketTemplateDao
 import com.tencent.devops.store.dao.template.TemplateCategoryRelDao
 import com.tencent.devops.store.dao.template.TemplateLabelRelDao
 import com.tencent.devops.store.pojo.common.KEY_CATEGORY_CODE
+import com.tencent.devops.store.pojo.common.OPEN
+import com.tencent.devops.store.pojo.common.CLOSE
 import com.tencent.devops.store.pojo.common.PASS
 import com.tencent.devops.store.pojo.common.ReleaseProcessItem
 import com.tencent.devops.store.pojo.common.StoreProcessInfo
@@ -187,6 +189,16 @@ abstract class TemplateReleaseServiceImpl @Autowired constructor() : TemplateRel
                         // 插入范畴
                         templateCategoryRelDao.deleteByTemplateId(context, templateId)
                         templateCategoryRelDao.batchAdd(context, userId, templateId, marketTemplateUpdateRequest.categoryIdList)
+                        if (templateApproveSwitch == CLOSE) {
+                            passTemplateReleaseAndNotify(
+                                context = context,
+                                userId = userId,
+                                approveResult = PASS,
+                                templateId = templateId,
+                                templateStatus = templateStatus,
+                                templateStatusMsg = ""
+                            )
+                        }
                     } else {
                         // 升级模板
                         upgradeMarketTemplate(templateRecord, context, userId, templateId, templateStatus, marketTemplateUpdateRequest)
@@ -234,18 +246,36 @@ abstract class TemplateReleaseServiceImpl @Autowired constructor() : TemplateRel
         templateCategoryRelDao.batchAdd(context, userId, templateId, marketTemplateUpdateRequest.categoryIdList)
         if (templateStatus == TemplateStatusEnum.RELEASED.status.toByte()) {
             // 普通升级无需审核
-            val upgradeTemplateRecord = marketTemplateDao.getTemplate(dslContext, templateId)!!
-            handleTemplateRelease(
+            passTemplateReleaseAndNotify(
                 context = context,
                 userId = userId,
                 approveResult = PASS,
-                template = upgradeTemplateRecord,
+                templateId = templateId,
                 templateStatus = templateStatus,
                 templateStatusMsg = ""
-                )
-            // 发通知消息
-            templateNotifyService.sendTemplateReleaseAuditNotifyMessage(templateId, AuditTypeEnum.AUDIT_SUCCESS)
+            )
         }
+    }
+
+    private fun passTemplateReleaseAndNotify(
+        context: DSLContext,
+        userId: String,
+        approveResult: String,
+        templateId: String,
+        templateStatus: Byte,
+        templateStatusMsg: String
+    ) {
+        val record = marketTemplateDao.getTemplate(dslContext, templateId)!!
+        handleTemplateRelease(
+            context = context,
+            userId = userId,
+            approveResult = PASS,
+            template = record,
+            templateStatus = templateStatus,
+            templateStatusMsg = ""
+            )
+        // 发通知消息
+        templateNotifyService.sendTemplateReleaseAuditNotifyMessage(templateId, AuditTypeEnum.AUDIT_SUCCESS)
     }
 
     override fun handleTemplateRelease(
@@ -355,7 +385,7 @@ abstract class TemplateReleaseServiceImpl @Autowired constructor() : TemplateRel
 
     private fun getNormalUpgradeFlag(templateCode: String, status: Int): Boolean {
         logger.info("templateApproveSwitch: $templateApproveSwitch")
-        if (templateApproveSwitch == "open") {
+        if (templateApproveSwitch == OPEN) {
             val releaseTotalNum = marketTemplateDao.countReleaseTemplateByCode(dslContext, templateCode)
             val currentNum = if (status == TemplateStatusEnum.RELEASED.status) 1 else 0
             return releaseTotalNum > currentNum
