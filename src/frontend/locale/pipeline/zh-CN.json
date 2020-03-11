@@ -84,6 +84,7 @@
     "stageReviewDesc": "30天未审核自动结束该流水线并标记为Stage成功",
     "stageTimeoutLabel": "Stage超时时间",
     "stageTimeoutError": "Stage超时时间错误",
+    "stageTimeoutDesc": "1-720之间的整数",
     "stageUserTriggers": "Stag审核人",
     "stageOptionLabel": "本Stage执行条件",
     "stageTriggerDesc": "多个人员用英文逗号分隔",

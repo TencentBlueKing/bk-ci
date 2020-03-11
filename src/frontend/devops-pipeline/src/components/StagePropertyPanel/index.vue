@@ -20,7 +20,7 @@
                     </bk-select>
                 </div>
             </form-field>
-            <stage-control :stage-control="stageControl" :disabled="!editable" :handle-stage-change="handleStageChange"></stage-control>
+            <stage-control ref="stageControl" :stage-control="stageControl" :disabled="!editable" :handle-stage-change="handleStageChange"></stage-control>
         </section>
     </bk-sideslider>
 </template>
@@ -86,7 +86,8 @@
             errors: {
                 deep: true,
                 handler: function (errors, old) {
-                    const isError = errors.any()
+                    const validStageControl = !this.$refs.stageControl || (this.$refs.stageControl && this.$refs.stageControl.validateStageControl())
+                    const isError = errors.any() || !validStageControl
                     this.handleStageChange('isError', isError)
                 }
             }
@@ -100,6 +101,7 @@
                 if (!this.stage.hasOwnProperty(name)) {
                     Vue.set(this.stage, name, value)
                 }
+                console.log(name, value, this.stage)
                 this.updateStage({
                     stage: this.stage,
                     newParam: {

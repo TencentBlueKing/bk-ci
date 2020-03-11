@@ -29,10 +29,10 @@
                         <p v-if="!hasTriggerMember" class="mt5 mb0">{{ $t('editPage.stageManualTriggerUserNoEmptyTips') }}</p>
                     </bk-form-item>
                 </template>
-                <bk-form-item class="stage-timeout-input" :label="$t('stageTimeoutLabel')" :required="true" :class="{ 'is-error': !validTimeout }" :desc="$t('storeMap.timeoutDesc')">
-                    <bk-input type="number" :disabled="disabled" v-model="timeout" :min="1" :max="10080">
+                <bk-form-item class="stage-timeout-input" :label="$t('stageTimeoutLabel')" :required="true" :class="{ 'is-error': !validTimeout }" :desc="$t('stageTimeoutDesc')">
+                    <bk-input type="number" :disabled="disabled" v-model="timeout" :min="1" :max="720">
                         <template slot="append">
-                            <div class="group-text">{{ $t('settings.minutes') }}</div>
+                            <div class="group-text">{{ $t('timeMap.hours') }}</div>
                         </template>
                     </bk-input>
                     <p v-if="!validTimeout" class="mt5 mb0">{{ $t('stageTimeoutError') }}</p>
@@ -158,7 +158,7 @@
                 }
             },
             validTimeout () {
-                return /\d+/.test(this.timeout) && parseInt(this.timeout) > 0 && parseInt(this.timeout) <= 10080
+                return /\d+/.test(this.timeout) && parseInt(this.timeout) > 0 && parseInt(this.timeout) <= 720
             }
         },
         watch: {
@@ -166,10 +166,17 @@
                 !val && this.handleUpdateStageControl('customVariables', [{ key: 'param1', value: '' }])
             },
             manualTrigger (val) {
-                !val && this.handleUpdateStageControl('triggerUsers', [])
+                !val && this.handleStageChange('triggerUsers', [])
             },
-            triggerUsers (triggerUsers) {
-                this.handleStageChange('isError', triggerUsers.length === 0 && this.manualTrigger)
+            hasTriggerMember: {
+                handler (hasTriggerMember) {
+                    this.manualTrigger && this.handleStageChange('isError', !hasTriggerMember)
+                }
+            },
+            validTimeout: {
+                handler (valid) {
+                    this.handleStageChange('isError', !valid)
+                }
             }
         },
         created () {
@@ -197,11 +204,11 @@
                     })
                     this.handleStageChange('fastKill', false)
                     this.handleStageChange('manualTrigger', false)
-                    this.handleStageChange('timeout', 900)
+                    this.handleStageChange('timeout', 24)
                 }
             },
-            setKeyValueValidate (addErrors, removeErrors) {
-                this.$emit('setKeyValueValidate', addErrors, removeErrors)
+            validateStageControl () {
+                return this.validTimeout && (!this.manualTrigger || this.hasTriggerMember)
             }
         }
     }

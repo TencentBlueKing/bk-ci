@@ -84,6 +84,7 @@
     "stageReviewDesc": "30-day unreviewed automatically ends the pipeline and marks it as STAGE_SUCCESS",
     "stageTimeoutLabel": "Stage Timeout",
     "stageTimeoutError": "Stage timeout field error",
+    "stageTimeoutDesc": "All the integers between 1 and 720",
     "stageUserTriggers": "Trigger Users",
     "stageOptionLabel": "Run this Stage",
     "stageTriggerDesc": "Multiple people separated by commas",
