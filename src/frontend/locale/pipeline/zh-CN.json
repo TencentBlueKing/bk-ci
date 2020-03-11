@@ -541,7 +541,7 @@
         "customVar": "自定义变量",
         "abortSuc": "驳回成功",
         "agreeSuc": "审核成功",
-        "toCheck": "去审核",
+        "toCheck": "审核",
         "noAuthToCheck": "无审核权限",
         "abortTips": "审核未通过，",
         "checkUser": "审核人为",
