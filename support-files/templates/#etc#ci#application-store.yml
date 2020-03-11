@@ -18,7 +18,6 @@ store:
   ideAtomDetailBaseUrl: __HTTP_SCHEMA__://__BKCI_FQDN__:__BKCI_HTTP_PORT__/console/store/atomStore/detail/ide/
   imageDetailBaseUrl: __HTTP_SCHEMA__://__BKCI_FQDN__:__BKCI_HTTP_PORT__/console/store/atomStore/detail/image/
   baseImageDocsLink: /console/store/atomStore/detail/image/
-  moaApproveCallBackUrl: __HTTP_SCHEMA__://__BKCI_FQDN__:__BKCI_HTTP_PORT__/store/api/service/market/approval/moa/callBack
   imageAdminUsers: admin
   buildResultBaseUrl: __HTTP_SCHEMA__://__BKCI_FQDN__:__BKCI_HTTP_PORT__/console/pipeline
   defaultImageSourceType: bkdevops
