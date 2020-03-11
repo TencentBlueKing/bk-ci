@@ -867,7 +867,7 @@ abstract class ImageReleaseService {
 
     private fun getNormalUpgradeFlag(imageCode: String, status: Int): Boolean {
         // 判断镜像是首次上架还是普通升级
-        if (imageApproveSwitch == "ON") {
+        if (imageApproveSwitch == "open") {
             val releaseTotalNum = marketImageDao.countReleaseImageByCode(dslContext, imageCode)
             val currentNum = if (status == ImageStatusEnum.RELEASED.status) 1 else 0
             return releaseTotalNum > currentNum

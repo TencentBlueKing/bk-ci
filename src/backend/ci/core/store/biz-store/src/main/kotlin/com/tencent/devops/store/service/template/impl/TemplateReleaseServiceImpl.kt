@@ -352,7 +352,7 @@ abstract class TemplateReleaseServiceImpl @Autowired constructor() : TemplateRel
     }
 
     private fun getNormalUpgradeFlag(templateCode: String, status: Int): Boolean {
-        if (templateApproveSwitch == "ON") {
+        if (templateApproveSwitch == "open") {
             val releaseTotalNum = marketTemplateDao.countReleaseTemplateByCode(dslContext, templateCode)
             val currentNum = if (status == TemplateStatusEnum.RELEASED.status) 1 else 0
             return releaseTotalNum > currentNum
