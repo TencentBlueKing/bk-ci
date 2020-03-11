@@ -34,6 +34,7 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.StageRunCondition
 import com.tencent.devops.model.process.Tables.T_PIPELINE_BUILD_STAGE
 import com.tencent.devops.model.process.tables.records.TPipelineBuildStageRecord
+import com.tencent.devops.process.engine.common.Timeout
 import com.tencent.devops.process.engine.pojo.PipelineBuildStage
 import com.tencent.devops.process.engine.pojo.PipelineBuildStageControlOption
 import org.jooq.DSLContext
@@ -143,9 +144,12 @@ class PipelineBuildStageDao {
                         stageControlOption = StageControlOption(
                             enable = true,
                             customVariables = conditions,
-                            runCondition = StageRunCondition.AFTER_LAST_FINISHED
+                            runCondition = StageRunCondition.AFTER_LAST_FINISHED,
+                            timeout = Timeout.DEFAULT_STAGE_TIMEOUT_HOURS
                         ),
-                        fastKill = false
+                        fastKill = false,
+                        manualTrigger = false,
+                        triggerUsers = null
                     )
                 }
             } else {
@@ -153,9 +157,12 @@ class PipelineBuildStageDao {
                     stageControlOption = StageControlOption(
                         enable = true,
                         customVariables = emptyList(),
-                        runCondition = StageRunCondition.AFTER_LAST_FINISHED
+                        runCondition = StageRunCondition.AFTER_LAST_FINISHED,
+                        timeout = Timeout.DEFAULT_STAGE_TIMEOUT_HOURS
                     ),
-                    fastKill = false
+                    fastKill = false,
+                    manualTrigger = false,
+                    triggerUsers = null
                 )
             }
 

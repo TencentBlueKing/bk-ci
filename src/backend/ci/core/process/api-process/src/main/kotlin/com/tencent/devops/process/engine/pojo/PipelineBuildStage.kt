@@ -40,5 +40,7 @@ data class PipelineBuildStage(
     val endTime: LocalDateTime? = null,
     val cost: Int = 0,
     val executeCount: Int = 1,
+    val manualTrigger: Boolean? = false,
+    val triggerUsers: List<String>? = null,
     val controlOption: PipelineBuildStageControlOption?
 )

@@ -88,7 +88,7 @@ class StageControl @Autowired constructor(
 
             var buildStatus: BuildStatus = BuildStatus.SUCCEED
 
-            val needPause = stage.controlOption?.stageControlOption?.runCondition == StageRunCondition.MANUAL_TRIGGER && source != "manual_trigger_stage"
+            val needPause = stage.controlOption?.manualTrigger == true && source != "manual_trigger_stage"
 
             val fastKill = stage.controlOption?.fastKill == true && source == "CONTAINER_END_FAILED"
 
@@ -141,7 +141,7 @@ class StageControl @Autowired constructor(
                     pipelineRuntimeService.updateStageStatus(buildId, stageId, buildStatus)
                     pipelineBuildDetailService.updateStageStatus(buildId, stageId, buildStatus)
 
-                    return
+                    return sendStageSuccessEvent(stageId)
                 }
             }
 
@@ -228,6 +228,18 @@ class StageControl @Autowired constructor(
                 logger.info("[$buildId]|STAGE_$actionType|stageId=$stageId|action=$newActionType")
                 return buildStatus
             }
+        } else if (BuildStatus.isReview(status) && ActionType.isEnd(newActionType)) {
+            buildStatus = BuildStatus.STAGE_SUCCESS
+            val now = LocalDateTime.now()
+            pipelineRuntimeService.updateStage(
+                buildId = buildId,
+                stageId = stageId,
+                startTime = now,
+                endTime = now,
+                buildStatus = buildStatus
+            )
+            logger.info("[$buildId]|STAGE_$actionType|stageId=$stageId|action=$newActionType")
+            return buildStatus
         }
 
         var finishContainers = 0
@@ -406,6 +418,19 @@ class StageControl @Autowired constructor(
                 buildId = buildId,
                 stageId = stageId,
                 actionType = ActionType.START
+            )
+        )
+    }
+
+    private fun PipelineBuildStageEvent.sendStageSuccessEvent(stageId: String) {
+        pipelineEventDispatcher.dispatch(
+            PipelineBuildFinishEvent(
+                source = "stage_success_$stageId",
+                projectId = projectId,
+                pipelineId = pipelineId,
+                userId = userId,
+                buildId = buildId,
+                status = BuildStatus.STAGE_SUCCESS
             )
         )
     }
