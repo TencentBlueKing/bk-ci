@@ -120,6 +120,9 @@ abstract class ImageReleaseService {
 
     private val logger = LoggerFactory.getLogger(ImageReleaseService::class.java)
 
+    @Value("\${store.imageApproveSwitch}")
+    protected lateinit var imageApproveSwitch: String
+
     fun addMarketImage(
         accessToken: String,
         userId: String,
@@ -863,9 +866,13 @@ abstract class ImageReleaseService {
 
     private fun getNormalUpgradeFlag(imageCode: String, status: Int): Boolean {
         // 判断镜像是首次上架还是普通升级
-        val releaseTotalNum = marketImageDao.countReleaseImageByCode(dslContext, imageCode)
-        val currentNum = if (status == ImageStatusEnum.RELEASED.status) 1 else 0
-        return releaseTotalNum > currentNum
+        if (imageApproveSwitch == "ON") {
+            val releaseTotalNum = marketImageDao.countReleaseImageByCode(dslContext, imageCode)
+            val currentNum = if (status == ImageStatusEnum.RELEASED.status) 1 else 0
+            return releaseTotalNum > currentNum
+        } else {
+            return true
+        }
     }
 
     /**
