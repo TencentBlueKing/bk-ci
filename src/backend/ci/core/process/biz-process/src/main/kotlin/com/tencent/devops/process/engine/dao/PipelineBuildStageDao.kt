@@ -145,11 +145,11 @@ class PipelineBuildStageDao {
                             enable = true,
                             customVariables = conditions,
                             runCondition = StageRunCondition.AFTER_LAST_FINISHED,
-                            timeout = Timeout.DEFAULT_STAGE_TIMEOUT_HOURS
+                            timeout = Timeout.DEFAULT_STAGE_TIMEOUT_HOURS,
+                            manualTrigger = false,
+                            triggerUsers = null
                         ),
-                        fastKill = false,
-                        manualTrigger = false,
-                        triggerUsers = null
+                        fastKill = false
                     )
                 }
             } else {
@@ -158,11 +158,11 @@ class PipelineBuildStageDao {
                         enable = true,
                         customVariables = emptyList(),
                         runCondition = StageRunCondition.AFTER_LAST_FINISHED,
-                        timeout = Timeout.DEFAULT_STAGE_TIMEOUT_HOURS
+                        timeout = Timeout.DEFAULT_STAGE_TIMEOUT_HOURS,
+                        manualTrigger = false,
+                        triggerUsers = null
                     ),
-                    fastKill = false,
-                    manualTrigger = false,
-                    triggerUsers = null
+                    fastKill = false
                 )
             }
 
