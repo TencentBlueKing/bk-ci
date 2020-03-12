@@ -168,6 +168,7 @@ class ServiceItemService @Autowired constructor(
             )
             itemList.add(serviceItem)
         }
+        logger.info("getItemInfoByIds: itemList[$itemList]")
         return itemList
     }
 
@@ -346,4 +347,5 @@ class ServiceItemService @Autowired constructor(
     companion object {
         val logger = LoggerFactory.getLogger(this::class.java)
     }
+
 }
