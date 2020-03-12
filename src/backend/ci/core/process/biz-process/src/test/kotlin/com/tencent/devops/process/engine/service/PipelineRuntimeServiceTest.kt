@@ -97,38 +97,6 @@ class PipelineRuntimeServiceTest {
     )
 
     @Test
-    fun getPipelineBuildMaterial() {
-        val repoIds = setOf("11", "12", "13")
-        val relation = mutableMapOf<String, String>()
-        val mockVars = mutableMapOf<String, String>()
-        repoIds.forEach { repoId ->
-            mockVars["$PIPELINE_MATERIAL_URL$repoId"] = "http://xxxx/$repoId"
-            relation["http://xxxx/$repoId"] = repoId
-            mockVars["$PIPELINE_MATERIAL_NEW_COMMIT_TIMES$repoId"] = repoId
-            mockVars["$PIPELINE_MATERIAL_ALIASNAME$repoId"] = "aliasName$repoId"
-            mockVars["$PIPELINE_MATERIAL_BRANCHNAME$repoId"] = "branch_$repoId"
-            mockVars["$PIPELINE_MATERIAL_NEW_COMMIT_ID$repoId"] = "new_commit_id_$repoId"
-            mockVars["$PIPELINE_MATERIAL_NEW_COMMIT_COMMENT$repoId"] = "comment_$repoId"
-        }
-
-        val buildId = "b-12345678901234567890123456789012"
-        whenever(pipelineBuildVarDao.getVars(dslContext, buildId)).thenReturn(mockVars)
-        val pipelineBuildMaterial = pipelineRuntimeService.getPipelineBuildMaterial(buildId)
-        Assert.assertEquals(pipelineBuildMaterial.size, repoIds.size)
-        pipelineBuildMaterial.forEach {
-            val repoId = relation[it.url]
-            Assert.assertEquals("http://xxxx/$repoId", it.url)
-            Assert.assertEquals("aliasName$repoId", it.aliasName)
-            Assert.assertEquals("branch_$repoId", it.branchName)
-            Assert.assertEquals("new_commit_id_$repoId", it.newCommitId)
-            Assert.assertEquals("comment_$repoId", it.newCommitComment)
-            Assert.assertEquals(repoId, "${it.commitTimes}")
-        }
-
-        println(JsonUtil.toJson(pipelineBuildMaterial))
-    }
-
-    @Test
     fun getAllVariable() {
 
         val buildId = "b-1234567890"

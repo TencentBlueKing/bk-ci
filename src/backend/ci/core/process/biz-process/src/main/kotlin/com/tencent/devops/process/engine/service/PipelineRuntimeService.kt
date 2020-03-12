@@ -164,8 +164,7 @@ class PipelineRuntimeService @Autowired constructor(
     private val pipelineBuildVarDao: PipelineBuildVarDao,
     private val buildDetailDao: BuildDetailDao,
     private val buildStartupParamService: BuildStartupParamService,
-    private val redisOperation: RedisOperation,
-    private val client: Client
+    private val redisOperation: RedisOperation
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineRuntimeService::class.java)
@@ -1580,14 +1579,6 @@ class PipelineRuntimeService @Autowired constructor(
             pipelineBuildSummaryDao.finishLatestRunningBuild(dslContext, latestRunningBuild)
         }
         with(latestRunningBuild) {
-            val materials: List<PipelineBuildMaterial> = try {
-                getPipelineBuildMaterial(buildId)
-            } catch (e: Throwable) {
-                logger.error("[$pipelineId]|getPipelineBuildMaterial-$buildId exception:", e)
-                mutableListOf()
-            }
-            logger.info("[$pipelineId]|getPipelineBuildMaterial-$buildId material: ${JsonUtil.toJson(materials)}")
-
             val executeTime = try {
                 getExecuteTime(pipelineId, buildId)
             } catch (e: Throwable) {
@@ -1616,7 +1607,6 @@ class PipelineRuntimeService @Autowired constructor(
                 dslContext = dslContext,
                 buildId = buildId,
                 buildStatus = if (BuildStatus.isFinish(status)) status else BuildStatus.FAILED,
-                material = JsonUtil.toJson(materials),
                 executeTime = executeTime,
                 buildParameters = JsonUtil.toJson(buildParameters),
                 recommendVersion = recommendVersion,
@@ -1694,34 +1684,6 @@ class PipelineRuntimeService @Autowired constructor(
             executeTime += it.totalTime ?: 0
         }
         return executeTime
-    }
-
-    fun getPipelineBuildMaterial(buildId: String): List<PipelineBuildMaterial> {
-        val materialList = mutableListOf<PipelineBuildMaterial>()
-        val commitResponse = client.get(ServiceCommitResource::class)
-            .getCommitsByBuildId(buildId, "")
-        if (commitResponse.isNotOk()) {
-            throw Exception("getCommitsByBuildId failed")
-        }
-
-        logger.info("getCommitsByBuildId response: ${commitResponse.data}")
-
-        commitResponse.data!!.forEach {
-            it.records.forEach { it1 ->
-                materialList.add(
-                    PipelineBuildMaterial(
-                        url = it1.url ?: "",
-                        aliasName = it1.aliasName ?: "",
-                        branchName = it1.branchName ?: "",
-                        newCommitId = it1.commit,
-                        newCommitComment = it1.comment ?: "",
-                        commitTimes = it.records.size
-                    )
-                )
-            }
-        }
-
-        return materialList
     }
 
     @Deprecated(message = "replace by PipelineRuntimeExtService")
