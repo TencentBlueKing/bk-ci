@@ -53,11 +53,16 @@ class CodeccTransferService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(CodeccTransferService::class.java)
     }
 
-    fun addToolSetToPipeline(projectId: String, pipelineIds: Set<String>, toolRuleSet: String): Map<String, String> {
+    fun addToolSetToPipeline(projectId: String, pipelineIds: Set<String>?, toolRuleSet: String, toolRuleSetName: String): Map<String, String> {
         val result = mutableMapOf<String, String>()
-        pipelineTaskService.list(projectId, pipelineIds).map {
+
+        val finalPipelineIds = pipelineIds
+            ?: pipelineRepositoryService.listPipelineByProject(projectId)?.filter { it.channel == ChannelCode.BS.name }?.map { it.pipelineId }?.toSet()
+            ?: throw RuntimeException("no pipeline found in project: $projectId")
+
+        pipelineTaskService.list(projectId, finalPipelineIds).map {
             val resultMsg = try {
-                doAddToolSetToPipeline(projectId, it, toolRuleSet)
+                doAddToolSetToPipeline(projectId, it, toolRuleSet, toolRuleSetName)
             } catch (e: Exception) {
                 logger.error("add pipeline ${it.key} rule($toolRuleSet) fail", e)
                 e.message ?: "unexpected error occur"
@@ -67,7 +72,12 @@ class CodeccTransferService @Autowired constructor(
         return result
     }
 
-    private fun doAddToolSetToPipeline(projectId: String, it: Map.Entry<String, List<PipelineModelTask>>, toolRuleSet: String): String {
+    private fun doAddToolSetToPipeline(
+        projectId: String,
+        it: Map.Entry<String, List<PipelineModelTask>>,
+        toolRuleSet: String,
+        toolRuleSetName: String
+    ): String {
         val pipelineId = it.key
 
         val newCodeccTask = it.value.filter { task -> task.taskParams["atomCode"] == "CodeccCheckAtom" }
@@ -88,11 +98,11 @@ class CodeccTransferService @Autowired constructor(
                         if (languages.contains(ProjectLanguage.C_CPP)) {
                             // add the first place
                             val languageRuleSetMap = newElement.data["languageRuleSetMap"] as Map<String, List<String>>
-                            val cppRule = languageRuleSetMap["C_CPP_RULE"]?.toMutableList() ?: mutableListOf()
+                            val cppRule = languageRuleSetMap[toolRuleSetName]?.toMutableList() ?: mutableListOf()
                             cppRule.add(toolRuleSet)
 
                             // add the second place
-                            val cppRule2 = newElement.data["C_CPP_RULE"] as List<String>
+                            val cppRule2 = newElement.data[toolRuleSetName] as List<String>
                             cppRule2.toMutableList().add(toolRuleSet)
                         }
                     }
@@ -107,7 +117,7 @@ class CodeccTransferService @Autowired constructor(
             projectId = projectId,
             pipelineId = pipelineId,
             model = model,
-            channelCode = ChannelCode.BS,
+            channelCode = pipelineInfo?.channelCode ?: ChannelCode.BS,
             checkPermission = false,
             checkTemplate = false
         )
@@ -273,7 +283,8 @@ class CodeccTransferService @Autowired constructor(
         }
 
         // only support some tools
-        val checkTool = setOf("COVERITY", "CPPLINT", "CCN", "DUPC", "SENSITIVE", "WOODPECKER_SENSITIVE", "PYLINT", "GOML")
+        val checkTool =
+            setOf("COVERITY", "CPPLINT", "CCN", "DUPC", "SENSITIVE", "WOODPECKER_SENSITIVE", "PYLINT", "GOML")
         oldCodeccElement.tools?.forEach {
             if (it !in checkTool) throw RuntimeException("not support tool to transfer: $it")
         }

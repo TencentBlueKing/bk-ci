@@ -35,6 +35,7 @@ import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["SERVICE_CODECC_TRANSFER_RESOURCE"], description = "codecc迁移资源")
@@ -51,5 +52,18 @@ interface ServiceCodeccTransferResource {
         projectId: String,
         @ApiParam("流水线Id", required = true)
         pipelineIds: Set<String>
+    ): Result<Map<String, String>>
+
+    @ApiOperation("")
+    @POST
+    @Path("/projects/{projectId}/addToolSetToPipeline")
+    fun addToolSetToPipeline(
+        @PathParam("projectId")
+        projectId: String,
+        @QueryParam("toolRuleSet")
+        toolRuleSet: String,
+        @QueryParam("toolRuleSetName")
+        toolRuleSetName: String,
+        pipelineIds: Set<String>?
     ): Result<Map<String, String>>
 }

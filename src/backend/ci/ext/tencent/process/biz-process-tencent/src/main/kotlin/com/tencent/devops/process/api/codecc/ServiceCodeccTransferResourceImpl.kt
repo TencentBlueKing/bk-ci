@@ -38,4 +38,13 @@ class ServiceCodeccTransferResourceImpl @Autowired constructor(
     override fun transferToV2(projectId: String, pipelineIds: Set<String>): Result<Map<String, String>> {
         return Result(codeccTransferService.transferToV2(projectId, pipelineIds))
     }
+
+    override fun addToolSetToPipeline(
+        projectId: String,
+        toolRuleSet: String,
+        toolRuleSetName: String,
+        pipelineIds: Set<String>?
+    ): Result<Map<String, String>> {
+        return Result(codeccTransferService.addToolSetToPipeline(projectId, pipelineIds, toolRuleSet, toolRuleSetName))
+    }
 }
