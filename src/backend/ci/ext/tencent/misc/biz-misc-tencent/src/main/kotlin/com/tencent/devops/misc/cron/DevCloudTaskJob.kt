@@ -26,7 +26,7 @@
 
 package com.tencent.devops.misc.cron
 
-import com.tencent.devops.artifactory.api.service.ServiceArtifactoryResource
+import com.tencent.devops.artifactory.api.service.ServiceArtifactoryDownLoadResource
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.notify.enums.EnumEmailFormat
 import com.tencent.devops.common.redis.RedisLock
@@ -377,7 +377,7 @@ class DevCloudTaskJob @Autowired constructor(
                 "devops.creator" to task.operator,
                 "devops.desc" to task.description
             )
-            client.get(ServiceArtifactoryResource::class).setProperties(task.projectId, imageName, imageTag, properties)
+            client.get(ServiceArtifactoryDownLoadResource::class).setProperties(task.projectId, imageName, imageTag, properties)
             val (title, content) = createBuildImageEmailBody(true, task.image, task.description, "")
             sendEmail(task.operator, task.projectId, title, content)
             // 将devcloud制作的镜像拷贝一份到docker构建镜像中

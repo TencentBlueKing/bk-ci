@@ -28,10 +28,9 @@ package com.tencent.devops.experience.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.tencent.devops.artifactory.api.service.ServiceArtifactoryResource
+import com.tencent.devops.artifactory.api.service.ServiceArtifactoryDownLoadResource
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.common.api.util.HashUtil
-import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.auth.api.BSAuthProjectApi
 import com.tencent.devops.common.auth.api.BSCCProjectApi
 import com.tencent.devops.common.auth.api.pojo.BkAuthProject
@@ -164,7 +163,7 @@ class ExperienceAppService(
 
         val path = experience.artifactoryPath
         val artifactoryType = ArtifactoryType.valueOf(experience.artifactoryType)
-        val fileDetail = client.get(ServiceArtifactoryResource::class).show(projectId, artifactoryType, path).data!!
+        val fileDetail = client.get(ServiceArtifactoryDownLoadResource::class).show(projectId, artifactoryType, path).data!!
 
         val experienceList = experienceDao.listByBundleIdentifier(dslContext, projectId, bundleIdentifier)
         val changeLog = experienceList.map {

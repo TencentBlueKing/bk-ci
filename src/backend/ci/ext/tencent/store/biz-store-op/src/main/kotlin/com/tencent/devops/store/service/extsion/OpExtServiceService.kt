@@ -82,23 +82,23 @@ class OpExtServiceService @Autowired constructor(
             page = page,
             pageSize = pageSize
         )
-
-        val allLable = labelDao.getAllLabel(dslContext, StoreTypeEnum.SERVICE.type.toByte())
-        val lableMap = mutableMapOf<String, String>()
-        allLable!!.forEach {
-            lableMap[it.id] = it.labelName
-        }
+//
+//        val allLable = labelDao.getAllLabel(dslContext, StoreTypeEnum.SERVICE.type.toByte())
+//        val lableMap = mutableMapOf<String, String>()
+//        allLable!!.forEach {
+//            lableMap[it.id] = it.labelName
+//        }
 
         val extensionServiceInfoList = mutableSetOf<ExtensionServiceVO>()
         serviceRecords?.forEach {
             val serviceId = it["itemId"] as String
-            val labelRecord = extServiceLableRelDao.getLabelsByServiceId(dslContext, serviceId)
-            val labelName =
-            if(labelRecord != null && labelRecord.size > 1) {
-                labelRecord[0]?.get(KEY_LABEL_NAME).toString()
-            } else {
-                null
-            }
+//            val labelRecord = extServiceLableRelDao.getLabelsByServiceId(dslContext, serviceId)
+//            val labelName =
+//            if(labelRecord != null && labelRecord.size > 1) {
+//                labelRecord[0]?.get(KEY_LABEL_NAME).toString()
+//            } else {
+//                null
+//            }
             extensionServiceInfoList.add(
                 ExtensionServiceVO(
                     serviceId = serviceId,
@@ -106,8 +106,7 @@ class OpExtServiceService @Autowired constructor(
                     serviceName = it["serviceName"] as String,
                     serviceStatus = (it["serviceStatus"] as Byte).toInt(),
                     publisher = it["publisher"] as String,
-                    lable = labelName ?: "",
-                    projectCode = "",
+                    projectCode = it["projectCode"] as String,
                     modifierTime = (it["updateTime"] as LocalDateTime).timestamp().toString(),
                     version = it["version"] as String
                 )

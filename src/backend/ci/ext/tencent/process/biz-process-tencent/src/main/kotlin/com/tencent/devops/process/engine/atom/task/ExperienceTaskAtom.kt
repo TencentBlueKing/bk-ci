@@ -26,7 +26,7 @@
 
 package com.tencent.devops.process.engine.atom.task
 
-import com.tencent.devops.artifactory.api.service.ServiceArtifactoryResource
+import com.tencent.devops.artifactory.api.service.ServiceArtifactoryDownLoadResource
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
@@ -125,7 +125,7 @@ class ExperienceTaskAtom @Autowired constructor(
 
         val artifactoryType = if (customized) com.tencent.devops.artifactory.pojo.enums.ArtifactoryType.CUSTOM_DIR
         else com.tencent.devops.artifactory.pojo.enums.ArtifactoryType.PIPELINE
-        if (!client.get(ServiceArtifactoryResource::class).check(projectId, artifactoryType, realPath).data!!) {
+        if (!client.get(ServiceArtifactoryDownLoadResource::class).check(projectId, artifactoryType, realPath).data!!) {
             LogUtils.addRedLine(rabbitTemplate, buildId, "文件($path)不存在", taskId, containerId, task.executeCount ?: 1)
             return AtomResponse(
                 buildStatus = BuildStatus.FAILED,

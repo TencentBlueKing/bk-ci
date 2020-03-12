@@ -1,5 +1,6 @@
 package com.tencent.devops.store.dao
 
+import com.nhaarman.mockito_kotlin.stub
 import com.tencent.devops.model.store.tables.TClassify
 import com.tencent.devops.model.store.tables.TExtensionService
 import com.tencent.devops.model.store.tables.TExtensionServiceFeature
@@ -7,11 +8,13 @@ import com.tencent.devops.model.store.tables.TExtensionServiceItemRel
 import com.tencent.devops.model.store.tables.TExtensionServiceLabelRel
 import com.tencent.devops.model.store.tables.TLabel
 import com.tencent.devops.model.store.tables.TStoreMember
+import com.tencent.devops.model.store.tables.TStoreProjectRel
 import com.tencent.devops.model.store.tables.TStoreStatisticsTotal
 import com.tencent.devops.model.store.tables.records.TExtensionServiceRecord
 import com.tencent.devops.store.pojo.ExtServiceCreateInfo
 import com.tencent.devops.store.pojo.ExtServiceUpdateInfo
 import com.tencent.devops.store.pojo.atom.enums.MarketAtomSortTypeEnum
+import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.dto.ServiceApproveReq
 import com.tencent.devops.store.pojo.enums.ExtServiceSortTypeEnum
@@ -400,7 +403,7 @@ class ExtServiceDao {
         val a = TExtensionService.T_EXTENSION_SERVICE.`as`("a")
         val b = TExtensionServiceFeature.T_EXTENSION_SERVICE_FEATURE.`as`("b")
         val c = TExtensionServiceItemRel.T_EXTENSION_SERVICE_ITEM_REL.`as`("c")
-        val d = TExtensionServiceLabelRel.T_EXTENSION_SERVICE_LABEL_REL.`as`("d")
+        val d = TStoreProjectRel.T_STORE_PROJECT_REL.`as`("d")
 
         var selectFeild = dslContext.select(
             a.ID.`as`("itemId"),
@@ -410,21 +413,19 @@ class ExtServiceDao {
             a.VERSION.`as`("version"),
             a.PUB_TIME.`as`("pubTime"),
             a.PUBLISHER.`as`("publisher"),
-            a.UPDATE_TIME.`as`("updateTime")
-        ).from(a).join(b).on(a.SERVICE_CODE.eq(b.SERVICE_CODE))
+            a.UPDATE_TIME.`as`("updateTime"),
+            d.PROJECT_CODE.`as`("projectCode")
+        ).from(a).join(b).on(a.SERVICE_CODE.eq(b.SERVICE_CODE)).join(d).on(a.SERVICE_CODE.eq(d.STORE_CODE))
 
         val conditions = mutableListOf<Condition>()
+        conditions.add(d.TYPE.eq(StoreProjectTypeEnum.INIT.type.toByte()))
+        conditions.add(d.STORE_TYPE.eq(StoreTypeEnum.SERVICE.type.toByte()))
         if (null != serviceName) {
-            conditions.add(a.SERVICE_NAME.like(serviceName))
+            conditions.add(a.SERVICE_NAME.like("%$serviceName%"))
         }
         if (null != itemId) {
             conditions.add(c.ITEM_ID.eq(itemId))
             selectFeild.join(c).on(a.ID.eq(c.SERVICE_ID))
-        }
-
-        if (null != lableId) {
-            conditions.add(d.LABEL_ID.eq(lableId))
-            selectFeild.join(d).on(a.ID.eq(d.SERVICE_ID))
         }
 
         if (null != isPublic) {

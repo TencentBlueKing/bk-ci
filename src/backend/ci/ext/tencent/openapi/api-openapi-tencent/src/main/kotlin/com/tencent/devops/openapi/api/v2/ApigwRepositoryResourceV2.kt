@@ -72,4 +72,5 @@ interface ApigwRepositoryResourceV2 {
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<Page<RepositoryInfo>?>
+
 }
