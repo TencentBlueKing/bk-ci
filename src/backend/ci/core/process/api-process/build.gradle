@@ -32,7 +32,6 @@ dependencies {
     compile project(":core:store:api-store-image")
     compile project(":core:artifactory:api-artifactory")
     compile project(":core:ticket:api-ticket")
-    compile "org.jooq:jooq"
 }
 
 apply from: "$rootDir/task_deploy_to_maven.gradle"

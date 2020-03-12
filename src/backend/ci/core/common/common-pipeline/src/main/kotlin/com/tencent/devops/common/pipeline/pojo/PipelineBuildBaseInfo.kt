@@ -6,7 +6,7 @@ package com.tencent.devops.common.pipeline.pojo
  * @Version 1.0
  */
 data class PipelineBuildBaseInfo(
-    val projectCode: String,
+    val projectId: String,
     val pipelineId: String,
     val buildIdList: List<String>
 )
