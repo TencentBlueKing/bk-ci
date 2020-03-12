@@ -51,9 +51,6 @@ interface ServiceBcsResource {
     @Path("/namespaces/{namespaceName}/create/test")
     @POST
     fun createNamespace(
-        @ApiParam("userId", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
         @ApiParam("命名空间名称")
         @PathParam("namespaceName")
         namespaceName: String,
@@ -65,9 +62,6 @@ interface ServiceBcsResource {
     @Path("/bcs/namespaces/{namespaceName}/secrets/{secretName}/create")
     @POST
     fun createImagePullSecretTest(
-        @ApiParam("userId", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
         @ApiParam("命名空间名称")
         @PathParam("namespaceName")
         namespaceName: String,

@@ -38,7 +38,6 @@ import org.springframework.beans.factory.annotation.Autowired
 class ServiceBcsResourceImpl @Autowired constructor() : ServiceBcsResource {
 
     override fun createNamespace(
-        userId: String,
         namespaceName: String,
         createBcsNameSpaceRequest: CreateBcsNameSpaceRequest
     ): Result<Boolean> {
@@ -49,7 +48,6 @@ class ServiceBcsResourceImpl @Autowired constructor() : ServiceBcsResource {
     }
 
     override fun createImagePullSecretTest(
-        userId: String,
         namespaceName: String,
         secretName: String,
         createImagePullSecretRequest: CreateImagePullSecretRequest
