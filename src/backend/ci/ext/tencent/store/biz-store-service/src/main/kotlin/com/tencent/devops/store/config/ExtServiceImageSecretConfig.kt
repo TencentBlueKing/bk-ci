@@ -24,23 +24,26 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.pojo
+package com.tencent.devops.store.config
 
-import io.swagger.annotations.ApiModelProperty
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.stereotype.Component
 
-data class DeployApp(
-    @ApiModelProperty("bcs请求路径", required = true)
-    val bcsUrl: String,
-    @ApiModelProperty("请求token", required = true)
-    val token: String,
-    @ApiModelProperty("k8s命名空间名称", required = true)
-    val namespaceName: String,
-    @ApiModelProperty("应用标识", required = true)
-    val appCode: String,
-    @ApiModelProperty("应用deployment", required = true)
-    val appDeployment: AppDeployment,
-    @ApiModelProperty("应用service", required = true)
-    val appService: AppService,
-    @ApiModelProperty(value = "应用ingress", required = false)
-    val appIngress: AppIngress
-)
+@Component
+class ExtServiceImageSecretConfig {
+
+    @Value("\${store.extService.bcs.secret.image.secretName}")
+    val secretName: String = ""
+
+    @Value("\${store.extService.bcs.secret.image.repo.registryUrl}")
+    val repoRegistryUrl: String = ""
+
+    @Value("\${store.extService.bcs.secret.image.repo.name}")
+    val repoUsername: String = ""
+
+    @Value("\${store.extService.bcs.secret.image.repo.password}")
+    val repoPassword: String = ""
+
+    @Value("\${store.extService.bcs.secret.image.repo.email}")
+    val repoEmail: String = ""
+}

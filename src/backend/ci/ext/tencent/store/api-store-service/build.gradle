@@ -26,6 +26,7 @@
 
 dependencies {
     compile project(":core:store:api-store")
+    compile project(":ext:tencent:dispatch:api-dispatch-bcs")
     compile("io.fabric8:kubernetes-client:4.8.0")
 }
 

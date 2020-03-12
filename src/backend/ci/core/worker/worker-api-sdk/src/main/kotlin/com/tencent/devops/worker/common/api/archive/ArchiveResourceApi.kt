@@ -162,14 +162,7 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
             .addFormDataPart("file", fileName, fileBody)
             .build()
         val request = buildPost(url, requestBody, headers ?: emptyMap())
-        val response = request(request, "upload file:$fileName fail")
-        try {
-            val obj = JsonParser().parse(response).asJsonObject
-            if (obj.has("code") && obj["code"].asString != "200") throw RemoteServiceException("upload file:$fileName fail")
-        } catch (ignored: Exception) {
-            LoggerService.addNormalLine(ignored.message ?: "")
-            throw RemoteServiceException("archive fail: $response")
-        }
-        return Result(true)
+        val responseContent = request(request, "upload file:$fileName fail")
+        return objectMapper.readValue(responseContent)
     }
 }
