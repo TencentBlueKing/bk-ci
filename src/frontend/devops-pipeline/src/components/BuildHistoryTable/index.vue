@@ -12,7 +12,7 @@
                 <template v-if="col.prop === 'buildNum'" v-slot="props">
                     <span class="build-num-status">
                         <router-link :class="{ [props.row.status]: true }" style="line-height: 42px;" :to="getArchiveUrl(props.row)">#{{ props.row.buildNum }}</router-link>
-                        <logo v-if="props.row.status === 'STAGE_SUCCESS'" name="flag" class="bk-icon" size="12" fill="#34d97b" />
+                        <logo v-if="props.row.status === 'STAGE_SUCCESS'" v-bk-tooltips="$t('details.statusMap.STAGE_SUCCESS')" name="flag" class="bk-icon" size="12" fill="#34d97b" />
                         <i v-else-if="retryable(props.row)" title="rebuild" class="bk-icon icon-retry" @click.stop="retry(props.row.id)" />
                         <i v-else-if="props.row.status === 'QUEUE' || props.row.status === 'RUNNING' || !props.row.endTime" :title="$t('history.stopBuild')" @click.stop="stopExecute(props.row.id)"
                             :class="{
