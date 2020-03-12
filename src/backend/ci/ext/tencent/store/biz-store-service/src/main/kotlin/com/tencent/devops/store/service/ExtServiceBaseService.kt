@@ -185,7 +185,6 @@ abstract class ExtServiceBaseService @Autowired constructor() {
                 pkgShaContent = "",
                 dockerFileContent = "",
                 imagePath = "",
-                frontentEntryFile = "",
                 creatorUser = userId,
                 modifierUser = userId
             )
@@ -386,11 +385,19 @@ abstract class ExtServiceBaseService @Autowired constructor() {
             // 添加扩展点使用记录
             client.get(ServiceItemResource::class).addServiceNum(itemIdList)
 
-            // TODO: 此处等carl完善
-            // asyncHandleUpdateService(context, serviceId, userId)
+            asyncHandleUpdateService(context, serviceId, userId)
         }
         return Result(serviceId)
     }
+
+    /**
+     * 异步处理上架扩展服务
+     */
+    abstract fun asyncHandleUpdateService(
+        context: DSLContext,
+        serviceId: String,
+        userId: String
+    )
 
     fun getExtensionServiceInfo(userId: String, serviceId: String): Result<StoreProcessInfo> {
         logger.info("getProcessInfo userId is $userId,serviceId is $serviceId")
@@ -675,12 +682,14 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         if (!checkResult) {
             return MessageCodeUtil.generateResponseDataObject(code)
         }
-        // 拉取task.json，检查格式，更新入库
+        // 拉取extension.json，检查格式，更新入库
         val serviceRecord = extServiceDao.getServiceById(dslContext, serviceId) ?: return Result(false)
         val serviceCode = serviceRecord.serviceCode
         val serviceName = serviceRecord.serviceName
         val serviceVersion = serviceRecord.version
         // TODO 此处等carl完善
+        // todo 解析extension.json的配置项数据，然后更新数据库
+        asyncHandleUpdateService(dslContext, serviceId, userId)
         return Result(true)
     }
 
@@ -800,8 +809,6 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         serviceId: String,
         extServiceUpdateInfo: ExtServiceUpdateInfo,
         extServiceVersionLogCreateInfo: ExtServiceVersionLogCreateInfo
-        // TODO: 此处等carl完善
-//        extServiceEnvUpdateInfo: ExtServiceEnvUpdateInfo
     ) {
         extServiceDao.updateExtServiceBaseInfo(
             dslContext = dslContext,
@@ -815,12 +822,6 @@ abstract class ExtServiceBaseService @Autowired constructor() {
             id = serviceId,
             extServiceVersionLogCreateInfo = extServiceVersionLogCreateInfo
         )
-//        extServiceEnvDao.updateExtServiceEnvInfo(
-//            dslContext = dslContext,
-//            userId = userId,
-//            serviceId = serviceId,
-//            extServiceEnvUpdateInfo = extServiceEnvUpdateInfo
-//        )
     }
 
     private fun getItemByItems(serviceId: String): List<StoreServiceItem> {
@@ -860,8 +861,6 @@ abstract class ExtServiceBaseService @Autowired constructor() {
             id = serviceId,
             extServiceCreateInfo = extServiceCreateInfo
         )
-//        // TODO: 此处等carl完善
-//        extServiceEnvDao.create(context, atomId, atomEnvRequest)
         extServiceVersionLogDao.create(
             dslContext = dslContext,
             userId = userId,
@@ -922,7 +921,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
             ExtServiceStatusEnum.INIT.status -> {
                 storeCommonService.setProcessInfo(processInfo, totalStep, NUM_ONE, DOING)
             }
-            ExtServiceStatusEnum.BUILDING.status, ExtServiceStatusEnum.COMMITTING.status, ExtServiceStatusEnum.DEPLOY.status -> {
+            ExtServiceStatusEnum.BUILDING.status, ExtServiceStatusEnum.COMMITTING.status, ExtServiceStatusEnum.DEPLOYING.status -> {
                 storeCommonService.setProcessInfo(processInfo, totalStep, NUM_TWO, DOING)
             }
             ExtServiceStatusEnum.BUILD_FAIL.status, ExtServiceStatusEnum.DEPLOY_FAIL.status -> {

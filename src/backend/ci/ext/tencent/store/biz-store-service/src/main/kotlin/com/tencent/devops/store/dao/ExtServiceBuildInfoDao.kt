@@ -24,18 +24,28 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":ext:tencent:common:common-digest-tencent")
-    compile project(":ext:tencent:common:common-auth:common-auth-tencent")
-    compile project(":ext:tencent:store:api-store-tencent")
-    compile project(":ext:tencent:store:api-store-service")
-    compile project(":ext:tencent:process:api-process-tencent")
-    compile project(":ext:tencent:store:biz-store-tencent")
-    compile project(":ext:tencent:project:api-project-tencent")
-    compile project(":core:store:biz-store")
-    compile project(":ext:tencent:environment:api-environment-tencent")
-    compile project(":ext:tencent:common:common-pipeline-tencent")
-    compile project(":core:common:common-archive")
-}
+package com.tencent.devops.store.dao
 
-apply from: "$rootDir/task_deploy_to_maven.gradle"
+import com.tencent.devops.model.store.tables.TExtensionServiceEnvInfo
+import com.tencent.devops.model.store.tables.TStoreBuildInfo
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import org.jooq.DSLContext
+import org.jooq.Record2
+import org.springframework.stereotype.Repository
+
+@Repository
+class ExtServiceBuildInfoDao {
+
+    fun getServiceBuildInfo(dslContext: DSLContext, serviceId: String): Record2<String, String> {
+        val a = TExtensionServiceEnvInfo.T_EXTENSION_SERVICE_ENV_INFO.`as`("a")
+        val b = TStoreBuildInfo.T_STORE_BUILD_INFO.`as`("b")
+        return dslContext.select(
+            b.SCRIPT.`as`("script"),
+            b.REPOSITORY_PATH.`as`("repositoryPath")
+        ).from(a)
+            .join(b)
+            .on(a.LANGUAGE.eq(b.LANGUAGE))
+            .where(a.SERVICE_ID.eq(serviceId)).and(b.STORE_TYPE.eq(StoreTypeEnum.SERVICE.type.toByte()))
+            .fetchOne()
+    }
+}

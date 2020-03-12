@@ -37,8 +37,4 @@ class ExtServiceBcsConfig {
 
     @Value("\${store.extService.bcs.token}")
     val token: String = ""
-
-    val extServiceBcsNameSpaceConfig: ExtServiceBcsNameSpaceConfig = ExtServiceBcsNameSpaceConfig()
-
-    val extServiceImageSecretConfig: ExtServiceImageSecretConfig = ExtServiceImageSecretConfig()
 }
