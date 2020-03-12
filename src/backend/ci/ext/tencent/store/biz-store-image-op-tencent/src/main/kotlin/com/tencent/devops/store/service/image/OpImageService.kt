@@ -91,7 +91,7 @@ class OpImageService @Autowired constructor(
         accessToken: String,
         userId: String,
         imageCreateRequest: ImageCreateRequest,
-        checkLatest: Boolean = true,
+        checkLatest: Boolean = false,
         needAuth: Boolean = true,
         sendCheckResultNotify: Boolean = true,
         runCheckPipeline: Boolean = true
