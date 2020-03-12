@@ -70,7 +70,7 @@ import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.dao.PipelineSettingDao
 import com.tencent.devops.process.engine.cfg.ModelTaskIdGenerator
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
-import com.tencent.devops.process.engine.dao.PipelineResDao
+import com.tencent.devops.process.engine.dao.PipelineResourceDao
 import com.tencent.devops.process.engine.dao.template.TemplateDao
 import com.tencent.devops.process.engine.dao.template.TemplatePipelineDao
 import com.tencent.devops.process.engine.service.PipelineService
@@ -132,7 +132,7 @@ class TemplateService @Autowired constructor(
     private val pipelineService: PipelineService,
     private val client: Client,
     private val objectMapper: ObjectMapper,
-    private val pipelineResDao: PipelineResDao,
+    private val pipelineResDao: PipelineResourceDao,
     private val pipelineTemplateDao: PipelineTemplateDao,
     private val pipelineGroupService: PipelineGroupService,
     private val modelTaskIdGenerator: ModelTaskIdGenerator,
@@ -288,7 +288,7 @@ class TemplateService @Autowired constructor(
     }
 
     fun deleteTemplate(projectId: String, userId: String, templateId: String): Boolean {
-        logger.info("Start to deleteRelatedAndBuildData the template $templateId by user $userId")
+        logger.info("Start to delete the template $templateId by user $userId")
         checkPermission(projectId, userId)
         val template = templateDao.getLatestTemplate(dslContext, templateId)
         dslContext.transaction { configuration ->
@@ -327,7 +327,7 @@ class TemplateService @Autowired constructor(
     }
 
     fun deleteTemplate(projectId: String, userId: String, templateId: String, version: Long): Boolean {
-        logger.info("Start to deleteRelatedAndBuildData the template [$projectId|$userId|$templateId|$version]")
+        logger.info("Start to delete the template [$projectId|$userId|$templateId|$version]")
         checkPermission(projectId, userId)
         return dslContext.transactionResult { configuration ->
             val context = DSL.using(configuration)

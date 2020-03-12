@@ -27,6 +27,7 @@
 package com.tencent.devops.process.engine.atom.vm
 
 import com.tencent.devops.common.api.enums.AgentStatus
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.pojo.Zone
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
@@ -60,7 +61,6 @@ import com.tencent.devops.process.engine.pojo.event.PipelineContainerAgentHeartB
 import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
-import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
@@ -343,7 +343,7 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
     ) {
         val agentResult = client.get(ServiceThirdPartyAgentResource::class).getAgentById(projectId, agentId!!)
         if (agentResult.isAgentDelete()) {
-            logger.warn("The agent($agentId) of project $projectId is already deleteRelatedAndBuildData")
+            logger.warn("The agent($agentId) of project $projectId is already delete")
             throw agentException(pipelineId, buildId)
         }
         val agent = agentResult.data ?: throw agentException(pipelineId, buildId)

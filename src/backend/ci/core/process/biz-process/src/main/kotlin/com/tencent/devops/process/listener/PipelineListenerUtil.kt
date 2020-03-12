@@ -16,22 +16,17 @@ object PipelineListenerUtil {
 
     fun getHardDeleteListeners(): MutableList<PipelineHardDeleteListener> {
         if (pipelineHardDeleteListeners.isEmpty()) {
-            findListeners()
+            synchronized(PipelineListenerUtil::class.java) {
+                if (pipelineHardDeleteListeners.isEmpty()) {
+                    findListeners()
+                }
+            }
         }
         return pipelineHardDeleteListeners
     }
 
     private fun findListeners() {
-        val applicationContext = SpringContextUtil.getApplicationCtx()!!
-        val beanNames = applicationContext.beanDefinitionNames
-        beanNames.forEach { beanName ->
-            val beanInstance = applicationContext.getBean(beanName)
-            logger.info("check $beanName")
-            if (beanInstance is PipelineHardDeleteListener) {
-                logger.info("add listener:$beanName")
-                pipelineHardDeleteListeners.add(beanInstance)
-            }
-        }
+        pipelineHardDeleteListeners.addAll(SpringContextUtil.getBeansWithClass(PipelineHardDeleteListener::class.java))
         logger.info("There are ${pipelineHardDeleteListeners.size} pipelineHardDeleteListeners")
     }
 }

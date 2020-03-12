@@ -27,7 +27,7 @@
 package com.tencent.devops.process.engine.service
 
 import com.tencent.devops.common.pipeline.enums.PipelineSvgType
-import com.tencent.devops.process.engine.dao.PipelineBuildDao
+import com.tencent.devops.process.engine.dao.PipelineBuildHistoryDao
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -35,7 +35,7 @@ import org.springframework.stereotype.Service
 @Service
 class PipelineBadgeService @Autowired constructor(
     private val dslContext: DSLContext,
-    private val pipelineBuildDao: PipelineBuildDao
+    private val pipelineBuildDao: PipelineBuildHistoryDao
 ) {
 
     fun get(pipelineId: String): String {

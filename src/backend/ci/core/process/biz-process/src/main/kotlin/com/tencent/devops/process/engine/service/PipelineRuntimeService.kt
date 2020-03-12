@@ -78,7 +78,7 @@ import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION_SUGGEST
 import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION_USERID
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.dao.PipelineBuildContainerDao
-import com.tencent.devops.process.engine.dao.PipelineBuildDao
+import com.tencent.devops.process.engine.dao.PipelineBuildHistoryDao
 import com.tencent.devops.process.engine.dao.PipelineBuildStageDao
 import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
 import com.tencent.devops.process.engine.dao.PipelineBuildTaskDao
@@ -153,7 +153,7 @@ class PipelineRuntimeService @Autowired constructor(
     private val pipelineWebsocketService: PipelineWebsocketService,
     private val buildIdGenerator: BuildIdGenerator,
     private val dslContext: DSLContext,
-    private val pipelineBuildDao: PipelineBuildDao,
+    private val pipelineBuildDao: PipelineBuildHistoryDao,
     private val pipelineBuildSummaryDao: PipelineBuildSummaryDao,
     private val pipelineBuildTaskDao: PipelineBuildTaskDao,
     private val pipelineBuildStageDao: PipelineBuildStageDao,

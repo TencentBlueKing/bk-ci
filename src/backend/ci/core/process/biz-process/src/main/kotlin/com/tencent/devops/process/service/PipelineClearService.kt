@@ -30,9 +30,7 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.PipelineBuildBaseInfo
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.process.dao.normal.BuildHistoryDao
-import com.tencent.devops.process.engine.dao.PipelineBuildDao
-import com.tencent.devops.process.engine.dao.PipelineInfoDao
+import com.tencent.devops.process.engine.dao.PipelineBuildHistoryDao
 import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import org.jooq.DSLContext
@@ -50,9 +48,7 @@ import java.util.concurrent.TimeUnit
 class PipelineClearService @Autowired constructor(
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val dslContext: DSLContext,
-    private val pipelineBuildDao: PipelineBuildDao,
-    private val buildHistoryDao: BuildHistoryDao,
-    private val pipelineInfoDao: PipelineInfoDao,
+    private val pipelineBuildDao: PipelineBuildHistoryDao,
     private val redisOperation: RedisOperation
 ) {
 
@@ -64,13 +60,13 @@ class PipelineClearService @Autowired constructor(
         private const val KEY_CLEAR_THREAD_FINISHED = "process:clearThreadFinished"
         private const val VALUE_CLEAR_THREAD_FINISHED_FALSE = "0"
         private const val VALUE_CLEAR_THREAD_FINISHED_TRUE = "1"
-        private const val PIPELINE_DELETE_BATCH_SIZE = 5000
+        private const val PIPELINE_DELETE_BATCH_SIZE = 500
         private const val BUILD_ID_DELETE_BATCH_SIZE = 10000
     }
 
     private val logger = LoggerFactory.getLogger(PipelineClearService::class.java)
 
-    @Value("\${deletedPipelineStoreDays:30}")
+    @Value("\${process.deletedPipelineStoreDays:30}")
     private val deletedPipelineStoreDays: Int = 30
 
     // 最多5线程，用完立即销毁
@@ -212,7 +208,7 @@ class PipelineClearService @Autowired constructor(
                         deleteRelatedAndBuildData(pipelineBuildBaseInfoList)
                     }
                     // 删主干流水线数据
-                    pipelineInfoDao.deletePipelinesHardly(dslContext, deletedPipelineIds)
+                    pipelineRepositoryService.deletePipelineInfosHardly(deletedPipelineIds)
                     watch.stop()
                 } while (deletedPipelines.size == pipelinesLimit)
                 heartBeatThread.interrupt()
@@ -228,8 +224,8 @@ class PipelineClearService @Autowired constructor(
 
     fun deleteRelatedAndBuildData(pipelineBuildBaseInfoList: List<PipelineBuildBaseInfo>) {
         // 删关联数据
-        pipelineRepositoryService.deletePipelinesHardly(pipelineBuildBaseInfoList, ChannelCode.BS)
+        pipelineRepositoryService.deletePipelinesRelatedAllDataHardly(pipelineBuildBaseInfoList, ChannelCode.BS)
         // 删主干构建数据
-        buildHistoryDao.deletePipelinesHardly(dslContext, pipelineBuildBaseInfoList)
+        pipelineBuildDao.deletePipelinesHardly(dslContext, pipelineBuildBaseInfoList)
     }
 }

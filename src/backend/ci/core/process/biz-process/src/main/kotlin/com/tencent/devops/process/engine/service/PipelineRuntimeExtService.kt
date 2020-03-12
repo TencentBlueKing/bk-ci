@@ -29,7 +29,7 @@ package com.tencent.devops.process.engine.service
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.process.engine.dao.PipelineBuildDao
+import com.tencent.devops.process.engine.dao.PipelineBuildHistoryDao
 import com.tencent.devops.process.engine.pojo.BuildInfo
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
@@ -38,7 +38,7 @@ import org.springframework.stereotype.Service
 @Service
 class PipelineRuntimeExtService @Autowired constructor(
     val redisOperation: RedisOperation,
-    val pipelineBuildDao: PipelineBuildDao,
+    val pipelineBuildDao: PipelineBuildHistoryDao,
     val dslContext: DSLContext
 ) {
     private val nextBuildKey = "pipelineNextQueueInfo:concurrency"

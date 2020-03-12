@@ -26,14 +26,17 @@
 
 package com.tencent.devops.process.engine.dao
 
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
+import com.tencent.devops.common.pipeline.pojo.PipelineBuildBaseInfo
 import com.tencent.devops.model.process.Tables.T_PIPELINE_BUILD_HISTORY
+import com.tencent.devops.model.process.tables.TPipelineBuildHistory
 import com.tencent.devops.model.process.tables.records.TPipelineBuildHistoryRecord
 import com.tencent.devops.process.engine.pojo.BuildInfo
-import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.process.listener.PipelineHardDeleteListener
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.DatePart
@@ -45,7 +48,24 @@ import java.sql.Timestamp
 import java.time.LocalDateTime
 
 @Repository
-class PipelineBuildDao {
+class PipelineBuildHistoryDao : PipelineHardDeleteListener {
+    override fun onPipelineDeleteHardly(dslContext: DSLContext, pipelineBuildBaseInfoList: List<PipelineBuildBaseInfo>): Boolean {
+        // 主干数据，由调用方在关联数据删除完成后最后删除，此处不作处理
+        return true
+    }
+
+    fun deletePipelinesHardly(dslContext: DSLContext, pipelineBuildBaseInfoList: List<PipelineBuildBaseInfo>): Boolean {
+        with(TPipelineBuildHistory.T_PIPELINE_BUILD_HISTORY) {
+            val batchSize = 1000
+            var affectedRows: Int
+            do {
+                affectedRows = dslContext.deleteFrom(this)
+                    .where(BUILD_ID.`in`(dslContext.select(BUILD_ID).from(this).where(PIPELINE_ID.`in`(pipelineBuildBaseInfoList.map { it.pipelineId })).limit(batchSize)))
+                    .execute()
+            } while (affectedRows > 0)
+        }
+        return true
+    }
 
     fun create(
         dslContext: DSLContext,

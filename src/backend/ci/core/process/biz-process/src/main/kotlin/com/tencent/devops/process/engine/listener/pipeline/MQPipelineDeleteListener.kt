@@ -33,7 +33,7 @@ import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.extend.ModelCheckPlugin
 import com.tencent.devops.process.dao.PipelineSettingDao
 import com.tencent.devops.process.engine.control.CallBackControl
-import com.tencent.devops.process.engine.dao.PipelineResDao
+import com.tencent.devops.process.engine.dao.PipelineResourceDao
 import com.tencent.devops.process.engine.pojo.event.PipelineDeleteEvent
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineWebhookService
@@ -53,7 +53,7 @@ import org.springframework.stereotype.Component
 class MQPipelineDeleteListener @Autowired constructor(
     private val objectMapper: ObjectMapper,
     private val dslContext: DSLContext,
-    private val pipelineResDao: PipelineResDao,
+    private val pipelineResDao: PipelineResourceDao,
     private val pipelineSettingDao: PipelineSettingDao,
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val pipelineWebhookService: PipelineWebhookService,

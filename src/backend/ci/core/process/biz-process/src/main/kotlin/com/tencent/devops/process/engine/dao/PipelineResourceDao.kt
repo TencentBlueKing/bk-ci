@@ -28,8 +28,11 @@ package com.tencent.devops.process.engine.dao
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.pipeline.Model
+import com.tencent.devops.common.pipeline.pojo.PipelineBuildBaseInfo
 import com.tencent.devops.model.process.Tables.T_PIPELINE_RESOURCE
+import com.tencent.devops.model.process.tables.TPipelineResource
 import com.tencent.devops.model.process.tables.records.TPipelineResourceRecord
+import com.tencent.devops.process.listener.PipelineHardDeleteListener
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -37,7 +40,15 @@ import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
 @Repository
-class PipelineResDao @Autowired constructor(private val objectMapper: ObjectMapper) {
+class PipelineResourceDao @Autowired constructor(private val objectMapper: ObjectMapper) : PipelineHardDeleteListener {
+    override fun onPipelineDeleteHardly(dslContext: DSLContext, pipelineBuildBaseInfoList: List<PipelineBuildBaseInfo>): Boolean {
+        with(TPipelineResource.T_PIPELINE_RESOURCE) {
+            dslContext.deleteFrom(this)
+                .where(PIPELINE_ID.`in`(pipelineBuildBaseInfoList.map { it.pipelineId }))
+                .execute()
+        }
+        return true
+    }
 
     fun create(
         dslContext: DSLContext,
@@ -122,6 +133,6 @@ class PipelineResDao @Autowired constructor(private val objectMapper: ObjectMapp
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(PipelineResDao::class.java)
+        private val logger = LoggerFactory.getLogger(PipelineResourceDao::class.java)
     }
 }

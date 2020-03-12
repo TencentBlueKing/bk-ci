@@ -217,7 +217,7 @@ class PipelineViewService @Autowired constructor(
                     tmpList.add(PipelineViewIdAndName(id = encode(record.id), name = record.name))
                 }
             }
-            // If tmpList is empty, then the view is deleteRelatedAndBuildData, so return the default view list
+            // If tmpList is empty, then the view is delete, so return the default view list
             if (tmpList.isEmpty()) {
                 tmpList.addAll(
                     listOf(

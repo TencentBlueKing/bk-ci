@@ -52,7 +52,7 @@ import com.tencent.devops.common.pipeline.pojo.BuildNo
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.dao.PipelineSettingDao
 import com.tencent.devops.process.engine.compatibility.BuildPropertyCompatibilityTools
-import com.tencent.devops.process.engine.dao.PipelineBuildDao
+import com.tencent.devops.process.engine.dao.PipelineBuildHistoryDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.dao.template.TemplateDao
 import com.tencent.devops.process.engine.dao.template.TemplatePipelineDao
@@ -112,14 +112,14 @@ class PipelineService @Autowired constructor(
     private val pipelineSettingDao: PipelineSettingDao,
     private val pipelineSettingService: PipelineSettingService,
     private val modelCheckPlugin: ModelCheckPlugin,
-    private val pipelineBuildDao: PipelineBuildDao,
+    private val pipelineBuildDao: PipelineBuildHistoryDao,
     private val authPermissionApi: AuthPermissionApi,
     private val pipelineAuthServiceCode: PipelineAuthServiceCode,
     private val objectMapper: ObjectMapper,
     private val client: Client
 ) {
 
-    @Value("\${deletedPipelineStoreDays:30}")
+    @Value("\${process.deletedPipelineStoreDays:30}")
     private val deletedPipelineStoreDays: Int = 30
 
     companion object {

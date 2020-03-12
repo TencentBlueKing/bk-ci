@@ -53,11 +53,11 @@ import com.tencent.devops.process.dao.PipelineSettingDao
 import com.tencent.devops.process.engine.cfg.ModelContainerIdGenerator
 import com.tencent.devops.process.engine.cfg.ModelTaskIdGenerator
 import com.tencent.devops.process.engine.cfg.PipelineIdGenerator
-import com.tencent.devops.process.engine.dao.PipelineBuildDao
+import com.tencent.devops.process.engine.dao.PipelineBuildHistoryDao
 import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.dao.PipelineModelTaskDao
-import com.tencent.devops.process.engine.dao.PipelineResDao
+import com.tencent.devops.process.engine.dao.PipelineResourceDao
 import com.tencent.devops.process.engine.dao.template.TemplatePipelineDao
 import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.engine.pojo.PipelineModelTask
@@ -91,8 +91,8 @@ class PipelineRepositoryService constructor(
     private val objectMapper: ObjectMapper,
     private val dslContext: DSLContext,
     private val pipelineInfoDao: PipelineInfoDao,
-    private val pipelineBuildDao: PipelineBuildDao,
-    private val pipelineResDao: PipelineResDao,
+    private val pipelineBuildDao: PipelineBuildHistoryDao,
+    private val pipelineResDao: PipelineResourceDao,
     private val pipelineModelTaskDao: PipelineModelTaskDao,
     private val pipelineSettingDao: PipelineSettingDao,
     private val pipelineBuildSummaryDao: PipelineBuildSummaryDao,
@@ -620,7 +620,11 @@ class PipelineRepositoryService constructor(
         }
     }
 
-    fun deletePipelinesHardly(
+    fun deletePipelineInfosHardly(pipelineIds: Collection<String>) {
+        pipelineInfoDao.deletePipelinesHardly(dslContext, pipelineIds)
+    }
+
+    fun deletePipelinesRelatedAllDataHardly(
         pipelineBuildBaseInfoList: List<PipelineBuildBaseInfo>,
         channelCode: ChannelCode?
     ) {

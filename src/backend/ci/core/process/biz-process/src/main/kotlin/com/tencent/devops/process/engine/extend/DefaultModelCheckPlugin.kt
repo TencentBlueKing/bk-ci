@@ -105,7 +105,7 @@ open class DefaultModelCheckPlugin constructor(open val client: Client) : ModelC
     }
 
     /**
-     * When edit the pipeline, it need to check if the element deleteRelatedAndBuildData
+     * When edit the pipeline, it need to check if the element delete
      */
     private fun Model.elementExist(elementId: String?): Boolean {
         stages.forEach { s ->
@@ -144,7 +144,7 @@ open class DefaultModelCheckPlugin constructor(open val client: Client) : ModelC
 
     private fun deletePrepare(sourceModel: Model?, e: Element, userId: String, pipelineId: String?) {
         if (sourceModel == null || !sourceModel.elementExist(e.id)) {
-            logger.info("The element(${e.name}/${e.id}) is deleteRelatedAndBuildData")
+            logger.info("The element(${e.name}/${e.id}) is delete")
             ElementBizRegistrar.getPlugin(e)?.beforeDelete(e, userId, pipelineId)
         }
     }

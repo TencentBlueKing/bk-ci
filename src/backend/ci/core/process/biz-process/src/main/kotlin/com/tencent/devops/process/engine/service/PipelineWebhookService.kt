@@ -38,7 +38,7 @@ import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.process.constant.ProcessMessageCode
-import com.tencent.devops.process.engine.dao.PipelineResDao
+import com.tencent.devops.process.engine.dao.PipelineResourceDao
 import com.tencent.devops.process.engine.dao.PipelineWebhookDao
 import com.tencent.devops.process.engine.pojo.PipelineWebhook
 import com.tencent.devops.process.service.scm.ScmProxyService
@@ -60,7 +60,7 @@ class PipelineWebhookService @Autowired constructor(
     private val scmProxyService: ScmProxyService,
     private val dslContext: DSLContext,
     private val pipelineWebhookDao: PipelineWebhookDao,
-    private val pipelineResDao: PipelineResDao,
+    private val pipelineResDao: PipelineResourceDao,
     private val objectMapper: ObjectMapper,
     private val client: Client
 ) {
@@ -123,7 +123,7 @@ class PipelineWebhookService @Autowired constructor(
     }
 
     fun deleteWebhook(pipelineId: String, userId: String): Result<Boolean> {
-        logger.info("deleteRelatedAndBuildData $pipelineId webhook by $userId")
+        logger.info("delete $pipelineId webhook by $userId")
         pipelineWebhookDao.delete(dslContext, pipelineId)
         return Result(true)
     }

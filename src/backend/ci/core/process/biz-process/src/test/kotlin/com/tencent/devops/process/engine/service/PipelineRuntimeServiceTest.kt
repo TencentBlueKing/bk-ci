@@ -35,7 +35,7 @@ import com.tencent.devops.common.websocket.dispatch.WebSocketDispatcher
 import com.tencent.devops.process.dao.BuildDetailDao
 import com.tencent.devops.process.engine.cfg.BuildIdGenerator
 import com.tencent.devops.process.engine.dao.PipelineBuildContainerDao
-import com.tencent.devops.process.engine.dao.PipelineBuildDao
+import com.tencent.devops.process.engine.dao.PipelineBuildHistoryDao
 import com.tencent.devops.process.engine.dao.PipelineBuildStageDao
 import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
 import com.tencent.devops.process.engine.dao.PipelineBuildTaskDao
@@ -69,7 +69,7 @@ class PipelineRuntimeServiceTest {
     private val websocketDispatcher: WebSocketDispatcher = WebSocketDispatcher(rabbitTemplate)
     private val buildIdGenerator: BuildIdGenerator = BuildIdGenerator()
     private val dslContext: DSLContext = mock()
-    private val pipelineBuildDao: PipelineBuildDao = mock()
+    private val pipelineBuildDao: PipelineBuildHistoryDao = mock()
     private val pipelineBuildSummaryDao: PipelineBuildSummaryDao = mock()
     private val pipelineBuildTaskDao: PipelineBuildTaskDao = mock()
     private val pipelineBuildStageDao: PipelineBuildStageDao = mock()
