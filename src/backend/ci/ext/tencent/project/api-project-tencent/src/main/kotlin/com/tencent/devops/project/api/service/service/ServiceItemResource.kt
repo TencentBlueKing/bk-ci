@@ -49,7 +49,7 @@ interface ServiceItemResource {
     fun getItemInfoByIds(
         @ApiParam("项目id串", required = true)
         @QueryParam("itemIds")
-        itemIds: List<String>
+        itemIds: Set<String>
     ): Result<List<ServiceItem>?>
 
     @GET
@@ -58,7 +58,7 @@ interface ServiceItemResource {
     fun getItemListsByIds(
         @ApiParam("项目Id", required = true)
         @QueryParam("itemIds")
-        itemIds: List<String>
+        itemIds: Set<String>
     ): Result<List<ExtItemDTO>?>
 
     @PUT
@@ -67,6 +67,6 @@ interface ServiceItemResource {
     fun addServiceNum(
         @ApiParam("项目Id", required = true)
         @QueryParam("itemIds")
-        itemIds: List<String>
+        itemIds: Set<String>
     ): Result<Boolean>
 }

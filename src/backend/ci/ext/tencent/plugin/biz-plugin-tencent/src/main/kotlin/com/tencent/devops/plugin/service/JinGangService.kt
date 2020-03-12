@@ -28,7 +28,8 @@ package com.tencent.devops.plugin.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.google.gson.JsonParser
-import com.tencent.devops.artifactory.api.service.ServiceArtifactoryDownLoadResource
+
+import com.tencent.devops.artifactory.api.service.ServiceArtifactoryResource
 import com.tencent.devops.artifactory.pojo.FileDetail
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
@@ -207,7 +208,7 @@ class JinGangService @Autowired constructor(
 
         // 获取文件信息
         val jfrogFile = try {
-            client.get(ServiceArtifactoryDownLoadResource::class).show(projectId, type, file).data!!
+            client.get(ServiceArtifactoryResource::class).show(projectId, type, file).data!!
         } catch (e: RemoteServiceException) {
             logger.error("client get ServiceArtifactoryResource#show fail for buildId($buildId)", e)
             throw RuntimeException("no file found in path($file)")

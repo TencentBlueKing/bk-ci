@@ -26,7 +26,8 @@
 
 package com.tencent.devops.process.service.app
 
-import com.tencent.devops.artifactory.api.service.ServiceArtifactoryDownLoadResource
+
+import com.tencent.devops.artifactory.api.service.ServiceArtifactoryResource
 import com.tencent.devops.artifactory.pojo.Property
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_VERSION
 import com.tencent.devops.common.client.Client
@@ -66,13 +67,13 @@ class AppBuildService @Autowired constructor(
         beginTime = System.currentTimeMillis()
 
         // 文件个数、版本
-        val files = client.get(ServiceArtifactoryDownLoadResource::class)
+        val files = client.get(ServiceArtifactoryResource::class)
             .search(projectId, null, null, listOf(Property("pipelineId", pipelineId), Property("buildId", buildId)))
             .data
         val packageVersion = StringBuilder()
         files?.records?.forEach {
             val singlePackageVersion =
-                client.get(ServiceArtifactoryDownLoadResource::class).show(projectId, it.artifactoryType, it.path)
+                client.get(ServiceArtifactoryResource::class).show(projectId, it.artifactoryType, it.path)
                     .data?.meta?.get(ARCHIVE_PROPS_APP_VERSION)
             if (!singlePackageVersion.isNullOrBlank()) packageVersion.append(singlePackageVersion).append(";")
         }

@@ -26,7 +26,8 @@
 
 package com.tencent.devops.process.service.ipt
 
-import com.tencent.devops.artifactory.api.service.ServiceArtifactoryDownLoadResource
+
+import com.tencent.devops.artifactory.api.service.ServiceArtifactoryResource
 import com.tencent.devops.artifactory.pojo.Property
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthPermissionApi
@@ -61,7 +62,7 @@ class IptRepoService @Autowired constructor(
             ?: throw RuntimeException("can not find build for commit")
 
         val searchProperty = listOf(Property("buildId", buildId), Property("pipelineId", pipelineId))
-        val fileList = client.get(ServiceArtifactoryDownLoadResource::class)
+        val fileList = client.get(ServiceArtifactoryResource::class)
             .search(projectId, null, null, searchProperty).data?.records ?: listOf()
         return IptBuildArtifactoryInfo(buildId, fileList)
     }

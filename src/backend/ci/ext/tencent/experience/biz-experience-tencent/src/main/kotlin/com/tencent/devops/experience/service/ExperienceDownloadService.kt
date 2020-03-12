@@ -26,7 +26,7 @@
 
 package com.tencent.devops.experience.service
 
-import com.tencent.devops.artifactory.api.service.ServiceArtifactoryDownLoadResource
+import com.tencent.devops.artifactory.api.service.ServiceArtifactoryResource
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.client.Client
@@ -109,7 +109,7 @@ class ExperienceDownloadService @Autowired constructor(
         }
 
         val artifactoryType = com.tencent.devops.artifactory.pojo.enums.ArtifactoryType.valueOf(experienceRecord.artifactoryType)
-        if (!client.get(ServiceArtifactoryDownLoadResource::class).check(projectId, artifactoryType, path).data!!) {
+        if (!client.get(ServiceArtifactoryResource::class).check(projectId, artifactoryType, path).data!!) {
             throw ErrorCodeException(
                 statusCode = 404,
                 defaultMessage = "文件不存在",
@@ -120,9 +120,9 @@ class ExperienceDownloadService @Autowired constructor(
         val url = if (path.endsWith(".ipa", true)) {
             "${HomeHostUtil.outerApiServerHost()}/artifactory/api/app/artifactories/$projectId/$artifactoryType/filePlist?experienceHashId=$experienceHashId&path=$path"
         } else {
-            client.get(ServiceArtifactoryDownLoadResource::class).externalUrl(projectId, artifactoryType, userId, path, 24*3600, false).data!!.url
+            client.get(ServiceArtifactoryResource::class).externalUrl(projectId, artifactoryType, userId, path, 24*3600, false).data!!.url
         }
-        val fileDetail = client.get(ServiceArtifactoryDownLoadResource::class).show(projectId, artifactoryType, path).data!!
+        val fileDetail = client.get(ServiceArtifactoryResource::class).show(projectId, artifactoryType, path).data!!
 
         count(experienceId, userId)
         return DownloadUrl(url, platform, fileDetail.size)
@@ -149,7 +149,7 @@ class ExperienceDownloadService @Autowired constructor(
         }
 
         val artifactoryType = com.tencent.devops.artifactory.pojo.enums.ArtifactoryType.valueOf(experienceRecord.artifactoryType)
-        if (!client.get(ServiceArtifactoryDownLoadResource::class).check(projectId, artifactoryType, path).data!!) {
+        if (!client.get(ServiceArtifactoryResource::class).check(projectId, artifactoryType, path).data!!) {
             throw ErrorCodeException(
                 statusCode = 404,
                 defaultMessage = "文件不存在",
@@ -159,7 +159,7 @@ class ExperienceDownloadService @Autowired constructor(
         val experienceHashId = HashUtil.encodeLongId(experienceId)
         val url = "${HomeHostUtil.outerApiServerHost()}/artifactory/api/app/artifactories/$projectId/$artifactoryType/filePlist?experienceHashId=$experienceHashId&path=$path"
 //        val url = client.get(ServiceArtifactoryResource::class).externalUrl(projectId, artifactoryType, userId, path, 24*3600, false).data!!.url
-        val fileDetail = client.get(ServiceArtifactoryDownLoadResource::class).show(projectId, artifactoryType, path).data!!
+        val fileDetail = client.get(ServiceArtifactoryResource::class).show(projectId, artifactoryType, path).data!!
 
         count(experienceId, userId)
         return DownloadUrl(url, platform, fileDetail.size)
@@ -185,7 +185,7 @@ class ExperienceDownloadService @Autowired constructor(
         }
 
         val artifactoryType = com.tencent.devops.artifactory.pojo.enums.ArtifactoryType.valueOf(experienceRecord.artifactoryType)
-        if (!client.get(ServiceArtifactoryDownLoadResource::class).check(projectId, artifactoryType, path).data!!) {
+        if (!client.get(ServiceArtifactoryResource::class).check(projectId, artifactoryType, path).data!!) {
             throw ErrorCodeException(
                 statusCode = 404,
                 defaultMessage = "文件不存在",
@@ -194,7 +194,7 @@ class ExperienceDownloadService @Autowired constructor(
         }
 
         count(experienceId, userId)
-        return client.get(ServiceArtifactoryDownLoadResource::class).downloadUrl(projectId, artifactoryType, userId, path, 24*3600, false).data!!.url
+        return client.get(ServiceArtifactoryResource::class).downloadUrl(projectId, artifactoryType, userId, path, 24*3600, false).data!!.url
     }
 
     fun count(experienceId: Long, userId: String) {

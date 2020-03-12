@@ -1,5 +1,6 @@
 package com.tencent.devops.artifactory.resources.service
 
+
 import com.tencent.devops.artifactory.api.service.ServiceArtifactoryDownLoadResource
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.artifactory.service.artifactory.ArtifactoryDownloadService

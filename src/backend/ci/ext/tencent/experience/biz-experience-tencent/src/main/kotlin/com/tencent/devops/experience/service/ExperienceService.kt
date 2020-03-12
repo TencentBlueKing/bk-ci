@@ -28,7 +28,8 @@ package com.tencent.devops.experience.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.tencent.devops.artifactory.api.service.ServiceArtifactoryDownLoadResource
+
+import com.tencent.devops.artifactory.api.service.ServiceArtifactoryResource
 import com.tencent.devops.artifactory.api.service.ServicePipelineResource
 import com.tencent.devops.artifactory.pojo.enums.Permission
 import com.tencent.devops.common.api.constant.CommonMessageCode
@@ -104,7 +105,7 @@ class ExperienceService @Autowired constructor(
         artifactoryType: ArtifactoryType
     ): Boolean {
         val type = com.tencent.devops.artifactory.pojo.enums.ArtifactoryType.valueOf(artifactoryType.name)
-        if (!client.get(ServiceArtifactoryDownLoadResource::class).check(projectId, type, path).data!!) {
+        if (!client.get(ServiceArtifactoryResource::class).check(projectId, type, path).data!!) {
             throw ErrorCodeException(
                 statusCode = 404,
                 defaultMessage = "文件不存在",
@@ -112,7 +113,7 @@ class ExperienceService @Autowired constructor(
             )
         }
 
-        val properties = client.get(ServiceArtifactoryDownLoadResource::class).properties(projectId, type, path).data!!
+        val properties = client.get(ServiceArtifactoryResource::class).properties(projectId, type, path).data!!
         val propertyMap = mutableMapOf<String, String>()
         properties.forEach {
             propertyMap[it.key] = it.value
@@ -245,7 +246,7 @@ class ExperienceService @Autowired constructor(
         val artifactoryType =
             com.tencent.devops.artifactory.pojo.enums.ArtifactoryType.valueOf(experience.artifactoryType.name)
         val properties =
-            client.get(ServiceArtifactoryDownLoadResource::class).properties(projectId, artifactoryType, path).data!!
+            client.get(ServiceArtifactoryResource::class).properties(projectId, artifactoryType, path).data!!
         val propertyMap = mutableMapOf<String, String>()
         properties.forEach {
             propertyMap[it.key] = it.value
@@ -386,7 +387,7 @@ class ExperienceService @Autowired constructor(
         val path = experience.path
         val artifactoryType =
             com.tencent.devops.artifactory.pojo.enums.ArtifactoryType.valueOf(experience.artifactoryType.name)
-        if (!client.get(ServiceArtifactoryDownLoadResource::class).check(projectId, artifactoryType, path).data!!) {
+        if (!client.get(ServiceArtifactoryResource::class).check(projectId, artifactoryType, path).data!!) {
             throw RuntimeException("文件($path)不存在")
         }
 
@@ -395,7 +396,7 @@ class ExperienceService @Autowired constructor(
         val source = Source.PIPELINE
 
         val properties =
-            client.get(ServiceArtifactoryDownLoadResource::class).properties(projectId, artifactoryType, path).data!!
+            client.get(ServiceArtifactoryResource::class).properties(projectId, artifactoryType, path).data!!
         val propertyMap = mutableMapOf<String, String>()
         properties.forEach {
             propertyMap[it.key] = it.value

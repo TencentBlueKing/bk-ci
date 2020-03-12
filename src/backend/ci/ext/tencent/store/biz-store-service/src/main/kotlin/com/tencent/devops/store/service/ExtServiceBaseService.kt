@@ -436,7 +436,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         // 获取项目ID对应的名称
         val projectCodeList = mutableListOf<String>()
         val serviceItemIdMap = mutableMapOf<String,List<String>>()
-        val itemIdList = mutableListOf<String>()
+        val itemIdList = mutableSetOf<String>()
         records?.forEach {
             val testProjectCode = storeProjectRelDao.getUserStoreTestProjectCode(
                 dslContext,
@@ -824,7 +824,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
 
     private fun getItemByItems(serviceId: String): List<StoreServiceItem> {
         val serviceItems = extServiceItemRelDao.getItemByServiceId(dslContext, serviceId)
-        val itemIds = mutableListOf<String>()
+        val itemIds = mutableSetOf<String>()
         serviceItems?.forEach { it ->
             itemIds.add(it.itemId)
         }
@@ -981,7 +981,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         serviceCode: String,
         repositoryHashId: String,
         fileName: String,
-        itemIds: List<String>
+        itemIds: Set<String>
     ): Map<String, String>? {
         val saveItemPropMap = mutableMapOf<String, String>()
         // 从工蜂拉取文件

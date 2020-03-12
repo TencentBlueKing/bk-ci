@@ -27,7 +27,8 @@
 package com.tencent.devops.process.engine.atom.task
 
 import com.google.gson.JsonParser
-import com.tencent.devops.artifactory.api.service.ServiceArtifactoryDownLoadResource
+
+import com.tencent.devops.artifactory.api.service.ServiceArtifactoryResource
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
@@ -225,7 +226,7 @@ class SecurityTaskAtom @Autowired constructor(
 
         LogUtils.addLine(rabbitTemplate, task.buildId, "security file path: $apkFile", task.taskId, task.containerHashId, task.executeCount ?: 1)
         // 获取文件信息，并上传文件
-        val jfrogFile = client.get(ServiceArtifactoryDownLoadResource::class).show(task.projectId, type, apkFile).data!!
+        val jfrogFile = client.get(ServiceArtifactoryResource::class).show(task.projectId, type, apkFile).data!!
 
         val uploadParams = UploadParams(
                 "/" + apkFile.removePrefix("/"),

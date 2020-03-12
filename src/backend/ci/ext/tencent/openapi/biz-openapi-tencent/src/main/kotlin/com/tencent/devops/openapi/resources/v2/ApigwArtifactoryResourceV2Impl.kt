@@ -1,6 +1,6 @@
 package com.tencent.devops.openapi.resources.v2
 
-import com.tencent.devops.artifactory.api.service.ServiceArtifactoryDownLoadResource
+
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
