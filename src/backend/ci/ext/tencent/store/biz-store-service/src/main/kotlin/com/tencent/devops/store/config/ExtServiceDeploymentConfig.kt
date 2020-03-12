@@ -32,12 +32,12 @@ import org.springframework.stereotype.Component
 @Component
 class ExtServiceDeploymentConfig {
 
-    @Value("\${extService.bcs.deployment.pullImageSecretName}")
+    @Value("\${store.extService.bcs.deployment.pullImageSecretName}")
     val pullImageSecretName: String = ""
 
-    @Value("\${extService.bcs.deployment.replicas}")
+    @Value("\${store.extService.bcs.deployment.replicas}")
     val replicas: String = ""
 
-    @Value("\${extService.bcs.deployment.containerPort}")
+    @Value("\${store.extService.bcs.deployment.containerPort}")
     val containerPort: String = ""
 }

@@ -32,15 +32,15 @@ import org.springframework.stereotype.Component
 @Component
 class ExtServiceIngressConfig {
 
-    @Value("\${extService.bcs.ingress.host}")
+    @Value("\${store.extService.bcs.ingress.host}")
     val host: String = ""
 
-    @Value("\${extService.bcs.ingress.contextPath}")
+    @Value("\${store.extService.bcs.ingress.contextPath}")
     val contextPath: String = ""
 
-    @Value("\${extService.bcs.ingress.annotation.class}")
+    @Value("\${store.extService.bcs.ingress.annotation.class}")
     val annotationClass: String = ""
 
-    @Value("\${extService.bcs.ingress.annotation.subnetId}")
+    @Value("\${store.extService.bcs.ingress.annotation.subnetId}")
     val annotationSubnetId: String = ""
 }

@@ -32,6 +32,6 @@ import org.springframework.stereotype.Component
 @Component
 class ExtServiceServiceConfig {
 
-    @Value("\${extService.bcs.service.servicePort}")
+    @Value("\${store.extService.bcs.service.servicePort}")
     val servicePort: String = ""
 }

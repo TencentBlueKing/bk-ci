@@ -32,12 +32,12 @@ import org.springframework.stereotype.Component
 @Component
 class ExtServiceBcsNameSpaceConfig {
 
-    @Value("\${extService.bcs.namespace.namespaceName}")
+    @Value("\${store.extService.bcs.namespace.namespaceName}")
     val namespaceName: String = ""
 
-    @Value("\${extService.bcs.namespace.labelKey}")
+    @Value("\${store.extService.bcs.namespace.labelKey}")
     val labelKey: String = ""
 
-    @Value("\${extService.bcs.namespace.labelValue}")
+    @Value("\${store.extService.bcs.namespace.labelValue}")
     val labelValue: String = ""
 }

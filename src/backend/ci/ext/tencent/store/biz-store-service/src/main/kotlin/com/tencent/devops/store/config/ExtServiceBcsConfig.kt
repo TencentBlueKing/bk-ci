@@ -32,10 +32,10 @@ import org.springframework.stereotype.Component
 @Component
 class ExtServiceBcsConfig {
 
-    @Value("\${extService.bcs.masterUrl}")
+    @Value("\${store.extService.bcs.masterUrl}")
     val masterUrl: String = ""
 
-    @Value("\${extService.bcs.token}")
+    @Value("\${store.extService.bcs.token}")
     val token: String = ""
 
     val extServiceBcsNameSpaceConfig: ExtServiceBcsNameSpaceConfig = ExtServiceBcsNameSpaceConfig()

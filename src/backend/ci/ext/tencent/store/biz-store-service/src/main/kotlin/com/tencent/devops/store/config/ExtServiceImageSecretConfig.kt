@@ -32,18 +32,18 @@ import org.springframework.stereotype.Component
 @Component
 class ExtServiceImageSecretConfig {
 
-    @Value("\${extService.bcs.secret.image.secretName}")
+    @Value("\${store.extService.bcs.secret.image.secretName}")
     val secretName: String = ""
 
-    @Value("\${extService.bcs.secret.image.repo.registryUrl}")
+    @Value("\${store.extService.bcs.secret.image.repo.registryUrl}")
     val repoRegistryUrl: String = ""
 
-    @Value("\${extService.bcs.secret.image.repo.name}")
+    @Value("\${store.extService.bcs.secret.image.repo.name}")
     val repoUsername: String = ""
 
-    @Value("\${extService.bcs.secret.image.repo.password}")
+    @Value("\${store.extService.bcs.secret.image.repo.password}")
     val repoPassword: String = ""
 
-    @Value("\${extService.bcs.secret.image.repo.email}")
+    @Value("\${store.extService.bcs.secret.image.repo.email}")
     val repoEmail: String = ""
 }
