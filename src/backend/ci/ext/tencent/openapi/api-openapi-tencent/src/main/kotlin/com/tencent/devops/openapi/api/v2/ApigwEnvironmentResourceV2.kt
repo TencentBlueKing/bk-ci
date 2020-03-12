@@ -78,7 +78,7 @@ interface ApigwEnvironmentResourceV2 {
 
     @ApiOperation("根据hashId获取项目节点列表(不校验权限)")
     @POST
-    @Path("/projects/{projectId}/listRawByHashIds")
+    @Path("/projects/{projectId}/listRawByNodeHashIds")
     fun listRawByHashIds(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)

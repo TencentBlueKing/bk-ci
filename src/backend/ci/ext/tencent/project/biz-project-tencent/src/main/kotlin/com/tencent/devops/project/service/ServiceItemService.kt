@@ -154,6 +154,22 @@ class ServiceItemService @Autowired constructor(
         return itemList
     }
 
+    fun getItemInfoByCodes(itemCodes: Set<String>): List<ServiceItem> {
+        logger.info("getItemInfoByCodes: itemCodes[$itemCodes]")
+        val itemList = mutableListOf<ServiceItem>()
+        serviceItemDao.getItemByCodes(dslContext, itemCodes)?.forEach {
+            val serviceItem = ServiceItem(
+                itemId = it!!.id,
+                itemCode = it.itemCode,
+                itemName = it.itemName,
+                parentId = it.parentId
+            )
+            itemList.add(serviceItem)
+        }
+        logger.info("getItemInfoByIds: itemList[$itemList]")
+        return itemList
+    }
+
     fun getItemInfoByIds(itemIds: Set<String>): List<ServiceItem> {
         logger.info("getItemInfoByIds: itemIds[$itemIds]")
         val itemList = mutableListOf<ServiceItem>()

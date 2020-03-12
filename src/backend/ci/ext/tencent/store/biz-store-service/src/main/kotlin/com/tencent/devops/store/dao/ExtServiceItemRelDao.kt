@@ -5,6 +5,7 @@ import com.tencent.devops.model.store.tables.TExtensionServiceItemRel
 import com.tencent.devops.model.store.tables.records.TExtensionServiceItemRelRecord
 import com.tencent.devops.store.pojo.ExtServiceItemRelCreateInfo
 import com.tencent.devops.store.pojo.ExtServiceItemRelUpdateInfo
+import com.tencent.devops.store.pojo.ItemPropCreateInfo
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository
@@ -77,10 +78,10 @@ class ExtServiceItemRelDao {
         }
     }
 
-    fun batchAdd(dslContext: DSLContext, userId: String, serviceId: String, propsMap: Map<String, String>) {
+    fun batchAdd(dslContext: DSLContext, userId: String, serviceId: String, itemPropList: List<ItemPropCreateInfo>) {
         with(TExtensionServiceItemRel.T_EXTENSION_SERVICE_ITEM_REL) {
 
-            val addStep = propsMap.map {
+            val addStep = itemPropList.map {
                 dslContext.insertInto(
                     this,
                     ID,
@@ -93,8 +94,8 @@ class ExtServiceItemRelDao {
                     .values(
                         UUIDUtil.generate(),
                         serviceId,
-                        it.key,
-                        it.value ?: "",
+                        it.itemId,
+                        it.props ?: "",
                         userId,
                         userId
                     )

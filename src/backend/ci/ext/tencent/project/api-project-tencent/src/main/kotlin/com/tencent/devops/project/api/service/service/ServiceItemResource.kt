@@ -44,6 +44,15 @@ interface ServiceItemResource {
     ): Result<ServiceItem?>
 
     @GET
+    @Path("itemCodes/{itemCodes}/byCodes")
+    @ApiOperation("获取扩展项目列表")
+    fun getItemByCodes(
+        @ApiParam("项目Code", required = true)
+        @QueryParam("itemCodes")
+        itemCodes: Set<String>
+    ): Result<List<ServiceItem>?>
+
+    @GET
     @Path("itemIds/{itemIds}/itemInfo")
     @ApiOperation("获取扩展项目列表")
     fun getItemInfoByIds(

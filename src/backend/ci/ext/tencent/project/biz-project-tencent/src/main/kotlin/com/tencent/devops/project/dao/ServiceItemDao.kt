@@ -162,6 +162,14 @@ class ServiceItemDao {
         }
     }
 
+    fun getItemByCodes(dslContext: DSLContext, itemCodes: Set<String>): Result<TServiceItemRecord?> {
+        return with(TServiceItem.T_SERVICE_ITEM) {
+            dslContext.selectFrom(this).where(
+                ITEM_CODE.`in`(itemCodes)
+            ).fetch()
+        }
+    }
+
     fun getAllServiceItem(dslContext: DSLContext): Result<TServiceItemRecord>? {
         return with(TServiceItem.T_SERVICE_ITEM) {
             dslContext.selectFrom(this)

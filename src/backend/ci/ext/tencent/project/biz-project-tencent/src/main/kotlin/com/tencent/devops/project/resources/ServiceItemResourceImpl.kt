@@ -24,6 +24,10 @@ class ServiceItemResourceImpl @Autowired constructor(
         return Result(serviceItemService.getItemByCode(itemCode))
     }
 
+    override fun getItemByCodes(itemCodes: Set<String>): Result<List<ServiceItem>?> {
+        return Result(serviceItemService.getItemInfoByCodes(itemCodes))
+    }
+
     override fun addServiceNum(itemIds: Set<String>): Result<Boolean> {
         return Result(serviceItemService.addServiceNum(itemIds))
     }

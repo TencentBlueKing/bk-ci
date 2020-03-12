@@ -49,6 +49,7 @@ import com.tencent.devops.store.pojo.ExtServiceItemRelCreateInfo
 import com.tencent.devops.store.pojo.ExtServiceUpdateInfo
 import com.tencent.devops.store.pojo.ExtServiceVersionLogCreateInfo
 import com.tencent.devops.store.pojo.ExtensionJson
+import com.tencent.devops.store.pojo.ItemPropCreateInfo
 import com.tencent.devops.store.pojo.StoreServiceItem
 import com.tencent.devops.store.pojo.common.ReleaseProcessItem
 import com.tencent.devops.store.pojo.common.StoreMediaInfoRequest
@@ -371,15 +372,15 @@ abstract class ExtServiceBaseService @Autowired constructor() {
             // 添加扩展点
             val featureInfoRecord = extFeatureDao.getLatestServiceByCode(dslContext, serviceCode)
             val itemIdList = submitDTO.extensionItemList
-            val itemProps =
-                getServiceProps(serviceCode, featureInfoRecord!!.repositoryHashId, EXTENSION_JSON_NAME, itemIdList)
+            val itemCreateInfoList =
+                getFileServiceProps(serviceCode, featureInfoRecord!!.repositoryHashId, EXTENSION_JSON_NAME, itemIdList)
             if (null != itemIdList) {
                 extServiceItemRelDao.deleteByServiceId(context, serviceId)
                 extServiceItemRelDao.batchAdd(
                     dslContext = dslContext,
                     userId = userId,
                     serviceId = serviceId,
-                    propsMap = itemProps!!
+                    itemPropList = itemCreateInfoList!!
                 )
             }
             // 添加扩展点使用记录
@@ -435,7 +436,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         logger.info("the getMyService userId is :$userId,records is :$records,count is :$count")
         // 获取项目ID对应的名称
         val projectCodeList = mutableListOf<String>()
-        val serviceItemIdMap = mutableMapOf<String,List<String>>()
+        val serviceItemIdMap = mutableMapOf<String, List<String>>()
         val itemIdList = mutableSetOf<String>()
         records?.forEach {
             val testProjectCode = storeProjectRelDao.getUserStoreTestProjectCode(
@@ -471,7 +472,6 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         }
         logger.info("the getMyService userId is :$userId,itemRecordList is :$itemRecordList, itemInfoMap is :$itemInfoMap")
 
-
         val myService = mutableListOf<MyExtServiceRespItem?>()
         records?.forEach {
             val serviceCode = it["serviceCode"] as String
@@ -486,9 +486,9 @@ abstract class ExtServiceBaseService @Autowired constructor() {
             logger.info("the getMyService serviceId is :$serviceId, itemList is :$serviceItemList")
             var itemName = ""
             serviceItemList?.forEach { itId ->
-                itemName += itemInfoMap?.get(itId)?.itemName +"，"
+                itemName += itemInfoMap?.get(itId)?.itemName + "，"
             }
-            itemName.substring(0, itemName.length-1)
+            itemName.substring(0, itemName.length - 1)
             logger.info("the getMyService serviceId is :$serviceId, itemName is :$itemName")
             myService.add(
                 MyExtServiceRespItem(
@@ -978,13 +978,22 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         return false
     }
 
-    private fun getServiceProps(
+    private fun getFileServiceProps(
         serviceCode: String,
         repositoryHashId: String,
         fileName: String,
-        itemIds: Set<String>
-    ): Map<String, String>? {
-        val saveItemPropMap = mutableMapOf<String, String>()
+        inputItemList : Set<String>
+    ): List<ItemPropCreateInfo> {
+        val itemCreateList = mutableListOf<ItemPropCreateInfo>()
+        val inputItemMap = mutableMapOf<String, ItemPropCreateInfo>()
+        // 页面属于与文件内的itemCode需取交集。重复以文件内的为准
+        inputItemList.forEach {
+            inputItemMap[it] = ItemPropCreateInfo(
+                    itemId = it,
+                    props = ""
+                )
+        }
+
         // 从工蜂拉取文件
         val fileStr = client.get(ServiceGitRepositoryResource::class).getFileContent(
             repositoryHashId,
@@ -992,7 +1001,8 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         ).data
         logger.info("getFileStr fileStr is:$fileStr")
         if (fileStr.isNullOrEmpty()) {
-            return mutableMapOf()
+            // 文件数据为空，直接返回输入数据
+            return returnInputData(inputItemList)
         }
         val taskDataMap = objectMapper.readValue<ExtensionJson>(fileStr!!)
         logger.info("getServiceProps taskDataMap[$taskDataMap]")
@@ -1002,43 +1012,50 @@ abstract class ExtServiceBaseService @Autowired constructor() {
             logger.warn("getServiceProps input serviceCode[$serviceCode], extension.json serviceCode[$fileServiceCode] ")
         }
 
-        // 若 extension.json存在则用 extension.json内的配置，否则使用扩展点默认props
-        val inputItemRecords = client.get(ServiceItemResource::class).getItemInfoByIds(itemIds).data
-        val dbItemMapIndexId = mutableMapOf<String, ServiceItem>()
-        val dbItemMapIndexCode = mutableMapOf<String, ServiceItem>()
-        val fileItemMap = mutableMapOf<String, String>()
-        inputItemRecords?.forEach {
-            dbItemMapIndexId[it.itemId] = it
-            dbItemMapIndexCode[it.itemCode] = it
+        if (fileItemList == null) {
+            // 文件数据为空，直接返回输入数据
+            return returnInputData(inputItemList)
         }
-//        // 解析extension.json内对应的itemId
-        fileItemList?.forEach {
-            logger.info("extension.json item:$it")
-            val itemCode = it.itemCode!!
-            val props = it.props
-            logger.info("getServiceProps fileItemList foreach itemCode[$itemCode] props[$props]")
-            var fileServiceItem = dbItemMapIndexCode[itemCode]
-            // 可能存在extension.json内配置了但页面没有选中的扩展点
-            if (fileServiceItem == null) {
-                fileServiceItem = client.get(ServiceItemResource::class).getItemByCode(itemCode).data
-                if (fileServiceItem != null) {
-                    // extension.json独立存在的扩展点加入遍历列表
-                    dbItemMapIndexId[fileServiceItem!!.itemId] = fileServiceItem
-                }
-            }
-            val fileItemId = (fileServiceItem?.itemId) ?: ""
-            fileItemMap[fileItemId] = props.toString()
+
+        // 文件与输入itemCode取交集，若文件内有，已文件props为准
+        val itemCodeList = mutableSetOf<String>()
+        val filePropMap = mutableMapOf<String, String>()
+        fileItemList!!.forEach {
+            itemCodeList.add(it.itemCode!!)
+            filePropMap[it.itemCode] = it.props.toString()
         }
-        logger.info("dbItemMapIndexId: $dbItemMapIndexId")
-        dbItemMapIndexId.forEach { (key, info) ->
-            if (fileItemMap.containsKey(key)) {
-                saveItemPropMap[key] = fileItemMap[key] ?: ""
-            } else {
-                saveItemPropMap[key] = info.props.toString()
+        val itemRecords =
+            client.get(ServiceItemResource::class).getItemByCodes(itemCodeList).data ?: return mutableListOf()
+        itemRecords.forEach {
+            if (filePropMap.containsKey(it.itemCode)) {
+                inputItemMap[it.itemId] =
+                    ItemPropCreateInfo(
+                        itemId = it.itemId,
+                        props = filePropMap[it.itemCode] ?: ""
+                    )
+
             }
         }
-        logger.info("saveItemPropMap: $saveItemPropMap")
-        return saveItemPropMap
+        // 返回取完交集后的数据
+        inputItemMap.forEach { (t, u) ->
+            itemCreateList.add(u)
+        }
+
+        return itemCreateList
+    }
+
+    private fun returnInputData(inputItem: Set<String>): List<ItemPropCreateInfo> {
+        // 默认添加页面选中的扩展点, props给空
+        val itemCreateList = mutableListOf<ItemPropCreateInfo>()
+        inputItem.forEach {
+            itemCreateList.add(
+                ItemPropCreateInfo(
+                    itemId = it,
+                    props = ""
+                )
+            )
+        }
+        return itemCreateList
     }
 
     /**

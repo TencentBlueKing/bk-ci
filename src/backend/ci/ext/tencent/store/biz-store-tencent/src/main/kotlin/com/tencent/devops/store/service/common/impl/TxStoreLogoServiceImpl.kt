@@ -49,7 +49,7 @@ class TxStoreLogoServiceImpl : StoreLogoServiceImpl() {
         logger.info("uploadStoreLogo serviceUrl is:$serviceUrl")
         OkhttpUtils.uploadFile(serviceUrl, file).use { response ->
             val responseContent = response.body()!!.string()
-            logger.error("uploadFile responseContent is: $responseContent")
+            logger.info("uploadFile responseContent is: $responseContent")
             if (!response.isSuccessful) {
                 return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
             }
