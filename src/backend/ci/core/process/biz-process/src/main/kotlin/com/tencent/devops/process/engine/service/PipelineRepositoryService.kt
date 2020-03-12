@@ -47,6 +47,7 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHook
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitlabWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeSVNWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
+import com.tencent.devops.model.process.tables.records.TPipelineInfoRecord
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.dao.PipelineSettingDao
 import com.tencent.devops.process.engine.cfg.ModelContainerIdGenerator
@@ -68,6 +69,7 @@ import com.tencent.devops.process.pojo.setting.PipelineSetting
 import com.tencent.devops.process.pojo.setting.Subscription
 import org.joda.time.LocalDateTime
 import org.jooq.DSLContext
+import org.jooq.Result
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -805,6 +807,10 @@ class PipelineRepositoryService constructor(
             channelCode = channelCode,
             pipelineIds = pipelineIds
         )
+    }
+
+    fun listPipelineByProject(projectId: String): Result<TPipelineInfoRecord>? {
+        return pipelineInfoDao.listPipelineInfoByProject(dslContext, projectId)
     }
 
     companion object {
