@@ -27,6 +27,7 @@
 package com.tencent.devops.process.api.codecc
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.plugin.codecc.pojo.coverity.ProjectLanguage
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -62,8 +63,8 @@ interface ServiceCodeccTransferResource {
         projectId: String,
         @QueryParam("toolRuleSet")
         toolRuleSet: String,
-        @QueryParam("toolRuleSetName")
-        toolRuleSetName: String,
+        @QueryParam("language")
+        language: ProjectLanguage,
         pipelineIds: Set<String>?
     ): Result<Map<String, String>>
 }

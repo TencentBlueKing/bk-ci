@@ -53,7 +53,12 @@ class CodeccTransferService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(CodeccTransferService::class.java)
     }
 
-    fun addToolSetToPipeline(projectId: String, pipelineIds: Set<String>?, toolRuleSet: String, toolRuleSetName: String): Map<String, String> {
+    fun addToolSetToPipeline(
+        projectId: String,
+        pipelineIds: Set<String>?,
+        toolRuleSet: String,
+        language: ProjectLanguage = ProjectLanguage.C_CPP
+    ): Map<String, String> {
         val result = mutableMapOf<String, String>()
 
         val finalPipelineIds = pipelineIds
@@ -62,7 +67,7 @@ class CodeccTransferService @Autowired constructor(
 
         pipelineTaskService.list(projectId, finalPipelineIds).map {
             val resultMsg = try {
-                doAddToolSetToPipeline(projectId, it, toolRuleSet, toolRuleSetName)
+                doAddToolSetToPipeline(projectId, it, toolRuleSet)
             } catch (e: Exception) {
                 logger.error("add pipeline ${it.key} rule($toolRuleSet) fail", e)
                 e.message ?: "unexpected error occur"
@@ -76,8 +81,10 @@ class CodeccTransferService @Autowired constructor(
         projectId: String,
         it: Map.Entry<String, List<PipelineModelTask>>,
         toolRuleSet: String,
-        toolRuleSetName: String
+        language: ProjectLanguage = ProjectLanguage.C_CPP
     ): String {
+        val toolRuleSetName = language.name + "_RULE"
+
         val pipelineId = it.key
 
         val newCodeccTask = it.value.filter { task -> task.taskParams["atomCode"] == "CodeccCheckAtom" }
@@ -88,27 +95,39 @@ class CodeccTransferService @Autowired constructor(
         val model = pipelineRepositoryService.getModel(pipelineId)!!
         val pipelineInfo = pipelineRepositoryService.getPipelineInfo(pipelineId)
         logger.info("get pipeline info for pipeline: $pipelineId, $pipelineInfo")
+        var needUpdate = false
         model.stages.forEach { stage ->
             stage.containers.forEach { container ->
                 container.elements.forEach { element ->
                     if (element.getAtomCode() == "CodeccCheckAtom") {
                         logger.info("get new codecc element for pipeline: $pipelineId")
                         val newElement = element as MarketBuildAtomElement
-                        val languages = newElement.data["languages"] as List<ProjectLanguage>
-                        if (languages.contains(ProjectLanguage.C_CPP)) {
+                        val input = newElement.data["input"] as Map<String, Any>
+                        val languages = input["languages"] as List<String>
+                        if (languages.contains(language.name)) {
+                            needUpdate = true
+
                             // add the first place
-                            val languageRuleSetMap = newElement.data["languageRuleSetMap"] as Map<String, List<String>>
-                            val cppRule = languageRuleSetMap[toolRuleSetName]?.toMutableList() ?: mutableListOf()
-                            cppRule.add(toolRuleSet)
+                            val languageRuleSetMap = input["languageRuleSetMap"] as MutableMap<String, List<String>>
+                            val langRule = languageRuleSetMap[toolRuleSetName] as? MutableList<String>
+                            if (langRule == null) {
+                                languageRuleSetMap["toolRuleSetName"] = listOf(toolRuleSet)
+                            } else if (!langRule.contains(toolRuleSet)) {
+                                langRule.add(toolRuleSet)
+                            }
 
                             // add the second place
-                            val cppRule2 = newElement.data[toolRuleSetName] as List<String>
-                            cppRule2.toMutableList().add(toolRuleSet)
+                            val langRule2 = input[toolRuleSetName] as MutableList<String>
+                            if (!langRule2.contains(toolRuleSet)) langRule2.add(toolRuleSet)
+
+                            logger.info("update pipieline rule list: $langRule\n $langRule2")
                         }
                     }
                 }
             }
         }
+
+        if (!needUpdate) return "do not contains $language language, do not update"
 
         // save pipeline
         logger.info("edit pipeline: $pipelineId")
