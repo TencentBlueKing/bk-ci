@@ -51,7 +51,7 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceExtServiceBuildPipelineInitResource {
 
-    @ApiOperation("扩展服务构建初始化流水线")
+    @ApiOperation("扩展服务构建部署初始流水线")
     @POST
     @Path("/ext/service/build/pipeline/projects/{projectCode}/init")
     fun initExtServiceBuildPipeline(

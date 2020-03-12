@@ -35,6 +35,9 @@ class ExtServiceImageSecretConfig {
     @Value("\${store.extService.bcs.secret.image.secretName}")
     val secretName: String = ""
 
+    @Value("\${store.extService.bcs.secret.image.imageNamePrefix}")
+    val imageNamePrefix: String = ""
+
     @Value("\${store.extService.bcs.secret.image.repo.registryUrl}")
     val repoRegistryUrl: String = ""
 

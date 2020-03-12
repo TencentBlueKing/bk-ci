@@ -1,3 +1,29 @@
+/*
+ * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ *
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ *
+ * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
+ *
+ * A copy of the MIT License is included in this file.
+ *
+ *
+ * Terms of the MIT License:
+ * ---------------------------------------------------
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
+ * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+ * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+ * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
 package com.tencent.devops.store.service
 
 import com.tencent.devops.common.client.Client
@@ -11,10 +37,12 @@ import com.tencent.devops.store.config.ExtServiceBcsNameSpaceConfig
 import com.tencent.devops.store.config.ExtServiceImageSecretConfig
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.context.annotation.DependsOn
 import org.springframework.stereotype.Service
 import javax.annotation.PostConstruct
 
 @Service
+@DependsOn("springContextUtil")
 class ExtServiceBcsInitService @Autowired constructor(
     private val client: Client,
     private val extServiceBcsConfig: ExtServiceBcsConfig,
@@ -27,7 +55,6 @@ class ExtServiceBcsInitService @Autowired constructor(
     @PostConstruct
     fun initBcsNamespace() {
         logger.info("begin execute initBcsNamespace")
-        logger.info("extServiceBcsConfig is:$extServiceBcsConfig")
         // 初始化bcs命名空间（包括已发布扩展服务版本的命名空间和处于测试中扩展服务版本的命名空间）
         val namespaceName = extServiceBcsNameSpaceConfig.namespaceName
         val createBcsNameSpaceRequest = CreateBcsNameSpaceRequest(
@@ -64,13 +91,21 @@ class ExtServiceBcsInitService @Autowired constructor(
                 email = extServiceImageSecretConfig.repoEmail
             )
         )
-        // 创建拉取镜像secret
-        val createImagePullSecretResult = client.get(ServiceBcsResource::class).createImagePullSecretTest(
+        // 创建已发布扩展服务版本的命名空间拉取镜像secret
+        val createReleaseNsImagePullSecretResult = client.get(ServiceBcsResource::class).createImagePullSecretTest(
             namespaceName = extServiceBcsNameSpaceConfig.namespaceName,
             secretName = secretName,
             createImagePullSecretRequest = createImagePullSecretRequest
         )
-        logger.info("create secretName:$secretName result is:$createImagePullSecretResult")
+        logger.info("createReleaseNsImagePullSecret secretName:$secretName result is:$createReleaseNsImagePullSecretResult")
+        // 创建已发布扩展服务版本的命名空间拉取镜像secret
+        val prepareSecretName = "$secretName-prepare"
+        val createPrepareNsImagePullSecretResult = client.get(ServiceBcsResource::class).createImagePullSecretTest(
+            namespaceName = extServiceBcsNameSpaceConfig.namespaceName,
+            secretName = prepareSecretName,
+            createImagePullSecretRequest = createImagePullSecretRequest
+        )
+        logger.info("createPrepareNsImagePullSecret secretName:$prepareSecretName result is:$createPrepareNsImagePullSecretResult")
         logger.info("end execute initBcsImagePullSecret")
     }
 }

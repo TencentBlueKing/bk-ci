@@ -15,8 +15,6 @@ data class ExtServiceEnvCreateInfo(
     val dockerFileContent: String? = "",
     @ApiModelProperty("扩展服务镜像路径")
     val imagePath: String? = null,
-    @ApiModelProperty("扩展服务前端入口文件")
-    val frontentEntryFile: String?,
     @ApiModelProperty("添加用户")
     val creatorUser: String,
     @ApiModelProperty("修改用户")

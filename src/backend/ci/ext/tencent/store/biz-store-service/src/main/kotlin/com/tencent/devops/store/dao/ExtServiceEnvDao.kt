@@ -25,7 +25,6 @@ class ExtServiceEnvDao {
                 PKG_SHA_CONTENT,
                 DOCKER_FILE_CONTENT,
                 IMAGE_PATH,
-                FRONTEND_ENTRY_FILE,
                 CREATOR,
                 MODIFIER,
                 CREATE_TIME,
@@ -39,7 +38,6 @@ class ExtServiceEnvDao {
                     extServiceEnvCreateInfo.pkgShaContent,
                     extServiceEnvCreateInfo.dockerFileContent,
                     extServiceEnvCreateInfo.imagePath,
-                    extServiceEnvCreateInfo.frontentEntryFile,
                     extServiceEnvCreateInfo.creatorUser,
                     extServiceEnvCreateInfo.modifierUser,
                     LocalDateTime.now(),
@@ -76,10 +74,6 @@ class ExtServiceEnvDao {
             val imagePath = extServiceEnvUpdateInfo.imagePath
             if (null != imagePath) {
                 baseStep.set(IMAGE_PATH, imagePath)
-            }
-            val frontentEntryFile = extServiceEnvUpdateInfo.frontentEntryFile
-            if (null != frontentEntryFile) {
-                baseStep.set(FRONTEND_ENTRY_FILE, frontentEntryFile)
             }
             baseStep.set(MODIFIER, userId).set(UPDATE_TIME, LocalDateTime.now())
                 .where(SERVICE_ID.eq(serviceId))

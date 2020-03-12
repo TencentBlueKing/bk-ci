@@ -15,8 +15,6 @@ data class ExtServiceEnvUpdateInfo(
     val imagePath: String?,
     @ApiModelProperty("扩展服务镜像执行命令")
     val imageCmd: String?,
-    @ApiModelProperty("扩展服务前端入口文件")
-    val frontentEntryFile: String?,
     @ApiModelProperty("修改用户")
     val modifierUser: String
 )
