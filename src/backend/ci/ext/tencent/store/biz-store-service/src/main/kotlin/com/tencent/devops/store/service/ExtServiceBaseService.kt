@@ -448,7 +448,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
 
             val serviceItemRecords = extServiceItemRelDao.getItemByServiceId(
                 dslContext,
-                it["serviceCode"] as String
+                it["serviceId"] as String
             )
             val itemIds = mutableListOf<String>()
             serviceItemRecords?.forEach { itemInfo ->
