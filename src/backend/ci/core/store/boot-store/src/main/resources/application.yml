@@ -1,0 +1,11 @@
+spring:
+  application:
+    name: store${service-suffix}
+    desc: DevOps Store Service
+    version: 4.0.0
+    packageName: com.tencent.devops.store
+
+
+server:
+  port: 21918
+
