@@ -1026,8 +1026,9 @@ abstract class ImageReleaseService {
                 params = arrayOf(imageId)
             )
         val oldStatus = image.imageStatus
+        val standardStatus = if (imageApproveSwitch == OPEN) ImageStatusEnum.AUDITING.status.toByte() else ImageStatusEnum.TESTING.status.toByte()
         // 非待审核状态直接返回
-        if (checkCurrentStatus && oldStatus != ImageStatusEnum.AUDITING.status.toByte()) {
+        if (checkCurrentStatus && oldStatus != standardStatus) {
             throw InvalidParamException(
                 message = "imageId=$imageId is not in approving state",
                 params = arrayOf(imageId)
