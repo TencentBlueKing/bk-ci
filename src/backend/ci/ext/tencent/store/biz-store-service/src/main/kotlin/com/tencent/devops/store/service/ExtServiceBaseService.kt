@@ -993,7 +993,6 @@ abstract class ExtServiceBaseService @Autowired constructor() {
                     props = ""
                 )
         }
-
         // 从工蜂拉取文件
         val fileStr = client.get(ServiceGitRepositoryResource::class).getFileContent(
             repositoryHashId,
@@ -1024,6 +1023,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
             itemCodeList.add(it.itemCode!!)
             filePropMap[it.itemCode] = it.props.toString()
         }
+        logger.info("getServiceProps fileItemList[$fileItemList], filePropMap[$filePropMap], inputItemMap[$inputItemMap]")
         val itemRecords =
             client.get(ServiceItemResource::class).getItemByCodes(itemCodeList).data ?: return mutableListOf()
         itemRecords.forEach {
@@ -1040,6 +1040,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         inputItemMap.forEach { (t, u) ->
             itemCreateList.add(u)
         }
+        logger.info("getServiceProps itemCreateList[$itemCreateList], filePropMap[$filePropMap]")
 
         return itemCreateList
     }
