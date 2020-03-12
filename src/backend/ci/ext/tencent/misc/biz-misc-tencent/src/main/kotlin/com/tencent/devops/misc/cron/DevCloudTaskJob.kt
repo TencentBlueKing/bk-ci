@@ -26,6 +26,7 @@
 
 package com.tencent.devops.misc.cron
 
+
 import com.tencent.devops.artifactory.api.service.ServiceArtifactoryResource
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.notify.enums.EnumEmailFormat

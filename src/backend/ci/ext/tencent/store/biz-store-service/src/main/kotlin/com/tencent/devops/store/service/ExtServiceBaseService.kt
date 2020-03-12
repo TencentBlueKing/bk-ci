@@ -442,6 +442,8 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         logger.info("the getMyService userId is :$userId,records is :$records,count is :$count")
         // 获取项目ID对应的名称
         val projectCodeList = mutableListOf<String>()
+        val serviceItemIdMap = mutableMapOf<String,List<String>>()
+        val itemIdList = mutableSetOf<String>()
         records?.forEach {
             val testProjectCode = storeProjectRelDao.getUserStoreTestProjectCode(
                 dslContext,
@@ -450,11 +452,33 @@ abstract class ExtServiceBaseService @Autowired constructor() {
                 StoreTypeEnum.SERVICE
             )
             if (null != testProjectCode) projectCodeList.add(testProjectCode)
+
+            val serviceItemRecords = extServiceItemRelDao.getItemByServiceId(
+                dslContext,
+                it["serviceId"] as String
+            )
+            val itemIds = mutableListOf<String>()
+            serviceItemRecords?.forEach { itemInfo ->
+                itemIds.add(itemInfo.itemId)
+                itemIdList.add(itemInfo.itemId)
+            }
+            serviceItemIdMap[it["serviceId"] as String] = itemIds
         }
+        logger.info("the getMyService serviceItemIdMap is :$serviceItemIdMap")
+
 
         logger.info("the getMyService userId is :$userId,projectCodeList is :$projectCodeList")
         val projectMap = client.get(ServiceProjectResource::class).getNameByCode(projectCodeList.joinToString(",")).data
         logger.info("the getMyService userId is :$userId,projectMap is :$projectMap")
+
+        val itemRecordList = client.get(ServiceItemResource::class).getItemInfoByIds(itemIdList).data
+        val itemInfoMap = mutableMapOf<String, ServiceItem>()
+        itemRecordList?.forEach {
+            itemInfoMap[it.itemId] = it
+        }
+        logger.info("the getMyService userId is :$userId,itemRecordList is :$itemRecordList, itemInfoMap is :$itemInfoMap")
+
+
         val myService = mutableListOf<MyExtServiceRespItem?>()
         records?.forEach {
             val serviceCode = it["serviceCode"] as String
@@ -465,7 +489,14 @@ abstract class ExtServiceBaseService @Autowired constructor() {
                 releaseFlag = true
             }
             val language = extServiceEnvDao.getMarketServiceEnvInfoByServiceId(dslContext, serviceId)?.language
-
+            val serviceItemList = serviceItemIdMap[serviceId]
+            logger.info("the getMyService serviceId is :$serviceId, itemList is :$serviceItemList")
+            var itemName = ""
+            serviceItemList?.forEach { itId ->
+                itemName += itemInfoMap?.get(itId)?.itemName +"，"
+            }
+            itemName.substring(0, itemName.length-1)
+            logger.info("the getMyService serviceId is :$serviceId, itemName is :$itemName")
             myService.add(
                 MyExtServiceRespItem(
                     serviceId = serviceId,
@@ -488,6 +519,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
                         )
                     ) ?: "",
                     language = language ?: "",
+                    itemName = itemName,
                     releaseFlag = releaseFlag
                 )
             )
@@ -794,7 +826,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
 
     private fun getItemByItems(serviceId: String): List<StoreServiceItem> {
         val serviceItems = extServiceItemRelDao.getItemByServiceId(dslContext, serviceId)
-        val itemIds = mutableListOf<String>()
+        val itemIds = mutableSetOf<String>()
         serviceItems?.forEach { it ->
             itemIds.add(it.itemId)
         }
@@ -949,7 +981,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         serviceCode: String,
         repositoryHashId: String,
         fileName: String,
-        itemIds: List<String>
+        itemIds: Set<String>
     ): Map<String, String>? {
         val saveItemPropMap = mutableMapOf<String, String>()
         // 从工蜂拉取文件

@@ -26,6 +26,7 @@
 
 package com.tencent.devops.process.service.app
 
+
 import com.tencent.devops.artifactory.api.service.ServiceArtifactoryResource
 import com.tencent.devops.artifactory.pojo.Property
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_VERSION

@@ -38,5 +38,5 @@ data class SubmitDTO(
     @ApiModelProperty("版本日志内容", required = true)
     val versionContent: String? = "",
     @ApiModelProperty("扩展点列表")
-    val extensionItemList: List<String>
+    val extensionItemList: Set<String>
 )

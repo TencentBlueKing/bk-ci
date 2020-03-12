@@ -11,15 +11,12 @@ import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.dao.ExtServiceDao
 import com.tencent.devops.store.dao.ExtServiceFeatureDao
 import com.tencent.devops.store.dao.ExtServiceItemRelDao
-import com.tencent.devops.store.dao.ExtServiceLableRelDao
-import com.tencent.devops.store.dao.common.LabelDao
 import com.tencent.devops.store.dao.common.StoreMediaInfoDao
 import com.tencent.devops.store.dao.common.StoreProjectRelDao
 import com.tencent.devops.store.dao.common.StoreReleaseDao
 import com.tencent.devops.store.pojo.ExtServiceFeatureUpdateInfo
 import com.tencent.devops.store.pojo.ExtServiceItemRelCreateInfo
 import com.tencent.devops.store.pojo.ExtServiceUpdateInfo
-import com.tencent.devops.store.pojo.common.KEY_LABEL_NAME
 import com.tencent.devops.store.pojo.common.PASS
 import com.tencent.devops.store.pojo.common.REJECT
 import com.tencent.devops.store.pojo.common.StoreMediaInfoRequest
@@ -44,17 +41,15 @@ import java.time.LocalDateTime
 @Service
 class OpExtServiceService @Autowired constructor(
     private val extServiceDao: ExtServiceDao,
-    private val labelDao: LabelDao,
-    private val client: Client,
     private val extServiceFeatureDao: ExtServiceFeatureDao,
     private val storeReleaseDao: StoreReleaseDao,
     private val storeProjectRelDao: StoreProjectRelDao,
     private val storeMemberService: TxExtServiceMemberImpl,
     private val extServiceItemDao: ExtServiceItemRelDao,
     private val storeMediaInfoDao: StoreMediaInfoDao,
-    private val extServiceLableRelDao: ExtServiceLableRelDao,
     private val dslContext: DefaultDSLContext,
-    private val serviceNotifyService: ExtServiceNotifyService
+    private val serviceNotifyService: ExtServiceNotifyService,
+    private val client: Client
 ) {
 
     fun queryServiceList(
@@ -82,23 +77,23 @@ class OpExtServiceService @Autowired constructor(
             page = page,
             pageSize = pageSize
         )
-
-        val allLable = labelDao.getAllLabel(dslContext, StoreTypeEnum.SERVICE.type.toByte())
-        val lableMap = mutableMapOf<String, String>()
-        allLable!!.forEach {
-            lableMap[it.id] = it.labelName
-        }
+//
+//        val allLable = labelDao.getAllLabel(dslContext, StoreTypeEnum.SERVICE.type.toByte())
+//        val lableMap = mutableMapOf<String, String>()
+//        allLable!!.forEach {
+//            lableMap[it.id] = it.labelName
+//        }
 
         val extensionServiceInfoList = mutableSetOf<ExtensionServiceVO>()
         serviceRecords?.forEach {
             val serviceId = it["itemId"] as String
-            val labelRecord = extServiceLableRelDao.getLabelsByServiceId(dslContext, serviceId)
-            val labelName =
-            if(labelRecord != null && labelRecord.size > 1) {
-                labelRecord[0]?.get(KEY_LABEL_NAME).toString()
-            } else {
-                null
-            }
+//            val labelRecord = extServiceLableRelDao.getLabelsByServiceId(dslContext, serviceId)
+//            val labelName =
+//            if(labelRecord != null && labelRecord.size > 1) {
+//                labelRecord[0]?.get(KEY_LABEL_NAME).toString()
+//            } else {
+//                null
+//            }
             extensionServiceInfoList.add(
                 ExtensionServiceVO(
                     serviceId = serviceId,
@@ -106,8 +101,7 @@ class OpExtServiceService @Autowired constructor(
                     serviceName = it["serviceName"] as String,
                     serviceStatus = (it["serviceStatus"] as Byte).toInt(),
                     publisher = it["publisher"] as String,
-                    lable = labelName ?: "",
-                    projectCode = "",
+                    projectCode = it["projectCode"] as String,
                     modifierTime = (it["updateTime"] as LocalDateTime).timestamp().toString(),
                     version = it["version"] as String
                 )

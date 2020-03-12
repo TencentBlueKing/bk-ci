@@ -76,7 +76,7 @@ interface OpServiceResource {
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @ApiParam("扩展服务ID", required = true)
-        @QueryParam("serviceId")
+        @PathParam("serviceId")
         serviceId: String
     ): Result<ServiceVersionVO?>
 
@@ -88,10 +88,10 @@ interface OpServiceResource {
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @ApiParam("扩展服务ID", required = true)
-        @QueryParam("serviceId")
+        @PathParam("serviceId")
         serviceId: String,
         @ApiParam("扩展服务Code", required = true)
-        @QueryParam("serviceCode")
+        @PathParam("serviceCode")
         serviceCode: String,
         @ApiParam("修改信息", required = true)
         updateInfo: OpEditInfoDTO
@@ -105,7 +105,7 @@ interface OpServiceResource {
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @ApiParam("扩展服务ID", required = true)
-        @QueryParam("serviceId")
+        @QueryParam("serviceCode")
         serviceCode: String
     ): Result<ServiceVersionVO?>
 

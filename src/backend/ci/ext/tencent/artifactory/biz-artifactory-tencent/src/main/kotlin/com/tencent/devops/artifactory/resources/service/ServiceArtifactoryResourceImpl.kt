@@ -26,6 +26,7 @@
 
 package com.tencent.devops.artifactory.resources.service
 
+
 import com.tencent.devops.artifactory.api.service.ServiceArtifactoryResource
 import com.tencent.devops.artifactory.pojo.ArtifactoryCreateInfo
 import com.tencent.devops.artifactory.pojo.Count

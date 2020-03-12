@@ -26,6 +26,7 @@
 
 package com.tencent.devops.process.service.ipt
 
+
 import com.tencent.devops.artifactory.api.service.ServiceArtifactoryResource
 import com.tencent.devops.artifactory.pojo.Property
 import com.tencent.devops.common.auth.api.AuthPermission

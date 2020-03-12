@@ -20,7 +20,7 @@ data class InitExtServiceDTO(
     @ApiModelProperty(value = "插件代码库不开源原因", required = false)
     val privateReason: String? = null,
     @ApiModelProperty("扩展点列表")
-    val extensionItemList: List<String>,
+    val extensionItemList: Set<String>,
     @ApiModelProperty(value = "项目可视范围", required = false)
     val visibilityLevel: VisibilityLevelEnum? = VisibilityLevelEnum.LOGIN_PUBLIC
 )

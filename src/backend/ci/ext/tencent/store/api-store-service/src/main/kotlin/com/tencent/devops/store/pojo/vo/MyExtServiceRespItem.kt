@@ -28,6 +28,8 @@ data class MyExtServiceRespItem(
     val releaseFlag: Boolean,
     @ApiModelProperty("创建人", required = true)
     val creator: String,
+    @ApiModelProperty("扩展点", required = true)
+    val itemName: String,
     @ApiModelProperty("修改人", required = true)
     val modifier: String,
     @ApiModelProperty("创建时间", required = true)

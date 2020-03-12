@@ -138,11 +138,10 @@ class ServiceItemService @Autowired constructor(
         )
     }
 
-    fun getItemByIds(itemIds: List<String>): List<ExtItemDTO> {
+    fun getItemByIds(itemIds: Set<String>): List<ExtItemDTO> {
         logger.info("getItemByIds: itemIds[$itemIds]")
-        val ids = itemIds.joinToString(",")
         val itemList = mutableListOf<ExtItemDTO>()
-        serviceItemDao.getItemByIds(dslContext, ids)?.forEach {
+        serviceItemDao.getItemByIds(dslContext, itemIds)?.forEach {
             val serviceItem = ServiceItem(
                 itemId = it!!.id,
                 itemCode = it.itemCode,
@@ -155,11 +154,10 @@ class ServiceItemService @Autowired constructor(
         return itemList
     }
 
-    fun getItemInfoByIds(itemIds: List<String>): List<ServiceItem> {
+    fun getItemInfoByIds(itemIds: Set<String>): List<ServiceItem> {
         logger.info("getItemInfoByIds: itemIds[$itemIds]")
-        val ids = itemIds.joinToString(",")
         val itemList = mutableListOf<ServiceItem>()
-        serviceItemDao.getItemByIds(dslContext, ids)?.forEach {
+        serviceItemDao.getItemByIds(dslContext, itemIds)?.forEach {
             val serviceItem = ServiceItem(
                 itemId = it!!.id,
                 itemCode = it.itemCode,
@@ -168,13 +166,13 @@ class ServiceItemService @Autowired constructor(
             )
             itemList.add(serviceItem)
         }
+        logger.info("getItemInfoByIds: itemList[$itemList]")
         return itemList
     }
 
-    fun addServiceNum(itemIds: List<String>): Boolean {
+    fun addServiceNum(itemIds: Set<String>): Boolean {
         logger.info("addServiceNum: itemIds[$itemIds]")
-        val ids = itemIds.joinToString(",")
-        serviceItemDao.getItemByIds(dslContext, ids)?.forEach {
+        serviceItemDao.getItemByIds(dslContext, itemIds)?.forEach {
             val serviceNum = it!!.serviceNum + 1
             serviceItemDao.addCount(dslContext, it.id, serviceNum)
         }
@@ -346,4 +344,5 @@ class ServiceItemService @Autowired constructor(
     companion object {
         val logger = LoggerFactory.getLogger(this::class.java)
     }
+
 }

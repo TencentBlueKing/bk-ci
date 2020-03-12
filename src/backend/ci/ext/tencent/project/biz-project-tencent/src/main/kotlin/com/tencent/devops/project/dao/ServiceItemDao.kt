@@ -154,7 +154,7 @@ class ServiceItemDao {
         }
     }
 
-    fun getItemByIds(dslContext: DSLContext, itemIds: String): Result<TServiceItemRecord?> {
+    fun getItemByIds(dslContext: DSLContext, itemIds: Set<String>): Result<TServiceItemRecord?> {
         return with(TServiceItem.T_SERVICE_ITEM) {
             dslContext.selectFrom(this).where(
                 ID.`in`(itemIds)
