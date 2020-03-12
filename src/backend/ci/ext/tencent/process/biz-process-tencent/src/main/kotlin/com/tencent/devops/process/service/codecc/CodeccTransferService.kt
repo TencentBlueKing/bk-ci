@@ -34,10 +34,12 @@ import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxPaasCodeCCScri
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.plugin.codecc.CodeccApi
 import com.tencent.devops.plugin.codecc.pojo.coverity.ProjectLanguage
+import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.pojo.PipelineModelTask
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineService
 import com.tencent.devops.process.service.PipelineTaskService
+import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -47,7 +49,9 @@ class CodeccTransferService @Autowired constructor(
     private val pipelineTaskService: PipelineTaskService,
     private val pipelineService: PipelineService,
     private val pipelineRepositoryService: PipelineRepositoryService,
-    private val codeccApi: CodeccApi
+    private val pipelineInfoDao: PipelineInfoDao,
+    private val codeccApi: CodeccApi,
+    private val dslContext: DSLContext
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(CodeccTransferService::class.java)
@@ -62,7 +66,7 @@ class CodeccTransferService @Autowired constructor(
         val result = mutableMapOf<String, String>()
 
         val finalPipelineIds = pipelineIds
-            ?: pipelineRepositoryService.listPipelineByProject(projectId)?.filter { it.channel == ChannelCode.BS.name }?.map { it.pipelineId }?.toSet()
+            ?: pipelineInfoDao.listPipelineInfoByProject(dslContext, projectId)?.filter { it.channel == ChannelCode.BS.name }?.map { it.pipelineId }?.toSet()
             ?: throw RuntimeException("no pipeline found in project: $projectId")
 
         pipelineTaskService.list(projectId, finalPipelineIds).map {
