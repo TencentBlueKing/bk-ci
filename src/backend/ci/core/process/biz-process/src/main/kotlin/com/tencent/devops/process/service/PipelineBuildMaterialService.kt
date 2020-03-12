@@ -24,18 +24,32 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.repository.pojo.commit
+package com.tencent.devops.process.service
 
-data class CommitData(
-    val type: Short, // 1-svn, 2-git, 3-gitlab
-    val pipelineId: String,
-    val buildId: String,
-    val commit: String,
-    val committer: String,
-    val commitTime: Long,
-    val comment: String?,
-    val repoId: String?,
-    val repoName: String?,
-    val elementId: String,
-    var url: String? = null
-)
+import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.process.engine.dao.PipelineBuildDao
+import com.tencent.devops.process.pojo.PipelineBuildMaterial
+import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
+
+@Service
+class PipelineBuildMaterialService @Autowired constructor(
+    private val dslContext: DSLContext,
+    private val pipelineBuildDao: PipelineBuildDao
+) {
+    private val logger = LoggerFactory.getLogger(PipelineBuildMaterialService::class.java)
+
+    fun saveBuildMaterial(
+        buildId: String,
+        projectId: String,
+        pipelineId: String,
+        pipelineBuildMaterials: List<PipelineBuildMaterial>
+    ): Int {
+        val materials = JsonUtil.toJson(pipelineBuildMaterials)
+        logger.info("BuildId: $buildId save material size: ${pipelineBuildMaterials.size}")
+        pipelineBuildDao.updateBuildMaterial(dslContext, buildId, materials)
+        return pipelineBuildMaterials.size
+    }
+}
