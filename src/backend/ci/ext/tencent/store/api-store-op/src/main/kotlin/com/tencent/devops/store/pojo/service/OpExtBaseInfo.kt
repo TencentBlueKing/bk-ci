@@ -8,7 +8,7 @@ data class OpExtBaseInfo(
     @ApiModelProperty("扩展服务Name")
     val serviceName: String,
     @ApiModelProperty("扩展点")
-    val itemIds: List<String>?,
+    val itemIds: Set<String>?,
     @ApiModelProperty("标签")
     val labels: List<String>?,
     @ApiModelProperty("简介")

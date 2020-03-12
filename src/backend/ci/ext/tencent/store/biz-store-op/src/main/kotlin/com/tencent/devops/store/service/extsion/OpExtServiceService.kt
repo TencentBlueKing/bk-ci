@@ -11,15 +11,12 @@ import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.dao.ExtServiceDao
 import com.tencent.devops.store.dao.ExtServiceFeatureDao
 import com.tencent.devops.store.dao.ExtServiceItemRelDao
-import com.tencent.devops.store.dao.ExtServiceLableRelDao
-import com.tencent.devops.store.dao.common.LabelDao
 import com.tencent.devops.store.dao.common.StoreMediaInfoDao
 import com.tencent.devops.store.dao.common.StoreProjectRelDao
 import com.tencent.devops.store.dao.common.StoreReleaseDao
 import com.tencent.devops.store.pojo.ExtServiceFeatureUpdateInfo
 import com.tencent.devops.store.pojo.ExtServiceItemRelCreateInfo
 import com.tencent.devops.store.pojo.ExtServiceUpdateInfo
-import com.tencent.devops.store.pojo.common.KEY_LABEL_NAME
 import com.tencent.devops.store.pojo.common.PASS
 import com.tencent.devops.store.pojo.common.REJECT
 import com.tencent.devops.store.pojo.common.StoreMediaInfoRequest
@@ -44,17 +41,15 @@ import java.time.LocalDateTime
 @Service
 class OpExtServiceService @Autowired constructor(
     private val extServiceDao: ExtServiceDao,
-    private val labelDao: LabelDao,
-    private val client: Client,
     private val extServiceFeatureDao: ExtServiceFeatureDao,
     private val storeReleaseDao: StoreReleaseDao,
     private val storeProjectRelDao: StoreProjectRelDao,
     private val storeMemberService: TxExtServiceMemberImpl,
     private val extServiceItemDao: ExtServiceItemRelDao,
     private val storeMediaInfoDao: StoreMediaInfoDao,
-    private val extServiceLableRelDao: ExtServiceLableRelDao,
     private val dslContext: DefaultDSLContext,
-    private val serviceNotifyService: ExtServiceNotifyService
+    private val serviceNotifyService: ExtServiceNotifyService,
+    private val client: Client
 ) {
 
     fun queryServiceList(
