@@ -139,10 +139,9 @@ class ServiceItemService @Autowired constructor(
     }
 
     fun getItemByIds(itemIds: Set<String>): List<ExtItemDTO> {
-        val ids = itemIds.joinToString(",")
         logger.info("getItemByIds: itemIds[$itemIds]")
         val itemList = mutableListOf<ExtItemDTO>()
-        serviceItemDao.getItemByIds(dslContext, ids)?.forEach {
+        serviceItemDao.getItemByIds(dslContext, itemIds)?.forEach {
             val serviceItem = ServiceItem(
                 itemId = it!!.id,
                 itemCode = it.itemCode,
@@ -156,10 +155,9 @@ class ServiceItemService @Autowired constructor(
     }
 
     fun getItemInfoByIds(itemIds: Set<String>): List<ServiceItem> {
-        val ids = itemIds.joinToString(",")
-        logger.info("getItemInfoByIds: itemIds[$itemIds], idStr[$ids]")
+        logger.info("getItemInfoByIds: itemIds[$itemIds]")
         val itemList = mutableListOf<ServiceItem>()
-        serviceItemDao.getItemByIds(dslContext, ids)?.forEach {
+        serviceItemDao.getItemByIds(dslContext, itemIds)?.forEach {
             val serviceItem = ServiceItem(
                 itemId = it!!.id,
                 itemCode = it.itemCode,
@@ -173,9 +171,8 @@ class ServiceItemService @Autowired constructor(
     }
 
     fun addServiceNum(itemIds: Set<String>): Boolean {
-        val ids = itemIds.joinToString(",")
-        logger.info("addServiceNum: itemIds[$itemIds], idStr[$ids]")
-        serviceItemDao.getItemByIds(dslContext, ids)?.forEach {
+        logger.info("addServiceNum: itemIds[$itemIds]")
+        serviceItemDao.getItemByIds(dslContext, itemIds)?.forEach {
             val serviceNum = it!!.serviceNum + 1
             serviceItemDao.addCount(dslContext, it.id, serviceNum)
         }
