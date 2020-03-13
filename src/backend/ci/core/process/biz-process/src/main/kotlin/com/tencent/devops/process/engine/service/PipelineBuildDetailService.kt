@@ -591,12 +591,12 @@ class PipelineBuildDetailService @Autowired constructor(
                         }
                     } else if (BuildStatus.isFinish(buildStatus) && stage.startEpoch != null) {
                         stage.elapsed = System.currentTimeMillis() - stage.startEpoch!!
-                    } else if (BuildStatus.isReview(buildStatus)) {
-                        // 如果某个stage进入等待审核触发，流水线状态设为阶段性执行成功
-                        pipelineBuildDao.updateStatus(dslContext, buildId, BuildStatus.RUNNING, BuildStatus.STAGE_SUCCESS)
                     } else if (BuildStatus.isReadyToRun(buildStatus)) {
                         // 如果某个stage被手动触发，流水线状态设为执行中
                         pipelineBuildDao.updateStatus(dslContext, buildId, BuildStatus.STAGE_SUCCESS, BuildStatus.RUNNING)
+                    } else if (buildStatus == BuildStatus.PAUSE) {
+                        // 如果某个stage进入等待审核触发，流水线状态设为阶段性执行成功
+                        pipelineBuildDao.updateStatus(dslContext, buildId, BuildStatus.RUNNING, BuildStatus.STAGE_SUCCESS)
                     }
 
                     // 更新Stage状态至BuildHistory
@@ -629,7 +629,7 @@ class PipelineBuildDetailService @Autowired constructor(
             override fun needUpdate(): Boolean {
                 return update
             }
-        }, if (BuildStatus.isReview(buildStatus)) BuildStatus.STAGE_SUCCESS else BuildStatus.RUNNING) // 除等待手动触发外，流水线都是RUNNING状态
+        }, if (buildStatus == BuildStatus.PAUSE) BuildStatus.STAGE_SUCCESS else BuildStatus.RUNNING) // 除等待手动触发外，流水线都是RUNNING状态
     }
 
     fun taskSkip(buildId: String, taskId: String) {
