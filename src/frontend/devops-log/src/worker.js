@@ -32,44 +32,60 @@ function handleColor (val) {
     return res
 }
 
-let allListData = []
-let tagList = []
-let mainWidth = 0
-let mainWordNum = 0
+const allListData = {}
+let curListData = []
+const allTagList = {}
+let curTagList = []
+const allMainWidth = {}
+const allMainWordNum = {}
+const allRepeatLineNum = {}
+let curId
 
 onmessage = function (e) {
     const data = e.data
     const type = data.type
+    curId = data.id
+    curListData = allListData[curId]
+    curTagList = allTagList[curId]
+
+    if (!curListData) {
+        allListData[curId] = curListData = []
+        allTagList[curId] = curTagList = []
+        allMainWidth[curId] = 0
+        allMainWordNum[curId] = 0
+        allRepeatLineNum[curId] = -1
+    }
+
     switch (type) {
         case 'initLog':
-            mainWidth = data.mainWidth - 70
-            mainWordNum = Math.floor(mainWidth / 6.8)
+            allMainWidth[curId] = data.mainWidth - 90
+            allMainWordNum[curId] = Math.floor(allMainWidth[curId] / 6.8)
             addListData(data)
-            postMessage({ type: 'completeInit', number: allListData.length })
+            postMessage({ type: 'completeInit', number: curListData.length, id: curId })
             break
         case 'addListData':
-            mainWidth = data.mainWidth - 70
-            mainWordNum = Math.floor(mainWidth / 6.8)
+            allMainWidth[curId] = data.mainWidth - 90
+            allMainWordNum[curId] = Math.floor(allMainWidth[curId] / 6.8)
             addListData(data)
-            postMessage({ type: 'completeAdd', number: allListData.length })
+            postMessage({ type: 'completeAdd', number: curListData.length, id: curId })
             break
         case 'wheelGetData':
             getListData(data)
             break
         case 'foldListData':
             foldListData(data)
-            postMessage({ type: 'completeFold', number: allListData.length })
+            postMessage({ type: 'completeFold', number: curListData.length, id: curId })
             break
         case 'resetData':
-            allListData = []
-            tagList = []
+            curListData = []
+            curTagList = []
             break
     }
 }
 
 function foldListData ({ startIndex }) {
-    const realIndex = allListData.findIndex(x => x.realIndex === startIndex)
-    const currentItem = allListData[realIndex]
+    const realIndex = curListData.findIndex(x => x.realIndex === startIndex)
+    const currentItem = curListData[realIndex]
     if (!currentItem || !currentItem.children) return
 
     if (!currentItem.children.length) {
@@ -83,20 +99,21 @@ function foldListData ({ startIndex }) {
                 currentNum = totalNum
                 totalNum = 0
             }
-            const subList = allListData.splice(realIndex + 1, currentNum)
-            currentItem.children.push(...subList)
+            const subList = curListData.splice(realIndex + 1, currentNum)
+            allRepeatLineNum[curId] -= subList.length
+            currentItem.children = currentItem.children.concat(subList)
         }
     } else {
         for (let index = 0; index < currentItem.children.length;) {
             const someList = currentItem.children.slice(index, index + 10000)
-            allListData.splice(realIndex + 1 + index, 0, ...someList)
+            curListData.splice(realIndex + 1 + index, 0, ...someList)
+            allRepeatLineNum[curId] += someList.length
             index += 10000
         }
         currentItem.children = []
     }
 }
 
-let repeatLineNum = -1
 function addListData ({ list }) {
     list.forEach((item) => {
         const { message, color } = handleColor(item.message || '')
@@ -104,27 +121,27 @@ function addListData ({ list }) {
         newItemArr.forEach((message) => {
             const splitTextArr = splitText(message)
             splitTextArr.forEach((message, i) => {
-                const currentIndex = allListData.length
+                const currentIndex = curListData.length
                 const newItem = {
                     message, color,
-                    isNewLine: i > 0 ? (repeatLineNum++, true) : false,
-                    showIndex: allListData.length - repeatLineNum,
+                    isNewLine: i > 0 ? (allRepeatLineNum[curId]++, true) : false,
+                    showIndex: curListData.length - allRepeatLineNum[curId],
                     realIndex: currentIndex,
                     timestamp: item.timestamp
                 }
                 if (message.includes('##[group]')) {
                     newItem.message = newItem.message.replace('##[group]', '')
-                    tagList.push(newItem)
+                    curTagList.push(newItem)
                 }
 
-                if (message.includes('##[endgroup]') && tagList.length) {
+                if (message.includes('##[endgroup]') && curTagList.length) {
                     newItem.message = newItem.message.replace('##[endgroup]', '')
-                    const linkItem = tagList.pop()
+                    const linkItem = curTagList.pop()
                     linkItem.endIndex = currentIndex
                     linkItem.children = []
                 }
 
-                allListData.push(newItem)
+                curListData.push(newItem)
             })
         })
     })
@@ -134,7 +151,7 @@ function splitText (message) {
     let tempMes = ''
     const totalWidth = getTextWidth(message)
     const mesRes = []
-    if (totalWidth < mainWidth) {
+    if (totalWidth < allMainWidth[curId]) {
         mesRes.push(message)
     } else {
         const regex = /<a[^>]+?href=["']?([^"']+)["']?[^>]*>([^<]+)<\/a>/gi
@@ -175,11 +192,11 @@ function splitText (message) {
 }
 
 function splitByChar (message) {
-    let tempMes = message.slice(0, mainWordNum)
-    message = message.slice(mainWordNum)
+    let tempMes = message.slice(0, allMainWordNum[curId])
+    message = message.slice(allMainWordNum[curId])
     let tempWidth = getTextWidth(tempMes)
-    while (tempWidth > mainWidth || (mainWidth - tempWidth > 15 && message !== '')) {
-        if (tempWidth > mainWidth) {
+    while (tempWidth > allMainWidth[curId] || (allMainWidth[curId] - tempWidth > 15 && message !== '')) {
+        if (tempWidth > allMainWidth[curId]) {
             message = tempMes.slice(-1) + message
             tempMes = tempMes.slice(0, -1)
             tempWidth = getTextWidth(tempMes)
@@ -211,7 +228,7 @@ function getListData ({ totalScrollHeight, itemHeight, itemNumber, canvasHeight,
     const nums = Math.floor(startIndex * itemHeight / 500000)
     for (let i = startIndex; i <= endIndex; i++) {
         const top = i * itemHeight - nums * 500000
-        const currentItem = allListData[i]
+        const currentItem = curListData[i]
         if (typeof currentItem === 'undefined') continue
         indexList.push({
             top,
@@ -241,10 +258,10 @@ function getListData ({ totalScrollHeight, itemHeight, itemNumber, canvasHeight,
     const minMapEndIndex = minMapStartIndex + itemNumber * 8
     const minMapList = []
     for (let i = minMapStartIndex; i <= minMapEndIndex; i++) {
-        const currentItem = allListData[i]
+        const currentItem = curListData[i]
         if (typeof currentItem === 'undefined') continue
         minMapList.push(currentItem)
     }
 
-    postMessage({ type, indexList, listData, totalScrollHeight, minMapList })
+    postMessage({ type, indexList, listData, totalScrollHeight, minMapList, id: curId })
 }

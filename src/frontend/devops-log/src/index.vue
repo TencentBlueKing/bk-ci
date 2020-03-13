@@ -1,39 +1,21 @@
 <template>
-    <article class="log-home">
-        <section class="log-main">
-            <header class="log-head">
-                <span class="log-title"><status-icon :status="status"></status-icon>{{ title }}</span>
-                <p class="log-buttons">
-                    <bk-select v-if="![0, 1].includes(+executeCount)" :placeholder="language('重试次数')" class="log-execute" :value="currentExe" :clearable="false">
-                        <bk-option v-for="execute in executeCount"
-                            :key="execute"
-                            :id="execute"
-                            :name="execute"
-                            @click.native="changeExecute(execute)"
-                        >
-                        </bk-option>
-                    </bk-select>
-                    <button class="log-button" @click="showTime = !showTime">{{ language('显示时间') }}</button>
-                    <button class="log-button" @click="downLoad">{{ language('下载日志') }}</button>
-                </p>
-            </header>
-
-            <virtual-scroll class="log-scroll" ref="scroll">
-                <template slot-scope="item">
-                    <span class="item-txt selection-color">
-                        <span class="item-time selection-color" v-if="showTime">{{(item.data.isNewLine ? '' : item.data.timestamp)|timeFilter}}</span>
-                        <span class="selection-color" :style="`color: ${item.data.color};font-weight: ${item.data.fontWeight}`" v-html="valuefilter(item.data.value)"></span>
-                    </span>
-                </template>
-            </virtual-scroll>
-        </section>
-    </article>
+    <log-container v-bind="$props" @closeLog="$emit('closeLog')" @changeExecute="changeExecute" :show-time.sync="showTime">
+        <virtual-scroll class="log-scroll" ref="scroll" :id="id" :worker="worker">
+            <template slot-scope="item">
+                <span class="item-txt selection-color">
+                    <span class="item-time selection-color" v-if="showTime">{{(item.data.isNewLine ? '' : item.data.timestamp)|timeFilter}}</span>
+                    <span class="selection-color" :style="`color: ${item.data.color};font-weight: ${item.data.fontWeight}`" v-html="valuefilter(item.data.value)"></span>
+                </span>
+            </template>
+        </virtual-scroll>
+    </log-container>
 </template>
 
 <script>
+    // eslint-disable-next-line
+    const Worker = require('worker-loader!./worker.js')
     import virtualScroll from './virtualScroll'
-    import statusIcon from './status'
-    import language from './locale'
+    import logContainer from './logContainer'
 
     function prezero (num) {
         num = Number(num)
@@ -51,15 +33,7 @@
     export default {
         components: {
             virtualScroll,
-            statusIcon
-        },
-
-        filters: {
-            timeFilter (val) {
-                if (!val) return ''
-                const time = new Date(val)
-                return `${time.getFullYear()}-${prezero(time.getMonth() + 1)}-${prezero(time.getDate())} ${prezero(time.getHours())}:${prezero(time.getMinutes())}:${prezero(time.getSeconds())}:${millisecond(time.getMilliseconds())}`
-            }
+            logContainer
         },
 
         props: {
@@ -78,32 +52,35 @@
             },
             title: {
                 type: String
+            },
+            id: {
+                type: String
             }
         },
 
         data () {
             return {
-                searchResult: [],
-                showSearchIndex: 0,
-                showTime: false,
-                currentExe: this.executeCount
+                worker: new Worker(),
+                showTime: false
             }
         },
 
-        mounted () {
-            document.addEventListener('mousedown', this.closeLog)
+        filters: {
+            timeFilter (val) {
+                if (!val) return ''
+                const time = new Date(val)
+                return `${time.getFullYear()}-${prezero(time.getMonth() + 1)}-${prezero(time.getDate())} ${prezero(time.getHours())}:${prezero(time.getMinutes())}:${prezero(time.getSeconds())}:${millisecond(time.getMilliseconds())}`
+            }
         },
 
-        beforeDestroy () {
-            document.removeEventListener('mousedown', this.closeLog)
+        beforeDestroy() {
+            this.worker.terminate()
         },
 
         methods: {
-            language,
-
-            closeLog (event) {
-                let curTarget = event.target
-                if (curTarget.classList.contains('log-home')) this.$emit('closeLog')
+            changeExecute (execute) {
+                this.$refs.scroll.resetData()
+                this.$emit('changeExecute', this.id, execute)
             },
 
             valuefilter (val) {
@@ -124,44 +101,9 @@
                 }).replace(/&lt;a((?!&gt;).)+?href=["']?([^"']+)["']?((?!&gt;).)*&gt;(((?!&lt;).)+)&lt;\/a&gt;/gi, "<a href='$2' target='_blank'>$4</a>")
             },
 
-            downLoad () {
-                fetch(this.downLoadLink, {
-                    method: 'GET',
-                    headers: {
-                        'content-type': 'application/json'
-                    },
-                    credentials: 'include'
-                }).then((res) => {
-                    if (res.status >= 200 && res.status < 300) {
-                        return res
-                    } else {
-                        throw new Error(res.statusText)
-                    }
-                }).then(res => res.blob()).then((blob) => {
-                    const a = document.createElement('a')
-                    const url = window.URL || window.webkitURL || window.moxURL
-                    a.href = url.createObjectURL(blob)
-                    a.download = this.downLoadName + '.log'
-                    document.body.appendChild(a)
-                    a.click()
-                    document.body.removeChild(a)
-                }).catch((err) => {
-                    console.error(err.message || err)
-                }).finally(() => {
-                    this.fileLoadPending = false
-                })
-            },
-
-            changeExecute (execute) {
-                if (this.currentExe === execute) return
-                this.currentExe = execute
-                this.$refs.scroll.resetData()
-                this.$emit('changeExecute', execute)
-            },
-
             addLogData (data) {
                 const scroll = this.$refs.scroll
-                scroll.addListData(data)
+                scroll.addLogData(data)
             },
 
             handleApiErr (err) {
@@ -173,24 +115,6 @@
 </script>
 
 <style lang="scss" scoped>
-    .share-icon {
-        position: absolute;
-        display: none;
-        cursor: pointer;
-        user-select: none;
-        width: 34px;
-        height: 34px;
-        border-radius: 4px;
-        background-color: rgba(255, 255, 255, 1);
-        background-image: url('./assets/png/link.png');
-        background-size: 20px;
-        background-position: center;
-        background-repeat: no-repeat;
-        opacity: 0.8;
-        &:hover {
-            opacity: 1;
-        }
-    }
     .log-home {
         position: fixed;
         top: 0;
@@ -227,7 +151,7 @@
                 align-items: center;
                 justify-content: space-between;
                 color: #d4d4d4;
-                .log-buttons {
+                .log-tools {
                     display: flex;
                     align-items: center;
                     line-height: 30px;
