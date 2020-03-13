@@ -62,15 +62,16 @@ enum class ExtServiceStatusEnum(val status: Int) {
                 1 -> COMMITTING.name
                 2 -> BUILDING.name
                 3 -> BUILD_FAIL.name
-                4 -> BUILDING.name
-                5 -> BUILD_FAIL.name
+                4 -> DEPLOYING.name
+                5 -> DEPLOY_FAIL.name
                 6 -> TESTING.name
-                7 -> AUDITING.name
-                8 -> AUDIT_REJECT.name
-                9 -> RELEASED.name
-                10 -> GROUNDING_SUSPENSION.name
-                11 -> UNDERCARRIAGING.name
-                12 -> UNDERCARRIAGED.name
+                7 -> EDIT.name
+                8 -> AUDITING.name
+                9 -> AUDIT_REJECT.name
+                10 -> RELEASED.name
+                11 -> GROUNDING_SUSPENSION.name
+                12 -> UNDERCARRIAGING.name
+                13 -> UNDERCARRIAGED.name
                 else -> INIT.name
             }
         }
