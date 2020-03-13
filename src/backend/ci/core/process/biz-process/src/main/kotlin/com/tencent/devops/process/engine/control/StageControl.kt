@@ -92,10 +92,12 @@ class StageControl @Autowired constructor(
 
             val fastKill = stage.controlOption?.fastKill == true && source == "CONTAINER_END_FAILED"
 
+            val reviewTimeout = stage.status == BuildStatus.STAGE_SUCCESS && actionType == ActionType.END
+
             logger.info("[$buildId]|[${buildInfo.status}]|STAGE_EVENT|event=$event|stage=$stage|needPause=$needPause|fastKill=$fastKill")
 
-            // 终止命令，不需要判断各个Stage的状态，可直接停止
-            if (ActionType.isTerminate(actionType) || fastKill) {
+            // [终止事件]或[满足FastKill]或[等待审核超时] 直接结束流水线，不需要判断各个Stage的状态，可直接停止
+            if (ActionType.isTerminate(actionType) || fastKill || reviewTimeout) {
                 logger.info("[$buildId]|[${buildInfo.status}]|STAGE_TERMINATE|stageId=$stageId")
 
                 buildStatus = BuildStatus.TERMINATE
@@ -116,6 +118,10 @@ class StageControl @Autowired constructor(
                 // 如果是因fastKill强制终止，流水线状态标记为失败
                 if (fastKill) buildStatus = BuildStatus.FAILED
 
+                //如果是因reviewTimeout结束构建，流水线状态标记为成功
+                if (reviewTimeout) buildStatus = BuildStatus.SUCCEED
+
+                // 如果是因审核超时终止构建，流水线状态
                 pipelineBuildDetailService.updateStageStatus(buildId, stageId, buildStatus)
                 return sendTerminateEvent(javaClass.simpleName, buildStatus)
             }
