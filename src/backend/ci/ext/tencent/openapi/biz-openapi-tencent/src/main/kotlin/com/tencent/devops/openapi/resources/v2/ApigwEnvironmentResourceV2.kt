@@ -2,6 +2,7 @@ package com.tencent.devops.openapi.resources.v2
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.api.ServiceEnvironmentResource
 import com.tencent.devops.environment.api.ServiceNodeResource
 import com.tencent.devops.environment.pojo.EnvWithPermission
@@ -12,7 +13,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
-@Service
+@RestResource
 class ApigwEnvironmentResourceV2 @Autowired constructor(
     private val client: Client
 ): ApigwEnvironmentResourceV2 {
