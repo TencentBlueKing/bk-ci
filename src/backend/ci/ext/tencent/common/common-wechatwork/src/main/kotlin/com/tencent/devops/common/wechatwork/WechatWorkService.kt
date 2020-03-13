@@ -427,7 +427,10 @@ class WechatWorkService @Autowired constructor(
 
         val accessToken = getAccessToken()
         val sendURL = "$url?access_token=$accessToken"
-        val jsonString = objectMapper.writeValueAsString(message)
+        logger.info("send to wework sendURL:$sendURL")
+        val jsonString = if (message is String) message else objectMapper.writeValueAsString(message)
+
+        logger.info("send to wework send json:$jsonString")
         val requestBody = RequestBody.create(MediaType.parse("application/json"), jsonString)
         val sendRequest = Request.Builder()
             .url(sendURL)
@@ -436,6 +439,8 @@ class WechatWorkService @Autowired constructor(
         OkhttpUtils.doHttp(sendRequest).use { response ->
             //        httpClient.newCall(sendRequest).execute().use { response ->
             val responseContent = response.body()!!.string()
+
+            logger.info("send to wework responseContent:$responseContent")
             if (!response.isSuccessful) {
                 throw RuntimeException("Fail to send msg to yqwx. $responseContent")
             }
