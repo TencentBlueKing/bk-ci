@@ -1,5 +1,5 @@
 <template>
-    <section class="scroll-home" @mousewheel.prevent="handleWheel" @DOMMouseScroll.prevent="handleWheel">
+    <section :class="['scroll-home', id, { 'min-height': totalNumber <= 0 }]" :style="`height: ${visHeight}px`" @mousewheel="handleWheel" @DOMMouseScroll="handleWheel">
         <ul class="scroll-index scroll" :style="`top: ${-totalScrollHeight}px; width: ${indexWidth}px`">
             <li class="scroll-item" :style="`height: ${itemHeight}px; top: ${item.top}px`" v-for="(item) in indexList" :key="item">
                 {{item.isNewLine ? '' : item.value}}
@@ -10,15 +10,15 @@
             <li :class="[{ 'pointer': item.isFold, hover: item.showIndex === curHoverIndex }, 'scroll-item']"
                 @mouseenter="curHoverIndex = item.showIndex"
                 @mouseleave="curHoverIndex = -1"
-                :style="`height: ${itemHeight}px; top: ${item.top}px; left: ${-bottomScrollDis * (itemWidth - mainWidth) / (mainWidth - bottomScrollWidth) }px; width: ${itemWidth}px`"
+                :style="`height: ${itemHeight}px; top: ${item.top}px; left: ${-bottomScrollDis * (itemWidth - mainWidth) / (mainWidth - bottomScrollWidth) }px;`"
                 v-for="item in listData"
                 :key="item.top + item.value"
                 @click="foldListData(item.index, item.isFold)"
             ><slot :data="item"></slot>
             </li>
         </ul>
-        <span class="min-nav min-map" :style="`height: ${visHeight}px; right: ${visWidth * 11 / 100}px`"></span>
-        <canvas class="min-nav no-scroll" :style="`height: ${visHeight}px; width: ${visWidth / 10}px;right: ${visWidth / 100}px`" ref="minMap" @click="changeMinMap"></canvas>
+        <span v-if="itemHeight * totalNumber > visHeight" class="min-nav min-map" :style="`height: ${visHeight}px; right: ${visWidth * 11 / 100}px`"></span>
+        <canvas v-show="itemHeight * totalNumber > visHeight" class="min-nav no-scroll" :style="`height: ${visHeight}px; width: ${visWidth / 10}px;right: ${visWidth / 100}px`" ref="minMap" @click="changeMinMap"></canvas>
         <span class="min-nav-slide no-scroll"
             v-if="itemHeight * totalNumber > visHeight"
             :style="`height: ${visHeight / 8}px; width: ${visWidth / 10}px; top: ${minMapTop}px;right: ${visWidth / 100}px`"
@@ -47,8 +47,6 @@
 </template>
 
 <script>
-    // eslint-disable-next-line
-    const Worker = require('worker-loader!./worker.js')
     import language from './locale'
 
     export default {
@@ -56,6 +54,16 @@
             itemHeight: {
                 type: Number,
                 default: 16
+            },
+            maxHeight: {
+                type: Number,
+                default: 0
+            },
+            id: {
+                type: String
+            },
+            worker: {
+                type: Object
             }
         },
 
@@ -63,7 +71,6 @@
             return {
                 indexList: [],
                 listData: [],
-                worker: {},
                 totalHeight: 0,
                 itemNumber: 0,
                 totalNumber: 0,
@@ -95,14 +102,13 @@
         },
 
         mounted () {
-            this.initStatus()
+            this.setVisWidth()
             this.initEvent()
             this.initWorker()
             this.drawMinNav()
         },
 
         beforeDestroy () {
-            this.worker.terminate()
             document.removeEventListener('mousemove', this.minNavMove)
             document.removeEventListener('mouseup', this.moveEnd)
             window.removeEventListener('resize', this.resize)
@@ -112,6 +118,11 @@
         methods: {
             language,
 
+            setVisWidth () {
+                const mainEle = document.querySelector(`.${this.id}`)
+                this.visWidth = mainEle.offsetWidth
+            },
+
             handleApiErr (err) {
                 this.hasCompleteInit = true
                 console.log(err)
@@ -119,8 +130,8 @@
 
             resetData () {
                 this.totalNumber = 0
-                this.setStatus()
-                this.worker.postMessage({ type: 'resetData' })
+                this.initStatus()
+                this.worker.postMessage({ type: 'resetData', id: this.id })
             },
 
             changeMinMap () {
@@ -139,6 +150,7 @@
                 window.getSelection().removeAllRanges()
                 if (isFold) {
                     const postData = {
+                        id: this.id,
                         type: 'foldListData',
                         startIndex
                     }
@@ -147,16 +159,26 @@
             },
 
             initStatus () {
-                const mainEle = document.querySelector('.scroll-home')
-                this.visHeight = mainEle.offsetHeight
-                this.visWidth = mainEle.offsetWidth
-                const dpr = window.devicePixelRatio || 1
-                this.$refs.minMap.width = this.visWidth / 10 * dpr
-                this.$refs.minMap.height = this.visHeight * dpr
-                this.$refs.minMap.getContext('2d').setTransform(dpr, 0, 0, dpr, 0, 0)
-                this.$refs.minNav.width = this.visWidth / 100 * dpr
-                this.$refs.minNav.height = this.visHeight * dpr
-                this.$refs.minNav.getContext('2d').setTransform(dpr, 0, 0, dpr, 0, 0)
+                const mainEle = document.querySelector(`.${this.id}`)
+                let visHeight = mainEle.offsetHeight
+                this.totalHeight = this.totalNumber * this.itemHeight
+                if (this.maxHeight) visHeight = this.totalHeight > this.maxHeight ? this.maxHeight : this.totalHeight
+                if (this.visHeight !== visHeight) {
+                    this.visHeight = visHeight
+                    const dpr = window.devicePixelRatio || 1
+                    this.$refs.minMap.width = this.visWidth / 10 * dpr
+                    this.$refs.minMap.height = this.visHeight * dpr
+                    this.$refs.minMap.getContext('2d').setTransform(dpr, 0, 0, dpr, 0, 0)
+                    this.$refs.minNav.width = this.visWidth / 100 * dpr
+                    this.$refs.minNav.height = this.visHeight * dpr
+                    this.$refs.minNav.getContext('2d').setTransform(dpr, 0, 0, dpr, 0, 0)
+                }
+                this.itemNumber = this.totalHeight > this.visHeight ? Math.ceil(this.visHeight / this.itemHeight) : this.totalNumber
+                const heightRate = this.visHeight / this.totalHeight
+                const minNavHeight = heightRate * this.visHeight
+                this.navHeight = heightRate > 1 ? this.visHeight : (minNavHeight < 20 ? 20 : minNavHeight)
+                const moveMaxHeight = this.totalNumber * this.itemHeight / 8
+                this.mapHeight = moveMaxHeight < this.visHeight ? moveMaxHeight : this.visHeight
             },
 
             initEvent () {
@@ -170,7 +192,6 @@
                 this.slowExec(() => {
                     const lastHeight = this.visHeight
                     this.initStatus()
-                    this.setStatus()
                     this.minMapTop = this.visHeight / lastHeight * this.minMapTop
                     this.minNavTop = this.minMapTop * (this.visHeight - this.navHeight) / (this.mapHeight - this.visHeight / 8)
                     
@@ -198,6 +219,7 @@
             },
 
             handleHorizontalScroll (event) {
+                event.preventDefault()
                 if (this.bottomScrollWidth >= this.mainWidth) return
 
                 const deltaX = -Math.max(-1, Math.min(1, (event.wheelDeltaX || -event.detail)))
@@ -208,9 +230,16 @@
             },
 
             handleVerticalScroll (event) {
-                if (this.itemHeight * this.totalNumber <= this.visHeight) return
-
                 const deltaY = Math.max(-1, Math.min(1, (event.wheelDeltaY || -event.detail)))
+                const firstIndex = this.indexList[0] || {}
+                const lastIndex = this.indexList[this.indexList.length - 1] || {}
+                const scrollEle = this.$el.parentElement.parentElement || {}
+                const downPreDefault = lastIndex.index + 1 < this.totalNumber || scrollEle.scrollTop + scrollEle.offsetHeight >= scrollEle.scrollHeight
+                const upPreDefault = firstIndex.index > 0 || scrollEle.scrollTop <= 0
+                const shouldPreDefault = deltaY < 0 ? downPreDefault : upPreDefault
+                if (shouldPreDefault) event.preventDefault()
+
+                if (this.itemHeight * this.totalNumber <= this.visHeight) return
                 let dis = deltaY * -(this.itemHeight * 3)
                 let tickGap = deltaY * -2
                 if (deltaY === 0) {
@@ -249,8 +278,9 @@
                 if (height <= 0) height = 0
                 else if (height >= this.totalHeight - this.visHeight) height = this.totalHeight - this.visHeight
                 if (this.totalHeight <= this.visHeight) height = 0
-                this.minMapTop = height / (this.totalHeight - this.visHeight) * (this.mapHeight - this.visHeight / 8)
-                this.minNavTop = height / (this.totalHeight - this.visHeight) * (this.visHeight - this.navHeight)
+                const heightDiff = (this.totalHeight - this.visHeight) || 1
+                this.minMapTop = height / heightDiff * (this.mapHeight - this.visHeight / 8)
+                this.minNavTop = height / heightDiff * (this.visHeight - this.navHeight)
                 this.getListData(height)
             },
 
@@ -265,15 +295,16 @@
                     canvasHeight: this.visHeight,
                     canvasWidth: this.visWidth / 10,
                     minMapTop: this.minMapTop,
-                    mapHeight: this.mapHeight
+                    mapHeight: this.mapHeight,
+                    id: this.id
                 }
                 this.worker.postMessage(postData)
             },
 
             initWorker () {
-                this.worker = new Worker()
                 this.worker.addEventListener('message', (event) => {
                     const data = event.data
+                    if (data.id !== this.id) return
                     switch (data.type) {
                         case 'completeInit':
                             this.freshDataScrollBottom(data)
@@ -285,7 +316,6 @@
                                 this.freshDataScrollBottom(data)
                             } else {
                                 this.freshDataNoScroll(data)
-                                this.indexWidth = (Math.log10(this.totalNumber) + 1) * 7
                             }
                             break
                         case 'wheelGetData':
@@ -301,7 +331,7 @@
             freshDataScrollBottom (data) {
                 this.totalNumber = data.number
                 this.indexWidth = (Math.log10(this.totalNumber) + 1) * 7
-                this.setStatus()
+                this.initStatus()
                 this.scrollPageByIndex(this.totalNumber - this.itemNumber)
             },
 
@@ -311,7 +341,8 @@
                 const oldMapHeight = this.mapHeight
                 const oldVisHeight = this.visHeight
                 this.totalNumber = data.number
-                this.setStatus()
+                this.indexWidth = (Math.log10(this.totalNumber) + 1) * 7
+                this.initStatus()
                 this.getNumberChangeList({ oldNumber, oldItemNumber, oldMapHeight, oldVisHeight })
             },
 
@@ -346,20 +377,10 @@
                 this.isScrolling = false
             },
 
-            addListData (list) {
+            addLogData (list) {
                 const type = this.hasCompleteInit ? 'addListData' : 'initLog'
-                const postData = { type, list, mainWidth: this.mainWidth }
+                const postData = { type, list, mainWidth: this.mainWidth, id: this.id }
                 this.worker.postMessage(postData)
-            },
-
-            setStatus () {
-                this.totalHeight = this.totalNumber * this.itemHeight
-                this.itemNumber = this.totalHeight > this.visHeight ? Math.ceil(this.visHeight / this.itemHeight) : this.totalNumber
-                const heightRate = this.visHeight / this.totalHeight
-                const minNavHeight = heightRate * this.visHeight
-                this.navHeight = heightRate > 1 ? this.visHeight : (minNavHeight < 20 ? 20 : minNavHeight)
-                const moveMaxHeight = this.totalNumber * this.itemHeight / 8
-                this.mapHeight = moveMaxHeight < this.visHeight ? moveMaxHeight : this.visHeight
             },
 
             startBottomMove (event) {
@@ -499,6 +520,9 @@
         position: relative;
         height: 100%;
         overflow-y: hidden;
+        &.min-height {
+            min-height: 150px;
+        }
         .list-empty {
             position: absolute;
             background: url('./assets/png/empty.png') center no-repeat;
@@ -519,21 +543,6 @@
             li {
                 width: 100%;
                 color: rgba(166, 166, 166, 1)
-            }
-            .log-folder {
-                background-image: url("./assets/png/down.png");
-                display: inline-block;
-                height: 16px;
-                width: 16px;
-                position: absolute;
-                cursor: pointer;
-                transform: rotate(0deg);
-                transition: transform 200ms;
-                top: 0;
-                right: -20px;
-                &.show-all {
-                    transform: rotate(-90deg);
-                }
             }
         }
         .scroll-main {
