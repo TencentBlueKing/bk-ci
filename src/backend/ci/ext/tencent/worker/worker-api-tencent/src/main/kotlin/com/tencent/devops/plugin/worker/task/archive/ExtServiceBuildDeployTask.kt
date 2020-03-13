@@ -134,13 +134,13 @@ class ExtServiceBuildDeployTask : ITask() {
         val repoAddr = extServiceImageInfoMap["repoAddr"] as String
         val imageName = extServiceImageInfoMap["imageName"] as String
         val imageTag = extServiceImageInfoMap["imageTag"] as String
-        val userName = extServiceImageInfoMap["userName"] as String
+        val username = extServiceImageInfoMap["username"] as String
         val password = extServiceImageInfoMap["password"] as String
         val dockerBuildParam = DockerBuildParam(
             repoAddr = repoAddr,
             imageName = imageName,
             imageTag = imageTag,
-            userName = userName,
+            userName = username,
             password = password,
             args = listOf("packageName=$packageName", "filePath=$filePath")
         )
