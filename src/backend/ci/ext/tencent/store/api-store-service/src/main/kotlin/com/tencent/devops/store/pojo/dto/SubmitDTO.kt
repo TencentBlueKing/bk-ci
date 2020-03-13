@@ -31,7 +31,7 @@ data class SubmitDTO(
     @ApiModelProperty("是否是最后版本")
     val latestFlag: Int? = 0,
     @ApiModelProperty("发布类型，NEW：新上架 INCOMPATIBILITY_UPGRADE：非兼容性升级 COMPATIBILITY_UPGRADE：兼容性功能更新 COMPATIBILITY_FIX：兼容性问题修正", required = true)
-    val releaseType: ReleaseTypeEnum,
+    val releaseType: ReleaseTypeEnum? = ReleaseTypeEnum.NEW,
     @ApiModelProperty("版本日志内容", required = true)
     val versionContent: String? = "",
     @ApiModelProperty("扩展点列表")
