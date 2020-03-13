@@ -183,7 +183,7 @@ class TxExtServiceBaseService : ExtServiceBaseService() {
                 servicePort = extServiceServiceConfig.servicePort.toInt()
             ),
             appIngress = AppIngress(
-                host = MessageFormat(extServiceIngressConfig.host).format(serviceCode),
+                host = MessageFormat(extServiceIngressConfig.host).format(arrayOf(serviceCode)),
                 contextPath = extServiceIngressConfig.contextPath,
                 ingressAnnotationMap = mapOf(
                     "kubernetes.io/ingress.class" to extServiceIngressConfig.annotationClass,
