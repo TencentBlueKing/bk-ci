@@ -3,6 +3,7 @@ package com.tencent.devops.openapi.aspect
 import com.tencent.devops.openapi.filter.ApiFilter
 import org.aspectj.lang.JoinPoint
 import org.aspectj.lang.annotation.*
+import org.aspectj.lang.reflect.MethodSignature
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 
@@ -26,11 +27,16 @@ class ApiAspect {
             + "||execution(* com.tencent.devops.openapi.resources.v2.user*.*(..))"
     ) // 所有controller包下面的所有方法的所有参数
     fun beforeMethod(jp: JoinPoint) {
+
         val methodName: String = jp.signature.name
         logger.info("【前置增强】the method 【$methodName】")
-        val args = jp.args
-        args.forEach {
-            logger.info("【前置增强】the arg: 【$it】")
+        val parameterValue = jp.args
+        parameterValue.forEach {
+            logger.info("【前置增强】the parameterValue: 【$it】")
+        }
+        val parameterNames =  (jp.signature as MethodSignature).parameterNames
+        parameterNames.forEach {
+            logger.info("【前置增强】the parameterNames: 【$it】")
         }
     }
 //
