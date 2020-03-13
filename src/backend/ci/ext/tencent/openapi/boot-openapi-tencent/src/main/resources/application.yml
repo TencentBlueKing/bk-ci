@@ -9,6 +9,10 @@ spring:
     username: soda
     password: soda
     addresses: 10.125.48.80:5672
+  datasource:
+    url: jdbc:mysql://10.125.48.80:3306/devops_support?useSSL=false&autoReconnect=true&timezone=+800&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true
+    username: tig4php
+    password: tig4php
   cloud:
     consul:
       discovery:

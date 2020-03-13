@@ -55,11 +55,6 @@ class ApiFilter : ContainerRequestFilter {
     private val excludeVeritfyPath = listOf("swagger.json", "external/service/versionInfo")
 
     fun verifyJWT(requestContext: ContainerRequestContext): Boolean {
-        val propertyNames = requestContext.propertyNames
-        propertyNames.forEach{
-            val propertyValue = requestContext.getProperty(it)
-            logger.error("$it=$propertyValue")
-        }
         val bkApiJwt = requestContext.getHeaderString("X-Bkapi-JWT")
         val apigwtType = requestContext.getHeaderString("X-DEVOPS-APIGW-TYPE")
         if (bkApiJwt.isNullOrBlank()) {
