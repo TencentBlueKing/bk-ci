@@ -82,7 +82,7 @@ class PipelineBuildStageDao {
                 records.add(
                     TPipelineBuildStageRecord(
                         projectId, pipelineId, buildId, stageId, seq,
-                        status.ordinal, startTime, endTime, cost, executeCount,null
+                        status.ordinal, startTime, endTime, cost, executeCount
                     )
                 )
             }
