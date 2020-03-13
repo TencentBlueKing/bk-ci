@@ -54,7 +54,7 @@ data class ServiceVersionVO(
     @ApiModelProperty("是否推荐标识 true：推荐，false：不推荐", required = false)
     val recommendFlag: Boolean? = null,
     @ApiModelProperty("扩展点列表")
-    val extensionItemList: List<StoreServiceItem>,
+    val extensionItemList: List<String>,
     @ApiModelProperty("媒体信息")
     val mediaList: List<StoreMediaInfo>?,
     @ApiModelProperty("标签")

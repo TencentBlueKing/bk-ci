@@ -50,7 +50,6 @@ import com.tencent.devops.store.pojo.ExtServiceUpdateInfo
 import com.tencent.devops.store.pojo.ExtServiceVersionLogCreateInfo
 import com.tencent.devops.store.pojo.ExtensionJson
 import com.tencent.devops.store.pojo.ItemPropCreateInfo
-import com.tencent.devops.store.pojo.StoreServiceItem
 import com.tencent.devops.store.pojo.common.ReleaseProcessItem
 import com.tencent.devops.store.pojo.common.StoreMediaInfoRequest
 import com.tencent.devops.store.pojo.common.StoreProcessInfo
@@ -495,7 +494,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
             serviceItemList?.forEach { itId ->
                 itemName += itemInfoMap?.get(itId)?.itemName + "，"
             }
-            itemName.substring(0, itemName.length - 1)
+            itemName.substring(0, itemName.length - 2)
             logger.info("the getMyService serviceId is :$serviceId, itemName is :$itemName")
             myService.add(
                 MyExtServiceRespItem(
@@ -824,29 +823,14 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         )
     }
 
-    private fun getItemByItems(serviceId: String): List<StoreServiceItem> {
+    private fun getItemByItems(serviceId: String): List<String> {
         val serviceItems = extServiceItemRelDao.getItemByServiceId(dslContext, serviceId)
-        val itemIds = mutableSetOf<String>()
+        val itemIds = mutableListOf<String>()
         serviceItems?.forEach { it ->
             itemIds.add(it.itemId)
         }
         logger.info("getItemByItems serviceId[$serviceId] items[$itemIds]")
-        val itemList = mutableListOf<StoreServiceItem>()
-        client.get(ServiceItemResource::class).getItemListsByIds(itemIds).data?.forEach {
-            val childItem = it.childItem?.get(0)
-            itemList.add(
-                StoreServiceItem(
-                    parentItemCode = it.serviceItem.itemCode,
-                    parentItemId = it.serviceItem.itemId,
-                    parentItemName = it.serviceItem.itemName,
-                    childItemCode = childItem.itemCode,
-                    childItemId = childItem.itemId,
-                    childItemName = childItem.itemName
-                )
-            )
-        }
-        logger.info("getItemByItems itemList[$itemList]")
-        return itemList
+        return itemIds
     }
 
     private fun upgradeMarketExtService(
