@@ -38,6 +38,7 @@ import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import java.text.MessageFormat
 
 @Service
 class TxExtServiceBaseService : ExtServiceBaseService() {
@@ -182,7 +183,7 @@ class TxExtServiceBaseService : ExtServiceBaseService() {
                 servicePort = extServiceServiceConfig.servicePort.toInt()
             ),
             appIngress = AppIngress(
-                host = extServiceIngressConfig.host,
+                host = MessageFormat(extServiceIngressConfig.host).format(serviceCode),
                 contextPath = extServiceIngressConfig.contextPath,
                 ingressAnnotationMap = mapOf(
                     "kubernetes.io/ingress.class" to extServiceIngressConfig.annotationClass,
