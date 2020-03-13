@@ -168,22 +168,23 @@ class TxExtServiceBaseService : ExtServiceBaseService() {
             username = extServiceImageSecretConfig.repoUsername,
             password = extServiceImageSecretConfig.repoPassword
         )
+        // 未正式发布的扩展服务先部署到bcs灰度环境
         val deployApp = DeployApp(
             bcsUrl = extServiceBcsConfig.masterUrl,
             token = extServiceBcsConfig.token,
-            namespaceName = "${extServiceBcsNameSpaceConfig.namespaceName}-prepare",
+            namespaceName = extServiceBcsNameSpaceConfig.grayNamespaceName,
             appCode = serviceCode,
             appDeployment = AppDeployment(
                 replicas = extServiceDeploymentConfig.replicas.toInt(),
                 image = "$repoAddr/$imageName:$version",
-                pullImageSecretName = "${extServiceDeploymentConfig.pullImageSecretName}-prepare",
+                pullImageSecretName = extServiceDeploymentConfig.grayPullImageSecretName,
                 containerPort = extServiceDeploymentConfig.containerPort.toInt()
             ),
             appService = AppService(
                 servicePort = extServiceServiceConfig.servicePort.toInt()
             ),
             appIngress = AppIngress(
-                host = MessageFormat(extServiceIngressConfig.host).format(serviceCode),
+                host = MessageFormat(extServiceIngressConfig.host).format(arrayOf(serviceCode)),
                 contextPath = extServiceIngressConfig.contextPath,
                 ingressAnnotationMap = mapOf(
                     "kubernetes.io/ingress.class" to extServiceIngressConfig.annotationClass,

@@ -69,11 +69,11 @@ class ExtServiceBcsInitService @Autowired constructor(
         val releaseNamespaceResult =
             client.get(ServiceBcsResource::class).createNamespace(namespaceName, createBcsNameSpaceRequest)
         logger.info("create namespace:$namespaceName result is:$releaseNamespaceResult")
-        val prepareNamespaceName = "$namespaceName-prepare"
+        val grayNamespaceName = extServiceBcsNameSpaceConfig.grayNamespaceName
         // 创建测试中扩展服务版本的命名空间
-        val prepareNamespaceResult =
-            client.get(ServiceBcsResource::class).createNamespace(prepareNamespaceName, createBcsNameSpaceRequest)
-        logger.info("create namespace:$prepareNamespaceName result is:$prepareNamespaceResult")
+        val grayNamespaceResult =
+            client.get(ServiceBcsResource::class).createNamespace(grayNamespaceName, createBcsNameSpaceRequest)
+        logger.info("create namespace:$grayNamespaceName result is:$grayNamespaceResult")
         logger.info("end execute initBcsNamespace")
     }
 
@@ -99,13 +99,13 @@ class ExtServiceBcsInitService @Autowired constructor(
         )
         logger.info("createReleaseNsImagePullSecret secretName:$secretName result is:$createReleaseNsImagePullSecretResult")
         // 创建已发布扩展服务版本的命名空间拉取镜像secret
-        val prepareSecretName = "$secretName-prepare"
-        val createPrepareNsImagePullSecretResult = client.get(ServiceBcsResource::class).createImagePullSecretTest(
-            namespaceName = extServiceBcsNameSpaceConfig.namespaceName,
-            secretName = prepareSecretName,
+        val graySecretName = extServiceImageSecretConfig.graySecretName
+        val createGrayNsImagePullSecretResult = client.get(ServiceBcsResource::class).createImagePullSecretTest(
+            namespaceName = extServiceBcsNameSpaceConfig.grayNamespaceName,
+            secretName = graySecretName,
             createImagePullSecretRequest = createImagePullSecretRequest
         )
-        logger.info("createPrepareNsImagePullSecret secretName:$prepareSecretName result is:$createPrepareNsImagePullSecretResult")
+        logger.info("createGrayNsImagePullSecretResult secretName:$graySecretName result is:$createGrayNsImagePullSecretResult")
         logger.info("end execute initBcsImagePullSecret")
     }
 }
