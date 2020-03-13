@@ -35,6 +35,9 @@ class ExtServiceDeploymentConfig {
     @Value("\${store.extService.bcs.deployment.pullImageSecretName}")
     val pullImageSecretName: String = ""
 
+    @Value("\${store.extService.bcs.deployment.grayPullImageSecretName}")
+    val grayPullImageSecretName: String = ""
+
     @Value("\${store.extService.bcs.deployment.replicas}")
     val replicas: String = ""
 

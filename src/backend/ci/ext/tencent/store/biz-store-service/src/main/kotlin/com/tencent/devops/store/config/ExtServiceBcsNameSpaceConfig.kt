@@ -35,6 +35,9 @@ class ExtServiceBcsNameSpaceConfig {
     @Value("\${store.extService.bcs.namespace.namespaceName}")
     val namespaceName: String = ""
 
+    @Value("\${store.extService.bcs.namespace.grayNamespaceName}")
+    val grayNamespaceName: String = ""
+
     @Value("\${store.extService.bcs.namespace.labelKey}")
     val labelKey: String = ""
 
