@@ -20,7 +20,7 @@ import javax.ws.rs.core.MediaType
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface BuildRepositoryResource {
-    @ApiOperation("获取指定构建或指定流水线下的构建变量")
+    @ApiOperation("保存构建物料信息")
     @Path("/saveBuildMaterial")
     @POST
     fun saveBuildMaterial(
