@@ -73,7 +73,7 @@ class ApiFilter : ContainerRequestFilter {
         logger.info("Get the parse bkApiJwt($jwt)")
 
         // 验证应用身份信息
-        if (jwt.has("app")) {
+        if (jwt.has("app") && apiType == "apigw-app") {
             val app = jwt.getJSONObject("app")
             // 应用身份登录
             if (app.has("app_code")) {
