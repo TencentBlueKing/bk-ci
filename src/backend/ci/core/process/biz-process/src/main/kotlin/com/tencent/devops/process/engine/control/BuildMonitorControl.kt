@@ -80,7 +80,10 @@ class BuildMonitorControl @Autowired constructor(
 
         return when {
             BuildStatus.isReadyToRun(buildInfo.status) -> monitorQueueBuild(event, buildInfo)
-            else -> monitorContainer(event)
+            else -> {
+                monitorContainer(event)
+                monitorStage(event)
+            }
         }
     }
 
@@ -91,17 +94,12 @@ class BuildMonitorControl @Autowired constructor(
                 !BuildStatus.isFinish(it.status)
             }
 
-        val stages = pipelineRuntimeService.listStages(event.buildId)
-            .filter {
-                !BuildStatus.isFinish(it.status)
-            }
-
-        if (containers.isEmpty() && stages.isEmpty()) {
-            logger.info("[${event.buildId}]|monitor| have not need monitor job and stage!")
+        if (containers.isEmpty()) {
+            logger.info("[${event.buildId}]|monitor| have not need monitor job!")
             return true
         }
 
-        var minInterval = MAX_MILLS
+        var minInterval = CONTAINER_MAX_MILLS
 
         containers.forEach { container ->
             val interval = container.checkNextContainerMonitorIntervals(event.userId)
@@ -111,6 +109,29 @@ class BuildMonitorControl @Autowired constructor(
             }
         }
 
+        if (minInterval < CONTAINER_MAX_MILLS) {
+            logger.info("[${event.buildId}]|monitor_continue|pipelineId=${event.pipelineId}")
+            event.delayMills = minInterval
+            pipelineEventDispatcher.dispatch(event)
+        }
+
+        return true
+    }
+
+    private fun monitorStage(event: PipelineBuildMonitorEvent): Boolean {
+
+        val stages = pipelineRuntimeService.listStages(event.buildId)
+            .filter {
+                !BuildStatus.isFinish(it.status)
+            }
+
+        if (stages.isEmpty()) {
+            logger.info("[${event.buildId}]|monitor| have not need monitor stage!")
+            return true
+        }
+
+        var minInterval = STAGE_MAX_MILLS
+
         stages.forEach { stage ->
             val interval = stage.checkNextStageMonitorIntervals(event.userId)
             // 根据最小的超时时间来决定下一次监控执行的时间
@@ -119,7 +140,7 @@ class BuildMonitorControl @Autowired constructor(
             }
         }
 
-        if (minInterval < MAX_MILLS) {
+        if (minInterval < STAGE_MAX_MILLS) {
             logger.info("[${event.buildId}]|monitor_continue|pipelineId=${event.pipelineId}")
             event.delayMills = minInterval
             pipelineEventDispatcher.dispatch(event)
@@ -130,8 +151,9 @@ class BuildMonitorControl @Autowired constructor(
 
     companion object {
         val MAX_MINUTES = TimeUnit.DAYS.toMinutes(7L) // 7 * 24 * 60 = 10080 分钟 = 最多超时7天
-        val MAX_MILLS = TimeUnit.MINUTES.toMillis(MAX_MINUTES).toInt() + 1 // 毫秒+1
+        val CONTAINER_MAX_MILLS = TimeUnit.MINUTES.toMillis(MAX_MINUTES).toInt() + 1 // 毫秒+1
         val MAX_HOURS = TimeUnit.DAYS.toHours(30)
+        val STAGE_MAX_MILLS = TimeUnit.HOURS.toMillis(MAX_HOURS).toInt() + 1
     }
 
     private fun PipelineBuildContainer.checkNextContainerMonitorIntervals(userId: String): Int {
@@ -197,20 +219,22 @@ class BuildMonitorControl @Autowired constructor(
     }
 
     private fun PipelineBuildStage.checkNextStageMonitorIntervals(userId: String): Int {
-
+        logger.warn("[$buildId]|prepare_monitor_stage|stage=$stageId")
         var interval = 0
 
-        if (BuildStatus.isFinish(status)) {
+        if (BuildStatus.STAGE_SUCCESS != status) {
             logger.info("[$buildId]|stage=$stageId| is $status")
             return interval
         }
+        logger.warn("[$buildId]|start_monitor_stage|stage=$stageId")
+
         var hours = controlOption?.stageControlOption?.timeout ?: Timeout.DEFAULT_STAGE_TIMEOUT_HOURS
         if (hours <= 0 || hours > MAX_HOURS) {
             hours = MAX_HOURS.toInt()
         }
         val timeoutMills = TimeUnit.HOURS.toMillis(hours.toLong())
 
-        val usedTimeMills: Long = if (BuildStatus.isRunning(status) && startTime != null) {
+        val usedTimeMills: Long = if (startTime != null) {
             System.currentTimeMillis() - startTime!!.timestampmilli()
         } else {
             0
