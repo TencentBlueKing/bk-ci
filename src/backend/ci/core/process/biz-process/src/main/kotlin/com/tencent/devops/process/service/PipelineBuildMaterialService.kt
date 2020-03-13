@@ -26,9 +26,11 @@
 
 package com.tencent.devops.process.service
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.pojo.PipelineBuildMaterial
+import org.apache.commons.lang3.StringUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -47,9 +49,19 @@ class PipelineBuildMaterialService @Autowired constructor(
         pipelineId: String,
         pipelineBuildMaterials: List<PipelineBuildMaterial>
     ): Int {
-        val materials = JsonUtil.toJson(pipelineBuildMaterials)
-        logger.info("BuildId: $buildId save material size: ${pipelineBuildMaterials.size}")
-        pipelineBuildDao.updateBuildMaterial(dslContext, buildId, materials)
+        var newPipelineBuildMaterials = pipelineBuildMaterials
+        val pipelineBuildHistoryRecord = pipelineBuildDao.getBuildInfo(dslContext, buildId)
+        if (pipelineBuildHistoryRecord != null) {
+            val material = pipelineBuildHistoryRecord.material
+            if (StringUtils.isNoneBlank(material)) {
+                val originPipelineBuildMaterials = JsonUtil.to(material, object : TypeReference<List<PipelineBuildMaterial>>() {})
+                newPipelineBuildMaterials = newPipelineBuildMaterials.plus(originPipelineBuildMaterials)
+            }
+
+            val materials = JsonUtil.toJson(newPipelineBuildMaterials)
+            logger.info("BuildId: $buildId save material size: ${newPipelineBuildMaterials.size}")
+            pipelineBuildDao.updateBuildMaterial(dslContext, buildId, materials)
+        }
         return pipelineBuildMaterials.size
     }
 }
