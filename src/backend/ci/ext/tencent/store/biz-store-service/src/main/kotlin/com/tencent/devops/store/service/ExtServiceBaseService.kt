@@ -267,7 +267,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         val requireVersion =
             if (cancelFlag && releaseType == ReleaseTypeEnum.CANCEL_RE_RELEASE) dbVersion else storeCommonService.getRequireVersion(
                 dbVersion,
-                releaseType
+                releaseType!!
             )
 
         if (version != requireVersion) {
@@ -352,7 +352,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
                     ),
                     extServiceVersionLogCreateInfo = ExtServiceVersionLogCreateInfo(
                         serviceId = serviceId,
-                        releaseType = submitDTO.releaseType.releaseType.toByte(),
+                        releaseType = submitDTO.releaseType!!.releaseType.toByte(),
                         content = submitDTO.versionContent ?: "",
                         creatorUser = userId,
                         modifierUser = userId
