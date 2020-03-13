@@ -23,33 +23,17 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.notify.model
 
-dependencies {
-    compile project(":core:process:api-process")
-    compile project(":core:log:api-log")
-    compile project(":core:store:api-store")
-    compile project(":core:dispatch:api-dispatch")
-    compile project(":core:ticket:api-ticket")
-    compile project(":core:environment:api-environment")
-    compile project(":core:dockerhost:api-dockerhost")
-    compile project(":core:dockerhost:biz-dockerhost")
-    compile project(":core:common:common-log")
-    compile project(":core:common:common-archive")
-    compile project(":core:common:common-pipeline")
-    compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
-    compile "org.jetbrains.kotlin:kotlin-reflect"
-    compile "org.apache.commons:commons-exec"
-    compile "org.apache.commons:commons-compress"
-    compile "com.github.oshi:oshi-core:3.4.0"
-    compile group: 'com.googlecode.plist', name: 'dd-plist', version: '1.20'
-    compile group: 'net.dongliu', name: 'apk-parser', version: '2.5.3'
-    compile group: 'org.xerial', name: 'sqlite-jdbc', version: '3.23.1'
-    compile "ch.qos.logback:logback-core"
-    compile "ch.qos.logback:logback-classic"
+import com.tencent.devops.notify.pojo.WechatNotifyMessage
+
+class WeworkNotifyMessageWithOperation : WechatNotifyMessage() {
+    var id: String? = null
+    var retryCount: Int = 0
+    var lastError: String? = null
+
+    override fun toString(): String {
+        return String.format("id(%s), retryCount(%s), message(%s) ",
+                id, retryCount, super.toString())
+    }
 }
-
-configurations {
-    all*.exclude group: 'org.springframework.boot', module: 'spring-boot-starter-log4j2'
-}
-
-apply from: "$rootDir/task_deploy_to_maven.gradle"
