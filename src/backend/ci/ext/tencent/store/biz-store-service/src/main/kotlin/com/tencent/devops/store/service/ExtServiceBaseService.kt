@@ -494,7 +494,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
             serviceItemList?.forEach { itId ->
                 itemName += itemInfoMap?.get(itId)?.itemName + "，"
             }
-            itemName.substring(0, itemName.length - 2)
+            itemName = itemName.substring(0, itemName.length - 1)
             logger.info("the getMyService serviceId is :$serviceId, itemName is :$itemName")
             myService.add(
                 MyExtServiceRespItem(
