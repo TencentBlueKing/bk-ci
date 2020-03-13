@@ -28,6 +28,8 @@ store:
   defaultTicketProject:
   defaultImageRDType: SELF_DEVELOPED
   imageExecuteNullNotifyTplCode: IMAGE_EXECUTE_NULL_NOTIFY_TPL
+  templateApproveSwitch: close
+  imageApproveSwitch: close
 
 logo:
   allowUploadLogoTypes:
