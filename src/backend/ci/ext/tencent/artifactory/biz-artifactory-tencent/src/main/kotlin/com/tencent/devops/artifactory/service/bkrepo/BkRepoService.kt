@@ -39,6 +39,7 @@ import com.tencent.devops.artifactory.pojo.Property
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.artifactory.service.PipelineService
 import com.tencent.devops.artifactory.service.RepoService
+import com.tencent.devops.artifactory.util.JFrogUtil
 import com.tencent.devops.artifactory.util.PathUtils
 import com.tencent.devops.artifactory.util.RepoUtils
 import com.tencent.devops.artifactory.util.StringUtil
@@ -52,8 +53,14 @@ import com.tencent.devops.common.archive.pojo.ArtifactorySearchParam
 import com.tencent.devops.common.archive.pojo.QueryNodeInfo
 import com.tencent.devops.common.archive.shorturl.ShortUrlApi
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.BSAuthProjectApi
+import com.tencent.devops.common.auth.code.BSRepoAuthServiceCode
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.utils.HomeHostUtil
+import com.tencent.devops.process.api.service.ServiceBuildResource
+import com.tencent.devops.process.api.service.ServicePipelineResource
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
@@ -63,6 +70,8 @@ import java.nio.file.FileSystems
 import java.nio.file.Paths
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import java.util.regex.Pattern
+import javax.ws.rs.BadRequestException
 import javax.ws.rs.NotFoundException
 
 @Service
@@ -72,7 +81,10 @@ class BkRepoService @Autowired constructor(
     val bkRepoPipelineDirService: BkRepoPipelineDirService,
     val shortUrlApi: ShortUrlApi,
     val bkRepoClient: BkRepoClient,
-    val commonConfig: CommonConfig
+    val commonConfig: CommonConfig,
+    val authProjectApi: BSAuthProjectApi,
+    val client: Client,
+    val artifactoryAuthServiceCode: BSRepoAuthServiceCode
 ) : RepoService {
     @Value("\${bkrepo.devnetGatewayUrl:#{null}}")
     private val DEVNET_GATEWAY_URL: String? = null
@@ -155,8 +167,66 @@ class BkRepoService @Autowired constructor(
         logger.info("getPropertiesByRegex, projectId: $projectId, pipelineId: $pipelineId, buildId: $buildId, " +
             "artifactoryType: $artifactoryType, argPath: $argPath, crossProjectId: $crossProjectId, " +
             "crossPipineId: $crossPipineId, crossBuildNo: $crossBuildNo")
-        // todo 实现
-        throw OperationException("not implemented")
+
+        var targetProjectId = projectId
+        var targetPipelineId = pipelineId
+        var targetBuildId = buildId
+        if (!crossProjectId.isNullOrBlank()) {
+            val lastModifyUser = client.get(ServicePipelineResource::class)
+                .getPipelineInfo(projectId, pipelineId, null).data!!.lastModifyUser
+
+            targetProjectId = crossProjectId!!
+            if (artifactoryType == ArtifactoryType.CUSTOM_DIR &&
+                !authProjectApi.getProjectUsers(artifactoryAuthServiceCode, targetProjectId).contains(lastModifyUser)) {
+                throw BadRequestException("用户（$lastModifyUser) 没有项目（$targetProjectId）下载权限)")
+            }
+            if (artifactoryType == ArtifactoryType.PIPELINE) {
+                targetPipelineId = crossPipineId ?: throw BadRequestException("Invalid Parameter pipelineId")
+                pipelineService.validatePermission(
+                    lastModifyUser,
+                    targetProjectId,
+                    targetPipelineId,
+                    AuthPermission.DOWNLOAD,
+                    "用户($lastModifyUser)在项目($crossProjectId)下没有流水线($crossPipineId)下载构建权限")
+
+                val targetBuild = client.get(ServiceBuildResource::class).getSingleHistoryBuild(
+                    targetProjectId,
+                    targetPipelineId,
+                    crossBuildNo ?: throw BadRequestException("Invalid Parameter buildNo"),
+                    ChannelCode.BS
+                ).data
+                targetBuildId = (targetBuild ?: throw BadRequestException("构建不存在($crossBuildNo)")).id
+            }
+        }
+        logger.info("targetProjectId: $targetProjectId, targetPipelineId: $targetPipelineId, targetBuildId: $targetBuildId")
+
+        val regex = Pattern.compile(",|;")
+        val pathArray = regex.split(argPath)
+
+        val resultList = mutableListOf<FileDetail>()
+        pathArray.forEach { path ->
+            val absPath = "/${JFrogUtil.normalize(path).removePrefix("/")}"
+            val filePath = if (artifactoryType == ArtifactoryType.PIPELINE) {
+                "/$targetPipelineId/$targetBuildId/${JFrogUtil.getParentFolder(absPath).removePrefix("/")}" // /$projectId/$pipelineId/$buildId/path/
+            } else {
+                "/${JFrogUtil.getParentFolder(absPath).removePrefix("/")}" // /path/
+            }
+            val fileName = JFrogUtil.getFileName(path) // *.txt
+
+            bkRepoClient.queryByPathEqOrNameMatchOrMetadataEqAnd(
+                userId = "",
+                projectId = projectId,
+                repoNames = listOf(RepoUtils.getRepoByType(artifactoryType)),
+                filePaths = listOf(filePath),
+                fileNames = listOf(fileName),
+                metadata = mapOf(),
+                page = 0,
+                pageSize = 10000
+            ).forEach {
+                resultList.add(RepoUtils.toFileDetail(it))
+            }
+        }
+        return resultList
     }
 
     override fun getOwnFileList(userId: String, projectId: String, offset: Int, limit: Int): Pair<Long, List<FileInfo>> {
