@@ -26,9 +26,7 @@ class UserExtServiceMemberResourceImpl @Autowired constructor(
             userId = userId,
             storeMemberReq = storeMemberReq,
             sendNotify = true,
-            storeType = StoreTypeEnum.SERVICE,
-            collaborationFlag = true
-
+            storeType = StoreTypeEnum.SERVICE
         )
     }
 

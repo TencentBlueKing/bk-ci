@@ -21,6 +21,7 @@ import com.tencent.devops.common.api.constant.TEST
 import com.tencent.devops.common.api.constant.UNDO
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
@@ -1003,7 +1004,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         // 文件与输入itemCode取交集，若文件内有props，以文件props为准
         val filePropMap = mutableMapOf<String, String>()
         fileItemList!!.forEach {
-            filePropMap[it.itemCode!!] = it.props.toString()
+            filePropMap[it.itemCode!!] = JsonUtil.toJson(it.props?: "" )
         }
         val itemRecords = client.get(ServiceItemResource::class).getItemInfoByIds(inputItemList).data
         itemRecords?.forEach {
