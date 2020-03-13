@@ -461,20 +461,26 @@ class PipelineBuildDetailService @Autowired constructor(
             try {
                 val model: Model = JsonUtil.to(record.model, Model::class.java)
                 model.stages.forEach { stage ->
-                    stage.containers.forEach { c ->
-                        if (!c.status.isNullOrBlank()) {
-                            val s = BuildStatus.valueOf(c.status!!)
+                    stage.containers.forEach { container ->
+                        if (!container.status.isNullOrBlank()) {
+                            val s = BuildStatus.valueOf(container.status!!)
                             if (BuildStatus.isRunning(s)) {
-                                c.status = finalStatus.name
+                                container.status = finalStatus.name
                             }
                         }
-                        c.elements.forEach { e ->
+                        container.elements.forEach { e ->
                             if (!e.status.isNullOrBlank()) {
                                 val s = BuildStatus.valueOf(e.status!!)
                                 if (BuildStatus.isRunning(s)) {
                                     e.status = finalStatus.name
                                 }
                             }
+                        }
+                    }
+                    if (!stage.status.isNullOrBlank()) {
+                        val s = BuildStatus.valueOf(stage.status!!)
+                        if (BuildStatus.isRunning(s)) {
+                            stage.status = finalStatus.name
                         }
                     }
                 }
@@ -485,11 +491,11 @@ class PipelineBuildDetailService @Autowired constructor(
                 }
 
                 buildDetailDao.update(
-                    context,
-                    buildId,
-                    JsonUtil.toJson(model),
-                    finalStatus,
-                    cancelUser
+                    dslContext = context,
+                    buildId = buildId,
+                    model = JsonUtil.toJson(model),
+                    buildStatus = finalStatus,
+                    cancelUser = cancelUser
                 )
                 pipelineDetailChangeEvent(buildId)
             } catch (t: Throwable) {
