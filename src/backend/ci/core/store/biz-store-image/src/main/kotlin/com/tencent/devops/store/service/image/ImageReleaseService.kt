@@ -1122,14 +1122,14 @@ abstract class ImageReleaseService {
                 )
             )
             imageFeatureDao.update(
-                context,
-                image.imageCode,
-                publicFlag,
-                recommendFlag,
-                certificationFlag,
-                rdType,
-                userId,
-                weight
+                dslContext = context,
+                imageCode = image.imageCode,
+                publicFlag = publicFlag,
+                recommendFlag = recommendFlag,
+                certificationFlag = certificationFlag,
+                rdType = rdType,
+                modifier = userId,
+                weight = weight
             )
         }
         marketImageDao.updateImageStatusInfo(
