@@ -23,31 +23,17 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.notify.model
 
-package com.tencent.devops.log.client
+import com.tencent.devops.notify.pojo.WechatNotifyMessage
 
-import com.tencent.devops.common.es.ESClient
-import org.elasticsearch.client.Client
+class WeworkNotifyMessageWithOperation : WechatNotifyMessage() {
+    var id: String? = null
+    var retryCount: Int = 0
+    var lastError: String? = null
 
-interface LogClient {
-
-    fun admin(buildId: String) = getClient(buildId).admin()
-
-    fun prepareBulk(buildId: String) = getClient(buildId).prepareBulk()
-
-    fun prepareSearch(buildId: String, index: String) = getClient(buildId).prepareSearch()
-
-    fun prepareMultiSearch(buildId: String) = getClient(buildId).prepareMultiSearch()
-
-    fun prepareSearchScroll(buildId: String, scrollId: String) = getClient(buildId).prepareSearchScroll(scrollId)
-
-    fun prepareIndex(buildId: String, index: String, type: String) = getClient(buildId).prepareIndex(index, type)
-
-    private fun getClient(buildId: String): Client {
-        return hashClient(buildId).client
+    override fun toString(): String {
+        return String.format("id(%s), retryCount(%s), message(%s) ",
+                id, retryCount, super.toString())
     }
-
-    fun getActiveClients(): List<ESClient>
-
-    fun hashClient(buildId: String): ESClient
 }

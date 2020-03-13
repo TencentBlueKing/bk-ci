@@ -23,31 +23,21 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.notify.pojo
 
-package com.tencent.devops.log.client
+import com.tencent.devops.common.notify.enums.WeworkReceiverType
+import com.tencent.devops.common.notify.enums.WeworkTextType
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-import com.tencent.devops.common.es.ESClient
-import org.elasticsearch.client.Client
-
-interface LogClient {
-
-    fun admin(buildId: String) = getClient(buildId).admin()
-
-    fun prepareBulk(buildId: String) = getClient(buildId).prepareBulk()
-
-    fun prepareSearch(buildId: String, index: String) = getClient(buildId).prepareSearch()
-
-    fun prepareMultiSearch(buildId: String) = getClient(buildId).prepareMultiSearch()
-
-    fun prepareSearchScroll(buildId: String, scrollId: String) = getClient(buildId).prepareSearchScroll(scrollId)
-
-    fun prepareIndex(buildId: String, index: String, type: String) = getClient(buildId).prepareIndex(index, type)
-
-    private fun getClient(buildId: String): Client {
-        return hashClient(buildId).client
-    }
-
-    fun getActiveClients(): List<ESClient>
-
-    fun hashClient(buildId: String): ESClient
-}
+@ApiModel("企业微信多媒体消息")
+data class WeworkNotifyTextMessage(
+    @ApiModelProperty("接收人Id", required = true)
+    val receivers: List<String>,
+    @ApiModelProperty("接收人类型", required = true)
+    val receiverType: WeworkReceiverType,
+    @ApiModelProperty("文本内容类型", required = true)
+    var textType: WeworkTextType,
+    @ApiModelProperty("文本内容", required = true)
+    var message: String
+)

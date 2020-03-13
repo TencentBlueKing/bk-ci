@@ -225,7 +225,7 @@ abstract class ImageReleaseService {
     fun updateMarketImage(
         userId: String,
         marketImageUpdateRequest: MarketImageUpdateRequest,
-        checkLatest: Boolean = true,
+        checkLatest: Boolean = false,
         sendCheckResultNotify: Boolean = true,
         runCheckPipeline: Boolean = true
     ): Result<String?> {

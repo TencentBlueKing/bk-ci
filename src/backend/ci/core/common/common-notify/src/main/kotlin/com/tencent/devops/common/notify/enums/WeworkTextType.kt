@@ -24,30 +24,9 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.log.client
+package com.tencent.devops.common.notify.enums
 
-import com.tencent.devops.common.es.ESClient
-import org.elasticsearch.client.Client
-
-interface LogClient {
-
-    fun admin(buildId: String) = getClient(buildId).admin()
-
-    fun prepareBulk(buildId: String) = getClient(buildId).prepareBulk()
-
-    fun prepareSearch(buildId: String, index: String) = getClient(buildId).prepareSearch()
-
-    fun prepareMultiSearch(buildId: String) = getClient(buildId).prepareMultiSearch()
-
-    fun prepareSearchScroll(buildId: String, scrollId: String) = getClient(buildId).prepareSearchScroll(scrollId)
-
-    fun prepareIndex(buildId: String, index: String, type: String) = getClient(buildId).prepareIndex(index, type)
-
-    private fun getClient(buildId: String): Client {
-        return hashClient(buildId).client
-    }
-
-    fun getActiveClients(): List<ESClient>
-
-    fun hashClient(buildId: String): ESClient
+enum class WeworkTextType(private val type: String) {
+    text("text"),
+    markdown("markdown")
 }
