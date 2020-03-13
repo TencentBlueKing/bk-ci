@@ -969,7 +969,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
     ): List<ItemPropCreateInfo> {
         val itemCreateList = mutableListOf<ItemPropCreateInfo>()
         val inputItemMap = mutableMapOf<String, ItemPropCreateInfo>()
-        // 页面属于与文件内的itemCode需取并集。重复以文件内的为准
+        // 匹配页面输入的itemId，是否在json文件内有对应的props，若没有则为空。有则替换。  json文件内多余的itemCode无视
         inputItemList.forEach {
             inputItemMap[it] = ItemPropCreateInfo(
                 itemId = it,
@@ -1000,25 +1000,25 @@ abstract class ExtServiceBaseService @Autowired constructor() {
             return returnInputData(inputItemList)
         }
 
-        // 文件与输入itemCode取并集，若文件内有，以文件props为准
-        val itemCodeList = mutableSetOf<String>()
+        // 文件与输入itemCode取交集，若文件内有props，以文件props为准
         val filePropMap = mutableMapOf<String, String>()
         fileItemList!!.forEach {
-            itemCodeList.add(it.itemCode!!)
-            filePropMap[it.itemCode] = it.props.toString()
+            filePropMap[it.itemCode!!] = it.props.toString()
         }
-        logger.info("getServiceProps fileItemList[$fileItemList], filePropMap[$filePropMap], inputItemMap[$inputItemMap]")
-        val itemRecords =
-            client.get(ServiceItemResource::class).getItemByCodes(itemCodeList).data ?: return mutableListOf()
-        itemRecords.forEach {
-            inputItemMap[it.itemId] =
-                ItemPropCreateInfo(
-                    itemId = it.itemId,
-                    props = filePropMap[it.itemCode] ?: ""
+        val itemRecords = client.get(ServiceItemResource::class).getItemInfoByIds(inputItemList).data
+        itemRecords?.forEach {
+            val itemCode = it.itemCode
+            val itemId = it.itemId
+            if (filePropMap.keys.contains(itemCode)) {
+                val propsInfo = filePropMap[itemCode]
+                inputItemMap[itemId] = ItemPropCreateInfo(
+                    itemId = itemId,
+                    props = propsInfo ?: ""
                 )
-
+            }
         }
-        // 返回取完并集后的数据
+
+        // 返回取完交集后的数据
         inputItemMap.forEach { (t, u) ->
             itemCreateList.add(u)
         }
