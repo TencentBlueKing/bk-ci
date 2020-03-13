@@ -75,12 +75,12 @@ enum class BuildStatus(val statusName: String, val visiable: Boolean) {
             status == SUCCEED || status == SKIP || status == REVIEW_PROCESSED || status == STAGE_SUCCESS
 
         fun isRunning(status: BuildStatus) =
-            isLoop(status) || status == REVIEWING || status == PREPARE_ENV || status == CALL_WAITING
+            isLoop(status) || status == REVIEWING || status == PREPARE_ENV || status == CALL_WAITING || status == PAUSE
 
         fun isCancel(status: BuildStatus) =
             status == TERMINATE || status == CANCELED || status == REVIEW_ABORT || status == QUALITY_CHECK_FAIL
 
-        fun isReview(status: BuildStatus) = status == REVIEW_ABORT || status == REVIEW_PROCESSED || status == PAUSE
+        fun isReview(status: BuildStatus) = status == REVIEW_ABORT || status == REVIEW_PROCESSED
 
         fun isReadyToRun(status: BuildStatus) = status == QUEUE || status == QUEUE_CACHE
         /**

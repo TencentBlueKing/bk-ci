@@ -118,7 +118,7 @@ class StageControl @Autowired constructor(
                 // 如果是因fastKill强制终止，流水线状态标记为失败
                 if (fastKill) buildStatus = BuildStatus.FAILED
 
-                //如果是因reviewTimeout结束构建，流水线状态标记为成功
+                // 如果是因reviewTimeout结束构建，流水线状态标记为成功
                 if (reviewTimeout) buildStatus = BuildStatus.SUCCEED
 
                 // 如果是因审核超时终止构建，流水线状态
@@ -238,7 +238,7 @@ class StageControl @Autowired constructor(
                 logger.info("[$buildId]|STAGE_$actionType|stageId=$stageId|action=$newActionType")
                 return buildStatus
             }
-        } else if (BuildStatus.isReview(status) && ActionType.isEnd(newActionType)) {
+        } else if (status == BuildStatus.PAUSE && ActionType.isEnd(newActionType)) {
             buildStatus = BuildStatus.STAGE_SUCCESS
             val now = LocalDateTime.now()
             pipelineRuntimeService.updateStage(
