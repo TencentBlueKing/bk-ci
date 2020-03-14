@@ -666,7 +666,7 @@ class BkRepoClient constructor(
             ruleList.add(fileNameRule)
         }
         if (metadata.isNotEmpty()) {
-            val metadataRule = Rule.NestedRule(metadata.map { Rule.QueryRule("metadata.${it.key}", it.value, OperationType.EQ) }.toMutableList(), , Rule.NestedRule.RelationType.AND)
+            val metadataRule = Rule.NestedRule(metadata.map { Rule.QueryRule("metadata.${it.key}", it.value, OperationType.EQ) }.toMutableList(), Rule.NestedRule.RelationType.AND)
             ruleList.add(metadataRule)
         }
         var rule = Rule.NestedRule(ruleList, Rule.NestedRule.RelationType.AND)
