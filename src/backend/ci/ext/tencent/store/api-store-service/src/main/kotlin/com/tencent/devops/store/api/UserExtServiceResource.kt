@@ -107,7 +107,7 @@ interface UserExtServiceResource {
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @ApiParam("serviceCode", required = true)
-        @QueryParam("serviceCode")
+        @PathParam("serviceCode")
         serviceCode: String,
         @ApiParam("媒体、可见范围信息")
         submitInfo: ExtSubmitDTO
