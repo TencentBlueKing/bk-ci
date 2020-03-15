@@ -324,6 +324,11 @@ class ServiceItemService @Autowired constructor(
         return Result(true)
     }
 
+    fun enable(userId: String, itemId: String): Result<Boolean> {
+        serviceItemDao.enable(dslContext, userId, itemId)
+        return Result(true)
+    }
+
     private fun isItemCanDeleteOrDisable(itemId: String): Boolean {
         val itemRecord = serviceItemDao.getItemById(dslContext, itemId) ?: throw RuntimeException("数据不存在")
         val count = itemRecord.serviceNum

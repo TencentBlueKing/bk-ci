@@ -44,4 +44,8 @@ class OPItemResourceImpl @Autowired constructor(
     override fun disable(userId: String, itemId: String): Result<Boolean> {
         return itemService.disable(userId, itemId)
     }
+
+    override fun enable(userId: String, itemId: String): Result<Boolean> {
+        return itemService.enable(userId, itemId)
+    }
 }

@@ -108,4 +108,16 @@ interface OPItemResource {
         @QueryParam("itemId")
         itemId: String
     ): Result<Boolean>
+
+    @PUT
+    @Path("/{itemId}/enable")
+    @ApiOperation("启用扩展点")
+    fun enable(
+        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @ApiParam("扩展点Id", required = true)
+        @QueryParam("itemId")
+        itemId: String
+    ): Result<Boolean>
 }

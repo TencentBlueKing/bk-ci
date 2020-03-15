@@ -102,6 +102,17 @@ class ServiceItemDao {
         }
     }
 
+    fun enable(dslContext: DSLContext, userId: String, itemId: String) {
+        with(TServiceItem.T_SERVICE_ITEM) {
+            val baseStep = dslContext.update(this)
+            baseStep.set(ITEM_STATUS, "ENABLE")
+            baseStep.set(MODIFIER, userId)
+            baseStep.set(UPDATE_TIME, LocalDateTime.now())
+                .where(ID.eq(itemId))
+                .execute()
+        }
+    }
+
     fun addCount(dslContext: DSLContext, itemId: String, serviceNum: Int) {
         with(TServiceItem.T_SERVICE_ITEM) {
             val baseStep = dslContext.update(this)
