@@ -151,7 +151,7 @@ interface OpServiceResource {
         visibleApproveReq: VisibleApproveReq
     ): Result<Boolean>
 
-    @ApiOperation("删除工作台插件")
+    @ApiOperation("删除扩展服务")
     @DELETE
     @Path("/serviceCodes/{serviceCode}")
     fun deleteAtom(

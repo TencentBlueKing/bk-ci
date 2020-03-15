@@ -178,7 +178,7 @@ class ExtServiceDao {
 
     fun countReleaseServiceByCode(dslContext: DSLContext, serviceCode: String): Int {
         with(TExtensionService.T_EXTENSION_SERVICE) {
-            return dslContext.selectCount().from(this).where(SERVICE_CODE.eq(serviceCode).and(SERVICE_STATUS.eq(ExtServiceStatusEnum.RELEASED.status.toByte()))).fetchOne(0, Int::class.java)
+            return dslContext.selectCount().from(this).where(SERVICE_CODE.eq(serviceCode).and(DELETE_FLAG.eq(false)).and(SERVICE_STATUS.eq(ExtServiceStatusEnum.RELEASED.status.toByte()))).fetchOne(0, Int::class.java)
         }
     }
 
@@ -420,6 +420,7 @@ class ExtServiceDao {
         val conditions = mutableListOf<Condition>()
         conditions.add(d.TYPE.eq(StoreProjectTypeEnum.INIT.type.toByte()))
         conditions.add(d.STORE_TYPE.eq(StoreTypeEnum.SERVICE.type.toByte()))
+        conditions.add(a.DELETE_FLAG.eq(false))
         if (null != serviceName) {
             conditions.add(a.SERVICE_NAME.like("%$serviceName%"))
         }

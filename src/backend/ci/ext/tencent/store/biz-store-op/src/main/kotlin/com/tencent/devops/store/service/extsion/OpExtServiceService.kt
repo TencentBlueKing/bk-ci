@@ -271,7 +271,7 @@ class OpExtServiceService @Autowired constructor(
     }
 
     fun deleteService(userId: String, serviceCode: String): Result<Boolean> {
-        logger.info("deleteAtom userId: $userId , serviceCode: $serviceCode")
+        logger.info("deleteService userId: $userId , serviceCode: $serviceCode")
         val type = StoreTypeEnum.SERVICE.type.toByte()
         val isOwner = storeMemberService.isStoreAdmin(userId, serviceCode, StoreTypeEnum.SERVICE.type.toByte())
         if (!isOwner) {
