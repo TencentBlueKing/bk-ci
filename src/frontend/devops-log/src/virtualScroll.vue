@@ -1,12 +1,12 @@
 <template>
     <section :class="['scroll-home', id, { 'min-height': totalNumber <= 0 }]" :style="`height: ${visHeight}px`" @mousewheel="handleWheel" @DOMMouseScroll="handleWheel">
-        <ul class="scroll-index scroll" :style="`top: ${-totalScrollHeight}px; width: ${indexWidth}px`">
+        <ul class="scroll-index scroll" :style="`top: ${-totalScrollHeight}px; width: ${indexWidth}px; height: ${ulHeight}px`">
             <li class="scroll-item" :style="`height: ${itemHeight}px; top: ${item.top}px`" v-for="(item) in indexList" :key="item">
                 {{item.isNewLine ? '' : item.value}}
                 <span :class="[{ 'show-all': item.hasFolded }, 'log-folder']" v-if="item.isFold" @click="foldListData(item.index, item.isFold)"></span>
             </li>
         </ul>
-        <ul class="scroll scroll-main" :style="`top: ${-totalScrollHeight}px;width: ${mainWidth}px; left: ${indexWidth}px`">
+        <ul class="scroll scroll-main" :style="`height: ${ulHeight}px; top: ${-totalScrollHeight}px ;width: ${mainWidth}px; left: ${indexWidth}px`">
             <li :class="[{ 'pointer': item.isFold, hover: item.showIndex === curHoverIndex }, 'scroll-item']"
                 @mouseenter="curHoverIndex = item.showIndex"
                 @mouseleave="curHoverIndex = -1"
@@ -69,6 +69,7 @@
 
         data () {
             return {
+                ulHeight: 0,
                 indexList: [],
                 listData: [],
                 totalHeight: 0,
@@ -174,6 +175,7 @@
                     this.$refs.minNav.getContext('2d').setTransform(dpr, 0, 0, dpr, 0, 0)
                 }
                 this.itemNumber = this.totalHeight > this.visHeight ? Math.ceil(this.visHeight / this.itemHeight) : this.totalNumber
+                this.ulHeight = this.totalHeight > 400000 ? 1000000 : this.totalHeight
                 const heightRate = this.visHeight / this.totalHeight
                 const minNavHeight = heightRate * this.visHeight
                 this.navHeight = heightRate > 1 ? this.visHeight : (minNavHeight < 20 ? 20 : minNavHeight)
@@ -274,7 +276,7 @@
             },
 
             scrollPageByIndex (index) {
-                let height = this.itemHeight * (index + 1)
+                let height = this.itemHeight * index
                 if (height <= 0) height = 0
                 else if (height >= this.totalHeight - this.visHeight) height = this.totalHeight - this.visHeight
                 if (this.totalHeight <= this.visHeight) height = 0
@@ -332,7 +334,7 @@
                 this.totalNumber = data.number
                 this.indexWidth = (Math.log10(this.totalNumber) + 1) * 7
                 this.initStatus()
-                this.scrollPageByIndex(this.totalNumber - this.itemNumber)
+                this.scrollPageByIndex(this.totalNumber - this.itemNumber + 1)
             },
 
             freshDataNoScroll (data) {
@@ -561,7 +563,6 @@
         .scroll {
             position: absolute;
             will-change: transform;
-            height: 1000000px;
             cursor: default;
             .scroll-item {
                 box-sizing: border-box;

@@ -48,15 +48,17 @@ onmessage = function (e) {
     curListData = allListData[curId]
     curTagList = allTagList[curId]
 
-    if (!curListData) {
-        allListData[curId] = curListData = []
-        allTagList[curId] = curTagList = []
-        allMainWidth[curId] = 0
-        allMainWordNum[curId] = 0
-        allRepeatLineNum[curId] = -1
-    }
-
     switch (type) {
+        case 'initStatus':
+            const pluginList = data.pluginList || []
+            pluginList.forEach((curId) => {
+                allListData[curId] = []
+                allTagList[curId] = []
+                allMainWidth[curId] = 0
+                allMainWordNum[curId] = 0
+                allRepeatLineNum[curId] = -1
+            })
+            break
         case 'initLog':
             allMainWidth[curId] = data.mainWidth - 90
             allMainWordNum[curId] = Math.floor(allMainWidth[curId] / 6.8)
@@ -76,11 +78,55 @@ onmessage = function (e) {
             foldListData(data)
             postMessage({ type: 'completeFold', number: curListData.length, id: curId })
             break
+        case 'search':
+            handleSearch(data.val)
+            break
+        case 'getSearchRes':
+            getSearchRes(data.index)
+            break
         case 'resetData':
-            curListData = []
-            curTagList = []
+            allListData = {}
+            allTagList = {}
+            allMainWidth = {}
+            allMainWordNum = {}
+            allRepeatLineNum = {}
             break
     }
+}
+
+let searchRes
+function handleSearch (val) {
+    searchRes = []
+    if (val !== '') {
+        const keys = Object.keys(allListData) || []
+        keys.forEach((key) => {
+            const curList = allListData[key] || []
+            curList.forEach(({ message, realIndex }) => {
+                const searchData = {
+                    index: realIndex,
+                    refId: key
+                }
+                if (message.includes(val)) searchRes.push(searchData)
+            })
+        })
+    }
+    postMessage({ type: 'completeSearch', num: searchRes.length })
+    getSearchRes(0)
+}
+
+// 分页获取搜索结果
+function getSearchRes (index) {
+    let curSearchRes = []
+    let startIndex = index - 500
+    let endIndex = index + 500
+    if (searchRes.length <= 1500) {
+        curSearchRes = searchRes
+    } else {
+        curSearchRes = [...searchRes.slice(index, endIndex), ...searchRes.slice(startIndex, index)]
+        if (startIndex < 0) curSearchRes = [...searchRes.slice(index, endIndex), ...searchRes.slice(startIndex), ...searchRes.slice(0, index)]
+        if (endIndex > searchRes.length) curSearchRes = [...searchRes.slice(index), ...searchRes.slice(0, endIndex - searchRes.length), ...searchRes.slice(startIndex, index)]
+    }
+    postMessage({ type: 'completeGetSearchRes', searchRes: curSearchRes })
 }
 
 function foldListData ({ startIndex }) {
@@ -123,7 +169,8 @@ function addListData ({ list }) {
             splitTextArr.forEach((message, i) => {
                 const currentIndex = curListData.length
                 const newItem = {
-                    message, color,
+                    message,
+                    color,
                     isNewLine: i > 0 ? (allRepeatLineNum[curId]++, true) : false,
                     showIndex: curListData.length - allRepeatLineNum[curId],
                     realIndex: currentIndex,
