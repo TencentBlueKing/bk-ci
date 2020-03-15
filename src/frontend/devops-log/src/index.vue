@@ -1,10 +1,16 @@
 <template>
-    <log-container v-bind="$props" @closeLog="$emit('closeLog')" @changeExecute="changeExecute" :show-time.sync="showTime">
+    <log-container v-bind="$props"
+        @closeLog="$emit('closeLog')"
+        @changeExecute="changeExecute"
+        @showSearchLog="showSearchLog"
+        :search-str.sync="searchStr"
+        :show-time.sync="showTime"
+        :worker="worker">
         <virtual-scroll class="log-scroll" ref="scroll" :id="id" :worker="worker">
             <template slot-scope="item">
                 <span class="item-txt selection-color">
                     <span class="item-time selection-color" v-if="showTime">{{(item.data.isNewLine ? '' : item.data.timestamp)|timeFilter}}</span>
-                    <span class="selection-color" :style="`color: ${item.data.color};font-weight: ${item.data.fontWeight}`" v-html="valuefilter(item.data.value)"></span>
+                    <span :class="['selection-color', { 'cur-search': curSearchIndex === item.data.index }]" :style="`color: ${item.data.color};font-weight: ${item.data.fontWeight}`" v-html="valuefilter(item.data.value)"></span>
                 </span>
             </template>
         </virtual-scroll>
@@ -61,7 +67,9 @@
         data () {
             return {
                 worker: new Worker(),
-                showTime: false
+                showTime: false,
+                searchStr: '',
+                curSearchIndex: 0
             }
         },
 
@@ -73,32 +81,51 @@
             }
         },
 
+        mounted () {
+            this.worker.postMessage({ type: 'initStatus', pluginList: [this.id] })
+        },
+
         beforeDestroy() {
             this.worker.terminate()
         },
 
         methods: {
+            showSearchLog ({ index }) {
+                this.curSearchIndex = index
+                index -= 5
+                if (index < 0) index = 0
+                this.$refs.scroll.scrollPageByIndex(index)
+            },
+
             changeExecute (execute) {
                 this.$refs.scroll.resetData()
                 this.$emit('changeExecute', this.id, execute)
             },
 
             valuefilter (val) {
-                return val.replace(/\s|<|>/g, (str) => {
-                    let res = '&nbsp;'
-                    switch (str) {
-                        case '<':
-                            res = '&lt;'
-                            break;
-                        case '>':
-                            res = '&gt;'
-                            break;
-                        default:
-                            res = '&nbsp;'
-                            break;
-                    }
-                    return res
-                }).replace(/&lt;a((?!&gt;).)+?href=["']?([^"']+)["']?((?!&gt;).)*&gt;(((?!&lt;).)+)&lt;\/a&gt;/gi, "<a href='$2' target='_blank'>$4</a>")
+                const valArr = val.split(/<a[^>]+?href=["']?([^"']+)["']?[^>]*>([^<]+)<\/a>/gi)
+                const transVal = (val = '') => {
+                    let regStr = '\\s|<|>'
+                    if (this.searchStr !== '') regStr += `|${this.searchStr}`
+                    const tranReg = new RegExp(regStr, 'g')
+                    return val.replace(tranReg, (str) => {
+                        if (str === '<') return '&lt;'
+                        else if (str === '>') return '&gt;'
+                        else if (str === this.searchStr) return `<span class="search-str">${str}</span>`
+                        else if (/\t/.test(str)) return '&nbsp;&nbsp;&nbsp;&nbsp;'
+                        else return'&nbsp;'
+                    })
+                }
+                let valRes = ''
+                for (let index = 0; index < valArr.length; index += 3) {
+                    if (typeof valArr[index] === 'undefined') continue
+                    const firstVal = valArr[index]
+                    const secVal = valArr[index + 1]
+                    const thirdVal = valArr[index + 2]
+                    valRes += transVal(firstVal)
+                    if (secVal) valRes += `<a href='${secVal}' target='_blank'>${transVal(thirdVal)}</a>`
+                }
+                return valRes
             },
 
             addLogData (data) {
@@ -115,121 +142,6 @@
 </script>
 
 <style lang="scss" scoped>
-    .log-home {
-        position: fixed;
-        top: 0;
-        left: 0;
-        bottom: 0;
-        right: 0;
-        background-color: rgba(0, 0, 0, .2);
-        z-index: 1000;
-        .scroll-loading {
-            position: absolute;
-            bottom: 0;
-            width: 100%;
-            height: 16px;
-        }
-        .log-main {
-            position: relative;
-            width: 80%;
-            height: calc(100% - 32px);
-            float: right;
-            display: flex;
-            flex-direction: column;
-            margin: 16px;
-            border-radius: 6px;
-            overflow: hidden;
-            transition-property: transform, opacity;
-            transition: transform 200ms cubic-bezier(.165,.84,.44,1), opacity 100ms cubic-bezier(.215,.61,.355,1);
-            background: #1e1e1e;
-            .log-head {
-                line-height: 52px;
-                padding: 10px 20px 8px;
-                border-bottom: 1px solid;
-                border-bottom-color: #2b2b2b;
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                color: #d4d4d4;
-                .log-tools {
-                    display: flex;
-                    align-items: center;
-                    line-height: 30px;
-                    .log-button {
-                        color: #c2cade;
-                        background: #222529;
-                        border: 1px solid #444d56;
-                        margin-right: 10px;
-                        height: 32px;
-                        line-height: 30px;
-                        display: inline-block;
-                        outline: none;
-                        cursor: pointer;
-                        white-space: nowrap;
-                        -webkit-appearance: none;
-                        padding: 0 15px;
-                        text-align: center;
-                        vertical-align: middle;
-                        font-size: 14px;
-                        border-radius: 2px;
-                        box-sizing: border-box;
-                        text-decoration: none;
-                        transition: background-color .3s ease;
-                        min-width: 68px;
-                        position: relative;
-                        &:hover {
-                            color: #fff;
-                            background: #292c2d;
-                        }
-                    }
-                    .log-execute {
-                        width: 100px;
-                        margin-right: 10px;
-                        color: #c2cade;
-                        background: #222529;
-                        border-color: #444d56;
-                        font-size: 14px;
-                        &:hover {
-                            color: #fff;
-                            background: #292c2d;
-                        }
-                    }
-                }
-                .log-title {
-                    display: flex;
-                    align-items: center;
-                }
-                .log-search {
-                    display: flex;
-                    align-items: center;
-                    background-color: #2d2d30;
-                    line-height: 30px;
-                    padding: 0 20px;
-                    font-size: 14px;
-                    .search-input {
-                        width: 200px;
-                    }
-                    /deep/ .bk-form-input {
-                        border: 1px solid transparent;
-                        background-color: rgb(60, 60, 60)!important;
-                        color: rgb(204, 204, 204);
-                        margin: 5px 0;
-                        height: 24px;
-                        width: 200px;
-                    }
-                    .search-summary {
-                        padding: 0 5px;
-                        font-size: 12px;
-                    }
-                    .bk-icon {
-                        margin-left: 5px;
-                        cursor: pointer;
-                        user-select: none;
-                    }
-                }
-            }
-        }
-    }
     .log-scroll {
         flex: 1;
         color: #ffffff;
@@ -245,6 +157,18 @@
         .item-txt {
             position: relative;
             padding: 0 5px;
+            .cur-search {
+                /deep/ .search-str {
+                    color: rgb(255, 255, 255);
+                    background: rgb(33, 136, 255);
+                    outline: rgb(121, 184, 255) solid 1px;
+                }
+            }
+            /deep/ .search-str {
+                color: rgb(36, 41, 46);
+                background: rgb(255, 223, 93);
+                outline: rgb(255, 223, 93) solid 1px;
+            }
         }
         .item-time {
             display: inline-block;
