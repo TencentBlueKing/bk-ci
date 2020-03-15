@@ -104,7 +104,7 @@ class ExtServiceDao {
     ) {
         with(TExtensionService.T_EXTENSION_SERVICE) {
             dslContext.update(this).set(DELETE_FLAG, true).set(MODIFIER, userId).set(UPDATE_TIME, LocalDateTime.now())
-                .where(SERVICE_CODE.eq(serviceCode))
+                .where(SERVICE_CODE.eq(serviceCode)).execute()
         }
     }
 

@@ -296,8 +296,11 @@ class OpExtServiceService @Autowired constructor(
                 arrayOf()
             )
         }
-        extServiceDao.deleteExtService(dslContext, userId, serviceCode)
-        extServiceFeatureDao.deleteExtFeatureService(dslContext, userId, serviceCode)
+        dslContext.transaction { t ->
+            val context = DSL.using(t)
+            extServiceDao.deleteExtService(context, userId, serviceCode)
+            extServiceFeatureDao.deleteExtFeatureService(context, userId, serviceCode)
+        }
         return Result(true)
     }
 
