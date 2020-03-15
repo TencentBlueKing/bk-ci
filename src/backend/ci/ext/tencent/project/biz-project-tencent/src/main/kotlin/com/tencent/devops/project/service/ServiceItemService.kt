@@ -7,10 +7,12 @@ import com.tencent.devops.project.api.pojo.ServiceItem
 import com.tencent.devops.project.api.pojo.ServiceItemInfoVO
 import com.tencent.devops.project.api.pojo.enums.HtmlComponentTypeEnum
 import com.tencent.devops.project.api.pojo.enums.ServiceItemStatusEnum
+import com.tencent.devops.project.dao.ServiceDao
 import com.tencent.devops.project.dao.ServiceItemDao
 import com.tencent.devops.project.pojo.ItemCreateInfo
 import com.tencent.devops.project.pojo.ItemQueryInfo
 import com.tencent.devops.project.pojo.ItemUpdateInfo
+import com.tencent.devops.project.pojo.service.ServiceVO
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -20,7 +22,8 @@ import java.lang.RuntimeException
 @Service
 class ServiceItemService @Autowired constructor(
     private val dslContext: DSLContext,
-    private val serviceItemDao: ServiceItemDao
+    private val serviceItemDao: ServiceItemDao,
+    private val projectServiceDao: ServiceDao
 ) {
     // 用于存放所有服务父子关系的map
     private val parentMap = mutableMapOf<String, MutableList<ServiceItem>>()
@@ -216,30 +219,35 @@ class ServiceItemService @Autowired constructor(
         return result
     }
 
-    fun getParentList(): Result<List<ServiceItem>> {
-        val parentItemList = mutableListOf<ServiceItem>()
-        serviceItemDao.getItemParent(dslContext)?.forEach {
-            if (it!!.parentId.isNotEmpty()) {
-                parentItemList.add(
-                    ServiceItem(
-                        itemId = it!!.id,
-                        itemCode = it.itemCode,
-                        itemName = it.itemName,
-                        serviceCount = it.serviceNum,
-                        htmlType = it.htmlComponentType,
-                        htmlPath = it.htmlPath,
-                        parentId = it.parentId
-                    )
-                )
-            }
-        }
-        return Result(parentItemList)
+    fun getProjectService(serviceId: String): ServiceVO {
+        val serviceRecord = projectServiceDao.select(dslContext, serviceId.toLong())
+        return ServiceVO(
+                id = serviceRecord!!.id,
+                name = serviceRecord.name,
+                link = serviceRecord.link,
+                linkNew = serviceRecord.linkNew,
+                status = serviceRecord.status,
+                injectType = serviceRecord.injectType,
+                iframeUrl = serviceRecord.iframeUrl,
+                cssUrl = serviceRecord.cssUrl,
+                jsUrl = serviceRecord.jsUrl,
+                grayCssUrl = serviceRecord.grayCssUrl,
+                grayJsUrl = serviceRecord.grayJsUrl,
+                showProjectList = serviceRecord.showProjectList,
+                showNav = serviceRecord.showNav,
+                projectIdType = serviceRecord.projectIdType,
+                collected = false,
+                weigHt = serviceRecord.weight,
+                logoUrl = serviceRecord.logoUrl,
+                webSocket = serviceRecord.webSocket,
+                grayIframeUrl = serviceRecord.grayIframeUrl
+            )
     }
 
-    fun queryItem(itemName: String?, pid: String?): Result<List<ServiceItem>> {
+    fun queryItem(itemName: String?, serviceId: String?): Result<List<ServiceItem>> {
         val query = ItemQueryInfo(
             itemName = itemName,
-            pid = pid
+            serviceId = serviceId
         )
         val itemList = mutableListOf<ServiceItem>()
         serviceItemDao.queryItem(dslContext, query)?.forEach {
@@ -269,9 +277,8 @@ class ServiceItemService @Autowired constructor(
             itemCode = itemInfo.itemCode,
             itemName = itemInfo.itemName,
             htmlPath = itemInfo.htmlPath,
-            inputPath = itemInfo.inputPath,
             creator = userId,
-            pid = itemInfo.pid,
+            serviceId = itemInfo.pid,
             UIType = itemInfo.UIType,
             iconUrl = itemInfo.iconUrl,
             props = itemInfo.props,
@@ -285,8 +292,7 @@ class ServiceItemService @Autowired constructor(
         val updateInfo = ItemUpdateInfo(
             itemName = itemInfo.itemName,
             htmlPath = itemInfo.htmlPath,
-            inputPath = itemInfo.inputPath,
-            pid = itemInfo.pid,
+            serviceId = itemInfo.pid,
             UIType = itemInfo.UIType,
             iconUrl = itemInfo.iconUrl,
             props = itemInfo.props,
@@ -343,7 +349,7 @@ class ServiceItemService @Autowired constructor(
     fun getItemsByServiceId(serviceId: String?): List<ServiceItemInfoVO>? {
         logger.info("getItemsByServiceId serviceId is:$serviceId")
         val itemQueryInfo = ItemQueryInfo(
-            pid = serviceId,
+            serviceId = serviceId,
             itemStatus = ServiceItemStatusEnum.ENABLE
         )
         val itemList = mutableListOf<ServiceItemInfoVO>()

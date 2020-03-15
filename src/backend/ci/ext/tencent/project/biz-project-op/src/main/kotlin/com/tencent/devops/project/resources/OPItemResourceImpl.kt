@@ -13,9 +13,6 @@ import org.springframework.beans.factory.annotation.Autowired
 class OPItemResourceImpl @Autowired constructor(
     private val itemService: ServiceItemService
 ) : OPItemResource {
-    override fun parentList(): Result<List<ServiceItem>> {
-        return itemService.getParentList()
-    }
 
     override fun list(itemName: String?, pid: String?): Result<List<ServiceItem>> {
         return itemService.queryItem(itemName, pid)

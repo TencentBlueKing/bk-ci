@@ -6,8 +6,8 @@ import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("查询扩展点请求对象")
 data class ItemQueryInfo(
-    @ApiModelProperty("父类扩展点ID", required = false)
-    val pid: String? = null,
+    @ApiModelProperty("所属服务Id", required = false)
+    val serviceId: String? = null,
     @ApiModelProperty("扩展点名称", required = false)
     val itemName: String? = null,
     @ApiModelProperty("扩展点状态", required = false)

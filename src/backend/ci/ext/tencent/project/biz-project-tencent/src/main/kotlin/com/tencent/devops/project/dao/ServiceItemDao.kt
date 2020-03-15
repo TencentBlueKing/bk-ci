@@ -36,7 +36,7 @@ class ServiceItemDao {
                     UUIDUtil.generate(),
                     info.itemCode,
                     info.itemName,
-                    info.pid,
+                    info.serviceId,
                     info.UIType,
                     info.htmlPath,
                     info.iconUrl,
@@ -58,8 +58,8 @@ class ServiceItemDao {
             if (null != info.htmlPath) {
                 baseStep.set(HTML_PATH, info.htmlPath)
             }
-            if (null != info.pid) {
-                baseStep.set(PARENT_ID, info.pid)
+            if (null != info.serviceId) {
+                baseStep.set(PARENT_ID, info.serviceId)
             }
             if (null != info.UIType) {
                 baseStep.set(HTML_COMPONENT_TYPE, info.UIType)
@@ -130,8 +130,8 @@ class ServiceItemDao {
                 whereStep.where(ITEM_NAME.like(itemQueryInfo.itemName))
             }
 
-            if (itemQueryInfo.pid != null) {
-                whereStep.where(PARENT_ID.eq(itemQueryInfo.pid))
+            if (itemQueryInfo.serviceId != null) {
+                whereStep.where(PARENT_ID.eq(itemQueryInfo.serviceId))
             }
 
             if (itemQueryInfo.itemStatus != null) {

@@ -25,10 +25,6 @@ import javax.ws.rs.core.MediaType
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface OPItemResource {
-    @GET
-    @Path("/parentServices")
-    @ApiOperation("查询根服务")
-    fun parentList(): Result<List<ServiceItem>>
 
     @GET
     @Path("/")
