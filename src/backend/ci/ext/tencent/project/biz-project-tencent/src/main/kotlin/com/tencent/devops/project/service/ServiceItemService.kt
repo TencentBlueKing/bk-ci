@@ -219,17 +219,19 @@ class ServiceItemService @Autowired constructor(
     fun getParentList(): Result<List<ServiceItem>> {
         val parentItemList = mutableListOf<ServiceItem>()
         serviceItemDao.getItemParent(dslContext)?.forEach {
-            parentItemList.add(
-                ServiceItem(
-                    itemId = it!!.id,
-                    itemCode = it.itemCode,
-                    itemName = it.itemName,
-                    serviceCount = it.serviceNum,
-                    htmlType = it.htmlComponentType,
-                    htmlPath = it.htmlPath,
-                    parentId = it.parentId
+            if (it!!.parentId.isNotEmpty()) {
+                parentItemList.add(
+                    ServiceItem(
+                        itemId = it!!.id,
+                        itemCode = it.itemCode,
+                        itemName = it.itemName,
+                        serviceCount = it.serviceNum,
+                        htmlType = it.htmlComponentType,
+                        htmlPath = it.htmlPath,
+                        parentId = it.parentId
+                    )
                 )
-            )
+            }
         }
         return Result(parentItemList)
     }
