@@ -1,5 +1,10 @@
 <template>
-    <log-container v-bind="$props" @closeLog="$emit('closeLog')" :show-time.sync="showTime">
+    <log-container v-bind="$props"
+        @closeLog="$emit('closeLog')"
+        @showSearchLog="showSearchLog"
+        :show-time.sync="showTime"
+        :search-str.sync="searchStr"
+        :worker="worker">
         <ul class="plugin-list">
             <li v-for="plugin in curPluginList" :key="plugin.id" class="plugin-item">
                 <p class="item-head" @click="expendLog(plugin)">
@@ -11,7 +16,7 @@
                     <template slot-scope="item">
                         <span class="item-txt selection-color">
                             <span class="item-time selection-color" v-if="showTime">{{(item.data.isNewLine ? '' : item.data.timestamp)|timeFilter}}</span>
-                            <span class="selection-color" :style="`color: ${item.data.color};font-weight: ${item.data.fontWeight}`" v-html="valuefilter(item.data.value)"></span>
+                            <span :class="['selection-color', { 'cur-search': curSearchIndex === item.data.index }]" :style="`color: ${item.data.color};font-weight: ${item.data.fontWeight}`" v-html="valuefilter(item.data.value)"></span>
                         </span>
                     </template>
                 </virtual-scroll>
@@ -73,7 +78,9 @@
             return {
                 worker: new Worker(),
                 curPluginList: JSON.parse(JSON.stringify(this.pluginList)),
-                showTime: false
+                showTime: false,
+                searchStr: '',
+                curSearchIndex: 0
             }
         },
 
@@ -85,11 +92,27 @@
             }
         },
 
+        mounted () {
+            this.worker.postMessage({ type: 'initStatus', pluginList: this.curPluginList.map(x => x.id) })
+        },
+
         beforeDestroy () {
             this.worker.terminate()
         },
 
         methods: {
+            showSearchLog ({ index, refId }) {
+                this.curSearchIndex = index
+                index -= 5
+                if (index < 0) index = 0
+                const ref = this.$refs[refId][0]
+                const ele = ref.$el
+                const curPlugin = this.curPluginList.find(x => x.id === refId) || {}
+                if (!curPlugin.isFold) curPlugin.isFold = true
+                ele.scrollIntoViewIfNeeded()
+                ref.scrollPageByIndex(index)
+            },
+
             expendLog (plugin) {
                 this.$set(plugin, 'isFold', !plugin.isFold)
                 let ref = this.$refs[plugin.id]
@@ -106,21 +129,29 @@
             },
 
             valuefilter (val) {
-                return val.replace(/\s|<|>/g, (str) => {
-                    let res = '&nbsp;'
-                    switch (str) {
-                        case '<':
-                            res = '&lt;'
-                            break;
-                        case '>':
-                            res = '&gt;'
-                            break;
-                        default:
-                            res = '&nbsp;'
-                            break;
-                    }
-                    return res
-                }).replace(/&lt;a((?!&gt;).)+?href=["']?([^"']+)["']?((?!&gt;).)*&gt;(((?!&lt;).)+)&lt;\/a&gt;/gi, "<a href='$2' target='_blank'>$4</a>")
+                const valArr = val.split(/<a[^>]+?href=["']?([^"']+)["']?[^>]*>([^<]+)<\/a>/gi)
+                const transVal = (val = '') => {
+                    let regStr = '\\s|<|>'
+                    if (this.searchStr !== '') regStr += `|${this.searchStr}`
+                    const tranReg = new RegExp(regStr, 'g')
+                    return val.replace(tranReg, (str) => {
+                        if (str === '<') return '&lt;'
+                        else if (str === '>') return '&gt;'
+                        else if (str === this.searchStr) return `<span class="search-str">${str}</span>`
+                        else if (/\t/.test(str)) return '&nbsp;&nbsp;&nbsp;&nbsp;'
+                        else return'&nbsp;'
+                    })
+                }
+                let valRes = ''
+                for (let index = 0; index < valArr.length; index += 3) {
+                    if (typeof valArr[index] === 'undefined') continue
+                    const firstVal = valArr[index]
+                    const secVal = valArr[index + 1]
+                    const thirdVal = valArr[index + 2]
+                    valRes += transVal(firstVal)
+                    if (secVal) valRes += `<a href='${secVal}' target='_blank'>${transVal(thirdVal)}</a>`
+                }
+                return valRes
             }
         }
     }
@@ -179,6 +210,18 @@
         .item-txt {
             position: relative;
             padding: 0 5px;
+            .cur-search {
+                /deep/ .search-str {
+                    color: rgb(255, 255, 255);
+                    background: rgb(33, 136, 255);
+                    outline: rgb(121, 184, 255) solid 1px;
+                }
+            }
+            /deep/ .search-str {
+                color: rgb(36, 41, 46);
+                background: rgb(255, 223, 93);
+                outline: rgb(255, 223, 93) solid 1px;
+            }
         }
         .item-time {
             display: inline-block;

@@ -6,12 +6,12 @@
                 <p class="log-tools">
                     <section class="tool-search">
                         <section class="searct-input">
-                            <input type="text" class="">
+                            <input type="text" @input="startSearch" placeholder="Search">
                             <img src="./assets/svg/spinner.svg" v-if="isSearching">
                         </section>
-                        <img src="./assets/svg/icon-angle-left.svg">
-                        <span class="search-num">2</span>
-                        <img src="./assets/svg/icon-angle-right.svg">
+                        <img src="./assets/svg/icon-angle-left.svg" @click="changeSearchIndex(-1)">
+                        <span class="search-num">{{`${searchIndex} / ${searchNum}`}}</span>
+                        <img src="./assets/svg/icon-angle-right.svg" @click="changeSearchIndex(1)">
                     </section>
                     <bk-select v-if="![0, 1].includes(+executeCount)" :placeholder="language('重试次数')" class="log-execute" :value="currentExe" :clearable="false">
                         <bk-option v-for="execute in executeCount"
@@ -26,7 +26,7 @@
                         <img src="./assets/svg/more.svg" class="more-icon" @click="showMore = !showMore">
                         <ul class="more-list" v-if="showMore">
                             <li class="more-button" @click="showLogTime">{{ language('显示时间') }}</li>
-                            <li class="more-button" @click="closeShowMore">{{ language('下载日志') }}</li>
+                            <li class="more-button" @click="downLoad">{{ language('下载日志') }}</li>
                         </ul>
                     </section>
                 </p>
@@ -65,21 +65,40 @@
             },
             showTime: {
                 type: Boolean
+            },
+            searchStr: {
+                type: String
+            },
+            worker: {
+                type: Object
             }
         },
 
         data () {
             return {
-                searchResult: [],
-                showSearchIndex: 0,
                 currentExe: this.executeCount,
                 isSearching: false,
-                showMore: false
+                showMore: false,
+                searchIndex: 0,
+                realSearchIndex: 0,
+                searchNum: 0,
+                searchRes: []
             }
         },
 
         mounted () {
             document.addEventListener('mousedown', this.closeLog)
+            this.worker.addEventListener('message', (event) => {
+                const data = event.data
+                switch (data.type) {
+                    case 'completeSearch':
+                        this.handleSearch(data.num)
+                        break
+                    case 'completeGetSearchRes':
+                        this.handleSearchRes(data.searchRes)
+                        break
+                }
+            })
         },
 
         beforeDestroy () {
@@ -88,6 +107,45 @@
 
         methods: {
             language,
+
+            changeSearchIndex (dis) {
+                if (this.searchRes.length <= 0) return
+                // 展示的index
+                let curIndex = this.searchIndex + dis
+                if (curIndex <= 0) curIndex = this.searchNum
+                if (curIndex > this.searchNum) curIndex = 1
+                this.searchIndex = curIndex
+                // 真实的index
+                curIndex = this.realSearchIndex + dis
+                if (curIndex < 0) curIndex = this.searchRes.length - 1
+                if (curIndex >= this.searchRes.length) curIndex = 0
+                if (curIndex >= 480 && curIndex <= 520) this.worker.postMessage({ type: 'getSearchRes', index: this.searchIndex - 1 })
+                const curSearch = this.searchRes[curIndex]
+                this.realSearchIndex = curIndex
+                this.$emit('showSearchLog', curSearch)
+            },
+
+            startSearch (event) {
+                this.isSearching = true
+                window.clearTimeout(this.startSearch.timeId)
+                this.startSearch.timeId = window.setTimeout(() => {
+                    const target = event.target || {}
+                    const val = target.value
+                    this.$emit('update:searchStr', val)
+                    this.worker.postMessage({ type: 'search', val })
+                }, 300)
+            },
+
+            handleSearchRes (searchRes = []) {
+                this.searchRes = searchRes
+                this.realSearchIndex = 0
+            },
+
+            handleSearch (num = 0) {
+                this.isSearching = false
+                this.searchNum = num
+                this.searchIndex = num > 0 ? 1 : 0
+            },
 
             showLogTime () {
                 this.closeShowMore()
@@ -104,6 +162,7 @@
             },
 
             downLoad () {
+                this.closeShowMore()
                 fetch(this.downLoadLink, {
                     method: 'GET',
                     headers: {
@@ -147,7 +206,6 @@
         line-height: 30px;
         .tool-search {
             font-size: 12px;
-            width: 250px;
             display: flex;
             height: 30px;
             align-items: center;
@@ -155,6 +213,7 @@
             .searct-input {
                 position: relative;
                 height: 26px;
+                margin-right: 5px;
                 input {
                     vertical-align: super;
                     border: 0;
