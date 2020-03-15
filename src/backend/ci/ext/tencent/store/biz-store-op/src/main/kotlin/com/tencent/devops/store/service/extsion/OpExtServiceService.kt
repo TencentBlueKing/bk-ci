@@ -288,6 +288,7 @@ class OpExtServiceService @Autowired constructor(
         }
         // 如果已经被安装到其他项目下使用，不能删除
         val installedCount = storeProjectRelDao.countInstalledProject(dslContext, serviceCode, type)
+        logger.info("installedCount: $releasedCount")
         if (installedCount > 0) {
             return MessageCodeUtil.generateResponseDataObject(
                 // TODO: 此处应在core添加扩展服务相关异常信息
@@ -295,11 +296,8 @@ class OpExtServiceService @Autowired constructor(
                 arrayOf()
             )
         }
-        dslContext.transaction { t ->
-            val context = DSL.using(t)
-            extServiceDao.deleteExtService(context, userId, serviceCode)
-            extServiceFeatureDao.deleteExtFeatureService(context, userId, serviceCode)
-        }
+        extServiceDao.deleteExtService(dslContext, userId, serviceCode)
+        extServiceFeatureDao.deleteExtFeatureService(dslContext, userId, serviceCode)
         return Result(true)
     }
 
