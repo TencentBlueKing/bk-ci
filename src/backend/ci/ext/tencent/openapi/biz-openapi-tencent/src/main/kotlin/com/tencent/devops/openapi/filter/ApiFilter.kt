@@ -79,17 +79,18 @@ class ApiFilter : ContainerRequestFilter {
             // 应用身份登录
             if (app.has("app_code")) {
                 val appCode = app.getString("app_code")
-                logger.info("appCode[$appCode]")
                 val verified = app.get("verified") as Boolean
-                if (appCode.isNullOrEmpty() || !verified) {
+                if (apigwtType == "apigw-app" && (appCode.isNullOrEmpty() || !verified)) {
                     return false
                 }else {
-                    // 将appCode头部置空
-                    requestContext.headers[AUTH_HEADER_DEVOPS_APP_CODE]?.set(0, null)
-                    if (requestContext.headers[AUTH_HEADER_DEVOPS_APP_CODE] != null) {
-                        requestContext.headers[AUTH_HEADER_DEVOPS_APP_CODE]?.set(0, appCode)
-                    } else {
-                        requestContext.headers.add(AUTH_HEADER_DEVOPS_APP_CODE, appCode)
+                    if(!appCode.isNullOrBlank()) {
+                        // 将appCode头部置空
+                        requestContext.headers[AUTH_HEADER_DEVOPS_APP_CODE]?.set(0, null)
+                        if (requestContext.headers[AUTH_HEADER_DEVOPS_APP_CODE] != null) {
+                            requestContext.headers[AUTH_HEADER_DEVOPS_APP_CODE]?.set(0, appCode)
+                        } else {
+                            requestContext.headers.add(AUTH_HEADER_DEVOPS_APP_CODE, appCode)
+                        }
                     }
                 }
             }
