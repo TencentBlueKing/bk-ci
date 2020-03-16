@@ -1,6 +1,6 @@
 package com.tencent.devops.dispatch.service
 
-import com.tencent.devops.dispatch.dao.DockerIPInfoDao
+import com.tencent.devops.dispatch.dao.PipelineDockerIPInfoDao
 import com.tencent.devops.dispatch.pojo.DockerIpInfoVO
 import com.tencent.devops.dispatch.pojo.DockerIpListPage
 import org.jooq.DSLContext
@@ -12,7 +12,7 @@ import java.time.format.DateTimeFormatter
 @Service
 class DispatchDockerService @Autowired constructor(
     private val dslContext: DSLContext,
-    private val dockerIPInfoDao: DockerIPInfoDao
+    private val pipelineDockerIPInfoDao: PipelineDockerIPInfoDao
 ) {
 
     companion object {
@@ -24,15 +24,15 @@ class DispatchDockerService @Autowired constructor(
         val pageSizeNotNull = pageSize ?: 10
 
         try {
-            val idcIpList = dockerIPInfoDao.getIdcIpList(dslContext, pageNotNull, pageSizeNotNull)
-            val count = dockerIPInfoDao.getIdcIpCount(dslContext)
+            val idcIpList = pipelineDockerIPInfoDao.getDockerIpList(dslContext, pageNotNull, pageSizeNotNull)
+            val count = pipelineDockerIPInfoDao.getDockerIpCount(dslContext)
 
             if (idcIpList.size == 0 || count == 0L) {
                 return DockerIpListPage(pageNotNull, pageSizeNotNull, 0, emptyList())
             }
             val dockerIpInfoVOList = mutableListOf<DockerIpInfoVO>()
             idcIpList.forEach {
-                dockerIpInfoVOList.add(DockerIpInfoVO(it.id, it.idcIp, it.capacity, it.usedNum, it.enable, it.grayEnv, it.gmtCreate.format(
+                dockerIpInfoVOList.add(DockerIpInfoVO(it.id, it.dockerIp, it.capacity, it.usedNum, it.enable, it.grayEnv, it.gmtCreate.format(
                     DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))))
             }
 
@@ -46,7 +46,7 @@ class DispatchDockerService @Autowired constructor(
     fun create(userId: String, dockerIpInfoVO: DockerIpInfoVO): Boolean {
         logger.info("$userId create IDC IP $dockerIpInfoVO")
         try {
-            dockerIPInfoDao.create(dslContext, dockerIpInfoVO.idcIp, dockerIpInfoVO.capacity, dockerIpInfoVO.usedNum, dockerIpInfoVO.enable, dockerIpInfoVO.grayEnv)
+            pipelineDockerIPInfoDao.create(dslContext, dockerIpInfoVO.idcIp, dockerIpInfoVO.capacity, dockerIpInfoVO.usedNum, dockerIpInfoVO.enable, dockerIpInfoVO.grayEnv)
             return true
         } catch (e: Exception) {
             logger.error("OP dispatchDocker create error.", e)
@@ -57,7 +57,7 @@ class DispatchDockerService @Autowired constructor(
     fun update(userId: String, dockerIpInfoId: Int, enable: Boolean): Boolean {
         logger.info("$userId update IDC IP id: $dockerIpInfoId status: $enable")
         try {
-            dockerIPInfoDao.updateIdcIpStatus(dslContext, dockerIpInfoId, enable)
+            pipelineDockerIPInfoDao.updateDockerIpStatus(dslContext, dockerIpInfoId, enable)
             return true
         } catch (e: Exception) {
             logger.error("OP dispatchDocker update error.", e)
@@ -68,7 +68,7 @@ class DispatchDockerService @Autowired constructor(
     fun delete(userId: String, dockerIpInfoId: Int): Boolean {
         logger.info("$userId delete $dockerIpInfoId")
         try {
-            dockerIPInfoDao.delete(dslContext, dockerIpInfoId)
+            pipelineDockerIPInfoDao.delete(dslContext, dockerIpInfoId)
             return true
         } catch (e: Exception) {
             logger.error("OP dispatchDocker delete error.", e)
