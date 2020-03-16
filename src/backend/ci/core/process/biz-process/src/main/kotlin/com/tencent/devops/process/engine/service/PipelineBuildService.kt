@@ -754,7 +754,7 @@ class PipelineBuildService(
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS,
                 defaultMessage = "流水线不存在",
                 params = arrayOf(buildId))
-       pipelineRuntimeService.getBuildInfo(buildId)
+        pipelineRuntimeService.getBuildInfo(buildId)
             ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
                 errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
@@ -791,7 +791,6 @@ class PipelineBuildService(
                 defaultMessage = "Stage启动失败![${interceptResult.message}]"
             )
         }
-
 
         if (isCancel) pipelineRuntimeService.cancelStage(
             userId = userId,

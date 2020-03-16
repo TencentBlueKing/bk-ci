@@ -645,7 +645,7 @@ class PipelineBuildDetailService @Autowired constructor(
         }, BuildStatus.RUNNING)
     }
 
-    fun stagePause(pipelineId:String, buildId: String, stageId: String) {
+    fun stagePause(pipelineId: String, buildId: String, stageId: String) {
         logger.info("[$buildId]|stage_pause|stageId=$stageId")
         update(buildId, object : ModelInterface {
             var update = false
@@ -691,7 +691,7 @@ class PipelineBuildDetailService @Autowired constructor(
         }, BuildStatus.STAGE_SUCCESS)
     }
 
-    fun stageStart(pipelineId:String, buildId: String, stageId: String) {
+    fun stageStart(pipelineId: String, buildId: String, stageId: String) {
         logger.info("[$buildId]|stage_start|stageId=$stageId")
         update(buildId, object : ModelInterface {
             var update = false
