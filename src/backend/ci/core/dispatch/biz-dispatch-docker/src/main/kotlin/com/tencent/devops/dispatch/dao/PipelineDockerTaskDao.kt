@@ -344,6 +344,18 @@ class PipelineDockerTaskDao {
         }
     }
 
+    fun clearHostTagForUnclaimedHostTask(dslContext: DSLContext, buildId: String, vmSeqId: Int): Boolean {
+        with(TDispatchPipelineDockerTask.T_DISPATCH_PIPELINE_DOCKER_TASK) {
+            return dslContext.update(this)
+                .set(HOST_TAG, "")
+                .where(BUILD_ID.eq(buildId))
+                .and(VM_SEQ_ID.eq(vmSeqId))
+                .and(STATUS.eq(PipelineTaskStatus.QUEUE.status))
+                .and(HOST_TAG.isNotNull).and(HOST_TAG.notEqual(""))
+                .execute() > 0
+        }
+    }
+
     fun clearHostTagForUnclaimedHostTask(dslContext: DSLContext): Boolean {
         with(TDispatchPipelineDockerTask.T_DISPATCH_PIPELINE_DOCKER_TASK) {
             return dslContext.update(this)
