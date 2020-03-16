@@ -149,7 +149,8 @@ class StageControl @Autowired constructor(
                     pipelineRuntimeService.updateStageStatus(buildId, stageId, BuildStatus.PAUSE)
                     pipelineBuildDetailService.stagePause(buildId, stageId)
 
-                    return sendStageSuccessEvent(stageId)
+//                    return sendStageSuccessEvent(stageId)
+                    return
                 }
             }
 
