@@ -11,6 +11,8 @@ data class ServiceItem(
     val itemCode: String,
     @ApiModelProperty("扩展蓝盾服务Id")
     val parentId: String,
+    @ApiModelProperty("扩展蓝盾服务Name")
+    var parentName: String? = "",
     @ApiModelProperty("页面路径")
     val htmlPath: String? = null,
     @ApiModelProperty("UI组件类型")

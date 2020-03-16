@@ -44,7 +44,7 @@ class ServiceItemService @Autowired constructor(
                 parentId = it.parentId
             )
             var childList = parentIndexMap[it.parentId]
-            if(childList!= null && childList!!.isNotEmpty()){
+            if (childList != null && childList!!.isNotEmpty()) {
                 childList!!.add(it.id)
             } else {
                 childList = mutableListOf()
@@ -58,7 +58,7 @@ class ServiceItemService @Autowired constructor(
             val childList = mutableListOf<ExtServiceEntity>()
             list.forEach {
                 val itemInfo = allItemMap[it]
-                if(itemInfo != null) {
+                if (itemInfo != null) {
                     childList.add(
                         ExtServiceEntity(
                             id = itemInfo.itemId,
@@ -81,13 +81,13 @@ class ServiceItemService @Autowired constructor(
     fun getItemListForOp(): List<ServiceItem> {
         val serviceItemList = mutableListOf<ServiceItem>()
         val serviceItemRecord = getServiceList()
-        if(serviceItemRecord.isNotEmpty()) {
+        if (serviceItemRecord.isNotEmpty()) {
             serviceItemRecord.forEach {
                 val parentItemName = it.extServiceItem.name
                 val childItemList = it.childItem
-                if(childItemList.isNotEmpty()) {
+                if (childItemList.isNotEmpty()) {
                     childItemList.forEach { subItem ->
-                        val itemName = parentItemName+"-"+subItem.name
+                        val itemName = parentItemName + "-" + subItem.name
                         serviceItemList.add(
                             ServiceItem(
                                 itemId = subItem.id,
@@ -101,7 +101,6 @@ class ServiceItemService @Autowired constructor(
             }
         }
         return serviceItemList
-
     }
 
     fun getItemById(itemId: String): ExtItemDTO? {
@@ -169,6 +168,8 @@ class ServiceItemService @Autowired constructor(
                 itemName = it.itemName,
                 parentId = it.parentId
             )
+            val parentName = findParent(serviceItem).extServiceItem.name.substringBefore("(")
+            serviceItem.parentName = parentName
             itemList.add(serviceItem)
         }
         logger.info("getItemInfoByIds: itemList[$itemList]")
@@ -183,7 +184,6 @@ class ServiceItemService @Autowired constructor(
         }
         return true
     }
-
 
     private fun findParent(serviceItem: ServiceItem): ExtItemDTO {
         logger.info("findParent: serviceItemId: ${serviceItem.itemId}, parentId:${serviceItem.parentId}")
@@ -203,11 +203,11 @@ class ServiceItemService @Autowired constructor(
     }
 
     fun getProjectService(serviceId: String): ExtServiceEntity {
-        return if(!projectServiceMap.containsKey(serviceId)) {
+        return if (!projectServiceMap.containsKey(serviceId)) {
             val serviceRecord = projectServiceDao.select(dslContext, serviceId.toLong())
             val serviceEntity = ExtServiceEntity(
                 id = serviceRecord!!.id.toString(),
-                name = serviceRecord.name
+                name = serviceRecord.name.substringBefore(")")
             )
             projectServiceMap[serviceId] = serviceEntity
             serviceEntity
@@ -345,5 +345,4 @@ class ServiceItemService @Autowired constructor(
     companion object {
         val logger = LoggerFactory.getLogger(this::class.java)
     }
-
 }

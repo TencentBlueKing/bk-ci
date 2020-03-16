@@ -494,9 +494,10 @@ abstract class ExtServiceBaseService @Autowired constructor() {
             logger.info("the getMyService serviceId is :$serviceId, itemList is :$serviceItemList")
             var itemName = ""
             serviceItemList?.forEach { itId ->
-                itemName += itemInfoMap?.get(itId)?.itemName + "，"
+                val itemInfo = itemInfoMap?.get(itId)
+                itemName += itemInfo!!.parentName + "-" + itemInfo.itemName + ","
             }
-            itemName = itemName.substring(0, itemName.length - 1)
+            itemName = itemName.substringBeforeLast(",")
             logger.info("the getMyService serviceId is :$serviceId, itemName is :$itemName")
             myService.add(
                 MyExtServiceRespItem(
@@ -1051,7 +1052,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         // 文件与输入itemCode取交集，若文件内有props，以文件props为准
         val filePropMap = mutableMapOf<String, String>()
         fileItemList!!.forEach {
-            filePropMap[it.itemCode!!] = JsonUtil.toJson(it.props?: "" )
+            filePropMap[it.itemCode!!] = JsonUtil.toJson(it.props ?: "")
         }
         val itemRecords = client.get(ServiceItemResource::class).getItemInfoByIds(inputItemList).data
         itemRecords?.forEach {
