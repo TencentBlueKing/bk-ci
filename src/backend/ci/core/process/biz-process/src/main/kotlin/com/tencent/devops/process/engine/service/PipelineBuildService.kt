@@ -771,13 +771,13 @@ class PipelineBuildService(
             errorCode = ProcessMessageCode.ERROR_STAGE_IS_NOT_PAUSED,
             defaultMessage = "阶段($stageId)未处于暂停状态",
             params = arrayOf(buildId))
-        if (isCancel) pipelineRuntimeService.startStage(
+        if (isCancel) pipelineRuntimeService.cancelStage(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
             stageId = stageId
-        ) else pipelineRuntimeService.cancelStage(
+        ) else pipelineRuntimeService.startStage(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,

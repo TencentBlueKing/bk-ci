@@ -604,60 +604,18 @@ class PipelineBuildDetailService @Autowired constructor(
                 if (stage.id == stageId) {
                     update = true
                     stage.status = buildStatus.name
-
-                    when {
-
-                        BuildStatus.isRunning(buildStatus) && stage.startEpoch == null -> {
-                            if (buildStatus == BuildStatus.SKIP) {
-                                stage.containers.forEach {
-                                    it.status = BuildStatus.SKIP.name
-                                }
-                            } else {
-                                stage.startEpoch = System.currentTimeMillis()
+                    if (BuildStatus.isRunning(buildStatus) && stage.startEpoch == null) {
+                        if (buildStatus == BuildStatus.SKIP) {
+                            stage.containers.forEach {
+                                it.status = BuildStatus.SKIP.name
                             }
+                        } else {
+                            stage.startEpoch = System.currentTimeMillis()
                         }
-
-                        BuildStatus.isFinish(buildStatus) && stage.startEpoch != null -> {
-                            stage.elapsed = System.currentTimeMillis() - stage.startEpoch!!
-                        }
-
-                        BuildStatus.isReadyToRun(buildStatus) -> {
-                            // 如果某个stage被手动触发，流水线状态设为执行中
-                            pipelineBuildDao.updateStatus(dslContext, buildId, BuildStatus.STAGE_SUCCESS, BuildStatus.RUNNING)
-                        }
-                        BuildStatus.isCancel(buildStatus) -> {
-                            stage.status = ""
-                        }
-
-                        buildStatus == BuildStatus.PAUSE -> {
-                            // 如果某个stage进入等待审核触发，流水线状态设为阶段性执行成功
-                            pipelineBuildDao.updateStatus(dslContext, buildId, BuildStatus.RUNNING, BuildStatus.STAGE_SUCCESS)
-                        }
+                    } else if (BuildStatus.isFinish(buildStatus) && stage.startEpoch != null) {
+                        stage.elapsed = System.currentTimeMillis() - stage.startEpoch!!
                     }
-
-
-                    // 更新Stage状态至BuildHistory
-                    val allStageStatus = model.stages.map {
-                        BuildStageStatus(
-                            stageId = it.id!!,
-                            name = it.name ?: it.id!!,
-                            status = it.status,
-                            startEpoch = it.startEpoch,
-                            elapsed = it.elapsed
-                        )
-                    }
-                    pipelineBuildDao.updateBuildStageStatus(dslContext, buildId, allStageStatus)
-
-                    // Stage状态更新单独发送构建历史页的消息推送
-                    val pipelineBuildInfo = pipelineBuildDao.getBuildInfo(dslContext, buildId) ?: return Traverse.BREAK
-                    webSocketDispatcher.dispatch(
-                        pipelineWebsocketService.buildHistoryMessage(
-                            pipelineBuildInfo.buildId,
-                            pipelineBuildInfo.projectId,
-                            pipelineBuildInfo.pipelineId,
-                            pipelineBuildInfo.startUser
-                        )
-                    )
+                    updateHistoryStage(buildId, model)
                     return Traverse.BREAK
                 }
                 return Traverse.CONTINUE
@@ -667,6 +625,50 @@ class PipelineBuildDetailService @Autowired constructor(
                 return update
             }
         }, if (buildStatus == BuildStatus.PAUSE) BuildStatus.STAGE_SUCCESS else BuildStatus.RUNNING) // 除等待手动触发外，流水线都是RUNNING状态
+    }
+
+    fun stagePause(buildId: String, stageId: String) {
+        logger.info("[$buildId]|stage_pause|stageId=$stageId")
+        update(buildId, object : ModelInterface {
+            var update = false
+
+            override fun onFindStage(stage: Stage, model: Model): Traverse {
+                if (stage.id == stageId) {
+                    update = true
+                    stage.status = BuildStatus.PAUSE.name
+                    pipelineBuildDao.updateStatus(dslContext, buildId, BuildStatus.RUNNING, BuildStatus.STAGE_SUCCESS)
+                    updateHistoryStage(buildId, model)
+                    return Traverse.BREAK
+                }
+                return Traverse.CONTINUE
+            }
+
+            override fun needUpdate(): Boolean {
+                return update
+            }
+        }, BuildStatus.STAGE_SUCCESS)
+    }
+
+    fun stageStart(buildId: String, stageId: String) {
+        logger.info("[$buildId]|stage_start|stageId=$stageId")
+        update(buildId, object : ModelInterface {
+            var update = false
+
+            override fun onFindStage(stage: Stage, model: Model): Traverse {
+                if (stage.id == stageId) {
+                    update = true
+                    stage.status = BuildStatus.QUEUE.name
+                    pipelineBuildDao.updateStatus(dslContext, buildId, BuildStatus.STAGE_SUCCESS, BuildStatus.RUNNING)
+                    updateHistoryStage(buildId, model)
+                    return Traverse.BREAK
+                }
+                return Traverse.CONTINUE
+            }
+
+            override fun needUpdate(): Boolean {
+                return update
+            }
+        }, BuildStatus.RUNNING)
     }
 
     fun taskSkip(buildId: String, taskId: String) {
@@ -732,6 +734,31 @@ class PipelineBuildDetailService @Autowired constructor(
                 return update
             }
         }, BuildStatus.RUNNING)
+    }
+
+    private fun updateHistoryStage(buildId: String, model: Model) {
+        // 更新Stage状态至BuildHistory
+        val allStageStatus = model.stages.map {
+            BuildStageStatus(
+                stageId = it.id!!,
+                name = it.name ?: it.id!!,
+                status = it.status,
+                startEpoch = it.startEpoch,
+                elapsed = it.elapsed
+            )
+        }
+        pipelineBuildDao.updateBuildStageStatus(dslContext, buildId, allStageStatus)
+
+        // Stage状态更新单独发送构建历史页的消息推送
+        val pipelineBuildInfo = pipelineBuildDao.getBuildInfo(dslContext, buildId) ?: return
+        webSocketDispatcher.dispatch(
+            pipelineWebsocketService.buildHistoryMessage(
+                pipelineBuildInfo.buildId,
+                pipelineBuildInfo.projectId,
+                pipelineBuildInfo.pipelineId,
+                pipelineBuildInfo.startUser
+            )
+        )
     }
 
     private fun update(buildId: String, modelInterface: ModelInterface, buildStatus: BuildStatus) {
