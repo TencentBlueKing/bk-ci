@@ -82,15 +82,19 @@ object BcsClientUtils {
 
     /**
      * 创建k8s命名空间
+     * @param bcsUrl bcs接口路径
+     * @param token token
      * @param namespaceName 命名空间名称
      * @param labelInfo 标签信息
      */
     fun createNamespace(
-        bcsKubernetesClient: KubernetesClient,
+        bcsUrl: String,
+        token: String,
         namespaceName: String,
         labelInfo: KubernetesLabel
     ): Namespace {
         logger.info("createNamespace namespaceName is: $namespaceName,labelInfo is: $labelInfo")
+        val bcsKubernetesClient = getBcsKubernetesClient(bcsUrl, token)
         var ns = bcsKubernetesClient.namespaces().withName(namespaceName).get()
         logger.info("the namespace is: $ns")
         if (ns == null) {
@@ -105,17 +109,21 @@ object BcsClientUtils {
 
     /**
      * 创建k8s拉取镜像secret
+     * @param bcsUrl bcs接口路径
+     * @param token token
      * @param namespaceName 命名空间名称
      * @param secretName 秘钥名称
      * @param kubernetesRepoInfo k8s仓库信息
      */
     fun createImagePullSecret(
-        bcsKubernetesClient: KubernetesClient,
+        bcsUrl: String,
+        token: String,
         secretName: String,
         namespaceName: String,
         kubernetesRepoInfo: KubernetesRepo
     ): Secret {
         logger.info("createImagePullSecret secretName is: $secretName,namespaceName is: $namespaceName")
+        val bcsKubernetesClient = getBcsKubernetesClient(bcsUrl, token)
         var secret = bcsKubernetesClient.secrets().inNamespace(namespaceName).withName(secretName).get()
         logger.info("the secret is: $secret")
         if (secret == null) {
@@ -157,40 +165,52 @@ object BcsClientUtils {
 
     /**
      * 创建deployment
+     * @param bcsUrl bcs接口路径
+     * @param token token
      * @param namespaceName 命名空间名称
      * @param deployment 无状态部署对象
      */
     fun createDeployment(
-        bcsKubernetesClient: KubernetesClient,
+        bcsUrl: String,
+        token: String,
         namespaceName: String,
         deployment: Deployment
     ): Deployment {
+        val bcsKubernetesClient = getBcsKubernetesClient(bcsUrl, token)
         return bcsKubernetesClient.apps().deployments().inNamespace(namespaceName).createOrReplace(deployment)
     }
 
     /**
      * 创建service
+     * @param bcsUrl bcs接口路径
+     * @param token token
      * @param namespaceName 命名空间名称
      * @param service service对象
      */
     fun createService(
-        bcsKubernetesClient: KubernetesClient,
+        bcsUrl: String,
+        token: String,
         namespaceName: String,
         service: Service
     ): Service {
+        val bcsKubernetesClient = getBcsKubernetesClient(bcsUrl, token)
         return bcsKubernetesClient.services().inNamespace(namespaceName).createOrReplace(service)
     }
 
     /**
      * 创建ingress
+     * @param bcsUrl bcs接口路径
+     * @param token token
      * @param namespaceName 命名空间名称
      * @param ingress ingress对象
      */
     fun createIngress(
-        bcsKubernetesClient: KubernetesClient,
+        bcsUrl: String,
+        token: String,
         namespaceName: String,
         ingress: Ingress
     ): Ingress {
+        val bcsKubernetesClient = getBcsKubernetesClient(bcsUrl, token)
         return bcsKubernetesClient.extensions().ingresses().inNamespace(namespaceName).createOrReplace(ingress)
     }
 }

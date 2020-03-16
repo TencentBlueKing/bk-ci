@@ -35,7 +35,7 @@ import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class BuildBcsResourceImpl @Autowired constructor(
-    val bcsDeployService: BcsDeployService
+    private val bcsDeployService: BcsDeployService
 ) : BuildBcsResource {
 
     override fun bcsDeployApp(userId: String, deployApp: DeployApp): Result<Boolean> {
