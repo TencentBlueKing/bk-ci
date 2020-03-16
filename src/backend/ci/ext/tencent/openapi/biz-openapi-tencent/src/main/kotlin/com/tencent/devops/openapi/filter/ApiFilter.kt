@@ -79,16 +79,21 @@ class ApiFilter : ContainerRequestFilter {
             // 应用身份登录
             if (app.has("app_code")) {
                 val appCode = app.getString("app_code")
+                logger.info("appCode[$appCode]")
                 val verified = app.get("verified") as Boolean
                 if (appCode.isNullOrEmpty() || !verified) {
                     return false
                 }else {
                     // 将appCode头部置空
                     requestContext.headers[AUTH_HEADER_DEVOPS_APP_CODE]?.set(0, null)
+                    logger.info("appCode header 1")
                     if (requestContext.headers[AUTH_HEADER_DEVOPS_APP_CODE] != null) {
                         requestContext.headers[AUTH_HEADER_DEVOPS_APP_CODE]?.set(0, appCode)
+                        logger.info("appCode header 2")
                     } else {
                         requestContext.headers.add(AUTH_HEADER_DEVOPS_APP_CODE, appCode)
+
+                        logger.info("appCode header 3")
                     }
                 }
             }
