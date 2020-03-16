@@ -29,6 +29,7 @@ package com.tencent.devops.process.service
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.pojo.Page
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
 import com.tencent.devops.process.dao.PipelineTaskDao
 import com.tencent.devops.process.engine.dao.PipelineModelTaskDao
@@ -87,10 +88,13 @@ class PipelineTaskService @Autowired constructor(
             listOf<PipelineProjectRel>()
         } else {
             pipelines.map {
+                val taskParamsStr = it["taskParams"] as? String
+                val taskParams = if (!taskParamsStr.isNullOrBlank()) JsonUtil.getObjectMapper().readValue(taskParamsStr, Map::class.java) as Map<String, Any> else mapOf()
                 PipelineProjectRel(
                     pipelineId = it["pipelineId"] as String,
                     pipelineName = it["pipelineName"] as String,
-                    projectCode = it["projectCode"] as String
+                    projectCode = it["projectCode"] as String,
+                    atomVersion = taskParams["version"].toString()
                 )
             }
         }
