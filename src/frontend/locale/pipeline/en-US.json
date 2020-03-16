@@ -339,6 +339,10 @@
         "stopFail": "cancel failed"
     },
     "history": {
+        "logEmpty": "Log is empty",
+        "logClear": "Log is cleared",
+        "logClose": "Log is closed",
+        "logErr": "Other exceptions",
         "execHistory": "Builds",
         "trendData": "Artifacts size trending",
         "chooseDateRange": "Please select a date range",

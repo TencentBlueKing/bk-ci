@@ -56,9 +56,6 @@
             downLoadLink: {
                 type: String
             },
-            downLoadName: {
-                type: String
-            },
             executeCount: {
                 type: Number,
                 default: 0
