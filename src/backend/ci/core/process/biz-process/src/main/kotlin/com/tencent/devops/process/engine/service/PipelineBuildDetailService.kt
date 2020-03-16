@@ -605,23 +605,36 @@ class PipelineBuildDetailService @Autowired constructor(
                     update = true
                     stage.status = buildStatus.name
 
-                    if (BuildStatus.isRunning(buildStatus) && stage.startEpoch == null) {
-                        if (buildStatus == BuildStatus.SKIP) {
-                            stage.containers.forEach {
-                                it.status = BuildStatus.SKIP.name
+                    when {
+
+                        BuildStatus.isRunning(buildStatus) && stage.startEpoch == null -> {
+                            if (buildStatus == BuildStatus.SKIP) {
+                                stage.containers.forEach {
+                                    it.status = BuildStatus.SKIP.name
+                                }
+                            } else {
+                                stage.startEpoch = System.currentTimeMillis()
                             }
-                        } else {
-                            stage.startEpoch = System.currentTimeMillis()
                         }
-                    } else if (BuildStatus.isFinish(buildStatus) && stage.startEpoch != null) {
-                        stage.elapsed = System.currentTimeMillis() - stage.startEpoch!!
-                    } else if (BuildStatus.isReadyToRun(buildStatus)) {
-                        // 如果某个stage被手动触发，流水线状态设为执行中
-                        pipelineBuildDao.updateStatus(dslContext, buildId, BuildStatus.STAGE_SUCCESS, BuildStatus.RUNNING)
-                    } else if (buildStatus == BuildStatus.PAUSE) {
-                        // 如果某个stage进入等待审核触发，流水线状态设为阶段性执行成功
-                        pipelineBuildDao.updateStatus(dslContext, buildId, BuildStatus.RUNNING, BuildStatus.STAGE_SUCCESS)
+
+                        BuildStatus.isFinish(buildStatus) && stage.startEpoch != null -> {
+                            stage.elapsed = System.currentTimeMillis() - stage.startEpoch!!
+                        }
+
+                        BuildStatus.isReadyToRun(buildStatus) -> {
+                            // 如果某个stage被手动触发，流水线状态设为执行中
+                            pipelineBuildDao.updateStatus(dslContext, buildId, BuildStatus.STAGE_SUCCESS, BuildStatus.RUNNING)
+                        }
+                        BuildStatus.isCancel(buildStatus) -> {
+                            stage.status = ""
+                        }
+
+                        buildStatus == BuildStatus.PAUSE -> {
+                            // 如果某个stage进入等待审核触发，流水线状态设为阶段性执行成功
+                            pipelineBuildDao.updateStatus(dslContext, buildId, BuildStatus.RUNNING, BuildStatus.STAGE_SUCCESS)
+                        }
                     }
+
 
                     // 更新Stage状态至BuildHistory
                     val allStageStatus = model.stages.map {

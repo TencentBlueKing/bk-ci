@@ -465,6 +465,9 @@ interface UserBuildResource {
         buildId: String,
         @ApiParam("阶段ID", required = true)
         @PathParam("stageId")
-        stageId: String
+        stageId: String,
+        @ApiParam("取消执行", required = false)
+        @QueryParam("cancel")
+        cancel: Boolean?
     ): Result<Boolean>
 }

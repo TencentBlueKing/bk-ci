@@ -1243,6 +1243,18 @@ class PipelineRuntimeService @Autowired constructor(
         )
     }
 
+    fun cancelStage(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        stageId: String
+    ) {
+        updateStageStatus(buildId, stageId, BuildStatus.REVIEW_ABORT)
+        SpringContextUtil.getBean(PipelineBuildDetailService::class.java)
+            .updateStageStatus(buildId, stageId, BuildStatus.REVIEW_ABORT)
+    }
+
     private fun makeStartVMTask(
         container: Container,
         containerSeq: Int,

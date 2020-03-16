@@ -152,7 +152,8 @@ class UserBuildResourceImpl @Autowired constructor(private val buildService: Pip
         projectId: String,
         pipelineId: String,
         buildId: String,
-        stageId: String
+        stageId: String,
+        cancel: Boolean?
     ): Result<Boolean> {
         checkParam(userId, projectId, pipelineId)
         if (buildId.isBlank()) {
@@ -167,7 +168,8 @@ class UserBuildResourceImpl @Autowired constructor(private val buildService: Pip
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
-            stageId = stageId
+            stageId = stageId,
+            isCancel = cancel ?: false
         )
         return Result(true)
     }
