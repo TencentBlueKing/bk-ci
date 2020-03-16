@@ -2,7 +2,6 @@ package com.tencent.devops.store.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.rabbitmq.tools.json.JSONUtil
 import com.tencent.devops.common.api.constant.APPROVE
 import com.tencent.devops.common.api.constant.BEGIN
 import com.tencent.devops.common.api.constant.BUILD
@@ -58,7 +57,6 @@ import com.tencent.devops.store.pojo.common.StoreProcessInfo
 import com.tencent.devops.store.pojo.common.StoreReleaseCreateRequest
 import com.tencent.devops.store.pojo.common.UN_RELEASE
 import com.tencent.devops.store.pojo.common.enums.AuditTypeEnum
-import com.tencent.devops.store.pojo.enums.ExtServicePackageSourceTypeEnum
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreMemberTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
@@ -67,9 +65,10 @@ import com.tencent.devops.store.pojo.dto.ExtSubmitDTO
 import com.tencent.devops.store.pojo.dto.InitExtServiceDTO
 import com.tencent.devops.store.pojo.dto.ServiceOfflineDTO
 import com.tencent.devops.store.pojo.dto.SubmitDTO
+import com.tencent.devops.store.pojo.enums.ExtServicePackageSourceTypeEnum
 import com.tencent.devops.store.pojo.enums.ExtServiceStatusEnum
-import com.tencent.devops.store.pojo.vo.MyServiceVO
 import com.tencent.devops.store.pojo.vo.MyExtServiceRespItem
+import com.tencent.devops.store.pojo.vo.MyServiceVO
 import com.tencent.devops.store.pojo.vo.ServiceVersionListItem
 import com.tencent.devops.store.pojo.vo.ServiceVersionListResp
 import com.tencent.devops.store.pojo.vo.ServiceVersionVO
@@ -713,7 +712,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
                     val filePropMap = mutableMapOf<String, String>()
                     fileItemList.forEach {
                         itemCodeList.add(it.itemCode)
-                        filePropMap[it.itemCode] = JsonUtil.toJson(it.props ?: mapOf())
+                        filePropMap[it.itemCode] = JsonUtil.toJson(it.props ?: "{}")
                     }
                     // 用配置文件最新的配置替换数据库中相关记录的配置
                     val serviceItemList = client.get(ServiceItemResource::class).getItemByCodes(itemCodeList).data
