@@ -1229,7 +1229,7 @@ class PipelineRuntimeService @Autowired constructor(
     ) {
         updateStageStatus(buildId, stageId, BuildStatus.QUEUE)
         SpringContextUtil.getBean(PipelineBuildDetailService::class.java)
-            .updateStageStatus(buildId, stageId, BuildStatus.QUEUE)
+            .stageStart(buildId, stageId)
         pipelineEventDispatcher.dispatch(
             PipelineBuildStageEvent(
                 source = "manual_trigger_stage",
@@ -1252,7 +1252,7 @@ class PipelineRuntimeService @Autowired constructor(
     ) {
         updateStageStatus(buildId, stageId, BuildStatus.REVIEW_ABORT)
         SpringContextUtil.getBean(PipelineBuildDetailService::class.java)
-            .updateStageStatus(buildId, stageId, BuildStatus.REVIEW_ABORT)
+            .stagePause(buildId, stageId)
     }
 
     private fun makeStartVMTask(
