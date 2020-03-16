@@ -50,7 +50,8 @@ class FreshCheckoutTask(
     override val buildId: String,
     override val repositoryConfig: RepositoryConfig,
     override val gitType: ScmType,
-    override val variables: Map<String, String>
+    override val variables: Map<String, String>,
+    override val aliasName: String
 ) : GitUpdateTask(
     projectName,
     userName,
@@ -68,7 +69,8 @@ class FreshCheckoutTask(
     buildId,
     repositoryConfig,
     gitType,
-    variables
+    variables,
+    aliasName
 ) {
 
     override fun beforeActions() {
