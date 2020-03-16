@@ -745,7 +745,8 @@ class PipelineBuildService(
         projectId: String,
         pipelineId: String,
         buildId: String,
-        stageId: String
+        stageId: String,
+        isCancel: Boolean
     ) {
         pipelineRuntimeService.getBuildInfo(buildId)
             ?: throw ErrorCodeException(
@@ -770,7 +771,13 @@ class PipelineBuildService(
             errorCode = ProcessMessageCode.ERROR_STAGE_IS_NOT_PAUSED,
             defaultMessage = "阶段($stageId)未处于暂停状态",
             params = arrayOf(buildId))
-        pipelineRuntimeService.startStage(
+        if (isCancel) pipelineRuntimeService.startStage(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            stageId = stageId
+        ) else pipelineRuntimeService.cancelStage(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
