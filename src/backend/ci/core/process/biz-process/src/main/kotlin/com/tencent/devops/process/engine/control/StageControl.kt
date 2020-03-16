@@ -31,6 +31,7 @@ import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.EnvControlTaskType
 import com.tencent.devops.common.pipeline.enums.StageRunCondition
+import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
 import com.tencent.devops.process.engine.pojo.PipelineBuildStage
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildCancelEvent
@@ -92,12 +93,12 @@ class StageControl @Autowired constructor(
 
             val fastKill = stage.controlOption?.fastKill == true && source == "CONTAINER_END_FAILED"
 
-            val reviewTimeout = stage.status == BuildStatus.STAGE_SUCCESS && actionType == ActionType.END
+            val reviewTimeout = stage.status == BuildStatus.PAUSE && actionType == ActionType.END
 
             logger.info("[$buildId]|[${buildInfo.status}]|STAGE_EVENT|event=$event|stage=$stage|needPause=$needPause|fastKill=$fastKill")
 
             // [终止事件]或[满足FastKill]或[等待审核超时] 直接结束流水线，不需要判断各个Stage的状态，可直接停止
-            if (ActionType.isTerminate(actionType) || fastKill || reviewTimeout) {
+            if (ActionType.isTerminate(actionType) || fastKill) {
                 logger.info("[$buildId]|[${buildInfo.status}]|STAGE_TERMINATE|stageId=$stageId")
 
                 buildStatus = BuildStatus.TERMINATE
@@ -118,12 +119,15 @@ class StageControl @Autowired constructor(
                 // 如果是因fastKill强制终止，流水线状态标记为失败
                 if (fastKill) buildStatus = BuildStatus.FAILED
 
-                // 如果是因reviewTimeout结束构建，流水线状态标记为成功
-                if (reviewTimeout) buildStatus = BuildStatus.SUCCEED
-
                 // 如果是因审核超时终止构建，流水线状态
                 pipelineBuildDetailService.updateStageStatus(buildId, stageId, buildStatus)
                 return sendTerminateEvent(javaClass.simpleName, buildStatus)
+            }
+
+            // 因审核超时取消继续构建
+            if (reviewTimeout) {
+                pipelineRuntimeService.updateStageStatus(buildId, stageId, BuildStatus.HEARTBEAT_TIMEOUT)
+                pipelineBuildDetailService.stageCancel(buildId, stageId)
             }
 
             // 仅在初次进入Stage时进行跳过判断
@@ -134,8 +138,7 @@ class StageControl @Autowired constructor(
                     // 执行条件不满足或未启用该Stage
                     logger.info("[$buildId]|[${buildInfo.status}]|STAGE_SKIP|stage=$stageId|action=$actionType")
 
-                    buildStatus = BuildStatus.SKIP
-                    pipelineRuntimeService.updateStageStatus(buildId, stageId, buildStatus)
+                    pipelineRuntimeService.updateStageStatus(buildId, stageId, BuildStatus.SKIP)
                     pipelineBuildDetailService.stageSkip(buildId, stageId)
 
                     actionType = ActionType.SKIP
@@ -143,12 +146,10 @@ class StageControl @Autowired constructor(
                     // 进入暂停状态等待手动触发
                     logger.info("[$buildId]|[${buildInfo.status}]|STAGE_PAUSE|stage=$stageId|action=$actionType")
 
-                    buildStatus = BuildStatus.PAUSE
-                    pipelineRuntimeService.updateStageStatus(buildId, stageId, buildStatus)
+                    pipelineRuntimeService.updateStageStatus(buildId, stageId, BuildStatus.PAUSE)
                     pipelineBuildDetailService.stagePause(buildId, stageId)
 
-//                    return sendStageSuccessEvent(stageId)
-                    return
+                    return sendStageSuccessEvent(stageId)
                 }
             }
 
