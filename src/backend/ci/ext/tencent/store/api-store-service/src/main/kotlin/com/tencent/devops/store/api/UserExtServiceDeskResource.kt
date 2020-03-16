@@ -150,8 +150,8 @@ interface UserExtServiceDeskResource {
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @ApiParam("项目代码", required = true)
-        @QueryParam("projectId")
-        projectId: String,
+        @QueryParam("projectCode")
+        projectCode: String,
         @ApiParam("serviceId", required = true)
         @PathParam("serviceId")
         serviceId: String
