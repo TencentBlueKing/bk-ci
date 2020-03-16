@@ -158,7 +158,8 @@ class PipelineModelTaskDao {
         val baseStep = dslContext.select(
             a.PIPELINE_ID.`as`("pipelineId"),
             a.PIPELINE_NAME.`as`("pipelineName"),
-            a.PROJECT_ID.`as`("projectCode")
+            a.PROJECT_ID.`as`("projectCode"),
+            b.TASK_PARAMS.`as`("taskParams")
         )
             .from(a)
             .join(b)
