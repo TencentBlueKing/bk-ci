@@ -697,7 +697,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
             extServiceFeature.repositoryHashId,
             EXTENSION_JSON_NAME, null, null, null
         ).data
-        logger.info("get file($EXTENSION_JSON_NAME) fileStr is:$fileStr")
+        logger.info("get serviceCode[$serviceCode] file($EXTENSION_JSON_NAME) fileStr is:$fileStr")
         dslContext.transaction { t ->
             val context = DSL.using(t)
             if (!fileStr.isNullOrEmpty()) {
@@ -717,11 +717,13 @@ abstract class ExtServiceBaseService @Autowired constructor() {
                     }
                     // 用配置文件最新的配置替换数据库中相关记录的配置
                     val serviceItemList = client.get(ServiceItemResource::class).getItemByCodes(itemCodeList).data
+                    logger.info("get serviceCode[$serviceCode] serviceItemList is:$serviceItemList")
                     serviceItemList?.forEach {
                         val props = filePropMap[it.itemCode]
                         filePropMap[it.itemId] = props!!
                         filePropMap.remove(it.itemCode)
                     }
+                    logger.info("get serviceCode[$serviceCode] filePropMap is:$filePropMap")
                     val serviceItemRelList = extServiceItemRelDao.getItemByServiceId(context, serviceId)
                     if (serviceItemRelList != null && serviceItemRelList.isNotEmpty) {
                         serviceItemRelList.forEach {
