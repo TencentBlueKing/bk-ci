@@ -84,19 +84,16 @@ class PipelineTaskService @Autowired constructor(
         val count = pipelineModelTaskDao.getPipelineCountByAtomCode(dslContext, atomCode, projectCode).toLong()
         val pipelines = pipelineModelTaskDao.listByAtomCode(dslContext, atomCode, projectCode, pageNotNull, pageSizeNotNull)
 
-        val records = if (pipelines == null) {
-            listOf<PipelineProjectRel>()
-        } else {
-            pipelines.map {
-                val taskParamsStr = it["taskParams"] as? String
-                val taskParams = if (!taskParamsStr.isNullOrBlank()) JsonUtil.getObjectMapper().readValue(taskParamsStr, Map::class.java) as Map<String, Any> else mapOf()
-                PipelineProjectRel(
-                    pipelineId = it["pipelineId"] as String,
-                    pipelineName = it["pipelineName"] as String,
-                    projectCode = it["projectCode"] as String,
-                    atomVersion = taskParams["version"].toString()
-                )
-            }
+        val records = mutableListOf<PipelineProjectRel>()
+        pipelines?.forEach {
+            val taskParamsStr = it["taskParams"] as? String
+            val taskParams = if (!taskParamsStr.isNullOrBlank()) JsonUtil.getObjectMapper().readValue(taskParamsStr, Map::class.java) as Map<String, Any> else mapOf()
+            records.add(PipelineProjectRel(
+                pipelineId = it["pipelineId"] as String,
+                pipelineName = it["pipelineName"] as String,
+                projectCode = it["projectCode"] as String,
+                atomVersion = taskParams["version"].toString()
+            ))
         }
 
         return Page(pageNotNull, pageSizeNotNull, count, records)
