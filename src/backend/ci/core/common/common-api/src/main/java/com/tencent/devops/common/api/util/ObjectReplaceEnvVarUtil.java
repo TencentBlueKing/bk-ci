@@ -61,7 +61,7 @@ public class ObjectReplaceEnvVarUtil {
                 if (!isNormalReplaceEnvVar(value)) {
                     replaceEnvVar(value, envMap);
                 } else {
-                    dataList.set(i, handleNormalEnvVar(obj, envMap));
+                    dataList.set(i, handleNormalEnvVar(value, envMap));
                 }
             }
         } else if (obj instanceof Set) {
@@ -80,7 +80,7 @@ public class ObjectReplaceEnvVarUtil {
             // 把需要进行占位符替换的元素替换完后再放入set集合,把替换前的元素删除
             for (Object value : replaceObjList) {
                 objSet.remove(value);
-                objSet.add(handleNormalEnvVar(obj, envMap));
+                objSet.add(handleNormalEnvVar(value, envMap));
             }
         } else if (isNormalReplaceEnvVar(obj)) {
             obj = handleNormalEnvVar(obj, envMap);
@@ -90,7 +90,7 @@ public class ObjectReplaceEnvVarUtil {
                 Map<String, Object> dataMap = JsonUtil.INSTANCE.toMap(obj);
                 obj = replaceEnvVar(dataMap, envMap);
             } catch (Throwable e) {
-                // 对象转换不了map的对象则直接替换
+                // 转换不了map的对象则直接替换
                 obj = EnvUtils.INSTANCE.parseEnv(JsonUtil.INSTANCE.toJson(obj), envMap, false, false);
             }
         }
