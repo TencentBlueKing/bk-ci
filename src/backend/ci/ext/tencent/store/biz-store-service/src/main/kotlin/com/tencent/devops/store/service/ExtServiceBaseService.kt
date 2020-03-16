@@ -278,7 +278,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
             )
         }
 
-        // 判断最近一个插件版本的状态，只有处于审核驳回、已发布、上架中止和已下架的状态才允许添加新的版本
+        // 判断最近一个扩展服务版本的状态，只有处于审核驳回、已发布、上架中止和已下架的状态才允许添加新的版本
         val serviceFinalStatusList = mutableListOf(
             ExtServiceStatusEnum.AUDIT_REJECT.status.toByte(),
             ExtServiceStatusEnum.RELEASED.status.toByte(),
@@ -287,7 +287,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         )
 
         if (serviceRecords.size == 1) {
-            // 如果是首次发布，处于初始化的插件状态也允许添加新的版本
+            // 如果是首次发布，处于初始化的扩展服务状态也允许添加新的版本
             serviceFinalStatusList.add(ExtServiceStatusEnum.INIT.status.toByte())
         }
 
@@ -338,7 +338,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
                     )
                 )
             } else {
-                // 升级插件
+                // 升级扩展服务
                 upgradeMarketExtService(
                     userId = userId,
                     serviceId = serviceId,
@@ -484,7 +484,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         records?.forEach {
             val serviceCode = it["serviceCode"] as String
             val serviceId = it["serviceId"] as String
-            var releaseFlag = false // 是否有处于上架状态的插件插件版本
+            var releaseFlag = false // 是否有处于上架状态的扩展服务版本
             val releaseServiceNum = extServiceDao.countReleaseServiceByCode(dslContext, serviceCode)
             if (releaseServiceNum > 0) {
                 releaseFlag = true
@@ -533,14 +533,14 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         if (!storeMemberDao.isStoreAdmin(dslContext, userId, serviceCode, StoreTypeEnum.SERVICE.type.toByte())) {
             return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED)
         }
-        // 设置插件状态为下架中
+        // 设置扩展服务状态为下架中
         extServiceDao.setServiceStatusByCode(
             dslContext, serviceCode, ExtServiceStatusEnum.RELEASED.status.toByte(),
             ExtServiceStatusEnum.UNDERCARRIAGING.status.toByte(), userId, serviceOfflineDTO.reason
         )
         // 通过websocket推送状态变更消息
 //        storeWebsocketService.sendWebsocketMessageByAtomCodeAndUserId(serviceCode, userId)
-        // 通知使用方插件即将下架 -- todo 待carl完善
+        // 通知使用方扩展服务即将下架 -- todo 待carl完善
 
         return Result(true)
     }

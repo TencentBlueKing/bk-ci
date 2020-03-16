@@ -12,7 +12,7 @@ data class ItemInfoResponse(
     @ApiModelProperty("扩展服务Id（父级）")
     val pid: String,
     @ApiModelProperty("UI组件类型")
-    val UIType: String,
+    val UiType: String,
     @ApiModelProperty("页面路径")
     val htmlPath: String,
     @ApiModelProperty("icon地址")
