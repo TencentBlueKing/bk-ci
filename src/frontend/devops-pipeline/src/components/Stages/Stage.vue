@@ -221,7 +221,8 @@
                 'setPipelineEditing',
                 'updateStage',
                 'triggerStage',
-                'deleteStage'
+                'deleteStage',
+                'toggleReviewDialog'
             ]),
             checkIsTriggerStage (stage) {
                 try {
@@ -280,9 +281,9 @@
 
             startNextStage () {
                 if (this.canTriggerStage) {
-                    this.triggerStage({
-                        ...this.$route.params,
-                        stageId: this.stage.id
+                    this.toggleReviewDialog({
+                        isShow: true,
+                        reviewInfo: this.stage
                     })
                 }
             },
