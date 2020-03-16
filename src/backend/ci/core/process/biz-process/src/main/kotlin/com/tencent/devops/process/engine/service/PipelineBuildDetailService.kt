@@ -618,7 +618,7 @@ class PipelineBuildDetailService @Autowired constructor(
             override fun needUpdate(): Boolean {
                 return update
             }
-        }, BuildStatus.RUNNING) // 除等待手动触发外，流水线都是RUNNING状态
+        }, BuildStatus.RUNNING)
     }
 
     fun stageSkip(buildId: String, stageId: String) {
