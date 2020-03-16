@@ -575,7 +575,7 @@ class JFrogAQLService @Autowired constructor(private val objectMapper: ObjectMap
      *
      */
     fun searchFileByRegex(
-        parentFolder: String,  // generic-local/
+        parentFolder: String, // generic-local/
         relativePaths: Set<String>, // bk-archive/$projectId/$pipelineId/$buildId/path/
         names: Set<String>
     ): List<JFrogAQLFileInfo> {

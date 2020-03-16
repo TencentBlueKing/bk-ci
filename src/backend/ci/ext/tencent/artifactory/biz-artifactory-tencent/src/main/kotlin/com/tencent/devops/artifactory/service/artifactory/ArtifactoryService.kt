@@ -269,8 +269,6 @@ class ArtifactoryService @Autowired constructor(
         pathArray.forEach { path ->
             val normalizedPath = JFrogUtil.normalize(path)
             val realPath = if (path.startsWith("/")) normalizedPath else "/$normalizedPath" // /path/*.txt
-
-
             val pathPrefix = if (artifactoryType == ArtifactoryType.PIPELINE) {
                 "/" + JFrogUtil.getPipelinePathPrefix(targetProjectId).removePrefix(repoPathPrefix) + "$targetPipelineId/$targetBuildId/" + JFrogUtil.getParentFolder(
                     realPath
