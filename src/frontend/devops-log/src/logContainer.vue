@@ -26,7 +26,7 @@
                         <img src="./assets/svg/more.svg" class="more-icon" @click="showMore = !showMore">
                         <ul class="more-list" v-if="showMore">
                             <li class="more-button" @click="showLogTime">{{ language('显示时间') }}</li>
-                            <li class="more-button" @click="downLoad">{{ language('下载日志') }}</li>
+                            <a download class="more-button" @click="downLoad" :href="downLoadLink">{{ language('下载日志') }}</a>
                         </ul>
                     </section>
                 </p>
@@ -48,9 +48,6 @@
 
         props: {
             downLoadLink: {
-                type: String
-            },
-            downLoadName: {
                 type: String
             },
             executeCount: {
@@ -163,31 +160,6 @@
 
             downLoad () {
                 this.closeShowMore()
-                fetch(this.downLoadLink, {
-                    method: 'GET',
-                    headers: {
-                        'content-type': 'application/json'
-                    },
-                    credentials: 'include'
-                }).then((res) => {
-                    if (res.status >= 200 && res.status < 300) {
-                        return res
-                    } else {
-                        throw new Error(res.statusText)
-                    }
-                }).then(res => res.blob()).then((blob) => {
-                    const a = document.createElement('a')
-                    const url = window.URL || window.webkitURL || window.moxURL
-                    a.href = url.createObjectURL(blob)
-                    a.download = this.downLoadName + '.log'
-                    document.body.appendChild(a)
-                    a.click()
-                    document.body.removeChild(a)
-                }).catch((err) => {
-                    console.error(err.message || err)
-                }).finally(() => {
-                    this.fileLoadPending = false
-                })
             },
 
             changeExecute (execute) {
@@ -278,6 +250,7 @@
                 }
                 .more-button {
                     cursor: pointer;
+                    color: #fff;
                     width: 100%;
                     text-align: left;
                     display: block;
