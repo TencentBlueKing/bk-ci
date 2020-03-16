@@ -438,6 +438,9 @@
         "noMetaData": "No meta data at the moment",
         "viewDetail": "Details",
         "artifactory": "Artifactory",
+        "checkDesc": "Review countdown",
+        "checkDescInfo": "The review function will end on {0}, and overdue will be automatically identified as Stage success status",
+        "abort": "Cancel (immediately mark Stage success status)",
         "statusMap": {
             "RUNNING": "Building",
             "PREPARE_ENV": "Preparing build-resource",
