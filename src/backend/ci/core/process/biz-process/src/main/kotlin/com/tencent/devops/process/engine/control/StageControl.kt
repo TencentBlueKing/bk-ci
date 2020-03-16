@@ -136,7 +136,7 @@ class StageControl @Autowired constructor(
 
                     buildStatus = BuildStatus.SKIP
                     pipelineRuntimeService.updateStageStatus(buildId, stageId, buildStatus)
-                    pipelineBuildDetailService.updateStageStatus(buildId, stageId, buildStatus)
+                    pipelineBuildDetailService.stageSkip(buildId, stageId)
 
                     actionType = ActionType.SKIP
                 } else if (needPause) {
@@ -145,7 +145,7 @@ class StageControl @Autowired constructor(
 
                     buildStatus = BuildStatus.PAUSE
                     pipelineRuntimeService.updateStageStatus(buildId, stageId, buildStatus)
-                    pipelineBuildDetailService.updateStageStatus(buildId, stageId, buildStatus)
+                    pipelineBuildDetailService.stagePause(buildId, stageId)
 
 //                    return sendStageSuccessEvent(stageId)
                     return
