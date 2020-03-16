@@ -171,6 +171,19 @@ class PipelineBuildDetailService @Autowired constructor(
         )
     }
 
+    fun pipelineHistoryChangeEvent(buildId: String) {
+        val pipelineBuildInfo = pipelineBuildDao.getBuildInfo(dslContext, buildId) ?: return
+        logger.info("dispatch pipelineHistoryChangeEvent, buildId: $buildId")
+        webSocketDispatcher.dispatch(
+            pipelineWebsocketService.buildHistoryMessage(
+                buildId = pipelineBuildInfo.buildId,
+                projectId = pipelineBuildInfo.projectId,
+                pipelineId = pipelineBuildInfo.pipelineId,
+                userId = pipelineBuildInfo.startUser
+            )
+        )
+    }
+
     fun updateModel(buildId: String, model: Model) {
         val now = System.currentTimeMillis()
         logger.info("update the build model for the build $buildId and now $now")
@@ -460,6 +473,7 @@ class PipelineBuildDetailService @Autowired constructor(
             logger.info("[$buildId]|ERRORCODE|BUILD_END|errorType=$errorType|errorCode=$errorCode|errorMsg=$errorMsg")
             try {
                 val model: Model = JsonUtil.to(record.model, Model::class.java)
+                val allStageStatus = mutableListOf<BuildStageStatus>()
                 model.stages.forEach { stage ->
                     stage.containers.forEach { container ->
                         if (!container.status.isNullOrBlank()) {
@@ -483,13 +497,22 @@ class PipelineBuildDetailService @Autowired constructor(
                             stage.status = finalStatus.name
                         }
                     }
+                    allStageStatus.add(
+                        BuildStageStatus(
+                            stageId = stage.id!!,
+                            name = stage.name ?: stage.id!!,
+                            status = stage.status,
+                            startEpoch = stage.startEpoch,
+                            elapsed = stage.elapsed
+                        )
+                    )
                 }
                 if (errorType != null) {
                     model.errorType = errorType.name
                     model.errorCode = errorCode
                     model.errorMsg = errorMsg
                 }
-
+                pipelineBuildDao.updateBuildStageStatus(dslContext, buildId, allStageStatus)
                 buildDetailDao.update(
                     dslContext = context,
                     buildId = buildId,
@@ -498,6 +521,7 @@ class PipelineBuildDetailService @Autowired constructor(
                     cancelUser = cancelUser
                 )
                 pipelineDetailChangeEvent(buildId)
+                pipelineHistoryChangeEvent(buildId)
             } catch (t: Throwable) {
                 logger.warn(
                     "Fail to update the build end status of model ${record.model} with status $buildStatus of build $buildId",
