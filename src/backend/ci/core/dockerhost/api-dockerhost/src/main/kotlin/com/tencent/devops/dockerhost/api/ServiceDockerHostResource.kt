@@ -27,6 +27,7 @@
 package com.tencent.devops.dockerhost.api
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.dispatch.pojo.DockerHostBuildInfo
 import com.tencent.devops.dockerhost.pojo.CheckImageRequest
 import com.tencent.devops.dockerhost.pojo.CheckImageResponse
 import com.tencent.devops.dockerhost.pojo.DockerBuildParam
@@ -173,4 +174,25 @@ interface ServiceDockerHostResource {
         containerId: String,
         @Context request: HttpServletRequest
     ): Result<Boolean>
+
+    @ApiOperation("启动流水线构建")
+    @POST
+    @Path("/build/start")
+    fun startBuild(
+        @ApiParam("构建任务", required = true)
+        dockerHostBuildInfo: DockerHostBuildInfo
+    ): Result<String>
+
+    @ApiOperation("终止流水线构建")
+    @DELETE
+    @Path("/build/end")
+    fun endBuild(
+        @ApiParam("构建任务", required = true)
+        dockerHostBuildInfo: DockerHostBuildInfo
+    ): Result<Boolean>
+
+    @ApiOperation("获取容器数量")
+    @GET
+    @Path("/container/count")
+    fun getContainerCount(): Result<Int>
 }
