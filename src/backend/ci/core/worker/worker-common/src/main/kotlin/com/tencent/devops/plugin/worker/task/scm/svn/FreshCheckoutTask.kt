@@ -53,22 +53,22 @@ class FreshCheckoutTask constructor(
     override val svnVersion: SVNVersion?,
     override val svnRepo: CodeSvnRepository
 ) : SvnUpdateTask(
-    svnUrl,
-    projectName,
-    username,
-    privateKey,
-    passPhrase,
-    revision,
-    workspace,
-    strategy,
-    update,
-    enableSubmodule,
-    svnDepth,
-    pipelineId,
-    buildId,
-    repositoryConfig,
-    svnVersion,
-    svnRepo
+    svnUrl = svnUrl,
+    projectName = projectName,
+    username = username,
+    privateKey = privateKey,
+    passPhrase = passPhrase,
+    revision = revision,
+    workspace = workspace,
+    strategy = strategy,
+    update = update,
+    enableSubmodule = enableSubmodule,
+    svnDepth = svnDepth,
+    pipelineId = pipelineId,
+    buildId = buildId,
+    repositoryConfig = repositoryConfig,
+    svnVersion = svnVersion,
+    svnRepo = svnRepo
 ) {
 
     override fun preUpdate() {

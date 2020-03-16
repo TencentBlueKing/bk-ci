@@ -261,12 +261,12 @@ open class GitUpdateTask constructor(
 
         commitResourceApi.saveBuildMaterial(listOf(
             PipelineBuildMaterial(
-                aliasName,
-                url,
-                modeValue,
-                commitMaterial.newCommitId,
-                commitMaterial.newCommitComment,
-                commitMaterial.commitTimes
+                aliasName = aliasName,
+                url = url,
+                branchName = modeValue,
+                newCommitId = commitMaterial.newCommitId,
+                newCommitComment = commitMaterial.newCommitComment,
+                commitTimes = commitMaterial.commitTimes
             )
         ))
         return env
