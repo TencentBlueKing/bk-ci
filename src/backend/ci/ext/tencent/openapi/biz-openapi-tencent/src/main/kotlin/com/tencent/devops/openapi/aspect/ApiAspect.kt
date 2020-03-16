@@ -1,5 +1,6 @@
 package com.tencent.devops.openapi.aspect
 
+import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.openapi.filter.ApiFilter
 import org.aspectj.lang.JoinPoint
 import org.aspectj.lang.annotation.*
@@ -59,8 +60,12 @@ class ApiAspect {
             }
         }
         logger.info("请求类型apigwType[${apigwType}],appCode[$appCode],项目[${projectId}]")
-        if(projectId != null && appCode != null && (apigwType == "apigw-app" || apigwType == "apigw")) {
-            logger.info("判断！！！！请求类型apigwType[${apigwType}],appCode[$appCode],是否有项目[${projectId}]的权限,")
+        if(projectId != null && appCode != null && (apigwType == "apigw-app")) {
+            logger.info("判断！！！！请求类型apigwType[${apigwType}],appCode[$appCode],是否有项目[${projectId}]的权限.")
+            val message = "判断！！！！请求类型apigwType[${apigwType}],appCode[$appCode],是否有项目[${projectId}]的权限.无权限！！！！！"
+            throw PermissionForbiddenException(
+                message = message
+            )
         }
     }
 //
