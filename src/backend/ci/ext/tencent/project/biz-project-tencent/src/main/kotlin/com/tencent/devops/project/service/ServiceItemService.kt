@@ -188,6 +188,9 @@ class ServiceItemService @Autowired constructor(
 
     private fun findParent(serviceItem: ServiceItem): ExtItemDTO {
         logger.info("findParent: serviceItemId: ${serviceItem.itemId}, parentId:${serviceItem.parentId}")
+        if(projectServiceMap.isEmpty()) {
+            getServiceList()
+        }
         val childList = mutableListOf<ExtServiceEntity>()
         childList.add(
             ExtServiceEntity(
@@ -235,7 +238,7 @@ class ServiceItemService @Autowired constructor(
                 htmlPath = it.htmlPath,
                 parentId = it.parentId
             )
-            val parentName = findParent(serviceItemInfo).extServiceItem.name
+            val parentName = findParent(serviceItemInfo).extServiceItem.name.substringBefore("(")
             serviceItemInfo.parentName = parentName
             itemList.add(
                 serviceItemInfo
