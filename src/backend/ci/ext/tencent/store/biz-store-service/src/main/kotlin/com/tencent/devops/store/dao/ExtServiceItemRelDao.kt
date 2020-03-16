@@ -103,4 +103,11 @@ class ExtServiceItemRelDao {
             dslContext.batch(addStep).execute()
         }
     }
+
+    fun batchUpdateServiceItemRel(dslContext: DSLContext, serviceItemRelList: List<TExtensionServiceItemRelRecord>) {
+        if (serviceItemRelList.isEmpty()) {
+            return
+        }
+        dslContext.batchUpdate(serviceItemRelList).execute()
+    }
 }

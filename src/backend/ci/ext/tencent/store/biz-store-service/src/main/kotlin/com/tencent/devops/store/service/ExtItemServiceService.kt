@@ -28,6 +28,7 @@ package com.tencent.devops.store.service
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.store.config.ExtServiceIngressConfig
 import com.tencent.devops.store.dao.ExtItemServiceDao
 import com.tencent.devops.store.pojo.vo.ExtItemServiceVO
 import com.tencent.devops.store.pojo.vo.ExtServiceVO
@@ -36,12 +37,16 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.text.MessageFormat
 
 @Service
 class ExtItemServiceService @Autowired constructor(
     private val dslContext: DSLContext,
-    private val extItemServiceDao: ExtItemServiceDao
+    private val extItemServiceDao: ExtItemServiceDao,
+    private val extServiceIngressConfig: ExtServiceIngressConfig
 ) {
+
+    private val logger = LoggerFactory.getLogger(ExtItemServiceService::class.java)
 
     fun getExtItemServiceList(
         userId: String,
@@ -51,7 +56,7 @@ class ExtItemServiceService @Autowired constructor(
         logger.info("getExtItemServiceList userId is :$userId,itemIds is :$itemIds,projectCode is :$projectCode")
         val extServiceList = mutableListOf<ExtItemServiceVO>()
         val itemIdList = itemIds.split(",")
-        itemIdList.forEach {
+        itemIdList.forEach { it ->
             val serviceRecords = extItemServiceDao.getExtItemServiceList(
                 dslContext = dslContext,
                 userId = userId,
@@ -61,19 +66,22 @@ class ExtItemServiceService @Autowired constructor(
                 pageSize = null
             )
             val serviceList = mutableListOf<ExtServiceVO>()
-            serviceRecords?.forEach {
-                val props = it["props"] as? String
+            serviceRecords?.forEach { service ->
+                val props = service["props"] as? String
+                val serviceCode = service["serviceCode"] as String
+                // 获取扩展服务对应的域名
+                val host = MessageFormat(extServiceIngressConfig.host).format(arrayOf(serviceCode))
                 serviceList.add(
                     ExtServiceVO(
-                        serviceId = it["serviceId"] as String,
-                        serviceName = it["serviceName"] as String,
-                        serviceCode = it["serviceCode"] as String,
-                        version = it["version"] as String,
-                        summary = it["summary"] as? String,
+                        serviceId = service["serviceId"] as String,
+                        serviceName = service["serviceName"] as String,
+                        serviceCode = service["serviceCode"] as String,
+                        version = service["version"] as String,
+                        summary = service["summary"] as? String,
                         vendor = ExtServiceVendorVO(
-                            name = it["publisher"] as String
+                            name = service["publisher"] as String
                         ),
-                        baseUrl = "", // todo 待网关完善好后把扩展服务访问地址前缀逻辑补上
+                        baseUrl = "http://$host",
                         props = if (!props.isNullOrBlank()) JsonUtil.toMap(props!!) else null
                     )
                 )
@@ -81,9 +89,5 @@ class ExtItemServiceService @Autowired constructor(
             extServiceList.add(ExtItemServiceVO(itemId = it, extServiceList = serviceList))
         }
         return Result(extServiceList)
-    }
-
-    companion object {
-        val logger = LoggerFactory.getLogger(this::class.java)
     }
 }

@@ -57,7 +57,6 @@ import com.tencent.devops.store.pojo.common.StoreProcessInfo
 import com.tencent.devops.store.pojo.common.StoreReleaseCreateRequest
 import com.tencent.devops.store.pojo.common.UN_RELEASE
 import com.tencent.devops.store.pojo.common.enums.AuditTypeEnum
-import com.tencent.devops.store.pojo.enums.ExtServicePackageSourceTypeEnum
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreMemberTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
@@ -66,9 +65,10 @@ import com.tencent.devops.store.pojo.dto.ExtSubmitDTO
 import com.tencent.devops.store.pojo.dto.InitExtServiceDTO
 import com.tencent.devops.store.pojo.dto.ServiceOfflineDTO
 import com.tencent.devops.store.pojo.dto.SubmitDTO
+import com.tencent.devops.store.pojo.enums.ExtServicePackageSourceTypeEnum
 import com.tencent.devops.store.pojo.enums.ExtServiceStatusEnum
-import com.tencent.devops.store.pojo.vo.MyServiceVO
 import com.tencent.devops.store.pojo.vo.MyExtServiceRespItem
+import com.tencent.devops.store.pojo.vo.MyServiceVO
 import com.tencent.devops.store.pojo.vo.ServiceVersionListItem
 import com.tencent.devops.store.pojo.vo.ServiceVersionListResp
 import com.tencent.devops.store.pojo.vo.ServiceVersionVO
@@ -684,13 +684,59 @@ abstract class ExtServiceBaseService @Autowired constructor() {
             return MessageCodeUtil.generateResponseDataObject(code)
         }
         // 拉取extension.json，检查格式，更新入库
-        val serviceRecord = extServiceDao.getServiceById(dslContext, serviceId) ?: return Result(false)
+        val serviceRecord =
+            extServiceDao.getServiceById(dslContext, serviceId) ?: return MessageCodeUtil.generateResponseDataObject(
+                CommonMessageCode.PARAMETER_IS_INVALID,
+                arrayOf(serviceId)
+            )
         val serviceCode = serviceRecord.serviceCode
-        val serviceName = serviceRecord.serviceName
-        val serviceVersion = serviceRecord.version
-        // TODO 此处等carl完善
-        // todo 解析extension.json的配置项数据，然后更新数据库
-        asyncHandleUpdateService(dslContext, serviceId, userId)
+        val extServiceFeature = extFeatureDao.getServiceByCode(dslContext, serviceCode)!!
+        // 从工蜂拉取文件
+        val fileStr = client.get(ServiceGitRepositoryResource::class).getFileContent(
+            extServiceFeature.repositoryHashId,
+            EXTENSION_JSON_NAME, null, null, null
+        ).data
+        logger.info("get file($EXTENSION_JSON_NAME) fileStr is:$fileStr")
+        dslContext.transaction { t ->
+            val context = DSL.using(t)
+            if (!fileStr.isNullOrEmpty()) {
+                val extensionJson = JsonUtil.to(fileStr!!, ExtensionJson::class.java)
+                logger.info("extensionJson is:$extensionJson")
+                val fileServiceCode = extensionJson.serviceCode
+                val fileItemList = extensionJson.itemList
+                if (fileServiceCode != serviceCode) {
+                    logger.warn("input serviceCode[$serviceCode], $EXTENSION_JSON_NAME serviceCode[$fileServiceCode] ")
+                }
+                if (fileItemList != null) {
+                    val itemCodeList = mutableSetOf<String>()
+                    val filePropMap = mutableMapOf<String, String>()
+                    fileItemList.forEach {
+                        itemCodeList.add(it.itemCode)
+                        filePropMap[it.itemCode] = JsonUtil.toJson(it.props ?: "{}")
+                    }
+                    // 用配置文件最新的配置替换数据库中相关记录的配置
+                    val serviceItemList = client.get(ServiceItemResource::class).getItemByCodes(itemCodeList).data
+                    serviceItemList?.forEach {
+                        val props = filePropMap[it.itemCode]
+                        filePropMap[it.itemId] = props!!
+                        filePropMap.remove(it.itemCode)
+                    }
+                    val serviceItemRelList = extServiceItemRelDao.getItemByServiceId(context, serviceId)
+                    if (serviceItemRelList != null && serviceItemRelList.isNotEmpty) {
+                        serviceItemRelList.forEach {
+                            // 如果json配置文件配了该扩展点，就将数据库扩展点记录的props字段替换成最新的
+                            val props = filePropMap[it.id]
+                            if (props != null) {
+                                it.props = props
+                            }
+                        }
+                        // 批量更新扩展服务和扩展点关联关系记录
+                        extServiceItemRelDao.batchUpdateServiceItemRel(context, serviceItemRelList)
+                    }
+                }
+            }
+            asyncHandleUpdateService(context, serviceId, userId)
+        }
         return Result(true)
     }
 
