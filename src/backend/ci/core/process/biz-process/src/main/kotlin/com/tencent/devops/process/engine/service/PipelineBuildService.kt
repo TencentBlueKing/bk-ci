@@ -748,7 +748,13 @@ class PipelineBuildService(
         stageId: String,
         isCancel: Boolean
     ) {
-        pipelineRuntimeService.getBuildInfo(buildId)
+        val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId, ChannelCode.BS)
+            ?: throw ErrorCodeException(
+                statusCode = Response.Status.NOT_FOUND.statusCode,
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS,
+                defaultMessage = "流水线不存在",
+                params = arrayOf(buildId))
+       pipelineRuntimeService.getBuildInfo(buildId)
             ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
                 errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
@@ -758,19 +764,35 @@ class PipelineBuildService(
             ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
                 errorCode = ProcessMessageCode.ERROR_NO_STAGE_EXISTS_BY_ID,
-                defaultMessage = "构建阶段${stageId}不存在",
+                defaultMessage = "构建Stage${stageId}不存在",
                 params = arrayOf(stageId))
         if (buildStage.controlOption?.stageControlOption?.triggerUsers?.contains(userId) != true)
             throw ErrorCodeException(
                 statusCode = Response.Status.FORBIDDEN.statusCode,
                 errorCode = ProcessMessageCode.USER_NEED_PIPELINE_X_PERMISSION.toString(),
-                defaultMessage = "用户($userId)不在阶段($stageId)可执行名单",
+                defaultMessage = "用户($userId)不在Stage($stageId)可执行名单",
                 params = arrayOf(buildId))
         if (buildStage.status.ordinal != 20) throw ErrorCodeException(
             statusCode = Response.Status.NOT_FOUND.statusCode,
             errorCode = ProcessMessageCode.ERROR_STAGE_IS_NOT_PAUSED,
-            defaultMessage = "阶段($stageId)未处于暂停状态",
+            defaultMessage = "Stage($stageId)未处于暂停状态",
             params = arrayOf(buildId))
+
+        val interceptResult = pipelineInterceptorChain.filter(
+            InterceptData(pipelineInfo, null, StartType.MANUAL)
+        )
+
+        if (interceptResult.isNotOk()) {
+            // 发送排队失败的事件
+            logger.error("[$pipelineId]|START_PIPELINE_MANUAL|流水线启动失败:[${interceptResult.message}]")
+            throw ErrorCodeException(
+                statusCode = Response.Status.NOT_FOUND.statusCode,
+                errorCode = interceptResult.status.toString(),
+                defaultMessage = "Stage启动失败![${interceptResult.message}]"
+            )
+        }
+
+
         if (isCancel) pipelineRuntimeService.cancelStage(
             userId = userId,
             projectId = projectId,

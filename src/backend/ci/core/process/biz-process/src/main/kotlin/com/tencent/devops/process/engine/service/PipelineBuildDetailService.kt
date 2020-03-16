@@ -645,7 +645,7 @@ class PipelineBuildDetailService @Autowired constructor(
         }, BuildStatus.RUNNING)
     }
 
-    fun stagePause(buildId: String, stageId: String) {
+    fun stagePause(pipelineId:String, buildId: String, stageId: String) {
         logger.info("[$buildId]|stage_pause|stageId=$stageId")
         update(buildId, object : ModelInterface {
             var update = false
@@ -654,7 +654,10 @@ class PipelineBuildDetailService @Autowired constructor(
                 if (stage.id == stageId) {
                     update = true
                     stage.status = BuildStatus.PAUSE.name
+                    stage.startEpoch = System.currentTimeMillis()
                     pipelineBuildDao.updateStatus(dslContext, buildId, BuildStatus.RUNNING, BuildStatus.STAGE_SUCCESS)
+                    // 被暂停的流水线不占构建队列，在执行数-1
+                    pipelineRuntimeService.updatePipelineRunningCount(pipelineId, -1)
                     updateHistoryStage(buildId, model)
                     return Traverse.BREAK
                 }
@@ -688,7 +691,7 @@ class PipelineBuildDetailService @Autowired constructor(
         }, BuildStatus.STAGE_SUCCESS)
     }
 
-    fun stageStart(buildId: String, stageId: String) {
+    fun stageStart(pipelineId:String, buildId: String, stageId: String) {
         logger.info("[$buildId]|stage_start|stageId=$stageId")
         update(buildId, object : ModelInterface {
             var update = false
@@ -698,6 +701,7 @@ class PipelineBuildDetailService @Autowired constructor(
                     update = true
                     stage.status = BuildStatus.QUEUE.name
                     pipelineBuildDao.updateStatus(dslContext, buildId, BuildStatus.STAGE_SUCCESS, BuildStatus.RUNNING)
+                    pipelineRuntimeService.updatePipelineRunningCount(pipelineId, 1)
                     updateHistoryStage(buildId, model)
                     return Traverse.BREAK
                 }

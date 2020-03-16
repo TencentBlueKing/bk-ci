@@ -1229,7 +1229,7 @@ class PipelineRuntimeService @Autowired constructor(
     ) {
         updateStageStatus(buildId, stageId, BuildStatus.QUEUE)
         SpringContextUtil.getBean(PipelineBuildDetailService::class.java)
-            .stageStart(buildId, stageId)
+            .stageStart(pipelineId, buildId, stageId)
         pipelineEventDispatcher.dispatch(
             PipelineBuildStageEvent(
                 source = "manual_trigger_stage",
@@ -2052,5 +2052,9 @@ class PipelineRuntimeService @Autowired constructor(
 
     fun getDefaultStageTagIds(): List<String>? {
         return stageTagService.getDefaultStageTag().data?.map { it.id }
+    }
+
+    fun updatePipelineRunningCount(pipelineId: String, runningIncrement: Int) {
+        pipelineBuildSummaryDao.updateRunningCount(dslContext, pipelineId, runningIncrement)
     }
 }

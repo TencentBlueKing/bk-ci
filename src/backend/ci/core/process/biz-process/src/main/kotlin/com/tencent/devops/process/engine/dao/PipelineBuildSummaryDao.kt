@@ -309,6 +309,17 @@ class PipelineBuildSummaryDao {
         }
     }
 
+    /**
+     * 4：正在队列中运行的数量刷新
+     */
+    fun updateRunningCount(dslContext: DSLContext, pipelineId: String, runningIncrement: Int = 1) {
+        with(T_PIPELINE_BUILD_SUMMARY) {
+            dslContext.update(this)
+                .set(RUNNING_COUNT, RUNNING_COUNT + runningIncrement)
+                .where(PIPELINE_ID.eq(pipelineId)).execute()
+        }
+    }
+
 //    fun resetTransferRecord(dslContext: DSLContext, pipelineId: String, startTime: Date?, endTime: Date?, historyBuildCount: Int) {
 //        with(T_PIPELINE_BUILD_SUMMARY) {
 //            dslContext.update(this)
