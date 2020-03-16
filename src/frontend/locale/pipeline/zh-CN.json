@@ -438,6 +438,9 @@
         "noMetaData": "暂无元数据",
         "viewDetail": "查看详情",
         "artifactory": "版本仓库",
+        "checkDesc": "审核倒计时",
+        "checkDescInfo": "审核功能将于{0}截止，逾期将自动标识为Stage成功状态",
+        "abort": "取消执行，立即标记为Stage成功状态",
         "statusMap": {
             "RUNNING": "执行中",
             "PREPARE_ENV": "准备构建环境中",

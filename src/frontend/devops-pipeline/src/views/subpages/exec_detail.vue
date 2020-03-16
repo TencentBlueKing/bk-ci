@@ -89,6 +89,7 @@
             >
             </log>
         </template>
+        <review-dialog :is-show="showReviewDialog"></review-dialog>
     </section>
 </template>
 
@@ -102,6 +103,7 @@
     import ContainerPropertyPanel from '@/components/ContainerPropertyPanel/'
     import StagePropertyPanel from '@/components/StagePropertyPanel'
     import emptyTips from '@/components/devops/emptyTips'
+    import ReviewDialog from '@/components/ReviewDialog'
     import log from '../../../../devops-log'
     import pipelineOperateMixin from '@/mixins/pipeline-operate-mixin'
     import pipelineConstMixin from '@/mixins/pipelineConstMixin'
@@ -116,7 +118,8 @@
             codeRecord,
             outputOption,
             emptyTips,
-            log
+            log,
+            ReviewDialog
         },
         mixins: [pipelineOperateMixin, pipelineConstMixin],
 
@@ -156,7 +159,8 @@
                 'editingElementPos',
                 'isPropertyPanelVisible',
                 'isShowCompleteLog',
-                'fetchingAtomList'
+                'fetchingAtomList',
+                'showReviewDialog'
             ]),
             ...mapState([
                 'fetchError'
@@ -366,7 +370,6 @@
                     }
                 })
             },
-
             showElementLog (elementId) {
                 let eleIndex, conIndex
                 const staIndex = this.execDetail.model.stages.findIndex(stage => {
