@@ -98,16 +98,15 @@ public class ObjectReplaceEnvVarUtil {
     }
 
     @NotNull
-    @SuppressWarnings("all")
     private static Object handleNormalEnvVar(Object obj, Map<String, String> envMap) {
         if (obj instanceof String) {
             try {
-                Map<String, Object> dataMap = JsonUtil.INSTANCE.toMap(obj);
-                // string能正常转成map，说明是json传，把map进行递归替换变量后再转成json串
-                dataMap = (Map<String, Object>) replaceEnvVar(dataMap, envMap);
-                obj = JsonUtil.INSTANCE.toJson(dataMap);
+                Object dataObj = JsonUtil.INSTANCE.to((String) obj);
+                // string能正常转成map或者list，说明是json串，把dataObj进行递归替换变量后再转成json串
+                dataObj = replaceEnvVar(dataObj, envMap);
+                obj = JsonUtil.INSTANCE.toJson(dataObj);
             } catch (Throwable e) {
-                // 对象转换不了map的对象则直接替换
+                // 转换不了map或者list的字符串对象则直接替换
                 obj = EnvUtils.INSTANCE.parseEnv(JsonUtil.INSTANCE.toJson(obj), envMap, false, false);
             }
         } else {
