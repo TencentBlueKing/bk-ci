@@ -1,13 +1,13 @@
 package com.tencent.devops.dispatch.dao
 
-import com.tencent.devops.model.dispatch.tables.TIdcIpInfo
-import com.tencent.devops.model.dispatch.tables.records.TIdcIpInfoRecord
+import com.tencent.devops.model.dispatch.tables.TDispatchPipelineDockerIpInfo
+import com.tencent.devops.model.dispatch.tables.records.TDispatchPipelineDockerIpInfoRecord
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository
 
 @Repository
-class DockerIPInfoDao {
+class PipelineDockerIPInfoDao {
     fun create(
         dslContext: DSLContext,
         idcIp: String,
@@ -16,10 +16,10 @@ class DockerIPInfoDao {
         enable: Boolean,
         grayEnv: Boolean
     ) {
-        with(TIdcIpInfo.T_IDC_IP_INFO) {
+        with(TDispatchPipelineDockerIpInfo.T_DISPATCH_PIPELINE_DOCKER_IP_INFO) {
             dslContext.insertInto(
                 this,
-                IDC_IP,
+                DOCKER_IP,
                 CAPACITY,
                 USED_NUM,
                 ENABLE,
@@ -45,22 +45,22 @@ class DockerIPInfoDao {
         used: Int,
         enable: Boolean
     ) {
-        with(TIdcIpInfo.T_IDC_IP_INFO) {
+        with(TDispatchPipelineDockerIpInfo.T_DISPATCH_PIPELINE_DOCKER_IP_INFO) {
             dslContext.update(this)
                 .set(CAPACITY, capacity)
                 .set(USED_NUM, used)
                 .set(ENABLE, enable)
-                .where(IDC_IP.eq(idcIp))
+                .where(DOCKER_IP.eq(idcIp))
                 .execute()
         }
     }
 
-    fun updateIdcIpStatus(
+    fun updateDockerIpStatus(
         dslContext: DSLContext,
         id: Int,
         enable: Boolean
     ) {
-        with(TIdcIpInfo.T_IDC_IP_INFO) {
+        with(TDispatchPipelineDockerIpInfo.T_DISPATCH_PIPELINE_DOCKER_IP_INFO) {
             dslContext.update(this)
                 .set(ENABLE, enable)
                 .where(ID.eq(id))
@@ -68,33 +68,33 @@ class DockerIPInfoDao {
         }
     }
 
-    fun getIdcIpList(
+    fun getDockerIpList(
         dslContext: DSLContext,
         page: Int,
         pageSize: Int
-    ): Result<TIdcIpInfoRecord> {
-        with(TIdcIpInfo.T_IDC_IP_INFO) {
+    ): Result<TDispatchPipelineDockerIpInfoRecord> {
+        with(TDispatchPipelineDockerIpInfo.T_DISPATCH_PIPELINE_DOCKER_IP_INFO) {
             return dslContext.selectFrom(this)
                 .limit(pageSize).offset((page - 1) * pageSize)
                 .fetch()
         }
     }
 
-    fun getIdcIpCount(
+    fun getDockerIpCount(
         dslContext: DSLContext
     ): Long {
-        with(TIdcIpInfo.T_IDC_IP_INFO) {
+        with(TDispatchPipelineDockerIpInfo.T_DISPATCH_PIPELINE_DOCKER_IP_INFO) {
             return dslContext.selectCount()
                 .from(this)
                 .fetchOne(0, Long::class.java)
         }
     }
 
-    fun getEnableIdcIpList(
+    fun getEnableDockerIpList(
         dslContext: DSLContext,
         grayEnv: Boolean
-    ): Result<TIdcIpInfoRecord> {
-        with(TIdcIpInfo.T_IDC_IP_INFO) {
+    ): Result<TDispatchPipelineDockerIpInfoRecord> {
+        with(TDispatchPipelineDockerIpInfo.T_DISPATCH_PIPELINE_DOCKER_IP_INFO) {
             return dslContext.selectFrom(this)
                 .where(ENABLE.eq(true))
                 .and(GRAY_ENV.eq(grayEnv))
@@ -104,11 +104,11 @@ class DockerIPInfoDao {
 
     fun delete(
         dslContext: DSLContext,
-        idcIpInfoId: Int
+        ipInfoId: Int
     ): Int {
-        return with(TIdcIpInfo.T_IDC_IP_INFO) {
+        return with(TDispatchPipelineDockerIpInfo.T_DISPATCH_PIPELINE_DOCKER_IP_INFO) {
             dslContext.delete(this)
-                .where(ID.eq(idcIpInfoId))
+                .where(ID.eq(ipInfoId))
                 .execute()
         }
     }
