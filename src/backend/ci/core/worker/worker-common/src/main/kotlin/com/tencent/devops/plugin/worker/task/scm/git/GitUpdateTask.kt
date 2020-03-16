@@ -263,7 +263,7 @@ open class GitUpdateTask constructor(
             PipelineBuildMaterial(
                 aliasName,
                 url,
-                branchName,
+                modeValue,
                 commitMaterial.newCommitId,
                 commitMaterial.newCommitComment,
                 commitMaterial.commitTimes
