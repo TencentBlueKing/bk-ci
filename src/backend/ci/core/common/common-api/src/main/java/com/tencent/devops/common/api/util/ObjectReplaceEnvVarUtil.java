@@ -26,6 +26,8 @@
 
 package com.tencent.devops.common.api.util;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.util.Iterator;
 import java.util.ArrayList;
 import java.util.List;
@@ -37,7 +39,7 @@ public class ObjectReplaceEnvVarUtil {
     /**
      * 把占位符替换环境变量
      *
-     * @param obj    需要把占位符替换环境变量的对象(对象如果是集合，注意要选择支持增加、删除等操作的集合类型，不要选择类似SingletonMap这种)
+     * @param obj    需要把占位符替换环境变量的对象(对象如果是集合对象，注意要选择支持增加、删除等操作的集合类型，不要选择类似SingletonMap这种)
      * @param envMap 环境变量Map
      */
     @SuppressWarnings("all")
@@ -49,7 +51,7 @@ public class ObjectReplaceEnvVarUtil {
                 if (!isNormalReplaceEnvVar(value)) {
                     replaceEnvVar(value, envMap);
                 } else {
-                    entry.setValue(EnvUtils.INSTANCE.parseEnv(JsonUtil.INSTANCE.toJson(value), envMap, false, false));
+                    entry.setValue(handleNormalEnvVar(value, envMap));
                 }
             }
         } else if (obj instanceof List) {
@@ -59,7 +61,7 @@ public class ObjectReplaceEnvVarUtil {
                 if (!isNormalReplaceEnvVar(value)) {
                     replaceEnvVar(value, envMap);
                 } else {
-                    dataList.set(i, EnvUtils.INSTANCE.parseEnv(JsonUtil.INSTANCE.toJson(value), envMap, false, false));
+                    dataList.set(i, handleNormalEnvVar(obj, envMap));
                 }
             }
         } else if (obj instanceof Set) {
@@ -78,18 +80,38 @@ public class ObjectReplaceEnvVarUtil {
             // 把需要进行占位符替换的元素替换完后再放入set集合,把替换前的元素删除
             for (Object value : replaceObjList) {
                 objSet.remove(value);
-                objSet.add(EnvUtils.INSTANCE.parseEnv(JsonUtil.INSTANCE.toJson(value), envMap, false, false));
+                objSet.add(handleNormalEnvVar(obj, envMap));
             }
         } else if (isNormalReplaceEnvVar(obj)) {
-            obj = EnvUtils.INSTANCE.parseEnv(JsonUtil.INSTANCE.toJson(obj), envMap, false, false);
+            obj = handleNormalEnvVar(obj, envMap);
         } else {
             try {
+                // 把对象转换成map后进行递归替换变量
                 Map<String, Object> dataMap = JsonUtil.INSTANCE.toMap(obj);
-                replaceEnvVar(dataMap, envMap);
+                obj = replaceEnvVar(dataMap, envMap);
             } catch (Throwable e) {
                 // 对象转换不了map的对象则直接替换
                 obj = EnvUtils.INSTANCE.parseEnv(JsonUtil.INSTANCE.toJson(obj), envMap, false, false);
             }
+        }
+        return obj;
+    }
+
+    @NotNull
+    @SuppressWarnings("all")
+    private static Object handleNormalEnvVar(Object obj, Map<String, String> envMap) {
+        if (obj instanceof String) {
+            try {
+                Map<String, Object> dataMap = JsonUtil.INSTANCE.toMap(obj);
+                // string能正常转成map，说明是json传，把map进行递归替换变量后再转成json串
+                dataMap = (Map<String, Object>) replaceEnvVar(dataMap, envMap);
+                obj = JsonUtil.INSTANCE.toJson(dataMap);
+            } catch (Throwable e) {
+                // 对象转换不了map的对象则直接替换
+                obj = EnvUtils.INSTANCE.parseEnv(JsonUtil.INSTANCE.toJson(obj), envMap, false, false);
+            }
+        } else {
+            obj = EnvUtils.INSTANCE.parseEnv(JsonUtil.INSTANCE.toJson(obj), envMap, false, false);
         }
         return obj;
     }
