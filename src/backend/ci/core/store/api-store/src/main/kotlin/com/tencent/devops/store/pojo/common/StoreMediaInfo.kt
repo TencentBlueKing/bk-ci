@@ -2,7 +2,7 @@ package com.tencent.devops.store.pojo.common
 
 import io.swagger.annotations.ApiModelProperty
 
-data class StoreMediaInfo (
+data class StoreMediaInfo(
     @ApiModelProperty("媒体id")
     val id: String,
     @ApiModelProperty("研发商店类型", required = true)

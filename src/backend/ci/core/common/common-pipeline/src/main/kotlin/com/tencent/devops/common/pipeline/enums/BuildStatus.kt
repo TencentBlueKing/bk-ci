@@ -81,7 +81,7 @@ enum class BuildStatus(val statusName: String, val visiable: Boolean) {
 
         fun isReview(status: BuildStatus) = status == REVIEW_ABORT || status == REVIEW_PROCESSED
 
-        fun isReadyToRun(status: BuildStatus) = status == QUEUE || status == QUEUE_CACHE ||  isRetry(status)
+        fun isReadyToRun(status: BuildStatus) = status == QUEUE || status == QUEUE_CACHE || isRetry(status)
         /**
          * 是否处于循环中： 正在运行中或循环等待都属于循环
          */

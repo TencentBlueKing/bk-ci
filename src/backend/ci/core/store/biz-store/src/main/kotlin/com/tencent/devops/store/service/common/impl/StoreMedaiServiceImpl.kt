@@ -13,7 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
-class StoreMedaiServiceImpl : StoreMediaService{
+class StoreMedaiServiceImpl : StoreMediaService {
 
     @Autowired
     lateinit var dslContext: DSLContext
@@ -25,7 +25,7 @@ class StoreMedaiServiceImpl : StoreMediaService{
         logger.info("addMedia input: userId[$userId] type[$type] storeMediaInfo:[$storeMediaInfo]")
         storeMediaInfoDao.add(
             dslContext = dslContext,
-            id =  UUIDUtil.generate(),
+            id = UUIDUtil.generate(),
             userId = userId,
             type = type.type.toByte(),
             storeMediaInfoReq = storeMediaInfo
@@ -41,7 +41,7 @@ class StoreMedaiServiceImpl : StoreMediaService{
         logger.info("updateMedia input: userId[$userId] id[$id] storeMediaInfo:[$storeMediaInfo]")
         storeMediaInfoDao.updateById(
             dslContext = dslContext,
-            id =  id,
+            id = id,
             userId = userId,
             storeMediaInfoReq = storeMediaInfo
         )
@@ -69,9 +69,9 @@ class StoreMedaiServiceImpl : StoreMediaService{
             storeCode = storeCode,
             type = storeType.type.toByte()
         )
-        return if(storeMediaInfoList == null){
+        return if (storeMediaInfoList == null) {
             Result(emptyList<StoreMediaInfo>())
-        }else{
+        } else {
             storeMediaRecord!!.forEach {
                 storeMediaInfoList.add(storeMediaInfoDao.convert(it))
             }
@@ -79,7 +79,7 @@ class StoreMedaiServiceImpl : StoreMediaService{
         }
     }
 
-    companion object{
+    companion object {
         val logger = LoggerFactory.getLogger(this::class.java)
     }
 }

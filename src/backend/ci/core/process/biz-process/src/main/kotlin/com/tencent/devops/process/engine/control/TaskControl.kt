@@ -30,7 +30,6 @@ import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatch
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.log.utils.LogUtils
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.TaskAtomService
 import com.tencent.devops.process.engine.common.BS_ATOM_STATUS_REFRESH_DELAY_MILLS
@@ -178,5 +177,4 @@ class TaskControl @Autowired constructor(
     private fun atomBuildStatus(response: AtomResponse): BuildStatus {
         return response.buildStatus
     }
-
 }

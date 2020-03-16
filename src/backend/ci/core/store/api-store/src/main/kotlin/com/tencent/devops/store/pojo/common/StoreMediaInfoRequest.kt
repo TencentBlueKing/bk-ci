@@ -4,7 +4,7 @@ import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("增删Media请求")
-data class StoreMediaInfoRequest (
+data class StoreMediaInfoRequest(
     @ApiModelProperty("研发商店类型", required = true)
     val storeCode: String,
     @ApiModelProperty("媒体url", required = true)
