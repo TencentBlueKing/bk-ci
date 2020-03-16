@@ -37,16 +37,23 @@ class ApiAspect {
         var projectId:String? = null
         var appCode:String? = null
         var apigwType:String? = null
+        parameterNames.forEach {
+            logger.info("参数名[$it]")
+        }
+
+        parameterValue.forEach {
+            logger.info("参数值[$it]")
+        }
         for (index in parameterValue.indices) {
             when(parameterNames[index]) {
                 "projectId" -> {
-                    projectId = parameterValue[index].toString()
+                    projectId = parameterValue[index]?.toString()
                 }
                 "appCode" -> {
-                    appCode = parameterValue[index].toString()
+                    appCode = parameterValue[index]?.toString()
                 }
                 "apigwType" -> {
-                    apigwType = parameterValue[index].toString()
+                    apigwType = parameterValue[index]?.toString()
                 }
                 else -> null
             }
