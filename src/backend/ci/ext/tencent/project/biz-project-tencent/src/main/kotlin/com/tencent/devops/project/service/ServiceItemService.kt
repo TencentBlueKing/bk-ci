@@ -12,12 +12,12 @@ import com.tencent.devops.project.dao.ServiceItemDao
 import com.tencent.devops.project.pojo.ItemCreateInfo
 import com.tencent.devops.project.pojo.ItemQueryInfo
 import com.tencent.devops.project.pojo.ItemUpdateInfo
-import com.tencent.devops.project.pojo.service.ServiceVO
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.lang.RuntimeException
+import com.tencent.devops.project.api.pojo.ExtServiceEntity as ExtServiceEntity
 
 @Service
 class ServiceItemService @Autowired constructor(
@@ -25,63 +25,53 @@ class ServiceItemService @Autowired constructor(
     private val serviceItemDao: ServiceItemDao,
     private val projectServiceDao: ServiceDao
 ) {
-    // 用于存放所有服务父子关系的map
-    private val parentMap = mutableMapOf<String, MutableList<ServiceItem>>()
-    // 用于存放所有服务子父关系的map
-    private val childMap = mutableMapOf<String, ServiceItem>() // 扩展点列表
+
+    // 用于存放服务信息的Map
+    private val projectServiceMap = mutableMapOf<String, ExtServiceEntity>()
 
     fun getServiceList(): List<ExtItemDTO> {
         val allItemData = serviceItemDao.getAllServiceItem(dslContext) ?: return emptyList()
         // 用于放所有数据
         val allItemMap = mutableMapOf<String, ServiceItem>()
         val itemList = mutableListOf<ExtItemDTO>()
-
-        allItemData.forEach { parentItem ->
-            if (parentItem.parentId == null || parentItem.parentId.isEmpty()) {
-                parentMap[parentItem.id] = mutableListOf()
-            }
-            val item = ServiceItem(
-                itemId = parentItem.id,
-                itemName = parentItem.itemName,
-                itemCode = parentItem.itemCode,
-                parentId = parentItem.parentId
+        val parentIndexMap = mutableMapOf<String, MutableList<String>>()
+        allItemData.forEach { it ->
+            allItemMap[it.id] = ServiceItem(
+                itemId = it.id,
+                itemCode = it.itemCode,
+                itemName = it.itemName,
+                icon = it.iconUrl,
+                parentId = it.parentId
             )
-            allItemMap[parentItem.id] = item
-        }
-        logger.info("getServiceItem allItemMap:$allItemMap")
-        allItemData.forEach { childItem ->
-            if (parentMap.containsKey(childItem.parentId)) {
-                val existList = parentMap[childItem.parentId]
-                existList!!.add(
-                    ServiceItem(
-                        itemId = childItem.id,
-                        itemName = childItem.itemName,
-                        itemCode = childItem.itemCode,
-                        parentId = childItem.parentId
-                    )
-                )
+            var childList = parentIndexMap[it.parentId]
+            if(childList!= null && childList!!.isNotEmpty()){
+                childList!!.add(it.id)
+            } else {
+                childList = mutableListOf()
+                childList.add(it.id)
+                parentIndexMap[it.parentId] = childList
             }
-            if (childItem.parentId != null) {
-                val parentItem = allItemMap[childItem.parentId]
-                if (parentItem != null) {
-                    childMap[childItem.id] = parentItem
+        }
+
+        parentIndexMap.forEach { (parentId, list) ->
+            val parentInfo = getProjectService(parentId)
+            val childList = mutableListOf<ExtServiceEntity>()
+            list.forEach {
+                val itemInfo = allItemMap[it]
+                if(itemInfo != null) {
+                    childList.add(
+                        ExtServiceEntity(
+                            id = itemInfo.itemId,
+                            name = itemInfo.itemName
+                        )
+                    )
                 }
             }
-        }
-        logger.info("getServiceItem parentMap:$parentMap")
-        logger.info("getServiceItem childMap:$childMap")
-
-        parentMap.forEach { (parentId, childList) ->
-            val itemData = allItemMap[parentId]
-            if (itemData != null) {
-                val data = ExtItemDTO(
-                    serviceItem = itemData,
-                    childItem = childList
-                )
-                logger.info("getServiceItem data:$data")
-
-                itemList.add(data)
-            }
+            val extItem = ExtItemDTO(
+                extServiceItem = parentInfo,
+                childItem = childList
+            )
+            itemList.add(extItem)
         }
         logger.info("getServiceItem itemList:${itemList.toList()}")
 
@@ -93,21 +83,17 @@ class ServiceItemService @Autowired constructor(
         val serviceItemRecord = getServiceList()
         if(serviceItemRecord.isNotEmpty()) {
             serviceItemRecord.forEach {
-                val parentItemName = it.serviceItem.itemName
+                val parentItemName = it.extServiceItem.name
                 val childItemList = it.childItem
                 if(childItemList.isNotEmpty()) {
                     childItemList.forEach { subItem ->
-                        val itemName = parentItemName+"-"+subItem.itemName
+                        val itemName = parentItemName+"-"+subItem.name
                         serviceItemList.add(
                             ServiceItem(
-                                itemId = subItem.itemId,
+                                itemId = subItem.id,
                                 itemName = itemName,
-                                itemCode = subItem.itemCode,
-                                parentId = subItem.parentId,
-                                htmlPath = subItem.htmlPath,
-                                htmlType = subItem.htmlType,
-                                props = subItem.props,
-                                serviceCount = subItem.serviceCount
+                                itemCode = "",
+                                parentId = it.extServiceItem.id
                             )
                         )
                     }
@@ -201,47 +187,33 @@ class ServiceItemService @Autowired constructor(
 
     private fun findParent(serviceItem: ServiceItem): ExtItemDTO {
         logger.info("findParent: serviceItemId: ${serviceItem.itemId}, parentId:${serviceItem.parentId}")
-        val result: ExtItemDTO
-        result = if (serviceItem.parentId != null) {
-            val childList = mutableListOf<ServiceItem>()
-            childList.add(serviceItem)
-            ExtItemDTO(
-                serviceItem = childMap[serviceItem.itemId]!!,
-                childItem = childList
+        val childList = mutableListOf<ExtServiceEntity>()
+        childList.add(
+            ExtServiceEntity(
+                id = serviceItem.itemId,
+                name = serviceItem.itemName
             )
-        } else {
-            ExtItemDTO(
-                serviceItem = serviceItem,
-                childItem = emptyList()
-            )
-        }
+        )
+        val result = ExtItemDTO(
+            extServiceItem = projectServiceMap[serviceItem.parentId]!!,
+            childItem = childList
+        )
         logger.info("findParent: result: $result")
         return result
     }
 
-    fun getProjectService(serviceId: String): ServiceVO {
-        val serviceRecord = projectServiceDao.select(dslContext, serviceId.toLong())
-        return ServiceVO(
-                id = serviceRecord!!.id,
-                name = serviceRecord.name,
-                link = serviceRecord.link,
-                linkNew = serviceRecord.linkNew,
-                status = serviceRecord.status,
-                injectType = serviceRecord.injectType,
-                iframeUrl = serviceRecord.iframeUrl,
-                cssUrl = serviceRecord.cssUrl,
-                jsUrl = serviceRecord.jsUrl,
-                grayCssUrl = serviceRecord.grayCssUrl,
-                grayJsUrl = serviceRecord.grayJsUrl,
-                showProjectList = serviceRecord.showProjectList,
-                showNav = serviceRecord.showNav,
-                projectIdType = serviceRecord.projectIdType,
-                collected = false,
-                weigHt = serviceRecord.weight,
-                logoUrl = serviceRecord.logoUrl,
-                webSocket = serviceRecord.webSocket,
-                grayIframeUrl = serviceRecord.grayIframeUrl
+    fun getProjectService(serviceId: String): ExtServiceEntity {
+        return if(!projectServiceMap.containsKey(serviceId)) {
+            val serviceRecord = projectServiceDao.select(dslContext, serviceId.toLong())
+            val serviceEntity = ExtServiceEntity(
+                id = serviceRecord!!.id.toString(),
+                name = serviceRecord.name
             )
+            projectServiceMap[serviceId] = serviceEntity
+            serviceEntity
+        } else {
+            projectServiceMap[serviceId]!!
+        }
     }
 
     fun queryItem(itemName: String?, serviceId: String?): Result<List<ServiceItem>> {
@@ -279,7 +251,7 @@ class ServiceItemService @Autowired constructor(
             htmlPath = itemInfo.htmlPath,
             creator = userId,
             serviceId = itemInfo.pid,
-            UIType = itemInfo.UIType,
+            UIType = itemInfo.UiType,
             iconUrl = itemInfo.iconUrl,
             props = itemInfo.props,
             tooltip = itemInfo.tooltip
@@ -293,7 +265,7 @@ class ServiceItemService @Autowired constructor(
             itemName = itemInfo.itemName,
             htmlPath = itemInfo.htmlPath,
             serviceId = itemInfo.pid,
-            UIType = itemInfo.UIType,
+            UIType = itemInfo.UiType,
             iconUrl = itemInfo.iconUrl,
             props = itemInfo.props,
             tooltip = itemInfo.tooltip
