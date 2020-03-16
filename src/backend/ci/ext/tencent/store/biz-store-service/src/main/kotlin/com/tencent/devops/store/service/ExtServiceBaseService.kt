@@ -727,7 +727,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
                     if (serviceItemRelList != null && serviceItemRelList.isNotEmpty) {
                         serviceItemRelList.forEach {
                             // 如果json配置文件配了该扩展点，就将数据库扩展点记录的props字段替换成最新的
-                            val props = filePropMap[it.id]
+                            val props = filePropMap[it.itemId]
                             if (props != null) {
                                 it.props = props
                             }
