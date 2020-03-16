@@ -209,12 +209,12 @@ open class SvnUpdateTask constructor(
 
         commitResourceApi.saveBuildMaterial(listOf(
             PipelineBuildMaterial(
-                svnRepo.aliasName,
-                svnRepo.url,
-                "",
-                commitMaterial.newCommitId,
-                commitMaterial.newCommitComment,
-                commitMaterial.commitTimes
+                aliasName = svnRepo.aliasName,
+                url = svnRepo.url,
+                branchName = "",
+                newCommitId = commitMaterial.newCommitId,
+                newCommitComment = commitMaterial.newCommitComment,
+                commitTimes = commitMaterial.commitTimes
             )
         ))
         return env
