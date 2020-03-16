@@ -174,7 +174,7 @@ class ExtItemServiceDao {
                 )
             )
         )
-        initTestConditions.add(tspr.STORE_TYPE.eq(StoreTypeEnum.ATOM.type.toByte()))
+        initTestConditions.add(tspr.STORE_TYPE.eq(StoreTypeEnum.SERVICE.type.toByte()))
         return initTestConditions
     }
 
