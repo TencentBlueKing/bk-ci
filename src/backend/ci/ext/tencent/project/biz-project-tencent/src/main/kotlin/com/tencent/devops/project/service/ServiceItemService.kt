@@ -226,16 +226,19 @@ class ServiceItemService @Autowired constructor(
         )
         val itemList = mutableListOf<ServiceItem>()
         serviceItemDao.queryItem(dslContext, query)?.forEach {
+            val serviceItemInfo = ServiceItem(
+                itemId = it.id,
+                itemCode = it.itemCode,
+                itemName = it.itemName,
+                serviceCount = it.serviceNum,
+                htmlType = it.htmlComponentType,
+                htmlPath = it.htmlPath,
+                parentId = it.parentId
+            )
+            val parentName = findParent(serviceItemInfo).extServiceItem.name
+            serviceItemInfo.parentName = parentName
             itemList.add(
-                ServiceItem(
-                    itemId = it.id,
-                    itemCode = it.itemCode,
-                    itemName = it.itemName,
-                    serviceCount = it.serviceNum,
-                    htmlType = it.htmlComponentType,
-                    htmlPath = it.htmlPath,
-                    parentId = it.parentId
-                )
+                serviceItemInfo
             )
         }
         val count = serviceItemDao.queryCount(dslContext, query)
