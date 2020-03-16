@@ -38,7 +38,11 @@ class ExtServiceVersionLogDao {
                     extServiceVersionLogCreateInfo.modifierUser,
                     LocalDateTime.now(),
                     LocalDateTime.now()
-                )
+                ).onDuplicateKeyUpdate()
+                .set(RELEASE_TYPE, extServiceVersionLogCreateInfo.releaseType)
+                .set(CONTENT, extServiceVersionLogCreateInfo.content)
+                .set(MODIFIER, userId)
+                .set(UPDATE_TIME, LocalDateTime.now())
                 .execute()
         }
     }
