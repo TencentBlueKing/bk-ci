@@ -92,21 +92,24 @@ open class CodeSvnPullCodeSetting constructor(
                 projectName = projectName,
                 svnCredential = svnCredential,
                 targetRevision = targetRevision,
-                updateStrategy = updateStrategy
+                updateStrategy = updateStrategy,
+                svnRepository = repo
             )
             CodePullStrategy.REVERT_UPDATE -> revertUpdateTask(
                 svnUrl = svnUrl,
                 projectName = projectName,
                 svnCredential = svnCredential,
                 targetRevision = targetRevision,
-                updateStrategy = updateStrategy
+                updateStrategy = updateStrategy,
+                svnRepository = repo
             )
             CodePullStrategy.FRESH_CHECKOUT -> freshCheckoutTask(
                 svnUrl = svnUrl,
                 projectName = projectName,
                 svnCredential = svnCredential,
                 targetRevision = targetRevision,
-                updateStrategy = updateStrategy
+                updateStrategy = updateStrategy,
+                svnRepository = repo
             )
         }
         val env = mutableMapOf<String, String>()
@@ -126,7 +129,8 @@ open class CodeSvnPullCodeSetting constructor(
         projectName: String,
         svnCredential: SvnCredential,
         targetRevision: SVNRevision,
-        updateStrategy: CodePullStrategy
+        updateStrategy: CodePullStrategy,
+        svnRepository: CodeSvnRepository
     ): FreshCheckoutTask {
         return FreshCheckoutTask(
             svnUrl = svnUrl,
@@ -143,7 +147,8 @@ open class CodeSvnPullCodeSetting constructor(
             pipelineId = pipelineId,
             buildId = buildId,
             repositoryConfig = repositoryConfig,
-            svnVersion = svnVersion
+            svnVersion = svnVersion,
+            svnRepo = svnRepository
         )
     }
 
@@ -152,7 +157,8 @@ open class CodeSvnPullCodeSetting constructor(
         projectName: String,
         svnCredential: SvnCredential,
         targetRevision: SVNRevision,
-        updateStrategy: CodePullStrategy
+        updateStrategy: CodePullStrategy,
+        svnRepository: CodeSvnRepository
     ): RevertUpdateTask {
         return RevertUpdateTask(
             svnUrl = svnUrl,
@@ -169,7 +175,8 @@ open class CodeSvnPullCodeSetting constructor(
             pipelineId = pipelineId,
             buildId = buildId,
             repositoryConfig = repositoryConfig,
-            svnVersion = svnVersion
+            svnVersion = svnVersion,
+            svnRepo = svnRepository
         )
     }
 
@@ -178,7 +185,8 @@ open class CodeSvnPullCodeSetting constructor(
         projectName: String,
         svnCredential: SvnCredential,
         targetRevision: SVNRevision,
-        updateStrategy: CodePullStrategy
+        updateStrategy: CodePullStrategy,
+        svnRepository: CodeSvnRepository
     ): SvnUpdateTask {
         return SvnUpdateTask(
             svnUrl = svnUrl,
@@ -195,7 +203,8 @@ open class CodeSvnPullCodeSetting constructor(
             pipelineId = pipelineId,
             buildId = buildId,
             repositoryConfig = repositoryConfig,
-            svnVersion = svnVersion
+            svnVersion = svnVersion,
+            svnRepo = svnRepository
         )
     }
 
