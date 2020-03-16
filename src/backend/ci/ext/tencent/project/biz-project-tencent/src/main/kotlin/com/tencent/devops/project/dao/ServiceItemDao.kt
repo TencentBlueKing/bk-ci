@@ -148,22 +148,22 @@ class ServiceItemDao {
     }
 
     fun queryCount(dslContext: DSLContext, itemQueryInfo: ItemQueryInfo): Int? {
-        val a = TServiceItem.T_SERVICE_ITEM.`as`("ta")
-        val baseStep = dslContext.select(TServiceItem.T_SERVICE_ITEM.ID.countDistinct()).from(TServiceItem.T_SERVICE_ITEM)
-        val conditions = mutableListOf<Condition>()
-        if (itemQueryInfo.itemName != null) {
-            conditions.add(a.ITEM_NAME.like(itemQueryInfo.itemName))
+        return with(TServiceItem.T_SERVICE_ITEM) {
+            val whereStep = dslContext.select(this.ID.countDistinct()).from(this)
+            if (itemQueryInfo.itemName != null) {
+                whereStep.where(ITEM_NAME.like(itemQueryInfo.itemName))
+            }
+
+            if (itemQueryInfo.serviceId != null) {
+                whereStep.where(PARENT_ID.eq(itemQueryInfo.serviceId))
+            }
+
+            if (itemQueryInfo.itemStatus != null) {
+                whereStep.where(ITEM_STATUS.eq(itemQueryInfo.itemStatus.name))
+            }
+            whereStep.fetchOne(0, Int::class.java)
         }
 
-        if (itemQueryInfo.serviceId != null) {
-            conditions.add(a.PARENT_ID.eq(itemQueryInfo.serviceId))
-        }
-
-        if (itemQueryInfo.itemStatus != null) {
-            conditions.add(a.ITEM_STATUS.eq(itemQueryInfo.itemStatus.name))
-        }
-
-        return baseStep.where(conditions).fetchOne(0, Int::class.java)
     }
 
     fun getItemById(dslContext: DSLContext, itemId: String): TServiceItemRecord? {
