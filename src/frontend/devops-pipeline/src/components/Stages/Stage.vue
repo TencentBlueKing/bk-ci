@@ -2,8 +2,8 @@
     <div :class="[{ 'pipeline-drag': editable && !isTriggerStage, 'show-stage-area': !isTriggerStage }, 'pipeline-stage']" ref="stageRef">
         <bk-button v-if="!isTriggerStage" :class="['pipeline-stage-entry', [stageStatusCls], { 'editable-stage-entry': editable, 'stage-disabled': stageDisabled }]" @click="showStagePanel">
             <span v-if="stage.status === 'PAUSE'" class="bk-icon icon-play-circle-shape" v-bk-tooltips.top="canTriggerStage ? $t('editPage.toCheck') : $t('editPage.noAuthToCheck')" @click.stop="startNextStage"></span>
-            <logo v-else-if="stage.status === 'SKIP'" v-bk-tooltips="$t('skipStageDesc')" :class="`stage-status-icon ${stageStatusIcon}`" :name="stageStatusIcon" size="16"></logo>
-            <logo v-else :class="`stage-status-icon ${stageStatusIcon}`" :name="stageStatusIcon" size="16"></logo>
+            <logo v-else-if="stage.status === 'SKIP'" v-bk-tooltips="$t('skipStageDesc')" class="skip-icon redo-arrow" name="redo-arrow" size="16"></logo>
+            <i v-else-if="stageStatusIcon" :class="`stage-status-icon bk-icon icon-${stageStatusIcon}`"></i>
             <span class="stage-entry-name">{{ stageTitle }}</span>
             <i v-if="stage.isError" class="bk-icon icon-exclamation-triangle-shape stage-entry-error-icon" />
             <span @click.stop v-if="showCheckedToatal && canSkipElement" class="check-total-stage">
@@ -179,6 +179,8 @@
                         return 'close-circle'
                     case 'SKIP':
                         return 'redo-arrow'
+                    case 'RUNNING':
+                        return 'circle-2-1 spin-icon'
                 }
                 return ''
             },
@@ -360,7 +362,7 @@
                 border-color: #D0D8EA;
                 color: black;
 
-                .stage-status-icon,
+                .skip-icon,
                 .icon-play-circle-shape {
                     vertical-align: middle;
                 }
