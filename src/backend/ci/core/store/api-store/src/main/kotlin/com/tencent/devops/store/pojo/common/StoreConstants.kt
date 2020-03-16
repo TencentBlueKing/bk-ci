@@ -47,6 +47,8 @@ const val IMAGE_RELEASE_AUDIT_PASS_TEMPLATE = "IMAGE_RELEASE_AUDIT_PASS_TEMPLATE
 const val IMAGE_RELEASE_AUDIT_REFUSE_TEMPLATE = "IMAGE_RELEASE_AUDIT_REFUSE_TEMPLATE" // 镜像发布审核被拒消息通知模板
 const val STORE_COMMENT_NOTIFY_TEMPLATE = "STORE_COMMENT_NOTIFY_TEMPLATE" // store评论消息通知模板
 const val STORE_COMMENT_REPLY_NOTIFY_TEMPLATE = "STORE_COMMENT_REPLY_NOTIFY_TEMPLATE" // store评论回复消息通知模板
+const val OPEN = "open" // 开关打开
+const val CLOSE = "close" // 开关关闭
 
 const val KEY_ID = "id"
 const val KEY_PUB_TIME = "pubTime"
