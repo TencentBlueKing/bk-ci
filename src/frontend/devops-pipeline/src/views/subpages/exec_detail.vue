@@ -46,7 +46,6 @@
                 <log :title="currentElement.name"
                     :status="currentElement.status"
                     :execute-count="currentElement.executeCount"
-                    :down-load-name="`${editingElementPos.stageIndex + 1}-${editingElementPos.containerIndex + 1}-${editingElementPos.elementIndex + 1}-${currentElement.name}`"
                     @changeExecute="changeExecute"
                     :down-load-link="downLoadPluginLink"
                     :id="currentElement.id"
@@ -58,9 +57,11 @@
                 <job :title="currentJob.name"
                     :status="currentJob.status"
                     :plugin-list="pluginList"
+                    :down-load-link="downLoadJobLink"
                     @closeLog="closeLog"
                     @closePlugin="closePlugin"
                     @openPlugin="initLog"
+                    ref="log"
                 />
             </template>
         </template>
@@ -134,11 +135,22 @@
             ...mapState([
                 'fetchError'
             ]),
-            downLoadAllLink () {
-                return `${AJAX_URL_PIRFIX}/log/api/user/logs/${this.$route.params.projectId}/${this.$route.params.pipelineId}/${this.execDetail.id}/download`
+
+            downLoadJobLink () {
+                const editingElementPos = this.editingElementPos
+                const fileName = `${editingElementPos.stageIndex + 1}-${editingElementPos.containerIndex + 1}-${this.currentJob.name}`
+                const tag = this.currentJob.id
+                const curLogPostData = this.logPostData[tag] || {}
+                const currentExe = curLogPostData.currentExe || 1
+                return `${AJAX_URL_PIRFIX}/log/api/user/logs/${this.$route.params.projectId}/${this.$route.params.pipelineId}/${this.execDetail.id}/download?tag=${tag}&executeCount=${currentExe}&fileName=${fileName}`
             },
             downLoadPluginLink () {
-                return `${AJAX_URL_PIRFIX}/log/api/user/logs/${this.$route.params.projectId}/${this.$route.params.pipelineId}/${this.execDetail.id}/download?tag=${this.currentElement.id}&executeCount=${this.logPostData.currentExe}`
+                const editingElementPos = this.editingElementPos
+                const fileName = `${editingElementPos.stageIndex + 1}-${editingElementPos.containerIndex + 1}-${editingElementPos.elementIndex + 1}-${this.currentElement.name}`
+                const tag = this.currentElement.id
+                const curLogPostData = this.logPostData[tag] || {}
+                const currentExe = curLogPostData.currentExe || 1
+                return `${AJAX_URL_PIRFIX}/log/api/user/logs/${this.$route.params.projectId}/${this.$route.params.pipelineId}/${this.execDetail.id}/download?tag=${tag}&executeCount=${currentExe}&fileName=${fileName}`
             },
             panels () {
                 return [{
@@ -346,6 +358,7 @@
                         tag,
                         currentExe: 1,
                         ref,
+                        lineNo: 0,
                         id: 1
                     }
                     this.logPostData[tag] = currentLogPost
@@ -361,18 +374,37 @@
                     this.handleLogRes(res, currentLogPost)
                 }).catch((err) => {
                     this.$bkMessage({ theme: 'error', message: err.message || err })
-                    currentLogPost.ref.handleApiErr(err)
+                    if (currentLogPost.ref) currentLogPost.ref.handleApiErr(err.message)
                 })
             },
 
             handleLogRes (res, currentLogPost) {
-                if (currentLogPost.id === undefined) return
+                if (currentLogPost.id === undefined || currentLogPost.ref === undefined) return
                 res = res.data || {}
+                if (res.status !== 0) {
+                    let errMessage
+                    switch (res.status) {
+                        case 1:
+                            errMessage = this.$t('history.logEmpty')
+                            break
+                        case 2:
+                            errMessage = this.$t('history.logClear')
+                            break
+                        case 3:
+                            errMessage = this.$t('history.logClose')
+                            break
+                        default:
+                            errMessage = this.$t('history.logErr')
+                            break
+                    }
+                    currentLogPost.ref.handleApiErr(errMessage)
+                    return
+                }
+
                 const logs = res.logs || []
                 const lastLog = logs[logs.length - 1] || {}
                 const lastLogNo = lastLog.lineNo || currentLogPost.lineNo - 1 || -1
                 currentLogPost.lineNo = +lastLogNo + 1
-
                 if (res.finished) {
                     if (res.hasMore) {
                         currentLogPost.ref.addLogData(logs)
@@ -388,12 +420,12 @@
 
             getAfterLogApi (mis, currentLogPost) {
                 currentLogPost.id = setTimeout(() => {
-                    if (currentLogPost.id === undefined) return
+                    if (currentLogPost.id === undefined || currentLogPost.ref === undefined) return
                     this.getAfterLog(currentLogPost).then((res) => {
                         this.handleLogRes(res, currentLogPost)
                     }).catch((err) => {
                         this.$bkMessage({ theme: 'error', message: err.message || err })
-                        currentLogPost.ref.handleApiErr(err)
+                        currentLogPost.ref.handleApiErr(err.message)
                     })
                 }, mis)
             },
