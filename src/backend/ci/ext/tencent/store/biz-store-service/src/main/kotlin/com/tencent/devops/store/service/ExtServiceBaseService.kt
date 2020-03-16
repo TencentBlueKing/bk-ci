@@ -305,6 +305,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
 
         dslContext.transaction { t ->
             val context = DSL.using(t)
+            logger.info("updateExtService cancelFlag[$cancelFlag] releaseType[$releaseType] version[${serviceRecord.version}]")
             if (StringUtils.isEmpty(serviceRecord.version) || (cancelFlag && releaseType == ReleaseTypeEnum.CANCEL_RE_RELEASE)) {
                 // 首次创建版本或者取消发布后不变更版本号重新上架，则在该版本的记录上做更新操作
                 serviceId = serviceRecord.id
