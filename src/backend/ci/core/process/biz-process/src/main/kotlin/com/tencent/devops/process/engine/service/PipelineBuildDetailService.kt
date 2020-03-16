@@ -605,13 +605,7 @@ class PipelineBuildDetailService @Autowired constructor(
                     update = true
                     stage.status = buildStatus.name
                     if (BuildStatus.isRunning(buildStatus) && stage.startEpoch == null) {
-                        if (buildStatus == BuildStatus.SKIP) {
-                            stage.containers.forEach {
-                                it.status = BuildStatus.SKIP.name
-                            }
-                        } else {
-                            stage.startEpoch = System.currentTimeMillis()
-                        }
+                        stage.startEpoch = System.currentTimeMillis()
                     } else if (BuildStatus.isFinish(buildStatus) && stage.startEpoch != null) {
                         stage.elapsed = System.currentTimeMillis() - stage.startEpoch!!
                     }
@@ -624,7 +618,31 @@ class PipelineBuildDetailService @Autowired constructor(
             override fun needUpdate(): Boolean {
                 return update
             }
-        }, if (buildStatus == BuildStatus.PAUSE) BuildStatus.STAGE_SUCCESS else BuildStatus.RUNNING) // 除等待手动触发外，流水线都是RUNNING状态
+        }, BuildStatus.RUNNING) // 除等待手动触发外，流水线都是RUNNING状态
+    }
+
+    fun stageSkip(buildId: String, stageId: String) {
+        logger.info("[$buildId]|stage_skip|stageId=$stageId")
+        update(buildId, object : ModelInterface {
+            var update = false
+
+            override fun onFindStage(stage: Stage, model: Model): Traverse {
+                if (stage.id == stageId) {
+                    update = true
+                    stage.status = BuildStatus.SKIP.name
+                    stage.containers.forEach {
+                        it.status = BuildStatus.SKIP.name
+                    }
+                    updateHistoryStage(buildId, model)
+                    return Traverse.BREAK
+                }
+                return Traverse.CONTINUE
+            }
+
+            override fun needUpdate(): Boolean {
+                return update
+            }
+        }, BuildStatus.RUNNING)
     }
 
     fun stagePause(buildId: String, stageId: String) {
@@ -637,6 +655,27 @@ class PipelineBuildDetailService @Autowired constructor(
                     update = true
                     stage.status = BuildStatus.PAUSE.name
                     pipelineBuildDao.updateStatus(dslContext, buildId, BuildStatus.RUNNING, BuildStatus.STAGE_SUCCESS)
+                    updateHistoryStage(buildId, model)
+                    return Traverse.BREAK
+                }
+                return Traverse.CONTINUE
+            }
+
+            override fun needUpdate(): Boolean {
+                return update
+            }
+        }, BuildStatus.STAGE_SUCCESS)
+    }
+
+    fun stageCancel(buildId: String, stageId: String) {
+        logger.info("[$buildId]|stage_cancel|stageId=$stageId")
+        update(buildId, object : ModelInterface {
+            var update = false
+
+            override fun onFindStage(stage: Stage, model: Model): Traverse {
+                if (stage.id == stageId) {
+                    update = true
+                    stage.status = ""
                     updateHistoryStage(buildId, model)
                     return Traverse.BREAK
                 }
