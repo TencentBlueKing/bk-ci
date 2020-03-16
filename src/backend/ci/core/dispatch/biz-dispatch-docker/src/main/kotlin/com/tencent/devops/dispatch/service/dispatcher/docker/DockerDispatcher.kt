@@ -29,7 +29,7 @@ package com.tencent.devops.dispatch.service.dispatcher.docker
 import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.dispatch.client.DockerHostClient
-import com.tencent.devops.dispatch.dao.DockerTaskHistoryDao
+import com.tencent.devops.dispatch.dao.PipelineDockerTaskHistoryDao
 import com.tencent.devops.dispatch.pojo.VolumeStatus
 import com.tencent.devops.dispatch.service.DockerHostBuildService
 import com.tencent.devops.dispatch.service.dispatcher.Dispatcher
@@ -48,7 +48,7 @@ class DockerDispatcher @Autowired constructor(
     private val rabbitTemplate: RabbitTemplate,
     private val dockerHostBuildService: DockerHostBuildService,
     private val dockerHostClient: DockerHostClient,
-    private val dockerTaskHistoryDao: DockerTaskHistoryDao,
+    private val pipelineDockerTaskHistoryDao: PipelineDockerTaskHistoryDao,
     private val dslContext: DSLContext,
     private val redisOperation: RedisOperation
     ) : Dispatcher {
@@ -72,15 +72,22 @@ class DockerDispatcher @Autowired constructor(
         )
         // dockerHostBuildService.dockerHostBuild(pipelineAgentStartupEvent)
 
-        val dockerIp = dockerHostClient.getAvailableDockerIp()
-        dockerTaskHistoryDao.create(
-            dslContext,
-            pipelineAgentStartupEvent.pipelineId,
-            pipelineAgentStartupEvent.buildId,
-            pipelineAgentStartupEvent.vmSeqId,
-            dockerIp,
-            VolumeStatus.RUNNING.status
-        )
+        val taskHistory = pipelineDockerTaskHistoryDao.getByPipelineIdAndVMSeq(dslContext, pipelineAgentStartupEvent.pipelineId, pipelineAgentStartupEvent.vmSeqId)
+        val dockerIp: String
+        if (taskHistory != null) {
+            dockerIp = taskHistory.dockerIp
+        } else {
+            dockerIp = dockerHostClient.getAvailableDockerIp()
+
+            pipelineDockerTaskHistoryDao.create(
+                dslContext,
+                pipelineAgentStartupEvent.pipelineId,
+                pipelineAgentStartupEvent.buildId,
+                pipelineAgentStartupEvent.vmSeqId,
+                dockerIp,
+                VolumeStatus.RUNNING.status
+            )
+        }
 
         dockerHostClient.startBuild(pipelineAgentStartupEvent, dockerIp)
     }
@@ -97,15 +104,15 @@ class DockerDispatcher @Autowired constructor(
         try {
             lock.lock()
             if (pipelineAgentShutdownEvent.vmSeqId != null) {
-                val taskHistory = dockerTaskHistoryDao.getByBuildIdAndVMSeq(dslContext, pipelineAgentShutdownEvent.buildId, pipelineAgentShutdownEvent.vmSeqId!!)
-                dockerHostClient.endBuild(pipelineAgentShutdownEvent, taskHistory!!.idcIp as String, taskHistory.containerId as String)
-                dockerTaskHistoryDao.updateStatus(dslContext, pipelineAgentShutdownEvent.buildId, pipelineAgentShutdownEvent.vmSeqId!!, VolumeStatus.FINISH.status)
+                val taskHistory = pipelineDockerTaskHistoryDao.getByPipelineIdAndVMSeq(dslContext, pipelineAgentShutdownEvent.pipelineId, pipelineAgentShutdownEvent.vmSeqId!!)
+                dockerHostClient.endBuild(pipelineAgentShutdownEvent, taskHistory!!.dockerIp as String, taskHistory.containerId as String)
+                pipelineDockerTaskHistoryDao.updateStatus(dslContext, pipelineAgentShutdownEvent.buildId, pipelineAgentShutdownEvent.vmSeqId!!, VolumeStatus.FINISH.status)
             } else {
-                val taskHistoryList = dockerTaskHistoryDao.getByBuildId(dslContext, pipelineAgentShutdownEvent.buildId)
+                val taskHistoryList = pipelineDockerTaskHistoryDao.getByPipelineId(dslContext, pipelineAgentShutdownEvent.pipelineId)
                 taskHistoryList.forEach {
-                    dockerHostClient.endBuild(pipelineAgentShutdownEvent, it.idcIp as String, it.containerId as String)
+                    dockerHostClient.endBuild(pipelineAgentShutdownEvent, it.dockerIp as String, it.containerId as String)
                     if (it.status == VolumeStatus.RUNNING.status) {
-                        dockerTaskHistoryDao.updateStatus(dslContext, pipelineAgentShutdownEvent.buildId, it.vmSeq as String, VolumeStatus.FINISH.status)
+                        pipelineDockerTaskHistoryDao.updateStatus(dslContext, pipelineAgentShutdownEvent.buildId, it.vmSeq as String, VolumeStatus.FINISH.status)
                     }
                 }
             }

@@ -1,7 +1,7 @@
 package com.tencent.devops.dispatch.dao
 
-import com.tencent.devops.model.dispatch.tables.TIdcTaskHistory
-import com.tencent.devops.model.dispatch.tables.records.TIdcTaskHistoryRecord
+import com.tencent.devops.model.dispatch.tables.TDispatchPipelineDockerTaskSimple
+import com.tencent.devops.model.dispatch.tables.records.TDispatchPipelineDockerTaskSimpleRecord
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.beans.factory.annotation.Autowired
@@ -9,7 +9,7 @@ import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
 @Repository
-class DockerTaskHistoryDao @Autowired constructor() {
+class PipelineDockerTaskHistoryDao @Autowired constructor() {
     fun create(
         dslContext: DSLContext,
         pipelineId: String,
@@ -18,21 +18,23 @@ class DockerTaskHistoryDao @Autowired constructor() {
         idcIp: String,
         status: Int
     ) {
-        with(TIdcTaskHistory.T_IDC_TASK_HISTORY) {
+        with(TDispatchPipelineDockerTaskSimple.T_DISPATCH_PIPELINE_DOCKER_TASK_SIMPLE) {
             dslContext.insertInto(
                 this,
                 PIPELINE_ID,
                 BUILD_ID,
                 VM_SEQ,
-                IDC_IP,
+                DOCKER_IP,
                 STATUS,
-                GMT_CREATE
+                GMT_CREATE,
+                GMT_MODIFIED
             ).values(
                 pipelineId,
                 buildId,
                 vmSeq,
                 idcIp,
                 status,
+                LocalDateTime.now(),
                 LocalDateTime.now()
             ).execute()
         }
@@ -44,9 +46,10 @@ class DockerTaskHistoryDao @Autowired constructor() {
         vmSeq: String,
         status: Int
     ) {
-        with(TIdcTaskHistory.T_IDC_TASK_HISTORY) {
+        with(TDispatchPipelineDockerTaskSimple.T_DISPATCH_PIPELINE_DOCKER_TASK_SIMPLE) {
             dslContext.update(this)
                 .set(STATUS, status)
+                .set(GMT_MODIFIED, LocalDateTime.now())
                 .where(BUILD_ID.eq(buildId))
                 .and(VM_SEQ.eq(vmSeq))
                 .execute()
@@ -59,35 +62,36 @@ class DockerTaskHistoryDao @Autowired constructor() {
         vmSeq: String,
         containerId: String
     ) {
-        with(TIdcTaskHistory.T_IDC_TASK_HISTORY) {
+        with(TDispatchPipelineDockerTaskSimple.T_DISPATCH_PIPELINE_DOCKER_TASK_SIMPLE) {
             dslContext.update(this)
                 .set(CONTAINER_ID, containerId)
+                .set(GMT_MODIFIED, LocalDateTime.now())
                 .where(BUILD_ID.eq(buildId))
                 .and(VM_SEQ.eq(vmSeq))
                 .execute()
         }
     }
 
-    fun getByBuildIdAndVMSeq(
+    fun getByPipelineIdAndVMSeq(
         dslContext: DSLContext,
-        buildId: String,
+        pipelineId: String,
         vmSeq: String
-    ): TIdcTaskHistoryRecord? {
-        with(TIdcTaskHistory.T_IDC_TASK_HISTORY) {
+    ): TDispatchPipelineDockerTaskSimpleRecord? {
+        with(TDispatchPipelineDockerTaskSimple.T_DISPATCH_PIPELINE_DOCKER_TASK_SIMPLE) {
             return dslContext.selectFrom(this)
-                .where(BUILD_ID.eq(buildId))
+                .where(PIPELINE_ID.eq(pipelineId))
                 .and(VM_SEQ.eq(vmSeq))
                 .fetchOne()
         }
     }
 
-    fun getByBuildId(
+    fun getByPipelineId(
         dslContext: DSLContext,
-        buildId: String
-    ): Result<TIdcTaskHistoryRecord> {
-        with(TIdcTaskHistory.T_IDC_TASK_HISTORY) {
+        pipelineId: String
+    ): Result<TDispatchPipelineDockerTaskSimpleRecord> {
+        with(TDispatchPipelineDockerTaskSimple.T_DISPATCH_PIPELINE_DOCKER_TASK_SIMPLE) {
             return dslContext.selectFrom(this)
-                .where(BUILD_ID.eq(buildId))
+                .where(PIPELINE_ID.eq(pipelineId))
                 .fetch()
         }
     }
