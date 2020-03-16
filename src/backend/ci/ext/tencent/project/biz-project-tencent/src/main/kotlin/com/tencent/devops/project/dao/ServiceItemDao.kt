@@ -7,6 +7,7 @@ import com.tencent.devops.model.project.tables.records.TServiceItemRecord
 import com.tencent.devops.project.pojo.ItemCreateInfo
 import com.tencent.devops.project.pojo.ItemQueryInfo
 import com.tencent.devops.project.pojo.ItemUpdateInfo
+import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository
@@ -137,8 +138,32 @@ class ServiceItemDao {
             if (itemQueryInfo.itemStatus != null) {
                 whereStep.where(ITEM_STATUS.eq(itemQueryInfo.itemStatus.name))
             }
-            whereStep.orderBy(UPDATE_TIME).fetch()
+            if(itemQueryInfo.page != null && itemQueryInfo.pageSize != null){
+                whereStep.limit((itemQueryInfo.page - 1) * itemQueryInfo.pageSize, itemQueryInfo.pageSize).fetch()
+            }
+            else {
+                whereStep.orderBy(UPDATE_TIME).fetch()
+            }
         }
+    }
+
+    fun queryCount(dslContext: DSLContext, itemQueryInfo: ItemQueryInfo): Int? {
+        val a = TServiceItem.T_SERVICE_ITEM.`as`("ta")
+        val baseStep = dslContext.select(TServiceItem.T_SERVICE_ITEM.ID.countDistinct()).from(TServiceItem.T_SERVICE_ITEM)
+        val conditions = mutableListOf<Condition>()
+        if (itemQueryInfo.itemName != null) {
+            conditions.add(a.ITEM_NAME.like(itemQueryInfo.itemName))
+        }
+
+        if (itemQueryInfo.serviceId != null) {
+            conditions.add(a.PARENT_ID.eq(itemQueryInfo.serviceId))
+        }
+
+        if (itemQueryInfo.itemStatus != null) {
+            conditions.add(a.ITEM_STATUS.eq(itemQueryInfo.itemStatus.name))
+        }
+
+        return baseStep.where(conditions).fetchOne(0, Int::class.java)
     }
 
     fun getItemById(dslContext: DSLContext, itemId: String): TServiceItemRecord? {

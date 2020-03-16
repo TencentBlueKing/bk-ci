@@ -3,6 +3,7 @@ package com.tencent.devops.project.service
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.project.api.pojo.ExtItemDTO
 import com.tencent.devops.project.api.pojo.ItemInfoResponse
+import com.tencent.devops.project.api.pojo.ItemListVO
 import com.tencent.devops.project.api.pojo.ServiceItem
 import com.tencent.devops.project.api.pojo.ServiceItemInfoVO
 import com.tencent.devops.project.api.pojo.enums.HtmlComponentTypeEnum
@@ -216,10 +217,12 @@ class ServiceItemService @Autowired constructor(
         }
     }
 
-    fun queryItem(itemName: String?, serviceId: String?): Result<List<ServiceItem>> {
+    fun queryItem(itemName: String?, serviceId: String?, page: Int?, pageSize: Int?): Result<ItemListVO> {
         val query = ItemQueryInfo(
             itemName = itemName,
-            serviceId = serviceId
+            serviceId = serviceId,
+            pageSize = pageSize,
+            page = page
         )
         val itemList = mutableListOf<ServiceItem>()
         serviceItemDao.queryItem(dslContext, query)?.forEach {
@@ -235,7 +238,8 @@ class ServiceItemService @Autowired constructor(
                 )
             )
         }
-        return Result(itemList)
+        val count = serviceItemDao.queryCount(dslContext, query)
+        return Result(ItemListVO(count ?: 0, page, pageSize, itemList))
     }
 
     fun createItem(userId: String, itemInfo: ItemInfoResponse): Result<Boolean> {

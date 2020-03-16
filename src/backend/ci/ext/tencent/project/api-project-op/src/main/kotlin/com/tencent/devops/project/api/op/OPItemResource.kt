@@ -5,6 +5,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.project.api.pojo.ExtItemDTO
 import com.tencent.devops.project.api.pojo.ItemInfoResponse
+import com.tencent.devops.project.api.pojo.ItemListVO
 import com.tencent.devops.project.api.pojo.ServiceItem
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -44,8 +45,14 @@ interface OPItemResource {
         itemName: String?,
         @ApiParam("蓝盾服务Id")
         @QueryParam("pid")
-        pid: String?
-    ): Result<List<ServiceItem>>
+        pid: String?,
+        @ApiParam("页码", required = false)
+        @QueryParam("page")
+        page: Int?,
+        @ApiParam("每页数量", required = false)
+        @QueryParam("pageSize")
+        pageSize: Int?
+    ): Result<ItemListVO>
 
     @POST
     @Path("/")
