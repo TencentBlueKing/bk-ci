@@ -27,12 +27,14 @@
 package com.tencent.devops.artifactory.service.bkrepo
 
 import com.tencent.devops.artifactory.pojo.DownloadUrl
+import com.tencent.devops.artifactory.pojo.FileDetail
 import com.tencent.devops.artifactory.pojo.Url
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.artifactory.service.PipelineService
 import com.tencent.devops.artifactory.service.RepoDownloadService
 import com.tencent.devops.artifactory.service.pojo.FileShareInfo
 import com.tencent.devops.artifactory.util.EmailUtil
+import com.tencent.devops.artifactory.util.JFrogUtil
 import com.tencent.devops.artifactory.util.PathUtils
 import com.tencent.devops.artifactory.util.RepoUtils
 import com.tencent.devops.artifactory.util.StringUtil
@@ -40,7 +42,6 @@ import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.archive.client.BkRepoClient
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_BUILD_ID
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_PIPELINE_ID
-import com.tencent.devops.common.archive.pojo.BkRepoFile
 import com.tencent.devops.common.archive.shorturl.ShortUrlApi
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.BSAuthProjectApi
@@ -269,21 +270,31 @@ class BkRepoDownloadService @Autowired constructor(
         }
         logger.info("targetProjectId: $targetProjectId, targetPipelineId: $targetPipelineId, targetBuildId: $targetBuildId")
 
+        val regex = Pattern.compile(",|;")
         val pathArray = regex.split(argPath)
-        val fileList = mutableListOf<BkRepoFile>()
+        val fileList = mutableListOf<FileDetail>()
         pathArray.forEach { path ->
-            fileList.addAll(
-                bkRepoClient.matchBkRepoFile(
-                    "",
-                    path,
-                    projectId,
-                    pipelineId,
-                    buildId,
-                    isCustom = artifactoryType == ArtifactoryType.CUSTOM_DIR
-                )
-            )
+            val absPath = "/${JFrogUtil.normalize(path).removePrefix("/")}"
+            val filePath = if (artifactoryType == ArtifactoryType.PIPELINE) {
+                "/$targetPipelineId/$targetBuildId/${JFrogUtil.getParentFolder(absPath).removePrefix("/")}" // /$projectId/$pipelineId/$buildId/path/
+            } else {
+                "/${JFrogUtil.getParentFolder(absPath).removePrefix("/")}" // /path/
+            }
+            val fileName = JFrogUtil.getFileName(path) // *.txt
+
+            bkRepoClient.queryByPathEqOrNameMatchOrMetadataEqAnd(
+                userId = "",
+                projectId = projectId,
+                repoNames = listOf(RepoUtils.getRepoByType(artifactoryType)),
+                filePaths = listOf(filePath),
+                fileNames = listOf(fileName),
+                metadata = mapOf(),
+                page = 0,
+                pageSize = 10000
+            ).forEach {
+                fileList.add(RepoUtils.toFileDetail(it))
+            }
         }
-        logger.info("match files: $fileList")
 
         val resultList = mutableListOf<String>()
         fileList.forEach {
