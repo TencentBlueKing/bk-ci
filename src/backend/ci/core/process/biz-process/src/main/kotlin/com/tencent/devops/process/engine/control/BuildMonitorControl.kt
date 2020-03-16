@@ -150,10 +150,10 @@ class BuildMonitorControl @Autowired constructor(
     }
 
     companion object {
-        val MAX_MINUTES = TimeUnit.DAYS.toMinutes(7L) // 7 * 24 * 60 = 10080 分钟 = 最多超时7天
+        val MAX_MINUTES = TimeUnit.DAYS.toMinutes(7L) // 7 * 24 * 60 = 10080 分钟 = 执行最多超时7天
         val CONTAINER_MAX_MILLS = TimeUnit.MINUTES.toMillis(MAX_MINUTES).toInt() + 1 // 毫秒+1
-        val MAX_HOURS = TimeUnit.DAYS.toHours(30)
-        val STAGE_MAX_MILLS = TimeUnit.HOURS.toMillis(MAX_HOURS).toInt() + 1
+        val MAX_HOURS = TimeUnit.DAYS.toHours(30) // 30 * 24 = 720 小时 = 审核最多超时30天
+        val STAGE_MAX_MILLS = TimeUnit.HOURS.toMillis(MAX_HOURS).toInt() + 1 // 毫秒+1
     }
 
     private fun PipelineBuildContainer.checkNextContainerMonitorIntervals(userId: String): Int {
@@ -256,7 +256,7 @@ class BuildMonitorControl @Autowired constructor(
             // 将改stage状态设为STAGE_SUCCESS
             pipelineEventDispatcher.dispatch(
                 PipelineBuildStageEvent(
-                    source = "running_timeout",
+                    source = "review_timeout",
                     projectId = projectId,
                     pipelineId = pipelineId,
                     userId = userId,
