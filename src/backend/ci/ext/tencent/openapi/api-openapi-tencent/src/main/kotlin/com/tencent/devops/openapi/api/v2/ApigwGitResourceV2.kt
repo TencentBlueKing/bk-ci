@@ -41,7 +41,7 @@ import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["OPEN_API_V2_GIT"], description = "OPEN-API-V2-GIT工蜂资源")
-@Path("/{apigw:apigw-user|apigw-app|apigw}/v2/git")
+@Path("/{apigwType:apigw-user|apigw-app|apigw}/v2/git")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ApigwGitResourceV2 {

@@ -60,7 +60,7 @@ class ApigwBuildResourceV2Impl @Autowired constructor(
             endDate = endDate,
             offset = offset,
             limit = limit,
-            interfaceName = "/{apigw:apigw-user|apigw-app|apigw}/v2/builds/detail/list"
+            interfaceName = "/{apigwType:apigw-user|apigw-app|apigw}/v2/builds/detail/list"
         ))
     }
 

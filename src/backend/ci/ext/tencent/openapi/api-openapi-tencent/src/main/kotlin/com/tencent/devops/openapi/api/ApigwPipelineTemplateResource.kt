@@ -41,7 +41,7 @@ import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["OPEN_API_TEMPLATE_PIPELINE"], description = "OPEN-API-项目流水线模板模板资源")
-@Path("/{apigw:apigw-user|apigw-app|apigw}/template/pipelines")
+@Path("/{apigwType:apigw-user|apigw-app|apigw}/template/pipelines")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ApigwPipelineTemplateResource {

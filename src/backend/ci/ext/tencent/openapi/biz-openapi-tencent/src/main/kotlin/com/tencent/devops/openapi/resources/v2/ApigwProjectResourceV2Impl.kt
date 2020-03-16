@@ -125,13 +125,13 @@ class ApigwProjectResourceV2Impl @Autowired constructor(
     override fun getProjectRoles(
         organizationType: String,
         organizationId: Long,
-        projectCode: String
+        projectId: String
     ): Result<List<BKAuthProjectRolesResources>?> {
         return Result(
             apigwProjectService.getProjectRoles(
                 organizationType = organizationType,
                 organizationId = organizationId,
-                projectCode = projectCode
+                projectCode = projectId
             )
         )
     }

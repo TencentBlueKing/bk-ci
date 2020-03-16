@@ -43,7 +43,7 @@ import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["OPEN_API_V2_CALLBACK"], description = "OPEN-API-V2-callback资源")
-@Path("/{apigw:apigw-user|apigw-app|apigw}/v2/callbacks")
+@Path("/{apigwType:apigw-user|apigw-app|apigw}/v2/callbacks")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ApigwCallBackResourceV2 {

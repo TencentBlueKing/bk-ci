@@ -45,7 +45,7 @@ import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["OPEN_API_V2_TEMPLATE"], description = "OPEN-API-V2-项目模板资源")
-@Path("/{apigw:apigw-user|apigw-app|apigw}/v2/templates")
+@Path("/{apigwType:apigw-user|apigw-app|apigw}/v2/templates")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ApigwTemplateResourceV2 {

@@ -44,7 +44,7 @@ import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["OPEN_API_REPOSITORY"], description = "OPEN-API-代码仓库资源")
-@Path("/{apigw:apigw-user|apigw-app|apigw}/v2/repositories")
+@Path("/{apigwType:apigw-user|apigw-app|apigw}/v2/repositories")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ApigwRepositoryResourceV2 {

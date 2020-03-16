@@ -51,7 +51,7 @@ import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["OPEN_API_PROJECT_V2"], description = "OPEN-API-项目资源V2")
-@Path("/{apigw:apigw-user|apigw-app|apigw}/v2/projects")
+@Path("/{apigwType:apigw-user|apigw-app|apigw}/v2/projects")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ApigwProjectResourceV2 {
@@ -151,7 +151,7 @@ interface ApigwProjectResourceV2 {
         @HeaderParam(AUTH_HEADER_DEVOPS_ORGANIZATION_ID)
         organizationId: Long,
         @ApiParam("项目code", required = true)
-        @PathParam("projectCode")
-        projectCode: String
+        @PathParam("projectId")
+        projectId: String
     ): Result<List<BKAuthProjectRolesResources>?>
 }

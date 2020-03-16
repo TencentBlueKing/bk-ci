@@ -48,7 +48,7 @@ import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["OPEN_API_V2_BUILD"], description = "OPEN-API-V2-构建资源")
-@Path("/{apigw:apigw-user|apigw-app|apigw}/v2/builds")
+@Path("/{apigwType:apigw-user|apigw-app|apigw}/v2/builds")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ApigwBuildResourceV2 {

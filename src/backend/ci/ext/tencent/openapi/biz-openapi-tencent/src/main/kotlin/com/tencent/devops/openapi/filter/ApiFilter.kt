@@ -25,6 +25,7 @@
  */
 package com.tencent.devops.openapi.filter
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.service.utils.SpringContextUtil
@@ -81,6 +82,14 @@ class ApiFilter : ContainerRequestFilter {
                 val verified = app.get("verified") as Boolean
                 if (appCode.isNullOrEmpty() || !verified) {
                     return false
+                }else {
+                    // 将appCode头部置空
+                    requestContext.headers[AUTH_HEADER_DEVOPS_APP_CODE]?.set(0, null)
+                    if (requestContext.headers[AUTH_HEADER_DEVOPS_APP_CODE] != null) {
+                        requestContext.headers[AUTH_HEADER_DEVOPS_APP_CODE]?.set(0, appCode)
+                    } else {
+                        requestContext.headers.add(AUTH_HEADER_DEVOPS_APP_CODE, appCode)
+                    }
                 }
             }
         }
@@ -94,7 +103,7 @@ class ApiFilter : ContainerRequestFilter {
                 val verified = user.get("verified") as Boolean
                 // 名字为空或者没有通过认证的时候，直接失败
                 if (username.isNotBlank() && verified) {
-                    // 将头部置空
+                    // 将user头部置空
                     requestContext.headers[AUTH_HEADER_DEVOPS_USER_ID]?.set(0, null)
                     if (requestContext.headers[AUTH_HEADER_DEVOPS_USER_ID] != null) {
                         requestContext.headers[AUTH_HEADER_DEVOPS_USER_ID]?.set(0, username)

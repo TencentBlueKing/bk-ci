@@ -53,7 +53,7 @@ import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["OPEN_API_PIPELINE"], description = "OPEN-API-流水线资源")
-@Path("/{apigw:apigw-user|apigw-app|apigw}/pipelines")
+@Path("/{apigwType:apigw-user|apigw-app|apigw}/pipelines")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ApigwPipelineResource {

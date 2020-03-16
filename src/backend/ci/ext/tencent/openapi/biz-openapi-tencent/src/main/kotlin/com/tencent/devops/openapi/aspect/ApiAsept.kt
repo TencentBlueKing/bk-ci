@@ -30,13 +30,30 @@ class ApiAspect {
 
         val methodName: String = jp.signature.name
         logger.info("【前置增强】the method 【$methodName】")
+        // 参数value
         val parameterValue = jp.args
-        parameterValue.forEach {
-            logger.info("【前置增强】the parameterValue: 【$it】")
-        }
+        // 参数key
         val parameterNames =  (jp.signature as MethodSignature).parameterNames
-        parameterNames.forEach {
-            logger.info("【前置增强】the parameterNames: 【$it】")
+        var projectId:String? = null
+        var appCode:String? = null
+        var apigwType:String? = null
+        for (index in parameterValue.indices) {
+            when(parameterNames[index]) {
+                "projectId" -> {
+                    projectId = parameterValue[index].toString()
+                }
+                "appCode" -> {
+                    appCode = parameterValue[index].toString()
+                }
+                "apigwType" -> {
+                    apigwType = parameterValue[index].toString()
+                }
+                else -> null
+            }
+        }
+        logger.info("请求类型apigwType[${apigwType}],appCode[$appCode],项目[${projectId}]")
+        if(projectId != null && appCode != null && (apigwType == "apigw-app" || apigwType == "apigw")) {
+            logger.info("判断！！！！请求类型apigwType[${apigwType}],appCode[$appCode],是否有项目[${projectId}]的权限,")
         }
     }
 //

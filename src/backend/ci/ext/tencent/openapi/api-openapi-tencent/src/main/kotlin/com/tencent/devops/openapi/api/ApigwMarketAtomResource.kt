@@ -45,7 +45,7 @@ import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["OPEN_API_MARKET_ATOM"], description = "OPEN-API-原子市场-原子")
-@Path("/{apigw:apigw-user|apigw-app|apigw}/market/atom/")
+@Path("/{apigwType:apigw-user|apigw-app|apigw}/market/atom/")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ApigwMarketAtomResource {

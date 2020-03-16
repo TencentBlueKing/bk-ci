@@ -39,7 +39,7 @@ import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["OPEN_API_MARKET"], description = "OPEN-API-研发市场资源")
-@Path("/{apigw:apigw-user|apigw-app|apigw}/market")
+@Path("/{apigwType:apigw-user|apigw-app|apigw}/market")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ApigwMarketTemplateResourceV2 {
