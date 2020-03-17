@@ -154,6 +154,7 @@ class DockerHostClient @Autowired constructor(
             .addHeader("Content-Type", "application/json; charset=utf-8")
             .build()
 
+        logger.info("[${event.projectId}|${event.pipelineId}|${event.buildId}] Start build Docker VM $dockerIp url: $proxyUrl")
         OkhttpUtils.doLongHttp(request).use { resp ->
             val responseBody = resp.body()!!.string()
             logger.info("[${event.projectId}|${event.pipelineId}|${event.buildId}] Start build Docker VM $dockerIp responseBody: $responseBody")
