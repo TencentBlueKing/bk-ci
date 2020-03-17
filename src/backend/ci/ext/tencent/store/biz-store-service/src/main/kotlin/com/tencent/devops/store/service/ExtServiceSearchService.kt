@@ -219,13 +219,6 @@ class ExtServiceSearchService @Autowired constructor(
 
     private fun getStatisticByCodeList(serviceCodeList: List<String>, statFiledList: List<String>): Result<HashMap<String, ExtServiceStatistic>> {
         val records = storeStatisticDao.batchGetStatisticByStoreCode(dslContext, serviceCodeList, StoreTypeEnum.SERVICE.type.toByte())
-        val serviceCodes = serviceCodeList.joinToString(",")
-//        val isStatPipeline = statFiledList.contains("PIPELINE")
-//        val pipelineStat = if (isStatPipeline) {
-//            client.get(ServiceMeasurePipelineResource::class).batchGetPipelineCountByAtomCode(serviceCodes, null).data
-//        } else {
-//            mutableMapOf()
-//        }
         val serviceStatistic = hashMapOf<String, ExtServiceStatistic>()
         records.map {
             if (it.value4() != null) {

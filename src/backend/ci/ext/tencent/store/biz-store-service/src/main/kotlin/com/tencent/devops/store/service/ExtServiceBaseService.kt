@@ -245,7 +245,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         // 判断扩展服务是不是首次创建版本
         val serviceRecords = extServiceDao.listServiceByCode(dslContext, serviceCode)
         logger.info("the serviceRecords is :$serviceRecords")
-        if (null == serviceRecords || serviceRecords.size < 1) {
+        if (serviceRecords == null || serviceRecords.size < 1) {
             return MessageCodeUtil.generateResponseDataObject(
                 CommonMessageCode.PARAMETER_IS_INVALID,
                 arrayOf(serviceCode)
@@ -339,9 +339,12 @@ abstract class ExtServiceBaseService @Autowired constructor() {
                 )
             } else {
                 // 升级扩展服务
+                val serviceEnvRecord = extServiceEnvDao.getMarketServiceEnvInfoByServiceId(context, serviceId)
                 upgradeMarketExtService(
+                    context = context,
                     userId = userId,
                     serviceId = serviceId,
+                    language = serviceEnvRecord!!.language,
                     extServiceCreateInfo = ExtServiceCreateInfo(
                         serviceCode = submitDTO.serviceCode,
                         serviceName = submitDTO.serviceName,
@@ -374,15 +377,13 @@ abstract class ExtServiceBaseService @Autowired constructor() {
             val itemIdList = submitDTO.extensionItemList
             val itemCreateInfoList =
                 getFileServiceProps(serviceCode, featureInfoRecord!!.repositoryHashId, EXTENSION_JSON_NAME, itemIdList)
-            if (null != itemIdList) {
-                extServiceItemRelDao.deleteByServiceId(context, serviceId)
-                extServiceItemRelDao.batchAdd(
-                    dslContext = dslContext,
-                    userId = userId,
-                    serviceId = serviceId,
-                    itemPropList = itemCreateInfoList!!
-                )
-            }
+            extServiceItemRelDao.deleteByServiceId(context, serviceId)
+            extServiceItemRelDao.batchAdd(
+                dslContext = dslContext,
+                userId = userId,
+                serviceId = serviceId,
+                itemPropList = itemCreateInfoList
+            )
             // 添加扩展点使用记录
             client.get(ServiceItemResource::class).addServiceNum(itemIdList)
 
@@ -495,7 +496,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
             serviceItemList?.forEach { itId ->
                 val itemInfo = itemInfoMap?.get(itId)
                 if (itemInfo != null) {
-                    itemName += itemInfo!!.parentName + "-" + itemInfo.itemName + ","
+                    itemName += itemInfo.parentName + "-" + itemInfo.itemName + ","
                 }
             }
             itemName = itemName.substringBeforeLast(",")
@@ -781,12 +782,12 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         val oldStatus = serviceInfo.serviceStatus
         val isNormalUpgrade = getNormalUpgradeFlag(serviceCode, oldStatus.toInt())
         val newStatus = getCompletEditStatus(isNormalUpgrade)
-        val (checkResult, code) = checkServiceVersionOptRight(userId, serviceId, newStatus, isNormalUpgrade )
+        val (checkResult, code) = checkServiceVersionOptRight(userId, serviceId, newStatus, isNormalUpgrade)
 
         if (checkResult) {
             return MessageCodeUtil.generateResponseDataObject(code)
         }
-        mediaList?.forEach {
+        mediaList.forEach {
             mediaService.add(
                 userId = userId,
                 type = StoreTypeEnum.SERVICE,
@@ -827,7 +828,6 @@ abstract class ExtServiceBaseService @Autowired constructor() {
             val featureInfoRecord = extFeatureDao.getLatestServiceByCode(dslContext, serviceCode)
             logger.info("getServiceVersion featureInfoRecord: $featureInfoRecord")
 
-            val repositoryHashId = featureInfoRecord!!.repositoryHashId
             val flag =
                 storeUserService.isCanInstallStoreComponent(defaultFlag, userId, serviceCode, StoreTypeEnum.SERVICE)
             val userCommentInfo =
@@ -1103,8 +1103,8 @@ abstract class ExtServiceBaseService @Autowired constructor() {
 
         // 文件与输入itemCode取交集，若文件内有props，以文件props为准
         val filePropMap = mutableMapOf<String, String>()
-        fileItemList!!.forEach {
-            filePropMap[it.itemCode!!] = JsonUtil.toJson(it.props ?: "")
+        fileItemList.forEach {
+            filePropMap[it.itemCode] = JsonUtil.toJson(it.props ?: "")
         }
         val itemRecords = client.get(ServiceItemResource::class).getItemInfoByIds(inputItemList).data
         itemRecords?.forEach {

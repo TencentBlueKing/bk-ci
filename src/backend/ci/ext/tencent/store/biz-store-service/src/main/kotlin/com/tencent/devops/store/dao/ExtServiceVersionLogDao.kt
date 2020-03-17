@@ -90,7 +90,7 @@ class ExtServiceVersionLogDao {
     fun listVersionLogByServiceId(
         dslContext: DSLContext,
         serviceId: String
-    ): Result<TExtensionServiceVersionLogRecord> {
+    ): Result<TExtensionServiceVersionLogRecord>? {
         with(TExtensionServiceVersionLog.T_EXTENSION_SERVICE_VERSION_LOG) {
             return dslContext.selectFrom(this).where(SERVICE_ID.eq(serviceId)).fetch()
         }

@@ -8,8 +8,6 @@ import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.store.dao.ExtServiceDao
 import com.tencent.devops.store.dao.ExtServiceVersionLogDao
 import com.tencent.devops.store.dao.common.StoreMemberDao
-import com.tencent.devops.store.pojo.common.ATOM_RELEASE_AUDIT_PASS_TEMPLATE
-import com.tencent.devops.store.pojo.common.ATOM_RELEASE_AUDIT_REFUSE_TEMPLATE
 import com.tencent.devops.store.pojo.common.EXTENSION_RELEASE_AUDIT_PASS_TEMPLATE
 import com.tencent.devops.store.pojo.common.EXTENSION_RELEASE_AUDIT_REFUSE_TEMPLATE
 import com.tencent.devops.store.pojo.common.enums.AuditTypeEnum

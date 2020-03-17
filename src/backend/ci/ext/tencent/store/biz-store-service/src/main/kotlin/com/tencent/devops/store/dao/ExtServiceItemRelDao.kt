@@ -95,7 +95,7 @@ class ExtServiceItemRelDao {
                         UUIDUtil.generate(),
                         serviceId,
                         it.itemId,
-                        it.props ?: "",
+                        it.props,
                         userId,
                         userId
                     )

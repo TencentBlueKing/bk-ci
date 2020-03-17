@@ -153,14 +153,14 @@ interface OpServiceResource {
 
     @ApiOperation("删除扩展服务")
     @DELETE
-    @Path("/serviceCodes/{serviceCode}")
+    @Path("/serviceIds/{serviceId}")
     fun deleteAtom(
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("扩展代码", required = true)
-        @PathParam("serviceCode")
-        serviceCode: String
+        @ApiParam("扩展Id", required = true)
+        @PathParam("serviceId")
+        serviceId: String
     ): Result<Boolean>
 
     @ApiOperation("查看可见范围")

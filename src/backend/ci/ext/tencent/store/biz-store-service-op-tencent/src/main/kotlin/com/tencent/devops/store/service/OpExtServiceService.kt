@@ -89,7 +89,7 @@ class OpExtServiceService @Autowired constructor(
         )
 
         val extensionServiceInfoList = mutableSetOf<ExtensionServiceVO>()
-        serviceRecords?.forEach {
+        serviceRecords.forEach {
             val serviceId = it["itemId"] as String
 
             extensionServiceInfoList.add(
@@ -127,7 +127,6 @@ class OpExtServiceService @Autowired constructor(
                 )
             )
             val itemIds = baseInfo.itemIds
-            val lables = baseInfo.labels
             if (itemIds != null) {
                 val existenceItems = extServiceItemDao.getItemByServiceId(dslContext, serviceId)
                 val existenceItemIds = mutableListOf<String>()
@@ -280,8 +279,10 @@ class OpExtServiceService @Autowired constructor(
         return Result(true)
     }
 
-    fun deleteService(userId: String, serviceCode: String): Result<Boolean> {
-        logger.info("deleteService userId: $userId , serviceCode: $serviceCode")
+    fun deleteService(userId: String, serviceId: String): Result<Boolean> {
+        logger.info("deleteService userId: $userId , serviceId: $serviceId")
+        val serviceRecord = extServiceDao.getServiceById(dslContext, serviceId) ?: throw RuntimeException(MessageCodeUtil.getCodeMessage(CommonMessageCode.PARAMETER_IS_INVALID,arrayOf(serviceId)))
+        val serviceCode = serviceRecord.serviceCode
         val type = StoreTypeEnum.SERVICE.type.toByte()
         val isOwner = storeMemberService.isStoreAdmin(userId, serviceCode, StoreTypeEnum.SERVICE.type.toByte())
         if (!isOwner) {
@@ -306,7 +307,7 @@ class OpExtServiceService @Autowired constructor(
         }
         dslContext.transaction { t ->
             val context = DSL.using(t)
-            extServiceDao.deleteExtService(context, userId, serviceCode)
+            extServiceDao.deleteExtService(context, userId, serviceId)
             extServiceFeatureDao.deleteExtFeatureService(context, userId, serviceCode)
         }
         return Result(true)

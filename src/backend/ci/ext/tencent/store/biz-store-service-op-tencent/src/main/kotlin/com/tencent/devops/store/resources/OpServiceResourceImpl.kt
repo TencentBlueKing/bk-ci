@@ -74,12 +74,12 @@ class OpServiceResourceImpl @Autowired constructor(
 
     override fun offlineService(
         userId: String,
-        serviceCode: String,
+        serviceId: String,
         serviceOffline: ServiceOfflineDTO
     ): Result<Boolean> {
         return extServiceBaseService.offlineService(
             userId = userId,
-            serviceCode = serviceCode,
+            serviceCode = serviceId,
             serviceOfflineDTO = serviceOffline
         )
     }
@@ -92,8 +92,8 @@ class OpServiceResourceImpl @Autowired constructor(
         return storeVisibleDeptService.approveVisibleDept(userId, serviceCode, visibleApproveReq, StoreTypeEnum.SERVICE)
     }
 
-    override fun deleteAtom(userId: String, serviceCode: String): Result<Boolean> {
-        return opExtServiceService.deleteService(userId, serviceCode)
+    override fun deleteAtom(userId: String, serviceId: String): Result<Boolean> {
+        return opExtServiceService.deleteService(userId, serviceId)
     }
 
     override fun getVisibleDept(userId: String, serviceCode: String): Result<StoreVisibleDeptResp?> {
