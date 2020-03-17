@@ -110,3 +110,5 @@ export const defaultBuildNo = {
     buildNo: '0',
     buildNoType: buildNoRules[2].value
 }
+
+export const TOGGLE_REVIEW_DIALOG = 'TOGGLE_REVIEW_DIALOG'

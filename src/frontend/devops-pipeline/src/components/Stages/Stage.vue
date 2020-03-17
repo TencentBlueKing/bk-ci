@@ -189,6 +189,9 @@
             }
         },
         watch: {
+            '$userInfo' (userinfo) {
+                console.log('userinfo watch', userinfo)
+            },
             'stage.runStage' (newVal) {
                 const { stage, updateStage } = this
                 const { containers } = stage
@@ -221,7 +224,8 @@
                 'setPipelineEditing',
                 'updateStage',
                 'triggerStage',
-                'deleteStage'
+                'deleteStage',
+                'toggleReviewDialog'
             ]),
             checkIsTriggerStage (stage) {
                 try {
@@ -280,9 +284,9 @@
 
             startNextStage () {
                 if (this.canTriggerStage) {
-                    this.triggerStage({
-                        ...this.$route.params,
-                        stageId: this.stage.id
+                    this.toggleReviewDialog({
+                        isShow: true,
+                        reviewInfo: this.stage
                     })
                 }
             },
