@@ -162,6 +162,7 @@ class DockerHostClient @Autowired constructor(
             when {
                 response["status"] == 0 -> {
                     val containId = response["data"] as String
+                    logger.info("[${event.projectId}|${event.pipelineId}|${event.buildId}] update container: $containId")
                     pipelineDockerTaskSimpleDao.updateContainerId(
                         dslContext,
                         event.pipelineId,
