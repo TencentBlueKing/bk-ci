@@ -647,7 +647,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         val serviceCode = serviceRecord.serviceCode
         val isNormalUpgrade = getNormalUpgradeFlag(serviceCode, serviceRecord.serviceStatus.toInt())
         logger.info("passTest isNormalUpgrade is:$isNormalUpgrade")
-        val serviceStatus = getPassTestStatus(isNormalUpgrade)
+        val serviceStatus = ExtServiceStatusEnum.EDIT.status.toByte()
         val (checkResult, code) = checkServiceVersionOptRight(userId, serviceId, serviceStatus, isNormalUpgrade)
         if (!checkResult) {
             return MessageCodeUtil.generateResponseDataObject(code)
@@ -769,7 +769,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         return Result(true)
     }
 
-    fun getPassTestStatus(isNormalUpgrade: Boolean): Byte {
+    fun getCompletEditStatus(isNormalUpgrade: Boolean): Byte {
         return if (isNormalUpgrade) ExtServiceStatusEnum.RELEASED.status.toByte() else ExtServiceStatusEnum.AUDITING.status.toByte()
     }
 
@@ -778,17 +778,22 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         val deptList = submitInfo.deptInfoList
 
         val serviceInfo = extServiceDao.getServiceById(dslContext, serviceId) ?: throw RuntimeException("数据不存在")
-        val oldStatus = serviceInfo.serviceStatus
-        if (oldStatus != ExtServiceStatusEnum.EDIT.status.toByte()) {
-            throw RuntimeException("提交资料必须为测试中")
-        }
+        val serviceCode = serviceInfo.serviceCode
 
+        val oldStatus = serviceInfo.serviceStatus
+        val isNormalUpgrade = getNormalUpgradeFlag(serviceCode, oldStatus.toInt())
+        val newStatus = getCompletEditStatus(isNormalUpgrade)
+        val (checkResult, code) = checkServiceVersionOptRight(userId, serviceId, newStatus, isNormalUpgrade )
+
+        if (checkResult) {
+            return MessageCodeUtil.generateResponseDataObject(code)
+        }
         mediaList?.forEach {
             mediaService.add(
                 userId = userId,
                 type = StoreTypeEnum.SERVICE,
                 storeMediaInfo = StoreMediaInfoRequest(
-                    storeCode = serviceInfo.serviceCode,
+                    storeCode = serviceCode,
                     mediaUrl = it.mediaUrl,
                     mediaType = it.mediaType.name,
                     modifier = userId
@@ -798,10 +803,10 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         deptService.addVisibleDept(
             userId = userId,
             storeType = StoreTypeEnum.SERVICE,
-            storeCode = serviceInfo.serviceCode,
+            storeCode = serviceCode,
             deptInfos = deptList
         )
-        extServiceDao.setServiceStatusByCode(dslContext, serviceInfo.serviceCode, oldStatus, ExtServiceStatusEnum.AUDITING.status.toByte(), userId, "提交资料")
+        extServiceDao.setServiceStatusByCode(dslContext, serviceInfo.serviceCode, oldStatus, newStatus, userId, "提交资料")
         return Result(true)
     }
 
@@ -1157,7 +1162,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         }
         logger.info("record status=$recordStatus, status=$status")
         val allowReleaseStatus = if (isNormalUpgrade != null && isNormalUpgrade) ExtServiceStatusEnum.TESTING
-        else ExtServiceStatusEnum.AUDITING
+        else ExtServiceStatusEnum.EDIT
         var validateFlag = true
         if (status == ExtServiceStatusEnum.COMMITTING.status.toByte() &&
             recordStatus != ExtServiceStatusEnum.INIT.status.toByte()
@@ -1186,8 +1191,12 @@ abstract class ExtServiceBaseService @Autowired constructor() {
             recordStatus != ExtServiceStatusEnum.BUILDING.status.toByte()
         ) {
             validateFlag = false
-        } else if (status == ExtServiceStatusEnum.AUDITING.status.toByte() &&
+        } else if (status == ExtServiceStatusEnum.EDIT.status.toByte() &&
             recordStatus != ExtServiceStatusEnum.TESTING.status.toByte()
+        ) {
+            validateFlag = false
+        } else if (status == ExtServiceStatusEnum.AUDITING.status.toByte() &&
+            recordStatus != ExtServiceStatusEnum.EDIT.status.toByte()
         ) {
             validateFlag = false
         } else if (status == ExtServiceStatusEnum.AUDIT_REJECT.status.toByte() &&
@@ -1215,7 +1224,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         ) {
             validateFlag = false
         }
-
+        // TODO: 提示信息
         return if (validateFlag) Pair(true, "") else Pair(false, StoreMessageCode.USER_ATOM_RELEASE_STEPS_ERROR)
     }
 
