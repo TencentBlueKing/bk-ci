@@ -188,7 +188,7 @@ class ServiceItemService @Autowired constructor(
 
     private fun findParent(serviceItem: ServiceItem): ExtItemDTO {
         logger.info("findParent: serviceItemId: ${serviceItem.itemId}, parentId:${serviceItem.parentId}")
-        if(projectServiceMap.isEmpty()) {
+        if (projectServiceMap.isEmpty()) {
             getServiceList()
         }
         val childList = mutableListOf<ExtServiceEntity>()
@@ -294,7 +294,7 @@ class ServiceItemService @Autowired constructor(
             htmlType = itemRecord.htmlComponentType,
             serviceCount = itemRecord.serviceNum,
             parentId = itemRecord.parentId,
-            props = itemRecord.props,
+            props = itemRecord.props ?: "",
             icon = itemRecord.iconUrl,
             tooltip = itemRecord.tooltip
 
