@@ -274,8 +274,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
 
         if (version != requireVersion) {
             return MessageCodeUtil.generateResponseDataObject(
-                // TODO: 需在core内添加新状态码
-                StoreMessageCode.USER_ATOM_VERSION_IS_INVALID,
+                StoreMessageCode.USER_SERVICE_VERSION_IS_INVALID,
                 arrayOf(version, requireVersion)
             )
         }
@@ -295,8 +294,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
 
         if (!serviceFinalStatusList.contains(serviceRecord.serviceStatus)) {
             return MessageCodeUtil.generateResponseDataObject(
-                // TODO: 需在core内添加新状态码
-                StoreMessageCode.USER_ATOM_VERSION_IS_NOT_FINISH,
+                StoreMessageCode.USER_SERVICE_VERSION_IS_NOT_FINISH,
                 arrayOf(serviceRecord.serviceName, serviceRecord.version)
             )
         }
@@ -1083,6 +1081,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         val fileItemList = taskDataMap.itemList
         if (fileServiceCode != serviceCode) {
             logger.warn("getServiceProps input serviceCode[$serviceCode], extension.json serviceCode[$fileServiceCode] ")
+            throw RuntimeException(MessageCodeUtil.getCodeLanMessage(StoreMessageCode.USER_SERVICE_CODE_DIFF))
         }
 
         if (fileItemList == null) {
@@ -1225,7 +1224,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
             validateFlag = false
         }
         // TODO: 提示信息
-        return if (validateFlag) Pair(true, "") else Pair(false, StoreMessageCode.USER_ATOM_RELEASE_STEPS_ERROR)
+        return if (validateFlag) Pair(true, "") else Pair(false, StoreMessageCode.USER_SERVICE_RELEASE_STEPS_ERROR)
     }
 
     companion object {

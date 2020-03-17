@@ -10,6 +10,8 @@ import com.tencent.devops.store.dao.ExtServiceVersionLogDao
 import com.tencent.devops.store.dao.common.StoreMemberDao
 import com.tencent.devops.store.pojo.common.ATOM_RELEASE_AUDIT_PASS_TEMPLATE
 import com.tencent.devops.store.pojo.common.ATOM_RELEASE_AUDIT_REFUSE_TEMPLATE
+import com.tencent.devops.store.pojo.common.EXTENSION_RELEASE_AUDIT_PASS_TEMPLATE
+import com.tencent.devops.store.pojo.common.EXTENSION_RELEASE_AUDIT_REFUSE_TEMPLATE
 import com.tencent.devops.store.pojo.common.enums.AuditTypeEnum
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreMemberTypeEnum
@@ -88,14 +90,13 @@ class ExtServiceNotifyService {
         val receivers = mutableSetOf(receiver)
         val templateCode = when (auditType) {
             AuditTypeEnum.AUDIT_SUCCESS -> {
-                // TODO: 需在消息模版内配置扩展服务相关模版
-                ATOM_RELEASE_AUDIT_PASS_TEMPLATE
+                EXTENSION_RELEASE_AUDIT_PASS_TEMPLATE
             }
             AuditTypeEnum.AUDIT_REJECT -> {
-                ATOM_RELEASE_AUDIT_REFUSE_TEMPLATE
+                EXTENSION_RELEASE_AUDIT_REFUSE_TEMPLATE
             }
             else -> {
-                ATOM_RELEASE_AUDIT_REFUSE_TEMPLATE
+                EXTENSION_RELEASE_AUDIT_REFUSE_TEMPLATE
             }
         }
         val sendNotifyMessageTemplateRequest = SendNotifyMessageTemplateRequest(

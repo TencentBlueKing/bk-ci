@@ -105,7 +105,7 @@ interface OpServiceResource {
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @ApiParam("扩展服务ID", required = true)
-        @QueryParam("serviceCode")
+        @PathParam("serviceCode")
         serviceCode: String
     ): Result<ServiceVersionVO?>
 
@@ -158,7 +158,7 @@ interface OpServiceResource {
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("插件代码", required = true)
+        @ApiParam("扩展代码", required = true)
         @PathParam("serviceCode")
         serviceCode: String
     ): Result<Boolean>

@@ -47,6 +47,7 @@ object StoreMessageCode {
     const val MSG_CODE_STORE_CLASSIFY_PREFIX = "MSG_CODE_STORE_CLASSIFY_PREFIX_" // 研发商店插分类国际化前缀
     const val MSG_CODE_STORE_CATEGORY_PREFIX = "MSG_CODE_STORE_CATEGORY_PREFIX_" // 研发商店范畴国际化前缀
     const val MSG_CODE_STORE_LABEL_PREFIX = "MSG_CODE_STORE_LABEL_PREFIX_" // 研发商店标签国际化前缀
+    const val MSG_CODE_BUILD_TYPE_PREFIX = "MSG_CODE_BUILD_TYPE_PREFIX_" // 构建资源类型国际化前缀
     // 插件相关的错误提示
     const val USER_QUERY_ATOM_PERMISSION_IS_INVALID = "2120001" // 研发商店：没有插件的查看权限
     const val USER_QUERY_PROJECT_PERMISSION_IS_INVALID = "2120002" // 研发商店：没有项目的查看权限
@@ -90,6 +91,16 @@ object StoreMessageCode {
     const val USER_IMAGE_UNKNOWN_IMAGE_CATEGORY = "2120308" // 镜像范畴未知：{0}
     const val USER_IMAGE_NOT_EXIST = "2120309" // 镜像不存在：{0}
     const val USER_IMAGE_VERSION_NOT_EXIST = "2120310" // 标识为{0}版本号为{1}的镜像不存在
+
+    // 扩展服务相关的错误提示
+    const val USER_SERVICE_RELEASED_IS_NOT_ALLOW_DELETE = "2120301" // 研发商店：扩展服务{0}已发布到商店，请先下架再删除
+    const val USER_SERVICE_USED_IS_NOT_ALLOW_DELETE = "2120302" // 研发商店：扩展服务{0}已安装到其他项目下使用，请勿移除
+    const val USER_SERVICE_VERSION_IS_INVALID = "2120303" // 研发商店：扩展服务升级的版本号{0}错误，应为{1}
+    const val USER_SERVICE_VERSION_IS_NOT_FINISH = "2120304" // 研发商店：扩展服务{0}的{1}版本发布未结束，请稍后再试
+    const val USER_SERVICE_CODE_DIFF = "2120305" // 研发商店：扩展编码与extension.json文件内编码不一致
+    const val USER_SERVICE_RELEASE_STEPS_ERROR = "2120306" // 研发商店：扩展服务发布流程状态变更顺序不正确
+
+
 
     // store公共业务相关的错误提示
     const val USER_PRAISE_IS_INVALID = "2120901" // 研发商店：你已点赞过

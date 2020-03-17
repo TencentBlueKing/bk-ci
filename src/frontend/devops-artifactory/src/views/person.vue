@@ -64,9 +64,6 @@
                         <li @click.stop="handlerDownload()">
                             <i class="bk-icon icon-download"></i>下载
                         </li>
-                        <li @click.stop="handlerDownload($event, 'MoF')" v-if="isExtendTx && isWindows && isApkOrIpa() && isMof">
-                            <i class="bk-icon icon-download"></i>魔方有线安装
-                        </li>
                         <li @click.stop="refresh()">
                             <i class="bk-icon icon-refresh"></i>刷新
                         </li>
@@ -222,18 +219,6 @@
             },
             searchKeysLen () {
                 return Object.keys(this.searchKeys).length || 0
-            },
-            isWindows () {
-                return /WINDOWS/.test(window.navigator.userAgent.toUpperCase())
-            },
-            isMof () {
-                const projectId = this.$route.params.projectId
-                return this.projectList.find(item => {
-                    return (item.deptName === '魔方工作室群' && item.projectCode === projectId)
-                })
-            },
-            isExtendTx () {
-                return VERSION_TYPE === 'tencent'
             }
         },
         watch: {
@@ -492,7 +477,7 @@
                     noPermissionList: [
                         { resource: resource, option: option }
                     ],
-                    applyPermissionUrl: this.isExtendTx ? `/backend/api/perm/apply/subsystem/?client_id=pipeline&project_code=${this.projectId}&service_code=pipeline&${role}=pipeline:${pipelineId}` : PERM_URL_PREFIX
+                    applyPermissionUrl: `/backend/api/perm/apply/subsystem/?client_id=pipeline&project_code=${this.projectId}&service_code=pipeline&${role}=pipeline:${pipelineId}`
                 }
                 this.$showAskPermissionDialog(params)
             },
@@ -563,13 +548,9 @@
             /**
              * 下载
              */
-            async handlerDownload (event, type) {
+            async handlerDownload () {
                 const url = await this.getDownloadUrl(this.lastClickItem)
-                url && window.open(type ? `${GW_URL_PREFIX}/pc/download/devops_pc_forward.html?downloadUrl=${url}` : url, '_self')
-            },
-            isApkOrIpa () {
-                const type = this.lastClickItem.name.toUpperCase().substring(this.lastClickItem.name.lastIndexOf('.') + 1)
-                return type === 'APK' || type === 'IPA'
+                url && window.open(url, '_self')
             }
         }
     }

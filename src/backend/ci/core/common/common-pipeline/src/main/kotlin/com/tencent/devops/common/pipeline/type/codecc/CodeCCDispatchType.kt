@@ -35,7 +35,7 @@ data class CodeCCDispatchType(
     val codeccTaskId: Long
 ) : DispatchType("", DispatchRouteKeySuffix.CODECC) {
     override fun buildType(): BuildType {
-        return BuildType.DOCKER
+        return BuildType.valueOf(BuildType.DOCKER.name)
     }
 
     override fun replaceField(variables: Map<String, String>) {

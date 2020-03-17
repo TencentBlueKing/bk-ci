@@ -291,8 +291,7 @@ class OpExtServiceService @Autowired constructor(
         logger.info("releasedCount: $releasedCount")
         if (releasedCount > 0) {
             return MessageCodeUtil.generateResponseDataObject(
-                // TODO: 此处应在core添加扩展服务相关异常信息
-                StoreMessageCode.USER_ATOM_RELEASED_IS_NOT_ALLOW_DELETE,
+                StoreMessageCode.USER_SERVICE_RELEASED_IS_NOT_ALLOW_DELETE,
                 arrayOf()
             )
         }
@@ -301,8 +300,7 @@ class OpExtServiceService @Autowired constructor(
         logger.info("installedCount: $releasedCount")
         if (installedCount > 0) {
             return MessageCodeUtil.generateResponseDataObject(
-                // TODO: 此处应在core添加扩展服务相关异常信息
-                StoreMessageCode.USER_ATOM_USED_IS_NOT_ALLOW_DELETE,
+                StoreMessageCode.USER_SERVICE_USED_IS_NOT_ALLOW_DELETE,
                 arrayOf()
             )
         }
