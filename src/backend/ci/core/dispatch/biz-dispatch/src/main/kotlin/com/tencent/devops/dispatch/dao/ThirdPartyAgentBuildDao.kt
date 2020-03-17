@@ -72,6 +72,11 @@ class ThirdPartyAgentBuildDao {
                 dslContext.selectFrom(this).where(BUILD_ID.eq(buildId)).and(VM_SEQ_ID.eq(vmSeqId)).fetchAny()
             if (preRecord != null) { // 支持更新，让用户进行步骤重试时继续能使用
                 return dslContext.update(this)
+                    .set(PROJECT_ID, projectId)
+                    .set(AGENT_ID, agentId) // agentId 会变化存在于构建机集群的场景下出现飘移（合法）
+                    .set(PIPELINE_ID, pipelineId)
+                    .set(BUILD_ID, buildId)
+                    .set(VM_SEQ_ID, vmSeqId)
                     .set(WORKSPACE, thirdPartyAgentWorkspace)
                     .set(UPDATED_TIME, now)
                     .set(STATUS, PipelineTaskStatus.QUEUE.status)
