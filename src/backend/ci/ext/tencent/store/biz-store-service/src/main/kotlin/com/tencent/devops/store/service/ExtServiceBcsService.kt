@@ -102,6 +102,13 @@ class ExtServiceBcsService {
         )
     }
 
+    /**
+     * 部署扩展服务应用
+     * @param userId 用户ID
+     * @param namespaceName 命名空间名称
+     * @param serviceCode 扩展服务代码
+     * @param version 扩展服务版本号
+     */
     fun deployExtService(
         userId: String,
         namespaceName: String,
@@ -119,6 +126,13 @@ class ExtServiceBcsService {
         return bcsDeployAppResult
     }
 
+    /**
+     * 停止扩展服务应用
+     * @param userId 用户ID
+     * @param serviceCode 扩展服务代码
+     * @param deploymentName deployment名称
+     * @param serviceName service名称
+     */
     fun stopExtService(
         userId: String,
         serviceCode: String,
@@ -142,4 +156,6 @@ class ExtServiceBcsService {
         logger.info("the bcsStopAppResult is :$bcsStopAppResult")
         return bcsStopAppResult
     }
+
+    fun saveExtServiceProjectCache()
 }
