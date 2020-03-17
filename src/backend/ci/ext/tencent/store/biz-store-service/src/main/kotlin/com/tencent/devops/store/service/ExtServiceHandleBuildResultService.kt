@@ -26,8 +26,10 @@
 
 package com.tencent.devops.store.service
 
+import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.store.dao.ExtServiceDao
 import com.tencent.devops.store.pojo.common.StoreBuildResultRequest
 import com.tencent.devops.store.pojo.enums.ExtServiceStatusEnum
@@ -40,7 +42,8 @@ import org.springframework.stereotype.Service
 @Service("SERVICE_HANDLE_BUILD_RESULT")
 class ExtServiceHandleBuildResultService @Autowired constructor(
     private val dslContext: DSLContext,
-    private val extServiceDao: ExtServiceDao
+    private val extServiceDao: ExtServiceDao,
+    private val extServiceBcsService: ExtServiceBcsService
 ) : AbstractStoreHandleBuildResultService() {
 
     private val logger = LoggerFactory.getLogger(ExtServiceHandleBuildResultService::class.java)
@@ -48,9 +51,18 @@ class ExtServiceHandleBuildResultService @Autowired constructor(
     override fun handleStoreBuildResult(storeBuildResultRequest: StoreBuildResultRequest): Result<Boolean> {
         logger.info("handleStoreBuildResult storeBuildResultRequest is:$storeBuildResultRequest")
         val serviceId = storeBuildResultRequest.storeId
+        val serviceRecord =
+            extServiceDao.getServiceById(dslContext, serviceId) ?: return MessageCodeUtil.generateResponseDataObject(
+                CommonMessageCode.PARAMETER_IS_INVALID,
+                arrayOf(serviceId)
+            )
         var serviceStatus = ExtServiceStatusEnum.TESTING // 构建成功将扩展服务状态置位测试状态
         if (BuildStatus.SUCCEED != storeBuildResultRequest.buildStatus) {
             serviceStatus = ExtServiceStatusEnum.BUILD_FAIL // 构建失败
+        }
+        if (serviceStatus == ExtServiceStatusEnum.TESTING) {
+            // 查出扩展服务对应的调试项目放入redis中
+            extServiceBcsService.addExtServiceTestProjectCache(serviceRecord.serviceCode)
         }
         extServiceDao.setServiceStatusById(
             dslContext = dslContext,

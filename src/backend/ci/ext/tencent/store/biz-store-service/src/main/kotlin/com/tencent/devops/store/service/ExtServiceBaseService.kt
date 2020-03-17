@@ -922,19 +922,32 @@ abstract class ExtServiceBaseService @Autowired constructor() {
     }
 
     private fun upgradeMarketExtService(
+        context: DSLContext,
         userId: String,
         serviceId: String,
+        language: String,
         extServiceCreateInfo: ExtServiceCreateInfo,
         extServiceVersionLogCreateInfo: ExtServiceVersionLogCreateInfo
     ) {
         extServiceDao.createExtService(
-            dslContext = dslContext,
+            dslContext = context,
             userId = userId,
             id = serviceId,
             extServiceCreateInfo = extServiceCreateInfo
         )
+        val extServiceEnvCreateInfo = ExtServiceEnvCreateInfo(
+            serviceId = serviceId,
+            language = language,
+            pkgPath = "",
+            pkgShaContent = "",
+            dockerFileContent = "",
+            imagePath = "",
+            creatorUser = userId,
+            modifierUser = userId
+        )
+        extServiceEnvDao.create(context, extServiceEnvCreateInfo) // 添加扩展服务执行环境信息
         extServiceVersionLogDao.create(
-            dslContext = dslContext,
+            dslContext = context,
             userId = userId,
             id = serviceId,
             extServiceVersionLogCreateInfo = extServiceVersionLogCreateInfo
@@ -1081,7 +1094,6 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         val fileItemList = taskDataMap.itemList
         if (fileServiceCode != serviceCode) {
             logger.warn("getServiceProps input serviceCode[$serviceCode], extension.json serviceCode[$fileServiceCode] ")
-            throw RuntimeException(MessageCodeUtil.getCodeLanMessage(StoreMessageCode.USER_SERVICE_CODE_DIFF))
         }
 
         if (fileItemList == null) {

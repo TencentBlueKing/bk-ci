@@ -28,6 +28,7 @@ package com.tencent.devops.store.service
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.dispatch.api.ServiceBcsResource
 import com.tencent.devops.dispatch.pojo.AppDeployment
 import com.tencent.devops.dispatch.pojo.AppIngress
@@ -40,6 +41,10 @@ import com.tencent.devops.store.config.ExtServiceDeploymentConfig
 import com.tencent.devops.store.config.ExtServiceImageSecretConfig
 import com.tencent.devops.store.config.ExtServiceIngressConfig
 import com.tencent.devops.store.config.ExtServiceServiceConfig
+import com.tencent.devops.store.dao.common.StoreProjectRelDao
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.pojo.constants.KEY_EXT_SERVICE_INIT_TEST_PROJECT_PREFIX
+import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -52,6 +57,15 @@ class ExtServiceBcsService {
 
     @Autowired
     private lateinit var client: Client
+
+    @Autowired
+    private lateinit var dslContext: DSLContext
+
+    @Autowired
+    private lateinit var redisOperation: RedisOperation
+
+    @Autowired
+    private lateinit var storeProjectRelDao: StoreProjectRelDao
 
     @Autowired
     private lateinit var extServiceBcsConfig: ExtServiceBcsConfig
@@ -102,6 +116,13 @@ class ExtServiceBcsService {
         )
     }
 
+    /**
+     * 部署扩展服务应用
+     * @param userId 用户ID
+     * @param namespaceName 命名空间名称
+     * @param serviceCode 扩展服务代码
+     * @param version 扩展服务版本号
+     */
     fun deployExtService(
         userId: String,
         namespaceName: String,
@@ -116,9 +137,25 @@ class ExtServiceBcsService {
             deployApp = deployApp
         )
         logger.info("bcsDeployAppResult is :$bcsDeployAppResult")
+        if (bcsDeployAppResult.isOk()) {
+            if (namespaceName == extServiceBcsNameSpaceConfig.grayNamespaceName) {
+                // 如果发布的灰度环境的扩展服务版本，查出扩展服务对应的调试项目放入redis中
+                addExtServiceTestProjectCache(serviceCode)
+            } else {
+                // 发布的灰度环境的扩展服务版本需删除扩展服务调试项目的redis缓存
+                deleteExtServiceTestProjectCache(serviceCode)
+            }
+        }
         return bcsDeployAppResult
     }
 
+    /**
+     * 停止扩展服务应用
+     * @param userId 用户ID
+     * @param serviceCode 扩展服务代码
+     * @param deploymentName deployment名称
+     * @param serviceName service名称
+     */
     fun stopExtService(
         userId: String,
         serviceCode: String,
@@ -141,5 +178,29 @@ class ExtServiceBcsService {
         )
         logger.info("the bcsStopAppResult is :$bcsStopAppResult")
         return bcsStopAppResult
+    }
+
+    /**
+     * 添加扩展服务对应的调试项目缓存
+     * @param serviceCode 扩展服务代码
+     */
+    fun addExtServiceTestProjectCache(serviceCode: String) {
+        // 查出扩展服务对应的调试项目放入redis中(网关拿到前端传的项目后根据缓存中的扩展服务对应的调试项目列表来决定是否访问扩展服务的灰度环境)
+        val testProjectCodes = storeProjectRelDao.getTestProjectCodesByStoreCode(
+            dslContext,
+            serviceCode,
+            StoreTypeEnum.SERVICE
+        )
+        testProjectCodes?.forEach {
+            redisOperation.addSetValue(KEY_EXT_SERVICE_INIT_TEST_PROJECT_PREFIX + serviceCode, it.value1())
+        }
+    }
+
+    /**
+     * 添加扩展服务对应的调试项目缓存
+     * @param serviceCode 扩展服务代码
+     */
+    fun deleteExtServiceTestProjectCache(serviceCode: String) {
+        redisOperation.delete(KEY_EXT_SERVICE_INIT_TEST_PROJECT_PREFIX + serviceCode)
     }
 }
