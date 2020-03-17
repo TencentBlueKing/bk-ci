@@ -7,6 +7,7 @@ import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.project.api.service.service.ServiceItemResource
+import com.tencent.devops.store.config.ExtServiceBcsNameSpaceConfig
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.dao.ExtServiceDao
 import com.tencent.devops.store.dao.ExtServiceFeatureDao
@@ -29,6 +30,10 @@ import com.tencent.devops.store.pojo.dto.ServiceApproveReq
 import com.tencent.devops.store.pojo.enums.ExtServiceSortTypeEnum
 import com.tencent.devops.store.pojo.vo.ExtServiceInfoResp
 import com.tencent.devops.store.pojo.vo.ExtensionServiceVO
+import com.tencent.devops.store.service.ExtServiceBaseService
+import com.tencent.devops.store.service.ExtServiceBcsService
+import com.tencent.devops.store.service.ExtServiceNotifyService
+import com.tencent.devops.store.service.TxExtServiceMemberImpl
 import org.jooq.impl.DSL
 import org.jooq.impl.DefaultDSLContext
 import org.slf4j.LoggerFactory
@@ -47,6 +52,8 @@ class OpExtServiceService @Autowired constructor(
     private val storeMediaInfoDao: StoreMediaInfoDao,
     private val dslContext: DefaultDSLContext,
     private val serviceNotifyService: ExtServiceNotifyService,
+    private val extServiceBcsService: ExtServiceBcsService,
+    private val extServiceBcsNameSpaceConfig: ExtServiceBcsNameSpaceConfig,
     private val client: Client
 ) {
 

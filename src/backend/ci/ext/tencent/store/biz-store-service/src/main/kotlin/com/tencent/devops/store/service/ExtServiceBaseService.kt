@@ -1,7 +1,5 @@
 package com.tencent.devops.store.service
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.constant.APPROVE
 import com.tencent.devops.common.api.constant.BEGIN
 import com.tencent.devops.common.api.constant.BUILD
@@ -24,7 +22,6 @@ import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.project.api.pojo.ServiceItem
 import com.tencent.devops.project.api.service.ServiceProjectResource
@@ -32,6 +29,7 @@ import com.tencent.devops.project.api.service.service.ServiceItemResource
 import com.tencent.devops.repository.api.ServiceGitRepositoryResource
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
+import com.tencent.devops.store.config.ExtServiceBcsNameSpaceConfig
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.dao.ExtServiceDao
 import com.tencent.devops.store.dao.ExtServiceEnvDao
@@ -107,8 +105,6 @@ abstract class ExtServiceBaseService @Autowired constructor() {
     @Autowired
     lateinit var extServiceItemRelDao: ExtServiceItemRelDao
     @Autowired
-    lateinit var redisOperation: RedisOperation
-    @Autowired
     lateinit var storeCommonService: StoreCommonService
     @Autowired
     lateinit var extServiceVersionLogDao: ExtServiceVersionLogDao
@@ -127,7 +123,9 @@ abstract class ExtServiceBaseService @Autowired constructor() {
     @Autowired
     lateinit var deptService: StoreVisibleDeptService
     @Autowired
-    lateinit var objectMapper: ObjectMapper
+    lateinit var extServiceBcsService: ExtServiceBcsService
+    @Autowired
+    lateinit var extServiceBcsNameSpaceConfig: ExtServiceBcsNameSpaceConfig
 
     fun addExtService(
         userId: String,
@@ -468,7 +466,6 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         }
         logger.info("the getMyService serviceItemIdMap is :$serviceItemIdMap")
 
-
         logger.info("the getMyService userId is :$userId,projectCodeList is :$projectCodeList")
         val projectMap = client.get(ServiceProjectResource::class).getNameByCode(projectCodeList.joinToString(",")).data
         logger.info("the getMyService userId is :$userId,projectMap is :$projectMap")
@@ -495,7 +492,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
             var itemName = ""
             serviceItemList?.forEach { itId ->
                 val itemInfo = itemInfoMap?.get(itId)
-                if(itemInfo != null) {
+                if (itemInfo != null) {
                     itemName += itemInfo!!.parentName + "-" + itemInfo.itemName + ","
                 }
             }

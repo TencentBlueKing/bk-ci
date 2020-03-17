@@ -2,7 +2,6 @@ package com.tencent.devops.store.service
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.timestamp
-import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.store.dao.ExtStoreProjectRelDao
 import com.tencent.devops.store.dao.common.StoreStatisticDao
 import com.tencent.devops.store.pojo.ExtServiceInstallTrendReq
@@ -31,7 +30,7 @@ class StatisticService @Autowired constructor(
     }
 
     fun getInstallTrend(serviceCode: String, days: Long): Result<List<ExtServiceInstallTrendReq>> {
-        val startTime : Long = if (days > 30 ) {
+        val startTime: Long = if (days > 30) {
             LocalDateTime.now().timestamp() - TimeUnit.DAYS.toSeconds(30)
         } else {
             LocalDateTime.now().timestamp() - TimeUnit.DAYS.toSeconds(days)
@@ -49,8 +48,8 @@ class StatisticService @Autowired constructor(
         val installDayMap = mutableMapOf<String, Int>()
         installRecords.forEach {
             val projectCreateTime = it.createTime.dayOfYear.toString()
-            if(installDayMap.containsKey(projectCreateTime)) {
-                var count  = installDayMap[projectCreateTime]
+            if (installDayMap.containsKey(projectCreateTime)) {
+                var count = installDayMap[projectCreateTime]
                 installDayMap[projectCreateTime] = count!! + 1
             } else {
                 installDayMap[projectCreateTime] = 1

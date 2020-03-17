@@ -40,6 +40,5 @@ class ExtStoreProjectRelDao {
             where.orderBy(CREATE_TIME.desc())
                 .fetch()
         }
-
     }
 }

@@ -31,19 +31,27 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.dispatch.api.ServiceBcsResource
 import com.tencent.devops.dispatch.pojo.CreateBcsNameSpaceRequest
 import com.tencent.devops.dispatch.pojo.CreateImagePullSecretRequest
+import com.tencent.devops.dispatch.pojo.DeployApp
+import com.tencent.devops.dispatch.pojo.StopApp
+import com.tencent.devops.dispatch.service.BcsDeployService
 import com.tencent.devops.dispatch.util.BcsClientUtils
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class ServiceBcsResourceImpl @Autowired constructor() : ServiceBcsResource {
+class ServiceBcsResourceImpl @Autowired constructor(
+    private val bcsDeployService: BcsDeployService
+) : ServiceBcsResource {
 
     override fun createNamespace(
         namespaceName: String,
         createBcsNameSpaceRequest: CreateBcsNameSpaceRequest
     ): Result<Boolean> {
-        val bcsKubernetesClient =
-            BcsClientUtils.getBcsKubernetesClient(createBcsNameSpaceRequest.bcsUrl, createBcsNameSpaceRequest.token)
-        BcsClientUtils.createNamespace(bcsKubernetesClient, namespaceName, createBcsNameSpaceRequest.kubernetesLabel)
+        BcsClientUtils.createNamespace(
+            bcsUrl = createBcsNameSpaceRequest.bcsUrl,
+            token = createBcsNameSpaceRequest.token,
+            namespaceName = namespaceName,
+            labelInfo = createBcsNameSpaceRequest.kubernetesLabel
+        )
         return Result(true)
     }
 
@@ -52,16 +60,21 @@ class ServiceBcsResourceImpl @Autowired constructor() : ServiceBcsResource {
         secretName: String,
         createImagePullSecretRequest: CreateImagePullSecretRequest
     ): Result<Boolean> {
-        val bcsKubernetesClient = BcsClientUtils.getBcsKubernetesClient(
-            bcsUrl = createImagePullSecretRequest.bcsUrl,
-            token = createImagePullSecretRequest.token
-        )
         BcsClientUtils.createImagePullSecret(
-            bcsKubernetesClient = bcsKubernetesClient,
+            bcsUrl = createImagePullSecretRequest.bcsUrl,
+            token = createImagePullSecretRequest.token,
             secretName = secretName,
             namespaceName = namespaceName,
             kubernetesRepoInfo = createImagePullSecretRequest.kubernetesRepo
         )
         return Result(true)
+    }
+
+    override fun bcsDeployApp(userId: String, deployApp: DeployApp): Result<Boolean> {
+        return bcsDeployService.deployApp(userId, deployApp)
+    }
+
+    override fun bcsStopApp(userId: String, stopApp: StopApp): Result<Boolean> {
+        return bcsDeployService.stopApp(userId, stopApp)
     }
 }

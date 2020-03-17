@@ -27,170 +27,119 @@
 package com.tencent.devops.store.service
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.store.pojo.dto.DeployExtServiceDTO
-import com.tencent.devops.store.pojo.dto.ExtServiceIngressDTO
-import com.tencent.devops.store.util.BcsClientUtils
-import io.fabric8.kubernetes.api.model.IntOrString
-import io.fabric8.kubernetes.api.model.ServiceBuilder
-import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder
-import io.fabric8.kubernetes.api.model.extensions.HTTPIngressPathBuilder
-import io.fabric8.kubernetes.api.model.extensions.HTTPIngressRuleValue
-import io.fabric8.kubernetes.api.model.extensions.Ingress
-import io.fabric8.kubernetes.api.model.extensions.IngressBackend
-import io.fabric8.kubernetes.api.model.extensions.IngressBackendBuilder
-import io.fabric8.kubernetes.api.model.extensions.IngressBuilder
-import io.fabric8.kubernetes.api.model.extensions.IngressRule
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.dispatch.api.ServiceBcsResource
+import com.tencent.devops.dispatch.pojo.AppDeployment
+import com.tencent.devops.dispatch.pojo.AppIngress
+import com.tencent.devops.dispatch.pojo.AppService
+import com.tencent.devops.dispatch.pojo.DeployApp
+import com.tencent.devops.dispatch.pojo.StopApp
+import com.tencent.devops.store.config.ExtServiceBcsConfig
+import com.tencent.devops.store.config.ExtServiceBcsNameSpaceConfig
+import com.tencent.devops.store.config.ExtServiceDeploymentConfig
+import com.tencent.devops.store.config.ExtServiceImageSecretConfig
+import com.tencent.devops.store.config.ExtServiceIngressConfig
+import com.tencent.devops.store.config.ExtServiceServiceConfig
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.util.Collections
+import java.text.MessageFormat
 
 @Service
-class ExtServiceBcsService @Autowired constructor(private val redisOperation: RedisOperation) {
+class ExtServiceBcsService {
 
     private val logger = LoggerFactory.getLogger(ExtServiceBcsService::class.java)
 
-    fun deployExtService(
-        userId: String,
-        deployExtServiceDTO: DeployExtServiceDTO
-    ): Result<Boolean> {
-        logger.info("deployExtService userId is: $userId,deployExtServiceDTO is: $deployExtServiceDTO")
-        val namespaceName = deployExtServiceDTO.namespaceName
-        val serviceCode = deployExtServiceDTO.serviceCode
-        val extServiceDeployment = deployExtServiceDTO.extServiceDeployment
-        val extServiceService = deployExtServiceDTO.extServiceService
-        val extServiceIngress = deployExtServiceDTO.extServiceIngress
-        val containerPort = extServiceDeployment.containerPort
-        // 创建deployment无状态部署
-        val deployment = DeploymentBuilder()
-            .withNewMetadata()
-            .withName(serviceCode)
-            .endMetadata()
-            .withNewSpec()
-            .withReplicas(extServiceDeployment.replicas)
-            .withNewTemplate()
-            .withNewMetadata()
-            .addToLabels("app", serviceCode)
-            .endMetadata()
-            .withNewSpec()
-            .addNewContainer()
-            .withName(serviceCode)
-            .withImage(extServiceDeployment.serviceImage)
-            .addNewPort()
-            .withContainerPort(containerPort)
-            .endPort()
-            .endContainer()
-            .addNewImagePullSecret()
-            .withName(extServiceDeployment.pullImageSecretName)
-            .endImagePullSecret()
-            .endSpec()
-            .endTemplate()
-            .withNewSelector()
-            .addToMatchLabels("app", serviceCode)
-            .endSelector()
-            .endSpec()
-            .build()
-        BcsClientUtils.createDeployment(namespaceName, deployment)
-        logger.info("created deployment:$deployment")
-        val servicePort = extServiceService.servicePort
-        val service = ServiceBuilder()
-            .withNewMetadata()
-            .withName("$serviceCode-service")
-            .endMetadata()
-            .withNewSpec()
-            .withSelector(Collections.singletonMap("app", serviceCode))
-            .addNewPort()
-            .withName("$serviceCode-port")
-            .withProtocol("TCP")
-            .withPort(servicePort)
-            .withTargetPort(IntOrString(containerPort))
-            .endPort()
-            .withType("NodePort")
-            .endSpec()
-            .build()
-        BcsClientUtils.createService(namespaceName, service)
-        logger.info("created service:$service")
-        // 创建ingress
-        //generate ingress backend
-        val ingressBackend: IngressBackend = IngressBackendBuilder()
-            .withServiceName("$serviceCode-service")
-            .withNewServicePort(servicePort)
-            .build()
-        //generate ingress path
-        val ingressPath = HTTPIngressPathBuilder()
-            .withBackend(ingressBackend)
-            .withPath(extServiceIngress.contextPath).build()
-        val ingressRule = IngressRule(
-            extServiceIngress.host,
-            HTTPIngressRuleValue(
-                listOf(ingressPath)
-            )
-        )
-        val ingressRedisKey = "ext:service:ingress:$namespaceName"
-        val ingressName = redisOperation.get(ingressRedisKey)
-        logger.info("deployExtService ingressName is: $ingressName")
-        if (ingressName.isNullOrBlank()) {
-            val ingress = createIngress(
-                namespaceName = namespaceName,
-                serviceCode = serviceCode,
-                extServiceIngress = extServiceIngress,
-                ingressRule = ingressRule,
-                ingressRedisKey = ingressRedisKey
-            )
-            logger.info("created ingress:$ingress")
-        } else {
-            val bcsKubernetesClient = BcsClientUtils.getBcsKubernetesClient()
-            var ingress =
-                bcsKubernetesClient.extensions().ingresses().inNamespace(namespaceName).withName(ingressName).get()
-            logger.info("deployExtService ingress is: $ingress")
-            if (ingress == null) {
-                ingress = createIngress(
-                    namespaceName = namespaceName,
-                    serviceCode = serviceCode,
-                    extServiceIngress = extServiceIngress,
-                    ingressRule = ingressRule,
-                    ingressRedisKey = ingressRedisKey
-                )
-                logger.info("created ingress:$ingress")
-            } else {
-                when {
-                    ingress.spec.rules.contains(ingressRule) -> return Result(true)
-                    else -> {
-                        ingress.spec.rules.add(ingressRule)
-                        BcsClientUtils.createIngress(namespaceName, ingress)
-                        logger.info("update ingress:$ingressName success")
-                    }
-                }
-            }
-        }
-        return Result(true)
-    }
+    @Autowired
+    private lateinit var client: Client
 
-    private fun createIngress(
+    @Autowired
+    private lateinit var extServiceBcsConfig: ExtServiceBcsConfig
+
+    @Autowired
+    private lateinit var extServiceBcsNameSpaceConfig: ExtServiceBcsNameSpaceConfig
+
+    @Autowired
+    private lateinit var extServiceImageSecretConfig: ExtServiceImageSecretConfig
+
+    @Autowired
+    private lateinit var extServiceDeploymentConfig: ExtServiceDeploymentConfig
+
+    @Autowired
+    private lateinit var extServiceServiceConfig: ExtServiceServiceConfig
+
+    @Autowired
+    private lateinit var extServiceIngressConfig: ExtServiceIngressConfig
+
+    fun generateDeployApp(
         namespaceName: String,
         serviceCode: String,
-        extServiceIngress: ExtServiceIngressDTO,
-        ingressRule: IngressRule,
-        ingressRedisKey: String
-    ): Ingress {
-        val ingress = IngressBuilder()
-            .withNewMetadata()
-            .withName("$namespaceName-ingress")
-            .addToLabels("app", serviceCode)
-            .addToAnnotations(extServiceIngress.ingressAnnotationMap)
-            .endMetadata()
-            .withNewSpec()
-            .withRules(ingressRule)
-            .endSpec()
-            .build()
-        BcsClientUtils.createIngress(namespaceName, ingress)
-        redisOperation.set(
-            key = ingressRedisKey,
-            value = "$namespaceName-ingress",
-            expiredInSecond = null,
-            expired = false
+        version: String
+    ): DeployApp {
+        val imageName = "${extServiceImageSecretConfig.imageNamePrefix}$serviceCode"
+        return DeployApp(
+            bcsUrl = extServiceBcsConfig.masterUrl,
+            token = extServiceBcsConfig.token,
+            namespaceName = namespaceName,
+            appCode = serviceCode,
+            appDeployment = AppDeployment(
+                replicas = extServiceDeploymentConfig.replicas.toInt(),
+                image = "${extServiceImageSecretConfig.repoRegistryUrl}/$imageName:$version",
+                pullImageSecretName = extServiceDeploymentConfig.grayPullImageSecretName,
+                containerPort = extServiceDeploymentConfig.containerPort.toInt()
+            ),
+            appService = AppService(
+                servicePort = extServiceServiceConfig.servicePort.toInt()
+            ),
+            appIngress = AppIngress(
+                host = MessageFormat(extServiceIngressConfig.host).format(arrayOf(serviceCode)),
+                contextPath = extServiceIngressConfig.contextPath,
+                ingressAnnotationMap = mapOf(
+                    "kubernetes.io/ingress.class" to extServiceIngressConfig.annotationClass,
+                    "kubernetes.io/ingress.subnetId" to extServiceIngressConfig.annotationSubnetId
+                )
+            )
         )
-        return ingress
+    }
+
+    fun deployExtService(
+        userId: String,
+        namespaceName: String,
+        serviceCode: String,
+        version: String
+    ): Result<Boolean> {
+        logger.info("deployExtService userId is:$userId,namespaceName is:$namespaceName")
+        logger.info("deployExtService serviceCode is:$serviceCode,version is:$version")
+        val deployApp = generateDeployApp(namespaceName, serviceCode, version)
+        val bcsDeployAppResult = client.get(ServiceBcsResource::class).bcsDeployApp(
+            userId = userId,
+            deployApp = deployApp
+        )
+        logger.info("bcsDeployAppResult is :$bcsDeployAppResult")
+        return bcsDeployAppResult
+    }
+
+    fun stopExtService(
+        userId: String,
+        serviceCode: String,
+        deploymentName: String,
+        serviceName: String
+    ): Result<Boolean> {
+        logger.info("stopExtService userId is:$userId,serviceCode is:$serviceCode")
+        logger.info("stopExtService deploymentName is:$deploymentName,serviceName is:$serviceName")
+        // 停止扩展服务部署（灰度命名空间和正式命名空间的扩展服务应用都需停止）
+        val bcsStopAppResult = client.get(ServiceBcsResource::class).bcsStopApp(
+            userId = userId,
+            stopApp = StopApp(
+                bcsUrl = extServiceBcsConfig.masterUrl,
+                token = extServiceBcsConfig.token,
+                grayNamespaceName = extServiceBcsNameSpaceConfig.grayNamespaceName,
+                namespaceName = extServiceBcsNameSpaceConfig.namespaceName,
+                deploymentName = serviceCode,
+                serviceName = "$serviceCode-service"
+            )
+        )
+        logger.info("the bcsStopAppResult is :$bcsStopAppResult")
+        return bcsStopAppResult
     }
 }

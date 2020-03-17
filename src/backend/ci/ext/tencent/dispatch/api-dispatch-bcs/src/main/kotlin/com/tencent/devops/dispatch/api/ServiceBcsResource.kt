@@ -30,10 +30,13 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.dispatch.pojo.CreateBcsNameSpaceRequest
 import com.tencent.devops.dispatch.pojo.CreateImagePullSecretRequest
+import com.tencent.devops.dispatch.pojo.DeployApp
+import com.tencent.devops.dispatch.pojo.StopApp
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
+import javax.ws.rs.DELETE
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
 import javax.ws.rs.Path
@@ -70,5 +73,27 @@ interface ServiceBcsResource {
         secretName: String,
         @ApiParam("创建拉取镜像secret请求对象")
         createImagePullSecretRequest: CreateImagePullSecretRequest
+    ): Result<Boolean>
+
+    @ApiOperation("bcs部署应用")
+    @Path("/deploy/app")
+    @POST
+    fun bcsDeployApp(
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("部署请求对象")
+        deployApp: DeployApp
+    ): Result<Boolean>
+
+    @ApiOperation("bcs停止部署应用")
+    @Path("/stop/app")
+    @DELETE
+    fun bcsStopApp(
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("停止部署请求对象")
+        stopApp: StopApp
     ): Result<Boolean>
 }
