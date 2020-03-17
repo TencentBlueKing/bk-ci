@@ -47,6 +47,7 @@
 
         > .step-icon {
             display: inline-block;
+            fill: $borderLightColor;
             &.SUCCEED {
                 fill: $successColor;
             }
