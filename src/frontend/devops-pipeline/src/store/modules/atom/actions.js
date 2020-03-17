@@ -42,8 +42,8 @@ function getMapByKey (list, key) {
 }
 
 export default {
-    triggerStage ({ commit }, { projectId, pipelineId, buildNo, stageId }) {
-        return request.post(`/${PROCESS_API_URL_PREFIX}/user/builds/projects/${projectId}/pipelines/${pipelineId}/builds/${buildNo}/stages/${stageId}/manualStart`)
+    triggerStage ({ commit }, { projectId, pipelineId, buildNo, stageId, cancel }) {
+        return request.post(`/${PROCESS_API_URL_PREFIX}/user/builds/projects/${projectId}/pipelines/${pipelineId}/builds/${buildNo}/stages/${stageId}/manualStart?cancel=${cancel}`)
     },
     async fetchStageTagList ({ commit }) {
         try {
