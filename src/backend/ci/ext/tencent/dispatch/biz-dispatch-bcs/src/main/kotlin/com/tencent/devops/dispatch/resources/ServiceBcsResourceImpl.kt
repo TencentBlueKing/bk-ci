@@ -32,6 +32,7 @@ import com.tencent.devops.dispatch.api.ServiceBcsResource
 import com.tencent.devops.dispatch.pojo.CreateBcsNameSpaceRequest
 import com.tencent.devops.dispatch.pojo.CreateImagePullSecretRequest
 import com.tencent.devops.dispatch.pojo.DeployApp
+import com.tencent.devops.dispatch.pojo.StopApp
 import com.tencent.devops.dispatch.service.BcsDeployService
 import com.tencent.devops.dispatch.util.BcsClientUtils
 import org.springframework.beans.factory.annotation.Autowired
@@ -71,5 +72,9 @@ class ServiceBcsResourceImpl @Autowired constructor(
 
     override fun bcsDeployApp(userId: String, deployApp: DeployApp): Result<Boolean> {
         return bcsDeployService.deployApp(userId, deployApp)
+    }
+
+    override fun bcsStopApp(userId: String, stopApp: StopApp): Result<Boolean> {
+        return bcsDeployService.stopApp(userId, stopApp)
     }
 }

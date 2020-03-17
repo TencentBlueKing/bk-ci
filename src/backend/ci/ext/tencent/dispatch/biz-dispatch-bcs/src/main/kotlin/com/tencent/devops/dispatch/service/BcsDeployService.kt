@@ -30,6 +30,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.dispatch.pojo.AppIngress
 import com.tencent.devops.dispatch.pojo.DeployApp
+import com.tencent.devops.dispatch.pojo.StopApp
 import com.tencent.devops.dispatch.util.BcsClientUtils
 import io.fabric8.kubernetes.api.model.IntOrString
 import io.fabric8.kubernetes.api.model.ServiceBuilder
@@ -202,5 +203,26 @@ class BcsDeployService @Autowired constructor(private val redisOperation: RedisO
             expired = false
         )
         return ingress
+    }
+
+    fun stopApp(
+        userId: String,
+        stopApp: StopApp
+    ): Result<Boolean> {
+        logger.info("bcsStopApp userId is: $userId,stopApp is: $stopApp")
+        val bcsUrl = stopApp.bcsUrl
+        val token = stopApp.token
+        val bcsKubernetesClient = BcsClientUtils.getBcsKubernetesClient(bcsUrl, token)
+        val grayNamespaceName = stopApp.namespaceName
+        // 删除deployment
+        bcsKubernetesClient.apps().deployments().inNamespace(grayNamespaceName).withName(stopApp.deploymentName).delete()
+        // 删除service
+        bcsKubernetesClient.services().inNamespace(grayNamespaceName).withName(stopApp.serviceName).delete()
+        val namespaceName = stopApp.namespaceName
+        // 删除deployment
+        bcsKubernetesClient.apps().deployments().inNamespace(namespaceName).withName(stopApp.deploymentName).delete()
+        // 删除service
+        bcsKubernetesClient.services().inNamespace(namespaceName).withName(stopApp.serviceName).delete()
+        return Result(true)
     }
 }

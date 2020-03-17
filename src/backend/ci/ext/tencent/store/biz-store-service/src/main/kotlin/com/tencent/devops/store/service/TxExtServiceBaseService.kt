@@ -5,10 +5,6 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.service.utils.MessageCodeUtil
-import com.tencent.devops.dispatch.pojo.AppDeployment
-import com.tencent.devops.dispatch.pojo.AppIngress
-import com.tencent.devops.dispatch.pojo.AppService
-import com.tencent.devops.dispatch.pojo.DeployApp
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServiceExtServiceBuildPipelineInitResource
 import com.tencent.devops.process.pojo.pipeline.ExtServiceBuildInitPipelineReq
@@ -17,12 +13,7 @@ import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.RepositoryInfo
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
-import com.tencent.devops.store.config.ExtServiceBcsConfig
-import com.tencent.devops.store.config.ExtServiceBcsNameSpaceConfig
-import com.tencent.devops.store.config.ExtServiceDeploymentConfig
 import com.tencent.devops.store.config.ExtServiceImageSecretConfig
-import com.tencent.devops.store.config.ExtServiceIngressConfig
-import com.tencent.devops.store.config.ExtServiceServiceConfig
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.dao.ExtServiceBuildAppRelDao
 import com.tencent.devops.store.dao.ExtServiceBuildInfoDao
@@ -38,7 +29,6 @@ import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import java.text.MessageFormat
 
 @Service
 class TxExtServiceBaseService : ExtServiceBaseService() {
@@ -59,22 +49,7 @@ class TxExtServiceBaseService : ExtServiceBaseService() {
     private lateinit var storePipelineBuildRelDao: StorePipelineBuildRelDao
 
     @Autowired
-    private lateinit var extServiceBcsConfig: ExtServiceBcsConfig
-
-    @Autowired
-    private lateinit var extServiceBcsNameSpaceConfig: ExtServiceBcsNameSpaceConfig
-
-    @Autowired
     private lateinit var extServiceImageSecretConfig: ExtServiceImageSecretConfig
-
-    @Autowired
-    private lateinit var extServiceDeploymentConfig: ExtServiceDeploymentConfig
-
-    @Autowired
-    private lateinit var extServiceServiceConfig: ExtServiceServiceConfig
-
-    @Autowired
-    private lateinit var extServiceIngressConfig: ExtServiceIngressConfig
 
     override fun handleServicePackage(
         extensionInfo: InitExtServiceDTO,
@@ -169,29 +144,7 @@ class TxExtServiceBaseService : ExtServiceBaseService() {
             password = extServiceImageSecretConfig.repoPassword
         )
         // 未正式发布的扩展服务先部署到bcs灰度环境
-        val deployApp = DeployApp(
-            bcsUrl = extServiceBcsConfig.masterUrl,
-            token = extServiceBcsConfig.token,
-            namespaceName = extServiceBcsNameSpaceConfig.grayNamespaceName,
-            appCode = serviceCode,
-            appDeployment = AppDeployment(
-                replicas = extServiceDeploymentConfig.replicas.toInt(),
-                image = "$repoAddr/$imageName:$version",
-                pullImageSecretName = extServiceDeploymentConfig.grayPullImageSecretName,
-                containerPort = extServiceDeploymentConfig.containerPort.toInt()
-            ),
-            appService = AppService(
-                servicePort = extServiceServiceConfig.servicePort.toInt()
-            ),
-            appIngress = AppIngress(
-                host = MessageFormat(extServiceIngressConfig.host).format(arrayOf(serviceCode)),
-                contextPath = extServiceIngressConfig.contextPath,
-                ingressAnnotationMap = mapOf(
-                    "kubernetes.io/ingress.class" to extServiceIngressConfig.annotationClass,
-                    "kubernetes.io/ingress.subnetId" to extServiceIngressConfig.annotationSubnetId
-                )
-            )
-        )
+        val deployApp = extServiceBcsService.generateDeployApp(extServiceBcsNameSpaceConfig.grayNamespaceName, serviceCode, version)
         if (null == servicePipelineRelRecord) {
             // 为用户初始化构建流水线并触发执行
             val serviceBaseInfo = ExtServiceBaseInfoDTO(

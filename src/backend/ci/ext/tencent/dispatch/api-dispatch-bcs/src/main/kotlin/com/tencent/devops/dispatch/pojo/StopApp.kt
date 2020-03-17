@@ -24,42 +24,21 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.api
+package com.tencent.devops.dispatch.pojo
 
-import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
-import com.tencent.devops.common.api.pojo.Result
-import io.fabric8.kubernetes.client.VersionInfo
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
-import javax.ws.rs.Consumes
-import javax.ws.rs.GET
-import javax.ws.rs.HeaderParam
-import javax.ws.rs.Path
-import javax.ws.rs.Produces
-import javax.ws.rs.core.MediaType
+import io.swagger.annotations.ApiModelProperty
 
-@Api(tags = ["USER_EXTENSION_BCS_SERVICE"], description = "服务扩展-bcs")
-@Path("/user/ext/services")
-@Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
-interface UserBcsServiceResource {
-
-    @ApiOperation("bcs版本接口测试")
-    @Path("/bcs/version/test")
-    @GET
-    fun bcsVersionTest(
-        @ApiParam("userId", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String
-    ): Result<VersionInfo>
-
-    @ApiOperation("bcs部署接口测试")
-    @Path("/bcs/deploy/test")
-    @GET
-    fun bcsDeployTest(
-        @ApiParam("userId", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String
-    ): Result<Boolean>
-}
+data class StopApp(
+    @ApiModelProperty("bcs请求路径", required = true)
+    val bcsUrl: String,
+    @ApiModelProperty("请求token", required = true)
+    val token: String,
+    @ApiModelProperty("k8s灰度命名空间名称", required = true)
+    val grayNamespaceName: String,
+    @ApiModelProperty("k8s命名空间名称", required = true)
+    val namespaceName: String,
+    @ApiModelProperty("deployment名称", required = true)
+    val deploymentName: String,
+    @ApiModelProperty("应用deployment", required = true)
+    val serviceName: String
+)

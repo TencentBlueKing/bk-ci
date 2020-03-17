@@ -1,7 +1,5 @@
 package com.tencent.devops.store.service
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.constant.APPROVE
 import com.tencent.devops.common.api.constant.BEGIN
 import com.tencent.devops.common.api.constant.BUILD
@@ -24,7 +22,6 @@ import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.project.api.pojo.ServiceItem
 import com.tencent.devops.project.api.service.ServiceProjectResource
@@ -32,6 +29,7 @@ import com.tencent.devops.project.api.service.service.ServiceItemResource
 import com.tencent.devops.repository.api.ServiceGitRepositoryResource
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
+import com.tencent.devops.store.config.ExtServiceBcsNameSpaceConfig
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.dao.ExtServiceDao
 import com.tencent.devops.store.dao.ExtServiceEnvDao
@@ -107,8 +105,6 @@ abstract class ExtServiceBaseService @Autowired constructor() {
     @Autowired
     lateinit var extServiceItemRelDao: ExtServiceItemRelDao
     @Autowired
-    lateinit var redisOperation: RedisOperation
-    @Autowired
     lateinit var storeCommonService: StoreCommonService
     @Autowired
     lateinit var extServiceVersionLogDao: ExtServiceVersionLogDao
@@ -127,7 +123,9 @@ abstract class ExtServiceBaseService @Autowired constructor() {
     @Autowired
     lateinit var deptService: StoreVisibleDeptService
     @Autowired
-    lateinit var objectMapper: ObjectMapper
+    lateinit var extServiceBcsService: ExtServiceBcsService
+    @Autowired
+    lateinit var extServiceBcsNameSpaceConfig: ExtServiceBcsNameSpaceConfig
 
     fun addExtService(
         userId: String,
@@ -534,6 +532,17 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         if (!storeMemberDao.isStoreAdmin(dslContext, userId, serviceCode, StoreTypeEnum.SERVICE.type.toByte())) {
             return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED)
         }
+        // 停止bcs灰度命名空间和正式命名空间的应用
+        val bcsStopAppResult = extServiceBcsService.stopExtService(
+            userId = userId,
+            serviceCode = serviceCode,
+            deploymentName = serviceCode,
+            serviceName = "$serviceCode-service"
+        )
+        logger.info("the bcsStopAppResult is :$bcsStopAppResult")
+        if (bcsStopAppResult.isNotOk()) {
+            return bcsStopAppResult
+        }
         // 设置扩展服务状态为下架中
         extServiceDao.setServiceStatusByCode(
             dslContext, serviceCode, ExtServiceStatusEnum.RELEASED.status.toByte(),
@@ -630,7 +639,8 @@ abstract class ExtServiceBaseService @Autowired constructor() {
             )
         }
         // 查看当前版本之前的版本是否有已发布的，如果有已发布的版本则只是普通的升级操作而不需要审核
-        val isNormalUpgrade = getNormalUpgradeFlag(serviceRecord.serviceCode, serviceRecord.serviceStatus.toInt())
+        val serviceCode = serviceRecord.serviceCode
+        val isNormalUpgrade = getNormalUpgradeFlag(serviceCode, serviceRecord.serviceStatus.toInt())
         logger.info("passTest isNormalUpgrade is:$isNormalUpgrade")
         val serviceStatus = getPassTestStatus(isNormalUpgrade)
         val (checkResult, code) = checkServiceVersionOptRight(userId, serviceId, serviceStatus, isNormalUpgrade)
@@ -638,18 +648,25 @@ abstract class ExtServiceBaseService @Autowired constructor() {
             return MessageCodeUtil.generateResponseDataObject(code)
         }
         if (isNormalUpgrade) {
+            // 正式发布最新的扩展服务版本
+            extServiceBcsService.deployExtService(
+                userId = userId,
+                namespaceName = extServiceBcsNameSpaceConfig.namespaceName,
+                serviceCode = serviceCode,
+                version = serviceRecord.version
+            )
             val creator = serviceRecord.creator
             dslContext.transaction { t ->
                 val context = DSL.using(t)
                 // 清空旧版本LATEST_FLAG
-                extServiceDao.cleanLatestFlag(context, serviceRecord.serviceCode)
+                extServiceDao.cleanLatestFlag(context, serviceCode)
                 // 记录发布信息
                 val pubTime = LocalDateTime.now()
                 storeReleaseDao.addStoreReleaseInfo(
                     dslContext = context,
                     userId = userId,
                     storeReleaseCreateRequest = StoreReleaseCreateRequest(
-                        storeCode = serviceRecord.serviceCode,
+                        storeCode = serviceCode,
                         storeType = StoreTypeEnum.SERVICE,
                         latestUpgrader = creator,
                         latestUpgradeTime = pubTime
@@ -1038,7 +1055,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
             // 文件数据为空，直接返回输入数据
             return returnInputData(inputItemList)
         }
-        val taskDataMap = objectMapper.readValue<ExtensionJson>(fileStr!!)
+        val taskDataMap = JsonUtil.to(fileStr!!, ExtensionJson::class.java)
         logger.info("getServiceProps taskDataMap[$taskDataMap]")
         val fileServiceCode = taskDataMap.serviceCode
         val fileItemList = taskDataMap.itemList

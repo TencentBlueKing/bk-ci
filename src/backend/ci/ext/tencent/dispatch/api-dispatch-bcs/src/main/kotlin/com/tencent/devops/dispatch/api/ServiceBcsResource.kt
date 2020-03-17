@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.dispatch.pojo.CreateBcsNameSpaceRequest
 import com.tencent.devops.dispatch.pojo.CreateImagePullSecretRequest
 import com.tencent.devops.dispatch.pojo.DeployApp
+import com.tencent.devops.dispatch.pojo.StopApp
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -85,18 +86,14 @@ interface ServiceBcsResource {
         deployApp: DeployApp
     ): Result<Boolean>
 
-    @ApiOperation("bcs创建命名空间")
-    @Path("/namespaces/{namespaceName}/deployments/{deploymentName}")
+    @ApiOperation("bcs停止部署应用")
+    @Path("/stop/app")
     @DELETE
-    fun deleteDeployment(
+    fun bcsStopApp(
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("命名空间名称")
-        @PathParam("namespaceName")
-        namespaceName: String,
-        @ApiParam("命名空间名称")
-        @PathParam("deploymentName")
-        deploymentName: String
+        @ApiParam("停止部署请求对象")
+        stopApp: StopApp
     ): Result<Boolean>
 }
