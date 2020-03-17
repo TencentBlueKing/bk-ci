@@ -87,11 +87,6 @@ import com.tencent.devops.process.engine.pojo.PipelineBuildStage
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.engine.pojo.PipelineBuildStageControlOption
-import com.tencent.devops.process.engine.pojo.event.PipelineBuildAtomTaskEvent
-import com.tencent.devops.process.engine.pojo.event.PipelineBuildCancelEvent
-import com.tencent.devops.process.engine.pojo.event.PipelineBuildMonitorEvent
-import com.tencent.devops.process.engine.pojo.event.PipelineBuildStartEvent
-import com.tencent.devops.process.engine.pojo.event.PipelineBuildStageEvent
 import com.tencent.devops.common.pipeline.option.StageControlOption
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION
@@ -101,6 +96,7 @@ import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION_SUGGEST
 import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION_USERID
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.common.Timeout
+import com.tencent.devops.process.engine.pojo.event.*
 import com.tencent.devops.process.pojo.BuildBasicInfo
 import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.process.pojo.PipelineBuildMaterial
@@ -1246,6 +1242,16 @@ class PipelineRuntimeService @Autowired constructor(
         updateStageStatus(buildId, stageId, BuildStatus.REVIEW_ABORT)
         SpringContextUtil.getBean(PipelineBuildDetailService::class.java)
             .stageCancel(buildId, stageId)
+        pipelineEventDispatcher.dispatch(
+            PipelineBuildFinishEvent(
+                source = "FINALLY_STAGE_SUCCESS",
+                projectId = projectId,
+                pipelineId = pipelineId,
+                userId = userId,
+                buildId = buildId,
+                status = BuildStatus.STAGE_SUCCESS
+            )
+        )
     }
 
     private fun makeStartVMTask(
