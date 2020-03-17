@@ -37,7 +37,7 @@ import com.tencent.devops.common.auth.code.RepoAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.model.repository.tables.TRepositoryGtiToken
+import com.tencent.devops.model.repository.tables.TRepositoryGitToken
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.repository.dao.GitTokenDao
 import com.tencent.devops.repository.pojo.AuthorizeResult
@@ -195,14 +195,14 @@ class GitOauthService @Autowired constructor(
     }
 
     private fun doGetAccessToken(userId: String): GitToken? {
-        return gitTokenDao.getAccessToken(dslContext, userId)?.map {
-            with(TRepositoryGtiToken.T_REPOSITORY_GTI_TOKEN) {
+        return gitTokenDao.getAccessToken(dslContext, userId)?.let {
+            with(TRepositoryGitToken.T_REPOSITORY_GIT_TOKEN) {
                 GitToken(
-                    accessToken = AESUtil.decrypt(aesKey!!, it.get(ACCESS_TOKEN)),
-                    refreshToken = AESUtil.decrypt(aesKey!!, it.get(REFRESH_TOKEN)),
-                    tokenType = it.get(TOKEN_TYPE),
-                    expiresIn = it.get(EXPIRES_IN),
-                    createTime = it.get(CREATE_TIME).timestampmilli()
+                    accessToken = AESUtil.decrypt(aesKey!!, it.accessToken),
+                    refreshToken = AESUtil.decrypt(aesKey!!, it.refreshToken),
+                    tokenType = it.tokenType,
+                    expiresIn = it.expiresIn,
+                    createTime = it.createTime.timestampmilli()
                 )
             }
         }
