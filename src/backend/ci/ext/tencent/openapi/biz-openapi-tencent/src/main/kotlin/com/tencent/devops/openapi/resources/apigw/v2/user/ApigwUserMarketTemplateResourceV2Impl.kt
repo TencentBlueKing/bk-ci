@@ -43,7 +43,8 @@ class ApigwUserMarketTemplateResourceV2Impl @Autowired constructor(
         appCode: String?,
         apigwType: String?,
         userId: String,
-        installTemplateReq: InstallTemplateReq): Result<Boolean> {
+        installTemplateReq: InstallTemplateReq
+    ): Result<Boolean> {
         // 可见与可安装鉴权在store服务marketTemplateService中已实现
         return client.get(ServiceTemplateResource::class).installTemplate(userId, installTemplateReq)
     }
