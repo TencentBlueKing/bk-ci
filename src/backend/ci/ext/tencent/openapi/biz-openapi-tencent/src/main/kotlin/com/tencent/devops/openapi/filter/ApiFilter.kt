@@ -55,6 +55,33 @@ class ApiFilter : ContainerRequestFilter {
 
     private val excludeVeritfyPath = listOf("swagger.json", "external/service/versionInfo")
 
+
+    override fun filter(requestContext: ContainerRequestContext) {
+        // path为为空的时候，直接退出
+        val path = requestContext.uriInfo.requestUri.path
+        logger.info("uriInfo uriInfo[$path]")
+        // 目录不是apigw的不做过滤
+        if(!path.startsWith("/api/apigw/") && !path.startsWith("/api/apigw-user/") && !path.startsWith("/api/apigw-app/")) {
+            return
+        }
+        if (!path.isNullOrBlank()) {
+            if (excludeVeritfyPath.contains(path)) {
+                logger.info("The path($path) already exclude")
+                return
+            }
+        }
+        val valid = verifyJWT(requestContext)
+        // 验证通过
+        if (!valid) {
+            requestContext.abortWith(
+                Response.status(Response.Status.BAD_REQUEST)
+                    .entity("Devops OpenAPI Auth fail：user or app auth fail.")
+                    .build()
+            )
+            return
+        }
+    }
+
     fun verifyJWT(requestContext: ContainerRequestContext): Boolean {
         val bkApiJwt = requestContext.getHeaderString("X-Bkapi-JWT")
         val apigwtType = requestContext.getHeaderString("X-DEVOPS-APIGW-TYPE")
@@ -123,31 +150,7 @@ class ApiFilter : ContainerRequestFilter {
         return true
     }
 
-    override fun filter(requestContext: ContainerRequestContext) {
-        // path为为空的时候，直接退出
-        val path = requestContext.uriInfo?.path ?: return
-        logger.info("uriInfo uriInfo[$path]")
-        // 目录不是apigw的不做过滤
-        if(!path.startsWith("/api/apigw/") && !path.startsWith("/api/apigw-user/") && !path.startsWith("/api/apigw-app/")) {
-            return
-        }
-        if (!path.isNullOrBlank()) {
-            if (excludeVeritfyPath.contains(path)) {
-                logger.info("The path($path) already exclude")
-                return
-            }
-        }
-        val valid = verifyJWT(requestContext)
-        // 验证通过
-        if (!valid) {
-            requestContext.abortWith(
-                Response.status(Response.Status.BAD_REQUEST)
-                    .entity("Devops OpenAPI Auth fail：user or app auth fail.")
-                    .build()
-            )
-            return
-        }
-    }
+
 
     private fun parseJwt(bkApiJwt: String, apigwtType: String?): JSONObject {
         var reader: PEMReader? = null
