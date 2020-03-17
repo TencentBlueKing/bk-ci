@@ -377,13 +377,15 @@ abstract class ExtServiceBaseService @Autowired constructor() {
             val itemIdList = submitDTO.extensionItemList
             val itemCreateInfoList =
                 getFileServiceProps(serviceCode, featureInfoRecord!!.repositoryHashId, EXTENSION_JSON_NAME, itemIdList)
-            extServiceItemRelDao.deleteByServiceId(context, serviceId)
-            extServiceItemRelDao.batchAdd(
-                dslContext = dslContext,
-                userId = userId,
-                serviceId = serviceId,
-                itemPropList = itemCreateInfoList
-            )
+            if (null != itemIdList) {
+                extServiceItemRelDao.deleteByServiceId(context, serviceId)
+                extServiceItemRelDao.batchAdd(
+                    dslContext = dslContext,
+                    userId = userId,
+                    serviceId = serviceId,
+                    itemPropList = itemCreateInfoList!!
+                )
+            }
             // 添加扩展点使用记录
             client.get(ServiceItemResource::class).addServiceNum(itemIdList)
 
@@ -496,7 +498,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
             serviceItemList?.forEach { itId ->
                 val itemInfo = itemInfoMap?.get(itId)
                 if (itemInfo != null) {
-                    itemName += itemInfo.parentName + "-" + itemInfo.itemName + ","
+                    itemName += itemInfo!!.parentName + "-" + itemInfo.itemName + ","
                 }
             }
             itemName = itemName.substringBeforeLast(",")
@@ -782,12 +784,12 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         val oldStatus = serviceInfo.serviceStatus
         val isNormalUpgrade = getNormalUpgradeFlag(serviceCode, oldStatus.toInt())
         val newStatus = getCompletEditStatus(isNormalUpgrade)
-        val (checkResult, code) = checkServiceVersionOptRight(userId, serviceId, newStatus, isNormalUpgrade)
+        val (checkResult, code) = checkServiceVersionOptRight(userId, serviceId, newStatus, isNormalUpgrade )
 
         if (checkResult) {
             return MessageCodeUtil.generateResponseDataObject(code)
         }
-        mediaList.forEach {
+        mediaList?.forEach {
             mediaService.add(
                 userId = userId,
                 type = StoreTypeEnum.SERVICE,
@@ -828,6 +830,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
             val featureInfoRecord = extFeatureDao.getLatestServiceByCode(dslContext, serviceCode)
             logger.info("getServiceVersion featureInfoRecord: $featureInfoRecord")
 
+            val repositoryHashId = featureInfoRecord!!.repositoryHashId
             val flag =
                 storeUserService.isCanInstallStoreComponent(defaultFlag, userId, serviceCode, StoreTypeEnum.SERVICE)
             val userCommentInfo =
@@ -1103,8 +1106,8 @@ abstract class ExtServiceBaseService @Autowired constructor() {
 
         // 文件与输入itemCode取交集，若文件内有props，以文件props为准
         val filePropMap = mutableMapOf<String, String>()
-        fileItemList.forEach {
-            filePropMap[it.itemCode] = JsonUtil.toJson(it.props ?: "")
+        fileItemList!!.forEach {
+            filePropMap[it.itemCode!!] = JsonUtil.toJson(it.props ?: "")
         }
         val itemRecords = client.get(ServiceItemResource::class).getItemInfoByIds(inputItemList).data
         itemRecords?.forEach {
