@@ -123,7 +123,7 @@ class BkRepoDownloadService @Autowired constructor(
         // 校验用户流水线权限？
         val normalizedPath = PathUtils.checkAndNormalizeAbsPath(argPath)
         val repo = RepoUtils.getRepoByType(artifactoryType)
-        val url = "${HomeHostUtil.getHost(commonConfig.devopsIdcProxyGateway!!)}/bkrepo/api/user/generic/$projectId/$repo$normalizedPath"
+        val url = "${HomeHostUtil.getHost(commonConfig.devopsIdcGateway!!)}/bkrepo/api/user/generic/$projectId/$repo$normalizedPath"
         return Url(url, url)
     }
 
