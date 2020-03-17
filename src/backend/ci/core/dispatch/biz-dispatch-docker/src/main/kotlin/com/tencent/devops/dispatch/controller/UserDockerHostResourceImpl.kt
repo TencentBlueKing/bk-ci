@@ -27,6 +27,7 @@
 package com.tencent.devops.dispatch.controller
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.pojo.Result
@@ -38,14 +39,18 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.dispatch.api.UserDockerHostResource
+import com.tencent.devops.dispatch.dao.PipelineDockerTaskSimpleDao
 import com.tencent.devops.dispatch.pojo.ContainerInfo
 import com.tencent.devops.dispatch.pojo.DebugStartParam
 import com.tencent.devops.dispatch.service.DockerHostBuildService
 import com.tencent.devops.dispatch.service.DockerHostDebugService
 import com.tencent.devops.store.api.container.ServiceContainerAppResource
 import com.tencent.devops.store.pojo.app.BuildEnv
+import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
+import java.net.URLEncoder
 
 @RestResource
 class UserDockerHostResourceImpl @Autowired constructor(
@@ -53,7 +58,9 @@ class UserDockerHostResourceImpl @Autowired constructor(
     private val dockerHostDebugService: DockerHostDebugService,
     private val bkAuthPermissionApi: AuthPermissionApi,
     private val pipelineAuthServiceCode: PipelineAuthServiceCode,
-    private val client: Client
+    private val pipelineDockerTaskSimpleDao: PipelineDockerTaskSimpleDao,
+    private val client: Client,
+    private val dslContext: DSLContext
 ) : UserDockerHostResource {
     companion object {
         private val logger = LoggerFactory.getLogger(UserDockerHostResourceImpl::class.java)
@@ -68,7 +75,17 @@ class UserDockerHostResourceImpl @Autowired constructor(
             throw PermissionForbiddenException("用户($userId)无权限在工程(${debugStartParam.projectId})下编辑流水线(${debugStartParam.pipelineId})")
         }
 
-        // 先查询是否已经有启动调试容器了，如果有，直接返回成功
+        // 查询是否存在构建机可启动调试
+        val taskHistory =
+            pipelineDockerTaskSimpleDao.getByPipelineIdAndVMSeq(dslContext, debugStartParam.pipelineId, debugStartParam.vmSeqId)
+                ?: throw ErrorCodeException(
+                    errorCode = "2103501",
+                    defaultMessage = "no container is ready to debug",
+                    params = arrayOf(debugStartParam.pipelineId)
+                )
+        val dockerIp = taskHistory.dockerIp
+
+        // 查询是否已经有启动调试容器了，如果有，直接返回成功
         val result = dockerHostDebugService.getDebugStatus(debugStartParam.pipelineId, debugStartParam.vmSeqId)
         if (result.status == 0) {
             logger.info("Container already exists, ContainerInfo: $result.data")
@@ -100,6 +117,7 @@ class UserDockerHostResourceImpl @Autowired constructor(
 
         with(debugStartParam) {
             dockerHostDebugService.insertDebug(
+                dockerIp = dockerIp,
                 userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId,
