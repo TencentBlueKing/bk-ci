@@ -43,11 +43,11 @@ class PrivateVMService @Autowired constructor(
     fun list(): List<VMWithPrivateProject> {
         val records = privateVMDao.list(dslContext)
         val vmIds = records.map {
-            it.vmId
+            it.vmId.toLong()
         }.toSet()
 
         val map = records.map {
-            it.vmId to it.projectId
+            it.vmId.toLong() to it.projectId
         }.toMap()
         val vmRecords = vmDao.findVMByIds(dslContext, vmIds)
         return vmRecords.map {
