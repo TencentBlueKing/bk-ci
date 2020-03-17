@@ -26,7 +26,11 @@
 
 package com.tencent.devops.dispatch.service
 
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.DockerVersion
 import com.tencent.devops.common.pipeline.type.docker.ImageType
@@ -34,6 +38,8 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.common.web.mq.alert.AlertLevel
 import com.tencent.devops.common.web.mq.alert.AlertUtils
+import com.tencent.devops.dispatch.client.DockerHostClient
+import com.tencent.devops.dispatch.controller.UserDockerHostResourceImpl
 import com.tencent.devops.dispatch.dao.PipelineDockerDebugDao
 import com.tencent.devops.dispatch.dao.PipelineDockerEnableDao
 import com.tencent.devops.dispatch.dao.PipelineDockerHostDao
@@ -45,12 +51,16 @@ import com.tencent.devops.dispatch.utils.redis.RedisUtils
 import com.tencent.devops.store.pojo.image.exception.UnknownImageType
 import com.tencent.devops.store.pojo.image.response.ImageRepoInfo
 import com.tencent.devops.ticket.pojo.enums.CredentialType
+import okhttp3.MediaType
+import okhttp3.Request
+import okhttp3.RequestBody
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
+import java.net.URLEncoder
 
 @Service
 class DockerHostDebugService @Autowired constructor(
@@ -71,10 +81,14 @@ class DockerHostDebugService @Autowired constructor(
     @Value("\${project.gray:#{null}}")
     private val grayFlag: String? = null
 
+    @Value("\${devopsGateway.idcProxy}")
+    val idcProxy: String? = null
+
     private val TLINUX1_2_IMAGE = "/bkdevops/docker-builder1.2:v1"
     private val TLINUX2_2_IMAGE = "/bkdevops/docker-builder2.2:v1"
 
     fun insertDebug(
+        dockerIp:String,
         userId: String,
         projectId: String,
         pipelineId: String,
@@ -155,6 +169,14 @@ class DockerHostDebugService @Autowired constructor(
             else -> ""
         }
 
+        val newImageType = when (imageType) {
+            null -> ImageType.BKDEVOPS.type
+            ImageType.THIRD -> imageType!!.type
+            ImageType.BKDEVOPS -> ImageType.BKDEVOPS.type
+            ImageType.BKSTORE -> imageRepoInfo!!.sourceType.type
+            else -> throw UnknownImageType("imageCode:$imageCode,imageVersion:$imageVersion,imageType:$imageType")
+        }
+
         pipelineDockerDebugDao.insertDebug(
             dslContext = dslContext,
             projectId = projectId,
@@ -167,16 +189,41 @@ class DockerHostDebugService @Autowired constructor(
             buildEnv = buildEnvStr,
             registryUser = userName,
             registryPwd = password,
-            imageType = when (imageType) {
-                null -> ImageType.BKDEVOPS.type
-                ImageType.THIRD -> imageType!!.type
-                ImageType.BKDEVOPS -> ImageType.BKDEVOPS.type
-                ImageType.BKSTORE -> imageRepoInfo!!.sourceType.type
-                else -> throw UnknownImageType("imageCode:$imageCode,imageVersion:$imageVersion,imageType:$imageType")
-            },
+            imageType = newImageType,
             imagePublicFlag = imageRepoInfo?.publicFlag,
             imageRDType = imageRepoInfo?.rdType
         )
+
+        // 定向通知dockerhost
+        val url = "http://$dockerIp/api/docker/debug/start"
+        val proxyUrl = "$idcProxy/proxy-devnet?url=${urlEncode(url)}"
+        val requestBody = ContainerInfo(projectId, pipelineId, vmSeqId, PipelineTaskStatus.RUNNING.status, dockerImage,
+            "", "", "", buildEnvStr, userName, password, newImageType)
+        val request = Request.Builder().url(proxyUrl)
+            .post(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), JsonUtil.toJson(requestBody)))
+            .addHeader("Accept", "application/json; charset=utf-8")
+            .addHeader("Content-Type", "application/json; charset=utf-8")
+            .build()
+
+        logger.info("[${projectId}|${pipelineId}] Start debug Docker VM $dockerIp url: $proxyUrl, requestBody: ${JsonUtil.toJson(requestBody)}")
+        OkhttpUtils.doLongHttp(request).use { resp ->
+            val responseBody = resp.body()!!.string()
+            logger.info("[${projectId}|${pipelineId}] Start debug Docker VM $dockerIp responseBody: $responseBody")
+            val response: Map<String, Any> = jacksonObjectMapper().readValue(responseBody)
+            when {
+                response["status"] == 0 -> {
+                }
+                response["status"] == 1 -> {
+                    val msg = response["message"]
+                    logger.error("[$projectId|$pipelineId] Start debug Docker VM failed. $msg")
+                    throw RuntimeException("Start debug Docker VM failed. $msg")
+                }
+                else -> {
+                    val msg = response["event"] as String
+                    throw RuntimeException("Start debug Docker VM failed, msg: $msg")
+                }
+            }
+        }
     }
 
     fun deleteDebug(pipelineId: String, vmSeqId: String): Result<Boolean> {
@@ -392,6 +439,8 @@ class DockerHostDebugService @Autowired constructor(
         }
         return result
     }
+
+    private fun urlEncode(s: String) = URLEncoder.encode(s, "UTF-8")
 
     companion object {
         private val logger = LoggerFactory.getLogger(DockerHostDebugService::class.java)
