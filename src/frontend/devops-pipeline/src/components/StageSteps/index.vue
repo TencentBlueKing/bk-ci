@@ -1,10 +1,10 @@
 <template>
     <div class="stage-steps">
         <template v-for="step in steps">
-            <span v-if="step.tooltip" v-bk-tooltips="step.tooltip" class="stage-step" :key="step.icon">
+            <span v-if="step.tooltip" v-bk-tooltips="step.tooltip" :class="`stage-step ${step.statusCls}`" :key="step.icon">
                 <logo :class="`step-icon ${step.statusCls}`" :name="step.icon" size="16" />
             </span>
-            <span v-else class="stage-step" :key="step.icon">
+            <span v-else :class="`stage-step ${step.statusCls}`" :key="step.icon">
                 <logo :class="`step-icon ${step.statusCls}`" :name="step.icon" size="16" />
             </span>
         </template>
@@ -39,29 +39,56 @@
             content: '';
             width: 6px;
             height: 1px;
-            background-color: #333;
+            background-color: #A9ABB9;
         }
         &:last-child::before {
             display: none;
         }
 
-        > .step-icon {
-            display: inline-block;
-            &.SUCCEED {
+        &.SUCCEED {
+            &:before {
+                background-color: $successColor;
+            }
+            .step-icon {
                 fill: $successColor;
             }
-            &.FAILED  {
+        }
+        &.FAILED  {
+            &:before {
+                background-color: $dangerColor;
+            }
+            .step-icon {
                 fill: $dangerColor;
             }
-            // &.RUNNING {
-            //     fill: $primaryColor;
-            // }
-            &.SKIP {
+        }
+        &.RUNNING {
+            &:before {
+                background-color: $primaryColor;
+            }
+            .step-icon {
+                fill: $primaryColor;
+            }
+        }
+        &.SKIP {
+            &:before {
+                background-color: $borderLightColor;
+            }
+            .step-icon {
                 fill: $borderLightColor;
             }
-            &.PAUSE  {
+        }
+        &.PAUSE  {
+            &:before {
+                background-color: $iconPrimaryColor;
+            }
+            .step-icon {
                 fill: $iconPrimaryColor;
             }
+        }
+
+        .step-icon {
+            display: inline-block;
+            fill: $borderLightColor;
         }
     }
 </style>
