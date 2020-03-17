@@ -155,20 +155,6 @@ class DockerHostDebugService @Autowired constructor(
             password = ticketsMap["v2"] as String
         }
 
-        val dockerHost = pipelineDockerHostDao.getHost(dslContext, projectId)
-        val lastHostIp = redisUtils.getDockerBuildLastHost(pipelineId, vmSeqId)
-        val hostTag = when {
-            null != dockerHost -> {
-                logger.info("Fixed debug host machine, hostIp:${dockerHost.hostIp}, pipelineId:$pipelineId")
-                dockerHost.hostIp
-            }
-            null != lastHostIp -> {
-                logger.info("Use last build hostIp: $lastHostIp, pipelineId:$pipelineId")
-                lastHostIp
-            }
-            else -> ""
-        }
-
         val newImageType = when (imageType) {
             null -> ImageType.BKDEVOPS.type
             ImageType.THIRD -> imageType!!.type
@@ -185,7 +171,7 @@ class DockerHostDebugService @Autowired constructor(
             status = PipelineTaskStatus.QUEUE,
             token = "",
             imageName = dockerImage,
-            hostTag = hostTag,
+            hostTag = dockerIp,
             buildEnv = buildEnvStr,
             registryUser = userName,
             registryPwd = password,
