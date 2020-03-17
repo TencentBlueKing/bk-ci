@@ -582,7 +582,7 @@ class BkRepoService @Autowired constructor(
             downloadIps = listOf(),
             timeoutInSeconds = ttl.toLong()
         )
-        return "${HomeHostUtil.getHost(commonConfig.devopsHostGateway!!)}/bkrepo/api/external/repository$shareUri"
+        return StringUtil.chineseUrlEncode("${HomeHostUtil.getHost(commonConfig.devopsHostGateway!!)}/bkrepo/api/external/repository$shareUri")
     }
 
     companion object {

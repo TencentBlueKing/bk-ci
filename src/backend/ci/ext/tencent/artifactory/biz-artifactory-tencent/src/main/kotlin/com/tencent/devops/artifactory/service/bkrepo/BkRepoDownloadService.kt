@@ -123,7 +123,7 @@ class BkRepoDownloadService @Autowired constructor(
         // 校验用户流水线权限？
         val normalizedPath = PathUtils.checkAndNormalizeAbsPath(argPath)
         val repo = RepoUtils.getRepoByType(artifactoryType)
-        val url = "${HomeHostUtil.getHost(commonConfig.devopsIdcGateway!!)}/bkrepo/api/user/generic/$projectId/$repo$normalizedPath"
+        val url = StringUtil.chineseUrlEncode("${HomeHostUtil.getHost(commonConfig.devopsIdcGateway!!)}/bkrepo/api/user/generic/$projectId/$repo$normalizedPath")
         return Url(url, url)
     }
 
@@ -295,7 +295,7 @@ class BkRepoDownloadService @Autowired constructor(
                 downloadIps = listOf(),
                 timeoutInSeconds = (ttl ?: 24 * 3600).toLong()
             )
-            resultList.add("${HomeHostUtil.getHost(commonConfig.devopsDevnetProxyGateway!!)}/bkrepo/api/external/repository$shareUri")
+            resultList.add(StringUtil.chineseUrlEncode("${HomeHostUtil.getHost(commonConfig.devopsDevnetProxyGateway!!)}/bkrepo/api/external/repository$shareUri"))
         }
         return resultList
     }
