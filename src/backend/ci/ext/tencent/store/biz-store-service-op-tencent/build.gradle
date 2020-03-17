@@ -25,13 +25,11 @@
  */
 
 dependencies {
-    compile project(":ext:tencent:store:biz-store-op")
-    compile project(":ext:tencent:store:biz-store-ideatom")
-    compile project(":ext:tencent:store:biz-store-tencent")
+    compile project(":core:store:biz-store")
     compile project(":ext:tencent:store:biz-store-service")
-    compile project(":ext:tencent:store:biz-store-image-tencent")
-    compile project(":ext:tencent:store:biz-store-image-op-tencent")
-    compile project(":ext:tencent:store:biz-store-service-op-tencent")
+    compile project(":ext:tencent:store:api-store-op")
+    compile project(":ext:tencent:store:api-store-service-op-tencent")
+    compile project(":core:repository:api-repository")
 }
 
-apply from: "$rootDir/task_spring_boot_package.gradle"
+apply from: "$rootDir/task_deploy_to_maven.gradle"

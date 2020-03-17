@@ -1,20 +1,20 @@
-package com.tencent.devops.store.resources.extsion
+package com.tencent.devops.store.resources
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.store.api.service.OpServiceResource
+import com.tencent.devops.store.api.OpServiceResource
+import com.tencent.devops.store.pojo.OpEditInfoDTO
 import com.tencent.devops.store.pojo.atom.enums.OpSortTypeEnum
 import com.tencent.devops.store.pojo.common.StoreVisibleDeptResp
 import com.tencent.devops.store.pojo.common.VisibleApproveReq
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.dto.ServiceApproveReq
 import com.tencent.devops.store.pojo.dto.ServiceOfflineDTO
-import com.tencent.devops.store.pojo.service.OpEditInfoDTO
 import com.tencent.devops.store.pojo.vo.ExtServiceInfoResp
 import com.tencent.devops.store.pojo.vo.ServiceVersionVO
 import com.tencent.devops.store.service.ExtServiceBaseService
+import com.tencent.devops.store.service.OpExtServiceService
 import com.tencent.devops.store.service.common.StoreVisibleDeptService
-import com.tencent.devops.store.service.extsion.OpExtServiceService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource

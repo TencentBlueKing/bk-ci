@@ -1,4 +1,4 @@
-package com.tencent.devops.store.service.extsion
+package com.tencent.devops.store.service
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
@@ -17,6 +17,7 @@ import com.tencent.devops.store.dao.common.StoreReleaseDao
 import com.tencent.devops.store.pojo.ExtServiceFeatureUpdateInfo
 import com.tencent.devops.store.pojo.ExtServiceItemRelCreateInfo
 import com.tencent.devops.store.pojo.ExtServiceUpdateInfo
+import com.tencent.devops.store.pojo.OpEditInfoDTO
 import com.tencent.devops.store.pojo.common.PASS
 import com.tencent.devops.store.pojo.common.REJECT
 import com.tencent.devops.store.pojo.common.StoreMediaInfoRequest
@@ -26,11 +27,8 @@ import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.enums.ExtServiceStatusEnum
 import com.tencent.devops.store.pojo.dto.ServiceApproveReq
 import com.tencent.devops.store.pojo.enums.ExtServiceSortTypeEnum
-import com.tencent.devops.store.pojo.service.OpEditInfoDTO
 import com.tencent.devops.store.pojo.vo.ExtServiceInfoResp
 import com.tencent.devops.store.pojo.vo.ExtensionServiceVO
-import com.tencent.devops.store.service.ExtServiceNotifyService
-import com.tencent.devops.store.service.TxExtServiceMemberImpl
 import org.jooq.impl.DSL
 import org.jooq.impl.DefaultDSLContext
 import org.slf4j.LoggerFactory

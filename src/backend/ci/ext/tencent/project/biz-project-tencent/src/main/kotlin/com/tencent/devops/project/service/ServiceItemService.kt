@@ -297,8 +297,8 @@ class ServiceItemService @Autowired constructor(
             props = itemRecord.props ?: "",
             icon = itemRecord.iconUrl,
             tooltip = itemRecord.tooltip
-
         )
+        itemInfo.parentName = findParent(itemInfo).extServiceItem.name
         return Result(itemInfo)
     }
 

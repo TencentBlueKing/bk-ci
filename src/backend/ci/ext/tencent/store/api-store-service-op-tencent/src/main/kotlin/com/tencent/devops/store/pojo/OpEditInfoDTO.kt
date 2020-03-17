@@ -1,4 +1,4 @@
-package com.tencent.devops.store.pojo.service
+package com.tencent.devops.store.pojo
 
 data class OpEditInfoDTO(
     val baseInfo: OpExtBaseInfo?,

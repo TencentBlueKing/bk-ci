@@ -1,14 +1,14 @@
-package com.tencent.devops.store.api.service
+package com.tencent.devops.store.api
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.store.pojo.OpEditInfoDTO
 import com.tencent.devops.store.pojo.atom.enums.OpSortTypeEnum
 import com.tencent.devops.store.pojo.common.StoreVisibleDeptResp
 import com.tencent.devops.store.pojo.common.VisibleApproveReq
 import com.tencent.devops.store.pojo.dto.ServiceApproveReq
 import com.tencent.devops.store.pojo.dto.ServiceOfflineDTO
-import com.tencent.devops.store.pojo.service.OpEditInfoDTO
 import com.tencent.devops.store.pojo.vo.ExtServiceInfoResp
 import com.tencent.devops.store.pojo.vo.ServiceVersionVO
 import io.swagger.annotations.Api

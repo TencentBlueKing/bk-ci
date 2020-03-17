@@ -1,4 +1,4 @@
-package com.tencent.devops.store.pojo.service
+package com.tencent.devops.store.pojo
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import io.swagger.annotations.ApiModelProperty

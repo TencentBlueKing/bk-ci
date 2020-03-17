@@ -1,4 +1,4 @@
-package com.tencent.devops.store.pojo.service
+package com.tencent.devops.store.pojo
 
 import com.tencent.devops.store.pojo.enums.ServiceTypeEnum
 import io.swagger.annotations.ApiModelProperty
