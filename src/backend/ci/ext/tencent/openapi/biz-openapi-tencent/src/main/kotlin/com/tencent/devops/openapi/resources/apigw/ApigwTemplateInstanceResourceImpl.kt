@@ -38,6 +38,8 @@ import org.springframework.beans.factory.annotation.Autowired
 class ApigwTemplateInstanceResourceImpl @Autowired constructor(private val client: Client) :
     ApigwTemplateInstanceResource {
     override fun createTemplateInstances(
+        appCode: String?,
+        apigwType: String?,
         userId: String,
         projectId: String,
         templateId: String,

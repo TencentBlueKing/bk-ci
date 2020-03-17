@@ -46,6 +46,8 @@ class ApigwBuildResourceV2Impl @Autowired constructor(
     private val apigwBuildServiceV2: ApigwBuildServiceV2
 ) : ApigwBuildResourceV2 {
     override fun getBuildListByBG(
+        appCode: String?,
+        apigwType: String?,
         userId: String,
         bgId: String,
         beginDate: Long?,
@@ -53,18 +55,22 @@ class ApigwBuildResourceV2Impl @Autowired constructor(
         offset: Int?,
         limit: Int?
     ): Result<List<PipelineBuildResponseData>?> {
-        return Result(apigwBuildServiceV2.getBuildList(
-            userId = userId,
-            bgId = bgId,
-            beginDate = beginDate,
-            endDate = endDate,
-            offset = offset,
-            limit = limit,
-            interfaceName = "/{apigwType:apigw-user|apigw-app|apigw}/v2/builds/detail/list"
-        ))
+        return Result(
+            apigwBuildServiceV2.getBuildList(
+                userId = userId,
+                bgId = bgId,
+                beginDate = beginDate,
+                endDate = endDate,
+                offset = offset,
+                limit = limit,
+                interfaceName = "/{apigwType:apigw-user|apigw-app|apigw}/v2/builds/detail/list"
+            )
+        )
     }
 
     override fun stop(
+        appCode: String?,
+        apigwType: String?,
         userId: String,
         projectId: String,
         pipelineId: String,
@@ -80,7 +86,14 @@ class ApigwBuildResourceV2Impl @Autowired constructor(
         )
     }
 
-    override fun detail(userId: String, projectId: String, pipelineId: String, buildId: String): Result<ModelDetail> {
+    override fun detail(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String
+    ): Result<ModelDetail> {
         logger.info("get build detail: the build($buildId) of pipeline($pipelineId) of project($projectId) by user($userId)")
         return client.get(ServiceBuildResource::class).getBuildDetail(
             userId = userId,
@@ -92,6 +105,8 @@ class ApigwBuildResourceV2Impl @Autowired constructor(
     }
 
     override fun getStatusWithoutPermission(
+        appCode: String?,
+        apigwType: String?,
         userId: String,
         organizationType: String,
         organizationId: Long,

@@ -37,7 +37,12 @@ import org.springframework.beans.factory.annotation.Autowired
 @RestResource
 class ApigwPipelineTemplateResourceImpl @Autowired constructor(private val client: Client) :
     ApigwPipelineTemplateResource {
-    override fun listTemplate(userId: String, projectId: String): Result<Map<String, PipelineTemplate>> {
+    override fun listTemplate(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String
+    ): Result<Map<String, PipelineTemplate>> {
         logger.info("get project's pipeline template, projectId($projectId)")
         val templates = client.get(ServicePipelineTemplateResource::class).listTemplate(projectId)
         val templatesResult = mutableMapOf<String, PipelineTemplate>()

@@ -40,6 +40,8 @@ import org.springframework.beans.factory.annotation.Autowired
 class ApigwCredentialResourceImpl @Autowired constructor(private val client: Client) :
     ApigwCredentialResource {
     override fun hasPermissionList(
+        appCode: String?,
+        apigwType: String?,
         userId: String,
         projectId: String,
         credentialTypesString: String?,

@@ -40,6 +40,8 @@ class ApigwCallBackResourceV2Impl @Autowired constructor(
     private val client: Client
 ) : ApigwCallBackResourceV2 {
     override fun create(
+        appCode: String?,
+        apigwType: String?,
         userId: String,
         projectId: String,
         url: String,

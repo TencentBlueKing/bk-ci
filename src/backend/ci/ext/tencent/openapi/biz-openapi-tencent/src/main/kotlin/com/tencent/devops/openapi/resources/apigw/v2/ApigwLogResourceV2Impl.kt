@@ -14,6 +14,8 @@ class ApigwLogResourceV2Impl @Autowired constructor(
     private val client: Client
 ) : ApigwLogResourceV2 {
     override fun getInitLogs(
+        appCode: String?,
+        apigwType: String?,
         projectId: String,
         pipelineId: String,
         buildId: String,

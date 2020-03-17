@@ -40,17 +40,28 @@ import org.springframework.beans.factory.annotation.Autowired
 @RestResource
 class ApigwMarketAtomResourceImpl @Autowired constructor(private val client: Client) :
     ApigwMarketAtomResource {
-    override fun getAtomByCode(atomCode: String, userId: String): Result<AtomVersion?> {
+    override fun getAtomByCode(
+        appCode: String?,
+        apigwType: String?,
+        atomCode: String,
+        userId: String): Result<AtomVersion?> {
         logger.info("get Atom By Code, atomCode($atomCode),userId($userId)")
         return client.get(ServiceMarketAtomResource::class).getAtomByCode(atomCode, userId)
     }
 
-    override fun getAtomStatisticByCode(atomCode: String, userId: String): Result<AtomStatistic> {
+    override fun getAtomStatisticByCode(
+        appCode: String?,
+        apigwType: String?,
+        atomCode: String,
+        userId: String
+        ): Result<AtomStatistic> {
         logger.info("get Atom Statistic By Code, atomCode($atomCode),userId($userId)")
         return client.get(ServiceMarketAtomResource::class).getAtomStatisticByCode(atomCode, userId)
     }
 
     override fun getAtomPipelinesByCode(
+        appCode: String?,
+        apigwType: String?,
         atomCode: String,
         userId: String,
         page: Int?,

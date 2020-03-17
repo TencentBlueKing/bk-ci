@@ -37,6 +37,8 @@ class ApigwAppQualityResourceImpl @Autowired constructor(
     private val apigwQualityService: ApigwQualityService
 ) : ApigwAppQualityResource {
     override fun getBuildQuality(
+        appCode: String?,
+        apigwType: String?,
         userId: String,
         bgId: String,
         projectId: String,

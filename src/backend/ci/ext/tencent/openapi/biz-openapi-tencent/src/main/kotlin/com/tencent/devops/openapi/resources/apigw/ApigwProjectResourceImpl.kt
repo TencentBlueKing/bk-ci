@@ -40,6 +40,8 @@ class ApigwProjectResourceImpl @Autowired constructor(private val client: Client
     ApigwProjectResource {
 
     override fun getProjectByGroup(
+        appCode: String?,
+        apigwType: String?,
         userId: String,
         bgName: String?,
         deptName: String?,
@@ -54,12 +56,20 @@ class ApigwProjectResourceImpl @Autowired constructor(private val client: Client
         )
     }
 
-    override fun getProject(userId: String, projectId: String): Result<ProjectVO?> {
+    override fun getProject(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String): Result<ProjectVO?> {
         logger.info("Get a project info ,projectId:$projectId")
         return client.get(ServiceProjectResource::class).get(projectId)
     }
 
-    override fun getProjectByUser(userId: String): Result<List<ProjectVO>> {
+    override fun getProjectByUser(
+        appCode: String?,
+        apigwType: String?,
+        userId: String
+    ): Result<List<ProjectVO>> {
         logger.info("Get user's project info ,userId:$userId")
         return client.get(ServiceProjectResource::class).list(userId)
     }

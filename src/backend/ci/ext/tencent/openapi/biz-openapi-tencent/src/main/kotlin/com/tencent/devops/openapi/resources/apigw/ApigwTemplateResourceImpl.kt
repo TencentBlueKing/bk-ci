@@ -41,6 +41,8 @@ import org.springframework.beans.factory.annotation.Autowired
 class ApigwTemplateResourceImpl @Autowired constructor(private val client: Client) :
     ApigwTemplateResource {
     override fun listTemplate(
+        appCode: String?,
+        apigwType: String?,
         userId: String,
         projectId: String,
         templateType: TemplateType?,
@@ -56,6 +58,8 @@ class ApigwTemplateResourceImpl @Autowired constructor(private val client: Clien
     }
 
     override fun getTemplate(
+        appCode: String?,
+        apigwType: String?,
         userId: String,
         projectId: String,
         templateId: String,
@@ -70,7 +74,12 @@ class ApigwTemplateResourceImpl @Autowired constructor(private val client: Clien
         )
     }
 
-    override fun listAllTemplate(userId: String, projectId: String): Result<OptionalTemplateList> {
+    override fun listAllTemplate(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String
+    ): Result<OptionalTemplateList> {
         logger.info("get project's pipeline all template, projectId($projectId) by user $userId")
         return client.get(ServiceTemplateResource::class).listAllTemplate(
             userId = userId,

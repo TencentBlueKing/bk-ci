@@ -38,7 +38,13 @@ import org.springframework.beans.factory.annotation.Autowired
 class ApigwGitResourceV2Impl @Autowired constructor(
     private val client: Client
 ) : ApigwGitResourceV2 {
-    override fun getProject(userId: String, projectId: String, repoHashId: String?): Result<AuthorizeResult> {
+    override fun getProject(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        repoHashId: String?
+    ): Result<AuthorizeResult> {
         logger.info("Get git projects  of project($projectId) by user($userId) with repoHashId($repoHashId)")
         return client.get(UserGitResource::class).getProject(
             userId = userId,

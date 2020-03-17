@@ -45,7 +45,13 @@ class ApigwProjectResourceV2Impl @Autowired constructor(
     private val apigwProjectService: ApigwProjectService
 ) : ApigwProjectResourceV2 {
 
-    override fun create(userId: String, accessToken: String, projectCreateInfo: ProjectCreateInfo): Result<String> {
+    override fun create(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        accessToken: String,
+        projectCreateInfo: ProjectCreateInfo
+    ): Result<String> {
         logger.info("v2/projects/newProject:create:Input($userId,$accessToken,$projectCreateInfo)")
         return Result(client.get(ServiceTxProjectResource::class).create(
             userId = userId,
@@ -55,6 +61,8 @@ class ApigwProjectResourceV2Impl @Autowired constructor(
     }
 
     override fun getProjectByOrganizationId(
+        appCode: String?,
+        apigwType: String?,
         userId: String,
         organizationType: String,
         organizationId: Long,
@@ -74,6 +82,8 @@ class ApigwProjectResourceV2Impl @Autowired constructor(
     }
 
     override fun createProjectUserByUser(
+        appCode: String?,
+        apigwType: String?,
         createUserId: String,
         createInfo: ProjectCreateUserDTO
     ): Result<Boolean?> {
@@ -81,6 +91,8 @@ class ApigwProjectResourceV2Impl @Autowired constructor(
     }
 
     override fun createProjectaUserByApp(
+        appCode: String?,
+        apigwType: String?,
         organizationType: String,
         organizationId: Long,
         createInfo: ProjectCreateUserDTO
@@ -95,6 +107,8 @@ class ApigwProjectResourceV2Impl @Autowired constructor(
     }
 
     override fun createUserPipelinePermissionByUser(
+        appCode: String?,
+        apigwType: String?,
         accessToken: String,
         createUser: String,
         createInfo: PipelinePermissionInfo
@@ -109,6 +123,8 @@ class ApigwProjectResourceV2Impl @Autowired constructor(
     }
 
     override fun createUserPipelinePermissionByApp(
+        appCode: String?,
+        apigwType: String?,
         organizationType: String,
         organizationId: Long,
         createInfo: PipelinePermissionInfo
@@ -123,6 +139,8 @@ class ApigwProjectResourceV2Impl @Autowired constructor(
     }
 
     override fun getProjectRoles(
+        appCode: String?,
+        apigwType: String?,
         organizationType: String,
         organizationId: Long,
         projectId: String

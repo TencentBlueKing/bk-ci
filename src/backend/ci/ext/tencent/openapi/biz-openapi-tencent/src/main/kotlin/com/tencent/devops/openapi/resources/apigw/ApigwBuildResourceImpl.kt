@@ -44,9 +44,9 @@ class ApigwBuildResourceImpl @Autowired constructor(
     private val client: Client
 ) : ApigwBuildResource {
     override fun manualStartupInfo(
-        userId: String,
         appCode: String?,
         apigwType: String?,
+        userId: String,
         projectId: String,
         pipelineId: String
     ): Result<BuildManualStartupInfo> {
@@ -60,9 +60,9 @@ class ApigwBuildResourceImpl @Autowired constructor(
     }
 
     override fun getHistoryBuild(
-        userId: String,
         appCode: String?,
         apigwType: String?,
+        userId: String,
         projectId: String,
         pipelineId: String,
         page: Int?,
@@ -80,9 +80,9 @@ class ApigwBuildResourceImpl @Autowired constructor(
     }
 
     override fun start(
-        userId: String,
         appCode: String?,
         apigwType: String?,
+        userId: String,
         projectId: String,
         pipelineId: String,
         values: Map<String, String>
@@ -98,9 +98,9 @@ class ApigwBuildResourceImpl @Autowired constructor(
     }
 
     override fun stop(
-        userId: String,
         appCode: String?,
         apigwType: String?,
+        userId: String,
         projectId: String,
         pipelineId: String,
         buildId: String
@@ -116,9 +116,9 @@ class ApigwBuildResourceImpl @Autowired constructor(
     }
 
     override fun getStatus(
-        userId: String,
         appCode: String?,
         apigwType: String?,
+        userId: String,
         projectId: String,
         pipelineId: String,
         buildId: String

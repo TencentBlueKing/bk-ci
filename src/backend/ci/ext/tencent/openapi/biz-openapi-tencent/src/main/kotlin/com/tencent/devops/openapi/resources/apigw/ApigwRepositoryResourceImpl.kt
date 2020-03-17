@@ -42,7 +42,13 @@ import org.springframework.beans.factory.annotation.Autowired
 @RestResource
 class ApigwRepositoryResourceImpl @Autowired constructor(private val client: Client) :
     ApigwRepositoryResource {
-    override fun create(userId: String, projectId: String, repository: Repository): Result<RepositoryId> {
+    override fun create(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        repository: Repository
+    ): Result<RepositoryId> {
         logger.info("create repostitories in project:userId=$userId,projectId=$projectId,repository:$repository")
         return client.get(ServiceRepositoryResource::class).create(
             userId = userId,
@@ -51,7 +57,13 @@ class ApigwRepositoryResourceImpl @Autowired constructor(private val client: Cli
         )
     }
 
-    override fun hasPermissionList(userId: String, projectId: String, repositoryType: ScmType?): Result<Page<RepositoryInfo>> {
+    override fun hasPermissionList(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        repositoryType: ScmType?
+    ): Result<Page<RepositoryInfo>> {
         logger.info("get user's use repostitories in project:userId=$userId,projectId=$projectId,repositoryType:$repositoryType")
         return client.get(ServiceRepositoryResource::class).hasPermissionList(
             userId = userId,

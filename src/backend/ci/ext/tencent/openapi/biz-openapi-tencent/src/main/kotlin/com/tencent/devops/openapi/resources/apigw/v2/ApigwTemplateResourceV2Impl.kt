@@ -39,7 +39,18 @@ class ApigwTemplateResourceV2Impl @Autowired constructor(
     private val apigwTemplateService: ApigwTemplateServiceV2
 ) : ApigwTemplateResourceV2 {
 
-    override fun listTemplateByOrganization(userId: String, organizationType: String, organizationName: String, deptName: String?, centerName: String?, templateType: TemplateType?, storeFlag: Boolean?, page: Int?, pageSize: Int?): Result<Page<TemplateModel>> {
+    override fun listTemplateByOrganization(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        organizationType: String,
+        organizationName: String,
+        deptName: String?,
+        centerName: String?,
+        templateType: TemplateType?,
+        storeFlag: Boolean?,
+        page: Int?,
+        pageSize: Int?): Result<Page<TemplateModel>> {
         return apigwTemplateService.listTemplateByOrganization(
             userId = userId,
             organizationType = organizationType,

@@ -40,7 +40,11 @@ class ApigwMarketTemplateResourceImpl @Autowired constructor(
     private val client: Client
 ) : ApigwMarketTemplateResource {
 
-    override fun list(userId: String): Result<List<MarketItem?>> {
+    override fun list(
+        appCode: String?,
+        apigwType: String?,
+        userId: String
+    ): Result<List<MarketItem?>> {
         logger.info("get user'd market template, user($userId)")
         val marketTemplateResp = client.get(ServiceTemplateResource::class).list(userId)
         if (marketTemplateResp.data != null) {

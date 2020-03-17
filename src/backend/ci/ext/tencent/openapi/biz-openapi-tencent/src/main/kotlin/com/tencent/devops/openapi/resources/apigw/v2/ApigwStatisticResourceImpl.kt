@@ -38,6 +38,8 @@ class ApigwStatisticResourceImpl @Autowired constructor(
     private val client: Client
 ) : ApigwStatisticResource {
     override fun getPipelineAndTemplateStatistic(
+        appCode: String?,
+        apigwType: String?,
         userId: String,
         organizationType: String,
         organizationId: Int,

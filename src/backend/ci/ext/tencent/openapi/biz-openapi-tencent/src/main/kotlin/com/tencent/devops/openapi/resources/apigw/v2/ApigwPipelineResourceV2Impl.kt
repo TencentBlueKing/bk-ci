@@ -45,6 +45,8 @@ class ApigwPipelineResourceV2Impl @Autowired constructor(
 ) : ApigwPipelineResourceV2 {
 
     override fun getListByOrganizationName(
+        appCode: String?,
+        apigwType: String?,
         userId: String,
         organizationType: String,
         organizationName: String,
@@ -65,6 +67,8 @@ class ApigwPipelineResourceV2Impl @Autowired constructor(
     }
 
     override fun getListByOrganizationId(
+        appCode: String?,
+        apigwType: String?,
         userId: String,
         organizationType: String,
         organizationId: Long,
@@ -86,6 +90,8 @@ class ApigwPipelineResourceV2Impl @Autowired constructor(
     }
 
     override fun getListByBuildResource(
+        appCode: String?,
+        apigwType: String?,
         userId: String,
         buildResourceType: String,
         buildResourceValue: String?,
@@ -104,6 +110,8 @@ class ApigwPipelineResourceV2Impl @Autowired constructor(
     }
 
     override fun buildStatistics(
+        appCode: String?,
+        apigwType: String?,
         userId: String,
         organizationType: String,
         organizationId: Int,

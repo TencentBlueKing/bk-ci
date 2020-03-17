@@ -47,6 +47,8 @@ import java.net.URLEncoder
 @RestResource
 class ApigwRepositoryResourceV2Impl @Autowired constructor(private val client: Client) : ApigwRepositoryResourceV2 {
     override fun listByProject(
+        appCode: String?,
+        apigwType: String?,
         organizationType: String,
         organizationId: Int,
         projectId: String,
@@ -70,6 +72,8 @@ class ApigwRepositoryResourceV2Impl @Autowired constructor(private val client: C
     }
 
     override fun getAuthUrl(
+        appCode: String?,
+        apigwType: String?,
         projectId: String,
         userId: String,
         repoHashId: String?
@@ -85,7 +89,11 @@ class ApigwRepositoryResourceV2Impl @Autowired constructor(private val client: C
         return client.get(ServiceGitRepositoryResource::class).getAuthUrl(authParamJsonStr)
     }
 
-    override fun gitGet(userId: String): Result<String?> {
+    override fun gitGet(
+        appCode: String?,
+        apigwType: String?,
+        userId: String
+    ): Result<String?> {
         logger.info("gitGet userId[$userId]")
         val gitToken = client.get(ServiceOauthResource::class).gitGet(userId)
         if (gitToken?.data == null) {

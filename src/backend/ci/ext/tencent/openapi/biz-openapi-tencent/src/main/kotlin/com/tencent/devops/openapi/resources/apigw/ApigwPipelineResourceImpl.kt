@@ -45,7 +45,13 @@ import org.springframework.beans.factory.annotation.Autowired
 class ApigwPipelineResourceImpl @Autowired constructor(private val client: Client) :
     ApigwPipelineResource {
 
-    override fun status(userId: String, projectId: String, pipelineId: String): Result<Pipeline?> {
+    override fun status(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        pipelineId: String
+    ): Result<Pipeline?> {
         logger.info("Get a pipeline status at project:$projectId, pipelineId:$pipelineId")
         return client.get(ServicePipelineResource::class).status(
             userId = userId,
@@ -54,7 +60,13 @@ class ApigwPipelineResourceImpl @Autowired constructor(private val client: Clien
         )
     }
 
-    override fun create(userId: String, projectId: String, pipeline: Model): Result<PipelineId> {
+    override fun create(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        pipeline: Model
+    ): Result<PipelineId> {
         logger.info("Create a pipeline at project:$projectId with model: $pipeline")
         return client.get(ServicePipelineResource::class).create(
             userId = userId,
@@ -64,7 +76,14 @@ class ApigwPipelineResourceImpl @Autowired constructor(private val client: Clien
         )
     }
 
-    override fun edit(userId: String, projectId: String, pipelineId: String, pipeline: Model): Result<Boolean> {
+    override fun edit(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        pipeline: Model
+    ): Result<Boolean> {
         logger.info("Edit a pipeline at project:$projectId, pipelineId:$pipelineId with model: $pipeline")
         return client.get(ServicePipelineResource::class).edit(
             userId = userId,
@@ -75,7 +94,13 @@ class ApigwPipelineResourceImpl @Autowired constructor(private val client: Clien
         )
     }
 
-    override fun get(userId: String, projectId: String, pipelineId: String): Result<Model> {
+    override fun get(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        pipelineId: String
+    ): Result<Model> {
         logger.info("Get a pipeline at project:$projectId, pipelineId:$pipelineId")
         return client.get(ServicePipelineResource::class).get(
             userId = userId,
@@ -85,7 +110,13 @@ class ApigwPipelineResourceImpl @Autowired constructor(private val client: Clien
         )
     }
 
-    override fun delete(userId: String, projectId: String, pipelineId: String): Result<Boolean> {
+    override fun delete(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        pipelineId: String
+    ): Result<Boolean> {
         logger.info("Delete a pipeline at project:$projectId, pipelineId:$pipelineId")
         return client.get(ServicePipelineResource::class).delete(
             userId = userId,
@@ -95,7 +126,14 @@ class ApigwPipelineResourceImpl @Autowired constructor(private val client: Clien
         )
     }
 
-    override fun getListByUser(userId: String, projectId: String, page: Int?, pageSize: Int?): Result<Page<Pipeline>> {
+    override fun getListByUser(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        page: Int?,
+        pageSize: Int?
+    ): Result<Page<Pipeline>> {
         logger.info("get pipelines by user, userId:$userId")
         return client.get(ServicePipelineResource::class).list(
             userId = userId,
@@ -108,6 +146,8 @@ class ApigwPipelineResourceImpl @Autowired constructor(private val client: Clien
     }
 
     override fun installAtom(
+        appCode: String?,
+        apigwType: String?,
         userId: String,
         channelCode: ChannelCode?,
         installAtomReq: InstallAtomReq
@@ -116,12 +156,25 @@ class ApigwPipelineResourceImpl @Autowired constructor(private val client: Clien
         return client.get(ServiceMarketAtomResource::class).installAtom(userId, channelCode, installAtomReq)
     }
 
-    override fun rename(userId: String, projectId: String, pipelineId: String, name: PipelineName): Result<Boolean> {
+    override fun rename(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        name: PipelineName
+    ): Result<Boolean> {
         logger.info("rename: userId[$userId] projectId[$projectId] pipelineId[$pipelineId] name[$name]")
         return client.get(ServicePipelineResource::class).rename(userId, projectId, pipelineId, name)
     }
 
-    override fun restore(userId: String, projectId: String, pipelineId: String): Result<Boolean> {
+    override fun restore(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        pipelineId: String
+    ): Result<Boolean> {
         logger.info("restore: userId[$userId] projectId[$projectId] pipelineId[$pipelineId]")
         return client.get(ServicePipelineResource::class).restore(userId, projectId, pipelineId)
     }

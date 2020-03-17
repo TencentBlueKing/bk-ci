@@ -39,7 +39,12 @@ class ApigwMarketTemplateResourceV2Impl @Autowired constructor(
     private val client: Client
 ) : ApigwMarketTemplateResourceV2 {
 
-    override fun installTemplateFromStore(userId: String, installTemplateReq: InstallTemplateReq): Result<Boolean> {
+    override fun installTemplateFromStore(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        installTemplateReq: InstallTemplateReq
+    ): Result<Boolean> {
         // 可见与可安装鉴权在store服务marketTemplateService中已实现
         return client.get(ServiceTemplateResource::class).installTemplate(userId, installTemplateReq)
     }
