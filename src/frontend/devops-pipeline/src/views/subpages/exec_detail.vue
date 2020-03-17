@@ -16,8 +16,11 @@
                         <template v-if="execDetail.status === 'CANCELED'">
                             <span v-bk-tooltips.light="`${$t('details.canceller')}：${execDetail.cancelUserId}`" :class="{ [execDetail.status]: execDetail.status }">{{ getStatusLabel(execDetail.status) }}</span>
                         </template>
+
                         <span v-else :class="{ [execDetail.status]: execDetail.status }">{{ getStatusLabel(execDetail.status) }}</span>
                         <i v-if="showRetryIcon" title="rebuild" class="bk-icon icon-retry" @click.stop="retry(execDetail.id, true)"></i>
+                        <logo v-else-if="execDetail.status === 'STAGE_SUCCESS'" :title="$t('details.statusMap.STAGE_SUCCESS')" name="flag" fill="#34d97b" size="16"></logo>
+                        <i v-else :title="$t('history.stopBuild')" class="bk-icon icon-stop-shape" @click.stop="stopExecute(execDetail.id)"></i>
                     </div>
                     <div class="info-item">
                         <span class="item-label">{{ $t('details.executor') }}：</span>
@@ -108,6 +111,7 @@
     import pipelineOperateMixin from '@/mixins/pipeline-operate-mixin'
     import pipelineConstMixin from '@/mixins/pipelineConstMixin'
     import { convertMStoStringByRule } from '@/utils/util'
+    import Logo from '@/components/Logo'
 
     export default {
         components: {
@@ -119,7 +123,8 @@
             outputOption,
             emptyTips,
             log,
-            ReviewDialog
+            ReviewDialog,
+            Logo
         },
         mixins: [pipelineOperateMixin, pipelineConstMixin],
 
@@ -440,7 +445,7 @@
                 this.isInitLog = true
                 this.getInitLog(this.logPostData).then((res) => {
                     this.handleLogRes(res)
-                    if (!res.finished || res.hasMore) this.$refs.log.scrollPageToBottom()
+                    if (!res.finished || res.hasMore) this.$refs.log && this.$refs.log.scrollPageToBottom()
                 }).catch((err) => {
                     this.$bkMessage({ theme: 'error', message: err.message || err })
                     this.isInitLog = false
@@ -558,6 +563,15 @@
                     font-size: 20px;
                     color: $primaryColor;
                     cursor: pointer;
+                }
+                .icon-stop-shape {
+                    font-size: 15px;
+                    color: $primaryColor;
+                    cursor: pointer;
+                    border: 1px solid $primaryColor;
+                    padding: 1px;
+                    border-radius: 50%;
+                    margin-left: 3px;
                 }
             }
         }
