@@ -341,9 +341,12 @@ abstract class ExtServiceBaseService @Autowired constructor() {
                 )
             } else {
                 // 升级扩展服务
+                val serviceEnvRecord = extServiceEnvDao.getMarketServiceEnvInfoByServiceId(context, serviceId)
                 upgradeMarketExtService(
+                    context = context,
                     userId = userId,
                     serviceId = serviceId,
+                    language = serviceEnvRecord!!.language,
                     extServiceCreateInfo = ExtServiceCreateInfo(
                         serviceCode = submitDTO.serviceCode,
                         serviceName = submitDTO.serviceName,
@@ -783,7 +786,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         val oldStatus = serviceInfo.serviceStatus
         val isNormalUpgrade = getNormalUpgradeFlag(serviceCode, oldStatus.toInt())
         val newStatus = getCompletEditStatus(isNormalUpgrade)
-        val (checkResult, code) = checkServiceVersionOptRight(userId, serviceId, newStatus, isNormalUpgrade )
+        val (checkResult, code) = checkServiceVersionOptRight(userId, serviceId, newStatus, isNormalUpgrade)
 
         if (checkResult) {
             return MessageCodeUtil.generateResponseDataObject(code)
@@ -924,19 +927,32 @@ abstract class ExtServiceBaseService @Autowired constructor() {
     }
 
     private fun upgradeMarketExtService(
+        context: DSLContext,
         userId: String,
         serviceId: String,
+        language: String,
         extServiceCreateInfo: ExtServiceCreateInfo,
         extServiceVersionLogCreateInfo: ExtServiceVersionLogCreateInfo
     ) {
         extServiceDao.createExtService(
-            dslContext = dslContext,
+            dslContext = context,
             userId = userId,
             id = serviceId,
             extServiceCreateInfo = extServiceCreateInfo
         )
+        val extServiceEnvCreateInfo = ExtServiceEnvCreateInfo(
+            serviceId = serviceId,
+            language = language,
+            pkgPath = "",
+            pkgShaContent = "",
+            dockerFileContent = "",
+            imagePath = "",
+            creatorUser = userId,
+            modifierUser = userId
+        )
+        extServiceEnvDao.create(context, extServiceEnvCreateInfo) // 添加扩展服务执行环境信息
         extServiceVersionLogDao.create(
-            dslContext = dslContext,
+            dslContext = context,
             userId = userId,
             id = serviceId,
             extServiceVersionLogCreateInfo = extServiceVersionLogCreateInfo
