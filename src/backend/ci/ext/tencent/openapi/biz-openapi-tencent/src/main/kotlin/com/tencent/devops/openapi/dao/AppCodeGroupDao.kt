@@ -67,7 +67,9 @@ class AppCodeGroupDao {
                     CENTER_ID,
                     CENTER_NAME,
                     CREATOR,
-                    CREATE_TIME
+                    CREATE_TIME,
+                    UPDATER,
+                    UPDATE_TIME
                 ).values(
                     appCode,
                     appCodeGroup.bgId,
@@ -76,6 +78,8 @@ class AppCodeGroupDao {
                     appCodeGroup.deptName,
                     appCodeGroup.centerId,
                     appCodeGroup.centerName,
+                    userName,
+                    now,
                     userName,
                     now
                 ).execute() > 0
