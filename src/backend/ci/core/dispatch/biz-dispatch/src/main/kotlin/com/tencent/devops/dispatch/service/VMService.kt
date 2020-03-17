@@ -302,7 +302,7 @@ class VMService @Autowired constructor(
             val set = mutableSetOf<VM>()
             if (privateRecords.isNotEmpty) {
                 privateRecords.forEach {
-                    set.add(vmDao.parseVM(vmDao.findVMById(context, it.vmId)) ?: return@forEach)
+                    set.add(vmDao.parseVM(vmDao.findVMById(context, it.vmId.toLong())) ?: return@forEach)
                 }
             }
             set
