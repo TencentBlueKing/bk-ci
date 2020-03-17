@@ -55,7 +55,7 @@ class PrivateVMDao {
             dslContext.insertInto(this,
                     VM_ID,
                     PROJECT_ID)
-                    .values(vmId, projectId)
+                    .values(vmId.toInt(), projectId)
                     .execute()
         }
     }
@@ -63,7 +63,7 @@ class PrivateVMDao {
     fun delete(dslContext: DSLContext, vmId: Long, projectId: String) {
         with(TDispatchPrivateVm.T_DISPATCH_PRIVATE_VM) {
             dslContext.deleteFrom(this)
-                    .where(VM_ID.eq(vmId))
+                    .where(VM_ID.eq(vmId.toInt()))
                     .and(PROJECT_ID.eq(projectId))
                     .execute()
         }
