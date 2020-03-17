@@ -166,7 +166,6 @@ class OpExtServiceService @Autowired constructor(
                     modifier = userId
                 )
             )
-
         }
 
         if (settingInfo != null) {
@@ -220,7 +219,7 @@ class OpExtServiceService @Autowired constructor(
                 version = serviceRecord.version
             )
             ExtServiceBaseService.logger.info("deployExtServiceResult is:$deployExtServiceResult")
-            if (deployExtServiceResult.isNotOk()){
+            if (deployExtServiceResult.isNotOk()) {
                 return deployExtServiceResult
             }
         }

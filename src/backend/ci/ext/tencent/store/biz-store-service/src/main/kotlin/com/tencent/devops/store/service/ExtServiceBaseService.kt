@@ -773,17 +773,22 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         return if (isNormalUpgrade) ExtServiceStatusEnum.RELEASED.status.toByte() else ExtServiceStatusEnum.AUDITING.status.toByte()
     }
 
-    fun createMediaAndVisible(userId: String, serviceCode: String, submitInfo: ExtSubmitDTO): Result<Boolean> {
+    fun createMediaAndVisible(userId: String, serviceId: String, submitInfo: ExtSubmitDTO): Result<Boolean> {
         val mediaList = submitInfo.mediaInfoList
         val deptList = submitInfo.deptInfoList
 
+        val serviceInfo = extServiceDao.getServiceById(dslContext, serviceId) ?: throw RuntimeException("数据不存在")
+        val oldStatus = serviceInfo.serviceStatus
+        if (oldStatus != ExtServiceStatusEnum.EDIT.status.toByte()) {
+            throw RuntimeException("提交资料必须为测试中")
+        }
 
         mediaList?.forEach {
             mediaService.add(
                 userId = userId,
                 type = StoreTypeEnum.SERVICE,
                 storeMediaInfo = StoreMediaInfoRequest(
-                    storeCode = serviceCode,
+                    storeCode = serviceInfo.serviceCode,
                     mediaUrl = it.mediaUrl,
                     mediaType = it.mediaType.name,
                     modifier = userId
@@ -793,10 +798,10 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         deptService.addVisibleDept(
             userId = userId,
             storeType = StoreTypeEnum.SERVICE,
-            storeCode = serviceCode,
+            storeCode = serviceInfo.serviceCode,
             deptInfos = deptList
         )
-        extServiceDao.setServiceStatusByCode(dslContext)
+        extServiceDao.setServiceStatusByCode(dslContext, serviceInfo.serviceCode, oldStatus, ExtServiceStatusEnum.AUDITING.status.toByte(), userId, "提交资料")
         return Result(true)
     }
 

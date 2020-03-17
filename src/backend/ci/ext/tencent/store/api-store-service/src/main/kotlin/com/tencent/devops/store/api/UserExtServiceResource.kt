@@ -101,14 +101,14 @@ interface UserExtServiceResource {
 
     @ApiOperation("添加媒体信息、可见范围")
     @POST
-    @Path("/serviceCodes/{serviceCode}/ext/submitInfo")
+    @Path("/serviceIds/{serviceId}/ext/submitInfo")
     fun createMediaAndVisible(
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("serviceCode", required = true)
-        @PathParam("serviceCode")
-        serviceCode: String,
+        @ApiParam("serviceId", required = true)
+        @PathParam("serviceId")
+        serviceId: String,
         @ApiParam("媒体、可见范围信息")
         submitInfo: ExtSubmitDTO
     ): Result<Boolean>

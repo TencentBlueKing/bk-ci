@@ -3,7 +3,7 @@ package com.tencent.devops.store.resources.common
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.common.OpMediaResource
-import com.tencent.devops.store.pojo.MediaInfoReq
+import com.tencent.devops.store.pojo.common.MediaInfoReq
 import com.tencent.devops.store.pojo.common.StoreMediaInfo
 import com.tencent.devops.store.pojo.common.StoreMediaInfoRequest
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
@@ -38,7 +38,7 @@ class OpMediaResourceImpl @Autowired constructor(
 
     override fun updateStoreMedia(
         userId: String,
-        mediaId: String, 
+        mediaId: String,
         storeCode: String,
         mediaInfoReq: MediaInfoReq
     ): Result<Boolean> {

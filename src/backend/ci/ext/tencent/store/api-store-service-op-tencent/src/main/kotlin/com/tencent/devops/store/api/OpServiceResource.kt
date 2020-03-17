@@ -175,7 +175,6 @@ interface OpServiceResource {
         serviceCode: String
     ): Result<StoreVisibleDeptResp?>
 
-
     @ApiOperation("删除扩展服务可见范围")
     @DELETE
     @Path("/{serviceCode}")
