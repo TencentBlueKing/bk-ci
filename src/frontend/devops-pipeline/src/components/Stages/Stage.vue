@@ -189,6 +189,9 @@
             }
         },
         watch: {
+            '$userInfo' (userinfo) {
+                console.log('userinfo watch', userinfo)
+            },
             'stage.runStage' (newVal) {
                 const { stage, updateStage } = this
                 const { containers } = stage

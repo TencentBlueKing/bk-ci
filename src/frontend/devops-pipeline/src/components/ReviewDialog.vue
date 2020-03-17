@@ -14,9 +14,9 @@
                     <div style="white-space: pre-wrap;word-break:break-all;">{{$t('details.checkDescInfo', [time])}}</div>
                 </bk-form-item>
                 <bk-form-item :label="$t('editPage.checkResult')">
-                    <bk-radio-group v-model="data.status">
-                        <bk-radio class="choose-item" :value="'PROCESS'">{{ $t('editPage.agree') }}</bk-radio>
-                        <bk-radio class="choose-item" :value="'ABORT'">{{ $t('details.abort') }}</bk-radio>
+                    <bk-radio-group v-model="isCancel">
+                        <bk-radio class="choose-item" :value="false">{{ $t('editPage.agree') }}</bk-radio>
+                        <bk-radio class="choose-item" :value="true">{{ $t('details.abort') }}</bk-radio>
                     </bk-radio-group>
                 </bk-form-item>
             </bk-form>
@@ -26,29 +26,21 @@
 
 <script>
     import { mapActions, mapState } from 'vuex'
+    import { convertTime } from '@/utils/util'
+
     export default {
         name: 'review-dialog',
         props: {
             isShow: {
                 type: Boolean,
                 default: false
-            },
-            toggleCheck: {
-                type: Function,
-                required: true
             }
         },
 
         data () {
             return {
                 isLoading: false,
-                data: {
-                    status: 'PROCESS',
-                    suggest: '',
-                    desc: '',
-                    params: []
-                },
-                time: '123'
+                isCancel: false
             }
         },
         computed: {
@@ -57,12 +49,13 @@
             ]),
             routerParams () {
                 return this.$route.params
-            }
-        },
-        watch: {
-            'isShow': function (val) {
-                if (val) {
-                    // this.requestCheckData()
+            },
+            time () {
+                try {
+                    const hour2Ms = 60 * 60 * 1000
+                    return convertTime(this.reviewInfo.startEpoch + this.reviewInfo.stageControlOption.timeout * hour2Ms)
+                } catch (e) {
+                    return 'unknow'
                 }
             }
         },
@@ -71,30 +64,11 @@
                 'toggleReviewDialog',
                 'triggerStage'
             ]),
-            async requestCheckData () {
-                try {
-                    this.isLoading = true
-                    const postData = {
-                        projectId: this.routerParams.projectId,
-                        pipelineId: this.routerParams.pipelineId,
-                        buildId: this.routerParams.buildNo
-                        // elementId: this.reviewInfo.id
-                    }
-                    const res = await this.getCheckAtomInfo(postData)
-                    this.data = Object.assign(res, { status: 'PROCESS' })
-                } catch (err) {
-                    this.$showTips({
-                        theme: 'error',
-                        message: err.message || err
-                    })
-                } finally {
-                    this.isLoading = false
-                }
-            },
             startReview () {
                 this.triggerStage({
                     ...this.$route.params,
-                    stageId: this.reviewInfo.id
+                    stageId: this.reviewInfo.id,
+                    cancel: this.isCancel
                 })
 
                 this.$nextTick(() => {
