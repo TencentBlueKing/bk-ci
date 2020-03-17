@@ -61,7 +61,6 @@ import com.tencent.devops.common.pipeline.utils.ModelUtils
 import com.tencent.devops.common.pipeline.utils.SkipElementUtils
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.websocket.dispatch.WebSocketDispatcher
 import com.tencent.devops.model.process.tables.records.TPipelineBuildContainerRecord
 import com.tencent.devops.model.process.tables.records.TPipelineBuildHistoryRecord
@@ -93,7 +92,6 @@ import com.tencent.devops.process.engine.pojo.event.PipelineBuildCancelEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildMonitorEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildStartEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildStageEvent
-import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.pipeline.option.StageControlOption
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION
@@ -2017,7 +2015,7 @@ class PipelineRuntimeService @Autowired constructor(
         return stageTagService.getDefaultStageTag().data?.map { it.id }
     }
 
-    fun updatePipelineRunningCount(pipelineId: String, runningIncrement: Int) {
-        pipelineBuildSummaryDao.updateRunningCount(dslContext, pipelineId, runningIncrement)
+    fun updatePipelineRunningCount(pipelineId: String, buildId: String, runningIncrement: Int) {
+        pipelineBuildSummaryDao.updateRunningCount(dslContext, pipelineId, buildId, runningIncrement)
     }
 }
