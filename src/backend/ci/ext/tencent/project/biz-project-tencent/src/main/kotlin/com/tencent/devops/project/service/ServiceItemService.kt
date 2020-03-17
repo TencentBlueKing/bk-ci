@@ -293,7 +293,11 @@ class ServiceItemService @Autowired constructor(
             htmlPath = itemRecord.htmlPath,
             htmlType = itemRecord.htmlComponentType,
             serviceCount = itemRecord.serviceNum,
-            parentId = itemRecord.parentId
+            parentId = itemRecord.parentId,
+            props = itemRecord.props,
+            icon = itemRecord.iconUrl,
+            tooltip = itemRecord.tooltip
+
         )
         return Result(itemInfo)
     }
