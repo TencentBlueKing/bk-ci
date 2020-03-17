@@ -50,7 +50,7 @@ class PrivateVMDao {
         }
     }
 
-    fun add(dslContext: DSLContext, vmId: Int, projectId: String) {
+    fun add(dslContext: DSLContext, vmId: Long, projectId: String) {
         with(TDispatchPrivateVm.T_DISPATCH_PRIVATE_VM) {
             dslContext.insertInto(this,
                     VM_ID,
@@ -60,7 +60,7 @@ class PrivateVMDao {
         }
     }
 
-    fun delete(dslContext: DSLContext, vmId: Int, projectId: String) {
+    fun delete(dslContext: DSLContext, vmId: Long, projectId: String) {
         with(TDispatchPrivateVm.T_DISPATCH_PRIVATE_VM) {
             dslContext.deleteFrom(this)
                     .where(VM_ID.eq(vmId))

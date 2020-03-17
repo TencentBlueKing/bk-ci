@@ -62,11 +62,11 @@ class PrivateVMService @Autowired constructor(
         }
     }
 
-    fun add(vmId: Int, projectId: String) {
+    fun add(vmId: Long, projectId: String) {
         privateVMDao.add(dslContext, vmId, projectId)
     }
 
-    fun delete(vmId: Int, projectId: String) {
+    fun delete(vmId: Long, projectId: String) {
         privateVMDao.delete(dslContext, vmId, projectId)
     }
 }
