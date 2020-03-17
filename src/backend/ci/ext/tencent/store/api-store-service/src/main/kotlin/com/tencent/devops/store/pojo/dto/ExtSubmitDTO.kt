@@ -1,7 +1,7 @@
 package com.tencent.devops.store.pojo.dto
 
-import com.tencent.devops.store.pojo.MediaInfoReq
 import com.tencent.devops.store.pojo.common.DeptInfo
+import com.tencent.devops.store.pojo.common.MediaInfoReq
 import io.swagger.annotations.ApiModelProperty
 
 data class ExtSubmitDTO(

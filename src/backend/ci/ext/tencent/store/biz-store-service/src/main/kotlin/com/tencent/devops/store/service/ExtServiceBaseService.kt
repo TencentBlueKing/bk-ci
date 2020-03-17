@@ -753,6 +753,8 @@ abstract class ExtServiceBaseService @Autowired constructor() {
     fun createMediaAndVisible(userId: String, serviceCode: String, submitInfo: ExtSubmitDTO): Result<Boolean> {
         val mediaList = submitInfo.mediaInfoList
         val deptList = submitInfo.deptInfoList
+
+
         mediaList?.forEach {
             mediaService.add(
                 userId = userId,
@@ -771,6 +773,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
             storeCode = serviceCode,
             deptInfos = deptList
         )
+        extServiceDao.setServiceStatusByCode(dslContext)
         return Result(true)
     }
 
