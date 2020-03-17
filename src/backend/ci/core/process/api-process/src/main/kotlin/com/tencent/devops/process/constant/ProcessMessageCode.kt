@@ -124,8 +124,8 @@ object ProcessMessageCode {
     const val ERROR_NO_BUILD_EXISTS_BY_ID = "2101100" // 流水线构建[{0}]不存在
     const val ERROR_NO_PIPELINE_EXISTS_BY_ID = "2101101" // 流水线[{0}]不存在
     const val ERROR_SUBPIPELINE_CYCLE_CALL = "2101102" // 子流水线循环调用
-    const val ERROR_NO_STAGE_EXISTS_BY_ID = "2101106" // 构建中阶段[{0}]不存在
-    const val ERROR_STAGE_IS_NOT_PAUSED = "2101108" // 构建中阶段[{0}]不存在
+    const val ERROR_NO_STAGE_EXISTS_BY_ID = "2101106" // 构建中Stage[{0}]不存在
+    const val ERROR_STAGE_IS_NOT_PAUSED = "2101108" // 构建中Stage[{0}]未处于等待审核
 
     // 构建时错误
     const val ERROR_BUILD_TASK_BCS_PARAM_BCSAPPINSTID = "2101111" // bcsAppInstId is not init

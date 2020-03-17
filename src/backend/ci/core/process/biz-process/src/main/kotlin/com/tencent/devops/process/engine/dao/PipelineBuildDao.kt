@@ -273,7 +273,6 @@ class PipelineBuildDao {
         dslContext: DSLContext,
         buildId: String,
         buildStatus: BuildStatus,
-        material: String?,
         executeTime: Long?,
         buildParameters: String?,
         recommendVersion: String?,
@@ -286,7 +285,6 @@ class PipelineBuildDao {
             var baseQuery = dslContext.update(this)
                 .set(STATUS, buildStatus.ordinal)
                 .set(END_TIME, LocalDateTime.now())
-                .set(MATERIAL, material)
                 .set(EXECUTE_TIME, executeTime)
                 .set(BUILD_PARAMETERS, buildParameters)
                 .set(RECOMMEND_VERSION, recommendVersion)
@@ -705,6 +703,15 @@ class PipelineBuildDao {
                 .where(BUILD_ID.eq(buildId))
                 .and(PROJECT_ID.eq(projectId))
                 .and(PIPELINE_ID.eq(pipelineId))
+                .execute()
+        }
+    }
+
+    fun updateBuildMaterial(dslContext: DSLContext, buildId: String, material: String?) {
+        with(T_PIPELINE_BUILD_HISTORY) {
+            dslContext.update(this)
+                .set(MATERIAL, material)
+                .where(BUILD_ID.eq(buildId))
                 .execute()
         }
     }
