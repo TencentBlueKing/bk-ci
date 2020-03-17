@@ -54,7 +54,7 @@ class DispatchDockerService @Autowired constructor(
         }
     }
 
-    fun update(userId: String, dockerIpInfoId: Int, enable: Boolean): Boolean {
+    fun update(userId: String, dockerIpInfoId: Long, enable: Boolean): Boolean {
         logger.info("$userId update IDC IP id: $dockerIpInfoId status: $enable")
         try {
             pipelineDockerIPInfoDao.updateDockerIpStatus(dslContext, dockerIpInfoId, enable)
@@ -65,7 +65,7 @@ class DispatchDockerService @Autowired constructor(
         }
     }
 
-    fun delete(userId: String, dockerIpInfoId: Int): Boolean {
+    fun delete(userId: String, dockerIpInfoId: Long): Boolean {
         logger.info("$userId delete $dockerIpInfoId")
         try {
             pipelineDockerIPInfoDao.delete(dslContext, dockerIpInfoId)
