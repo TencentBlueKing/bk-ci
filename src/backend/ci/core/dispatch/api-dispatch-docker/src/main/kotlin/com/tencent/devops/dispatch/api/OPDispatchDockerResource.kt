@@ -60,7 +60,7 @@ interface OPDispatchDockerResource {
         userId: String,
         @ApiParam("IDC构建机ID", required = true)
         @PathParam("dockerIpInfoId")
-        dockerIpInfoId: Int,
+        dockerIpInfoId: Long,
         @ApiParam("构建机状态", required = true)
         enable: Boolean
     ): Result<Boolean>
@@ -74,6 +74,6 @@ interface OPDispatchDockerResource {
         userId: String,
         @ApiParam("服务ID", required = true)
         @PathParam("dockerIpInfoId")
-        dockerIpInfoId: Int
+        dockerIpInfoId: Long
     ): Result<Boolean>
 }
