@@ -537,6 +537,17 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         if (!storeMemberDao.isStoreAdmin(dslContext, userId, serviceCode, StoreTypeEnum.SERVICE.type.toByte())) {
             return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED)
         }
+        // 停止bcs灰度命名空间和正式命名空间的应用
+        val bcsStopAppResult = extServiceBcsService.stopExtService(
+            userId = userId,
+            serviceCode = serviceCode,
+            deploymentName = serviceCode,
+            serviceName = "$serviceCode-service"
+        )
+        logger.info("the bcsStopAppResult is :$bcsStopAppResult")
+        if (bcsStopAppResult.isNotOk()) {
+            return bcsStopAppResult
+        }
         // 设置扩展服务状态为下架中
         extServiceDao.setServiceStatusByCode(
             dslContext, serviceCode, ExtServiceStatusEnum.RELEASED.status.toByte(),
@@ -633,7 +644,8 @@ abstract class ExtServiceBaseService @Autowired constructor() {
             )
         }
         // 查看当前版本之前的版本是否有已发布的，如果有已发布的版本则只是普通的升级操作而不需要审核
-        val isNormalUpgrade = getNormalUpgradeFlag(serviceRecord.serviceCode, serviceRecord.serviceStatus.toInt())
+        val serviceCode = serviceRecord.serviceCode
+        val isNormalUpgrade = getNormalUpgradeFlag(serviceCode, serviceRecord.serviceStatus.toInt())
         logger.info("passTest isNormalUpgrade is:$isNormalUpgrade")
         val serviceStatus = getPassTestStatus(isNormalUpgrade)
         val (checkResult, code) = checkServiceVersionOptRight(userId, serviceId, serviceStatus, isNormalUpgrade)
@@ -641,18 +653,29 @@ abstract class ExtServiceBaseService @Autowired constructor() {
             return MessageCodeUtil.generateResponseDataObject(code)
         }
         if (isNormalUpgrade) {
+            // 正式发布最新的扩展服务版本
+            val deployExtServiceResult = extServiceBcsService.deployExtService(
+                userId = userId,
+                namespaceName = extServiceBcsNameSpaceConfig.namespaceName,
+                serviceCode = serviceCode,
+                version = serviceRecord.version
+            )
+            logger.info("deployExtServiceResult is:$deployExtServiceResult")
+            if (deployExtServiceResult.isNotOk()) {
+                return deployExtServiceResult
+            }
             val creator = serviceRecord.creator
             dslContext.transaction { t ->
                 val context = DSL.using(t)
                 // 清空旧版本LATEST_FLAG
-                extServiceDao.cleanLatestFlag(context, serviceRecord.serviceCode)
+                extServiceDao.cleanLatestFlag(context, serviceCode)
                 // 记录发布信息
                 val pubTime = LocalDateTime.now()
                 storeReleaseDao.addStoreReleaseInfo(
                     dslContext = context,
                     userId = userId,
                     storeReleaseCreateRequest = StoreReleaseCreateRequest(
-                        storeCode = serviceRecord.serviceCode,
+                        storeCode = serviceCode,
                         storeType = StoreTypeEnum.SERVICE,
                         latestUpgrader = creator,
                         latestUpgradeTime = pubTime
