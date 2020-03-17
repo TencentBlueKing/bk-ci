@@ -29,7 +29,7 @@ package com.tencent.devops.dispatch.service.dispatcher.docker
 import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.dispatch.client.DockerHostClient
-import com.tencent.devops.dispatch.dao.PipelineDockerTaskHistoryDao
+import com.tencent.devops.dispatch.dao.PipelineDockerTaskSimpleDao
 import com.tencent.devops.dispatch.pojo.VolumeStatus
 import com.tencent.devops.dispatch.service.DockerHostBuildService
 import com.tencent.devops.dispatch.service.dispatcher.Dispatcher
@@ -48,7 +48,7 @@ class DockerDispatcher @Autowired constructor(
     private val rabbitTemplate: RabbitTemplate,
     private val dockerHostBuildService: DockerHostBuildService,
     private val dockerHostClient: DockerHostClient,
-    private val pipelineDockerTaskHistoryDao: PipelineDockerTaskHistoryDao,
+    private val pipelineDockerTaskSimpleDao: PipelineDockerTaskSimpleDao,
     private val dslContext: DSLContext,
     private val redisOperation: RedisOperation
     ) : Dispatcher {
@@ -70,19 +70,17 @@ class DockerDispatcher @Autowired constructor(
             pipelineAgentStartupEvent.containerHashId,
             pipelineAgentStartupEvent.executeCount ?: 1
         )
-        // dockerHostBuildService.dockerHostBuild(pipelineAgentStartupEvent)
 
-        val taskHistory = pipelineDockerTaskHistoryDao.getByPipelineIdAndVMSeq(dslContext, pipelineAgentStartupEvent.pipelineId, pipelineAgentStartupEvent.vmSeqId)
+        val taskHistory = pipelineDockerTaskSimpleDao.getByPipelineIdAndVMSeq(dslContext, pipelineAgentStartupEvent.pipelineId, pipelineAgentStartupEvent.vmSeqId)
         val dockerIp: String
         if (taskHistory != null) {
             dockerIp = taskHistory.dockerIp
         } else {
             dockerIp = dockerHostClient.getAvailableDockerIp()
 
-            pipelineDockerTaskHistoryDao.create(
+            pipelineDockerTaskSimpleDao.create(
                 dslContext,
                 pipelineAgentStartupEvent.pipelineId,
-                pipelineAgentStartupEvent.buildId,
                 pipelineAgentStartupEvent.vmSeqId,
                 dockerIp,
                 VolumeStatus.RUNNING.status
@@ -104,15 +102,15 @@ class DockerDispatcher @Autowired constructor(
         try {
             lock.lock()
             if (pipelineAgentShutdownEvent.vmSeqId != null) {
-                val taskHistory = pipelineDockerTaskHistoryDao.getByPipelineIdAndVMSeq(dslContext, pipelineAgentShutdownEvent.pipelineId, pipelineAgentShutdownEvent.vmSeqId!!)
+                val taskHistory = pipelineDockerTaskSimpleDao.getByPipelineIdAndVMSeq(dslContext, pipelineAgentShutdownEvent.pipelineId, pipelineAgentShutdownEvent.vmSeqId!!)
                 dockerHostClient.endBuild(pipelineAgentShutdownEvent, taskHistory!!.dockerIp as String, taskHistory.containerId as String)
-                pipelineDockerTaskHistoryDao.updateStatus(dslContext, pipelineAgentShutdownEvent.buildId, pipelineAgentShutdownEvent.vmSeqId!!, VolumeStatus.FINISH.status)
+                pipelineDockerTaskSimpleDao.updateStatus(dslContext, pipelineAgentShutdownEvent.pipelineId, pipelineAgentShutdownEvent.vmSeqId!!, VolumeStatus.FINISH.status)
             } else {
-                val taskHistoryList = pipelineDockerTaskHistoryDao.getByPipelineId(dslContext, pipelineAgentShutdownEvent.pipelineId)
+                val taskHistoryList = pipelineDockerTaskSimpleDao.getByPipelineId(dslContext, pipelineAgentShutdownEvent.pipelineId)
                 taskHistoryList.forEach {
                     dockerHostClient.endBuild(pipelineAgentShutdownEvent, it.dockerIp as String, it.containerId as String)
                     if (it.status == VolumeStatus.RUNNING.status) {
-                        pipelineDockerTaskHistoryDao.updateStatus(dslContext, pipelineAgentShutdownEvent.buildId, it.vmSeq as String, VolumeStatus.FINISH.status)
+                        pipelineDockerTaskSimpleDao.updateStatus(dslContext, pipelineAgentShutdownEvent.pipelineId, it.vmSeq as String, VolumeStatus.FINISH.status)
                     }
                 }
             }

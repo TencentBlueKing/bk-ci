@@ -12,7 +12,7 @@ import com.tencent.devops.common.pipeline.enums.DockerVersion
 import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
 import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.dispatch.dao.PipelineDockerIPInfoDao
-import com.tencent.devops.dispatch.dao.PipelineDockerTaskHistoryDao
+import com.tencent.devops.dispatch.dao.PipelineDockerTaskSimpleDao
 import com.tencent.devops.dispatch.dao.PipelineDockerBuildDao
 import com.tencent.devops.dispatch.pojo.DockerHostBuildInfo
 import com.tencent.devops.dispatch.pojo.VolumeStatus
@@ -35,7 +35,7 @@ import java.net.URLEncoder
 
 @Component
 class DockerHostClient @Autowired constructor(
-    private val pipelineDockerTaskHistoryDao: PipelineDockerTaskHistoryDao,
+    private val pipelineDockerTaskSimpleDao: PipelineDockerTaskSimpleDao,
     private val pipelineDockerIpInfoDao: PipelineDockerIPInfoDao,
     private val pipelineDockerBuildDao: PipelineDockerBuildDao,
     private val redisUtils: RedisUtils,
@@ -162,9 +162,9 @@ class DockerHostClient @Autowired constructor(
             when {
                 response["status"] == 0 -> {
                     val containId = response["data"] as String
-                    pipelineDockerTaskHistoryDao.updateContainerId(
+                    pipelineDockerTaskSimpleDao.updateContainerId(
                         dslContext,
-                        event.buildId,
+                        event.pipelineId,
                         event.vmSeqId,
                         containId
                     )
@@ -178,9 +178,9 @@ class DockerHostClient @Autowired constructor(
                         val idcIpLocal = getAvailableDockerIp(unAvailableIpListLocal)
                         startBuild(event, idcIpLocal, retryTimeLocal, unAvailableIpListLocal)
                     } else {
-                        pipelineDockerTaskHistoryDao.updateStatus(
+                        pipelineDockerTaskSimpleDao.updateStatus(
                             dslContext,
-                            event.buildId,
+                            event.pipelineId,
                             event.vmSeqId,
                             VolumeStatus.FAILURE.status
                         )
@@ -192,9 +192,9 @@ class DockerHostClient @Autowired constructor(
                 else -> {
                     val msg = response["event"] as String
                     logger.error("[${event.projectId}|${event.pipelineId}|${event.buildId}] Start build Docker VM failed, msg: $msg")
-                    pipelineDockerTaskHistoryDao.updateStatus(
+                    pipelineDockerTaskSimpleDao.updateStatus(
                         dslContext,
-                        event.buildId,
+                        event.pipelineId,
                         event.vmSeqId,
                         VolumeStatus.FAILURE.status
                     )

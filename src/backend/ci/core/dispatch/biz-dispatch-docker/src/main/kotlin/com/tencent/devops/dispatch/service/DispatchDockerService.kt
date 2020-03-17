@@ -24,14 +24,14 @@ class DispatchDockerService @Autowired constructor(
         val pageSizeNotNull = pageSize ?: 10
 
         try {
-            val idcIpList = pipelineDockerIPInfoDao.getDockerIpList(dslContext, pageNotNull, pageSizeNotNull)
+            val dockerIpList = pipelineDockerIPInfoDao.getDockerIpList(dslContext, pageNotNull, pageSizeNotNull)
             val count = pipelineDockerIPInfoDao.getDockerIpCount(dslContext)
 
-            if (idcIpList.size == 0 || count == 0L) {
+            if (dockerIpList.size == 0 || count == 0L) {
                 return DockerIpListPage(pageNotNull, pageSizeNotNull, 0, emptyList())
             }
             val dockerIpInfoVOList = mutableListOf<DockerIpInfoVO>()
-            idcIpList.forEach {
+            dockerIpList.forEach {
                 dockerIpInfoVOList.add(DockerIpInfoVO(it.id, it.dockerIp, it.capacity, it.usedNum, it.enable, it.grayEnv, it.gmtCreate.format(
                     DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))))
             }
@@ -55,7 +55,7 @@ class DispatchDockerService @Autowired constructor(
     }
 
     fun update(userId: String, dockerIpInfoId: Long, enable: Boolean): Boolean {
-        logger.info("$userId update IDC IP id: $dockerIpInfoId status: $enable")
+        logger.info("$userId update Docker IP id: $dockerIpInfoId status: $enable")
         try {
             pipelineDockerIPInfoDao.updateDockerIpStatus(dslContext, dockerIpInfoId, enable)
             return true
