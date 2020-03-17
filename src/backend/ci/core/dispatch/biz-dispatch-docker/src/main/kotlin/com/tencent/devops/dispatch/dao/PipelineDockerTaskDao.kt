@@ -60,7 +60,7 @@ class PipelineDockerTaskDao {
         imagePublicFlag: Boolean?,
         imageRDType: ImageRDTypeEnum?,
         containerHashId: String?
-    ): Int {
+    ): Long {
         with(TDispatchPipelineDockerTask.T_DISPATCH_PIPELINE_DOCKER_TASK) {
             val now = LocalDateTime.now()
             val preRecord = dslContext.selectFrom(this).where(BUILD_ID.eq(buildId)).and(VM_SEQ_ID.eq(vmSeqId)).fetchAny()
@@ -306,7 +306,7 @@ class PipelineDockerTaskDao {
         }
     }
 
-    fun deleteTask(dslContext: DSLContext, id: Int) {
+    fun deleteTask(dslContext: DSLContext, id: Long) {
         with(TDispatchPipelineDockerTask.T_DISPATCH_PIPELINE_DOCKER_TASK) {
             dslContext.deleteFrom(this)
                 .where(ID.eq(id))

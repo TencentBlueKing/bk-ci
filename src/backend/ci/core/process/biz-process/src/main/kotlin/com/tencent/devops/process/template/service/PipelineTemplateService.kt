@@ -132,7 +132,7 @@ class PipelineTemplateService @Autowired constructor(
     fun getTemplateDetailInfo(templateCode: String, publicFlag: Boolean): Result<TemplateDetailInfo?> {
         logger.info("the userId is:$templateCode,publicFlag is:$publicFlag")
         if (publicFlag) {
-            val publicTemplateRecord = pipelineTemplateDao.getTemplate(dslContext, templateCode.toInt())
+            val publicTemplateRecord = pipelineTemplateDao.getTemplate(dslContext, templateCode.toLong())
                 ?: return MessageCodeUtil.generateResponseDataObject(
                     CommonMessageCode.PARAMETER_IS_INVALID,
                     arrayOf(templateCode)

@@ -27,7 +27,7 @@
 package com.tencent.devops.dispatch.pojo
 
 data class ThirdPartyAgentPreBuildAgents(
-    val id: Int,
+    val id: Long,
     val projectId: String,
     val agentId: String,
     val buildId: String,
