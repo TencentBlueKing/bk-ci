@@ -14,7 +14,7 @@
     "build:test": "lerna run public:test --parallel",
     "build:master": "lerna run public:master --parallel",
     "build:external": "lerna run public:external --parallel",
-    "public": "gulp -d frontend"
+    "public": "gulp -d frontend -p"
   },
   "workspaces": [
     "devops-codelib",

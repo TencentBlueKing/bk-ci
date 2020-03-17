@@ -7,18 +7,19 @@ const argv = yargs.alias({
     'dist': 'd',
     'env': 'e',
     'lsVersion': 'l',
-    'scope': 's'
+    'scope': 's',
+    'public': 'p'
 }).default({
     'dist': 'frontend',
     'env': 'master',
-    'lsVersion': 'dev'
+    'lsVersion': 'dev',
+    'public': false
 }).describe({
     'dist': 'build output dist directory',
     'env': 'environment [dev, test, master, external]',
     'lsVersion': 'localStorage version'
 }).argv
-const { dist, env, lsVersion, scope } = argv
-
+const { dist, env, lsVersion, scope, public } = argv
 
 const svgSpriteConfig = {
     mode: {
@@ -42,13 +43,21 @@ function renameSvg (type) {
     }
 }
 
+let scopeCli = ''
+if (scope && typeof scope === 'string') {
+    scopeCli = scope
+        .split(',')
+        .filter(v => v.trim())
+        .map(name => `--scope devops-${name} `)
+        .join()
+}
+
 task('devops', series([taskGenerator('devops'), renameSvg('devops')]))
 task('pipeline', series([taskGenerator('pipeline'), renameSvg('pipeline')]))
 task('copy', () => src(['common-lib/**'], { 'base': '.' }).pipe(dest(`${dist}/`)))
 task('build', cb => {
     const spinner = new Ora('building bk-ci frontend project').start()
-    const isMultiple = typeof scope === 'string' && scope.split(',').length > 1
-    require('child_process').exec(`lerna run public:${env} --scope=devops-${isMultiple ? `{${scope}}` : scope} -- --env.dist=${dist} --env.lsVersion=${lsVersion}`, {
+    require('child_process').exec(`lerna run public:${env} ${scopeCli}--parallel -- --env.dist=${dist} --env.lsVersion=${lsVersion}`, {
         maxBuffer: 5000 * 1024
     }, (err, res) => {
         if (err) {
@@ -59,5 +68,5 @@ task('build', cb => {
         cb()
     })
 })
-  
-exports.default = parallel('devops', 'pipeline', 'copy', 'build')
+
+exports.default = parallel('build', ...(public ? ['devops', 'pipeline', 'copy'] : []))
