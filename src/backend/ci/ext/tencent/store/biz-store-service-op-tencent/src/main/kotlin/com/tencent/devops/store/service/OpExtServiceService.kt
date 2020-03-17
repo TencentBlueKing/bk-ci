@@ -25,15 +25,11 @@ import com.tencent.devops.store.pojo.common.StoreMediaInfoRequest
 import com.tencent.devops.store.pojo.common.StoreReleaseCreateRequest
 import com.tencent.devops.store.pojo.common.enums.AuditTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import com.tencent.devops.store.pojo.enums.ExtServiceStatusEnum
 import com.tencent.devops.store.pojo.dto.ServiceApproveReq
 import com.tencent.devops.store.pojo.enums.ExtServiceSortTypeEnum
+import com.tencent.devops.store.pojo.enums.ExtServiceStatusEnum
 import com.tencent.devops.store.pojo.vo.ExtServiceInfoResp
 import com.tencent.devops.store.pojo.vo.ExtensionServiceVO
-import com.tencent.devops.store.service.ExtServiceBaseService
-import com.tencent.devops.store.service.ExtServiceBcsService
-import com.tencent.devops.store.service.ExtServiceNotifyService
-import com.tencent.devops.store.service.TxExtServiceMemberImpl
 import org.jooq.impl.DSL
 import org.jooq.impl.DefaultDSLContext
 import org.slf4j.LoggerFactory
@@ -214,19 +210,32 @@ class OpExtServiceService @Autowired constructor(
         }
         val creator = serviceRecord.creator
         val serviceCode = serviceRecord.serviceCode
+        val releaseFlag = approveReq.result == PASS
+        if (releaseFlag) {
+            // 正式发布最新的扩展服务版本
+            val deployExtServiceResult = extServiceBcsService.deployExtService(
+                userId = userId,
+                namespaceName = extServiceBcsNameSpaceConfig.namespaceName,
+                serviceCode = serviceCode,
+                version = serviceRecord.version
+            )
+            ExtServiceBaseService.logger.info("deployExtServiceResult is:$deployExtServiceResult")
+            if (deployExtServiceResult.isNotOk()){
+                return deployExtServiceResult
+            }
+        }
         val serviceStatus =
-            if (approveReq.result == PASS) {
+            if (releaseFlag) {
                 ExtServiceStatusEnum.RELEASED.status.toByte()
             } else {
                 ExtServiceStatusEnum.AUDIT_REJECT.status.toByte()
             }
-        val type = if (approveReq.result == PASS) AuditTypeEnum.AUDIT_SUCCESS else AuditTypeEnum.AUDIT_REJECT
+        val type = if (releaseFlag) AuditTypeEnum.AUDIT_SUCCESS else AuditTypeEnum.AUDIT_REJECT
 
         dslContext.transaction { t ->
             val context = DSL.using(t)
-            val latestFlag = approveReq.result == PASS
             var pubTime: LocalDateTime? = null
-            if (latestFlag) {
+            if (releaseFlag) {
                 pubTime = LocalDateTime.now()
 //                // 清空旧版本LATEST_FLAG
 //                marketAtomDao.cleanLatestFlag(context, approveReq.serviceCode)
@@ -250,7 +259,7 @@ class OpExtServiceService @Autowired constructor(
                 serviceId,
                 serviceStatus,
                 approveReq,
-                latestFlag,
+                releaseFlag,
                 pubTime
             )
             extServiceFeatureDao.updateExtServiceFeatureBaseInfo(
