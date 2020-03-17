@@ -10,8 +10,10 @@ import okhttp3.Request
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
+import java.net.URLEncoder
 
 @Component
 class VmStatusScheduler @Autowired constructor(
@@ -24,7 +26,10 @@ class VmStatusScheduler @Autowired constructor(
         private const val jobLockKey = "dispatch_idc_cron_volume_fresh_job"
     }
 
-    @Scheduled(cron = "0 0/1 * * * ?")
+    @Value("\${devopsGateway.idcProxy}")
+    val idcProxy: String? = null
+
+    @Scheduled(cron = "0 0/5 * * * ?")
     fun run() {
         logger.info("VolumeStatusUpdateJob start")
 
@@ -42,7 +47,7 @@ class VmStatusScheduler @Autowired constructor(
         }
     }
 
-    fun executeTask() {
+    private fun executeTask() {
         var grayEnv = false
         val gray = System.getProperty("gray.project", "none")
         if (gray == "grayproject") {
@@ -55,7 +60,8 @@ class VmStatusScheduler @Autowired constructor(
             val capacity = it.capacity as Int
             val enable = it.enable as Boolean
             val url = "http://$itDockerIp/api/docker/container/count"
-            val request = Request.Builder().url(url)
+            val proxyUrl = "$idcProxy/proxy-devnet?url=${urlEncode(url)}"
+            val request = Request.Builder().url(proxyUrl)
                 .addHeader("Accept", "application/json; charset=utf-8")
                 .addHeader("Content-Type", "application/json; charset=utf-8")
                 .build()
@@ -76,4 +82,6 @@ class VmStatusScheduler @Autowired constructor(
             }
         }
     }
+
+    private fun urlEncode(s: String) = URLEncoder.encode(s, "UTF-8")
 }
