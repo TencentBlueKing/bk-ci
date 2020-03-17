@@ -98,6 +98,8 @@ object StoreMessageCode {
     const val USER_SERVICE_VERSION_IS_INVALID = "2120303" // 研发商店：扩展服务升级的版本号{0}错误，应为{1}
     const val USER_SERVICE_VERSION_IS_NOT_FINISH = "2120304" // 研发商店：扩展服务{0}的{1}版本发布未结束，请稍后再试
     const val USER_SERVICE_CODE_DIFF = "2120305" // 研发商店：扩展编码与extension.json文件内编码不一致
+    const val USER_SERVICE_RELEASE_STEPS_ERROR = "2120306" // 研发商店：扩展服务发布流程状态变更顺序不正确
+
 
 
     // store公共业务相关的错误提示
