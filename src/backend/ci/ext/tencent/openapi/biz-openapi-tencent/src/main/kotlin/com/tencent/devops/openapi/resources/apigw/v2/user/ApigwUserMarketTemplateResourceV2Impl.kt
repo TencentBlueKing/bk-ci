@@ -23,6 +23,28 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.openapi.resources.apigw.v2.user
 
-apply from: "$rootDir/task_gen_jooq.gradle"
-apply from: "$rootDir/task_deploy_to_maven.gradle"
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.openapi.api.apigw.v2.user.ApigwUserMarketTemplateResourceV2
+import com.tencent.devops.store.api.template.ServiceTemplateResource
+import com.tencent.devops.store.pojo.template.InstallTemplateReq
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+
+@RestResource
+class ApigwUserMarketTemplateResourceV2Impl @Autowired constructor(
+    private val client: Client
+) : ApigwUserMarketTemplateResourceV2 {
+
+    override fun installTemplateFromStore(userId: String, installTemplateReq: InstallTemplateReq): Result<Boolean> {
+        // 可见与可安装鉴权在store服务marketTemplateService中已实现
+        return client.get(ServiceTemplateResource::class).installTemplate(userId, installTemplateReq)
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(ApigwUserMarketTemplateResourceV2Impl::class.java)
+    }
+}

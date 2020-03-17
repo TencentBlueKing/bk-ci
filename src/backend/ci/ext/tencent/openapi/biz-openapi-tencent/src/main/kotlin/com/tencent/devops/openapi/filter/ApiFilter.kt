@@ -124,7 +124,13 @@ class ApiFilter : ContainerRequestFilter {
     }
 
     override fun filter(requestContext: ContainerRequestContext) {
-        val path = requestContext.uriInfo?.path
+        // path为为空的时候，直接退出
+        val path = requestContext.uriInfo?.path ?: return
+        logger.info("uriInfo uriInfo[$path]")
+        // 目录不是apigw的不做过滤
+        if(!path.startsWith("/api/apigw/") && !path.startsWith("/api/apigw-user/") && !path.startsWith("/api/apigw-app/")) {
+            return
+        }
         if (!path.isNullOrBlank()) {
             if (excludeVeritfyPath.contains(path)) {
                 logger.info("The path($path) already exclude")

@@ -23,6 +23,33 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.openapi.resources.apigw.v2
 
-apply from: "$rootDir/task_gen_jooq.gradle"
-apply from: "$rootDir/task_deploy_to_maven.gradle"
+import com.tencent.devops.common.api.pojo.Page
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.openapi.api.apigw.v2.ApigwTemplateResourceV2
+import com.tencent.devops.openapi.service.apigw.ApigwTemplateServiceV2
+import com.tencent.devops.process.pojo.template.TemplateModel
+import com.tencent.devops.process.pojo.template.TemplateType
+import org.springframework.beans.factory.annotation.Autowired
+
+@RestResource
+class ApigwTemplateResourceV2Impl @Autowired constructor(
+    private val apigwTemplateService: ApigwTemplateServiceV2
+) : ApigwTemplateResourceV2 {
+
+    override fun listTemplateByOrganization(userId: String, organizationType: String, organizationName: String, deptName: String?, centerName: String?, templateType: TemplateType?, storeFlag: Boolean?, page: Int?, pageSize: Int?): Result<Page<TemplateModel>> {
+        return apigwTemplateService.listTemplateByOrganization(
+            userId = userId,
+            organizationType = organizationType,
+            organizationName = organizationName,
+            deptName = deptName,
+            centerName = centerName,
+            templateType = templateType,
+            storeFlag = storeFlag,
+            page = page,
+            pageSize = pageSize
+        )
+    }
+}

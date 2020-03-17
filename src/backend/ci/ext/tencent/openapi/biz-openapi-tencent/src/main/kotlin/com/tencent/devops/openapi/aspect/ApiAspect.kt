@@ -22,10 +22,10 @@ class ApiAspect {
      * @param jp
      */
     @Before(
-        "execution(* com.tencent.devops.openapi.resources.*.*(..))"
-            + "||execution(* com.tencent.devops.openapi.resources.v2.*.*(..))"
-            + "||execution(* com.tencent.devops.openapi.resources.v2.app.*.*(..))"
-            + "||execution(* com.tencent.devops.openapi.resources.v2.user*.*(..))"
+        "execution(* com.tencent.devops.openapi.resources.apigw.*.*(..))"
+            + "||execution(* com.tencent.devops.openapi.resources.apigw.v2.*.*(..))"
+            + "||execution(* com.tencent.devops.openapi.resources.apigw.v2.app.*.*(..))"
+            + "||execution(* com.tencent.devops.openapi.resources.apigw.v2.user*.*(..))"
     ) // 所有controller包下面的所有方法的所有参数
     fun beforeMethod(jp: JoinPoint) {
 

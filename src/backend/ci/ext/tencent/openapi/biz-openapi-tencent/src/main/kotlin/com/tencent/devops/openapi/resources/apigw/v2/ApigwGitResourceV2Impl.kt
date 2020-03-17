@@ -23,6 +23,31 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.openapi.resources.apigw.v2
 
-apply from: "$rootDir/task_gen_jooq.gradle"
-apply from: "$rootDir/task_deploy_to_maven.gradle"
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.openapi.api.apigw.v2.ApigwGitResourceV2
+import com.tencent.devops.repository.api.UserGitResource
+import com.tencent.devops.repository.pojo.AuthorizeResult
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+
+@RestResource
+class ApigwGitResourceV2Impl @Autowired constructor(
+    private val client: Client
+) : ApigwGitResourceV2 {
+    override fun getProject(userId: String, projectId: String, repoHashId: String?): Result<AuthorizeResult> {
+        logger.info("Get git projects  of project($projectId) by user($userId) with repoHashId($repoHashId)")
+        return client.get(UserGitResource::class).getProject(
+            userId = userId,
+            projectId = projectId,
+            repoHashId = repoHashId
+        )
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(ApigwGitResourceV2Impl::class.java)
+    }
+}
