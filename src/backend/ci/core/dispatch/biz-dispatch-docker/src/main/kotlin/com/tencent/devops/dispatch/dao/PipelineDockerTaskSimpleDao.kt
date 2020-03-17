@@ -9,11 +9,10 @@ import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
 @Repository
-class PipelineDockerTaskHistoryDao @Autowired constructor() {
+class PipelineDockerTaskSimpleDao @Autowired constructor() {
     fun create(
         dslContext: DSLContext,
         pipelineId: String,
-        buildId: String,
         vmSeq: String,
         idcIp: String,
         status: Int
@@ -22,7 +21,6 @@ class PipelineDockerTaskHistoryDao @Autowired constructor() {
             dslContext.insertInto(
                 this,
                 PIPELINE_ID,
-                BUILD_ID,
                 VM_SEQ,
                 DOCKER_IP,
                 STATUS,
@@ -30,7 +28,6 @@ class PipelineDockerTaskHistoryDao @Autowired constructor() {
                 GMT_MODIFIED
             ).values(
                 pipelineId,
-                buildId,
                 vmSeq,
                 idcIp,
                 status,
@@ -42,7 +39,7 @@ class PipelineDockerTaskHistoryDao @Autowired constructor() {
 
     fun updateStatus(
         dslContext: DSLContext,
-        buildId: String,
+        pipelineId: String,
         vmSeq: String,
         status: Int
     ) {
@@ -50,7 +47,7 @@ class PipelineDockerTaskHistoryDao @Autowired constructor() {
             dslContext.update(this)
                 .set(STATUS, status)
                 .set(GMT_MODIFIED, LocalDateTime.now())
-                .where(BUILD_ID.eq(buildId))
+                .where(PIPELINE_ID.eq(pipelineId))
                 .and(VM_SEQ.eq(vmSeq))
                 .execute()
         }
@@ -58,7 +55,7 @@ class PipelineDockerTaskHistoryDao @Autowired constructor() {
 
     fun updateContainerId(
         dslContext: DSLContext,
-        buildId: String,
+        pipelineId: String,
         vmSeq: String,
         containerId: String
     ) {
@@ -66,7 +63,7 @@ class PipelineDockerTaskHistoryDao @Autowired constructor() {
             dslContext.update(this)
                 .set(CONTAINER_ID, containerId)
                 .set(GMT_MODIFIED, LocalDateTime.now())
-                .where(BUILD_ID.eq(buildId))
+                .where(PIPELINE_ID.eq(pipelineId))
                 .and(VM_SEQ.eq(vmSeq))
                 .execute()
         }

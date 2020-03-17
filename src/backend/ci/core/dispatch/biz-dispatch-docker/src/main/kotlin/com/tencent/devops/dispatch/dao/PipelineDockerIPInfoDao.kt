@@ -5,6 +5,7 @@ import com.tencent.devops.model.dispatch.tables.records.TDispatchPipelineDockerI
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository
+import java.time.LocalDateTime
 
 @Repository
 class PipelineDockerIPInfoDao {
@@ -32,8 +33,8 @@ class PipelineDockerIPInfoDao {
                 used,
                 enable,
                 grayEnv,
-                java.time.LocalDateTime.now(),
-                java.time.LocalDateTime.now()
+                LocalDateTime.now(),
+                LocalDateTime.now()
             ).execute()
         }
     }
@@ -50,6 +51,7 @@ class PipelineDockerIPInfoDao {
                 .set(CAPACITY, capacity)
                 .set(USED_NUM, used)
                 .set(ENABLE, enable)
+                .set(GMT_MODIFIED, LocalDateTime.now())
                 .where(DOCKER_IP.eq(idcIp))
                 .execute()
         }
@@ -63,6 +65,7 @@ class PipelineDockerIPInfoDao {
         with(TDispatchPipelineDockerIpInfo.T_DISPATCH_PIPELINE_DOCKER_IP_INFO) {
             dslContext.update(this)
                 .set(ENABLE, enable)
+                .set(GMT_MODIFIED, LocalDateTime.now())
                 .where(ID.eq(id))
                 .execute()
         }
