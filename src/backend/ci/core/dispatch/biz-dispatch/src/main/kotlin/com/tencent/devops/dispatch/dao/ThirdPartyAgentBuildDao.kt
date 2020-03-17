@@ -113,7 +113,7 @@ class ThirdPartyAgentBuildDao {
      */
     fun updateExpireBuilds(
         dslContext: DSLContext,
-        ids: Set<Int>
+        ids: Set<Long>
     ): Int {
         with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
             return dslContext.update(this)
@@ -155,7 +155,7 @@ class ThirdPartyAgentBuildDao {
 
     fun updateStatus(
         dslContext: DSLContext,
-        id: Int,
+        id: Long,
         status: PipelineTaskStatus
     ): Int {
         with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
