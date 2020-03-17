@@ -339,7 +339,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
                 )
             } else {
                 // 升级扩展服务
-                val serviceEnvRecord = extServiceEnvDao.getMarketServiceEnvInfoByServiceId(context, serviceId)
+                val serviceEnvRecord = extServiceEnvDao.getMarketServiceEnvInfoByServiceId(context, serviceRecord.id)
                 upgradeMarketExtService(
                     context = context,
                     userId = userId,
