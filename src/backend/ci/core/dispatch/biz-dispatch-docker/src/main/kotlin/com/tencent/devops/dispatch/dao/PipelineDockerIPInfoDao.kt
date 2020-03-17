@@ -57,7 +57,7 @@ class PipelineDockerIPInfoDao {
 
     fun updateDockerIpStatus(
         dslContext: DSLContext,
-        id: Int,
+        id: Long,
         enable: Boolean
     ) {
         with(TDispatchPipelineDockerIpInfo.T_DISPATCH_PIPELINE_DOCKER_IP_INFO) {
@@ -104,7 +104,7 @@ class PipelineDockerIPInfoDao {
 
     fun delete(
         dslContext: DSLContext,
-        ipInfoId: Int
+        ipInfoId: Long
     ): Int {
         return with(TDispatchPipelineDockerIpInfo.T_DISPATCH_PIPELINE_DOCKER_IP_INFO) {
             dslContext.delete(this)
