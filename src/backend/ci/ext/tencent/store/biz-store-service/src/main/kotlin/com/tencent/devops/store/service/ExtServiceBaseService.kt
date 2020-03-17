@@ -871,6 +871,9 @@ abstract class ExtServiceBaseService @Autowired constructor() {
                     userCommentInfo = userCommentInfo,
                     visibilityLevel = VisibilityLevelEnum.getVisibilityLevel(featureInfoRecord.visibilityLevel),
                     recommendFlag = featureInfoRecord?.recommendFlag,
+                    publicFlag = featureInfoRecord.publicFlag,
+                    certificationFlag = featureInfoRecord.certificationFlag,
+                    weight = featureInfoRecord.weight,
                     extensionItemList = itemList,
                     mediaList = mediaList
                 )

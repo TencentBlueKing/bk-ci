@@ -50,8 +50,14 @@ data class ServiceVersionVO(
     val visibilityLevel: String?,
 //    @ApiModelProperty("扩展服务代码库不开源原因")
 //    val privateReason: String?,
-    @ApiModelProperty("是否推荐标识 true：推荐，false：不推荐", required = false)
+    @ApiModelProperty("是否推荐标识 true：推荐，false：不推荐")
     val recommendFlag: Boolean? = null,
+    @ApiModelProperty("是否公共 true：推荐，false：不推荐")
+    val publicFlag: Boolean? = null,
+    @ApiModelProperty("是否官方认证 true：推荐，false：不推荐")
+    val certificationFlag: Boolean? = null,
+    @ApiModelProperty("权重")
+    val weight: Int? = null,
     @ApiModelProperty("扩展点列表")
     val extensionItemList: List<String>,
     @ApiModelProperty("媒体信息")
