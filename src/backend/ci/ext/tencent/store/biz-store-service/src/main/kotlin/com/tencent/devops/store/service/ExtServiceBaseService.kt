@@ -1,5 +1,7 @@
 package com.tencent.devops.store.service
 
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.constant.APPROVE
 import com.tencent.devops.common.api.constant.BEGIN
 import com.tencent.devops.common.api.constant.BUILD
@@ -122,6 +124,8 @@ abstract class ExtServiceBaseService @Autowired constructor() {
     lateinit var mediaService: StoreMediaService
     @Autowired
     lateinit var deptService: StoreVisibleDeptService
+    @Autowired
+    lateinit var objectMapper: ObjectMapper
     @Autowired
     lateinit var extServiceBcsService: ExtServiceBcsService
     @Autowired

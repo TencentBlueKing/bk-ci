@@ -1,4 +1,4 @@
-package com.tencent.devops.store.pojo.enums
+package com.tencent.devops.store.pojo.common.enums
 
 enum class MediaTypeEnum {
     PICTURE, // 图片

@@ -1,6 +1,6 @@
-package com.tencent.devops.store.pojo
+package com.tencent.devops.store.pojo.common
 
-import com.tencent.devops.store.pojo.enums.MediaTypeEnum
+import com.tencent.devops.store.pojo.common.enums.MediaTypeEnum
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
