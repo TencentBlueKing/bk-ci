@@ -48,6 +48,7 @@ import com.tencent.devops.common.auth.api.BSAuthProjectApi
 import com.tencent.devops.common.auth.code.BSRepoAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.notify.api.service.ServiceNotifyResource
 import com.tencent.devops.process.api.service.ServiceBuildResource
@@ -55,7 +56,6 @@ import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.util.regex.Pattern
 import javax.ws.rs.BadRequestException
@@ -69,19 +69,9 @@ class BkRepoDownloadService @Autowired constructor(
     private val artifactoryAuthServiceCode: BSRepoAuthServiceCode,
     private val pipelineService: PipelineService,
     private val bkRepoClient: BkRepoClient,
-    private val shortUrlApi: ShortUrlApi
+    private val shortUrlApi: ShortUrlApi,
+    val commonConfig: CommonConfig
 ) : RepoDownloadService {
-    private val regex = Pattern.compile(",|;")
-
-    @Value("\${bkrepo.devnetGatewayUrl:#{null}}")
-    private val DEVNET_GATEWAY_URL: String? = null
-
-    @Value("\${bkrepo.idcGatewayUrl:#{null}}")
-    private val IDC_GATEWAY_URL: String? = null
-
-    @Value("\${bkrepo.thirdPartyUrl:#{null}}")
-    private val THIRDPARTYH_URL: String? = null
-
     override fun getDownloadUrl(token: String): DownloadUrl {
         // 不支持
         throw OperationException("not support")
@@ -129,15 +119,12 @@ class BkRepoDownloadService @Autowired constructor(
         artifactoryType: ArtifactoryType,
         argPath: String
     ): Url {
-        logger.info("getDownloadUrl, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType, " +
-            "argPath: $argPath")
+        logger.info("getDownloadUrl, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType, argPath: $argPath")
         // 校验用户流水线权限？
         val normalizedPath = PathUtils.checkAndNormalizeAbsPath(argPath)
         val repo = RepoUtils.getRepoByType(artifactoryType)
-        return Url(
-            "$DEVNET_GATEWAY_URL/bkrepo/api/user/generic/$projectId/$repo$normalizedPath",
-            "$IDC_GATEWAY_URL/bkrepo/api/user/generic/$projectId/$repo$normalizedPath"
-        )
+        val url = "${HomeHostUtil.getHost(commonConfig.devopsIdcProxyGateway!!)}/bkrepo/api/user/generic/$projectId/$repo$normalizedPath"
+        return Url(url, url)
     }
 
     // 可能已废弃，待检查
@@ -308,7 +295,7 @@ class BkRepoDownloadService @Autowired constructor(
                 downloadIps = listOf(),
                 timeoutInSeconds = (ttl ?: 24 * 3600).toLong()
             )
-            resultList.add("$THIRDPARTYH_URL/bkrepo/api/external/repository$shareUri")
+            resultList.add("${HomeHostUtil.getHost(commonConfig.devopsDevnetProxyGateway!!)}/bkrepo/api/external/repository$shareUri")
         }
         return resultList
     }

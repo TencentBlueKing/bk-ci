@@ -86,11 +86,6 @@ class BkRepoService @Autowired constructor(
     val client: Client,
     val artifactoryAuthServiceCode: BSRepoAuthServiceCode
 ) : RepoService {
-    @Value("\${bkrepo.devnetGatewayUrl:#{null}}")
-    private val DEVNET_GATEWAY_URL: String? = null
-
-    @Value("\${bkrepo.externalUrl:#{null}}")
-    private val EXTERNAL_URL: String? = null
 
     override fun list(userId: String, projectId: String, artifactoryType: ArtifactoryType, path: String): List<FileInfo> {
         return when (artifactoryType) {
