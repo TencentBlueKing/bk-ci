@@ -6,7 +6,7 @@ import io.swagger.annotations.ApiModelProperty
 @ApiModel("IdcIpInfoVO")
 data class DockerIpInfoVO(
     @ApiModelProperty("主键ID")
-    val id: Int,
+    val id: Long,
     @ApiModelProperty("IDC构建机IP")
     val idcIp: String,
     @ApiModelProperty("IDC构建机容量")
