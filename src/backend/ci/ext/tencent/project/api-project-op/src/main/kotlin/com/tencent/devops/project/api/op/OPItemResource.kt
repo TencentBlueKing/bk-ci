@@ -5,6 +5,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.project.api.pojo.ExtItemDTO
 import com.tencent.devops.project.api.pojo.ItemInfoResponse
+import com.tencent.devops.project.api.pojo.ItemListVO
 import com.tencent.devops.project.api.pojo.ServiceItem
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -16,6 +17,7 @@ import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
 import javax.ws.rs.PUT
 import javax.ws.rs.Path
+import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
@@ -44,8 +46,14 @@ interface OPItemResource {
         itemName: String?,
         @ApiParam("蓝盾服务Id")
         @QueryParam("pid")
-        pid: String?
-    ): Result<List<ServiceItem>>
+        pid: String?,
+        @ApiParam("页码", required = false)
+        @QueryParam("page")
+        page: Int?,
+        @ApiParam("每页数量", required = false)
+        @QueryParam("pageSize")
+        pageSize: Int?
+    ): Result<ItemListVO>
 
     @POST
     @Path("/")
@@ -66,7 +74,7 @@ interface OPItemResource {
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
         @ApiParam("扩展点Id", required = true)
-        @QueryParam("itemId")
+        @PathParam("itemId")
         itemId: String,
         @ApiParam("扩展点信息", required = true)
         updateInfo: ItemInfoResponse
@@ -77,7 +85,7 @@ interface OPItemResource {
     @ApiOperation("获取扩展点")
     fun get(
         @ApiParam("扩展点Id", required = true)
-        @QueryParam("itemId")
+        @PathParam("itemId")
         itemId: String
     ): Result<ServiceItem?>
 
@@ -89,7 +97,7 @@ interface OPItemResource {
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
         @ApiParam("扩展点Id", required = true)
-        @QueryParam("itemId")
+        @PathParam("itemId")
         itemId: String
     ): Result<Boolean>
 
@@ -101,7 +109,7 @@ interface OPItemResource {
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
         @ApiParam("扩展点Id", required = true)
-        @QueryParam("itemId")
+        @PathParam("itemId")
         itemId: String
     ): Result<Boolean>
 
@@ -113,7 +121,7 @@ interface OPItemResource {
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
         @ApiParam("扩展点Id", required = true)
-        @QueryParam("itemId")
+        @PathParam("itemId")
         itemId: String
     ): Result<Boolean>
 }

@@ -77,23 +77,20 @@ class OpExtServiceService @Autowired constructor(
             page = page,
             pageSize = pageSize
         )
-//
-//        val allLable = labelDao.getAllLabel(dslContext, StoreTypeEnum.SERVICE.type.toByte())
-//        val lableMap = mutableMapOf<String, String>()
-//        allLable!!.forEach {
-//            lableMap[it.id] = it.labelName
-//        }
+
+        val count = extServiceDao.queryCountFromOp(
+            dslContext = dslContext,
+            serviceName = serviceName,
+            isPublic = isPublic,
+            isRecommend = isRecommend,
+            itemId = itemId,
+            isApprove = isApprove
+        )
 
         val extensionServiceInfoList = mutableSetOf<ExtensionServiceVO>()
         serviceRecords?.forEach {
             val serviceId = it["itemId"] as String
-//            val labelRecord = extServiceLableRelDao.getLabelsByServiceId(dslContext, serviceId)
-//            val labelName =
-//            if(labelRecord != null && labelRecord.size > 1) {
-//                labelRecord[0]?.get(KEY_LABEL_NAME).toString()
-//            } else {
-//                null
-//            }
+
             extensionServiceInfoList.add(
                 ExtensionServiceVO(
                     serviceId = serviceId,
@@ -108,7 +105,7 @@ class OpExtServiceService @Autowired constructor(
             )
         }
 
-        return Result(ExtServiceInfoResp(extensionServiceInfoList.size, page, pageSize, extensionServiceInfoList))
+        return Result(ExtServiceInfoResp(count, page, pageSize, extensionServiceInfoList))
     }
 
     fun editExtInfo(userId: String, serviceId: String, serviceCode: String, infoResp: OpEditInfoDTO): Result<Boolean> {

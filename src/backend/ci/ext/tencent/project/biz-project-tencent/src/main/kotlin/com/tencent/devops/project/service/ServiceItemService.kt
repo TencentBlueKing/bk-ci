@@ -3,6 +3,7 @@ package com.tencent.devops.project.service
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.project.api.pojo.ExtItemDTO
 import com.tencent.devops.project.api.pojo.ItemInfoResponse
+import com.tencent.devops.project.api.pojo.ItemListVO
 import com.tencent.devops.project.api.pojo.ServiceItem
 import com.tencent.devops.project.api.pojo.ServiceItemInfoVO
 import com.tencent.devops.project.api.pojo.enums.HtmlComponentTypeEnum
@@ -187,6 +188,9 @@ class ServiceItemService @Autowired constructor(
 
     private fun findParent(serviceItem: ServiceItem): ExtItemDTO {
         logger.info("findParent: serviceItemId: ${serviceItem.itemId}, parentId:${serviceItem.parentId}")
+        if (projectServiceMap.isEmpty()) {
+            getServiceList()
+        }
         val childList = mutableListOf<ExtServiceEntity>()
         childList.add(
             ExtServiceEntity(
@@ -216,26 +220,32 @@ class ServiceItemService @Autowired constructor(
         }
     }
 
-    fun queryItem(itemName: String?, serviceId: String?): Result<List<ServiceItem>> {
+    fun queryItem(itemName: String?, serviceId: String?, page: Int?, pageSize: Int?): Result<ItemListVO> {
         val query = ItemQueryInfo(
             itemName = itemName,
-            serviceId = serviceId
+            serviceId = serviceId,
+            pageSize = pageSize,
+            page = page
         )
         val itemList = mutableListOf<ServiceItem>()
         serviceItemDao.queryItem(dslContext, query)?.forEach {
+            val serviceItemInfo = ServiceItem(
+                itemId = it.id,
+                itemCode = it.itemCode,
+                itemName = it.itemName,
+                serviceCount = it.serviceNum,
+                htmlType = it.htmlComponentType,
+                htmlPath = it.htmlPath,
+                parentId = it.parentId
+            )
+            val parentName = findParent(serviceItemInfo).extServiceItem.name.substringBefore("(")
+            serviceItemInfo.parentName = parentName
             itemList.add(
-                ServiceItem(
-                    itemId = it.id,
-                    itemCode = it.itemCode,
-                    itemName = it.itemName,
-                    serviceCount = it.serviceNum,
-                    htmlType = it.htmlComponentType,
-                    htmlPath = it.htmlPath,
-                    parentId = it.parentId
-                )
+                serviceItemInfo
             )
         }
-        return Result(itemList)
+        val count = serviceItemDao.queryCount(dslContext, query)
+        return Result(ItemListVO(count ?: 0, page, pageSize, itemList))
     }
 
     fun createItem(userId: String, itemInfo: ItemInfoResponse): Result<Boolean> {
@@ -283,7 +293,11 @@ class ServiceItemService @Autowired constructor(
             htmlPath = itemRecord.htmlPath,
             htmlType = itemRecord.htmlComponentType,
             serviceCount = itemRecord.serviceNum,
-            parentId = itemRecord.parentId
+            parentId = itemRecord.parentId,
+            props = itemRecord.props ?: "",
+            icon = itemRecord.iconUrl,
+            tooltip = itemRecord.tooltip
+
         )
         return Result(itemInfo)
     }

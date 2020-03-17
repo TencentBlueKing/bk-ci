@@ -137,8 +137,32 @@ class ServiceItemDao {
             if (itemQueryInfo.itemStatus != null) {
                 whereStep.where(ITEM_STATUS.eq(itemQueryInfo.itemStatus.name))
             }
-            whereStep.orderBy(UPDATE_TIME).fetch()
+            if(itemQueryInfo.page != null && itemQueryInfo.pageSize != null){
+                whereStep.limit((itemQueryInfo.page - 1) * itemQueryInfo.pageSize, itemQueryInfo.pageSize).fetch()
+            }
+            else {
+                whereStep.orderBy(UPDATE_TIME).fetch()
+            }
         }
+    }
+
+    fun queryCount(dslContext: DSLContext, itemQueryInfo: ItemQueryInfo): Int? {
+        return with(TServiceItem.T_SERVICE_ITEM) {
+            val whereStep = dslContext.select(this.ID.countDistinct()).from(this)
+            if (itemQueryInfo.itemName != null) {
+                whereStep.where(ITEM_NAME.like(itemQueryInfo.itemName))
+            }
+
+            if (itemQueryInfo.serviceId != null) {
+                whereStep.where(PARENT_ID.eq(itemQueryInfo.serviceId))
+            }
+
+            if (itemQueryInfo.itemStatus != null) {
+                whereStep.where(ITEM_STATUS.eq(itemQueryInfo.itemStatus.name))
+            }
+            whereStep.fetchOne(0, Int::class.java)
+        }
+
     }
 
     fun getItemById(dslContext: DSLContext, itemId: String): TServiceItemRecord? {

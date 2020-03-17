@@ -459,6 +459,54 @@ class ExtServiceDao {
         }
     }
 
+    fun queryCountFromOp(
+        dslContext: DSLContext,
+        serviceName: String?,
+        itemId: String?,
+        isRecommend: Boolean?,
+        isPublic: Boolean?,
+        isApprove: Boolean?
+    ): Int {
+        val a = TExtensionService.T_EXTENSION_SERVICE.`as`("a")
+        val b = TExtensionServiceFeature.T_EXTENSION_SERVICE_FEATURE.`as`("b")
+        val c = TExtensionServiceItemRel.T_EXTENSION_SERVICE_ITEM_REL.`as`("c")
+        val d = TStoreProjectRel.T_STORE_PROJECT_REL.`as`("d")
+
+        var selectFeild = dslContext.select(
+            a.ID.countDistinct()
+        ).from(a).join(b).on(a.SERVICE_CODE.eq(b.SERVICE_CODE)).join(d).on(a.SERVICE_CODE.eq(d.STORE_CODE))
+
+        val conditions = mutableListOf<Condition>()
+        conditions.add(d.TYPE.eq(StoreProjectTypeEnum.INIT.type.toByte()))
+        conditions.add(d.STORE_TYPE.eq(StoreTypeEnum.SERVICE.type.toByte()))
+        conditions.add(a.DELETE_FLAG.eq(false))
+        if (null != serviceName) {
+            conditions.add(a.SERVICE_NAME.like("%$serviceName%"))
+        }
+        if (null != itemId) {
+            conditions.add(c.ITEM_ID.eq(itemId))
+            selectFeild.join(c).on(a.ID.eq(c.SERVICE_ID))
+        }
+
+        if (null != isPublic) {
+            conditions.add(b.PUBLIC_FLAG.eq(isPublic))
+        }
+
+        if (null != isRecommend) {
+            conditions.add(b.RECOMMEND_FLAG.eq(isRecommend))
+        }
+
+        if (null != isApprove) {
+            if (isApprove) {
+                conditions.add(a.SERVICE_STATUS.eq(ExtServiceStatusEnum.AUDITING.status.toByte()))
+            } else {
+                conditions.add(a.SERVICE_STATUS.notEqual(ExtServiceStatusEnum.AUDITING.status.toByte()))
+            }
+        }
+        return selectFeild.where(conditions).fetchOne(0, Int::class.java)
+
+    }
+
     /**
      * 研发商店搜索结果列表
      */

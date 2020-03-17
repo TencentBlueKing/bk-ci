@@ -493,7 +493,9 @@ abstract class ExtServiceBaseService @Autowired constructor() {
             var itemName = ""
             serviceItemList?.forEach { itId ->
                 val itemInfo = itemInfoMap?.get(itId)
-                itemName += itemInfo!!.parentName + "-" + itemInfo.itemName + ","
+                if(itemInfo != null) {
+                    itemName += itemInfo!!.parentName + "-" + itemInfo.itemName + ","
+                }
             }
             itemName = itemName.substringBeforeLast(",")
             logger.info("the getMyService serviceId is :$serviceId, itemName is :$itemName")
