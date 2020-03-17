@@ -264,7 +264,7 @@ open class GitUpdateTask constructor(
                 aliasName = aliasName,
                 url = url,
                 branchName = modeValue,
-                newCommitId = commitMaterial.newCommitId,
+                newCommitId = commitMaterial.newCommitId ?: commitMaterial.lastCommitId,
                 newCommitComment = commitMaterial.newCommitComment,
                 commitTimes = commitMaterial.commitTimes
             )
