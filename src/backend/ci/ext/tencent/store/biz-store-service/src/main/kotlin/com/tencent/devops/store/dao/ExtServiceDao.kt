@@ -465,7 +465,7 @@ class ExtServiceDao {
         itemId: String?,
         isRecommend: Boolean?,
         isPublic: Boolean?,
-        isApprove: Boolean?,
+        isApprove: Boolean?
     ): Int {
         val a = TExtensionService.T_EXTENSION_SERVICE.`as`("a")
         val b = TExtensionServiceFeature.T_EXTENSION_SERVICE_FEATURE.`as`("b")
