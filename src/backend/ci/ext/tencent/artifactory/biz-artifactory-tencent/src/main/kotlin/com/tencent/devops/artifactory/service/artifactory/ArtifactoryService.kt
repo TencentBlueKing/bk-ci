@@ -261,28 +261,26 @@ class ArtifactoryService @Autowired constructor(
         val regex = Pattern.compile(",|;")
         val pathArray = regex.split(argPath)
 
-        val repoPathPrefix = JFrogUtil.getRepoPath()
-        val pipelinePathPrefix = "/" + JFrogUtil.getPipelinePathPrefix(targetProjectId).removePrefix(repoPathPrefix)
-        val customDirPathPrefix = "/" + JFrogUtil.getCustomDirPathPrefix(targetProjectId).removePrefix(repoPathPrefix)
+        val repoPathPrefix = JFrogUtil.getRepoPath() // "generic-local/"
+        val pipelinePathPrefix = "/" + JFrogUtil.getPipelinePathPrefix(targetProjectId).removePrefix(repoPathPrefix) // "bk-archive/$projectId/"
+        val customDirPathPrefix = "/" + JFrogUtil.getCustomDirPathPrefix(targetProjectId).removePrefix(repoPathPrefix) // // "bk-custom/$projectId/"
         val ret = mutableListOf<FileDetail>()
 
         pathArray.forEach { path ->
             val normalizedPath = JFrogUtil.normalize(path)
-            val realPath = if (path.startsWith("/")) normalizedPath else "/$normalizedPath"
-
+            val realPath = if (path.startsWith("/")) normalizedPath else "/$normalizedPath" // /path/*.txt
             val pathPrefix = if (artifactoryType == ArtifactoryType.PIPELINE) {
                 "/" + JFrogUtil.getPipelinePathPrefix(targetProjectId).removePrefix(repoPathPrefix) + "$targetPipelineId/$targetBuildId/" + JFrogUtil.getParentFolder(
                     realPath
-                ).removePrefix("/")
+                ).removePrefix("/") // bk-archive/$projectId/$pipelineId/$buildId/path/
             } else {
                 "/" + JFrogUtil.getCustomDirPathPrefix(targetProjectId).removePrefix(repoPathPrefix) + JFrogUtil.getParentFolder(
                     realPath
-                ).removePrefix("/")
+                ).removePrefix("/") // bk-archive/$projectId/path/
             }
-            val fileName = JFrogUtil.getFileName(path)
+            val fileName = JFrogUtil.getFileName(path) // *.txt
 
-            val jFrogAQLFileInfoList =
-                jFrogAQLService.searchFileByRegex(repoPathPrefix, setOf(pathPrefix), setOf(fileName))
+            val jFrogAQLFileInfoList = jFrogAQLService.searchFileByRegex(repoPathPrefix, setOf(pathPrefix), setOf(fileName))
             logger.info("Path($path) match file list: $jFrogAQLFileInfoList")
 
             jFrogAQLFileInfoList.forEach {

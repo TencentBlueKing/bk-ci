@@ -27,6 +27,7 @@
 package com.tencent.devops.process.api.codecc
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.plugin.codecc.pojo.coverity.ProjectLanguage
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -35,6 +36,7 @@ import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["SERVICE_CODECC_TRANSFER_RESOURCE"], description = "codecc迁移资源")
@@ -51,5 +53,18 @@ interface ServiceCodeccTransferResource {
         projectId: String,
         @ApiParam("流水线Id", required = true)
         pipelineIds: Set<String>
+    ): Result<Map<String, String>>
+
+    @ApiOperation("")
+    @POST
+    @Path("/projects/{projectId}/addToolSetToPipeline")
+    fun addToolSetToPipeline(
+        @PathParam("projectId")
+        projectId: String,
+        @QueryParam("toolRuleSet")
+        toolRuleSet: String,
+        @QueryParam("language")
+        language: ProjectLanguage,
+        pipelineIds: Set<String>?
     ): Result<Map<String, String>>
 }

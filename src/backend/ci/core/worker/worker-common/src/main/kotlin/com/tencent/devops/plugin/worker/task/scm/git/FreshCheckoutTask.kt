@@ -50,25 +50,27 @@ class FreshCheckoutTask(
     override val buildId: String,
     override val repositoryConfig: RepositoryConfig,
     override val gitType: ScmType,
-    override val variables: Map<String, String>
+    override val variables: Map<String, String>,
+    override val aliasName: String
 ) : GitUpdateTask(
-    projectName,
-    userName,
-    url,
-    branchName,
-    revision,
-    workspace,
-    credentialSetter,
-    convertSubmoduleUrl,
-    enableSubmodule,
-    enableVirtualMergeBranch,
-    modeType,
-    modeValue,
-    pipelineId,
-    buildId,
-    repositoryConfig,
-    gitType,
-    variables
+    projectName = projectName,
+    userName = userName,
+    url = url,
+    branchName = branchName,
+    revision = revision,
+    workspace = workspace,
+    credentialSetter = credentialSetter,
+    convertSubmoduleUrl = convertSubmoduleUrl,
+    enableSubmodule = enableSubmodule,
+    enableVirtualMergeBranch = enableVirtualMergeBranch,
+    modeType = modeType,
+    modeValue = modeValue,
+    pipelineId = pipelineId,
+    buildId = buildId,
+    repositoryConfig = repositoryConfig,
+    gitType = gitType,
+    variables = variables,
+    aliasName = aliasName
 ) {
 
     override fun beforeActions() {

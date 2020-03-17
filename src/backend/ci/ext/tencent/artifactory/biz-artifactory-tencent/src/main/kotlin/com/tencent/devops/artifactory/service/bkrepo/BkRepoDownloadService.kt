@@ -27,12 +27,14 @@
 package com.tencent.devops.artifactory.service.bkrepo
 
 import com.tencent.devops.artifactory.pojo.DownloadUrl
+import com.tencent.devops.artifactory.pojo.FileDetail
 import com.tencent.devops.artifactory.pojo.Url
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.artifactory.service.PipelineService
 import com.tencent.devops.artifactory.service.RepoDownloadService
 import com.tencent.devops.artifactory.service.pojo.FileShareInfo
 import com.tencent.devops.artifactory.util.EmailUtil
+import com.tencent.devops.artifactory.util.JFrogUtil
 import com.tencent.devops.artifactory.util.PathUtils
 import com.tencent.devops.artifactory.util.RepoUtils
 import com.tencent.devops.artifactory.util.StringUtil
@@ -40,13 +42,13 @@ import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.archive.client.BkRepoClient
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_BUILD_ID
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_PIPELINE_ID
-import com.tencent.devops.common.archive.pojo.BkRepoFile
 import com.tencent.devops.common.archive.shorturl.ShortUrlApi
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.BSAuthProjectApi
 import com.tencent.devops.common.auth.code.BSRepoAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.notify.api.service.ServiceNotifyResource
 import com.tencent.devops.process.api.service.ServiceBuildResource
@@ -54,7 +56,6 @@ import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.util.regex.Pattern
 import javax.ws.rs.BadRequestException
@@ -68,19 +69,9 @@ class BkRepoDownloadService @Autowired constructor(
     private val artifactoryAuthServiceCode: BSRepoAuthServiceCode,
     private val pipelineService: PipelineService,
     private val bkRepoClient: BkRepoClient,
-    private val shortUrlApi: ShortUrlApi
+    private val shortUrlApi: ShortUrlApi,
+    val commonConfig: CommonConfig
 ) : RepoDownloadService {
-    private val regex = Pattern.compile(",|;")
-
-    @Value("\${bkrepo.devnetGatewayUrl:#{null}}")
-    private val DEVNET_GATEWAY_URL: String? = null
-
-    @Value("\${bkrepo.idcGatewayUrl:#{null}}")
-    private val IDC_GATEWAY_URL: String? = null
-
-    @Value("\${bkrepo.thirdPartyUrl:#{null}}")
-    private val THIRDPARTYH_URL: String? = null
-
     override fun getDownloadUrl(token: String): DownloadUrl {
         // 不支持
         throw OperationException("not support")
@@ -128,15 +119,12 @@ class BkRepoDownloadService @Autowired constructor(
         artifactoryType: ArtifactoryType,
         argPath: String
     ): Url {
-        logger.info("getDownloadUrl, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType, " +
-            "argPath: $argPath")
+        logger.info("getDownloadUrl, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType, argPath: $argPath")
         // 校验用户流水线权限？
         val normalizedPath = PathUtils.checkAndNormalizeAbsPath(argPath)
         val repo = RepoUtils.getRepoByType(artifactoryType)
-        return Url(
-            "$DEVNET_GATEWAY_URL/bkrepo/api/user/generic/$projectId/$repo$normalizedPath",
-            "$IDC_GATEWAY_URL/bkrepo/api/user/generic/$projectId/$repo$normalizedPath"
-        )
+        val url = "${HomeHostUtil.getHost(commonConfig.devopsIdcGateway!!)}/bkrepo/api/user/generic/$projectId/$repo$normalizedPath"
+        return Url(url, url)
     }
 
     // 可能已废弃，待检查
@@ -269,21 +257,31 @@ class BkRepoDownloadService @Autowired constructor(
         }
         logger.info("targetProjectId: $targetProjectId, targetPipelineId: $targetPipelineId, targetBuildId: $targetBuildId")
 
+        val regex = Pattern.compile(",|;")
         val pathArray = regex.split(argPath)
-        val fileList = mutableListOf<BkRepoFile>()
+        val fileList = mutableListOf<FileDetail>()
         pathArray.forEach { path ->
-            fileList.addAll(
-                bkRepoClient.matchBkRepoFile(
-                    "",
-                    path,
-                    projectId,
-                    pipelineId,
-                    buildId,
-                    isCustom = artifactoryType == ArtifactoryType.CUSTOM_DIR
-                )
-            )
+            val absPath = "/${JFrogUtil.normalize(path).removePrefix("/")}"
+            val filePath = if (artifactoryType == ArtifactoryType.PIPELINE) {
+                "/$targetPipelineId/$targetBuildId/${JFrogUtil.getParentFolder(absPath).removePrefix("/")}" // /$projectId/$pipelineId/$buildId/path/
+            } else {
+                "/${JFrogUtil.getParentFolder(absPath).removePrefix("/")}" // /path/
+            }
+            val fileName = JFrogUtil.getFileName(path) // *.txt
+
+            bkRepoClient.queryByPathEqOrNameMatchOrMetadataEqAnd(
+                userId = "",
+                projectId = projectId,
+                repoNames = listOf(RepoUtils.getRepoByType(artifactoryType)),
+                filePaths = listOf(filePath),
+                fileNames = listOf(fileName),
+                metadata = mapOf(),
+                page = 0,
+                pageSize = 10000
+            ).forEach {
+                fileList.add(RepoUtils.toFileDetail(it))
+            }
         }
-        logger.info("match files: $fileList")
 
         val resultList = mutableListOf<String>()
         fileList.forEach {
@@ -297,7 +295,7 @@ class BkRepoDownloadService @Autowired constructor(
                 downloadIps = listOf(),
                 timeoutInSeconds = (ttl ?: 24 * 3600).toLong()
             )
-            resultList.add("$THIRDPARTYH_URL/bkrepo/api/external/repository$shareUri")
+            resultList.add("${HomeHostUtil.getHost(commonConfig.devopsDevnetProxyGateway!!)}/bkrepo/api/external/repository$shareUri")
         }
         return resultList
     }

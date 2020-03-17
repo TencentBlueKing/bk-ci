@@ -34,10 +34,12 @@ import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxPaasCodeCCScri
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.plugin.codecc.CodeccApi
 import com.tencent.devops.plugin.codecc.pojo.coverity.ProjectLanguage
+import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.pojo.PipelineModelTask
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineService
 import com.tencent.devops.process.service.PipelineTaskService
+import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -47,10 +49,103 @@ class CodeccTransferService @Autowired constructor(
     private val pipelineTaskService: PipelineTaskService,
     private val pipelineService: PipelineService,
     private val pipelineRepositoryService: PipelineRepositoryService,
-    private val codeccApi: CodeccApi
+    private val pipelineInfoDao: PipelineInfoDao,
+    private val codeccApi: CodeccApi,
+    private val dslContext: DSLContext
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(CodeccTransferService::class.java)
+    }
+
+    fun addToolSetToPipeline(
+        projectId: String,
+        pipelineIds: Set<String>?,
+        toolRuleSet: String,
+        language: ProjectLanguage = ProjectLanguage.C_CPP
+    ): Map<String, String> {
+        val result = mutableMapOf<String, String>()
+
+        val finalPipelineIds = pipelineIds
+            ?: pipelineInfoDao.listPipelineInfoByProject(dslContext, projectId)?.filter { it.channel == ChannelCode.BS.name }?.map { it.pipelineId }?.toSet()
+            ?: throw RuntimeException("no pipeline found in project: $projectId")
+
+        pipelineTaskService.list(projectId, finalPipelineIds).map {
+            val resultMsg = try {
+                doAddToolSetToPipeline(projectId, it, toolRuleSet)
+            } catch (e: Exception) {
+                logger.error("add pipeline ${it.key} rule($toolRuleSet) fail", e)
+                e.message ?: "unexpected error occur"
+            }
+            result[it.key] = resultMsg
+        }
+        return result
+    }
+
+    private fun doAddToolSetToPipeline(
+        projectId: String,
+        it: Map.Entry<String, List<PipelineModelTask>>,
+        toolRuleSet: String,
+        language: ProjectLanguage = ProjectLanguage.C_CPP
+    ): String {
+        val toolRuleSetName = language.name + "_RULE"
+
+        val pipelineId = it.key
+
+        val newCodeccTask = it.value.filter { task -> task.taskParams["atomCode"] == "CodeccCheckAtom" }
+        if (newCodeccTask.isEmpty()) {
+            return "$pipelineId do not contains new codecc element"
+        }
+
+        val model = pipelineRepositoryService.getModel(pipelineId)!!
+        val pipelineInfo = pipelineRepositoryService.getPipelineInfo(pipelineId)
+        logger.info("get pipeline info for pipeline: $pipelineId, $pipelineInfo")
+        var needUpdate = false
+        model.stages.forEach { stage ->
+            stage.containers.forEach { container ->
+                container.elements.forEach { element ->
+                    if (element.getAtomCode() == "CodeccCheckAtom") {
+                        logger.info("get new codecc element for pipeline: $pipelineId")
+                        val newElement = element as MarketBuildAtomElement
+                        val input = newElement.data["input"] as Map<String, Any>
+                        val languages = input["languages"] as List<String>
+                        if (languages.contains(language.name)) {
+                            needUpdate = true
+
+                            // add the first place
+                            val languageRuleSetMap = input["languageRuleSetMap"] as MutableMap<String, List<String>>
+                            val langRule = languageRuleSetMap[toolRuleSetName] as? MutableList<String>
+                            if (langRule == null) {
+                                languageRuleSetMap["toolRuleSetName"] = listOf(toolRuleSet)
+                            } else if (!langRule.contains(toolRuleSet)) {
+                                langRule.add(toolRuleSet)
+                            }
+
+                            // add the second place
+                            val langRule2 = input[toolRuleSetName] as MutableList<String>
+                            if (!langRule2.contains(toolRuleSet)) langRule2.add(toolRuleSet)
+
+                            logger.info("update pipieline rule list: $langRule\n $langRule2")
+                        }
+                    }
+                }
+            }
+        }
+
+        if (!needUpdate) return "do not contains $language language, do not update"
+
+        // save pipeline
+        logger.info("edit pipeline: $pipelineId")
+        pipelineService.editPipeline(
+            userId = pipelineInfo?.lastModifyUser ?: "",
+            projectId = projectId,
+            pipelineId = pipelineId,
+            model = model,
+            channelCode = pipelineInfo?.channelCode ?: ChannelCode.BS,
+            checkPermission = false,
+            checkTemplate = false
+        )
+
+        return "add rule($toolRuleSet) to pipeline($pipelineId) success"
     }
 
     fun transferToV2(projectId: String, pipelineIds: Set<String>): Map<String, String> {
@@ -211,7 +306,8 @@ class CodeccTransferService @Autowired constructor(
         }
 
         // only support some tools
-        val checkTool = setOf("COVERITY", "CPPLINT", "CCN", "DUPC", "SENSITIVE", "WOODPECKER_SENSITIVE", "PYLINT", "GOML")
+        val checkTool =
+            setOf("COVERITY", "CPPLINT", "CCN", "DUPC", "SENSITIVE", "WOODPECKER_SENSITIVE", "PYLINT", "GOML")
         oldCodeccElement.tools?.forEach {
             if (it !in checkTool) throw RuntimeException("not support tool to transfer: $it")
         }
