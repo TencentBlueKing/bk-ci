@@ -76,16 +76,16 @@ class AppCodeService(
     private val appCodeGroupCache = CacheBuilder.newBuilder()
         .maximumSize(10000)
         .expireAfterWrite(5, TimeUnit.MINUTES)
-        .build<String/*appCode*/, AppCodeGroup?/*AppCodeGroup*/>(
-            object : CacheLoader<String, AppCodeGroup?>() {
-                override fun load(appCode: String): AppCodeGroup? {
+        .build<String/*appCode*/, Pair<String, AppCodeGroup?>/*Map<projectId,AppCodeGroup>*/>(
+            object : CacheLoader<String,  Pair<String, AppCodeGroup?>>() {
+                override fun load(appCode: String): Pair<String, AppCodeGroup?> {
                     try {
                         val appCodeGroup = getAppCodeGroup(appCode)
                         logger.info("appCode[$appCode] openapi appCodeGroup:$appCodeGroup.")
-                        return appCodeGroup
+                        return Pair(appCode, appCodeGroup)
                     } catch (t: Throwable) {
                         logger.info("appCode[$appCode] failed to get appCodeGroup.")
-                        return null
+                        return Pair(appCode, null)
                     }
                 }
             }
@@ -124,7 +124,7 @@ class AppCodeService(
                 return true
             }
         }
-        val appCodeGroup = appCodeGroupCache.get(appCode)
+        val appCodeGroup = appCodeGroupCache.get(appCode).second
         if(appCodeGroup != null) {
             val projectInfo = client.get(ServiceProjectResource::class).get(projectId).data
             if(projectInfo != null) {
