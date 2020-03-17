@@ -53,7 +53,7 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["OP_APP_CODE_GROUP"], description = "OP-AppCode组织架构资源")
+@Api(tags = ["OP_APP_CODE_PROJECT"], description = "OP-AppCode项目资源")
 @Path("/op/appCodeProject/")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
