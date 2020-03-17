@@ -103,7 +103,7 @@ class DockerHostBuildService @Autowired constructor(
     fun enable(pipelineId: String, vmSeqId: Int?, enable: Boolean) =
         pipelineDockerEnableDao.enable(dslContext, pipelineId, vmSeqId, enable)
 
-    fun dockerHostBuild(event: PipelineAgentStartupEvent) {
+    /*fun dockerHostBuild(event: PipelineAgentStartupEvent) {
         logger.info("Start docker host build ($event)}")
         val dispatchType = event.dispatchType as DockerDispatchType
         dslContext.transaction { configuration ->
@@ -235,9 +235,9 @@ class DockerHostBuildService @Autowired constructor(
                 dockerImage = dockerImage
             )
         }
-    }
+    }*/
 
-    private fun saveDockerInfoToBuildDetail(
+/*    private fun saveDockerInfoToBuildDetail(
         projectId: String,
         pipelineId: String,
         buildId: String,
@@ -252,7 +252,7 @@ class DockerHostBuildService @Autowired constructor(
             vmSeqId,
             VmInfo("", DockerUtils.parseShortImage(dockerImage))
         )
-    }
+    }*/
 
     fun finishDockerBuild(buildId: String, vmSeqId: String?, success: Boolean) {
         logger.info("Finish docker build of buildId($buildId) and vmSeqId($vmSeqId) with result($success)")
