@@ -31,6 +31,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
+import java.net.URLEncoder
 
 @Component
 class DockerHostClient @Autowired constructor(
@@ -52,11 +53,8 @@ class DockerHostClient @Autowired constructor(
     @Value("\${dispatch.dockerBuildImagePrefix:#{null}}")
     val dockerBuildImagePrefix: String? = null
 
-    @Value("\${registry.userName:#{null}}")
-    val registryUserName: String? = null
-
-    @Value("\${registry.password:#{null}}")
-    val registryPassword: String? = null
+    @Value("\${devopsGateway.idcProxy}")
+    val idcProxy: String? = null
 
     fun startBuild(
         event: PipelineAgentStartupEvent,
@@ -149,7 +147,8 @@ class DockerHostClient @Autowired constructor(
 
         logger.info("[${event.projectId}|${event.pipelineId}|${event.buildId}] Start build Docker VM $dockerIp requestBody: $requestBody")
         val url = "http://$dockerIp/api/docker/build/start"
-        val request = Request.Builder().url(url)
+        val proxyUrl = "$idcProxy/proxy-devnet?url=${urlEncode(url)}"
+        val request = Request.Builder().url(proxyUrl)
             .post(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), JsonUtil.toJson(requestBody)))
             .addHeader("Accept", "application/json; charset=utf-8")
             .addHeader("Content-Type", "application/json; charset=utf-8")
@@ -225,7 +224,8 @@ class DockerHostClient @Autowired constructor(
         )
 
         val url = "http://$dockerIp/api/docker/build/end"
-        val request = Request.Builder().url(url)
+        val proxyUrl = "$idcProxy/proxy-devnet?url=${urlEncode(url)}"
+        val request = Request.Builder().url(proxyUrl)
             .delete(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), JsonUtil.toJson(requestBody)))
             .addHeader("Accept", "application/json; charset=utf-8")
             .addHeader("Content-Type", "application/json; charset=utf-8")
@@ -274,4 +274,6 @@ class DockerHostClient @Autowired constructor(
 
         return dockerIp
     }
+
+    private fun urlEncode(s: String) = URLEncoder.encode(s, "UTF-8")
 }
