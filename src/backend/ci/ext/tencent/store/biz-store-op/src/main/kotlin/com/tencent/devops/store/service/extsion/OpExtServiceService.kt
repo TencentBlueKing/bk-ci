@@ -7,6 +7,7 @@ import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.project.api.service.service.ServiceItemResource
+import com.tencent.devops.store.config.ExtServiceBcsNameSpaceConfig
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.dao.ExtServiceDao
 import com.tencent.devops.store.dao.ExtServiceFeatureDao
@@ -29,6 +30,8 @@ import com.tencent.devops.store.pojo.enums.ExtServiceSortTypeEnum
 import com.tencent.devops.store.pojo.service.OpEditInfoDTO
 import com.tencent.devops.store.pojo.vo.ExtServiceInfoResp
 import com.tencent.devops.store.pojo.vo.ExtensionServiceVO
+import com.tencent.devops.store.service.ExtServiceBaseService
+import com.tencent.devops.store.service.ExtServiceBcsService
 import com.tencent.devops.store.service.ExtServiceNotifyService
 import com.tencent.devops.store.service.TxExtServiceMemberImpl
 import org.jooq.impl.DSL
@@ -49,6 +52,8 @@ class OpExtServiceService @Autowired constructor(
     private val storeMediaInfoDao: StoreMediaInfoDao,
     private val dslContext: DefaultDSLContext,
     private val serviceNotifyService: ExtServiceNotifyService,
+    private val extServiceBcsService: ExtServiceBcsService,
+    private val extServiceBcsNameSpaceConfig: ExtServiceBcsNameSpaceConfig,
     private val client: Client
 ) {
 
@@ -209,19 +214,32 @@ class OpExtServiceService @Autowired constructor(
         }
         val creator = serviceRecord.creator
         val serviceCode = serviceRecord.serviceCode
+        val releaseFlag = approveReq.result == PASS
+        if (releaseFlag) {
+            // 正式发布最新的扩展服务版本
+            val deployExtServiceResult = extServiceBcsService.deployExtService(
+                userId = userId,
+                namespaceName = extServiceBcsNameSpaceConfig.namespaceName,
+                serviceCode = serviceCode,
+                version = serviceRecord.version
+            )
+            ExtServiceBaseService.logger.info("deployExtServiceResult is:$deployExtServiceResult")
+            if (deployExtServiceResult.isNotOk()){
+                return deployExtServiceResult
+            }
+        }
         val serviceStatus =
-            if (approveReq.result == PASS) {
+            if (releaseFlag) {
                 ExtServiceStatusEnum.RELEASED.status.toByte()
             } else {
                 ExtServiceStatusEnum.AUDIT_REJECT.status.toByte()
             }
-        val type = if (approveReq.result == PASS) AuditTypeEnum.AUDIT_SUCCESS else AuditTypeEnum.AUDIT_REJECT
+        val type = if (releaseFlag) AuditTypeEnum.AUDIT_SUCCESS else AuditTypeEnum.AUDIT_REJECT
 
         dslContext.transaction { t ->
             val context = DSL.using(t)
-            val latestFlag = approveReq.result == PASS
             var pubTime: LocalDateTime? = null
-            if (latestFlag) {
+            if (releaseFlag) {
                 pubTime = LocalDateTime.now()
 //                // 清空旧版本LATEST_FLAG
 //                marketAtomDao.cleanLatestFlag(context, approveReq.serviceCode)
@@ -245,7 +263,7 @@ class OpExtServiceService @Autowired constructor(
                 serviceId,
                 serviceStatus,
                 approveReq,
-                latestFlag,
+                releaseFlag,
                 pubTime
             )
             extServiceFeatureDao.updateExtServiceFeatureBaseInfo(

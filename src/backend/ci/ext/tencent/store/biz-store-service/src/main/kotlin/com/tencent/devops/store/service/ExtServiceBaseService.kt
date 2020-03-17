@@ -466,7 +466,6 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         }
         logger.info("the getMyService serviceItemIdMap is :$serviceItemIdMap")
 
-
         logger.info("the getMyService userId is :$userId,projectCodeList is :$projectCodeList")
         val projectMap = client.get(ServiceProjectResource::class).getNameByCode(projectCodeList.joinToString(",")).data
         logger.info("the getMyService userId is :$userId,projectMap is :$projectMap")
@@ -493,7 +492,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
             var itemName = ""
             serviceItemList?.forEach { itId ->
                 val itemInfo = itemInfoMap?.get(itId)
-                if(itemInfo != null) {
+                if (itemInfo != null) {
                     itemName += itemInfo!!.parentName + "-" + itemInfo.itemName + ","
                 }
             }
@@ -651,12 +650,16 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         }
         if (isNormalUpgrade) {
             // 正式发布最新的扩展服务版本
-            extServiceBcsService.deployExtService(
+            val deployExtServiceResult = extServiceBcsService.deployExtService(
                 userId = userId,
                 namespaceName = extServiceBcsNameSpaceConfig.namespaceName,
                 serviceCode = serviceCode,
                 version = serviceRecord.version
             )
+            logger.info("deployExtServiceResult is:$deployExtServiceResult")
+            if (deployExtServiceResult.isNotOk()) {
+                return deployExtServiceResult
+            }
             val creator = serviceRecord.creator
             dslContext.transaction { t ->
                 val context = DSL.using(t)

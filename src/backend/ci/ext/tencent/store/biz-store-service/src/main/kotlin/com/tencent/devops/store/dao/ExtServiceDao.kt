@@ -1,6 +1,5 @@
 package com.tencent.devops.store.dao
 
-import com.nhaarman.mockito_kotlin.stub
 import com.tencent.devops.model.store.tables.TClassify
 import com.tencent.devops.model.store.tables.TExtensionService
 import com.tencent.devops.model.store.tables.TExtensionServiceFeature
@@ -448,7 +447,7 @@ class ExtServiceDao {
         val orderByStep = if (desc != null && desc) {
             realSortType.desc()
         } else {
-           realSortType.asc()
+            realSortType.asc()
         }
         val t = selectFeild.where(conditions).orderBy(orderByStep)
         val baseStep = dslContext.select().from(t)
@@ -504,7 +503,6 @@ class ExtServiceDao {
             }
         }
         return selectFeild.where(conditions).fetchOne(0, Int::class.java)
-
     }
 
     /**

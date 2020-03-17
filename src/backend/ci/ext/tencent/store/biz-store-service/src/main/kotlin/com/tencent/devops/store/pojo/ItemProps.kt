@@ -1,6 +1,6 @@
 package com.tencent.devops.store.pojo
 
-data class ItemProps (
+data class ItemProps(
     val itemCode: String,
     val props: Map<String, Any>? = null
 )
