@@ -66,7 +66,7 @@ class VmStatusScheduler @Autowired constructor(
                 .addHeader("Content-Type", "application/json; charset=utf-8")
                 .build()
 
-            logger.info("Docker VM status fresh url: $url")
+            logger.info("Docker VM status fresh url: $proxyUrl")
             OkhttpUtils.doHttp(request).use { resp ->
                 val responseBody = resp.body()!!.string()
                 logger.info("Docker VM $itDockerIp status fresh responseBody: $responseBody")
