@@ -1,0 +1,115 @@
+package com.tencent.devops.dispatch.dao
+
+import com.tencent.devops.model.dispatch.tables.TDispatchPipelineDockerIpInfo
+import com.tencent.devops.model.dispatch.tables.records.TDispatchPipelineDockerIpInfoRecord
+import org.jooq.DSLContext
+import org.jooq.Result
+import org.springframework.stereotype.Repository
+
+@Repository
+class PipelineDockerIPInfoDao {
+    fun create(
+        dslContext: DSLContext,
+        idcIp: String,
+        capacity: Int,
+        used: Int,
+        enable: Boolean,
+        grayEnv: Boolean
+    ) {
+        with(TDispatchPipelineDockerIpInfo.T_DISPATCH_PIPELINE_DOCKER_IP_INFO) {
+            dslContext.insertInto(
+                this,
+                DOCKER_IP,
+                CAPACITY,
+                USED_NUM,
+                ENABLE,
+                GRAY_ENV,
+                GMT_CREATE,
+                GMT_MODIFIED
+            ).values(
+                idcIp,
+                capacity,
+                used,
+                enable,
+                grayEnv,
+                java.time.LocalDateTime.now(),
+                java.time.LocalDateTime.now()
+            ).execute()
+        }
+    }
+
+    fun update(
+        dslContext: DSLContext,
+        idcIp: String,
+        capacity: Int,
+        used: Int,
+        enable: Boolean
+    ) {
+        with(TDispatchPipelineDockerIpInfo.T_DISPATCH_PIPELINE_DOCKER_IP_INFO) {
+            dslContext.update(this)
+                .set(CAPACITY, capacity)
+                .set(USED_NUM, used)
+                .set(ENABLE, enable)
+                .where(DOCKER_IP.eq(idcIp))
+                .execute()
+        }
+    }
+
+    fun updateDockerIpStatus(
+        dslContext: DSLContext,
+        id: Int,
+        enable: Boolean
+    ) {
+        with(TDispatchPipelineDockerIpInfo.T_DISPATCH_PIPELINE_DOCKER_IP_INFO) {
+            dslContext.update(this)
+                .set(ENABLE, enable)
+                .where(ID.eq(id))
+                .execute()
+        }
+    }
+
+    fun getDockerIpList(
+        dslContext: DSLContext,
+        page: Int,
+        pageSize: Int
+    ): Result<TDispatchPipelineDockerIpInfoRecord> {
+        with(TDispatchPipelineDockerIpInfo.T_DISPATCH_PIPELINE_DOCKER_IP_INFO) {
+            return dslContext.selectFrom(this)
+                .limit(pageSize).offset((page - 1) * pageSize)
+                .fetch()
+        }
+    }
+
+    fun getDockerIpCount(
+        dslContext: DSLContext
+    ): Long {
+        with(TDispatchPipelineDockerIpInfo.T_DISPATCH_PIPELINE_DOCKER_IP_INFO) {
+            return dslContext.selectCount()
+                .from(this)
+                .fetchOne(0, Long::class.java)
+        }
+    }
+
+    fun getEnableDockerIpList(
+        dslContext: DSLContext,
+        grayEnv: Boolean
+    ): Result<TDispatchPipelineDockerIpInfoRecord> {
+        with(TDispatchPipelineDockerIpInfo.T_DISPATCH_PIPELINE_DOCKER_IP_INFO) {
+            return dslContext.selectFrom(this)
+                .where(ENABLE.eq(true))
+                .and(GRAY_ENV.eq(grayEnv))
+                .fetch()
+        }
+    }
+
+    fun delete(
+        dslContext: DSLContext,
+        ipInfoId: Int
+    ): Int {
+        return with(TDispatchPipelineDockerIpInfo.T_DISPATCH_PIPELINE_DOCKER_IP_INFO) {
+            dslContext.delete(this)
+                .where(ID.eq(ipInfoId))
+                .execute()
+        }
+    }
+}

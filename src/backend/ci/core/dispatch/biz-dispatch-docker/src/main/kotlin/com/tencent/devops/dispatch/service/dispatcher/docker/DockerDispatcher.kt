@@ -27,11 +27,18 @@
 package com.tencent.devops.dispatch.service.dispatcher.docker
 
 import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
+import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.dispatch.client.DockerHostClient
+import com.tencent.devops.dispatch.dao.PipelineDockerTaskHistoryDao
+import com.tencent.devops.dispatch.pojo.VolumeStatus
 import com.tencent.devops.dispatch.service.DockerHostBuildService
 import com.tencent.devops.dispatch.service.dispatcher.Dispatcher
+import com.tencent.devops.dispatch.utils.DockerHostLock
 import com.tencent.devops.log.utils.LogUtils
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
 import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
+import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
@@ -39,8 +46,17 @@ import org.springframework.stereotype.Component
 @Component
 class DockerDispatcher @Autowired constructor(
     private val rabbitTemplate: RabbitTemplate,
-    private val dockerHostBuildService: DockerHostBuildService
-) : Dispatcher {
+    private val dockerHostBuildService: DockerHostBuildService,
+    private val dockerHostClient: DockerHostClient,
+    private val pipelineDockerTaskHistoryDao: PipelineDockerTaskHistoryDao,
+    private val dslContext: DSLContext,
+    private val redisOperation: RedisOperation
+    ) : Dispatcher {
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(DockerDispatcher::class.java)
+    }
+
     override fun canDispatch(pipelineAgentStartupEvent: PipelineAgentStartupEvent) =
         pipelineAgentStartupEvent.dispatchType is DockerDispatchType
 
@@ -54,7 +70,26 @@ class DockerDispatcher @Autowired constructor(
             pipelineAgentStartupEvent.containerHashId,
             pipelineAgentStartupEvent.executeCount ?: 1
         )
-        dockerHostBuildService.dockerHostBuild(pipelineAgentStartupEvent)
+        // dockerHostBuildService.dockerHostBuild(pipelineAgentStartupEvent)
+
+        val taskHistory = pipelineDockerTaskHistoryDao.getByPipelineIdAndVMSeq(dslContext, pipelineAgentStartupEvent.pipelineId, pipelineAgentStartupEvent.vmSeqId)
+        val dockerIp: String
+        if (taskHistory != null) {
+            dockerIp = taskHistory.dockerIp
+        } else {
+            dockerIp = dockerHostClient.getAvailableDockerIp()
+
+            pipelineDockerTaskHistoryDao.create(
+                dslContext,
+                pipelineAgentStartupEvent.pipelineId,
+                pipelineAgentStartupEvent.buildId,
+                pipelineAgentStartupEvent.vmSeqId,
+                dockerIp,
+                VolumeStatus.RUNNING.status
+            )
+        }
+
+        dockerHostClient.startBuild(pipelineAgentStartupEvent, dockerIp)
     }
 
     override fun shutdown(pipelineAgentShutdownEvent: PipelineAgentShutdownEvent) {
@@ -63,6 +98,30 @@ class DockerDispatcher @Autowired constructor(
             pipelineAgentShutdownEvent.vmSeqId,
             pipelineAgentShutdownEvent.buildResult
         )
+
+        logger.info("On shutdown - ($pipelineAgentShutdownEvent|$)")
+        val lock = DockerHostLock(redisOperation, pipelineAgentShutdownEvent.pipelineId)
+        try {
+            lock.lock()
+            if (pipelineAgentShutdownEvent.vmSeqId != null) {
+                val taskHistory = pipelineDockerTaskHistoryDao.getByPipelineIdAndVMSeq(dslContext, pipelineAgentShutdownEvent.pipelineId, pipelineAgentShutdownEvent.vmSeqId!!)
+                dockerHostClient.endBuild(pipelineAgentShutdownEvent, taskHistory!!.dockerIp as String, taskHistory.containerId as String)
+                pipelineDockerTaskHistoryDao.updateStatus(dslContext, pipelineAgentShutdownEvent.buildId, pipelineAgentShutdownEvent.vmSeqId!!, VolumeStatus.FINISH.status)
+            } else {
+                val taskHistoryList = pipelineDockerTaskHistoryDao.getByPipelineId(dslContext, pipelineAgentShutdownEvent.pipelineId)
+                taskHistoryList.forEach {
+                    dockerHostClient.endBuild(pipelineAgentShutdownEvent, it.dockerIp as String, it.containerId as String)
+                    if (it.status == VolumeStatus.RUNNING.status) {
+                        pipelineDockerTaskHistoryDao.updateStatus(dslContext, pipelineAgentShutdownEvent.buildId, it.vmSeq as String, VolumeStatus.FINISH.status)
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            logger.info("[${pipelineAgentShutdownEvent.projectId}|${pipelineAgentShutdownEvent.pipelineId}|${pipelineAgentShutdownEvent.buildId}] Shutdown Docker job failed. msg:${e.message}")
+            throw RuntimeException("停止构建机失败，错误信息:${e.message}")
+        } finally {
+            lock.unlock()
+        }
     }
 
 //    override fun canDispatch(buildMessage: PipelineBuildMessage) =
