@@ -2,6 +2,8 @@ package com.tencent.devops.openapi.aspect
 
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.openapi.filter.ApiFilter
+import com.tencent.devops.openapi.service.op.AppCodeGroupService
+import com.tencent.devops.openapi.service.op.AppCodeService
 import org.aspectj.lang.JoinPoint
 import org.aspectj.lang.annotation.*
 import org.aspectj.lang.reflect.MethodSignature
@@ -10,7 +12,9 @@ import org.springframework.stereotype.Component
 
 @Aspect
 @Component
-class ApiAspect {
+class ApiAspect(
+    private val appCodeService: AppCodeService
+) {
 
     companion object {
         private val logger = LoggerFactory.getLogger(ApiFilter::class.java)
@@ -62,10 +66,14 @@ class ApiAspect {
         logger.info("请求类型apigwType[${apigwType}],appCode[$appCode],项目[${projectId}]")
         if(projectId != null && appCode != null && (apigwType == "apigw-app")) {
             logger.info("判断！！！！请求类型apigwType[${apigwType}],appCode[$appCode],是否有项目[${projectId}]的权限.")
-            val message = "判断！！！！请求类型apigwType[${apigwType}],appCode[$appCode],是否有项目[${projectId}]的权限.无权限！！！！！"
-            throw PermissionForbiddenException(
-                message = message
-            )
+            if(appCodeService.validAppCode(appCode,projectId)) {
+                logger.info("请求类型apigwType[${apigwType}],appCode[$appCode],是否有项目[${projectId}]的权限【验证通过】")
+            }else {
+                val message = "请求类型apigwType[${apigwType}],appCode[$appCode],是否有项目[${projectId}]的权限【验证失败】"
+                throw PermissionForbiddenException(
+                    message = message
+                )
+            }
         }
     }
 //
