@@ -57,11 +57,11 @@ class TXBuildClusterCronConfiguration : SchedulingConfigurer {
     override fun configureTasks(scheduledTaskRegistrar: ScheduledTaskRegistrar) {
         scheduledTaskRegistrar.setScheduler(Executors.newScheduledThreadPool(100))
 
-        scheduledTaskRegistrar.addFixedRateTask(
+        /*scheduledTaskRegistrar.addFixedRateTask(
             IntervalTask(
                 Runnable { debugRunner.startBuild() }, 5 * 1000, 30 * 1000
             )
-        )
+        )*/
         scheduledTaskRegistrar.addFixedRateTask(
             IntervalTask(
                 Runnable { debugRunner.endBuild() }, 10 * 1000, 60 * 1000
