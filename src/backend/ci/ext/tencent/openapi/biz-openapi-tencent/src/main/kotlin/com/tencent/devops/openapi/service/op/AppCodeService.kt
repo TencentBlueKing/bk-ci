@@ -51,7 +51,7 @@ class AppCodeService(
 
     private val appCodeProjectCache = CacheBuilder.newBuilder()
         .maximumSize(10000)
-        .expireAfterWrite(30, TimeUnit.SECONDS)
+        .expireAfterWrite(5, TimeUnit.MINUTES)
         .build<String/*appCode*/, Map<String, String>/*Map<projectId,projectId>*/>(
             object : CacheLoader<String, Map<String, String>>() {
                 override fun load(appCode: String): Map<String, String> {
@@ -69,7 +69,7 @@ class AppCodeService(
 
     private val appCodeGroupCache = CacheBuilder.newBuilder()
         .maximumSize(10000)
-        .expireAfterWrite(30, TimeUnit.SECONDS)
+        .expireAfterWrite(5, TimeUnit.MINUTES)
         .build<String/*appCode*/, Pair<String, AppCodeGroup?>/*Map<projectId,AppCodeGroup>*/>(
             object : CacheLoader<String, Pair<String, AppCodeGroup?>>() {
                 override fun load(appCode: String): Pair<String, AppCodeGroup?> {
