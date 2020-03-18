@@ -37,7 +37,7 @@ import com.tencent.devops.model.process.tables.records.TPipelineBuildContainerRe
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainerControlOption
 import org.jooq.DSLContext
-import org.jooq.InsertSetMoreStep
+import org.jooq.InsertOnDuplicateSetMoreStep
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
@@ -90,7 +90,7 @@ class PipelineBuildContainerDao {
 
     fun batchSave(dslContext: DSLContext, taskList: Collection<PipelineBuildContainer>) {
         val records =
-            mutableListOf<InsertSetMoreStep<TPipelineBuildContainerRecord>>()
+            mutableListOf<InsertOnDuplicateSetMoreStep<TPipelineBuildContainerRecord>>()
         with(T_PIPELINE_BUILD_CONTAINER) {
             taskList.forEach {
                 records.add(
@@ -108,6 +108,12 @@ class PipelineBuildContainerDao {
                         .set(COST, it.cost)
                         .set(EXECUTE_COUNT, it.executeCount)
                         .set(CONDITIONS, if (it.controlOption != null) JsonUtil.toJson(it.controlOption!!) else null)
+                        .onDuplicateKeyUpdate()
+                        .set(STATUS, it.status.ordinal)
+                        .set(START_TIME, it.startTime)
+                        .set(END_TIME, it.endTime)
+                        .set(COST, it.cost)
+                        .set(EXECUTE_COUNT, it.executeCount)
                 )
             }
         }
