@@ -288,7 +288,7 @@ class PipelineDockerDebugDao {
     fun getUnclaimedHostDebug(dslContext: DSLContext): Result<TDispatchPipelineDockerDebugRecord> {
         with(TDispatchPipelineDockerDebug.T_DISPATCH_PIPELINE_DOCKER_DEBUG) {
             return dslContext.selectFrom(this)
-                .where(timestampDiff(org.jooq.DatePart.SECOND, UPDATED_TIME.cast(java.sql.Timestamp::class.java)).greaterOrEqual(60))
+                .where(timestampDiff(DatePart.SECOND, UPDATED_TIME.cast(java.sql.Timestamp::class.java)).greaterOrEqual(60))
                 .and(STATUS.eq(PipelineTaskStatus.QUEUE.status))
                 .and(HOST_TAG.isNotNull).and(HOST_TAG.notEqual(""))
                 .fetch()
@@ -299,7 +299,7 @@ class PipelineDockerDebugDao {
         with(TDispatchPipelineDockerDebug.T_DISPATCH_PIPELINE_DOCKER_DEBUG) {
             return dslContext.update(this)
                 .set(HOST_TAG, "")
-                .where(timestampDiff(org.jooq.DatePart.SECOND, UPDATED_TIME.cast(java.sql.Timestamp::class.java)).greaterOrEqual(60))
+                .where(timestampDiff(DatePart.SECOND, UPDATED_TIME.cast(java.sql.Timestamp::class.java)).greaterOrEqual(60))
                 .and(STATUS.eq(PipelineTaskStatus.QUEUE.status))
                 .and(HOST_TAG.isNotNull).and(HOST_TAG.notEqual(""))
                 .execute() == 1
@@ -309,7 +309,7 @@ class PipelineDockerDebugDao {
     fun getUnclaimedZoneDebug(dslContext: DSLContext): Result<TDispatchPipelineDockerDebugRecord> {
         with(TDispatchPipelineDockerDebug.T_DISPATCH_PIPELINE_DOCKER_DEBUG) {
             return dslContext.selectFrom(this)
-                .where(timestampDiff(org.jooq.DatePart.SECOND, UPDATED_TIME.cast(java.sql.Timestamp::class.java)).greaterOrEqual(100))
+                .where(timestampDiff(DatePart.SECOND, UPDATED_TIME.cast(java.sql.Timestamp::class.java)).greaterOrEqual(100))
                 .and(STATUS.eq(PipelineTaskStatus.QUEUE.status))
                 .and(ZONE.isNotNull).and(ZONE.notEqual(""))
                 .fetch()
@@ -320,7 +320,7 @@ class PipelineDockerDebugDao {
         with(TDispatchPipelineDockerDebug.T_DISPATCH_PIPELINE_DOCKER_DEBUG) {
             return dslContext.update(this)
                 .set(ZONE, Zone.SHENZHEN.name)
-                .where(timestampDiff(org.jooq.DatePart.SECOND, UPDATED_TIME.cast(java.sql.Timestamp::class.java)).greaterOrEqual(100))
+                .where(timestampDiff(DatePart.SECOND, UPDATED_TIME.cast(java.sql.Timestamp::class.java)).greaterOrEqual(100))
                 .and(STATUS.eq(PipelineTaskStatus.QUEUE.status))
                 .and(ZONE.isNotNull).and(ZONE.notEqual("")).and(ZONE.notEqual(Zone.SHENZHEN.name))
                 .execute() == 1
