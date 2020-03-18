@@ -163,23 +163,6 @@ class DockerHostDebugService @Autowired constructor(
             else -> throw UnknownImageType("imageCode:$imageCode,imageVersion:$imageVersion,imageType:$imageType")
         }
 
-        pipelineDockerDebugDao.insertDebug(
-            dslContext = dslContext,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            vmSeqId = vmSeqId,
-            status = PipelineTaskStatus.QUEUE,
-            token = "",
-            imageName = dockerImage,
-            hostTag = dockerIp,
-            buildEnv = buildEnvStr,
-            registryUser = userName,
-            registryPwd = password,
-            imageType = newImageType,
-            imagePublicFlag = imageRepoInfo?.publicFlag,
-            imageRDType = imageRepoInfo?.rdType
-        )
-
         // 定向通知dockerhost
         val url = "http://$dockerIp/api/docker/debug/start"
         val proxyUrl = "$idcProxy/proxy-devnet?url=${urlEncode(url)}"
@@ -198,6 +181,24 @@ class DockerHostDebugService @Autowired constructor(
             val response: Map<String, Any> = jacksonObjectMapper().readValue(responseBody)
             when {
                 response["status"] == 0 -> {
+                    val containerId = response["data"].toString()
+                    pipelineDockerDebugDao.insertDebug(
+                        dslContext = dslContext,
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        vmSeqId = vmSeqId,
+                        status = PipelineTaskStatus.RUNNING,
+                        token = "",
+                        imageName = dockerImage,
+                        hostTag = dockerIp,
+                        containerId = containerId,
+                        buildEnv = buildEnvStr,
+                        registryUser = userName,
+                        registryPwd = password,
+                        imageType = newImageType,
+                        imagePublicFlag = imageRepoInfo?.publicFlag,
+                        imageRDType = imageRepoInfo?.rdType
+                    )
                 }
                 response["status"] == 1 -> {
                     val msg = response["message"]
