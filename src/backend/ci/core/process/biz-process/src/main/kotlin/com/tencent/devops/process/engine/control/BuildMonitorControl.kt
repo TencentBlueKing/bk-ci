@@ -182,7 +182,7 @@ class BuildMonitorControl @Autowired constructor(
             0
         }
 
-        logger.info("[$buildId]|container=$containerId|timeoutMills=$timeoutMills|useTimeMills=$usedTimeMills")
+        logger.info("[$buildId]|start_monitor_container|container=$containerId|timeoutMills=$timeoutMills|useTimeMills=$usedTimeMills")
 
         interval = (timeoutMills - usedTimeMills).toInt()
         if (interval <= 0) {
