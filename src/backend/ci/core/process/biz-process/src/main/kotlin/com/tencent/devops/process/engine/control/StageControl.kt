@@ -39,6 +39,7 @@ import com.tencent.devops.process.engine.pojo.event.PipelineBuildFinishEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildStageEvent
 import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
+import com.tencent.devops.process.engine.service.PipelineStageService
 import com.tencent.devops.process.pojo.mq.PipelineBuildContainerEvent
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -53,7 +54,8 @@ import java.time.LocalDateTime
 class StageControl @Autowired constructor(
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val pipelineRuntimeService: PipelineRuntimeService,
-    private val pipelineBuildDetailService: PipelineBuildDetailService
+    private val pipelineBuildDetailService: PipelineBuildDetailService,
+    private val pipelineStageService: PipelineStageService
 ) {
 
     private val logger = LoggerFactory.getLogger(javaClass)!!
@@ -74,14 +76,14 @@ class StageControl @Autowired constructor(
                 return
             }
 
-            val stage = pipelineRuntimeService.getStage(buildId, stageId) ?: run {
+            val stage = pipelineStageService.getStage(buildId, stageId) ?: run {
                 logger.warn("[$buildId]|[${buildInfo.status}]|bad stage|stage=$stageId")
                 return
             }
 
             val variables = pipelineRuntimeService.getAllVariable(buildId)
 
-            val stages = pipelineRuntimeService.listStages(buildId)
+            val stages = pipelineStageService.listStages(buildId)
 
             val containerList = pipelineRuntimeService.listContainers(buildId, stageId)
 
@@ -103,7 +105,7 @@ class StageControl @Autowired constructor(
 
                 buildStatus = BuildStatus.TERMINATE
                 stages.forEach { s ->
-                    pipelineRuntimeService.updateStageStatus(buildId, s.stageId, buildStatus)
+                    pipelineStageService.updateStageStatus(buildId, s.stageId, buildStatus)
                 }
                 allContainers.forEach { c ->
                     if (BuildStatus.isRunning(c.status))
@@ -126,7 +128,7 @@ class StageControl @Autowired constructor(
 
             // 因审核超时直接取消继续构建
             if (reviewTimeout) {
-                pipelineRuntimeService.cancelStage(
+                pipelineStageService.cancelStage(
                     userId = userId,
                     projectId = projectId,
                     pipelineId = pipelineId,
@@ -144,7 +146,7 @@ class StageControl @Autowired constructor(
                     // 执行条件不满足或未启用该Stage
                     logger.info("[$buildId]|[${buildInfo.status}]|STAGE_SKIP|stage=$stageId|action=$actionType")
 
-                    pipelineRuntimeService.updateStageStatus(buildId, stageId, BuildStatus.SKIP)
+                    pipelineStageService.updateStageStatus(buildId, stageId, BuildStatus.SKIP)
                     pipelineBuildDetailService.stageSkip(buildId, stageId)
 
                     actionType = ActionType.SKIP
@@ -152,7 +154,7 @@ class StageControl @Autowired constructor(
                     // 进入暂停状态等待手动触发
                     logger.info("[$buildId]|[${buildInfo.status}]|STAGE_PAUSE|stage=$stageId|action=$actionType")
 
-                    pipelineRuntimeService.updateStageStatus(buildId, stageId, BuildStatus.PAUSE)
+                    pipelineStageService.updateStageStatus(buildId, stageId, BuildStatus.PAUSE)
                     pipelineBuildDetailService.stagePause(pipelineId, buildId, stageId)
 
                     return
@@ -216,7 +218,7 @@ class StageControl @Autowired constructor(
             // 要启动Stage，初始化状态
             if (ActionType.isStart(newActionType)) {
                 buildStatus = BuildStatus.RUNNING
-                pipelineRuntimeService.updateStageStatus(buildId, stageId, buildStatus)
+                pipelineStageService.updateStageStatus(buildId, stageId, buildStatus)
                 pipelineBuildDetailService.updateStageStatus(buildId, stageId, buildStatus)
                 logger.info("[$buildId]|STAGE_INIT|stageId=$stageId|action=$newActionType")
             }
@@ -224,7 +226,7 @@ class StageControl @Autowired constructor(
             else if (ActionType.isEnd(newActionType)) {
                 buildStatus = BuildStatus.CANCELED
                 val now = LocalDateTime.now()
-                pipelineRuntimeService.updateStage(
+                pipelineStageService.updateStage(
                     buildId = buildId,
                     stageId = stageId,
                     startTime = now,
@@ -236,7 +238,7 @@ class StageControl @Autowired constructor(
             } else if (actionType == ActionType.SKIP) {
                 buildStatus = BuildStatus.SKIP
                 val now = LocalDateTime.now()
-                pipelineRuntimeService.updateStage(
+                pipelineStageService.updateStage(
                     buildId = buildId,
                     stageId = stageId,
                     startTime = now,
@@ -249,7 +251,7 @@ class StageControl @Autowired constructor(
         } else if (status == BuildStatus.PAUSE && ActionType.isEnd(newActionType)) {
             buildStatus = BuildStatus.STAGE_SUCCESS
             val now = LocalDateTime.now()
-            pipelineRuntimeService.updateStage(
+            pipelineStageService.updateStage(
                 buildId = buildId,
                 stageId = stageId,
                 startTime = now,
@@ -283,7 +285,7 @@ class StageControl @Autowired constructor(
             } else {
                 BuildStatus.FAILED
             }
-            pipelineRuntimeService.updateStageStatus(buildId, stageId, buildStatus)
+            pipelineStageService.updateStageStatus(buildId, stageId, buildStatus)
             pipelineBuildDetailService.updateStageStatus(buildId, stageId, buildStatus)
             logger.info("[$buildId]|STAGE_CONTAINER_FINISH|stageId=$stageId|status=$buildStatus|action=$actionType")
         }

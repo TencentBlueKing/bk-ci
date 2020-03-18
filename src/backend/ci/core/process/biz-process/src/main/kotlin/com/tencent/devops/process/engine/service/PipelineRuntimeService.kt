@@ -41,8 +41,8 @@ import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.ManualReviewAction
-import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.enums.StageRunCondition
+import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.option.StageControlOption
 import com.tencent.devops.common.pipeline.pojo.BuildNo
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
@@ -105,10 +105,10 @@ import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.pojo.BuildBasicInfo
 import com.tencent.devops.process.pojo.BuildHistory
+import com.tencent.devops.process.pojo.BuildStageStatus
 import com.tencent.devops.process.pojo.PipelineBuildMaterial
 import com.tencent.devops.process.pojo.ReviewParam
 import com.tencent.devops.process.pojo.VmInfo
-import com.tencent.devops.process.pojo.BuildStageStatus
 import com.tencent.devops.process.pojo.mq.PipelineBuildContainerEvent
 import com.tencent.devops.process.pojo.pipeline.PipelineLatestBuild
 import com.tencent.devops.process.service.BuildStartupParamService
@@ -153,6 +153,7 @@ class PipelineRuntimeService @Autowired constructor(
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val webSocketDispatcher: WebSocketDispatcher,
     private val pipelineWebsocketService: PipelineWebsocketService,
+    private val pipelineStageService: PipelineStageService,
     private val buildIdGenerator: BuildIdGenerator,
     private val dslContext: DSLContext,
     private val pipelineBuildDao: PipelineBuildDao,
@@ -163,7 +164,6 @@ class PipelineRuntimeService @Autowired constructor(
     private val pipelineBuildVarDao: PipelineBuildVarDao,
     private val buildDetailDao: BuildDetailDao,
     private val buildStartupParamService: BuildStartupParamService,
-    private val stageTagService: StageTagService,
     private val redisOperation: RedisOperation
 ) {
     companion object {
@@ -440,52 +440,6 @@ class PipelineRuntimeService @Autowired constructor(
             startTime = startTime,
             endTime = endTime
         )
-    }
-
-    fun getStage(buildId: String, stageId: String?): PipelineBuildStage? {
-        val result = pipelineBuildStageDao.get(dslContext, buildId, stageId)
-        if (result != null) {
-            return pipelineBuildStageDao.convert(result)
-        }
-        return null
-    }
-
-    fun updateStageStatus(buildId: String, stageId: String, buildStatus: BuildStatus) {
-        logger.info("[$buildId]|updateContainerStatus|status=$buildStatus|stageId=$stageId")
-        pipelineBuildStageDao.updateStatus(
-            dslContext = dslContext,
-            buildId = buildId,
-            stageId = stageId,
-            buildStatus = buildStatus
-        )
-    }
-
-    fun updateStage(
-        buildId: String,
-        stageId: String,
-        startTime: LocalDateTime,
-        endTime: LocalDateTime,
-        buildStatus: BuildStatus
-    ) {
-        pipelineBuildStageDao.update(
-            dslContext = dslContext,
-            buildId = buildId,
-            stageId = stageId,
-            buildStatus = buildStatus,
-            startTime = startTime,
-            endTime = endTime
-        )
-    }
-
-    fun listStages(buildId: String): List<PipelineBuildStage> {
-        val list = pipelineBuildStageDao.listByBuildId(dslContext, buildId)
-        val result = mutableListOf<PipelineBuildStage>()
-        if (list.isNotEmpty()) {
-            list.forEach {
-                result.add(pipelineBuildStageDao.convert(it)!!)
-            }
-        }
-        return result
     }
 
     fun listPipelineBuildHistory(projectId: String, pipelineId: String, offset: Int, limit: Int): List<BuildHistory> {
@@ -809,7 +763,7 @@ class PipelineRuntimeService @Autowired constructor(
         } else ""
 
         val updateExistsRecord: MutableList<TPipelineBuildTaskRecord> = mutableListOf()
-        val defaultStageTagIds = getDefaultStageTagIds()
+        val defaultStageTagIds = pipelineStageService.getDefaultStageTagIds()
         val lastTimeBuildTaskRecords = pipelineBuildTaskDao.getByBuildId(dslContext, buildId)
         val lastTimeBuildContainerRecords = pipelineBuildContainerDao.listByBuildId(dslContext, buildId)
         val lastTimeBuildStageRecords = pipelineBuildStageDao.listByBuildId(dslContext, buildId)
@@ -1213,51 +1167,6 @@ class PipelineRuntimeService @Autowired constructor(
         )
 
         return buildId
-    }
-
-    fun startStage(
-        userId: String,
-        projectId: String,
-        pipelineId: String,
-        buildId: String,
-        stageId: String
-    ) {
-        updateStageStatus(buildId, stageId, BuildStatus.QUEUE)
-        SpringContextUtil.getBean(PipelineBuildDetailService::class.java)
-            .stageStart(pipelineId, buildId, stageId)
-        pipelineEventDispatcher.dispatch(
-            PipelineBuildStageEvent(
-                source = BS_MANUAL_START_STAGE,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                userId = userId,
-                buildId = buildId,
-                stageId = stageId,
-                actionType = ActionType.REFRESH
-            )
-        )
-    }
-
-    fun cancelStage(
-        userId: String,
-        projectId: String,
-        pipelineId: String,
-        buildId: String,
-        stageId: String
-    ) {
-        updateStageStatus(buildId, stageId, BuildStatus.REVIEW_ABORT)
-        SpringContextUtil.getBean(PipelineBuildDetailService::class.java)
-            .stageCancel(buildId, stageId)
-        pipelineEventDispatcher.dispatch(
-            PipelineBuildFinishEvent(
-                source = "FINALLY_STAGE_SUCCESS",
-                projectId = projectId,
-                pipelineId = pipelineId,
-                userId = userId,
-                buildId = buildId,
-                status = BuildStatus.STAGE_SUCCESS
-            )
-        )
     }
 
     private fun makeStartVMTask(
@@ -2021,13 +1930,5 @@ class PipelineRuntimeService @Autowired constructor(
                 param = JsonUtil.getObjectMapper().writeValueAsString(params)
             )
         }
-    }
-
-    fun getDefaultStageTagIds(): List<String>? {
-        return stageTagService.getDefaultStageTag().data?.map { it.id }
-    }
-
-    fun updatePipelineRunningCount(pipelineId: String, buildId: String, runningIncrement: Int) {
-        pipelineBuildSummaryDao.updateRunningCount(dslContext, pipelineId, buildId, runningIncrement)
     }
 }

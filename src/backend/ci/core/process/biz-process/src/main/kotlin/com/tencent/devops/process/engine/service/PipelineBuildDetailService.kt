@@ -63,6 +63,7 @@ class PipelineBuildDetailService @Autowired constructor(
     private val dslContext: DSLContext,
     private val buildDetailDao: BuildDetailDao,
     private val pipelineRepositoryService: PipelineRepositoryService,
+    private val pipelineStageService: PipelineStageService,
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val redisOperation: RedisOperation,
     private val webSocketDispatcher: WebSocketDispatcher,
@@ -657,7 +658,7 @@ class PipelineBuildDetailService @Autowired constructor(
                     stage.startEpoch = System.currentTimeMillis()
                     pipelineBuildDao.updateStatus(dslContext, buildId, BuildStatus.RUNNING, BuildStatus.STAGE_SUCCESS)
                     // 被暂停的流水线不占构建队列，在执行数-1
-                    pipelineRuntimeService.updatePipelineRunningCount(pipelineId, buildId, -1)
+                    pipelineStageService.updatePipelineRunningCount(pipelineId, buildId, -1)
                     updateHistoryStage(buildId, model)
                     return Traverse.BREAK
                 }
@@ -701,7 +702,7 @@ class PipelineBuildDetailService @Autowired constructor(
                     update = true
                     stage.status = BuildStatus.QUEUE.name
                     pipelineBuildDao.updateStatus(dslContext, buildId, BuildStatus.STAGE_SUCCESS, BuildStatus.RUNNING)
-                    pipelineRuntimeService.updatePipelineRunningCount(pipelineId, buildId, 1)
+                    pipelineStageService.updatePipelineRunningCount(pipelineId, buildId, 1)
                     updateHistoryStage(buildId, model)
                     return Traverse.BREAK
                 }

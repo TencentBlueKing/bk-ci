@@ -111,6 +111,7 @@ class PipelineBuildService(
     private val pipelineInterceptorChain: PipelineInterceptorChain,
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val pipelineRuntimeService: PipelineRuntimeService,
+    private val pipelineStageService: PipelineStageService,
     private val redisOperation: RedisOperation,
     private val buildDetailService: PipelineBuildDetailService,
     private val jmxApi: ProcessJmxApi,
@@ -760,7 +761,7 @@ class PipelineBuildService(
                 errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
                 defaultMessage = "构建任务${buildId}不存在",
                 params = arrayOf(buildId))
-        val buildStage = pipelineRuntimeService.getStage(buildId, stageId)
+        val buildStage = pipelineStageService.getStage(buildId, stageId)
             ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
                 errorCode = ProcessMessageCode.ERROR_NO_STAGE_EXISTS_BY_ID,
@@ -772,7 +773,7 @@ class PipelineBuildService(
                 errorCode = ProcessMessageCode.USER_NEED_PIPELINE_X_PERMISSION.toString(),
                 defaultMessage = "用户($userId)不在Stage($stageId)可执行名单",
                 params = arrayOf(buildId))
-        if (buildStage.status.ordinal != 20) throw ErrorCodeException(
+        if (buildStage.status.name != BuildStatus.PAUSE.name) throw ErrorCodeException(
             statusCode = Response.Status.NOT_FOUND.statusCode,
             errorCode = ProcessMessageCode.ERROR_STAGE_IS_NOT_PAUSED,
             defaultMessage = "Stage($stageId)未处于暂停状态",
@@ -792,13 +793,13 @@ class PipelineBuildService(
             )
         }
 
-        if (isCancel) pipelineRuntimeService.cancelStage(
+        if (isCancel) pipelineStageService.cancelStage(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
             stageId = stageId
-        ) else pipelineRuntimeService.startStage(
+        ) else pipelineStageService.startStage(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
