@@ -1,8 +1,11 @@
 package com.tencent.devops.store.pojo
 
+import com.tencent.devops.store.pojo.enums.ServiceTypeEnum
 import io.swagger.annotations.ApiModelProperty
 
 data class ExtServiceFeatureUpdateInfo(
+    @ApiModelProperty("扩展服务类型：0：官方自研，1：第三方", required = true)
+    val serviceTypeEnum: ServiceTypeEnum? = ServiceTypeEnum.SELF_DEVELOPED,
     @ApiModelProperty("是否为公共扩展服务， TRUE：是 FALSE：不是  ")
     val publicFlag: Boolean? = null,
     @ApiModelProperty("是否推荐， TRUE：是 FALSE：不是 ")

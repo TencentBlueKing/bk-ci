@@ -874,6 +874,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
                     publicFlag = featureInfoRecord.publicFlag,
                     certificationFlag = featureInfoRecord.certificationFlag,
                     weight = featureInfoRecord.weight,
+                    serviceTypeEnum = featureInfoRecord.serviceType,
                     extensionItemList = itemList,
                     mediaList = mediaList
                 )

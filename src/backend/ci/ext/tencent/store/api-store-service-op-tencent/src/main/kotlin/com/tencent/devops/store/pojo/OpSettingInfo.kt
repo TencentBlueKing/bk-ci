@@ -6,6 +6,8 @@ import io.swagger.annotations.ApiModelProperty
 data class OpSettingInfo(
     @ApiModelProperty("扩展类型")
     val type: ServiceTypeEnum?,
+    @ApiModelProperty("扩展服务类型：0：官方自研，1：第三方", required = true)
+    val serviceTypeEnum: ServiceTypeEnum,
     @ApiModelProperty("是否公共", required = true)
     val publicFlag: Boolean,
     @ApiModelProperty("是否推荐", required = true)

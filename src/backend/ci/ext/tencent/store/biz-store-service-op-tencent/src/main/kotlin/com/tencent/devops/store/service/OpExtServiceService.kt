@@ -176,7 +176,8 @@ class OpExtServiceService @Autowired constructor(
                     publicFlag = settingInfo.publicFlag,
                     recommentFlag = settingInfo.recommendFlag,
                     certificationFlag = settingInfo.certificationFlag,
-                    modifierUser = userId
+                    modifierUser = userId,
+                    serviceTypeEnum = settingInfo.serviceTypeEnum
                 )
             )
         }
@@ -268,7 +269,8 @@ class OpExtServiceService @Autowired constructor(
                     weight = approveReq.weight,
                     recommentFlag = approveReq.recommendFlag,
                     publicFlag = approveReq.publicFlag,
-                    certificationFlag = approveReq.certificationFlag
+                    certificationFlag = approveReq.certificationFlag,
+                    serviceTypeEnum = approveReq.serviceType
                 )
             )
         }

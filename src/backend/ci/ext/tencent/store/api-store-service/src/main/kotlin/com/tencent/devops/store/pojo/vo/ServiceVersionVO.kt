@@ -3,6 +3,7 @@ package com.tencent.devops.store.pojo.vo
 import com.tencent.devops.store.pojo.common.Label
 import com.tencent.devops.store.pojo.common.StoreMediaInfo
 import com.tencent.devops.store.pojo.common.StoreUserCommentInfo
+import com.tencent.devops.store.pojo.enums.ServiceTypeEnum
 import io.swagger.annotations.ApiModelProperty
 
 data class ServiceVersionVO(
@@ -50,14 +51,16 @@ data class ServiceVersionVO(
     val visibilityLevel: String?,
 //    @ApiModelProperty("扩展服务代码库不开源原因")
 //    val privateReason: String?,
+    @ApiModelProperty("扩展服务类型：0：官方自研，1：第三方", required = true)
+    val serviceTypeEnum: Byte ?= 0,
     @ApiModelProperty("是否推荐标识 true：推荐，false：不推荐")
-    val recommendFlag: Boolean? = null,
+    val recommendFlag: Boolean? = false,
     @ApiModelProperty("是否公共 true：推荐，false：不推荐")
-    val publicFlag: Boolean? = null,
+    val publicFlag: Boolean? = true,
     @ApiModelProperty("是否官方认证 true：推荐，false：不推荐")
-    val certificationFlag: Boolean? = null,
+    val certificationFlag: Boolean? = false,
     @ApiModelProperty("权重")
-    val weight: Int? = null,
+    val weight: Int? = 1,
     @ApiModelProperty("扩展点列表")
     val extensionItemList: List<String>,
     @ApiModelProperty("媒体信息")
