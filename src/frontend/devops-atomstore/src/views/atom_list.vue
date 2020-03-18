@@ -3,25 +3,25 @@
         <h3 class="market-home-title banner-nav">
             <icon class="title-icon" name="color-logo-store" size="25" />
             <p class="title-name">
-                <span class="back-home" @click="toAtomStore"> {{ $t('研发商店') }} </span>
+                <span class="back-home" @click="toAtomStore"> {{ $t('store.研发商店') }} </span>
                 <i class="right-arrow banner-arrow"></i>
-                <span class="banner-des"> {{ $t('工作台') }} </span>
+                <span class="banner-des"> {{ $t('store.工作台') }} </span>
             </p>
-            <a class="title-work" target="_blank" :href="docLink[currentTab].link">{{ docLink[currentTab].name }}</a>
+            <section v-if="tabList[currentTab].showMore" class="banner-more">
+                <icon name="work-manage" size="20" class="work-more" />
+                <section class="more-list">
+                    <a :href="more.link" v-for="more in tabList[currentTab].moreList" :key="more.name" target="_blank">{{ more.name }}</a>
+                </section>
+            </section>
+            <a class="title-work" target="_blank" :href="tabList[currentTab].link" v-else>{{ tabList[currentTab].name }}</a>
         </h3>
         <div class="atomstore-list-content">
-            <bk-tab :active.sync="currentTab" @tab-change="changeTab" type="unborder-card">
-                <bk-tab-panel name="atom" render-directive="if">
+            <bk-tab :active.sync="currentTab" type="unborder-card">
+                <bk-tab-panel :name="key" render-directive="if" v-for="(tab, key) in tabList" :key="tab.type">
                     <template slot="label">
-                        <span class="work-label"><icon class="title-icon" :name="`store-atom`" size="16" /> {{ $t('流水线插件') }} </span>
+                        <span class="work-label"><icon class="title-icon" :name="`store-${key}`" size="16" /> {{ tab.tabName }} </span>
                     </template>
-                    <atom-list></atom-list>
-                </bk-tab-panel>
-                <bk-tab-panel name="template" render-directive="if">
-                    <template slot="label">
-                        <span class="work-label"><icon class="title-icon" :name="`store-template`" size="16" /> {{ $t('流水线模板') }} </span>
-                    </template>
-                    <template-list></template-list>
+                    <component :is="`${key}List`"></component>
                 </bk-tab-panel>
             </bk-tab>
         </div>
@@ -32,19 +32,31 @@
     import { getQueryString } from '@/utils/index'
     import atomList from '@/components/common/workList/atom'
     import templateList from '@/components/common/workList/template'
+    import imageList from '@/components/common/workList/image'
+    let currentProjectCode = localStorage.getItem('projectId')
+    if (!currentProjectCode) currentProjectCode = (window.projectList[0] || {}).projectCode
 
     export default {
         components: {
             atomList,
-            templateList
+            templateList,
+            imageList
         },
 
         data () {
             return {
                 currentTab: 'atom',
-                docLink: {
-                    atom: { name: this.$t('插件指引'), link: 'http://tempdocklink/pages/viewpage.action?pageId=15008942' },
-                    template: { name: this.$t('模版指引'), link: 'http://tempdocklink/pages/viewpage.action?pageId=15008944' }
+                tabList: {
+                    atom: {
+                        tabName: this.$t('store.流水线插件'),
+                        showMore: true,
+                        moreList: [
+                            { name: this.$t('store.插件指引'), link: 'http://tempdocklink/pages/viewpage.action?pageId=15008942' },
+                            { name: this.$t('store.debugTask'), link: `/console/pipeline/${currentProjectCode}/atomDebug` }
+                        ]
+                    },
+                    template: { name: this.$t('store.模版指引'), tabName: this.$t('store.流水线模板'), link: 'http://tempdocklink/pages/viewpage.action?pageId=15008944' },
+                    image: { name: this.$t('store.镜像指引'), tabName: this.$t('store.容器镜像'), link: 'http://tempdocklink/pages/viewpage.action?pageId=22118721' }
                 }
             }
         },
@@ -82,6 +94,59 @@
     
     .atom-list-wrapper {
         height: 100%;
+        .banner-more {
+            height: 20px;
+            &:hover .more-list {
+                display: block;
+            }
+        }
+        .work-more {
+            margin-right: 30px;
+            cursor: pointer;
+        }
+        .more-list {
+            display: none;
+            transition: display 200ms;
+            position: absolute;
+            z-index: 500;
+            right: 30px;
+            top: 40px;
+            background: $white;
+            border: 1px solid $borderWeightColor;
+            border-radius: 2px;
+            box-shadow: 0 3px 6px rgba(51, 60, 72, 0.12);
+            &:hover {
+                display: block;
+            }
+            &::before {
+                content: '';
+                position: absolute;
+                right: 2px;
+                top: -6px;
+                width: 10px;
+                height: 10px;
+                transform: rotate(45deg);
+                background: $white;
+                border-top: 1px solid $borderWeightColor;
+                border-left: 1px solid $borderWeightColor;
+            }
+            a {
+                display: block;
+                min-width: 88px;
+                line-height: 32px;
+                border-bottom: 1px solid $borderWeightColor;
+                padding: 0 14px;
+                color: $fontWeightColor;
+                white-space: nowrap;
+                cursor: pointer;
+                &:hover {
+                    color: $primaryColor;
+                }
+                &:last-child {
+                    border: 0;
+                }
+            }
+        }
         .atomstore-list-content {
             padding: 8px 25px 25px;
             height: calc(100% - 50px);
@@ -162,7 +227,6 @@
             .offline-atom-form,
             .relate-template-form {
                 margin: 30px 50px 20px 28px;
-                height: 100%;
             }
             .bk-label {
                 width: 97px;

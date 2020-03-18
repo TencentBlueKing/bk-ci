@@ -26,6 +26,7 @@
 
 package com.tencent.devops.plugin.worker.task
 
+import com.tencent.devops.common.api.enums.OSType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.enums.BuildScriptType
 import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxCodeCCScriptElement
@@ -36,6 +37,8 @@ import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.plugin.worker.task.codecc.util.CodeccEnvHelper
 import com.tencent.devops.plugin.worker.task.codecc.util.CodeccRepoHelper
 import com.tencent.devops.plugin.worker.task.codecc.util.CodeccUtils
+import com.tencent.devops.plugin.worker.task.codecc.util.WindowsCodeccUtils
+import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.task.ITask
 import com.tencent.devops.worker.common.task.TaskClassType
@@ -70,9 +73,10 @@ class LinuxCodeCCScriptTask : ITask() {
         CodeccEnvHelper.saveTask(buildVariables)
 
         // 执行codecc的python脚本
-        CodeccUtils.executeCommand(coverityConfig)
+        if (AgentEnv.getOS() == OSType.WINDOWS) WindowsCodeccUtils().executeCommand(coverityConfig)
+        else CodeccUtils().executeCommand(coverityConfig)
 
         // 写入环境变量
-        addEnv(CodeccEnvHelper.getCodeccEnv(workspace))
+        addEnv(CodeccEnvHelper.getCodeccEnv(workspace, buildTask.buildId))
     }
 }

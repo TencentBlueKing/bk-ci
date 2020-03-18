@@ -28,6 +28,8 @@ package com.tencent.devops.plugin.worker.task.codecc.util
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.enums.OSType
+import com.tencent.devops.common.api.exception.TaskExecuteException
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.enums.BuildScriptType
 import com.tencent.devops.plugin.codecc.pojo.coverity.CoverityProjectType
@@ -35,6 +37,7 @@ import com.tencent.devops.plugin.codecc.pojo.coverity.ProjectLanguage
 import com.tencent.devops.plugin.worker.pojo.CodeccExecuteConfig
 import com.tencent.devops.plugin.worker.task.codecc.LinuxCodeccConstants
 import com.tencent.devops.plugin.worker.task.codecc.WindowsCodeccConstants
+import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.worker.common.CommonEnv
 import com.tencent.devops.worker.common.api.utils.ThirdPartyAgentBuildInfoUtils
 import com.tencent.devops.worker.common.env.AgentEnv
@@ -172,10 +175,12 @@ object CodeccParamsHelper {
      * Ruby					    非编译型
      */
 
-    fun getProjectType(languagesStr: String): CoverityProjectType {
+    fun getProjectType(languagesStr: String?): CoverityProjectType {
+        if (languagesStr.isNullOrBlank()) return CoverityProjectType.UN_COMPILE
+
         // 此处为了新引擎兼容，新引擎传递的参数是真实类型json，而不是单纯的String
         // 而CodeCC是用x,y,z这种方式对待List，所以在这强转并写入params中供CodeCC读取
-        val languages = JsonUtil.to(languagesStr, object : TypeReference<List<String>>() {})
+        val languages = JsonUtil.to(languagesStr!!, object : TypeReference<List<String>>() {})
 
         if (languages.isEmpty()) {
             return CoverityProjectType.UN_COMPILE
@@ -201,7 +206,11 @@ object CodeccParamsHelper {
         return if (scriptType == BuildScriptType.SHELL) {
             val shareCoverityFile = LinuxCodeccConstants.getCovPyFile()
             if (!shareCoverityFile.exists()) {
-                throw RuntimeException("The coverity file (${shareCoverityFile.canonicalPath}) is not exist")
+                throw throw TaskExecuteException(
+                    errorType = ErrorType.USER,
+                    errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
+                    errorMsg = "The coverity file (${shareCoverityFile.canonicalPath}) is not exist"
+                )
             }
             val localCoverityFile = File(codeccWorkspace, shareCoverityFile.name)
             shareCoverityFile.copyTo(localCoverityFile, true)
@@ -215,7 +224,11 @@ object CodeccParamsHelper {
         return if (scriptType == BuildScriptType.SHELL) {
             val shareToolFile = LinuxCodeccConstants.getToolPyFile()
             if (AgentEnv.getOS() != OSType.MAC_OS && !shareToolFile.exists()) {
-                throw RuntimeException("The mutli tool file (${shareToolFile.canonicalPath}) is not exist")
+                throw throw TaskExecuteException(
+                    errorType = ErrorType.USER,
+                    errorCode = ErrorCode.USER_RESOURCE_NOT_FOUND,
+                    errorMsg = "The mutli tool file (${shareToolFile.canonicalPath}) is not exist"
+                )
             }
             val localToolFile = File(codeccWorkspace, shareToolFile.name)
             shareToolFile.copyTo(localToolFile, true)

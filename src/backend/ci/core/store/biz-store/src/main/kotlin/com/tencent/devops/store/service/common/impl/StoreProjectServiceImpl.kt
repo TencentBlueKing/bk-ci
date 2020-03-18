@@ -107,7 +107,6 @@ class StoreProjectServiceImpl @Autowired constructor(
     }
 
     override fun installStoreComponent(
-        accessToken: String,
         userId: String,
         projectCodeList: ArrayList<String>,
         storeId: String,
@@ -116,9 +115,9 @@ class StoreProjectServiceImpl @Autowired constructor(
         publicFlag: Boolean,
         channelCode: ChannelCode
     ): Result<Boolean> {
-        logger.info("installStoreComponent accessToken is :$accessToken, userId is :$userId, projectCodeList is :$projectCodeList, storeId is :$storeId")
+        logger.info("installStoreComponent userId is :$userId, projectCodeList is :$projectCodeList, storeId is :$storeId")
         logger.info("installStoreComponent storeCode is :$storeCode, storeType is :$storeType, publicFlag is :$publicFlag, channelCode is :$channelCode")
-        val validateInstallResult = validateInstallPermission(publicFlag, userId, storeCode, storeType, accessToken, projectCodeList, channelCode)
+        val validateInstallResult = validateInstallPermission(publicFlag, userId, storeCode, storeType, projectCodeList, channelCode)
         logger.info("installStoreComponent validateInstallResult is :$validateInstallResult")
         if (validateInstallResult.isNotOk()) {
             return validateInstallResult
@@ -151,7 +150,6 @@ class StoreProjectServiceImpl @Autowired constructor(
         userId: String,
         storeCode: String,
         storeType: StoreTypeEnum,
-        accessToken: String,
         projectCodeList: ArrayList<String>,
         channelCode: ChannelCode
     ): Result<Boolean> {

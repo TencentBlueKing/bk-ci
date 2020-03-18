@@ -28,6 +28,8 @@ package com.tencent.devops.plugin.worker.task.codecc.util
 
 import com.google.common.io.Files
 import com.tencent.devops.common.api.enums.OSType
+import com.tencent.devops.common.api.exception.TaskExecuteException
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.FileUtil
 import com.tencent.devops.plugin.codecc.pojo.CodeccToolType
 import com.tencent.devops.plugin.worker.pojo.CodeccExecuteConfig
@@ -40,6 +42,7 @@ import com.tencent.devops.plugin.worker.task.codecc.LinuxCodeccConstants.THIRD_N
 import com.tencent.devops.plugin.worker.task.codecc.LinuxCodeccConstants.THIRD_PYLINT2_FILE
 import com.tencent.devops.plugin.worker.task.codecc.LinuxCodeccConstants.THIRD_PYLINT3_FILE
 import com.tencent.devops.plugin.worker.task.codecc.LinuxCodeccConstants.THIRD_PYTHON3_TAR_FILE
+import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.utils.CommandLineUtils
@@ -123,15 +126,11 @@ object CodeccInstaller {
     }
 
     fun setUpPython3(coverityConfig: CodeccExecuteConfig) {
-        // 多工具需要安装python3
         // 安装python 3.x
-        if (coverityConfig.tools.minus(listOf("COVERITY", "KLOCWORK")).isNotEmpty()) {
-            // 2.1 安装python 3.x
-            LoggerService.addNormalLine("download python 3.x")
-            helper.getTool(CodeccToolType.PYTHON3, THIRD_PYTHON3_TAR_FILE, Runnable {
-                setupPython3(WorkspaceUtils.getLandun(), THIRD_PYTHON3_TAR_FILE)
-            })
-        }
+        LoggerService.addNormalLine("download python 3.x")
+        helper.getTool(CodeccToolType.PYTHON3, THIRD_PYTHON3_TAR_FILE, Runnable {
+            setupPython3(WorkspaceUtils.getLandun(), THIRD_PYTHON3_TAR_FILE)
+        })
     }
 
     fun donwloadScript() {
@@ -189,7 +188,11 @@ object CodeccInstaller {
             script.writeText(commands.joinToString(System.lineSeparator()))
             return CommandLineUtils.execute(script, workspace, true)
         } catch (e: Exception) {
-            throw RuntimeException("安装python2失败: ${e.message}")
+            throw throw TaskExecuteException(
+                errorType = ErrorType.USER,
+                errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
+                errorMsg = "安装python2失败: ${e.message}"
+            )
         }
     }
 
@@ -203,7 +206,11 @@ object CodeccInstaller {
             // 执行相关命令
             CommandLineUtils.execute("chmod -R 755 $pythonPath/bin/python", workspace, true)
         } catch (e: Exception) {
-            throw RuntimeException("安装python3失败: ${e.message}")
+            throw throw TaskExecuteException(
+                errorType = ErrorType.USER,
+                errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
+                errorMsg = "安装python3失败: ${e.message}"
+            )
         }
     }
 

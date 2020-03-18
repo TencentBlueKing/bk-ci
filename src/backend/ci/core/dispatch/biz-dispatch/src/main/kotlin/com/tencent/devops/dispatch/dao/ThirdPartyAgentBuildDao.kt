@@ -71,13 +71,16 @@ class ThirdPartyAgentBuildDao {
             val preRecord =
                 dslContext.selectFrom(this).where(BUILD_ID.eq(buildId)).and(VM_SEQ_ID.eq(vmSeqId)).fetchAny()
             if (preRecord != null) { // 支持更新，让用户进行步骤重试时继续能使用
-                dslContext.update(this)
+                return dslContext.update(this)
+                    .set(PROJECT_ID, projectId)
+                    .set(AGENT_ID, agentId) // agentId 会变化存在于构建机集群的场景下出现飘移（合法）
+                    .set(PIPELINE_ID, pipelineId)
+                    .set(BUILD_ID, buildId)
+                    .set(VM_SEQ_ID, vmSeqId)
                     .set(WORKSPACE, thirdPartyAgentWorkspace)
-                    .set(CREATED_TIME, now)
                     .set(UPDATED_TIME, now)
                     .set(STATUS, PipelineTaskStatus.QUEUE.status)
                     .where(ID.eq(preRecord.id)).execute()
-                return preRecord.id
             }
             return dslContext.insertInto(
                 this,
@@ -115,7 +118,7 @@ class ThirdPartyAgentBuildDao {
      */
     fun updateExpireBuilds(
         dslContext: DSLContext,
-        ids: Set<Int>
+        ids: Set<Long>
     ): Int {
         with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
             return dslContext.update(this)
@@ -144,7 +147,7 @@ class ThirdPartyAgentBuildDao {
         vmSeqId: String
     ): Result<TDispatchThirdpartyAgentBuildRecord> {
         with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
-            return dslContext.selectFrom(this)
+            return dslContext.selectFrom(this.forceIndex("IDX_PROJECT_PIPELINE_SEQ_STATUS_TIME"))
                 .where(PROJECT_ID.eq(projectId))
                 .and(PIPELINE_ID.eq(pipelineId))
                 .and(VM_SEQ_ID.eq(vmSeqId))
@@ -157,7 +160,7 @@ class ThirdPartyAgentBuildDao {
 
     fun updateStatus(
         dslContext: DSLContext,
-        id: Int,
+        id: Long,
         status: PipelineTaskStatus
     ): Int {
         with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {

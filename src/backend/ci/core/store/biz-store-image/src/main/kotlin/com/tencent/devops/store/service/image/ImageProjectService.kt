@@ -1,3 +1,29 @@
+/*
+ * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ *
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ *
+ * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
+ *
+ * A copy of the MIT License is included in this file.
+ *
+ *
+ * Terms of the MIT License:
+ * ---------------------------------------------------
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
+ * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+ * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+ * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
 package com.tencent.devops.store.service.image
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
@@ -9,14 +35,14 @@ import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.type.docker.ImageType
+import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.dao.common.StoreProjectRelDao
-import com.tencent.devops.store.dao.image.Constants.KEY_CATEGORY_CODE
-import com.tencent.devops.store.dao.image.Constants.KEY_CATEGORY_NAME
-import com.tencent.devops.store.dao.image.Constants.KEY_CREATE_TIME
 import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_AGENT_TYPE_SCOPE
 import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_CODE
+import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_DOCKER_FILE_CONTENT
+import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_DOCKER_FILE_TYPE
 import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_FEATURE_CERTIFICATION_FLAG
 import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_FEATURE_PUBLIC_FLAG
 import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_FEATURE_RECOMMEND_FLAG
@@ -31,36 +57,30 @@ import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_REPO_URL
 import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_SOURCE_TYPE
 import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_SUMMARY
 import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_TAG
-import com.tencent.devops.store.dao.image.Constants.KEY_LABEL_CODE
-import com.tencent.devops.store.dao.image.Constants.KEY_LABEL_ID
-import com.tencent.devops.store.dao.image.Constants.KEY_LABEL_NAME
-import com.tencent.devops.store.dao.image.Constants.KEY_LABEL_TYPE
-import com.tencent.devops.store.dao.image.Constants.KEY_MODIFIER
-import com.tencent.devops.store.dao.image.Constants.KEY_PUBLISHER
-import com.tencent.devops.store.dao.image.Constants.KEY_UPDATE_TIME
 import com.tencent.devops.store.dao.image.ImageAgentTypeDao
 import com.tencent.devops.store.dao.image.ImageDao
-import com.tencent.devops.store.dao.image.ImageLabelRelDao
 import com.tencent.devops.store.dao.image.MarketImageDao
 import com.tencent.devops.store.dao.image.MarketImageFeatureDao
 import com.tencent.devops.store.exception.image.ImageNotExistException
+import com.tencent.devops.store.pojo.common.KEY_CATEGORY_CODE
+import com.tencent.devops.store.pojo.common.KEY_CATEGORY_NAME
+import com.tencent.devops.store.pojo.common.KEY_MODIFIER
+import com.tencent.devops.store.pojo.common.KEY_PUBLISHER
+import com.tencent.devops.store.pojo.common.KEY_UPDATE_TIME
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.image.enums.ImageAgentTypeEnum
 import com.tencent.devops.store.pojo.image.enums.ImageRDTypeEnum
 import com.tencent.devops.store.pojo.image.enums.ImageStatusEnum
-import com.tencent.devops.store.pojo.image.enums.LabelTypeEnum
 import com.tencent.devops.store.pojo.image.enums.MarketImageSortTypeEnum
 import com.tencent.devops.store.pojo.image.response.ImageDetail
 import com.tencent.devops.store.pojo.image.response.JobImageItem
 import com.tencent.devops.store.pojo.image.response.JobMarketImageItem
-import com.tencent.devops.store.pojo.image.response.Label
 import com.tencent.devops.store.service.common.StoreProjectService
 import com.tencent.devops.store.service.common.StoreUserService
 import com.tencent.devops.store.util.MultiSourceDataPaginator
 import com.tencent.devops.store.util.PagableDataSource
 import org.jooq.DSLContext
 import org.jooq.Record
-import org.jooq.Record21
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
@@ -75,10 +95,10 @@ class ImageProjectService @Autowired constructor(
     private val imageService: ImageService,
     private val storeUserService: StoreUserService,
     private val imageDao: ImageDao,
-    private val imageLabelRelDao: ImageLabelRelDao,
     private val marketImageDao: MarketImageDao,
     private val imageAgentTypeDao: ImageAgentTypeDao,
     private val marketImageFeatureDao: MarketImageFeatureDao,
+    private val imageLabelService: ImageLabelService,
     private val storeProjectRelDao: StoreProjectRelDao,
     private val storeProjectService: StoreProjectService,
     private val client: Client
@@ -295,6 +315,10 @@ class ImageProjectService @Autowired constructor(
         val dbClassifyId = it["classifyId"] as String
         val classifyCode = it["classifyCode"] as String
         val classifyName = it["classifyName"] as String
+        val classifyLanName = MessageCodeUtil.getCodeLanMessage(
+            messageCode = "${StoreMessageCode.MSG_CODE_STORE_CLASSIFY_PREFIX}$classifyCode",
+            defaultMessage = classifyName
+        )
         val logoUrl = it["logoUrl"] as? String
         val icon = it["icon"] as? String
         val summary = it["summary"] as? String
@@ -330,7 +354,7 @@ class ImageProjectService @Autowired constructor(
             imageStatus = ImageStatusEnum.getImageStatus(imageStatus.toInt()),
             classifyId = dbClassifyId,
             classifyCode = classifyCode,
-            classifyName = classifyName,
+            classifyName = classifyLanName,
             logoUrl = logoUrl,
             icon = icon,
             summary = summary,
@@ -931,7 +955,7 @@ class ImageProjectService @Autowired constructor(
     }
 
     fun genJobMarketImageItem(
-        it: Record21<String, String, String, Byte, String, String, String, Int, String, String, String, String, String, String, String, String, LocalDateTime, Boolean, Boolean, Boolean, String>,
+        it: Record,
         canInstallFlag: Boolean,
         installFlag: Boolean,
         availableFlag: Boolean
@@ -956,25 +980,21 @@ class ImageProjectService @Autowired constructor(
         val imageRepoName = it.get(KEY_IMAGE_REPO_NAME) as String
         val imageTag = it.get(KEY_IMAGE_TAG) as String
         // 单独查询
-        val labelList = imageLabelRelDao.getLabelsByImageId(dslContext, id)?.map {
-            Label(
-                id = it.get(KEY_LABEL_ID) as String,
-                labelCode = it.get(KEY_LABEL_CODE) as String,
-                labelName = it.get(KEY_LABEL_NAME) as String,
-                labelType = LabelTypeEnum.getLabelType((it.get(KEY_LABEL_TYPE) as Byte).toInt()),
-                createTime = (it.get(KEY_CREATE_TIME) as LocalDateTime).timestampmilli(),
-                updateTime = (it.get(KEY_UPDATE_TIME) as LocalDateTime).timestampmilli()
-            )
-        } ?: emptyList()
+        val labelList = imageLabelService.getLabelsByImageId(id).data
         val category = it.get(KEY_CATEGORY_CODE) as String?
         val categoryName = it.get(KEY_CATEGORY_NAME) as String?
+        val categoryLanName = MessageCodeUtil.getCodeLanMessage(
+            messageCode = "${StoreMessageCode.MSG_CODE_STORE_CATEGORY_PREFIX}$category",
+            defaultMessage = categoryName
+        )
         val publisher = it.get(KEY_PUBLISHER) as String
         val publicFlag = it.get(KEY_IMAGE_FEATURE_PUBLIC_FLAG) as Boolean
-        // 是否可安装
         val recommendFlag = it.get(KEY_IMAGE_FEATURE_RECOMMEND_FLAG) as Boolean
         val certificationFlag = it.get(KEY_IMAGE_FEATURE_CERTIFICATION_FLAG) as Boolean
         val modifier = it.get(KEY_MODIFIER) as String?
         val updateTime = (it.get(KEY_UPDATE_TIME) as LocalDateTime).timestampmilli()
+        val dockerFileType = it.get(KEY_IMAGE_DOCKER_FILE_TYPE) as String? ?: "INPUT"
+        val dockerFileContent = it.get(KEY_IMAGE_DOCKER_FILE_CONTENT) as String? ?: ""
         return JobMarketImageItem(
             imageId = id,
             id = id,
@@ -994,15 +1014,18 @@ class ImageProjectService @Autowired constructor(
             imageRepoUrl = imageRepoUrl ?: "",
             imageRepoName = imageRepoName,
             imageTag = imageTag,
-            labelNames = labelList.map { it.labelName }.joinToString { it },
+            dockerFileType = dockerFileType,
+            dockerFileContent = dockerFileContent,
+            labelNames = labelList?.map { it.labelName }?.joinToString { it } ?: "",
             category = category ?: "",
-            categoryName = categoryName ?: "",
+            categoryName = categoryLanName,
             publisher = publisher,
             publicFlag = publicFlag,
             flag = canInstallFlag,
             recommendFlag = recommendFlag,
             certificationFlag = certificationFlag,
-            isInstalled = installFlag,
+            // 公共镜像视为已安装
+            isInstalled = installFlag || publicFlag,
             modifier = modifier ?: "",
             updateTime = updateTime
         )
@@ -1012,14 +1035,13 @@ class ImageProjectService @Autowired constructor(
      * 安装镜像到项目
      */
     fun installImage(
-        accessToken: String,
         userId: String,
         projectCodeList: ArrayList<String>,
         imageCode: String,
         channelCode: ChannelCode,
         interfaceName: String? = "Anon interface"
     ): Result<Boolean> {
-        logger.info("$interfaceName:installImage:Input:($accessToken,$userId,$projectCodeList,$imageCode)")
+        logger.info("$interfaceName:installImage:Input:($userId,$projectCodeList,$imageCode)")
         // 判断镜像标识是否合法
         val image = marketImageDao.getLatestImageByCode(dslContext, imageCode)
             ?: throw ImageNotExistException("imageCode=$imageCode")
@@ -1029,7 +1051,6 @@ class ImageProjectService @Autowired constructor(
             userId = userId,
             storeCode = image.imageCode,
             storeType = StoreTypeEnum.IMAGE,
-            accessToken = accessToken,
             projectCodeList = projectCodeList
         )
         if (validateInstallResult.isNotOk()) {
@@ -1037,7 +1058,6 @@ class ImageProjectService @Autowired constructor(
         }
         logger.info("$interfaceName:installImage:Inner:image.id=${image.id},imageFeature.publicFlag=${imageFeature.publicFlag}")
         return storeProjectService.installStoreComponent(
-            accessToken = accessToken,
             userId = userId,
             projectCodeList = projectCodeList,
             storeId = image.id,

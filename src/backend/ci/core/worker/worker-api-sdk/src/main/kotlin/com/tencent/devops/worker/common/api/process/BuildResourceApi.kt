@@ -43,14 +43,28 @@ class BuildResourceApi : AbstractBuildResourceApi(), BuildSDKApi {
     override fun setStarted(): Result<BuildVariables> {
         val path = "/ms/process/api/build/builds/started"
         val request = buildPut(path)
-        val responseContent = request(request, "通知服务端启动构建失败")
+        val errorMessage = "通知服务端启动构建失败"
+        val responseContent = request(
+            request = request,
+            connectTimeoutInSec = 5L,
+            errorMessage = errorMessage,
+            readTimeoutInSec = 30L,
+            writeTimeoutInSec = 30L
+        )
         return objectMapper.readValue(responseContent)
     }
 
     override fun claimTask(): Result<BuildTask> {
         val path = "/ms/process/api/build/builds/claim"
         val request = buildGet(path)
-        val responseContent = request(request, "领取构建机任务失败")
+        val errorMessage = "领取构建机任务失败"
+        val responseContent = request(
+            request = request,
+            connectTimeoutInSec = 5L,
+            errorMessage = errorMessage,
+            readTimeoutInSec = 30L,
+            writeTimeoutInSec = 30L
+        )
         return objectMapper.readValue(responseContent)
     }
 
@@ -61,21 +75,42 @@ class BuildResourceApi : AbstractBuildResourceApi(), BuildSDKApi {
             objectMapper.writeValueAsString(result)
         )
         val request = buildPost(path, requestBody)
-        val responseContent = request(request, "报告任务完成失败")
+        val errorMessage = "报告任务完成失败"
+        val responseContent = request(
+            request = request,
+            connectTimeoutInSec = 5L,
+            errorMessage = errorMessage,
+            readTimeoutInSec = 30L,
+            writeTimeoutInSec = 30L
+        )
         return objectMapper.readValue(responseContent)
     }
 
     override fun endTask(): Result<Boolean> {
         val path = "/ms/process/api/build/builds/end"
         val request = buildPost(path)
-        val responseContent = request(request, "构建完成请求失败")
+        val errorMessage = "构建完成请求失败"
+        val responseContent = request(
+            request = request,
+            connectTimeoutInSec = 5L,
+            errorMessage = errorMessage,
+            readTimeoutInSec = 30L,
+            writeTimeoutInSec = 30L
+        )
         return objectMapper.readValue(responseContent)
     }
 
     override fun heartbeat(): Result<Boolean> {
         val path = "/ms/process/api/build/builds/heartbeat"
         val request = buildPost(path)
-        val responseContent = request(request, "心跳失败")
+        val errorMessage = "心跳失败"
+        val responseContent = request(
+            request = request,
+            connectTimeoutInSec = 5L,
+            errorMessage = errorMessage,
+            readTimeoutInSec = 10L,
+            writeTimeoutInSec = 10L
+        )
         return objectMapper.readValue(responseContent)
     }
 
@@ -89,7 +124,14 @@ class BuildResourceApi : AbstractBuildResourceApi(), BuildSDKApi {
         if (channelCode != null) sb.append("?channelCode=${channelCode.name}")
         val path = sb.toString()
         val request = buildGet(path)
-        val responseContent = request(request, "获取构建任务详情失败")
+        val errorMessage = "获取构建任务详情失败"
+        val responseContent = request(
+            request = request,
+            connectTimeoutInSec = 5L,
+            errorMessage = errorMessage,
+            readTimeoutInSec = 30L,
+            writeTimeoutInSec = 30L
+        )
         return objectMapper.readValue(responseContent)
     }
 
@@ -105,7 +147,14 @@ class BuildResourceApi : AbstractBuildResourceApi(), BuildSDKApi {
         )
         val path = sb.toString()
         val request = buildGet(path)
-        val responseContent = request(request, "获取构建任务详情失败")
+        val errorMessage = "获取构建任务详情失败"
+        val responseContent = request(
+            request = request,
+            connectTimeoutInSec = 5L,
+            errorMessage = errorMessage,
+            readTimeoutInSec = 30L,
+            writeTimeoutInSec = 30L
+        )
         return objectMapper.readValue(responseContent)
     }
 }

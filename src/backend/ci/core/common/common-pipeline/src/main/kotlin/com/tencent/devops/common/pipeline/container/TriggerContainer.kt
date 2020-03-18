@@ -37,7 +37,7 @@ data class TriggerContainer(
     @ApiModelProperty("构建容器序号id", required = false, hidden = true)
     override var id: String? = null,
     @ApiModelProperty("容器名称", required = true)
-    override val name: String = "",
+    override var name: String = "",
     @ApiModelProperty("任务集合", required = true)
     override val elements: List<Element> = listOf(),
     @ApiModelProperty("状态", required = true, hidden = true)
@@ -48,7 +48,7 @@ data class TriggerContainer(
     @ApiModelProperty("插件运行时间", required = false, hidden = true)
     override var elementElapsed: Long? = null,
     @ApiModelProperty("参数化构建", required = false)
-    val params: List<BuildFormProperty> = listOf(),
+    var params: List<BuildFormProperty> = listOf(),
     @ApiModelProperty("模板参数构建", required = false)
     val templateParams: List<BuildFormProperty>? = null,
     @ApiModelProperty("构建版本号", required = false)

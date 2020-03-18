@@ -71,8 +71,6 @@ object ProcessService {
         errorType: String? = null,
         errorCode: Int? = null
     ) {
-        logger.info("[ERRORCODE] completeTask <$taskId>[$errorType][$errorCode][$message] ")
-        LoggerService.addFoldEndLine("$elementName-[$elementId]")
         if (buildResult.isNotEmpty()) {
             buildResult.forEach { (key, value) ->
                 if (value.length > PIPLELINE_PARAM_MAX_LENGTH) {

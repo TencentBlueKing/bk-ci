@@ -389,7 +389,7 @@ interface ServiceBuildResource {
     @ApiOperation("根据流水线id获取最新执行信息")
     @POST
     // @Path("/projects/{projectId}/getPipelineLatestBuild")
-    @Path("/{projectCode}/getPipelineLatestBuild")
+    @Path("/{projectId}/getPipelineLatestBuild")
     fun getPipelineLatestBuildByIds(
         @ApiParam("项目id", required = true)
         @PathParam("projectId")
@@ -401,7 +401,7 @@ interface ServiceBuildResource {
     @ApiOperation("第三方构建机Agent构建结束")
     @POST
     // @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/seqs/{vmSeqId}/workerBuildFinish")
-    @Path("/{projectCode}/{pipelineId}/{buildId}/{vmSeqId}/workerBuildFinish")
+    @Path("/{projectId}/{pipelineId}/{buildId}/{vmSeqId}/workerBuildFinish")
     fun workerBuildFinish(
         @ApiParam("项目id", required = true)
         @PathParam("projectId")
@@ -419,7 +419,7 @@ interface ServiceBuildResource {
         simpleResult: SimpleResult
     ): Result<Boolean>
 
-    @ApiOperation("获取构建详情")
+    @ApiOperation("保存构建详情")
     @POST
     // @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/seqs/{vmSeqId}/saveBuildVmInfo")
     @Path("/{projectId}/{pipelineId}/{buildId}/{vmSeqId}/saveBuildVmInfo")
@@ -439,4 +439,22 @@ interface ServiceBuildResource {
         @ApiParam("参数", required = true)
         vmInfo: VmInfo
     ): Result<Boolean>
+
+    @ApiOperation("获取流水线构建单条历史")
+    @GET
+    @Path("/{projectId}/{pipelineId}/{buildNum}/history")
+    fun getSingleHistoryBuild(
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @ApiParam("流水线buildNum", required = true)
+        @PathParam("buildNum")
+        buildNum: String,
+        @ApiParam("渠道号，默认为DS", required = false)
+        @QueryParam("channelCode")
+        channelCode: ChannelCode?
+    ): Result<BuildHistory?>
 }

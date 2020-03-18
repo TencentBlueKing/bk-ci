@@ -81,9 +81,9 @@
 
 <style lang="scss">
     @import './../../assets/scss/conf';
-    .bkdevops-aside-nav.navigation-bar {
+    .bkdevops-aside-nav.bk-navigation {
         height: calc(100vh - 50px);
-        .navigation-bar-nav {
+        .navigation-nav {
             .nav-slider-title {
                 border-bottom-color: #dcdee5;
                 box-shadow: 0 3px 6px 0 rgba(99,101,110,.06);
@@ -95,8 +95,12 @@
                 }
             }
             .nav-slider {
-                border-right: 1px solid #dcdee5;
+                border-right: 1px solid #dcdee5 !important;
             }
+            .nav-slider-list {
+                height: 100% !important;
+            }
+
             .nav-slider-footer {
                 .footer-icon {
                     color: $fontWeightColor;
@@ -117,7 +121,7 @@
                 z-index: 100;
             }
         }
-        .navigation-bar-container {
+        .navigation-container {
             height: calc(100vh - 50px);
             .container-header {
                 display: none;

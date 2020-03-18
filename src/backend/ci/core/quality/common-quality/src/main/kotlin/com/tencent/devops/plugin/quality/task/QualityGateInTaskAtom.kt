@@ -26,6 +26,9 @@
 
 package com.tencent.devops.plugin.quality.task
 
+import com.tencent.devops.common.api.exception.TaskExecuteException
+import com.tencent.devops.common.api.pojo.ErrorCode
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.client.Client
@@ -123,8 +126,10 @@ class QualityGateInTaskAtom @Autowired constructor(
 
         if (interceptTask == null) {
             logger.error("Fail to find quality gate intercept element")
-            throw RuntimeException(
-                "Fail to find quality gate intercept element"
+            throw TaskExecuteException(
+                errorCode = ErrorCode.USER_RESOURCE_NOT_FOUND,
+                errorType = ErrorType.USER,
+                errorMsg = "Fail to find quality gate intercept element"
             )
         }
 
@@ -132,11 +137,15 @@ class QualityGateInTaskAtom @Autowired constructor(
 
         val checkResult = try {
             val buildCheckParams = BuildCheckParams(projectId, pipelineId, buildId, buildNo, interceptTaskName,
-                    startTime.timestamp(), interceptTask, ControlPointPosition.BEFORE_POSITION, templateId)
+                    startTime.timestamp(), interceptTask, ControlPointPosition.BEFORE_POSITION, templateId, runVariables)
             QualityUtils.check(client, buildCheckParams)
         } catch (t: Throwable) {
             logger.error("Quality Gate check in fail", t)
-            throw RuntimeException("质量红线(准入)检测失败")
+            throw TaskExecuteException(
+                errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
+                errorType = ErrorType.USER,
+                errorMsg = "质量红线(准入)检测失败"
+            )
         }
         pipelineEventDispatcher.dispatch(PipelineStatusChangeEvent(
                 source = "pipelineDetailChangeEvent",

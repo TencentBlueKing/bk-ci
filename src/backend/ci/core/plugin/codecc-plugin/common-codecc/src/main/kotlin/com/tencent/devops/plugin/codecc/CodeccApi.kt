@@ -29,8 +29,10 @@ package com.tencent.devops.plugin.codecc
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
-import com.tencent.devops.common.api.exception.CodeccReportException
 import com.tencent.devops.common.api.exception.RemoteServiceException
+import com.tencent.devops.common.api.exception.TaskExecuteException
+import com.tencent.devops.common.api.pojo.ErrorCode
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
@@ -50,7 +52,7 @@ open class CodeccApi constructor(
     private val existPath: String = "/ms/task/api/service/task/exists",
     private val deletePath: String = "/ms/task/api/service/task",
     private val report: String = "/api",
-    private val getRuleSetsPath: String = "/ms/task/api/service/checker/tasks/0/checkerSets"
+    private val getRuleSetsPath: String = "/ms/defect/api/service/checker/tools/{toolName}/pipelineCheckerSets"
 ) {
 
     companion object {
@@ -95,7 +97,9 @@ open class CodeccApi constructor(
                 "devopsTools" to objectMapper.writeValueAsString(tools),
                 "devopsToolParams" to devopsToolParams,
                 "toolCheckerSets" to genToolChecker(element),
-                "nameCn" to pipelineName
+                "nameCn" to pipelineName,
+                "projectBuildType" to scriptType.name,
+                "projectBuildCommand" to script
             )
             logger.info("start to create task: $body")
 
@@ -122,7 +126,8 @@ open class CodeccApi constructor(
                 DevOpsToolParams("py_version", pyVersion ?: ""),
                 DevOpsToolParams("ccn_threshold", ccnThreshold ?: ""),
                 DevOpsToolParams("needCodeContent", needCodeContent ?: ""),
-                DevOpsToolParams("eslint_rc", eslintRc ?: "")
+                DevOpsToolParams("eslint_rc", eslintRc ?: ""),
+                DevOpsToolParams("SHELL", script)
             )
             if (!element.projectBuildType.isNullOrBlank()) {
                 devopsToolParams.add(DevOpsToolParams("PROJECT_BUILD_TYPE", projectBuildType!!))
@@ -136,7 +141,9 @@ open class CodeccApi constructor(
                 "taskId" to codeCCTaskId!!,
                 "devopsToolParams" to devopsToolParams,
                 "toolCheckerSets" to genToolChecker(element),
-                "nameCn" to pipelineName
+                "nameCn" to pipelineName,
+                "projectBuildType" to scriptType.name,
+                "projectBuildCommand" to script
             )
             logger.info("Update the coverity task($body)")
             val header = mapOf(
@@ -229,7 +236,11 @@ open class CodeccApi constructor(
 
     private fun getCodeccResult(responseBody: String): CoverityResult {
         val result = objectMapper.readValue<CoverityResult>(responseBody)
-        if (result.code != "0" || result.status != 0) throw RuntimeException("execute codecc task fail")
+        if (result.code != "0" || result.status != 0) throw TaskExecuteException(
+            errorCode = ErrorCode.SYSTEM_SERVICE_ERROR,
+            errorType = ErrorType.SYSTEM,
+            errorMsg = "execute codecc task fail"
+        )
         return result
     }
 
@@ -266,8 +277,25 @@ open class CodeccApi constructor(
             }
         } catch (ignored: Throwable) {
             logger.warn("Fail to get the codecc report of ($projectId|$pipelineId)", ignored)
-            throw CodeccReportException("获取CodeCC报告失败")
+            throw TaskExecuteException(
+                errorCode = ErrorCode.SYSTEM_SERVICE_ERROR,
+                errorType = ErrorType.SYSTEM,
+                errorMsg = "获取CodeCC报告失败"
+            )
         }
+    }
+
+    fun getLanguageRuleSets(projectId: String, userId: String): Result<Map<String, Any>> {
+        val headers = mapOf(
+                AUTH_HEADER_DEVOPS_PROJECT_ID to projectId
+        )
+        val result = taskExecution(
+                body = mapOf(),
+                path = "/ms/defect/api/service/checkerSet/categoryList",
+                headers = headers,
+                method = "GET"
+        )
+        return objectMapper.readValue(result)
     }
 
     private fun genToolChecker(element: LinuxCodeCCScriptElement): List<ToolChecker> {
@@ -294,6 +322,7 @@ open class CodeccApi constructor(
             if (!gociLintToolSetId.isNullOrBlank()) map["GOCILINT"] = gociLintToolSetId!!
             if (!woodpeckerToolSetId.isNullOrBlank()) map["WOODPECKER_SENSITIVE"] = woodpeckerToolSetId!!
             if (!horuspyToolSetId.isNullOrBlank()) map["HORUSPY"] = horuspyToolSetId!!
+            if (!pinpointToolSetId.isNullOrBlank()) map["PINPOINT"] = pinpointToolSetId!!
         }
         return map
     }

@@ -26,11 +26,15 @@
 
 package com.tencent.devops.worker.common.utils
 
+import com.tencent.devops.common.api.exception.TaskExecuteException
+import com.tencent.devops.common.api.pojo.ErrorCode
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.log.Ansi
 import com.tencent.devops.store.pojo.app.BuildEnv
 import com.tencent.devops.worker.common.CommonEnv
 import com.tencent.devops.worker.common.WORKSPACE_ENV
 import com.tencent.devops.worker.common.logger.LoggerService
+import com.tencent.devops.worker.common.task.script.ScriptEnvUtils
 import java.io.File
 import java.nio.file.Files
 
@@ -68,7 +72,6 @@ object ShellUtil {
         "\n" +
         "        echo \$key=\$val  >> ##gateValueFile##\n" +
         "    }\n"
-    const val GATEWAY_FILE = "gatewayValueFile.ini"
 
     lateinit var buildEnvs: List<BuildEnv>
 
@@ -77,26 +80,38 @@ object ShellUtil {
     private val specialCharToReplace = Regex("['\n]") // --bug=75509999 Agent环境变量中替换掉破坏性字符
 
     fun execute(
+        buildId: String,
         script: String,
         dir: File,
         buildEnvs: List<BuildEnv>,
         runtimeVariables: Map<String, String>,
         continueNoneZero: Boolean = false,
+        systemEnvVariables: Map<String, String>? = null,
         prefix: String = ""
     ): String {
         return executeUnixCommand(
-            command = getCommandFile(script, dir, buildEnvs, runtimeVariables, continueNoneZero).canonicalPath,
+            command = getCommandFile(
+                buildId = buildId,
+                script = script,
+                dir = dir,
+                buildEnvs = buildEnvs,
+                runtimeVariables = runtimeVariables,
+                continueNoneZero = continueNoneZero,
+                systemEnvVariables = systemEnvVariables
+            ).canonicalPath,
             sourceDir = dir,
             prefix = prefix
         )
     }
 
     fun getCommandFile(
+        buildId: String,
         script: String,
         dir: File,
         buildEnvs: List<BuildEnv>,
         runtimeVariables: Map<String, String>,
-        continueNoneZero: Boolean = false
+        continueNoneZero: Boolean = false,
+        systemEnvVariables: Map<String, String>? = null
     ): File {
         val file = Files.createTempFile("devops_script", ".sh").toFile()
         file.deleteOnExit()
@@ -109,6 +124,12 @@ object ShellUtil {
 
         command.append("export $WORKSPACE_ENV=${dir.absolutePath}\n")
             .append("export DEVOPS_BUILD_SCRIPT_FILE=${file.absolutePath}\n")
+
+        // 设置系统环境变量
+        systemEnvVariables?.forEach { (name, value) ->
+            command.append("export $name=$value\n")
+        }
+
         val commonEnv = runtimeVariables.plus(CommonEnv.getCommonEnv())
             .filter {
                 !specialEnv(it.key, it.value)
@@ -166,8 +187,8 @@ object ShellUtil {
             command.append("set +e\n")
         }
 
-        command.append(setEnv.replace("##resultFile##", File(dir, "result.log").absolutePath))
-        command.append(setGateValue.replace("##gateValueFile##", File(dir, GATEWAY_FILE).absolutePath))
+        command.append(setEnv.replace("##resultFile##", File(dir, ScriptEnvUtils.getEnvFile(buildId)).absolutePath))
+        command.append(setGateValue.replace("##gateValueFile##", File(dir, ScriptEnvUtils.getQualityGatewayEnvFile()).absolutePath))
         command.append(script)
 
         file.writeText(command.toString())
@@ -181,7 +202,11 @@ object ShellUtil {
             return CommandLineUtils.execute(command, sourceDir, true, prefix)
         } catch (ignored: Throwable) {
             LoggerService.addNormalLine("Fail to run the command $command because of error(${ignored.message})")
-            throw ignored
+            throw throw TaskExecuteException(
+                errorType = ErrorType.SYSTEM,
+                errorCode = ErrorCode.SYSTEM_INNER_TASK_ERROR,
+                errorMsg = ignored.message ?: ""
+            )
         }
     }
 
