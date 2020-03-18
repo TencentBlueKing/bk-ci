@@ -46,6 +46,7 @@ import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.process.engine.common.Timeout
 import com.tencent.devops.process.engine.pojo.PipelineBuildStage
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildStageEvent
+import com.tencent.devops.process.engine.service.PipelineStageService
 import com.tencent.devops.process.pojo.mq.PipelineBuildContainerEvent
 import com.tencent.devops.process.service.PipelineSettingService
 import org.slf4j.LoggerFactory
@@ -64,7 +65,8 @@ class BuildMonitorControl @Autowired constructor(
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val pipelineSettingService: PipelineSettingService,
     private val pipelineRuntimeService: PipelineRuntimeService,
-    private val pipelineRuntimeExtService: PipelineRuntimeExtService
+    private val pipelineRuntimeExtService: PipelineRuntimeExtService,
+    private val pipelineStageService: PipelineStageService
 ) {
 
     private val logger = LoggerFactory.getLogger(javaClass)!!
@@ -120,7 +122,7 @@ class BuildMonitorControl @Autowired constructor(
 
     private fun monitorStage(event: PipelineBuildMonitorEvent): Boolean {
 
-        val stages = pipelineRuntimeService.listStages(event.buildId)
+        val stages = pipelineStageService.listStages(event.buildId)
             .filter {
                 !BuildStatus.isFinish(it.status)
             }
@@ -222,7 +224,7 @@ class BuildMonitorControl @Autowired constructor(
         logger.warn("[$buildId]|prepare_monitor_stage|stage=$stageId")
         var interval = 0
 
-        if (BuildStatus.isFinish(status) && BuildStatus.STAGE_SUCCESS != status) {
+        if (controlOption?.stageControlOption?.manualTrigger != true) {
             logger.info("[$buildId]|stage=$stageId| is $status")
             return interval
         }
