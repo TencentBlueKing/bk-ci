@@ -126,6 +126,7 @@ class AppCodeService(
                 return true
             }
         }
+        logger.info("appCode[$appCode] projectId[$projectId] openapi appCodeProjectCache no matched.")
         val appCodeGroup = appCodeGroupCache.get(appCode).second
         logger.info("appCode[$appCode] projectId[$projectId] openapi appCodeGroupCache:$appCodeGroup.")
         if(appCodeGroup != null) {
@@ -146,6 +147,7 @@ class AppCodeService(
                 }
             }
         }
+        logger.info("appCode[$appCode] projectId[$projectId] openapi appCodeGroupCache no matched.")
         return false
     }
 }
