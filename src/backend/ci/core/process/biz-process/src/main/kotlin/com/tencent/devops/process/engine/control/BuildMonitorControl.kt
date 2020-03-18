@@ -75,7 +75,7 @@ class BuildMonitorControl @Autowired constructor(
 
         val buildId = event.buildId
         val buildInfo = pipelineRuntimeService.getBuildInfo(buildId) ?: return false
-        if (BuildStatus.isFinish(buildInfo.status)) {
+        if (BuildStatus.isFinish(buildInfo.status) && buildInfo.status != BuildStatus.STAGE_SUCCESS) {
             logger.info("[$buildId]|monitor| is ${buildInfo.status}")
             return true
         }
@@ -90,7 +90,7 @@ class BuildMonitorControl @Autowired constructor(
 
     private fun monitorPipeline(event: PipelineBuildMonitorEvent): Boolean {
 
-        // 由于天数要求时间数值大，以INT的上限值作为下一次monitor时间
+        // 由于30天对应的毫秒数值过大，以Int的上限值作为下一次monitor时间
         val stageMinInterval = min(monitorStage(event), Int.MAX_VALUE.toLong()).toInt()
         val containerMinInterval = monitorContainer(event)
 
@@ -225,7 +225,7 @@ class BuildMonitorControl @Autowired constructor(
     }
 
     private fun PipelineBuildStage.checkNextStageMonitorIntervals(userId: String): Long {
-        var interval : Long = 0
+        var interval: Long = 0
 
         if (controlOption?.stageControlOption?.manualTrigger != true) {
             logger.info("[$buildId]|not_monitor_stage|stage=$stageId|manualTrigger != true")
