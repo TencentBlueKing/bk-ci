@@ -30,15 +30,12 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.mq.alert.AlertLevel
 import com.tencent.devops.dispatch.pojo.ContainerInfo
-import com.tencent.devops.dispatch.pojo.DockerHostBuildInfo
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.dockerhost.dispatch.AlertApi
 import com.tencent.devops.dockerhost.exception.ContainerException
 import com.tencent.devops.dockerhost.exception.NoSuchImageException
 import com.tencent.devops.dockerhost.service.DockerHostDebugService
-import com.tencent.devops.dockerhost.services.DockerHostBuildService
 import com.tencent.devops.dockerhost.utils.CommonUtils
-import com.tencent.devops.dockerhost.utils.MAX_CONTAINER_NUM
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
