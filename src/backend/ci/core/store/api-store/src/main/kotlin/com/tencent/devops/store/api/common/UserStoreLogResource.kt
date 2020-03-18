@@ -24,12 +24,13 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.api.atom
+package com.tencent.devops.store.api.common
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.log.model.pojo.QueryLogs
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -42,19 +43,22 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["USER_MARKET_ATOM_LOG"], description = "插件-日志")
-@Path("/user/market/atom/logs")
+@Api(tags = ["USER_STORE_LOG"], description = "研发商店-日志")
+@Path("/user/store/logs")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface UserMarketAtomLogResource {
+interface UserStoreLogResource {
 
     @ApiOperation("根据构建ID获取初始化所有日志")
     @GET
-    @Path("/{projectCode}/{pipelineId}/{buildId}/")
+    @Path("/types/{storeType}/projects/{projectCode}/pipelines/{pipelineId}/builds/{buildId}/")
     fun getInitLogs(
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
+        @ApiParam("研发商店组件类型", required = true)
+        @PathParam("storeType")
+        storeType: StoreTypeEnum,
         @ApiParam("项目代码", required = true)
         @PathParam("projectCode")
         projectCode: String,
@@ -80,11 +84,14 @@ interface UserMarketAtomLogResource {
 
     @ApiOperation("获取更多日志")
     @GET
-    @Path("/{projectCode}/{pipelineId}/{buildId}/more")
+    @Path("/types/{storeType}/projects/{projectCode}/pipelines/{pipelineId}/builds/{buildId}/more")
     fun getMoreLogs(
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
+        @ApiParam("研发商店组件类型", required = true)
+        @PathParam("storeType")
+        storeType: StoreTypeEnum,
         @ApiParam("项目代码", required = true)
         @PathParam("projectCode")
         projectCode: String,
@@ -116,11 +123,14 @@ interface UserMarketAtomLogResource {
 
     @ApiOperation("获取某行后的日志")
     @GET
-    @Path("/{projectCode}/{pipelineId}/{buildId}/after")
+    @Path("/types/{storeType}/projects/{projectCode}/pipelines/{pipelineId}/builds/{buildId}/after")
     fun getAfterLogs(
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
+        @ApiParam("研发商店组件类型", required = true)
+        @PathParam("storeType")
+        storeType: StoreTypeEnum,
         @ApiParam("项目代码", required = true)
         @PathParam("projectCode")
         projectCode: String,
