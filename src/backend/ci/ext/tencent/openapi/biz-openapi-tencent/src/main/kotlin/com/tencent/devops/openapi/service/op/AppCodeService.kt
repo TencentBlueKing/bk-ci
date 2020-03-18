@@ -118,8 +118,8 @@ class AppCodeService(
 
     fun validAppCode(appCode:String, projectId:String):Boolean {
         val appCodeProject = appCodeProjectCache.get(appCode)
+        logger.info("appCode[$appCode] projectId[$projectId] openapi appCodeProjectCache:$appCodeProject.")
         if(appCodeProject.isNotEmpty()) {
-            logger.info("appCode[$appCode] projectId[$projectId] openapi appCodeProjectCache:$appCodeProject.")
             val projectId = appCodeProject[projectId]
             if(projectId != null && projectId.isNotBlank()) {
                 logger.info("appCode[$appCode] projectId[$projectId] openapi appCodeProjectCache matched.")
@@ -127,8 +127,8 @@ class AppCodeService(
             }
         }
         val appCodeGroup = appCodeGroupCache.get(appCode).second
+        logger.info("appCode[$appCode] projectId[$projectId] openapi appCodeGroupCache:$appCodeGroup.")
         if(appCodeGroup != null) {
-            logger.info("appCode[$appCode] projectId[$projectId] openapi appCodeGroupCache:$appCodeGroup.")
             val projectInfo = client.get(ServiceProjectResource::class).get(projectId).data
             logger.info("appCode[$appCode] projectId[$projectId] openapi appCodeGroupCache projectInfo:$projectInfo.")
             if(projectInfo != null) {
