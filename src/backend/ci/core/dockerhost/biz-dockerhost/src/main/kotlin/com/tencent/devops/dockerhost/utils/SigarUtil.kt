@@ -26,9 +26,12 @@
 
 package com.tencent.devops.dockerhost.utils
 
+import org.hyperic.sigar.FileSystem
+import org.hyperic.sigar.FileSystemUsage
 import org.hyperic.sigar.Sigar
 import java.util.ArrayDeque
 import kotlin.math.roundToInt
+
 
 object SigarUtil {
 
@@ -40,11 +43,15 @@ object SigarUtil {
 
     private val cpuQueue = ArrayDeque<Int>()
 
-    private const val queueMaxSize = 10
+    private val diskQueue = ArrayDeque<Int>()
+
+    private const val queueMaxSize = 20
 
     private var queueMemValueSum = 0
 
     private var queueCpuValueSum = 0
+
+    private var queueDiskValueSum = 0
 
     fun loadEnable(): Boolean {
         return try {
@@ -72,6 +79,14 @@ object SigarUtil {
         }
     }
 
+    fun getAverageDiskLoad(): Int {
+        return try {
+            queueDiskValueSum / diskQueue.size
+        } catch (e: Exception) {
+            0
+        }
+    }
+
     fun pushMem() {
         val element = getMemUsedPercent()
         if (memQueue.size >= queueMaxSize) {
@@ -90,6 +105,16 @@ object SigarUtil {
 
         cpuQueue.push(element)
         queueCpuValueSum += element
+    }
+
+    fun pushDisk() {
+        val element = getDiskUsedPercent()
+        if (diskQueue.size >= queueMaxSize) {
+            queueDiskValueSum -= diskQueue.pollLast()
+        }
+
+        diskQueue.push(element)
+        queueDiskValueSum += element
     }
 
     fun getMemQueue(): ArrayDeque<Int> {
@@ -124,5 +149,56 @@ object SigarUtil {
         } else {
             0
         }
+    }
+
+    private fun getDiskUsedPercent(): Int {
+        val element = file().roundToInt()
+        return if (element in 0..100) {
+            element
+        } else {
+            0
+        }
+    }
+
+    @Throws(Exception::class)
+    private fun file(): Double {
+        var diskUsage = 0.0
+        val sigar = Sigar()
+        val fslist: Array<FileSystem> = sigar.fileSystemList
+        for (i in fslist.indices) {
+            println("分区的盘符名称$i")
+            val fs: FileSystem = fslist[i]
+            // 分区的盘符名称
+            println("盘符名称:    " + fs.devName)
+            // 分区的盘符名称
+            println("盘符路径:    " + fs.dirName)
+            println("盘符标志:    " + fs.flags) //
+            // 文件系统类型，比如 FAT32、NTFS
+            println("盘符类型:    " + fs.sysTypeName)
+            // 文件系统类型名，比如本地硬盘、光驱、网络文件系统等
+            println("盘符类型名:    " + fs.typeName)
+            // 文件系统类型
+            println("盘符文件系统类型:    " + fs.getType())
+            var usage: FileSystemUsage?
+            usage = sigar.getFileSystemUsage(fs.dirName)
+            when (fs.type) {
+                2 -> {
+                    // 文件系统总大小
+                    println(fs.devName.toString() + "总大小:    " + usage.total + "KB")
+                    // 文件系统剩余大小
+                    println(fs.devName.toString() + "剩余大小:    " + usage.free + "KB")
+                    // 文件系统可用大小
+                    println(fs.devName.toString() + "可用大小:    " + usage.avail + "KB")
+                    // 文件系统已经使用量
+                    println(fs.devName.toString() + "已经使用量:    " + usage.used + "KB")
+                    val usePercent = usage.usePercent * 100
+                    // 文件系统资源的利用率
+                    println(fs.devName.toString() + "资源的利用率:    " + usePercent + "%")
+                    diskUsage = usePercent
+                }
+            }
+        }
+
+        return diskUsage
     }
 }
