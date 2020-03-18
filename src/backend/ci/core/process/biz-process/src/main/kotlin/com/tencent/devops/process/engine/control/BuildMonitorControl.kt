@@ -259,7 +259,6 @@ class BuildMonitorControl @Autowired constructor(
                 executeCount = 1
             )
             logger.warn("[$buildId]|monitor_stage_timeout|stage=$stageId")
-            // 将改stage状态设为STAGE_SUCCESS
             pipelineStageService.cancelStage(userId, projectId, pipelineId, buildId, stageId)
         }
 
