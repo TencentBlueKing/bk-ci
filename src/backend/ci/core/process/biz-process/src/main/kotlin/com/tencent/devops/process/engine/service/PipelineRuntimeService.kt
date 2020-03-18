@@ -87,13 +87,7 @@ import com.tencent.devops.process.engine.pojo.event.PipelineBuildStageEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildStartEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildFinishEvent
 import com.tencent.devops.common.service.utils.SpringContextUtil
-import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION
-import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION_DESC
-import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION_PARAMS
-import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION_SUGGEST
-import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION_USERID
-import com.tencent.devops.process.engine.common.VMUtils
-import com.tencent.devops.process.engine.common.Timeout
+import com.tencent.devops.process.engine.common.*
 import com.tencent.devops.process.engine.pojo.BuildInfo
 import com.tencent.devops.process.engine.pojo.LatestRunningBuild
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
@@ -1226,7 +1220,7 @@ class PipelineRuntimeService @Autowired constructor(
             .stageStart(pipelineId, buildId, stageId)
         pipelineEventDispatcher.dispatch(
             PipelineBuildStageEvent(
-                source = "manual_trigger_stage",
+                source = BS_MANUAL_START_STAGE,
                 projectId = projectId,
                 pipelineId = pipelineId,
                 userId = userId,
