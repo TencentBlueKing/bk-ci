@@ -99,8 +99,6 @@ class StageControl @Autowired constructor(
 
             val fastKill = stage.controlOption?.fastKill == true && source == "CONTAINER_END_FAILED"
 
-            val reviewTimeout = stage.status == BuildStatus.PAUSE && actionType == ActionType.END
-
             logger.info("[$buildId]|[${buildInfo.status}]|STAGE_EVENT|event=$event|stage=$stage|needPause=$needPause|fastKill=$fastKill")
 
             // [终止事件]或[满足FastKill]或[等待审核超时] 直接结束流水线，不需要判断各个Stage的状态，可直接停止
@@ -128,18 +126,6 @@ class StageControl @Autowired constructor(
                 // 如果是因审核超时终止构建，流水线状态
                 pipelineBuildDetailService.updateStageStatus(buildId, stageId, buildStatus)
                 return sendTerminateEvent(javaClass.simpleName, buildStatus)
-            }
-
-            // 因审核超时直接取消继续构建
-            if (reviewTimeout) {
-                pipelineStageService.cancelStage(
-                    userId = userId,
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    buildId = buildId,
-                    stageId = stageId
-                )
-                return
             }
 
             // 仅在初次进入Stage时进行跳过判断
