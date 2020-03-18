@@ -280,7 +280,6 @@ class ExtServiceDao {
                 .set(SERVICE_STATUS_MSG, approveReq.message)
                 .set(LATEST_FLAG, latestFlag)
                 .set(PUB_TIME, pubTime)
-                .set(MODIFIER, userId)
                 .set(UPDATE_TIME, LocalDateTime.now())
                 .where(ID.eq(serviceId))
                 .execute()
