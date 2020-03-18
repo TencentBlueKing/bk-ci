@@ -1,7 +1,7 @@
 <template>
     <div :class="{ &quot;soda-accordion&quot;: true, &quot;is-danger&quot;: isError, &quot;showCheckbox&quot;: showCheckbox }">
         <header :active="isShow" @click="toggleContent" class="header">
-            <i class="bk-icon icon-angle-down" />
+            <i class="devops-icon icon-angle-down" />
             <slot name="header"></slot>
         </header>
         <transition name="slideLeft">
@@ -113,7 +113,7 @@
             > .header {
                 background-color: $fontWeightColor;
                 color: white;
-                .bk-icon {
+                .devops-icon {
                     display: none;
                 }
                 .var-header {

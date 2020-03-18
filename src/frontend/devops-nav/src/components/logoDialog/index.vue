@@ -24,7 +24,7 @@
                         accept="image/png, image/jpeg"
                         @change="fileChange"
                     >
-                    <label for="file"><i class="bk-icon icon-bk" />{{ $t('selectLogo') }}</label>
+                    <label for="file"><i class="devops-icon icon-bk" />{{ $t('selectLogo') }}</label>
                     <p class="logo-desc">
                         {{ $t('supportExtTips') }}
                     </p>

@@ -124,7 +124,7 @@
                     <div class="bk-form-item">
                         <label class="bk-label tip-bottom">{{ $t('template.applySetting') }}
                             <span v-bk-tooltips.bottom="$t('template.tipsSetting')" class="bottom-start">
-                                <i class="bk-icon icon-info-circle"></i>
+                                <i class="devops-icon icon-info-circle"></i>
                             </span>
                         </label>
                         <div class="bk-form-content">

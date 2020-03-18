@@ -1,8 +1,8 @@
 <template>
     <div class="select-input" v-bk-clickoutside="handleBlur">
         <input class="bk-form-input" v-bind="restProps" v-model="displayName" :disabled="disabled || loading" ref="inputArea" :title="value" autocomplete="off" @input="handleInput" @focus="handleFocus" @keypress.enter.prevent="handleEnterOption" @keydown.up.prevent="handleKeyup" @keydown.down.prevent="handleKeydown" @keydown.tab.prevent="handleBlur" />
-        <i v-if="loading" class="bk-icon icon-circle-2-1 option-fetching-icon spin-icon" />
-        <i v-else-if="!disabled && value" class="bk-icon icon-close-circle-shape option-fetching-icon" @click.stop="clearValue" />
+        <i v-if="loading" class="devops-icon icon-circle-2-1 option-fetching-icon spin-icon" />
+        <i v-else-if="!disabled && value" class="devops-icon icon-close-circle-shape option-fetching-icon" @click.stop="clearValue" />
         <div class="dropbox-container" v-show="hasOption && optionListVisible && !loading" ref="dropMenu">
             <ul>
                 <template v-if="hasGroup">

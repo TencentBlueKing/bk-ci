@@ -6,7 +6,7 @@
         }">
         <content-header class="info-header">
             <div slot="left">
-                <i class="bk-icon icon-arrows-left" @click="toNodeList"></i>
+                <i class="devops-icon icon-arrows-left" @click="toNodeList"></i>
                 <input type="text" class="bk-form-input display-name-input"
                     ref="nodeName"
                     v-if="editable"
@@ -17,14 +17,14 @@
                     @blur="saveName"
                     :class="{ 'is-danger': errors.has('nodeName') }" />
                 <span class="header-text" v-if="!editable">{{ nodeDetails.displayName }}</span>
-                <i class="bk-icon icon-edit" v-if="!editable && nodeDetails.canEdit" @click="editNodeName"></i>
+                <i class="devops-icon icon-edit" v-if="!editable && nodeDetails.canEdit" @click="editNodeName"></i>
             </div>
             <div slot="right" class="node-handle">
                 <span class="copy-btn" @click="copyHandle">
                     {{ nodeDetails.os === 'WINDOWS' ? $t('environment.nodeInfo.copyDownloadLink') : $t('environment.nodeInfo.copyInstallCommand')}}
                 </span>
                 <span class="download-btn" v-if="nodeDetails.os === 'WINDOWS'" @click="downloadHandle">{{ $t('environment.nodeInfo.downloadInstallationPackage') }}</span>
-                <i class="bk-icon icon-refresh" @click="refresh"></i>
+                <i class="devops-icon icon-refresh" @click="refresh"></i>
             </div>
         </content-header>
         <div class="sub-view-port" v-show="showContent">

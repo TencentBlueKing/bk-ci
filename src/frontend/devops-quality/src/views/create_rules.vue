@@ -6,7 +6,7 @@
         }">
         <div class="info-header">
             <div class="title">
-                <!-- <i class="bk-icon icon-arrows-left" @click="toRuleList"></i> -->
+                <!-- <i class="devops-icon icon-arrows-left" @click="toRuleList"></i> -->
                 <span class="header-text">{{ title }}</span>
             </div>
         </div>
@@ -26,9 +26,9 @@
                             <icon v-if="entry.name === '版本转测'" name="version-test" size="14" />
                             <icon v-if="entry.name === '发布上线'" name="release-online" size="14" />
                         </div>
-                        <i :class="{ &quot;bk-icon&quot;: true, &quot;label-icon&quot;: true, &quot;icon-placeholder&quot;: true }" v-else></i>
+                        <i :class="{ &quot;devops-icon&quot;: true, &quot;label-icon&quot;: true, &quot;icon-placeholder&quot;: true }" v-else></i>
                         <span class="card-label">{{ entry.name }}</span>
-                        <i class="bk-icon icon-check-circle-shape" v-if="curFastType === entry.hashId"></i>
+                        <i class="devops-icon icon-check-circle-shape" v-if="curFastType === entry.hashId"></i>
                     </li>
                 </ul>
             </div>
@@ -59,7 +59,7 @@
                             </bk-input>
                         </devops-form-item>
                         <p class="gateway-id-tips">
-                            <i class="bk-icon icon-info-circle"></i>
+                            <i class="devops-icon icon-info-circle"></i>
                             <span>若输入了ID（例如gate1），红线将只对名称以ID加下划线开头的控制点生效（例如gate1_XX）</span>
                         </p>
                         <bk-form-item label="描述" :property="'desc'">
@@ -74,7 +74,7 @@
                     </bk-form>
                     <p class="info-title" style="margin-top: 28px;">指标
                         <bk-popover placement="right">
-                            <i class="bk-icon icon-info-circle"></i>
+                            <i class="devops-icon icon-info-circle"></i>
                             <template slot="content">
                                 <p style="width: 200px; text-align: left; white-space: normal;word-break: break-all;font-weight: 400;">选择关注的指标并设置范围，不满足的流水线将会在控制点位置停住</p>
                             </template>
@@ -144,9 +144,9 @@
                                 />
                             </td>
                             <td>
-                                <i class="bk-icon icon-plus-circle-shape"
+                                <i class="devops-icon icon-plus-circle-shape"
                                     @click="selectMetadata(index)"></i>
-                                <i class="bk-icon icon-minus-circle-shape"
+                                <i class="devops-icon icon-minus-circle-shape"
                                     @click="reduceMetadata(row, index)"></i>
                             </td>
                         </tr>
@@ -157,7 +157,7 @@
                     </div>
                     <p class="info-title" style="margin-top: 28px;">控制点
                         <bk-popover placement="right">
-                            <i class="bk-icon icon-info-circle"></i>
+                            <i class="devops-icon icon-info-circle"></i>
                             <template slot="content">
                                 <p style="width: 200px; text-align: left; white-space: normal;word-break: break-all;font-weight: 400;">控制点插件需要满足全部指标条件才能顺利执行</p>
                             </template>
@@ -196,8 +196,8 @@
                             :property="'controlPointPosition'">
                             <bk-dropdown-menu @show="isDropdownShow = true" @hide="isDropdownShow = false" ref="dropdown">
                                 <bk-button type="primary" slot="dropdown-trigger">
-                                    <i class="bk-icon icon-plus select-effect-btn"></i><span>选择流水线</span>
-                                    <i :class="['bk-icon icon-angle-down',{ 'icon-flip': isDropdownShow }]"></i>
+                                    <i class="devops-icon icon-plus select-effect-btn"></i><span>选择流水线</span>
+                                    <i :class="['devops-icon icon-angle-down',{ 'icon-flip': isDropdownShow }]"></i>
                                 </bk-button>
                                 <ul class="bk-dropdown-list" slot="dropdown-content">
                                     <li><a href="javascript:;" @click="triggerHandler('pipeline')">单流水线</a></li>
@@ -285,7 +285,7 @@
                                                 <bk-checkbox :value="col.groupHashId" v-for="(col, index) in groupList" :key="index">
                                                     <span class="notice-name" :title="col.name">{{ col.name }}</span>
                                                     <bk-popover :delay="500" placement="top">
-                                                        <i class="bk-icon icon-member-list"></i>
+                                                        <i class="devops-icon icon-member-list"></i>
                                                         <template slot="content">
                                                             <p style="max-width: 300px; text-align: left; white-space: normal;word-break: break-all;font-weight: 400;">
                                                                 <span v-for="(entry, opIndex) in col.innerUsers" :key="opIndex">{{ entry.replace('"', '') }}<span v-if="opIndex !== (col.innerUsers.length - 1)">,</span></span>
@@ -294,7 +294,7 @@
                                                     </bk-popover>
                                                 </bk-checkbox>
                                                 <bk-checkbox class="add-group" :disabled="true" @click.native="toCreateGroup">
-                                                    <i class="bk-icon icon-plus-circle"></i>
+                                                    <i class="devops-icon icon-plus-circle"></i>
                                                     <span class="bk-checkbox-text create-group">新增通知组</span>
                                                 </bk-checkbox>
                                             </bk-checkbox-group>
@@ -1634,7 +1634,7 @@
                 .bk-select-name {
                     height: 36px;
                 }
-                .bk-icon,
+                .devops-icon,
                 input {
                     border-radius: 0;
                     border-color: #DDE4EB;

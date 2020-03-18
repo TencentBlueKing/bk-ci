@@ -22,7 +22,7 @@
                             <p :class="errors.has('atomName') ? 'error-tips' : 'normal-tips'">{{ errors.first("atomName") }}</p>
                         </div>
                         <bk-popover placement="right">
-                            <i class="bk-icon icon-info-circle"></i>
+                            <i class="devops-icon icon-info-circle"></i>
                             <template slot="content">
                                 <p> {{ $t('store.插件名称不超过20个字符') }} </p>
                             </template>
@@ -73,7 +73,7 @@
                             }"
                             :class="{ 'is-danger': errors.has('introduction') }">
                         <bk-popover placement="left">
-                            <i class="bk-icon icon-info-circle"></i>
+                            <i class="devops-icon icon-info-circle"></i>
                             <template slot="content">
                                 <p> {{ $t('store.插件一句话简介，不超过70个字符。') }} </p>
                                 <p> {{ $t('store.展示在插件市场以及流水线选择插件页面。') }} </p>
@@ -95,7 +95,7 @@
                             @imgAdd="addImage"
                         />
                         <bk-popover placement="left">
-                            <i class="bk-icon icon-info-circle"></i>
+                            <i class="devops-icon icon-info-circle"></i>
                             <template slot="content">
                                 <p> {{ $t('store["插件详细介绍，请说明插件功能、使用场景、使用限制和受限解决方案[可选]、常见的失败原因和解决方案、以及接口人联系方式。"]') }} </p>
                                 <p> {{ $t('store.展示在插件市场查看插件详情界面，帮助用户快速了解插件和解决遇到的问题。') }} </p>

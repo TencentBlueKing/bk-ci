@@ -13,7 +13,7 @@
                 v-if="showNewServiveTips"
                 class="unread-icon"
             />
-            <i class="bk-icon icon-angle-down" />
+            <i class="devops-icon icon-angle-down" />
         </p>
         <transition name="fade">
             <div

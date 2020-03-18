@@ -35,9 +35,9 @@
                                 <!-- <div class="info-value" v-if="atomDetail.os">{{ atomOs(atomDetail.os) }}</div> -->
                                 <div class="info-value" v-if="atomDetail.os">{{ jobTypeMap[atomDetail.jobType] }}
                                     <span v-if="atomDetail.jobType === 'AGENT'">（
-                                        <i class="bk-icon icon-linux-view" v-if="atomDetail.os.indexOf('LINUX') !== -1"></i>
-                                        <i class="bk-icon icon-windows" v-if="atomDetail.os.indexOf('WINDOWS') !== -1"></i>
-                                        <i class="bk-icon icon-macos" v-if="atomDetail.os.indexOf('MACOS') !== -1"></i>）
+                                        <i class="devops-icon icon-linux-view" v-if="atomDetail.os.indexOf('LINUX') !== -1"></i>
+                                        <i class="devops-icon icon-windows" v-if="atomDetail.os.indexOf('WINDOWS') !== -1"></i>
+                                        <i class="devops-icon icon-macos" v-if="atomDetail.os.indexOf('MACOS') !== -1"></i>）
                                     </span>
                                 </div>
                             </div>
@@ -74,7 +74,7 @@
                             </div>
                         </div>
                         <div class="toggle-btn" v-if="isOverflow" @click="toggleShow()">{{ isDropdownShow ? $t('store.收起') : $t('store.展开') }}
-                            <i :class="['bk-icon icon-angle-down', { 'icon-flip': isDropdownShow }]"></i>
+                            <i :class="['devops-icon icon-angle-down', { 'icon-flip': isDropdownShow }]"></i>
                         </div>
                     </div>
                     <div class="item-form item-form-right">
@@ -346,7 +346,7 @@
             color: $primaryColor;
             text-align: right;
             cursor: pointer;
-            .bk-icon {
+            .devops-icon {
                 display: inline-block;
                 margin-left: 2px;
                 transition: all ease 0.2s;

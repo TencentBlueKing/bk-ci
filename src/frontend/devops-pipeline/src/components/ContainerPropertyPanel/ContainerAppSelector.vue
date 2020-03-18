@@ -18,8 +18,8 @@
             <bk-option v-for="item in versionList" :key="item.id" :id="item.id" :name="item.name">
             </bk-option>
         </bk-select>
-        <i v-if="addContainerApp && !disabled" @click="addContainerApp" class="bk-icon icon-plus"></i>
-        <i v-if="removeContainerApp && !disabled" @click="removeContainerApp(app)" class="bk-icon icon-minus"></i>
+        <i v-if="addContainerApp && !disabled" @click="addContainerApp" class="devops-icon icon-plus"></i>
+        <i v-if="removeContainerApp && !disabled" @click="removeContainerApp(app)" class="devops-icon icon-minus"></i>
     </div>
 </template>
 
@@ -97,7 +97,7 @@
             width: 44%;
             margin: 0 10px 0 0;
         }
-        .bk-icon {
+        .devops-icon {
             cursor: pointer;
             margin: 0 6px;
             &.icon-plus {

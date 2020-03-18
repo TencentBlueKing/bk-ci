@@ -1,7 +1,7 @@
 <template>
     <h3 class="component-tip">
         <span class="tip-icon">
-            <i class="bk-icon icon-info-circle-shape"></i>
+            <i class="devops-icon icon-info-circle-shape"></i>
         </span>
         <span class="tip-message" v-html="tip"></span>
     </h3>
@@ -130,7 +130,7 @@
             min-width: 44px;
             background-color: #ffb400;
             position: relative;
-            .bk-icon {
+            .devops-icon {
                 font-size: 18px;
                 color: #fff;
                 display: inline-block;

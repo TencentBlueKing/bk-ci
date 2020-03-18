@@ -13,7 +13,7 @@
                 <div class="rule-main-container">
                     <div class="rule-main-header">
                         <button class="bk-button bk-primary" @click="toCreateRule">
-                            <i class="bk-icon icon-plus"></i>
+                            <i class="devops-icon icon-plus"></i>
                             <span style="margin-left: 0;">创建规则</span>
                         </button>
                     </div>
@@ -771,7 +771,7 @@
             .bk-button {
                 padding: 0 10px 0 8px;
                 width: 106px;
-                .bk-icon {
+                .devops-icon {
                     font-size: 12px;
                 }
             }
