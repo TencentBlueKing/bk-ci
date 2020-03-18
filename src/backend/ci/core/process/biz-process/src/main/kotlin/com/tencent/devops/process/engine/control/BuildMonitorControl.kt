@@ -222,7 +222,7 @@ class BuildMonitorControl @Autowired constructor(
         logger.warn("[$buildId]|prepare_monitor_stage|stage=$stageId")
         var interval = 0
 
-        if (BuildStatus.STAGE_SUCCESS != status) {
+        if (BuildStatus.isFinish(status) && BuildStatus.STAGE_SUCCESS != status) {
             logger.info("[$buildId]|stage=$stageId| is $status")
             return interval
         }
