@@ -786,7 +786,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         val newStatus = getCompletEditStatus(isNormalUpgrade)
         val (checkResult, code) = checkServiceVersionOptRight(userId, serviceId, newStatus, isNormalUpgrade )
 
-        if (checkResult) {
+        if (!checkResult) {
             return MessageCodeUtil.generateResponseDataObject(code)
         }
         mediaList?.forEach {
@@ -1101,6 +1101,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         val fileItemList = taskDataMap.itemList
         if (fileServiceCode != serviceCode) {
             logger.warn("getServiceProps input serviceCode[$serviceCode], extension.json serviceCode[$fileServiceCode] ")
+            throw RuntimeException(MessageCodeUtil.getCodeLanMessage(StoreMessageCode.USER_SERVICE_CODE_DIFF))
         }
 
         if (fileItemList == null) {

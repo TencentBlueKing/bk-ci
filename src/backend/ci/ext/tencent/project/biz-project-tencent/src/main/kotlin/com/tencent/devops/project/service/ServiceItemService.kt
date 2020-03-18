@@ -211,7 +211,7 @@ class ServiceItemService @Autowired constructor(
             val serviceRecord = projectServiceDao.select(dslContext, serviceId.toLong())
             val serviceEntity = ExtServiceEntity(
                 id = serviceRecord!!.id.toString(),
-                name = serviceRecord.name.substringBefore(")")
+                name = serviceRecord.name.substringBefore("(")
             )
             projectServiceMap[serviceId] = serviceEntity
             serviceEntity
