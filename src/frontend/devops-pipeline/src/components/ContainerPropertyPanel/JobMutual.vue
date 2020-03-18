@@ -2,7 +2,7 @@
     <accordion show-checkbox :show-content="enableMutual" key="otherChoice" is-version="true">
         <header class="var-header" slot="header">
             <span>{{ $t('editPage.mutexGroup') }}</span>
-            <!--<i class="bk-icon icon-angle-down" style="display:block"></i>-->
+            <!--<i class="devops-icon icon-angle-down" style="display:block"></i>-->
             <input class="accordion-checkbox" :disabled="disabled" :checked="enableMutual" type="checkbox" @click.stop @change="toggleMutual" />
         </header>
         <div slot="content" class="bk-form bk-form-vertical" v-if="enableMutual">

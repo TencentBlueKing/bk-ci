@@ -36,7 +36,7 @@
                         <span>{{ $t('ticket.cert.upload') }}</span>
                     </div>
                 </a>
-                <span v-if="formData.jksFileName"><i class="bk-icon icon-check-circle"></i>{{ $t('ticket.cert.successfullyUpload') }}</span>
+                <span v-if="formData.jksFileName"><i class="devops-icon icon-check-circle"></i>{{ $t('ticket.cert.successfullyUpload') }}</span>
                 <p :class="errors.has('jksFileName') ? 'error-tips' : 'normal-tips'">{{ $t('ticket.cert.filePlaceholer') }}</p>
             </div>
         </div>

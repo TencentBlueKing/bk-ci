@@ -29,7 +29,7 @@
                     <label>{{copyUrl.label}}</label>
                     <p class="badge-item">
                         <bk-input readonly :value="copyUrl.url" disabled />
-                        <span class="bk-icon icon-clipboard copy-icon" :data-clipboard-text="copyUrl.url"></span>
+                        <span class="devops-icon icon-clipboard copy-icon" :data-clipboard-text="copyUrl.url"></span>
                     </p>
                 </div>
             </bk-form-item>
@@ -177,7 +177,7 @@
             .badge-item {
                 display: flex;
                 align-items: center;
-                .bk-icon {
+                .devops-icon {
                     font-size: 14px;
                     margin-left: 10px;
                 }

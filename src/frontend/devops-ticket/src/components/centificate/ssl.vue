@@ -36,7 +36,7 @@
                         <span>{{ $t('ticket.cert.upload') }}</span>
                     </div>
                 </a>
-                <span v-if="formData.serverCrtFileName"><i class="bk-icon icon-check-circle"></i>{{ $t('ticket.cert.successfullyUpload') }}</span>
+                <span v-if="formData.serverCrtFileName"><i class="devops-icon icon-check-circle"></i>{{ $t('ticket.cert.successfullyUpload') }}</span>
                 <p :class="errors.has('serverCrtFileName') ? 'error-tips' : 'normal-tips'">{{ $t('ticket.cert.certFileRule') }}</p>
             </div>
         </div>
@@ -59,7 +59,7 @@
                         <span>{{ $t('ticket.cert.upload') }}</span>
                     </div>
                 </a>
-                <span v-if="formData.serverKeyFileName"><i class="bk-icon icon-check-circle"></i>{{ $t('ticket.cert.successfullyUpload') }}</span>
+                <span v-if="formData.serverKeyFileName"><i class="devops-icon icon-check-circle"></i>{{ $t('ticket.cert.successfullyUpload') }}</span>
                 <p :class="errors.has('serverKeyFileName') ? 'error-tips' : 'normal-tips'">{{ $t('ticket.cert.keyFileRule') }}</p>
             </div>
         </div>
@@ -81,7 +81,7 @@
                         <span>{{ $t('ticket.cert.upload') }}</span>
                     </div>
                 </a>
-                <span v-if="formData.clientCrtFileName"><i class="bk-icon icon-check-circle"></i>{{ $t('ticket.cert.successfullyUpload') }}</span>
+                <span v-if="formData.clientCrtFileName"><i class="devops-icon icon-check-circle"></i>{{ $t('ticket.cert.successfullyUpload') }}</span>
                 <p class="normal-tips">{{ $t('ticket.cert.certFileRule') }}</p>
             </div>
         </div>
@@ -102,7 +102,7 @@
                         <span>{{ $t('ticket.cert.upload') }}</span>
                     </div>
                 </a>
-                <span v-if="formData.clientKeyFileName"><i class="bk-icon icon-check-circle"></i>{{ $t('ticket.cert.successfullyUpload') }}</span>
+                <span v-if="formData.clientKeyFileName"><i class="devops-icon icon-check-circle"></i>{{ $t('ticket.cert.successfullyUpload') }}</span>
                 <p class="normal-tips">{{ $t('ticket.cert.keyFileRule') }}</p>
             </div>
         </div>

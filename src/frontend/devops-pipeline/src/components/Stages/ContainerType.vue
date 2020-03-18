@@ -28,18 +28,18 @@
                         )
                     case container.isError:
                         iconProps = {
-                            class: 'bk-icon icon-exclamation-triangle-shape is-danger'
+                            class: 'devops-icon icon-exclamation-triangle-shape is-danger'
                         }
                         break
                     case isVmContainer(container):
                         iconProps = {
-                            class: `bk-icon icon-${baseOS.toLowerCase()}`,
+                            class: `devops-icon icon-${baseOS.toLowerCase()}`,
                             title: vmNames.join(',')
                         }
                         break
                     case isNormalContainer(container):
                         iconProps = {
-                            class: 'bk-icon icon-none'
+                            class: 'devops-icon icon-none'
                         }
                         break
                     case isTriggerContainer(container):
@@ -73,7 +73,7 @@
         font-size: 12px;
         margin-right: 12px;
         font-style: normal;
-        .bk-icon {
+        .devops-icon {
             font-size: 18px;
             &.icon-exclamation-triangle-shape {
                 font-size: 14px;

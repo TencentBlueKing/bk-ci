@@ -36,7 +36,7 @@
                         <span>{{ $t('ticket.cert.upload') }}</span>
                     </div>
                 </a>
-                <span v-if="formData.p12FileName"><i class="bk-icon icon-check-circle"></i>{{ $t('ticket.cert.successfullyUpload') }}</span>
+                <span v-if="formData.p12FileName"><i class="devops-icon icon-check-circle"></i>{{ $t('ticket.cert.successfullyUpload') }}</span>
                 <p :class="errors.has('p12FileName') ? 'error-tips' : 'normal-tips'">{{ $t('ticket.cert.p12FileRule') }}</p>
             </div>
         </div>
@@ -84,7 +84,7 @@
                         <span>{{ $t('ticket.cert.upload') }}</span>
                     </div>
                 </a>
-                <span v-if="formData.mobileProvisionFileName"><i class="bk-icon icon-check-circle"></i>{{ $t('ticket.cert.successfullyUpload') }}</span>
+                <span v-if="formData.mobileProvisionFileName"><i class="devops-icon icon-check-circle"></i>{{ $t('ticket.cert.successfullyUpload') }}</span>
                 <p :class="errors.has('mobileProvisionFileName') ? 'error-tips' : 'normal-tips'">{{ $t('ticket.cert.remarkFileRule') }}</p>
             </div>
         </div>

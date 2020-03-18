@@ -21,7 +21,7 @@
                     <h3>{{ entry.label }}<span class="add-view-btn" v-if="index === 2" @click="routeTocreateView()">{{ $t('view.addView') }}</span></h3>
                     <div class="view-box" v-for="(view, viewIndex) in entry.viewList" :key="viewIndex">
                         <span class="view-title">{{ view.name }}</span>
-                        <i class="bk-icon icon-plus-square" :class="{ 'is-selected': isIncludeCommonly(view.id) || commonlyViews.length === 7 }"
+                        <i class="devops-icon icon-plus-square" :class="{ 'is-selected': isIncludeCommonly(view.id) || commonlyViews.length === 7 }"
                             @click="addHandler(view)"></i>
                     </div>
                 </li>

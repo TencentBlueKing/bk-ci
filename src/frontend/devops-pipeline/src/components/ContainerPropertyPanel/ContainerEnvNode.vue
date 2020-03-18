@@ -19,7 +19,7 @@
             >
                 <template>
                     <div class="bk-selector-create-item cursor-pointer" @click.stop.prevent="addThridSlave">
-                        <i class="bk-icon icon-plus-circle"></i>
+                        <i class="devops-icon icon-plus-circle"></i>
                         <span class="text">{{ $t('editPage.addThirdSlave') }}</span>
                     </div>
                 </template>

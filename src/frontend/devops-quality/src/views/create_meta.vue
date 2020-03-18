@@ -7,10 +7,10 @@
         <section class="sub-view-port" v-if="showContent">
             <div class="info-header">
                 <div class="title">
-                    <i class="bk-icon icon-arrows-left" @click="toMetaDataList()"></i>
+                    <i class="devops-icon icon-arrows-left" @click="toMetaDataList()"></i>
                     <span class="header-text">{{ title }}</span>
                 </div>
-                <!-- <a class="job-guide" @click="linkToDocs">脚本任务指标使用指南<i class="bk-icon icon-tiaozhuan"></i></a> -->
+                <!-- <a class="job-guide" @click="linkToDocs">脚本任务指标使用指南<i class="devops-icon icon-tiaozhuan"></i></a> -->
             </div>
             <div class="create-meta-content">
                 <p class="info-title">基本信息</p>

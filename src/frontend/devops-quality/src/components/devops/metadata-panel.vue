@@ -5,7 +5,7 @@
                 <input class="bk-form-input" type="text" placeholder="请输入..."
                     v-model="searchKey"
                     @keyup.enter="toSearch()">
-                <i class="bk-icon icon-search" @click="toSearch()"></i>
+                <i class="devops-icon icon-search" @click="toSearch()"></i>
             </div>
         </div>
         <div class="metadata-panel-container">
@@ -66,7 +66,7 @@
                             <div class="task-desc" :title="task.desc">{{ task.desc }}</div>
                             <div class="dropdown-icon" :class="{ 'hide': !task.indicators.length }">
                                 <i :class="{
-                                    'bk-icon': true,
+                                    'devops-icon': true,
                                     'icon-angle-double-right': true,
                                     'icon-flip': task.isDropdownShow
                                 }"></i>
@@ -114,7 +114,7 @@
                                     <div class="task-desc" :title="task.desc">{{ task.desc }}</div>
                                     <div class="dropdown-icon" :class="{ 'hide': !task.items.length }">
                                         <i :class="{
-                                            'bk-icon': true,
+                                            'devops-icon': true,
                                             'icon-angle-double-right': true,
                                             'icon-flip': task.isDropdownShow
                                         }"></i>
@@ -563,7 +563,7 @@
                 display: flex;
                 line-height: 22px;
             }
-            .bk-icon {
+            .devops-icon {
                 margin-right: 20px;
                 font-size: 24px;
                 color: #C3CDD7;

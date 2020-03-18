@@ -2,7 +2,7 @@
     <div class="env-detail-wrapper">
         <content-header class="env-detail-header">
             <template slot="left">
-                <i class="bk-icon icon-arrows-left" @click="toEnvList"></i>
+                <i class="devops-icon icon-arrows-left" @click="toEnvList"></i>
                 {{ curEnvDetail.name }}
             </template>
         </content-header>
@@ -122,7 +122,7 @@
                                         name="confvalue"
                                         @input="errorHandler.valueError = false"
                                         :class="{ 'is-danger': errorHandler.valueError }">
-                                    <i class="bk-icon" :class="curIsPlaintext ? 'icon-eye' : 'icon-hide'"
+                                    <i class="devops-icon" :class="curIsPlaintext ? 'icon-eye' : 'icon-hide'"
                                         v-if="(row.isCreateItem || row.isEditItem) && row.isSecure === 'ciphertext'"
                                         @click="curIsPlaintext = !curIsPlaintext"></i>
                                     <span class="config-name"
@@ -173,7 +173,7 @@
                                 </div>
                                 <p v-else class="env-base cur-env-name"><span class="env-name-content">{{ curEnvDetail.name }}</span></p>
                                 <div class="handler-btn">
-                                    <i class="bk-icon icon-edit" v-if="!isEditingName" @click="toEditBaseForm('name')"></i>
+                                    <i class="devops-icon icon-edit" v-if="!isEditingName" @click="toEditBaseForm('name')"></i>
                                     <span class="edit-base" v-if="isEditingName" @click="saveEnvDetail('name')">{{ $t('environment.save') }}</span>
                                     <span class="edit-base" v-if="isEditingName" @click="cancelEnvDetail('name')">{{ $t('environment.cancel') }}</span>
                                 </div>
@@ -193,7 +193,7 @@
                                     <span v-else>--</span>
                                 </p>
                                 <div class="handler-btn">
-                                    <i class="bk-icon icon-edit" v-if="!isEditingDesc" @click="toEditBaseForm('desc')"></i>
+                                    <i class="devops-icon icon-edit" v-if="!isEditingDesc" @click="toEditBaseForm('desc')"></i>
                                     <span class="edit-base" v-if="isEditingDesc" @click="saveEnvDetail('desc')">{{ $t('environment.save') }}</span>
                                     <span class="edit-base" v-if="isEditingDesc" @click="cancelEnvDetail('desc')">{{ $t('environment.cancel') }}</span>
                                 </div>
@@ -214,7 +214,7 @@
                                     <span v-if="curEnvDetail.envType === 'BUILD'">{{ $t('environment.envInfo.buildEnvType') }}</span>
                                 </p>
                                 <div class="handler-btn" v-if="curEnvDetail.envType !== 'BUILD'">
-                                    <i class="bk-icon icon-edit" v-if="!isEditingType" @click="toEditBaseForm('type')"></i>
+                                    <i class="devops-icon icon-edit" v-if="!isEditingType" @click="toEditBaseForm('type')"></i>
                                     <span class="edit-base" v-if="isEditingType" @click="saveEnvDetail('type')">{{ $t('environment.save') }}</span>
                                     <span class="edit-base" v-if="isEditingType" @click="cancelEnvDetail('type')">{{ $t('environment.cancel') }}</span>
                                 </div>
@@ -1262,7 +1262,7 @@
             padding-right: 10px;
             color: #ffbf00;
 
-            .bk-icon {
+            .devops-icon {
                 margin-right: 6px;
             }
         }
@@ -1296,7 +1296,7 @@
         .config-item-value {
             position: relative;
 
-            .bk-icon {
+            .devops-icon {
                 position: absolute;
                 top: 9px;
                 right: 30px;

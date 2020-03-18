@@ -19,10 +19,10 @@
                 />
             </template>
             <template v-else>
-                <i class="bk-select-angle bk-icon icon-angle-down" />
+                <i class="bk-select-angle devops-icon icon-angle-down" />
                 <i
                     v-if="clearable && !isUnselected && !disabled && !readonly"
-                    class="bk-select-clear bk-icon icon-close"
+                    class="bk-select-clear devops-icon icon-close"
                     @click.prevent.stop="reset"
                 />
             </template>

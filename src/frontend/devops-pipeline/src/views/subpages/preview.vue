@@ -3,7 +3,7 @@
         <div class="scroll-container">
             <div class="execute-previe-content">
                 <div class="version-option" v-if="isVisibleVersion">
-                    <p class="item-title">{{ $t('preview.introVersion') }}：<i :class="['bk-icon icon-angle-down', { 'icon-flip': isDropdownShowVersion }]" @click="toggleIcon('version')"></i></p>
+                    <p class="item-title">{{ $t('preview.introVersion') }}：<i :class="['devops-icon icon-angle-down', { 'icon-flip': isDropdownShowVersion }]" @click="toggleIcon('version')"></i></p>
                     <pipeline-versions-form ref="versionForm"
                         v-if="isDropdownShowVersion"
                         :build-no="buildNo"
@@ -14,7 +14,7 @@
                     ></pipeline-versions-form>
                 </div>
                 <div class="global-params" v-if="paramList.length">
-                    <p class="item-title">{{ $t('template.pipelineVar') }}：<i :class="['bk-icon icon-angle-down', { 'icon-flip': isDropdownShowParam }]" @click="toggleIcon('params')"></i></p>
+                    <p class="item-title">{{ $t('template.pipelineVar') }}：<i :class="['devops-icon icon-angle-down', { 'icon-flip': isDropdownShowParam }]" @click="toggleIcon('params')"></i></p>
                     <pipeline-params-form ref="paramsForm" v-if="isDropdownShowParam" :param-values="paramValues" :handle-param-change="handleParamChange" :params="paramList"></pipeline-params-form>
                 </div>
                 <div class="execute-detail-option" v-if="pipeline">
@@ -304,7 +304,7 @@
             .item-title {
                 line-height: 36px;
                 border-bottom: 1px solid $borderWeightColor;
-                .bk-icon {
+                .devops-icon {
                     display: inline-block;
                     margin-left: 6px;
                     transition: all ease 0.2s;

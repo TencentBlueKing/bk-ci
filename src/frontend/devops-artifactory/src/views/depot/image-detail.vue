@@ -2,7 +2,7 @@
     <div class="biz-content" v-bkloading="{ isLoading: showLoading }">
         <div class="biz-top-bar">
             <div class="biz-image-detail-title">
-                <span class="bk-icon icon-arrows-left" style="color: #3c96ff; cursor: pointer; font-weight: 600;" @click="backImageLibrary"></span>
+                <span class="devops-icon icon-arrows-left" style="color: #3c96ff; cursor: pointer; font-weight: 600;" @click="backImageLibrary"></span>
                 {{imageName}}
             </div>
         </div>

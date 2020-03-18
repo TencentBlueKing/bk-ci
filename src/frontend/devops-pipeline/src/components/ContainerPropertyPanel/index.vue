@@ -32,11 +32,11 @@
                     >
                         <template>
                             <div class="bk-selector-create-item cursor-pointer" @click.stop.prevent="addThridSlave">
-                                <i class="bk-icon icon-plus-circle"></i>
+                                <i class="devops-icon icon-plus-circle"></i>
                                 <span class="text">{{ $t('editPage.addThirdSlave') }}</span>
                             </div>
                             <div v-if="container.baseOS === 'LINUX'" class="bk-selector-create-item cursor-pointer" @click.stop.prevent="addDockerImage">
-                                <i class="bk-icon icon-plus-circle"></i>
+                                <i class="devops-icon icon-plus-circle"></i>
                                 <span class="text">{{ $t('editPage.addImage') }}</span>
                             </div>
                         </template>
@@ -138,7 +138,7 @@
                 </form-field>
 
                 <div class="build-path-tips" v-if="hasBuildEnv">
-                    <div class="tips-icon"><i class="bk-icon icon-info-circle-shape"></i></div>
+                    <div class="tips-icon"><i class="devops-icon icon-info-circle-shape"></i></div>
                     <div class="tips-content">
                         <p class="tips-title">{{ $t('editPage.envDependencyTips') }}：</p>
                         <template v-for="(value, keys) in container.buildEnv">
@@ -717,7 +717,7 @@
     .app-selector-item {
         margin: 10px 0;
         &:last-child {
-            .bk-icon.icon-plus {
+            .devops-icon.icon-plus {
                 display: block;
             }
         }

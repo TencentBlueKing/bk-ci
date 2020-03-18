@@ -1,6 +1,6 @@
 <template>
     <span class="log-status readonly">
-        <i v-if="status === 'RUNNING' || status === 'PREPARE_ENV' || status === 'QUEUE' || status === 'LOOP_WAITING' || status === 'CALL_WAITING'" class="bk-icon icon-circle-2-1 executing" />
+        <i v-if="status === 'RUNNING' || status === 'PREPARE_ENV' || status === 'QUEUE' || status === 'LOOP_WAITING' || status === 'CALL_WAITING'" class="devops-icon icon-circle-2-1 executing" />
         <svg aria-hidden="true" v-if="status === 'WAITING'">
             <use xlink:href="#icon-build-waiting"></use>
         </svg>

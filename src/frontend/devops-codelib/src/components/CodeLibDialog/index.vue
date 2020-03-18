@@ -110,7 +110,7 @@
                                 :id="option.credentialId"
                                 :name="option.credentialId">
                                 <span>{{option.credentialId}}</span>
-                                <i class="bk-icon icon-edit2 cre-icon" @click.stop="goToEditCre(index)"></i>
+                                <i class="devops-icon icon-edit2 cre-icon" @click.stop="goToEditCre(index)"></i>
                             </bk-option>
                         </bk-select>
                         <span class="text-link" @click="addCredential">{{ $t('codelib.new') }}</span>

@@ -10,7 +10,7 @@
         }">
             <div class="pipeline-list-header">
                 <div class="title">选择流水线</div>
-                <div><i class="bk-icon icon-close" @click="cancel()" style="color: #C3CDD7;"></i></div>
+                <div><i class="devops-icon icon-close" @click="cancel()" style="color: #C3CDD7;"></i></div>
             </div>
             <div class="query-pipeline-row">
                 <!-- <bk-select v-model="sortType">
@@ -29,7 +29,7 @@
                     <input class="bk-form-input" type="text" placeholder="请输入..."
                         v-model="searchName"
                         @keyup.enter="toSearchPipeline()">
-                    <i class="bk-icon icon-search" @click="toSearchPipeline()"></i>
+                    <i class="devops-icon icon-search" @click="toSearchPipeline()"></i>
                 </div>
             </div>
             <div class="pipeline-content">

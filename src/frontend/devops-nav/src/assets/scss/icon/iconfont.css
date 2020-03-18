@@ -30,7 +30,7 @@
 .fa{
   font-family: FontAwesome !important;
 }
-.bk-icon {
+.devops-icon {
   /* use !important to prevent issues with browser extensions that change fonts */
   font-family: 'bk-icons-linear' !important;
   speak: none;

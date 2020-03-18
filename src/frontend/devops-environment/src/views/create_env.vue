@@ -2,7 +2,7 @@
     <div class="environment-create">
         <content-header class="env-header">
             <div slot="left" class="title">
-                <i class="bk-icon icon-arrows-left" @click="toEnvList"></i>
+                <i class="devops-icon icon-arrows-left" @click="toEnvList"></i>
                 <span class="header-text">{{ `${$t('environment.new')}${$t('environment.environment')}` }}</span>
             </div>
         </content-header>
