@@ -23,7 +23,7 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.store.service.atom.impl
+package com.tencent.devops.store.service.common.impl
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
@@ -34,27 +34,28 @@ import com.tencent.devops.log.model.pojo.QueryLogs
 import com.tencent.devops.store.dao.common.StoreMemberDao
 import com.tencent.devops.store.dao.common.StorePipelineRelDao
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import com.tencent.devops.store.service.atom.MarketAtomLogService
+import com.tencent.devops.store.service.common.StoreLogService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 /**
- * 插件市场-插件日志业务逻辑类
+ * 研发商店-日志业务逻辑类
  * since: 2019-08-15
  */
 @Service
-class MarketAtomLogServiceImpl @Autowired constructor(
+class StoreLogServiceImpl @Autowired constructor(
     private val client: Client,
     private val dslContext: DSLContext,
-    private val atomPipelineRelDao: StorePipelineRelDao,
+    private val storePipelineRelDao: StorePipelineRelDao,
     private val storeMemberDao: StoreMemberDao
-) : MarketAtomLogService {
-    private val logger = LoggerFactory.getLogger(MarketAtomLogServiceImpl::class.java)
+) : StoreLogService {
+    private val logger = LoggerFactory.getLogger(StoreLogServiceImpl::class.java)
 
     override fun getInitLogs(
         userId: String,
+        storeType: StoreTypeEnum,
         projectCode: String,
         pipelineId: String,
         buildId: String,
@@ -63,9 +64,9 @@ class MarketAtomLogServiceImpl @Autowired constructor(
         tag: String?,
         executeCount: Int?
     ): Result<QueryLogs?> {
-        logger.info("getInitLogs userId is:$userId,projectCode is:$projectCode,pipelineId is:$pipelineId,buildId is:$buildId")
+        logger.info("getInitLogs userId is:$userId,storeType is:$storeType,projectCode is:$projectCode,pipelineId is:$pipelineId,buildId is:$buildId")
         logger.info("getInitLogs isAnalysis is:$isAnalysis,queryKeywords is:$queryKeywords,tag is:$tag,executeCount is:$executeCount")
-        val validateResult = validateUserQueryPermission(pipelineId, userId)
+        val validateResult = validateUserQueryPermission(storeType, pipelineId, userId)
         logger.info("getInitLogs validateResult is:$validateResult")
         if (validateResult.isNotOk()) {
             return Result(status = validateResult.status, message = validateResult.message, data = null)
@@ -89,6 +90,7 @@ class MarketAtomLogServiceImpl @Autowired constructor(
 
     override fun getAfterLogs(
         userId: String,
+        storeType: StoreTypeEnum,
         projectCode: String,
         pipelineId: String,
         buildId: String,
@@ -98,9 +100,9 @@ class MarketAtomLogServiceImpl @Autowired constructor(
         tag: String?,
         executeCount: Int?
     ): Result<QueryLogs?> {
-        logger.info("getAfterLogs userId is:$userId,projectCode is:$projectCode,pipelineId is:$pipelineId,buildId is:$buildId,start is:$start")
-        logger.info("getAfterLogs isAnalysis is:$isAnalysis,queryKeywords is:$queryKeywords,tag is:$tag,executeCount is:$executeCount")
-        val validateResult = validateUserQueryPermission(pipelineId, userId)
+        logger.info("getAfterLogs userId is:$userId,storeType is:$storeType,projectCode is:$projectCode,pipelineId is:$pipelineId,buildId is:$buildId")
+        logger.info("getAfterLogs start is:$start,isAnalysis is:$isAnalysis,queryKeywords is:$queryKeywords,tag is:$tag,executeCount is:$executeCount")
+        val validateResult = validateUserQueryPermission(storeType, pipelineId, userId)
         logger.info("getAfterLogs validateResult is:$validateResult")
         if (validateResult.isNotOk()) {
             return Result(status = validateResult.status, message = validateResult.message, data = null)
@@ -125,6 +127,7 @@ class MarketAtomLogServiceImpl @Autowired constructor(
 
     override fun getMoreLogs(
         userId: String,
+        storeType: StoreTypeEnum,
         projectCode: String,
         pipelineId: String,
         buildId: String,
@@ -135,9 +138,9 @@ class MarketAtomLogServiceImpl @Autowired constructor(
         tag: String?,
         executeCount: Int?
     ): Result<QueryLogs?> {
-        logger.info("getMoreLogs userId is:$userId,projectCode is:$projectCode,pipelineId is:$pipelineId,buildId is:$buildId,num is:$num")
-        logger.info("getMoreLogs fromStart is:$fromStart,start is:$start,end is:$end,tag is:$tag,executeCount is:$executeCount")
-        val validateResult = validateUserQueryPermission(pipelineId, userId)
+        logger.info("getMoreLogs userId is:$userId,storeType is:$storeType,projectCode is:$projectCode,pipelineId is:$pipelineId,buildId is:$buildId")
+        logger.info("getMoreLogs num is:$num,fromStart is:$fromStart,start is:$start,end is:$end,tag is:$tag,executeCount is:$executeCount")
+        val validateResult = validateUserQueryPermission(storeType, pipelineId, userId)
         logger.info("getMoreLogs validateResult is:$validateResult")
         if (validateResult.isNotOk()) {
             return Result(status = validateResult.status, message = validateResult.message, data = null)
@@ -161,14 +164,14 @@ class MarketAtomLogServiceImpl @Autowired constructor(
         return queryLogsResult
     }
 
-    private fun validateUserQueryPermission(pipelineId: String, userId: String): Result<Boolean> {
+    private fun validateUserQueryPermission(storeType: StoreTypeEnum, pipelineId: String, userId: String): Result<Boolean> {
         // 查询是否是插件的成员，只有插件的成员才能看日志
-        val atomPipelineRelRecord = atomPipelineRelDao.getStorePipelineRelByPipelineId(dslContext, pipelineId)
-        logger.info("validateUserQueryPermission atomPipelineRelRecord is:$atomPipelineRelRecord")
-        if (null == atomPipelineRelRecord) {
+        val storePipelineRelRecord = storePipelineRelDao.getStorePipelineRelByPipelineId(dslContext, pipelineId)
+        logger.info("validateUserQueryPermission storePipelineRelRecord is:$storePipelineRelRecord")
+        if (null == storePipelineRelRecord) {
             return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_INVALID, arrayOf(pipelineId))
         }
-        val flag = storeMemberDao.isStoreMember(dslContext, userId, atomPipelineRelRecord.storeCode, StoreTypeEnum.ATOM.type.toByte())
+        val flag = storeMemberDao.isStoreMember(dslContext, userId, storePipelineRelRecord.storeCode, storeType.type.toByte())
         if (!flag) {
             return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED)
         }
