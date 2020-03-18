@@ -224,12 +224,12 @@ class BuildMonitorControl @Autowired constructor(
         logger.warn("[$buildId]|prepare_monitor_stage|stage=$stageId")
         var interval = 0
 
-        if (controlOption?.stageControlOption?.manualTrigger != true || status != BuildStatus.PAUSE) {
+        if (controlOption?.stageControlOption?.manualTrigger != true) {
             logger.info("[$buildId]|not_monitor_stage|stage=$stageId|status=$status")
             return interval
         }
         if (BuildStatus.isFinish(status)) {
-            logger.info("[$buildId]|not_monitor_stage|stage=$stageId|status=$status")
+            logger.info("[$buildId]|monitor_stage_finish|stage=$stageId|status=$status")
             return interval
         }
         logger.warn("[$buildId]|start_monitor_stage|stage=$stageId")
