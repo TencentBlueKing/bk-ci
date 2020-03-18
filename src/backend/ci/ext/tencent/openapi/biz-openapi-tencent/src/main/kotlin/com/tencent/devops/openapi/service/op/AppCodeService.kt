@@ -130,6 +130,7 @@ class AppCodeService(
         if(appCodeGroup != null) {
             logger.info("appCode[$appCode] projectId[$projectId] openapi appCodeGroupCache:$appCodeGroup.")
             val projectInfo = client.get(ServiceProjectResource::class).get(projectId).data
+            logger.info("appCode[$appCode] projectId[$projectId] openapi appCodeGroupCache projectInfo:$projectInfo.")
             if(projectInfo != null) {
                 if(appCodeGroup.centerId != null && projectInfo.centerId != null && appCodeGroup.centerId.toString() == projectInfo.centerId) {
                     logger.info("appCode[$appCode] projectId[$projectId] openapi appCodeGroupCache centerId matched.")
