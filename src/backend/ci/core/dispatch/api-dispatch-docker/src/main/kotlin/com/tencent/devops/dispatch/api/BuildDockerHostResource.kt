@@ -67,7 +67,7 @@ interface BuildDockerHostResource {
         hostTag: String
     ): Result<DockerHostBuildInfo>?
 
-/*    @ApiOperation("上报containerId")
+    @ApiOperation("上报containerId")
     @POST
     @Path("/containerId")
     fun reportContainerId(
@@ -83,7 +83,7 @@ interface BuildDockerHostResource {
         @ApiParam("hostTag", required = true)
         @QueryParam("hostTag")
         hostTag: String? = null
-    ): Result<Boolean>?*/
+    ): Result<Boolean>?
 
     @ApiOperation("回滚任务到队列里面")
     @POST
@@ -118,7 +118,7 @@ interface BuildDockerHostResource {
         hostTag: String
     ): Result<ContainerInfo>?
 
-/*    @ApiOperation("上报containerId")
+    @ApiOperation("上报containerId")
     @POST
     @Path("/reportDebugContainerId")
     fun reportDebugContainerId(
@@ -131,7 +131,7 @@ interface BuildDockerHostResource {
         @ApiParam("containerId", required = true)
         @QueryParam("containerId")
         containerId: String
-    ): Result<Boolean>?*/
+    ): Result<Boolean>?
 
     @ApiOperation("回滚debug任务到队列里面")
     @POST
