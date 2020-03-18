@@ -62,19 +62,19 @@ class TXBuildClusterCronConfiguration : SchedulingConfigurer {
                 Runnable { debugRunner.startBuild() }, 5 * 1000, 30 * 1000
             )
         )*/
-        scheduledTaskRegistrar.addFixedRateTask(
+/*        scheduledTaskRegistrar.addFixedRateTask(
             IntervalTask(
                 Runnable { debugRunner.endBuild() }, 10 * 1000, 60 * 1000
             )
-        )
+        )*/
         scheduledTaskRegistrar.addCronTask(
 //                { updateAgentRunner.update() }, "0 0 3 * * ?"
             { updateAgentRunner.update() }, downloadAgentCron!!
         )
     }
 
-    @Autowired
-    private lateinit var debugRunner: DebugRunner
+/*    @Autowired
+    private lateinit var debugRunner: DebugRunner*/
 
     @Autowired
     private lateinit var updateAgentRunner: UpdateAgentRunner
