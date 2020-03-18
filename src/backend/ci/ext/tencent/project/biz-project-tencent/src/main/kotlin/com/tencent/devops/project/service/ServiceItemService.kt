@@ -223,6 +223,7 @@ class ServiceItemService @Autowired constructor(
     fun queryItem(itemName: String?, serviceId: String?, page: Int?, pageSize: Int?): Result<ItemListVO> {
         val query = ItemQueryInfo(
             itemName = itemName,
+            itemStatus = ServiceItemStatusEnum.ENABLE,
             serviceId = serviceId,
             pageSize = pageSize,
             page = page

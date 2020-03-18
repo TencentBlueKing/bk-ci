@@ -4,6 +4,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.model.project.tables.TServiceItem
 import com.tencent.devops.model.project.tables.records.TServiceItemRecord
+import com.tencent.devops.project.api.pojo.enums.ServiceItemStatusEnum
 import com.tencent.devops.project.pojo.ItemCreateInfo
 import com.tencent.devops.project.pojo.ItemQueryInfo
 import com.tencent.devops.project.pojo.ItemUpdateInfo
@@ -83,7 +84,7 @@ class ServiceItemDao {
     fun delete(dslContext: DSLContext, userId: String, itemId: String) {
         with(TServiceItem.T_SERVICE_ITEM) {
             val baseStep = dslContext.update(this)
-            baseStep.set(ITEM_STATUS, "DELETE")
+            baseStep.set(ITEM_STATUS, ServiceItemStatusEnum.DELETE.name)
             baseStep.set(MODIFIER, userId)
             baseStep.set(UPDATE_TIME, LocalDateTime.now())
                 .where(ID.eq(itemId))
@@ -94,7 +95,7 @@ class ServiceItemDao {
     fun disable(dslContext: DSLContext, userId: String, itemId: String) {
         with(TServiceItem.T_SERVICE_ITEM) {
             val baseStep = dslContext.update(this)
-            baseStep.set(ITEM_STATUS, "DISABLE")
+            baseStep.set(ITEM_STATUS, ServiceItemStatusEnum.DISABLE.name)
             baseStep.set(MODIFIER, userId)
             baseStep.set(UPDATE_TIME, LocalDateTime.now())
                 .where(ID.eq(itemId))
@@ -105,7 +106,7 @@ class ServiceItemDao {
     fun enable(dslContext: DSLContext, userId: String, itemId: String) {
         with(TServiceItem.T_SERVICE_ITEM) {
             val baseStep = dslContext.update(this)
-            baseStep.set(ITEM_STATUS, "ENABLE")
+            baseStep.set(ITEM_STATUS, ServiceItemStatusEnum.ENABLE.name)
             baseStep.set(MODIFIER, userId)
             baseStep.set(UPDATE_TIME, LocalDateTime.now())
                 .where(ID.eq(itemId))
@@ -176,7 +177,7 @@ class ServiceItemDao {
     fun getItemByCode(dslContext: DSLContext, itemCode: String): TServiceItemRecord? {
         return with(TServiceItem.T_SERVICE_ITEM) {
             dslContext.selectFrom(this).where(
-                ITEM_CODE.eq(itemCode)
+                ITEM_CODE.eq(itemCode).and(ITEM_STATUS.eq(ServiceItemStatusEnum.ENABLE.name))
             ).fetchOne()
         }
     }
@@ -200,14 +201,14 @@ class ServiceItemDao {
     fun getItemByCodes(dslContext: DSLContext, itemCodes: Set<String>): Result<TServiceItemRecord?> {
         return with(TServiceItem.T_SERVICE_ITEM) {
             dslContext.selectFrom(this).where(
-                ITEM_CODE.`in`(itemCodes)
+                ITEM_CODE.`in`(itemCodes).and(ITEM_STATUS.eq(ServiceItemStatusEnum.ENABLE.name))
             ).fetch()
         }
     }
 
     fun getAllServiceItem(dslContext: DSLContext): Result<TServiceItemRecord>? {
         return with(TServiceItem.T_SERVICE_ITEM) {
-            dslContext.selectFrom(this)
+            dslContext.selectFrom(this).where(ITEM_STATUS.eq(ServiceItemStatusEnum.ENABLE.name))
                 .orderBy(CREATE_TIME.desc())
                 .fetch()
         }
