@@ -224,7 +224,7 @@ class BuildMonitorControl @Autowired constructor(
         logger.warn("[$buildId]|prepare_monitor_stage|stage=$stageId")
         var interval = 0
 
-        if (controlOption?.stageControlOption?.manualTrigger != true) {
+        if (controlOption?.stageControlOption?.manualTrigger != true || BuildStatus.isFinish(status)) {
             logger.info("[$buildId]|stage=$stageId| is $status")
             return interval
         }
