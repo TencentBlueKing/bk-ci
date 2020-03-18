@@ -50,6 +50,39 @@ class ExtServiceSearchService @Autowired constructor(
         labelInfoList.add(MarketMainItemLabel(LATEST, MessageCodeUtil.getCodeLanMessage(LATEST)))
         // 最火标签
         labelInfoList.add(MarketMainItemLabel(HOTTEST, MessageCodeUtil.getCodeLanMessage(HOTTEST)))
+        result.add(ExtServiceMainItemVo(
+            key = LATEST,
+            label = MessageCodeUtil.getCodeLanMessage(LATEST),
+            records = doList(
+                userId = userId,
+                userDeptList = userDeptList,
+                serviceName = null,
+                classifyCode = null,
+                labelCode = null,
+                score = null,
+                sortType = ExtServiceSortTypeEnum.UPDATE_TIME,
+                desc = true,
+                page = page,
+                pageSize = pageSize
+            ).records
+        ))
+
+        result.add(ExtServiceMainItemVo(
+            key = HOTTEST,
+            label = MessageCodeUtil.getCodeLanMessage(HOTTEST),
+            records = doList(
+                userId = userId,
+                userDeptList = userDeptList,
+                serviceName = null,
+                classifyCode = null,
+                labelCode = null,
+                score = null,
+                sortType = ExtServiceSortTypeEnum.DOWNLOAD_COUNT,
+                desc = true,
+                page = page,
+                pageSize = pageSize
+            ).records
+        ))
         val futureList = mutableListOf<SearchExtServiceVO>()
         val classifyList = extServiceDao.getAllServiceClassify(dslContext)
         classifyList?.forEach {
