@@ -44,12 +44,18 @@ class PipelineDockerIPInfoDao {
         idcIp: String,
         capacity: Int,
         used: Int,
+        cpuLoad: Int,
+        memLoad: Int,
+        diskLoad: Int,
         enable: Boolean
     ) {
         with(TDispatchPipelineDockerIpInfo.T_DISPATCH_PIPELINE_DOCKER_IP_INFO) {
             dslContext.update(this)
                 .set(CAPACITY, capacity)
                 .set(USED_NUM, used)
+                .set(CPU_LOAD, cpuLoad)
+                .set(MEM_LOAD, memLoad)
+                .set(DISK_LOAD, diskLoad)
                 .set(ENABLE, enable)
                 .set(GMT_MODIFIED, LocalDateTime.now())
                 .where(DOCKER_IP.eq(idcIp))
