@@ -72,7 +72,7 @@ class VmStatusScheduler @Autowired constructor(
                 logger.info("Docker VM $itDockerIp status fresh responseBody: $responseBody")
                 val response: Map<String, Any> = jacksonObjectMapper().readValue(responseBody)
                 if (response["status"] == 0) {
-                    val dockerHostLoad: Map<String, Any> = jacksonObjectMapper().readValue(response["data"] as String)
+                    val dockerHostLoad: Map<String, Any> = response["data"] as LinkedHashMap<String, Any>
                     val usedNum = dockerHostLoad["usedContainerNum"] as Int
                     val averageCpuLoad = dockerHostLoad["averageCpuLoad"] as Int
                     val averageMemLoad = dockerHostLoad["averageMemLoad"] as Int
