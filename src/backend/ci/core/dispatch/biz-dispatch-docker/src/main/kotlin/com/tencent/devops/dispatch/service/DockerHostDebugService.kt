@@ -164,7 +164,7 @@ class DockerHostDebugService @Autowired constructor(
             else -> throw UnknownImageType("imageCode:$imageCode,imageVersion:$imageVersion,imageType:$imageType")
         }
 
-        // 定向通知dockerhost
+        // 根据dockerIp定向调用dockerhost
         val url = "http://$dockerIp/api/docker/debug/start"
         val proxyUrl = "$idcProxy/proxy-devnet?url=${urlEncode(url)}"
         val requestBody = ContainerInfo(projectId, pipelineId, vmSeqId, PipelineTaskStatus.RUNNING.status, dockerImage,
@@ -202,7 +202,7 @@ class DockerHostDebugService @Autowired constructor(
                     )
                 }
                 response["status"] == 1 -> {
-                    // 重试策略
+                    // 因为母机负载问题，重试策略
 
                 }
                 else -> {
@@ -217,8 +217,50 @@ class DockerHostDebugService @Autowired constructor(
     fun deleteDebug(pipelineId: String, vmSeqId: String): Result<Boolean> {
         logger.info("Delete docker debug  pipelineId:($pipelineId), vmSeqId:($vmSeqId)")
 
-        // 状态标记为完成即可
-        pipelineDockerDebugDao.updateStatus(dslContext, pipelineId, vmSeqId, PipelineTaskStatus.DONE)
+        val pipelineDockerDebug = pipelineDockerDebugDao.getDebug(dslContext, pipelineId, vmSeqId)
+        if (pipelineDockerDebug != null) {
+            val projectId = pipelineDockerDebug.projectId
+            val dockerIp = pipelineDockerDebug.hostTag
+            // 根据dockerIp定向调用dockerhost
+            val url = "http://$dockerIp/api/docker/debug/stop"
+            val proxyUrl = "$idcProxy/proxy-devnet?url=${urlEncode(url)}"
+            val requestBody = ContainerInfo(projectId,
+                pipelineId,
+                vmSeqId,
+                pipelineDockerDebug.status,
+                pipelineDockerDebug.imageName,
+                pipelineDockerDebug.containerId,
+                pipelineDockerDebug.hostTag,
+                "",
+                pipelineDockerDebug.buildEnv,
+                pipelineDockerDebug.registryUser,
+                pipelineDockerDebug.registryPwd,
+                pipelineDockerDebug.imageType
+                )
+            val request = Request.Builder().url(proxyUrl)
+                .post(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), JsonUtil.toJson(requestBody)))
+                .addHeader("Accept", "application/json; charset=utf-8")
+                .addHeader("Content-Type", "application/json; charset=utf-8")
+                .build()
+
+            logger.info("[${projectId}|${pipelineId}] Stop debug Docker VM $dockerIp url: $proxyUrl, requestBody: ${JsonUtil.toJson(requestBody)}")
+            OkhttpUtils.doLongHttp(request).use { resp ->
+                val responseBody = resp.body()!!.string()
+                logger.info("[${projectId}|${pipelineId}] Stop debug Docker VM $dockerIp responseBody: $responseBody")
+                val response: Map<String, Any> = jacksonObjectMapper().readValue(responseBody)
+                when {
+                    response["status"] == 0 -> {
+
+                    }
+                    else -> {
+                        val msg = response["message"]
+                        logger.error("[$projectId|$pipelineId] Stop debug Docker VM failed. $msg")
+                        throw RuntimeException("Stop debug Docker VM failed. $msg")
+                    }
+                }
+            }
+        }
+
         return Result(0, "success")
     }
 
@@ -286,15 +328,15 @@ class DockerHostDebugService @Autowired constructor(
         }
     }
 
-/*    fun reportContainerId(pipelineId: String, vmSeqId: String, containerId: String): Result<Boolean>? {
+    fun reportContainerId(pipelineId: String, vmSeqId: String, containerId: String): Result<Boolean>? {
         logger.info("Docker host debug report containerId, pipelineId:$pipelineId, vmSeqId:$vmSeqId, containerId:$containerId")
 
         pipelineDockerDebugDao.updateContainerId(dslContext, pipelineId, vmSeqId, containerId)
 
         return Result(0, "success", true)
-    }*/
+    }
 
-/*    fun rollbackDebug(pipelineId: String, vmSeqId: String, shutdown: Boolean?, message: String?): Result<Boolean>? {
+    fun rollbackDebug(pipelineId: String, vmSeqId: String, shutdown: Boolean?, message: String?): Result<Boolean>? {
         logger.info("Rollback build, pipelineId:$pipelineId, vmSeqId:$vmSeqId")
 
         val redisLock = DockerHostDebugLock(redisOperation)
@@ -335,7 +377,7 @@ class DockerHostDebugService @Autowired constructor(
         }
 
         return Result(0, "success", true)
-    }*/
+    }
 
     fun endDebug(hostTag: String): Result<ContainerInfo>? {
         val redisLock = DockerHostDebugLock(redisOperation)
