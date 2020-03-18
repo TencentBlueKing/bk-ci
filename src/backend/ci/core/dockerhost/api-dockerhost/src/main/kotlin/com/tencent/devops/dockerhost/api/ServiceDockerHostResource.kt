@@ -31,6 +31,7 @@ import com.tencent.devops.dispatch.pojo.DockerHostBuildInfo
 import com.tencent.devops.dockerhost.pojo.CheckImageRequest
 import com.tencent.devops.dockerhost.pojo.CheckImageResponse
 import com.tencent.devops.dockerhost.pojo.DockerBuildParam
+import com.tencent.devops.dockerhost.pojo.DockerHostLoad
 import com.tencent.devops.dockerhost.pojo.DockerLogsResponse
 import com.tencent.devops.dockerhost.pojo.DockerRunParam
 import com.tencent.devops.dockerhost.pojo.DockerRunResponse
@@ -191,8 +192,8 @@ interface ServiceDockerHostResource {
         dockerHostBuildInfo: DockerHostBuildInfo
     ): Result<Boolean>
 
-    @ApiOperation("获取容器数量")
+    @ApiOperation("获取docker母机负载")
     @GET
-    @Path("/container/count")
-    fun getContainerCount(): Result<Int>
+    @Path("/host/load")
+    fun getDockerHostLoad(): Result<DockerHostLoad>
 }

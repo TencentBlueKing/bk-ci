@@ -58,9 +58,7 @@ class DockerHostClient @Autowired constructor(
 
     fun startBuild(
         event: PipelineAgentStartupEvent,
-        dockerIp: String,
-        retryTime: Int = 0,
-        unAvailableIpList: Set<String>? = null
+        dockerIp: String
     ) {
         val secretKey = ApiUtil.randomSecretKey()
         val id = pipelineDockerBuildDao.startBuild(
@@ -145,64 +143,7 @@ class DockerHostClient @Autowired constructor(
             ""
         )
 
-        logger.info("[${event.projectId}|${event.pipelineId}|${event.buildId}] Start build Docker VM $dockerIp requestBody: $requestBody")
-        val url = "http://$dockerIp/api/docker/build/start"
-        val proxyUrl = "$idcProxy/proxy-devnet?url=${urlEncode(url)}"
-        val request = Request.Builder().url(proxyUrl)
-            .post(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), JsonUtil.toJson(requestBody)))
-            .addHeader("Accept", "application/json; charset=utf-8")
-            .addHeader("Content-Type", "application/json; charset=utf-8")
-            .build()
-
-        logger.info("[${event.projectId}|${event.pipelineId}|${event.buildId}] Start build Docker VM $dockerIp url: $proxyUrl")
-        OkhttpUtils.doLongHttp(request).use { resp ->
-            val responseBody = resp.body()!!.string()
-            logger.info("[${event.projectId}|${event.pipelineId}|${event.buildId}] Start build Docker VM $dockerIp responseBody: $responseBody")
-            val response: Map<String, Any> = jacksonObjectMapper().readValue(responseBody)
-            when {
-                response["status"] == 0 -> {
-                    val containId = response["data"] as String
-                    logger.info("[${event.projectId}|${event.pipelineId}|${event.buildId}] update container: $containId")
-                    pipelineDockerTaskSimpleDao.updateContainerId(
-                        dslContext,
-                        event.pipelineId,
-                        event.vmSeqId,
-                        containId
-                    )
-                }
-                response["status"] == 1 -> {
-                    // status== 1 重试三次
-                    if (retryTime < 3) {
-                        val unAvailableIpListLocal: Set<String> = unAvailableIpList?.plus(dockerIp) ?: setOf(dockerIp)
-                        val retryTimeLocal = retryTime + 1
-                        // 当前IP不可用，重新获取可用ip
-                        val idcIpLocal = getAvailableDockerIp(unAvailableIpListLocal)
-                        startBuild(event, idcIpLocal, retryTimeLocal, unAvailableIpListLocal)
-                    } else {
-                        pipelineDockerTaskSimpleDao.updateStatus(
-                            dslContext,
-                            event.pipelineId,
-                            event.vmSeqId,
-                            VolumeStatus.FAILURE.status
-                        )
-
-                        logger.error("[${event.projectId}|${event.pipelineId}|${event.buildId}] Start build Docker VM failed, retry $retryTime times.")
-                        throw RuntimeException("Start build Docker VM failed, retry $retryTime times.")
-                    }
-                }
-                else -> {
-                    val msg = response["event"] as String
-                    logger.error("[${event.projectId}|${event.pipelineId}|${event.buildId}] Start build Docker VM failed, msg: $msg")
-                    pipelineDockerTaskSimpleDao.updateStatus(
-                        dslContext,
-                        event.pipelineId,
-                        event.vmSeqId,
-                        VolumeStatus.FAILURE.status
-                    )
-                    throw RuntimeException("Start build Docker VM failed, msg: $msg")
-                }
-            }
-        }
+        dockerBuildStart(dockerIp, requestBody, event)
     }
 
     fun endBuild(event: PipelineAgentShutdownEvent, dockerIp: String, containerId: String) {
@@ -275,6 +216,71 @@ class DockerHostClient @Autowired constructor(
         }
 
         return dockerIp
+    }
+
+    private fun dockerBuildStart(dockerIp: String,
+                                 requestBody: DockerHostBuildInfo,
+                                 event: PipelineAgentStartupEvent,
+                                 retryTime: Int = 0,
+                                 unAvailableIpList: Set<String>? = null) {
+        logger.info("[${event.projectId}|${event.pipelineId}|${event.buildId}|$retryTime] Start build Docker VM $dockerIp requestBody: $requestBody")
+        val url = "http://$dockerIp/api/docker/build/start"
+        val proxyUrl = "$idcProxy/proxy-devnet?url=${urlEncode(url)}"
+        val request = Request.Builder().url(proxyUrl)
+            .post(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), JsonUtil.toJson(requestBody)))
+            .addHeader("Accept", "application/json; charset=utf-8")
+            .addHeader("Content-Type", "application/json; charset=utf-8")
+            .build()
+
+        logger.info("[${event.projectId}|${event.pipelineId}|${event.buildId}] Start build Docker VM $dockerIp url: $proxyUrl")
+        OkhttpUtils.doLongHttp(request).use { resp ->
+            val responseBody = resp.body()!!.string()
+            logger.info("[${event.projectId}|${event.pipelineId}|${event.buildId}] Start build Docker VM $dockerIp responseBody: $responseBody")
+            val response: Map<String, Any> = jacksonObjectMapper().readValue(responseBody)
+            when {
+                response["status"] == 0 -> {
+                    val containId = response["data"] as String
+                    logger.info("[${event.projectId}|${event.pipelineId}|${event.buildId}] update container: $containId")
+                    pipelineDockerTaskSimpleDao.updateContainerId(
+                        dslContext,
+                        event.pipelineId,
+                        event.vmSeqId,
+                        containId
+                    )
+                }
+                response["status"] == 1 -> {
+                    // status== 1 重试三次
+                    if (retryTime < 3) {
+                        val unAvailableIpListLocal: Set<String> = unAvailableIpList?.plus(dockerIp) ?: setOf(dockerIp)
+                        val retryTimeLocal = retryTime + 1
+                        // 当前IP不可用，重新获取可用ip
+                        val idcIpLocal = getAvailableDockerIp(unAvailableIpListLocal)
+                        dockerBuildStart(idcIpLocal, requestBody, event, retryTimeLocal, unAvailableIpListLocal)
+                    } else {
+                        pipelineDockerTaskSimpleDao.updateStatus(
+                            dslContext,
+                            event.pipelineId,
+                            event.vmSeqId,
+                            VolumeStatus.FAILURE.status
+                        )
+
+                        logger.error("[${event.projectId}|${event.pipelineId}|${event.buildId}] Start build Docker VM failed, retry $retryTime times.")
+                        throw RuntimeException("Start build Docker VM failed, retry $retryTime times.")
+                    }
+                }
+                else -> {
+                    val msg = response["event"] as String
+                    logger.error("[${event.projectId}|${event.pipelineId}|${event.buildId}] Start build Docker VM failed, msg: $msg")
+                    pipelineDockerTaskSimpleDao.updateStatus(
+                        dslContext,
+                        event.pipelineId,
+                        event.vmSeqId,
+                        VolumeStatus.FAILURE.status
+                    )
+                    throw RuntimeException("Start build Docker VM failed, msg: $msg")
+                }
+            }
+        }
     }
 
     private fun urlEncode(s: String) = URLEncoder.encode(s, "UTF-8")
