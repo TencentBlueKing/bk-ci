@@ -59,7 +59,7 @@ class VmStatusScheduler @Autowired constructor(
             val itDockerIp = it.dockerIp as String
             val capacity = it.capacity as Int
             val enable = it.enable as Boolean
-            val url = "http://$itDockerIp/api/docker/container/count"
+            val url = "http://$itDockerIp/api/docker/host/load"
             val proxyUrl = "$idcProxy/proxy-devnet?url=${urlEncode(url)}"
             val request = Request.Builder().url(proxyUrl)
                 .addHeader("Accept", "application/json; charset=utf-8")
@@ -72,7 +72,11 @@ class VmStatusScheduler @Autowired constructor(
                 logger.info("Docker VM $itDockerIp status fresh responseBody: $responseBody")
                 val response: Map<String, Any> = jacksonObjectMapper().readValue(responseBody)
                 if (response["status"] == 0) {
-                    val usedNum = response["data"] as Int
+                    val dockerHostLoad: Map<String, Any> = jacksonObjectMapper().readValue(response["data"] as String)
+                    val usedNum = dockerHostLoad["usedContainerNum"] as Int
+                    val averageCpuLoad = dockerHostLoad["averageCpuLoad"] as Int
+                    val averageMemLoad = dockerHostLoad["averageMemLoad"] as Int
+                    val averageDiskLoad = dockerHostLoad["averageDiskLoad"] as Int
                     pipelineDockerIpInfoDao.update(dslContext, itDockerIp, capacity, usedNum, enable)
                 } else {
                     val msg = response["message"] as String

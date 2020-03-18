@@ -215,12 +215,11 @@ class DockerHostDebugService @Autowired constructor(
     }
 
     fun deleteDebug(pipelineId: String, vmSeqId: String): Result<Boolean> {
-        logger.info("Delete docker debug  pipelineId:($pipelineId), vmSeqId:($vmSeqId)")
-
         val pipelineDockerDebug = pipelineDockerDebugDao.getDebug(dslContext, pipelineId, vmSeqId)
         if (pipelineDockerDebug != null) {
             val projectId = pipelineDockerDebug.projectId
             val dockerIp = pipelineDockerDebug.hostTag
+
             // 根据dockerIp定向调用dockerhost
             val url = "http://$dockerIp/api/docker/debug/stop"
             val proxyUrl = "$idcProxy/proxy-devnet?url=${urlEncode(url)}"
@@ -231,7 +230,7 @@ class DockerHostDebugService @Autowired constructor(
                 pipelineDockerDebug.imageName,
                 pipelineDockerDebug.containerId,
                 pipelineDockerDebug.hostTag,
-                "",
+                pipelineDockerDebug.token,
                 pipelineDockerDebug.buildEnv,
                 pipelineDockerDebug.registryUser,
                 pipelineDockerDebug.registryPwd,
@@ -250,9 +249,10 @@ class DockerHostDebugService @Autowired constructor(
                 val response: Map<String, Any> = jacksonObjectMapper().readValue(responseBody)
                 when {
                     response["status"] == 0 -> {
-
+                        pipelineDockerDebugDao.deleteDebug(dslContext, pipelineDockerDebug.id)
                     }
                     else -> {
+                        pipelineDockerDebugDao.updateStatus(dslContext, pipelineId, vmSeqId, PipelineTaskStatus.FAILURE)
                         val msg = response["message"]
                         logger.error("[$projectId|$pipelineId] Stop debug Docker VM failed. $msg")
                         throw RuntimeException("Stop debug Docker VM failed. $msg")
@@ -406,9 +406,9 @@ class DockerHostDebugService @Autowired constructor(
             if (timeoutDebugTask.isNotEmpty) {
                 logger.info("There is ${timeoutDebugTask.size} debug task have/has already time out, clear it.")
                 for (i in timeoutDebugTask.indices) {
-                    logger.info("clear pipelineId:(${timeoutDebugTask[i].pipelineId}), vmSeqId:(${timeoutDebugTask[i].vmSeqId}), containerId:(${timeoutDebugTask[i].containerId})")
+                    logger.info("Delete timeout debug task, pipelineId:(${timeoutDebugTask[i].pipelineId}), vmSeqId:(${timeoutDebugTask[i].vmSeqId}), containerId:(${timeoutDebugTask[i].containerId})")
+                    deleteDebug(timeoutDebugTask[i].pipelineId, timeoutDebugTask[i].vmSeqId)
                 }
-                pipelineDockerDebugDao.updateTimeOutDebugTask(dslContext)
             }
         } finally {
             redisLock.unlock()
