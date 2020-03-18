@@ -83,25 +83,40 @@ class BuildMonitorControl @Autowired constructor(
         return when {
             BuildStatus.isReadyToRun(buildInfo.status) -> monitorQueueBuild(event, buildInfo)
             else -> {
-                monitorContainer(event)
-                monitorStage(event)
+                monitorPipeline(event)
             }
         }
     }
 
-    private fun monitorContainer(event: PipelineBuildMonitorEvent): Boolean {
+    private fun monitorPipeline(event: PipelineBuildMonitorEvent): Boolean {
+
+        val containerMinInterval = monitorContainer(event)
+        val stageMinInterval = monitorStage(event)
+
+        val minInterval = listOf(containerMinInterval, stageMinInterval).min()!!
+
+        if (minInterval < listOf(CONTAINER_MAX_MILLS, STAGE_MAX_MILLS).min()!!) {
+            logger.info("[${event.buildId}]|pipeline_monitor_continue|pipelineId=${event.pipelineId}")
+            event.delayMills = minInterval
+            pipelineEventDispatcher.dispatch(event)
+        }
+
+        return true
+    }
+
+    private fun monitorContainer(event: PipelineBuildMonitorEvent): Int {
 
         val containers = pipelineRuntimeService.listContainers(event.buildId)
             .filter {
                 !BuildStatus.isFinish(it.status)
             }
 
+        var minInterval = CONTAINER_MAX_MILLS
+
         if (containers.isEmpty()) {
             logger.info("[${event.buildId}]|monitor| have not need monitor job!")
-            return true
+            return minInterval
         }
-
-        var minInterval = CONTAINER_MAX_MILLS
 
         containers.forEach { container ->
             val interval = container.checkNextContainerMonitorIntervals(event.userId)
@@ -110,29 +125,22 @@ class BuildMonitorControl @Autowired constructor(
                 minInterval = interval
             }
         }
-
-        if (minInterval < CONTAINER_MAX_MILLS) {
-            logger.info("[${event.buildId}]|monitor_continue|pipelineId=${event.pipelineId}")
-            event.delayMills = minInterval
-            pipelineEventDispatcher.dispatch(event)
-        }
-
-        return true
+        return minInterval
     }
 
-    private fun monitorStage(event: PipelineBuildMonitorEvent): Boolean {
+    private fun monitorStage(event: PipelineBuildMonitorEvent): Int {
 
         val stages = pipelineStageService.listStages(event.buildId)
             .filter {
                 !BuildStatus.isFinish(it.status)
             }
 
+        var minInterval = STAGE_MAX_MILLS
+
         if (stages.isEmpty()) {
             logger.info("[${event.buildId}]|monitor| have not need monitor stage!")
-            return true
+            return minInterval
         }
-
-        var minInterval = STAGE_MAX_MILLS
 
         stages.forEach { stage ->
             val interval = stage.checkNextStageMonitorIntervals(event.userId)
@@ -142,13 +150,7 @@ class BuildMonitorControl @Autowired constructor(
             }
         }
 
-        if (minInterval < STAGE_MAX_MILLS) {
-            logger.info("[${event.buildId}]|monitor_continue|pipelineId=${event.pipelineId}")
-            event.delayMills = minInterval
-            pipelineEventDispatcher.dispatch(event)
-        }
-
-        return true
+        return minInterval
     }
 
     companion object {
@@ -221,7 +223,7 @@ class BuildMonitorControl @Autowired constructor(
     }
 
     private fun PipelineBuildStage.checkNextStageMonitorIntervals(userId: String): Int {
-        logger.warn("[$buildId]|prepare_monitor_stage|stage=$stageId")
+        logger.info("[$buildId]|prepare_monitor_stage|stage=$stageId")
         var interval = 0
 
         if (controlOption?.stageControlOption?.manualTrigger != true) {
@@ -232,7 +234,7 @@ class BuildMonitorControl @Autowired constructor(
             logger.info("[$buildId]|monitor_stage_finish|stage=$stageId|status=$status")
             return interval
         }
-        logger.warn("[$buildId]|start_monitor_stage|stage=$stageId")
+        logger.info("[$buildId]|start_monitor_stage|stage=$stageId")
 
         var hours = controlOption?.stageControlOption?.timeout ?: Timeout.DEFAULT_STAGE_TIMEOUT_HOURS
         if (hours <= 0 || hours > MAX_HOURS) {
