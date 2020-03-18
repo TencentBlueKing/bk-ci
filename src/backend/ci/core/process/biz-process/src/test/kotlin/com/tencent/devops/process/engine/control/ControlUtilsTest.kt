@@ -73,7 +73,9 @@ class ControlUtilsTest {
                             otherTask = nullObject,
                             customCondition = nullObject,
                             customVariables = nullObject,
-                            runCondition = RunCondition.PRE_TASK_FAILED_ONLY
+                            runCondition = RunCondition.PRE_TASK_FAILED_ONLY,
+                            retryCount = 0,
+                            retryWhenFailed = false
                         ), status
                     )
                 )
@@ -87,7 +89,9 @@ class ControlUtilsTest {
                             otherTask = nullObject,
                             customCondition = nullObject,
                             customVariables = nullObject,
-                            runCondition = RunCondition.PRE_TASK_FAILED_ONLY
+                            runCondition = RunCondition.PRE_TASK_FAILED_ONLY,
+                            retryCount = 0,
+                            retryWhenFailed = false
                         ), status
                     )
                 )
@@ -102,7 +106,9 @@ class ControlUtilsTest {
             ControlUtils.isEnable(
                 ElementAdditionalOptions(
                     enable = false, continueWhenFailed = false, timeout = 0, runCondition = null,
-                    otherTask = null, customCondition = null, customVariables = null
+                    otherTask = null, customCondition = null, customVariables = null,
+                    retryCount = 0,
+                    retryWhenFailed = false
                 )
             )
         )
@@ -110,7 +116,9 @@ class ControlUtilsTest {
             ControlUtils.continueWhenFailure(
                 ElementAdditionalOptions(
                     enable = true, continueWhenFailed = true, timeout = 0, runCondition = null,
-                    otherTask = null, customCondition = null, customVariables = null
+                    otherTask = null, customCondition = null, customVariables = null,
+                    retryCount = 0,
+                    retryWhenFailed = false
                 )
             )
         )
@@ -125,7 +133,9 @@ class ControlUtilsTest {
             ControlUtils.continueWhenFailure(
                 ElementAdditionalOptions(
                     enable = true, continueWhenFailed = false, timeout = 0, runCondition = null,
-                    otherTask = null, customCondition = null, customVariables = null
+                    otherTask = null, customCondition = null, customVariables = null,
+                    retryCount = 0,
+                    retryWhenFailed = false
                 )
             )
         )
@@ -133,7 +143,9 @@ class ControlUtilsTest {
             ControlUtils.continueWhenFailure(
                 ElementAdditionalOptions(
                     enable = true, continueWhenFailed = true, timeout = 0, runCondition = null,
-                    otherTask = null, customCondition = null, customVariables = null
+                    otherTask = null, customCondition = null, customVariables = null,
+                    retryCount = 0,
+                    retryWhenFailed = false
                 )
             )
         )
