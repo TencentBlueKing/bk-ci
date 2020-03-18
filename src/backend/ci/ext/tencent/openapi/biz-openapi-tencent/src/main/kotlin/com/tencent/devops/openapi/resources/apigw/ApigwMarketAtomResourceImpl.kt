@@ -44,7 +44,8 @@ class ApigwMarketAtomResourceImpl @Autowired constructor(private val client: Cli
         appCode: String?,
         apigwType: String?,
         atomCode: String,
-        userId: String): Result<AtomVersion?> {
+        userId: String
+    ): Result<AtomVersion?> {
         logger.info("get Atom By Code, atomCode($atomCode),userId($userId)")
         return client.get(ServiceMarketAtomResource::class).getAtomByCode(atomCode, userId)
     }
@@ -54,7 +55,7 @@ class ApigwMarketAtomResourceImpl @Autowired constructor(private val client: Cli
         apigwType: String?,
         atomCode: String,
         userId: String
-        ): Result<AtomStatistic> {
+    ): Result<AtomStatistic> {
         logger.info("get Atom Statistic By Code, atomCode($atomCode),userId($userId)")
         return client.get(ServiceMarketAtomResource::class).getAtomStatisticByCode(atomCode, userId)
     }

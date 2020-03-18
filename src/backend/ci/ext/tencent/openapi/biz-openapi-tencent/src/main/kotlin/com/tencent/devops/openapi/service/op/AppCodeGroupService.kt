@@ -28,7 +28,6 @@ package com.tencent.devops.openapi.service.op
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.model.openapi.tables.records.TAppCodeGroupRecord
 import com.tencent.devops.openapi.dao.AppCodeGroupDao
-import com.tencent.devops.openapi.dao.AppCodeProjectDao
 import com.tencent.devops.openapi.pojo.AppCodeGroup
 import com.tencent.devops.openapi.pojo.AppCodeGroupResponse
 import org.jooq.DSLContext
@@ -70,7 +69,7 @@ class AppCodeGroupService(
         return appCodeGroupDao.delete(dslContext, appCode)
     }
 
-    private fun tranform(record: TAppCodeGroupRecord):AppCodeGroupResponse {
+    private fun tranform(record: TAppCodeGroupRecord): AppCodeGroupResponse {
         return AppCodeGroupResponse(
             id = record.id,
             appCode = record.appCode,

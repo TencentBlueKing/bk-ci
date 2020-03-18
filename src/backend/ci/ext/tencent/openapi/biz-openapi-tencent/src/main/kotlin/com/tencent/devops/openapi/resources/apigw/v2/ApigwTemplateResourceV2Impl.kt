@@ -50,7 +50,8 @@ class ApigwTemplateResourceV2Impl @Autowired constructor(
         templateType: TemplateType?,
         storeFlag: Boolean?,
         page: Int?,
-        pageSize: Int?): Result<Page<TemplateModel>> {
+        pageSize: Int?
+    ): Result<Page<TemplateModel>> {
         return apigwTemplateService.listTemplateByOrganization(
             userId = userId,
             organizationType = organizationType,

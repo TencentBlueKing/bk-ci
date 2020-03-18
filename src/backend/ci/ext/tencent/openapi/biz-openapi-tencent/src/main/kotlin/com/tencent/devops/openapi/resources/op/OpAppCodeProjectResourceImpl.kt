@@ -29,7 +29,6 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.op.OpAppCodeProjectResource
 import com.tencent.devops.openapi.pojo.AppCodeProjectResponse
-import com.tencent.devops.openapi.service.op.AppCodeGroupService
 import com.tencent.devops.openapi.service.op.AppCodeProjectService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired

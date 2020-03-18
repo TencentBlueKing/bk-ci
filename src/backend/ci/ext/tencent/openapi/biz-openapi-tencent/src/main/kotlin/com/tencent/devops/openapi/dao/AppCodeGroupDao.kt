@@ -53,8 +53,8 @@ class AppCodeGroupDao {
                     .set(DEPT_NAME, appCodeGroup.deptName)
                     .set(CENTER_ID, appCodeGroup.centerId)
                     .set(CENTER_NAME, appCodeGroup.centerName)
-                    .set(UPDATER,userName)
-                    .set(UPDATE_TIME,now)
+                    .set(UPDATER, userName)
+                    .set(UPDATE_TIME, now)
                     .where(APP_CODE.eq(appCode))
                     .execute() > 0
             } else {
@@ -90,13 +90,12 @@ class AppCodeGroupDao {
     fun get(
         dslContext: DSLContext,
         appCode: String
-    ):TAppCodeGroupRecord? {
+    ): TAppCodeGroupRecord? {
         with(TAppCodeGroup.T_APP_CODE_GROUP) {
             return dslContext.selectFrom(this)
                 .where(APP_CODE.eq(appCode))
                 .fetchOne()
         }
-
     }
 
     fun list(
@@ -105,7 +104,6 @@ class AppCodeGroupDao {
         with(TAppCodeGroup.T_APP_CODE_GROUP) {
             return dslContext.selectFrom(this).fetch()
         }
-
     }
 
     fun exist(

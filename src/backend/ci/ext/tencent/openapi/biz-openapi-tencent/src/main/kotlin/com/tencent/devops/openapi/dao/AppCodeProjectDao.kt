@@ -26,7 +26,6 @@
 
 package com.tencent.devops.openapi.dao
 
-import com.tencent.devops.model.openapi.tables.TAppCodeGroup
 import com.tencent.devops.model.openapi.tables.TAppCodeProject
 import com.tencent.devops.model.openapi.tables.records.TAppCodeProjectRecord
 import org.jooq.DSLContext
@@ -42,7 +41,7 @@ class AppCodeProjectDao {
         appCode: String,
         projectId: String
     ): Boolean {
-        if(exist(dslContext, appCode, projectId)) return true
+        if (exist(dslContext, appCode, projectId)) return true
         with(TAppCodeProject.T_APP_CODE_PROJECT) {
             val now = LocalDateTime.now()
             return dslContext.insertInto(this,
@@ -56,7 +55,6 @@ class AppCodeProjectDao {
                 userName,
                 now
             ).execute() > 0
-
         }
     }
 
@@ -71,7 +69,6 @@ class AppCodeProjectDao {
                 .and(PROJECT_ID.eq(projectId))
                 .fetchOne()
         }
-
     }
 
     fun list(
@@ -80,7 +77,6 @@ class AppCodeProjectDao {
         with(TAppCodeProject.T_APP_CODE_PROJECT) {
             return dslContext.selectFrom(this).fetch()
         }
-
     }
 
     fun listByAppCode(
@@ -90,10 +86,7 @@ class AppCodeProjectDao {
         with(TAppCodeProject.T_APP_CODE_PROJECT) {
             return dslContext.selectFrom(this).where(APP_CODE.eq(appCode)).fetch()
         }
-
     }
-
-
 
     fun exist(
         dslContext: DSLContext,

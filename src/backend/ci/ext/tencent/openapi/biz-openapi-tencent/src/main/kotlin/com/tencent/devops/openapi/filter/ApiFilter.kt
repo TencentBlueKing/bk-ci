@@ -55,13 +55,12 @@ class ApiFilter : ContainerRequestFilter {
 
     private val excludeVeritfyPath = listOf("swagger.json", "external/service/versionInfo")
 
-
     override fun filter(requestContext: ContainerRequestContext) {
         // path为为空的时候，直接退出
         val path = requestContext.uriInfo.requestUri.path
         logger.info("uriInfo uriInfo[$path]")
         // 目录不是apigw的不做过滤
-        if(!path.startsWith("/api/apigw/") && !path.startsWith("/api/apigw-user/") && !path.startsWith("/api/apigw-app/")) {
+        if (!path.startsWith("/api/apigw/") && !path.startsWith("/api/apigw-user/") && !path.startsWith("/api/apigw-app/")) {
             return
         }
         if (!path.isNullOrBlank()) {
@@ -109,8 +108,8 @@ class ApiFilter : ContainerRequestFilter {
                 val verified = app.get("verified") as Boolean
                 if (apigwtType == "apigw-app" && (appCode.isNullOrEmpty() || !verified)) {
                     return false
-                }else {
-                    if(!appCode.isNullOrBlank()) {
+                } else {
+                    if (!appCode.isNullOrBlank()) {
                         // 将appCode头部置空
                         requestContext.headers[AUTH_HEADER_DEVOPS_APP_CODE]?.set(0, null)
                         if (requestContext.headers[AUTH_HEADER_DEVOPS_APP_CODE] != null) {
@@ -149,8 +148,6 @@ class ApiFilter : ContainerRequestFilter {
         }
         return true
     }
-
-
 
     private fun parseJwt(bkApiJwt: String, apigwtType: String?): JSONObject {
         var reader: PEMReader? = null

@@ -25,18 +25,11 @@
  */
 package com.tencent.devops.openapi.api.op
 
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
-import com.tencent.devops.common.api.pojo.BuildHistoryPage
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.openapi.pojo.AppCodeGroup
 import com.tencent.devops.openapi.pojo.AppCodeGroupResponse
-import com.tencent.devops.process.pojo.BuildHistory
-import com.tencent.devops.process.pojo.BuildHistoryWithVars
-import com.tencent.devops.process.pojo.BuildId
-import com.tencent.devops.process.pojo.BuildManualStartupInfo
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -45,11 +38,9 @@ import javax.ws.rs.DELETE
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
-import javax.ws.rs.PUT
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
-import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["OP_APP_CODE_GROUP"], description = "OP-AppCode组织架构资源")
@@ -93,7 +84,6 @@ interface OpAppCodeGroupResource {
         userName: String
     ): Result<List<AppCodeGroupResponse>>
 
-
     @ApiOperation("删除appCode的组织架构")
     @DELETE
     @Path("{appCode}")
@@ -105,5 +95,4 @@ interface OpAppCodeGroupResource {
         @PathParam("appCode")
         appCode: String
     ): Result<Boolean>
-
 }

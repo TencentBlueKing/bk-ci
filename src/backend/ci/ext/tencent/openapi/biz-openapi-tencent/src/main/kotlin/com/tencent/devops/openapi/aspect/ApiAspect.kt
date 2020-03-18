@@ -2,10 +2,11 @@ package com.tencent.devops.openapi.aspect
 
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.openapi.filter.ApiFilter
-import com.tencent.devops.openapi.service.op.AppCodeGroupService
 import com.tencent.devops.openapi.service.op.AppCodeService
 import org.aspectj.lang.JoinPoint
-import org.aspectj.lang.annotation.*
+import org.aspectj.lang.annotation.Aspect
+import org.aspectj.lang.annotation.Before
+
 import org.aspectj.lang.reflect.MethodSignature
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
@@ -26,10 +27,10 @@ class ApiAspect(
      * @param jp
      */
     @Before(
-        "execution(* com.tencent.devops.openapi.resources.apigw.*.*(..))"
-            + "||execution(* com.tencent.devops.openapi.resources.apigw.v2.*.*(..))"
-            + "||execution(* com.tencent.devops.openapi.resources.apigw.v2.app.*.*(..))"
-            + "||execution(* com.tencent.devops.openapi.resources.apigw.v2.user*.*(..))"
+        "execution(* com.tencent.devops.openapi.resources.apigw.*.*(..))" +
+            "||execution(* com.tencent.devops.openapi.resources.apigw.v2.*.*(..))" +
+            "||execution(* com.tencent.devops.openapi.resources.apigw.v2.app.*.*(..))" +
+            "||execution(* com.tencent.devops.openapi.resources.apigw.v2.user*.*(..))"
     ) // 所有controller包下面的所有方法的所有参数
     fun beforeMethod(jp: JoinPoint) {
 
@@ -38,10 +39,10 @@ class ApiAspect(
         // 参数value
         val parameterValue = jp.args
         // 参数key
-        val parameterNames =  (jp.signature as MethodSignature).parameterNames
-        var projectId:String? = null
-        var appCode:String? = null
-        var apigwType:String? = null
+        val parameterNames = (jp.signature as MethodSignature).parameterNames
+        var projectId: String? = null
+        var appCode: String? = null
+        var apigwType: String? = null
         parameterNames.forEach {
             logger.info("参数名[$it]")
         }
@@ -50,7 +51,7 @@ class ApiAspect(
             logger.info("参数值[$it]")
         }
         for (index in parameterValue.indices) {
-            when(parameterNames[index]) {
+            when (parameterNames[index]) {
                 "projectId" -> {
                     projectId = parameterValue[index]?.toString()
                 }
@@ -63,13 +64,13 @@ class ApiAspect(
                 else -> null
             }
         }
-        logger.info("请求类型apigwType[${apigwType}],appCode[$appCode],项目[${projectId}]")
-        if(projectId != null && appCode != null && (apigwType == "apigw-app")) {
-            logger.info("判断！！！！请求类型apigwType[${apigwType}],appCode[$appCode],是否有项目[${projectId}]的权限.")
-            if(appCodeService.validAppCode(appCode,projectId)) {
-                logger.info("请求类型apigwType[${apigwType}],appCode[$appCode],是否有项目[${projectId}]的权限【验证通过】")
-            }else {
-                val message = "请求类型apigwType[${apigwType}],appCode[$appCode],是否有项目[${projectId}]的权限【验证失败】"
+        logger.info("请求类型apigwType[$apigwType],appCode[$appCode],项目[$projectId]")
+        if (projectId != null && appCode != null && (apigwType == "apigw-app")) {
+            logger.info("判断！！！！请求类型apigwType[$apigwType],appCode[$appCode],是否有项目[$projectId]的权限.")
+            if (appCodeService.validAppCode(appCode, projectId)) {
+                logger.info("请求类型apigwType[$apigwType],appCode[$appCode],是否有项目[$projectId]的权限【验证通过】")
+            } else {
+                val message = "请求类型apigwType[$apigwType],appCode[$appCode],是否有项目[$projectId]的权限【验证失败】"
                 throw PermissionForbiddenException(
                     message = message
                 )
@@ -110,11 +111,11 @@ class ApiAspect(
 //        val methodName: String = jp.signature.name
 //        logger.error("【异常增强】the method 【$methodName】 occurs exception: ", e)
 //    }
-    /**
-     * 环绕增强：目标方法执行前后分别执行一些代码，发生异常的时候执行另外一些代码
-     *
-     * @return
-     */
+//    /**
+//     * 环绕增强：目标方法执行前后分别执行一些代码，发生异常的时候执行另外一些代码
+//     *
+//     * @return
+//     */
 /*    @Around(value = "execution(* com.wuychn.springbootaspect.controller.*.*(..))")
     public Object aroundMethod(ProceedingJoinPoint jp) {
         String methodName = jp.getSignature().getName();

@@ -60,7 +60,8 @@ class ApigwProjectResourceImpl @Autowired constructor(private val client: Client
         appCode: String?,
         apigwType: String?,
         userId: String,
-        projectId: String): Result<ProjectVO?> {
+        projectId: String
+    ): Result<ProjectVO?> {
         logger.info("Get a project info ,projectId:$projectId")
         return client.get(ServiceProjectResource::class).get(projectId)
     }

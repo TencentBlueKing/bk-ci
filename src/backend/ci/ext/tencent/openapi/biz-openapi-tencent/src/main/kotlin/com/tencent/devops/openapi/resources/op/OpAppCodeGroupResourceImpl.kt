@@ -58,5 +58,4 @@ class OpAppCodeGroupResourceImpl @Autowired constructor(
     override fun deleteGroup(userName: String, appCode: String): Result<Boolean> {
         return Result(appCodeGroupService.deleteGroup(userName, appCode))
     }
-
 }

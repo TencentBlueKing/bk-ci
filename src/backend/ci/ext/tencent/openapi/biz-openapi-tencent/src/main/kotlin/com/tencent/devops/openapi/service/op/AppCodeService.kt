@@ -27,15 +27,9 @@ package com.tencent.devops.openapi.service.op
 
 import com.google.common.cache.CacheBuilder
 import com.google.common.cache.CacheLoader
-import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.model.openapi.tables.records.TAppCodeGroupRecord
-import com.tencent.devops.openapi.dao.AppCodeGroupDao
-import com.tencent.devops.openapi.dao.AppCodeProjectDao
 import com.tencent.devops.openapi.pojo.AppCodeGroup
-import com.tencent.devops.openapi.pojo.AppCodeGroupResponse
 import com.tencent.devops.project.api.service.ServiceProjectResource
-import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.util.concurrent.TimeUnit
@@ -77,7 +71,7 @@ class AppCodeService(
         .maximumSize(10000)
         .expireAfterWrite(30, TimeUnit.SECONDS)
         .build<String/*appCode*/, Pair<String, AppCodeGroup?>/*Map<projectId,AppCodeGroup>*/>(
-            object : CacheLoader<String,  Pair<String, AppCodeGroup?>>() {
+            object : CacheLoader<String, Pair<String, AppCodeGroup?>>() {
                 override fun load(appCode: String): Pair<String, AppCodeGroup?> {
                     try {
                         val appCodeGroup = getAppCodeGroup(appCode)
@@ -109,19 +103,19 @@ class AppCodeService(
                 bgId = appCodeGroupResponse.bgId,
                 bgName = appCodeGroupResponse.bgName,
                 deptId = appCodeGroupResponse.deptId,
-                deptName = appCodeGroupResponse.bgName,
+                deptName = appCodeGroupResponse.deptName,
                 centerId = appCodeGroupResponse.centerId,
                 centerName = appCodeGroupResponse.centerName
             )
         }
     }
 
-    fun validAppCode(appCode:String, projectId:String):Boolean {
+    fun validAppCode(appCode: String, projectId: String): Boolean {
         val appCodeProject = appCodeProjectCache.get(appCode)
         logger.info("appCode[$appCode] projectId[$projectId] openapi appCodeProjectCache:$appCodeProject.")
-        if(appCodeProject.isNotEmpty()) {
+        if (appCodeProject.isNotEmpty()) {
             val projectId = appCodeProject[projectId]
-            if(projectId != null && projectId.isNotBlank()) {
+            if (projectId != null && projectId.isNotBlank()) {
                 logger.info("appCode[$appCode] projectId[$projectId] openapi appCodeProjectCache matched.")
                 return true
             }
@@ -129,19 +123,19 @@ class AppCodeService(
         logger.info("appCode[$appCode] projectId[$projectId] openapi appCodeProjectCache no matched.")
         val appCodeGroup = appCodeGroupCache.get(appCode).second
         logger.info("appCode[$appCode] projectId[$projectId] openapi appCodeGroupCache:$appCodeGroup.")
-        if(appCodeGroup != null) {
+        if (appCodeGroup != null) {
             val projectInfo = client.get(ServiceProjectResource::class).get(projectId).data
             logger.info("appCode[$appCode] projectId[$projectId] openapi appCodeGroupCache projectInfo:$projectInfo.")
-            if(projectInfo != null) {
-                if(appCodeGroup.centerId != null && projectInfo.centerId != null && appCodeGroup.centerId.toString() == projectInfo.centerId) {
+            if (projectInfo != null) {
+                if (appCodeGroup.centerId != null && projectInfo.centerId != null && appCodeGroup.centerId.toString() == projectInfo.centerId) {
                     logger.info("appCode[$appCode] projectId[$projectId] openapi appCodeGroupCache centerId matched.")
                     return true
                 }
-                if(appCodeGroup.deptId != null && projectInfo.deptId != null && appCodeGroup.deptId.toString() == projectInfo.deptId) {
+                if (appCodeGroup.deptId != null && projectInfo.deptId != null && appCodeGroup.deptId.toString() == projectInfo.deptId) {
                     logger.info("appCode[$appCode] projectId[$projectId] openapi appCodeGroupCache deptId matched.")
                     return true
                 }
-                if(appCodeGroup.bgId != null && projectInfo.bgId != null && appCodeGroup.bgId.toString() == projectInfo.bgId) {
+                if (appCodeGroup.bgId != null && projectInfo.bgId != null && appCodeGroup.bgId.toString() == projectInfo.bgId) {
                     logger.info("appCode[$appCode] projectId[$projectId] openapi appCodeGroupCache bgId matched.")
                     return true
                 }
