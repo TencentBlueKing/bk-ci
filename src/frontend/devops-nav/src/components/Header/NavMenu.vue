@@ -13,7 +13,7 @@
                 v-if="showNewServiveTips"
                 class="unread-icon"
             />
-            <i class="devops-icon icon-angle-down" />
+            <i class="bk-icon icon-angle-down" />
         </p>
         <transition name="fade">
             <div
@@ -226,8 +226,7 @@
             transition: 0.2s all linear;
         }
         > i {
-            font-size: 12px;
-            margin-left: 5px;
+            font-size: 22px;
             vertical-align: -2px;
             display: inline-block;
         }

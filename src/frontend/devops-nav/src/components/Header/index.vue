@@ -297,6 +297,7 @@
                 }
                 .bk-select-angle {
                     color: white;
+                    top: 7px;
                 }
                 .bk-tooltip-ref {
                     outline: none;
