@@ -139,6 +139,10 @@ class AppCodeService(
                     logger.info("appCode[$appCode] projectId[$projectId] openapi appCodeGroupCache bgId matched.")
                     return true
                 }
+                if (appCodeGroup.centerId == null && appCodeGroup.deptId == null && appCodeGroup.bgId == null) {
+                    logger.info("appCode[$appCode] projectId[$projectId] openapi appCodeGroupCache all group matched.")
+                    return true
+                }
             }
         }
         logger.info("appCode[$appCode] projectId[$projectId] openapi appCodeGroupCache no matched.")
