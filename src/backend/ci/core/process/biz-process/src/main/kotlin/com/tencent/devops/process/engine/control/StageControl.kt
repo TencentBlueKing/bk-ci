@@ -76,18 +76,22 @@ class StageControl @Autowired constructor(
                 return
             }
 
-            val stage = pipelineStageService.getStage(buildId, stageId) ?: run {
+            val stages = pipelineStageService.listStages(buildId)
+
+            val stagesWithId = stages.filter { it.stageId == stageId }
+
+            val stage = if (stagesWithId.isNotEmpty()) {
+                stagesWithId.first()
+            } else {
                 logger.warn("[$buildId]|[${buildInfo.status}]|bad stage|stage=$stageId")
                 return
             }
 
             val variables = pipelineRuntimeService.getAllVariable(buildId)
 
-            val stages = pipelineStageService.listStages(buildId)
-
-            val containerList = pipelineRuntimeService.listContainers(buildId, stageId)
-
             val allContainers = pipelineRuntimeService.listContainers(buildId)
+
+            val containerList = allContainers.filter { it.stageId == stageId }
 
             var buildStatus: BuildStatus = BuildStatus.SUCCEED
 
