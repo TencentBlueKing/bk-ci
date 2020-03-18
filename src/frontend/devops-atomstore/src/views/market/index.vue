@@ -15,8 +15,8 @@
                 <nav class="home-nav">
                     <section :class="[{ 'control-active': isInputFocus }, 'g-input-search']">
                         <input class="g-input-border" type="text" :placeholder="$t('store.请输入名称')" v-model="inputValue" @focus="isInputFocus = true" @blur="isInputFocus = false" @keyup.enter="filterData.searchStr = inputValue" />
-                        <i class="bk-icon icon-search" v-if="!inputValue"></i>
-                        <i class="bk-icon icon-close-circle-shape clear-icon" v-else @click="(inputValue = '', filterData.searchStr = '')"></i>
+                        <i class="devops-icon icon-search" v-if="!inputValue"></i>
+                        <i class="devops-icon icon-close-circle-shape clear-icon" v-else @click="(inputValue = '', filterData.searchStr = '')"></i>
                     </section>
 
                     <section class="nav-pipetype">

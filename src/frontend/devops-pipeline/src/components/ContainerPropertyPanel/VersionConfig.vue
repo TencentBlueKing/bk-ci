@@ -13,7 +13,7 @@
                     <span>
                         {{ $t('preview.introVersion') }}
                         <bk-popover placement="right" :max-width="200">
-                            <i style="display:block;" class="bk-icon icon-info-circle"></i>
+                            <i style="display:block;" class="devops-icon icon-info-circle"></i>
                             <div slot="content" style="white-space: pre-wrap;">
                                 <div> {{ $t('editPage.introVersionTips') }} </div>
                             </div>
@@ -310,7 +310,7 @@
                 margin-right: 10px;
             }
         }
-        .bk-icon {
+        .devops-icon {
             font-size: 14px;
             padding: 10px  0 0 10px;
             cursor: pointer;
@@ -330,7 +330,7 @@
         > span {
             flex: 1;
         }
-        >.bk-icon {
+        >.devops-icon {
             width: 24px;
             text-align: center;
             &.icon-plus {

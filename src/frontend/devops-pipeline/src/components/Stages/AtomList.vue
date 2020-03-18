@@ -44,11 +44,11 @@
                             <p>{{ atom.elapsed ? localTime(atom.elapsed) : '' }}</p>
                         </template>
                     </bk-popover>
-                    <span class="bk-icon copy" v-if="editable && stageIndex !== 0 && !atom.isError" :title="$t('editPage.copyAtom')" @click.stop="copyAtom(index)">
+                    <span class="devops-icon copy" v-if="editable && stageIndex !== 0 && !atom.isError" :title="$t('editPage.copyAtom')" @click.stop="copyAtom(index)">
                         <Logo name="copy" size="18"></Logo>
                     </span>
                     <i v-if="editable" @click.stop="editAtom(index, false)" class="add-plus-icon close" />
-                    <i v-if="editable && atom.isError" class="bk-icon icon-exclamation-triangle-shape" />
+                    <i v-if="editable && atom.isError" class="devops-icon icon-exclamation-triangle-shape" />
                     <span @click.stop="" v-if="isPreview && canSkipElement && container['@type'].indexOf('trigger') < 0">
                         <bk-checkbox class="atom-canskip-checkbox" v-model="atom.canElementSkip" :disabled="useSkipStyle(atom)" />
                     </span>
@@ -65,7 +65,7 @@
                         <span class="revire-btn continue-excude" @click.stop="reviewExcude(atom, 'PROCESS', atom.reviewUsers)">{{ $t('resume') }}</span>
                         <span class="review-btn stop-excude" @click.stop="reviewExcude(atom, 'ABORT', atom.reviewUsers)">{{ $t('terminate') }}</span>
                     </span>
-                    <i class="bk-icon icon-circle-2-1 executing-job" v-if="atom.status === 'REVIEWING' && reviewLoading"></i>
+                    <i class="devops-icon icon-circle-2-1 executing-job" v-if="atom.status === 'REVIEWING' && reviewLoading"></i>
                 </section>
             </li>
             <span v-if="editable" :class="{ &quot;add-atom-entry&quot;: true, &quot;block-add-entry&quot;: atomList.length === 0 }" @click="editAtom(atomList.length - 1, true)">

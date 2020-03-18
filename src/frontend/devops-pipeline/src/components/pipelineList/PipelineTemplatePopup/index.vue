@@ -12,12 +12,12 @@
             <div v-bkloading="{ isLoading }" class="pipeline-template">
                 <header>
                     {{ $t('newlist.addPipeline') }}
-                    <i class="bk-icon icon-close" @click="toggleTemplatePopup(false)" />
+                    <i class="devops-icon icon-close" @click="toggleTemplatePopup(false)" />
                 </header>
                 <div class="temp-type-tab">
                     <span v-for="(type, index) in tempTypeList" :key="type" :class="{ &quot;active&quot;: tempTypeIndex === index }" @click="selectTempType(index)">
                         {{ type.categoryName }}
-                        <i class="bk-icon icon-refresh" v-if="type.categoryCode === 'store' && tempTypeIndex === index" @click="refreshStoreTEmp"></i>
+                        <i class="devops-icon icon-refresh" v-if="type.categoryCode === 'store' && tempTypeIndex === index" @click="refreshStoreTEmp"></i>
                     </span>
                 </div>
                 <div class="template-content" :style="{ height: viewHeight }">
@@ -28,7 +28,7 @@
                                     name="searchInput"
                                     v-model="searchName"
                                     @keyup.enter="search()">
-                                <i class="bk-icon icon-search" @click="search()"></i>
+                                <i class="devops-icon icon-search" @click="search()"></i>
                             </div>
                             <div class="search-category">
                                 <span v-for="category in categoryList"
@@ -56,11 +56,11 @@
                                     v-if="(tempTypeIndex !== tempTypeList.length - 1) && item.templateType.toLowerCase() === 'constraint'"
                                     class="temp-tip"
                                 >{{ $t('newlist.store') }}</span>
-                                <i v-if="activeTempIndex === index && !item.isInstall" class="bk-icon icon-check-circle-shape"></i>
+                                <i v-if="activeTempIndex === index && !item.isInstall" class="devops-icon icon-check-circle-shape"></i>
                                 <p class="temp-logo">
                                     <logo size="50" :name="item.icon" v-if="item.icon"></logo>
                                     <img class="temp-img" :src="item.logoUrl" v-else-if="item.logoUrl">
-                                    <i class="bk-icon icon-placeholder" v-else></i>
+                                    <i class="devops-icon icon-placeholder" v-else></i>
                                 </p>
                                 <p class="temp-title" :title="item.name">
                                     {{ item.name }}

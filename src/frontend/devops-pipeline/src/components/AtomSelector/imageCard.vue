@@ -6,12 +6,12 @@
                 <span class="main-name">
                     <span :class="{ 'not-recommend': card.recommendFlag === false }" :title="card.recommendFlag === false ? $t('editPage.notRecomendImage') : ''">{{card.name}}</span>
                     <span :title="$t('editPage.officialCertification')" class="icon-title">
-                        <logo class="bk-icon" name="LDImage" size="13" v-if="card.certificationFlag" />
+                        <logo class="devops-icon" name="LDImage" size="13" v-if="card.certificationFlag" />
                     </span>
                 </span>
                 <span class="main-summary" :title="card.summary">{{card.summary}}</span>
                 <span class="main-repo" :title="`${card.imageRepoUrl}${card.imageRepoUrl ? '/' : ''}${card.imageRepoName}:${card.imageTag}`">
-                    <logo class="bk-icon" name="imagedocker" size="10" />
+                    <logo class="devops-icon" name="imagedocker" size="10" />
                     {{card.imageRepoUrl}}{{card.imageRepoUrl ? '/' : ''}}{{card.imageRepoName}}:{{card.imageTag}}
                 </span>
                 <ul class="main-label" v-if="card.labelNames">
@@ -199,7 +199,7 @@
                 .not-recommend {
                     text-decoration: line-through;
                 }
-                .bk-icon {
+                .devops-icon {
                     margin-left: 4px;
                 }
                 .icon-title {

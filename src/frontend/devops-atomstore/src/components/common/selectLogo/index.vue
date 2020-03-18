@@ -6,7 +6,7 @@
                 <span>{{ $t('store.editLogo') }}</span>
             </section>
             <section v-else @click="uploadLogo" :class="[{ 'logo-error': isErr }, 'un-upload']">
-                <i class="bk-icon icon-plus"></i>
+                <i class="devops-icon icon-plus"></i>
                 <p> {{ $t('store.上传LOGO') }} </p>
             </section>
             <p v-if="isErr" class="is-err"> {{ $t('store.Logo必填') }} </p>

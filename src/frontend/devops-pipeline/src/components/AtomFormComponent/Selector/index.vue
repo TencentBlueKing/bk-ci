@@ -21,7 +21,7 @@
         <template v-if="mergedOptionsConf.hasAddItem">
             <div slot="extension" class="bk-selector-create-item">
                 <a :href="addItemUrl" target="_blank">
-                    <i class="bk-icon icon-plus-circle" />
+                    <i class="devops-icon icon-plus-circle" />
                     {{ mergedOptionsConf.itemText }}
                 </a>
             </div>

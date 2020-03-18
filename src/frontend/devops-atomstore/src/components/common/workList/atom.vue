@@ -6,8 +6,8 @@
             </div>
             <section :class="[{ 'control-active': isInputFocus }, 'g-input-search', 'list-input']">
                 <input class="g-input-border" type="text" :placeholder="$t('store.请输入关键字搜索')" v-model="searchName" @focus="isInputFocus = true" @blur="isInputFocus = false" @keyup.enter="search" />
-                <i class="bk-icon icon-search" v-if="!searchName"></i>
-                <i class="bk-icon icon-close-circle-shape clear-icon" v-else @click="clearSearch"></i>
+                <i class="devops-icon icon-search" v-if="!searchName"></i>
+                <i class="devops-icon icon-close-circle-shape clear-icon" v-else @click="clearSearch"></i>
             </section>
         </div>
         <bk-table style="margin-top: 15px;" :empty-text="$t('store.暂时没有插件')"
@@ -40,7 +40,7 @@
                     <span class="atom-status-icon success" v-if="props.row.atomStatus === 'RELEASED'"></span>
                     <span class="atom-status-icon fail" v-if="props.row.atomStatus === 'GROUNDING_SUSPENSION'"></span>
                     <span class="atom-status-icon obtained" v-if="props.row.atomStatus === 'AUDIT_REJECT' || props.row.atomStatus === 'UNDERCARRIAGED'"></span>
-                    <span class="atom-status-icon bk-icon icon-initialize" v-if="props.row.atomStatus === 'INIT'"></span>
+                    <span class="atom-status-icon devops-icon icon-initialize" v-if="props.row.atomStatus === 'INIT'"></span>
                     <span>{{ $t(atomStatusList[props.row.atomStatus]) }}</span>
                 </template>
             </bk-table-column>
@@ -113,7 +113,7 @@
                                     </p>
                                 </div>
                                 <bk-popover placement="right">
-                                    <i class="bk-icon icon-info-circle"></i>
+                                    <i class="devops-icon icon-info-circle"></i>
                                     <template slot="content">
                                         <p> {{ $t('store.唯一标识，创建后不能修改。将作为插件代码库路径。') }} </p>
                                     </template>
@@ -127,7 +127,7 @@
                                     <big-select v-model="createAtomForm.projectCode" @selected="selectedProject" :searchable="true" @toggle="toggleProjectList" :options="projectList" setting-key="projectCode" display-key="projectName" :placeholder="$t('store.请选择调试项目')">
                                         <div slot="extension" style="cursor: pointer;">
                                             <a :href="itemUrl" target="_blank">
-                                                <i class="bk-icon icon-plus-circle" />
+                                                <i class="devops-icon icon-plus-circle" />
                                                 {{ itemText }}
                                             </a>
                                         </div>
@@ -135,7 +135,7 @@
                                     <div v-if="atomErrors.projectError" class="error-tips"> {{ $t('store.项目不能为空') }} </div>
                                 </div>
                                 <bk-popover placement="right" width="400">
-                                    <i class="bk-icon icon-info-circle"></i>
+                                    <i class="devops-icon icon-info-circle"></i>
                                     <template slot="content">
                                         <p> {{ $t('store.debugProjectTips') }} </p>
                                     </template>
@@ -166,7 +166,7 @@
                     <div class="oauth-tips" v-else style="margin: 30px">
                         <button class="bk-button bk-primary" type="button" @click="openValidate"> {{ $t('store.OAUTH认证') }} </button>
                         <p class="prompt-oauth">
-                            <i class="bk-icon icon-info-circle-shape"></i>
+                            <i class="devops-icon icon-info-circle-shape"></i>
                             <span> {{ $t('store.新增插件时将自动初始化插件代码库，请先进行工蜂OAUTH授权') }} </span>
                         </p>
                     </div>

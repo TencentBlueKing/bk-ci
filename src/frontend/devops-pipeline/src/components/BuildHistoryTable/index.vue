@@ -12,10 +12,10 @@
                 <template v-if="col.prop === 'buildNum'" v-slot="props">
                     <span class="build-num-status">
                         <router-link :class="{ [props.row.status]: true }" style="line-height: 42px;" :to="getArchiveUrl(props.row)">#{{ props.row.buildNum }}</router-link>
-                        <i v-if="retryable(props.row)" title="rebuild" class="bk-icon icon-retry" @click.stop="retry(props.row.id)" />
+                        <i v-if="retryable(props.row)" title="rebuild" class="devops-icon icon-retry" @click.stop="retry(props.row.id)" />
                         <i v-else-if="props.row.status === 'QUEUE' || props.row.status === 'RUNNING' || !props.row.endTime"
                             :class="{
-                                'bk-icon': true,
+                                'devops-icon': true,
                                 'spin-icon': true,
                                 'running-icon': true,
                                 'icon-hourglass': props.row.status === 'QUEUE',
@@ -71,7 +71,7 @@
                             {{ props.row.remark || '--' }}
                         </span>
                         <bk-popover ref="remarkPopup" trigger="click" theme="light" placement="left">
-                            <i class="bk-icon icon-edit remark-entry" @click.stop="activeRemarkInput(props.row)" />
+                            <i class="devops-icon icon-edit remark-entry" @click.stop="activeRemarkInput(props.row)" />
                             <div slot="content">
                                 <bk-input type="textarea" ref="remarkInput" rows="3" class="remark-input" v-model.trim="tempRemark" />
                                 <div class="remark-edit-footer">
@@ -87,7 +87,7 @@
                 </template>
             </bk-table-column>
             <empty-tips v-if="emptyTipsConfig" class="build-list-table-empty-tips" slot="empty" v-bind="emptyTipsConfig"></empty-tips>
-            <div v-if="loadingMore" class="loading-more" slot="append"><i class="bk-icon icon-circle-2-1 spin-icon"></i><span>{{ $t('loadingTips') }}</span></div>
+            <div v-if="loadingMore" class="loading-more" slot="append"><i class="devops-icon icon-circle-2-1 spin-icon"></i><span>{{ $t('loadingTips') }}</span></div>
         </bk-table>
         <portal to="artifactory-popup">
             <div ref="artifactPopup" class="artifact-list-popup" v-show="actifactories.length" v-bk-clickoutside="hideArtifactoriesPopup">
@@ -102,7 +102,7 @@
                             <span :title="artifactory.name" class="artifact-name">{{ artifactory.name }}</span>
                             <span class="artifact-size">{{ artifactory.size }}</span>
                         </p>
-                        <i class="bk-icon icon-download download-link history-text-link" @click.stop="downloadFile(artifactory)" />
+                        <i class="devops-icon icon-download download-link history-text-link" @click.stop="downloadFile(artifactory)" />
                         <Logo class="icon-copy" name="copy" size="12" v-if="artifactory.artifactoryType === 'PIPELINE'" @click.stop.native="copyToCustom(artifactory)"></Logo>
                     </li>
                     <footer v-if="needShowAll" @click.stop="showAllArtifactory" class="history-text-link">{{ $t('history.showAll') }}</footer>
@@ -516,7 +516,7 @@
         .build-num-status {
             display: flex;
             align-items: center;
-            .bk-icon {
+            .devops-icon {
                 margin-left: 6px;
                 display: inline-block;
             }
@@ -602,7 +602,7 @@
         height: 36px;
         justify-content: center;
         align-items: center;
-        .bk-icon {
+        .devops-icon {
             margin-right: 8px;
         }
     }
