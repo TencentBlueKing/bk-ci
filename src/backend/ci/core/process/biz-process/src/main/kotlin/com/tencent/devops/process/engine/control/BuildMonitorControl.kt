@@ -95,8 +95,10 @@ class BuildMonitorControl @Autowired constructor(
 
         val minInterval = listOf(containerMinInterval, stageMinInterval).min()!!
 
+        logger.info("[${event.buildId}]|pipeline_monitor|containerMinInterval=$containerMinInterval|stageMinInterval=$stageMinInterval")
+
         if (minInterval < listOf(CONTAINER_MAX_MILLS, STAGE_MAX_MILLS).min()!!) {
-            logger.info("[${event.buildId}]|pipeline_monitor_continue|pipelineId=${event.pipelineId}")
+            logger.info("[${event.buildId}]|pipeline_monitor_continue|minInterval=$minInterval")
             event.delayMills = minInterval
             pipelineEventDispatcher.dispatch(event)
         }
@@ -114,7 +116,7 @@ class BuildMonitorControl @Autowired constructor(
         var minInterval = CONTAINER_MAX_MILLS
 
         if (containers.isEmpty()) {
-            logger.info("[${event.buildId}]|monitor| have not need monitor job!")
+            logger.info("[${event.buildId}]|container_monitor| have not need monitor job!")
             return minInterval
         }
 
@@ -138,7 +140,7 @@ class BuildMonitorControl @Autowired constructor(
         var minInterval = STAGE_MAX_MILLS
 
         if (stages.isEmpty()) {
-            logger.info("[${event.buildId}]|monitor| have not need monitor stage!")
+            logger.info("[${event.buildId}]|stage_monitor| have not need monitor stage!")
             return minInterval
         }
 
@@ -223,18 +225,16 @@ class BuildMonitorControl @Autowired constructor(
     }
 
     private fun PipelineBuildStage.checkNextStageMonitorIntervals(userId: String): Int {
-        logger.info("[$buildId]|prepare_monitor_stage|stage=$stageId")
         var interval = 0
 
         if (controlOption?.stageControlOption?.manualTrigger != true) {
-            logger.info("[$buildId]|not_monitor_stage|stage=$stageId|status=$status")
+            logger.info("[$buildId]|not_monitor_stage|stage=$stageId|manualTrigger != true")
             return interval
         }
         if (BuildStatus.isFinish(status)) {
-            logger.info("[$buildId]|monitor_stage_finish|stage=$stageId|status=$status")
+            logger.info("[$buildId]|not_monitor_stage|stage=$stageId|status=$status")
             return interval
         }
-        logger.info("[$buildId]|start_monitor_stage|stage=$stageId")
 
         var hours = controlOption?.stageControlOption?.timeout ?: Timeout.DEFAULT_STAGE_TIMEOUT_HOURS
         if (hours <= 0 || hours > MAX_HOURS) {
@@ -248,7 +248,7 @@ class BuildMonitorControl @Autowired constructor(
             0
         }
 
-        logger.info("[$buildId]|stage=$stageId|timeoutMills=$timeoutMills|useTimeMills=$usedTimeMills")
+        logger.info("[$buildId]|start_monitor_stage|stage=$stageId|timeoutMills=$timeoutMills|useTimeMills=$usedTimeMills")
 
         interval = (timeoutMills - usedTimeMills).toInt()
         if (interval <= 0) {
