@@ -1,5 +1,6 @@
 package com.tencent.devops.project.pojo
 
+import com.tencent.devops.project.api.pojo.enums.HtmlComponentTypeEnum
 import io.swagger.annotations.ApiModelProperty
 
 data class ItemUpdateInfo(
@@ -8,7 +9,7 @@ data class ItemUpdateInfo(
     @ApiModelProperty("蓝盾服务id")
     val serviceId: String?,
     @ApiModelProperty("UI组件类型")
-    val UIType: String?,
+    val UIType: HtmlComponentTypeEnum?,
     @ApiModelProperty("页面路径")
     val htmlPath: String?,
     @ApiModelProperty("icon地址")

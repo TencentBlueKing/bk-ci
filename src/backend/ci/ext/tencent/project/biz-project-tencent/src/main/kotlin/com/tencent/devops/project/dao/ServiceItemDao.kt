@@ -37,7 +37,7 @@ class ServiceItemDao {
                     info.itemCode,
                     info.itemName,
                     info.serviceId,
-                    info.UIType,
+                    info.UIType.name,
                     info.htmlPath,
                     info.iconUrl,
                     info.props,
@@ -62,7 +62,7 @@ class ServiceItemDao {
                 baseStep.set(PARENT_ID, info.serviceId)
             }
             if (null != info.UIType) {
-                baseStep.set(HTML_COMPONENT_TYPE, info.UIType)
+                baseStep.set(HTML_COMPONENT_TYPE, info.UIType.name)
             }
             if (null != info.iconUrl) {
                 baseStep.set(ICON_URL, info.iconUrl)
