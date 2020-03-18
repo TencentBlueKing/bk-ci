@@ -45,7 +45,6 @@ import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.process.engine.common.Timeout
 import com.tencent.devops.process.engine.pojo.PipelineBuildStage
-import com.tencent.devops.process.engine.pojo.event.PipelineBuildStageEvent
 import com.tencent.devops.process.engine.service.PipelineStageService
 import com.tencent.devops.process.pojo.mq.PipelineBuildContainerEvent
 import com.tencent.devops.process.service.PipelineSettingService
@@ -54,6 +53,7 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.util.concurrent.TimeUnit
+import kotlin.math.min
 
 /**
  * 构建控制器
@@ -93,11 +93,11 @@ class BuildMonitorControl @Autowired constructor(
         val containerMinInterval = monitorContainer(event)
         val stageMinInterval = monitorStage(event)
 
-        val minInterval = listOf(containerMinInterval, stageMinInterval).min()!!
+        val minInterval = min(containerMinInterval, stageMinInterval)
 
         logger.info("[${event.buildId}]|pipeline_monitor|containerMinInterval=$containerMinInterval|stageMinInterval=$stageMinInterval")
 
-        if (minInterval < listOf(CONTAINER_MAX_MILLS, STAGE_MAX_MILLS).min()!!) {
+        if (minInterval < min(CONTAINER_MAX_MILLS, STAGE_MAX_MILLS)) {
             logger.info("[${event.buildId}]|pipeline_monitor_continue|minInterval=$minInterval")
             event.delayMills = minInterval
             pipelineEventDispatcher.dispatch(event)
