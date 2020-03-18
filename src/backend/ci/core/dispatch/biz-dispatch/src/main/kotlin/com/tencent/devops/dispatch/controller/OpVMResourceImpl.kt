@@ -44,7 +44,7 @@ class OpVMResourceImpl @Autowired constructor(
 
     override fun list(ip: String?, name: String?, typeId: Int?, os: String?, osVersion: String?, offset: Int?, limit: Int?) = Result(vmService.queryVMs(ip, name, typeId, os, osVersion, offset, limit))
 
-    override fun get(vmId: Int): Result<VM> {
+    override fun get(vmId: Long): Result<VM> {
         if (vmId < 0) {
             throw InvalidParamException("无效的虚拟机ID($vmId)")
         }
@@ -59,7 +59,7 @@ class OpVMResourceImpl @Autowired constructor(
         return Result(vmService.queryVMByIp(ip))
     }
 
-    override fun delete(id: Int): Result<Boolean> {
+    override fun delete(id: Long): Result<Boolean> {
         vmService.deleteVM(id)
         return Result(true)
     }
@@ -72,12 +72,12 @@ class OpVMResourceImpl @Autowired constructor(
         return Result(vmService.queryVMStatus(vmName))
     }
 
-    override fun maintain(vmId: Int, enable: Boolean): Result<Boolean> {
+    override fun maintain(vmId: Long, enable: Boolean): Result<Boolean> {
         vmService.maintainVM(vmId, enable)
         return Result(true)
     }
 
-    override fun maintain(vmId: Int): Result<Boolean> {
+    override fun maintain(vmId: Long): Result<Boolean> {
         return Result(vmService.queryVMMaintainStatus(vmId))
     }
 
