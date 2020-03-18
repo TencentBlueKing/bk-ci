@@ -209,7 +209,7 @@ class PipelineBuildStageDao {
             if (BuildStatus.isFinish(buildStatus)) {
                 update.set(END_TIME, LocalDateTime.now())
                 update.set(COST, COST + END_TIME - START_TIME)
-            } else if (BuildStatus.isRunning(buildStatus) || buildStatus == BuildStatus.PAUSE) {
+            } else if (BuildStatus.isRunning(buildStatus)) {
                 update.set(START_TIME, LocalDateTime.now())
             }
 
