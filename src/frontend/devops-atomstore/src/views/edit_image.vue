@@ -12,7 +12,7 @@
             <a class="develop-guide-link" target="_blank" href="http://tempdocklink/pages/viewpage.action?pageId=22118721"> {{ $t('store.镜像指引') }} </a>
         </div>
         <main v-bkloading="{ isLoading }" class="edit-content">
-            <bk-form ref="imageForm" class="edit-image" label-width="125" :model="form" v-show="!isLoading">
+            <bk-form ref="imageForm" class="edit-image" label-width="150" :model="form" v-show="!isLoading">
                 <bk-form-item class="wt660" :label="$t('store.镜像名称')" :required="true" property="imageName" :rules="[requireRule]" ref="imageName">
                     <bk-input v-model="form.imageName" :placeholder="$t('store.请输入镜像名称')"></bk-input>
                 </bk-form-item>
@@ -100,7 +100,7 @@
                         <bk-radio value="INPUT" class="mr12"> {{ $t('store.手动录入') }} </bk-radio>
                     </bk-radio-group>
                 </bk-form-item>
-                <bk-form-item label="Dockerfile" :required="true" property="dockerFileContent" :rules="[requireRule]" ref="dockerFileContent">
+                <bk-form-item label="Dockerfile" property="dockerFileContent" ref="dockerFileContent">
                     <section class="dockerfile" @click="freshCodeMirror"></section>
                 </bk-form-item>
                 <div class="version-msg">
