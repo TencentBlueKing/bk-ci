@@ -86,11 +86,8 @@ class ServiceDockerDebugResourceImpl @Autowired constructor(private val dockerHo
 
     override fun endDebug(dockerEndDebugInfo: ContainerInfo): Result<Boolean> {
         return try {
-            logger.warn("dockerEndDebugInfo: $dockerEndDebugInfo")
-            if (dockerEndDebugInfo.status == PipelineTaskStatus.DONE.status || dockerEndDebugInfo.status == PipelineTaskStatus.FAILURE.status) {
-                logger.warn("Stop the container, containerId: ${dockerEndDebugInfo.containerId}")
-                dockerHostDebugService.stopContainer(dockerEndDebugInfo)
-            }
+            logger.warn("Stop the container, containerId: ${dockerEndDebugInfo.containerId}")
+            dockerHostDebugService.stopContainer(dockerEndDebugInfo)
 
             Result(true)
         } catch (t: Throwable) {
