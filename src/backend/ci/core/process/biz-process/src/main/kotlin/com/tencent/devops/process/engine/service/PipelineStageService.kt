@@ -68,29 +68,12 @@ class PipelineStageService @Autowired constructor(
     }
 
     fun updateStageStatus(buildId: String, stageId: String, buildStatus: BuildStatus) {
-        logger.info("[$buildId]|updateContainerStatus|status=$buildStatus|stageId=$stageId")
+        logger.info("[$buildId]|updateStageStatus|status=$buildStatus|stageId=$stageId")
         pipelineBuildStageDao.updateStatus(
             dslContext = dslContext,
             buildId = buildId,
             stageId = stageId,
             buildStatus = buildStatus
-        )
-    }
-
-    fun updateStage(
-        buildId: String,
-        stageId: String,
-        startTime: LocalDateTime,
-        endTime: LocalDateTime,
-        buildStatus: BuildStatus
-    ) {
-        pipelineBuildStageDao.update(
-            dslContext = dslContext,
-            buildId = buildId,
-            stageId = stageId,
-            buildStatus = buildStatus,
-            startTime = startTime,
-            endTime = endTime
         )
     }
 

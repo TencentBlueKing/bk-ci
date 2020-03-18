@@ -216,11 +216,9 @@ class StageControl @Autowired constructor(
             else if (ActionType.isEnd(newActionType)) {
                 buildStatus = BuildStatus.CANCELED
                 val now = LocalDateTime.now()
-                pipelineStageService.updateStage(
+                pipelineStageService.updateStageStatus(
                     buildId = buildId,
                     stageId = stageId,
-                    startTime = now,
-                    endTime = now,
                     buildStatus = buildStatus
                 )
                 logger.info("[$buildId]|STAGE_$actionType|stageId=$stageId|action=$newActionType")
@@ -228,11 +226,9 @@ class StageControl @Autowired constructor(
             } else if (actionType == ActionType.SKIP) {
                 buildStatus = BuildStatus.SKIP
                 val now = LocalDateTime.now()
-                pipelineStageService.updateStage(
+                pipelineStageService.updateStageStatus(
                     buildId = buildId,
                     stageId = stageId,
-                    startTime = now,
-                    endTime = now,
                     buildStatus = buildStatus
                 )
                 logger.info("[$buildId]|STAGE_$actionType|stageId=$stageId|action=$newActionType")
@@ -241,11 +237,9 @@ class StageControl @Autowired constructor(
         } else if (status == BuildStatus.PAUSE && ActionType.isEnd(newActionType)) {
             buildStatus = BuildStatus.STAGE_SUCCESS
             val now = LocalDateTime.now()
-            pipelineStageService.updateStage(
+            pipelineStageService.updateStageStatus(
                 buildId = buildId,
                 stageId = stageId,
-                startTime = now,
-                endTime = now,
                 buildStatus = buildStatus
             )
             logger.info("[$buildId]|STAGE_$actionType|stageId=$stageId|action=$newActionType")
