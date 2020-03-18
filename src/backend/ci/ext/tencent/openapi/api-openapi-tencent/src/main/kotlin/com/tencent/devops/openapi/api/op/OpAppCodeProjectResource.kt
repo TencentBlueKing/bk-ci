@@ -96,7 +96,7 @@ interface OpAppCodeProjectResource {
         @PathParam("appCode")
         appCode: String,
         @ApiParam("项目ID", required = true)
-        @QueryParam("projectId")
+        @PathParam("projectId")
         projectId: String
     ): Result<AppCodeProjectResponse?>
 
@@ -111,7 +111,7 @@ interface OpAppCodeProjectResource {
         @PathParam("appCode")
         appCode: String,
         @ApiParam("项目ID", required = true)
-        @QueryParam("projectId")
+        @PathParam("projectId")
         projectId: String
     ): Result<Boolean>
 }
