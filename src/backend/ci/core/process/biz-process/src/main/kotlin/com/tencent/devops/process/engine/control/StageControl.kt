@@ -125,13 +125,16 @@ class StageControl @Autowired constructor(
             }
 
             // 因审核超时直接取消继续构建
-            if (reviewTimeout) pipelineRuntimeService.cancelStage(
-                userId = userId,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                buildId = buildId,
-                stageId = stageId
-            )
+            if (reviewTimeout) {
+                pipelineRuntimeService.cancelStage(
+                    userId = userId,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    buildId = buildId,
+                    stageId = stageId
+                )
+                return
+            }
 
             // 仅在初次进入Stage时进行跳过判断
             if (BuildStatus.isReadyToRun(stage.status)) {
