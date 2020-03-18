@@ -77,7 +77,8 @@ class VmStatusScheduler @Autowired constructor(
                     val averageCpuLoad = dockerHostLoad["averageCpuLoad"] as Int
                     val averageMemLoad = dockerHostLoad["averageMemLoad"] as Int
                     val averageDiskLoad = dockerHostLoad["averageDiskLoad"] as Int
-                    pipelineDockerIpInfoDao.update(dslContext, itDockerIp, capacity, usedNum, enable)
+                    pipelineDockerIpInfoDao.update(dslContext, itDockerIp, capacity, usedNum, averageCpuLoad,
+                        averageMemLoad, averageDiskLoad, enable)
                 } else {
                     val msg = response["message"] as String
                     logger.error("Get Docker VM container failed, msg: $msg")
