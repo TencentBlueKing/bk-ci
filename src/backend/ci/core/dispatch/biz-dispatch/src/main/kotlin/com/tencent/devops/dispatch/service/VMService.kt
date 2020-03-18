@@ -122,7 +122,7 @@ class VMService @Autowired constructor(
         return Result(true)
     }
 
-    fun deleteVM(id: Int) {
+    fun deleteVM(id: Long) {
         vmDao.deleteVM(dslContext, id)
         vmCache.expire(id)
     }
@@ -152,7 +152,7 @@ class VMService @Autowired constructor(
         return Result(true)
     }
 
-    fun queryVMById(id: Int): VM {
+    fun queryVMById(id: Long): VM {
         return vmDao.parseVM(vmDao.findVMById(dslContext, id)) ?: throw NotFoundException("VM $id is not exist")
     }
 
@@ -164,39 +164,39 @@ class VMService @Autowired constructor(
         return vmDao.parseVM(vmDao.findVMByIp(dslContext, ip)) ?: throw NotFoundException("VM($ip) 不存在")
     }
 
-    fun shutdownVM(vmId: Int, snapshotKey: String): Boolean {
+    fun shutdownVM(vmId: Long, snapshotKey: String): Boolean {
         return powerOffVM.shutdown(vmId, snapshotKey)
     }
 
-    fun directShutdownVM(vmId: Int): Boolean {
+    fun directShutdownVM(vmId: Long): Boolean {
         return powerOffVM.directShutdown(vmId)
     }
 
-    fun startUpVM(projectId: String, vmId: Int, snapshotKey: String): Boolean {
+    fun startUpVM(projectId: String, vmId: Long, snapshotKey: String): Boolean {
         return powerOnVM.powerOn(projectId, vmId, snapshotKey)
     }
 
-    fun startUpVM(vmId: Int) = powerOnVM.powerOn(vmId)
+    fun startUpVM(vmId: Long) = powerOnVM.powerOn(vmId)
 
-    fun shutdownVM(vmId: Int) = powerOffVM.shutdown(vmId)
+    fun shutdownVM(vmId: Long) = powerOffVM.shutdown(vmId)
 
     fun queryVMStatus(vmHashId: String): String {
-        val vmId = HashUtil.decodeOtherIdToInt(vmHashId)
+        val vmId = HashUtil.decodeIdToLong(vmHashId)
         val vm = vmCache.getVM(vmId)
         return vm?.runtime?.powerState?.toString() ?: throw VMNotExistException("VM($vmId) NOT EXIST")
     }
 
-    fun queryVMMaintainStatus(vmId: Int): Boolean {
+    fun queryVMMaintainStatus(vmId: Long): Boolean {
         val vm = vmDao.parseVM(vmDao.findVMById(dslContext, vmId))
         return vm?.inMaintain ?: throw VMNotExistException("VM($vmId) is not exist")
     }
 
-    fun maintainVM(vmId: Int, maintain: Boolean) {
+    fun maintainVM(vmId: Long, maintain: Boolean) {
         vmDao.maintainVM(dslContext, vmId, maintain)
     }
 
     @Synchronized
-    fun findVM(projectId: String, preferVMName: String?, from: String, preVMs: List<Int>): VM? {
+    fun findVM(projectId: String, preferVMName: String?, from: String, preVMs: List<Long>): VM? {
         if (from.isBlank()) {
             return null
         }
@@ -223,7 +223,7 @@ class VMService @Autowired constructor(
         return getIdleVM(projectId, preferVMName, from, filterVms, preVMs)
     }
 
-    private fun getIdleVM(projectId: String, preferVMName: String?, from: String, vms: List<VirtualMachine>, preVMs: List<Int>): VM? {
+    private fun getIdleVM(projectId: String, preferVMName: String?, from: String, vms: List<VirtualMachine>, preVMs: List<Long>): VM? {
         val vmNames = if (preferVMName.isNullOrBlank()) {
             emptyArray()
         } else {
@@ -265,7 +265,7 @@ class VMService @Autowired constructor(
         return getPublicVM(vms, vmNames, preVMs)
     }
 
-    private fun getPublicVM(vms: List<VirtualMachine>, preferVMs: Array<String>, preVMs: List<Int>): VM? {
+    private fun getPublicVM(vms: List<VirtualMachine>, preferVMs: Array<String>, preVMs: List<Long>): VM? {
         if (preferVMs.isNotEmpty()) {
             return getPreferVMs(vms, preferVMs, false)
         } else {
@@ -273,7 +273,7 @@ class VMService @Autowired constructor(
         }
     }
 
-    private fun getNonePreferVMs(vms: List<VirtualMachine>, preVMs: List<Int>, includePrivateVM: Boolean): VM? {
+    private fun getNonePreferVMs(vms: List<VirtualMachine>, preVMs: List<Long>, includePrivateVM: Boolean): VM? {
         val filterVM = mutableListOf<VM>()
         vms.forEach {
             filterVM.add(getVM(it.name, includePrivateVM) ?: return@forEach)
@@ -302,7 +302,7 @@ class VMService @Autowired constructor(
             val set = mutableSetOf<VM>()
             if (privateRecords.isNotEmpty) {
                 privateRecords.forEach {
-                    set.add(vmDao.parseVM(vmDao.findVMById(context, it.vmId)) ?: return@forEach)
+                    set.add(vmDao.parseVM(vmDao.findVMById(context, it.vmId.toLong())) ?: return@forEach)
                 }
             }
             set

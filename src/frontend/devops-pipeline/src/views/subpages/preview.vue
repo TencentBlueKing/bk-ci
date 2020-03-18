@@ -7,6 +7,7 @@
                     <pipeline-versions-form ref="versionForm"
                         v-if="isDropdownShowVersion"
                         :build-no="buildNo"
+                        :is-preview="true"
                         :version-param-values="versionParamValues"
                         :handle-version-change="handleVersionChange"
                         :handle-build-no-change="handleBuildNoChange"
@@ -67,6 +68,7 @@
     import StagePropertyPanel from '@/components/StagePropertyPanel'
     import Vue from 'vue'
     import { bus } from '@/utils/bus'
+    import { getParamsValuesMap } from '@/utils/util'
     import PipelineParamsForm from '@/components/pipelineParamsForm.vue'
     import PipelineVersionsForm from '@/components/PipelineVersionsForm.vue'
     import pipelineOperateMixin from '@/mixins/pipeline-operate-mixin'
@@ -214,12 +216,6 @@
                 const { getStage, pipeline } = this
                 return getStage(pipeline.stages, stageIndex)
             },
-            getParamsValue (params) {
-                return params.reduce((values, param) => {
-                    values[param.id] = param.defaultValue
-                    return values
-                }, {})
-            },
             async init () {
                 this.isLoading = true
 
@@ -242,8 +238,8 @@
                         }
                         this.paramList = this.curPipelineInfo.properties.filter(p => p.required)
                         this.versionParamList = this.curPipelineInfo.properties.filter(p => !p.required)
-                        this.paramValues = this.getParamsValue(this.paramList)
-                        this.versionParamValues = this.getParamsValue(this.versionParamList)
+                        this.paramValues = getParamsValuesMap(this.paramList)
+                        this.versionParamValues = getParamsValuesMap(this.versionParamList)
                         this.requestPipeline(this.$route.params)
                     } else {
                         throw new Error(this.$t('newlist.withoutManualAtom'))

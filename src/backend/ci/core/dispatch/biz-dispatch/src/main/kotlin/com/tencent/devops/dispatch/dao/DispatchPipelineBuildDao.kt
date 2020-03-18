@@ -81,7 +81,7 @@ class DispatchPipelineBuildDao {
         dslContext: DSLContext,
         buildId: String,
         vmSeqId: String,
-        vmId: Int,
+        vmId: Long,
         status: PipelineTaskStatus
     ): Boolean {
         with(TDispatchPipelineBuild.T_DISPATCH_PIPELINE_BUILD) {
@@ -95,7 +95,7 @@ class DispatchPipelineBuildDao {
         }
     }
 
-    fun updatePipelineStatus(dslContext: DSLContext, id: Int, status: PipelineTaskStatus): Boolean {
+    fun updatePipelineStatus(dslContext: DSLContext, id: Long, status: PipelineTaskStatus): Boolean {
         with(TDispatchPipelineBuild.T_DISPATCH_PIPELINE_BUILD) {
             return dslContext.update(this)
                 .set(STATUS, status.status)

@@ -405,6 +405,40 @@ export default {
                 })
             }
         },
+        /**
+         *  终止流水线
+         */
+        async stopExecute (buildId) {
+            let message, theme
+
+            try {
+                const { $store } = this
+                const res = await $store.dispatch('pipelines/requestTerminatePipeline', {
+                    ...this.$route.params,
+                    buildId
+                })
+
+                if (res) {
+                    message = this.$t('subpage.stopSuc')
+                    theme = 'success'
+                } else {
+                    message = this.$t('subpage.stopFail')
+                    theme = 'error'
+                }
+            } catch (err) {
+                if (err.code === 403) { // 没有权限执行
+                    this.setPermissionConfig(`流水线：${this.curPipeline.pipelineName}`, '执行')
+                } else {
+                    message = err.message || err
+                    theme = 'error'
+                }
+            } finally {
+                message && this.$showTips({
+                    message,
+                    theme
+                })
+            }
+        },
         async savePipelineAndSetting () {
             const { pipelineSetting, checkPipelineInvalid, pipeline } = this
             const { inValid, message } = checkPipelineInvalid(pipeline.stages)
