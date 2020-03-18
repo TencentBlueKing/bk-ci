@@ -59,7 +59,7 @@ class PipelineDockerDebugDao {
         imageType: String?,
         imagePublicFlag: Boolean?,
         imageRDType: ImageRDTypeEnum?
-    ): Int {
+    ): Long {
         with(TDispatchPipelineDockerDebug.T_DISPATCH_PIPELINE_DOCKER_DEBUG) {
             val now = LocalDateTime.now()
             return dslContext.insertInto(this,
@@ -260,7 +260,7 @@ class PipelineDockerDebugDao {
         }
     }
 
-    fun deleteDebug(dslContext: DSLContext, id: Int) {
+    fun deleteDebug(dslContext: DSLContext, id: Long) {
         with(TDispatchPipelineDockerDebug.T_DISPATCH_PIPELINE_DOCKER_DEBUG) {
             dslContext.deleteFrom(this)
                 .where(ID.eq(id))

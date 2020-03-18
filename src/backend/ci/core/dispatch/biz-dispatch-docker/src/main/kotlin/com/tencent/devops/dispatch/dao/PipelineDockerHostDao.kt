@@ -44,28 +44,47 @@ class PipelineDockerHostDao {
     ): Int {
         with(TDispatchPipelineDockerHost.T_DISPATCH_PIPELINE_DOCKER_HOST) {
             val now = LocalDateTime.now()
-            return dslContext.insertInto(this,
-                    PROJECT_CODE,
-                    HOST_IP,
-                    REMARK,
-                    CREATED_TIME,
-                    UPDATED_TIME)
-                    .values(
-                            projectId,
-                            hostIp,
-                            remark ?: "",
-                            now,
-                            now
-                    ).execute()
+            return dslContext.insertInto(
+                this,
+                PROJECT_CODE,
+                HOST_IP,
+                REMARK,
+                CREATED_TIME,
+                UPDATED_TIME
+            )
+                .values(
+                    projectId,
+                    hostIp,
+                    remark ?: "",
+                    now,
+                    now
+                ).execute()
         }
     }
 
-    fun getHost(dslContext: DSLContext, projectId: String, type: DockerHostType = DockerHostType.BUILD): TDispatchPipelineDockerHostRecord? {
+    fun getHost(
+        dslContext: DSLContext,
+        projectId: String,
+        type: DockerHostType = DockerHostType.BUILD
+    ): TDispatchPipelineDockerHostRecord? {
         with(TDispatchPipelineDockerHost.T_DISPATCH_PIPELINE_DOCKER_HOST) {
             return dslContext.selectFrom(this)
                 .where(PROJECT_CODE.eq(projectId))
                 .and(TYPE.eq(type.ordinal))
-                .fetchOne()
+                .fetchAny()
+        }
+    }
+
+    fun getHostIps(
+        dslContext: DSLContext,
+        projectId: String,
+        type: DockerHostType = DockerHostType.BUILD
+    ): List<String> {
+        with(TDispatchPipelineDockerHost.T_DISPATCH_PIPELINE_DOCKER_HOST) {
+            return dslContext.select(HOST_IP).from(this)
+                .where(PROJECT_CODE.eq(projectId))
+                .and(TYPE.eq(type.ordinal))
+                .fetch(HOST_IP, String::class.java)
         }
     }
 }
