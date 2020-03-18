@@ -146,7 +146,21 @@
             language,
 
             valuefilter (val) {
-                return val.replace(/\s/g, '&nbsp;').replace(/<a[^>]*>/g, (a) => a.replace(/&nbsp;/g, ' ')).replace(/<br\/>/g, '')
+                return val.replace(/\s|<|>/g, (str) => {
+                    let res = '&nbsp;'
+                    switch (str) {
+                        case '<':
+                            res = '&lt;'
+                            break;
+                        case '>':
+                            res = '&gt;'
+                            break;
+                        default:
+                            res = '&nbsp;'
+                            break;
+                    }
+                    return res
+                }).replace(/&lt;a.+?href=["']?([^"']+)["']?.*&gt;(.+)&lt;\/a&gt;/g, "<a href='$1' target='_blank'>$2</a>")
             },
 
             downLoad () {

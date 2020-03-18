@@ -6,6 +6,7 @@
     "devops-environment",
     "devops-ticket",
     "devops-atomstore",
+    "devops-artifactory",
     "devops-quality",
     "devops-log"
   ],
