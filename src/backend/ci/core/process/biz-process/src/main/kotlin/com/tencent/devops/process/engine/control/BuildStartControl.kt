@@ -298,11 +298,9 @@ class BuildStartControl @Autowired constructor(
             }
         }
 
-        pipelineStageService.updateStage(
+        pipelineStageService.updateStageStatus(
             buildId = buildId,
             stageId = stage.id!!,
-            startTime = now,
-            endTime = now,
             buildStatus = BuildStatus.SUCCEED
         )
 
