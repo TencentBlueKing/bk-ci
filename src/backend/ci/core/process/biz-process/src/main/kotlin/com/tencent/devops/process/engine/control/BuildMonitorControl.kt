@@ -90,19 +90,19 @@ class BuildMonitorControl @Autowired constructor(
 
     private fun monitorPipeline(event: PipelineBuildMonitorEvent): Boolean {
 
+        // 由于天数要求时间数值大，以INT的上限值作为下一次monitor时间
+        val stageMinInterval = min(monitorStage(event), Int.MAX_VALUE.toLong()).toInt()
         val containerMinInterval = monitorContainer(event)
-        val stageMinInterval = monitorStage(event)
 
         val minInterval = min(containerMinInterval, stageMinInterval)
 
         logger.info("[${event.buildId}]|pipeline_monitor|containerMinInterval=$containerMinInterval|stageMinInterval=$stageMinInterval")
 
-        if (minInterval < min(CONTAINER_MAX_MILLS, STAGE_MAX_MILLS)) {
+        if (minInterval < min(CONTAINER_MAX_MILLS.toLong(), STAGE_MAX_MILLS)) {
             logger.info("[${event.buildId}]|pipeline_monitor_continue|minInterval=$minInterval")
             event.delayMills = minInterval
             pipelineEventDispatcher.dispatch(event)
         }
-
         return true
     }
 
@@ -130,7 +130,7 @@ class BuildMonitorControl @Autowired constructor(
         return minInterval
     }
 
-    private fun monitorStage(event: PipelineBuildMonitorEvent): Int {
+    private fun monitorStage(event: PipelineBuildMonitorEvent): Long {
 
         val stages = pipelineStageService.listStages(event.buildId)
             .filter {
@@ -148,7 +148,7 @@ class BuildMonitorControl @Autowired constructor(
             val interval = stage.checkNextStageMonitorIntervals(event.userId)
             // 根据最小的超时时间来决定下一次监控执行的时间
             if (interval in 1 until minInterval) {
-                minInterval = interval
+                minInterval = interval.toLong()
             }
         }
 
@@ -159,7 +159,7 @@ class BuildMonitorControl @Autowired constructor(
         val MAX_MINUTES = TimeUnit.DAYS.toMinutes(7L) // 7 * 24 * 60 = 10080 分钟 = 执行最多超时7天
         val CONTAINER_MAX_MILLS = TimeUnit.MINUTES.toMillis(MAX_MINUTES).toInt() + 1 // 毫秒+1
         val MAX_HOURS = TimeUnit.DAYS.toHours(30) // 30 * 24 = 720 小时 = 审核最多超时30天
-        val STAGE_MAX_MILLS = TimeUnit.HOURS.toMillis(MAX_HOURS).toInt() + 1 // 毫秒+1
+        val STAGE_MAX_MILLS = TimeUnit.HOURS.toMillis(MAX_HOURS) + 1 // 毫秒+1
     }
 
     private fun PipelineBuildContainer.checkNextContainerMonitorIntervals(userId: String): Int {
@@ -224,8 +224,8 @@ class BuildMonitorControl @Autowired constructor(
         return interval
     }
 
-    private fun PipelineBuildStage.checkNextStageMonitorIntervals(userId: String): Int {
-        var interval = 0
+    private fun PipelineBuildStage.checkNextStageMonitorIntervals(userId: String): Long {
+        var interval : Long = 0
 
         if (controlOption?.stageControlOption?.manualTrigger != true) {
             logger.info("[$buildId]|not_monitor_stage|stage=$stageId|manualTrigger != true")
@@ -250,7 +250,7 @@ class BuildMonitorControl @Autowired constructor(
 
         logger.info("[$buildId]|start_monitor_stage|stage=$stageId|timeoutMills=$timeoutMills|useTimeMills=$usedTimeMills")
 
-        interval = (timeoutMills - usedTimeMills).toInt()
+        interval = timeoutMills - usedTimeMills
         if (interval <= 0) {
             LogUtils.addRedLine(
                 rabbitTemplate = rabbitTemplate,
