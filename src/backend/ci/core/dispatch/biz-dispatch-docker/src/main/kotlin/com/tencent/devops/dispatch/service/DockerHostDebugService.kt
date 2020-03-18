@@ -202,13 +202,13 @@ class DockerHostDebugService @Autowired constructor(
                     )
                 }
                 response["status"] == 1 -> {
+                    // 重试策略
+
+                }
+                else -> {
                     val msg = response["message"]
                     logger.error("[$projectId|$pipelineId] Start debug Docker VM failed. $msg")
                     throw RuntimeException("Start debug Docker VM failed. $msg")
-                }
-                else -> {
-                    val msg = response["event"] as String
-                    throw RuntimeException("Start debug Docker VM failed, msg: $msg")
                 }
             }
         }
@@ -286,15 +286,15 @@ class DockerHostDebugService @Autowired constructor(
         }
     }
 
-    fun reportContainerId(pipelineId: String, vmSeqId: String, containerId: String): Result<Boolean>? {
+/*    fun reportContainerId(pipelineId: String, vmSeqId: String, containerId: String): Result<Boolean>? {
         logger.info("Docker host debug report containerId, pipelineId:$pipelineId, vmSeqId:$vmSeqId, containerId:$containerId")
 
         pipelineDockerDebugDao.updateContainerId(dslContext, pipelineId, vmSeqId, containerId)
 
         return Result(0, "success", true)
-    }
+    }*/
 
-    fun rollbackDebug(pipelineId: String, vmSeqId: String, shutdown: Boolean?, message: String?): Result<Boolean>? {
+/*    fun rollbackDebug(pipelineId: String, vmSeqId: String, shutdown: Boolean?, message: String?): Result<Boolean>? {
         logger.info("Rollback build, pipelineId:$pipelineId, vmSeqId:$vmSeqId")
 
         val redisLock = DockerHostDebugLock(redisOperation)
@@ -335,7 +335,7 @@ class DockerHostDebugService @Autowired constructor(
         }
 
         return Result(0, "success", true)
-    }
+    }*/
 
     fun endDebug(hostTag: String): Result<ContainerInfo>? {
         val redisLock = DockerHostDebugLock(redisOperation)
