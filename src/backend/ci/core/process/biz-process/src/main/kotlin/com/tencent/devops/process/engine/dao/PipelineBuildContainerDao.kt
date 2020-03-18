@@ -89,8 +89,8 @@ class PipelineBuildContainerDao {
     }
 
     fun batchSave(dslContext: DSLContext, taskList: Collection<PipelineBuildContainer>) {
-        val records
-            = mutableListOf<InsertOnDuplicateSetMoreStep<TPipelineBuildContainerRecord>>()
+        val records =
+            mutableListOf<InsertOnDuplicateSetMoreStep<TPipelineBuildContainerRecord>>()
         with(T_PIPELINE_BUILD_CONTAINER) {
             taskList.forEach {
                 records.add(
