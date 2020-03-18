@@ -29,7 +29,7 @@ package com.tencent.devops.common.api.util;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Iterator;
-import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -49,7 +49,7 @@ public class ObjectReplaceEnvVarUtil {
             for (Map.Entry entry : entrySet) {
                 Object value = entry.getValue();
                 if (!isNormalReplaceEnvVar(value)) {
-                    replaceEnvVar(value, envMap);
+                    entry.setValue(replaceEnvVar(value, envMap));
                 } else {
                     entry.setValue(handleNormalEnvVar(value, envMap));
                 }
@@ -59,28 +59,23 @@ public class ObjectReplaceEnvVarUtil {
             for (int i = 0; i < dataList.size(); i++) {
                 Object value = dataList.get(i);
                 if (!isNormalReplaceEnvVar(value)) {
-                    replaceEnvVar(value, envMap);
+                    dataList.set(i, replaceEnvVar(value, envMap));
                 } else {
                     dataList.set(i, handleNormalEnvVar(value, envMap));
                 }
             }
         } else if (obj instanceof Set) {
             Set objSet = (Set) obj;
-            Iterator it = objSet.iterator();
-            List replaceObjList = new ArrayList();
+            Set replaceObjSet = new HashSet(objSet);
+            Iterator it = replaceObjSet.iterator();
             while (it.hasNext()) {
                 Object value = it.next();
-                if (!isNormalReplaceEnvVar(value)) {
-                    replaceEnvVar(value, envMap);
-                } else {
-                    // 先把需要进行占位符替换的元素放到一个集合里
-                    replaceObjList.add(value);
-                }
-            }
-            // 把需要进行占位符替换的元素替换完后再放入set集合,把替换前的元素删除
-            for (Object value : replaceObjList) {
                 objSet.remove(value);
-                objSet.add(handleNormalEnvVar(value, envMap));
+                if (!isNormalReplaceEnvVar(value)) {
+                    objSet.add(replaceEnvVar(value, envMap));
+                } else {
+                    objSet.add(handleNormalEnvVar(value, envMap));
+                }
             }
         } else if (isNormalReplaceEnvVar(obj)) {
             obj = handleNormalEnvVar(obj, envMap);
@@ -88,7 +83,8 @@ public class ObjectReplaceEnvVarUtil {
             try {
                 // 把对象转换成map后进行递归替换变量
                 Map<String, Object> dataMap = JsonUtil.INSTANCE.toMap(obj);
-                obj = replaceEnvVar(dataMap, envMap);
+                replaceEnvVar(dataMap, envMap);
+                obj = JsonUtil.INSTANCE.to(JsonUtil.INSTANCE.toJson(dataMap), obj.getClass());
             } catch (Throwable e) {
                 // 转换不了map的对象则直接替换
                 obj = EnvUtils.INSTANCE.parseEnv(JsonUtil.INSTANCE.toJson(obj), envMap, false, false);
