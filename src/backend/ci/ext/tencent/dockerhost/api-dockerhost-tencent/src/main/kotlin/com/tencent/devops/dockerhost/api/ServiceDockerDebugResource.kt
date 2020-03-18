@@ -52,7 +52,7 @@ interface ServiceDockerDebugResource {
     fun startDebug(
         @ApiParam("容器信息", required = true)
         dockerStartDebugInfo: ContainerInfo
-    ): Result<Boolean>
+    ): Result<String>
 
     @ApiOperation("终止流水线调试")
     @DELETE

@@ -53,39 +53,35 @@ class ServiceDockerDebugResourceImpl @Autowired constructor(private val dockerHo
         private const val maxRunningContainerNum = 200
     }
 
-    override fun startDebug(dockerStartDebugInfo: ContainerInfo): Result<Boolean> {
+    override fun startDebug(dockerStartDebugInfo: ContainerInfo): Result<String> {
         try {
             val containerNum = dockerHostDebugService.getContainerNum()
             if (containerNum >= maxRunningContainerNum) {
                 logger.warn("Too many containers in this host, break to start debug.")
                 alertApi.alert(AlertLevel.HIGH.name, "Docker构建机运行的容器太多", "Docker构建机运行的容器太多, " +
                         "母机IP:${CommonUtils.getInnerIP()}， 容器数量: $containerNum")
-                return Result(1, "Too many containers in this host, break to start debug.", false)
+                return Result(1, "Too many containers in this host, break to start debug.", "")
             }
 
             if (dockerStartDebugInfo.status == PipelineTaskStatus.RUNNING.status) {
                 logger.warn("Create debug container, dockerStartDebugInfo: $dockerStartDebugInfo")
                 return try {
                     val containerId = dockerHostDebugService.createContainer(dockerStartDebugInfo)
-                    // 上报containerId给dispatch
-                    dockerHostDebugService.reportDebugContainerId(dockerStartDebugInfo.pipelineId, dockerStartDebugInfo.vmSeqId, containerId)
-                    Result(true)
+                    Result(containerId)
                 } catch (e: NoSuchImageException) {
                     logger.error("Create debug container failed, no such image. pipelineId: ${dockerStartDebugInfo.pipelineId}, vmSeqId: ${dockerStartDebugInfo.vmSeqId}, err: ${e.message}")
-                    dockerHostDebugService.rollbackDebug(dockerStartDebugInfo.pipelineId, dockerStartDebugInfo.vmSeqId, true, e.message)
-                    Result(1, "Create debug container failed, no such image. rollback debug", false)
+                    Result(2, "Create debug container failed, no such image.", "")
                 } catch (e: ContainerException) {
-                    logger.error("Create debug container failed, rollback debug. pipelineId: ${dockerStartDebugInfo.pipelineId}, vmSeqId: ${dockerStartDebugInfo.vmSeqId}")
-                    dockerHostDebugService.rollbackDebug(dockerStartDebugInfo.pipelineId, dockerStartDebugInfo.vmSeqId, true, e.message)
-                    Result(1, "Create debug container failed, rollback debug", false)
+                    logger.error("Create debug container failed. pipelineId: ${dockerStartDebugInfo.pipelineId}, vmSeqId: ${dockerStartDebugInfo.vmSeqId}")
+                    Result(3, "Create debug container failed.", "")
                 }
             }
         } catch (t: Throwable) {
             logger.error("Start debug encounter unknown exception", t)
-            return Result(1, "Start debug encounter unknown exception.", false)
+            return Result(4, "Start debug encounter unknown exception.", "")
         }
 
-        return Result(true)
+        return Result("")
     }
 
     override fun endDebug(dockerEndDebugInfo: ContainerInfo): Result<Boolean> {
