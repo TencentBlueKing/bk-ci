@@ -61,6 +61,7 @@ import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.compatibility.BuildParametersCompatibilityTransformer
 import com.tencent.devops.process.engine.compatibility.BuildPropertyCompatibilityTools
 import com.tencent.devops.process.engine.control.lock.BuildIdLock
+import com.tencent.devops.process.engine.control.lock.PipelineBuildRunLock
 import com.tencent.devops.process.engine.interceptor.InterceptData
 import com.tencent.devops.process.engine.interceptor.PipelineInterceptorChain
 import com.tencent.devops.process.engine.pojo.PipelineInfo
@@ -779,33 +780,38 @@ class PipelineBuildService(
             defaultMessage = "Stage($stageId)未处于暂停状态",
             params = arrayOf(buildId))
 
-        val interceptResult = pipelineInterceptorChain.filter(
-            InterceptData(pipelineInfo, null, StartType.MANUAL)
-        )
-
-        if (interceptResult.isNotOk()) {
-            // 发送排队失败的事件
-            logger.error("[$pipelineId]|START_PIPELINE_MANUAL|流水线启动失败:[${interceptResult.message}]")
-            throw ErrorCodeException(
-                statusCode = Response.Status.NOT_FOUND.statusCode,
-                errorCode = interceptResult.status.toString(),
-                defaultMessage = "Stage启动失败![${interceptResult.message}]"
+        val runLock = PipelineBuildRunLock(redisOperation, pipelineId)
+        try {
+            runLock.lock()
+            val interceptResult = pipelineInterceptorChain.filter(
+                InterceptData(pipelineInfo, null, StartType.MANUAL)
             )
-        }
 
-        if (isCancel) pipelineStageService.cancelStage(
-            userId = userId,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            buildId = buildId,
-            stageId = stageId
-        ) else pipelineStageService.startStage(
-            userId = userId,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            buildId = buildId,
-            stageId = stageId
-        )
+            if (interceptResult.isNotOk()) {
+                // 发送排队失败的事件
+                logger.error("[$pipelineId]|START_PIPELINE_MANUAL|流水线启动失败:[${interceptResult.message}]")
+                throw ErrorCodeException(
+                    statusCode = Response.Status.NOT_FOUND.statusCode,
+                    errorCode = interceptResult.status.toString(),
+                    defaultMessage = "Stage启动失败![${interceptResult.message}]"
+                )
+            }
+            if (isCancel) pipelineStageService.cancelStage(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                stageId = stageId
+            ) else pipelineStageService.startStage(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                stageId = stageId
+            )
+        } finally {
+            runLock.unlock()
+        }
     }
 
     fun goToReview(userId: String, projectId: String, pipelineId: String, buildId: String, elementId: String): ReviewParam {
@@ -1575,9 +1581,9 @@ class PipelineBuildService(
     ): String {
 
         val pipelineId = readyToBuildPipelineInfo.pipelineId
-        val redisLock = RedisLock(redisOperation, "build:limit:$pipelineId", 5L)
+        val runLock = PipelineBuildRunLock(redisOperation, pipelineId)
         try {
-            if (frequencyLimit && channelCode !in NO_LIMIT_CHANNEL && !redisLock.tryLock()) {
+            if (frequencyLimit && channelCode !in NO_LIMIT_CHANNEL && !runLock.tryLock()) {
                 throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_START_BUILD_FREQUENT_LIMIT,
                     defaultMessage = "不能太频繁启动构建")
             }
@@ -1640,7 +1646,7 @@ class PipelineBuildService(
 
             return buildId
         } finally {
-            if (readyToBuildPipelineInfo.channelCode !in NO_LIMIT_CHANNEL) redisLock.unlock()
+            if (readyToBuildPipelineInfo.channelCode !in NO_LIMIT_CHANNEL) runLock.unlock()
         }
     }
 
