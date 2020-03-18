@@ -544,7 +544,7 @@ class PipelineBuildDetailService @Autowired constructor(
             BuildStatus.valueOf(status)
         }
 
-        return if (oldStatus == null || oldStatus == BuildStatus.STAGE_SUCCESS || !BuildStatus.isFinish(oldStatus)) {
+        return if (oldStatus == null || !BuildStatus.isFinish(oldStatus)) {
             logger.info("[${record.buildId}]|Update the build to status $buildStatus from $oldStatus")
             buildStatus
         } else {
