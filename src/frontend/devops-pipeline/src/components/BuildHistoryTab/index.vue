@@ -11,15 +11,11 @@
             @cancel="resetColumns">
             <bk-transfer :source-list="sourceColumns" display-key="label" setting-key="prop" :sortable="true" :target-list="shownColumns" :title="[$t('history.canChooseList'), $t('history.choosedList')]" @change="handleColumnsChange"></bk-transfer>
         </bk-dialog>
-        <template v-if="currentBuildNo">
-            <pipeline-log :title="`${$t('history.viewLog')}${currentBuildNum ? `（#${currentBuildNum}）` : ''}`" :build-no="currentBuildNo" :build-num="currentBuildNum" :show-export="currentShowStatus" />
-        </template>
     </div>
 </template>
 
 <script>
     import webSocketMessage from '@/utils/webSocketMessage'
-    import PipelineLog from '@/components/Log'
     import BuildHistoryTable from '@/components/BuildHistoryTable/'
     import FilterBar from '@/components/BuildHistoryTable/FilterBar'
     import { BUILD_HISTORY_TABLE_DEFAULT_COLUMNS } from '@/utils/pipelineConst'
@@ -36,8 +32,7 @@
         name: 'build-history-tab',
         components: {
             BuildHistoryTable,
-            FilterBar,
-            PipelineLog
+            FilterBar
         },
 
         mixins: [pipelineConstMixin],
@@ -107,7 +102,8 @@
                 ]
             },
             sourceColumns () {
-                return Object.values(this.BUILD_HISTORY_TABLE_COLUMNS_MAP).sort((c1, c2) => c1.index > c2.index)
+                const historyTableColumns = Object.values(this.BUILD_HISTORY_TABLE_COLUMNS_MAP).sort((c1, c2) => c1.index > c2.index)
+                return historyTableColumns.filter(x => !x.hiddenInHistory)
             },
             emptyTipsConfig () {
                 const { hasNoPermission, buildList, isLoading, historyPageStatus: { isQuerying } } = this

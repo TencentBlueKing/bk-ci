@@ -26,7 +26,9 @@
 
 package com.tencent.devops.project.api.user
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ACCESS_TOKEN
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
@@ -61,7 +63,10 @@ interface UserProjectResource {
     fun list(
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-        userId: String
+        userId: String,
+        @ApiParam("access_token")
+        @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
+        accessToken: String?
     ): Result<List<ProjectVO>>
 
     @GET
@@ -70,7 +75,10 @@ interface UserProjectResource {
     fun get(
         @ApiParam("项目ID英文名标识", required = true)
         @PathParam("english_name")
-        projectId: String
+        projectId: String,
+        @ApiParam("access_token")
+        @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
+        accessToken: String?
     ): Result<ProjectVO>
 
     @POST
@@ -81,7 +89,10 @@ interface UserProjectResource {
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
         @ApiParam(value = "项目信息", required = true)
-        projectCreateInfo: ProjectCreateInfo
+        projectCreateInfo: ProjectCreateInfo,
+        @ApiParam("access_token")
+        @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
+        accessToken: String?
     ): Result<Boolean>
 
     @PUT
@@ -95,7 +106,25 @@ interface UserProjectResource {
         @PathParam("project_id")
         projectId: String,
         @ApiParam(value = "项目信息", required = true)
-        projectUpdateInfo: ProjectUpdateInfo
+        projectUpdateInfo: ProjectUpdateInfo,
+        @ApiParam("access_token")
+        @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
+        accessToken: String?
+    ): Result<Boolean>
+
+    @PUT
+    @Path("/{project_id}/enable")
+    @ApiOperation("启用或停用项目")
+    fun enable(
+        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("project_id")
+        projectId: String,
+        @ApiParam("待变更的新状态", required = true)
+        @QueryParam("enabled")
+        enabled: Boolean
     ): Result<Boolean>
 
     @PUT
@@ -113,7 +142,10 @@ interface UserProjectResource {
         @FormDataParam("logo")
         inputStream: InputStream,
         @FormDataParam("logo")
-        disposition: FormDataContentDisposition
+        disposition: FormDataContentDisposition,
+        @ApiParam("access_token")
+        @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
+        accessToken: String?
     ): Result<Boolean>
 
     @PUT

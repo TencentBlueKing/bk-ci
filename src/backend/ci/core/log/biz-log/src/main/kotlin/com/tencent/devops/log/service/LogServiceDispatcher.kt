@@ -28,11 +28,9 @@ package com.tencent.devops.log.service
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.log.model.pojo.EndPageQueryLogs
-import com.tencent.devops.log.model.pojo.LogBatchEvent
-import com.tencent.devops.log.model.pojo.LogEvent
-import com.tencent.devops.log.model.pojo.LogStatusEvent
 import com.tencent.devops.log.model.pojo.PageQueryLogs
 import com.tencent.devops.log.model.pojo.QueryLogs
+import com.tencent.devops.log.model.pojo.QueryLineNo
 import com.tencent.devops.log.service.v2.LogServiceV2
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -55,12 +53,32 @@ class LogServiceDispatcher @Autowired constructor(
     ): Result<QueryLogs> {
         return Result(
             logServiceV2.queryInitLogs(
-                buildId,
-                isAnalysis ?: false,
-                queryKeywords,
-                tag,
-                jobId,
-                executeCount
+                buildId = buildId,
+                isAnalysis = isAnalysis ?: false,
+                keywordsStr = queryKeywords,
+                tag = tag,
+                jobId = jobId,
+                executeCount = executeCount
+            )
+        )
+    }
+
+    fun getLineNoByKeywords(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        queryKeywords: String,
+        tag: String?,
+        jobId: String?,
+        executeCount: Int?
+    ): Result<QueryLineNo> {
+        return Result(
+            logServiceV2.queryLineNoByKeywords(
+                buildId = buildId,
+                keywordsStr = queryKeywords,
+                tag = tag,
+                jobId = jobId,
+                executeCount = executeCount
             )
         )
     }
@@ -80,14 +98,14 @@ class LogServiceDispatcher @Autowired constructor(
     ): Result<PageQueryLogs> {
             return Result(
                 logServiceV2.queryInitLogsPage(
-                    buildId,
-                    isAnalysis ?: false,
-                    queryKeywords,
-                    tag,
-                    jobId,
-                        executeCount,
-                    page ?: -1,
-                    pageSize ?: -1
+                    buildId = buildId,
+                    isAnalysis = isAnalysis ?: false,
+                    keywordsStr = queryKeywords,
+                    tag = tag,
+                    jobId = jobId,
+                    executeCount = executeCount,
+                    page = page ?: -1,
+                    pageSize = pageSize ?: -1
                 )
             )
     }
@@ -106,14 +124,14 @@ class LogServiceDispatcher @Autowired constructor(
     ): Result<QueryLogs> {
             return Result(
                 logServiceV2.queryMoreLogsBetweenLines(
-                    buildId,
-                    num ?: 100,
-                    fromStart ?: true,
-                    start,
-                    end,
-                    tag,
-                    jobId,
-                        executeCount
+                    buildId = buildId,
+                    num = num ?: 100,
+                    fromStart = fromStart ?: true,
+                    start = start,
+                    end = end,
+                    tag = tag,
+                    jobId = jobId,
+                    executeCount = executeCount
                 )
             )
     }
@@ -130,14 +148,12 @@ class LogServiceDispatcher @Autowired constructor(
         executeCount: Int?
     ): Result<QueryLogs> {
             return Result(
-                logServiceV2.queryMoreLogsAfterLine(
-                    buildId,
-                    start,
-                    isAnalysis ?: false,
-                    queryKeywords,
-                    tag,
-                    jobId,
-                        executeCount
+                logServiceV2.queryMoreOriginLogsAfterLine(
+                    buildId = buildId,
+                    start = start,
+                    tag = tag,
+                    jobId = jobId,
+                    executeCount = executeCount
                 )
             )
     }
@@ -164,17 +180,5 @@ class LogServiceDispatcher @Autowired constructor(
         executeCount: Int?
     ): Result<EndPageQueryLogs> {
         return Result(logServiceV2.getEndLogs(pipelineId, buildId, tag, jobId, executeCount, size))
-    }
-
-    fun logEvent(event: LogEvent) {
-        logServiceV2.addLogEvent(event)
-    }
-
-    fun logBatchEvent(event: LogBatchEvent) {
-        logServiceV2.addBatchLogEvent(event)
-    }
-
-    fun logStatusEvent(event: LogStatusEvent) {
-        logServiceV2.updateLogStatus(event)
     }
 }

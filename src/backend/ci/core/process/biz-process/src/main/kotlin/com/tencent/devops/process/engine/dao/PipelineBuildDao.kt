@@ -33,7 +33,7 @@ import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.model.process.Tables.T_PIPELINE_BUILD_HISTORY
 import com.tencent.devops.model.process.tables.records.TPipelineBuildHistoryRecord
 import com.tencent.devops.process.engine.pojo.BuildInfo
-import com.tencent.devops.process.pojo.ErrorType
+import com.tencent.devops.common.api.pojo.ErrorType
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.DatePart
@@ -271,7 +271,6 @@ class PipelineBuildDao {
         dslContext: DSLContext,
         buildId: String,
         buildStatus: BuildStatus,
-        material: String?,
         executeTime: Long?,
         buildParameters: String?,
         recommendVersion: String?,
@@ -284,7 +283,6 @@ class PipelineBuildDao {
             var baseQuery = dslContext.update(this)
                 .set(STATUS, buildStatus.ordinal)
                 .set(END_TIME, LocalDateTime.now())
-                .set(MATERIAL, material)
                 .set(EXECUTE_TIME, executeTime)
                 .set(BUILD_PARAMETERS, buildParameters)
                 .set(RECOMMEND_VERSION, recommendVersion)
@@ -703,6 +701,15 @@ class PipelineBuildDao {
                 .where(BUILD_ID.eq(buildId))
                 .and(PROJECT_ID.eq(projectId))
                 .and(PIPELINE_ID.eq(pipelineId))
+                .execute()
+        }
+    }
+
+    fun updateBuildMaterial(dslContext: DSLContext, buildId: String, material: String?) {
+        with(T_PIPELINE_BUILD_HISTORY) {
+            dslContext.update(this)
+                .set(MATERIAL, material)
+                .where(BUILD_ID.eq(buildId))
                 .execute()
         }
     }

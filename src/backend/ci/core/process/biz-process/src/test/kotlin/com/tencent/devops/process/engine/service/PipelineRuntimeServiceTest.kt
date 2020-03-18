@@ -28,7 +28,6 @@ package com.tencent.devops.process.engine.service
 
 import com.nhaarman.mockito_kotlin.mock
 import com.nhaarman.mockito_kotlin.whenever
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.websocket.dispatch.WebSocketDispatcher
@@ -41,12 +40,14 @@ import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
 import com.tencent.devops.process.engine.dao.PipelineBuildTaskDao
 import com.tencent.devops.process.engine.dao.PipelineBuildVarDao
 import com.tencent.devops.process.service.BuildStartupParamService
-import com.tencent.devops.process.utils.PIPELINE_MATERIAL_ALIASNAME
-import com.tencent.devops.process.utils.PIPELINE_MATERIAL_BRANCHNAME
-import com.tencent.devops.process.utils.PIPELINE_MATERIAL_NEW_COMMIT_COMMENT
-import com.tencent.devops.process.utils.PIPELINE_MATERIAL_NEW_COMMIT_ID
-import com.tencent.devops.process.utils.PIPELINE_MATERIAL_NEW_COMMIT_TIMES
-import com.tencent.devops.process.utils.PIPELINE_MATERIAL_URL
+import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
+import com.tencent.devops.process.utils.PIPELINE_NAME
+import com.tencent.devops.process.utils.PIPELINE_START_CHANNEL
+import com.tencent.devops.process.utils.PIPELINE_START_MOBILE
+import com.tencent.devops.process.utils.PIPELINE_START_TYPE
+import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
+import com.tencent.devops.process.utils.PIPELINE_START_USER_NAME
+import com.tencent.devops.process.utils.PIPELINE_VERSION
 import org.jooq.DSLContext
 import org.junit.Assert
 import org.junit.Test
@@ -89,34 +90,49 @@ class PipelineRuntimeServiceTest {
     )
 
     @Test
-    fun getPipelineBuildMaterial() {
-        val repoIds = setOf("11", "12", "13")
-        val relation = mutableMapOf<String, String>()
-        val mockVars = mutableMapOf<String, String>()
-        repoIds.forEach { repoId ->
-            mockVars["$PIPELINE_MATERIAL_URL$repoId"] = "http://xxxx/$repoId"
-            relation["http://xxxx/$repoId"] = repoId
-            mockVars["$PIPELINE_MATERIAL_NEW_COMMIT_TIMES$repoId"] = repoId
-            mockVars["$PIPELINE_MATERIAL_ALIASNAME$repoId"] = "aliasName$repoId"
-            mockVars["$PIPELINE_MATERIAL_BRANCHNAME$repoId"] = "branch_$repoId"
-            mockVars["$PIPELINE_MATERIAL_NEW_COMMIT_ID$repoId"] = "new_commit_id_$repoId"
-            mockVars["$PIPELINE_MATERIAL_NEW_COMMIT_COMMENT$repoId"] = "comment_$repoId"
-        }
+    fun getAllVariable() {
 
-        val buildId = "b-12345678901234567890123456789012"
+        val buildId = "b-1234567890"
+
+        val mockVars = mutableMapOf(
+            "pipeline.start.channel" to "BS",
+            "pipeline.start.isMobile" to "false",
+            "pipeline.name" to "流水线名称",
+            "pipeline.build.num" to "210",
+            "pipeline.start.type" to "SERVICE",
+            "pipeline.start.user.id" to "user123",
+            "pipeline.start.user.name" to "人名",
+            "pipeline.version" to "34"
+        )
+
         whenever(pipelineBuildVarDao.getVars(dslContext, buildId)).thenReturn(mockVars)
-        val pipelineBuildMaterial = pipelineRuntimeService.getPipelineBuildMaterial(buildId)
-        Assert.assertEquals(pipelineBuildMaterial.size, repoIds.size)
-        pipelineBuildMaterial.forEach {
-            val repoId = relation[it.url]
-            Assert.assertEquals("http://xxxx/$repoId", it.url)
-            Assert.assertEquals("aliasName$repoId", it.aliasName)
-            Assert.assertEquals("branch_$repoId", it.branchName)
-            Assert.assertEquals("new_commit_id_$repoId", it.newCommitId)
-            Assert.assertEquals("comment_$repoId", it.newCommitComment)
-            Assert.assertEquals(repoId, "${it.commitTimes}")
-        }
+        val allVariable = pipelineRuntimeService.getAllVariable(buildId)
 
-        println(JsonUtil.toJson(pipelineBuildMaterial))
+        Assert.assertEquals(mockVars["pipeline.start.channel"], allVariable[PIPELINE_START_CHANNEL])
+        Assert.assertEquals(allVariable["pipeline.start.channel"], allVariable[PIPELINE_START_CHANNEL])
+
+        Assert.assertEquals(mockVars["pipeline.start.isMobile"], allVariable[PIPELINE_START_MOBILE])
+        Assert.assertEquals(allVariable["pipeline.start.isMobile"], allVariable[PIPELINE_START_MOBILE])
+
+        Assert.assertEquals(mockVars["pipeline.name"], allVariable[PIPELINE_NAME])
+        Assert.assertEquals(allVariable["pipeline.name"], allVariable[PIPELINE_NAME])
+
+        Assert.assertEquals(mockVars["pipeline.build.num"], allVariable[PIPELINE_BUILD_NUM])
+        Assert.assertEquals(allVariable["pipeline.build.num"], allVariable[PIPELINE_BUILD_NUM])
+
+        Assert.assertEquals(mockVars["pipeline.name"], allVariable[PIPELINE_NAME])
+        Assert.assertEquals(allVariable["pipeline.name"], allVariable[PIPELINE_NAME])
+
+        Assert.assertEquals(mockVars["pipeline.start.type"], allVariable[PIPELINE_START_TYPE])
+        Assert.assertEquals(allVariable["pipeline.start.type"], allVariable[PIPELINE_START_TYPE])
+
+        Assert.assertEquals(mockVars["pipeline.start.user.id"], allVariable[PIPELINE_START_USER_ID])
+        Assert.assertEquals(allVariable["pipeline.start.user.id"], allVariable[PIPELINE_START_USER_ID])
+
+        Assert.assertEquals(mockVars["pipeline.start.user.name"], allVariable[PIPELINE_START_USER_NAME])
+        Assert.assertEquals(allVariable["pipeline.start.user.name"], allVariable[PIPELINE_START_USER_NAME])
+
+        Assert.assertEquals(mockVars["pipeline.version"], allVariable[PIPELINE_VERSION])
+        Assert.assertEquals(allVariable["pipeline.version"], allVariable[PIPELINE_VERSION])
     }
 }

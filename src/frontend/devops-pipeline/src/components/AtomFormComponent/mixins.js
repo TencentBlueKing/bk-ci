@@ -69,7 +69,7 @@ export default {
                 switch (true) {
                     case Array.isArray(response.data):
                         return response.data
-                    case Array.isArray(response.data.record):
+                    case response.data && response.data.record && Array.isArray(response.data.record):
                         return response.data.record
                     default:
                         const path = dataPath.split('.')

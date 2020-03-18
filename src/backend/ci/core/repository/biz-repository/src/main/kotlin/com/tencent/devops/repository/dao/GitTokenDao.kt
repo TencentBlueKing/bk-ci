@@ -26,16 +26,17 @@
 
 package com.tencent.devops.repository.dao
 
-import com.tencent.devops.model.repository.tables.TRepositoryGtiToken
-import com.tencent.devops.model.repository.tables.records.TRepositoryGtiTokenRecord
+import com.tencent.devops.model.repository.tables.TRepositoryGitToken
+import com.tencent.devops.model.repository.tables.records.TRepositoryGitTokenRecord
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
+import java.time.LocalDateTime
 
 @Repository
 class GitTokenDao {
-    fun getAccessToken(dslContext: DSLContext, userId: String): TRepositoryGtiTokenRecord? {
-        with(TRepositoryGtiToken.T_REPOSITORY_GTI_TOKEN) {
+    fun getAccessToken(dslContext: DSLContext, userId: String): TRepositoryGitTokenRecord? {
+        with(TRepositoryGitToken.T_REPOSITORY_GIT_TOKEN) {
             return dslContext.selectFrom(this)
                 .where(USER_ID.eq(userId))
                 .fetchOne()
@@ -43,33 +44,36 @@ class GitTokenDao {
     }
 
     fun saveAccessToken(dslContext: DSLContext, userId: String, token: GitToken): Int {
-        with(TRepositoryGtiToken.T_REPOSITORY_GTI_TOKEN) {
+        with(TRepositoryGitToken.T_REPOSITORY_GIT_TOKEN) {
             return dslContext.insertInto(
                 this,
                 USER_ID,
                 ACCESS_TOKEN,
                 REFRESH_TOKEN,
                 TOKEN_TYPE,
-                EXPIRES_IN
+                EXPIRES_IN,
+                CREATE_TIME
             )
                 .values(
                     userId,
                     token.accessToken,
                     token.refreshToken,
                     token.tokenType,
-                    token.expiresIn
+                    token.expiresIn,
+                    LocalDateTime.now()
                 )
                 .onDuplicateKeyUpdate()
                 .set(ACCESS_TOKEN, token.accessToken)
                 .set(REFRESH_TOKEN, token.refreshToken)
                 .set(TOKEN_TYPE, token.tokenType)
                 .set(EXPIRES_IN, token.expiresIn)
+                .set(CREATE_TIME, LocalDateTime.now())
                 .execute()
         }
     }
 
     fun deleteToken(dslContext: DSLContext, userId: String): Int {
-        with(TRepositoryGtiToken.T_REPOSITORY_GTI_TOKEN) {
+        with(TRepositoryGitToken.T_REPOSITORY_GIT_TOKEN) {
             return dslContext.deleteFrom(this)
                 .where(USER_ID.eq(userId))
                 .execute()

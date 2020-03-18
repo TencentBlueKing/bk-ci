@@ -30,10 +30,10 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxPaasCodeCCScriptElement
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.notify.api.service.ServiceNotifyResource
 import com.tencent.devops.plugin.api.ServiceCodeccElementResource
+import com.tencent.devops.plugin.codecc.CodeccUtils
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.quality.api.v2.pojo.QualityHisMetadata
@@ -165,7 +165,7 @@ class QualityRuleCheckService @Autowired constructor(
 
             // 遍历项目下所有拦截规则
             val ruleList = ruleService.serviceListRuleByPosition(projectId, buildCheckParams.position)
-            val metadataList = qualityHisMetadataService.serviceGetHisMetadata(buildId)
+            val metadataList = lazyGetHisMetadata(buildId)
             logger.info("Rule metadata serviceList for build(${buildCheckParams.buildId}):\n metadataList=$metadataList")
 
             ruleList.filter { rule ->
@@ -183,7 +183,10 @@ class QualityRuleCheckService @Autowired constructor(
                 val result = checkIndicator(rule, buildCheckParams, metadataList)
                 val interceptRecordList = result.second
                 val interceptResult = result.first
-                val params = mapOf("projectId" to buildCheckParams.projectId, "pipelineId" to buildCheckParams.pipelineId)
+                val params = mapOf("projectId" to buildCheckParams.projectId,
+                    "pipelineId" to buildCheckParams.pipelineId,
+                    CodeccUtils.BK_CI_CODECC_TASK_ID to (buildCheckParams.runtimeVariable?.get(CodeccUtils.BK_CI_CODECC_TASK_ID) ?: "")
+                )
 
                 resultList.add(getRuleCheckSingleResult(rule.name, interceptRecordList, params))
                 ruleInterceptList.add(Triple(rule, interceptResult, interceptRecordList))
@@ -202,6 +205,16 @@ class QualityRuleCheckService @Autowired constructor(
             logger.info("end check pipeline($pipelineId) build($buildId) task(${buildCheckParams.taskId})")
             return RuleCheckResult(allPass, allEnd, auditTimeOutMinutes * 60, resultList)
         }
+    }
+
+    // codecc回调数据是异步的，为空加个等待
+    private fun lazyGetHisMetadata(buildId: String): List<QualityHisMetadata> {
+        for (i in setOf(1, 5, 3, 7)) {
+            val result = qualityHisMetadataService.serviceGetHisMetadata(buildId)
+            if (result.isNotEmpty()) return result
+            Thread.sleep(i * 1000L)
+        }
+        return listOf()
     }
 
     private fun checkPostHandle(
@@ -374,10 +387,12 @@ class QualityRuleCheckService @Autowired constructor(
 
     private fun getDetailMsg(record: QualityRuleInterceptRecord, params: Map<String, String>): String {
         // codecc跳到独立入口页面
-        return if (record.indicatorType == LinuxPaasCodeCCScriptElement.classType) {
+        return if (CodeccUtils.isCodeccAtom(record.indicatorType)) {
             val projectId = params["projectId"] ?: ""
             val pipelineId = params["pipelineId"] ?: ""
-            val taskId = client.get(ServiceCodeccElementResource::class).get(projectId, pipelineId).data?.taskId
+            val paramTaskId = params[CodeccUtils.BK_CI_CODECC_TASK_ID]
+            val taskId = if (paramTaskId.isNullOrBlank()) client.get(ServiceCodeccElementResource::class).get(projectId, pipelineId).data?.taskId
+            else paramTaskId
             if (taskId.isNullOrBlank()) {
                 logger.warn("taskId is null or blank for project($projectId) pipeline($pipelineId)")
                 return ""

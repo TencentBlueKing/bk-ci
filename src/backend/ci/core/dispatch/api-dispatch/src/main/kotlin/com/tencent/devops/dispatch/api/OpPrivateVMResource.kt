@@ -57,7 +57,7 @@ interface OpPrivateVMResource {
     fun bind(
         @ApiParam(value = "虚拟机ID", required = true)
         @PathParam("vmId")
-        vmId: Int,
+        vmId: Long,
         @ApiParam(value = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String
@@ -69,7 +69,7 @@ interface OpPrivateVMResource {
     fun unbind(
         @ApiParam(value = "虚拟机ID", required = true)
         @PathParam("vmId")
-        vmId: Int,
+        vmId: Long,
         @ApiParam(value = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String

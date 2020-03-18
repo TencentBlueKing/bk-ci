@@ -89,6 +89,8 @@ data class AtomVersion(
     val repositoryAuthorizer: String?,
     @ApiModelProperty("插件的调试项目")
     val projectCode: String?,
+    @ApiModelProperty("插件的初始化项目")
+    val initProjectCode: String?,
     @ApiModelProperty("标签列表", required = false)
     val labelList: List<Label>?,
     @ApiModelProperty("插件包名")
@@ -98,5 +100,7 @@ data class AtomVersion(
     @ApiModelProperty("项目可视范围,PRIVATE:私有 LOGIN_PUBLIC:登录用户开源")
     val visibilityLevel: String?,
     @ApiModelProperty("插件代码库不开源原因")
-    val privateReason: String?
+    val privateReason: String?,
+    @ApiModelProperty("是否推荐标识 true：推荐，false：不推荐", required = false)
+    val recommendFlag: Boolean? = null
 )

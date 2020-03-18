@@ -38,6 +38,10 @@ interface OpProjectService {
 
     fun setGrayProject(projectCodeList: List<String>, operateFlag: Int): Boolean
 
+    fun setRepoGrayProject(projectCodeList: List<String>, operateFlag: Int): Boolean
+
+    fun setMacOSGrayProject(projectCodeList: List<String>, operateFlag: Int): Boolean
+
     fun updateProjectFromOp(userId: String, accessToken: String, projectInfoRequest: OpProjectUpdateInfoRequest): Int
 
     fun getProjectList(
@@ -53,6 +57,35 @@ interface OpProjectService {
         grayFlag: Boolean
     ): Result<Map<String, Any?>?>
 
+    fun getProjectList(
+        projectName: String?,
+        englishName: String?,
+        projectType: Int?,
+        isSecrecy: Boolean?,
+        creator: String?,
+        approver: String?,
+        approvalStatus: Int?,
+        offset: Int,
+        limit: Int,
+        grayFlag: Boolean,
+        repoGrayFlag: Boolean
+    ): Result<Map<String, Any?>?>
+
+    fun getProjectList(
+        projectName: String?,
+        englishName: String?,
+        projectType: Int?,
+        isSecrecy: Boolean?,
+        creator: String?,
+        approver: String?,
+        approvalStatus: Int?,
+        offset: Int,
+        limit: Int,
+        grayFlag: Boolean,
+        repoGrayFlag: Boolean,
+        macosGrayFlag: Boolean
+    ): Result<Map<String, Any?>?>
+
     fun getProjectCount(
         projectName: String?,
         englishName: String?,
@@ -63,4 +96,13 @@ interface OpProjectService {
         approvalStatus: Int?,
         grayFlag: Boolean
     ): Result<Int>
+
+    fun synProject(
+        projectCode: String,
+        isRefresh: Boolean? = true
+    ): Result<Boolean>
+
+    fun synProjectInit(
+        isRefresh: Boolean? = true
+    ): Result<List<String>>
 }

@@ -71,6 +71,7 @@ type AgentHeartbeatResponse struct {
 	AgentStatus       string            `json:"agentStatus"`
 	ParallelTaskCount int               `json:"parallelTaskCount"`
 	Envs              map[string]string `json:"envs"`
+	Gateway           string            `json:"gateway"`
 }
 
 func NewPipelineResponse(seqId string, status string, response string) *PipelineResponse {

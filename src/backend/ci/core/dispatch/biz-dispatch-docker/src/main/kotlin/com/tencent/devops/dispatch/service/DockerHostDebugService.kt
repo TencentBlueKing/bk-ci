@@ -31,6 +31,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.DockerVersion
 import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.common.web.mq.alert.AlertLevel
 import com.tencent.devops.common.web.mq.alert.AlertUtils
 import com.tencent.devops.dispatch.dao.PipelineDockerDebugDao
@@ -40,6 +41,7 @@ import com.tencent.devops.dispatch.pojo.ContainerInfo
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.dispatch.utils.CommonUtils
 import com.tencent.devops.dispatch.utils.DockerHostDebugLock
+import com.tencent.devops.dispatch.utils.DockerUtils
 import com.tencent.devops.dispatch.utils.redis.RedisUtils
 import com.tencent.devops.store.pojo.image.exception.UnknownImageType
 import com.tencent.devops.store.pojo.image.response.ImageRepoInfo
@@ -60,7 +62,8 @@ class DockerHostDebugService @Autowired constructor(
     private val redisUtils: RedisUtils,
     private val redisOperation: RedisOperation,
     private val client: Client,
-    private val storeImageService: StoreImageService
+    private val storeImageService: StoreImageService,
+    private val gray: Gray
 ) {
 
     @Value("\${dispatch.dockerBuildImagePrefix:#{null}}")
@@ -68,7 +71,6 @@ class DockerHostDebugService @Autowired constructor(
 
     @Value("\${project.gray:#{null}}")
     private val grayFlag: String? = null
-    private val redisKey = "project:setting:gray" // 灰度项目列表存在redis的标识key
 
     private val TLINUX1_2_IMAGE = "/bkdevops/docker-builder1.2:v1"
     private val TLINUX2_2_IMAGE = "/bkdevops/docker-builder2.2:v1"
@@ -93,6 +95,8 @@ class DockerHostDebugService @Autowired constructor(
             imageRepoInfo = storeImageService.getImageRepoInfo(
                 userId = userId,
                 projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = null,
                 imageCode = imageCode,
                 imageVersion = imageVersion,
                 defaultPrefix = dockerBuildImagePrefix
@@ -120,7 +124,7 @@ class DockerHostDebugService @Autowired constructor(
             else -> when (imageName) {
                 DockerVersion.TLINUX1_2.value -> dockerBuildImagePrefix + TLINUX1_2_IMAGE
                 DockerVersion.TLINUX2_2.value -> dockerBuildImagePrefix + TLINUX2_2_IMAGE
-                else -> "$dockerBuildImagePrefix/$imageName"
+                else -> "$dockerBuildImagePrefix/bkdevops/$imageName"
             }
         }
         logger.info("insertDebug:Docker images is: $dockerImage")
@@ -138,19 +142,23 @@ class DockerHostDebugService @Autowired constructor(
             password = ticketsMap["v2"] as String
         }
 
-        val dockerHost = pipelineDockerHostDao.getHost(dslContext, projectId)
+//        val dockerHost = pipelineDockerHostDao.getHost(dslContext, projectId)
+//        val lastHostIp = redisUtils.getDockerBuildLastHost(pipelineId, vmSeqId)
+//        val hostTag = when {
+//            null != dockerHost -> {
+//                logger.info("Fixed debug host machine, hostIp:${dockerHost.hostIp}, pipelineId:$pipelineId")
+//                dockerHost.hostIp
+//            }
+//            null != lastHostIp -> {
+//                logger.info("Use last build hostIp: $lastHostIp, pipelineId:$pipelineId")
+//                lastHostIp
+//            }
+//            else -> ""
+//        }
+        val dockerHosts = pipelineDockerHostDao.getHostIps(dslContext, projectId)
         val lastHostIp = redisUtils.getDockerBuildLastHost(pipelineId, vmSeqId)
-        val hostTag = when {
-            null != dockerHost -> {
-                logger.info("Fixed debug host machine, hostIp:${dockerHost.hostIp}, pipelineId:$pipelineId")
-                dockerHost.hostIp
-            }
-            null != lastHostIp -> {
-                logger.info("Use last build hostIp: $lastHostIp, pipelineId:$pipelineId")
-                lastHostIp
-            }
-            else -> ""
-        }
+        val hostTag =
+            DockerUtils.getDockerHostIp(dockerHosts = dockerHosts, lastHostIp = lastHostIp, buildId = "debug_")
 
         pipelineDockerDebugDao.insertDebug(
             dslContext = dslContext,
@@ -206,9 +214,7 @@ class DockerHostDebugService @Autowired constructor(
         val redisLock = DockerHostDebugLock(redisOperation)
         try {
             val gray = !grayFlag.isNullOrBlank() && grayFlag!!.toBoolean()
-            val grayProjectSet = redisOperation.getSetMembers(redisKey)?.filter { !it.isBlank() }
-                ?.toSet() ?: emptySet()
-            logger.info("gray environment: $gray")
+            val grayProjectSet = this.gray.grayProjectSet(redisOperation)
             redisLock.lock()
             if (gray) {
                 // 优先取设置了IP的任务（可能是固定构建机，也可能是上次用的构建机）
@@ -337,6 +343,7 @@ class DockerHostDebugService @Autowired constructor(
         }
     }
 
+    // FIXME 需要记录如果是从某个构建ID启动的调试必须不允许漂移，另起issue处理
     @Scheduled(initialDelay = 90 * 1000, fixedDelay = 60 * 1000)
     fun resetHostTag() {
         val redisLock = DockerHostDebugLock(redisOperation)

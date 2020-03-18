@@ -28,17 +28,17 @@ package com.tencent.devops.process.engine.service
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.tencent.devops.common.api.exception.ClientException
 import com.tencent.devops.common.api.exception.RemoteServiceException
-import com.tencent.devops.common.api.util.EnvUtils.parseEnv
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.ObjectReplaceEnvVarUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
-import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildTaskFinishBroadCastEvent
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
+import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildTaskFinishBroadCastEvent
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.BuildTaskStatus
@@ -54,8 +54,8 @@ import com.tencent.devops.process.jmx.elements.JmxElements
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildTaskResult
 import com.tencent.devops.process.pojo.BuildVariables
-import com.tencent.devops.process.pojo.ErrorType
 import com.tencent.devops.process.pojo.mq.PipelineBuildContainerEvent
+import com.tencent.devops.process.service.PipelineTaskService
 import com.tencent.devops.process.utils.PIPELINE_ELEMENT_ID
 import com.tencent.devops.process.utils.PIPELINE_TURBO_TASK_ID
 import com.tencent.devops.process.utils.PIPELINE_VMSEQ_ID
@@ -79,6 +79,7 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
     private val measureService: MeasureService?,
     private val rabbitTemplate: RabbitTemplate,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
+    private val pipelineTaskService: PipelineTaskService,
     private val redisOperation: RedisOperation,
     private val jmxElements: JmxElements,
     private val consulClient: ConsulDiscoveryClient?,
@@ -156,8 +157,15 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
                         buildId = buildId, vmSeqId = vmSeqId, buildStatus = BuildStatus.SUCCEED
                     )
                     return BuildVariables(
-                        buildId, vmSeqId, vmName,
-                        buildInfo.projectId, buildInfo.pipelineId, variables, buildEnvs, it.containerId ?: "", variablesWithType
+                        buildId = buildId,
+                        vmSeqId = vmSeqId,
+                        vmName = vmName,
+                        projectId = buildInfo.projectId,
+                        pipelineId = buildInfo.pipelineId,
+                        variables = variables,
+                        buildEnvs = buildEnvs,
+                        containerId = it.containerId ?: "",
+                        variablesWithType = variablesWithType
                     )
                 }
                 vmId++
@@ -354,6 +362,8 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
                         ) {
                             if (!checkCustomVariableSkip(buildId, additionalOptions, allVariable)) {
                                 queueTasks.add(task)
+                            } else {
+                                buildDetailService.taskSkip(buildId, task.taskId)
                             }
                         }
                     }
@@ -426,13 +436,15 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
         // 认领任务
         pipelineRuntimeService.claimBuildTask(buildId, task, userId)
 
-        val buildVariable = allVariable
-            .plus(PIPELINE_VMSEQ_ID to vmSeqId)
-            .plus(PIPELINE_ELEMENT_ID to task.taskId)
-            .plus(PIPELINE_TURBO_TASK_ID to turboTaskId)
-            .toMutableMap()
+        val buildVariable = mutableMapOf(
+            PIPELINE_VMSEQ_ID to vmSeqId,
+            PIPELINE_ELEMENT_ID to task.taskId,
+            PIPELINE_TURBO_TASK_ID to turboTaskId
+        )
 
         PipelineVarUtil.fillOldVar(buildVariable)
+
+        buildVariable.putAll(allVariable)
 
         val buildTask = BuildTask(
             buildId = buildId,
@@ -443,7 +455,8 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
             elementName = task.taskName,
             type = task.taskType,
             params = task.taskParams.map {
-                it.key to parseEnv(command = JsonUtil.toJson(it.value), data = buildVariable, isEscape = true)
+                val obj = ObjectReplaceEnvVarUtil.replaceEnvVar(it.value, buildVariable)
+                it.key to JsonUtil.toJson(obj)
             }.filter {
                 !it.first.startsWith("@type")
             }.toMap(),
@@ -503,7 +516,20 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
             ErrorType.valueOf(result.errorType!!)
         } else null
 
-        val buildStatus = if (result.success) BuildStatus.SUCCEED else BuildStatus.FAILED
+        val buildStatus = if (result.success) {
+            pipelineTaskService.removeRetryCache(buildId, result.taskId)
+            BuildStatus.SUCCEED
+        } else {
+            if (pipelineTaskService.isRetryWhenFail(result.taskId, buildId)) {
+                logger.info("task fail,user setting retry, build[$buildId], taskId[${result.taskId}, elementId[${result.elementId}]]")
+                // 此处休眠5s作为重试的冷却时间
+                Thread.sleep(5000)
+                BuildStatus.RETRY
+            } else {
+                BuildStatus.FAILED
+            }
+        }
+
         buildDetailService.pipelineTaskEnd(
             buildId = buildId,
             elementId = result.elementId,
@@ -555,7 +581,12 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
                 actionType = ActionType.END
             )
         )
-        LogUtils.stopLog(rabbitTemplate, buildId, result.elementId, result.containerId ?: "")
+        LogUtils.stopLog(
+            rabbitTemplate = rabbitTemplate,
+            buildId = buildId,
+            tag = result.elementId,
+            jobId = result.containerId ?: ""
+        )
     }
 
     /**
@@ -622,13 +653,13 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
         }
     }
 
-    @Suppress("UNCHECKED_CAST")
+    @Suppress("UNCHECKED_CAST") // FIXME: 需要重新定义接口拆分实现，此处非开源所需要
     fun getTurboTask(pipelineId: String, elementId: String): String {
         try {
             val instances = consulClient!!.getInstances("turbo")
-                ?: throw ClientException("找不到任何有效的turbo服务提供者")
+                ?: return ""
             if (instances.isEmpty()) {
-                throw ClientException("找不到任何有效的turbo服务提供者")
+                return ""
             }
             val url = "${if (instances[0].isSecure) "https" else
                 "http"}://${instances[0].host}:${instances[0].port}/api/service/turbo/task/pipeline/$pipelineId/$elementId"

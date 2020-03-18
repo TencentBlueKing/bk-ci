@@ -1,7 +1,7 @@
 <template>
     <div class="atom-overview-wrapper">
         <div class="inner-header">
-            <div class="title"> {{ $t('插件概览') }} </div>
+            <div class="title"> {{ $t('store.插件概览') }} </div>
         </div>
 
         <section
@@ -13,7 +13,7 @@
             <div class="atom-overview-container" v-if="showContent">
                 <div class="info-content info-content-left">
                     <div class="overview-statistics">
-                        <div class="info-title"> {{ $t('总体统计') }} </div>
+                        <div class="info-title"> {{ $t('store.总体统计') }} </div>
                         <div class="atom-statistic">
                             <div class="total-item" v-for="(entry, index) in statisticList" :key="index">
                                 <div class="item-value" :class="{ 'blue-theme': entry.name === 'commentCnt' || entry.name === 'score' }">{{ entry.value }}</div>
@@ -22,33 +22,33 @@
                         </div>
                     </div>
                     <div class="trend-chart">
-                        <div class="info-title"> {{ $t('趋势图') }} </div>
+                        <div class="info-title"> {{ $t('store.趋势图') }} </div>
                         <div class="chart-content">
                             <div class="info-tab">
-                                <span class="tab-item"> {{ $t('安装量') }} </span>
+                                <span class="tab-item"> {{ $t('store.安装量') }} </span>
                             </div>
                             <div class="chart-item">
                                 <img :src="image">
-                                <p>{{ $t('功能正在建设中') }}···</p>
+                                <p>{{ $t('store.功能正在建设中') }}···</p>
                             </div>
                         </div>
                     </div>
                 </div>
                 <div class="info-content info-content-right">
                     <div class="atom-code-card">
-                        <div class="card-title"> {{ $t('插件代码') }} </div>
+                        <div class="card-title"> {{ $t('store.插件代码') }} </div>
                         <div class="card-content">
                             <div class="code-form-item">
-                                <div class="info-label"> {{ $t('开发语言：') }} </div>
+                                <div class="info-label"> {{ $t('store.开发语言：') }} </div>
                                 <div class="info-value">{{ codeForm.language }}</div>
                             </div>
                         </div>
                     </div>
                     <div class="atom-latest-news">
-                        <div class="info-title"> {{ $t('最新动态') }} </div>
+                        <div class="info-title"> {{ $t('store.最新动态') }} </div>
                         <div class="news-content">
                             <img :src="image">
-                            <p>{{ $t('功能正在建设中') }}···</p>
+                            <p>{{ $t('store.功能正在建设中') }}···</p>
                         </div>
                     </div>
                 </div>
@@ -67,10 +67,10 @@
                 showContent: false,
                 image: imgBuilding,
                 statisticList: [
-                    { name: 'downloads', label: this.$t('安装量'), value: 0 },
-                    { name: 'pipelineCnt', label: this.$t('流水线个数'), value: 0 },
-                    { name: 'commentCnt', label: this.$t('评论数'), value: 0 },
-                    { name: 'score', label: this.$t('评分'), value: 0 }
+                    { name: 'downloads', label: this.$t('store.安装量'), value: 0 },
+                    { name: 'pipelineCnt', label: this.$t('store.流水线个数'), value: 0 },
+                    { name: 'commentCnt', label: this.$t('store.评论数'), value: 0 },
+                    { name: 'score', label: this.$t('store.评分'), value: 0 }
                 ],
                 loading: {
                     isLoading: false,
@@ -196,14 +196,17 @@
             .card-content {
                 height: 129px;
                 margin-top: 8px;
-                padding: 20px;
+                padding: 10px 20px;
                 border: 1px solid $borderWeightColor;
                 background: #fff;
+                display: flex;
+                flex-direction: column;
+                justify-content: space-around;
+                font-size: 12px;
             }
             .code-form-item {
                 position: relative;
                 display: flex;
-                margin-top: 15px;
                 width: 100%;
                 &:first-child {
                     margin-top: 0;
@@ -224,27 +227,29 @@
             }
             .codelib-url {
                 position: relative;
-                top: 4px;
                 width: calc(100% - 84px);
+                display: flex;
+                align-items: center;
+                .bk-icon {
+                    vertical-align: middle;
+                    margin-left: 4px;
+                }
             }
             .codelib-text {
                 display: inline-block;
                 white-space: nowrap;
-                max-width: 86%;
+                flex: 1;
                 overflow: hidden;
+                color: $fontWeightColor;
                 font-size: 12px;
                 text-overflow: ellipsis;
             }
             .copy-btn {
-                position: relative;
-                top: -2px;
-                left: 4px;
-                font-size: 12px;
+                margin-left: 4px;
             }
-        }
-        .jump-url {
-            color: $primaryColor;
-            cursor: pointer;
+            .repo-outh {
+                margin-left: 14px;
+            }
         }
         .trend-chart {
             margin-top: 24px;

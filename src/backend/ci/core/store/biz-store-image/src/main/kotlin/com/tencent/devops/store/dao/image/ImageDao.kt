@@ -1,3 +1,29 @@
+/*
+ * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ *
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ *
+ * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
+ *
+ * A copy of the MIT License is included in this file.
+ *
+ *
+ * Terms of the MIT License:
+ * ---------------------------------------------------
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
+ * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+ * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+ * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
 package com.tencent.devops.store.dao.image
 
 import com.tencent.devops.common.api.util.JsonUtil
@@ -10,9 +36,9 @@ import com.tencent.devops.model.store.tables.TLabel
 import com.tencent.devops.model.store.tables.TStoreMember
 import com.tencent.devops.model.store.tables.TStoreProjectRel
 import com.tencent.devops.model.store.tables.records.TImageRecord
-import com.tencent.devops.store.dao.image.Constants.KEY_CREATE_TIME
-import com.tencent.devops.store.dao.image.Constants.KEY_CREATOR
 import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_CODE
+import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_FEATURE_PUBLIC_FLAG
+import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_FEATURE_RECOMMEND_FLAG
 import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_ID
 import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_NAME
 import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_REPO_NAME
@@ -22,25 +48,31 @@ import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_SOURCE_TYPE
 import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_STATUS
 import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_TAG
 import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_VERSION
-import com.tencent.devops.store.dao.image.Constants.KEY_MODIFIER
-import com.tencent.devops.store.dao.image.Constants.KEY_UPDATE_TIME
+import com.tencent.devops.store.pojo.common.KEY_CREATE_TIME
+import com.tencent.devops.store.pojo.common.KEY_CREATOR
+import com.tencent.devops.store.pojo.common.KEY_MODIFIER
+import com.tencent.devops.store.pojo.common.KEY_UPDATE_TIME
 import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.image.enums.ImageAgentTypeEnum
+import com.tencent.devops.store.pojo.image.enums.ImageRDTypeEnum
 import com.tencent.devops.store.pojo.image.enums.ImageStatusEnum
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
-import org.jooq.Record14
-import org.jooq.Record4
+import org.jooq.Record15
+import org.jooq.Record5
 import org.jooq.Record9
 import org.jooq.Result
 import org.jooq.impl.DSL
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
 @Repository
 class ImageDao {
+    private val logger = LoggerFactory.getLogger(ImageDao::class.java)
+
     data class ImageUpdateBean constructor(
         val imageName: String?,
         val classifyId: String?,
@@ -53,6 +85,8 @@ class ImageDao {
         val imageStatusMsg: String?,
         val imageSize: String?,
         val imageTag: String?,
+        val dockerFileType: String?,
+        val dockerFileContent: String?,
         val agentTypeList: List<ImageAgentTypeEnum>,
         val logoUrl: String?,
         val icon: String?,
@@ -544,8 +578,9 @@ class ImageDao {
         imageName: String?,
         page: Int? = 1,
         pageSize: Int? = -1
-    ): Result<Record14<String, String, String, String, String, String, String, String, String, Byte, String, String, LocalDateTime, LocalDateTime>> {
+    ): Result<Record15<String, String, String, String, String, String, String, String, String, Byte, String, String, LocalDateTime, LocalDateTime, Boolean>>? {
         val tImage = TImage.T_IMAGE.`as`("tImage")
+        val tImageFeature = TImageFeature.T_IMAGE_FEATURE.`as`("tImageFeature")
         val tStoreMember = TStoreMember.T_STORE_MEMBER.`as`("tStoreMember")
         val conditions = generateGetMyImageConditions(tImage, userId, tStoreMember, imageName)
         val t = dslContext.select(tImage.IMAGE_CODE.`as`("imageCode"), tImage.CREATE_TIME.max().`as`("createTime"))
@@ -564,8 +599,11 @@ class ImageDao {
             tImage.CREATOR.`as`(KEY_CREATOR),
             tImage.MODIFIER.`as`(KEY_MODIFIER),
             tImage.CREATE_TIME.`as`(KEY_CREATE_TIME),
-            tImage.UPDATE_TIME.`as`(KEY_UPDATE_TIME)
+            tImage.UPDATE_TIME.`as`(KEY_UPDATE_TIME),
+            tImageFeature.PUBLIC_FLAG.`as`(KEY_IMAGE_FEATURE_PUBLIC_FLAG)
         ).from(tImage)
+            .join(tImageFeature)
+            .on(tImage.IMAGE_CODE.eq(tImageFeature.IMAGE_CODE))
             .join(t)
             .on(
                 tImage.IMAGE_CODE.eq(
@@ -681,6 +719,12 @@ class ImageDao {
             if (!imageUpdateBean.imageTag.isNullOrBlank()) {
                 baseQuery = baseQuery.set(IMAGE_TAG, imageUpdateBean.imageTag)
             }
+            if (!imageUpdateBean.dockerFileType.isNullOrBlank()) {
+                baseQuery = baseQuery.set(DOCKER_FILE_TYPE, imageUpdateBean.dockerFileType)
+            }
+            if (imageUpdateBean.dockerFileContent != null) {
+                baseQuery = baseQuery.set(DOCKER_FILE_CONTENT, imageUpdateBean.dockerFileContent)
+            }
             if (imageUpdateBean.agentTypeList.isNotEmpty()) {
                 baseQuery = baseQuery.set(AGENT_TYPE_SCOPE, JsonUtil.toJson(imageUpdateBean.agentTypeList))
             }
@@ -785,12 +829,13 @@ class ImageDao {
 
     fun listByRepoNameAndTag(
         dslContext: DSLContext,
-        userId: String,
+        projectId: String,
         repoName: String?,
         tag: String?
-    ): Result<Record4<String, String, String, String>>? {
+    ): Result<Record5<String, String, String, String, Boolean>>? {
         val tImage = TImage.T_IMAGE.`as`("tImage")
         val tImageFeature = TImageFeature.T_IMAGE_FEATURE.`as`("tImageFeature")
+        val tStoreProjectRel = TStoreProjectRel.T_STORE_PROJECT_REL.`as`("tStoreProjectRel")
         val conditions = mutableListOf<Condition>()
         if (!repoName.isNullOrBlank()) {
             conditions.add(tImage.IMAGE_REPO_NAME.eq(repoName))
@@ -798,22 +843,29 @@ class ImageDao {
         if (!tag.isNullOrBlank()) {
             conditions.add(tImage.IMAGE_TAG.eq(tag))
         }
-        // 用户自己发布的（测试、审核、已发布）+公共的（已发布）
+        val selfPublishConditions = mutableListOf<Condition>()
+        selfPublishConditions.addAll(conditions)
+        selfPublishConditions.add(tStoreProjectRel.STORE_TYPE.eq(StoreTypeEnum.IMAGE.type.toByte()))
+        // 用户自己发布的（测试、审核、已发布、下架中、已下架）+公共的（已发布、下架中、已下架）
         val query = dslContext.select(
             tImage.ID.`as`(KEY_IMAGE_ID),
             tImage.IMAGE_CODE.`as`(KEY_IMAGE_CODE),
             tImage.IMAGE_NAME.`as`(KEY_IMAGE_NAME),
-            tImage.VERSION.`as`(KEY_IMAGE_VERSION)
+            tImage.VERSION.`as`(KEY_IMAGE_VERSION),
+            tImageFeature.RECOMMEND_FLAG.`as`(KEY_IMAGE_FEATURE_RECOMMEND_FLAG)
         ).from(tImage)
             .join(tImageFeature).on(tImage.IMAGE_CODE.eq(tImageFeature.IMAGE_CODE))
-            .where(conditions)
-            .and(tImage.CREATOR.eq(userId))
+            .join(tStoreProjectRel).on(tImage.IMAGE_CODE.eq(tStoreProjectRel.STORE_CODE))
+            .where(selfPublishConditions)
+            .and(tStoreProjectRel.PROJECT_CODE.eq(projectId))
             .and(
                 tImage.IMAGE_STATUS.`in`(
                     setOf(
                         ImageStatusEnum.RELEASED.status.toByte(),
                         ImageStatusEnum.TESTING.status.toByte(),
-                        ImageStatusEnum.AUDITING.status.toByte()
+                        ImageStatusEnum.AUDITING.status.toByte(),
+                        ImageStatusEnum.UNDERCARRIAGING.status.toByte(),
+                        ImageStatusEnum.UNDERCARRIAGED.status.toByte()
                     )
                 )
             )
@@ -822,20 +874,64 @@ class ImageDao {
                     tImage.ID.`as`(KEY_IMAGE_ID),
                     tImage.IMAGE_CODE.`as`(KEY_IMAGE_CODE),
                     tImage.IMAGE_NAME.`as`(KEY_IMAGE_NAME),
-                    tImage.VERSION.`as`(KEY_IMAGE_VERSION)
+                    tImage.VERSION.`as`(KEY_IMAGE_VERSION),
+                    tImageFeature.RECOMMEND_FLAG.`as`(KEY_IMAGE_FEATURE_RECOMMEND_FLAG)
                 ).from(tImage)
                     .join(tImageFeature).on(tImage.IMAGE_CODE.eq(tImageFeature.IMAGE_CODE))
                     .where(conditions)
-                    .and(tImage.CREATOR.notEqual(userId))
                     .and(tImageFeature.PUBLIC_FLAG.eq(true))
                     .and(
                         tImage.IMAGE_STATUS.`in`(
                             setOf(
-                                ImageStatusEnum.RELEASED.status.toByte()
+                                ImageStatusEnum.RELEASED.status.toByte(),
+                                ImageStatusEnum.UNDERCARRIAGING.status.toByte(),
+                                ImageStatusEnum.UNDERCARRIAGED.status.toByte()
                             )
                         )
                     )
             )
+        logger.info(query.getSQL(true))
         return query.fetch()
+    }
+
+    /**
+     * 查出可运行的自研公共镜像
+     */
+    fun listRunnableSelfDevelopPublicImages(
+        dslContext: DSLContext
+    ): Result<Record9<String, String, String, String, String, String, String, String, String>>? {
+        val tImage = TImage.T_IMAGE.`as`("tImage")
+        val tImageFeature = TImageFeature.T_IMAGE_FEATURE.`as`("tImageFeature")
+        val tStoreProjectRel = TStoreProjectRel.T_STORE_PROJECT_REL.`as`("tStoreProjectRel")
+        val conditions = mutableSetOf<Condition>()
+        val imageStatusSet = setOf(
+            ImageStatusEnum.RELEASED.status.toByte(),
+            ImageStatusEnum.UNDERCARRIAGING.status.toByte(),
+            ImageStatusEnum.UNDERCARRIAGED.status.toByte()
+        )
+        // 自研
+        conditions.add(tImageFeature.IMAGE_TYPE.eq(ImageRDTypeEnum.SELF_DEVELOPED.type.toByte()))
+        // 公共
+        conditions.add(tImageFeature.PUBLIC_FLAG.eq(true))
+        // 状态
+        conditions.add(tImage.IMAGE_STATUS.`in`(imageStatusSet))
+        // 镜像
+        conditions.add(tStoreProjectRel.STORE_TYPE.eq(StoreTypeEnum.IMAGE.type.toByte()))
+        // 调试项目信息
+        conditions.add(tStoreProjectRel.TYPE.eq(StoreProjectTypeEnum.INIT.type.toByte()))
+        val baseStep = dslContext.select(
+            tImage.ID.`as`(KEY_IMAGE_ID),
+            tImage.IMAGE_CODE.`as`(KEY_IMAGE_CODE),
+            tImage.IMAGE_NAME.`as`(KEY_IMAGE_NAME),
+            tImage.IMAGE_SOURCE_TYPE.`as`(KEY_IMAGE_SOURCE_TYPE),
+            tImage.IMAGE_REPO_URL.`as`(KEY_IMAGE_REPO_URL),
+            tImage.IMAGE_REPO_NAME.`as`(KEY_IMAGE_REPO_NAME),
+            tImage.IMAGE_TAG.`as`(KEY_IMAGE_TAG),
+            tImage.TICKET_ID.`as`(Constants.KEY_IMAGE_TICKET_ID),
+            tStoreProjectRel.PROJECT_CODE.`as`(Constants.KEY_IMAGE_INIT_PROJECT)
+        ).from(tImage).join(tImageFeature).on(tImage.IMAGE_CODE.eq(tImageFeature.IMAGE_CODE))
+            .join(tStoreProjectRel).on(tImage.IMAGE_CODE.eq(tStoreProjectRel.STORE_CODE))
+        return baseStep.where(conditions)
+            .fetch()
     }
 }

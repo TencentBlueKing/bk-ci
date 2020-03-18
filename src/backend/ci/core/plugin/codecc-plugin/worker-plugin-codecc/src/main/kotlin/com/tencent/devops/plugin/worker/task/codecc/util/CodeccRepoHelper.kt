@@ -41,10 +41,10 @@ import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils.replaceCod
 import com.tencent.devops.plugin.worker.pojo.CodeccExecuteConfig
 import com.tencent.devops.plugin.worker.task.scm.util.RepositoryUtils
 import com.tencent.devops.plugin.worker.task.scm.util.SvnUtil
-import com.tencent.devops.process.pojo.AtomErrorCode
+import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
-import com.tencent.devops.process.pojo.ErrorType
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.process.pojo.task.PipelineBuildTaskInfo
 import com.tencent.devops.repository.pojo.CodeGitRepository
 import com.tencent.devops.repository.pojo.CodeGitlabRepository
@@ -52,7 +52,7 @@ import com.tencent.devops.repository.pojo.CodeSvnRepository
 import com.tencent.devops.repository.pojo.GithubRepository
 import com.tencent.devops.worker.common.api.ApiFactory
 import com.tencent.devops.worker.common.api.process.BuildTaskSDKApi
-import com.tencent.devops.worker.common.exception.TaskExecuteException
+import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.worker.common.utils.CredentialUtils
 
 object CodeccRepoHelper {
@@ -72,9 +72,9 @@ object CodeccRepoHelper {
     ): List<CodeccExecuteConfig.RepoItem> {
         val buildTasks = pipelineTaskApi.getAllBuildTask().data
             ?: throw TaskExecuteException(
-                ErrorType.SYSTEM,
-                AtomErrorCode.SYSTEM_INNER_TASK_ERROR,
-                "get build task fail"
+                errorType = ErrorType.SYSTEM,
+                errorCode = ErrorCode.SYSTEM_INNER_TASK_ERROR,
+                errorMsg = "get build task fail"
             )
         val codeccTask = buildTasks.first { it.taskType in codeccElementTypes }
 
@@ -114,7 +114,7 @@ object CodeccRepoHelper {
                 else -> {
                     throw TaskExecuteException(
                         ErrorType.SYSTEM,
-                        AtomErrorCode.SYSTEM_INNER_TASK_ERROR,
+                        ErrorCode.SYSTEM_INNER_TASK_ERROR,
                         "get codecc task fail"
                     )
                 }
@@ -124,7 +124,10 @@ object CodeccRepoHelper {
 
         // 新的拉代码插件接入模式
         val newRepoTaskIds = buildTask.buildVariable?.filter { it.key.startsWith("bk_repo_taskId_") }?.values
-        newRepoTaskIds?.forEach { taskId ->
+        newRepoTaskIds?.filter { taskId ->
+            val containerId = buildTask.buildVariable!!["bk_repo_container_id_$taskId"]
+            containerId.isNullOrBlank() || containerId == codeccTask.containerId
+        }?.forEach { taskId ->
             val repoConfigType = buildTask.buildVariable!!["bk_repo_config_type_$taskId"]
             val repoType = buildTask.buildVariable!!["bk_repo_type_$taskId"]!!
             val localPath = buildTask.buildVariable!!["bk_repo_local_path_$taskId"] ?: ""
