@@ -53,6 +53,7 @@ enum class BuildStatus(val statusName: String, val visiable: Boolean) {
     QUEUE_TIMEOUT("排队超时", true), // 17 排队超时
     EXEC_TIMEOUT("执行超时", true), // 18 执行超时
     QUEUE_CACHE("队列待处理", true), // 19 队列待处理，瞬间状态。只有在启动和取消过程中存在的中间状态
+    RETRY("重试", true), // 21 重试
     UNKNOWN("未知状态", false); // 99
 
     companion object {
@@ -80,11 +81,16 @@ enum class BuildStatus(val statusName: String, val visiable: Boolean) {
 
         fun isReview(status: BuildStatus) = status == REVIEW_ABORT || status == REVIEW_PROCESSED
 
-        fun isReadyToRun(status: BuildStatus) = status == QUEUE || status == QUEUE_CACHE
+        fun isReadyToRun(status: BuildStatus) = status == QUEUE || status == QUEUE_CACHE || isRetry(status)
         /**
          * 是否处于循环中： 正在运行中或循环等待都属于循环
          */
         fun isLoop(status: BuildStatus) = status == RUNNING || status == LOOP_WAITING
+
+        /**
+         * 是否处于重试中
+         */
+        fun isRetry(status: BuildStatus) = status == RETRY
 
         /**
          * 能否重试执行
