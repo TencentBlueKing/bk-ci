@@ -224,7 +224,7 @@ class BuildMonitorControl @Autowired constructor(
         logger.warn("[$buildId]|prepare_monitor_stage|stage=$stageId")
         var interval = 0
 
-        if (controlOption?.stageControlOption?.manualTrigger != true || BuildStatus.isFinish(status)) {
+        if (controlOption?.stageControlOption?.manualTrigger != true || status != BuildStatus.PAUSE) {
             logger.info("[$buildId]|stage=$stageId| is $status")
             return interval
         }
@@ -256,17 +256,7 @@ class BuildMonitorControl @Autowired constructor(
             )
             logger.warn("[$buildId]|monitor_stage_timeout|stage=$stageId")
             // 将改stage状态设为STAGE_SUCCESS
-            pipelineEventDispatcher.dispatch(
-                PipelineBuildStageEvent(
-                    source = "review_timeout",
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    userId = userId,
-                    buildId = buildId,
-                    stageId = stageId,
-                    actionType = ActionType.END
-                )
-            )
+            pipelineStageService.cancelStage(userId, projectId, pipelineId, buildId, stageId)
         }
 
         return interval
