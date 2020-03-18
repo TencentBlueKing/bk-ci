@@ -53,9 +53,9 @@ class BuildDockerHostResourceImpl @Autowired constructor(
         return dockerHostBuildService.rollbackBuild(buildId, vmSeqId, shutdown)
     }
 
-    override fun reportContainerId(buildId: String, vmSeqId: Int, containerId: String, hostTag: String?): Result<Boolean>? {
+/*    override fun reportContainerId(buildId: String, vmSeqId: Int, containerId: String, hostTag: String?): Result<Boolean>? {
         return dockerHostBuildService.reportContainerId(buildId, vmSeqId, containerId, hostTag)
-    }
+    }*/
 
     override fun startBuild(hostTag: String): Result<DockerHostBuildInfo>? {
         return dockerHostBuildService.startBuild(hostTag)
@@ -73,9 +73,9 @@ class BuildDockerHostResourceImpl @Autowired constructor(
         return dockerHostDebugService.endDebug(hostTag)
     }
 
-    override fun reportDebugContainerId(pipelineId: String, vmSeqId: String, containerId: String): Result<Boolean>? {
+/*    override fun reportDebugContainerId(pipelineId: String, vmSeqId: String, containerId: String): Result<Boolean>? {
         return dockerHostDebugService.reportContainerId(pipelineId, vmSeqId, containerId)
-    }
+    }*/
 
     override fun rollbackDebug(pipelineId: String, vmSeqId: String, shutdown: Boolean?, message: String?): Result<Boolean>? {
         return dockerHostDebugService.rollbackDebug(pipelineId, vmSeqId, shutdown, message)
