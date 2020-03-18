@@ -15,7 +15,7 @@
                 </bk-form-item>
                 <bk-form-item :label="$t('editPage.checkResult')">
                     <bk-radio-group v-model="isCancel">
-                        <bk-radio class="choose-item" :value="false">{{ $t('editPage.agree') }}</bk-radio>
+                        <bk-radio class="choose-item" :value="false">{{ $t('details.agree') }}</bk-radio>
                         <bk-radio class="choose-item" :value="true">{{ $t('details.abort') }}</bk-radio>
                     </bk-radio-group>
                 </bk-form-item>
