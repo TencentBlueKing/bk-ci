@@ -1380,6 +1380,21 @@ class PipelineBuildService(
         return buildHistory
     }
 
+    fun getLatestSuccessBuild(
+        projectId: String,
+        pipelineId: String,
+        channelCode: ChannelCode
+    ): BuildHistory? {
+        val buildHistory = pipelineRuntimeService.getBuildHistoryByBuildNum(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildNum = -1,
+            statusSet = setOf(BuildStatus.SUCCEED)
+        )
+        logger.info("[$pipelineId]|buildHistory=$buildHistory")
+        return buildHistory
+    }
+
     fun getModel(projectId: String, pipelineId: String, version: Int? = null) =
         pipelineRepositoryService.getModel(pipelineId, version) ?: throw ErrorCodeException(
             statusCode = Response.Status.NOT_FOUND.statusCode,
