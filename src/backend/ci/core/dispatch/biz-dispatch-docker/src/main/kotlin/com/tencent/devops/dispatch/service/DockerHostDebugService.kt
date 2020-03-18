@@ -168,7 +168,7 @@ class DockerHostDebugService @Autowired constructor(
             projectId = projectId,
             pipelineId = pipelineId,
             vmSeqId = vmSeqId,
-            status = PipelineTaskStatus.QUEUE,
+            status = PipelineTaskStatus.RUNNING,
             token = "",
             imageName = dockerImage,
             hostTag = dockerIp,
