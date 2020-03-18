@@ -514,3 +514,10 @@
         }
     }
 </script>
+
+<style lang="scss" scoped>
+    .bk-select .devops-icon.icon-angle-down {
+        right: 2px;
+        top: 4px;
+    }
+</style>
