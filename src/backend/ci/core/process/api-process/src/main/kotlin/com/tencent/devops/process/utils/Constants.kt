@@ -52,7 +52,7 @@ const val PIPELINE_WEBHOOK_BLOCK = "BK_CI_HOOK_BLOCK" // hookBlock
 const val PIPELINE_WEBHOOK_TYPE = "BK_CI_HOOK_TYPE" // hookType
 const val PIPELINE_WEBHOOK_EVENT_TYPE = "BK_CI_HOOK_EVENT_TYPE" // hookEventType
 const val PIPELINE_WEBHOOK_MR_ID = "BK_CI_HOOK_MR_ID" // bk_hookMergeRequestId
-const val PIPELINE_REPO_NAME = "BL_CI_REPO_NAME" // "repoName"
+const val PIPELINE_REPO_NAME = "BK_CI_REPO_NAME" // "repoName"
 const val PIPELINE_WEBHOOK_MR_COMMITTER = "BK_CI_HOOK_MR_COMMITTER" // "bk_hookMergeRequest_committer"
 
 const val GIT_MR_NUMBER = "BK_CI_GIT_MR_NUMBER" // git_mr_number
@@ -74,9 +74,6 @@ const val PROJECT_NAME_CHINESE = "BK_CI_PROJECT_NAME_CN" // "project.name.chines
 
 const val PIPELINE_START_MOBILE = "BK_CI_IS_MOBILE" // "pipeline.start.isMobile"
 
-const val SUB_PIPELINE_BUILD_STATUS = "BK_CI_SUB_PIPELINE_BUILD_STATUS" // "sub.pipeline.build.status"
-const val SUB_PIPELINE_BUILD_DELETE_REASON = "BK_CI_SUB_PIPELINE_DELETE_REASON" // "sub.pipeline.build.delete.reason"
-
 const val PIPELINE_START_TASK_ID = "BK_CI_START_TASK_ID" // "pipeline.start.task.id"
 const val PIPELINE_RETRY_COUNT = "BK_CI_RETRY_COUNT" // "pipeline.retry.count"
 const val PIPELINE_RETRY_BUILD_ID = "BK_CI_RETRY_BUILD_ID" // "pipeline.retry.build.id"
@@ -95,9 +92,9 @@ const val PIPELINE_MATERIAL_NEW_COMMIT_COMMENT =
 const val PIPELINE_MATERIAL_NEW_COMMIT_TIMES =
     "BK_CI_PIPELINE_MATERIAL_NEW_COMMIT_TIMES" // pipeline.material.new.commit.times
 
-const val MAJORVERSION = "BK_CI_MAJOR_VERSION" // majorVersion
-const val MINORVERSION = "BK_CI_MINOR_VERSION" // minorVersion
-const val FIXVERSION = "BK_CI_FIX_VERSION" // fixVersion
+const val MAJORVERSION = "BK_CI_MAJOR_VERSION" // MajorVersion
+const val MINORVERSION = "BK_CI_MINOR_VERSION" // MinorVersion
+const val FIXVERSION = "BK_CI_FIX_VERSION" // FixVersion
 const val BUILD_NO = "BK_CI_BUILD_NO" // "BuildNo"
 
 /**
@@ -111,6 +108,15 @@ const val PIPELINE_BUILD_REMARK = "BK_CI_BUILD_REMARK" // "流水线构建备注
  * 流水线设置-最大排队数量-默认值
  */
 const val PIPELINE_SETTING_MAX_QUEUE_SIZE_DEFAULT = 10
+/**
+ * 流水线插件设置-失败重试最大值
+ */
+const val TASK_FAIL_RETRY_MAX_COUNT = 5
+/**
+ * 流水线插件设置-失败重试最小值
+ */
+const val TASK_FAIL_RETRY_MIN_COUNT = 1
+
 /**
  * 流水线设置-最大排队数量-最小值
  */
@@ -157,9 +163,14 @@ object PipelineVarUtil {
      * 以下用于兼容旧参数
      */
     private val oldVarMappingNewVar = mapOf(
-        "majorVersion" to MAJORVERSION,
-        "minorVersion" to MINORVERSION,
-        "fixVersion" to FIXVERSION,
+        "pipeline.start.isMobile" to PIPELINE_START_MOBILE,
+        "repoName" to PIPELINE_REPO_NAME,
+        "pipeline.version" to PIPELINE_VERSION,
+        "pipeline.start.parent.build.task.id" to PIPELINE_START_PARENT_BUILD_TASK_ID,
+        "pipeline.start.parent.build.id" to PIPELINE_START_PARENT_BUILD_ID,
+        "MajorVersion" to MAJORVERSION,
+        "MinorVersion" to MINORVERSION,
+        "FixVersion" to FIXVERSION,
         "BuildNo" to BUILD_NO,
         "pipeline.start.channel" to PIPELINE_START_CHANNEL,
         "pipeline.build.last.update" to PIPELINE_BUILD_LAST_UPDATE,
@@ -187,6 +198,8 @@ object PipelineVarUtil {
         "hookTargetUrl" to PIPELINE_WEBHOOK_TARGET_URL,
         "hookBlock" to PIPELINE_WEBHOOK_BLOCK,
         "hookType" to PIPELINE_WEBHOOK_TYPE,
+        "hookRepo" to PIPELINE_WEBHOOK_REPO,
+        "hookRepoType" to PIPELINE_WEBHOOK_REPO_TYPE,
         "hookEventType" to PIPELINE_WEBHOOK_EVENT_TYPE,
         "bk_hookMergeRequestId" to PIPELINE_WEBHOOK_MR_ID,
         "bk_hookMergeRequest_committer" to PIPELINE_WEBHOOK_MR_COMMITTER,
@@ -210,6 +223,38 @@ object PipelineVarUtil {
     fun fillOldVar(vars: MutableMap<String, String>) {
         turning(newVarMappingOldVar, vars)
         prefixTurning(newPrefixMappingOld, vars)
+    }
+
+    /**
+     * 从新变量前缀的变量中查出并增加旧变量，会做去重
+     * @param vars 变量Map
+     * @return 包含新旧变量的Map
+     */
+    fun mixOldVarAndNewVar(vars: MutableMap<String, String>): MutableMap<String, String> {
+        // 旧流水线的前缀变量追加 一些旧代码类插件生成的
+        prefixTurning(newPrefixMappingOld, vars)
+
+        val allVars = mutableMapOf<String, String>()
+        vars.forEach {
+            // 从新转旧: 新流水线产生的变量 兼容在旧流水线中已经使用到的旧变量
+            val oldVarName = newVarToOldVar(it.key)
+            if (!oldVarName.isNullOrBlank()) {
+                allVars[oldVarName!!] = it.value // 旧变量写入，如果之前有了，则替换
+                allVars[it.key] = it.value // 新变量仍然写入
+            } else {
+                // 从旧转新: 兼容从旧入口写入的数据转到新的流水线运行
+                val newVarName = oldVarToNewVar(it.key)
+                // 新变量已经存在，忽略旧变量转换
+                if (!newVarName.isNullOrBlank() && !vars.contains(newVarName)) {
+                    allVars[newVarName!!] = it.value
+                }
+                // 已经存在从新变量转化过来的旧变量，则不覆盖，放弃
+                if (!allVars.containsKey(it.key)) {
+                    allVars[it.key] = it.value
+                }
+            }
+        }
+        return allVars
     }
 
     /**

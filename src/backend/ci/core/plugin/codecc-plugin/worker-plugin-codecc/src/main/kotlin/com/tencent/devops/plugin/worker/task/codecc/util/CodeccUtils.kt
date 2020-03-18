@@ -26,6 +26,7 @@
 
 package com.tencent.devops.plugin.worker.task.codecc.util
 
+import com.tencent.devops.common.api.enums.OSType
 import com.tencent.devops.common.pipeline.enums.BuildScriptType
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.plugin.codecc.pojo.coverity.CoverityProjectType
@@ -46,24 +47,22 @@ import com.tencent.devops.plugin.worker.task.codecc.util.CodeccParamsHelper.getP
 import com.tencent.devops.plugin.worker.task.codecc.util.CodeccParamsHelper.getPyLint3Path
 import com.tencent.devops.plugin.worker.task.codecc.util.CodeccParamsHelper.getPython2Path
 import com.tencent.devops.plugin.worker.task.codecc.util.CodeccParamsHelper.getPython3Path
+import com.tencent.devops.process.utils.PIPELINE_TURBO_TASK_ID
 import com.tencent.devops.worker.common.CommonEnv
 import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.env.BuildEnv
 import com.tencent.devops.worker.common.logger.LoggerService
+import com.tencent.devops.worker.common.utils.BatScriptUtil
 import com.tencent.devops.worker.common.utils.ShellUtil
 import org.slf4j.LoggerFactory
 import java.io.File
-import java.net.URLDecoder
 import kotlin.math.max
 
-/**
- * deng
- * 26/01/2018
- */
-object CodeccUtils {
+open class CodeccUtils {
 
     private lateinit var coverityStartFile: String
     private lateinit var toolsStartFile: String
+    private lateinit var codeccStartFile: String
 
     private val logger = LoggerFactory.getLogger(CodeccUtils::class.java)
 
@@ -79,13 +78,13 @@ object CodeccUtils {
         val codeccWorkspace = getCodeccWorkspace(codeccExecuteConfig)
         try {
             initData(codeccExecuteConfig.scriptType, codeccWorkspace)
-            return doRun(codeccExecuteConfig)
+            return doRun(codeccExecuteConfig, codeccWorkspace)
         } finally {
-            if (codeccWorkspace.exists() && codeccWorkspace.isDirectory) codeccWorkspace.deleteRecursively()
+            codeccWorkspace.deleteRecursively()
         }
     }
 
-    fun getCodeccWorkspace(codeccExecuteConfig: CodeccExecuteConfig): File {
+    private fun getCodeccWorkspace(codeccExecuteConfig: CodeccExecuteConfig): File {
         val buildId = codeccExecuteConfig.buildVariables.buildId
         val workspace = codeccExecuteConfig.workspace
 
@@ -103,12 +102,21 @@ object CodeccUtils {
         return codeccWorkspace
     }
 
-    private fun doRun(codeccExecuteConfig: CodeccExecuteConfig): String {
-        return CodeccExecuteHelper.executeCodecc(
-            codeccExecuteConfig = codeccExecuteConfig,
-            covFun = CodeccUtils::doCoverityCommand,
-            toolFun = CodeccUtils::doCodeccToolCommand
-        )
+    private fun doRun(
+        codeccExecuteConfig: CodeccExecuteConfig,
+        codeccWorkspace: File
+    ): String {
+        val scriptType = codeccExecuteConfig.scriptType
+        return if (scriptType == BuildScriptType.BAT) {
+            CodeccExecuteHelper.executeCodecc(
+                codeccExecuteConfig = codeccExecuteConfig,
+                covFun = this::doCoverityCommand,
+                toolFun = this::doCodeccToolCommand
+            )
+        } else {
+            codeccStartFile = CodeccScriptUtils().downloadScriptFile(codeccWorkspace).canonicalPath
+            doCodeccSingleCommand(codeccExecuteConfig)
+        }
     }
 
     private fun initData(scriptType: BuildScriptType, codeccWorkspace: File) {
@@ -120,22 +128,24 @@ object CodeccUtils {
         )
     }
 
+    open fun coverityPreExecute(list: MutableList<String>) {
+        list.add("export PATH=${getPython2Path(BuildScriptType.SHELL)}:\$PATH\n")
+        list.add("export LANG=zh_CN.UTF-8\n")
+        CommonEnv.getCommonEnv().forEach { (key, value) ->
+            list.add("export $key=$value\n")
+        }
+        list.add("python -V\n")
+        list.add("pwd\n")
+    }
+
     private fun doCoverityCommand(codeccExecuteConfig: CodeccExecuteConfig): String {
         val workspace = codeccExecuteConfig.workspace
         val taskParams = codeccExecuteConfig.buildTask.params ?: mapOf()
-        val script = URLDecoder.decode(taskParams["script"] ?: "", "UTF-8")
+        val script = taskParams["script"] ?: ""
         val scriptType = codeccExecuteConfig.scriptType
-        val scriptFile = ShellUtil.getCommandFile(
-            script = script,
-            dir = workspace,
-            buildEnvs = codeccExecuteConfig.buildVariables.buildEnvs,
-            runtimeVariables = codeccExecuteConfig.buildVariables.variables
-        )
+        val scriptFile = getScriptFile(codeccExecuteConfig, script)
         logger.info("Start to execute the script file for script($script)")
 
-        val list = mutableListOf<String>()
-        list.add("export PATH=${getPython2Path(scriptType)}:\$PATH\n")
-        list.add("export LANG=zh_CN.UTF-8\n")
         val scanTools = if (codeccExecuteConfig.filterTools.isNotEmpty()) {
             codeccExecuteConfig.filterTools
         } else {
@@ -143,13 +153,8 @@ object CodeccUtils {
         }
         val finalScanTools = scanTools.filter { it in COV_TOOLS }
 
-        CommonEnv.getCommonEnv().forEach { (key, value) ->
-            list.add("export $key=$value\n")
-        }
-
-        list.add("python -V\n")
-        list.add("pwd\n")
-
+        val list = mutableListOf<String>()
+        coverityPreExecute(list)
         list.add("python")
         list.add(coverityStartFile)
 
@@ -178,7 +183,11 @@ object CodeccUtils {
         if (!BuildEnv.isThirdParty()) list.add("-DCOVERITY_HOME_BIN=${getCovToolPath(scriptType)}/bin")
         list.add("-DPROJECT_BUILD_PATH=${workspace.canonicalPath}")
         list.add("-DSYNC_TYPE=${taskParams["asynchronous"] != "true"}")
-        if (!BuildEnv.isThirdParty() && scanTools.contains("KLOCWORK")) list.add("-DKLOCWORK_HOME_BIN=${getKlocToolPath(scriptType)}")
+        if (!BuildEnv.isThirdParty() && scanTools.contains("KLOCWORK")) list.add(
+            "-DKLOCWORK_HOME_BIN=${getKlocToolPath(
+                scriptType
+            )}"
+        )
         if (taskParams.containsKey("goPath")) list.add("-DGO_PATH=${taskParams["goPath"]}")
         list.add("-DSUB_PATH=${getGoRootPath(scriptType)}:$GO_CI_LINT_PATH")
 
@@ -188,15 +197,17 @@ object CodeccUtils {
         else "[cov]"
         printLog(list, tag)
 
-        val variables =
-            codeccExecuteConfig.buildVariables.variables.plus(codeccExecuteConfig.buildTask.buildVariable ?: mapOf())
-        return ShellUtil.execute(
-            script = list.joinToString(" "),
-            dir = workspace,
-            buildEnvs = codeccExecuteConfig.buildVariables.buildEnvs,
-            runtimeVariables = variables,
-            prefix = "[cov] "
-        )
+        return executeScript(codeccExecuteConfig, list, "[cov] ")
+    }
+
+    open fun toolPreExecute(list: MutableList<String>) {
+        list.add("export PATH=${getPython3Path(BuildScriptType.SHELL)}:\$PATH\n")
+        list.add("export LANG=zh_CN.UTF-8\n")
+        list.add("export PATH=/data/bkdevops/apps/codecc/go/bin:/data/bkdevops/apps/codecc/gometalinter/bin:\$PATH\n")
+
+        CommonEnv.getCommonEnv().forEach { (key, value) ->
+            list.add("export $key=$value\n")
+        }
     }
 
     private fun doCodeccToolCommand(
@@ -205,14 +216,6 @@ object CodeccUtils {
         val workspace = codeccExecuteConfig.workspace
         val scriptType = codeccExecuteConfig.scriptType
 
-        val list = mutableListOf<String>()
-        list.add("export PATH=${getPython3Path(scriptType)}:\$PATH\n")
-        list.add("export LANG=zh_CN.UTF-8\n")
-        list.add("export PATH=/data/bkdevops/apps/codecc/go/bin:/data/bkdevops/apps/codecc/gometalinter/bin:\$PATH\n")
-
-        CommonEnv.getCommonEnv().forEach { (key, value) ->
-            list.add("export $key=$value\n")
-        }
         val scanTools = if (codeccExecuteConfig.filterTools.isNotEmpty()) {
             codeccExecuteConfig.filterTools
         } else {
@@ -222,6 +225,8 @@ object CodeccUtils {
 
         val finalScanTools = scanTools.minus(COV_TOOLS)
 
+        val list = mutableListOf<String>()
+        toolPreExecute(list)
         list.add("python -V\n")
         list.add("pwd\n")
         list.add("python")
@@ -256,14 +261,105 @@ object CodeccUtils {
         // 打印日志
         printLog(list, "[tools]")
 
-        val variables =
-            codeccExecuteConfig.buildVariables.variables.plus(codeccExecuteConfig.buildTask.buildVariable ?: mapOf())
-        return ShellUtil.execute(
-            script = list.joinToString(" "),
-            dir = workspace,
-            buildEnvs = codeccExecuteConfig.buildVariables.buildEnvs,
-            runtimeVariables = variables,
-            prefix = "[tools] "
+        return executeScript(codeccExecuteConfig, list, "[tool] ")
+    }
+
+    open fun doPreCodeccSingleCommand(command: MutableList<String>) {
+        command.add("export PATH=${getPython3Path(BuildScriptType.SHELL)}:\$PATH\n")
+        command.add("export LANG=zh_CN.UTF-8\n")
+        command.add("export PATH=/data/bkdevops/apps/codecc/go/bin:/data/bkdevops/apps/codecc/gometalinter/bin:\$PATH\n")
+
+        CommonEnv.getCommonEnv().forEach { (key, value) ->
+            command.add("export $key=$value\n")
+        }
+
+        command.add("python -V\n")
+        command.add("pwd\n")
+    }
+
+    fun doCodeccSingleCommand(
+        codeccExecuteConfig: CodeccExecuteConfig
+    ): String {
+        val command = mutableListOf<String>()
+        doPreCodeccSingleCommand(command)
+
+        val workspace = codeccExecuteConfig.workspace
+        val taskParams = codeccExecuteConfig.buildTask.params ?: mapOf()
+        val script = taskParams["script"] ?: ""
+        val scriptType = codeccExecuteConfig.scriptType
+        val scriptFile = getScriptFile(codeccExecuteConfig, script)
+        logger.info("Start to execute the script file for script($script)")
+
+        val scanTools = if (codeccExecuteConfig.filterTools.isNotEmpty()) {
+            codeccExecuteConfig.filterTools
+        } else {
+            codeccExecuteConfig.tools
+        }
+        if (scanTools.isEmpty()) return "scan tools is empty"
+
+        command.add("python")
+        command.add(codeccStartFile)
+
+        // 添加公共参数
+        addCommonParams(command, codeccExecuteConfig)
+
+        // 添加coverity/klockwork参数
+        command.add("-DIS_SPEC_CONFIG=true")
+        command.add("-DSCAN_TOOLS=${scanTools.joinToString(",").toLowerCase()}")
+        command.add("-DCOVERITY_RESULT_PATH=${File(coverityStartFile).parent}")
+
+        val buildCmd = when (CodeccParamsHelper.getProjectType(taskParams["languages"])) {
+            CoverityProjectType.UN_COMPILE -> {
+                "--no-command --fs-capture-search ."
+            }
+            CoverityProjectType.COMPILE -> scriptFile.canonicalPath
+            CoverityProjectType.COMBINE -> "--fs-capture-search . ${scriptFile.canonicalPath}"
+        }
+
+        // 工蜂开源扫描就不做限制
+        val channelCode = codeccExecuteConfig.buildVariables.variables["pipeline.start.channel"] ?: ""
+        val coreCount = if (channelCode == ChannelCode.GONGFENGSCAN.name) Runtime.getRuntime().availableProcessors()
+        else max(Runtime.getRuntime().availableProcessors() / 2, 1) // 用一半的核
+
+        command.add("-DPROJECT_BUILD_COMMAND=\"--parallel-translate=$coreCount $buildCmd\"")
+        if (!BuildEnv.isThirdParty()) command.add("-DCOVERITY_HOME_BIN=${getCovToolPath(scriptType)}/bin")
+        command.add("-DPROJECT_BUILD_PATH=${workspace.canonicalPath}")
+        command.add("-DSYNC_TYPE=${taskParams["asynchronous"] != "true"}")
+        if (!BuildEnv.isThirdParty() && scanTools.contains("KLOCWORK")) command.add(
+            "-DKLOCWORK_HOME_BIN=${getKlocToolPath(
+                scriptType
+            )}"
+        )
+        if (taskParams.containsKey("goPath")) command.add("-DGO_PATH=${taskParams["goPath"]}")
+
+        // 多工具
+        command.add("-DOFFLINE=true")
+        command.add("-DDATA_ROOT_PATH=${File(toolsStartFile).parent}")
+        command.add("-DSTREAM_CODE_PATH=${workspace.canonicalPath}")
+        command.add("-DPY27_PATH=${getPython2Path(scriptType)}")
+        command.add("-DPY35_PATH=${getPython3Path(scriptType)}")
+        if (scanTools.contains("PYLINT")) {
+            command.add("-DPY27_PYLINT_PATH=${getPyLint2Path(scriptType)}")
+            command.add("-DPY35_PYLINT_PATH=${getPyLint3Path(scriptType)}")
+        } else {
+            // 两个参数是必填的
+            // 把路径配置成其他可用路径就可以
+            command.add("-DPY27_PYLINT_PATH=${workspace.canonicalPath}")
+            command.add("-DPY35_PYLINT_PATH=${workspace.canonicalPath}")
+        }
+        var subPath = if (BuildEnv.isThirdParty()) "" else
+            "/usr/local/svn/bin:/data/bkdevops/apps/coverity"
+        subPath = "$subPath:${getJdkPath(scriptType)}:${getNodePath(scriptType)}:" +
+            "${getGoMetaLinterPath(scriptType)}:${getGoRootPath(scriptType)}:$STYLE_TOOL_PATH:$PHPCS_TOOL_PATH:${getGoRootPath(scriptType)}:$GO_CI_LINT_PATH"
+        command.add("-DSUB_PATH=$subPath")
+        command.add("-DGOROOT=/data/bkdevops/apps/codecc/go")
+
+        printLog(command, "[codecc] ")
+
+        return executeScript(
+            codeccExecuteConfig = codeccExecuteConfig,
+            list = command,
+            prefix = "[codecc] "
         )
     }
 
@@ -276,6 +372,67 @@ object CodeccUtils {
             ) {
                 LoggerService.addNormalLine("$tag $it")
             }
+        }
+    }
+
+    private fun takeBuildEnvs(coverConfig: CodeccExecuteConfig): List<com.tencent.devops.store.pojo.app.BuildEnv> {
+        val turboTaskId = coverConfig.buildTask.buildVariable?.get(PIPELINE_TURBO_TASK_ID)
+        return if (turboTaskId.isNullOrBlank()) {
+            coverConfig.buildVariables.buildEnvs
+        } else { // 设置编译加速路径
+            coverConfig.buildVariables.buildEnvs.plus(
+                com.tencent.devops.store.pojo.app.BuildEnv(
+                    name = "turbo",
+                    version = "1.0",
+                    binPath = "",
+                    env = mapOf()
+                )
+            )
+        }
+    }
+
+    private fun getScriptFile(codeccExecuteConfig: CodeccExecuteConfig, script: String): File {
+        return if (AgentEnv.getOS() == OSType.WINDOWS) {
+            BatScriptUtil.getCommandFile(
+                buildId = codeccExecuteConfig.buildTask.buildId,
+                script = script,
+                dir = codeccExecuteConfig.workspace,
+                runtimeVariables = codeccExecuteConfig.buildVariables.variables
+            )
+        } else {
+            ShellUtil.getCommandFile(
+                buildId = codeccExecuteConfig.buildTask.buildId,
+                script = script,
+                dir = codeccExecuteConfig.workspace,
+                buildEnvs = codeccExecuteConfig.buildVariables.buildEnvs,
+                runtimeVariables = codeccExecuteConfig.buildVariables.variables
+            )
+        }
+    }
+
+    private fun executeScript(
+        codeccExecuteConfig: CodeccExecuteConfig,
+        list: MutableList<String>,
+        prefix: String
+    ): String {
+        val variables =
+            codeccExecuteConfig.buildVariables.variables.plus(codeccExecuteConfig.buildTask.buildVariable ?: mapOf())
+        return if (AgentEnv.getOS() == OSType.WINDOWS) {
+            BatScriptUtil.execute(
+                buildId = codeccExecuteConfig.buildTask.buildId,
+                script = list.joinToString(" "),
+                dir = codeccExecuteConfig.workspace,
+                runtimeVariables = variables,
+                prefix = prefix)
+        } else {
+            ShellUtil.execute(
+                buildId = codeccExecuteConfig.buildTask.buildId,
+                script = list.joinToString(" "),
+                dir = codeccExecuteConfig.workspace,
+                buildEnvs = takeBuildEnvs(codeccExecuteConfig),
+                runtimeVariables = variables,
+                prefix = prefix
+            )
         }
     }
 }

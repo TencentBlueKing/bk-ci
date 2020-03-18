@@ -45,7 +45,7 @@ data class DockerDispatchType(
 ) : StoreDispatchType(if (dockerBuildVersion.isNullOrBlank())
     imageCode else dockerBuildVersion, null, imageType, credentialId, credentialProject, imageCode, imageVersion, imageName) {
     override fun buildType(): BuildType {
-        return BuildType.DOCKER
+        return BuildType.valueOf(BuildType.DOCKER.name)
     }
 
     override fun replaceField(variables: Map<String, String>) {

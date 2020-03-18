@@ -34,5 +34,5 @@ data class TStackDispatchType(@JsonProperty("value") val tstackAgentId: String) 
     override fun replaceField(variables: Map<String, String>) {
     }
 
-    override fun buildType() = BuildType.TSTACK
+    override fun buildType() = BuildType.valueOf(BuildType.TSTACK.name)
 }

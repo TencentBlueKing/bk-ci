@@ -72,7 +72,7 @@ class MutexControl @Autowired constructor(
         }
         return MutexGroup(
             enable = mutexGroup.enable,
-            mutexGroupName = mutexGroup.mutexGroupName,
+            mutexGroupName = mutexGroupName,
             queueEnable = mutexGroup.queueEnable,
             timeout = timeOut,
             queue = queue
@@ -179,14 +179,14 @@ class MutexControl @Autowired constructor(
                 false
             }
             if (lockResult) {
-                logContainerMutex(container, "Job互斥组:已获取互斥锁，准备运行该Job。")
+                logContainerMutex(container, "Job互斥组:Job(${buildId}_$containerId),已获取互斥锁(${mutexGroup.mutexGroupName})，准备运行该Job。")
             }
             return lockResult
         }
         // 没有排队最小值的时候，则开始抢锁
         val lockResult = containerMutexLock.tryLock()
         if (lockResult) {
-            logContainerMutex(container, "Job互斥组:已获取互斥锁，准备执行该Job。")
+            logContainerMutex(container, "Job互斥组:Job(${buildId}_$containerId),已获取互斥锁(${mutexGroup.mutexGroupName})，准备执行该Job。")
         }
         return lockResult
     }
@@ -217,15 +217,19 @@ class MutexControl @Autowired constructor(
         mutexGroup: MutexGroup,
         container: PipelineBuildContainer
     ): Boolean {
+
+        val lockKey = getMutexLockKey(projectId, mutexGroup)
+        val lockedContainerMutexId = redisOperation.get(lockKey)
         // 当没有启动互斥组或者没有启动互斥组排队或者互斥组名字为空的时候，则直接排队失败
         if (!mutexGroup.enable || !mutexGroup.queueEnable || mutexGroup.mutexGroupName.isNullOrBlank()) {
-            logContainerMutex(container, "Job互斥组:互斥组中已经有Job在运行，该Job取消。")
+            logContainerMutex(container, "Job互斥组:Job(${buildId}_$containerId),互斥组(${mutexGroup.mutexGroupName})中已经有Job($lockedContainerMutexId)在运行，该Job取消。")
             return false
         }
         val containerMutexId = getMutexContainerId(buildId, containerId)
         val queueKey = getMutexQueueKey(projectId, mutexGroup)
         val exist = redisOperation.hhaskey(queueKey, containerMutexId)
         val queueSize = redisOperation.hsize(queueKey)
+
         // 也已经在队列中,判断是否已经超时
         if (exist) {
             val startTime = redisOperation.hget(queueKey, containerMutexId)?.toLong() ?: LocalDateTime.now().timestamp()
@@ -234,7 +238,7 @@ class MutexControl @Autowired constructor(
             // 排队等待时间为0的时候，立即超时
             // 超时就退出队列，并失败, 没有就继续在队列中,timeOut时间为分钟
             return if (mutexGroup.timeout == 0 || timeDiff > mutexGroup.timeout * 60) {
-                logContainerMutex(container, "Job互斥组:超过了最长等待时间，该Job取消。")
+                logContainerMutex(container, "Job互斥组:Job(${buildId}_$containerId),等待互斥锁(${mutexGroup.mutexGroupName})超过了最长等待时间,正在运行的Job($lockedContainerMutexId)，该Job取消。")
                 quitMutexQueue(
                     projectId = projectId,
                     buildId = buildId,
@@ -246,7 +250,7 @@ class MutexControl @Autowired constructor(
                 val timeDiffMod = timeDiff % 60 // 余数，在19秒内的，应该只有一次运行，所以在一分钟内的小于19秒的才打印
                 val timeDiffQuotient = timeDiff / 60 // 余数，在19秒内的，应该只有一次运行，所以在一分钟内的小于19秒的才打印
                 val timeDiffDisplay = if (timeDiffQuotient > 0) "${timeDiffQuotient}分钟" else "${timeDiff}秒"
-                var frontContainer = 0 // 排在该Container签名的数量
+                var frontContainer = 1 // 排在该Container签名的数量
                 redisOperation.hvalues(queueKey)?.map { it.toLong() }?.forEach {
                     if (it < startTime) {
                         frontContainer++
@@ -254,7 +258,7 @@ class MutexControl @Autowired constructor(
                 }
 
                 if (timeDiffMod <= 19) {
-                    logContainerMutex(container, "Job互斥组:已等待$timeDiffDisplay，前面还有${frontContainer}个任务在排队。")
+                    logContainerMutex(container, "Job互斥组:Job(${buildId}_$containerId),已等待互斥锁(${mutexGroup.mutexGroupName})$timeDiffDisplay，正在运行的Job($lockedContainerMutexId)，目前还有${frontContainer}个任务在排队。")
                 }
                 true
             }
@@ -262,10 +266,10 @@ class MutexControl @Autowired constructor(
             // 排队队列为0的时候，不做排队
             // 还没有在队列中，则判断队列的数量,如果超过了则排队失败,没有则进入队列.
             return if (mutexGroup.queue == 0 || queueSize >= mutexGroup.queue) {
-                logContainerMutex(container, "Job互斥组:超过了队列最大任务数，该Job取消。")
+                logContainerMutex(container, "Job互斥组:Job(${buildId}_$containerId),互斥组(${mutexGroup.mutexGroupName})队列已经超过最大任务数(${mutexGroup.queue})，正在运行的Job($lockedContainerMutexId)，该Job取消。")
                 false
             } else {
-                logContainerMutex(container, "Job互斥组:进入互斥组的排队队列，前面还有${queueSize}个任务在排队。")
+                logContainerMutex(container, "Job互斥组:Job(${buildId}_$containerId),进入互斥组(${mutexGroup.mutexGroupName})的排队队列，正在运行的Job($lockedContainerMutexId)，目前还有${queueSize + 1}个任务在排队。")
                 // 则进入队列,并返回成功
                 enterMutexQueue(
                     projectId = projectId,
@@ -312,21 +316,9 @@ class MutexControl @Autowired constructor(
 
     private fun logContainerMutex(container: PipelineBuildContainer, message: String) {
         val tagName = "${container.stageId}-[${container.containerId}]"
-        LogUtils.addFoldStartLine(
-            rabbitTemplate = rabbitTemplate,
-            buildId = container.buildId, tagName = tagName,
-            tag = tagName, jobId = null,
-            executeCount = container.executeCount
-        )
         LogUtils.addYellowLine(
             rabbitTemplate = rabbitTemplate,
             buildId = container.buildId, message = message,
-            tag = tagName, jobId = null,
-            executeCount = container.executeCount
-        )
-        LogUtils.addFoldEndLine(
-            rabbitTemplate = rabbitTemplate,
-            buildId = container.buildId, tagName = tagName,
             tag = tagName, jobId = null,
             executeCount = container.executeCount
         )

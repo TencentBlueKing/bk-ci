@@ -35,6 +35,7 @@ import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.log.api.UserLogResource
+import com.tencent.devops.log.model.pojo.QueryLineNo
 import com.tencent.devops.log.model.pojo.QueryLogs
 import com.tencent.devops.log.service.LogServiceDispatcher
 import org.springframework.beans.factory.annotation.Autowired
@@ -62,9 +63,39 @@ class UserLogResourceImpl @Autowired constructor(
         jobId: String?,
         executeCount: Int?
     ): Result<QueryLogs> {
-
         validateAuth(userId, projectId, pipelineId, buildId)
-        return logDispatcher.getInitLogs(projectId, pipelineId, buildId, isAnalysis, queryKeywords, tag, jobId, executeCount)
+        return logDispatcher.getInitLogs(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            isAnalysis = isAnalysis,
+            queryKeywords = queryKeywords,
+            tag = tag,
+            jobId = jobId,
+            executeCount = executeCount
+        )
+    }
+
+    override fun getLineNoByKeywords(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        queryKeywords: String,
+        tag: String?,
+        jobId: String?,
+        executeCount: Int?
+    ): Result<QueryLineNo> {
+        validateAuth(userId, projectId, pipelineId, buildId)
+        return logDispatcher.getLineNoByKeywords(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            queryKeywords = queryKeywords,
+            tag = tag,
+            jobId = jobId,
+            executeCount = executeCount
+        )
     }
 
     override fun getMoreLogs(
@@ -82,16 +113,16 @@ class UserLogResourceImpl @Autowired constructor(
     ): Result<QueryLogs> {
         validateAuth(userId, projectId, pipelineId, buildId)
         return logDispatcher.getMoreLogs(
-                projectId,
-                pipelineId,
-                buildId,
-                num,
-                fromStart,
-                start,
-                end,
-                tag,
-                jobId,
-                executeCount
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            num = num,
+            fromStart = fromStart,
+            start = start,
+            end = end,
+            tag = tag,
+            jobId = jobId,
+            executeCount = executeCount
         )
     }
 
@@ -109,15 +140,15 @@ class UserLogResourceImpl @Autowired constructor(
     ): Result<QueryLogs> {
         validateAuth(userId, projectId, pipelineId, buildId)
         return logDispatcher.getAfterLogs(
-                projectId,
-                pipelineId,
-                buildId,
-                start,
-                isAnalysis,
-                queryKeywords,
-                tag,
-                jobId,
-                executeCount
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            start = start,
+            isAnalysis = isAnalysis,
+            queryKeywords = queryKeywords,
+            tag = tag,
+            jobId = jobId,
+            executeCount = executeCount
         )
     }
 
@@ -131,7 +162,14 @@ class UserLogResourceImpl @Autowired constructor(
         executeCount: Int?
     ): Response {
         validateAuth(userId, projectId, pipelineId, buildId)
-        return logDispatcher.downloadLogs(projectId, pipelineId, buildId, tag ?: "", jobId, executeCount)
+        return logDispatcher.downloadLogs(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            tag = tag ?: "",
+            jobId = jobId,
+            executeCount = executeCount
+        )
     }
 
     private fun validateAuth(userId: String, projectId: String, pipelineId: String, buildId: String) {

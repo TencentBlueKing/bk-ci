@@ -29,10 +29,8 @@ package com.tencent.devops.process.engine.service
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
-import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Container
-import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.element.Element
@@ -44,8 +42,13 @@ import com.tencent.devops.common.websocket.dispatch.WebSocketDispatcher
 import com.tencent.devops.model.process.tables.records.TPipelineBuildDetailRecord
 import com.tencent.devops.process.dao.BuildDetailDao
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
-import com.tencent.devops.process.pojo.ErrorType
+import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.common.pipeline.container.TriggerContainer
+import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
+import com.tencent.devops.process.utils.PipelineVarUtil
+import com.tencent.devops.quality.QualityGateInElement
+import com.tencent.devops.quality.QualityGateOutElement
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -60,7 +63,6 @@ class PipelineBuildDetailService @Autowired constructor(
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val redisOperation: RedisOperation,
-    private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val webSocketDispatcher: WebSocketDispatcher,
     private val pipelineWebsocketService: PipelineWebsocketService,
     private val pipelineBuildDao: PipelineBuildDao
@@ -103,6 +105,33 @@ class PipelineBuildDetailService @Autowired constructor(
             ModelUtils.refreshCanRetry(model, canRetry, buildInfo.status)
         }
 
+        val triggerContainer = model.stages[0].containers[0] as TriggerContainer
+        val params = triggerContainer.params
+        val newParams = mutableListOf<BuildFormProperty>()
+        params.forEach {
+            // 变量名从旧转新: 兼容从旧入口写入的数据转到新的流水线运行
+            val newVarName = PipelineVarUtil.oldVarToNewVar(it.id)
+            if (!newVarName.isNullOrBlank()) {
+                newParams.add(
+                    BuildFormProperty(
+                        id = newVarName!!,
+                        required = it.required,
+                        type = it.type,
+                        defaultValue = it.defaultValue,
+                        options = it.options,
+                        desc = it.desc,
+                        repoHashId = it.repoHashId,
+                        relativePath = it.relativePath,
+                        scmType = it.scmType,
+                        containerType = it.containerType,
+                        glob = it.glob,
+                        properties = it.properties
+                    )
+                )
+            } else newParams.add(it)
+        }
+        triggerContainer.params = newParams
+
         return ModelDetail(
             id = record.buildId,
             pipelineId = buildInfo.pipelineId,
@@ -127,37 +156,27 @@ class PipelineBuildDetailService @Autowired constructor(
         return JsonUtil.to(record.model, Model::class.java)
     }
 
-    fun create(buildId: String, startType: StartType, buildNum: Int, model: Model) {
-        buildDetailDao.create(dslContext, buildId, startType, buildNum, JsonUtil.toJson(model))
-        pipelineDetailChangeEvent(buildId)
-    }
-
     fun pipelineDetailChangeEvent(buildId: String) {
         val pipelineBuildInfo = pipelineBuildDao.getBuildInfo(dslContext, buildId) ?: return
         logger.info("dispatch pipelineDetailChangeEvent, buildId: $buildId")
         webSocketDispatcher.dispatch(
-                pipelineWebsocketService.buildDetailMessage(pipelineBuildInfo.buildId, pipelineBuildInfo.projectId, pipelineBuildInfo.pipelineId, pipelineBuildInfo.startUser)
+            pipelineWebsocketService.buildDetailMessage(
+                buildId = pipelineBuildInfo.buildId,
+                projectId = pipelineBuildInfo.projectId,
+                pipelineId = pipelineBuildInfo.pipelineId,
+                userId = pipelineBuildInfo.startUser
+            )
         )
-//        pipelineEventDispatcher.dispatch(
-//            PipelineStatusChangeEvent(
-//                source = "pipelineDetailChangeEvent",
-//                pipelineId = pipelineBuildInfo.pipelineId,
-//                changeType = ChangeType.DETAIL,
-//                buildId = pipelineBuildInfo.buildId,
-//                projectId = pipelineBuildInfo.projectId,
-//                userId = pipelineBuildInfo.startUser
-//            )
-//        )
     }
 
     fun updateModel(buildId: String, model: Model) {
         val now = System.currentTimeMillis()
         logger.info("update the build model for the build $buildId and now $now")
         buildDetailDao.update(
-            dslContext,
-            buildId,
-            JsonUtil.getObjectMapper().writeValueAsString(model),
-            BuildStatus.RUNNING
+            dslContext = dslContext,
+            buildId = buildId,
+            model = JsonUtil.getObjectMapper().writeValueAsString(model),
+            buildStatus = BuildStatus.RUNNING
         )
         pipelineDetailChangeEvent(buildId)
     }
@@ -289,13 +308,13 @@ class PipelineBuildDetailService @Autowired constructor(
     }
 
     fun normalContainerSkip(buildId: String, containerId: String) {
-        logger.info("Normal container skip of build $buildId")
+        logger.info("[$buildId|$containerId] Normal container skip")
         update(buildId, object : ModelInterface {
 
             var update = false
 
             override fun onFindContainer(id: Int, container: Container): Traverse {
-                if (container is NormalContainer) {
+                if (container !is TriggerContainer) {
                     // 兼容id字段
                     if (container.id == containerId || container.containerId == containerId) {
                         update = true
@@ -516,6 +535,28 @@ class PipelineBuildDetailService @Autowired constructor(
         }, BuildStatus.RUNNING)
     }
 
+    fun taskSkip(buildId: String, taskId: String) {
+        logger.info("[$buildId|$taskId] Task skip")
+        update(buildId, object : ModelInterface {
+            var update = false
+            override fun onFindElement(e: Element, c: Container): Traverse {
+                if (e.id == taskId) {
+                    update = true
+                    e.status = BuildStatus.SKIP.name
+                    return Traverse.BREAK
+                }
+                return Traverse.CONTINUE
+            }
+
+            override fun needUpdate(): Boolean {
+                if (!update) {
+                    logger.info("The task start is not update of build $buildId with element $taskId")
+                }
+                return update
+            }
+        }, BuildStatus.RUNNING)
+    }
+
     fun taskStart(buildId: String, taskId: String) {
         logger.info("The task($taskId) start of build $buildId")
         val variables = pipelineRuntimeService.getAllVariable(buildId)
@@ -533,6 +574,9 @@ class PipelineBuildDetailService @Autowired constructor(
                         }
                         e.reviewUsers.clear()
                         e.reviewUsers.addAll(list)
+                    } else if (e is QualityGateInElement || e is QualityGateOutElement) {
+                        e.status = BuildStatus.REVIEWING.name
+                        c.status = BuildStatus.REVIEWING.name
                     } else {
                         c.status = BuildStatus.RUNNING.name
                         e.status = BuildStatus.RUNNING.name

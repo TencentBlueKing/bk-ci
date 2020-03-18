@@ -34,5 +34,5 @@ class ESXiDispatchType : DispatchType("") {
     override fun replaceField(variables: Map<String, String>) {
     }
 
-    override fun buildType() = BuildType.ESXi
+    override fun buildType() = BuildType.valueOf(BuildType.ESXi.name)
 }

@@ -27,7 +27,9 @@
 package com.tencent.devops.process.engine.service
 
 import com.fasterxml.jackson.core.JsonParseException
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.PipelineAlreadyExistException
 import com.tencent.devops.common.api.model.SQLLimit
 import com.tencent.devops.common.api.model.SQLPage
@@ -37,18 +39,22 @@ import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.pipeline.enums.PipelineInstanceTypeEnum
 import com.tencent.devops.common.pipeline.extend.ModelCheckPlugin
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildNo
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.dao.PipelineSettingDao
+import com.tencent.devops.process.engine.compatibility.BuildPropertyCompatibilityTools
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
+import com.tencent.devops.process.engine.dao.template.TemplateDao
 import com.tencent.devops.process.engine.dao.template.TemplatePipelineDao
 import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.jmx.api.ProcessJmxApi
@@ -67,6 +73,7 @@ import com.tencent.devops.process.pojo.classify.enums.Logic
 import com.tencent.devops.process.pojo.pipeline.SimplePipeline
 import com.tencent.devops.process.pojo.setting.PipelineRunLockType
 import com.tencent.devops.process.pojo.setting.PipelineSetting
+import com.tencent.devops.process.pojo.template.TemplateType
 import com.tencent.devops.process.service.PipelineSettingService
 import com.tencent.devops.process.service.PipelineUserService
 import com.tencent.devops.process.service.label.PipelineGroupService
@@ -74,6 +81,7 @@ import com.tencent.devops.process.service.view.PipelineViewService
 import com.tencent.devops.process.utils.PIPELINE_VIEW_ALL_PIPELINES
 import com.tencent.devops.process.utils.PIPELINE_VIEW_FAVORITE_PIPELINES
 import com.tencent.devops.process.utils.PIPELINE_VIEW_MY_PIPELINES
+import com.tencent.devops.store.api.common.ServiceStoreResource
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.jooq.Result
@@ -97,6 +105,7 @@ class PipelineService @Autowired constructor(
     private val pipelineBean: PipelineBean,
     private val processJmxApi: ProcessJmxApi,
     private val dslContext: DSLContext,
+    private val templateDao: TemplateDao,
     private val templatePipelineDao: TemplatePipelineDao,
     private val pipelineInfoDao: PipelineInfoDao,
     private val pipelineSettingDao: PipelineSettingDao,
@@ -104,20 +113,13 @@ class PipelineService @Autowired constructor(
     private val modelCheckPlugin: ModelCheckPlugin,
     private val pipelineBuildDao: PipelineBuildDao,
     private val authPermissionApi: AuthPermissionApi,
-    private val pipelineAuthServiceCode: PipelineAuthServiceCode
+    private val pipelineAuthServiceCode: PipelineAuthServiceCode,
+    private val objectMapper: ObjectMapper,
+    private val client: Client
 ) {
 
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineService::class.java)
-    }
-
-    private fun checkPipelineName(name: String) {
-        if (name.toCharArray().size > 64) {
-            throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_PIPELINE_NAME_TOO_LONG,
-                defaultMessage = "流水线名称过长"
-            )
-        }
     }
 
     fun sortPipelines(pipelines: List<Pipeline>, sortType: PipelineSortType) {
@@ -142,12 +144,15 @@ class PipelineService @Autowired constructor(
         model: Model,
         channelCode: ChannelCode,
         checkPermission: Boolean = true,
-        fixPipelineId: String? = null
+        fixPipelineId: String? = null,
+        instanceType: String? = PipelineInstanceTypeEnum.FREEDOM.type,
+        buildNo: BuildNo? = null,
+        param: List<BuildFormProperty>? = null
     ): String {
+        logger.info("createPipeline: $userId|$projectId|$channelCode|$checkPermission|$fixPipelineId|$instanceType")
         val apiStartEpoch = System.currentTimeMillis()
         var success = false
         try {
-            checkPipelineName(model.name)
 
             if (checkPermission) {
                 pipelinePermissionService.validPipelinePermission(
@@ -168,9 +173,19 @@ class PipelineService @Autowired constructor(
                 )
             }
 
+            // 检查用户是否有插件的使用权限
+            if (model.srcTemplateId != null) {
+                val srcTemplateId = model.srcTemplateId as String
+                val validateRet = client.get(ServiceStoreResource::class)
+                    .validateUserTemplateAtomVisibleDept(userId, srcTemplateId, projectId)
+                if (validateRet.isNotOk()) {
+                    throw OperationException(validateRet.message ?: "模版下存在无权限的插件")
+                }
+            }
+
             var pipelineId: String? = null
             try {
-                val instance = if (model.instanceFromTemplate == null || !model.instanceFromTemplate!!) {
+                val instance = if (instanceType == PipelineInstanceTypeEnum.FREEDOM.type) {
                     // 将模版常量变更实例化为流水线变量
                     val triggerContainer = model.stages[0].containers[0] as TriggerContainer
                     instanceModel(
@@ -210,6 +225,12 @@ class PipelineService @Autowired constructor(
                 }
                 pipelineGroupService.addPipelineLabel(userId = userId, pipelineId = pipelineId, labelIds = model.labels)
                 pipelineUserService.create(pipelineId, userId)
+                logger.info("instanceType: $instanceType")
+                if (model.templateId != null) {
+                    var templateId = model.templateId as String
+                    logger.info("templateId: $templateId")
+                    createRelationBtwTemplate(userId, templateId, pipelineId, instanceType!!, buildNo, param)
+                }
                 success = true
                 return pipelineId
             } catch (duplicateKeyException: DuplicateKeyException) {
@@ -233,6 +254,53 @@ class PipelineService @Autowired constructor(
             pipelineBean.create(success)
             processJmxApi.execute(ProcessJmxApi.NEW_PIPELINE_CREATE, System.currentTimeMillis() - apiStartEpoch)
         }
+    }
+
+    /**
+     * 创建模板和流水线关联关系
+     */
+    fun createRelationBtwTemplate(
+        userId: String,
+        templateId: String,
+        pipelineId: String,
+        instanceType: String,
+        buildNo: BuildNo? = null,
+        param: List<BuildFormProperty>? = null
+    ): Boolean {
+        logger.info("start createRelationBtwTemplate: $userId|$templateId|$pipelineId|$instanceType")
+        val template = templateDao.getLatestTemplate(dslContext, templateId)
+        var rootTemplateId = templateId
+        var templateVersion = template.version
+        var versionName = template.versionName
+        if (template.type == TemplateType.CONSTRAINT.name) {
+            logger.info("template[$templateId] is from store, srcTemplateId is ${template.srcTemplateId}")
+            val rootTemplate = templateDao.getLatestTemplate(dslContext, template.srcTemplateId)
+            rootTemplateId = rootTemplate.id
+            templateVersion = rootTemplate.version
+            versionName = rootTemplate.versionName
+        }
+
+        templatePipelineDao.create(
+            dslContext = dslContext,
+            pipelineId = pipelineId,
+            instanceType = instanceType,
+            rootTemplateId = rootTemplateId,
+            templateVersion = templateVersion,
+            versionName = versionName,
+            templateId = templateId,
+            userId = userId,
+            buildNo = if (buildNo == null) {
+                null
+            } else {
+                objectMapper.writeValueAsString(buildNo)
+            },
+            param = if (param == null) {
+                null
+            } else {
+                objectMapper.writeValueAsString(param)
+            }
+        )
+        return true
     }
 
     /**
@@ -327,7 +395,6 @@ class PipelineService @Autowired constructor(
             )
 
         logger.info("Start to copy the pipeline $pipelineId")
-        checkPipelineName(name)
         if (checkPermission) {
             pipelinePermissionService.validPipelinePermission(
                 userId = userId,
@@ -405,7 +472,6 @@ class PipelineService @Autowired constructor(
         var success = false
         logger.info("Start to edit the pipeline $pipelineId of project $projectId with channel $channelCode and permission $checkPermission by user $userId")
         try {
-            checkPipelineName(model.name)
             if (checkPermission) {
                 pipelinePermissionService.validPipelinePermission(
                     userId = userId,
@@ -453,7 +519,6 @@ class PipelineService @Autowired constructor(
             if (checkPermission) {
                 pipelinePermissionService.modifyResource(projectId, pipelineId, model.name)
             }
-            pipelineGroupService.updatePipelineLabel(userId, pipelineId, model.labels)
             pipelineUserService.update(pipelineId, userId)
             success = true
         } finally {
@@ -594,10 +659,13 @@ class PipelineService @Autowired constructor(
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS,
                 defaultMessage = "指定要复制的流水线-模型不存在")
         try {
-            val buildNo = (model.stages[0].containers[0] as TriggerContainer).buildNo
+            val triggerContainer = model.stages[0].containers[0] as TriggerContainer
+            val buildNo = triggerContainer.buildNo
             if (buildNo != null) {
                 buildNo.buildNo = pipelineRepositoryService.getBuildNo(projectId = projectId, pipelineId = pipelineId) ?: buildNo.buildNo
             }
+            // 兼容性处理
+            BuildPropertyCompatibilityTools.fix(triggerContainer.params)
 
             // 获取流水线labels
             val groups = pipelineGroupService.getGroups(userId = userId, projectId = projectId, pipelineId = pipelineId)
@@ -698,7 +766,8 @@ class PipelineService @Autowired constructor(
         }
 
         if (templateIdList != null) {
-            val templatePipelineIds = templatePipelineDao.listPipeline(dslContext, templateIdList).map { it.pipelineId }
+            val templatePipelineIds =
+                templatePipelineDao.listPipeline(dslContext, PipelineInstanceTypeEnum.CONSTRAINT.type, templateIdList).map { it.pipelineId }
             resultPipelineIds.addAll(templatePipelineIds)
         }
 
@@ -1367,6 +1436,7 @@ class PipelineService @Autowired constructor(
             val buildNum = it["BUILD_NUM"] as Int
             val version = it["VERSION"] as Int
             val taskCount = it["TASK_COUNT"] as Int
+            val creator = it["CREATOR"] as String
             val createTime = (it["CREATE_TIME"] as LocalDateTime?)?.timestampmilli() ?: 0
             val updateTime = (it["UPDATE_TIME"] as LocalDateTime?)?.timestampmilli() ?: 0
 
@@ -1417,7 +1487,8 @@ class PipelineService @Autowired constructor(
                     hasPermission = authPipelines.contains(pipelineId),
                     hasCollect = favorPipelines.contains(pipelineId),
                     latestBuildUserId = starter,
-                    instanceFromTemplate = templatePipelineDao.get(dslContext, pipelineId) != null
+                    instanceFromTemplate = templatePipelineDao.get(dslContext, pipelineId) != null,
+                    creator = creator
                 )
             )
         }

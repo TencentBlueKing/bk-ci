@@ -29,6 +29,12 @@ package com.tencent.devops.store.dao.template
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.model.store.tables.TLabel
 import com.tencent.devops.model.store.tables.TTemplateLabelRel
+import com.tencent.devops.store.pojo.common.KEY_CREATE_TIME
+import com.tencent.devops.store.pojo.common.KEY_LABEL_CODE
+import com.tencent.devops.store.pojo.common.KEY_LABEL_ID
+import com.tencent.devops.store.pojo.common.KEY_LABEL_NAME
+import com.tencent.devops.store.pojo.common.KEY_LABEL_TYPE
+import com.tencent.devops.store.pojo.common.KEY_UPDATE_TIME
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.jooq.Result
@@ -44,12 +50,12 @@ class TemplateLabelRelDao {
         val a = TLabel.T_LABEL.`as`("a")
         val b = TTemplateLabelRel.T_TEMPLATE_LABEL_REL.`as`("b")
         return dslContext.select(
-            a.ID.`as`("id"),
-            a.LABEL_CODE.`as`("labelCode"),
-            a.LABEL_NAME.`as`("labelName"),
-            a.TYPE.`as`("labelType"),
-            a.CREATE_TIME.`as`("createTime"),
-            a.UPDATE_TIME.`as`("updateTime")
+            a.ID.`as`(KEY_LABEL_ID),
+            a.LABEL_CODE.`as`(KEY_LABEL_CODE),
+            a.LABEL_NAME.`as`(KEY_LABEL_NAME),
+            a.TYPE.`as`(KEY_LABEL_TYPE),
+            a.CREATE_TIME.`as`(KEY_CREATE_TIME),
+            a.UPDATE_TIME.`as`(KEY_UPDATE_TIME)
         ).from(a).join(b).on(a.ID.eq(b.LABEL_ID))
             .where(b.TEMPLATE_ID.eq(templateId))
             .fetch()

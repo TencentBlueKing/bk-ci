@@ -71,6 +71,8 @@
         leaveConfirm (to, from, next) {
             this.leaving = true
             this.$bkInfo({
+                type: 'warning',
+                theme: 'warning',
                 title: this.$t('leaveConfirmTitle'),
                 subTitle: this.$t('leaveConfirmMsg'),
                 confirmFn: () => {
@@ -145,6 +147,8 @@
                 const childWin = this.$refs.iframeEle.contentWindow
                 this.iframeUtil.syncProjectList(childWin, this.projectList)
                 this.iframeUtil.syncUserInfo(childWin, this.user)
+                this.iframeUtil.syncLocale(childWin, this.$i18n.locale)
+                
                 if (this.$route.params.projectId) {
                     this.iframeUtil.syncProjectId(childWin, this.$route.params.projectId)
                 }
