@@ -128,7 +128,7 @@ class ServiceItemDao {
         return with(TServiceItem.T_SERVICE_ITEM) {
             val whereStep = dslContext.selectFrom(this)
             if (itemQueryInfo.itemName != null) {
-                whereStep.where(ITEM_NAME.like(itemQueryInfo.itemName))
+                whereStep.where(ITEM_NAME.like("%${itemQueryInfo.itemName}%"))
             }
 
             if (itemQueryInfo.serviceId != null) {
