@@ -1,4 +1,5 @@
 import SockJS from 'sockjs-client'
+import * as cookie from 'js-cookie'
 const Stomp = require('stompjs/lib/stomp.js').Stomp
 
 function uuid () {
@@ -91,7 +92,7 @@ class BlueShieldWebSocket {
         const hasWebSocket = pathRegs.some((reg) => reg && new RegExp(reg).test(path))
         const currentPage = window.currentPage || {}
         const showProjectList = currentPage.show_project_list || false
-        const projectId = localStorage.getItem('projectId')
+        const projectId = cookie.get(X_DEVOPS_PROJECT_ID)
         const data = JSON.stringify({ sessionId: this.uuid, userId: this.userName, page: router.path, showProjectList, projectId })
 
         if (hasWebSocket) setTimeout(() => { this.loopSendChangePage(data) }, 5)
