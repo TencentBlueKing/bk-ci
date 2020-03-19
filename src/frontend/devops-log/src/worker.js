@@ -25,10 +25,12 @@ function handleColor (val) {
         if (!res.color && item.color) res.color = item.color
     })
     
-    const currentColor = colorList.find(color => String(val).includes(color.key))
-    if (currentColor) res.color = currentColor.color
+    const currentColor = colorList.find(color => String(val).startsWith(color.key))
+    if (currentColor) {
+        res.color = currentColor.color
+        res.message = String(res.message).replace(reg, '')
+    }
     if (res.color) res.fontWeight = 600
-    res.message = String(res.message).replace(reg, '')
     return res
 }
 
@@ -162,9 +164,9 @@ function foldListData ({ startIndex }) {
 
 function addListData ({ list }) {
     list.forEach((item) => {
-        const { message, color } = handleColor(item.message || '')
-        const newItemArr = message.split(/\r\n|\n/)
-        newItemArr.forEach((message) => {
+        const newItemArr = (item.message || '').split(/\r\n|\n/)
+        newItemArr.forEach((val) => {
+            const { message, color } = handleColor(val || '')
             const splitTextArr = splitText(message)
             splitTextArr.forEach((message, i) => {
                 const currentIndex = curListData.length
@@ -176,12 +178,12 @@ function addListData ({ list }) {
                     realIndex: currentIndex,
                     timestamp: item.timestamp
                 }
-                if (message.includes('##[group]')) {
+                if (message.startsWith('##[group]')) {
                     newItem.message = newItem.message.replace('##[group]', '')
                     curTagList.push(newItem)
                 }
 
-                if (message.includes('##[endgroup]') && curTagList.length) {
+                if (message.startsWith('##[endgroup]') && curTagList.length) {
                     newItem.message = newItem.message.replace('##[endgroup]', '')
                     const linkItem = curTagList.pop()
                     linkItem.endIndex = currentIndex
