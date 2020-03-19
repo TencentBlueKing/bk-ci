@@ -91,6 +91,7 @@ class ExtServiceBcsService {
         version: String
     ): DeployApp {
         val imageName = "${extServiceImageSecretConfig.imageNamePrefix}$serviceCode"
+        val host = if (namespaceName == extServiceBcsNameSpaceConfig.grayNamespaceName)  extServiceIngressConfig.grayHost else extServiceIngressConfig.host
         return DeployApp(
             bcsUrl = extServiceBcsConfig.masterUrl,
             token = extServiceBcsConfig.token,
@@ -106,7 +107,7 @@ class ExtServiceBcsService {
                 servicePort = extServiceServiceConfig.servicePort.toInt()
             ),
             appIngress = AppIngress(
-                host = MessageFormat(extServiceIngressConfig.host).format(arrayOf(serviceCode)),
+                host = MessageFormat(host).format(arrayOf(serviceCode)),
                 contextPath = extServiceIngressConfig.contextPath,
                 ingressAnnotationMap = mapOf(
                     "kubernetes.io/ingress.class" to extServiceIngressConfig.annotationClass,
