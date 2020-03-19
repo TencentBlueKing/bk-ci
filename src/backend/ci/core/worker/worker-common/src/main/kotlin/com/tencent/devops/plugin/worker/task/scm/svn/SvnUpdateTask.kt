@@ -212,7 +212,7 @@ open class SvnUpdateTask constructor(
                 aliasName = svnRepo.aliasName,
                 url = svnRepo.url,
                 branchName = "",
-                newCommitId = commitMaterial.newCommitId,
+                newCommitId = commitMaterial.newCommitId ?: commitMaterial.lastCommitId,
                 newCommitComment = commitMaterial.newCommitComment,
                 commitTimes = commitMaterial.commitTimes
             )

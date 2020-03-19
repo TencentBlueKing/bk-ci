@@ -43,8 +43,7 @@ module.exports = {
         'vue'
     ],
     globals: {
-        'LOGOUT_SERVICE_URL': true,
-        'X_DEVOPS_PROJECT_ID': true
+        'LOGOUT_SERVICE_URL': true
     },
     overrides: [
         {

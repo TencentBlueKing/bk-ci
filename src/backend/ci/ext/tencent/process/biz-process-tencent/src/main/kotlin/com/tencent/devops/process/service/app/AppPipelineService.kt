@@ -194,6 +194,8 @@ class AppPipelineService @Autowired constructor(
             buildNoEnd = null
         )
         val histories = result.records.map { h ->
+            val packageVersion = StringBuilder()
+            h.artifactList?.forEach { packageVersion.append(it.appVersion).append(";") }
             AppPipelineHistory(
                 projectId = projectId,
                 pipelineId = pipelineId,
@@ -206,7 +208,7 @@ class AppPipelineService @Autowired constructor(
                 status = h.status,
                 curTimestamp = h.currentTimestamp,
                 pipelineVersion = h.pipelineVersion,
-                appVersion = h.artifactList?.map { it.appVersion }
+                packageVersion = packageVersion.toString().removeSuffix(";")
             ).apply {
                 isMobileStart = h.isMobileStart
             }

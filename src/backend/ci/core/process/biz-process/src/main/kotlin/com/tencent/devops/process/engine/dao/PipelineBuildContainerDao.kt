@@ -29,7 +29,7 @@ package com.tencent.devops.process.engine.dao
 import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.NameAndValue
-import com.tencent.devops.common.pipeline.container.JobControlOption
+import com.tencent.devops.common.pipeline.option.JobControlOption
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.JobRunCondition
 import com.tencent.devops.model.process.Tables.T_PIPELINE_BUILD_CONTAINER
@@ -37,6 +37,7 @@ import com.tencent.devops.model.process.tables.records.TPipelineBuildContainerRe
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainerControlOption
 import org.jooq.DSLContext
+import org.jooq.InsertOnDuplicateSetMoreStep
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
@@ -88,19 +89,35 @@ class PipelineBuildContainerDao {
     }
 
     fun batchSave(dslContext: DSLContext, taskList: Collection<PipelineBuildContainer>) {
-        val records = mutableListOf<TPipelineBuildContainerRecord>()
-        taskList.forEach {
-            with(it) {
+        val records =
+            mutableListOf<InsertOnDuplicateSetMoreStep<TPipelineBuildContainerRecord>>()
+        with(T_PIPELINE_BUILD_CONTAINER) {
+            taskList.forEach {
                 records.add(
-                    TPipelineBuildContainerRecord(
-                        projectId, pipelineId, buildId, stageId, containerId, containerType,
-                        seq, status.ordinal, startTime, endTime, cost, executeCount,
-                        if (controlOption != null) JsonUtil.toJson(controlOption!!) else null
-                    )
+                    dslContext.insertInto(this)
+                        .set(PROJECT_ID, it.projectId)
+                        .set(PIPELINE_ID, it.pipelineId)
+                        .set(BUILD_ID, it.buildId)
+                        .set(STAGE_ID, it.stageId)
+                        .set(CONTAINER_ID, it.containerId)
+                        .set(CONTAINER_TYPE, it.containerType)
+                        .set(SEQ, it.seq)
+                        .set(STATUS, it.status.ordinal)
+                        .set(START_TIME, it.startTime)
+                        .set(END_TIME, it.endTime)
+                        .set(COST, it.cost)
+                        .set(EXECUTE_COUNT, it.executeCount)
+                        .set(CONDITIONS, if (it.controlOption != null) JsonUtil.toJson(it.controlOption!!) else null)
+                        .onDuplicateKeyUpdate()
+                        .set(STATUS, it.status.ordinal)
+                        .set(START_TIME, it.startTime)
+                        .set(END_TIME, it.endTime)
+                        .set(COST, it.cost)
+                        .set(EXECUTE_COUNT, it.executeCount)
                 )
             }
         }
-        dslContext.batchStore(records).execute()
+        dslContext.batch(records).execute()
     }
 
     fun get(
