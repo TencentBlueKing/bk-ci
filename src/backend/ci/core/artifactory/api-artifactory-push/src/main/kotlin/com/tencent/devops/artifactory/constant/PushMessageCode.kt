@@ -44,4 +44,13 @@ package com.tencent.devops.artifactory.constant
  */
 object PushMessageCode {
     const val FUSH_FILE_VALIDATE_FAIL = "2103001" // 用户无操作下载权限
+    const val FUSH_FILE_REMOTE_MACHINE_EMPTY = "2103002" // 目标机器不能为空
+    const val ENV_NAME_MACHINE_NOT_EXITS = "2103003" // 输入环境名不存在{0},请导入机器至项目
+    const val ENV_MACHINE_NOT_AUTH = "2103004" // 用户没有操作这些环境的权限！环境ID{0}
+    const val NODE_NAME_MACHINE_NOT_EXITS = "2103005" // 输入节点名不存在{0},请导入机器至项目
+    const val FILE_NOT_EXITS = "2103006" // 未匹配到文件{0}
+    const val GET_FILE_FAIL = "2103007" // 构建分发获取文件失败
+    const val JOB_EXECUTE_FAIL = "2103008" // JOB执行失败,msg{0}
+
+
 }
