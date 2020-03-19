@@ -38,11 +38,11 @@ class OpStageTagResourceImpl @Autowired constructor(
     private val stageTagService: StageTagService
 ) : OpStageTagResource {
     override fun add(stageTagRequest: StageTagRequest): Result<Boolean> {
-        return stageTagService.saveStageTag(stageTagRequest.stageTagName, stageTagRequest.defaultFlag)
+        return stageTagService.saveStageTag(stageTagRequest.stageTagName, stageTagRequest.weight)
     }
 
     override fun update(id: String, stageTagRequest: StageTagRequest): Result<Boolean> {
-        return stageTagService.updateStageTag(id, stageTagRequest.stageTagName, stageTagRequest.defaultFlag)
+        return stageTagService.updateStageTag(id, stageTagRequest.stageTagName, stageTagRequest.weight)
     }
 
     override fun listAllStageTags(): Result<List<PipelineStageTag>> {
