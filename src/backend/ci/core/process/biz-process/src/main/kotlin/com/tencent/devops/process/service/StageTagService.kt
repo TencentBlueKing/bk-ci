@@ -92,7 +92,7 @@ class StageTagService @Autowired constructor(
             // 抛出错误提示
             return MessageCodeUtil.generateResponseDataObject(
                 CommonMessageCode.PARAMETER_IS_EXIST,
-                arrayOf(stageTag),
+                arrayOf("tagName/weight"),
                 false
             )
         }
