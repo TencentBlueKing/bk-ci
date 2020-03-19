@@ -57,6 +57,7 @@
 </template>
 
 <script>
+
     import Vue from 'vue'
     import { mapActions, mapState, mapGetters } from 'vuex'
     import StageContainer from './StageContainer'
@@ -189,9 +190,6 @@
             }
         },
         watch: {
-            '$userInfo' (userinfo) {
-                console.log('userinfo watch', userinfo)
-            },
             'stage.runStage' (newVal) {
                 const { stage, updateStage } = this
                 const { containers } = stage
@@ -471,7 +469,6 @@
                 background: $stageBGColor;
             }
         }
-
         .append-stage {
             position: absolute;
             top: $addIconTop;
