@@ -304,7 +304,7 @@ function convertToEn (time) {
     const sec = time / 1000
     let res = ''
     if (sec <= 60) {
-        res = 'less than one minute'
+        res = 'less than 1 minute'
     } else if (sec <= 60 * 60) {
         res = `${Math.floor(sec / 60)}m and ${(Math.floor(sec % 60))}s`
     } else if (time <= 60 * 60 * 24) {

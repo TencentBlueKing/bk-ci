@@ -11,16 +11,16 @@
             </form-field>
             <form-field :required="true" :label="$t('label')" :is-error="errors.has('tag')" :error-msg="errors.first('tag')">
                 <div class="stage-tag">
-                    <bk-select v-model="stageTag" name="tag" :disabled="!editable" multiple searchable>
+                    <bk-select v-model="stageTag" v-validate.initial="'required'" name="tag" :disabled="!editable" multiple searchable>
                         <bk-option v-for="tag in stageTagList"
-                            :key="tag"
-                            :id="tag"
-                            :name="tag">
+                            :key="tag.id"
+                            :id="tag.id"
+                            :name="tag.stageTagName">
                         </bk-option>
                     </bk-select>
                 </div>
             </form-field>
-            <stage-control :stage-control="stage.stageControlOption" :handle-stage-change="handleStageChange"></stage-control>
+            <stage-control ref="stageControl" :stage-control="stageControl" :disabled="!editable" :handle-stage-change="handleStageChange"></stage-control>
         </section>
     </bk-sideslider>
 </template>
@@ -67,33 +67,38 @@
                 }
             },
             stageTitle () {
-                return typeof this.stageIndex !== 'undefined' ? (this.stage.name || this.stage.id) : this.$t('propertyBar')
+                return typeof this.stage !== 'undefined' ? this.stage.name : 'stage'
+            },
+            stageControl () {
+                if (this.stage && this.stage.stageControlOption) {
+                    return {
+                        ...this.stage.stageControlOption,
+                        fastKill: this.stage.fastKill
+                    }
+                }
+                return undefined
             }
         },
         watch: {
             errors: {
                 deep: true,
                 handler: function (errors, old) {
-                    const isError = errors.any()
+                    const validStageControl = !this.$refs.stageControl || (this.$refs.stageControl && this.$refs.stageControl.validateStageControl())
+                    const isError = errors.any() || !validStageControl
                     this.handleStageChange('isError', isError)
                 }
             }
         },
-        created () {
-            this.fetchStageTagList({
-                projectCode: this.$route.params && this.$route.params.projectId
-            })
-        },
         methods: {
             ...mapActions('atom', [
                 'updateStage',
-                'togglePropertyPanel',
-                'fetchStageTagList'
+                'togglePropertyPanel'
             ]),
             handleStageChange (name, value) {
                 if (!this.stage.hasOwnProperty(name)) {
                     Vue.set(this.stage, name, value)
                 }
+                console.log(name, value, this.stage)
                 this.updateStage({
                     stage: this.stage,
                     newParam: {

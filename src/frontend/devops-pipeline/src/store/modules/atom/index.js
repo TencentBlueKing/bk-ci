@@ -52,7 +52,10 @@ export default {
         executeStatus: false,
         saveStatus: false,
         authSettingEditing: false,
-        stageTagList: []
+        stageTagList: [],
+        defaultStageTags: [],
+        showReviewDialog: false,
+        reviewInfo: null
     },
     mutations,
     actions,
