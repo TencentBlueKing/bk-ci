@@ -28,6 +28,7 @@ package com.tencent.devops.process.api.codecc
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.plugin.codecc.pojo.coverity.ProjectLanguage
 import com.tencent.devops.process.service.codecc.CodeccTransferService
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -37,5 +38,14 @@ class ServiceCodeccTransferResourceImpl @Autowired constructor(
 ) : ServiceCodeccTransferResource {
     override fun transferToV2(projectId: String, pipelineIds: Set<String>): Result<Map<String, String>> {
         return Result(codeccTransferService.transferToV2(projectId, pipelineIds))
+    }
+
+    override fun addToolSetToPipeline(
+        projectId: String,
+        toolRuleSet: String,
+        language: ProjectLanguage,
+        pipelineIds: Set<String>?
+    ): Result<Map<String, String>> {
+        return Result(codeccTransferService.addToolSetToPipeline(projectId, pipelineIds, toolRuleSet, language))
     }
 }

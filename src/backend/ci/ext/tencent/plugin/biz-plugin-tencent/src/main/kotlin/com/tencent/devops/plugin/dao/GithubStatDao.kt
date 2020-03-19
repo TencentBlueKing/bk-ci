@@ -31,8 +31,6 @@ import com.tencent.devops.model.plugin.tables.TPluginGithubStat
 import com.tencent.devops.plugin.api.pojo.GithubStatRequest
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
 
 @Repository
 class GithubStatDao {
@@ -63,7 +61,7 @@ class GithubStatDao {
                     UUIDUtil.generate(),
                     owner,
                     repo,
-                    LocalDate.parse(githubStatRequest.statDate, DateTimeFormatter.ISO_DATE),
+                    githubStatRequest.statDate,
                     githubStatRequest.issueCntAll,
                     githubStatRequest.issueCntOpen,
                     githubStatRequest.issueCntClosed,

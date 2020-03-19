@@ -27,7 +27,6 @@
 package com.tencent.devops.common.es
 
 import com.tencent.devops.common.web.WebAutoConfiguration
-import org.elasticsearch.client.transport.TransportClient
 import org.elasticsearch.common.settings.Settings
 import org.elasticsearch.common.transport.InetSocketTransportAddress
 import org.elasticsearch.transport.client.PreBuiltTransportClient
@@ -52,18 +51,23 @@ class ESAutoConfiguration {
     private val port: Int? = 0
     @Value("\${elasticsearch.cluster}")
     private val cluster: String? = null
+    @Value("\${elasticsearch.name}")
+    private val name: String? = null
 
     @Bean
     @Primary
-    fun transportClient(): TransportClient {
-        if (ip == null || ip!!.isBlank()) {
+    fun transportClient(): ESClient {
+        if (ip.isNullOrBlank()) {
             throw IllegalArgumentException("ES集群地址尚未配置")
         }
         if (port == null || port!! <= 0) {
             throw IllegalArgumentException("ES集群端口尚未配置")
         }
-        if (cluster == null || cluster!!.isBlank()) {
+        if (cluster.isNullOrBlank()) {
             throw IllegalArgumentException("ES集群名称尚未配置")
+        }
+        if (name.isNullOrBlank()) {
+            throw IllegalArgumentException("ES唯一名称尚未配置")
         }
         val settings = Settings.builder().put("cluster.name", cluster).build()
         val ips = ip!!.split(",".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
@@ -71,6 +75,6 @@ class ESAutoConfiguration {
         for (ipAddress in ips) {
             client.addTransportAddress(InetSocketTransportAddress(InetAddress.getByName(ipAddress), port!!))
         }
-        return client
+        return ESClient(name!!, client)
     }
 }

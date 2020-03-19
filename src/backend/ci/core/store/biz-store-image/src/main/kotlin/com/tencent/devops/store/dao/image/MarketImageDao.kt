@@ -750,6 +750,14 @@ class MarketImageDao @Autowired constructor(
         if (!imageSize.isNullOrBlank()) {
             baseStep.set(IMAGE_SIZE, imageSize)
         }
+        val dockerFileType = imageBaseInfoUpdateRequest.dockerFileType
+        if (!dockerFileType.isNullOrBlank()) {
+            baseStep.set(DOCKER_FILE_TYPE, dockerFileType)
+        }
+        val dockerFileContent = imageBaseInfoUpdateRequest.dockerFileContent
+        if (dockerFileContent != null) {
+            baseStep.set(DOCKER_FILE_CONTENT, dockerFileContent)
+        }
         val deleteFlag = imageBaseInfoUpdateRequest.deleteFlag
         if (null != deleteFlag) {
             baseStep.set(DELETE_FLAG, deleteFlag)
