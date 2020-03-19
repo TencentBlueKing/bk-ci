@@ -40,6 +40,7 @@ import com.tencent.devops.process.pojo.PipelineName
 import com.tencent.devops.process.pojo.PipelineRemoteToken
 import com.tencent.devops.process.pojo.PipelineSortType
 import com.tencent.devops.process.pojo.PipelineStatus
+import com.tencent.devops.process.pojo.PipelineStageTag
 import com.tencent.devops.process.pojo.app.PipelinePage
 import com.tencent.devops.process.pojo.classify.PipelineViewAndPipelines
 import com.tencent.devops.process.pojo.classify.PipelineViewPipelinePage
@@ -454,4 +455,13 @@ interface UserPipelineResource {
         @ApiParam(value = "流水线名称", required = true)
         name: PipelineName
     ): Result<Boolean>
+
+    @ApiOperation("获取流水线阶段标签")
+    @GET
+    @Path("/stageTag")
+    fun getStageTag(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String
+    ): Result<List<PipelineStageTag>>
 }
