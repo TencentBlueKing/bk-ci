@@ -759,7 +759,7 @@ class PipelineRuntimeService @Autowired constructor(
         } else ""
 
         val updateExistsRecord: MutableList<TPipelineBuildTaskRecord> = mutableListOf()
-        val defaultStageTagIds = pipelineStageService.getDefaultStageTagIds()
+        val defaultStageTagId = pipelineStageService.getDefaultStageTagId()
         val lastTimeBuildTaskRecords = pipelineBuildTaskDao.getByBuildId(dslContext, buildId)
         val lastTimeBuildContainerRecords = pipelineBuildContainerDao.listByBuildId(dslContext, buildId)
         val lastTimeBuildStageRecords = pipelineBuildStageDao.listByBuildId(dslContext, buildId)
@@ -801,7 +801,7 @@ class PipelineRuntimeService @Autowired constructor(
                 ) else null
             var needUpdateStage = false
             if (stage.name.isNullOrBlank()) stage.name = stage.id
-            if (stage.tag == null) stage.tag = defaultStageTagIds
+            if (stage.tag == null) stage.tag = listOf(defaultStageTagId)
 
             // --- 第2层循环：Container遍历处理 ---
             stage.containers.forEach c@{ container ->
