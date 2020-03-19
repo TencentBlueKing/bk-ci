@@ -29,13 +29,31 @@ BEGIN
             CHANGE `CREDENTIAL_ID` `CREDENTIAL_ID` varchar(128) NULL AFTER REPOSITORY_ID;
     END IF;
 
-    IF NOT EXISTS(SELECT 1
-                  FROM information_schema.COLUMNS
+    IF EXISTS(SELECT 1
+              FROM information_schema.TABLES
+              WHERE TABLE_SCHEMA = db
+                AND TABLE_NAME = 'T_REPOSITORY_GTI_TOKEN') THEN
+        IF NOT EXISTS(SELECT 1
+                  FROM information_schema.TABLES
                   WHERE TABLE_SCHEMA = db
-                    AND TABLE_NAME = 'T_REPOSITORY_GTI_TOKEN'
-                    AND COLUMN_NAME = 'CREATE_TIME') THEN
-        ALTER TABLE `devops_repository`.`T_REPOSITORY_GTI_TOKEN`
-        	ADD COLUMN `CREATE_TIME` DATETIME NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'token的创建时间';
+                    AND TABLE_NAME = 'T_REPOSITORY_GIT_TOKEN') THEN
+            RENAME TABLE T_REPOSITORY_GTI_TOKEN TO T_REPOSITORY_GIT_TOKEN;
+        END IF;
+    END IF;
+
+
+    IF EXISTS(SELECT 1
+                  FROM information_schema.TABLES
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_REPOSITORY_GIT_TOKEN') THEN
+        IF NOT EXISTS(SELECT 1
+                      FROM information_schema.COLUMNS
+                      WHERE TABLE_SCHEMA = db
+                        AND TABLE_NAME = 'T_REPOSITORY_GIT_TOKEN'
+                        AND COLUMN_NAME = 'CREATE_TIME') THEN
+            ALTER TABLE `T_REPOSITORY_GIT_TOKEN`
+        	    ADD COLUMN `CREATE_TIME` DATETIME NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'token的创建时间';
+        END IF;
     END IF;
 
     COMMIT;

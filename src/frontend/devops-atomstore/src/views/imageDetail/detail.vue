@@ -36,11 +36,41 @@
                                     v-if="progressStatus.indexOf(props.row.imageStatus) > -1"
                                     @click="$router.push({ name: 'imageProgress', params: { imageId: props.row.imageId } })"
                                 > {{ $t('store.进度') }} </span>
+                                <span class="obtained-btn"
+                                    v-if="props.row.imageStatus === 'RELEASED' || (props.row.imageStatus === 'GROUNDING_SUSPENSION' && props.row.releaseFlag)"
+                                    @click="offline(props.row)"
+                                > {{ $t('store.下架') }} </span>
                             </section>
                         </template>
                     </bk-table-column>
                 </bk-table>
             </section>
+
+            <bk-sideslider :is-show.sync="offlineImageData.show"
+                :title="offlineImageData.title"
+                :quick-close="offlineImageData.quickClose"
+                :width="offlineImageData.width">
+                <template slot="content">
+                    <bk-form ref="offlineForm" class="relate-form" label-width="100" :model="offlineImageData.form" v-bkloading="{ isLoading: offlineImageData.isLoading }">
+                        <bk-form-item :label="$t('store.镜像名称')" property="imageName">
+                            <span class="lh30">{{offlineImageData.form.imageName}}</span>
+                        </bk-form-item>
+                        <bk-form-item :label="$t('store.镜像标识')" property="imageCode">
+                            <span class="lh30">{{offlineImageData.form.imageCode}}</span>
+                        </bk-form-item>
+                        <bk-form-item :label="$t('store.镜像版本')" property="version">
+                            <span class="lh30">{{offlineImageData.form.version}}</span>
+                        </bk-form-item>
+                        <bk-form-item :label="$t('store.下架原因')" :required="true" property="reason" :rules="[requireRule]">
+                            <bk-input type="textarea" v-model="offlineImageData.form.reason" :placeholder="$t('store.请输入下架原因')"></bk-input>
+                        </bk-form-item>
+                        <bk-form-item>
+                            <bk-button theme="primary" @click.native="submitOfflineImage"> {{ $t('store.提交') }} </bk-button>
+                            <bk-button @click.native="cancelOfflineImage"> {{ $t('store.取消') }} </bk-button>
+                        </bk-form-item>
+                    </bk-form>
+                </template>
+            </bk-sideslider>
         </main>
     </article>
 </template>
@@ -66,6 +96,25 @@
                     count: 1,
                     limit: 10
                 },
+                offlineImageData: {
+                    title: this.$t('store.下架镜像'),
+                    quickClose: true,
+                    width: 565,
+                    isLoading: false,
+                    show: false,
+                    versionList: [],
+                    form: {
+                        imageName: '',
+                        imageCode: '',
+                        version: '',
+                        reason: ''
+                    }
+                },
+                requireRule: {
+                    required: true,
+                    message: this.$t('store.必填项'),
+                    trigger: 'blur'
+                },
                 progressStatus: ['COMMITTING', 'CHECKING', 'CHECK_FAIL', 'TESTING', 'AUDITING'],
                 upgradeStatus: ['AUDIT_REJECT', 'RELEASED', 'GROUNDING_SUSPENSION']
             }
@@ -82,6 +131,39 @@
         },
 
         methods: {
+            submitOfflineImage (row) {
+                this.$refs.offlineForm.validate().then(() => {
+                    const postData = {
+                        imageCode: this.offlineImageData.form.imageCode,
+                        params: {
+                            version: this.offlineImageData.form.version,
+                            reason: this.offlineImageData.form.reason
+                        }
+                    }
+                    this.offlineImageData.isLoading = true
+                    this.$store.dispatch('store/requestOfflineImage', postData).then((res) => {
+                        this.cancelOfflineImage()
+                        this.getVersionList()
+                    }).catch((err) => {
+                        this.$bkMessage({ message: err.message || err, theme: 'error' })
+                    }).finally(() => (this.offlineImageData.isLoading = false))
+                }).catch(() => this.$bkMessage({ message: this.$t('store.校验失败，请修改再试'), theme: 'error' }))
+            },
+
+            cancelOfflineImage () {
+                this.offlineImageData.show = false
+                this.offlineImageData.form.imageName = ''
+                this.offlineImageData.form.imageCode = ''
+                this.offlineImageData.form.version = ''
+            },
+
+            offline (row) {
+                this.offlineImageData.show = true
+                this.offlineImageData.form.imageName = row.imageName
+                this.offlineImageData.form.imageCode = row.imageCode
+                this.offlineImageData.form.version = row.version
+            },
+
             getVersionList () {
                 const postData = {
                     imageCode: this.currentImage.imageCode,
