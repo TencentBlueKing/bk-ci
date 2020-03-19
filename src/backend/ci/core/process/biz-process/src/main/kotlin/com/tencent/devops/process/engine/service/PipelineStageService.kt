@@ -132,8 +132,8 @@ class PipelineStageService @Autowired constructor(
         )
     }
 
-    fun getDefaultStageTagIds(): List<String>? {
-        return stageTagService.getDefaultStageTag().data?.map { it.id }
+    fun getDefaultStageTagId(): String? {
+        return stageTagService.getDefaultStageTag().data?.id
     }
 
     fun updatePipelineRunningCount(pipelineId: String, buildId: String, runningIncrement: Int) {

@@ -680,7 +680,7 @@ class PipelineService @Autowired constructor(
             model.pipelineCreator = pipelineInfo.creator
             model.stages.forEach {
                 if (it.name.isNullOrBlank()) it.name = it.id
-                if (it.tag == null) it.tag = pipelineStageService.getDefaultStageTagIds()
+                if (it.tag == null) it.tag = listOf(pipelineStageService.getDefaultStageTagId())
             }
 
             return model
