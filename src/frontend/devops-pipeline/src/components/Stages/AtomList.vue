@@ -1,27 +1,27 @@
 <template>
     <section>
-        <draggable class="container-atom-list" :class="{ &quot;trigger-container&quot;: isTriggerContainer(container), &quot;readonly&quot;: !editable }" :data-baseos="container.baseOS || container.classType" v-model="atomList" v-bind="dragOptions" :move="checkMove">
-            <li v-for="(atom, index) in atomList" :key="atom.name" :class="{ &quot;atom-item&quot;: true,
+        <draggable class="container-atom-list" :class="{ 'trigger-container': isTriggerContainer(container), 'readonly': !editable }" :data-baseos="container.baseOS || container.classType" v-model="atomList" v-bind="dragOptions" :move="checkMove">
+            <li v-for="(atom, index) in atomList" :key="atom.name" :class="{ 'atom-item': true,
                                                                              [atom.status]: atom.status,
-                                                                             &quot;quality-item&quot;: (atom[&quot;@type&quot;] === &quot;qualityGateOutTask&quot;) || (atom[&quot;@type&quot;] === &quot;qualityGateInTask&quot;),
-                                                                             &quot;last-quality-item&quot;: (atom[&quot;@type&quot;] === &quot;qualityGateOutTask&quot; && index === atomList.length - 1),
-                                                                             &quot;arrival-atom&quot;: atom.status,
-                                                                             &quot;qualitt-next-atom&quot;: handlePreviousAtomCheck(atomList, index)
+                                                                             'quality-item': (atom['@type'] === 'qualityGateOutTask') || (atom['@type'] === 'qualityGateInTask'),
+                                                                             'last-quality-item': (atom['@type'] === 'qualityGateOutTask' && index === atomList.length - 1),
+                                                                             'arrival-atom': atom.status,
+                                                                             'qualitt-next-atom': handlePreviousAtomCheck(atomList, index)
             }"
-                @click="showPropertyPanel(index)"
+                @click.stop="showPropertyPanel(index)"
             >
                 <section class="atom-item atom-section normal-atom" :class="{ [atom.status]: atom.status,
-                                                                              &quot;is-error&quot;: atom.isError,
-                                                                              &quot;quality-atom&quot;: atom[&quot;@type&quot;] === &quot;qualityGateOutTask&quot;,
-                                                                              &quot;is-intercept&quot;: atom.isQualityCheck,
-                                                                              &quot;template-compare-atom&quot;: atom.templateModify }"
+                                                                              'is-error': atom.isError,
+                                                                              'quality-atom': atom['@type'] === 'qualityGateOutTask',
+                                                                              'is-intercept': atom.isQualityCheck,
+                                                                              'template-compare-atom': atom.templateModify }"
                     v-if="atom['@type'] !== 'qualityGateInTask' && atom['@type'] !== 'qualityGateOutTask'">
                     <status-icon v-if="atom.status && atom.status !== 'SKIP'" type="element" :status="atom.status" />
-                    <status-icon v-else-if="isWaiting && atom.status !== &quot;SKIP&quot;" type="element" status="WAITING" />
-                    <img v-else-if="atomMap[atom.atomCode] && atomMap[atom.atomCode].icon" :src="atomMap[atom.atomCode].icon" :class="{ &quot;atom-icon&quot;: true, &quot;skip-icon&quot;: useSkipStyle(atom) }" />
-                    <logo v-else :class="{ &quot;atom-icon&quot;: true, &quot;skip-icon&quot;: useSkipStyle(atom) }" :name="getAtomIcon(atom.atomCode)" size="18" />
+                    <status-icon v-else-if="isWaiting && atom.status !== 'SKIP'" type="element" status="WAITING" />
+                    <img v-else-if="atomMap[atom.atomCode] && atomMap[atom.atomCode].icon" :src="atomMap[atom.atomCode].icon" :class="{ 'atom-icon': true, 'skip-icon': useSkipStyle(atom) }" />
+                    <logo v-else :class="{ 'atom-icon': true, 'skip-icon': useSkipStyle(atom) }" :name="getAtomIcon(atom.atomCode)" size="18" />
                     <p class="atom-name">
-                        <span :title="atom.name" :class="{ &quot;skip-name&quot;: useSkipStyle(atom) }">{{ atom.atomCode ? atom.name : $t('editPage.pendingAtom') }}</span>
+                        <span :title="atom.name" :class="{ 'skip-name': useSkipStyle(atom) }">{{ atom.atomCode ? atom.name : $t('editPage.pendingAtom') }}</span>
                     </p>
                     <bk-popover placement="top" v-if="atom.status === 'REVIEWING'">
                         <span @click.stop="checkAtom(atom)" :class="{ 'atom-reviewing-tips': userInfo && isCurrentUser(getReviewUser(atom)), 'atom-review-diasbled-tips': !(userInfo && isCurrentUser(getReviewUser(atom))) }">{{ $t('editPage.toCheck') }}</span>
@@ -55,9 +55,9 @@
                 </section>
 
                 <section class="atom-section quality-atom"
-                    :class="{ &quot;is-review&quot;: (atom.status === &quot;REVIEWING&quot;),
-                              &quot;is-success&quot;: (atom.status === &quot;SUCCEED&quot; || atom.status === &quot;REVIEW_PROCESSED&quot;),
-                              &quot;is-fail&quot;: (atom.status === &quot;QUALITY_CHECK_FAIL&quot; || atom.status === &quot;REVIEW_ABORT&quot;) }"
+                    :class="{ 'is-review': (atom.status === 'REVIEWING'),
+                              'is-success': (atom.status === 'SUCCEED' || atom.status === 'REVIEW_PROCESSED'),
+                              'is-fail': (atom.status === 'QUALITY_CHECK_FAIL' || atom.status === 'REVIEW_ABORT') }"
                     v-if="atom['@type'] === 'qualityGateInTask' || atom['@type'] === 'qualityGateOutTask'">
                     <span class="atom-title">{{ $t('details.quality.quality') }}</span>
                     <span class="handler-list" :class="{ 'disabled-review': atom.status === 'REVIEWING' && userInfo && !isCurrentUser(atom.reviewUsers) }"
@@ -68,7 +68,7 @@
                     <i class="bk-icon icon-circle-2-1 executing-job" v-if="atom.status === 'REVIEWING' && reviewLoading"></i>
                 </section>
             </li>
-            <span v-if="editable" :class="{ &quot;add-atom-entry&quot;: true, &quot;block-add-entry&quot;: atomList.length === 0 }" @click="editAtom(atomList.length - 1, true)">
+            <span v-if="editable" :class="{ 'add-atom-entry': true, 'block-add-entry': atomList.length === 0 }" @click="editAtom(atomList.length - 1, true)">
                 <i class="add-plus-icon" />
                 <span v-if="atomList.length === 0">{{ $t('editPage.addAtom') }}</span>
             </span>
@@ -97,6 +97,7 @@
             stageIndex: Number,
             containerIndex: Number,
             containerStatus: String,
+            containerDisabled: Boolean,
             editable: {
                 type: Boolean,
                 default: true
@@ -370,7 +371,7 @@
                 }
             },
             useSkipStyle (atom) {
-                return atom && (atom.status === 'SKIP' || (atom.additionalOptions && atom.additionalOptions.enable === false) || (this.container.jobControlOption && this.container.jobControlOption.enable === false))
+                return (atom && (atom.status === 'SKIP' || (atom.additionalOptions && atom.additionalOptions.enable === false))) || this.containerDisabled
             }
         }
     }

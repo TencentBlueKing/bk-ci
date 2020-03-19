@@ -184,7 +184,6 @@
              *  参数为pipelineId的触发全局bus事件
              */
             emitEventHandler (eventName, pipelineId) {
-                console.log(eventName)
                 bus.$emit(eventName, pipelineId)
             },
             /**

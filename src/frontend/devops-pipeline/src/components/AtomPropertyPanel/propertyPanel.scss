@@ -25,11 +25,12 @@
 .atom-property-panel {
     height: 100%;
 }
-.sodaci-property-panel {
+.bkci-property-panel {
     .bk-sideslider-content {
         height: calc(100% - 60px);
         max-height: calc(100vh - 60px);
-        .container-property-panel {
+        .container-property-panel,
+        .stage-property-panel {
             padding: 20px 32px 10px 32px;
         }
     }
