@@ -184,6 +184,30 @@ class PipelineModelTaskDao {
         return condition
     }
 
+    fun listByAtomCodeAndPipelineIds(
+        dslContext: DSLContext,
+        atomCode: String,
+        pipelineIdList: List<String>
+    ): Result<out Record>? {
+        val a = TPipelineInfo.T_PIPELINE_INFO.`as`("a")
+        val b = TPipelineModelTask.T_PIPELINE_MODEL_TASK.`as`("b")
+        val condition = getListByAtomCodeCond(a, b, atomCode, null)
+
+        val baseStep = dslContext.select(
+            a.PIPELINE_ID.`as`("pipelineId"),
+            a.PIPELINE_NAME.`as`("pipelineName"),
+            a.PROJECT_ID.`as`("projectCode"),
+            b.TASK_PARAMS.`as`("taskParams")
+        )
+            .from(b)
+            .join(a)
+            .on(a.PIPELINE_ID.eq(b.PIPELINE_ID))
+            .where(condition)
+            .and(b.PIPELINE_ID.`in`(pipelineIdList))
+
+        return baseStep.fetch()
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineModelTaskDao::class.java)
     }
