@@ -221,7 +221,7 @@ class DockerHostDebugService @Autowired constructor(
             val dockerIp = pipelineDockerDebug.hostTag
 
             // 根据dockerIp定向调用dockerhost
-            val url = "http://$dockerIp/api/docker/debug/stop"
+            val url = "http://$dockerIp/api/docker/debug/end"
             val proxyUrl = "$idcProxy/proxy-devnet?url=${urlEncode(url)}"
             val requestBody = ContainerInfo(projectId,
                 pipelineId,
