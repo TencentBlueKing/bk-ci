@@ -323,16 +323,15 @@ class PipelineBuildSummaryDao {
 
             // 如果本次构建是最新一次，则要把状态和完成时间也刷新
             if (count > 0) {
-                // 如果是新增一个执行，
-                val newStatus = if (runningIncrement > 0) {
-                    BuildStatus.RUNNING
+                val update
+                    = dslContext.update(this).set(LATEST_END_TIME, LocalDateTime.now())
+                if (runningIncrement > 0) {
+                    update.set(LATEST_STATUS, BuildStatus.RUNNING.ordinal)
                 } else {
-                    BuildStatus.STAGE_SUCCESS
+                    update.set(LATEST_STATUS, BuildStatus.STAGE_SUCCESS.ordinal)
+                        .set(LATEST_END_TIME, LocalDateTime.now())
                 }
-                dslContext.update(this)
-                    .set(LATEST_STATUS, newStatus.ordinal)
-                    .set(LATEST_END_TIME, LocalDateTime.now())
-                    .where(PIPELINE_ID.eq(pipelineId))
+                update.where(PIPELINE_ID.eq(pipelineId))
                     .and(LATEST_BUILD_ID.eq(buildId))
                     .execute()
             }
