@@ -6,13 +6,13 @@
         :search-str.sync="searchStr"
         :worker="worker">
         <ul class="plugin-list">
-            <li v-for="plugin in curPluginList" :key="plugin.id" class="plugin-item">
+            <li v-for="plugin in pluginList" :key="plugin.id" class="plugin-item">
                 <p class="item-head" @click="expendLog(plugin)">
-                    <span :class="[{ 'show-all': !!plugin.isFold }, 'log-folder']"></span>
+                    <span :class="[{ 'show-all': !!curFoldList[plugin.id] }, 'log-folder']"></span>
                     <status-icon :status="plugin.status"></status-icon>
                     {{ plugin.name }}
                 </p>
-                <virtual-scroll class="log-scroll" :ref="plugin.id" v-show="plugin.isFold" :max-height="500" :id="plugin.id" :worker="worker">
+                <virtual-scroll class="log-scroll" :ref="plugin.id" v-show="curFoldList[plugin.id]" :max-height="500" :id="plugin.id" :worker="worker">
                     <template slot-scope="item">
                         <span class="item-txt selection-color">
                             <span class="item-time selection-color" v-if="showTime">{{(item.data.isNewLine ? '' : item.data.timestamp)|timeFilter}}</span>
@@ -74,7 +74,7 @@
         data () {
             return {
                 worker: new Worker(),
-                curPluginList: JSON.parse(JSON.stringify(this.pluginList)),
+                curFoldList: this.pluginList.map(plugin => ({ [plugin.id]: false })),
                 showTime: false,
                 searchStr: '',
                 curSearchIndex: 0
@@ -90,7 +90,7 @@
         },
 
         mounted () {
-            this.worker.postMessage({ type: 'initStatus', pluginList: this.curPluginList.map(x => x.id) })
+            this.worker.postMessage({ type: 'initStatus', pluginList: this.pluginList.map(x => x.id) })
         },
 
         beforeDestroy () {
@@ -104,24 +104,24 @@
                 if (index < 0) index = 0
                 const ref = this.$refs[refId][0]
                 const ele = ref.$el
-                const curPlugin = this.curPluginList.find(x => x.id === refId) || {}
-                if (!curPlugin.isFold) curPlugin.isFold = true
+                if (!this.curFoldList[refId]) this.curFoldList[refId] = true
                 ele.scrollIntoViewIfNeeded()
                 ref.scrollPageByIndex(index)
             },
 
             expendLog (plugin) {
-                this.$set(plugin, 'isFold', !plugin.isFold)
-                let ref = this.$refs[plugin.id]
+                const id = plugin.id
+                this.$set(this.curFoldList, [id], !this.curFoldList[id])
+                let ref = this.$refs[id]
 
-                if (plugin.isFold) {
+                if (this.curFoldList[id]) {
                     this.$nextTick(() => {
-                        ref = this.$refs[plugin.id][0]
+                        ref = this.$refs[id][0]
                         ref.setVisWidth()
-                        this.$emit('openPlugin', plugin.id, ref)
+                        this.$emit('openPlugin', id, ref)
                     })
                 } else {
-                    this.$emit('closePlugin', plugin.id)
+                    this.$emit('closePlugin', id)
                 }
             },
 
