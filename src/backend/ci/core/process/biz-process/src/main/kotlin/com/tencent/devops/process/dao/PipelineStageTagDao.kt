@@ -101,13 +101,13 @@ class PipelineStageTagDao {
         }
     }
 
-    fun getDefaultStageTag(dslContext: DSLContext): TPipelineStageTagRecord {
+    fun getDefaultStageTag(dslContext: DSLContext): PipelineStageTag? {
         with(TPipelineStageTag.T_PIPELINE_STAGE_TAG) {
-            return dslContext
-                .selectFrom(this)
+            val record = dslContext.selectFrom(this)
                 .orderBy(WEIGHT.desc())
                 .limit(1)
                 .fetchOne()
+            return if (record == null) null else convert(record, true)
         }
     }
 

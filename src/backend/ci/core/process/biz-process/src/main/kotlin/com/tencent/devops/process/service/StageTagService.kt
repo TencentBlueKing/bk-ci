@@ -60,10 +60,8 @@ class StageTagService @Autowired constructor(
     /**
      * 获取所有阶段标签信息
      */
-    fun getDefaultStageTag(): Result<PipelineStageTag> {
-        val pipelineStageTag =
-            pipelineStageTagDao.getDefaultStageTag(dslContext)
-        return Result(pipelineStageTagDao.convert(pipelineStageTag, true))
+    fun getDefaultStageTag(): Result<PipelineStageTag?> {
+        return Result(pipelineStageTagDao.getDefaultStageTag(dslContext))
     }
 
     /**
@@ -87,7 +85,7 @@ class StageTagService @Autowired constructor(
     fun saveStageTag(stageTag: String, weight: Int): Result<Boolean> {
         logger.info("the save stageTagName is:$stageTag")
         // 判断阶段标签名称是否存在
-        val count = getCountByName(stageTag, weight)
+        val count = getCountByNameOrWeight(stageTag, weight)
         if (count > 0) {
             // 抛出错误提示
             return MessageCodeUtil.generateResponseDataObject(
@@ -107,7 +105,7 @@ class StageTagService @Autowired constructor(
     fun updateStageTag(id: String, stageTagName: String, weight: Int): Result<Boolean> {
         logger.info("the update stageTagName is:$stageTagName")
         // 判断阶段标签代码是否存在
-        if (getCountByName(stageTagName, weight) > 0) {
+        if (getCountByNameOrWeight(stageTagName, weight) > 0) {
             // 判断更新的阶段标签代码是否属于自已
             val pipelineStageTag = pipelineStageTagDao.getStageTag(dslContext, id)
             if (null != pipelineStageTag && stageTagName != pipelineStageTag.stageTagName) {
@@ -136,7 +134,7 @@ class StageTagService @Autowired constructor(
     /**
      * 根据阶段标签名称和权重查询重复数据库记录数
      */
-    private fun getCountByName(stageTagName: String, weight: Int): Int {
+    private fun getCountByNameOrWeight(stageTagName: String, weight: Int): Int {
         val recordList = pipelineStageTagDao.countByNameOrWeight(dslContext, stageTagName, weight)
         var result = 0
         if (recordList != null) {

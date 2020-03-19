@@ -31,6 +31,7 @@ import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.EnvControlTaskType
 import com.tencent.devops.common.pipeline.enums.StageRunCondition
+import com.tencent.devops.process.engine.common.BS_CONTAINER_END_SOURCE_PREIX
 import com.tencent.devops.process.engine.common.BS_MANUAL_START_STAGE
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
 import com.tencent.devops.process.engine.pojo.PipelineBuildStage
@@ -97,7 +98,7 @@ class StageControl @Autowired constructor(
 
             val needPause = stage.controlOption?.stageControlOption?.manualTrigger == true && source != BS_MANUAL_START_STAGE
 
-            val fastKill = stage.controlOption?.fastKill == true && source == "CONTAINER_END_FAILED"
+            val fastKill = stage.controlOption?.fastKill == true && source == "$BS_CONTAINER_END_SOURCE_PREIX${BuildStatus.FAILED}"
 
             logger.info("[$buildId]|[${buildInfo.status}]|STAGE_EVENT|event=$event|stage=$stage|needPause=$needPause|fastKill=$fastKill")
 
