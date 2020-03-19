@@ -85,9 +85,6 @@
                 type: Boolean,
                 default: false
             },
-            preStatus: {
-                type: String
-            },
             canSkipElement: {
                 type: Boolean,
                 default: false
@@ -193,9 +190,6 @@
             }
         },
         watch: {
-            '$userInfo' (userinfo) {
-                console.log('userinfo watch', userinfo)
-            },
             'stage.runStage' (newVal) {
                 const { stage, updateStage } = this
                 const { containers } = stage

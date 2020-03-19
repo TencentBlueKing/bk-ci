@@ -42,10 +42,7 @@
         computed: {
             computedStage: {
                 get () {
-                    return this.stages.map(stage => ({
-                        name: stage.id,
-                        ...stage
-                    }))
+                    return this.stages
                 },
                 set (stages) {
                     const data = stages.map((stage, index) => {

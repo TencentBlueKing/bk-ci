@@ -24,7 +24,7 @@
                     <i v-bk-tooltips="$t('stageReviewDesc')" class="bk-icon icon-info-circle" />
                 </bk-form-item>
                 <template v-if="manualTrigger">
-                    
+
                     <form-field :required="true" :label="$t('stageUserTriggers')" :is-error="!hasTriggerMember" :desc="$t('stageTriggerDesc')" :error-msg="$t('editPage.stageManualTriggerUserNoEmptyTips')">
                         <bk-input :clearable="true" :disabled="disabled" v-model="triggerUsers"></bk-input>
                     </form-field>
@@ -173,7 +173,6 @@
                 this.handleStageChange('isError', !this.validateStageControl())
             },
             hasTriggerMember (hasTriggerMember) {
-                console.log(hasTriggerMember)
                 this.handleStageChange('isError', !this.validateStageControl())
             },
             validTimeout (valid) {
@@ -204,7 +203,7 @@
                         manualTrigger: false,
                         triggerUsers: [],
                         timeout: 24,
-                        
+
                         customVariables: [{ key: 'param1', value: '' }]
                     })
                     this.handleStageChange('fastKill', false)
@@ -216,7 +215,6 @@
         }
     }
 </script>
-
 
 <style lang="scss">
     .stage-trigger-member-input.is-error,
