@@ -32,6 +32,8 @@ import com.tencent.devops.common.pipeline.enums.JobRunCondition
 import com.tencent.devops.common.pipeline.enums.StageRunCondition
 import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
 import com.tencent.devops.common.pipeline.pojo.element.TaskRunCondition
+import com.tencent.devops.process.utils.TASK_FAIL_RETRY_MAX_COUNT
+import com.tencent.devops.process.utils.TASK_FAIL_RETRY_MIN_COUNT
 import org.slf4j.LoggerFactory
 
 /**
@@ -63,6 +65,26 @@ object ControlUtils {
             return false
         }
         return additionalOptions.continueWhenFailed
+    }
+
+    fun retryWhenFailure(additionalOptions: ElementAdditionalOptions?, retryCount: Int): Boolean {
+        if (additionalOptions == null) {
+            return false
+        }
+        val retryWhenFailed = additionalOptions.retryWhenFailed ?: false
+
+        return if (retryWhenFailed) {
+            var settingRetryCount = additionalOptions!!.retryCount ?: 1
+            if (settingRetryCount > TASK_FAIL_RETRY_MAX_COUNT) {
+                settingRetryCount = TASK_FAIL_RETRY_MAX_COUNT
+            }
+            if (settingRetryCount < TASK_FAIL_RETRY_MIN_COUNT) {
+                settingRetryCount = TASK_FAIL_RETRY_MIN_COUNT
+            }
+            retryCount < settingRetryCount
+        } else {
+            false
+        }
     }
 
     fun checkAdditionalSkip(
