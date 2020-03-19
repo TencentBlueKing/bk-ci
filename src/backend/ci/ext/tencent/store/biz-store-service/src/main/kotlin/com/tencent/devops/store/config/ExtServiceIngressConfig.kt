@@ -35,6 +35,9 @@ class ExtServiceIngressConfig {
     @Value("\${store.extService.bcs.ingress.host}")
     val host: String = ""
 
+    @Value("\${store.extService.bcs.ingress.grayHost}")
+    val grayHost: String = ""
+
     @Value("\${store.extService.bcs.ingress.contextPath}")
     val contextPath: String = ""
 
