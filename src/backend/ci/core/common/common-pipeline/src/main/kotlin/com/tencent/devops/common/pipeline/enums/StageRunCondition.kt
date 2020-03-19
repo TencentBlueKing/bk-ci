@@ -24,31 +24,16 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.pipeline.pojo.element
+package com.tencent.devops.common.pipeline.enums
 
-import com.tencent.devops.common.pipeline.NameAndValue
-
-data class ElementAdditionalOptions(
-    val enable: Boolean,
-    val continueWhenFailed: Boolean,
-    val retryWhenFailed: Boolean,
-    val retryCount: Int,
-    val timeout: Long?,
-    val taskRunCondition: TaskRunCondition?,
-
-    val otherTask: String?,
-    val customVariables: List<NameAndValue>?,
-    val customCondition: String?
-)
-
-enum class TaskRunCondition {
-    PRE_TASK_SUCCESS,                   // 所有前置插件运行成功时
-    PRE_TASK_FAILED_BUT_CANCEL,         // 即使前面有插件运行失败也运行，除非被取消才不运行
-    PRE_TASK_FAILED_EVEN_CANCEL,        // 即使前面有插件运行失败也运行，即使被取消也运行
-    PRE_TASK_FAILED_ONLY,               // 只有前面有插件运行失败时才运行
-    OTHER_TASK_RUNNING,                 // 指定插件开始运行时
-    CUSTOM_VARIABLE_MATCH,             // 自定义变量全部满足时运行
-    CUSTOM_VARIABLE_MATCH_NOT_RUN,     // 自定义变量全部满足时不运行
-    CUSTOM_CONDITION_MATCH             // 满足以下自定义条件时运行
+/**
+ * 运行选项
+ * @version 1.0
+ */
+enum class StageRunCondition {
+    AFTER_LAST_FINISHED,            // 上个阶段执行结束
+    CUSTOM_VARIABLE_MATCH,          // 自定义变量全部满足时运行
+    CUSTOM_VARIABLE_MATCH_NOT_RUN,  // 自定义变量全部满足时不运行
+    CUSTOM_CONDITION_MATCH          // 满足以下自定义条件时运行
     ;
 }
