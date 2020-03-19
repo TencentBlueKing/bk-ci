@@ -16,8 +16,10 @@
                         <template v-if="execDetail.status === 'CANCELED'">
                             <span v-bk-tooltips.light="`${$t('details.canceller')}：${execDetail.cancelUserId}`" :class="{ [execDetail.status]: execDetail.status }">{{ getStatusLabel(execDetail.status) }}</span>
                         </template>
+
                         <span v-else :class="{ [execDetail.status]: execDetail.status }">{{ getStatusLabel(execDetail.status) }}</span>
                         <i v-if="showRetryIcon" title="rebuild" class="bk-icon icon-retry" @click.stop="retry(execDetail.id, true)"></i>
+                        <logo v-else-if="execDetail.status === 'STAGE_SUCCESS'" :title="$t('details.statusMap.STAGE_SUCCESS')" name="flag" fill="#34d97b" size="16"></logo>
                         <i v-else :title="$t('history.stopBuild')" class="bk-icon icon-stop-shape" @click.stop="stopExecute(execDetail.id)"></i>
                     </div>
                     <div class="info-item">
@@ -66,6 +68,13 @@
                     :editable="false"
                 />
             </template>
+            <template v-else-if="typeof editingElementPos.stageIndex !== 'undefined'">
+                <stage-property-panel
+                    :stage="stage"
+                    :stage-index="editingElementPos.stageIndex"
+                    :editable="false"
+                />
+            </template>
         </template>
 
         <template v-if="execDetail">
@@ -83,6 +92,7 @@
             >
             </log>
         </template>
+        <review-dialog :is-show="showReviewDialog"></review-dialog>
     </section>
 </template>
 
@@ -94,21 +104,27 @@
     import codeRecord from '@/components/codeRecord'
     import outputOption from '@/components/outputOption'
     import ContainerPropertyPanel from '@/components/ContainerPropertyPanel/'
+    import StagePropertyPanel from '@/components/StagePropertyPanel'
     import emptyTips from '@/components/devops/emptyTips'
+    import ReviewDialog from '@/components/ReviewDialog'
     import log from '../../../../devops-log'
     import pipelineOperateMixin from '@/mixins/pipeline-operate-mixin'
     import pipelineConstMixin from '@/mixins/pipelineConstMixin'
     import { convertMStoStringByRule } from '@/utils/util'
+    import Logo from '@/components/Logo'
 
     export default {
         components: {
             stages,
             ContainerPropertyPanel,
+            StagePropertyPanel,
             viewPart,
             codeRecord,
             outputOption,
             emptyTips,
-            log
+            log,
+            ReviewDialog,
+            Logo
         },
         mixins: [pipelineOperateMixin, pipelineConstMixin],
 
@@ -148,7 +164,8 @@
                 'editingElementPos',
                 'isPropertyPanelVisible',
                 'isShowCompleteLog',
-                'fetchingAtomList'
+                'fetchingAtomList',
+                'showReviewDialog'
             ]),
             ...mapState([
                 'fetchError'
@@ -222,6 +239,16 @@
                 const currentStage = stages[editingElementPos.stageIndex] || []
                 return currentStage.containers[editingElementPos.containerIndex]
             },
+            stage () {
+                const { editingElementPos, execDetail } = this
+                if (editingElementPos) {
+                    const model = execDetail.model || {}
+                    const stages = model.stages || []
+                    const stage = stages[editingElementPos.stageIndex]
+                    return stage
+                }
+                return null
+            },
             currentElement () {
                 const {
                     editingElementPos: { stageIndex, containerIndex, elementIndex },
@@ -266,7 +293,7 @@
                     width: 820
                 } : {
                     title: this.$t('propertyBar'),
-                    class: 'sodaci-property-panel',
+                    class: 'bkci-property-panel',
                     width: 640
                 }
             },
@@ -281,7 +308,7 @@
                 return this.routerParams.type || 'executeDetail'
             },
             showRetryIcon () {
-                return this.execDetail && ['RUNNING', 'QUEUE'].indexOf(this.execDetail.status) < 0
+                return this.execDetail && ['RUNNING', 'QUEUE', 'STAGE_SUCCESS'].indexOf(this.execDetail.status) < 0
             }
         },
 
@@ -348,7 +375,6 @@
                     }
                 })
             },
-
             showElementLog (elementId) {
                 let eleIndex, conIndex
                 const staIndex = this.execDetail.model.stages.findIndex(stage => {
