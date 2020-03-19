@@ -48,8 +48,13 @@ class StageTagService @Autowired constructor(
      * 获取所有阶段标签信息
      */
     fun getAllStageTag(): Result<List<PipelineStageTag>> {
-        val pipelineStageTagList =
-            pipelineStageTagDao.getAllStageTag(dslContext).map { pipelineStageTagDao.convert(it) }
+        val pipelineStageTagList = mutableListOf<PipelineStageTag>()
+        pipelineStageTagDao.getAllStageTag(dslContext).forEachIndexed { index, tPipelineStageTagRecord ->
+            pipelineStageTagDao.convert(
+                record = tPipelineStageTagRecord,
+                defaultFlag = index == 0
+            )
+        }
         return Result(pipelineStageTagList)
     }
 
@@ -59,7 +64,7 @@ class StageTagService @Autowired constructor(
     fun getDefaultStageTag(): Result<PipelineStageTag> {
         val pipelineStageTag =
             pipelineStageTagDao.getDefaultStageTag(dslContext)
-        return Result(pipelineStageTagDao.convert(pipelineStageTag))
+        return Result(pipelineStageTagDao.convert(pipelineStageTag, true))
     }
 
     /**
@@ -72,7 +77,7 @@ class StageTagService @Autowired constructor(
             if (pipelineStageTagRecord == null) {
                 null
             } else {
-                pipelineStageTagDao.convert(pipelineStageTagRecord)
+                pipelineStageTagDao.convert(pipelineStageTagRecord, false)
             }
         )
     }
