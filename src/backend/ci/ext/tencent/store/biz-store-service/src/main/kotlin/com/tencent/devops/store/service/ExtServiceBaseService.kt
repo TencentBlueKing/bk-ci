@@ -858,6 +858,8 @@ abstract class ExtServiceBaseService @Autowired constructor() {
                 )
             }
             val extensionName =getAllItemName(itemList.toSet())
+            val serviceVersion = extServiceVersionLogDao.getVersionLogByServiceId(dslContext, serviceId)
+
 
 
             Result(
@@ -896,7 +898,9 @@ abstract class ExtServiceBaseService @Autowired constructor() {
                     serviceType = featureInfoRecord.serviceType.toInt(),
                     extensionItemList = itemList,
                     mediaList = mediaList,
-                    extensionItemName = extensionName
+                    extensionItemName = extensionName,
+                    content = serviceVersion.content,
+                    releaseType = ReleaseTypeEnum.getReleaseType(serviceVersion.releaseType.toInt())
                 )
             )
         }

@@ -68,5 +68,9 @@ data class ServiceVersionVO(
     @ApiModelProperty("标签")
     val labelList: List<Label>,
     @ApiModelProperty("扩展点名称")
-    val extensionItemName: String
+    val extensionItemName: String,
+    @ApiModelProperty("发布类型，0：新上架 1：非兼容性升级 2：兼容性功能更新 3：兼容性问题修正 ")
+    val releaseType: String,
+    @ApiModelProperty("版本日志内容", required = true)
+    val content: String
 )
