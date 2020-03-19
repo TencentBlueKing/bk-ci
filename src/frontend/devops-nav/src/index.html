@@ -273,6 +273,24 @@
             }
         }
 
+        function getDefaultPid (projectList) {
+            if (Array.isArray(projectList) && projectList.length > 0) {
+                var firstProj = projectList[0]
+                var firstPid = firstProj && firstProj.projectCode ? firstProj.projectCode : undefined
+                for(var i = 0; i < projectList.length; i++) { 
+                    var proj = projectList[i]
+                    if (proj && !proj.gray) {
+                        return proj.projectCode
+                    }
+                }
+                if (firstPid) {  // 如果cookie为空，而项目列表中找不到非灰度的项目时，将cookie值设置为首个项目id, 同时自动刷新页面
+                    window.setProjectIdCookie(firstPid)
+                    location.reload()
+                }
+            }
+
+        }
+
         function init (projectList, allServices, userInfo) {
             var path = location.pathname.replace('/console', '')
             var headTag = document.head || document.getElementsByTagName('head')[0]
@@ -282,10 +300,9 @@
             var serviceMatchResult = path.match(pathReg)
             var subServiceId = serviceMatchResult ? serviceMatchResult[1] : null
             var page = serviceMap[subServiceId] || null
-
-            var defaultPid = projectList[0] && projectList[0].projectCode
             var isPidOk = isValidPid(projectList, pathPid)
-            if (!isPidOk && defaultPid) {
+            if (!isPidOk && !pathPid) {
+                var defaultPid = getDefaultPid(projectList)
                 window.setProjectIdCookie(defaultPid)
             }
 
