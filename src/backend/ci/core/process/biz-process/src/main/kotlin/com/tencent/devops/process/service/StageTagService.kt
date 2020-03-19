@@ -49,10 +49,9 @@ class StageTagService @Autowired constructor(
      */
     fun getAllStageTag(): Result<List<PipelineStageTag>> {
         val pipelineStageTagList = mutableListOf<PipelineStageTag>()
-        pipelineStageTagDao.getAllStageTag(dslContext).forEachIndexed { index, tPipelineStageTagRecord ->
-            pipelineStageTagDao.convert(
-                record = tPipelineStageTagRecord,
-                defaultFlag = index == 0
+        pipelineStageTagDao.getAllStageTag(dslContext).forEachIndexed { index, record ->
+            pipelineStageTagList.add(
+                pipelineStageTagDao.convert(record, index == 0)
             )
         }
         return Result(pipelineStageTagList)
