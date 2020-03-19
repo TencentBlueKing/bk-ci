@@ -92,7 +92,6 @@ import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION_SUGGEST
 import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION_USERID
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.common.Timeout
-import com.tencent.devops.process.engine.control.lock.PipelineBuildRunLock
 import com.tencent.devops.process.engine.pojo.BuildInfo
 import com.tencent.devops.process.engine.pojo.LatestRunningBuild
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
@@ -1524,45 +1523,40 @@ class PipelineRuntimeService @Autowired constructor(
      * 开始最新一次构建
      */
     fun startLatestRunningBuild(latestRunningBuild: LatestRunningBuild, retry: Boolean) {
-        val runLock = PipelineBuildRunLock(redisOperation, latestRunningBuild.pipelineId)
-        try {
-            runLock.lock()
-            dslContext.transaction { configuration ->
-                val transactionContext = DSL.using(configuration)
-                buildDetailDao.updateStatus(
-                    transactionContext,
-                    latestRunningBuild.buildId,
-                    BuildStatus.RUNNING,
-                    LocalDateTime.now()
-                )
-                pipelineBuildDao.startBuild(transactionContext, latestRunningBuild.buildId, retry)
-                pipelineBuildSummaryDao.startLatestRunningBuild(transactionContext, latestRunningBuild)
-            }
-            val pipelineBuildInfo = pipelineBuildDao.getBuildInfo(dslContext, latestRunningBuild.buildId) ?: return
-            webSocketDispatcher.dispatch(
-                pipelineWebsocketService.buildHistoryMessage(
-                    pipelineBuildInfo.buildId,
-                    pipelineBuildInfo.projectId,
-                    pipelineBuildInfo.pipelineId,
-                    pipelineBuildInfo.startUser
-                ),
-                pipelineWebsocketService.buildDetailMessage(
-                    pipelineBuildInfo.buildId,
-                    pipelineBuildInfo.projectId,
-                    pipelineBuildInfo.pipelineId,
-                    pipelineBuildInfo.startUser
-                ),
-                pipelineWebsocketService.buildStatusMessage(
-                    pipelineBuildInfo.buildId,
-                    pipelineBuildInfo.projectId,
-                    pipelineBuildInfo.pipelineId,
-                    pipelineBuildInfo.startUser
-                )
+        dslContext.transaction { configuration ->
+            val transactionContext = DSL.using(configuration)
+            buildDetailDao.updateStatus(
+                transactionContext,
+                latestRunningBuild.buildId,
+                BuildStatus.RUNNING,
+                LocalDateTime.now()
             )
-        } finally {
-            runLock.unlock()
-            logger.info("[${latestRunningBuild.pipelineId}]|startLatestRunningBuild-${latestRunningBuild.buildId}")
+            pipelineBuildDao.startBuild(transactionContext, latestRunningBuild.buildId, retry)
+            pipelineBuildSummaryDao.startLatestRunningBuild(transactionContext, latestRunningBuild)
         }
+        val pipelineBuildInfo = pipelineBuildDao.getBuildInfo(dslContext, latestRunningBuild.buildId) ?: return
+        webSocketDispatcher.dispatch(
+            pipelineWebsocketService.buildHistoryMessage(
+                pipelineBuildInfo.buildId,
+                pipelineBuildInfo.projectId,
+                pipelineBuildInfo.pipelineId,
+                pipelineBuildInfo.startUser
+            ),
+            pipelineWebsocketService.buildDetailMessage(
+                pipelineBuildInfo.buildId,
+                pipelineBuildInfo.projectId,
+                pipelineBuildInfo.pipelineId,
+                pipelineBuildInfo.startUser
+            ),
+            pipelineWebsocketService.buildStatusMessage(
+                pipelineBuildInfo.buildId,
+                pipelineBuildInfo.projectId,
+                pipelineBuildInfo.pipelineId,
+                pipelineBuildInfo.startUser
+            )
+        )
+
+        logger.info("[${latestRunningBuild.pipelineId}]|startLatestRunningBuild-${latestRunningBuild.buildId}")
     }
 
     /**
