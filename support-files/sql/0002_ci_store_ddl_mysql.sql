@@ -507,7 +507,7 @@ CREATE TABLE IF NOT EXISTS `T_STORE_PROJECT_REL` (
   `UPDATE_TIME` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `STORE_TYPE` tinyint(4) NOT NULL DEFAULT '0',
   PRIMARY KEY (`ID`),
-  UNIQUE KEY `uni_inx_tspr_code_type` (`STORE_CODE`,`PROJECT_CODE`,`STORE_TYPE`),
+  UNIQUE KEY `uni_inx_tspr_code_type` (`STORE_CODE`,`PROJECT_CODE`,`TYPE`,`STORE_TYPE`,`CREATOR`),
   KEY `inx_tpapr_project_code` (`PROJECT_CODE`),
   KEY `inx_tspr_type` (`TYPE`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='商店组件与项目关联关系表';
