@@ -66,5 +66,7 @@ data class ServiceVersionVO(
     @ApiModelProperty("媒体信息")
     val mediaList: List<StoreMediaInfo>?,
     @ApiModelProperty("标签")
-    val labelList: List<Label>
+    val labelList: List<Label>,
+    @ApiModelProperty("扩展点名称")
+    val extensionItemName: String
 )

@@ -51,6 +51,11 @@ import com.tencent.devops.store.pojo.ExtServiceUpdateInfo
 import com.tencent.devops.store.pojo.ExtServiceVersionLogCreateInfo
 import com.tencent.devops.store.pojo.ExtensionJson
 import com.tencent.devops.store.pojo.ItemPropCreateInfo
+import com.tencent.devops.store.pojo.common.KEY_LABEL_CODE
+import com.tencent.devops.store.pojo.common.KEY_LABEL_ID
+import com.tencent.devops.store.pojo.common.KEY_LABEL_NAME
+import com.tencent.devops.store.pojo.common.KEY_LABEL_TYPE
+import com.tencent.devops.store.pojo.common.Label
 import com.tencent.devops.store.pojo.common.ReleaseProcessItem
 import com.tencent.devops.store.pojo.common.StoreMediaInfoRequest
 import com.tencent.devops.store.pojo.common.StoreProcessInfo
@@ -784,7 +789,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         val oldStatus = serviceInfo.serviceStatus
         val isNormalUpgrade = getNormalUpgradeFlag(serviceCode, oldStatus.toInt())
         val newStatus = getCompletEditStatus(isNormalUpgrade)
-        val (checkResult, code) = checkServiceVersionOptRight(userId, serviceId, newStatus, isNormalUpgrade )
+        val (checkResult, code) = checkServiceVersionOptRight(userId, serviceId, newStatus, isNormalUpgrade)
 
         if (!checkResult) {
             return MessageCodeUtil.generateResponseDataObject(code)
@@ -839,7 +844,20 @@ abstract class ExtServiceBaseService @Autowired constructor() {
             logger.info("getServiceVersion serviceEnv: $serviceEnv")
             val itemList = getItemByItems(serviceId)
             val mediaList = mediaService.getByCode(serviceCode, StoreTypeEnum.SERVICE).data
-//            val labelList = extServiceLabelDao.getLabelsByServiceId(dslContext, serviceId)?: emptyList<Label>()
+            val labelRecords = extServiceLabelDao.getLabelsByServiceId(dslContext, serviceId)
+            val lableList = mutableListOf<Label>()
+            labelRecords?.forEach {
+                lableList.add(
+                    Label(
+                        id = it[KEY_LABEL_ID] as String,
+                        labelCode = it[KEY_LABEL_CODE] as String,
+                        labelName = it[KEY_LABEL_NAME] as String,
+                        labelType = it[KEY_LABEL_TYPE] as String
+                    )
+                )
+            }
+            val extensionName =getAllItemName(itemList.toSet())
+
 
             Result(
                 ServiceVersionVO(
@@ -867,7 +885,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
                         serviceCode,
                         StoreTypeEnum.SERVICE
                     ),
-                    labelList = emptyList(),
+                    labelList = lableList ,
                     userCommentInfo = userCommentInfo,
                     visibilityLevel = VisibilityLevelEnum.getVisibilityLevel(featureInfoRecord.visibilityLevel),
                     recommendFlag = featureInfoRecord?.recommendFlag,
@@ -876,7 +894,8 @@ abstract class ExtServiceBaseService @Autowired constructor() {
                     weight = featureInfoRecord.weight,
                     serviceType = featureInfoRecord.serviceType.toInt(),
                     extensionItemList = itemList,
-                    mediaList = mediaList
+                    mediaList = mediaList,
+                    extensionItemName = extensionName
                 )
             )
         }
@@ -926,6 +945,17 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         }
         logger.info("getItemByItems serviceId[$serviceId] items[$itemIds]")
         return itemIds
+    }
+
+    private fun getAllItemName(itemList: Set<String>): String {
+        val itemRecords = client.get(ServiceItemResource::class).getItemInfoByIds(itemList).data
+        var itemNames = ""
+        itemRecords?.forEach {
+            itemNames = itemNames + it.parentName + "-" + it.itemName + ","
+        }
+        itemNames = itemNames.substringBeforeLast(",")
+
+        return itemNames
     }
 
     private fun upgradeMarketExtService(
