@@ -24,7 +24,7 @@
                             }"
                         >
                         </i>
-                        
+
                     </span>
                 </template>
                 <template v-else-if="col.prop === 'stageStatus'" v-slot="props">
@@ -210,7 +210,6 @@
                         icon: this.statusIconMap[stage.status] || 'circle',
                         statusCls: `${stage.status}${stage.status === 'RUNNING' ? ' spin-icon' : ''}`
                     })) : null
-                    console.log(stageStatus)
                     return {
                         ...item,
                         index,

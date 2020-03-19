@@ -49,7 +49,6 @@ export default {
         try {
             const res = await request.get(`/${PROCESS_API_URL_PREFIX}/user/pipelines/stageTag`)
             const defaultStageTag = res.data.filter(item => item.defaultFlag).map(item => item.id)
-            console.log(defaultStageTag)
             commit(SET_STAGE_TAG_LIST, res.data)
             commit(SET_DEFAULT_STAGE_TAG, defaultStageTag)
         } catch (error) {
