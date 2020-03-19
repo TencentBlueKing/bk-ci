@@ -55,7 +55,7 @@ interface ServiceDockerDebugResource {
     ): Result<String>
 
     @ApiOperation("终止流水线调试")
-    @DELETE
+    @POST
     @Path("/debug/end")
     fun endDebug(
         @ApiParam("容器信息", required = true)
