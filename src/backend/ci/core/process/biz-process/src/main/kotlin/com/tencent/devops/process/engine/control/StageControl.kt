@@ -57,7 +57,7 @@ class StageControl @Autowired constructor(
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val pipelineBuildDetailService: PipelineBuildDetailService,
-    private val pipelineStageService: PipelineStageService
+    private val pipelineStageService: PipelineStageService,
     private val redisOperation: RedisOperation
     ) {
 
