@@ -407,7 +407,11 @@ class DockerHostDebugService @Autowired constructor(
                 logger.info("There is ${timeoutDebugTask.size} debug task have/has already time out, clear it.")
                 for (i in timeoutDebugTask.indices) {
                     logger.info("Delete timeout debug task, pipelineId:(${timeoutDebugTask[i].pipelineId}), vmSeqId:(${timeoutDebugTask[i].vmSeqId}), containerId:(${timeoutDebugTask[i].containerId})")
-                    deleteDebug(timeoutDebugTask[i].pipelineId, timeoutDebugTask[i].vmSeqId)
+                    try {
+                        deleteDebug(timeoutDebugTask[i].pipelineId, timeoutDebugTask[i].vmSeqId)
+                    } catch (e: Exception) {
+                        logger.error("Delete timeout debug task failed, ${e.message}")
+                    }
                 }
             }
         } finally {
