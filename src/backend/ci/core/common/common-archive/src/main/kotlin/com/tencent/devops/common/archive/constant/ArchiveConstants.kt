@@ -24,24 +24,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo.app.pipeline
+package com.tencent.devops.common.archive.constant
 
-import com.tencent.devops.common.pipeline.enums.StartType
-
-data class AppPipelineHistory(
-    val projectId: String,
-    val pipelineId: String,
-    val buildId: String,
-    val userId: String,
-    val trigger: StartType,
-    val buildNum: Int?,
-    val startTime: Long?,
-    val endTime: Long?,
-    val status: String,
-    val curTimestamp: Long,
-    val pipelineVersion: Int,
-    var fileCount: Int = 0,
-    var allFileSize: Long = 0,
-    val packageVersion: String?,
-    var isMobileStart: Boolean = false
-)
+// 归档元数据
+const val ARCHIVE_PROPS_PROJECT_ID = "projectId"
+const val ARCHIVE_PROPS_PIPELINE_ID = "pipelineId"
+const val ARCHIVE_PROPS_PIPELINE_NAME = "pipelineName"
+const val ARCHIVE_PROPS_BUILD_ID = "buildId"
+const val ARCHIVE_PROPS_BUILD_NO = "buildNo"
+const val ARCHIVE_PROPS_USER_ID = "userId"
+const val ARCHIVE_PROPS_CREATOR_ID = "creatorId"
+const val ARCHIVE_PROPS_APP_VERSION = "appVersion"
+const val ARCHIVE_PROPS_APP_BUNDLE_IDENTIFIER = "bundleIdentifier"
+const val ARCHIVE_PROPS_APP_APP_TITLE = "appTitle"
+const val ARCHIVE_PROPS_APP_IMAGE = "image"
+const val ARCHIVE_PROPS_APP_FULL_IMAGE = "fullImage"
+const val ARCHIVE_PROPS_SOURCE = "source"
+const val ARCHIVE_PROPS_FILE_NAME = "fileName"
