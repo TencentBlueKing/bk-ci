@@ -30,12 +30,15 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.store.config.ExtServiceIngressConfig
 import com.tencent.devops.store.dao.ExtItemServiceDao
+import com.tencent.devops.store.dao.common.StoreProjectRelDao
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.vo.ExtItemServiceVO
 import com.tencent.devops.store.pojo.vo.ExtServiceVO
 import com.tencent.devops.store.pojo.vo.ExtServiceVendorVO
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.autoconfigure.session.StoreType
 import org.springframework.stereotype.Service
 import java.text.MessageFormat
 
@@ -43,6 +46,7 @@ import java.text.MessageFormat
 class ExtItemServiceService @Autowired constructor(
     private val dslContext: DSLContext,
     private val extItemServiceDao: ExtItemServiceDao,
+    private val storeProjectRelDao: StoreProjectRelDao,
     private val extServiceIngressConfig: ExtServiceIngressConfig
 ) {
 
@@ -69,8 +73,16 @@ class ExtItemServiceService @Autowired constructor(
             serviceRecords?.forEach { service ->
                 val props = service["props"] as? String
                 val serviceCode = service["serviceCode"] as String
+                // 判断用户的项目是否是调试项目
+                val grayFlag = storeProjectRelDao.isInitTestProjectCode(
+                    dslContext = dslContext,
+                    storeCode = serviceCode,
+                    storeType = StoreTypeEnum.SERVICE,
+                    projectCode = projectCode
+                )
                 // 获取扩展服务对应的域名
-                val host = MessageFormat(extServiceIngressConfig.host).format(arrayOf(serviceCode))
+                val hostPrefix = if (grayFlag) "$serviceCode-gray" else serviceCode
+                val host = MessageFormat(extServiceIngressConfig.host).format(arrayOf(hostPrefix))
                 serviceList.add(
                     ExtServiceVO(
                         serviceId = service["serviceId"] as String,

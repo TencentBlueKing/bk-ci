@@ -42,8 +42,6 @@ import com.tencent.devops.store.config.ExtServiceImageSecretConfig
 import com.tencent.devops.store.config.ExtServiceIngressConfig
 import com.tencent.devops.store.config.ExtServiceServiceConfig
 import com.tencent.devops.store.dao.common.StoreProjectRelDao
-import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import com.tencent.devops.store.pojo.constants.KEY_EXT_SERVICE_INIT_TEST_PROJECT_PREFIX
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -88,9 +86,11 @@ class ExtServiceBcsService {
     fun generateDeployApp(
         namespaceName: String,
         serviceCode: String,
-        version: String
+        version: String,
+        grayFlag: Boolean
     ): DeployApp {
         val imageName = "${extServiceImageSecretConfig.imageNamePrefix}$serviceCode"
+        val hostPrefix = if (grayFlag) "$serviceCode-gray" else serviceCode
         return DeployApp(
             bcsUrl = extServiceBcsConfig.masterUrl,
             token = extServiceBcsConfig.token,
@@ -106,7 +106,7 @@ class ExtServiceBcsService {
                 servicePort = extServiceServiceConfig.servicePort.toInt()
             ),
             appIngress = AppIngress(
-                host = MessageFormat(extServiceIngressConfig.host).format(arrayOf(serviceCode)),
+                host = MessageFormat(extServiceIngressConfig.host).format(arrayOf(hostPrefix)),
                 contextPath = extServiceIngressConfig.contextPath,
                 ingressAnnotationMap = mapOf(
                     "kubernetes.io/ingress.class" to extServiceIngressConfig.annotationClass,
@@ -127,25 +127,17 @@ class ExtServiceBcsService {
         userId: String,
         namespaceName: String,
         serviceCode: String,
-        version: String
+        version: String,
+        grayFlag: Boolean
     ): Result<Boolean> {
         logger.info("deployExtService userId is:$userId,namespaceName is:$namespaceName")
-        logger.info("deployExtService serviceCode is:$serviceCode,version is:$version")
-        val deployApp = generateDeployApp(namespaceName, serviceCode, version)
+        logger.info("deployExtService serviceCode is:$serviceCode,version is:$version,grayFlag is:$grayFlag")
+        val deployApp = generateDeployApp(namespaceName, serviceCode, version, grayFlag)
         val bcsDeployAppResult = client.get(ServiceBcsResource::class).bcsDeployApp(
             userId = userId,
             deployApp = deployApp
         )
         logger.info("bcsDeployAppResult is :$bcsDeployAppResult")
-        if (bcsDeployAppResult.isOk()) {
-            if (namespaceName == extServiceBcsNameSpaceConfig.grayNamespaceName) {
-                // 如果发布的灰度环境的扩展服务版本，查出扩展服务对应的调试项目放入redis中
-                addExtServiceTestProjectCache(serviceCode)
-            } else {
-                // 发布的灰度环境的扩展服务版本需删除扩展服务调试项目的redis缓存
-                deleteExtServiceTestProjectCache(serviceCode)
-            }
-        }
         return bcsDeployAppResult
     }
 
@@ -178,29 +170,5 @@ class ExtServiceBcsService {
         )
         logger.info("the bcsStopAppResult is :$bcsStopAppResult")
         return bcsStopAppResult
-    }
-
-    /**
-     * 添加扩展服务对应的调试项目缓存
-     * @param serviceCode 扩展服务代码
-     */
-    fun addExtServiceTestProjectCache(serviceCode: String) {
-        // 查出扩展服务对应的调试项目放入redis中(网关拿到前端传的项目后根据缓存中的扩展服务对应的调试项目列表来决定是否访问扩展服务的灰度环境)
-        val testProjectCodes = storeProjectRelDao.getTestProjectCodesByStoreCode(
-            dslContext,
-            serviceCode,
-            StoreTypeEnum.SERVICE
-        )
-        testProjectCodes?.forEach {
-            redisOperation.addSetValue(KEY_EXT_SERVICE_INIT_TEST_PROJECT_PREFIX + serviceCode, it.value1())
-        }
-    }
-
-    /**
-     * 添加扩展服务对应的调试项目缓存
-     * @param serviceCode 扩展服务代码
-     */
-    fun deleteExtServiceTestProjectCache(serviceCode: String) {
-        redisOperation.delete(KEY_EXT_SERVICE_INIT_TEST_PROJECT_PREFIX + serviceCode)
     }
 }

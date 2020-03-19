@@ -659,7 +659,8 @@ abstract class ExtServiceBaseService @Autowired constructor() {
                 userId = userId,
                 namespaceName = extServiceBcsNameSpaceConfig.namespaceName,
                 serviceCode = serviceCode,
-                version = serviceRecord.version
+                version = serviceRecord.version,
+                grayFlag = true
             )
             logger.info("deployExtServiceResult is:$deployExtServiceResult")
             if (deployExtServiceResult.isNotOk()) {
