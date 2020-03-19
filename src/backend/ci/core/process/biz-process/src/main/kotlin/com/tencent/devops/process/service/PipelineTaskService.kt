@@ -109,7 +109,7 @@ class PipelineTaskService @Autowired constructor(
                     pipelineId = pipelineId,
                     pipelineName = it["pipelineName"] as String,
                     projectCode = it["projectCode"] as String,
-                    atomVersion = pipelineAtomVersionInfo.getOrDefault(pipelineId, mutableListOf<String>()).joinToString(",")
+                    atomVersion = pipelineAtomVersionInfo.getOrDefault(pipelineId, mutableListOf<String>()).distinct().joinToString(",")
                 )
             }
         }
