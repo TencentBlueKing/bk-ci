@@ -1248,19 +1248,21 @@ class TemplateService @Autowired constructor(
                         }
                         tmpLabels
                     }
+                    val instanceModel = getInstanceModel(
+                        pipelineId = it.pipelineId,
+                        templateModel = templateModel,
+                        pipelineName = it.pipelineName,
+                        buildNo = it.buildNo,
+                        param = it.param,
+                        instanceFromTemplate = true,
+                        labels = labels
+                    )
+                    instanceModel.templateId = templateId
                     pipelineService.editPipeline(
                         userId = userId,
                         projectId = projectId,
                         pipelineId = it.pipelineId,
-                        model = getInstanceModel(
-                            pipelineId = it.pipelineId,
-                            templateModel = templateModel,
-                            pipelineName = it.pipelineName,
-                            buildNo = it.buildNo,
-                            param = it.param,
-                            instanceFromTemplate = true,
-                            labels = labels
-                        ),
+                        model = instanceModel,
                         channelCode = ChannelCode.BS,
                         checkPermission = true,
                         checkTemplate = false
@@ -1771,7 +1773,7 @@ class TemplateService @Autowired constructor(
         val projectCodeList = addMarketTemplateRequest.projectCodeList
         val projectTemplateMap = mutableMapOf<String, String>()
         if (publicFlag) {
-            val publicTemplateRecord = pipelineTemplateDao.getTemplate(dslContext, templateCode.toInt())
+            val publicTemplateRecord = pipelineTemplateDao.getTemplate(dslContext, templateCode.toLong())
                 ?: return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_INVALID, arrayOf(templateCode), mapOf())
             logger.info("the publicTemplateRecord is:$publicTemplateRecord")
             dslContext.transaction { t ->
