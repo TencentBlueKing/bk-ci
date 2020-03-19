@@ -57,9 +57,8 @@ class StageControl @Autowired constructor(
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val pipelineBuildDetailService: PipelineBuildDetailService,
-    private val pipelineStageService: PipelineStageService,
-    private val redisOperation: RedisOperation
-    ) {
+    private val pipelineStageService: PipelineStageService
+) {
 
     private val logger = LoggerFactory.getLogger(javaClass)!!
 
@@ -144,18 +143,13 @@ class StageControl @Autowired constructor(
 
                     actionType = ActionType.SKIP
                 } else if (needPause) {
-                    val runLock = PipelineBuildRunLock(redisOperation, pipelineId)
                     // 进入暂停状态等待手动触发
                     logger.info("[$buildId]|[${buildInfo.status}]|STAGE_PAUSE|stage=$stageId|action=$actionType")
 
-                    try {
-                        runLock.lock()
-                        pipelineStageService.updateStageStatus(buildId, stageId, BuildStatus.PAUSE)
-                        pipelineBuildDetailService.stagePause(pipelineId, buildId, stageId)
-                    } finally {
-                        runLock.unlock()
-                        return
-                    }
+                    pipelineStageService.updateStageStatus(buildId, stageId, BuildStatus.PAUSE)
+                    pipelineBuildDetailService.stagePause(pipelineId, buildId, stageId)
+
+                    return
                 }
             }
 
