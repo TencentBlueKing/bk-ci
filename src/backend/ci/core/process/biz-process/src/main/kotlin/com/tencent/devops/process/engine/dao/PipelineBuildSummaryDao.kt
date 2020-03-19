@@ -332,7 +332,6 @@ class PipelineBuildSummaryDao {
                 dslContext.update(this)
                     .set(LATEST_STATUS, newStatus.ordinal)
                     .set(LATEST_END_TIME, LocalDateTime.now())
-                    .set(RUNNING_COUNT, RUNNING_COUNT + runningIncrement)
                     .where(PIPELINE_ID.eq(pipelineId))
                     .and(LATEST_BUILD_ID.eq(buildId))
                     .execute()
