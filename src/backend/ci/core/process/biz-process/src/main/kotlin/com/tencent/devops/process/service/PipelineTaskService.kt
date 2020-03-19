@@ -147,7 +147,6 @@ class PipelineTaskService @Autowired constructor(
         return isRry
     }
 
-
     fun removeRetryCache(buildId: String, taskId: String) {
         // 清除该原子内的重试记录
         redisOperation.delete(getRedisKey(buildId, taskId))
