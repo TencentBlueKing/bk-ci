@@ -98,7 +98,6 @@
                 if (!this.stage.hasOwnProperty(name)) {
                     Vue.set(this.stage, name, value)
                 }
-                console.log(name, value, this.stage)
                 this.updateStage({
                     stage: this.stage,
                     newParam: {
