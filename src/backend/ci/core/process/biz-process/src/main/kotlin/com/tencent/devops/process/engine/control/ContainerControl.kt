@@ -46,6 +46,7 @@ import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.process.engine.common.BS_CONTAINER_END_SOURCE_PREIX
 import com.tencent.devops.process.pojo.mq.PipelineBuildContainerEvent
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
@@ -279,7 +280,7 @@ class ContainerControl @Autowired constructor(
                 containerId = containerId,
                 mutexGroup = mutexGroup
             )
-            sendBackStage("CONTAINER_END_$containerFinalStatus")
+            sendBackStage("$BS_CONTAINER_END_SOURCE_PREIX$containerFinalStatus")
         } else {
             sendTask(waitToDoTask, actionType)
         }
