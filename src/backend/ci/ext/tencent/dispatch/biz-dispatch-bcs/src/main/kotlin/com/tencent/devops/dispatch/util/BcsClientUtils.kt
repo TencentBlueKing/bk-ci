@@ -28,8 +28,11 @@ package com.tencent.devops.dispatch.util
 
 import com.tencent.devops.dispatch.pojo.KubernetesLabel
 import com.tencent.devops.dispatch.pojo.KubernetesRepo
+import io.fabric8.kubernetes.api.model.LimitRangeBuilder
+import io.fabric8.kubernetes.api.model.LimitRangeItem
 import io.fabric8.kubernetes.api.model.Namespace
 import io.fabric8.kubernetes.api.model.NamespaceBuilder
+import io.fabric8.kubernetes.api.model.Quantity
 import io.fabric8.kubernetes.api.model.Secret
 import io.fabric8.kubernetes.api.model.SecretBuilder
 import io.fabric8.kubernetes.api.model.Service
@@ -49,7 +52,7 @@ object BcsClientUtils {
 
     private val bcsKubernetesClientMap = ConcurrentHashMap<String, KubernetesClient>()
 
-    fun getBcsKubernetesClientMap(): ConcurrentHashMap<String, KubernetesClient>{
+    fun getBcsKubernetesClientMap(): ConcurrentHashMap<String, KubernetesClient> {
         return bcsKubernetesClientMap
     }
 
@@ -102,8 +105,16 @@ object BcsClientUtils {
                 NamespaceBuilder().withNewMetadata().withName(namespaceName)
                     .addToLabels(labelInfo.labelKey, labelInfo.labelValue).endMetadata()
                     .build()
-            logger.info("created namespace:${bcsKubernetesClient.namespaces().createOrReplace(ns)}")
+            val namespace = bcsKubernetesClient.namespaces().createOrReplace(ns)
+            logger.info("created namespace:$namespace")
         }
+        val limitRangeItem = LimitRangeItem()
+        limitRangeItem.default = mapOf("cpu" to Quantity("1"), "memory" to Quantity("2Gi"))
+        limitRangeItem.defaultRequest = mapOf("cpu" to Quantity("0.5"), "memory" to Quantity("1Gi"))
+        limitRangeItem.type = "Container"
+        val limitRange = LimitRangeBuilder().withNewMetadata().withName("$namespaceName-limit")
+            .endMetadata().withNewSpec().addToLimits(limitRangeItem).endSpec().build()
+        bcsKubernetesClient.limitRanges().inNamespace(namespaceName).createOrReplace(limitRange)
         return ns
     }
 

@@ -144,7 +144,12 @@ class TxExtServiceBaseService : ExtServiceBaseService() {
             password = extServiceImageSecretConfig.repoPassword
         )
         // 未正式发布的扩展服务先部署到bcs灰度环境
-        val deployApp = extServiceBcsService.generateDeployApp(extServiceBcsNameSpaceConfig.grayNamespaceName, serviceCode, version)
+        val deployApp = extServiceBcsService.generateDeployApp(
+            namespaceName = extServiceBcsNameSpaceConfig.grayNamespaceName,
+            serviceCode = serviceCode,
+            version = version,
+            grayFlag = true
+        )
         if (null == servicePipelineRelRecord) {
             // 为用户初始化构建流水线并触发执行
             val serviceBaseInfo = ExtServiceBaseInfoDTO(
