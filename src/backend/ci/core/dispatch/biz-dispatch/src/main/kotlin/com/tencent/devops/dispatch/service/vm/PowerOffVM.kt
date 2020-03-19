@@ -39,7 +39,7 @@ import org.springframework.stereotype.Component
 @Component
 class PowerOffVM(private val vmCache: VMCache) {
 
-    fun shutdown(vmId: Int): Boolean {
+    fun shutdown(vmId: Long): Boolean {
         val vm = vmCache.getVM(vmId)
         return if (vm == null) {
             logger.error("ShutdownVM: Cannot find vm $vmId")
@@ -49,7 +49,7 @@ class PowerOffVM(private val vmCache: VMCache) {
         }
     }
 
-    fun shutdown(vmId: Int, snapshotKey: String): Boolean {
+    fun shutdown(vmId: Long, snapshotKey: String): Boolean {
         // 首先查询该VM名称对应的VM对象
         val vm = vmCache.getVM(vmId)
         return if (vm == null) {
@@ -101,7 +101,7 @@ class PowerOffVM(private val vmCache: VMCache) {
         }
     }
 
-    private fun removeBackupSnapshot(vm: VirtualMachine, snapshotKey: String, vmId: Int): Boolean {
+    private fun removeBackupSnapshot(vm: VirtualMachine, snapshotKey: String, vmId: Long): Boolean {
         val snapInfo = vm.snapshot
         if (snapInfo == null) {
             logger.info("The snapshot is empty")
@@ -123,13 +123,13 @@ class PowerOffVM(private val vmCache: VMCache) {
      * @param vmId VM名称
      * @return 是否成功
      */
-    fun directShutdown(vmId: Int): Boolean {
+    fun directShutdown(vmId: Long): Boolean {
         // 首先查询该VM名称对应的VM对象
         val vm = vmCache.getVM(vmId)
         return vm != null && shutdownVM(vm)
     }
 
-    private fun removeSnapshot(vm: VirtualMachine, snapshot: ManagedObjectReference, vmId: Int, removeChild: Boolean = true): Boolean {
+    private fun removeSnapshot(vm: VirtualMachine, snapshot: ManagedObjectReference, vmId: Long, removeChild: Boolean = true): Boolean {
         val task = VirtualMachineSnapshot(vm.serverConnection, snapshot).removeSnapshot_Task(removeChild)
         if (task.waitForTask() == Task.SUCCESS) {
             return true

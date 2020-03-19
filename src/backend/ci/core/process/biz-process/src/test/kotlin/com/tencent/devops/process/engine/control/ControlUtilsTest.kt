@@ -73,7 +73,9 @@ class ControlUtilsTest {
                             otherTask = nullObject,
                             customCondition = nullObject,
                             customVariables = nullObject,
-                            taskRunCondition = TaskRunCondition.PRE_TASK_FAILED_ONLY
+                            taskRunCondition = TaskRunCondition.PRE_TASK_FAILED_ONLY,
+                            retryCount = 0,
+                            retryWhenFailed = false
                         ), status
                     )
                 )
@@ -87,7 +89,9 @@ class ControlUtilsTest {
                             otherTask = nullObject,
                             customCondition = nullObject,
                             customVariables = nullObject,
-                            taskRunCondition = TaskRunCondition.PRE_TASK_FAILED_ONLY
+                            taskRunCondition = TaskRunCondition.PRE_TASK_FAILED_ONLY,
+                            retryCount = 0,
+                            retryWhenFailed = false
                         ), status
                     )
                 )
@@ -101,16 +105,30 @@ class ControlUtilsTest {
         Assert.assertFalse(
             ControlUtils.isEnable(
                 ElementAdditionalOptions(
-                    enable = false, continueWhenFailed = false, timeout = 0, taskRunCondition = null,
-                    otherTask = null, customCondition = null, customVariables = null
+                    enable = false,
+                    continueWhenFailed = false,
+                    timeout = 0,
+                    taskRunCondition = null,
+                    otherTask = null,
+                    customCondition = null,
+                    customVariables = null,
+                    retryCount = 0,
+                    retryWhenFailed = false
                 )
             )
         )
         Assert.assertTrue(
             ControlUtils.continueWhenFailure(
                 ElementAdditionalOptions(
-                    enable = true, continueWhenFailed = true, timeout = 0, taskRunCondition = null,
-                    otherTask = null, customCondition = null, customVariables = null
+                    enable = true,
+                    continueWhenFailed = true,
+                    timeout = 0,
+                    taskRunCondition = null,
+                    otherTask = null,
+                    customCondition = null,
+                    customVariables = null,
+                    retryCount = 0,
+                    retryWhenFailed = false
                 )
             )
         )
@@ -124,16 +142,30 @@ class ControlUtilsTest {
         Assert.assertFalse(
             ControlUtils.continueWhenFailure(
                 ElementAdditionalOptions(
-                    enable = true, continueWhenFailed = false, timeout = 0, taskRunCondition = null,
-                    otherTask = null, customCondition = null, customVariables = null
+                    enable = true,
+                    continueWhenFailed = false,
+                    timeout = 0,
+                    taskRunCondition = null,
+                    otherTask = null,
+                    customCondition = null,
+                    customVariables = null,
+                    retryCount = 0,
+                    retryWhenFailed = false
                 )
             )
         )
         Assert.assertTrue(
             ControlUtils.continueWhenFailure(
                 ElementAdditionalOptions(
-                    enable = true, continueWhenFailed = true, timeout = 0, taskRunCondition = null,
-                    otherTask = null, customCondition = null, customVariables = null
+                    enable = true,
+                    continueWhenFailed = true,
+                    timeout = 0,
+                    taskRunCondition = null,
+                    otherTask = null,
+                    customCondition = null,
+                    customVariables = null,
+                    retryCount = 0,
+                    retryWhenFailed = false
                 )
             )
         )

@@ -191,7 +191,6 @@
                         defaultValue: value
                     })
                 }
-                console.log(value, name, version)
                 this.handleChange([
                     ...this.versions,
                     ...this.globalParams
