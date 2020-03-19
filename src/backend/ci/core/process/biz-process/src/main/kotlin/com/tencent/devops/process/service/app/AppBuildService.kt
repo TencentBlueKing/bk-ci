@@ -89,23 +89,23 @@ class AppBuildService @Autowired constructor(
         logger.info("查询收藏的流水线: ${System.currentTimeMillis() - beginTime} ms")
 
         return AppModelDetail(
-            modelDetail.id,
-            modelDetail.userId,
-            modelDetail.trigger,
-            modelDetail.startTime,
-            modelDetail.endTime,
-            modelDetail.status,
-            modelDetail.currentTimestamp,
-            modelDetail.buildNum,
-            modelDetail.cancelUserId,
-            files?.records?.size ?: 0,
-            packageVersion.toString().removeSuffix(";"),
-            pipelineId,
-            version,
-            name,
-            projectId,
-            favorPipelines.contains(pipelineId),
-            modelDetail.model
+            buildId = modelDetail.id,
+            userId = modelDetail.userId,
+            trigger = modelDetail.trigger,
+            startTime = modelDetail.startTime,
+            endTime = modelDetail.endTime,
+            status = modelDetail.status,
+            currentTimestamp = modelDetail.currentTimestamp,
+            buildNum = modelDetail.buildNum,
+            cancelUserId = modelDetail.cancelUserId,
+            fileCount = files?.records?.size ?: 0,
+            packageVersion = packageVersion.toString().removeSuffix(";"),
+            pipelineId = pipelineId,
+            pipelineVersion = version,
+            pipelineName = name,
+            projectId = projectId,
+            hasCollect = favorPipelines.contains(pipelineId),
+            model = modelDetail.model
         )
     }
 }

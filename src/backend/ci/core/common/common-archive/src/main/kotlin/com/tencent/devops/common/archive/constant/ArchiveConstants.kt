@@ -26,20 +26,18 @@
 
 package com.tencent.devops.common.archive.constant
 
-// Codecc元数据
-const val ARCHIVE_PROPS_CODECC_VS_LEAK_COUNT = "codecc.coverity.warning.count"
-const val ARCHIVE_PROPS_CODECC_VS_LEAK_HIGH_COUNT = "codecc.coverity.warning.high.count"
-const val ARCHIVE_PROPS_CODECC_VS_LEAK_HIGH_AND_LIGHT_COUNT = "codecc.coverity.warning.highAndLight.count"
-
-// 漏洞扫描元数据
-const val ARCHIVE_PROPS_VS_LEAK_HIGH_COUNT = "vs.leak.high.count"
-const val ARCHIVE_PROPS_VS_LEAK_MIDDLE_COUNT = "vs.leak.middle.count"
-const val ARCHIVE_PROPS_VS_LEAK_LIGHT_COUNT = "vs.leak.light.count"
-const val ARCHIVE_PROPS_VS_LEAK_COUNT = "vs.leak.count"
-const val ARCHIVE_PROPS_VS_RISK_COUNT = "vs.risk.count"
-
-// apk加固元数据
-const val ARCHIVE_PROPS_APK_SHELL_STATUS = "apk.shell.status"
-
-// 企业签名元数据
-const val ARCHIVE_PROPS_IPA_SIGN_STATUS = "ipa.sign.status"
+// 归档元数据
+const val ARCHIVE_PROPS_PROJECT_ID = "projectId"
+const val ARCHIVE_PROPS_PIPELINE_ID = "pipelineId"
+const val ARCHIVE_PROPS_PIPELINE_NAME = "pipelineName"
+const val ARCHIVE_PROPS_BUILD_ID = "buildId"
+const val ARCHIVE_PROPS_BUILD_NO = "buildNo"
+const val ARCHIVE_PROPS_USER_ID = "userId"
+const val ARCHIVE_PROPS_CREATOR_ID = "creatorId"
+const val ARCHIVE_PROPS_APP_VERSION = "appVersion"
+const val ARCHIVE_PROPS_APP_BUNDLE_IDENTIFIER = "bundleIdentifier"
+const val ARCHIVE_PROPS_APP_APP_TITLE = "appTitle"
+const val ARCHIVE_PROPS_APP_IMAGE = "image"
+const val ARCHIVE_PROPS_APP_FULL_IMAGE = "fullImage"
+const val ARCHIVE_PROPS_SOURCE = "source"
+const val ARCHIVE_PROPS_FILE_NAME = "fileName"
