@@ -47,6 +47,8 @@ export const UPDATE_STAGE = 'UPDATE_STAGE'
 export const SET_INSERT_STAGE_INDEX = 'SET_INSERT_STAGE_INDEX'
 export const SET_STAGE_TAG_LIST = 'SET_STAGE_TAG_LIST'
 
+export const SET_DEFAULT_STAGE_TAG = 'SET_DEFAULT_STAGE_TAG'
+
 export const ADD_CONTAINER = 'ADD_CONTAINER'
 export const UPDATE_CONTAINER = 'UPDATE_CONTAINER'
 export const DELETE_CONTAINER = 'DELETE_CONTAINER'
@@ -109,3 +111,5 @@ export const defaultBuildNo = {
     buildNo: '0',
     buildNoType: buildNoRules[2].value
 }
+
+export const TOGGLE_REVIEW_DIALOG = 'TOGGLE_REVIEW_DIALOG'

@@ -92,7 +92,7 @@ module.exports = ({ entry, publicPath, dist, port = 8080, argv, env }) => {
         ],
         optimization: {
             namedChunks: true,
-            minimize: true
+            minimize: !isDev
         },
         resolve: {
             extensions: ['.js', '.vue', '.json', '.ts', '.scss', '.css'],
