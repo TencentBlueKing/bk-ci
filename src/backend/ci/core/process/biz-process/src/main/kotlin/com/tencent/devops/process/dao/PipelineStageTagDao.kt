@@ -111,12 +111,13 @@ class PipelineStageTagDao {
         }
     }
 
-    fun convert(record: TPipelineStageTagRecord): PipelineStageTag {
+    fun convert(record: TPipelineStageTagRecord, defaultFlag: Boolean): PipelineStageTag {
         with(record) {
             return PipelineStageTag(
                 id = id,
                 stageTagName = stageTagName,
                 weight = weight,
+                defaultFlag = defaultFlag,
                 createTime = createTime.timestampmilli(),
                 updateTime = updateTime.timestampmilli()
             )
