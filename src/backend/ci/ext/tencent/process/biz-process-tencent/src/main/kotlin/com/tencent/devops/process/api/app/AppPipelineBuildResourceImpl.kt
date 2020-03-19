@@ -104,6 +104,33 @@ class AppPipelineBuildResourceImpl @Autowired constructor(
         return Result(true)
     }
 
+    override fun manualStartStage(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        stageId: String,
+        cancel: Boolean?
+    ): Result<Boolean> {
+        checkParam(userId, projectId, pipelineId)
+        if (buildId.isBlank()) {
+            throw ParamBlankException("Invalid buildId")
+        }
+        if (stageId.isBlank()) {
+            throw ParamBlankException("Invalid stageId")
+        }
+
+        buildService.buildManualStartStage(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            stageId = stageId,
+            isCancel = cancel ?: false
+        )
+        return Result(true)
+    }
+
     override fun goToReview(
         userId: String,
         projectId: String,
