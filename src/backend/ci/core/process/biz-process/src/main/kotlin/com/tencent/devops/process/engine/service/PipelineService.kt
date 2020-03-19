@@ -102,6 +102,8 @@ class PipelineService @Autowired constructor(
     private val pipelineGroupService: PipelineGroupService,
     private val pipelineViewService: PipelineViewService,
     private val pipelineUserService: PipelineUserService,
+    private val pipelineSettingService: PipelineSettingService,
+    private val pipelineStageService: PipelineStageService,
     private val pipelineBean: PipelineBean,
     private val processJmxApi: ProcessJmxApi,
     private val dslContext: DSLContext,
@@ -109,7 +111,6 @@ class PipelineService @Autowired constructor(
     private val templatePipelineDao: TemplatePipelineDao,
     private val pipelineInfoDao: PipelineInfoDao,
     private val pipelineSettingDao: PipelineSettingDao,
-    private val pipelineSettingService: PipelineSettingService,
     private val modelCheckPlugin: ModelCheckPlugin,
     private val pipelineBuildDao: PipelineBuildDao,
     private val authPermissionApi: AuthPermissionApi,
@@ -677,6 +678,10 @@ class PipelineService @Autowired constructor(
             model.name = pipelineInfo.pipelineName
             model.desc = pipelineInfo.pipelineDesc
             model.pipelineCreator = pipelineInfo.creator
+            model.stages.forEach {
+                if (it.name.isNullOrBlank()) it.name = it.id
+                if (it.tag == null) it.tag = pipelineStageService.getDefaultStageTagIds()
+            }
 
             return model
         } catch (e: Exception) {

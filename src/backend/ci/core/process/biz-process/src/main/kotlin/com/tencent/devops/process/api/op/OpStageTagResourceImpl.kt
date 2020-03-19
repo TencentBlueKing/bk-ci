@@ -24,20 +24,36 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.pipeline.container
+package com.tencent.devops.process.api.op
 
-import com.tencent.devops.common.pipeline.NameAndValue
-import com.tencent.devops.common.pipeline.enums.JobRunCondition
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.process.pojo.PipelineStageTag
+import com.tencent.devops.process.pojo.StageTagRequest
+import com.tencent.devops.process.service.StageTagService
+import org.springframework.beans.factory.annotation.Autowired
 
-/**
- * Job流程控制
- * @version 1.0
- */
-data class JobControlOption(
-    val enable: Boolean, // 是否启用Job
-    val prepareTimeout: Int? = 10, // Job准备环境的超时时间
-    val timeout: Int?, // Job执行的超时时间
-    val runCondition: JobRunCondition, // 运行条件
-    val customVariables: List<NameAndValue>? = null, // 自定义变量
-    val customCondition: String? = null // 自定义条件
-)
+@RestResource
+class OpStageTagResourceImpl @Autowired constructor(
+    private val stageTagService: StageTagService
+) : OpStageTagResource {
+    override fun add(stageTagRequest: StageTagRequest): Result<Boolean> {
+        return stageTagService.saveStageTag(stageTagRequest.stageTagName, stageTagRequest.defaultFlag)
+    }
+
+    override fun update(id: String, stageTagRequest: StageTagRequest): Result<Boolean> {
+        return stageTagService.updateStageTag(id, stageTagRequest.stageTagName, stageTagRequest.defaultFlag)
+    }
+
+    override fun listAllStageTags(): Result<List<PipelineStageTag>> {
+        return stageTagService.getAllStageTag()
+    }
+
+    override fun getStageTagById(id: String): Result<PipelineStageTag?> {
+        return stageTagService.getStageTag(id)
+    }
+
+    override fun deleteStageTagById(id: String): Result<Boolean> {
+        return stageTagService.deleteStageTag(id)
+    }
+}
