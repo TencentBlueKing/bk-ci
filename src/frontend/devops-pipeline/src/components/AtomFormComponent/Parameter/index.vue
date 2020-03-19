@@ -118,7 +118,6 @@
                     if (Array.isArray(param.value)) { // 去掉空字符串, 空字符串无意义
                         param.value = param.value.filter(v => v !== '')
                     }
-
                 })
                 this.updateParameters()
             },
