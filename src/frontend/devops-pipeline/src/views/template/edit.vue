@@ -10,7 +10,7 @@
                     <bk-button @click="exit">{{ $t('cancel') }}</bk-button>
                 </div>
             </pipeline>
-            <bk-sideslider :title="$t('template.versionList')" class="sodaci-property-panel" width="640" :is-show.sync="showVersionSideBar" :quick-close="true">
+            <bk-sideslider :title="$t('template.versionList')" class="bkci-property-panel" width="640" :is-show.sync="showVersionSideBar" :quick-close="true">
                 <template slot="content">
                     <section class="version-list-wrapper">
                         <bk-table
