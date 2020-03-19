@@ -38,7 +38,7 @@ data class PipelineStageTag(
     @ApiModelProperty("阶段标签权重", required = true)
     val weight: Int,
     @ApiModelProperty("是否为默认标签", required = true)
-    var defaultFlag: Boolean,
+    val defaultFlag: Boolean,
     @ApiModelProperty("创建日期")
     val createTime: Long = 0,
     @ApiModelProperty("更新日期")
