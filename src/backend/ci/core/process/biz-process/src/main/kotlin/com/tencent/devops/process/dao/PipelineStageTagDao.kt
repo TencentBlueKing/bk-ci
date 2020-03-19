@@ -43,19 +43,19 @@ class PipelineStageTagDao {
         dslContext: DSLContext,
         id: String,
         stageTagName: String,
-        defaultFlag: Boolean
+        weight: Int
     ) {
         with(TPipelineStageTag.T_PIPELINE_STAGE_TAG) {
             dslContext.insertInto(
                 this,
                 ID,
                 STAGE_TAG_NAME,
-                DEFAULT_FLAG
+                WEIGHT
             )
                 .values(
                     id,
                     stageTagName,
-                    defaultFlag
+                    weight
                 ).execute()
         }
     }
@@ -72,12 +72,12 @@ class PipelineStageTagDao {
         dslContext: DSLContext,
         id: String,
         stageTagName: String,
-        defaultFlag: Boolean
+        weight: Int
     ) {
         with(TPipelineStageTag.T_PIPELINE_STAGE_TAG) {
             dslContext.update(this)
                 .set(STAGE_TAG_NAME, stageTagName)
-                .set(DEFAULT_FLAG, defaultFlag)
+                .set(WEIGHT, weight)
                 .set(UPDATE_TIME, LocalDateTime.now())
                 .where(ID.eq(id))
                 .execute()
@@ -96,26 +96,27 @@ class PipelineStageTagDao {
         with(TPipelineStageTag.T_PIPELINE_STAGE_TAG) {
             return dslContext
                 .selectFrom(this)
-                .orderBy(CREATE_TIME.desc())
+                .orderBy(WEIGHT.desc())
                 .fetch()
         }
     }
 
-    fun getDefaultStageTag(dslContext: DSLContext): Result<TPipelineStageTagRecord> {
+    fun getDefaultStageTag(dslContext: DSLContext): PipelineStageTag? {
         with(TPipelineStageTag.T_PIPELINE_STAGE_TAG) {
-            return dslContext
-                .selectFrom(this)
-                .where(DEFAULT_FLAG.eq(true))
-                .orderBy(CREATE_TIME.desc())
-                .fetch()
+            val record = dslContext.selectFrom(this)
+                .orderBy(WEIGHT.desc())
+                .limit(1)
+                .fetchOne()
+            return if (record == null) null else convert(record, true)
         }
     }
 
-    fun convert(record: TPipelineStageTagRecord): PipelineStageTag {
+    fun convert(record: TPipelineStageTagRecord, defaultFlag: Boolean): PipelineStageTag {
         with(record) {
             return PipelineStageTag(
                 id = id,
                 stageTagName = stageTagName,
+                weight = weight,
                 defaultFlag = defaultFlag,
                 createTime = createTime.timestampmilli(),
                 updateTime = updateTime.timestampmilli()
@@ -123,15 +124,12 @@ class PipelineStageTagDao {
         }
     }
 
-    fun countByName(dslContext: DSLContext, stageTagName: String): Record1<Int>? {
+    fun countByNameOrWeight(dslContext: DSLContext, stageTagName: String, weight: Int): Record1<Int>? {
         with(TPipelineStageTag.T_PIPELINE_STAGE_TAG) {
-            return dslContext.selectCount().from(this).where(STAGE_TAG_NAME.eq(stageTagName)).fetchOne()
-        }
-    }
-
-    fun countDefaultTag(dslContext: DSLContext): Record1<Int>? {
-        with(TPipelineStageTag.T_PIPELINE_STAGE_TAG) {
-            return dslContext.selectCount().from(this).where(DEFAULT_FLAG.eq(true)).fetchOne()
+            return dslContext.selectCount().from(this)
+                .where(STAGE_TAG_NAME.eq(stageTagName))
+                .or(WEIGHT.eq(weight))
+                .fetchOne()
         }
     }
 }

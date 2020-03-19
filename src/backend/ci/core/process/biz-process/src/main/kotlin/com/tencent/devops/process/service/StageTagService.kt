@@ -48,18 +48,20 @@ class StageTagService @Autowired constructor(
      * 获取所有阶段标签信息
      */
     fun getAllStageTag(): Result<List<PipelineStageTag>> {
-        val pipelineStageTagList =
-            pipelineStageTagDao.getAllStageTag(dslContext).map { pipelineStageTagDao.convert(it) }
+        val pipelineStageTagList = mutableListOf<PipelineStageTag>()
+        pipelineStageTagDao.getAllStageTag(dslContext).forEachIndexed { index, record ->
+            pipelineStageTagList.add(
+                pipelineStageTagDao.convert(record, index == 0)
+            )
+        }
         return Result(pipelineStageTagList)
     }
 
     /**
      * 获取所有阶段标签信息
      */
-    fun getDefaultStageTag(): Result<List<PipelineStageTag>> {
-        val pipelineStageTagList =
-            pipelineStageTagDao.getDefaultStageTag(dslContext).map { pipelineStageTagDao.convert(it) }
-        return Result(pipelineStageTagList)
+    fun getDefaultStageTag(): Result<PipelineStageTag?> {
+        return Result(pipelineStageTagDao.getDefaultStageTag(dslContext))
     }
 
     /**
@@ -72,7 +74,7 @@ class StageTagService @Autowired constructor(
             if (pipelineStageTagRecord == null) {
                 null
             } else {
-                pipelineStageTagDao.convert(pipelineStageTagRecord)
+                pipelineStageTagDao.convert(pipelineStageTagRecord, false)
             }
         )
     }
@@ -80,36 +82,30 @@ class StageTagService @Autowired constructor(
     /**
      * 保存阶段标签信息
      */
-    fun saveStageTag(stageTag: String, defaultFlag: Boolean): Result<Boolean> {
+    fun saveStageTag(stageTag: String, weight: Int): Result<Boolean> {
         logger.info("the save stageTagName is:$stageTag")
         // 判断阶段标签名称是否存在
-        val count = getCountByName(stageTag)
+        val count = getCountByNameOrWeight(stageTag, weight)
         if (count > 0) {
             // 抛出错误提示
             return MessageCodeUtil.generateResponseDataObject(
                 CommonMessageCode.PARAMETER_IS_EXIST,
-                arrayOf(stageTag),
+                arrayOf("tagName/weight"),
                 false
             )
         }
         val id = UUIDUtil.generate()
-        if (getDefaultCount() > 0 || defaultFlag)
-            pipelineStageTagDao.add(dslContext, id, stageTag, defaultFlag)
-        else return MessageCodeUtil.generateResponseDataObject(
-            CommonMessageCode.ERROR_INVALID_CONFIG,
-            arrayOf("defaultFlag", true.toString()),
-            false
-        )
+        pipelineStageTagDao.add(dslContext, id, stageTag, weight)
         return Result(true)
     }
 
     /**
      * 更新阶段标签信息
      */
-    fun updateStageTag(id: String, stageTagName: String, defaultFlag: Boolean): Result<Boolean> {
+    fun updateStageTag(id: String, stageTagName: String, weight: Int): Result<Boolean> {
         logger.info("the update stageTagName is:$stageTagName")
         // 判断阶段标签代码是否存在
-        if (getCountByName(stageTagName) > 0) {
+        if (getCountByNameOrWeight(stageTagName, weight) > 0) {
             // 判断更新的阶段标签代码是否属于自已
             val pipelineStageTag = pipelineStageTagDao.getStageTag(dslContext, id)
             if (null != pipelineStageTag && stageTagName != pipelineStageTag.stageTagName) {
@@ -121,13 +117,8 @@ class StageTagService @Autowired constructor(
                 )
             }
         }
-        if (getDefaultCount() > 0 || defaultFlag)
-            pipelineStageTagDao.update(dslContext, id, stageTagName, defaultFlag)
-        else return MessageCodeUtil.generateResponseDataObject(
-            CommonMessageCode.ERROR_INVALID_CONFIG,
-            arrayOf("defaultFlag", true.toString()),
-            false
-        )
+        pipelineStageTagDao.update(dslContext, id, stageTagName, weight)
+
         return Result(true)
     }
 
@@ -141,22 +132,10 @@ class StageTagService @Autowired constructor(
     }
 
     /**
-     * 根据阶段标签名称查询数据库记录数
+     * 根据阶段标签名称和权重查询重复数据库记录数
      */
-    private fun getCountByName(stageTagName: String): Int {
-        val recordList = pipelineStageTagDao.countByName(dslContext, stageTagName)
-        var result = 0
-        if (recordList != null) {
-            result = recordList.get(0) as Int
-        }
-        return result
-    }
-
-    /**
-     *  判断是否存在默认阶段标签
-     */
-    private fun getDefaultCount(): Int {
-        val recordList = pipelineStageTagDao.countDefaultTag(dslContext)
+    private fun getCountByNameOrWeight(stageTagName: String, weight: Int): Int {
+        val recordList = pipelineStageTagDao.countByNameOrWeight(dslContext, stageTagName, weight)
         var result = 0
         if (recordList != null) {
             result = recordList.get(0) as Int
