@@ -84,16 +84,34 @@ class PipelineTaskService @Autowired constructor(
         val count = pipelineModelTaskDao.getPipelineCountByAtomCode(dslContext, atomCode, projectCode).toLong()
         val pipelines = pipelineModelTaskDao.listByAtomCode(dslContext, atomCode, projectCode, pageNotNull, pageSizeNotNull)
 
-        val records = mutableListOf<PipelineProjectRel>()
-        pipelines?.forEach {
-            val taskParamsStr = it["taskParams"] as? String
-            val taskParams = if (!taskParamsStr.isNullOrBlank()) JsonUtil.getObjectMapper().readValue(taskParamsStr, Map::class.java) as Map<String, Any> else mapOf()
-            records.add(PipelineProjectRel(
-                pipelineId = it["pipelineId"] as String,
-                pipelineName = it["pipelineName"] as String,
-                projectCode = it["projectCode"] as String,
-                atomVersion = taskParams["version"].toString()
-            ))
+        val pipelineAtomVersionInfo = mutableMapOf<String, MutableList<String>>()
+        val pipelineIds = pipelines?.map { it["pipelineId"] as String }
+        if (pipelineIds != null && pipelineIds.isNotEmpty()) {
+            val pipelineAtoms = pipelineModelTaskDao.listByAtomCodeAndPipelineIds(dslContext, atomCode, pipelineIds)
+            pipelineAtoms?.forEach {
+                val pipelineId = it["pipelineId"] as String
+                val taskParamsStr = it["taskParams"] as? String
+                val taskParams = if (!taskParamsStr.isNullOrBlank()) JsonUtil.getObjectMapper().readValue(taskParamsStr, Map::class.java) as Map<String, Any> else mapOf()
+                if (pipelineAtomVersionInfo.containsKey(pipelineId)) {
+                    pipelineAtomVersionInfo[pipelineId]!!.add(taskParams["version"].toString())
+                } else {
+                    pipelineAtomVersionInfo[pipelineId] = mutableListOf(taskParams["version"].toString())
+                }
+            }
+        }
+
+        val records = if (pipelines == null) {
+            listOf<PipelineProjectRel>()
+        } else {
+            pipelines.map {
+                val pipelineId = it["pipelineId"] as String
+                PipelineProjectRel(
+                    pipelineId = pipelineId,
+                    pipelineName = it["pipelineName"] as String,
+                    projectCode = it["projectCode"] as String,
+                    atomVersion = pipelineAtomVersionInfo.getOrDefault(pipelineId, mutableListOf<String>()).joinToString(",")
+                )
+            }
         }
 
         return Page(pageNotNull, pageSizeNotNull, count, records)
