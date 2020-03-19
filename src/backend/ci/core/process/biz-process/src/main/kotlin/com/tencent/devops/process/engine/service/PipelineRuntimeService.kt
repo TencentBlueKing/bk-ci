@@ -28,6 +28,7 @@ package com.tencent.devops.process.engine.service
 
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.artifactory.pojo.FileInfo
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
@@ -59,6 +60,7 @@ import com.tencent.devops.common.pipeline.utils.ModelUtils
 import com.tencent.devops.common.pipeline.utils.SkipElementUtils
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.websocket.dispatch.WebSocketDispatcher
 import com.tencent.devops.model.process.tables.records.TPipelineBuildContainerRecord
 import com.tencent.devops.model.process.tables.records.TPipelineBuildHistoryRecord
@@ -96,8 +98,6 @@ import com.tencent.devops.process.engine.pojo.event.PipelineBuildMonitorEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildStartEvent
 import com.tencent.devops.process.pojo.BuildBasicInfo
 import com.tencent.devops.process.pojo.BuildHistory
-import com.tencent.devops.common.api.pojo.ErrorType
-import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.process.pojo.PipelineBuildMaterial
 import com.tencent.devops.process.pojo.ReviewParam
 import com.tencent.devops.process.pojo.VmInfo
@@ -110,12 +110,6 @@ import com.tencent.devops.process.utils.MAJORVERSION
 import com.tencent.devops.process.utils.MINORVERSION
 import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
 import com.tencent.devops.process.utils.PIPELINE_BUILD_REMARK
-import com.tencent.devops.process.utils.PIPELINE_MATERIAL_ALIASNAME
-import com.tencent.devops.process.utils.PIPELINE_MATERIAL_BRANCHNAME
-import com.tencent.devops.process.utils.PIPELINE_MATERIAL_NEW_COMMIT_COMMENT
-import com.tencent.devops.process.utils.PIPELINE_MATERIAL_NEW_COMMIT_ID
-import com.tencent.devops.process.utils.PIPELINE_MATERIAL_NEW_COMMIT_TIMES
-import com.tencent.devops.process.utils.PIPELINE_MATERIAL_URL
 import com.tencent.devops.process.utils.PIPELINE_RETRY_BUILD_ID
 import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
 import com.tencent.devops.process.utils.PIPELINE_RETRY_START_TASK_ID
@@ -129,7 +123,6 @@ import com.tencent.devops.process.utils.PIPELINE_START_USER_NAME
 import com.tencent.devops.process.utils.PIPELINE_VERSION
 import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_TYPE
 import com.tencent.devops.process.utils.PipelineVarUtil
-import org.apache.commons.lang3.math.NumberUtils
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.jooq.Result
@@ -1576,14 +1569,6 @@ class PipelineRuntimeService @Autowired constructor(
             pipelineBuildSummaryDao.finishLatestRunningBuild(dslContext, latestRunningBuild)
         }
         with(latestRunningBuild) {
-            val materials: List<PipelineBuildMaterial> = try {
-                getPipelineBuildMaterial(buildId)
-            } catch (e: Throwable) {
-                logger.error("[$pipelineId]|getPipelineBuildMaterial-$buildId exception:", e)
-                mutableListOf()
-            }
-            logger.info("[$pipelineId]|getPipelineBuildMaterial-$buildId material: ${JsonUtil.toJson(materials)}")
-
             val executeTime = try {
                 getExecuteTime(pipelineId, buildId)
             } catch (e: Throwable) {
@@ -1612,7 +1597,6 @@ class PipelineRuntimeService @Autowired constructor(
                 dslContext = dslContext,
                 buildId = buildId,
                 buildStatus = if (BuildStatus.isFinish(status)) status else BuildStatus.FAILED,
-                material = JsonUtil.toJson(materials),
                 executeTime = executeTime,
                 buildParameters = JsonUtil.toJson(buildParameters),
                 recommendVersion = recommendVersion,
@@ -1690,29 +1674,6 @@ class PipelineRuntimeService @Autowired constructor(
             executeTime += it.totalTime ?: 0
         }
         return executeTime
-    }
-
-    fun getPipelineBuildMaterial(buildId: String): List<PipelineBuildMaterial> {
-        val vars = pipelineBuildVarDao.getVars(dslContext, buildId)
-        val materialList = mutableListOf<PipelineBuildMaterial>()
-        vars.forEach {
-            if (it.key.contains(PIPELINE_MATERIAL_URL)) {
-                val repoId = it.key.substringAfter(PIPELINE_MATERIAL_URL)
-                val commitTimes = vars["$PIPELINE_MATERIAL_NEW_COMMIT_TIMES$repoId"] ?: "0"
-                materialList.add(
-                    PipelineBuildMaterial(
-                        url = it.value,
-                        aliasName = vars["$PIPELINE_MATERIAL_ALIASNAME$repoId"] ?: "",
-                        branchName = vars["$PIPELINE_MATERIAL_BRANCHNAME$repoId"] ?: "",
-                        newCommitId = vars["$PIPELINE_MATERIAL_NEW_COMMIT_ID$repoId"] ?: "",
-                        newCommitComment = vars["$PIPELINE_MATERIAL_NEW_COMMIT_COMMENT$repoId"] ?: "",
-                        commitTimes = if (NumberUtils.isDigits(commitTimes)) commitTimes.toInt() else 0
-                    )
-                )
-            }
-        }
-
-        return materialList
     }
 
     @Deprecated(message = "replace by PipelineRuntimeExtService")
