@@ -16,7 +16,7 @@ data class FastPushFileRequest(
     @ApiModelProperty("目标机器操作用户")
     val account: String,
     @ApiModelProperty("超时时间")
-    val timeout: Long
+    val timeout: Long?
 ) {
     data class FileSource(
         val files: List<String>,

@@ -29,5 +29,5 @@ interface ServiceFilePushResource {
         userId: String,
         @ApiParam("pushInfo", required = true)
         pushInfo: PushFileDTO
-    ): Result<String?>
+    ): Result<Boolean?>
 }

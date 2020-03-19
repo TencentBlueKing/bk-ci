@@ -12,6 +12,7 @@ class FileResourceInfo (
     @ApiModelProperty("构件Id", required = true)
     val buildId: String,
     @ApiModelProperty("文件名", required = true)
-    val fileName: String
-
+    val fileName: String,
+    @ApiModelProperty("是否为流水线仓库", required = false)
+    val isCustom: Boolean? = false
 )

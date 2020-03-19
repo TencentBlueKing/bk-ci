@@ -12,5 +12,7 @@ class RemoteResourceInfo (
     @ApiModelProperty("获取目标机器类型", required = true)
     val pushType: PushTypeEnum,
     @ApiModelProperty("目标机信息,支持多个目标,以,分割", required = true)
-    val targetMessage: String
+    val targetMachine: String,
+    @ApiModelProperty("超时时间")
+    val timeout: Long?
 )
