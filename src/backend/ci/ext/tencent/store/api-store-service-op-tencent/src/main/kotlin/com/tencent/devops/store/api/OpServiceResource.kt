@@ -80,6 +80,24 @@ interface OpServiceResource {
         serviceId: String
     ): Result<ServiceVersionVO?>
 
+    @ApiOperation("根据Code获取扩展服务版本列表")
+    @GET
+    @Path("/serviceCodes/{serviceCode}/version/list")
+    fun listServiceByCode(
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("扩展服务Code", required = true)
+        @PathParam("serviceCode")
+        serviceCode: String,
+        @ApiParam("页码", required = false)
+        @QueryParam("page")
+        page: Int?,
+        @ApiParam("每页数量", required = false)
+        @QueryParam("pageSize")
+        pageSize: Int?
+    ): Result<ExtServiceInfoResp?>
+
     @ApiOperation("编辑扩展服务")
     @POST
     @Path("/serviceIds/{serviceId}/serviceCodes/{serviceCode}")

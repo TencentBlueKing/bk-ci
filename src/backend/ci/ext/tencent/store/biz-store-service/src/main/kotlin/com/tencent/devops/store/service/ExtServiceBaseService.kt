@@ -316,7 +316,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
                 serviceId = serviceRecord.id
                 val finalReleaseType = if (releaseType == ReleaseTypeEnum.CANCEL_RE_RELEASE) {
                     val serviceVersion = extServiceVersionLogDao.getVersionLogByServiceId(context, serviceId)
-                    serviceVersion.releaseType
+                    serviceVersion!!.releaseType
                 } else {
                     releaseType.releaseType.toByte()
                 }
@@ -896,8 +896,8 @@ abstract class ExtServiceBaseService @Autowired constructor() {
                     extensionItemList = itemList,
                     mediaList = mediaList,
                     extensionItemName = extensionName,
-                    content = serviceVersion.content,
-                    releaseType = ReleaseTypeEnum.getReleaseType(serviceVersion.releaseType.toInt())
+                    content = serviceVersion?.content ?: "",
+                    releaseType = ReleaseTypeEnum.getReleaseType(serviceVersion?.releaseType?.toInt()?: ReleaseTypeEnum.NEW.releaseType)
                 )
             )
         }

@@ -123,7 +123,11 @@ class ServiceItemService @Autowired constructor(
             itemId = record.id,
             itemCode = record.itemCode,
             itemName = record.itemName,
-            parentId = record.parentId
+            parentId = record.parentId,
+            itemStatus = record.itemStatus,
+            icon = record.iconUrl,
+            htmlType = record.htmlComponentType,
+            htmlPath = record.htmlPath
         )
     }
 
@@ -237,7 +241,8 @@ class ServiceItemService @Autowired constructor(
                 serviceCount = it.serviceNum,
                 htmlType = it.htmlComponentType,
                 htmlPath = it.htmlPath,
-                parentId = it.parentId
+                parentId = it.parentId,
+                itemStatus = it.itemStatus
             )
             val parentName = findParent(serviceItemInfo).extServiceItem.name.substringBefore("(")
             serviceItemInfo.parentName = parentName
@@ -256,6 +261,11 @@ class ServiceItemService @Autowired constructor(
             logger.warn("createItem itemCode is exsit, itemCode[$itemCode]")
             throw RuntimeException("扩展点已存在")
         }
+        val itemRecordByName = serviceItemDao.getItemByName(dslContext, itemInfo.itemName)
+        if(itemRecordByName != null) {
+            logger.warn("createItem itemName is exsit, itemName[$itemInfo.itemName]")
+            throw RuntimeException("扩展点名称已存在")
+        }
         val createInfo = ItemCreateInfo(
             itemCode = itemInfo.itemCode,
             itemName = itemInfo.itemName,
@@ -272,6 +282,11 @@ class ServiceItemService @Autowired constructor(
     }
 
     fun updateItem(userId: String, itemId: String, itemInfo: ItemInfoResponse): Result<Boolean> {
+        val itemRecordByName = serviceItemDao.getItemByName(dslContext, itemInfo.itemName)
+        if(itemRecordByName != null) {
+            logger.warn("createItem itemName is exsit, itemName[$itemInfo.itemName]")
+            throw RuntimeException("扩展点名称已存在")
+        }
         val updateInfo = ItemUpdateInfo(
             itemName = itemInfo.itemName,
             htmlPath = itemInfo.htmlPath,
@@ -297,7 +312,8 @@ class ServiceItemService @Autowired constructor(
             parentId = itemRecord.parentId,
             props = itemRecord.props ?: "",
             icon = itemRecord.iconUrl,
-            tooltip = itemRecord.tooltip
+            tooltip = itemRecord.tooltip,
+            itemStatus = itemRecord.itemStatus
         )
         itemInfo.parentName = findParent(itemInfo).extServiceItem.name
         return Result(itemInfo)

@@ -109,6 +109,35 @@ class OpExtServiceService @Autowired constructor(
         return Result(ExtServiceInfoResp(count, page, pageSize, extensionServiceInfoList))
     }
 
+    fun listServiceByCode(
+        serviceCode: String,
+        page: Int?,
+        pageSize: Int?
+    ): Result<ExtServiceInfoResp?> {
+        val serviceRecord = extServiceDao.getServiceByCode(dslContext, serviceCode, page, pageSize)
+        val count = extServiceDao.countByCode(dslContext, serviceCode)
+        val extensionServiceInfoList = mutableSetOf<ExtensionServiceVO>()
+        serviceRecord?.forEach {
+            val serviceId = it["itemId"] as String
+
+            extensionServiceInfoList.add(
+                ExtensionServiceVO(
+                    serviceId = serviceId,
+                    serviceCode = it["serviceCode"] as String,
+                    serviceName = it["serviceName"] as String,
+                    serviceStatus = (it["serviceStatus"] as Byte).toInt(),
+                    publisher = it["publisher"] as String,
+                    projectCode = it["projectCode"] as String,
+                    modifierTime = (it["updateTime"] as LocalDateTime).timestamp().toString(),
+                    version = it["version"] as String
+                )
+            )
+        }
+
+        return Result(ExtServiceInfoResp(count, page, pageSize, extensionServiceInfoList))
+
+    }
+
     fun editExtInfo(userId: String, serviceId: String, serviceCode: String, infoResp: OpEditInfoDTO): Result<Boolean> {
         val baseInfo = infoResp.baseInfo
         val settingInfo = infoResp.settingInfo
@@ -283,7 +312,9 @@ class OpExtServiceService @Autowired constructor(
 
     fun deleteService(userId: String, serviceId: String): Result<Boolean> {
         logger.info("deleteService userId: $userId , serviceId: $serviceId")
-        val serviceRecord = extServiceDao.getServiceById(dslContext, serviceId) ?: throw RuntimeException(MessageCodeUtil.getCodeMessage(CommonMessageCode.PARAMETER_IS_INVALID,arrayOf(serviceId)))
+        val serviceRecord = extServiceDao.getServiceById(dslContext, serviceId) ?: throw RuntimeException(
+            MessageCodeUtil.getCodeMessage(CommonMessageCode.PARAMETER_IS_INVALID, arrayOf(serviceId))
+        )
         val serviceCode = serviceRecord.serviceCode
         val type = StoreTypeEnum.SERVICE.type.toByte()
         val isOwner = storeMemberService.isStoreAdmin(userId, serviceCode, StoreTypeEnum.SERVICE.type.toByte())

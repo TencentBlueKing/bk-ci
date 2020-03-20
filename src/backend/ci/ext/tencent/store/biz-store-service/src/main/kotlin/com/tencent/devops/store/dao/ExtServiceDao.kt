@@ -21,6 +21,8 @@ import com.tencent.devops.store.pojo.enums.ExtServiceStatusEnum
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
+import org.jooq.Record1
+import org.jooq.Record9
 import org.jooq.Result
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
@@ -177,7 +179,11 @@ class ExtServiceDao {
 
     fun countReleaseServiceByCode(dslContext: DSLContext, serviceCode: String): Int {
         with(TExtensionService.T_EXTENSION_SERVICE) {
-            return dslContext.selectCount().from(this).where(SERVICE_CODE.eq(serviceCode).and(DELETE_FLAG.eq(false)).and(SERVICE_STATUS.eq(ExtServiceStatusEnum.RELEASED.status.toByte()))).fetchOne(0, Int::class.java)
+            return dslContext.selectCount().from(this).where(
+                SERVICE_CODE.eq(serviceCode).and(DELETE_FLAG.eq(false)).and(
+                    SERVICE_STATUS.eq(ExtServiceStatusEnum.RELEASED.status.toByte())
+                )
+            ).fetchOne(0, Int::class.java)
         }
     }
 
@@ -236,9 +242,51 @@ class ExtServiceDao {
         }
     }
 
+    fun getServiceByCode(
+        dslContext: DSLContext,
+        serviceCode: String,
+        page: Int?,
+        pageSize: Int?
+    ): Result<Record>? {
+        val a = TExtensionService.T_EXTENSION_SERVICE.`as`("a")
+        val b = TStoreProjectRel.T_STORE_PROJECT_REL.`as`("b")
+        val conditions = mutableListOf<Condition>()
+        conditions.add(a.SERVICE_CODE.eq(serviceCode))
+        conditions.add(a.DELETE_FLAG.eq(false))
+        conditions.add(b.STORE_TYPE.eq(StoreTypeEnum.SERVICE.type.toByte()))
+        val whereStep = dslContext.select(
+            a.ID.`as`("itemId"),
+            a.SERVICE_STATUS.`as`("serviceStatus"),
+            a.SERVICE_NAME.`as`("serviceName"),
+            a.SERVICE_CODE.countDistinct().`as`("serviceCode"),
+            a.VERSION.`as`("version"),
+            a.PUB_TIME.`as`("pubTime"),
+            a.PUBLISHER.`as`("publisher"),
+            a.UPDATE_TIME.`as`("updateTime"),
+            b.PROJECT_CODE.`as`("projectCode")
+        )
+            .from(a)
+            .leftJoin(b)
+            .on(a.SERVICE_CODE.eq(b.STORE_CODE))
+            .where(conditions)
+        return if (null != page && null != pageSize) {
+            whereStep.limit((page - 1) * pageSize, pageSize).fetch()
+        } else {
+            whereStep.fetch()
+        }
+    }
+
+    fun countByCode(dslContext: DSLContext, serviceCode: String): Int {
+        return with(TExtensionService.T_EXTENSION_SERVICE) {
+            dslContext.selectCount().where(DELETE_FLAG.eq(false)).and(SERVICE_CODE.eq(serviceCode))
+                .fetchOne(0, Int::class.java)
+        }
+    }
+
     fun getServiceLatestByCode(dslContext: DSLContext, serviceCode: String): TExtensionServiceRecord? {
         return with(TExtensionService.T_EXTENSION_SERVICE) {
-            dslContext.selectFrom(this).where(DELETE_FLAG.eq(false)).and(SERVICE_CODE.eq(serviceCode)).and(LATEST_FLAG.eq(true)).fetchOne()
+            dslContext.selectFrom(this).where(DELETE_FLAG.eq(false)).and(SERVICE_CODE.eq(serviceCode))
+                .and(LATEST_FLAG.eq(true)).fetchOne()
         }
     }
 
@@ -371,7 +419,13 @@ class ExtServiceDao {
     /**
      * 设置原子状态（单个版本）
      */
-    fun setServiceStatusById(dslContext: DSLContext, serviceId: String, serviceStatus: Byte, userId: String, msg: String?) {
+    fun setServiceStatusById(
+        dslContext: DSLContext,
+        serviceId: String,
+        serviceStatus: Byte,
+        userId: String,
+        msg: String?
+    ) {
         with(TExtensionService.T_EXTENSION_SERVICE) {
             val baseStep = dslContext.update(this)
                 .set(SERVICE_STATUS, serviceStatus)
@@ -407,7 +461,7 @@ class ExtServiceDao {
             a.ID.`as`("itemId"),
             a.SERVICE_STATUS.`as`("serviceStatus"),
             a.SERVICE_NAME.`as`("serviceName"),
-            a.SERVICE_CODE.`as`("serviceCode"),
+            a.SERVICE_CODE.countDistinct().`as`("serviceCode"),
             a.VERSION.`as`("version"),
             a.PUB_TIME.`as`("pubTime"),
             a.PUBLISHER.`as`("publisher"),
@@ -478,6 +532,7 @@ class ExtServiceDao {
         conditions.add(d.TYPE.eq(StoreProjectTypeEnum.INIT.type.toByte()))
         conditions.add(d.STORE_TYPE.eq(StoreTypeEnum.SERVICE.type.toByte()))
         conditions.add(a.DELETE_FLAG.eq(false))
+        conditions.add(a.LATEST_FLAG.eq(true))
         if (null != serviceName) {
             conditions.add(a.SERVICE_NAME.like("%$serviceName%"))
         }
@@ -561,7 +616,9 @@ class ExtServiceDao {
         if (null != sortType) {
             if (sortType == ExtServiceSortTypeEnum.DOWNLOAD_COUNT && score == null) {
                 val tas = TStoreStatisticsTotal.T_STORE_STATISTICS_TOTAL.`as`("tas")
-                val t = dslContext.select(tas.STORE_CODE, tas.DOWNLOADS.`as`(ExtServiceSortTypeEnum.DOWNLOAD_COUNT.name)).from(tas).where(tas.STORE_TYPE.eq(storeType)).asTable("t")
+                val t =
+                    dslContext.select(tas.STORE_CODE, tas.DOWNLOADS.`as`(ExtServiceSortTypeEnum.DOWNLOAD_COUNT.name))
+                        .from(tas).where(tas.STORE_TYPE.eq(storeType)).asTable("t")
                 baseStep.leftJoin(t).on(ta.SERVICE_CODE.eq(t.field("STORE_CODE", String::class.java)))
             }
 
@@ -595,6 +652,7 @@ class ExtServiceDao {
         conditions.add(a.LATEST_FLAG.eq(true)) // 最新版本
         return conditions
     }
+
     private fun generateGetMemberConditions(
         a: TExtensionService,
         userId: String,

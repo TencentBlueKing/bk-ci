@@ -58,7 +58,7 @@ class ExtServiceNotifyService {
             "name" to serviceName,
             "version" to serviceRecord.version
         )
-        val releaseType = serviceVersionLogRecord.releaseType
+        val releaseType = serviceVersionLogRecord!!.releaseType
         val bodyParams = mapOf(
             "name" to serviceName,
             "version" to serviceRecord.version,

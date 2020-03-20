@@ -23,5 +23,7 @@ data class ServiceItem(
     @ApiModelProperty("icon路径")
     val icon: String? = "",
     @ApiModelProperty("props参数")
-    val props: String = ""
+    val props: String = "",
+    @ApiModelProperty("扩展点状态")
+    val itemStatus: String? = "ENABLE"
 )

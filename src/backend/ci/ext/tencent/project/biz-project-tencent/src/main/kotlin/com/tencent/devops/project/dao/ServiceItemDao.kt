@@ -182,6 +182,14 @@ class ServiceItemDao {
         }
     }
 
+    fun getItemByName(dslContext: DSLContext, itemName: String): TServiceItemRecord? {
+        return with(TServiceItem.T_SERVICE_ITEM) {
+            dslContext.selectFrom(this).where(
+                ITEM_NAME.eq(itemName).and(ITEM_STATUS.eq(ServiceItemStatusEnum.ENABLE.name))
+            ).fetchOne()
+        }
+    }
+
     fun getItemParent(dslContext: DSLContext): Result<TServiceItemRecord?> {
         return with(TServiceItem.T_SERVICE_ITEM) {
             dslContext.selectFrom(this).where(
