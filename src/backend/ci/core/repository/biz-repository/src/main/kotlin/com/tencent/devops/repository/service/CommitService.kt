@@ -35,6 +35,7 @@ import com.tencent.devops.repository.pojo.commit.CommitData
 import com.tencent.devops.repository.pojo.commit.CommitResponse
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -44,6 +45,10 @@ class CommitService @Autowired constructor(
     private val commitDao: CommitDao,
     private val dslContext: DSLContext
 ) {
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(CommitService::class.java)
+    }
 
     fun getCommit(buildId: String): List<CommitResponse> {
         val commits = commitDao.getBuildCommit(dslContext, buildId)
@@ -80,6 +85,7 @@ class CommitService @Autowired constructor(
     }
 
     fun addCommit(commits: List<CommitData>): Int {
+        logger.info("start to add commit: ${commits.firstOrNull()} ... ${commits.lastOrNull()}")
         return commitDao.addCommit(dslContext, commits).size
     }
 
