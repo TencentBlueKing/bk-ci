@@ -194,19 +194,21 @@ class DockerHostClient @Autowired constructor(
         if (gray == "grayproject") {
             grayEnv = true
         }
-        val dockerIpList = pipelineDockerIpInfoDao.getEnableDockerIpList(dslContext, grayEnv)
         var dockerIp = ""
-        var usedNum = 100
-        run outside@{
-            dockerIpList.forEach {
-                if (!unAvailableIpList.contains(it.dockerIp)) {
-                    val itIdcIp = it.dockerIp as String
-                    val itUsedNum = it.usedNum as Int
-                    if (usedNum > itUsedNum) {
-                        usedNum = itUsedNum
-                        dockerIp = itIdcIp
-                        return@outside
-                    }
+        // 先取容量负载比较小的，同时满足磁盘空间使用率小于60%并且内存CPU使用率均低于80%，从满足的节点中选择磁盘空间使用率最小的
+        val firstDockerIpList = pipelineDockerIpInfoDao.getEnableDockerIpList(dslContext, grayEnv, 80, 80, 60)
+        if (firstDockerIpList.isNotEmpty) {
+            dockerIp = firstDockerIpList[0].dockerIp
+        } else {
+            // 没有满足1的，优先选择磁盘空间，内存使用率均低于80%的
+            val secondDockerIpList = pipelineDockerIpInfoDao.getEnableDockerIpList(dslContext, grayEnv, 80, 80, 80)
+            if (secondDockerIpList.isNotEmpty) {
+                dockerIp = secondDockerIpList[0].dockerIp
+            } else {
+                // 通过2依旧没有找到满足的构建机，选择内存使用率小于80%的
+                val thirdDockerIpList = pipelineDockerIpInfoDao.getEnableDockerIpList(dslContext, grayEnv, 90, 80, 100)
+                if (thirdDockerIpList.isNotEmpty) {
+                    dockerIp = thirdDockerIpList[0].dockerIp
                 }
             }
         }
