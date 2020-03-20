@@ -60,6 +60,16 @@ class PipelineExtendConfiguration {
     }
 
     /**
+     * 插件结束后续广播exchange
+     */
+    @Bean
+    fun pipelineBuildElementFinishFanoutExchange(): FanoutExchange {
+        val fanoutExchange = FanoutExchange(MQ.EXCHANGE_PIPELINE_BUILD_ELEMENT_FINISH_FANOUT, true, false)
+        fanoutExchange.isDelayed = true
+        return fanoutExchange
+    }
+
+    /**
      * 构建构建回调广播交换机
      */
     @Bean
