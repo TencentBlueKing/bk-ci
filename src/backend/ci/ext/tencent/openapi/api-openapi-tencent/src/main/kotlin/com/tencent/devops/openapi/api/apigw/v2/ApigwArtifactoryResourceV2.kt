@@ -24,7 +24,7 @@ import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["OPEN_API_V2_ARTIFACTORY"], description = "OPEN-API-V2-ARTIFACTORY")
-@Path("/{apigwType:apigw-user|apigw-app|apigw}/v2/artifactory")
+@Path("/{apigwType:apigw-user|apigw-app|apigw}/v2/artifactories")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ApigwArtifactoryResourceV2 {
