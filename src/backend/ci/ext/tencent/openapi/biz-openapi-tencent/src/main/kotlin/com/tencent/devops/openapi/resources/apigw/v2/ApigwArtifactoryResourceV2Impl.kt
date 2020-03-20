@@ -11,25 +11,42 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.v2.ApigwArtifactoryResourceV2
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ApigwArtifactoryResourceV2Impl @Autowired constructor(
     private val client: Client
 ) : ApigwArtifactoryResourceV2 {
+    companion object {
+        private val logger = LoggerFactory.getLogger(ApigwArtifactoryResourceV2Impl::class.java)
+    }
+
     override fun getThirdPartyDownloadUrl(
         appCode: String?,
         apigwType: String?,
+        userId: String,
         projectId: String,
-        pipelineId: String,
-        buildId: String,
         artifactoryType: ArtifactoryType,
         path: String,
-        ttl: Int?,
-        crossProjectId: String?,
-        crossPipineId: String?,
-        crossBuildNo: String?
+        ttl: Int?
     ): Result<List<String>> {
+        var pipelineId = ""
+        var buildId = ""
+        if (artifactoryType == ArtifactoryType.PIPELINE) {
+            val pathList = path.split("/")
+            logger.info("getThirdPartyDownloadUrl pathList:$pathList")
+            if (pathList[0].isBlank()) {
+                pipelineId = pathList[1]
+                buildId = pathList[2]
+            } else {
+                pipelineId = pathList[0]
+                buildId = pathList[1]
+            }
+        }
+
+        logger.info("getThirdPartyDownloadUrl pipelineId:$pipelineId")
+        logger.info("getThirdPartyDownloadUrl buildId:$buildId")
         return client.get(ServiceArtifactoryDownLoadResource::class).getThirdPartyDownloadUrl(
             projectId = projectId,
             pipelineId = pipelineId,
@@ -37,9 +54,9 @@ class ApigwArtifactoryResourceV2Impl @Autowired constructor(
             artifactoryType = artifactoryType,
             path = path,
             ttl = ttl,
-            crossPipineId = crossPipineId,
-            crossProjectId = crossProjectId,
-            crossBuildNo = crossBuildNo
+            crossPipineId = null,
+            crossProjectId = null,
+            crossBuildNo = null
         )
     }
 

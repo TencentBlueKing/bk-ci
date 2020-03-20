@@ -5,11 +5,8 @@ import com.tencent.devops.artifactory.pojo.FileInfoPage
 import com.tencent.devops.artifactory.pojo.SearchProps
 import com.tencent.devops.artifactory.pojo.Url
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
-import com.tencent.devops.common.api.auth.AUTH_HEADER_BUILD_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE
-import com.tencent.devops.common.api.auth.AUTH_HEADER_PIPELINE_ID
-import com.tencent.devops.common.api.auth.AUTH_HEADER_PROJECT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
@@ -32,7 +29,7 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface ApigwArtifactoryResourceV2 {
     @ApiOperation("获取文件第三方下载链接")
-    @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/thirdPartyDownloadUrl")
+    @Path("/projects/{projectId}/thirdPartyDownloadUrl")
     @GET
     fun getThirdPartyDownloadUrl(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
@@ -41,15 +38,12 @@ interface ApigwArtifactoryResourceV2 {
         @ApiParam(value = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
+        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
         @ApiParam("项目ID", required = true)
-        @HeaderParam(AUTH_HEADER_PROJECT_ID)
+        @PathParam("projectId")
         projectId: String,
-        @ApiParam("流水线ID", required = true)
-        @HeaderParam(AUTH_HEADER_PIPELINE_ID)
-        pipelineId: String,
-        @ApiParam("构建ID", required = true)
-        @HeaderParam(AUTH_HEADER_BUILD_ID)
-        buildId: String,
         @ApiParam("版本仓库类型", required = true)
         @QueryParam("artifactoryType")
         artifactoryType: ArtifactoryType,
@@ -58,16 +52,7 @@ interface ApigwArtifactoryResourceV2 {
         path: String,
         @ApiParam("有效时间(s)", required = true)
         @QueryParam("ttl")
-        ttl: Int?,
-        @ApiParam("项目ID", required = false)
-        @QueryParam("projectId")
-        crossProjectId: String?,
-        @ApiParam("流水线ID", required = false)
-        @QueryParam("pipelineId")
-        crossPipineId: String?,
-        @ApiParam("构建No", required = false)
-        @QueryParam("buildNo")
-        crossBuildNo: String?
+        ttl: Int?
     ): Result<List<String>>
 
     @ApiOperation("获取用户下载链接")
