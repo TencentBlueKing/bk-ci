@@ -1008,36 +1008,6 @@ class PipelineBuildService(
         return Response.temporaryRedirect(uri).build()
     }
 
-    fun getBuildStatus(
-        userId: String,
-        projectId: String,
-        pipelineId: String,
-        buildId: String,
-        channelCode: ChannelCode,
-        checkPermission: Boolean
-    ): BuildHistory {
-        if (checkPermission) {
-            pipelinePermissionService.validPipelinePermission(
-                userId,
-                projectId,
-                pipelineId,
-                AuthPermission.VIEW,
-                "用户（$userId) 无权限获取流水线($pipelineId)构建状态"
-            )
-        }
-
-        val buildHistories = pipelineRuntimeService.getBuildHistoryByIds(setOf(buildId))
-
-        if (buildHistories.isEmpty()) {
-            throw ErrorCodeException(
-                statusCode = Response.Status.NOT_FOUND.statusCode,
-                errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
-                defaultMessage = "构建任务${buildId}不存在",
-                params = arrayOf(buildId))
-        }
-        return buildHistories[0]
-    }
-
     fun getBuildStatusWithVars(
         userId: String,
         projectId: String,
