@@ -1,5 +1,5 @@
 <template>
-    <bk-sideslider class="sodaci-property-panel" width="640" :is-show.sync="visible" :quick-close="true">
+    <bk-sideslider class="bkci-property-panel" width="640" :is-show.sync="visible" :quick-close="true">
         <header class="container-panel-header" slot="header">
             {{ title }}
             <div v-if="showDebugDockerBtn" :class="!editable ? 'control-bar' : 'debug-btn'">

@@ -24,17 +24,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo
+package com.tencent.devops.process.engine.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.common.pipeline.option.StageControlOption
 
-@ApiModel("流水线信息")
-data class PipelineProjectRel(
-    @ApiModelProperty("流水线ID", required = true)
-    val pipelineId: String,
-    @ApiModelProperty("流水线名称", required = true)
-    var pipelineName: String,
-    @ApiModelProperty("项目标识", required = true)
-    val projectCode: String
+/**
+ *
+ * @version 1.0
+ */
+data class PipelineBuildStageControlOption(
+    val stageControlOption: StageControlOption,
+    val fastKill: Boolean? = false
 )

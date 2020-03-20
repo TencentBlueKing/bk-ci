@@ -2,6 +2,7 @@
     "pipeline": "Pipeline",
     "pipelineName": "Name",
     "labelManage": "Labels",
+    "label": "Label",
     "viewManage": "Views",
     "templateManage": "Templates",
     "pluginManage": "Installed plugins",
@@ -76,6 +77,18 @@
     "loadingTips": "Data is Loading, Please wait",
     "metaData": "Meta Data",
     "download": "Download",
+    "enableStage": "Enable Stage",
+    "stageFastKill": "Enable FastKill",
+    "stageFastKillDesc": "Fast kill Stage when Job error",
+    "enableStageReview": "Enable Stage Review",
+    "stageReviewDesc": "30-day unreviewed automatically ends the pipeline and marks it as STAGE_SUCCESS",
+    "stageTimeoutLabel": "Stage Timeout",
+    "stageTimeoutError": "Stage timeout field error",
+    "stageTimeoutDesc": "All the integers between 1 and 720",
+    "stageUserTriggers": "Trigger Users",
+    "stageOptionLabel": "Run this Stage",
+    "stageTriggerDesc": "Multiple people separated by commas",
+    "skipStageDesc": "SKIPED",
     "timeMap": {
         "days": "days ",
         "hours": "h ",
@@ -339,6 +352,7 @@
         "stopFail": "cancel failed"
     },
     "history": {
+        "stageStatus": "Stage",
         "execHistory": "Builds",
         "trendData": "Artifacts size trending",
         "chooseDateRange": "Please select a date range",
@@ -425,6 +439,10 @@
         "noMetaData": "No meta data at the moment",
         "viewDetail": "Details",
         "artifactory": "Artifactory",
+        "checkDesc": "Review countdown",
+        "checkDescInfo": "The review function will end on {0}, and overdue will be automatically identified as Stage success status",
+        "abort": "Cancel (immediately mark Stage success status)",
+        "agree": "Continue execution",
         "statusMap": {
             "RUNNING": "Building",
             "PREPARE_ENV": "Preparing build-resource",
@@ -446,7 +464,8 @@
             "CALL_WAITING": "Call Waiting",
             "TRY_FINALLY": "Try Finally",
             "QUEUE_CACHE": "Queue cache",
-            "UNKNOWN": "Unknow"
+            "UNKNOWN": "Unknow",
+            "STAGE_SUCCESS": "STAGE_SUCCESS"
         },
         "toArtifactory": "locate",
         "saveToCustom": " Copy to custom artifactory",
@@ -513,6 +532,9 @@
         "prepareEnv": " Preparing build resource",
         "copyJob": "Duplicate job",
         "copyJobFail": "Duplicate job failed",
+        "copyStage": "Duplicate stage",
+        "copyStageFail": "Duplicate stage failed",
+        "stageManualTriggerUserNoEmptyTips": "Manual Trigger Stage User Field can not be empty",
         "triggerTooltips": " Click builds to trigger the configurable recommended version and pipeline variables",
         "userTime": "User time",
         "systemTime": "System time",
@@ -524,7 +546,8 @@
         "customVar": "Custom variables",
         "abortSuc": "Abort successfully",
         "agreeSuc": "Approval successfully",
-        "toCheck": "To Review",
+        "toCheck": "Review",
+        "noAuthToCheck": "No Access",
         "abortTips": "Review has not passed",
         "checkUser": "Reviewer",
         "aborted": "Aborted",
@@ -687,7 +710,8 @@
             "serviceId": "Service ID",
             "templateDownload": "Download",
             "otherChoice": "Other Choice"
-        }
+        },
+        "stageOption": "Advance"
     },
     "storeMap": {
         "string": "String",
@@ -737,6 +761,8 @@
         "mutualTimeoutPlaceholder": "Please fill in an integer between 1 and 10080 ",
         "queueLabel": " Maximum tasks in queues ",
         "queuePlaceholder": " Please fill in an integer between 1 and 10",
-        "noEnv": "Agentless" 
+        "noEnv": "Agentless",
+        "afterPreStageSuccess": "after Pre Stage done",
+        "manualRunStage": "Manual"
     }
 }

@@ -26,6 +26,7 @@
 
 package com.tencent.devops.common.pipeline.container
 
+import com.tencent.devops.common.pipeline.option.StageControlOption
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -33,6 +34,22 @@ import io.swagger.annotations.ApiModelProperty
 data class Stage(
     @ApiModelProperty("容器集合", required = true)
     val containers: List<Container> = listOf(),
-    @ApiModelProperty("Stage ID", required = false)
-    var id: String?
+    @ApiModelProperty("阶段ID", required = false)
+    var id: String?,
+    @ApiModelProperty("阶段名称", required = true)
+    var name: String? = "",
+    @ApiModelProperty("阶段标签", required = false, hidden = true)
+    var tag: List<String?>? = null,
+    @ApiModelProperty("阶段状态", required = false, hidden = true)
+    var status: String? = null,
+    @ApiModelProperty("阶段启动时间", required = false, hidden = true)
+    var startEpoch: Long? = null,
+    @ApiModelProperty("容器运行时间", required = false, hidden = true)
+    var elapsed: Long? = null,
+    @ApiModelProperty("用户自定义环境变量", required = false)
+    val customBuildEnv: Map<String, String>? = null,
+    @ApiModelProperty("是否启用容器失败快速终止阶段", required = false)
+    val fastKill: Boolean? = false,
+    @ApiModelProperty("流程控制选项", required = true)
+    var stageControlOption: StageControlOption? = null // 为了兼容旧数据，所以定义为可空以及var
 )

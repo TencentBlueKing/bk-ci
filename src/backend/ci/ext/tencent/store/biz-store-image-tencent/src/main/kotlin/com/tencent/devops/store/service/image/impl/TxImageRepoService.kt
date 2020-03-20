@@ -35,7 +35,6 @@ import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.image.api.ServiceImageResource
 import com.tencent.devops.image.pojo.DockerRepo
 import com.tencent.devops.store.dao.image.ImageDao
-import com.tencent.devops.store.pojo.common.LATEST
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -77,7 +76,7 @@ class TxImageRepoService @Autowired constructor(
                     )
                 }
                 imageCode = imageRecord.imageCode
-                val dockerRepoTags = dockerRepo.tags?.filter { it.tag != LATEST }
+                val dockerRepoTags = dockerRepo.tags
                 dockerRepoTags?.forEach {
                     val relFlag = imageDao.countReleaseImageByTag(
                         dslContext = dslContext,
@@ -92,8 +91,6 @@ class TxImageRepoService @Autowired constructor(
                     it.storeFlag
                 }
                 dockerRepo.tags = tags
-            } else {
-                dockerRepo.tags = dockerRepo.tags?.filter { it.tag != LATEST }
             }
         }
         logger.info("getRelImageInfo dockerRepo is:$dockerRepo")

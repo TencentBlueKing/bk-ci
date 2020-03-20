@@ -24,20 +24,16 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.pipeline.container
-
-import com.tencent.devops.common.pipeline.NameAndValue
-import com.tencent.devops.common.pipeline.enums.JobRunCondition
+package com.tencent.devops.common.pipeline.enums
 
 /**
- * Job流程控制
+ * 运行选项
  * @version 1.0
  */
-data class JobControlOption(
-    val enable: Boolean, // 是否启用Job
-    val prepareTimeout: Int? = 10, // Job准备环境的超时时间
-    val timeout: Int?, // Job执行的超时时间
-    val runCondition: JobRunCondition, // 运行条件
-    val customVariables: List<NameAndValue>? = null, // 自定义变量
-    val customCondition: String? = null // 自定义条件
-)
+enum class StageRunCondition {
+    AFTER_LAST_FINISHED,            // 上个阶段执行结束
+    CUSTOM_VARIABLE_MATCH,          // 自定义变量全部满足时运行
+    CUSTOM_VARIABLE_MATCH_NOT_RUN,  // 自定义变量全部满足时不运行
+    CUSTOM_CONDITION_MATCH          // 满足以下自定义条件时运行
+    ;
+}

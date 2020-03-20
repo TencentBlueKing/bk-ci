@@ -29,12 +29,10 @@ package com.tencent.devops.process.pojo
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("流水线信息")
-data class PipelineProjectRel(
-    @ApiModelProperty("流水线ID", required = true)
-    val pipelineId: String,
-    @ApiModelProperty("流水线名称", required = true)
-    var pipelineName: String,
-    @ApiModelProperty("项目标识", required = true)
-    val projectCode: String
+@ApiModel("流水线-阶段标签信息请求体")
+data class StageTagRequest(
+    @ApiModelProperty("阶段标签名称", required = true)
+    val stageTagName: String,
+    @ApiModelProperty("阶段标签权重", required = true)
+    val weight: Int
 )
