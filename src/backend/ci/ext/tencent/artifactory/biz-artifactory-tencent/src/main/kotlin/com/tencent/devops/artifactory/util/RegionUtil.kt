@@ -37,8 +37,8 @@ object RegionUtil {
 
     fun getRegionUrl(region: String?): String {
         return when (region) {
-            null, IDC, OSS -> idcHost()
-            DEVNET -> devHost()
+            null, DEVNET -> devHost()
+            IDC, OSS -> idcHost()
             else -> throw RuntimeException("region not supported")
         }
     }
