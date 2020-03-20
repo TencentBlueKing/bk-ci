@@ -24,26 +24,32 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.artifactory.service
+package com.tencent.devops.artifactory.util
 
-import com.tencent.devops.artifactory.pojo.DownloadUrl
-import com.tencent.devops.artifactory.pojo.Url
-import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
+import com.tencent.devops.common.service.config.CommonConfig
+import com.tencent.devops.common.service.utils.HomeHostUtil
+import com.tencent.devops.common.service.utils.SpringContextUtil
 
-interface RepoDownloadService {
-    fun getDownloadUrl(token: String): DownloadUrl
+object RegionUtil {
+    private const val IDC = "IDC"
+    private const val OSS = "OSS"
+    private const val DEVNET = "DEVNET"
 
-    fun serviceGetExternalDownloadUrl(userId: String, projectId: String, artifactoryType: ArtifactoryType, argPath: String, ttl: Int, directed: Boolean = false): Url
+    fun getRegionUrl(region: String?): String {
+        return when (region) {
+            null, IDC, OSS -> idcHost()
+            DEVNET -> devHost()
+            else -> throw RuntimeException("region not supported")
+        }
+    }
 
-    fun serviceGetInnerDownloadUrl(userId: String, projectId: String, artifactoryType: ArtifactoryType, argPath: String, ttl: Int, directed: Boolean = false): Url
+    private fun idcHost(): String {
+        val commonConfig = SpringContextUtil.getBean(CommonConfig::class.java)
+        return HomeHostUtil.getHost(commonConfig.devopsIdcGateway!!)
+    }
 
-    fun getDownloadUrl(userId: String, projectId: String, artifactoryType: ArtifactoryType, argPath: String): Url
-
-    fun getIoaUrl(userId: String, projectId: String, artifactoryType: ArtifactoryType, argPath: String): Url
-
-    fun getExternalUrl(userId: String, projectId: String, artifactoryType: ArtifactoryType, argPath: String): Url
-
-    fun shareUrl(userId: String, projectId: String, artifactoryType: ArtifactoryType, argPath: String, ttl: Int, downloadUsers: String)
-
-    fun getThirdPartyDownloadUrl(projectId: String, pipelineId: String, buildId: String, artifactoryType: ArtifactoryType, argPath: String, ttl: Int?, crossProjectId: String?, crossPipineId: String?, crossBuildNo: String?, region: String?): List<String>
+    private fun devHost(): String {
+        val commonConfig = SpringContextUtil.getBean(CommonConfig::class.java)
+        return HomeHostUtil.getHost(commonConfig.devopsDevnetProxyGateway!!)
+    }
 }

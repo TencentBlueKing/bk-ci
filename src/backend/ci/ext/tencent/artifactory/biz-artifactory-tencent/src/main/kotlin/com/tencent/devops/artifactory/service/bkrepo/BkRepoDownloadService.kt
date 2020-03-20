@@ -36,6 +36,7 @@ import com.tencent.devops.artifactory.service.pojo.FileShareInfo
 import com.tencent.devops.artifactory.util.EmailUtil
 import com.tencent.devops.artifactory.util.JFrogUtil
 import com.tencent.devops.artifactory.util.PathUtils
+import com.tencent.devops.artifactory.util.RegionUtil
 import com.tencent.devops.artifactory.util.RepoUtils
 import com.tencent.devops.artifactory.util.StringUtil
 import com.tencent.devops.common.api.exception.OperationException
@@ -221,7 +222,8 @@ class BkRepoDownloadService @Autowired constructor(
         ttl: Int?,
         crossProjectId: String?,
         crossPipineId: String?,
-        crossBuildNo: String?
+        crossBuildNo: String?,
+        region: String?
     ): List<String> {
         logger.info("getThirdPartyDownloadUrl, projectId: $projectId, pipelineId: $pipelineId, buildId: $buildId" +
             ", artifactoryType: $artifactoryType, argPath: $argPath, crossProjectId: $crossProjectId, ttl: $ttl" +
@@ -295,7 +297,7 @@ class BkRepoDownloadService @Autowired constructor(
                 downloadIps = listOf(),
                 timeoutInSeconds = (ttl ?: 24 * 3600).toLong()
             )
-            resultList.add("${HomeHostUtil.getHost(commonConfig.devopsDevnetProxyGateway!!)}/bkrepo/api/external/repository$shareUri")
+            resultList.add("${RegionUtil.getRegionUrl(region)}/bkrepo/api/external/repository$shareUri")
         }
         return resultList
     }

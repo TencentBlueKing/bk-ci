@@ -33,9 +33,9 @@ import com.tencent.devops.artifactory.pojo.FileInfo
 import com.tencent.devops.artifactory.pojo.FileInfoPage
 import com.tencent.devops.artifactory.pojo.Property
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
-import com.tencent.devops.artifactory.service.bkrepo.BkRepoDownloadService
 import com.tencent.devops.artifactory.service.artifactory.ArtifactoryDownloadService
 import com.tencent.devops.artifactory.service.artifactory.ArtifactoryService
+import com.tencent.devops.artifactory.service.bkrepo.BkRepoDownloadService
 import com.tencent.devops.artifactory.service.bkrepo.BkRepoService
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
@@ -154,7 +154,8 @@ class BuildArtifactoryResourceImpl @Autowired constructor(
         ttl: Int?,
         crossProjectId: String?,
         crossPipineId: String?,
-        crossBuildNo: String?
+        crossBuildNo: String?,
+        region: String?
     ): Result<List<String>> {
         checkParam(projectId, path)
         return if (repoGray.isGray(projectId, redisOperation)) {
@@ -168,7 +169,8 @@ class BuildArtifactoryResourceImpl @Autowired constructor(
                     ttl,
                     crossProjectId,
                     crossPipineId,
-                    crossBuildNo
+                    crossBuildNo,
+                    region
                 )
             )
         } else {
@@ -182,7 +184,8 @@ class BuildArtifactoryResourceImpl @Autowired constructor(
                     ttl,
                     crossProjectId,
                     crossPipineId,
-                    crossBuildNo
+                    crossBuildNo,
+                    region
                 )
             )
         }

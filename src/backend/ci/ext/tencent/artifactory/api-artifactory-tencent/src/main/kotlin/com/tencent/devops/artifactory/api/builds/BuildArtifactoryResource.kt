@@ -35,6 +35,7 @@ import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.common.api.auth.AUTH_HEADER_BUILD_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_PIPELINE_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_PROJECT_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_REGION
 import com.tencent.devops.common.api.pojo.Result
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -147,7 +148,10 @@ interface BuildArtifactoryResource {
         crossPipineId: String?,
         @ApiParam("构建No", required = false)
         @QueryParam("buildNo")
-        crossBuildNo: String?
+        crossBuildNo: String?,
+        @ApiParam("客户端区域", required = true)
+        @HeaderParam(AUTH_HEADER_REGION)
+        region: String?
     ): Result<List<String>>
 
     @ApiOperation("获取文件下载url")
