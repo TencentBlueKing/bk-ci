@@ -166,9 +166,8 @@ class GroupService @Autowired constructor(
         return GroupUsers(innerUsers, outerUsers)
     }
 
-    fun serviceGetUsers(groupHashIdList: List<String>): GroupUsers {
-        val groupIdList = groupHashIdList.map { HashUtil.decodeIdToLong(it) }
-        val result = groupDao.list(dslContext, groupIdList.toSet())
+    fun serviceGetUsers(groupIdList: Collection<Long>): GroupUsers {
+        val result = groupDao.list(dslContext, groupIdList)
         val innerUsersSet = mutableSetOf<String>()
         val outerUsersSet = mutableSetOf<String>()
 
