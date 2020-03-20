@@ -85,7 +85,7 @@
             <div>
                 <div style="margin: -20px;">
                     <div class="bk-dialog-tool">
-                        <i class="bk-dialog-close devops-icon icon-close" @click="hideImageDialog"></i>
+                        <i class="bk-dialog-close bk-icon icon-close" @click="hideImageDialog"></i>
                     </div>
                     <div class="dialog-title">
                         上传镜像
