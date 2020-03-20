@@ -6,6 +6,6 @@ import io.swagger.annotations.ApiModel
 @ApiModel("扩展服务-首页")
 data class ExtServiceMainItemVo(
     val key: String,
-    val service: String,
+    val lable: String,
     val records: List<ExtServiceItem?>
 )

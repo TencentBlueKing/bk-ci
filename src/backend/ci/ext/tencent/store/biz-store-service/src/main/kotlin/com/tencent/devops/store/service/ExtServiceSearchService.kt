@@ -119,7 +119,7 @@ class ExtServiceSearchService @Autowired constructor(
             result.add(
                 ExtServiceMainItemVo(
                     key = serviceInfo.key,
-                    service = serviceInfo.bkService,
+                    lable = serviceInfo.bkService,
                     records = futureList[index].records
                 )
             )
