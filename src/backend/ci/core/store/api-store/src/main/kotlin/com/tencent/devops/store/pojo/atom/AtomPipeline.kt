@@ -35,6 +35,8 @@ data class AtomPipeline(
     val pipelineId: String,
     @ApiModelProperty("流水线名称", required = true)
     var pipelineName: String,
+    @ApiModelProperty("流水线使用的插件版本")
+    var atomVersion: String,
     @ApiModelProperty("项目标识", required = true)
     val projectCode: String,
     @ApiModelProperty("所属项目")
