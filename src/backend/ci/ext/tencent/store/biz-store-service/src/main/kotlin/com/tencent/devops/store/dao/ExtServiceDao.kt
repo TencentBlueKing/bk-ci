@@ -459,7 +459,7 @@ class ExtServiceDao {
             a.ID.`as`("itemId"),
             a.SERVICE_STATUS.`as`("serviceStatus"),
             a.SERVICE_NAME.`as`("serviceName"),
-            a.SERVICE_CODE.countDistinct().`as`("serviceCode"),
+            a.SERVICE_CODE.`as`("serviceCode"),
             a.VERSION.`as`("version"),
             a.PUB_TIME.`as`("pubTime"),
             a.PUBLISHER.`as`("publisher"),
@@ -471,6 +471,7 @@ class ExtServiceDao {
         conditions.add(d.TYPE.eq(StoreProjectTypeEnum.INIT.type.toByte()))
         conditions.add(d.STORE_TYPE.eq(StoreTypeEnum.SERVICE.type.toByte()))
         conditions.add(a.DELETE_FLAG.eq(false))
+        conditions.add(a.LATEST_FLAG.eq(true))
         if (null != serviceName) {
             conditions.add(a.SERVICE_NAME.like("%$serviceName%"))
         }
@@ -531,6 +532,7 @@ class ExtServiceDao {
         conditions.add(d.STORE_TYPE.eq(StoreTypeEnum.SERVICE.type.toByte()))
         conditions.add(a.DELETE_FLAG.eq(false))
         conditions.add(a.LATEST_FLAG.eq(true))
+
         if (null != serviceName) {
             conditions.add(a.SERVICE_NAME.like("%$serviceName%"))
         }
