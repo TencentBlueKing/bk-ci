@@ -45,5 +45,17 @@ interface RepoDownloadService {
 
     fun shareUrl(userId: String, projectId: String, artifactoryType: ArtifactoryType, argPath: String, ttl: Int, downloadUsers: String)
 
-    fun getThirdPartyDownloadUrl(projectId: String, pipelineId: String, buildId: String, artifactoryType: ArtifactoryType, argPath: String, ttl: Int?, crossProjectId: String?, crossPipineId: String?, crossBuildNo: String?, region: String?): List<String>
+    fun getThirdPartyDownloadUrl(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        artifactoryType: ArtifactoryType,
+        argPath: String,
+        ttl: Int?,
+        crossProjectId: String?,
+        crossPipineId: String?,
+        crossBuildNo: String?,
+        region: String? = null,
+        userId: String? = null
+    ): List<String>
 }

@@ -256,7 +256,8 @@ class ArtifactoryDownloadService @Autowired constructor(
         crossProjectId: String?,
         crossPipineId: String?,
         crossBuildNo: String?,
-        region: String?
+        region: String?,
+        userId: String?
     ): List<String> {
         logger.info("getThirdPartyDownloadUrl, projectId: $projectId, pipelineId: $pipelineId, buildId: $buildId" +
             ", artifactoryType: $artifactoryType, argPath: $argPath, crossProjectId: $crossProjectId, ttl: $ttl" +
@@ -265,21 +266,20 @@ class ArtifactoryDownloadService @Autowired constructor(
         var targetPipelineId = pipelineId
         var targetBuildId = buildId
         if (!crossProjectId.isNullOrBlank()) {
-            val lastModifyUser = client.get(ServicePipelineResource::class)
-                .getPipelineInfo(projectId, pipelineId, null).data!!.lastModifyUser
+            val accessUserId = userId ?: client.get(ServicePipelineResource::class).getPipelineInfo(projectId, pipelineId, null).data!!.lastModifyUser
             targetProjectId = crossProjectId!!
             if (artifactoryType == ArtifactoryType.CUSTOM_DIR &&
-                !authProjectApi.getProjectUsers(artifactoryAuthServiceCode, targetProjectId).contains(lastModifyUser)) {
-                throw BadRequestException("用户（$lastModifyUser) 没有项目（$targetProjectId）下载权限)")
+                !authProjectApi.getProjectUsers(artifactoryAuthServiceCode, targetProjectId).contains(accessUserId)) {
+                throw BadRequestException("用户（$accessUserId) 没有项目（$targetProjectId）下载权限)")
             }
             if (artifactoryType == ArtifactoryType.PIPELINE) {
                 targetPipelineId = crossPipineId ?: throw BadRequestException("Invalid Parameter pipelineId")
                 pipelineService.validatePermission(
-                    lastModifyUser,
+                    accessUserId,
                     targetProjectId,
                     targetPipelineId,
                     AuthPermission.DOWNLOAD,
-                    "用户($lastModifyUser)在项目($crossProjectId)下没有流水线($crossPipineId)下载构建权限"
+                    "用户($accessUserId)在项目($crossProjectId)下没有流水线($crossPipineId)下载构建权限"
                 )
 
                 val targetBuild = client.get(ServiceBuildResource::class).getSingleHistoryBuild(
