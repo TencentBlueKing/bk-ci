@@ -52,7 +52,7 @@ data class ServiceVersionVO(
 //    @ApiModelProperty("扩展服务代码库不开源原因")
 //    val privateReason: String?,
     @ApiModelProperty("扩展服务类型：0：官方自研，1：第三方", required = true)
-    val serviceType: Int ?= ServiceTypeEnum.SELF_DEVELOPED.type,
+    val serviceType: Int ? = ServiceTypeEnum.SELF_DEVELOPED.type,
     @ApiModelProperty("是否推荐标识 true：推荐，false：不推荐")
     val recommendFlag: Boolean? = false,
     @ApiModelProperty("是否公共 true：推荐，false：不推荐")

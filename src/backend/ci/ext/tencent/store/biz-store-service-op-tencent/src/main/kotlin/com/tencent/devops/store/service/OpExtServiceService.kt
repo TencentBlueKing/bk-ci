@@ -135,7 +135,6 @@ class OpExtServiceService @Autowired constructor(
         }
 
         return Result(ExtServiceInfoResp(count, page, pageSize, extensionServiceInfoList))
-
     }
 
     fun editExtInfo(userId: String, serviceId: String, serviceCode: String, infoResp: OpEditInfoDTO): Result<Boolean> {

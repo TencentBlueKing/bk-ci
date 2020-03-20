@@ -21,8 +21,6 @@ import com.tencent.devops.store.pojo.enums.ExtServiceStatusEnum
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
-import org.jooq.Record1
-import org.jooq.Record9
 import org.jooq.Result
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
@@ -247,7 +245,7 @@ class ExtServiceDao {
         serviceCode: String,
         page: Int?,
         pageSize: Int?
-    ): Result<Record>? {
+    ): Result<out Record>? {
         val a = TExtensionService.T_EXTENSION_SERVICE.`as`("a")
         val b = TStoreProjectRel.T_STORE_PROJECT_REL.`as`("b")
         val conditions = mutableListOf<Condition>()

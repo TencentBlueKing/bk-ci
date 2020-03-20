@@ -73,7 +73,6 @@ class OpServiceResourceImpl @Autowired constructor(
         return opExtServiceService.listServiceByCode(serviceCode, page, pageSize)
     }
 
-
     override fun getExtsionServiceByCode(userId: String, serviceCode: String): Result<ServiceVersionVO?> {
         return extServiceBaseService.getServiceByCode(userId, serviceCode)
     }
