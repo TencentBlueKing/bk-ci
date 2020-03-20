@@ -29,6 +29,7 @@ package com.tencent.devops.dispatch.service.dispatcher.docker
 import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.dispatch.client.DockerHostClient
+import com.tencent.devops.dispatch.dao.PipelineDockerIPInfoDao
 import com.tencent.devops.dispatch.dao.PipelineDockerTaskSimpleDao
 import com.tencent.devops.dispatch.pojo.VolumeStatus
 import com.tencent.devops.dispatch.service.DockerHostBuildService
@@ -49,6 +50,7 @@ class DockerDispatcher @Autowired constructor(
     private val dockerHostBuildService: DockerHostBuildService,
     private val dockerHostClient: DockerHostClient,
     private val pipelineDockerTaskSimpleDao: PipelineDockerTaskSimpleDao,
+    private val pipelineDockerIpInfoDao: PipelineDockerIPInfoDao,
     private val dslContext: DSLContext,
     private val redisOperation: RedisOperation
     ) : Dispatcher {
@@ -72,9 +74,14 @@ class DockerDispatcher @Autowired constructor(
         )
 
         val taskHistory = pipelineDockerTaskSimpleDao.getByPipelineIdAndVMSeq(dslContext, pipelineAgentStartupEvent.pipelineId, pipelineAgentStartupEvent.vmSeqId)
-        val dockerIp: String
+        var dockerIp: String
         if (taskHistory != null) {
             dockerIp = taskHistory.dockerIp
+            // 查看当前IP负载情况，当前IP负载未超额（内存低于90%且硬盘低于90%），可直接下发，当负载超额，重新选择构建机
+            val ipInfo = pipelineDockerIpInfoDao.getDockerIpInfo(dslContext, dockerIp)
+            if (ipInfo.diskLoad > 90 || ipInfo.memLoad > 90) {
+                dockerIp = dockerHostClient.getAvailableDockerIp()
+            }
         } else {
             dockerIp = dockerHostClient.getAvailableDockerIp()
 
