@@ -19,6 +19,7 @@
 
 export const FETCH_ERROR = 'FETCH_ERROR'
 
+export const PROJECT_API_URL_PREFIX = 'project/api'
 export const BACKEND_API_URL_PREFIX = 'backend'
 export const PROCESS_API_URL_PREFIX = 'process/api'
 export const REPOSITORY_API_URL_PREFIX = 'repository/api'

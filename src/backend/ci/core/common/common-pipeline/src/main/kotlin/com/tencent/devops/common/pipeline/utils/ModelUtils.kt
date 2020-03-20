@@ -28,14 +28,14 @@ package com.tencent.devops.common.pipeline.utils
 
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Container
-import com.tencent.devops.common.pipeline.container.JobControlOption
+import com.tencent.devops.common.pipeline.option.JobControlOption
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.JobRunCondition
 import com.tencent.devops.common.pipeline.pojo.element.Element
-import com.tencent.devops.common.pipeline.pojo.element.RunCondition
+import com.tencent.devops.common.pipeline.pojo.element.TaskRunCondition
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.RemoteTriggerElement
 
@@ -128,8 +128,8 @@ object ModelUtils {
         if (additionalOptions != null) {
             if (additionalOptions.continueWhenFailed) {
                 e.canRetry = false
-            } else if (additionalOptions.runCondition == RunCondition.PRE_TASK_FAILED_BUT_CANCEL ||
-                additionalOptions.runCondition == RunCondition.PRE_TASK_FAILED_ONLY
+            } else if (additionalOptions.taskRunCondition == TaskRunCondition.PRE_TASK_FAILED_BUT_CANCEL ||
+                additionalOptions.taskRunCondition == TaskRunCondition.PRE_TASK_FAILED_ONLY
             ) {
                 // 前面有失败的插件时也要运行的插件，将前面的失败插件置为不可重试
                 e.canRetry = false

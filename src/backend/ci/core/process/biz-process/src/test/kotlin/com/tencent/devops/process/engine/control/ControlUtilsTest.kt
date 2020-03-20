@@ -30,7 +30,7 @@ import com.tencent.devops.common.pipeline.NameAndValue
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.JobRunCondition
 import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
-import com.tencent.devops.common.pipeline.pojo.element.RunCondition
+import com.tencent.devops.common.pipeline.pojo.element.TaskRunCondition
 import org.junit.Assert
 import org.junit.Test
 
@@ -73,7 +73,7 @@ class ControlUtilsTest {
                             otherTask = nullObject,
                             customCondition = nullObject,
                             customVariables = nullObject,
-                            runCondition = RunCondition.PRE_TASK_FAILED_ONLY,
+                            taskRunCondition = TaskRunCondition.PRE_TASK_FAILED_ONLY,
                             retryCount = 0,
                             retryWhenFailed = false
                         ), status
@@ -89,7 +89,7 @@ class ControlUtilsTest {
                             otherTask = nullObject,
                             customCondition = nullObject,
                             customVariables = nullObject,
-                            runCondition = RunCondition.PRE_TASK_FAILED_ONLY,
+                            taskRunCondition = TaskRunCondition.PRE_TASK_FAILED_ONLY,
                             retryCount = 0,
                             retryWhenFailed = false
                         ), status
@@ -105,8 +105,13 @@ class ControlUtilsTest {
         Assert.assertFalse(
             ControlUtils.isEnable(
                 ElementAdditionalOptions(
-                    enable = false, continueWhenFailed = false, timeout = 0, runCondition = null,
-                    otherTask = null, customCondition = null, customVariables = null,
+                    enable = false,
+                    continueWhenFailed = false,
+                    timeout = 0,
+                    taskRunCondition = null,
+                    otherTask = null,
+                    customCondition = null,
+                    customVariables = null,
                     retryCount = 0,
                     retryWhenFailed = false
                 )
@@ -115,8 +120,13 @@ class ControlUtilsTest {
         Assert.assertTrue(
             ControlUtils.continueWhenFailure(
                 ElementAdditionalOptions(
-                    enable = true, continueWhenFailed = true, timeout = 0, runCondition = null,
-                    otherTask = null, customCondition = null, customVariables = null,
+                    enable = true,
+                    continueWhenFailed = true,
+                    timeout = 0,
+                    taskRunCondition = null,
+                    otherTask = null,
+                    customCondition = null,
+                    customVariables = null,
                     retryCount = 0,
                     retryWhenFailed = false
                 )
@@ -132,8 +142,13 @@ class ControlUtilsTest {
         Assert.assertFalse(
             ControlUtils.continueWhenFailure(
                 ElementAdditionalOptions(
-                    enable = true, continueWhenFailed = false, timeout = 0, runCondition = null,
-                    otherTask = null, customCondition = null, customVariables = null,
+                    enable = true,
+                    continueWhenFailed = false,
+                    timeout = 0,
+                    taskRunCondition = null,
+                    otherTask = null,
+                    customCondition = null,
+                    customVariables = null,
                     retryCount = 0,
                     retryWhenFailed = false
                 )
@@ -142,8 +157,13 @@ class ControlUtilsTest {
         Assert.assertTrue(
             ControlUtils.continueWhenFailure(
                 ElementAdditionalOptions(
-                    enable = true, continueWhenFailed = true, timeout = 0, runCondition = null,
-                    otherTask = null, customCondition = null, customVariables = null,
+                    enable = true,
+                    continueWhenFailed = true,
+                    timeout = 0,
+                    taskRunCondition = null,
+                    otherTask = null,
+                    customCondition = null,
+                    customVariables = null,
                     retryCount = 0,
                     retryWhenFailed = false
                 )
@@ -157,7 +177,7 @@ class ControlUtilsTest {
         val conditions = mutableListOf(NameAndValue("key1", "a"), NameAndValue("key2", "b"))
         val variables = mutableMapOf("key1" to "a", "key2" to "b")
         Assert.assertTrue(
-            ControlUtils.checkSkipCondition(
+            ControlUtils.checkJobSkipCondition(
                 conditions = conditions,
                 variables = variables,
                 buildId = buildId,
@@ -165,7 +185,7 @@ class ControlUtilsTest {
             )
         )
         Assert.assertFalse(
-            ControlUtils.checkSkipCondition(
+            ControlUtils.checkJobSkipCondition(
                 conditions = conditions,
                 variables = variables,
                 buildId = buildId,
@@ -179,7 +199,7 @@ class ControlUtilsTest {
         variables.clear()
         variables["key3"] = "un"
         Assert.assertFalse(
-            ControlUtils.checkSkipCondition(
+            ControlUtils.checkJobSkipCondition(
                 conditions = conditions,
                 variables = variables,
                 buildId = buildId,
@@ -187,7 +207,7 @@ class ControlUtilsTest {
             )
         )
         Assert.assertTrue(
-            ControlUtils.checkSkipCondition(
+            ControlUtils.checkJobSkipCondition(
                 conditions = conditions,
                 variables = variables,
                 buildId = buildId,
@@ -195,7 +215,7 @@ class ControlUtilsTest {
             )
         )
         Assert.assertFalse(
-            ControlUtils.checkSkipCondition(
+            ControlUtils.checkJobSkipCondition(
                 conditions = conditions,
                 variables = variables,
                 buildId = buildId,
