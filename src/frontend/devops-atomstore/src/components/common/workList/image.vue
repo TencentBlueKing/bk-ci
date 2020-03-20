@@ -276,7 +276,6 @@
                 this.offlineImageData.show = true
                 this.offlineImageData.form.imageName = row.imageName
                 this.offlineImageData.form.imageCode = row.imageCode
-                this.offlineImageData.form.version = row.version
                 this.offlineImageData.isLoading = true
 
                 const postData = {
@@ -286,7 +285,9 @@
                 }
                 this.offlineImageData.isLoading = true
                 this.$store.dispatch('store/requestImageVersionList', postData).then((res) => {
-                    this.offlineImageData.versionList = res.records || []
+                    this.offlineImageData.versionList = (res.records || []).filter((image) => {
+                        return image.imageStatus === 'RELEASED' || (image.imageStatus === 'GROUNDING_SUSPENSION' && image.releaseFlag)
+                    })
                 }).catch((err) => {
                     this.$bkMessage({ message: err.message || err, theme: 'error' })
                 }).finally(() => (this.offlineImageData.isLoading = false))
