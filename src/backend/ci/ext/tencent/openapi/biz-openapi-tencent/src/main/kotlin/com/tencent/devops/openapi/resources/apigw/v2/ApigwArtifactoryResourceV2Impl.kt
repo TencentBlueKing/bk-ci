@@ -81,10 +81,18 @@ class ApigwArtifactoryResourceV2Impl @Autowired constructor(
         apigwType: String?,
         userId: String,
         projectId: String,
+        pipelineId: String,
+        buildId: String,
         page: Int?,
-        pageSize: Int?,
-        searchProps: SearchProps
+        pageSize: Int?
     ): Result<FileInfoPage<FileInfo>> {
+        val map = mutableMapOf<String, String>()
+        map["pipelineId"] = pipelineId
+        map["buildId"] = buildId
+        val searchProps = SearchProps(
+            fileNames = null,
+            props = map
+        )
         return client.get(UserArtifactoryResource::class).search(
             userId = userId,
             projectId = projectId,

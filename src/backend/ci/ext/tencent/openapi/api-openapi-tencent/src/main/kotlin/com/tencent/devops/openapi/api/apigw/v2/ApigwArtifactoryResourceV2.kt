@@ -81,7 +81,7 @@ interface ApigwArtifactoryResourceV2 {
 
     @ApiOperation("根据元数据获取文件")
     // @Path("/projects/{projectId}/search")
-    @Path("/{projectId}/search")
+    @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/search")
     @POST
     fun search(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
@@ -96,13 +96,17 @@ interface ApigwArtifactoryResourceV2 {
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
+        @ApiParam("流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @ApiParam("构建ID", required = true)
+        @PathParam("buildId")
+        buildId: String,
         @ApiParam("第几页", required = false, defaultValue = "1")
         @QueryParam("page")
         page: Int?,
         @ApiParam("每页多少条(不传默认全部返回)", required = false, defaultValue = "20")
         @QueryParam("pageSize")
-        pageSize: Int?,
-        @ApiParam("元数据", required = true)
-        searchProps: SearchProps
+        pageSize: Int?
     ): Result<FileInfoPage<FileInfo>>
 }
