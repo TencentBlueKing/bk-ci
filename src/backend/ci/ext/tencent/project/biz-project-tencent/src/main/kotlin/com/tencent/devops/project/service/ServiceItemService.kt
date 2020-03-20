@@ -20,6 +20,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.lang.RuntimeException
+import javax.annotation.PostConstruct
 import com.tencent.devops.project.api.pojo.ExtServiceEntity as ExtServiceEntity
 
 @Service
@@ -32,6 +33,12 @@ class ServiceItemService @Autowired constructor(
 
     // 用于存放服务信息的Map
     private val projectServiceMap = mutableMapOf<String, ExtServiceEntity>()
+
+    @PostConstruct
+    fun init() {
+        // 初始化projectServiceMap
+        getServiceList()
+    }
 
     fun getServiceList(): List<ExtItemDTO> {
         val allItemData = serviceItemDao.getAllServiceItem(dslContext) ?: return emptyList()
@@ -301,12 +308,12 @@ class ServiceItemService @Autowired constructor(
     private fun validArgs(itemInfo: ItemInfoResponse) {
         val itemRecordByName = serviceItemDao.getItemByName(dslContext, itemInfo.itemName)
 
-        if(itemRecordByName != null) {
+        if (itemRecordByName != null) {
             logger.warn("createItem itemName is exsit, itemName[$itemInfo.itemName]")
             throw RuntimeException("扩展点名称已存在")
         }
         val itemRecordByHtmlPath = serviceItemDao.getItemByHtmlPath(dslContext, itemInfo.htmlPath)
-        if(itemRecordByHtmlPath != null) {
+        if (itemRecordByHtmlPath != null) {
             logger.warn("createItem itemName is exsit, itemName[$itemInfo.itemName]")
             throw RuntimeException("前端页面路径路径重复")
         }
