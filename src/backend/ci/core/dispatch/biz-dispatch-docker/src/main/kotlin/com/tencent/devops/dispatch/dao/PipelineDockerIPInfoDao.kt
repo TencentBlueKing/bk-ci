@@ -89,6 +89,17 @@ class PipelineDockerIPInfoDao {
         }
     }
 
+    fun getDockerIpInfo(
+        dslContext: DSLContext,
+        dockerIp: String
+    ): TDispatchPipelineDockerIpInfoRecord {
+        with(TDispatchPipelineDockerIpInfo.T_DISPATCH_PIPELINE_DOCKER_IP_INFO) {
+            return dslContext.selectFrom(this)
+                .where(DOCKER_IP.eq(dockerIp))
+                .fetchOne()
+        }
+    }
+
     fun getDockerIpCount(
         dslContext: DSLContext
     ): Long {
@@ -101,12 +112,19 @@ class PipelineDockerIPInfoDao {
 
     fun getEnableDockerIpList(
         dslContext: DSLContext,
-        grayEnv: Boolean
+        grayEnv: Boolean,
+        cpuLoad: Int,
+        memLoad: Int,
+        diskLoad: Int
     ): Result<TDispatchPipelineDockerIpInfoRecord> {
         with(TDispatchPipelineDockerIpInfo.T_DISPATCH_PIPELINE_DOCKER_IP_INFO) {
             return dslContext.selectFrom(this)
                 .where(ENABLE.eq(true))
                 .and(GRAY_ENV.eq(grayEnv))
+                .and(CPU_LOAD.lessOrEqual(cpuLoad))
+                .and(MEM_LOAD.lessOrEqual(memLoad))
+                .and(DISK_LOAD.lessOrEqual(diskLoad))
+                .orderBy(DISK_LOAD.asc())
                 .fetch()
         }
     }
