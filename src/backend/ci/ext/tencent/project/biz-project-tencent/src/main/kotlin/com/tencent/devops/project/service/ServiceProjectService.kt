@@ -1,6 +1,7 @@
 package com.tencent.devops.project.service
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.project.dao.ServiceDao
 import com.tencent.devops.project.pojo.service.ServiceVO
 import org.jooq.DSLContext
@@ -14,30 +15,30 @@ class ServiceProjectService @Autowired constructor(
 ) {
     fun getServiceList(): Result<List<ServiceVO>> {
         val serviceList = mutableListOf<ServiceVO>()
-        val serviceRecodes =  projectServiceDao.getServiceList(dslContext)
-        if(serviceRecodes != null) {
+        val serviceRecodes = projectServiceDao.getServiceList(dslContext)
+        if (serviceRecodes != null) {
             for (serviceRecode in serviceRecodes) {
                 serviceList.add(
                     ServiceVO(
-                        id = serviceRecode.id,
-                        name = serviceRecode.name,
-                        link = serviceRecode.link,
-                        linkNew = serviceRecode.linkNew,
+                        id = serviceRecode.id ?: 0,
+                        name = MessageCodeUtil.getMessageByLocale(serviceRecode.name, serviceRecode.englishName),
+                        link = serviceRecode.link ?: "",
+                        linkNew = serviceRecode.linkNew ?: "",
                         status = serviceRecode.status,
-                        injectType = serviceRecode.injectType,
-                        iframeUrl = serviceRecode.iframeUrl,
-                        cssUrl = serviceRecode.cssUrl,
-                        jsUrl = serviceRecode.jsUrl,
-                        grayCssUrl = serviceRecode.grayCssUrl,
-                        grayJsUrl = serviceRecode.grayJsUrl,
-                        showProjectList = serviceRecode.showProjectList,
-                        showNav = serviceRecode.showNav,
-                        projectIdType = serviceRecode.projectIdType,
-                        collected = false,
-                        weigHt = serviceRecode.weight,
-                        logoUrl = serviceRecode.logoUrl,
-                        webSocket = serviceRecode.webSocket,
-                        grayIframeUrl = serviceRecode.grayIframeUrl
+                        injectType = serviceRecode.injectType ?: "",
+                        iframeUrl = serviceRecode.iframeUrl ?: "",
+                        grayIframeUrl = serviceRecode.grayIframeUrl ?: "",
+                        cssUrl = serviceRecode.cssUrl ?: "",
+                        jsUrl = serviceRecode.jsUrl ?: "",
+                        grayCssUrl = serviceRecode.grayCssUrl ?: "",
+                        grayJsUrl = serviceRecode.grayJsUrl ?: "",
+                        showProjectList = serviceRecode.showProjectList ?: true,
+                        showNav = serviceRecode.showNav ?: true,
+                        projectIdType = serviceRecode.projectIdType ?: "",
+                        collected = true,
+                        weigHt = serviceRecode.weight ?: 0,
+                        logoUrl = serviceRecode.logoUrl ?: "",
+                        webSocket = serviceRecode.webSocket ?: ""
                     )
                 )
             }
