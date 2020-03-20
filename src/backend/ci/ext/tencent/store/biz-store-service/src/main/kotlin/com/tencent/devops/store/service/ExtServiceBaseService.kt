@@ -136,6 +136,8 @@ abstract class ExtServiceBaseService @Autowired constructor() {
     @Autowired
     lateinit var extServiceBcsNameSpaceConfig: ExtServiceBcsNameSpaceConfig
 
+    val bkServiceMap = mutableMapOf<String, Long>()
+
     fun addExtService(
         userId: String,
         extensionInfo: InitExtServiceDTO
@@ -227,7 +229,8 @@ abstract class ExtServiceBaseService @Autowired constructor() {
                         serviceId = id,
                         itemId = it,
                         creatorUser = userId,
-                        modifierUser = userId
+                        modifierUser = userId,
+                        bkServiceId = getItemBkServiceId(it)
                     )
                 )
             }
@@ -897,7 +900,9 @@ abstract class ExtServiceBaseService @Autowired constructor() {
                     mediaList = mediaList,
                     extensionItemName = extensionName,
                     content = serviceVersion?.content ?: "",
-                    releaseType = ReleaseTypeEnum.getReleaseType(serviceVersion?.releaseType?.toInt() ?: ReleaseTypeEnum.NEW.releaseType)
+                    releaseType = ReleaseTypeEnum.getReleaseType(
+                        serviceVersion?.releaseType?.toInt() ?: ReleaseTypeEnum.NEW.releaseType
+                    )
                 )
             )
         }
@@ -1113,7 +1118,8 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         inputItemList.forEach {
             inputItemMap[it] = ItemPropCreateInfo(
                 itemId = it,
-                props = ""
+                props = "",
+                bkServiceId = getItemBkServiceId(it)
             )
         }
 
@@ -1154,7 +1160,8 @@ abstract class ExtServiceBaseService @Autowired constructor() {
                 val propsInfo = filePropMap[itemCode]
                 inputItemMap[itemId] = ItemPropCreateInfo(
                     itemId = itemId,
-                    props = propsInfo ?: ""
+                    props = propsInfo ?: "",
+                    bkServiceId = getItemBkServiceId(itemId)
                 )
             }
         }
@@ -1175,7 +1182,8 @@ abstract class ExtServiceBaseService @Autowired constructor() {
             itemCreateList.add(
                 ItemPropCreateInfo(
                     itemId = it,
-                    props = ""
+                    props = "",
+                    bkServiceId = getItemBkServiceId(it)
                 )
             )
         }
@@ -1277,6 +1285,23 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         }
         // TODO: 提示信息
         return if (validateFlag) Pair(true, "") else Pair(false, StoreMessageCode.USER_SERVICE_RELEASE_STEPS_ERROR)
+    }
+
+    fun getItemBkServiceId(itemId: String): Long {
+        return if (bkServiceMap.containsKey(itemId)) {
+            bkServiceMap[itemId]!!
+        } else {
+            val itemIdList = mutableSetOf<String>()
+            itemIdList.add(itemId)
+            val itemInfo = client.get(ServiceItemResource::class).getItemInfoByIds(itemIdList).data
+            if (itemInfo != null) {
+                val bkService = itemInfo[0].parentId.toLong()
+                bkServiceMap[itemInfo[0].itemId] = bkService
+                bkService
+            } else {
+                0
+            }
+        }
     }
 
     companion object {

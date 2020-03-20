@@ -399,10 +399,10 @@ class ExtServiceDao {
             baseStep.leftJoin(talr).on(ta.ID.eq(talr.SERVICE_ID))
             conditions.add(talr.LABEL_ID.`in`(labelIdList))
         }
-        if(bkService != null) {
+        if (bkService != null) {
             val tir = TExtensionServiceItemRel.T_EXTENSION_SERVICE_ITEM_REL.`as`("tir")
-            val serviceIdList = dslContext.select(tir.SERVICE_ID).from(tir).
-                where(tir.BK_SERVICE_ID.eq(bkService)).fetch().map { it["SERVICE_ID"] as String }
+            val serviceIdList = dslContext.select(tir.SERVICE_ID).from(tir)
+                .where(tir.BK_SERVICE_ID.eq(bkService)).fetch().map { it["SERVICE_ID"] as String }
             baseStep.leftJoin(tir).on(ta.ID.`in`(serviceIdList))
         }
 
@@ -609,10 +609,10 @@ class ExtServiceDao {
             baseStep.leftJoin(talr).on(ta.ID.eq(talr.SERVICE_ID))
             conditions.add(talr.LABEL_ID.`in`(labelIdList))
         }
-        if(bkService != null) {
+        if (bkService != null) {
             val tir = TExtensionServiceItemRel.T_EXTENSION_SERVICE_ITEM_REL.`as`("tir")
-            val serviceIdList = dslContext.select(tir.SERVICE_ID).from(tir).
-                where(tir.BK_SERVICE_ID.eq(bkService)).fetch().map { it["SERVICE_ID"] as String }
+            val serviceIdList = dslContext.select(tir.SERVICE_ID).from(tir)
+                .where(tir.BK_SERVICE_ID.eq(bkService)).fetch().map { it["SERVICE_ID"] as String }
             baseStep.leftJoin(tir).on(ta.ID.`in`(serviceIdList))
         }
         if (score != null) {

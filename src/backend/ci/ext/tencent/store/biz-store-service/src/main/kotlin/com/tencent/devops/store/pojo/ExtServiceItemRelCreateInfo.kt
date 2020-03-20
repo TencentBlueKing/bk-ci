@@ -7,6 +7,8 @@ data class ExtServiceItemRelCreateInfo(
     val serviceId: String,
     @ApiModelProperty("服务功能项ID")
     val itemId: String,
+    @ApiModelProperty("bkServiceId")
+    val bkServiceId: Long,
     @ApiModelProperty("添加用户")
     val creatorUser: String,
     @ApiModelProperty("修改用户")

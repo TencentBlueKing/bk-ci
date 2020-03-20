@@ -12,7 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired
 class ServiceItemResourceImpl @Autowired constructor(
     private val serviceItemService: ServiceItemService
 ) : ServiceItemResource {
-    override fun getItemList(userId: String, itemId: String): Result<ExtItemDTO?> {
+    override fun getItemInfo(userId: String, itemId: String): Result<ExtItemDTO?> {
         return Result(serviceItemService.getItemById(itemId))
     }
 

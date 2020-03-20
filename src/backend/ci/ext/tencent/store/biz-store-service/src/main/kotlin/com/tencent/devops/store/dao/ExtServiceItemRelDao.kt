@@ -25,6 +25,7 @@ class ExtServiceItemRelDao {
                 ID,
                 SERVICE_ID,
                 ITEM_ID,
+                BK_SERVICE_ID,
                 CREATOR,
                 MODIFIER,
                 CREATE_TIME,
@@ -34,6 +35,7 @@ class ExtServiceItemRelDao {
                     UUIDUtil.generate(),
                     extServiceItemRelCreateInfo.serviceId,
                     extServiceItemRelCreateInfo.itemId,
+                    extServiceItemRelCreateInfo.bkServiceId,
                     extServiceItemRelCreateInfo.creatorUser,
                     extServiceItemRelCreateInfo.modifierUser,
                     LocalDateTime.now(),
@@ -88,6 +90,7 @@ class ExtServiceItemRelDao {
                     ID,
                     SERVICE_ID,
                     ITEM_ID,
+                    BK_SERVICE_ID,
                     PROPS,
                     CREATOR,
                     MODIFIER
@@ -96,6 +99,7 @@ class ExtServiceItemRelDao {
                         UUIDUtil.generate(),
                         serviceId,
                         it.itemId,
+                        it.bkServiceId,
                         it.props,
                         userId,
                         userId
@@ -112,7 +116,7 @@ class ExtServiceItemRelDao {
         dslContext.batchUpdate(serviceItemRelList).execute()
     }
 
-    fun getBkService(dslContext: DSLContext) : Result<out Record> {
+    fun getBkService(dslContext: DSLContext): Result<out Record> {
         return with(TExtensionServiceItemRel.T_EXTENSION_SERVICE_ITEM_REL) {
             dslContext.select(BK_SERVICE_ID.`as`("bkServiceId")).from(this).groupBy(BK_SERVICE_ID).fetch()
         }

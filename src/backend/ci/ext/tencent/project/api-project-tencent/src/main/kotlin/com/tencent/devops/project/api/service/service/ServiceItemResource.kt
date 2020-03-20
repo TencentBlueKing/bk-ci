@@ -24,8 +24,8 @@ import javax.ws.rs.core.MediaType
 interface ServiceItemResource {
     @GET
     @Path("/{itemId}")
-    @ApiOperation("获取扩展项目列表")
-    fun getItemList(
+    @ApiOperation("获取扩展项目信息")
+    fun getItemInfo(
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,

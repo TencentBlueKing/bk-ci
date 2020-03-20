@@ -41,6 +41,7 @@ import java.time.LocalDateTime
 class OpExtServiceService @Autowired constructor(
     private val extServiceDao: ExtServiceDao,
     private val extServiceFeatureDao: ExtServiceFeatureDao,
+    private val extServiceBaseService: ExtServiceBaseService,
     private val storeReleaseDao: StoreReleaseDao,
     private val storeProjectRelDao: StoreProjectRelDao,
     private val storeMemberService: TxExtServiceMemberImpl,
@@ -170,7 +171,8 @@ class OpExtServiceService @Autowired constructor(
                                 serviceId = serviceId,
                                 modifierUser = userId,
                                 creatorUser = userId,
-                                itemId = itemId
+                                itemId = itemId,
+                                bkServiceId = extServiceBaseService.getItemBkServiceId(itemId)
                             )
                         )
                     }

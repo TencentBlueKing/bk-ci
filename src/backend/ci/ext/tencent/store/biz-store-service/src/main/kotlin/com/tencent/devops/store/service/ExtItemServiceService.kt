@@ -101,7 +101,7 @@ class ExtItemServiceService @Autowired constructor(
         }
         return Result(extServiceList)
     }
-    
+
     fun updateItemService(userId: String, itemId: String, serviceId: String): Result<Boolean> {
         extItemServiceDao.updateItemService(dslContext, itemId, serviceId, userId)
         return Result(true)
