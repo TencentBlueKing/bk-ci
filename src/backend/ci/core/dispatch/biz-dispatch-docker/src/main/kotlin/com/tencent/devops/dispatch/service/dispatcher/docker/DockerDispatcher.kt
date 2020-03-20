@@ -81,9 +81,13 @@ class DockerDispatcher @Autowired constructor(
             val ipInfo = pipelineDockerIpInfoDao.getDockerIpInfo(dslContext, dockerIp)
             if (ipInfo.diskLoad > 90 || ipInfo.memLoad > 90) {
                 dockerIp = dockerHostClient.getAvailableDockerIp()
+                pipelineDockerTaskSimpleDao.updateDockerIp(dslContext, pipelineAgentStartupEvent.pipelineId, pipelineAgentStartupEvent.vmSeqId, dockerIp)
                 logger.info("${pipelineAgentStartupEvent.pipelineId}|${pipelineAgentStartupEvent.buildId}|${pipelineAgentStartupEvent.vmSeqId}| origin host: ${taskHistory.dockerIp} " +
                         "overload, DiskLoad: ${ipInfo.diskLoad}|MemLoad: ${ipInfo.memLoad}, switch to new host: $dockerIp")
             }
+
+            // 更新状态running
+            pipelineDockerTaskSimpleDao.updateStatus(dslContext, pipelineAgentStartupEvent.pipelineId, pipelineAgentStartupEvent.vmSeqId, VolumeStatus.RUNNING.status)
         } else {
             dockerIp = dockerHostClient.getAvailableDockerIp()
 
