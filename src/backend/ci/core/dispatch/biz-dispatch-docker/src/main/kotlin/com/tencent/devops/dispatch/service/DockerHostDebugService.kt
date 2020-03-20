@@ -26,6 +26,7 @@
 
 package com.tencent.devops.dispatch.service
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.pojo.Result
@@ -49,6 +50,8 @@ import com.tencent.devops.dispatch.utils.CommonUtils
 import com.tencent.devops.dispatch.utils.DockerHostDebugLock
 import com.tencent.devops.dispatch.utils.DockerUtils
 import com.tencent.devops.dispatch.utils.redis.RedisUtils
+import com.tencent.devops.store.api.container.ServiceContainerAppResource
+import com.tencent.devops.store.pojo.app.BuildEnv
 import com.tencent.devops.store.pojo.image.exception.UnknownImageType
 import com.tencent.devops.store.pojo.image.response.ImageRepoInfo
 import com.tencent.devops.ticket.pojo.enums.CredentialType
@@ -88,7 +91,7 @@ class DockerHostDebugService @Autowired constructor(
     private val TLINUX1_2_IMAGE = "/bkdevops/docker-builder1.2:v1"
     private val TLINUX2_2_IMAGE = "/bkdevops/docker-builder2.2:v1"
 
-    fun insertDebug(
+    fun startDebug(
         dockerIp:String,
         userId: String,
         projectId: String,
@@ -97,7 +100,7 @@ class DockerHostDebugService @Autowired constructor(
         imageCode: String?,
         imageVersion: String?,
         imageName: String?,
-        buildEnvStr: String,
+        buildEnv: Map<String, String>?,
         imageType: ImageType?,
         credentialId: String?
     ) {
@@ -158,11 +161,34 @@ class DockerHostDebugService @Autowired constructor(
 
         val newImageType = when (imageType) {
             null -> ImageType.BKDEVOPS.type
-            ImageType.THIRD -> imageType!!.type
+            ImageType.THIRD -> imageType.type
             ImageType.BKDEVOPS -> ImageType.BKDEVOPS.type
             ImageType.BKSTORE -> imageRepoInfo!!.sourceType.type
             else -> throw UnknownImageType("imageCode:$imageCode,imageVersion:$imageVersion,imageType:$imageType")
         }
+
+        val buildEnvStr = if (null != buildEnv && buildEnv.isNotEmpty()) {
+            try {
+                val buildEnvs = client.get(ServiceContainerAppResource::class).getApp("linux")
+                val buildEnvResult = mutableListOf<BuildEnv>()
+                if (!(!buildEnvs.isOk() && null != buildEnvs.data && buildEnvs.data!!.isNotEmpty())) {
+                    for (buildEnvParam in buildEnv) {
+                        for (buildEnv1 in buildEnvs.data!!) {
+                            if (buildEnv1.name == buildEnvParam.key && buildEnv1.version == buildEnvParam.value) {
+                                buildEnvResult.add(buildEnv1)
+                            }
+                        }
+                    }
+                }
+                ObjectMapper().writeValueAsString(buildEnvResult)
+            } catch (e: Exception) {
+                logger.error("${pipelineId}|${vmSeqId}| start debug. get build env failed msg: $e")
+                ""
+            }
+        } else {
+            ""
+        }
+        logger.info("${pipelineId}|${vmSeqId}| start debug. Container ready to start, buildEnvStr: $buildEnvStr")
 
         // 根据dockerIp定向调用dockerhost
         val url = "http://$dockerIp/api/docker/debug/start"

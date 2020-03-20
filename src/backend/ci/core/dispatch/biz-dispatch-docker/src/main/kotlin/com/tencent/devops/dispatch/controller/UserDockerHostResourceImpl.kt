@@ -26,7 +26,6 @@
 
 package com.tencent.devops.dispatch.controller
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
@@ -47,13 +46,9 @@ import com.tencent.devops.dispatch.pojo.VolumeStatus
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.dispatch.service.DockerHostBuildService
 import com.tencent.devops.dispatch.service.DockerHostDebugService
-import com.tencent.devops.store.api.container.ServiceContainerAppResource
-import com.tencent.devops.store.pojo.app.BuildEnv
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
-import java.net.URLEncoder
 
 @RestResource
 class UserDockerHostResourceImpl @Autowired constructor(
@@ -71,15 +66,9 @@ class UserDockerHostResourceImpl @Autowired constructor(
     }
 
     override fun startDebug(userId: String, debugStartParam: DebugStartParam): Result<Boolean>? {
-        checkParam(userId, debugStartParam.projectId, debugStartParam.pipelineId, debugStartParam.vmSeqId)
+        checkPermission(userId, debugStartParam.projectId, debugStartParam.pipelineId, debugStartParam.vmSeqId)
 
-        if (!bkAuthPermissionApi.validateUserResourcePermission(userId, pipelineAuthServiceCode, AuthResourceType.PIPELINE_DEFAULT,
-                debugStartParam.projectId, debugStartParam.pipelineId, AuthPermission.EDIT)) {
-            logger.info("用户($userId)无权限在工程(${debugStartParam.projectId})下编辑流水线(${debugStartParam.pipelineId})")
-            throw PermissionForbiddenException("用户($userId)无权限在工程(${debugStartParam.projectId})下编辑流水线(${debugStartParam.pipelineId})")
-        }
-
-        // 查询是否存在构建机可启动调试，查看当前构建机的状态，如果running则直接返回当前running的containerId
+        // 查询是否存在构建机可启动调试，查看当前构建机的状态，如果running则直接复用当前running的containerId
         val taskHistory =
             pipelineDockerTaskSimpleDao.getByPipelineIdAndVMSeq(dslContext, debugStartParam.pipelineId, debugStartParam.vmSeqId)
                 ?: throw ErrorCodeException(
@@ -106,7 +95,7 @@ class UserDockerHostResourceImpl @Autowired constructor(
                 imageRDType = null
             )
 
-            logger.info("Container already running, ContainerInfo: ${taskHistory.containerId}")
+            logger.info("${debugStartParam.pipelineId}|${debugStartParam.vmSeqId}| start debug. Container already running, ContainerInfo: ${taskHistory.containerId}")
             return Result(true)
         }
 
@@ -115,35 +104,12 @@ class UserDockerHostResourceImpl @Autowired constructor(
         // 查询是否已经有启动调试容器了，如果有，直接返回成功
         val result = dockerHostDebugService.getDebugStatus(debugStartParam.pipelineId, debugStartParam.vmSeqId)
         if (result.status == 0) {
-            logger.info("Container already exists, ContainerInfo: $result.data")
+            logger.info("${debugStartParam.pipelineId}|${debugStartParam.vmSeqId}| start debug. Container already exists, ContainerInfo: $result.data")
             return Result(true)
         }
 
-        val buildEnvStr = if (null != debugStartParam.buildEnv && debugStartParam.buildEnv!!.isNotEmpty()) {
-            try {
-                val buildEnvs = client.get(ServiceContainerAppResource::class).getApp("linux")
-                val buildEnvResult = mutableListOf<BuildEnv>()
-                if (!(!buildEnvs.isOk() && null != buildEnvs.data && buildEnvs.data!!.isNotEmpty())) {
-                    for (buildEnvParam in debugStartParam.buildEnv!!) {
-                        for (buildEnv in buildEnvs.data!!) {
-                            if (buildEnv.name == buildEnvParam.key && buildEnv.version == buildEnvParam.value) {
-                                buildEnvResult.add(buildEnv)
-                            }
-                        }
-                    }
-                }
-                ObjectMapper().writeValueAsString(buildEnvResult)
-            } catch (e: Exception) {
-                logger.error("get build env failed msg: $e")
-                ""
-            }
-        } else {
-            ""
-        }
-        logger.info("Container ready to start, buildEnvStr: $buildEnvStr")
-
         with(debugStartParam) {
-            dockerHostDebugService.insertDebug(
+            dockerHostDebugService.startDebug(
                 dockerIp = dockerIp,
                 userId = userId,
                 projectId = projectId,
@@ -152,7 +118,7 @@ class UserDockerHostResourceImpl @Autowired constructor(
                 imageCode = imageCode,
                 imageVersion = imageVersion,
                 imageName = imageName,
-                buildEnvStr = buildEnvStr,
+                buildEnv = buildEnv,
                 imageType = ImageType.getType(imageType),
                 credentialId = credentialId
             )
@@ -162,23 +128,13 @@ class UserDockerHostResourceImpl @Autowired constructor(
     }
 
     override fun getDebugStatus(userId: String, projectId: String, pipelineId: String, vmSeqId: String): Result<ContainerInfo>? {
-        checkParam(userId, projectId, pipelineId, vmSeqId)
-
-        if (!bkAuthPermissionApi.validateUserResourcePermission(userId, pipelineAuthServiceCode, AuthResourceType.PIPELINE_DEFAULT, projectId, pipelineId, AuthPermission.EDIT)) {
-            logger.info("用户($userId)无权限在工程($projectId)下编辑流水线($pipelineId)")
-            throw PermissionForbiddenException("用户($userId)无权限在工程($projectId)下编辑流水线($pipelineId)")
-        }
+        checkPermission(userId, projectId, pipelineId, vmSeqId)
 
         return dockerHostDebugService.getDebugStatus(pipelineId, vmSeqId)
     }
 
     override fun stopDebug(userId: String, projectId: String, pipelineId: String, vmSeqId: String): Result<Boolean>? {
-        checkParam(userId, projectId, pipelineId, vmSeqId)
-
-        if (!bkAuthPermissionApi.validateUserResourcePermission(userId, pipelineAuthServiceCode, AuthResourceType.PIPELINE_DEFAULT, projectId, pipelineId, AuthPermission.EDIT)) {
-            logger.info("用户($userId)无权限在工程($projectId)下编辑流水线($pipelineId)")
-            throw PermissionForbiddenException("用户($userId)无权限在工程($projectId)下编辑流水线($pipelineId)")
-        }
+        checkPermission(userId, projectId, pipelineId, vmSeqId)
 
         return dockerHostDebugService.deleteDebug(pipelineId, vmSeqId)
     }
@@ -218,4 +174,14 @@ class UserDockerHostResourceImpl @Autowired constructor(
             throw ParamBlankException("Invalid vmSeqID")
         }
     }
+
+    private fun checkPermission(userId: String, projectId: String, pipelineId: String, vmSeqId: String) {
+        checkParam(userId, projectId, pipelineId, vmSeqId)
+
+        if (!bkAuthPermissionApi.validateUserResourcePermission(userId, pipelineAuthServiceCode, AuthResourceType.PIPELINE_DEFAULT, projectId, pipelineId, AuthPermission.EDIT)) {
+            logger.info("用户($userId)无权限在工程($projectId)下编辑流水线($pipelineId)")
+            throw PermissionForbiddenException("用户($userId)无权限在工程($projectId)下编辑流水线($pipelineId)")
+        }
+    }
+
 }
