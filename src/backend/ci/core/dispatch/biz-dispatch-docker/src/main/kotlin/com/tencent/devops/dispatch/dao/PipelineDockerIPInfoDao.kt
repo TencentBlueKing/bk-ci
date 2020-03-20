@@ -110,7 +110,7 @@ class PipelineDockerIPInfoDao {
         }
     }
 
-    fun getEnableDockerIpList(
+    fun getAvailableDockerIpList(
         dslContext: DSLContext,
         grayEnv: Boolean,
         cpuLoad: Int,
@@ -125,6 +125,18 @@ class PipelineDockerIPInfoDao {
                 .and(MEM_LOAD.lessOrEqual(memLoad))
                 .and(DISK_LOAD.lessOrEqual(diskLoad))
                 .orderBy(DISK_LOAD.asc())
+                .fetch()
+        }
+    }
+
+    fun getEnableDockerIpList(
+        dslContext: DSLContext,
+        grayEnv: Boolean
+    ): Result<TDispatchPipelineDockerIpInfoRecord> {
+        with(TDispatchPipelineDockerIpInfo.T_DISPATCH_PIPELINE_DOCKER_IP_INFO) {
+            return dslContext.selectFrom(this)
+                .where(ENABLE.eq(true))
+                .and(GRAY_ENV.eq(grayEnv))
                 .fetch()
         }
     }
