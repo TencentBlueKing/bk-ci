@@ -33,6 +33,7 @@ class ApigwArtifactoryResourceV2Impl @Autowired constructor(
     ): Result<List<String>> {
         var pipelineId = ""
         var buildId = ""
+        var subPath = path
         if (artifactoryType == ArtifactoryType.PIPELINE) {
             val pathList = path.split("/")
             logger.info("getThirdPartyDownloadUrl pathList:$pathList")
@@ -43,16 +44,18 @@ class ApigwArtifactoryResourceV2Impl @Autowired constructor(
                 pipelineId = pathList[0]
                 buildId = pathList[1]
             }
+            subPath = path.replace("/$pipelineId/$buildId" , "")
         }
 
         logger.info("getThirdPartyDownloadUrl pipelineId:$pipelineId")
         logger.info("getThirdPartyDownloadUrl buildId:$buildId")
+        logger.info("getThirdPartyDownloadUrl subPath:$subPath")
         return client.get(ServiceArtifactoryDownLoadResource::class).getThirdPartyDownloadUrl(
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
             artifactoryType = artifactoryType,
-            path = path,
+            path = subPath,
             ttl = ttl,
             crossPipineId = null,
             crossProjectId = null,
