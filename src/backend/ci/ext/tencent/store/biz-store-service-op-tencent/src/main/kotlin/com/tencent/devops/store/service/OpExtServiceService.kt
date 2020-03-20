@@ -216,8 +216,7 @@ class OpExtServiceService @Autowired constructor(
                 userId = userId,
                 namespaceName = extServiceBcsNameSpaceConfig.namespaceName,
                 serviceCode = serviceCode,
-                version = serviceRecord.version,
-                grayFlag = true
+                version = serviceRecord.version
             )
             ExtServiceBaseService.logger.info("deployExtServiceResult is:$deployExtServiceResult")
             if (deployExtServiceResult.isNotOk()) {

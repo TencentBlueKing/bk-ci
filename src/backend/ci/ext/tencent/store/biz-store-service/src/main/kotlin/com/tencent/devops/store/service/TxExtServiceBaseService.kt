@@ -147,8 +147,7 @@ class TxExtServiceBaseService : ExtServiceBaseService() {
         val deployApp = extServiceBcsService.generateDeployApp(
             namespaceName = extServiceBcsNameSpaceConfig.grayNamespaceName,
             serviceCode = serviceCode,
-            version = version,
-            grayFlag = true
+            version = version
         )
         if (null == servicePipelineRelRecord) {
             // 为用户初始化构建流水线并触发执行

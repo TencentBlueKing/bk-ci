@@ -38,7 +38,6 @@ import com.tencent.devops.store.pojo.vo.ExtServiceVendorVO
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.autoconfigure.session.StoreType
 import org.springframework.stereotype.Service
 import java.text.MessageFormat
 
@@ -81,8 +80,8 @@ class ExtItemServiceService @Autowired constructor(
                     projectCode = projectCode
                 )
                 // 获取扩展服务对应的域名
-                val hostPrefix = if (grayFlag) "$serviceCode-gray" else serviceCode
-                val host = MessageFormat(extServiceIngressConfig.host).format(arrayOf(hostPrefix))
+                val hostConfig = if (grayFlag) extServiceIngressConfig.grayHost else extServiceIngressConfig.host
+                val host = MessageFormat(hostConfig).format(arrayOf(serviceCode))
                 serviceList.add(
                     ExtServiceVO(
                         serviceId = service["serviceId"] as String,

@@ -86,11 +86,10 @@ class ExtServiceBcsService {
     fun generateDeployApp(
         namespaceName: String,
         serviceCode: String,
-        version: String,
-        grayFlag: Boolean
+        version: String
     ): DeployApp {
         val imageName = "${extServiceImageSecretConfig.imageNamePrefix}$serviceCode"
-        val hostPrefix = if (grayFlag) "$serviceCode-gray" else serviceCode
+        val host = if (namespaceName == extServiceBcsNameSpaceConfig.grayNamespaceName) extServiceIngressConfig.grayHost else extServiceIngressConfig.host
         return DeployApp(
             bcsUrl = extServiceBcsConfig.masterUrl,
             token = extServiceBcsConfig.token,
@@ -106,7 +105,7 @@ class ExtServiceBcsService {
                 servicePort = extServiceServiceConfig.servicePort.toInt()
             ),
             appIngress = AppIngress(
-                host = MessageFormat(extServiceIngressConfig.host).format(arrayOf(hostPrefix)),
+                host = MessageFormat(host).format(arrayOf(serviceCode)),
                 contextPath = extServiceIngressConfig.contextPath,
                 ingressAnnotationMap = mapOf(
                     "kubernetes.io/ingress.class" to extServiceIngressConfig.annotationClass,
@@ -127,12 +126,11 @@ class ExtServiceBcsService {
         userId: String,
         namespaceName: String,
         serviceCode: String,
-        version: String,
-        grayFlag: Boolean
+        version: String
     ): Result<Boolean> {
         logger.info("deployExtService userId is:$userId,namespaceName is:$namespaceName")
-        logger.info("deployExtService serviceCode is:$serviceCode,version is:$version,grayFlag is:$grayFlag")
-        val deployApp = generateDeployApp(namespaceName, serviceCode, version, grayFlag)
+        logger.info("deployExtService serviceCode is:$serviceCode,version is:$version")
+        val deployApp = generateDeployApp(namespaceName, serviceCode, version)
         val bcsDeployAppResult = client.get(ServiceBcsResource::class).bcsDeployApp(
             userId = userId,
             deployApp = deployApp

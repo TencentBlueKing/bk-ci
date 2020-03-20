@@ -80,7 +80,7 @@ class ExtServiceFeatureDao {
                 baseStep.set(WEIGHT, weight)
             }
             val serviceType = extServiceFeatureUpdateInfo.serviceTypeEnum
-            if(null != serviceType) {
+            if (null != serviceType) {
                 baseStep.set(SERVICE_TYPE, serviceType.type.toByte())
             }
             val visibilityLevel = extServiceFeatureUpdateInfo.visibilityLevel

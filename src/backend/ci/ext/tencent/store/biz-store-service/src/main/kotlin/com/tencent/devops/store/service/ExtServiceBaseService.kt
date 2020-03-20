@@ -664,8 +664,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
                 userId = userId,
                 namespaceName = extServiceBcsNameSpaceConfig.namespaceName,
                 serviceCode = serviceCode,
-                version = serviceRecord.version,
-                grayFlag = true
+                version = serviceRecord.version
             )
             logger.info("deployExtServiceResult is:$deployExtServiceResult")
             if (deployExtServiceResult.isNotOk()) {
@@ -857,10 +856,8 @@ abstract class ExtServiceBaseService @Autowired constructor() {
                     )
                 )
             }
-            val extensionName =getAllItemName(itemList.toSet())
+            val extensionName = getAllItemName(itemList.toSet())
             val serviceVersion = extServiceVersionLogDao.getVersionLogByServiceId(dslContext, serviceId)
-
-
 
             Result(
                 ServiceVersionVO(
@@ -888,7 +885,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
                         serviceCode,
                         StoreTypeEnum.SERVICE
                     ),
-                    labelList = lableList ,
+                    labelList = lableList,
                     userCommentInfo = userCommentInfo,
                     visibilityLevel = VisibilityLevelEnum.getVisibilityLevel(featureInfoRecord.visibilityLevel),
                     recommendFlag = featureInfoRecord?.recommendFlag,
