@@ -27,6 +27,7 @@ class UserExtServiceResourceImpl @Autowired constructor(
         serviceName: String?,
         classifyCode: String?,
         labelCode: String?,
+        bkServiceId: Long?,
         score: Int?,
         sortType: ExtServiceSortTypeEnum?,
         page: Int?,

@@ -7,6 +7,7 @@ import com.tencent.devops.store.pojo.ExtServiceItemRelCreateInfo
 import com.tencent.devops.store.pojo.ExtServiceItemRelUpdateInfo
 import com.tencent.devops.store.pojo.ItemPropCreateInfo
 import org.jooq.DSLContext
+import org.jooq.Record
 import org.jooq.Result
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
@@ -109,5 +110,11 @@ class ExtServiceItemRelDao {
             return
         }
         dslContext.batchUpdate(serviceItemRelList).execute()
+    }
+
+    fun getBkService(dslContext: DSLContext) : Result<out Record> {
+        return with(TExtensionServiceItemRel.T_EXTENSION_SERVICE_ITEM_REL) {
+            dslContext.select(BK_SERVICE_ID.`as`("bkServiceId")).from(this).groupBy(BK_SERVICE_ID).fetch()
+        }
     }
 }

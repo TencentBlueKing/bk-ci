@@ -48,7 +48,7 @@ class ExtItemServiceDao {
     fun updateItemService(dslContext: DSLContext, itemId: String, bkServiceId: String, userId: String) {
         with(TExtensionServiceItemRel.T_EXTENSION_SERVICE_ITEM_REL) {
             val baseStep = dslContext.update(this)
-            baseStep.set(BK_SERVICE_ID, bkServiceId)
+            baseStep.set(BK_SERVICE_ID, bkServiceId.toLong())
             baseStep.set(MODIFIER, userId).set(UPDATE_TIME, LocalDateTime.now())
                 .where(ITEM_ID.eq(itemId))
                 .execute()

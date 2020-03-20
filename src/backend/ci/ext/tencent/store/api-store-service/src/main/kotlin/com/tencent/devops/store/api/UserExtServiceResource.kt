@@ -58,6 +58,9 @@ interface UserExtServiceResource {
         @ApiParam("功能标签", required = false)
         @QueryParam("labelCode")
         labelCode: String?,
+        @ApiParam("BK服务ID", required = false)
+        @QueryParam("bkServiceId")
+        bkServiceId: Long?,
         @ApiParam("评分", required = false)
         @QueryParam("score")
         score: Int?,

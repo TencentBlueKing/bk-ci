@@ -380,6 +380,7 @@ class ExtServiceDao {
         dslContext: DSLContext,
         serviceName: String?,
         classifyCode: String?,
+        bkService: Long?,
         labelCodeList: List<String>?,
         score: Int?
     ): Int {
@@ -398,6 +399,13 @@ class ExtServiceDao {
             baseStep.leftJoin(talr).on(ta.ID.eq(talr.SERVICE_ID))
             conditions.add(talr.LABEL_ID.`in`(labelIdList))
         }
+        if(bkService != null) {
+            val tir = TExtensionServiceItemRel.T_EXTENSION_SERVICE_ITEM_REL.`as`("tir")
+            val serviceIdList = dslContext.select(tir.SERVICE_ID).from(tir).
+                where(tir.BK_SERVICE_ID.eq(bkService)).fetch().map { it["SERVICE_ID"] as String }
+            baseStep.leftJoin(tir).on(ta.ID.`in`(serviceIdList))
+        }
+
         if (score != null) {
             val tas = TStoreStatisticsTotal.T_STORE_STATISTICS_TOTAL.`as`("tas")
             val t = dslContext.select(
@@ -566,6 +574,7 @@ class ExtServiceDao {
         dslContext: DSLContext,
         serviceName: String?,
         classifyCode: String?,
+        bkService: Long?,
         labelCodeList: List<String>?,
         score: Int?,
         sortType: ExtServiceSortTypeEnum?,
@@ -599,6 +608,12 @@ class ExtServiceDao {
             val talr = TExtensionServiceLabelRel.T_EXTENSION_SERVICE_LABEL_REL.`as`("talr")
             baseStep.leftJoin(talr).on(ta.ID.eq(talr.SERVICE_ID))
             conditions.add(talr.LABEL_ID.`in`(labelIdList))
+        }
+        if(bkService != null) {
+            val tir = TExtensionServiceItemRel.T_EXTENSION_SERVICE_ITEM_REL.`as`("tir")
+            val serviceIdList = dslContext.select(tir.SERVICE_ID).from(tir).
+                where(tir.BK_SERVICE_ID.eq(bkService)).fetch().map { it["SERVICE_ID"] as String }
+            baseStep.leftJoin(tir).on(ta.ID.`in`(serviceIdList))
         }
         if (score != null) {
             val tas = TStoreStatisticsTotal.T_STORE_STATISTICS_TOTAL.`as`("tas")
@@ -650,6 +665,7 @@ class ExtServiceDao {
         val conditions = mutableListOf<Condition>()
         conditions.add(a.SERVICE_STATUS.eq(ExtServiceStatusEnum.RELEASED.status.toByte())) // 已发布的
         conditions.add(a.LATEST_FLAG.eq(true)) // 最新版本
+        conditions.add(a.DELETE_FLAG.eq(false)) // 只查没有被删除的插件
         return conditions
     }
 
@@ -677,7 +693,6 @@ class ExtServiceDao {
         val ta = TExtensionService.T_EXTENSION_SERVICE.`as`("ta")
         val storeType = StoreTypeEnum.SERVICE.type.toByte()
         val conditions = setExtServiceVisibleCondition(ta)
-        conditions.add(ta.DELETE_FLAG.eq(false)) // 只查没有被删除的插件
         if (!serviceName.isNullOrEmpty()) {
             conditions.add(ta.SERVICE_NAME.contains(serviceName))
         }
