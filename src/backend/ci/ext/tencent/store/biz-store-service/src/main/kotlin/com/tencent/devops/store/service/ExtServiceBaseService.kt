@@ -853,7 +853,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
                         id = it[KEY_LABEL_ID] as String,
                         labelCode = it[KEY_LABEL_CODE] as String,
                         labelName = it[KEY_LABEL_NAME] as String,
-                        labelType = it[KEY_LABEL_TYPE] as String
+                        labelType = StoreTypeEnum.getStoreType((it[KEY_LABEL_TYPE] as Byte).toInt())
                     )
                 )
             }
