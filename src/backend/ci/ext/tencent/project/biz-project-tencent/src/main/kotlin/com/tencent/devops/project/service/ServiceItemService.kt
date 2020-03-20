@@ -289,8 +289,17 @@ class ServiceItemService @Autowired constructor(
     }
 
     fun updateItem(userId: String, itemId: String, itemInfo: ItemInfoResponse): Result<Boolean> {
-        validArgs(itemInfo)
+        val itemRecordByName = serviceItemDao.getItemByName(dslContext, itemInfo.itemName)
 
+        if (itemRecordByName != null && itemId != itemRecordByName.id) {
+            logger.warn("createItem itemName is exsit, itemName[$itemInfo.itemName]")
+            throw RuntimeException("扩展点名称已存在")
+        }
+        val itemRecordByHtmlPath = serviceItemDao.getItemByHtmlPath(dslContext, itemInfo.htmlPath)
+        if (itemRecordByHtmlPath != null && itemId != itemRecordByHtmlPath.id) {
+            logger.warn("createItem itemName is exsit, itemName[$itemInfo.itemName]")
+            throw RuntimeException("前端页面路径路径重复")
+        }
         val updateInfo = ItemUpdateInfo(
             itemName = itemInfo.itemName,
             htmlPath = itemInfo.htmlPath,
