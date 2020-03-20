@@ -80,9 +80,8 @@ interface ApigwArtifactoryResourceV2 {
     ): Result<Url>
 
     @ApiOperation("根据元数据获取文件")
-    // @Path("/projects/{projectId}/search")
     @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/search")
-    @POST
+    @GET
     fun search(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
