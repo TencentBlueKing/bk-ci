@@ -29,6 +29,3 @@ dependencies {
     compile project(":core:artifactory:biz-artifactory")
 
 }
-
-
-apply from: "$rootDir/task_deploy_to_maven.gradle"

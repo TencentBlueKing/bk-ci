@@ -25,6 +25,7 @@
  */
 
 subprojects {
+    group "com.tencent.bk.devops.ci.environment"
     dependencies {
         compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
         compile "org.jetbrains.kotlin:kotlin-reflect"
@@ -32,5 +33,3 @@ subprojects {
         testCompile "org.springframework.boot:spring-boot-starter-test"
     }
 }
-
-apply from: "$rootDir/task_deploy_to_maven.gradle"

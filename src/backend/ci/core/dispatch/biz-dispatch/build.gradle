@@ -43,5 +43,3 @@ dependencies {
     compile "org.json:json"
     compile "org.apache.commons:commons-exec"
 }
-
-apply from: "$rootDir/task_deploy_to_maven.gradle"

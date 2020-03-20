@@ -113,8 +113,16 @@ ext {
 }
 
 allprojects {
-    group "com.tencent.bk.devops"
-    version "2.1.3"
+    group "com.tencent.bk.devops.ci"
+    // version "2.1.3"
+    // 修改为通过JVM启动构建时系统变量，或者从gradle.properties配置文件中读取
+    // 1. try read ci_version in jvm -Dci_version
+    def devops_version = System.getProperty("ci_version")
+    // 2. try read [CI_VERSION_IN_GRADLE_PROPERTIES] in gradle.properties
+    if (devops_version == null) {
+        devops_version = CI_VERSION_IN_GRADLE_PROPERTIES
+    }
+    version = devops_version
 
     def mavenRepoUrl = System.getProperty("mavenRepoUrl")
     if (mavenRepoUrl == null) {
@@ -153,6 +161,7 @@ subprojects {
     apply plugin: "idea"
     apply plugin: "java"
     apply plugin: "kotlin"
+    apply plugin: "maven"
     apply plugin: "kotlin-spring"
     apply plugin: "io.spring.dependency-management"
 
@@ -171,7 +180,7 @@ subprojects {
 
     jar.onlyIf { !sourceSets.main.allSource.files.isEmpty() }
     uploadArchives.onlyIf { !sourceSets.main.allSource.files.isEmpty() }
-//    install.onlyIf { !sourceSets.main.allSource.files.isEmpty() }
+    install.onlyIf { !sourceSets.main.allSource.files.isEmpty() }
 
     configurations {
         ktlint

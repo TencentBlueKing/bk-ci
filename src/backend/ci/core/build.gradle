@@ -32,5 +32,3 @@ subprojects {
         testCompile "org.springframework.boot:spring-boot-starter-test"
     }
 }
-
-apply from: "$rootDir/task_deploy_to_maven.gradle"
