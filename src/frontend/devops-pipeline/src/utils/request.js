@@ -20,7 +20,7 @@
 import axios from 'axios'
 import Vue from 'vue'
 import { bus } from './bus'
-import cookie from 'cookie'
+import * as cookie from 'js-cookie'
 
 const request = axios.create({
     baseURL: `${AJAX_URL_PIRFIX}`,
@@ -86,7 +86,7 @@ request.interceptors.response.use(response => {
 }, errorHandler)
 
 const injectCSRFTokenToHeaders = () => {
-    const CSRFToken = cookie.parse(document.cookie).backend_csrftoken
+    const CSRFToken = cookie.get('backend_csrftoken')
     if (CSRFToken !== undefined) {
         request.defaults.headers.post['X-CSRFToken'] = CSRFToken
     } else {
