@@ -69,6 +69,22 @@ class PipelineDockerTaskSimpleDao @Autowired constructor() {
         }
     }
 
+    fun updateDockerIp(
+        dslContext: DSLContext,
+        pipelineId: String,
+        vmSeq: String,
+        dockerIp: String
+    ) {
+        with(TDispatchPipelineDockerTaskSimple.T_DISPATCH_PIPELINE_DOCKER_TASK_SIMPLE) {
+            dslContext.update(this)
+                .set(DOCKER_IP, dockerIp)
+                .set(GMT_MODIFIED, LocalDateTime.now())
+                .where(PIPELINE_ID.eq(pipelineId))
+                .and(VM_SEQ.eq(vmSeq))
+                .execute()
+        }
+    }
+
     fun getByPipelineIdAndVMSeq(
         dslContext: DSLContext,
         pipelineId: String,
