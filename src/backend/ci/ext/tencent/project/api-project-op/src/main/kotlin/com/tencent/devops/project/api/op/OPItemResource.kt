@@ -68,7 +68,7 @@ interface OPItemResource {
     @PUT
     @Path("/{itemId}")
     @ApiOperation("修改扩展点")
-    fun get(
+    fun update(
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,

@@ -134,16 +134,14 @@ class ServiceItemDao {
             if (itemQueryInfo.serviceId != null) {
                 whereStep.where(PARENT_ID.eq(itemQueryInfo.serviceId))
             }
-
-            if (itemQueryInfo.itemStatus != null) {
-                whereStep.where(ITEM_STATUS.eq(itemQueryInfo.itemStatus.name))
-            }
+            whereStep.where(ITEM_STATUS.notEqual("DELETE"))
             if(itemQueryInfo.page != null && itemQueryInfo.pageSize != null){
                 whereStep.limit((itemQueryInfo.page - 1) * itemQueryInfo.pageSize, itemQueryInfo.pageSize).fetch()
             }
             else {
                 whereStep.orderBy(UPDATE_TIME).fetch()
             }
+
         }
     }
 
@@ -157,7 +155,7 @@ class ServiceItemDao {
             if (itemQueryInfo.serviceId != null) {
                 whereStep.where(PARENT_ID.eq(itemQueryInfo.serviceId))
             }
-
+            whereStep.where(ITEM_STATUS.notEqual("DELETE"))
             if (itemQueryInfo.itemStatus != null) {
                 whereStep.where(ITEM_STATUS.eq(itemQueryInfo.itemStatus.name))
             }
@@ -178,6 +176,14 @@ class ServiceItemDao {
         return with(TServiceItem.T_SERVICE_ITEM) {
             dslContext.selectFrom(this).where(
                 ITEM_CODE.eq(itemCode).and(ITEM_STATUS.eq(ServiceItemStatusEnum.ENABLE.name))
+            ).fetchOne()
+        }
+    }
+
+    fun getItemByHtmlPath(dslContext: DSLContext, htmlPath: String): TServiceItemRecord? {
+        return with(TServiceItem.T_SERVICE_ITEM) {
+            dslContext.selectFrom(this).where(
+                HTML_PATH.eq(htmlPath).and(ITEM_STATUS.eq(ServiceItemStatusEnum.ENABLE.name))
             ).fetchOne()
         }
     }

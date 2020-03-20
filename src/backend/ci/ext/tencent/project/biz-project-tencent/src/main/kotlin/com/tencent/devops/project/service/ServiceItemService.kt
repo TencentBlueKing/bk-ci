@@ -1,6 +1,7 @@
 package com.tencent.devops.project.service
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.project.api.pojo.ExtItemDTO
 import com.tencent.devops.project.api.pojo.ItemInfoResponse
 import com.tencent.devops.project.api.pojo.ItemListVO
@@ -13,6 +14,7 @@ import com.tencent.devops.project.dao.ServiceItemDao
 import com.tencent.devops.project.pojo.ItemCreateInfo
 import com.tencent.devops.project.pojo.ItemQueryInfo
 import com.tencent.devops.project.pojo.ItemUpdateInfo
+import com.tencent.devops.store.api.ServiceItemRelResource
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -23,6 +25,7 @@ import com.tencent.devops.project.api.pojo.ExtServiceEntity as ExtServiceEntity
 @Service
 class ServiceItemService @Autowired constructor(
     private val dslContext: DSLContext,
+    private val client: Client,
     private val serviceItemDao: ServiceItemDao,
     private val projectServiceDao: ServiceDao
 ) {
@@ -261,11 +264,8 @@ class ServiceItemService @Autowired constructor(
             logger.warn("createItem itemCode is exsit, itemCode[$itemCode]")
             throw RuntimeException("扩展点已存在")
         }
-        val itemRecordByName = serviceItemDao.getItemByName(dslContext, itemInfo.itemName)
-        if(itemRecordByName != null) {
-            logger.warn("createItem itemName is exsit, itemName[$itemInfo.itemName]")
-            throw RuntimeException("扩展点名称已存在")
-        }
+        validArgs(itemInfo)
+
         val createInfo = ItemCreateInfo(
             itemCode = itemInfo.itemCode,
             itemName = itemInfo.itemName,
@@ -282,11 +282,8 @@ class ServiceItemService @Autowired constructor(
     }
 
     fun updateItem(userId: String, itemId: String, itemInfo: ItemInfoResponse): Result<Boolean> {
-        val itemRecordByName = serviceItemDao.getItemByName(dslContext, itemInfo.itemName)
-        if(itemRecordByName != null) {
-            logger.warn("createItem itemName is exsit, itemName[$itemInfo.itemName]")
-            throw RuntimeException("扩展点名称已存在")
-        }
+        validArgs(itemInfo)
+
         val updateInfo = ItemUpdateInfo(
             itemName = itemInfo.itemName,
             htmlPath = itemInfo.htmlPath,
@@ -297,7 +294,22 @@ class ServiceItemService @Autowired constructor(
             tooltip = itemInfo.tooltip
         )
         serviceItemDao.update(dslContext, itemId, userId, updateInfo)
+        client.get(ServiceItemRelResource::class).updateItemService(userId, itemId, itemInfo.pid)
         return Result(true)
+    }
+
+    private fun validArgs(itemInfo: ItemInfoResponse) {
+        val itemRecordByName = serviceItemDao.getItemByName(dslContext, itemInfo.itemName)
+
+        if(itemRecordByName != null) {
+            logger.warn("createItem itemName is exsit, itemName[$itemInfo.itemName]")
+            throw RuntimeException("扩展点名称已存在")
+        }
+        val itemRecordByHtmlPath = serviceItemDao.getItemByHtmlPath(dslContext, itemInfo.htmlPath)
+        if(itemRecordByHtmlPath != null) {
+            logger.warn("createItem itemName is exsit, itemName[$itemInfo.itemName]")
+            throw RuntimeException("前端页面路径路径重复")
+        }
     }
 
     fun getItem(itemId: String): Result<ServiceItem?> {

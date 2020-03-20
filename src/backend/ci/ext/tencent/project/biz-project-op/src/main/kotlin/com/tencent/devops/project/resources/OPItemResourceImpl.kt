@@ -26,7 +26,7 @@ class OPItemResourceImpl @Autowired constructor(
         return itemService.createItem(userId, createInfo)
     }
 
-    override fun get(userId: String, itemId: String, updateInfo: ItemInfoResponse): Result<Boolean> {
+    override fun update(userId: String, itemId: String, updateInfo: ItemInfoResponse): Result<Boolean> {
         return itemService.updateItem(userId, itemId, updateInfo)
     }
 
