@@ -231,6 +231,96 @@ BEGIN
             ADD COLUMN `IMAGE_RD_TYPE` tinyint(1) DEFAULT NULL COMMENT '镜像研发来源：0自研1第三方';
     END IF;
 
+    IF EXISTS(SELECT 1
+              FROM information_schema.COLUMNS
+              WHERE TABLE_SCHEMA = db
+                AND TABLE_NAME = 'T_DISPATCH_PIPELINE_BUILD'
+                AND COLUMN_NAME = 'ID') THEN
+        IF NOT EXISTS(SELECT 1
+                      FROM information_schema.COLUMNS
+                      WHERE TABLE_SCHEMA = db
+                        AND TABLE_NAME = 'T_DISPATCH_PIPELINE_BUILD'
+                        AND COLUMN_NAME = 'ID'
+                        AND COLUMN_TYPE = 'bigint(20)') THEN
+            ALTER TABLE T_DISPATCH_PIPELINE_BUILD MODIFY COLUMN ID BIGINT(20) NOT NULL AUTO_INCREMENT;
+        END IF;
+    END IF;
+
+    IF EXISTS(SELECT 1
+              FROM information_schema.COLUMNS
+              WHERE TABLE_SCHEMA = db
+                AND TABLE_NAME = 'T_DISPATCH_PIPELINE_BUILD'
+                AND COLUMN_NAME = 'VM_ID') THEN
+        IF NOT EXISTS(SELECT 1
+                      FROM information_schema.COLUMNS
+                      WHERE TABLE_SCHEMA = db
+                        AND TABLE_NAME = 'T_DISPATCH_PIPELINE_BUILD'
+                        AND COLUMN_NAME = 'VM_ID'
+                        AND COLUMN_TYPE = 'bigint(20)') THEN
+            ALTER TABLE T_DISPATCH_PIPELINE_BUILD MODIFY COLUMN VM_ID BIGINT(20) NOT NULL AUTO_INCREMENT;
+        END IF;
+    END IF;
+
+    IF EXISTS(SELECT 1
+              FROM information_schema.COLUMNS
+              WHERE TABLE_SCHEMA = db
+                AND TABLE_NAME = 'T_DISPATCH_PIPELINE_DOCKER_TASK'
+                AND COLUMN_NAME = 'ID') THEN
+        IF NOT EXISTS(SELECT 1
+                      FROM information_schema.COLUMNS
+                      WHERE TABLE_SCHEMA = db
+                        AND TABLE_NAME = 'T_DISPATCH_PIPELINE_DOCKER_TASK'
+                        AND COLUMN_NAME = 'ID'
+                        AND COLUMN_TYPE = 'bigint(20)') THEN
+            ALTER TABLE T_DISPATCH_PIPELINE_DOCKER_TASK MODIFY COLUMN ID BIGINT(20) NOT NULL AUTO_INCREMENT;
+        END IF;
+    END IF;
+
+    IF EXISTS(SELECT 1
+              FROM information_schema.COLUMNS
+              WHERE TABLE_SCHEMA = db
+                AND TABLE_NAME = 'T_DISPATCH_THIRDPARTY_AGENT_BUILD'
+                AND COLUMN_NAME = 'ID') THEN
+        IF NOT EXISTS(SELECT 1
+                      FROM information_schema.COLUMNS
+                      WHERE TABLE_SCHEMA = db
+                        AND TABLE_NAME = 'T_DISPATCH_THIRDPARTY_AGENT_BUILD'
+                        AND COLUMN_NAME = 'ID'
+                        AND COLUMN_TYPE = 'bigint(20)') THEN
+            ALTER TABLE T_DISPATCH_THIRDPARTY_AGENT_BUILD MODIFY COLUMN ID BIGINT(20) NOT NULL AUTO_INCREMENT;
+        END IF;
+    END IF;
+
+    IF EXISTS(SELECT 1
+              FROM information_schema.COLUMNS
+              WHERE TABLE_SCHEMA = db
+                AND TABLE_NAME = 'T_DISPATCH_VM'
+                AND COLUMN_NAME = 'VM_ID') THEN
+        IF NOT EXISTS(SELECT 1
+                      FROM information_schema.COLUMNS
+                      WHERE TABLE_SCHEMA = db
+                        AND TABLE_NAME = 'T_DISPATCH_VM'
+                        AND COLUMN_NAME = 'VM_ID'
+                        AND COLUMN_TYPE = 'bigint(20)') THEN
+            ALTER TABLE T_DISPATCH_VM MODIFY COLUMN VM_ID BIGINT(20) NOT NULL AUTO_INCREMENT;
+        END IF;
+    END IF;
+
+    IF EXISTS(SELECT 1
+              FROM information_schema.COLUMNS
+              WHERE TABLE_SCHEMA = db
+                AND TABLE_NAME = 'T_DISPATCH_PIPELINE_DOCKER_DEBUG'
+                AND COLUMN_NAME = 'ID') THEN
+        IF NOT EXISTS(SELECT 1
+                      FROM information_schema.COLUMNS
+                      WHERE TABLE_SCHEMA = db
+                        AND TABLE_NAME = 'T_DISPATCH_PIPELINE_DOCKER_DEBUG'
+                        AND COLUMN_NAME = 'ID'
+                        AND COLUMN_TYPE = 'bigint(20)') THEN
+            ALTER TABLE T_DISPATCH_PIPELINE_DOCKER_DEBUG MODIFY COLUMN ID BIGINT(20) NOT NULL AUTO_INCREMENT;
+        END IF;
+    END IF;
+
     COMMIT;
 END <CI_UBF>
 DELIMITER ;

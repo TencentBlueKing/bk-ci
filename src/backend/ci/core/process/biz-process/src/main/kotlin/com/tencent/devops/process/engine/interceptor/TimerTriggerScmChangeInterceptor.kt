@@ -44,6 +44,7 @@ import com.tencent.devops.common.pipeline.pojo.git.GitPullMode
 import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils.buildConfig
 import com.tencent.devops.common.web.mq.alert.AlertLevel
 import com.tencent.devops.common.web.mq.alert.AlertUtils
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_TIMER_SCM_NO_CHANGE
 import com.tencent.devops.process.constant.ProcessMessageCode.OK
 import com.tencent.devops.process.engine.pojo.Response
@@ -71,7 +72,7 @@ class TimerTriggerScmChangeInterceptor @Autowired constructor(
 
         val pipelineId = task.pipelineInfo.pipelineId
         val projectId = task.pipelineInfo.projectId
-        val model = task.model
+        val model = task.model ?: return Response(ERROR_PIPELINE_MODEL_NOT_EXISTS.toInt(), "流水线的模型不存在")
 
         var noScm = false
         var hasCodeChange = false
