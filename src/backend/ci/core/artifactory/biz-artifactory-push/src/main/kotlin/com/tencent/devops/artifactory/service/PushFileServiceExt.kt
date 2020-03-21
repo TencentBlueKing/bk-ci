@@ -22,7 +22,7 @@ class PushFileServiceExt @Autowired constructor(
     private val pipelineAuthServiceCode: PipelineAuthServiceCode,
     private val envService: EnvServiceExt,
     private val jobService: JobServiceExt,
-    private val fileServiceExt: FileServiceExt
+    private val fileService: FileService
 ): PushFileService {
 
     override fun pushFileByJob(
@@ -51,7 +51,7 @@ class PushFileServiceExt @Autowired constructor(
         val envSet = envService.parsingAndValidateEnv(pushResourceInfo, userId, projectId)
         try {
             // 下载目标文件到本地
-            downloadFiles = fileServiceExt.downloadFileTolocal(projectId, pipelineId, buildId, fileResourceInfo.fileName,
+            downloadFiles = fileService.downloadFileTolocal(projectId, pipelineId, buildId, fileResourceInfo.fileName,
                 fileResourceInfo.isCustom!!
             ).toMutableList()
             val filePath = mutableListOf<String>()
@@ -77,6 +77,7 @@ class PushFileServiceExt @Autowired constructor(
             val jobInstanceId = jobService.fastPushFileDevops(fastPushFileRequest, projectId)
             jobService.checkStatus(projectId, jobInstanceId, userId)
         } catch (e: Exception) {
+            logger.warn("push file by job fail: $e")
             throw e
         } finally {
             clearTmpFile(downloadFiles)
