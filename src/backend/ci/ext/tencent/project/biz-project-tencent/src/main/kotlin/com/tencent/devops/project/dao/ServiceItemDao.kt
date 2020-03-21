@@ -222,7 +222,7 @@ class ServiceItemDao {
 
     fun getAllServiceItem(dslContext: DSLContext): Result<TServiceItemRecord>? {
         return with(TServiceItem.T_SERVICE_ITEM) {
-            dslContext.selectFrom(this).where(ITEM_STATUS.eq(ServiceItemStatusEnum.ENABLE.name))
+            dslContext.selectFrom(this).where(ITEM_STATUS.notEqual(ServiceItemStatusEnum.DELETE.name))
                 .orderBy(CREATE_TIME.desc())
                 .fetch()
         }
