@@ -38,6 +38,7 @@ class ServiceItemService @Autowired constructor(
     fun init() {
         // 初始化projectServiceMap
         getServiceList()
+        logger.info("projectServiceMap: $projectServiceMap")
     }
 
     fun getServiceList(): List<ExtItemDTO> {
@@ -228,6 +229,7 @@ class ServiceItemService @Autowired constructor(
                 name = serviceRecord.name.substringBefore("(")
             )
             projectServiceMap[serviceId] = serviceEntity
+            logger.info("set bkServiceId to map: servcieId[$serviceId], entity[${serviceEntity.toString()}]")
             serviceEntity
         } else {
             projectServiceMap[serviceId]!!
