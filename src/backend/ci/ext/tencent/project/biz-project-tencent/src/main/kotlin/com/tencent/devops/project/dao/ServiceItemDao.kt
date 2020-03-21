@@ -149,16 +149,14 @@ class ServiceItemDao {
         return with(TServiceItem.T_SERVICE_ITEM) {
             val whereStep = dslContext.select(this.ID.countDistinct()).from(this)
             if (itemQueryInfo.itemName != null) {
-                whereStep.where(ITEM_NAME.like(itemQueryInfo.itemName))
+                whereStep.where(ITEM_NAME.like("%${itemQueryInfo.itemName}%"))
             }
 
             if (itemQueryInfo.serviceId != null) {
                 whereStep.where(PARENT_ID.eq(itemQueryInfo.serviceId))
             }
             whereStep.where(ITEM_STATUS.notEqual("DELETE"))
-            if (itemQueryInfo.itemStatus != null) {
-                whereStep.where(ITEM_STATUS.eq(itemQueryInfo.itemStatus.name))
-            }
+
             whereStep.fetchOne(0, Int::class.java)
         }
 
