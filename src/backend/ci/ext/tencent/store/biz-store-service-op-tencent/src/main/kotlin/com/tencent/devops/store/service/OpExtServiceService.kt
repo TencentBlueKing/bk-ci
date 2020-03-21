@@ -207,7 +207,7 @@ class OpExtServiceService @Autowired constructor(
                     recommentFlag = settingInfo.recommendFlag,
                     certificationFlag = settingInfo.certificationFlag,
                     modifierUser = userId,
-                    serviceTypeEnum = settingInfo.serviceTypeEnum
+                    serviceTypeEnum = settingInfo.type
                 )
             )
         }
