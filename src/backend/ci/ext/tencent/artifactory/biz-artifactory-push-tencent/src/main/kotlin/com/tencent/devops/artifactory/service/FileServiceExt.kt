@@ -33,7 +33,7 @@ class FileServiceExt @Autowired constructor(
         isCustom: Boolean
     ): List<File> {
         val downloadFiles = mutableListOf<File>()
-        val destPath = Files.createTempDirectory("").toFile().absolutePath
+        val destPath = buildTmpFile(projectId, buildId, pipelineId)
         val isRepoGray = repoGray.isGray(projectId, redisOperation)
 
         var count = 0
@@ -151,6 +151,10 @@ class FileServiceExt @Autowired constructor(
             }
         }
         return result
+    }
+
+    private fun buildTmpFile(projectId: String, buildId: String, pipelineId: String): String {
+        return Files.createTempDirectory("/jobPush/$projectId/$pipelineId/$buildId").toFile().absolutePath
     }
 
     // 获取所有的文件和文件夹
