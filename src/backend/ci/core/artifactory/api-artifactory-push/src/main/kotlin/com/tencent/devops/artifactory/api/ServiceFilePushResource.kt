@@ -22,7 +22,6 @@ interface ServiceFilePushResource {
     @ApiOperation("分发文件")
     @POST
     @Path("/")
-    @Consumes(MediaType.MULTIPART_FORM_DATA)
     fun pushFile(
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
