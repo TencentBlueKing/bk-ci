@@ -123,7 +123,7 @@ class EnvServiceExt @Autowired constructor(
     }
 
     private fun checkParams(str: String?): Boolean {
-        if (!(str == null || str.isEmpty())) {
+        if (str == null || str.isEmpty()) {
             throw RuntimeException(MessageCodeUtil.getCodeMessage(PushMessageCode.FUSH_FILE_REMOTE_MACHINE_EMPTY, null))
         }
         return true
