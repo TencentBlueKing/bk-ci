@@ -21,6 +21,7 @@ class EnvServiceExt @Autowired constructor(
     fun parsingAndValidateEnv(remoteResourceInfo: RemoteResourceInfo, userId: String, projectId: String): EnvSet {
         val pushType = remoteResourceInfo.pushType.name
         val targetMachine = remoteResourceInfo.targetMachine
+        logger.info("push file by Job: pushType[$pushType] targetMachine[$targetMachine] userId[$userId] projectId[$projectId]")
         val envSet = when (pushType) {
             PushTypeEnum.ENVId.name -> getRemoteInfoByEnvId(targetMachine)
             PushTypeEnum.NodeId.name -> getRemoteInfoByNodeId(targetMachine)
@@ -28,6 +29,7 @@ class EnvServiceExt @Autowired constructor(
             else -> throw RuntimeException()
         }
         checkEnvNodeExists(userId, projectId, envSet)
+        logger.info("push file by Job: envSet[$envSet]")
         return envSet
     }
 
