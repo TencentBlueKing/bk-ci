@@ -18,8 +18,8 @@ import org.springframework.stereotype.Service
 class JobServiceExt @Autowired constructor(
     private val objectMapper: ObjectMapper
 ) {
-    @Value("\\")
-    private val jobUrl: String? = null
+    @Value("\${job.nginx.url:#{null}}")
+    val jobUrl: String? = null
 
     fun fastPushFileDevops(pushFileRequest: FastPushFileRequest, projectId: String): Long {
         val requestBody = objectMapper.writeValueAsString(pushFileRequest)
