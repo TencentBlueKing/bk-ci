@@ -30,6 +30,7 @@ class PushFileServiceExt @Autowired constructor(
         pushResourceInfo: RemoteResourceInfo,
         fileResourceInfo: FileResourceInfo
     ): Result<Boolean> {
+        logger.info("pushFileByJob user[$userId], pushResourceInfo[$pushResourceInfo] fileResourceInfo[$fileResourceInfo]")
         val projectId = fileResourceInfo.projectId
         val pipelineId = fileResourceInfo.pipelineId
         val buildId = fileResourceInfo.buildId
