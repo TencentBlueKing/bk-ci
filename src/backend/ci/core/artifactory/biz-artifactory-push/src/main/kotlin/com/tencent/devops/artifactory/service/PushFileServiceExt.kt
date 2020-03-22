@@ -95,7 +95,9 @@ class PushFileServiceExt @Autowired constructor(
                 if (file.isDirectory) {
                     logger.info("[ delete temp dir $file : ${file.deleteRecursively()}")
                 } else {
-                    logger.info("[delete temp file $file : ${file.delete()}")
+                    logger.info("[ delete temp dir $file : ${file.length()} , ${file.path}")
+
+//                    logger.info("[delete temp file $file : ${file.delete()}")
                 }
             }
         }
