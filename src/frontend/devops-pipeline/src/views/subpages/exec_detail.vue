@@ -151,7 +151,7 @@
                 const tag = this.currentElement.id
                 const curLogPostData = this.logPostData[tag] || {}
                 const currentExe = curLogPostData.currentExe || 1
-                return `${AJAX_URL_PIRFIX}/log/api/user/logs/${this.$route.params.projectId}/${this.$route.params.pipelineId}/${this.execDetail.id}/download?tag=${tag}&executeCount=${currentExe}&fileName    =${fileName}`
+                return `${AJAX_URL_PIRFIX}/log/api/user/logs/${this.$route.params.projectId}/${this.$route.params.pipelineId}/${this.execDetail.id}/download?tag=${tag}&executeCount=${currentExe}&fileName=${fileName}`
             },
             panels () {
                 return [{
