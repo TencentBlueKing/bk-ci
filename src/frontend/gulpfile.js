@@ -18,19 +18,17 @@ const argv = yargs.alias({
     'lsVersion': 'localStorage version'
 }).argv
 const { dist, env, lsVersion, scope } = argv
-
-
 const svgSpriteConfig = {
     mode: {
         symbol: true
     }
-};
+}
 
-function taskGenerator(type) {
+function taskGenerator (type) {
     return () => {
         return src(`./svg-sprites/${type}/*.svg`)
-        .pipe(svgSprite(svgSpriteConfig))
-        .pipe(dest(`./svg-sprites/dist/${type}`))
+            .pipe(svgSprite(svgSpriteConfig))
+            .pipe(dest(`./svg-sprites/dist/${type}`))
     }
 }
 
@@ -42,13 +40,34 @@ function renameSvg (type) {
     }
 }
 
+function getScopeStr (scope) {
+    try {
+        if (!scope) return ''
+        let scopeArray
+        switch (true) {
+            case typeof scope === 'string':
+                scopeArray = scope.split(',')
+                break
+            default:
+                scopeArray = scope
+        }
+        const isMultiple = scopeArray.length > 1
+        return `--scope=devops-${isMultiple ? `{${scopeArray.join(',')}}` : scopeArray.join(',')}`
+    } catch (e) {
+        console.error(e)
+        return ''
+    }
+}
+
 task('devops', series([taskGenerator('devops'), renameSvg('devops')]))
 task('pipeline', series([taskGenerator('pipeline'), renameSvg('pipeline')]))
 task('copy', () => src(['common-lib/**'], { 'base': '.' }).pipe(dest(`${dist}/`)))
+
 task('build', cb => {
     const spinner = new Ora('building bk-ci frontend project').start()
-    const isMultiple = typeof scope === 'string' && scope.split(',').length > 1
-    require('child_process').exec(`lerna run public:${env} --scope=devops-${isMultiple ? `{${scope}}` : scope} -- --env.dist=${dist} --env.lsVersion=${lsVersion}`, {
+    const scopeStr = getScopeStr(scope)
+    console.log(`lerna run public:${env} ${scopeStr} -- --env.dist=${dist} --env.lsVersion=${lsVersion}`)
+    require('child_process').exec(`lerna run public:${env} ${scopeStr} -- --env.dist=${dist} --env.lsVersion=${lsVersion}`, {
         maxBuffer: 5000 * 1024
     }, (err, res) => {
         if (err) {
