@@ -68,6 +68,7 @@ class MoocDao {
                 ).onDuplicateKeyUpdate()
                 .set(PROPS, body)
                 .set(UPDATE_TIME, time)
+                .execute()
             return id
         }
     }
