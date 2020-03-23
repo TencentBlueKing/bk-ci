@@ -58,30 +58,6 @@ class JobServiceExt @Autowired constructor(
         }
     }
 
-    fun checkStatus(
-        projectId: String,
-        taskInstanceId: Long,
-        operator: String
-    ) {
-        var jobSuccess = true
-        var startTime = System.currentTimeMillis()
-
-        while (jobSuccess) {
-            Thread.sleep(5000)
-            val taskResult = getTaskResult(projectId, taskInstanceId, operator)
-            if (taskResult.isFinish) {
-                if (taskResult.success) {
-                    jobSuccess = false
-                } else {
-                    throw java.lang.RuntimeException("job execute fail, mssage:${taskResult.msg}")
-                }
-            } else {
-                logger.info("执行中/Waiting for job:$taskInstanceId")
-            }
-        }
-        logger.info("job执行耗时：${System.currentTimeMillis() - startTime}")
-    }
-
     fun getTaskResult(projectId: String, taskInstanceId: Long, operator: String): TaskResult {
         try {
             val url = "$jobUrl/service/history/$projectId/$taskInstanceId/status"
@@ -121,7 +97,6 @@ class JobServiceExt @Autowired constructor(
     }
 
     data class TaskResult(val isFinish: Boolean, val success: Boolean, val msg: String)
-
 
     companion object {
         val logger = LoggerFactory.getLogger(this::class.java)

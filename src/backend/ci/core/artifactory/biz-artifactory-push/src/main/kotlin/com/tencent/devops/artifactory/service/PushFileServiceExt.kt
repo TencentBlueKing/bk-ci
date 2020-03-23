@@ -1,8 +1,11 @@
 package com.tencent.devops.artifactory.service
 
 import com.tencent.devops.artifactory.constant.PushMessageCode
+import com.tencent.devops.artifactory.pojo.EnvSet
 import com.tencent.devops.artifactory.pojo.FastPushFileRequest
 import com.tencent.devops.artifactory.pojo.FileResourceInfo
+import com.tencent.devops.artifactory.pojo.vo.PushResultVO
+import com.tencent.devops.artifactory.pojo.PushStatus
 import com.tencent.devops.artifactory.pojo.RemoteResourceInfo
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.AuthPermission
@@ -23,14 +26,17 @@ class PushFileServiceExt @Autowired constructor(
     private val envService: EnvServiceExt,
     private val jobService: JobServiceExt,
     private val fileService: FileService
-): PushFileService {
+) : PushFileService {
+
+    val jobInstanceMap = mutableMapOf<String, List<String>>()
 
     override fun pushFileByJob(
         userId: String,
         pushResourceInfo: RemoteResourceInfo,
         fileResourceInfo: FileResourceInfo
-    ): Result<Boolean> {
+    ): Result<Long> {
         logger.info("pushFileByJob user[$userId], pushResourceInfo[$pushResourceInfo] fileResourceInfo[$fileResourceInfo]")
+        var jobInstanceId = 0L
         val projectId = fileResourceInfo.projectId
         val pipelineId = fileResourceInfo.pipelineId
         val buildId = fileResourceInfo.buildId
@@ -52,7 +58,8 @@ class PushFileServiceExt @Autowired constructor(
         val envSet = envService.parsingAndValidateEnv(pushResourceInfo, userId, projectId)
         try {
             // 下载目标文件到本地
-            downloadFiles = fileService.downloadFileTolocal(projectId, pipelineId, buildId, fileResourceInfo.fileName,
+            downloadFiles = fileService.downloadFileTolocal(
+                projectId, pipelineId, buildId, fileResourceInfo.fileName,
                 fileResourceInfo.isCustom!!
             ).toMutableList()
             val filePath = mutableListOf<String>()
@@ -66,42 +73,92 @@ class PushFileServiceExt @Autowired constructor(
                 account = pushResourceInfo.account
             )
 
+            val localEnvSet = EnvSet(emptyList(), emptyList(), envService.buildIpDto())
+
             val fastPushFileRequest = FastPushFileRequest(
                 userId = userId,
-                envSet = envSet,
+                envSet = localEnvSet,
                 fileSources = listOf(fileSource),
                 fileTargetPath = pushResourceInfo.targetPath,
                 account = pushResourceInfo.account,
                 timeout = pushResourceInfo.timeout ?: 600
             )
             // 执行分发动作
-            val jobInstanceId = jobService.fastPushFileDevops(fastPushFileRequest, projectId)
-            jobService.checkStatus(projectId, jobInstanceId, userId)
+            jobInstanceId = jobService.fastPushFileDevops(fastPushFileRequest, projectId)
+            cachePushMsg(jobInstanceId, downloadFiles)
         } catch (e: Exception) {
             logger.warn("push file by job fail: $e")
+            clearTmpFile(jobInstanceId)
             throw e
-        } finally {
-            clearTmpFile(downloadFiles)
         }
 
-        return Result(true)
+        return Result(jobInstanceId)
     }
 
-    private fun clearTmpFile(files: List<File>) {
+    fun checkStatus(
+        userId: String,
+        projectId: String,
+        taskInstanceId: Long
+    ): Result<PushResultVO> {
+        val result = jobService.getTaskResult(projectId, taskInstanceId, userId)
+        if (result.isFinish) {
+            return if (result.success) {
+                Result(
+                    PushResultVO(
+                        status = PushStatus.SUCCESS,
+                        msg = result.msg
+                    )
+                )
+            } else {
+                Result(
+                    PushResultVO(
+                        status = PushStatus.FAIL, msg = result.msg
+                    )
+                )
+            }
+        } else {
+            return Result(
+                PushResultVO(
+                    status = PushStatus.RUNNING,
+                    msg = result.msg
+                )
+            )
+        }
+    }
+
+    fun clearTmpFile(jobId: Long) {
+        val fileList = jobInstanceMap[jobId.toString()]
+        if (fileList != null) {
+            if(fileList.isNotEmpty()) {
+                clearTmpFile(fileList)
+            }
+        }
+    }
+
+    private fun clearTmpFile(files: List<String>) {
         logger.info("start clear TmpFile, tmpFile count:${files.size}")
         val startTime = System.currentTimeMillis()
         files.forEach { file ->
-            if (file.exists()) {
-                if (file.isDirectory) {
-                    logger.info("[ delete temp dir $file : ${file.deleteRecursively()}")
+            val tmpFile  = File(file)
+            if (tmpFile.exists()) {
+                if (tmpFile.isDirectory) {
+                    logger.info("[ delete temp dir $file : ${tmpFile.deleteRecursively()}")
                 } else {
-                    logger.info("[ delete temp dir $file : ${file.length()} , ${file.path}")
-
-//                    logger.info("[delete temp file $file : ${file.delete()}")
+                    logger.info("[delete temp file $file : ${tmpFile.delete()}")
                 }
             }
         }
         logger.info("delete temp file time：${System.currentTimeMillis() - startTime}")
+    }
+
+
+
+    private fun cachePushMsg(jobId: Long, files: List<File>) {
+        val pathList = mutableListOf<String>()
+        files.forEach {
+            pathList.add(it.absolutePath)
+        }
+        jobInstanceMap[jobId.toString()] = pathList
     }
 
     companion object {
