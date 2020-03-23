@@ -107,7 +107,7 @@ class ExtServiceSearchService @Autowired constructor(
                     bkServiceId = bkServiceId,
                     labelCode = null,
                     score = null,
-                    sortType = ExtServiceSortTypeEnum.DOWNLOAD_COUNT,
+                    sortType = ExtServiceSortTypeEnum.UPDATE_TIME,
                     desc = true,
                     page = page,
                     pageSize = pageSize
@@ -192,7 +192,7 @@ class ExtServiceSearchService @Autowired constructor(
             page,
             pageSize
         ) ?: return SearchExtServiceVO(0, page, pageSize, results)
-        logger.info("[list]get services: $services")
+        logger.info("[list] userId[$userId],userDeptList[$userDeptList],serviceName[$serviceName],classifyCode[$classifyCode],labelCode[$labelCode] get services: $services")
 
         val serviceCodeList = services.map {
             it["SERVICE_ID"] as String
