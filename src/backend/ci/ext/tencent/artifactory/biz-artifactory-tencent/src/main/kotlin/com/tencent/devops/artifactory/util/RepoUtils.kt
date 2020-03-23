@@ -109,6 +109,24 @@ object RepoUtils {
         }
     }
 
+    fun toFileDetail(nodeInfo: QueryNodeInfo): FileDetail {
+        return FileDetail(
+            name = nodeInfo.name,
+            path = nodeInfo.path,
+            fullName = nodeInfo.fullPath,
+            fullPath = nodeInfo.fullPath,
+            size = nodeInfo.size,
+            createdTime = LocalDateTime.parse(nodeInfo.createdDate, DateTimeFormatter.ISO_DATE_TIME).timestamp(),
+            modifiedTime = LocalDateTime.parse(nodeInfo.lastModifiedDate, DateTimeFormatter.ISO_DATE_TIME).timestamp(),
+            checksums = FileChecksums(
+                sha256 = nodeInfo.sha256 ?: "",
+                sha1 = "",
+                md5 = nodeInfo.md5 ?: ""
+            ),
+            meta = nodeInfo.metadata
+        )
+    }
+
     private fun refineFullPath(fileInfo: com.tencent.bkrepo.generic.pojo.FileInfo): String {
         return if (fileInfo.folder && !fileInfo.fullPath.endsWith("/")) {
             fileInfo.fullPath + "/"

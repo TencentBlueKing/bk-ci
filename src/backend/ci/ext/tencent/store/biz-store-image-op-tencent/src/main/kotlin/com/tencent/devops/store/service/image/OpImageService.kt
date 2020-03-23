@@ -1,13 +1,9 @@
 package com.tencent.devops.store.service.image
 
-import com.fasterxml.jackson.core.type.TypeReference
-import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.pipeline.type.docker.ImageType
-import com.tencent.devops.model.store.tables.records.TImageRecord
 import com.tencent.devops.store.dao.OpImageDao
 import com.tencent.devops.store.dao.common.StoreProjectRelDao
 import com.tencent.devops.store.dao.common.StoreReleaseDao
@@ -44,9 +40,6 @@ import com.tencent.devops.store.pojo.common.KEY_PUB_TIME
 import com.tencent.devops.store.pojo.common.KEY_UPDATE_TIME
 import com.tencent.devops.store.pojo.common.KEY_VERSION_LOG_CONTENT
 import com.tencent.devops.store.pojo.common.PASS
-import com.tencent.devops.store.pojo.common.REJECT
-import com.tencent.devops.store.pojo.common.StoreReleaseCreateRequest
-import com.tencent.devops.store.pojo.common.enums.AuditTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.image.enums.CategoryTypeEnum
@@ -91,7 +84,7 @@ class OpImageService @Autowired constructor(
         accessToken: String,
         userId: String,
         imageCreateRequest: ImageCreateRequest,
-        checkLatest: Boolean = true,
+        checkLatest: Boolean = false,
         needAuth: Boolean = true,
         sendCheckResultNotify: Boolean = true,
         runCheckPipeline: Boolean = true
@@ -224,7 +217,7 @@ class OpImageService @Autowired constructor(
             }
             // 若更新已发布、下架中、已下架版本，需要更新最终agentType
             if (imageRecord.imageStatus in setOf(ImageStatusEnum.RELEASED, ImageStatusEnum.UNDERCARRIAGING, ImageStatusEnum.UNDERCARRIAGED).map { it.status.toByte() }) {
-                saveImageAgentTypeToFeature(dslContext, imageRecord.imageCode, imageUpdateRequest.agentTypeScope)
+                imageReleaseService.saveImageAgentTypeToFeature(dslContext, imageRecord.imageCode, imageUpdateRequest.agentTypeScope)
             }
             // 更新范畴
             val categoryIdList = imageUpdateRequest.categoryIdList
@@ -377,62 +370,8 @@ class OpImageService @Autowired constructor(
         )
     }
 
-    /**
-     * 审核镜像
-     */
-    fun approveImageWithoutNotify(userId: String, imageId: String, approveImageReq: ApproveImageReq, checkCurrentStatus: Boolean = true): AuditTypeEnum {
-        // 参数校验
-        // 判断镜像是否存在
-        val image = imageDao.getImage(dslContext, imageId)
-            ?: throw InvalidParamException(
-                message = "imageId=$imageId is not valid",
-                params = arrayOf(imageId)
-            )
-        val oldStatus = image.imageStatus
-        // 非待审核状态直接返回
-        if (checkCurrentStatus && oldStatus != ImageStatusEnum.AUDITING.status.toByte()) {
-            throw InvalidParamException(
-                message = "imageId=$imageId is not in approving state",
-                params = arrayOf(imageId)
-            )
-        }
-        // 审核结果校验
-        val approveResult = approveImageReq.result
-        if (approveResult != PASS && approveResult != REJECT) {
-            throw InvalidParamException(
-                message = "approveResult=$approveResult is not valid,should be PASS/REJECT",
-                params = arrayOf(approveResult)
-            )
-        }
-        val imageStatus =
-            if (approveResult == PASS) {
-                ImageStatusEnum.RELEASED.status.toByte()
-            } else {
-                ImageStatusEnum.AUDIT_REJECT.status.toByte()
-            }
-        val type = if (approveResult == PASS) AuditTypeEnum.AUDIT_SUCCESS else AuditTypeEnum.AUDIT_REJECT
-        val imageStatusMsg = approveImageReq.message
-        dslContext.transaction { t ->
-            val context = DSL.using(t)
-            handleImageRelease(
-                context = context,
-                userId = userId,
-                approveResult = approveResult,
-                image = image,
-                imageStatus = imageStatus,
-                imageStatusMsg = imageStatusMsg,
-                publicFlag = approveImageReq.publicFlag,
-                recommendFlag = approveImageReq.recommendFlag,
-                certificationFlag = approveImageReq.certificationFlag,
-                rdType = approveImageReq.rdType,
-                weight = approveImageReq.weight
-            )
-        }
-        return type
-    }
-
     fun approveImage(userId: String, imageId: String, approveImageReq: ApproveImageReq): Result<Boolean> {
-        val type = approveImageWithoutNotify(
+        val type = imageReleaseService.approveImageWithoutNotify(
             userId = userId,
             imageId = imageId,
             approveImageReq = approveImageReq
@@ -442,80 +381,13 @@ class OpImageService @Autowired constructor(
         return Result(true)
     }
 
-    private fun saveImageAgentTypeToFeature(
-        context: DSLContext,
-        imageCode: String,
-        agentTypeList: List<ImageAgentTypeEnum>
-    ) {
-        imageAgentTypeDao.deleteAgentTypeByImageCode(context, imageCode)
-        agentTypeList.forEach {
-            imageAgentTypeDao.addAgentTypeByImageCode(context, imageCode, it)
-        }
-    }
-
-    fun handleImageRelease(
-        context: DSLContext,
-        userId: String,
-        approveResult: String,
-        image: TImageRecord,
-        imageStatus: Byte,
-        imageStatusMsg: String,
-        publicFlag: Boolean,
-        recommendFlag: Boolean,
-        certificationFlag: Boolean,
-        rdType: ImageRDTypeEnum?,
-        weight: Int?
-    ) {
-        val latestFlag = approveResult == PASS
-        var pubTime: LocalDateTime? = null
-        if (latestFlag) {
-            // 清空旧版本LATEST_FLAG
-            marketImageDao.cleanLatestFlag(context, image.imageCode)
-            pubTime = LocalDateTime.now()
-            // 记录发布信息
-            storeReleaseDao.addStoreReleaseInfo(
-                dslContext = context,
-                userId = userId,
-                storeReleaseCreateRequest = StoreReleaseCreateRequest(
-                    storeCode = image.imageCode,
-                    storeType = StoreTypeEnum.IMAGE,
-                    latestUpgrader = image.creator,
-                    latestUpgradeTime = pubTime
-                )
-            )
-            imageFeatureDao.update(
-                context,
-                image.imageCode,
-                publicFlag,
-                recommendFlag,
-                certificationFlag,
-                rdType,
-                userId,
-                weight
-            )
-        }
-        marketImageDao.updateImageStatusInfo(
-            dslContext = context,
-            imageId = image.id,
-            imageStatus = imageStatus,
-            imageStatusMsg = imageStatusMsg,
-            latestFlag = latestFlag,
-            pubTime = pubTime
-        )
-        saveImageAgentTypeToFeature(
-            context,
-            image.imageCode,
-            JsonUtil.to(image.agentTypeScope, object : TypeReference<List<ImageAgentTypeEnum>>() {})
-        )
-    }
-
     fun releaseImageDirectly(
         context: DSLContext,
         userId: String,
         imageCode: String,
         imageId: String
     ) {
-        approveImageWithoutNotify(
+        imageReleaseService.approveImageWithoutNotify(
             userId = userId,
             imageId = imageId,
             approveImageReq = ApproveImageReq(

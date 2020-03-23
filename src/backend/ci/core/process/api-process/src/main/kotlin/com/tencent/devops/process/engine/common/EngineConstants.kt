@@ -37,3 +37,6 @@ const val BS_MANUAL_ACTION_USERID = "_bsManualActionUserId_"
 const val BS_MANUAL_ACTION_SUGGEST = "_bsManualActionSuggest_"
 const val BS_MANUAL_ACTION_PARAMS = "_bsManualActionParams_"
 const val BS_MANUAL_ACTION_DESC = "_bsManualActionDesc_"
+
+const val BS_MANUAL_START_STAGE = "manual_start_stage"
+const val BS_CONTAINER_END_SOURCE_PREIX = "CONTAINER_END_"

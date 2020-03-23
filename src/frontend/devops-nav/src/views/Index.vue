@@ -79,7 +79,7 @@
     import Header from '../components/Header/index.vue'
     import AskPermissionDialog from '../components/AskPermissionDialog/AskPermissionDialog.vue'
     import LoginDialog from '../components/LoginDialog/index.vue'
-    import { Component, Watch } from 'vue-property-decorator'
+    import { Component } from 'vue-property-decorator'
     import { State, Getter, Action } from 'vuex-class'
     import eventBus from '../utils/eventBus'
 
@@ -134,11 +134,6 @@
             return explorer.indexOf('Chrome') >= 0 && explorer.indexOf('QQ') === -1
         }
 
-        @Watch('$route.path')
-        routeChange (name: string): void {
-            this.hasProjectList && this.saveProjectId()
-        }
-
         switchProject () {
             this.iframeUtil.toggleProjectMenu(true)
         }
@@ -148,15 +143,7 @@
             this.closePreviewTips()
         }
 
-        saveProjectId (): void {
-            const { $route, projectList } = this
-            if (projectList.find(project => (project.projectCode === $route.params.projectId && project.enabled && (project.approvalStatus === 2 || project.approvalStatus === 1)))) {
-                localStorage.setItem('projectId', $route.params.projectId)
-            }
-        }
-
         created () {
-            this.hasProjectList && this.saveProjectId()
             eventBus.$on('toggle-login-dialog', (isShow) => {
                 this.showLoginDialog = isShow
             })
