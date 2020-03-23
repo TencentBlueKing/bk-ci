@@ -31,14 +31,15 @@ import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.service.utils.SpringContextUtil
 
 object RegionUtil {
-    private const val IDC = "IDC"
-    private const val OSS = "OSS"
-    private const val DEVNET = "DEVNET"
+    const val IDC = "IDC"
+    const val OSS = "OSS"
+    const val DEVNET = "DEVNET"
+    const val EXTERNAL = "EXTERNAL"
 
     fun getRegionUrl(region: String?): String {
         return when (region) {
             null, DEVNET -> devHost()
-            IDC, OSS -> idcHost()
+            IDC, OSS, EXTERNAL -> idcHost()
             else -> throw RuntimeException("region not supported")
         }
     }
@@ -51,5 +52,25 @@ object RegionUtil {
     private fun devHost(): String {
         val commonConfig = SpringContextUtil.getBean(CommonConfig::class.java)
         return HomeHostUtil.getHost(commonConfig.devopsDevnetProxyGateway!!)
+    }
+
+    fun replaceRegionServer(url: String, region: String?): String {
+        return when (region) {
+            null, DEVNET -> replaceServerHost(url, devHost())
+            IDC, OSS, EXTERNAL -> replaceServerHost(url, idcHost())
+            else -> return url
+        }
+    }
+
+    fun replaceServerHost(originUrl: String, regionHost: String): String {
+        val index = originUrl.indexOf("//")
+        if (index == -1) {
+            return originUrl
+        }
+        val index2 = originUrl.indexOf("/", index + 2)
+        if (index2 == -1) {
+            return originUrl
+        }
+        return "${regionHost.removeSuffix("/")}/${originUrl.substring(index2 + 1)}"
     }
 }

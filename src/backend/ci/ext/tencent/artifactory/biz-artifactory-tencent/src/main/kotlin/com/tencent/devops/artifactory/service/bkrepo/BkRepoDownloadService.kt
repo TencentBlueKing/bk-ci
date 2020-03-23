@@ -228,13 +228,30 @@ class BkRepoDownloadService @Autowired constructor(
     ): List<String> {
         logger.info("getThirdPartyDownloadUrl, projectId: $projectId, pipelineId: $pipelineId, buildId: $buildId" +
             ", artifactoryType: $artifactoryType, argPath: $argPath, crossProjectId: $crossProjectId, ttl: $ttl" +
-            ", crossPipineId: $crossPipineId, crossBuildNo: $crossBuildNo")
+            ", crossPipineId: $crossPipineId, crossBuildNo: $crossBuildNo, region：$region, userId: $userId")
         var targetProjectId = projectId
         var targetPipelineId = pipelineId
         var targetBuildId = buildId
         if (!crossProjectId.isNullOrBlank()) {
-            val accessUserId = userId ?: client.get(ServicePipelineResource::class).getPipelineInfo(projectId, pipelineId, null).data!!.lastModifyUser
             targetProjectId = crossProjectId!!
+            targetPipelineId = crossPipineId ?: throw BadRequestException("Invalid Parameter pipelineId")
+        }
+
+        var accessUserId = when {
+            userId.isNullOrBlank() -> {
+                userId!!
+            }
+            crossProjectId.isNullOrBlank() -> {
+                targetProjectId = crossProjectId!!
+                client.get(ServicePipelineResource::class).getPipelineInfo(projectId, pipelineId, null).data!!.lastModifyUser
+            }
+            else -> {
+                null
+            }
+        }
+
+        // userId 有值或 crossProjectId 不为空时需要校验用户权限
+        if (accessUserId != null) {
             if (artifactoryType == ArtifactoryType.CUSTOM_DIR &&
                 !authProjectApi.getProjectUsers(artifactoryAuthServiceCode, targetProjectId).contains(accessUserId)) {
                 throw BadRequestException("用户（$accessUserId) 没有项目（$targetProjectId）下载权限)")
@@ -246,8 +263,8 @@ class BkRepoDownloadService @Autowired constructor(
                     targetProjectId,
                     targetPipelineId,
                     AuthPermission.DOWNLOAD,
-                    "用户($accessUserId)在项目($crossProjectId)下没有流水线($crossPipineId)下载构建权限")
-
+                    "用户($accessUserId)在项目($crossProjectId)下没有流水线($crossPipineId)下载构建权限"
+                )
                 val targetBuild = client.get(ServiceBuildResource::class).getSingleHistoryBuild(
                     targetProjectId,
                     targetPipelineId,
@@ -257,7 +274,7 @@ class BkRepoDownloadService @Autowired constructor(
                 targetBuildId = (targetBuild ?: throw BadRequestException("构建不存在($crossBuildNo)")).id
             }
         }
-        logger.info("targetProjectId: $targetProjectId, targetPipelineId: $targetPipelineId, targetBuildId: $targetBuildId")
+        logger.info("accessUserId: $accessUserId, targetProjectId: $targetProjectId, targetPipelineId: $targetPipelineId, targetBuildId: $targetBuildId")
 
         val regex = Pattern.compile(",|;")
         val pathArray = regex.split(argPath)
