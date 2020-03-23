@@ -653,61 +653,12 @@ abstract class ExtServiceBaseService @Autowired constructor() {
             )
         }
         // 查看当前版本之前的版本是否有已发布的，如果有已发布的版本则只是普通的升级操作而不需要审核
-        val serviceCode = serviceRecord.serviceCode
-        val isNormalUpgrade = getNormalUpgradeFlag(serviceCode, serviceRecord.serviceStatus.toInt())
-        logger.info("passTest isNormalUpgrade is:$isNormalUpgrade")
         val serviceStatus = ExtServiceStatusEnum.EDIT.status.toByte()
-        val (checkResult, code) = checkServiceVersionOptRight(userId, serviceId, serviceStatus, isNormalUpgrade)
-        if (!checkResult) {
-            return MessageCodeUtil.generateResponseDataObject(code)
-        }
-        if (isNormalUpgrade) {
-            // 正式发布最新的扩展服务版本
-            val deployExtServiceResult = extServiceBcsService.deployExtService(
-                userId = userId,
-                namespaceName = extServiceBcsNameSpaceConfig.namespaceName,
-                serviceCode = serviceCode,
-                version = serviceRecord.version
-            )
-            logger.info("deployExtServiceResult is:$deployExtServiceResult")
-            if (deployExtServiceResult.isNotOk()) {
-                return deployExtServiceResult
-            }
-            val creator = serviceRecord.creator
-            dslContext.transaction { t ->
-                val context = DSL.using(t)
-                // 清空旧版本LATEST_FLAG
-                extServiceDao.cleanLatestFlag(context, serviceCode)
-                // 记录发布信息
-                val pubTime = LocalDateTime.now()
-                storeReleaseDao.addStoreReleaseInfo(
-                    dslContext = context,
-                    userId = userId,
-                    storeReleaseCreateRequest = StoreReleaseCreateRequest(
-                        storeCode = serviceCode,
-                        storeType = StoreTypeEnum.SERVICE,
-                        latestUpgrader = creator,
-                        latestUpgradeTime = pubTime
-                    )
-                )
-                extServiceDao.updateExtServiceBaseInfo(
-                    dslContext = dslContext,
-                    userId = userId,
-                    serviceId = serviceId,
-                    extServiceUpdateInfo = ExtServiceUpdateInfo(
-                        status = serviceStatus.toInt(), latestFlag = true, modifierUser = userId
-                    )
-                )
-//                // 通过websocket推送状态变更消息
-//                storeWebsocketService.sendWebsocketMessage(userId, serviceId)
-            }
-            // 发送版本发布邮件
-            serviceNotifyService.sendAtomReleaseAuditNotifyMessage(serviceId, AuditTypeEnum.AUDIT_SUCCESS)
-        } else {
-            extServiceDao.setServiceStatusById(dslContext, serviceId, serviceStatus, userId, "")
+
+        extServiceDao.setServiceStatusById(dslContext, serviceId, serviceStatus, userId, "")
 //            // 通过websocket推送状态变更消息
 //            storeWebsocketService.sendWebsocketMessage(userId, serviceId)
-        }
+
         return Result(true)
     }
 
@@ -815,7 +766,58 @@ abstract class ExtServiceBaseService @Autowired constructor() {
             storeCode = serviceCode,
             deptInfos = deptList
         )
-        extServiceDao.setServiceStatusByCode(dslContext, serviceInfo.serviceCode, oldStatus, newStatus, userId, "提交资料")
+        if (isNormalUpgrade) {
+            // 正式发布最新的扩展服务版本
+            val deployExtServiceResult = extServiceBcsService.deployExtService(
+                userId = userId,
+                namespaceName = extServiceBcsNameSpaceConfig.namespaceName,
+                serviceCode = serviceCode,
+                version = serviceInfo.version
+            )
+            logger.info("deployExtServiceResult is:$deployExtServiceResult")
+            if (deployExtServiceResult.isNotOk()) {
+                return deployExtServiceResult
+            }
+            val creator = serviceInfo.creator
+            dslContext.transaction { t ->
+                val context = DSL.using(t)
+                // 清空旧版本LATEST_FLAG
+                extServiceDao.cleanLatestFlag(context, serviceCode)
+                // 记录发布信息
+                val pubTime = LocalDateTime.now()
+                storeReleaseDao.addStoreReleaseInfo(
+                    dslContext = context,
+                    userId = userId,
+                    storeReleaseCreateRequest = StoreReleaseCreateRequest(
+                        storeCode = serviceCode,
+                        storeType = StoreTypeEnum.SERVICE,
+                        latestUpgrader = creator,
+                        latestUpgradeTime = pubTime
+                    )
+                )
+                extServiceDao.updateExtServiceBaseInfo(
+                    dslContext = dslContext,
+                    userId = userId,
+                    serviceId = serviceId,
+                    extServiceUpdateInfo = ExtServiceUpdateInfo(
+                        status = newStatus.toInt(),
+                        latestFlag = true,
+                        modifierUser = userId
+                    )
+                )
+            }
+            // 发送版本发布邮件
+            serviceNotifyService.sendAtomReleaseAuditNotifyMessage(serviceId, AuditTypeEnum.AUDIT_SUCCESS)
+        } else {
+            extServiceDao.setServiceStatusByCode(
+                dslContext,
+                serviceInfo.serviceCode,
+                oldStatus,
+                newStatus,
+                userId,
+                "提交资料"
+            )
+        }
         return Result(true)
     }
 
