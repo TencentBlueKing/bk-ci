@@ -73,7 +73,8 @@ data class Model(
             val containerList = mutableListOf<Container>()
             stage.containers.forEach { container ->
 
-                val elementList = container.elements.filterNot { elementClassTypes.contains(it.getClassType()) }
+                val elementList = container.elements
+                    .filterNot { elementClassTypes.contains(it.getClassType()) }
                 val finalContainer = when (container) {
                     is VMBuildContainer -> {
                         VMBuildContainer(
@@ -127,7 +128,20 @@ data class Model(
                 }
                 containerList.add(finalContainer)
             }
-            stageList.add(Stage(containerList, stage.id))
+            stageList.add(
+                Stage(
+                    containers = containerList,
+                    id = stage.id,
+                    name = stage.name,
+                    tag = stage.tag,
+                    status = stage.status,
+                    startEpoch = stage.startEpoch,
+                    elapsed = stage.elapsed,
+                    customBuildEnv = stage.customBuildEnv,
+                    fastKill = stage.fastKill,
+                    stageControlOption = stage.stageControlOption
+                )
+            )
         }
 
         return Model(name, desc, stageList, labels, instanceFromTemplate, pipelineCreator, null, templateId)
