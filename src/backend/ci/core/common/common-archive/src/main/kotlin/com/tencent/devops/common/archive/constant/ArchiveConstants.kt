@@ -24,31 +24,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.pipeline.pojo.element
+package com.tencent.devops.common.archive.constant
 
-import com.tencent.devops.common.pipeline.NameAndValue
-
-data class ElementAdditionalOptions(
-    val enable: Boolean,
-    val continueWhenFailed: Boolean,
-    val retryWhenFailed: Boolean,
-    val retryCount: Int,
-    val timeout: Long?,
-    val runCondition: RunCondition?,
-
-    val otherTask: String?,
-    val customVariables: List<NameAndValue>?,
-    val customCondition: String?
-)
-
-enum class RunCondition {
-    PRE_TASK_SUCCESS,                   // 所有前置插件运行成功时
-    PRE_TASK_FAILED_BUT_CANCEL,         // 即使前面有插件运行失败也运行，除非被取消才不运行
-    PRE_TASK_FAILED_EVEN_CANCEL,        // 即使前面有插件运行失败也运行，即使被取消也运行
-    PRE_TASK_FAILED_ONLY,               // 只有前面有插件运行失败时才运行
-    OTHER_TASK_RUNNING,                 // 指定插件开始运行时
-    CUSTOM_VARIABLE_MATCH,             // 自定义变量全部满足时运行
-    CUSTOM_VARIABLE_MATCH_NOT_RUN,     // 自定义变量全部满足时不运行
-    CUSTOM_CONDITION_MATCH             // 满足以下自定义条件时运行
-    ;
-}
+// 归档元数据
+const val ARCHIVE_PROPS_PROJECT_ID = "projectId"
+const val ARCHIVE_PROPS_PIPELINE_ID = "pipelineId"
+const val ARCHIVE_PROPS_PIPELINE_NAME = "pipelineName"
+const val ARCHIVE_PROPS_BUILD_ID = "buildId"
+const val ARCHIVE_PROPS_BUILD_NO = "buildNo"
+const val ARCHIVE_PROPS_USER_ID = "userId"
+const val ARCHIVE_PROPS_CREATOR_ID = "creatorId"
+const val ARCHIVE_PROPS_APP_VERSION = "appVersion"
+const val ARCHIVE_PROPS_APP_BUNDLE_IDENTIFIER = "bundleIdentifier"
+const val ARCHIVE_PROPS_APP_APP_TITLE = "appTitle"
+const val ARCHIVE_PROPS_APP_IMAGE = "image"
+const val ARCHIVE_PROPS_APP_FULL_IMAGE = "fullImage"
+const val ARCHIVE_PROPS_SOURCE = "source"
+const val ARCHIVE_PROPS_FILE_NAME = "fileName"
