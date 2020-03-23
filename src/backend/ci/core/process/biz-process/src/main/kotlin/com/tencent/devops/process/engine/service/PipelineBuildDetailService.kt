@@ -135,6 +135,11 @@ class PipelineBuildDetailService @Autowired constructor(
         }
         triggerContainer.params = newParams
 
+        model.stages.forEach {
+            if (it.name.isNullOrBlank()) it.name = it.id
+            if (it.tag == null) it.tag = listOf(pipelineStageService.getDefaultStageTagId())
+        }
+
         return ModelDetail(
             id = record.buildId,
             pipelineId = buildInfo.pipelineId,
