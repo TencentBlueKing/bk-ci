@@ -160,7 +160,7 @@ class UserLogResourceImpl @Autowired constructor(
         tag: String?,
         jobId: String?,
         executeCount: Int?,
-        filename: String?
+        fileName: String?
     ): Response {
         validateAuth(userId, projectId, pipelineId, buildId)
         return logDispatcher.downloadLogs(
@@ -170,7 +170,7 @@ class UserLogResourceImpl @Autowired constructor(
             tag = tag ?: "",
             jobId = jobId,
             executeCount = executeCount,
-            filename = filename
+            fileName = fileName
         )
     }
 

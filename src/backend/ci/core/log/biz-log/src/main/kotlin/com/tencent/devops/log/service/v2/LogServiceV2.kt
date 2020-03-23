@@ -408,7 +408,7 @@ class LogServiceV2 @Autowired constructor(
         tag: String?,
         jobId: String?,
         executeCount: Int?,
-        filename: String?
+        fileName: String?
     ): Response {
         val indexAndType = indexServiceV2.getIndexAndType(buildId)
 
@@ -453,7 +453,7 @@ class LogServiceV2 @Autowired constructor(
             } while (scrollResp.hits.hits.isNotEmpty())
         }
 
-        val resultName = filename ?: "$pipelineId-$buildId-log"
+        val resultName = fileName ?: "$pipelineId-$buildId-log"
         return Response
             .ok(fileStream, MediaType.APPLICATION_OCTET_STREAM_TYPE)
             .header("content-disposition", "attachment; filename = $resultName.log")

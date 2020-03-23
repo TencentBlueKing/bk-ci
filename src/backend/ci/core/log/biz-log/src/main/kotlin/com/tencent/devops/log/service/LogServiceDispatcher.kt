@@ -165,9 +165,9 @@ class LogServiceDispatcher @Autowired constructor(
         tag: String?,
         jobId: String?,
         executeCount: Int?,
-        filename: String?
+        fileName: String?
     ): Response {
-        return logServiceV2.downloadLogs(pipelineId, buildId, tag, jobId, executeCount, filename)
+        return logServiceV2.downloadLogs(pipelineId, buildId, tag, jobId, executeCount, fileName)
     }
 
     fun getEndLogs(
