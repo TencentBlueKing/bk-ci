@@ -38,7 +38,7 @@ object RegionUtil {
 
     fun getRegionUrl(region: String?): String {
         return when (region) {
-            null, DEVNET -> devHost()
+            null, "", DEVNET -> devHost()
             IDC, OSS, EXTERNAL -> idcHost()
             else -> throw RuntimeException("region not supported")
         }
@@ -56,7 +56,7 @@ object RegionUtil {
 
     fun replaceRegionServer(url: String, region: String?): String {
         return when (region) {
-            null, DEVNET -> replaceServerHost(url, devHost())
+            null, "", DEVNET -> replaceServerHost(url, devHost())
             IDC, OSS, EXTERNAL -> replaceServerHost(url, idcHost())
             else -> return url
         }
