@@ -37,8 +37,8 @@ class EnvServiceExt @Autowired constructor(
         checkParams(targetMachine)
         val envHashIds = targetMachine.split(",")
         val nodeHashIds: List<String> = ArrayList()
-        val ipLists: List<EnvSet.IpDto> = buildIpDto()
-        return EnvSet(envHashIds, nodeHashIds, ipLists)
+//        val ipLists: List<EnvSet.IpDto> = buildIpDto()
+        return EnvSet(envHashIds, nodeHashIds, emptyList())
     }
 
     private fun getRemoteInfoByEnvName(targetMachine: String, userId: String, projectId: String): EnvSet {
@@ -71,8 +71,8 @@ class EnvServiceExt @Autowired constructor(
             throw RuntimeException(MessageCodeUtil.getCodeMessage(PushMessageCode.ENV_MACHINE_NOT_AUTH, arrayOf(noAuthEnvIds.toString())))
         }
         val nodeHashIds: List<String> = ArrayList()
-        val ipLists: List<EnvSet.IpDto> = buildIpDto()
-        return EnvSet(envIdList, nodeHashIds, ipLists)
+//        val ipLists: List<EnvSet.IpDto> = buildIpDto()
+        return EnvSet(envIdList, nodeHashIds, emptyList())
     }
 
     private fun getRemoteInfoByNodeId(targetMachine: String): EnvSet {
@@ -80,8 +80,8 @@ class EnvServiceExt @Autowired constructor(
 
         val nodeHashIds = targetMachine.split(",")
         val envHashIds: List<String> = ArrayList()
-        val ipLists: List<EnvSet.IpDto> = buildIpDto()
-        return EnvSet(envHashIds, nodeHashIds, ipLists)
+//        val ipLists: List<EnvSet.IpDto> = buildIpDto()
+        return EnvSet(envHashIds, nodeHashIds, emptyList())
     }
 
     private fun checkEnvNodeExists(
@@ -117,7 +117,7 @@ class EnvServiceExt @Autowired constructor(
         }
     }
 
-    private fun buildIpDto(): List<EnvSet.IpDto> {
+    fun buildIpDto(): List<EnvSet.IpDto> {
         val ip = EnvSet.IpDto(CommonUtils.getInnerIP())
         return listOf(ip)
     }
