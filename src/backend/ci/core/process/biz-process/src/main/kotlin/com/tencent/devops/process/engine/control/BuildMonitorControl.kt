@@ -148,7 +148,7 @@ class BuildMonitorControl @Autowired constructor(
             val interval = stage.checkNextStageMonitorIntervals(event.userId)
             // 根据最小的超时时间来决定下一次监控执行的时间
             if (interval in 1 until minInterval) {
-                minInterval = interval.toLong()
+                minInterval = interval
             }
         }
 
