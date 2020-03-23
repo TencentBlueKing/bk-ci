@@ -92,6 +92,7 @@ import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION_SUGGEST
 import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION_USERID
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.common.Timeout
+import com.tencent.devops.process.engine.control.ControlUtils
 import com.tencent.devops.process.engine.pojo.BuildInfo
 import com.tencent.devops.process.engine.pojo.LatestRunningBuild
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
@@ -860,7 +861,7 @@ class PipelineRuntimeService @Autowired constructor(
                         val skipKey = SkipElementUtils.getSkipElementVariableName(atomElement.id!!)
                         val status = if (params[skipKey] != null && params[skipKey] == "true") {
                             BuildStatus.SKIP // 跳过
-                        } else if (atomElement.additionalOptions != null && !atomElement.additionalOptions!!.enable) {
+                        } else if (!ControlUtils.isEnable(atomElement.additionalOptions) || atomElement.status == BuildStatus.SKIP.name) {
                             BuildStatus.SKIP // 跳过
                         } else {
                             BuildStatus.QUEUE
@@ -981,7 +982,7 @@ class PipelineRuntimeService @Autowired constructor(
                     if (needUpdateContainer) {
                         run findHistoryContainer@{
                             lastTimeBuildContainerRecords.forEach {
-                                if (it.containerId == containerId) {
+                                if (it.containerId == containerId && it.status != BuildStatus.SKIP.ordinal) {
                                     it.status = BuildStatus.QUEUE.ordinal
                                     it.executeCount += 1
                                     updateContainerExistsRecord.add(it)
