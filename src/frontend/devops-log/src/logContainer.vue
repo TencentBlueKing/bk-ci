@@ -154,7 +154,7 @@
             },
 
             closeLog (event) {
-                let curTarget = event.target
+                const curTarget = event.target
                 if (curTarget.classList.contains('log-home')) this.$emit('closeLog')
             },
 

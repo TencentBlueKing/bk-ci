@@ -383,7 +383,7 @@
                     if (currentItem.color) canvasContext.font = `normal normal bold 2px Consolas`
                     else canvasContext.font = `normal normal normal 2px Consolas`
                     canvasContext.fillStyle = currentColor
-                    canvasContext.fillText(currentItem.message, 5, ((index + 1)* 2))
+                    canvasContext.fillText(currentItem.message, 5, ((index + 1) * 2))
                 }
                 this.isScrolling = false
             },
