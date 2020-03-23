@@ -62,6 +62,7 @@ class ReportArchiveTask : ITask() {
         val reportNameParam = taskParams["reportName"] ?: throw ParamBlankException("param [reportName] is empty")
         val reportType = taskParams["reportType"] ?: ReportTypeEnum.INTERNAL.name
         val indexFileParam: String
+        var indexFileContent: String
         if (reportType == ReportTypeEnum.INTERNAL.name) {
             val fileDirParam = taskParams["fileDir"] ?: throw ParamBlankException("param [fileDir] is empty")
             indexFileParam = taskParams["indexFile"] ?: throw ParamBlankException("param [indexFile] is empty")
@@ -79,7 +80,7 @@ class ReportArchiveTask : ITask() {
             val reportRootUrl = api.getRootUrl(elementId).data!!
             addEnv(REPORT_DYNAMIC_ROOT_URL, reportRootUrl)
 
-            var indexFileContent = indexFile.readText()
+            indexFileContent = indexFile.readText()
             indexFileContent = indexFileContent.replace("\${$REPORT_DYNAMIC_ROOT_URL}", reportRootUrl)
             indexFile.writeText(indexFileContent)
 
@@ -94,6 +95,7 @@ class ReportArchiveTask : ITask() {
         } else {
             val reportUrl = taskParams["reportUrl"] as String
             indexFileParam = reportUrl // 第三方构建产出物链接
+            indexFileContent = "detail：$reportUrl" // 第三方构建产出物如果需要发邮件，邮件内容展示第三方构建产出物链接
         }
 
         val enableEmail = taskParams["enableEmail"]?.toBoolean() ?: false
@@ -107,7 +109,7 @@ class ReportArchiveTask : ITask() {
             } catch (t: Throwable) { // 旧引擎做法是用x,y,z 传递
                 regex.split(emailReceivers).toSet()
             }
-            reportEmail = ReportEmail(receivers, emailTitle, indexFileParam)
+            reportEmail = ReportEmail(receivers, emailTitle, indexFileContent)
         }
 
         logger.info("indexFileParam is:$indexFileParam,reportNameParam is:$reportNameParam,reportType is:$reportType")
