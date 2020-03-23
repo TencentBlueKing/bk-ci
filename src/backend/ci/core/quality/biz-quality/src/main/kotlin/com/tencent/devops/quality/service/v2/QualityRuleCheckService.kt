@@ -165,7 +165,7 @@ class QualityRuleCheckService @Autowired constructor(
 
             // 遍历项目下所有拦截规则
             val ruleList = ruleService.serviceListRuleByPosition(projectId, buildCheckParams.position)
-            val metadataList = lazyGetHisMetadata(buildId)
+            val metadataList = lazyGetHisMetadata(buildId, hasCodeccIndicator(ruleList))
             logger.info("Rule metadata serviceList for build(${buildCheckParams.buildId}):\n metadataList=$metadataList")
 
             ruleList.filter { rule ->
@@ -207,14 +207,28 @@ class QualityRuleCheckService @Autowired constructor(
         }
     }
 
-    // codecc回调数据是异步的，为空加个等待
-    private fun lazyGetHisMetadata(buildId: String): List<QualityHisMetadata> {
-        for (i in setOf(1, 5, 3, 7)) {
-            val result = qualityHisMetadataService.serviceGetHisMetadata(buildId)
-            if (result.isNotEmpty()) return result
-            Thread.sleep(i * 1000L)
+    private fun hasCodeccIndicator(ruleList: List<QualityRule>): Boolean {
+        ruleList.forEach { rule ->
+            rule.indicators.forEach {
+                val isContains = CodeccUtils.isCodeccAtom(it.elementType)
+                if (isContains) return true
+            }
         }
-        return listOf()
+        return false
+    }
+
+    // codecc回调数据是异步的，为空加个等待
+    private fun lazyGetHisMetadata(buildId: String, hasCodeccIndicator: Boolean): List<QualityHisMetadata> {
+        if (hasCodeccIndicator) {
+            for (i in setOf(1, 3, 5, 7, 9, 11, 13, 15, 17, 19, 2, 4, 6, 8, 10, 12, 14, 16, 18)) {
+                val result = qualityHisMetadataService.serviceGetHisMetadata(buildId)
+                if (result.isNotEmpty()) return result
+                Thread.sleep(i * 1000L)
+            }
+            return listOf()
+        } else {
+            return qualityHisMetadataService.serviceGetHisMetadata(buildId)
+        }
     }
 
     private fun checkPostHandle(
