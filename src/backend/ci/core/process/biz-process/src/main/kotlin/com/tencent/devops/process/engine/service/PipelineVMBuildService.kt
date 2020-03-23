@@ -43,7 +43,7 @@ import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.BuildTaskStatus
 import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
-import com.tencent.devops.common.pipeline.pojo.element.TaskRunCondition
+import com.tencent.devops.common.pipeline.pojo.element.RunCondition
 import com.tencent.devops.common.pipeline.utils.HeartBeatUtils
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.log.utils.LogUtils
@@ -290,11 +290,11 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
     }
 
     private fun notSkipWhenCustomVarMatch(additionalOptions: ElementAdditionalOptions?) =
-        additionalOptions != null && additionalOptions.taskRunCondition == TaskRunCondition.CUSTOM_VARIABLE_MATCH &&
+        additionalOptions != null && additionalOptions.runCondition == RunCondition.CUSTOM_VARIABLE_MATCH &&
             additionalOptions.customVariables != null && additionalOptions.customVariables!!.isNotEmpty()
 
     private fun skipWhenCustomVarMatch(additionalOptions: ElementAdditionalOptions?) =
-        additionalOptions != null && additionalOptions.taskRunCondition == TaskRunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN &&
+        additionalOptions != null && additionalOptions.runCondition == RunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN &&
             additionalOptions.customVariables != null && additionalOptions.customVariables!!.isNotEmpty()
 
     private fun buildClaim(buildId: String, vmSeqId: String, vmName: String): BuildTask {
@@ -323,8 +323,8 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
                         if (BuildStatus.isReadyToRun(taskBehind.status)) {
                             if (taskBehind.additionalOptions != null &&
                                 taskBehind.additionalOptions!!.enable &&
-                                (taskBehind.additionalOptions!!.taskRunCondition == TaskRunCondition.PRE_TASK_FAILED_BUT_CANCEL ||
-                                    taskBehind.additionalOptions!!.taskRunCondition == TaskRunCondition.PRE_TASK_FAILED_ONLY)
+                                (taskBehind.additionalOptions!!.runCondition == RunCondition.PRE_TASK_FAILED_BUT_CANCEL ||
+                                    taskBehind.additionalOptions!!.runCondition == RunCondition.PRE_TASK_FAILED_ONLY)
                             ) {
                                 logger.info(
                                     "[$buildId]|containerId=$vmSeqId|name=${taskBehind.taskName}|" +
@@ -349,15 +349,15 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
                     // 如果当前Container已经执行失败了，但是有配置了前置失败还要执行的插件，则只能添加这样的插件到队列中
                     if (isContainerFailed) {
                         if (continueWhenPreTaskFailed && additionalOptions != null && additionalOptions.enable &&
-                            (additionalOptions.taskRunCondition == TaskRunCondition.PRE_TASK_FAILED_BUT_CANCEL ||
-                                additionalOptions.taskRunCondition == TaskRunCondition.PRE_TASK_FAILED_ONLY)
+                            (additionalOptions.runCondition == RunCondition.PRE_TASK_FAILED_BUT_CANCEL ||
+                                additionalOptions.runCondition == RunCondition.PRE_TASK_FAILED_ONLY)
                         ) {
                             queueTasks.add(task)
                         }
                     } else { // 当前Container成功
                         if (additionalOptions == null ||
-                            additionalOptions.taskRunCondition != TaskRunCondition.PRE_TASK_FAILED_ONLY ||
-                            (additionalOptions.taskRunCondition == TaskRunCondition.PRE_TASK_FAILED_ONLY &&
+                            additionalOptions.runCondition != RunCondition.PRE_TASK_FAILED_ONLY ||
+                            (additionalOptions.runCondition == RunCondition.PRE_TASK_FAILED_ONLY &&
                                 hasFailedTaskInInSuccessContainer)
                         ) {
                             if (!checkCustomVariableSkip(buildId, additionalOptions, allVariable)) {
