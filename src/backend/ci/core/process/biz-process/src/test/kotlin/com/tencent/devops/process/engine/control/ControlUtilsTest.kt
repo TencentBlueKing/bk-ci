@@ -30,7 +30,7 @@ import com.tencent.devops.common.pipeline.NameAndValue
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.JobRunCondition
 import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
-import com.tencent.devops.common.pipeline.pojo.element.TaskRunCondition
+import com.tencent.devops.common.pipeline.pojo.element.RunCondition
 import org.junit.Assert
 import org.junit.Test
 
@@ -73,7 +73,7 @@ class ControlUtilsTest {
                             otherTask = nullObject,
                             customCondition = nullObject,
                             customVariables = nullObject,
-                            taskRunCondition = TaskRunCondition.PRE_TASK_FAILED_ONLY,
+                            runCondition = RunCondition.PRE_TASK_FAILED_ONLY,
                             retryCount = 0,
                             retryWhenFailed = false
                         ), status
@@ -89,7 +89,7 @@ class ControlUtilsTest {
                             otherTask = nullObject,
                             customCondition = nullObject,
                             customVariables = nullObject,
-                            taskRunCondition = TaskRunCondition.PRE_TASK_FAILED_ONLY,
+                            runCondition = RunCondition.PRE_TASK_FAILED_ONLY,
                             retryCount = 0,
                             retryWhenFailed = false
                         ), status
@@ -108,7 +108,7 @@ class ControlUtilsTest {
                     enable = false,
                     continueWhenFailed = false,
                     timeout = 0,
-                    taskRunCondition = null,
+                    runCondition = null,
                     otherTask = null,
                     customCondition = null,
                     customVariables = null,
@@ -123,7 +123,7 @@ class ControlUtilsTest {
                     enable = true,
                     continueWhenFailed = true,
                     timeout = 0,
-                    taskRunCondition = null,
+                    runCondition = null,
                     otherTask = null,
                     customCondition = null,
                     customVariables = null,
@@ -145,7 +145,7 @@ class ControlUtilsTest {
                     enable = true,
                     continueWhenFailed = false,
                     timeout = 0,
-                    taskRunCondition = null,
+                    runCondition = null,
                     otherTask = null,
                     customCondition = null,
                     customVariables = null,
@@ -160,7 +160,7 @@ class ControlUtilsTest {
                     enable = true,
                     continueWhenFailed = true,
                     timeout = 0,
-                    taskRunCondition = null,
+                    runCondition = null,
                     otherTask = null,
                     customCondition = null,
                     customVariables = null,
