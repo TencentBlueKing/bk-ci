@@ -332,7 +332,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
                         status = serviceStatus.status,
                         statusMsg = "",
                         logoUrl = submitDTO.logoUrl,
-                        summary = submitDTO.sunmmary,
+                        summary = submitDTO.summary,
                         description = submitDTO.description,
                         latestFlag = true,
                         modifierUser = userId
