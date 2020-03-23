@@ -276,7 +276,7 @@ class ExtServiceDao {
 
     fun countByCode(dslContext: DSLContext, serviceCode: String): Int {
         return with(TExtensionService.T_EXTENSION_SERVICE) {
-            dslContext.selectCount().where(DELETE_FLAG.eq(false)).and(SERVICE_CODE.eq(serviceCode))
+            dslContext.selectCount().from(this).where(DELETE_FLAG.eq(false)).and(SERVICE_CODE.eq(serviceCode))
                 .fetchOne(0, Int::class.java)
         }
     }

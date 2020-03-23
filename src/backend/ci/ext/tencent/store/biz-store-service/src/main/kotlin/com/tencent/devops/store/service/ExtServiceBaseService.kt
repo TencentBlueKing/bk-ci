@@ -1220,8 +1220,8 @@ abstract class ExtServiceBaseService @Autowired constructor() {
             return Pair(false, CommonMessageCode.PERMISSION_DENIED)
         }
         logger.info("record status=$recordStatus, status=$status")
-        val allowReleaseStatus = if (isNormalUpgrade != null && isNormalUpgrade) ExtServiceStatusEnum.TESTING
-        else ExtServiceStatusEnum.EDIT
+        val allowReleaseStatus = if (isNormalUpgrade != null && isNormalUpgrade) ExtServiceStatusEnum.EDIT
+        else ExtServiceStatusEnum.TESTING
         var validateFlag = true
         if (status == ExtServiceStatusEnum.COMMITTING.status.toByte() &&
             recordStatus != ExtServiceStatusEnum.INIT.status.toByte()
