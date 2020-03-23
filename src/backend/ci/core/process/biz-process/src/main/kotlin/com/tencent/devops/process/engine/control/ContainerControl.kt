@@ -32,7 +32,7 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ContainerMutexStatus
 import com.tencent.devops.common.pipeline.enums.EnvControlTaskType
 import com.tencent.devops.common.pipeline.enums.JobRunCondition
-import com.tencent.devops.common.pipeline.pojo.element.TaskRunCondition
+import com.tencent.devops.common.pipeline.pojo.element.RunCondition
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.log.utils.LogUtils
 import com.tencent.devops.process.engine.common.VMUtils
@@ -292,11 +292,11 @@ class ContainerControl @Autowired constructor(
             return false
         }
 
-        val runCondition = task.additionalOptions?.taskRunCondition
+        val runCondition = task.additionalOptions?.runCondition
         return if (runCondition == null)
             false
-        else runCondition == TaskRunCondition.PRE_TASK_FAILED_BUT_CANCEL ||
-            runCondition == TaskRunCondition.PRE_TASK_FAILED_ONLY
+        else runCondition == RunCondition.PRE_TASK_FAILED_BUT_CANCEL ||
+            runCondition == RunCondition.PRE_TASK_FAILED_ONLY
     }
 
     private fun checkTerminateAction(containerTaskList: Collection<PipelineBuildTask>, message: String?): Triple<Nothing?, BuildStatus, Boolean> {
