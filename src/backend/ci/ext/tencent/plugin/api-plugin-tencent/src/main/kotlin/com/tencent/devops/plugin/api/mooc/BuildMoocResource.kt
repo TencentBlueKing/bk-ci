@@ -44,10 +44,9 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface BuildMoocResource {
 
-    @ApiOperation("sjy")
+    @ApiOperation("查询用户Mooc信息")
     @GET
     @Path("/users/{userId}")
-    @Consumes(MediaType.MULTIPART_FORM_DATA)
     fun queryMooc(
         @ApiParam(value = "要查询的用户ID", required = true)
         @PathParam("userId")

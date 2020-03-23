@@ -27,11 +27,13 @@
 package com.tencent.devops.plugin.resources.mooc
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.plugin.api.mooc.BuildMoocResource
 import com.tencent.devops.plugin.service.mooc.MoocService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
+@RestResource
 class BuildMoocResourceImpl @Autowired constructor(val moocService: MoocService) : BuildMoocResource {
 
     companion object {
@@ -40,7 +42,7 @@ class BuildMoocResourceImpl @Autowired constructor(val moocService: MoocService)
 
     override fun queryMooc(userId: String): Result<List<Map<String, Any>>> {
         val list = moocService.getList(userId)
-        logger.info("$userId: $list")
+        logger.info("Get Mooc|$userId|data=$list")
         return Result(list)
     }
 }

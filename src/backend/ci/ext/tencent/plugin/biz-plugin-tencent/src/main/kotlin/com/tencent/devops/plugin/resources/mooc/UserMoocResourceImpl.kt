@@ -27,11 +27,13 @@
 package com.tencent.devops.plugin.resources.mooc
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.plugin.api.mooc.UserMoocResource
 import com.tencent.devops.plugin.service.mooc.MoocService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
+@RestResource
 class UserMoocResourceImpl @Autowired constructor(val moocService: MoocService) : UserMoocResource {
 
     companion object {
@@ -40,7 +42,7 @@ class UserMoocResourceImpl @Autowired constructor(val moocService: MoocService) 
 
     override fun addMooc(userId: String, moocBody: Map<String, Any>): Result<Boolean> {
         val id = moocService.create(userId, moocBody)
-        logger.info("craete mooc $userId, result=$id")
+        logger.info("Create_Mooc|$userId|id=$id")
         return Result(true)
     }
 }
