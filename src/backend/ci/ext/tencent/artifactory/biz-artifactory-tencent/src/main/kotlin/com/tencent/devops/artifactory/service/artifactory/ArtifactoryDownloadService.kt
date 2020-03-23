@@ -271,11 +271,10 @@ class ArtifactoryDownloadService @Autowired constructor(
         }
 
         var accessUserId = when {
-            userId.isNullOrBlank() -> {
+            !userId.isNullOrBlank() -> {
                 userId!!
             }
-            crossProjectId.isNullOrBlank() -> {
-                targetProjectId = crossProjectId!!
+            !crossProjectId.isNullOrBlank() -> {
                 client.get(ServicePipelineResource::class).getPipelineInfo(projectId, pipelineId, null).data!!.lastModifyUser
             }
             else -> {
