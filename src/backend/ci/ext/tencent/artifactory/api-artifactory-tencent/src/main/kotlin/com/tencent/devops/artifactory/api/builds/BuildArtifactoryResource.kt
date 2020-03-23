@@ -149,9 +149,9 @@ interface BuildArtifactoryResource {
         @ApiParam("构建No", required = false)
         @QueryParam("buildNo")
         crossBuildNo: String?,
-        @ApiParam("客户端区域", required = true)
+        @ApiParam("客户端区域", required = false)
         @HeaderParam(AUTH_HEADER_REGION)
-        region: String? = null
+        region: String?
     ): Result<List<String>>
 
     @ApiOperation("获取文件下载url")

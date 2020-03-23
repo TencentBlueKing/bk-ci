@@ -269,7 +269,7 @@ class BkRepoDownloadService @Autowired constructor(
                     targetProjectId,
                     targetPipelineId,
                     AuthPermission.DOWNLOAD,
-                    "用户($accessUserId)在项目($crossProjectId)下没有流水线($crossPipineId)下载构建权限"
+                    "用户($accessUserId)在项目($targetProjectId)下没有流水线($targetPipelineId)下载构件权限"
                 )
             }
         }
