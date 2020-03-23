@@ -304,6 +304,9 @@ class ServiceItemService @Autowired constructor(
             logger.warn("createItem itemName is exsit, itemName[$itemInfo.itemName]")
             throw RuntimeException("前端页面路径路径重复")
         }
+
+        validProps(itemInfo.props)
+
         val updateInfo = ItemUpdateInfo(
             itemName = itemInfo.itemName,
             htmlPath = itemInfo.htmlPath,
@@ -330,15 +333,20 @@ class ServiceItemService @Autowired constructor(
             logger.warn("createItem itemName is exsit, itemName[$itemInfo.itemName]")
             throw RuntimeException("前端页面路径路径重复")
         }
+        validProps(itemInfo.props)
+    }
 
-        val props = itemInfo.props?: throw RuntimeException("props信息不能为空")
+    private fun validProps(props: String?){
+        if(props.isNullOrEmpty()){
+            throw RuntimeException("props信息为空")
+        }
+
         try{
-            JsonUtil.toJson(props)
+            JsonUtil.toJson(props!!)
         }
         catch (e: Exception){
             throw RuntimeException("props信息非json结构")
         }
-
     }
 
     fun getItem(itemId: String): Result<ServiceItem?> {
