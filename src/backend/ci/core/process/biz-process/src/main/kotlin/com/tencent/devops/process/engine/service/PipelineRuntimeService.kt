@@ -981,7 +981,7 @@ class PipelineRuntimeService @Autowired constructor(
                     if (needUpdateContainer) {
                         run findHistoryContainer@{
                             lastTimeBuildContainerRecords.forEach {
-                                if (it.containerId == containerId) {
+                                if (it.containerId == containerId && it.status != BuildStatus.SKIP.ordinal) {
                                     it.status = BuildStatus.QUEUE.ordinal
                                     it.executeCount += 1
                                     updateContainerExistsRecord.add(it)
