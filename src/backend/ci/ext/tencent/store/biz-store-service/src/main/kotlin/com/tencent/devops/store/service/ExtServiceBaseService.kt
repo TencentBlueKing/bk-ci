@@ -898,8 +898,8 @@ abstract class ExtServiceBaseService @Autowired constructor() {
                     serviceType = featureInfoRecord.serviceType.toInt(),
                     extensionItemList = itemList,
                     mediaList = mediaList,
-                    extensionItemName = extensionName,
-                    content = serviceVersion?.content ?: "",
+                    itemName = extensionName,
+                    versionContent = serviceVersion?.content ?: "",
                     releaseType = ReleaseTypeEnum.getReleaseType(
                         serviceVersion?.releaseType?.toInt() ?: ReleaseTypeEnum.NEW.releaseType
                     )

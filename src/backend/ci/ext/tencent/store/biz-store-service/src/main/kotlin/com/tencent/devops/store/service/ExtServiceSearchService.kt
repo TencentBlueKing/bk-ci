@@ -89,7 +89,7 @@ class ExtServiceSearchService @Autowired constructor(
         val bkServiceRecord = client.get(ServiceInfoResource::class).getServiceList(userId).data
         val serviceInfoMap = mutableMapOf<String, String>()
         bkServiceRecord?.forEach {
-            serviceInfoMap[it.id.toString()] = it.name
+            serviceInfoMap[it.id.toString()] = it.name.substringBefore("(")
         }
 
         val bkServiceIdList = extServiceItemRelDao.getBkService(dslContext)
@@ -116,13 +116,15 @@ class ExtServiceSearchService @Autowired constructor(
         }
         for (index in futureList.indices) {
             val serviceInfo = serviceInfoList[index]
-            result.add(
-                ExtServiceMainItemVo(
-                    key = serviceInfo.key,
-                    label = serviceInfo.bkService,
-                    records = futureList[index].records
+            if(!(futureList[index].records == null || futureList[index].records.isEmpty())) {
+                result.add(
+                    ExtServiceMainItemVo(
+                        key = serviceInfo.key,
+                        label = serviceInfo.bkService,
+                        records = futureList[index].records
+                    )
                 )
-            )
+            }
         }
         return Result(result)
     }
@@ -192,7 +194,7 @@ class ExtServiceSearchService @Autowired constructor(
             page,
             pageSize
         ) ?: return SearchExtServiceVO(0, page, pageSize, results)
-        logger.info("[list] userId[$userId],userDeptList[$userDeptList],serviceName[$serviceName],classifyCode[$classifyCode],labelCode[$labelCode] get services: $services")
+        logger.info("[list] userId[$userId],userDeptList[$userDeptList],serviceName[$serviceName],bkService[$bkServiceId],labelCode[$labelCode] get services: $services")
 
         val serviceCodeList = services.map {
             it["SERVICE_ID"] as String
