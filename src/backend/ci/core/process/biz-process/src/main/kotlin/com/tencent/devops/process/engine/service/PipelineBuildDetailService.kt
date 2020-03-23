@@ -135,9 +135,10 @@ class PipelineBuildDetailService @Autowired constructor(
         }
         triggerContainer.params = newParams
 
+        val defaultTagIds = listOf(pipelineStageService.getDefaultStageTagId())
         model.stages.forEach {
             if (it.name.isNullOrBlank()) it.name = it.id
-            if (it.tag == null) it.tag = listOf(pipelineStageService.getDefaultStageTagId())
+            if (it.tag == null) it.tag = defaultTagIds
         }
 
         return ModelDetail(
@@ -549,7 +550,7 @@ class PipelineBuildDetailService @Autowired constructor(
             BuildStatus.valueOf(status)
         }
 
-        return if (oldStatus == null || !BuildStatus.isFinish(oldStatus) || buildStatus == BuildStatus.STAGE_SUCCESS) {
+        return if (oldStatus == null || !BuildStatus.isFinish(oldStatus)) {
             logger.info("[${record.buildId}]|Update the build to status $buildStatus from $oldStatus")
             buildStatus
         } else {
