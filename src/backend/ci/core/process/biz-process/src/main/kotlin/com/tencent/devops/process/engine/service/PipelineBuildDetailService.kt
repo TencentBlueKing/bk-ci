@@ -686,6 +686,7 @@ class PipelineBuildDetailService @Autowired constructor(
                 if (stage.id == stageId) {
                     update = true
                     stage.status = ""
+                    pipelineBuildDao.updateStageCancelStatus(dslContext, buildId)
                     updateHistoryStage(buildId, model)
                     return Traverse.BREAK
                 }
