@@ -1,5 +1,6 @@
 package com.tencent.devops.artifactory.pojo.vo
 
+import com.tencent.devops.artifactory.pojo.PushStatus
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
