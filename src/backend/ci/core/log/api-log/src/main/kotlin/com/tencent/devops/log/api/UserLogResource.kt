@@ -219,7 +219,7 @@ interface UserLogResource {
         @QueryParam("executeCount")
         executeCount: Int?,
         @ApiParam("文件名", required = false)
-        @QueryParam("filename")
+        @QueryParam("fileName")
         filename: String?
     ): Response
 }
