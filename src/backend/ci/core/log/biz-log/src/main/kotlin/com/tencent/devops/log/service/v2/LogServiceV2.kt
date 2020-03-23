@@ -402,7 +402,14 @@ class LogServiceV2 @Autowired constructor(
         }
     }
 
-    fun downloadLogs(pipelineId: String, buildId: String, tag: String?, jobId: String?, executeCount: Int?): Response {
+    fun downloadLogs(
+        pipelineId: String,
+        buildId: String,
+        tag: String?,
+        jobId: String?,
+        executeCount: Int?,
+        filename: String?
+    ): Response {
         val indexAndType = indexServiceV2.getIndexAndType(buildId)
 
         val query = getQuery(buildId, tag, jobId, executeCount)
@@ -446,9 +453,10 @@ class LogServiceV2 @Autowired constructor(
             } while (scrollResp.hits.hits.isNotEmpty())
         }
 
+        val resultName = filename ?: "$pipelineId-$buildId-log"
         return Response
             .ok(fileStream, MediaType.APPLICATION_OCTET_STREAM_TYPE)
-            .header("content-disposition", "attachment; filename = $pipelineId-$buildId-log.txt")
+            .header("content-disposition", "attachment; filename = $resultName.log")
             .header("Cache-Control", "no-cache")
             .build()
     }
