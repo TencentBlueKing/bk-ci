@@ -403,7 +403,8 @@ class ExtServiceDao {
             val tir = TExtensionServiceItemRel.T_EXTENSION_SERVICE_ITEM_REL.`as`("tir")
             val serviceIdList = dslContext.select(tir.SERVICE_ID).from(tir)
                 .where(tir.BK_SERVICE_ID.eq(bkService)).fetch().map { it["SERVICE_ID"] as String }
-            baseStep.leftJoin(tir).on(ta.ID.`in`(serviceIdList))
+            baseStep.leftJoin(tir).on(ta.ID.eq(tir.SERVICE_ID))
+            conditions.add(ta.ID.`in`(serviceIdList))
         }
 
         if (score != null) {
@@ -613,7 +614,7 @@ class ExtServiceDao {
             val tir = TExtensionServiceItemRel.T_EXTENSION_SERVICE_ITEM_REL.`as`("tir")
             val serviceIdList = dslContext.select(tir.SERVICE_ID).from(tir)
                 .where(tir.BK_SERVICE_ID.eq(bkService)).fetch().map { it["SERVICE_ID"] as String }
-            baseStep.leftJoin(tir).on(ta.ID.`in`(serviceIdList))
+            conditions.add(ta.ID.`in`(serviceIdList))
         }
         if (score != null) {
             val tas = TStoreStatisticsTotal.T_STORE_STATISTICS_TOTAL.`as`("tas")
