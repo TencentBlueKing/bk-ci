@@ -74,16 +74,16 @@ class ThirdPartyAgentService @Autowired constructor(
         taskName: String
     ) {
         val count = thirdPartyAgentBuildDao.add(
-            dslContext,
-            projectId,
-            agentId,
-            pipelineId,
-            buildId,
-            vmSeqId,
-            thirdPartyAgentWorkspace,
-            pipelineName,
-            buildNo,
-            taskName
+            dslContext = dslContext,
+            projectId = projectId,
+            agentId = agentId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            vmSeqId = vmSeqId,
+            thirdPartyAgentWorkspace = thirdPartyAgentWorkspace,
+            pipelineName = pipelineName,
+            buildNum = buildNo,
+            taskName = taskName
         )
         if (count != 1) {
             logger.warn("Fail to add the third party agent build of ($buildId|$vmSeqId|$agentId|$count)")
@@ -97,12 +97,12 @@ class ThirdPartyAgentService @Autowired constructor(
         )
         return records.map {
             ThirdPartyAgentPreBuildAgents(
-                it.id,
-                it.projectId,
-                it.agentId,
-                it.buildId,
-                it.status,
-                it.createdTime.timestamp()
+                id = it.id,
+                projectId = it.projectId,
+                agentId = it.agentId,
+                buildId = it.buildId,
+                status = it.status,
+                createdTime = it.createdTime.timestamp()
             )
         }
     }
@@ -278,18 +278,18 @@ class ThirdPartyAgentService @Autowired constructor(
         val agentBuildCount = thirdPartyAgentBuildDao.countAgentBuilds(dslContext, agentId)
         val agentBuilds = thirdPartyAgentBuildDao.listAgentBuilds(dslContext, agentId, offset, limit).map {
             AgentBuildInfo(
-                it.projectId,
-                it.agentId,
-                it.pipelineId,
-                it.pipelineName,
-                it.buildId,
-                it.buildNum,
-                it.vmSeqId,
-                it.taskName,
-                PipelineTaskStatus.toStatus(it.status).name,
-                it.createdTime.timestamp(),
-                it.updatedTime.timestamp(),
-                it.workspace
+                projectId = it.projectId,
+                agentId = it.agentId,
+                pipelineId = it.pipelineId,
+                pipelineName = it.pipelineName,
+                buildId = it.buildId,
+                buildNum = it.buildNum,
+                vmSeqId = it.vmSeqId,
+                taskName = it.taskName,
+                status = PipelineTaskStatus.toStatus(it.status).name,
+                createdTime = it.createdTime.timestamp(),
+                updatedTime = it.updatedTime.timestamp(),
+                workspace = it.workspace
             )
         }
         return Page(pageNotNull, pageSizeNotNull, agentBuildCount, agentBuilds)
@@ -338,11 +338,11 @@ class ThirdPartyAgentService @Autowired constructor(
         }
 
         client.get(ServiceBuildResource::class).workerBuildFinish(
-            projectId,
-            buildInfo.pipelineId ?: "dummyPipelineId",
-            buildInfo.buildId,
-            buildInfo.vmSeqId,
-            SimpleResult(buildInfo.success, buildInfo.message)
+            projectId = projectId,
+            pipelineId = buildInfo.pipelineId ?: "dummyPipelineId",
+            buildId = buildInfo.buildId,
+            vmSeqId = buildInfo.vmSeqId,
+            simpleResult = SimpleResult(buildInfo.success, buildInfo.message)
         )
     }
 

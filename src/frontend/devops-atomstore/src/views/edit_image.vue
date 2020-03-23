@@ -12,7 +12,7 @@
             <a class="develop-guide-link" target="_blank" href="http://tempdocklink/pages/viewpage.action?pageId=22118721"> {{ $t('store.镜像指引') }} </a>
         </div>
         <main v-bkloading="{ isLoading }" class="edit-content">
-            <bk-form ref="imageForm" class="edit-image" label-width="125" :model="form" v-show="!isLoading">
+            <bk-form ref="imageForm" class="edit-image" label-width="150" :model="form" v-show="!isLoading">
                 <bk-form-item class="wt660" :label="$t('store.镜像名称')" :required="true" property="imageName" :rules="[requireRule]" ref="imageName">
                     <bk-input v-model="form.imageName" :placeholder="$t('store.请输入镜像名称')"></bk-input>
                 </bk-form-item>
@@ -82,7 +82,7 @@
                 <bk-form-item :label="$t('store.源镜像名称')" property="imageRepoName" :required="true" :rules="[requireRule]" ref="imageRepoName">
                     <bk-input v-model="form.imageRepoName" :placeholder="$t('store.请输入源镜像名称，如 XXX/XXXX')"></bk-input>
                 </bk-form-item>
-                <bk-form-item :label="$t('store.源镜像Tag')" property="imageTag" :desc="$t('store.请不要使用可变功能的Tag（如latest），避免镜像变更导致关联流水线不能正常执行')" :required="true" :rules="[requireRule, latestRule]" ref="imageTag">
+                <bk-form-item :label="$t('store.源镜像Tag')" property="imageTag" :desc="$t('store.不建议使用可变功能的Tag（如latest），避免镜像变更导致关联流水线不能正常执行')" :required="true" :rules="[requireRule]" ref="imageTag">
                     <bk-input v-model="form.imageTag" :placeholder="$t('store.imageTag')"></bk-input>
                 </bk-form-item>
                 <bk-form-item :label="$t('store.凭证')" property="ticketId" :desc="$t('store.若为私有镜像，请提供凭证，用于流水线执行时拉取镜像')">
@@ -100,7 +100,7 @@
                         <bk-radio value="INPUT" class="mr12"> {{ $t('store.手动录入') }} </bk-radio>
                     </bk-radio-group>
                 </bk-form-item>
-                <bk-form-item label="Dockerfile" :required="true" property="dockerFileContent" :rules="[requireRule]" ref="dockerFileContent">
+                <bk-form-item label="Dockerfile" property="dockerFileContent" ref="dockerFileContent">
                     <section class="dockerfile" @click="freshCodeMirror"></section>
                 </bk-form-item>
                 <div class="version-msg">
@@ -196,13 +196,6 @@
                 requireRule: {
                     required: true,
                     message: this.$t('store.必填项'),
-                    trigger: 'blur'
-                },
-                latestRule: {
-                    validator (val) {
-                        return val !== 'latest'
-                    },
-                    message: this.$t('store.镜像tag不能是latest'),
                     trigger: 'blur'
                 },
                 logoErr: false,

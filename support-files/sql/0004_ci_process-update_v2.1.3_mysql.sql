@@ -499,6 +499,66 @@ BEGIN
             ADD INDEX ROOT_TEMPLATE_ID (`ROOT_TEMPLATE_ID`);
     END IF;
 
+    IF EXISTS(SELECT 1
+              FROM information_schema.COLUMNS
+              WHERE TABLE_SCHEMA = db
+                AND TABLE_NAME = 'T_TEMPLATE'
+                AND COLUMN_NAME = 'VERSION') THEN
+        IF NOT EXISTS(SELECT 1
+                      FROM information_schema.COLUMNS
+                      WHERE TABLE_SCHEMA = db
+                        AND TABLE_NAME = 'T_TEMPLATE'
+                        AND COLUMN_NAME = 'VERSION'
+                        AND COLUMN_TYPE = 'bigint(20)') THEN
+            ALTER TABLE T_TEMPLATE MODIFY COLUMN VERSION BIGINT(20) NOT NULL AUTO_INCREMENT;
+        END IF;
+    END IF;
+
+    IF EXISTS(SELECT 1
+              FROM information_schema.COLUMNS
+              WHERE TABLE_SCHEMA = db
+                AND TABLE_NAME = 'T_PIPELINE_WEBHOOK'
+                AND COLUMN_NAME = 'ID') THEN
+        IF NOT EXISTS(SELECT 1
+                      FROM information_schema.COLUMNS
+                      WHERE TABLE_SCHEMA = db
+                        AND TABLE_NAME = 'T_PIPELINE_WEBHOOK'
+                        AND COLUMN_NAME = 'ID'
+                        AND COLUMN_TYPE = 'bigint(20)') THEN
+            ALTER TABLE T_PIPELINE_WEBHOOK MODIFY COLUMN ID BIGINT(20) NOT NULL AUTO_INCREMENT;
+        END IF;
+    END IF;
+
+    IF EXISTS(SELECT 1
+              FROM information_schema.COLUMNS
+              WHERE TABLE_SCHEMA = db
+                AND TABLE_NAME = 'T_PIPELINE_TEMPLATE'
+                AND COLUMN_NAME = 'ID') THEN
+        IF NOT EXISTS(SELECT 1
+                      FROM information_schema.COLUMNS
+                      WHERE TABLE_SCHEMA = db
+                        AND TABLE_NAME = 'T_PIPELINE_TEMPLATE'
+                        AND COLUMN_NAME = 'ID'
+                        AND COLUMN_TYPE = 'bigint(20)') THEN
+            ALTER TABLE T_PIPELINE_TEMPLATE MODIFY COLUMN ID BIGINT(20) NOT NULL AUTO_INCREMENT;
+        END IF;
+    END IF;
+
+    IF EXISTS(SELECT 1
+              FROM information_schema.COLUMNS
+              WHERE TABLE_SCHEMA = db
+                AND TABLE_NAME = 'T_BUILD_STARTUP_PARAM'
+                AND COLUMN_NAME = 'ID') THEN
+        IF NOT EXISTS(SELECT 1
+                      FROM information_schema.COLUMNS
+                      WHERE TABLE_SCHEMA = db
+                        AND TABLE_NAME = 'T_BUILD_STARTUP_PARAM'
+                        AND COLUMN_NAME = 'ID'
+                        AND COLUMN_TYPE = 'bigint(20)') THEN
+            ALTER TABLE T_BUILD_STARTUP_PARAM MODIFY COLUMN ID BIGINT(20) NOT NULL AUTO_INCREMENT;
+        END IF;
+    END IF;
+
     COMMIT;
 END <CI_UBF>
 DELIMITER ;
