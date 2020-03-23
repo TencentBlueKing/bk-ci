@@ -122,23 +122,23 @@ class AppPipelineService @Autowired constructor(
             with(it) {
                 appPipelines.add(
                     AppPipeline(
-                        projectId,
-                        projectName,
-                        pipelineId,
-                        pipelineName,
-                        pipelineDesc ?: "",
-                        latestBuildStatus,
-                        latestBuildNum,
-                        latestBuildId,
-                        latestBuildStartTime,
-                        latestBuildEndTime,
-                        latestBuildUserId,
-                        pipelineVersion,
-                        canManualStartup,
-                        hasCollect,
-                        deploymentTime,
-                        createTime,
-                        logoAddr
+                        projectId = projectId,
+                        projectName = projectName,
+                        pipelineId = pipelineId,
+                        pipelineName = pipelineName,
+                        pipelineDesc = pipelineDesc ?: "",
+                        latestBuildStatus = latestBuildStatus,
+                        latestBuildNum = latestBuildNum,
+                        latestBuildId = latestBuildId,
+                        latestBuildStartTime = latestBuildStartTime,
+                        latestBuildEndTime = latestBuildEndTime,
+                        latestBuildUser = latestBuildUserId,
+                        pipelineVersion = pipelineVersion,
+                        canManualStartup = canManualStartup,
+                        hasCollect = hasCollect,
+                        deploymentTime = deploymentTime,
+                        createTime = createTime,
+                        logoUrl = logoAddr
                     )
                 )
             }
@@ -169,43 +169,46 @@ class AppPipelineService @Autowired constructor(
     ): Page<AppPipelineHistory> {
 
         val result = buildService.getHistoryBuild(
-            userId,
-            projectId,
-            pipelineId,
-            page,
-            pageSize,
-            null,
-            null,
-            materialBranch,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            page = page,
+            pageSize = pageSize,
+            materialAlias = null,
+            materialUrl = null,
+            materialBranch = materialBranch,
+            materialCommitId = null,
+            materialCommitMessage = null,
+            status = null,
+            trigger = null,
+            queueTimeStartTime = null,
+            queueTimeEndTime = null,
+            startTimeStartTime = null,
+            startTimeEndTime = null,
+            endTimeStartTime = null,
+            endTimeEndTime = null,
+            totalTimeMin = null,
+            totalTimeMax = null,
+            remark = null,
+            buildNoStart = null,
+            buildNoEnd = null
         )
         val histories = result.records.map { h ->
+            val packageVersion = StringBuilder()
+            h.artifactList?.forEach { packageVersion.append(it.appVersion).append(";") }
             AppPipelineHistory(
-                projectId,
-                pipelineId,
-                h.id,
-                h.userId,
-                StartType.toStartType(h.trigger),
-                h.buildNum,
-                h.startTime,
-                h.endTime,
-                h.status,
-                h.currentTimestamp,
-                h.pipelineVersion
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = h.id,
+                userId = h.userId,
+                trigger = StartType.toStartType(h.trigger),
+                buildNum = h.buildNum,
+                startTime = h.startTime,
+                endTime = h.endTime,
+                status = h.status,
+                curTimestamp = h.currentTimestamp,
+                pipelineVersion = h.pipelineVersion,
+                packageVersion = packageVersion.toString().removeSuffix(";")
             ).apply {
                 isMobileStart = h.isMobileStart
             }
