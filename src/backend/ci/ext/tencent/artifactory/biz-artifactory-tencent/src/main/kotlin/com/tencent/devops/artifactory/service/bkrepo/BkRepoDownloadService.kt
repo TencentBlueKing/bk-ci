@@ -235,6 +235,13 @@ class BkRepoDownloadService @Autowired constructor(
         if (!crossProjectId.isNullOrBlank()) {
             targetProjectId = crossProjectId!!
             targetPipelineId = crossPipineId ?: throw BadRequestException("Invalid Parameter pipelineId")
+            val targetBuild = client.get(ServiceBuildResource::class).getSingleHistoryBuild(
+                targetProjectId,
+                targetPipelineId,
+                crossBuildNo ?: throw BadRequestException("Invalid Parameter buildNo"),
+                ChannelCode.BS
+            ).data
+            targetBuildId = (targetBuild ?: throw BadRequestException("构建不存在($crossBuildNo)")).id
         }
 
         var accessUserId = when {
@@ -248,15 +255,15 @@ class BkRepoDownloadService @Autowired constructor(
                 null
             }
         }
+        logger.info("accessUserId: $accessUserId, targetProjectId: $targetProjectId, targetPipelineId: $targetPipelineId, targetBuildId: $targetBuildId")
 
-        // userId 有值或 crossProjectId 不为空时需要校验用户权限
+        //校验用户权限
         if (accessUserId != null) {
             if (artifactoryType == ArtifactoryType.CUSTOM_DIR &&
                 !authProjectApi.getProjectUsers(artifactoryAuthServiceCode, targetProjectId).contains(accessUserId)) {
                 throw BadRequestException("用户（$accessUserId) 没有项目（$targetProjectId）下载权限)")
             }
             if (artifactoryType == ArtifactoryType.PIPELINE) {
-                targetPipelineId = crossPipineId ?: throw BadRequestException("Invalid Parameter pipelineId")
                 pipelineService.validatePermission(
                     accessUserId,
                     targetProjectId,
@@ -264,16 +271,8 @@ class BkRepoDownloadService @Autowired constructor(
                     AuthPermission.DOWNLOAD,
                     "用户($accessUserId)在项目($crossProjectId)下没有流水线($crossPipineId)下载构建权限"
                 )
-                val targetBuild = client.get(ServiceBuildResource::class).getSingleHistoryBuild(
-                    targetProjectId,
-                    targetPipelineId,
-                    crossBuildNo ?: throw BadRequestException("Invalid Parameter buildNo"),
-                    ChannelCode.BS
-                ).data
-                targetBuildId = (targetBuild ?: throw BadRequestException("构建不存在($crossBuildNo)")).id
             }
         }
-        logger.info("accessUserId: $accessUserId, targetProjectId: $targetProjectId, targetPipelineId: $targetPipelineId, targetBuildId: $targetBuildId")
 
         val regex = Pattern.compile(",|;")
         val pathArray = regex.split(argPath)
