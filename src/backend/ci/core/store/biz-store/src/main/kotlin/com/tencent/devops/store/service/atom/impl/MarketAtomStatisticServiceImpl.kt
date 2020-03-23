@@ -126,6 +126,7 @@ class MarketAtomStatisticServiceImpl @Autowired constructor(
                 AtomPipeline(
                     pipelineId = it.pipelineId,
                     pipelineName = it.pipelineName,
+                    atomVersion = it.atomVersion,
                     projectCode = projectCode,
                     projectName = project?.projectName ?: "",
                     bgName = project?.bgName ?: "",

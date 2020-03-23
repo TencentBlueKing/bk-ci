@@ -43,7 +43,7 @@ import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.BuildTaskStatus
 import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
-import com.tencent.devops.common.pipeline.pojo.element.RunCondition
+import com.tencent.devops.common.pipeline.pojo.element.TaskRunCondition
 import com.tencent.devops.common.pipeline.utils.HeartBeatUtils
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.log.utils.LogUtils
@@ -55,6 +55,7 @@ import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildTaskResult
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.pojo.mq.PipelineBuildContainerEvent
+import com.tencent.devops.process.service.PipelineTaskService
 import com.tencent.devops.process.utils.PIPELINE_ELEMENT_ID
 import com.tencent.devops.process.utils.PIPELINE_TURBO_TASK_ID
 import com.tencent.devops.process.utils.PIPELINE_VMSEQ_ID
@@ -78,6 +79,7 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
     private val measureService: MeasureService?,
     private val rabbitTemplate: RabbitTemplate,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
+    private val pipelineTaskService: PipelineTaskService,
     private val redisOperation: RedisOperation,
     private val jmxElements: JmxElements,
     private val consulClient: ConsulDiscoveryClient?,
@@ -288,11 +290,11 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
     }
 
     private fun notSkipWhenCustomVarMatch(additionalOptions: ElementAdditionalOptions?) =
-        additionalOptions != null && additionalOptions.runCondition == RunCondition.CUSTOM_VARIABLE_MATCH &&
+        additionalOptions != null && additionalOptions.taskRunCondition == TaskRunCondition.CUSTOM_VARIABLE_MATCH &&
             additionalOptions.customVariables != null && additionalOptions.customVariables!!.isNotEmpty()
 
     private fun skipWhenCustomVarMatch(additionalOptions: ElementAdditionalOptions?) =
-        additionalOptions != null && additionalOptions.runCondition == RunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN &&
+        additionalOptions != null && additionalOptions.taskRunCondition == TaskRunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN &&
             additionalOptions.customVariables != null && additionalOptions.customVariables!!.isNotEmpty()
 
     private fun buildClaim(buildId: String, vmSeqId: String, vmName: String): BuildTask {
@@ -321,8 +323,8 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
                         if (BuildStatus.isReadyToRun(taskBehind.status)) {
                             if (taskBehind.additionalOptions != null &&
                                 taskBehind.additionalOptions!!.enable &&
-                                (taskBehind.additionalOptions!!.runCondition == RunCondition.PRE_TASK_FAILED_BUT_CANCEL ||
-                                    taskBehind.additionalOptions!!.runCondition == RunCondition.PRE_TASK_FAILED_ONLY)
+                                (taskBehind.additionalOptions!!.taskRunCondition == TaskRunCondition.PRE_TASK_FAILED_BUT_CANCEL ||
+                                    taskBehind.additionalOptions!!.taskRunCondition == TaskRunCondition.PRE_TASK_FAILED_ONLY)
                             ) {
                                 logger.info(
                                     "[$buildId]|containerId=$vmSeqId|name=${taskBehind.taskName}|" +
@@ -347,15 +349,15 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
                     // 如果当前Container已经执行失败了，但是有配置了前置失败还要执行的插件，则只能添加这样的插件到队列中
                     if (isContainerFailed) {
                         if (continueWhenPreTaskFailed && additionalOptions != null && additionalOptions.enable &&
-                            (additionalOptions.runCondition == RunCondition.PRE_TASK_FAILED_BUT_CANCEL ||
-                                additionalOptions.runCondition == RunCondition.PRE_TASK_FAILED_ONLY)
+                            (additionalOptions.taskRunCondition == TaskRunCondition.PRE_TASK_FAILED_BUT_CANCEL ||
+                                additionalOptions.taskRunCondition == TaskRunCondition.PRE_TASK_FAILED_ONLY)
                         ) {
                             queueTasks.add(task)
                         }
                     } else { // 当前Container成功
                         if (additionalOptions == null ||
-                            additionalOptions.runCondition != RunCondition.PRE_TASK_FAILED_ONLY ||
-                            (additionalOptions.runCondition == RunCondition.PRE_TASK_FAILED_ONLY &&
+                            additionalOptions.taskRunCondition != TaskRunCondition.PRE_TASK_FAILED_ONLY ||
+                            (additionalOptions.taskRunCondition == TaskRunCondition.PRE_TASK_FAILED_ONLY &&
                                 hasFailedTaskInInSuccessContainer)
                         ) {
                             if (!checkCustomVariableSkip(buildId, additionalOptions, allVariable)) {
@@ -509,12 +511,25 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
                 logger.warn("[$buildId]| save var fail: ${ignored.message}", ignored)
             }
         }
-        logger.info("[ERRORCODE] completeClaimBuildTask <$buildId>[${result.errorType}][${result.errorCode}][${result.message}] ")
+        logger.info("[$buildId]|ERRORCODE|completeClaimBuildTask|errorType=${result.errorType}|errorCode=${result.errorCode}|message=${result.message}] ")
         val errorType = if (!result.errorType.isNullOrBlank()) {
             ErrorType.valueOf(result.errorType!!)
         } else null
 
-        val buildStatus = if (result.success) BuildStatus.SUCCEED else BuildStatus.FAILED
+        val buildStatus = if (result.success) {
+            pipelineTaskService.removeRetryCache(buildId, result.taskId)
+            BuildStatus.SUCCEED
+        } else {
+            if (pipelineTaskService.isRetryWhenFail(result.taskId, buildId)) {
+                logger.info("task fail,user setting retry, build[$buildId], taskId[${result.taskId}, elementId[${result.elementId}]]")
+                // 此处休眠5s作为重试的冷却时间
+                Thread.sleep(5000)
+                BuildStatus.RETRY
+            } else {
+                BuildStatus.FAILED
+            }
+        }
+
         buildDetailService.pipelineTaskEnd(
             buildId = buildId,
             elementId = result.elementId,

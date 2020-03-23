@@ -98,6 +98,10 @@ export function PipelineEditActionCreator (mutation) {
             if (compareParam(payload.newParam, payload.atom)) {
                 commit(SET_PIPELINE_EDITING, true)
             }
+        } else if (payload.stage && payload.newParam) {
+            if (compareParam(payload.newParam, payload.stage)) {
+                commit(SET_PIPELINE_EDITING, true)
+            }
         } else if ([UPDATE_ATOM_OUTPUT_NAMESPACE, ADD_STAGE].includes(mutation)) {
             commit(SET_PIPELINE_EDITING, true)
         }
