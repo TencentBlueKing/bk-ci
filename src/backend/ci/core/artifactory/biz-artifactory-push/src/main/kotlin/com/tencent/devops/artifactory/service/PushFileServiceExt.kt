@@ -67,17 +67,18 @@ class PushFileServiceExt @Autowired constructor(
                 filePath.add(it.absolutePath)
             }
 
+            val localEnvSet = EnvSet(emptyList(), emptyList(), envService.buildIpDto())
+
             val fileSource = FastPushFileRequest.FileSource(
                 files = filePath,
-                envSet = envSet,
+                envSet = localEnvSet,
                 account = pushResourceInfo.account
             )
 
-            val localEnvSet = EnvSet(emptyList(), emptyList(), envService.buildIpDto())
 
             val fastPushFileRequest = FastPushFileRequest(
                 userId = userId,
-                envSet = localEnvSet,
+                envSet = envSet,
                 fileSources = listOf(fileSource),
                 fileTargetPath = pushResourceInfo.targetPath,
                 account = pushResourceInfo.account,
