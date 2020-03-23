@@ -138,19 +138,20 @@
 
             downLoadJobLink () {
                 const editingElementPos = this.editingElementPos
-                const fileName = `${editingElementPos.stageIndex + 1}-${editingElementPos.containerIndex + 1}-${this.currentJob.name}`
-                const tag = this.currentJob.id
+                const fileName = encodeURI(encodeURI(`${editingElementPos.stageIndex + 1}-${editingElementPos.containerIndex + 1}-${this.currentJob.name}`))
+                const jobId = this.currentJob.containerId
+                const tag = `startVM-${this.currentJob.id}`
                 const curLogPostData = this.logPostData[tag] || {}
                 const currentExe = curLogPostData.currentExe || 1
-                return `${AJAX_URL_PIRFIX}/log/api/user/logs/${this.$route.params.projectId}/${this.$route.params.pipelineId}/${this.execDetail.id}/download?tag=${tag}&executeCount=${currentExe}&fileName=${fileName}`
+                return `${AJAX_URL_PIRFIX}/log/api/user/logs/${this.$route.params.projectId}/${this.$route.params.pipelineId}/${this.execDetail.id}/download?jobId=${jobId}&executeCount=${currentExe}&fileName=${fileName}`
             },
             downLoadPluginLink () {
                 const editingElementPos = this.editingElementPos
-                const fileName = `${editingElementPos.stageIndex + 1}-${editingElementPos.containerIndex + 1}-${editingElementPos.elementIndex + 1}-${this.currentElement.name}`
+                const fileName = encodeURI(encodeURI(`${editingElementPos.stageIndex + 1}-${editingElementPos.containerIndex + 1}-${editingElementPos.elementIndex + 1}-${this.currentElement.name}`))
                 const tag = this.currentElement.id
                 const curLogPostData = this.logPostData[tag] || {}
                 const currentExe = curLogPostData.currentExe || 1
-                return `${AJAX_URL_PIRFIX}/log/api/user/logs/${this.$route.params.projectId}/${this.$route.params.pipelineId}/${this.execDetail.id}/download?tag=${tag}&executeCount=${currentExe}&fileName=${fileName}`
+                return `${AJAX_URL_PIRFIX}/log/api/user/logs/${this.$route.params.projectId}/${this.$route.params.pipelineId}/${this.execDetail.id}/download?tag=${tag}&executeCount=${currentExe}&fileName    =${fileName}`
             },
             panels () {
                 return [{
