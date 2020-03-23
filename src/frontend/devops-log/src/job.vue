@@ -26,11 +26,11 @@
 </template>
 
 <script>
-    // eslint-disable-next-line
-    const Worker = require('worker-loader!./worker.js')
     import virtualScroll from './virtualScroll'
     import logContainer from './logContainer'
     import statusIcon from './status'
+    // eslint-disable-next-line
+    const Worker = require('worker-loader!./worker.js')
 
     function prezero (num) {
         num = Number(num)
@@ -50,6 +50,14 @@
             virtualScroll,
             logContainer,
             statusIcon
+        },
+
+        filters: {
+            timeFilter (val) {
+                if (!val) return ''
+                const time = new Date(val)
+                return `${time.getFullYear()}-${prezero(time.getMonth() + 1)}-${prezero(time.getDate())} ${prezero(time.getHours())}:${prezero(time.getMinutes())}:${prezero(time.getSeconds())}:${millisecond(time.getMilliseconds())}`
+            }
         },
 
         props: {
@@ -78,14 +86,6 @@
                 showTime: false,
                 searchStr: '',
                 curSearchIndex: 0
-            }
-        },
-
-        filters: {
-            timeFilter (val) {
-                if (!val) return ''
-                const time = new Date(val)
-                return `${time.getFullYear()}-${prezero(time.getMonth() + 1)}-${prezero(time.getDate())} ${prezero(time.getHours())}:${prezero(time.getMinutes())}:${prezero(time.getSeconds())}:${millisecond(time.getMilliseconds())}`
             }
         },
 
@@ -136,7 +136,7 @@
                         else if (str === '>') return '&gt;'
                         else if (str === this.searchStr) return `<span class="search-str">${str}</span>`
                         else if (/\t/.test(str)) return '&nbsp;&nbsp;&nbsp;&nbsp;'
-                        else return'&nbsp;'
+                        else return '&nbsp;'
                     })
                 }
                 let valRes = ''

@@ -34,13 +34,13 @@ function handleColor (val) {
     return res
 }
 
-const allListData = {}
+let allListData = {}
 let curListData = []
-const allTagList = {}
+let allTagList = {}
 let curTagList = []
-const allMainWidth = {}
-const allMainWordNum = {}
-const allRepeatLineNum = {}
+let allMainWidth = {}
+let allMainWordNum = {}
+let allRepeatLineNum = {}
 let curId
 
 onmessage = function (e) {
@@ -119,8 +119,8 @@ function handleSearch (val) {
 // 分页获取搜索结果
 function getSearchRes (index) {
     let curSearchRes = []
-    let startIndex = index - 500
-    let endIndex = index + 500
+    const startIndex = index - 500
+    const endIndex = index + 500
     if (searchRes.length <= 1500) {
         curSearchRes = searchRes
     } else {
@@ -208,12 +208,14 @@ function splitText (message) {
         let tempA = null
         let currentIndex = 0
 
-        while ((tempA = regex.exec(message)) != null) aList.push({
-            content: tempA[0],
-            href: tempA[1],
-            text: tempA[2],
-            startIndex: tempA.index
-        })
+        while ((tempA = regex.exec(message)) != null) {
+            aList.push({
+                content: tempA[0],
+                href: tempA[1],
+                text: tempA[2],
+                startIndex: tempA.index
+            })
+        }
         if (aList.length) message = message.replace(regex, '$2')
 
         while (message !== '') {
@@ -259,9 +261,9 @@ function splitByChar (message) {
 }
 
 const canvas = new OffscreenCanvas(100, 1)
-const context = canvas.getContext("2d")
+const context = canvas.getContext('2d')
 context.font = 'normal 12px Consolas, "Courier New", monospace'
-function getTextWidth(text) {
+function getTextWidth (text) {
     const metrics = context.measureText(text)
     return metrics.width
 }
@@ -287,7 +289,7 @@ function getListData ({ totalScrollHeight, itemHeight, itemNumber, canvasHeight,
             isFold: currentItem.endIndex !== undefined,
             hasFolded: (currentItem.children || []).length > 0
         })
-        listData.push({ 
+        listData.push({
             top,
             isNewLine: currentItem.isNewLine,
             value: currentItem.message,
