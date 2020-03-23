@@ -287,8 +287,8 @@ class BkRepoDownloadService @Autowired constructor(
             val fileName = JFrogUtil.getFileName(path) // *.txt
 
             bkRepoClient.queryByPathEqOrNameMatchOrMetadataEqAnd(
-                userId = "",
-                projectId = projectId,
+                userId = accessUserId ?: "",
+                projectId = targetProjectId,
                 repoNames = listOf(RepoUtils.getRepoByType(artifactoryType)),
                 filePaths = listOf(filePath),
                 fileNames = listOf(fileName),
@@ -304,8 +304,8 @@ class BkRepoDownloadService @Autowired constructor(
         fileList.forEach {
             val repoName = RepoUtils.getRepoByType(artifactoryType)
             val shareUri = bkRepoClient.createShareUri(
-                "",
-                projectId = projectId,
+                userId = accessUserId ?: "",
+                projectId = targetProjectId,
                 repoName = repoName,
                 fullPath = it.fullPath,
                 downloadUsers = listOf(),
