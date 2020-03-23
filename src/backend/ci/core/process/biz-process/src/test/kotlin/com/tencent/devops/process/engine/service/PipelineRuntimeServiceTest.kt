@@ -40,6 +40,7 @@ import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
 import com.tencent.devops.process.engine.dao.PipelineBuildTaskDao
 import com.tencent.devops.process.engine.dao.PipelineBuildVarDao
 import com.tencent.devops.process.service.BuildStartupParamService
+import com.tencent.devops.process.service.StageTagService
 import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
 import com.tencent.devops.process.utils.PIPELINE_NAME
 import com.tencent.devops.process.utils.PIPELINE_START_CHANNEL
@@ -70,6 +71,7 @@ class PipelineRuntimeServiceTest {
     private val pipelineBuildVarDao: PipelineBuildVarDao = mock()
     private val buildDetailDao: BuildDetailDao = mock()
     private val buildStartupParamService: BuildStartupParamService = mock()
+    private val stageTagService: StageTagService = mock()
     private val redisOperation: RedisOperation = RedisOperation(redisTemplate)
 
     private val pipelineRuntimeService = PipelineRuntimeService(
@@ -86,6 +88,7 @@ class PipelineRuntimeServiceTest {
         pipelineBuildVarDao = pipelineBuildVarDao,
         buildDetailDao = buildDetailDao,
         buildStartupParamService = buildStartupParamService,
+        stageTagService = stageTagService,
         redisOperation = redisOperation
     )
 

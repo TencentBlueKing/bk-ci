@@ -51,6 +51,9 @@ export default {
     setSaveStatus ({ commit }, status) {
         commit(SET_SAVE_STATUS, status)
     },
+    toggleReviewDialog ({ commit }, { isShow, reviewInfo }) {
+        commit(TOGGLE_REVIEW_DIALOG, { isShow, reviewInfo })
+    },
     addStoreAtom ({ commit, state }) {
         const store = state.storeAtomData || {}
         let page = store.page || 1
@@ -268,6 +271,7 @@ export default {
         commit(SET_PIPELINE_EDITING, true)
     },
     updateContainer: PipelineEditActionCreator(UPDATE_CONTAINER),
+    updateStage: PipelineEditActionCreator(UPDATE_STAGE),
     addAtom: ({ commit }, { stageIndex, containerIndex, atomIndex, container }) => {
         const insertIndex = atomIndex + 1
         commit(INSERT_ATOM, {
