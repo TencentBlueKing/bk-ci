@@ -403,7 +403,7 @@ class ExtServiceDao {
             val tir = TExtensionServiceItemRel.T_EXTENSION_SERVICE_ITEM_REL.`as`("tir")
             val serviceIdList = dslContext.select(tir.SERVICE_ID).from(tir)
                 .where(tir.BK_SERVICE_ID.eq(bkService)).fetch().map { it["SERVICE_ID"] as String }
-            baseStep.leftJoin(tir).on(ta.ID.`in`(serviceIdList))
+            conditions.add(ta.ID.`in`(serviceIdList))
         }
 
         if (score != null) {
@@ -613,7 +613,7 @@ class ExtServiceDao {
             val tir = TExtensionServiceItemRel.T_EXTENSION_SERVICE_ITEM_REL.`as`("tir")
             val serviceIdList = dslContext.select(tir.SERVICE_ID).from(tir)
                 .where(tir.BK_SERVICE_ID.eq(bkService)).fetch().map { it["SERVICE_ID"] as String }
-            baseStep.leftJoin(tir).on(ta.ID.`in`(serviceIdList))
+            conditions.add(ta.ID.`in`(serviceIdList))
         }
         if (score != null) {
             val tas = TStoreStatisticsTotal.T_STORE_STATISTICS_TOTAL.`as`("tas")
@@ -651,6 +651,7 @@ class ExtServiceDao {
         } else {
             baseStep.where(conditions)
         }
+
         return if (null != page && null != pageSize) {
             baseStep.limit((page - 1) * pageSize, pageSize).fetch()
         } else {
@@ -665,7 +666,7 @@ class ExtServiceDao {
         val conditions = mutableListOf<Condition>()
         conditions.add(a.SERVICE_STATUS.eq(ExtServiceStatusEnum.RELEASED.status.toByte())) // 已发布的
         conditions.add(a.LATEST_FLAG.eq(true)) // 最新版本
-        conditions.add(a.DELETE_FLAG.eq(false)) // 只查没有被删除的插件
+        conditions.add(a.DELETE_FLAG.eq(false)) // 只查没有被删除的扩展
         return conditions
     }
 

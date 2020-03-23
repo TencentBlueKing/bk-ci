@@ -1,6 +1,7 @@
 package com.tencent.devops.project.service
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.project.api.pojo.ExtItemDTO
 import com.tencent.devops.project.api.pojo.ItemInfoResponse
@@ -21,6 +22,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.lang.RuntimeException
 import javax.annotation.PostConstruct
+import kotlin.RuntimeException
 import com.tencent.devops.project.api.pojo.ExtServiceEntity as ExtServiceEntity
 
 @Service
@@ -302,6 +304,9 @@ class ServiceItemService @Autowired constructor(
             logger.warn("createItem itemName is exsit, itemName[$itemInfo.itemName]")
             throw RuntimeException("前端页面路径路径重复")
         }
+
+        validProps(itemInfo.props)
+
         val updateInfo = ItemUpdateInfo(
             itemName = itemInfo.itemName,
             htmlPath = itemInfo.htmlPath,
@@ -327,6 +332,20 @@ class ServiceItemService @Autowired constructor(
         if (itemRecordByHtmlPath != null) {
             logger.warn("createItem itemName is exsit, itemName[$itemInfo.itemName]")
             throw RuntimeException("前端页面路径路径重复")
+        }
+        validProps(itemInfo.props)
+    }
+
+    private fun validProps(props: String?){
+        if(props.isNullOrEmpty()){
+            throw RuntimeException("props信息为空")
+        }
+
+        try{
+            JsonUtil.toJson(props!!)
+        }
+        catch (e: Exception){
+            throw RuntimeException("props信息非json结构")
         }
     }
 
