@@ -80,6 +80,7 @@ class ServiceIptResourceImpl @Autowired constructor(
                     null,
                     null,
                     null,
+                    null,
                     null
                 ).firstOrNull()
             } else {
@@ -89,6 +90,7 @@ class ServiceIptResourceImpl @Autowired constructor(
                     buildId,
                     it.artifactoryType,
                     path,
+                    null,
                     null,
                     null,
                     null,

@@ -36,6 +36,7 @@ import com.tencent.devops.artifactory.service.pojo.FileShareInfo
 import com.tencent.devops.artifactory.util.EmailUtil
 import com.tencent.devops.artifactory.util.JFrogUtil
 import com.tencent.devops.artifactory.util.PathUtils
+import com.tencent.devops.artifactory.util.RegionUtil
 import com.tencent.devops.artifactory.util.RepoUtils
 import com.tencent.devops.artifactory.util.StringUtil
 import com.tencent.devops.common.api.exception.OperationException
@@ -221,31 +222,20 @@ class BkRepoDownloadService @Autowired constructor(
         ttl: Int?,
         crossProjectId: String?,
         crossPipineId: String?,
-        crossBuildNo: String?
+        crossBuildNo: String?,
+        region: String?,
+        userId: String?
     ): List<String> {
         logger.info("getThirdPartyDownloadUrl, projectId: $projectId, pipelineId: $pipelineId, buildId: $buildId" +
             ", artifactoryType: $artifactoryType, argPath: $argPath, crossProjectId: $crossProjectId, ttl: $ttl" +
-            ", crossPipineId: $crossPipineId, crossBuildNo: $crossBuildNo")
+            ", crossPipineId: $crossPipineId, crossBuildNo: $crossBuildNo, region：$region, userId: $userId")
         var targetProjectId = projectId
         var targetPipelineId = pipelineId
         var targetBuildId = buildId
         if (!crossProjectId.isNullOrBlank()) {
-            val lastModifyUser = client.get(ServicePipelineResource::class)
-                .getPipelineInfo(projectId, pipelineId, null).data!!.lastModifyUser
             targetProjectId = crossProjectId!!
-            if (artifactoryType == ArtifactoryType.CUSTOM_DIR &&
-                !authProjectApi.getProjectUsers(artifactoryAuthServiceCode, targetProjectId).contains(lastModifyUser)) {
-                throw BadRequestException("用户（$lastModifyUser) 没有项目（$targetProjectId）下载权限)")
-            }
             if (artifactoryType == ArtifactoryType.PIPELINE) {
                 targetPipelineId = crossPipineId ?: throw BadRequestException("Invalid Parameter pipelineId")
-                pipelineService.validatePermission(
-                    lastModifyUser,
-                    targetProjectId,
-                    targetPipelineId,
-                    AuthPermission.DOWNLOAD,
-                    "用户($lastModifyUser)在项目($crossProjectId)下没有流水线($crossPipineId)下载构建权限")
-
                 val targetBuild = client.get(ServiceBuildResource::class).getSingleHistoryBuild(
                     targetProjectId,
                     targetPipelineId,
@@ -255,7 +245,36 @@ class BkRepoDownloadService @Autowired constructor(
                 targetBuildId = (targetBuild ?: throw BadRequestException("构建不存在($crossBuildNo)")).id
             }
         }
-        logger.info("targetProjectId: $targetProjectId, targetPipelineId: $targetPipelineId, targetBuildId: $targetBuildId")
+
+        var accessUserId = when {
+            !userId.isNullOrBlank() -> {
+                userId!!
+            }
+            !crossProjectId.isNullOrBlank() -> {
+                client.get(ServicePipelineResource::class).getPipelineInfo(projectId, pipelineId, null).data!!.lastModifyUser
+            }
+            else -> {
+                null
+            }
+        }
+        logger.info("accessUserId: $accessUserId, targetProjectId: $targetProjectId, targetPipelineId: $targetPipelineId, targetBuildId: $targetBuildId")
+
+        //校验用户权限
+        if (accessUserId != null) {
+            if (artifactoryType == ArtifactoryType.CUSTOM_DIR &&
+                !authProjectApi.getProjectUsers(artifactoryAuthServiceCode, targetProjectId).contains(accessUserId)) {
+                throw BadRequestException("用户（$accessUserId) 没有项目（$targetProjectId）下载权限)")
+            }
+            if (artifactoryType == ArtifactoryType.PIPELINE) {
+                pipelineService.validatePermission(
+                    accessUserId,
+                    targetProjectId,
+                    targetPipelineId,
+                    AuthPermission.DOWNLOAD,
+                    "用户($accessUserId)在项目($targetProjectId)下没有流水线($targetPipelineId)下载构件权限"
+                )
+            }
+        }
 
         val regex = Pattern.compile(",|;")
         val pathArray = regex.split(argPath)
@@ -270,8 +289,8 @@ class BkRepoDownloadService @Autowired constructor(
             val fileName = JFrogUtil.getFileName(path) // *.txt
 
             bkRepoClient.queryByPathEqOrNameMatchOrMetadataEqAnd(
-                userId = "",
-                projectId = projectId,
+                userId = accessUserId ?: "",
+                projectId = targetProjectId,
                 repoNames = listOf(RepoUtils.getRepoByType(artifactoryType)),
                 filePaths = listOf(filePath),
                 fileNames = listOf(fileName),
@@ -287,15 +306,15 @@ class BkRepoDownloadService @Autowired constructor(
         fileList.forEach {
             val repoName = RepoUtils.getRepoByType(artifactoryType)
             val shareUri = bkRepoClient.createShareUri(
-                "",
-                projectId = projectId,
+                userId = accessUserId ?: "",
+                projectId = targetProjectId,
                 repoName = repoName,
                 fullPath = it.fullPath,
                 downloadUsers = listOf(),
                 downloadIps = listOf(),
                 timeoutInSeconds = (ttl ?: 24 * 3600).toLong()
             )
-            resultList.add("${HomeHostUtil.getHost(commonConfig.devopsDevnetProxyGateway!!)}/bkrepo/api/external/repository$shareUri")
+            resultList.add("${RegionUtil.getRegionUrl(region)}/bkrepo/api/external/repository$shareUri")
         }
         return resultList
     }
