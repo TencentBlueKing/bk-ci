@@ -368,7 +368,7 @@ class ContainerControl @Autowired constructor(
         var startVMFail = false
 
         containerTaskList.forEach nextOne@{ task ->
-            if (!ControlUtils.isEnable(task.additionalOptions)) {
+            if (!ControlUtils.isEnable(task.additionalOptions) && BuildStatus.isReadyToRun(task.status)) {
                 logger.info("[$buildId]|container=$containerId|task(${task.taskSeq})=${task.taskId}|${task.taskName}|is not enable, will skip")
                 pipelineRuntimeService.updateTaskStatus(
                     buildId = buildId, taskId = task.taskId, userId = task.starter, buildStatus = BuildStatus.SKIP
