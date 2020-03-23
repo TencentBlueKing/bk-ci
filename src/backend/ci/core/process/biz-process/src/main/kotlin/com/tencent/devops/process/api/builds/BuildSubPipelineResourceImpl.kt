@@ -93,13 +93,17 @@ class BuildSubPipelineResourceImpl @Autowired constructor(
         pipelineId: String,
         buildId: String
     ): Result<SubPipelineStatus> {
-        val list = pipelineRuntimeService.getBuildHistoryByIds(setOf(buildId))
-        return if (list.isEmpty()) {
-            var status = list[0].status
-            if (status == BuildStatus.STAGE_SUCCESS.name && list[0].endTime != null) {
-                status = BuildStatus.SUCCEED.name
-            }
-            Result(SubPipelineStatus(status))
+        val buildInfo = pipelineRuntimeService.getBuildInfo(buildId)
+        return if (buildInfo != null) {
+            Result(
+                SubPipelineStatus(
+                    if (buildInfo.isSuccess() && buildInfo.status == BuildStatus.STAGE_SUCCESS) {
+                        BuildStatus.SUCCEED.name
+                    } else {
+                        buildInfo.status.name
+                    }
+                )
+            )
         } else {
             Result(SubPipelineStatus("ERROR"))
         }
