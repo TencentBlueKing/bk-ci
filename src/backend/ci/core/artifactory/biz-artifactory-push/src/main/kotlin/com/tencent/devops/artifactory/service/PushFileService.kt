@@ -9,5 +9,5 @@ interface PushFileService {
         userId: String,
         pushResourceInfo: RemoteResourceInfo,
         fileResourceInfo: FileResourceInfo
-    ): Result<Boolean>
+    ): Result<Long>
 }
