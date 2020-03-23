@@ -267,14 +267,16 @@ class ArtifactoryDownloadService @Autowired constructor(
         var targetBuildId = buildId
         if (!crossProjectId.isNullOrBlank()) {
             targetProjectId = crossProjectId!!
-            targetPipelineId = crossPipineId ?: throw BadRequestException("Invalid Parameter pipelineId")
-            val targetBuild = client.get(ServiceBuildResource::class).getSingleHistoryBuild(
-                targetProjectId,
-                targetPipelineId,
-                crossBuildNo ?: throw BadRequestException("Invalid Parameter buildNo"),
-                ChannelCode.BS
-            ).data
-            targetBuildId = (targetBuild ?: throw BadRequestException("构建不存在($crossBuildNo)")).id
+            if (artifactoryType == ArtifactoryType.PIPELINE) {
+                targetPipelineId = crossPipineId ?: throw BadRequestException("Invalid Parameter pipelineId")
+                val targetBuild = client.get(ServiceBuildResource::class).getSingleHistoryBuild(
+                    targetProjectId,
+                    targetPipelineId,
+                    crossBuildNo ?: throw BadRequestException("Invalid Parameter buildNo"),
+                    ChannelCode.BS
+                ).data
+                targetBuildId = (targetBuild ?: throw BadRequestException("构建不存在($crossBuildNo)")).id
+            }
         }
 
         var accessUserId = when {
