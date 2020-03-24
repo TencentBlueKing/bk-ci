@@ -70,9 +70,6 @@ class TaskAtomService @Autowired(required = false) constructor(
             // 更新状态
             pipelineRuntimeService.updateTaskStatus(task.buildId, task.taskId, task.starter, BuildStatus.RUNNING)
             pipelineBuildDetailService.taskStart(task.buildId, task.taskId)
-            if (task.taskSeq == 0) {
-                pipelineBuildDetailService.updateStartVMStatus(task.buildId, task.containerId, BuildStatus.RUNNING)
-            }
             val runVariables = pipelineRuntimeService.getAllVariable(task.buildId)
 
             atomResponse = if (task.isSkip(runVariables)) { // 跳过
@@ -166,9 +163,6 @@ class TaskAtomService @Autowired(required = false) constructor(
                 errorCode = errorCode,
                 errorMsg = errorMsg
             )
-            if (task.taskSeq == 0) {
-                pipelineBuildDetailService.updateStartVMStatus(task.buildId, task.containerId, status)
-            }
             measureService?.postTaskData(
                 projectId = task.projectId,
                 pipelineId = task.pipelineId,
