@@ -167,11 +167,10 @@ class LogServiceV2 @Autowired constructor(
                         executeCount = executeCount
                     )
                 } else {
-                    doQueryInitLogs(
+                    doQueryLargeInitLogs(
                         buildId = buildId,
                         index = index,
                         type = type,
-                        keywords = defaultKeywords,
                         tag = tag,
                         jobId = jobId,
                         executeCount = executeCount
@@ -1029,7 +1028,6 @@ class LogServiceV2 @Autowired constructor(
         buildId: String,
         index: String,
         type: String,
-        keywords: List<String>,
         tag: String? = null,
         jobId: String? = null,
         executeCount: Int?
@@ -1088,6 +1086,100 @@ class LogServiceV2 @Autowired constructor(
                 )
                 logs.add(logLine)
             }
+            logger.info("logs query time cost($type): ${System.currentTimeMillis() - startTime}")
+            queryLogs.logs.addAll(logs)
+            if (logs.isEmpty()) queryLogs.status = LogStatus.EMPTY
+            queryLogs.hasMore = size > logs.size
+        } catch (ex: IndexNotFoundException) {
+            logger.error("Query init logs failed because of IndexNotFoundException. buildId: $buildId", ex)
+            queryLogs.status = LogStatus.CLEAN
+            queryLogs.finished = true
+            queryLogs.hasMore = false
+        } catch (e: IndexClosedException) {
+            logger.error("Query init logs failed because of IndexClosedException. buildId: $buildId", e)
+            queryLogs.status = LogStatus.CLOSED
+            queryLogs.finished = true
+            queryLogs.hasMore = false
+        } catch (e: Exception) {
+            logger.error("Query init logs failed because of ${e.javaClass}. buildId: $buildId", e)
+            queryLogs.status = LogStatus.FAIL
+            queryLogs.finished = true
+            queryLogs.hasMore = false
+        }
+        return queryLogs
+    }
+
+    private fun doQueryLargeInitLogs(
+        buildId: String,
+        index: String,
+        type: String,
+        tag: String? = null,
+        jobId: String? = null,
+        executeCount: Int?
+    ): QueryLogs {
+        logger.info("[$index|$type|$buildId|$tag|$jobId|$executeCount] doQueryLargeInitLogs")
+        val logStatus = if (tag == null && jobId != null) getLogStatus(buildId, jobId, null, executeCount)
+        else getLogStatus(buildId, tag, jobId, executeCount)
+
+        val queryLogs = QueryLogs(buildId, logStatus)
+
+        try {
+            val size = getLogSize(
+                index = index,
+                type = type,
+                buildId = buildId,
+                tag = tag,
+                jobId = jobId,
+                executeCount = executeCount
+            )
+            if (size == 0L) return queryLogs
+            val logRange = getLogRange(
+                buildId = buildId,
+                index = index,
+                type = type,
+                tag = tag,
+                jobId = jobId,
+                executeCount = executeCount,
+                size = size
+            )
+            logger.info("[$index|$type|$buildId|$tag|$jobId|$executeCount] getLargeInitLogs with range: $logRange")
+
+            val startTime = System.currentTimeMillis()
+            val logs = mutableListOf<LogLine>()
+            val boolQueryBuilder = getQuery(buildId, tag, jobId, executeCount)
+            logger.info("Get the query builder: $boolQueryBuilder")
+
+            var scrollResp = client.prepareSearch(buildId, index)
+                .setTypes(type)
+                .setQuery(boolQueryBuilder)
+                .addDocValueField("lineNo")
+                .addDocValueField("timestamp")
+                .addSort("lineNo", SortOrder.ASC)
+                .setScroll(TimeValue(1000 * 64))
+                .setSize(Constants.MAX_LINES)
+                .get()
+            var times = 0
+            do {
+                scrollResp.hits.forEach { searchHitFields ->
+                    val sourceMap = searchHitFields.source
+                    val ln = sourceMap["lineNo"].toString().toLong()
+                    val t = sourceMap["tag"]?.toString() ?: ""
+                    val logLine = LogLine(
+                        lineNo = ln,
+                        timestamp = sourceMap["timestamp"].toString().toLong(),
+                        message = sourceMap["message"].toString(),
+                        priority = Constants.DEFAULT_PRIORITY_NOT_DELETED,
+                        tag = t,
+                        jobId = sourceMap["jobId"]?.toString() ?: "",
+                        executeCount = sourceMap["executeCount"]?.toString()?.toInt() ?: 1
+                    )
+                    logs.add(logLine)
+                }
+                times++
+                scrollResp = client.prepareSearchScroll(buildId, scrollResp.scrollId)
+                    .setScroll(TimeValue(1000 * 64)).execute().actionGet()
+            } while (scrollResp.hits.hits.isNotEmpty() || times >= Constants.SCROLL_MAX_TIMES)
+
             logger.info("logs query time cost($type): ${System.currentTimeMillis() - startTime}")
             queryLogs.logs.addAll(logs)
             if (logs.isEmpty()) queryLogs.status = LogStatus.EMPTY
