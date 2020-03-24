@@ -1178,7 +1178,7 @@ class LogServiceV2 @Autowired constructor(
                 times++
                 scrollResp = client.prepareSearchScroll(buildId, scrollResp.scrollId)
                     .setScroll(TimeValue(1000 * 64)).execute().actionGet()
-            } while (scrollResp.hits.hits.isNotEmpty() || times >= Constants.SCROLL_MAX_TIMES)
+            } while (scrollResp.hits.hits.isNotEmpty() || times < Constants.SCROLL_MAX_TIMES)
 
             logger.info("logs query time cost($type): ${System.currentTimeMillis() - startTime}")
             queryLogs.logs.addAll(logs)
