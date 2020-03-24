@@ -19,8 +19,7 @@
                 </div>
             </div>
             <div class="sub_header_right">
-                <a class="develop-guide-link" target="_blank"
-                    :href="docsLink"> {{ $t('store.插件指引') }} </a>
+                <a class="develop-guide-link" target="_blank" :href="docsLink"> {{ $t('store.插件指引') }} </a>
             </div>
         </div>
         <div class="release-progress-content" v-show="showContent">
@@ -39,24 +38,12 @@
                                     <i class="bk-icon icon-check-1" v-if="entry.status === 'success'"></i>
                                     <p class="step-label">{{ entry.name }}</p>
                                 </div>
-                                <div class="retry-bth" v-if="isEnterprise">
+                                <div class="retry-bth">
                                     <span class="test-btn"
                                         v-if="entry.code === 'commit' && ['doing','success'].includes(entry.status) && !isOver">
                                         <span> {{ $t('store.重新传包') }} </span>
                                         <input type="file" title="" class="upload-input" @change="selectFile" accept="application/zip">
                                     </span>
-                                </div>
-                                <div class="retry-bth" v-else>
-                                    <span :class="[{ disable: !permission }, 'rebuild-btn']"
-                                        :title="permissionMsg"
-                                        v-if="(entry.code === 'build' && entry.status === 'fail') ||
-                                            (entry.code === 'build' && entry.status === 'success' && progressStatus[index + 1].status === 'doing')"
-                                        @click.stop="rebuild"
-                                    > {{ $t('store.重新构建') }} <i class="col-line" v-if="!isEnterprise"></i></span>
-                                    <span class="log-btn"
-                                        v-if="entry.code === 'build' && entry.status !== 'undo' && !isEnterprise"
-                                        @click.stop="readLog"
-                                    > {{ $t('store.日志') }} </span>
                                 </div>
                                 <div class="retry-bth">
                                     <span class="test-btn"
@@ -72,9 +59,6 @@
                                     @click.stop="passTest"
                                     :title="permissionMsg"
                                 > {{ $t('store.继续') }} </bk-button>
-                                <div class="audit-tips" v-if="entry.code === 'approve' && entry.status === 'doing' && !isEnterprise">
-                                    <i class="bk-icon icon-info-circle"></i> {{ $t('store.由蓝盾管理员审核') }}
-                                </div>
                             </div>
                         </div>
                     </div>
@@ -103,7 +87,7 @@
                                 <div class="info-value">{{ versionDetail.classifyName }}</div>
                             </div>
                         </div>
-                        <div class="detail-form-item multi-item" v-if="isEnterprise">
+                        <div class="detail-form-item multi-item">
                             <div class="detail-form-item">
                                 <div class="info-label"> {{ $t('store.操作系统：') }} </div>
                                 <div class="info-value" v-if="versionDetail.os">
@@ -113,22 +97,6 @@
                                         <i class="bk-icon icon-macos" v-if="versionDetail.os.indexOf('MACOS') !== -1"></i>
                                     </span>
                                 </div>
-                            </div>
-                        </div>
-                        <div class="detail-form-item multi-item" v-else>
-                            <div class="detail-form-item">
-                                <div class="info-label"> {{ $t('store.适用Job类型：') }} </div>
-                                <div class="info-value" v-if="versionDetail.os">{{ jobTypeMap[versionDetail.jobType] }}
-                                    <span v-if="versionDetail.jobType === 'AGENT'">（
-                                        <i class="bk-icon icon-linux-view" v-if="versionDetail.os.indexOf('LINUX') !== -1"></i>
-                                        <i class="bk-icon icon-windows" v-if="versionDetail.os.indexOf('WINDOWS') !== -1"></i>
-                                        <i class="bk-icon icon-macos" v-if="versionDetail.os.indexOf('MACOS') !== -1"></i>）
-                                    </span>
-                                </div>
-                            </div>
-                            <div class="detail-form-item is-open">
-                                <label class="info-label"> {{ $t('store.是否开源') }} </label>
-                                <div class="info-value">{{ versionDetail.visibilityLevel | levelFilter }}</div>
                             </div>
                         </div>
                         <div class="detail-form-item">
@@ -172,7 +140,7 @@
                             <div class="info-label"> {{ $t('store.版本：') }} </div>
                             <div class="info-value">{{ versionDetail.version }}</div>
                         </div>
-                        <div class="detail-form-item" v-if="isEnterprise">
+                        <div class="detail-form-item">
                             <div class="info-label"> {{ $t('store.发布包：') }} </div>
                             <div class="info-value">{{ versionDetail.pkgName }}</div>
                         </div>
@@ -186,58 +154,25 @@
                         <i class="bk-icon icon-placeholder atom-logo" v-else></i>
                     </div>
                 </div>
-                <div class="released-tips" v-if="isOver">
-                    <h3> {{ $t('store.恭喜，成功发布到商店!') }} </h3>
-                    <div class="handle-btn">
-                        <bk-button class="bk-button bk-primary" size="small" @click="toAtomList"> {{ $t('store.工作台') }} </bk-button>
-                        <bk-button class="bk-button bk-default" size="small" @click="toAtomStore"> {{ $t('store.研发商店') }} </bk-button>
-                    </div>
+            </div>
+            <div class="released-tips" v-if="isOver">
+                <h3> {{ $t('store.恭喜，成功发布到商店!') }} </h3>
+                <div class="handle-btn">
+                    <bk-button class="bk-button bk-primary" size="small" @click="toAtomList"> {{ $t('store.工作台') }} </bk-button>
+                    <bk-button class="bk-button bk-default" size="small" @click="toAtomStore"> {{ $t('store.研发商店') }} </bk-button>
                 </div>
             </div>
         </div>
-        <bk-sideslider
-            class="build-side-slider"
-            :is-show.sync="sideSliderConfig.show"
-            :title="sideSliderConfig.title"
-            :quick-close="sideSliderConfig.quickClose"
-            :width="sideSliderConfig.width">
-            <template slot="content">
-                <div style="width: 100%; height: 100%"
-                    v-bkloading="{
-                        isLoading: sideSliderConfig.loading.isLoading,
-                        title: sideSliderConfig.loading.title
-                    }">
-                    <build-log v-if="currentBuildNo"
-                        :project-id="currentProjectId"
-                        :pipeline-id="currentPipelineId"
-                        :build-no="currentBuildNo"
-                        :log-url="`store/api/user/market/atom/logs/${currentProjectId}/${currentPipelineId}`"
-                    />
-                </div>
-            </template>
-        </bk-sideslider>
     </div>
 </template>
 
 <script>
-    import BuildLog from '@/components/Log'
-    import cookie from 'cookie'
+    import * as cookie from 'js-cookie'
     import webSocketMessage from '@/utils/webSocketMessage'
 
-    const CSRFToken = cookie.parse(document.cookie).backend_csrftoken
+    const CSRFToken = cookie.get('backend_csrftoken')
 
     export default {
-        components: {
-            BuildLog
-        },
-
-        filters: {
-            levelFilter (val) {
-                const local = window.devops || {}
-                if (val === 'LOGIN_PUBLIC') return local.$t('store.是')
-                else return local.$t('store.否')
-            }
-        },
         data () {
             return {
                 permission: true,
@@ -246,7 +181,7 @@
                 currentBuildNo: '',
                 currentPipelineId: '',
                 timer: -1,
-                docsLink: 'http://iwiki.oa.com/pages/viewpage.action?pageId=15008942',
+                docsLink: 'http://tempdocklink/pages/viewpage.action?pageId=15008942',
                 showContent: false,
                 isOverflow: false,
                 isDropdownShow: false,
@@ -279,17 +214,6 @@
                 versionDetail: {
                     description: '',
                     visibilityLevel: ''
-                },
-                sideSliderConfig: {
-                    show: false,
-                    title: this.$t('store.查看日志'),
-                    quickClose: true,
-                    width: 820,
-                    value: '',
-                    loading: {
-                        isLoading: false,
-                        title: ''
-                    }
                 }
             }
         },
@@ -308,21 +232,8 @@
                 if (!this.permission) str = this.$t('store.只有插件管理员或当前流程创建者可以操作')
                 return str
             },
-            isEnterprise () {
-                return VERSION_TYPE === 'ee'
-            },
             postUrl () {
                 return `${GW_URL_PREFIX}/artifactory/api/user/artifactories/projects/${this.versionDetail.projectCode}/ids/${this.versionDetail.atomId}/codes/${this.versionDetail.atomCode}/versions/${this.versionDetail.version}/re/archive`
-            }
-        },
-
-        watch: {
-            'sideSliderConfig.show' (val) {
-                if (!val) {
-                    this.currentProjectId = ''
-                    this.currentBuildNo = ''
-                    this.currentPipelineId = ''
-                }
             }
         },
 
@@ -430,37 +341,6 @@
                         theme
                     })
                 }
-            },
-
-            async rebuild () {
-                if (!this.permission) return
-
-                let message, theme
-
-                try {
-                    await this.$store.dispatch('store/rebuild', {
-                        atomId: this.routerParams.atomId,
-                        projectId: this.versionDetail.projectCode
-                    })
-
-                    message = this.$t('store.操作成功')
-                    theme = 'success'
-                    // this.requestRelease(this.routerParams.atomId)
-                } catch (err) {
-                    message = err.message ? err.message : err
-                    theme = 'error'
-                } finally {
-                    this.$bkMessage({
-                        message,
-                        theme
-                    })
-                }
-            },
-            readLog () {
-                this.sideSliderConfig.show = true
-                this.currentProjectId = this.storeBuildInfo.projectCode
-                this.currentBuildNo = this.storeBuildInfo.buildId
-                this.currentPipelineId = this.storeBuildInfo.pipelineId
             },
             handlerCancel () {
                 if (!this.permission) return

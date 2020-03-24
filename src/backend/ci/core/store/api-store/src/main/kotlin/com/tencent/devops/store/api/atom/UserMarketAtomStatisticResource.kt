@@ -29,6 +29,7 @@ package com.tencent.devops.store.api.atom
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.store.pojo.atom.AtomPipeline
 import com.tencent.devops.store.pojo.atom.AtomPipelineExecInfo
 import com.tencent.devops.store.pojo.atom.AtomStatistic
 import io.swagger.annotations.Api
@@ -60,7 +61,25 @@ interface UserMarketAtomStatisticResource {
         atomCode: String
     ): Result<AtomStatistic>
 
-    @ApiOperation("根据插件代码获取对应的流水线信息")
+    @ApiOperation("根据插件代码获取使用的流水线详情 - 所有")
+    @GET
+    @Path("/{atomCode}/pipelines")
+    fun getAtomPipelinesByCode(
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("插件代码", required = true)
+        @PathParam("atomCode")
+        atomCode: String,
+        @ApiParam("第几页", required = false, defaultValue = "1")
+        @QueryParam("page")
+        page: Int?,
+        @ApiParam("每页多少条", required = false, defaultValue = "20")
+        @QueryParam("pageSize")
+        pageSize: Int?
+    ): Result<Page<AtomPipeline>>
+
+    @ApiOperation("根据插件代码获取对应的流水线信息 - 项目下")
     @GET
     @Path("/projectCodes/{projectCode}/atomCodes/{atomCode}/pipelines")
     fun getAtomPipelines(

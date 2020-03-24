@@ -242,6 +242,7 @@
         },
         created () {
             this.fetchPipelineList()
+            this.fetchStageTagList()
             this.$store.dispatch('requestProjectDetail', { projectId: this.projectId })
         },
         methods: {
@@ -251,7 +252,8 @@
             ]),
             ...mapActions('atom', [
                 'requestPipelineExecDetailByBuildNum',
-                'togglePropertyPanel'
+                'togglePropertyPanel',
+                'fetchStageTagList'
             ]),
             handleSelected (pipelineId, cur) {
                 const { projectId, $route } = this

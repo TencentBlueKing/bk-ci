@@ -100,7 +100,13 @@ class DockerDispatcher @Autowired constructor(
             )
         }
 
-        dockerHostClient.startBuild(pipelineAgentStartupEvent, dockerIp)
+        try {
+            dockerHostClient.startBuild(pipelineAgentStartupEvent, dockerIp)
+        } catch (e: Exception) {
+            logger.error("[${pipelineAgentStartupEvent.projectId}|${pipelineAgentStartupEvent.pipelineId}|${pipelineAgentStartupEvent.buildId}] Start build Docker VM failed.", e)
+            pipelineDockerTaskSimpleDao.updateStatus(dslContext, pipelineAgentStartupEvent.pipelineId, pipelineAgentStartupEvent.vmSeqId, VolumeStatus.FAILURE.status)
+            throw RuntimeException(e.message)
+        }
     }
 
     override fun shutdown(pipelineAgentShutdownEvent: PipelineAgentShutdownEvent) {
