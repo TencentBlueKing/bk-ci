@@ -27,6 +27,7 @@
 package com.tencent.devops.dispatch.util
 
 import com.tencent.devops.dispatch.pojo.KubernetesLabel
+import com.tencent.devops.dispatch.pojo.KubernetesLimitRange
 import com.tencent.devops.dispatch.pojo.KubernetesRepo
 import io.fabric8.kubernetes.api.model.LimitRangeBuilder
 import io.fabric8.kubernetes.api.model.LimitRangeItem
@@ -94,7 +95,8 @@ object BcsClientUtils {
         bcsUrl: String,
         token: String,
         namespaceName: String,
-        labelInfo: KubernetesLabel
+        labelInfo: KubernetesLabel,
+        limitRangeInfo: KubernetesLimitRange? = null
     ): Namespace {
         logger.info("createNamespace namespaceName is: $namespaceName,labelInfo is: $labelInfo")
         val bcsKubernetesClient = getBcsKubernetesClient(bcsUrl, token)
@@ -109,12 +111,14 @@ object BcsClientUtils {
             logger.info("created namespace:$namespace")
         }
         val limitRangeItem = LimitRangeItem()
-        limitRangeItem.default = mapOf("cpu" to Quantity("1"), "memory" to Quantity("2Gi"))
-        limitRangeItem.defaultRequest = mapOf("cpu" to Quantity("0.5"), "memory" to Quantity("1Gi"))
-        limitRangeItem.type = "Container"
-        val limitRange = LimitRangeBuilder().withNewMetadata().withName("$namespaceName-limit")
-            .endMetadata().withNewSpec().addToLimits(limitRangeItem).endSpec().build()
-        bcsKubernetesClient.limitRanges().inNamespace(namespaceName).createOrReplace(limitRange)
+        if (null != limitRangeInfo) {
+            limitRangeItem.default = mapOf("cpu" to Quantity("1"), "memory" to Quantity("2Gi"))
+            limitRangeItem.defaultRequest = mapOf("cpu" to Quantity("0.5"), "memory" to Quantity("1Gi"))
+            limitRangeItem.type = "Container"
+            val limitRange = LimitRangeBuilder().withNewMetadata().withName("$namespaceName-limit")
+                .endMetadata().withNewSpec().addToLimits(limitRangeItem).endSpec().build()
+            bcsKubernetesClient.limitRanges().inNamespace(namespaceName).createOrReplace(limitRange)
+        }
         return ns
     }
 
