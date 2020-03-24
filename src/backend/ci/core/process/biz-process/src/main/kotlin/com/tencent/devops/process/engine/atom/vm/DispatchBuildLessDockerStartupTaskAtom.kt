@@ -240,7 +240,7 @@ class DispatchBuildLessDockerStartupTaskAtom @Autowired constructor(
                 containerHashId = container.containerId ?: "",
                 containerType = container.getClassType(),
                 taskSeq = taskSeq,
-                taskId = VMUtils.genStartVMTaskId(containerSeq, taskSeq),
+                taskId = VMUtils.genStartVMTaskId(container.id!!),
                 taskName = "Prepare_Job#${container.id!!}(N)",
                 taskType = EnvControlTaskType.NORMAL.name,
                 taskAtom = AtomUtils.parseAtomBeanName(DispatchBuildLessDockerStartupTaskAtom::class.java),
