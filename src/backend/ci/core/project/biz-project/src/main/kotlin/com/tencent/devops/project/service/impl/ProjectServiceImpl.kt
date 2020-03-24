@@ -32,6 +32,8 @@ import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dispatch.ProjectDispatcher
 import com.tencent.devops.project.jmx.api.ProjectJmxApi
+import com.tencent.devops.project.pojo.ProjectEnableInfo
+import com.tencent.devops.project.pojo.mq.ProjectEnableBroadCastEvent
 import com.tencent.devops.project.service.ProjectPermissionService
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
@@ -46,10 +48,21 @@ class ProjectServiceImpl @Autowired constructor(
     redisOperation: RedisOperation,
     gray: Gray,
     client: Client,
-    projectDispatcher: ProjectDispatcher
+    val projectDispatcher: ProjectDispatcher
 ) : AbsProjectServiceImpl(projectPermissionService, dslContext, projectDao, projectJmxApi, redisOperation, gray, client, projectDispatcher) {
 
     override fun updateUsableStatus(userId: String, projectId: String, enabled: Boolean) {
         projectDao.updateUsableStatus(dslContext, userId, projectId, enabled)
+        projectDao.get(dslContext, projectId)?.let {
+            projectDispatcher.dispatch(ProjectEnableBroadCastEvent(
+                userId,
+                projectId,
+                projectEnableInfo = ProjectEnableInfo(
+                    it.projectName,
+                    it.englishName,
+                    it.enabled
+                )
+            ))
+        }
     }
 }

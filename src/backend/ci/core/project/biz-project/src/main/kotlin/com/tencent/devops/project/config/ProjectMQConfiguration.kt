@@ -27,9 +27,13 @@
 package com.tencent.devops.project.config
 
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
+import org.springframework.amqp.core.Binding
+import org.springframework.amqp.core.BindingBuilder
 import org.springframework.amqp.core.FanoutExchange
+import org.springframework.amqp.core.Queue
 import org.springframework.amqp.rabbit.connection.ConnectionFactory
 import org.springframework.amqp.rabbit.core.RabbitAdmin
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
 import org.springframework.context.annotation.Bean
@@ -52,4 +56,20 @@ class ProjectMQConfiguration {
         fanoutExchange.isDelayed = true
         return fanoutExchange
     }
+
+    @Bean
+    fun projectEnableQueue() = Queue(MQ.QUEUE_PROJECT_ENABLE_EVENT)
+
+    @Bean
+    fun projectEnableExchange(): FanoutExchange {
+        val fanoutExchange = FanoutExchange(MQ.EXCHANGE_PROJECT_ENABLE_FANOUT, true, false)
+        fanoutExchange.isDelayed = true
+        return fanoutExchange
+    }
+
+    @Bean
+    fun projectEnableQueueBind(
+        @Autowired projectEnableQueue: Queue,
+        @Autowired projectEnableExchange: FanoutExchange
+    ): Binding = BindingBuilder.bind(projectEnableQueue).to(projectEnableExchange)
 }
