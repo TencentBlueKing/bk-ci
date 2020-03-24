@@ -52,7 +52,7 @@ object QualityUtils {
 
     fun check(client: Client, buildCheckParams: BuildCheckParams): RuleCheckResult {
         return try {
-            client.get(ServiceQualityRuleResource::class).check(
+            client.getWithoutRetry(ServiceQualityRuleResource::class).check(
                     buildCheckParams
             ).data!!
         } catch (e: Exception) {
