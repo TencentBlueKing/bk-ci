@@ -165,10 +165,8 @@ class QualityRuleCheckService @Autowired constructor(
 
             // 遍历项目下所有拦截规则
             val ruleList = ruleService.serviceListRuleByPosition(projectId, buildCheckParams.position)
-            val metadataList = lazyGetHisMetadata(buildId, hasCodeccIndicator(ruleList))
-            logger.info("Rule metadata serviceList for build(${buildCheckParams.buildId}):\n metadataList=$metadataList")
 
-            ruleList.filter { rule ->
+            val filterRuleList = ruleList.filter { rule ->
                 logger.info("validate whether to check rule(${rule.name}) with gatewayId(${rule.gatewayId})")
                 if (rule.controlPoint.name != buildCheckParams.taskId) return@filter false
                 val gatewayId = rule.gatewayId ?: ""
@@ -177,7 +175,12 @@ class QualityRuleCheckService @Autowired constructor(
                 val containsInPipeline = rule.range.contains(pipelineId)
                 val containsInTemplate = rule.templateRange.contains(buildCheckParams.templateId)
                 return@filter (containsInPipeline || containsInTemplate)
-            }.forEach { rule ->
+            }
+
+            // start to check
+            val metadataList = lazyGetHisMetadata(buildId, hasCodeccIndicator(filterRuleList))
+            logger.info("Rule metadata serviceList for build(${buildCheckParams.buildId}):\n metadataList=$metadataList")
+            filterRuleList.forEach { rule ->
                 logger.info("start to check rule(${rule.name})")
 
                 val result = checkIndicator(rule, buildCheckParams, metadataList)
