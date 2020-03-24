@@ -46,6 +46,7 @@ import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
+import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.pojo.BuildStageStatus
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import com.tencent.devops.process.utils.PipelineVarUtil
@@ -275,6 +276,9 @@ class PipelineBuildDetailService @Autowired constructor(
 //                    }
                     e.canRetry = canRetry
                     e.status = buildStatus.name
+                    if (taskId == VMUtils.genStartVMTaskId(c.id!!)) {
+                        c.startVMStatus =  buildStatus.name
+                    }
                     if (e.startEpoch == null) {
                         logger.warn("The task($taskId) of build $buildId start epoch is null")
                         e.elapsed = 0
@@ -327,32 +331,6 @@ class PipelineBuildDetailService @Autowired constructor(
         errorMsg: String?
     ) {
         taskEnd(buildId, taskId, buildStatus, BuildStatus.isFailure(buildStatus), errorType, errorCode, errorMsg)
-    }
-
-    fun updateStartVMStatus(
-        buildId: String,
-        containerId: String,
-        buildStatus: BuildStatus
-    ) {
-        logger.info("[$buildId|$containerId] update container startVMStatus to $buildStatus")
-        update(buildId, object : ModelInterface {
-            var update = false
-            override fun onFindContainer(id: Int, container: Container, stage: Stage): Traverse {
-                if (container !is TriggerContainer) {
-                    // 兼容id字段
-                    if (container.id == containerId || container.containerId == containerId) {
-                        update = true
-                        container.startVMStatus = buildStatus.name
-                        return Traverse.BREAK
-                    }
-                }
-                return Traverse.CONTINUE
-            }
-
-            override fun needUpdate(): Boolean {
-                return update
-            }
-        }, BuildStatus.RUNNING)
     }
 
     fun normalContainerSkip(buildId: String, containerId: String) {
@@ -756,6 +734,9 @@ class PipelineBuildDetailService @Autowired constructor(
                 if (e.id == taskId) {
                     update = true
                     e.status = BuildStatus.SKIP.name
+                    if (taskId == VMUtils.genStartVMTaskId(c.id!!)) {
+                        c.startVMStatus =  BuildStatus.SKIP.name
+                    }
                     return Traverse.BREAK
                 }
                 return Traverse.CONTINUE
@@ -793,6 +774,9 @@ class PipelineBuildDetailService @Autowired constructor(
                     } else {
                         c.status = BuildStatus.RUNNING.name
                         e.status = BuildStatus.RUNNING.name
+                        if (taskId == VMUtils.genStartVMTaskId(c.id!!)) {
+                            c.startVMStatus =  BuildStatus.RUNNING.name
+                        }
                     }
                     e.startEpoch = System.currentTimeMillis()
                     if (c.startEpoch == null) {
