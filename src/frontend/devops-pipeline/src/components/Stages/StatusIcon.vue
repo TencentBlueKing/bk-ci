@@ -1,5 +1,5 @@
 <template>
-    <span :class="{ 'stage-status': true, [type]: type, 'readonly': !editable || (jobOption && jobOption.enable === false) }">
+    <span :class="{ 'stage-status': true, [type]: type, 'readonly': !editable || containerDisabled }">
         <transition name="slide-top">
             <i v-if="status === 'RUNNING' || status === 'PREPARE_ENV' || status === 'QUEUE' || status === 'LOOP_WAITING' || status === 'CALL_WAITING'"
                 class="bk-icon icon-circle-2-1 executing-job" />
@@ -32,7 +32,7 @@
             type: String,
             editable: Boolean,
             serialNum: String,
-            jobOption: Object
+            containerDisabled: Boolean
         }
     }
 </script>

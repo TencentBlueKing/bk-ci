@@ -56,6 +56,7 @@ import com.tencent.devops.process.engine.pojo.event.PipelineBuildStartEvent
 import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
+import com.tencent.devops.process.engine.service.PipelineStageService
 import com.tencent.devops.process.service.PipelineUserService
 import com.tencent.devops.process.service.ProjectOauthTokenService
 import com.tencent.devops.process.service.scm.ScmProxyService
@@ -83,6 +84,7 @@ class BuildStartControl @Autowired constructor(
     private val runLockInterceptor: RunLockInterceptor,
     private val redisOperation: RedisOperation,
     private val pipelineRuntimeService: PipelineRuntimeService,
+    private val pipelineStageService: PipelineStageService,
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val projectOauthTokenService: ProjectOauthTokenService,
     private val buildDetailService: PipelineBuildDetailService,
@@ -190,7 +192,10 @@ class BuildStartControl @Autowired constructor(
         pipelineEventDispatcher.dispatch(
             PipelineBuildStageEvent(
                 source = tag,
-                projectId = projectId, pipelineId = pipelineId, userId = userId, buildId = buildId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                userId = userId,
+                buildId = buildId,
                 stageId = model.stages[1].id ?: modelStageIdGenerator.getNextId(),
                 actionType = actionType
             )
@@ -293,11 +298,9 @@ class BuildStartControl @Autowired constructor(
             }
         }
 
-        pipelineRuntimeService.updateStage(
+        pipelineStageService.updateStageStatus(
             buildId = buildId,
             stageId = stage.id!!,
-            startTime = now,
-            endTime = now,
             buildStatus = BuildStatus.SUCCEED
         )
 

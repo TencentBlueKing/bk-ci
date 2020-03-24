@@ -31,4 +31,5 @@ object Timeout {
     const val MAX_MILLS = MAX_MINUTES * 60 * 1000 + 1 // 毫秒+1
     const val DEFAULT_TIMEOUT_MIN = 900
     const val DEFAULT_PREPARE_MINUTES = 10 // 10分钟
+    const val DEFAULT_STAGE_TIMEOUT_HOURS = 24 // 24小时
 }

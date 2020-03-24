@@ -28,7 +28,7 @@ package com.tencent.devops.common.pipeline.utils
 
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Container
-import com.tencent.devops.common.pipeline.container.JobControlOption
+import com.tencent.devops.common.pipeline.option.JobControlOption
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer

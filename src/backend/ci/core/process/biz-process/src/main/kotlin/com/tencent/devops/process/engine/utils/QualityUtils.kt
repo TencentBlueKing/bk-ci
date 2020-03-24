@@ -185,7 +185,20 @@ object QualityUtils {
                     }
                     containerList.add(finalContainer)
                 }
-                stageList.add(Stage(containerList, stage.id))
+                stageList.add(
+                    Stage(
+                        containers = containerList,
+                        id = stage.id,
+                        name = stage.name,
+                        tag = stage.tag,
+                        status = stage.status,
+                        startEpoch = stage.startEpoch,
+                        elapsed = stage.elapsed,
+                        customBuildEnv = stage.customBuildEnv,
+                        fastKill = stage.fastKill,
+                        stageControlOption = stage.stageControlOption
+                    )
+                )
             }
 
             return Model(name, desc, stageList, labels, instanceFromTemplate, pipelineCreator, null, templateId)
