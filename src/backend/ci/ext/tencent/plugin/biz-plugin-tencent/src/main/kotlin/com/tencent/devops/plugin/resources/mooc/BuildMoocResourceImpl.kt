@@ -24,45 +24,25 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.plugin.quality.task
+package com.tencent.devops.plugin.resources.mooc
 
-import com.tencent.devops.common.client.Client
-import com.tencent.devops.quality.api.v2.ServiceQualityRuleResource
-import com.tencent.devops.quality.api.v2.pojo.request.BuildCheckParams
-import com.tencent.devops.quality.pojo.RuleCheckResult
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.plugin.api.mooc.BuildMoocResource
+import com.tencent.devops.plugin.service.mooc.MoocService
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
 
-object QualityUtils {
+@RestResource
+class BuildMoocResourceImpl @Autowired constructor(val moocService: MoocService) : BuildMoocResource {
 
-    private val logger = LoggerFactory.getLogger(QualityUtils::class.java)
-
-    fun getAuditUserList(client: Client, projectId: String, pipelineId: String, buildId: String, taskId: String): Set<String> {
-        return try {
-            client.get(ServiceQualityRuleResource::class).getAuditUserList(
-                    projectId,
-                    pipelineId,
-                    buildId,
-                    taskId
-            ).data ?: setOf()
-        } catch (e: Exception) {
-            logger.error("quality get audit user list fail: ${e.message}", e)
-            return setOf()
-        }
+    companion object {
+        private val logger = LoggerFactory.getLogger(BuildMoocResourceImpl::class.java)
     }
 
-    fun check(client: Client, buildCheckParams: BuildCheckParams): RuleCheckResult {
-        return try {
-            client.getWithoutRetry(ServiceQualityRuleResource::class).check(
-                    buildCheckParams
-            ).data!!
-        } catch (e: Exception) {
-            logger.error("quality get audit user list fail: ${e.message}", e)
-            return RuleCheckResult(
-                    true,
-                    true,
-                    15 * 6000,
-                    listOf()
-            )
-        }
+    override fun queryMooc(userId: String): Result<List<Map<String, Any>>> {
+        val list = moocService.getList(userId)
+        logger.info("Get Mooc|$userId|data=$list")
+        return Result(list)
     }
 }

@@ -24,45 +24,34 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.plugin.quality.task
+package com.tencent.devops.plugin.api.mooc
 
-import com.tencent.devops.common.client.Client
-import com.tencent.devops.quality.api.v2.ServiceQualityRuleResource
-import com.tencent.devops.quality.api.v2.pojo.request.BuildCheckParams
-import com.tencent.devops.quality.pojo.RuleCheckResult
-import org.slf4j.LoggerFactory
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.pojo.Result
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.HeaderParam
+import javax.ws.rs.POST
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
 
-object QualityUtils {
+@Api(tags = ["USER_MOOC"], description = "用户-Mooc接口")
+@Path("/user/mooc")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface UserMoocResource {
 
-    private val logger = LoggerFactory.getLogger(QualityUtils::class.java)
-
-    fun getAuditUserList(client: Client, projectId: String, pipelineId: String, buildId: String, taskId: String): Set<String> {
-        return try {
-            client.get(ServiceQualityRuleResource::class).getAuditUserList(
-                    projectId,
-                    pipelineId,
-                    buildId,
-                    taskId
-            ).data ?: setOf()
-        } catch (e: Exception) {
-            logger.error("quality get audit user list fail: ${e.message}", e)
-            return setOf()
-        }
-    }
-
-    fun check(client: Client, buildCheckParams: BuildCheckParams): RuleCheckResult {
-        return try {
-            client.getWithoutRetry(ServiceQualityRuleResource::class).check(
-                    buildCheckParams
-            ).data!!
-        } catch (e: Exception) {
-            logger.error("quality get audit user list fail: ${e.message}", e)
-            return RuleCheckResult(
-                    true,
-                    true,
-                    15 * 6000,
-                    listOf()
-            )
-        }
-    }
+    @ApiOperation("添加 Mooc信息")
+    @POST
+    @Path("/add")
+    fun addMooc(
+        @ApiParam("用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("Mooc参数体", required = true)
+        moocBody: Map<String, Any>
+    ): Result<Boolean>
 }

@@ -24,13 +24,13 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":core:common:common-web")
-    compile project(":core:common:common-service")
-    compile("com.tencent.bkrepo:api-generic:0.7.0") {
-        changing(true)
-    }
-    compile("com.tencent.bkrepo:api-repository:0.7.0") {
-        changing(true)
-    }
-}
+package com.tencent.devops.process.pojo.pipeline
+
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+
+@ApiModel("构建模型-ID")
+data class SubPipelineStatus(
+    @ApiModelProperty("子流水线状态", required = true)
+    val status: String
+)

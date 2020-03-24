@@ -24,45 +24,42 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.plugin.quality.task
+package com.tencent.devops.plugin.service.mooc
 
-import com.tencent.devops.common.client.Client
-import com.tencent.devops.quality.api.v2.ServiceQualityRuleResource
-import com.tencent.devops.quality.api.v2.pojo.request.BuildCheckParams
-import com.tencent.devops.quality.pojo.RuleCheckResult
+import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.model.plugin.tables.TPluginMooc.T_PLUGIN_MOOC
+import com.tencent.devops.plugin.dao.MoocDao
+import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
 
-object QualityUtils {
+@Service
+class MoocService @Autowired constructor(
+    private val moocDao: MoocDao,
+    private val dslContext: DSLContext
+) {
 
-    private val logger = LoggerFactory.getLogger(QualityUtils::class.java)
-
-    fun getAuditUserList(client: Client, projectId: String, pipelineId: String, buildId: String, taskId: String): Set<String> {
-        return try {
-            client.get(ServiceQualityRuleResource::class).getAuditUserList(
-                    projectId,
-                    pipelineId,
-                    buildId,
-                    taskId
-            ).data ?: setOf()
-        } catch (e: Exception) {
-            logger.error("quality get audit user list fail: ${e.message}", e)
-            return setOf()
-        }
+    companion object {
+        private val logger = LoggerFactory.getLogger(MoocService::class.java)
     }
 
-    fun check(client: Client, buildCheckParams: BuildCheckParams): RuleCheckResult {
-        return try {
-            client.getWithoutRetry(ServiceQualityRuleResource::class).check(
-                    buildCheckParams
-            ).data!!
-        } catch (e: Exception) {
-            logger.error("quality get audit user list fail: ${e.message}", e)
-            return RuleCheckResult(
-                    true,
-                    true,
-                    15 * 6000,
-                    listOf()
-            )
+    fun create(userId: String, body: Map<String, Any>): String {
+        logger.info("craete mooc $userId, body: $body")
+        val courseId: String = body["Class_id"]?.toString() ?: body["class_id"]?.toString() ?: ""
+        return moocDao.upsert(dslContext, userId, courseId, JsonUtil.toJson(body))
+    }
+
+    fun getList(userId: String): List<Map<String, Any>> {
+        val recordList = moocDao.getUserRecords(dslContext, userId)
+        val result = mutableListOf<Map<String, Any>>()
+        if (recordList.isNotEmpty) {
+            with(T_PLUGIN_MOOC) {
+                for (item in recordList) {
+                    result.add(JsonUtil.toMap(item.get(PROPS)))
+                }
+            }
         }
+        return result
     }
 }
