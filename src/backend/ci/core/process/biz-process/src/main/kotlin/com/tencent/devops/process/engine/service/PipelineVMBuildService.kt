@@ -157,15 +157,8 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
                         buildId = buildId, vmSeqId = vmSeqId, buildStatus = BuildStatus.SUCCEED
                     )
                     return BuildVariables(
-                        buildId = buildId,
-                        vmSeqId = vmSeqId,
-                        vmName = vmName,
-                        projectId = buildInfo.projectId,
-                        pipelineId = buildInfo.pipelineId,
-                        variables = variables,
-                        buildEnvs = buildEnvs,
-                        containerId = it.containerId ?: "",
-                        variablesWithType = variablesWithType
+                        buildId, vmSeqId, vmName,
+                        buildInfo.projectId, buildInfo.pipelineId, variables, buildEnvs, it.containerId ?: "", variablesWithType
                     )
                 }
                 vmId++
@@ -532,7 +525,7 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
 
         buildDetailService.pipelineTaskEnd(
             buildId = buildId,
-            elementId = result.elementId,
+            taskId = result.elementId,
             buildStatus = buildStatus,
             errorType = errorType,
             errorCode = result.errorCode,

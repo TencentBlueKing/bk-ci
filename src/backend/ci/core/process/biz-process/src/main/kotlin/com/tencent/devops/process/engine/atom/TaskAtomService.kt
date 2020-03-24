@@ -67,21 +67,12 @@ class TaskAtomService @Autowired(required = false) constructor(
 
         jmxElements.execute(elementType)
         var atomResponse = AtomResponse(BuildStatus.FAILED)
-        val logTagName = task.taskName + "-[" + task.taskId + "]"
         try {
             // 更新状态
             pipelineRuntimeService.updateTaskStatus(task.buildId, task.taskId, task.starter, BuildStatus.RUNNING)
             pipelineBuildDetailService.taskStart(task.buildId, task.taskId)
-            val executeCount = task.executeCount ?: 1
-            if (!isEnvControl) {
-                LogUtils.addFoldStartLine(
-                    rabbitTemplate = rabbitTemplate,
-                    buildId = task.buildId,
-                    groupName = logTagName,
-                    tag = task.taskId,
-                    jobId = task.containerHashId,
-                    executeCount = executeCount
-                )
+            if (isEnvControl) {
+                pipelineBuildDetailService.updateStartVMStatus(task.buildId, task.containerId, BuildStatus.RUNNING)
             }
             val runVariables = pipelineRuntimeService.getAllVariable(task.buildId)
 
@@ -139,7 +130,6 @@ class TaskAtomService @Autowired(required = false) constructor(
                     task = task,
                     startTime = startTime,
                     elementType = elementType,
-                    logTagName = logTagName,
                     errorType = atomResponse.errorType,
                     errorCode = atomResponse.errorCode,
                     errorMsg = atomResponse.errorMsg
@@ -154,7 +144,6 @@ class TaskAtomService @Autowired(required = false) constructor(
         task: PipelineBuildTask,
         startTime: Long,
         elementType: String,
-        logTagName: String,
         errorType: ErrorType?,
         errorCode: Int?,
         errorMsg: String?
@@ -174,12 +163,15 @@ class TaskAtomService @Autowired(required = false) constructor(
             )
             pipelineBuildDetailService.pipelineTaskEnd(
                 buildId = task.buildId,
-                elementId = task.taskId,
+                taskId = task.taskId,
                 buildStatus = status,
                 errorType = errorType,
                 errorCode = errorCode,
                 errorMsg = errorMsg
             )
+            if (isEnvControl) {
+                pipelineBuildDetailService.updateStartVMStatus(task.buildId, task.containerId, status)
+            }
             measureService?.postTaskData(
                 projectId = task.projectId,
                 pipelineId = task.pipelineId,
@@ -195,16 +187,6 @@ class TaskAtomService @Autowired(required = false) constructor(
                 errorCode = errorCode,
                 errorMsg = errorMsg
             )
-            if (!isEnvControl) {
-                LogUtils.addFoldEndLine(
-                    rabbitTemplate = rabbitTemplate,
-                    buildId = task.buildId,
-                    groupName = logTagName,
-                    tag = task.taskId,
-                    jobId = task.containerHashId,
-                    executeCount = task.executeCount ?: 1
-                )
-            }
             if (BuildStatus.isFailure(status)) {
                 jmxElements.fail(elementType)
             }
@@ -245,7 +227,6 @@ class TaskAtomService @Autowired(required = false) constructor(
         val startTime = System.currentTimeMillis()
         val elementType = task.taskType
         var atomResponse = AtomResponse(BuildStatus.FAILED)
-        val logTagName = task.taskName + "-[" + task.taskId + "]"
 
         try {
             val runVariables = pipelineRuntimeService.getAllVariable(task.buildId)
@@ -293,7 +274,6 @@ class TaskAtomService @Autowired(required = false) constructor(
                     task = task,
                     startTime = startTime,
                     elementType = elementType,
-                    logTagName = logTagName,
                     errorType = atomResponse.errorType,
                     errorCode = atomResponse.errorCode,
                     errorMsg = atomResponse.errorMsg

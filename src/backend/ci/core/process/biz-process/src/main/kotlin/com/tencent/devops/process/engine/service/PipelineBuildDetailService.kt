@@ -314,13 +314,39 @@ class PipelineBuildDetailService @Autowired constructor(
 
     fun pipelineTaskEnd(
         buildId: String,
-        elementId: String,
+        taskId: String,
         buildStatus: BuildStatus,
         errorType: ErrorType?,
         errorCode: Int?,
         errorMsg: String?
     ) {
-        taskEnd(buildId, elementId, buildStatus, BuildStatus.isFailure(buildStatus), errorType, errorCode, errorMsg)
+        taskEnd(buildId, taskId, buildStatus, BuildStatus.isFailure(buildStatus), errorType, errorCode, errorMsg)
+    }
+
+    fun updateStartVMStatus(
+        buildId: String,
+        containerId: String,
+        buildStatus: BuildStatus
+    ) {
+        logger.info("[$buildId|$containerId] update container startVMStatus to $buildStatus")
+        update(buildId, object : ModelInterface {
+            var update = false
+            override fun onFindContainer(id: Int, container: Container, stage: Stage): Traverse {
+                if (container !is TriggerContainer) {
+                    // 兼容id字段
+                    if (container.id == containerId || container.containerId == containerId) {
+                        update = true
+                        container.startVMStatus = buildStatus.name
+                        return Traverse.BREAK
+                    }
+                }
+                return Traverse.CONTINUE
+            }
+
+            override fun needUpdate(): Boolean {
+                return update
+            }
+        }, BuildStatus.RUNNING)
     }
 
     fun normalContainerSkip(buildId: String, containerId: String) {
