@@ -167,7 +167,7 @@ class LogServiceV2 @Autowired constructor(
                         executeCount = executeCount
                     )
                 } else {
-                    doQueryLargeInitLogs(
+                    doQueryInitLogs(
                         buildId = buildId,
                         index = index,
                         type = type,
@@ -385,7 +385,7 @@ class LogServiceV2 @Autowired constructor(
             val indexAndType = indexServiceV2.getIndexAndType(buildId)
             val index = indexAndType.index
             val type = indexAndType.type
-            val result = doQueryMoreOriginLogsAfterLine(
+            val result = doQueryLargeLogsAfterLine(
                 buildId = buildId,
                 index = index,
                 type = type,
@@ -856,7 +856,6 @@ class LogServiceV2 @Autowired constructor(
                 .setSize(querySize)
                 .addDocValueField("lineNo")
                 .addDocValueField("timestamp")
-//                .addDocValueField("message")
                 .addSort("lineNo", SortOrder.ASC)
                 .get(TimeValue.timeValueSeconds(60))
             var lastLineNo = -1L
@@ -1109,45 +1108,29 @@ class LogServiceV2 @Autowired constructor(
         return queryLogs
     }
 
-    private fun doQueryLargeInitLogs(
+    private fun doQueryLargeLogsAfterLine(
         buildId: String,
         index: String,
         type: String,
-        tag: String? = null,
-        jobId: String? = null,
+        start: Long,
+        tag: String?,
+        jobId: String?,
         executeCount: Int?
     ): QueryLogs {
         logger.info("[$index|$type|$buildId|$tag|$jobId|$executeCount] doQueryLargeInitLogs")
-        val logStatus = if (tag == null && jobId != null) getLogStatus(buildId, jobId, null, executeCount)
-        else getLogStatus(buildId, tag, jobId, executeCount)
-
+        val logStatus = if (tag == null && jobId != null) {
+            getLogStatus(buildId, jobId, null, executeCount)
+        } else {
+            getLogStatus(buildId, tag, jobId, executeCount)
+        }
+        val moreLogs = QueryLogs(buildId, getLogStatus(buildId, tag, jobId, executeCount))
         val queryLogs = QueryLogs(buildId, logStatus)
 
         try {
-            val size = getLogSize(
-                index = index,
-                type = type,
-                buildId = buildId,
-                tag = tag,
-                jobId = jobId,
-                executeCount = executeCount
-            )
-            if (size == 0L) return queryLogs
-            val logRange = getLogRange(
-                buildId = buildId,
-                index = index,
-                type = type,
-                tag = tag,
-                jobId = jobId,
-                executeCount = executeCount,
-                size = size
-            )
-            logger.info("[$index|$type|$buildId|$tag|$jobId|$executeCount] getLargeInitLogs with range: $logRange")
-
             val startTime = System.currentTimeMillis()
             val logs = mutableListOf<LogLine>()
             val boolQueryBuilder = getQuery(buildId, tag, jobId, executeCount)
-            logger.info("Get the query builder: $boolQueryBuilder")
+                .must(QueryBuilders.rangeQuery("lineNo").gte(start))
 
             var scrollResp = client.prepareSearch(buildId, index)
                 .setTypes(type)
@@ -1182,8 +1165,8 @@ class LogServiceV2 @Autowired constructor(
 
             logger.info("logs query time cost($type): ${System.currentTimeMillis() - startTime}")
             queryLogs.logs.addAll(logs)
-            if (logs.isEmpty()) queryLogs.status = LogStatus.EMPTY
-            queryLogs.hasMore = size > logs.size
+            moreLogs.logs.addAll(logs)
+            moreLogs.hasMore = moreLogs.logs.size >= Constants.MAX_LINES
         } catch (ex: IndexNotFoundException) {
             logger.error("Query init logs failed because of IndexNotFoundException. buildId: $buildId", ex)
             queryLogs.status = LogStatus.CLEAN
