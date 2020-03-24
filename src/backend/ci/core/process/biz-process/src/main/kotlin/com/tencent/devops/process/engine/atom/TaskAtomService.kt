@@ -63,7 +63,6 @@ class TaskAtomService @Autowired(required = false) constructor(
     fun start(task: PipelineBuildTask): AtomResponse {
         val startTime = System.currentTimeMillis()
         val elementType = task.taskType
-        val isEnvControl = elementType == EnvControlTaskType.NORMAL.name || elementType == EnvControlTaskType.VM.name
 
         jmxElements.execute(elementType)
         var atomResponse = AtomResponse(BuildStatus.FAILED)
@@ -71,7 +70,7 @@ class TaskAtomService @Autowired(required = false) constructor(
             // 更新状态
             pipelineRuntimeService.updateTaskStatus(task.buildId, task.taskId, task.starter, BuildStatus.RUNNING)
             pipelineBuildDetailService.taskStart(task.buildId, task.taskId)
-            if (isEnvControl) {
+            if (task.taskSeq == 0) {
                 pipelineBuildDetailService.updateStartVMStatus(task.buildId, task.containerId, BuildStatus.RUNNING)
             }
             val runVariables = pipelineRuntimeService.getAllVariable(task.buildId)
@@ -149,8 +148,6 @@ class TaskAtomService @Autowired(required = false) constructor(
         errorMsg: String?
     ) {
         try {
-            val isEnvControl = elementType == EnvControlTaskType.NORMAL.name || elementType == EnvControlTaskType.VM.name
-
             // 更新状态
             pipelineRuntimeService.updateTaskStatus(
                 buildId = task.buildId,
@@ -169,7 +166,7 @@ class TaskAtomService @Autowired(required = false) constructor(
                 errorCode = errorCode,
                 errorMsg = errorMsg
             )
-            if (isEnvControl) {
+            if (task.taskSeq == 0) {
                 pipelineBuildDetailService.updateStartVMStatus(task.buildId, task.containerId, status)
             }
             measureService?.postTaskData(
