@@ -94,6 +94,14 @@ class BuildBuildResourceImpl @Autowired constructor(
         return Result(history)
     }
 
+    override fun getLatestSuccessBuild(
+        projectId: String,
+        pipelineId: String,
+        channelCode: ChannelCode?
+    ): Result<BuildHistory?> {
+        return Result(buildService.getLatestSuccessBuild(projectId, pipelineId, channelCode ?: ChannelCode.BS))
+    }
+
     override fun getBuildDetail(
         projectId: String,
         pipelineId: String,

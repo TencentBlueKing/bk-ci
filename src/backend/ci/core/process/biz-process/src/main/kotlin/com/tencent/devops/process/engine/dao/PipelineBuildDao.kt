@@ -34,6 +34,8 @@ import com.tencent.devops.model.process.Tables.T_PIPELINE_BUILD_HISTORY
 import com.tencent.devops.model.process.tables.records.TPipelineBuildHistoryRecord
 import com.tencent.devops.process.engine.pojo.BuildInfo
 import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.process.pojo.BuildStageStatus
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.DatePart
@@ -341,6 +343,18 @@ class PipelineBuildDao {
             dslContext.update(this)
                 .set(STATUS, newBuildStatus.ordinal)
                 .where(BUILD_ID.eq(buildId)).and(STATUS.eq(oldBuildStatus.ordinal))
+                .execute()
+        } == 1
+    }
+
+    fun updateStageCancelStatus(
+        dslContext: DSLContext,
+        buildId: String
+    ): Boolean {
+        return with(T_PIPELINE_BUILD_HISTORY) {
+            dslContext.update(this)
+                .set(END_TIME, LocalDateTime.now())
+                .where(BUILD_ID.eq(buildId)).and(STATUS.eq(BuildStatus.STAGE_SUCCESS.ordinal))
                 .execute()
         } == 1
     }
@@ -709,6 +723,19 @@ class PipelineBuildDao {
         with(T_PIPELINE_BUILD_HISTORY) {
             dslContext.update(this)
                 .set(MATERIAL, material)
+                .where(BUILD_ID.eq(buildId))
+                .execute()
+        }
+    }
+
+    fun updateBuildStageStatus(
+        dslContext: DSLContext,
+        buildId: String,
+        stageStatus: List<BuildStageStatus>
+    ): Int {
+        return with(T_PIPELINE_BUILD_HISTORY) {
+            dslContext.update(this)
+                .set(STAGE_STATUS, JsonUtil.toJson(stageStatus))
                 .where(BUILD_ID.eq(buildId))
                 .execute()
         }
