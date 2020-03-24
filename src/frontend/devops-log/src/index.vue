@@ -18,7 +18,7 @@
                 </p>
             </header>
 
-            <virtual-scroll class="log-scroll" ref="scroll" :id="id" :currentExe="currentExe">
+            <virtual-scroll class="log-scroll" ref="scroll" :id="id" :current-exe="currentExe">
                 <template slot-scope="item">
                     <span class="item-txt selection-color"
                         v-if="!isInit"
@@ -131,7 +131,7 @@
             this.offsetTop = mainEle.offsetTop
 
             const query = this.$route.query || {}
-            const minMapTop = query.minMapTop
+            // const minMapTop = query.minMapTop
             const id = query.id
             if (id === this.id) this.currentExe = +query.currentExe
         },
@@ -151,13 +151,13 @@
                     switch (str) {
                         case '<':
                             res = '&lt;'
-                            break;
+                            break
                         case '>':
                             res = '&gt;'
-                            break;
+                            break
                         default:
                             res = '&nbsp;'
-                            break;
+                            break
                     }
                     return res
                 }).replace(/&lt;a.+?href=["']?([^"']+)["']?.*&gt;(.+)&lt;\/a&gt;/g, "<a href='$1' target='_blank'>$2</a>")
