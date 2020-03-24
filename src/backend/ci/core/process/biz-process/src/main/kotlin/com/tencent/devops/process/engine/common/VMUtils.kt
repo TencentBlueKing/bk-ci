@@ -39,5 +39,4 @@ object VMUtils {
     fun genVMSeq(containerSeq: Int, taskSeq: Int): Int = containerSeq * 1000 + taskSeq
 
     fun genStartVMTaskId(containerSeq: String) = "startVM-$containerSeq"
-
 }
