@@ -26,6 +26,7 @@
 
 dependencies {
     compile project(":core:common:common-web")
+    compile project(":core:common:common-service")
     compile("com.tencent.bkrepo:api-generic:0.7.0") {
         changing(true)
     }

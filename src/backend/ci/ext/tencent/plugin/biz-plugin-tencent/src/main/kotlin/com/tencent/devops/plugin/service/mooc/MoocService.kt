@@ -24,17 +24,42 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo
+package com.tencent.devops.plugin.service.mooc
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.model.plugin.tables.TPluginMooc.T_PLUGIN_MOOC
+import com.tencent.devops.plugin.dao.MoocDao
+import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
 
-@ApiModel("流水线信息")
-data class PipelineProjectRel(
-    @ApiModelProperty("流水线ID", required = true)
-    val pipelineId: String,
-    @ApiModelProperty("流水线名称", required = true)
-    var pipelineName: String,
-    @ApiModelProperty("项目标识", required = true)
-    val projectCode: String
-)
+@Service
+class MoocService @Autowired constructor(
+    private val moocDao: MoocDao,
+    private val dslContext: DSLContext
+) {
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(MoocService::class.java)
+    }
+
+    fun create(userId: String, body: Map<String, Any>): String {
+        logger.info("craete mooc $userId, body: $body")
+        val courseId: String = body["Class_id"]?.toString() ?: body["class_id"]?.toString() ?: ""
+        return moocDao.upsert(dslContext, userId, courseId, JsonUtil.toJson(body))
+    }
+
+    fun getList(userId: String): List<Map<String, Any>> {
+        val recordList = moocDao.getUserRecords(dslContext, userId)
+        val result = mutableListOf<Map<String, Any>>()
+        if (recordList.isNotEmpty) {
+            with(T_PLUGIN_MOOC) {
+                for (item in recordList) {
+                    result.add(JsonUtil.toMap(item.get(PROPS)))
+                }
+            }
+        }
+        return result
+    }
+}

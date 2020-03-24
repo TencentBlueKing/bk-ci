@@ -24,17 +24,25 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo
+package com.tencent.devops.plugin.resources.mooc
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.plugin.api.mooc.BuildMoocResource
+import com.tencent.devops.plugin.service.mooc.MoocService
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
 
-@ApiModel("流水线信息")
-data class PipelineProjectRel(
-    @ApiModelProperty("流水线ID", required = true)
-    val pipelineId: String,
-    @ApiModelProperty("流水线名称", required = true)
-    var pipelineName: String,
-    @ApiModelProperty("项目标识", required = true)
-    val projectCode: String
-)
+@RestResource
+class BuildMoocResourceImpl @Autowired constructor(val moocService: MoocService) : BuildMoocResource {
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(BuildMoocResourceImpl::class.java)
+    }
+
+    override fun queryMooc(userId: String): Result<List<Map<String, Any>>> {
+        val list = moocService.getList(userId)
+        logger.info("Get Mooc|$userId|data=$list")
+        return Result(list)
+    }
+}
