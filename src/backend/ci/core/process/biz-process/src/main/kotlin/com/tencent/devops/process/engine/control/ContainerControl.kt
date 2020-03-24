@@ -120,6 +120,16 @@ class ContainerControl @Autowired constructor(
                     startTime = LocalDateTime.now(),
                     endTime = LocalDateTime.now()
                 )
+
+                containerTaskList.forEach {
+                    pipelineRuntimeService.updateTaskStatus(
+                        buildId = buildId,
+                        taskId = it.taskId,
+                        userId = it.starter,
+                        buildStatus = BuildStatus.SKIP
+                    )
+                }
+
                 logger.info("[$buildId]|CONTAINER_SKIP|stage=$stageId|container=$containerId|action=$actionType")
                 pipelineBuildDetailService.normalContainerSkip(buildId, container.containerId)
                 // 返回stage的时候，需要解锁
