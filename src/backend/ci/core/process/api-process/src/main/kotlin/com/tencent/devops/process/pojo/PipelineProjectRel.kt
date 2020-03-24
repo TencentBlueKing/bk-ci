@@ -36,5 +36,7 @@ data class PipelineProjectRel(
     @ApiModelProperty("流水线名称", required = true)
     var pipelineName: String,
     @ApiModelProperty("项目标识", required = true)
-    val projectCode: String
+    val projectCode: String,
+    @ApiModelProperty("插件版本", required = true)
+    val atomVersion: String
 )

@@ -53,6 +53,9 @@ enum class BuildStatus(val statusName: String, val visiable: Boolean) {
     QUEUE_TIMEOUT("排队超时", true), // 17 排队超时
     EXEC_TIMEOUT("执行超时", true), // 18 执行超时
     QUEUE_CACHE("队列待处理", true), // 19 队列待处理，瞬间状态。只有在启动和取消过程中存在的中间状态
+    RETRY("重试", true), // 20 重试
+    PAUSE("暂停执行", true), // 21 暂停执行，等待事件
+    STAGE_SUCCESS("阶段性完成", true), // 22 流水线阶段性完成
     UNKNOWN("未知状态", false); // 99
 
     companion object {
@@ -73,18 +76,23 @@ enum class BuildStatus(val statusName: String, val visiable: Boolean) {
             status == SUCCEED || status == SKIP || status == REVIEW_PROCESSED
 
         fun isRunning(status: BuildStatus) =
-            isLoop(status) || status == REVIEWING || status == PREPARE_ENV || status == CALL_WAITING
+            isLoop(status) || status == REVIEWING || status == PREPARE_ENV || status == CALL_WAITING || status == PAUSE
 
         fun isCancel(status: BuildStatus) =
             status == TERMINATE || status == CANCELED || status == REVIEW_ABORT || status == QUALITY_CHECK_FAIL
 
         fun isReview(status: BuildStatus) = status == REVIEW_ABORT || status == REVIEW_PROCESSED
 
-        fun isReadyToRun(status: BuildStatus) = status == QUEUE || status == QUEUE_CACHE
+        fun isReadyToRun(status: BuildStatus) = status == QUEUE || status == QUEUE_CACHE || isRetry(status)
         /**
          * 是否处于循环中： 正在运行中或循环等待都属于循环
          */
         fun isLoop(status: BuildStatus) = status == RUNNING || status == LOOP_WAITING
+
+        /**
+         * 是否处于重试中
+         */
+        fun isRetry(status: BuildStatus) = status == RETRY
 
         /**
          * 能否重试执行

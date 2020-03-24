@@ -109,6 +109,15 @@ const val PIPELINE_BUILD_REMARK = "BK_CI_BUILD_REMARK" // "流水线构建备注
  */
 const val PIPELINE_SETTING_MAX_QUEUE_SIZE_DEFAULT = 10
 /**
+ * 流水线插件设置-失败重试最大值
+ */
+const val TASK_FAIL_RETRY_MAX_COUNT = 5
+/**
+ * 流水线插件设置-失败重试最小值
+ */
+const val TASK_FAIL_RETRY_MIN_COUNT = 1
+
+/**
  * 流水线设置-最大排队数量-最小值
  */
 const val PIPELINE_SETTING_MAX_QUEUE_SIZE_MIN = 0
