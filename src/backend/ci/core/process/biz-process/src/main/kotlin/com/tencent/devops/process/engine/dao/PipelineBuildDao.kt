@@ -347,6 +347,18 @@ class PipelineBuildDao {
         } == 1
     }
 
+    fun updateStageCancelStatus(
+        dslContext: DSLContext,
+        buildId: String
+    ): Boolean {
+        return with(T_PIPELINE_BUILD_HISTORY) {
+            dslContext.update(this)
+                .set(END_TIME, LocalDateTime.now())
+                .where(BUILD_ID.eq(buildId)).and(STATUS.eq(BuildStatus.STAGE_SUCCESS.ordinal))
+                .execute()
+        } == 1
+    }
+
     fun convert(t: TPipelineBuildHistoryRecord?): BuildInfo? {
         return if (t == null) {
             null
