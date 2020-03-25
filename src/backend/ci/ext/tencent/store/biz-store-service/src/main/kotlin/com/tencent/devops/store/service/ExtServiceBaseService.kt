@@ -560,7 +560,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         // 设置扩展服务状态为下架中
         extServiceDao.setServiceStatusByCode(
             dslContext, serviceCode, ExtServiceStatusEnum.RELEASED.status.toByte(),
-            ExtServiceStatusEnum.UNDERCARRIAGING.status.toByte(), userId, serviceOfflineDTO.reason
+            ExtServiceStatusEnum.UNDERCARRIAGED.status.toByte(), userId, serviceOfflineDTO.reason
         )
         // 通过websocket推送状态变更消息
 //        storeWebsocketService.sendWebsocketMessageByAtomCodeAndUserId(serviceCode, userId)
