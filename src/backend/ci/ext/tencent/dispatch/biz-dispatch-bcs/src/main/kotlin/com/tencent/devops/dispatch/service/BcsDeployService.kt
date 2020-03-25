@@ -77,7 +77,7 @@ class BcsDeployService @Autowired constructor(private val redisOperation: RedisO
             .withNewTemplate()
             .withNewMetadata()
             .addToLabels(defaultLabelKey, serviceCode)
-            .addToAnnotations("deployTime", System.currentTimeMillis().toString())
+            .addToAnnotations("dummy", "du_"+System.currentTimeMillis())
             .endMetadata()
             .withNewSpec()
             .addNewContainer()
