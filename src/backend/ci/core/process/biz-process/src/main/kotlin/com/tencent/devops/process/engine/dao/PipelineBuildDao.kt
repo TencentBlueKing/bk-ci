@@ -42,6 +42,7 @@ import org.jooq.DatePart
 import org.jooq.Field
 import org.jooq.Result
 import org.jooq.impl.DSL
+import org.jooq.util.mysql.MySQLDataType
 import org.springframework.stereotype.Repository
 import java.sql.Timestamp
 import java.time.LocalDateTime
@@ -294,7 +295,7 @@ class PipelineBuildDao {
             if (errorType != null) {
                 baseQuery = baseQuery.set(ERROR_TYPE, errorType.ordinal)
                 baseQuery = baseQuery.set(ERROR_CODE, errorCode)
-                baseQuery = baseQuery.set(ERROR_MSG, errorMsg)
+                baseQuery = baseQuery.set(ERROR_MSG, errorMsg?.substring(0, ERROR_MSG.dataType.length()))
             }
             baseQuery.where(BUILD_ID.eq(buildId))
                 .execute()
