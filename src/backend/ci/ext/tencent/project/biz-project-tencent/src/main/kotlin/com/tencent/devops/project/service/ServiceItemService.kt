@@ -289,6 +289,9 @@ class ServiceItemService @Autowired constructor(
             tooltip = itemInfo.tooltip
         )
         serviceItemDao.add(dslContext, userId, createInfo)
+        if(projectServiceMap[itemInfo.pid] == null){
+            getProjectService(itemInfo.pid)
+        }
         return Result(true)
     }
 
