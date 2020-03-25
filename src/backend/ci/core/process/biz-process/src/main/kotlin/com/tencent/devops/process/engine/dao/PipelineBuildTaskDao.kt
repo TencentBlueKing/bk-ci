@@ -37,6 +37,7 @@ import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.common.api.pojo.ErrorType
 import org.jooq.DSLContext
 import org.jooq.Result
+import org.jooq.util.mysql.MySQLDataType
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Repository
@@ -158,7 +159,7 @@ class PipelineBuildTaskDao @Autowired constructor(private val objectMapper: Obje
                         },
                         buildTask.errorType?.ordinal,
                         buildTask.errorCode,
-                        buildTask.errorMsg,
+                        buildTask.errorMsg?.substring(0, ERROR_MSG.dataType.length()),
                         buildTask.containerHashId
                     )
             }).execute()
@@ -287,7 +288,7 @@ class PipelineBuildTaskDao @Autowired constructor(private val objectMapper: Obje
             if (errorType != null) {
                 update.set(ERROR_TYPE, errorType.ordinal)
                 update.set(ERROR_CODE, errorCode)
-                update.set(ERROR_MSG, errorMsg)
+                update.set(ERROR_MSG, errorMsg?.substring(0, ERROR_MSG.dataType.length()))
             }
             update.where(BUILD_ID.eq(buildId)).and(TASK_ID.eq(taskId)).execute()
 
