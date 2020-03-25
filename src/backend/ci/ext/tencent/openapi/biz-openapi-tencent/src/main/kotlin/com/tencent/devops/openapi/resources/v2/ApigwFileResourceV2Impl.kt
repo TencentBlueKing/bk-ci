@@ -6,7 +6,7 @@ import com.tencent.devops.artifactory.pojo.vo.PushResultVO
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.openapi.api.v2.ApigwFileResourceV2
+import com.tencent.devops.openapi.api.apigw.v2.ApigwFileResourceV2
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 

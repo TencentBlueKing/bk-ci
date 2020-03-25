@@ -1,7 +1,9 @@
-package com.tencent.devops.openapi.api.v2
+package com.tencent.devops.openapi.api.apigw.v2
 
 import com.tencent.devops.artifactory.pojo.dto.PushFileDTO
 import com.tencent.devops.artifactory.pojo.vo.PushResultVO
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
 import io.swagger.annotations.Api
