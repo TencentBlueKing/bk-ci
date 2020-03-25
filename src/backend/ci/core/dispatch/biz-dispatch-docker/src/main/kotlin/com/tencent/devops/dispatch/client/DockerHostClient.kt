@@ -11,15 +11,18 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.DockerVersion
 import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
 import com.tencent.devops.common.pipeline.type.docker.ImageType
+import com.tencent.devops.dispatch.dao.PipelineDockerBuildDao
+import com.tencent.devops.dispatch.dao.PipelineDockerHostDao
 import com.tencent.devops.dispatch.dao.PipelineDockerIPInfoDao
 import com.tencent.devops.dispatch.dao.PipelineDockerTaskSimpleDao
-import com.tencent.devops.dispatch.dao.PipelineDockerBuildDao
 import com.tencent.devops.dispatch.pojo.DockerHostBuildInfo
 import com.tencent.devops.dispatch.pojo.VolumeStatus
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.dispatch.pojo.redis.RedisBuild
 import com.tencent.devops.dispatch.utils.CommonUtils
 import com.tencent.devops.dispatch.utils.redis.RedisUtils
+import com.tencent.devops.log.utils.LogUtils
+import com.tencent.devops.model.dispatch.tables.records.TDispatchPipelineDockerIpInfoRecord
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
 import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
 import com.tencent.devops.ticket.pojo.enums.CredentialType
@@ -28,6 +31,7 @@ import okhttp3.Request
 import okhttp3.RequestBody
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
+import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
@@ -38,9 +42,11 @@ class DockerHostClient @Autowired constructor(
     private val pipelineDockerTaskSimpleDao: PipelineDockerTaskSimpleDao,
     private val pipelineDockerIpInfoDao: PipelineDockerIPInfoDao,
     private val pipelineDockerBuildDao: PipelineDockerBuildDao,
+    private val pipelineDockerHostDao: PipelineDockerHostDao,
     private val redisUtils: RedisUtils,
     private val client: Client,
-    private val dslContext: DSLContext
+    private val dslContext: DSLContext,
+    private val rabbitTemplate: RabbitTemplate
 ) {
 
     companion object {
@@ -188,36 +194,63 @@ class DockerHostClient @Autowired constructor(
         }
     }
 
-    fun getAvailableDockerIp(unAvailableIpList: Set<String> = setOf()): String {
+    fun getAvailableDockerIp(event: PipelineAgentStartupEvent, unAvailableIpList: Set<String> = setOf()): String {
         var grayEnv = false
         val gray = System.getProperty("gray.project", "none")
         if (gray == "grayproject") {
             grayEnv = true
         }
         var dockerIp = ""
+        // 先判断是否OP已配置专机，若配置了专机，从列表中选择一个容量最小的
+        val specialIpSet = pipelineDockerHostDao.getHostIps(dslContext, event.projectId).toSet()
+
         // 先取容量负载比较小的，同时满足磁盘空间使用率小于60%并且内存CPU使用率均低于80%，从满足的节点中选择磁盘空间使用率最小的
-        val firstDockerIpList = pipelineDockerIpInfoDao.getAvailableDockerIpList(dslContext, grayEnv, 80, 80, 60)
+        val firstDockerIpList = pipelineDockerIpInfoDao.getAvailableDockerIpList(dslContext, grayEnv, 80, 80, 60, specialIpSet)
         if (firstDockerIpList.isNotEmpty) {
-            dockerIp = firstDockerIpList[0].dockerIp
+            dockerIp = selectAvailableDockerIp(firstDockerIpList, unAvailableIpList)
         } else {
             // 没有满足1的，优先选择磁盘空间，内存使用率均低于80%的
-            val secondDockerIpList = pipelineDockerIpInfoDao.getAvailableDockerIpList(dslContext, grayEnv, 80, 80, 80)
+            val secondDockerIpList = pipelineDockerIpInfoDao.getAvailableDockerIpList(dslContext, grayEnv, 80, 80, 80, specialIpSet)
             if (secondDockerIpList.isNotEmpty) {
-                dockerIp = secondDockerIpList[0].dockerIp
+                dockerIp = selectAvailableDockerIp(secondDockerIpList, unAvailableIpList)
             } else {
                 // 通过2依旧没有找到满足的构建机，选择内存使用率小于80%的
-                val thirdDockerIpList = pipelineDockerIpInfoDao.getAvailableDockerIpList(dslContext, grayEnv, 90, 80, 100)
+                val thirdDockerIpList = pipelineDockerIpInfoDao.getAvailableDockerIpList(dslContext, grayEnv, 90, 80, 100, specialIpSet)
                 if (thirdDockerIpList.isNotEmpty) {
-                    dockerIp = thirdDockerIpList[0].dockerIp
+                    dockerIp = selectAvailableDockerIp(thirdDockerIpList, unAvailableIpList)
                 }
             }
         }
 
         if (dockerIp == "") {
+            LogUtils.addRedLine(
+                rabbitTemplate = rabbitTemplate,
+                buildId = event.buildId,
+                message = "Start build Docker VM failed, no available VM ip.",
+                tag = "",
+                jobId = event.containerHashId,
+                executeCount = event.executeCount ?: 1
+            )
             throw RuntimeException("Start build Docker VM failed, no available VM ip.")
         }
 
         return dockerIp
+    }
+
+    private fun selectAvailableDockerIp(dockerIpList: List<TDispatchPipelineDockerIpInfoRecord>, unAvailableIpList: Set<String> = setOf()): String {
+        if (unAvailableIpList.isEmpty()) {
+            return dockerIpList[0].dockerIp
+        } else {
+            dockerIpList.forEach {
+                if (unAvailableIpList.contains(it.dockerIp)) {
+                    return@forEach
+                } else {
+                    return it.dockerIp
+                }
+            }
+        }
+
+        return ""
     }
 
     private fun dockerBuildStart(dockerIp: String,
@@ -256,7 +289,7 @@ class DockerHostClient @Autowired constructor(
                         val unAvailableIpListLocal: Set<String> = unAvailableIpList?.plus(dockerIp) ?: setOf(dockerIp)
                         val retryTimeLocal = retryTime + 1
                         // 当前IP不可用，重新获取可用ip
-                        val idcIpLocal = getAvailableDockerIp(unAvailableIpListLocal)
+                        val idcIpLocal = getAvailableDockerIp(event, unAvailableIpListLocal)
                         dockerBuildStart(idcIpLocal, requestBody, event, retryTimeLocal, unAvailableIpListLocal)
                     } else {
                         pipelineDockerTaskSimpleDao.updateStatus(
@@ -287,3 +320,4 @@ class DockerHostClient @Autowired constructor(
 
     private fun urlEncode(s: String) = URLEncoder.encode(s, "UTF-8")
 }
+
