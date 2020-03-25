@@ -160,10 +160,9 @@ object SigarUtil {
 
     @Throws(Exception::class)
     private fun file(): Int {
+        var diskUsedPercent = 0
         val sigar = Sigar()
         val fslist: Array<FileSystem> = sigar.fileSystemList
-        var usageAvail = 0L
-        var usageUsed = 0L
         for (i in fslist.indices) {
             val fs: FileSystem = fslist[i]
             var usage: FileSystemUsage?
@@ -186,12 +185,13 @@ object SigarUtil {
                     // 文件系统资源的利用率
                     logger.info(fs.devName.toString() + "资源的利用率:    " + usePercent + "%")
 
-                    usageAvail += usage.avail
-                    usageUsed += usage.used
+                    if (fs.dirName == "/data") {
+                        diskUsedPercent = (usage.usePercent * 100).roundToInt()
+                    }
                 }
             }
         }
 
-        return (usageUsed / usageAvail.toDouble() * 100).toInt()
+        return diskUsedPercent
     }
 }
