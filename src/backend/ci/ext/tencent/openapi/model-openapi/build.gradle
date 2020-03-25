@@ -24,5 +24,5 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-//apply from: "$rootDir/task_gen_jooq.gradle"
-//apply from: "$rootDir/task_deploy_to_maven.gradle"
+apply from: "$rootDir/task_gen_jooq.gradle"
+apply from: "$rootDir/task_deploy_to_maven.gradle"

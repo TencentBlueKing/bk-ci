@@ -31,7 +31,7 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.JobRunCondition
 import com.tencent.devops.common.pipeline.enums.StageRunCondition
 import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
-import com.tencent.devops.common.pipeline.pojo.element.TaskRunCondition
+import com.tencent.devops.common.pipeline.pojo.element.RunCondition
 import com.tencent.devops.process.utils.TASK_FAIL_RETRY_MAX_COUNT
 import com.tencent.devops.process.utils.TASK_FAIL_RETRY_MIN_COUNT
 import org.slf4j.LoggerFactory
@@ -48,7 +48,7 @@ object ControlUtils {
         if (additionalOptions == null) {
             return false
         }
-        return additionalOptions.taskRunCondition == TaskRunCondition.PRE_TASK_FAILED_ONLY && !BuildStatus.isFailure(
+        return additionalOptions.runCondition == RunCondition.PRE_TASK_FAILED_ONLY && !BuildStatus.isFailure(
             containerFinalStatus
         )
     }
@@ -131,11 +131,11 @@ object ControlUtils {
     }
 
     private fun notSkipWhenCustomVarMatch(additionalOptions: ElementAdditionalOptions?) =
-        additionalOptions != null && additionalOptions.taskRunCondition == TaskRunCondition.CUSTOM_VARIABLE_MATCH &&
+        additionalOptions != null && additionalOptions.runCondition == RunCondition.CUSTOM_VARIABLE_MATCH &&
             additionalOptions.customVariables != null && !additionalOptions.customVariables!!.isEmpty()
 
     private fun skipWhenCustomVarMatch(additionalOptions: ElementAdditionalOptions?) =
-        additionalOptions != null && additionalOptions.taskRunCondition == TaskRunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN &&
+        additionalOptions != null && additionalOptions.runCondition == RunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN &&
             additionalOptions.customVariables != null && !additionalOptions.customVariables!!.isEmpty()
 
     private fun skipWhenPreTaskFailedOnly(
@@ -144,7 +144,7 @@ object ControlUtils {
         hasFailedTaskInSuccessContainer: Boolean
     ): Boolean {
         return additionalOptions != null &&
-            additionalOptions.taskRunCondition == TaskRunCondition.PRE_TASK_FAILED_ONLY &&
+            additionalOptions.runCondition == RunCondition.PRE_TASK_FAILED_ONLY &&
             BuildStatus.isSuccess(containerFinalStatus) &&
             !hasFailedTaskInSuccessContainer
     }
