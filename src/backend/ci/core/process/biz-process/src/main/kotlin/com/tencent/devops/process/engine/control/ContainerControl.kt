@@ -387,7 +387,6 @@ class ContainerControl @Autowired constructor(
                 pipelineBuildDetailService.taskEnd(
                     buildId = buildId, taskId = task.taskId, buildStatus = BuildStatus.SKIP
                 )
-                if (isStartVMTask) pipelineBuildDetailService.updateStartVMStatus(buildId, containerId, BuildStatus.SKIP)
 //                containerFinalStatus = BuildStatus.SKIP
 
                 LogUtils.addYellowLine(
