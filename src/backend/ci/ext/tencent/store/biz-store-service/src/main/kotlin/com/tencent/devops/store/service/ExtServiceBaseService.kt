@@ -891,6 +891,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
                         StoreTypeEnum.SERVICE
                     ),
                     labelList = lableList,
+                    labelIdList = lableList.map { it.id },
                     userCommentInfo = userCommentInfo,
                     visibilityLevel = VisibilityLevelEnum.getVisibilityLevel(featureInfoRecord.visibilityLevel),
                     recommendFlag = featureInfoRecord?.recommendFlag,

@@ -67,6 +67,8 @@ data class ServiceVersionVO(
     val mediaList: List<StoreMediaInfo>?,
     @ApiModelProperty("标签")
     val labelList: List<Label>,
+    @ApiModelProperty("标签Id")
+    val labelIdList: List<String>,
     @ApiModelProperty("扩展点名称")
     val itemName: String,
     @ApiModelProperty("发布类型，0：新上架 1：非兼容性升级 2：兼容性功能更新 3：兼容性问题修正 ")
