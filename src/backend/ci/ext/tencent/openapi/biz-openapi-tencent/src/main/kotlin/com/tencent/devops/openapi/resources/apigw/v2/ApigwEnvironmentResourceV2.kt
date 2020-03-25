@@ -16,17 +16,29 @@ import org.springframework.beans.factory.annotation.Autowired
 class ApigwEnvironmentResourceV2 @Autowired constructor(
     private val client: Client
 ) : ApigwEnvironmentResourceV2 {
-    override fun listUsableServerNodes(userId: String, projectId: String): Result<List<NodeWithPermission>> {
+    override fun listUsableServerNodes(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String
+    ): Result<List<NodeWithPermission>> {
         logger.info("listUsableServerNodes userId[$userId] project[$projectId]")
         return client.get(ServiceNodeResource::class).listUsableServerNodes(userId, projectId)
     }
 
-    override fun listUsableServerEnvs(userId: String, projectId: String): Result<List<EnvWithPermission>> {
+    override fun listUsableServerEnvs(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String
+    ): Result<List<EnvWithPermission>> {
         logger.info("listUsableServerEnvs userId[$userId] project[$projectId]")
         return client.get(ServiceEnvironmentResource:: class).listUsableServerEnvs(userId, projectId)
     }
 
     override fun listRawByEnvNames(
+        appCode: String?,
+        apigwType: String?,
         userId: String,
         projectId: String,
         envNames: List<String>
@@ -36,6 +48,8 @@ class ApigwEnvironmentResourceV2 @Autowired constructor(
     }
 
     override fun listRawByEnvHashIds(
+        appCode: String?,
+        apigwType: String?,
         userId: String,
         projectId: String,
         envHashIds: List<String>
@@ -45,6 +59,8 @@ class ApigwEnvironmentResourceV2 @Autowired constructor(
     }
 
     override fun listRawByHashIds(
+        appCode: String?,
+        apigwType: String?,
         userId: String,
         projectId: String,
         nodeHashIds: List<String>

@@ -26,6 +26,7 @@ class ApigwArtifactoryResourceV2Impl @Autowired constructor(
         appCode: String?,
         apigwType: String?,
         userId: String,
+        region: String?,
         projectId: String,
         artifactoryType: ArtifactoryType,
         path: String,
@@ -59,7 +60,9 @@ class ApigwArtifactoryResourceV2Impl @Autowired constructor(
             ttl = ttl,
             crossPipineId = null,
             crossProjectId = null,
-            crossBuildNo = null
+            crossBuildNo = null,
+            region = region,
+            userId = userId
         )
     }
 
