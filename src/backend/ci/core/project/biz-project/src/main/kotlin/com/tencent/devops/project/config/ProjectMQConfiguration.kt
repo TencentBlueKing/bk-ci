@@ -51,6 +51,9 @@ class ProjectMQConfiguration {
     }
 
     @Bean
+    fun projectCreateQueue(): Queue = Queue(MQ.QUEUE_PROJECT_CREATE_EVENT)
+
+    @Bean
     fun projectCreateExchange(): FanoutExchange {
         val fanoutExchange = FanoutExchange(MQ.EXCHANGE_PROJECT_CREATE_FANOUT, true, false)
         fanoutExchange.isDelayed = true
@@ -58,7 +61,29 @@ class ProjectMQConfiguration {
     }
 
     @Bean
-    fun projectEnableQueue() = Queue(MQ.QUEUE_PROJECT_ENABLE_EVENT)
+    fun projectCreateQueueBind(
+        @Autowired projectCreateQueue: Queue,
+        @Autowired projectCreateExchange: FanoutExchange
+    ): Binding = BindingBuilder.bind(projectCreateQueue).to(projectCreateExchange)
+
+    @Bean
+    fun projectUpdateQueue(): Queue = Queue(MQ.QUEUE_PROJECT_UPDATE_EVENT)
+
+    @Bean
+    fun projectUpdateExchange(): FanoutExchange {
+        val fanoutExchange = FanoutExchange(MQ.EXCHANGE_PROJECT_UPDATE_FANOUT, true, false)
+        fanoutExchange.isDelayed = true
+        return fanoutExchange
+    }
+
+    @Bean
+    fun projectUpdateQueueBind(
+        @Autowired projectUpdateQueue: Queue,
+        @Autowired projectUpdateExchange: FanoutExchange
+    ): Binding = BindingBuilder.bind(projectUpdateQueue).to(projectUpdateExchange)
+
+    @Bean
+    fun projectEnableQueue(): Queue = Queue(MQ.QUEUE_PROJECT_ENABLE_EVENT)
 
     @Bean
     fun projectEnableExchange(): FanoutExchange {
