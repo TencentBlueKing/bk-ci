@@ -149,7 +149,8 @@ object SigarUtil {
     }
 
     private fun getDiskUsedPercent(): Int {
-        val element = file().roundToInt()
+        val element = file()
+        logger.info("getDiskUsedPercent ==========>：$element")
         return if (element in 0..100) {
             element
         } else {
@@ -158,28 +159,21 @@ object SigarUtil {
     }
 
     @Throws(Exception::class)
-    private fun file(): Double {
-        var diskUsage = 0.0
+    private fun file(): Int {
         val sigar = Sigar()
         val fslist: Array<FileSystem> = sigar.fileSystemList
+        var usageAvail = 0L
+        var usageUsed = 0L
         for (i in fslist.indices) {
-            logger.info("分区的盘符名称$i")
             val fs: FileSystem = fslist[i]
-            // 分区的盘符名称
-            logger.info("盘符名称:    " + fs.devName)
-            // 分区的盘符名称
-            logger.info("盘符路径:    " + fs.dirName)
-            logger.info("盘符标志:    " + fs.flags) //
-            // 文件系统类型，比如 FAT32、NTFS
-            logger.info("盘符类型:    " + fs.sysTypeName)
-            // 文件系统类型名，比如本地硬盘、光驱、网络文件系统等
-            logger.info("盘符类型名:    " + fs.typeName)
-            // 文件系统类型
-            logger.info("盘符文件系统类型:    " + fs.getType())
             var usage: FileSystemUsage?
             usage = sigar.getFileSystemUsage(fs.dirName)
             when (fs.type) {
                 2 -> {
+                    // 分区的盘符名称
+                    logger.info("盘符名称:    " + fs.devName)
+                    // 分区的盘符名称
+                    logger.info("盘符路径:    " + fs.dirName)
                     // 文件系统总大小
                     logger.info(fs.devName.toString() + "总大小:    " + usage.total + "KB")
                     // 文件系统剩余大小
@@ -191,11 +185,13 @@ object SigarUtil {
                     val usePercent = usage.usePercent * 100
                     // 文件系统资源的利用率
                     logger.info(fs.devName.toString() + "资源的利用率:    " + usePercent + "%")
-                    diskUsage = usePercent
+
+                    usageAvail += usage.avail
+                    usageUsed += usage.used
                 }
             }
         }
 
-        return diskUsage
+        return (usageUsed / usageAvail.toDouble() * 100).toInt()
     }
 }
