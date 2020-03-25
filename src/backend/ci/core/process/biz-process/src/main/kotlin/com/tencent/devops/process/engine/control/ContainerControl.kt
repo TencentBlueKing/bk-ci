@@ -221,7 +221,7 @@ class ContainerControl @Autowired constructor(
                     }
                 }
             }
-
+            pipelineBuildDetailService.updateStartVMStatus(buildId, containerId, containerFinalStatus)
             val finallyTasks = containerTaskList.filter { task ->
                 if (task.taskId == VMUtils.genEndPointTaskId(task.taskSeq) || // end-xxx 结束拦截点
                     task.taskId == VMUtils.genStopVMTaskId(task.taskSeq) // 停止构建机
@@ -378,6 +378,7 @@ class ContainerControl @Autowired constructor(
         var startVMFail = false
 
         containerTaskList.forEach nextOne@{ task ->
+            val isStartVMTask = task.taskSeq == 0
             if (!ControlUtils.isEnable(task.additionalOptions)) {
                 logger.info("[$buildId]|container=$containerId|task(${task.taskSeq})=${task.taskId}|${task.taskName}|is not enable, will skip")
                 pipelineRuntimeService.updateTaskStatus(
@@ -386,6 +387,7 @@ class ContainerControl @Autowired constructor(
                 pipelineBuildDetailService.taskEnd(
                     buildId = buildId, taskId = task.taskId, buildStatus = BuildStatus.SKIP
                 )
+                if (isStartVMTask) pipelineBuildDetailService.updateStartVMStatus(buildId, containerId, BuildStatus.SKIP)
 //                containerFinalStatus = BuildStatus.SKIP
 
                 LogUtils.addYellowLine(
@@ -430,6 +432,7 @@ class ContainerControl @Autowired constructor(
                     pipelineBuildDetailService.taskEnd(
                         buildId = buildId, taskId = task.taskId, buildStatus = BuildStatus.SKIP
                     )
+                    if (isStartVMTask) pipelineBuildDetailService.updateStartVMStatus(buildId, containerId, BuildStatus.SKIP)
                     waitToDoTask = null
 
                     LogUtils.addYellowLine(
@@ -443,13 +446,14 @@ class ContainerControl @Autowired constructor(
                     return@nextOne
                 } else {
                     containerFinalStatus = BuildStatus.RUNNING
+                    pipelineBuildDetailService.updateStartVMStatus(buildId, containerId, BuildStatus.SUCCEED)
                     return Triple(waitToDoTask, containerFinalStatus, startVMFail)
                 }
             } else if (BuildStatus.isFailure(task.status) && !continueWhenFailure(task.additionalOptions)) {
                 // 如果在待执行插件之前前面还有失败的插件，则整个设置状态失败，因为即使重试也是失败了。
                 containerFinalStatus = task.status
                 if (waitToDoTask == null) {
-                    startVMFail = task.taskSeq == 0
+                    startVMFail = isStartVMTask
                     return Triple(waitToDoTask, containerFinalStatus, startVMFail)
                 }
             } else if (BuildStatus.isFailure(task.status) && continueWhenFailure(task.additionalOptions)) {
