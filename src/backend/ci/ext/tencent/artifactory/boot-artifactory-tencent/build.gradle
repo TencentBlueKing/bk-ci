@@ -27,6 +27,7 @@
 dependencies {
     compile project(":core:artifactory:biz-artifactory-store") // 对接研发商店
     compile project(":ext:tencent:artifactory:biz-artifactory-tencent")
+    compile project(":ext:tencent:artifactory:biz-artifactory-push-tencent")
 }
 
 apply from: "$rootDir/task_spring_boot_package.gradle"
