@@ -23,18 +23,36 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.openapi.resources.apigw.v2.app
 
-dependencies {
-    compile project(":ext:tencent:common:common-digest-tencent")
-    compile project(":ext:tencent:openapi:model-openapi")
-    compile project(":ext:tencent:openapi:api-openapi-tencent")
-    compile project(":ext:tencent:common:common-pipeline-tencent")
-    compile project(":ext:tencent:process:biz-process-tencent")
-    compile project(":ext:tencent:repository:api-repository-tencent")
-    compile project (":core:common:common-client")
-    compile "io.jsonwebtoken:jjwt"
-    compile group: 'net.sf.json-lib', name: 'json-lib', classifier: "jdk15"
-    compile "org.springframework.boot:spring-boot-starter-aop"
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.openapi.api.apigw.v2.app.ApigwAppQualityResource
+import com.tencent.devops.openapi.service.apigw.ApigwQualityService
+import com.tencent.devops.quality.api.v2.pojo.QualityRuleIntercept
+import org.springframework.beans.factory.annotation.Autowired
+
+@RestResource
+class ApigwAppQualityResourceImpl @Autowired constructor(
+    private val apigwQualityService: ApigwQualityService
+) : ApigwAppQualityResource {
+    override fun getBuildQuality(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        bgId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String
+    ): Result<List<QualityRuleIntercept>?> {
+        return Result(apigwQualityService.getBuildQuality(
+            userId = userId,
+            bgId = bgId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            checkUserPermission = false,
+            interfaceName = "/v2/quality/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}"
+        ))
+    }
 }
-
-apply from: "$rootDir/task_deploy_to_maven.gradle"

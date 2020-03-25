@@ -23,18 +23,21 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.openapi.pojo
 
-dependencies {
-    compile project(":ext:tencent:common:common-digest-tencent")
-    compile project(":ext:tencent:openapi:model-openapi")
-    compile project(":ext:tencent:openapi:api-openapi-tencent")
-    compile project(":ext:tencent:common:common-pipeline-tencent")
-    compile project(":ext:tencent:process:biz-process-tencent")
-    compile project(":ext:tencent:repository:api-repository-tencent")
-    compile project (":core:common:common-client")
-    compile "io.jsonwebtoken:jjwt"
-    compile group: 'net.sf.json-lib', name: 'json-lib', classifier: "jdk15"
-    compile "org.springframework.boot:spring-boot-starter-aop"
-}
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-apply from: "$rootDir/task_deploy_to_maven.gradle"
+@ApiModel("AppCode所属项目信息-response")
+data class AppCodeProjectResponse(
+    @ApiModelProperty("ID")
+    val id: Long,
+    @ApiModelProperty("appCode")
+    val appCode: String,
+    @ApiModelProperty("项目ID")
+    val projectId: String,
+    @ApiModelProperty("创建人")
+    val creator: String?,
+    @ApiModelProperty("创建时间")
+    val createTime: Long?
+)

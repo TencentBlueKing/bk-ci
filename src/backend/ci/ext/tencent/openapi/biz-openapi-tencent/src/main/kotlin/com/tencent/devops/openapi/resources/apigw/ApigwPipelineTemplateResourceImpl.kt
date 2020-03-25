@@ -23,18 +23,38 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.openapi.resources.apigw
 
-dependencies {
-    compile project(":ext:tencent:common:common-digest-tencent")
-    compile project(":ext:tencent:openapi:model-openapi")
-    compile project(":ext:tencent:openapi:api-openapi-tencent")
-    compile project(":ext:tencent:common:common-pipeline-tencent")
-    compile project(":ext:tencent:process:biz-process-tencent")
-    compile project(":ext:tencent:repository:api-repository-tencent")
-    compile project (":core:common:common-client")
-    compile "io.jsonwebtoken:jjwt"
-    compile group: 'net.sf.json-lib', name: 'json-lib', classifier: "jdk15"
-    compile "org.springframework.boot:spring-boot-starter-aop"
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.openapi.api.apigw.ApigwPipelineTemplateResource
+import com.tencent.devops.process.api.service.ServicePipelineTemplateResource
+import com.tencent.devops.process.pojo.PipelineTemplate
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+
+@RestResource
+class ApigwPipelineTemplateResourceImpl @Autowired constructor(private val client: Client) :
+    ApigwPipelineTemplateResource {
+    override fun listTemplate(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String
+    ): Result<Map<String, PipelineTemplate>> {
+        logger.info("get project's pipeline template, projectId($projectId)")
+        val templates = client.get(ServicePipelineTemplateResource::class).listTemplate(projectId)
+        val templatesResult = mutableMapOf<String, PipelineTemplate>()
+        if (templates.data != null) {
+            (templates.data as Map<String, PipelineTemplate>).forEach {
+                templatesResult[it.value.name] = it.value
+            }
+        }
+        return Result(templatesResult)
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(ApigwPipelineTemplateResourceImpl::class.java)
+    }
 }
-
-apply from: "$rootDir/task_deploy_to_maven.gradle"

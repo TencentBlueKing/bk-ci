@@ -23,32 +23,56 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.openapi.api.apigw.v2.app
 
-package com.tencent.devops.plugin.api.mooc
-
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BG_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.quality.api.v2.pojo.QualityRuleIntercept
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
+import javax.ws.rs.HeaderParam
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["BUILD_MOOC"], description = "MOOC-查询接口")
-@Path("/build/mooc")
+@Api(tags = ["OPEN_API_V2_QUALITY"], description = "OPEN-API-V2-质量红线资源")
+@Path("/{apigwType:apigw-user|apigw-app|apigw}/v2/quality")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface BuildMoocResource {
+interface ApigwAppQualityResource {
 
-    @ApiOperation("查询用户Mooc信息")
+    @ApiOperation("获取某次构建的质量红线数据")
+    @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}")
     @GET
-    @Path("/users/{userId}")
-    fun queryMooc(
-        @ApiParam(value = "要查询的用户ID", required = true)
-        @PathParam("userId")
-        userId: String
-    ): Result<List<Map<String, Any>>>
+    fun getBuildQuality(
+        @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @ApiParam(value = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @ApiParam(value = "事业群ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_BG_ID)
+        bgId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @ApiParam("构建ID", required = true)
+        @PathParam("buildId")
+        buildId: String
+    ): Result<List<QualityRuleIntercept>?>
 }

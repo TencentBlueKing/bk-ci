@@ -23,32 +23,50 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.openapi.api.apigw.v2
 
-package com.tencent.devops.plugin.api.mooc
-
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.repository.pojo.AuthorizeResult
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
+import javax.ws.rs.HeaderParam
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["BUILD_MOOC"], description = "MOOC-查询接口")
-@Path("/build/mooc")
+@Api(tags = ["OPEN_API_V2_GIT"], description = "OPEN-API-V2-GIT工蜂资源")
+@Path("/{apigwType:apigw-user|apigw-app|apigw}/v2/git")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface BuildMoocResource {
+interface ApigwGitResourceV2 {
 
-    @ApiOperation("查询用户Mooc信息")
+    @ApiOperation("根据用户ID, 通过oauth方式获取项目")
     @GET
-    @Path("/users/{userId}")
-    fun queryMooc(
-        @ApiParam(value = "要查询的用户ID", required = true)
-        @PathParam("userId")
-        userId: String
-    ): Result<List<Map<String, Any>>>
+    @Path("/getProject")
+    fun getProject(
+        @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @ApiParam(value = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "项目ID", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @ApiParam(value = "repo hash iD", required = false)
+        @QueryParam("repoHashId")
+        repoHashId: String?
+    ): Result<AuthorizeResult>
 }

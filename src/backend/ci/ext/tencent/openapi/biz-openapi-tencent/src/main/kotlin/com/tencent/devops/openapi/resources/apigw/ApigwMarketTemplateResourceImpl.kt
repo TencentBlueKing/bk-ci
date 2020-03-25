@@ -23,32 +23,43 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-
-package com.tencent.devops.plugin.api.mooc
+package com.tencent.devops.openapi.resources.apigw
 
 import com.tencent.devops.common.api.pojo.Result
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
-import javax.ws.rs.Consumes
-import javax.ws.rs.GET
-import javax.ws.rs.Path
-import javax.ws.rs.PathParam
-import javax.ws.rs.Produces
-import javax.ws.rs.core.MediaType
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.openapi.api.apigw.ApigwMarketTemplateResource
+import com.tencent.devops.store.api.template.ServiceTemplateResource
+import com.tencent.devops.store.pojo.common.MarketItem
+import com.tencent.devops.store.pojo.template.MarketTemplateResp
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
 
-@Api(tags = ["BUILD_MOOC"], description = "MOOC-查询接口")
-@Path("/build/mooc")
-@Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
-interface BuildMoocResource {
+@RestResource
+class ApigwMarketTemplateResourceImpl @Autowired constructor(
+    private val client: Client
+) : ApigwMarketTemplateResource {
 
-    @ApiOperation("查询用户Mooc信息")
-    @GET
-    @Path("/users/{userId}")
-    fun queryMooc(
-        @ApiParam(value = "要查询的用户ID", required = true)
-        @PathParam("userId")
+    override fun list(
+        appCode: String?,
+        apigwType: String?,
         userId: String
-    ): Result<List<Map<String, Any>>>
+    ): Result<List<MarketItem?>> {
+        logger.info("get user'd market template, user($userId)")
+        val marketTemplateResp = client.get(ServiceTemplateResource::class).list(userId)
+        if (marketTemplateResp.data != null) {
+            val marketItemList = (marketTemplateResp.data as MarketTemplateResp).records
+            if ((marketTemplateResp.data as MarketTemplateResp).records.isNotEmpty()) {
+                // 过滤 没有安装权限的
+                return Result(marketItemList.filter {
+                    it?.flag == true
+                })
+            }
+        }
+        return Result(listOf(null))
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(ApigwMarketTemplateResourceImpl::class.java)
+    }
 }

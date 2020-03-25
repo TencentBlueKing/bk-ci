@@ -23,18 +23,35 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.openapi.resources.apigw.v2
 
-dependencies {
-    compile project(":ext:tencent:common:common-digest-tencent")
-    compile project(":ext:tencent:openapi:model-openapi")
-    compile project(":ext:tencent:openapi:api-openapi-tencent")
-    compile project(":ext:tencent:common:common-pipeline-tencent")
-    compile project(":ext:tencent:process:biz-process-tencent")
-    compile project(":ext:tencent:repository:api-repository-tencent")
-    compile project (":core:common:common-client")
-    compile "io.jsonwebtoken:jjwt"
-    compile group: 'net.sf.json-lib', name: 'json-lib', classifier: "jdk15"
-    compile "org.springframework.boot:spring-boot-starter-aop"
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.openapi.api.apigw.v2.ApigwStatisticResource
+import com.tencent.devops.process.api.v2.ServiceStatisticResource
+import com.tencent.devops.process.pojo.statistic.PipelineAndTemplateStatistic
+import org.springframework.beans.factory.annotation.Autowired
+
+@RestResource
+class ApigwStatisticResourceImpl @Autowired constructor(
+    private val client: Client
+) : ApigwStatisticResource {
+    override fun getPipelineAndTemplateStatistic(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        organizationType: String,
+        organizationId: Int,
+        deptName: String?,
+        centerName: String?
+    ): Result<PipelineAndTemplateStatistic> {
+        return client.get(ServiceStatisticResource::class).getPipelineAndTemplateStatistic(
+            userId = userId,
+            organizationType = organizationType,
+            organizationId = organizationId,
+            deptName = deptName,
+            centerName = centerName
+        )
+    }
 }
-
-apply from: "$rootDir/task_deploy_to_maven.gradle"

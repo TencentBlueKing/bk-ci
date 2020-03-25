@@ -23,18 +23,33 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.openapi.resources.apigw.v2
 
-dependencies {
-    compile project(":ext:tencent:common:common-digest-tencent")
-    compile project(":ext:tencent:openapi:model-openapi")
-    compile project(":ext:tencent:openapi:api-openapi-tencent")
-    compile project(":ext:tencent:common:common-pipeline-tencent")
-    compile project(":ext:tencent:process:biz-process-tencent")
-    compile project(":ext:tencent:repository:api-repository-tencent")
-    compile project (":core:common:common-client")
-    compile "io.jsonwebtoken:jjwt"
-    compile group: 'net.sf.json-lib', name: 'json-lib', classifier: "jdk15"
-    compile "org.springframework.boot:spring-boot-starter-aop"
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.openapi.api.apigw.v2.ApigwMarketTemplateResourceV2
+import com.tencent.devops.store.api.template.ServiceTemplateResource
+import com.tencent.devops.store.pojo.template.InstallTemplateReq
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+
+@RestResource
+class ApigwMarketTemplateResourceV2Impl @Autowired constructor(
+    private val client: Client
+) : ApigwMarketTemplateResourceV2 {
+
+    override fun installTemplateFromStore(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        installTemplateReq: InstallTemplateReq
+    ): Result<Boolean> {
+        // 可见与可安装鉴权在store服务marketTemplateService中已实现
+        return client.get(ServiceTemplateResource::class).installTemplate(userId, installTemplateReq)
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(ApigwMarketTemplateResourceV2Impl::class.java)
+    }
 }
-
-apply from: "$rootDir/task_deploy_to_maven.gradle"

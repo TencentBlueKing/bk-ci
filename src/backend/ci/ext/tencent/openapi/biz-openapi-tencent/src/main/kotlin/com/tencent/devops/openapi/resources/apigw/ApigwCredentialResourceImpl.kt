@@ -23,32 +23,45 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.openapi.resources.apigw
 
-package com.tencent.devops.plugin.api.mooc
-
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
-import javax.ws.rs.Consumes
-import javax.ws.rs.GET
-import javax.ws.rs.Path
-import javax.ws.rs.PathParam
-import javax.ws.rs.Produces
-import javax.ws.rs.core.MediaType
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.openapi.api.apigw.ApigwCredentialResource
+import com.tencent.devops.ticket.api.ServiceCredentialResource
+import com.tencent.devops.ticket.pojo.Credential
+import com.tencent.devops.ticket.pojo.enums.Permission
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
 
-@Api(tags = ["BUILD_MOOC"], description = "MOOC-查询接口")
-@Path("/build/mooc")
-@Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
-interface BuildMoocResource {
+@RestResource
+class ApigwCredentialResourceImpl @Autowired constructor(private val client: Client) :
+    ApigwCredentialResource {
+    override fun hasPermissionList(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        credentialTypesString: String?,
+        permission: Permission,
+        page: Int?,
+        pageSize: Int?
+    ): Result<Page<Credential>> {
+        logger.info("get credential of project($projectId) by user($userId)")
+        return client.get(ServiceCredentialResource::class).hasPermissionList(
+            userId = userId,
+            projectId = projectId,
+            credentialTypesString = credentialTypesString,
+            permission = permission,
+            page = page,
+            pageSize = pageSize,
+            keyword = null
+        )
+    }
 
-    @ApiOperation("查询用户Mooc信息")
-    @GET
-    @Path("/users/{userId}")
-    fun queryMooc(
-        @ApiParam(value = "要查询的用户ID", required = true)
-        @PathParam("userId")
-        userId: String
-    ): Result<List<Map<String, Any>>>
+    companion object {
+        private val logger = LoggerFactory.getLogger(ApigwCredentialResourceImpl::class.java)
+    }
 }

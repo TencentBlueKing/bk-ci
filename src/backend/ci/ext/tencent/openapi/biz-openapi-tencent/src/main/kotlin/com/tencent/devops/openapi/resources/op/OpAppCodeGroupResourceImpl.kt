@@ -23,18 +23,39 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.openapi.resources.op
 
-dependencies {
-    compile project(":ext:tencent:common:common-digest-tencent")
-    compile project(":ext:tencent:openapi:model-openapi")
-    compile project(":ext:tencent:openapi:api-openapi-tencent")
-    compile project(":ext:tencent:common:common-pipeline-tencent")
-    compile project(":ext:tencent:process:biz-process-tencent")
-    compile project(":ext:tencent:repository:api-repository-tencent")
-    compile project (":core:common:common-client")
-    compile "io.jsonwebtoken:jjwt"
-    compile group: 'net.sf.json-lib', name: 'json-lib', classifier: "jdk15"
-    compile "org.springframework.boot:spring-boot-starter-aop"
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.openapi.api.op.OpAppCodeGroupResource
+import com.tencent.devops.openapi.pojo.AppCodeGroup
+import com.tencent.devops.openapi.pojo.AppCodeGroupResponse
+import com.tencent.devops.openapi.service.op.AppCodeGroupService
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+
+@RestResource
+class OpAppCodeGroupResourceImpl @Autowired constructor(
+    private val appCodeGroupService: AppCodeGroupService
+) : OpAppCodeGroupResource {
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(OpAppCodeGroupResourceImpl::class.java)
+    }
+
+    override fun setGroup(userName: String, appCode: String, appCodeGroup: AppCodeGroup): Result<Boolean> {
+        return Result(appCodeGroupService.setGroup(userName, appCode, appCodeGroup))
+    }
+
+    override fun getGroup(userName: String, appCode: String): Result<AppCodeGroupResponse?> {
+        return Result(appCodeGroupService.getGroup(appCode))
+    }
+
+    override fun listGroup(userName: String): Result<List<AppCodeGroupResponse>> {
+        return Result(appCodeGroupService.listGroup(userName))
+    }
+
+    override fun deleteGroup(userName: String, appCode: String): Result<Boolean> {
+        return Result(appCodeGroupService.deleteGroup(userName, appCode))
+    }
 }
-
-apply from: "$rootDir/task_deploy_to_maven.gradle"
