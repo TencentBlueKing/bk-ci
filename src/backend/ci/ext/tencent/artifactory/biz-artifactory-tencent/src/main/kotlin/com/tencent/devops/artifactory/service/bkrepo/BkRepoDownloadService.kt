@@ -259,7 +259,7 @@ class BkRepoDownloadService @Autowired constructor(
         }
         logger.info("accessUserId: $accessUserId, targetProjectId: $targetProjectId, targetPipelineId: $targetPipelineId, targetBuildId: $targetBuildId")
 
-        // 校验用户权限
+q        // 校验用户权限
         if (accessUserId != null) {
             if (artifactoryType == ArtifactoryType.CUSTOM_DIR &&
                 !authProjectApi.getProjectUsers(artifactoryAuthServiceCode, targetProjectId).contains(accessUserId)) {
