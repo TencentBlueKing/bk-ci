@@ -2,6 +2,7 @@ package com.tencent.devops.dispatch.dao
 
 import com.tencent.devops.model.dispatch.tables.TDispatchPipelineDockerIpInfo
 import com.tencent.devops.model.dispatch.tables.records.TDispatchPipelineDockerIpInfoRecord
+import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository
@@ -115,15 +116,22 @@ class PipelineDockerIPInfoDao {
         grayEnv: Boolean,
         cpuLoad: Int,
         memLoad: Int,
-        diskLoad: Int
+        diskLoad: Int,
+        limitIpSet: Set<String> = setOf()
     ): Result<TDispatchPipelineDockerIpInfoRecord> {
         with(TDispatchPipelineDockerIpInfo.T_DISPATCH_PIPELINE_DOCKER_IP_INFO) {
+            val conditions =
+                mutableListOf<Condition>(
+                    ENABLE.eq(true),
+                    GRAY_ENV.eq(grayEnv),
+                    CPU_LOAD.lessOrEqual(cpuLoad),
+                    MEM_LOAD.lessOrEqual(memLoad),
+                    DISK_LOAD.lessOrEqual(diskLoad)
+                )
+            if (limitIpSet.isEmpty()) conditions.add(DOCKER_IP.`in`(limitIpSet))
+
             return dslContext.selectFrom(this)
-                .where(ENABLE.eq(true))
-                .and(GRAY_ENV.eq(grayEnv))
-                .and(CPU_LOAD.lessOrEqual(cpuLoad))
-                .and(MEM_LOAD.lessOrEqual(memLoad))
-                .and(DISK_LOAD.lessOrEqual(diskLoad))
+                .where(conditions)
                 .orderBy(DISK_LOAD.asc())
                 .fetch()
         }
