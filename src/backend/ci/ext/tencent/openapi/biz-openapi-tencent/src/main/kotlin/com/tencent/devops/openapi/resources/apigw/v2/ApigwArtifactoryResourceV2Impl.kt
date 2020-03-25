@@ -45,7 +45,7 @@ class ApigwArtifactoryResourceV2Impl @Autowired constructor(
                 pipelineId = pathList[0]
                 buildId = pathList[1]
             }
-            subPath = path.replace("/$pipelineId/$buildId" , "")
+            subPath = path.replace("/$pipelineId/$buildId", "")
         }
 
         logger.info("getThirdPartyDownloadUrl pipelineId:$pipelineId")
