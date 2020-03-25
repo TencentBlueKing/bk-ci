@@ -82,6 +82,7 @@ class BcsDeployService @Autowired constructor(private val redisOperation: RedisO
             .addNewContainer()
             .withName(serviceCode)
             .withImage(appDeployment.image)
+            .withImagePullPolicy("Always") //更新为总是从仓库拉取镜像
             .addNewPort()
             .withContainerPort(containerPort)
             .endPort()
