@@ -71,6 +71,7 @@ class BcsDeployService @Autowired constructor(private val redisOperation: RedisO
         val deployment = DeploymentBuilder()
             .withNewMetadata()
             .withName(serviceCode)
+            .addToAnnotations("createTime", System.currentTimeMillis().toString())
             .endMetadata()
             .withNewSpec()
             .withReplicas(appDeployment.replicas)
