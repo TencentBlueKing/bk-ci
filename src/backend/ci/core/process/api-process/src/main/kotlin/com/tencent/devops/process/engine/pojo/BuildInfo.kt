@@ -52,11 +52,14 @@ data class BuildInfo(
 ) {
 
     fun isFinish() = when {
-        status.name == BuildStatus.STAGE_SUCCESS.name && endTime != null -> true
+        status.name == BuildStatus.STAGE_SUCCESS.name && endTime != null && endTime > 0 && startTime != null && endTime > startTime -> true
         else -> BuildStatus.isFinish(status)
     }
 
-    fun isSuccess() = BuildStatus.isSuccess(status) && endTime != null
+    fun isSuccess() = when {
+        status.name == BuildStatus.STAGE_SUCCESS.name && endTime != null && endTime > 0 && startTime != null && endTime > startTime -> true
+        else -> BuildStatus.isSuccess(status)
+    }
 
     fun isFailure() = BuildStatus.isFailure(status)
 
