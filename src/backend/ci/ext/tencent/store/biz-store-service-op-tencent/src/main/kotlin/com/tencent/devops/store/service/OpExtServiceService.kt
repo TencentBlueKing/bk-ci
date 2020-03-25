@@ -119,8 +119,8 @@ class OpExtServiceService @Autowired constructor(
         val count = extServiceDao.countByCode(dslContext, serviceCode)
         val extensionServiceInfoList = mutableSetOf<ExtensionServiceVO>()
         serviceRecord?.forEach {
+            logger.info("listServiceByCode serviceCode[$serviceCode] record[$it]")
             val serviceId = it["itemId"] as String
-
             extensionServiceInfoList.add(
                 ExtensionServiceVO(
                     serviceId = serviceId,

@@ -23,7 +23,7 @@ data class SubmitDTO(
     @ApiModelProperty("ICON")
     val icon: String?,
     @ApiModelProperty("扩展服务简介")
-    val sunmmary: String? = null,
+    val summary: String? = null,
     @ApiModelProperty("扩展服务描述")
     val description: String? = null,
     @ApiModelProperty("扩展服务发布者")
