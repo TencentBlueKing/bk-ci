@@ -116,4 +116,16 @@ interface UserExtServiceResource {
         @ApiParam("媒体、可见范围信息")
         submitInfo: ExtSubmitDTO
     ): Result<Boolean>
+
+    @ApiOperation("编辑返回测试中")
+    @POST
+    @Path("/serviceIds/{serviceId}/ext/back")
+    fun createMediaAndVisible(
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("serviceId", required = true)
+        @PathParam("serviceId")
+        serviceId: String
+    ): Result<Boolean>
 }

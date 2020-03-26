@@ -60,4 +60,8 @@ class UserExtServiceResourceImpl @Autowired constructor(
     override fun createMediaAndVisible(userId: String, serviceId: String, submitInfo: ExtSubmitDTO): Result<Boolean> {
         return extServiceBaseService.createMediaAndVisible(userId, serviceId, submitInfo)
     }
+
+    override fun createMediaAndVisible(userId: String, serviceId: String): Result<Boolean> {
+        return extServiceBaseService.backToTest(userId, serviceId)
+    }
 }

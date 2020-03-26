@@ -836,6 +836,25 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         return Result(true)
     }
 
+    fun backToTest(userId: String, serviceId: String): Result<Boolean> {
+        logger.info("back to test： serviceId[$serviceId], userId[$serviceId]")
+        val newStatus = ExtServiceStatusEnum.TESTING
+        val (checkResult, code) = checkServiceVersionOptRight(userId, serviceId, newStatus.status.toByte())
+
+        if (!checkResult) {
+            return MessageCodeUtil.generateResponseDataObject(code)
+        }
+
+        extServiceDao.setServiceStatusById(
+            dslContext = dslContext,
+            serviceId =  serviceId,
+            userId = userId,
+            serviceStatus = newStatus.status.toByte(),
+            msg = "back to test"
+        )
+        return Result(true)
+    }
+
     @Suppress("UNCHECKED_CAST")
     private fun getServiceVersion(serviceId: String, userId: String): Result<ServiceVersionVO?> {
         logger.info("getServiceVersion serviceID[$serviceId], userID[$userId]")
@@ -1265,7 +1284,11 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         ) {
             validateFlag = false
         } else if (status == ExtServiceStatusEnum.TESTING.status.toByte() &&
-            recordStatus != ExtServiceStatusEnum.BUILDING.status.toByte()
+            recordStatus !in (
+                listOf(
+                    ExtServiceStatusEnum.BUILDING.status.toByte(),
+                    ExtServiceStatusEnum.EDIT.status.toByte()
+                ))
         ) {
             validateFlag = false
         } else if (status == ExtServiceStatusEnum.EDIT.status.toByte() &&

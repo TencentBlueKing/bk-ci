@@ -379,7 +379,7 @@ class GitService @Autowired constructor(
                 val atomCode = authParams["atomCode"] as? String
                 mf.format(arrayOf(atomCode))
             }
-            RedirectUrlTypeEnum.EXT_SERVICE_MARKER -> {
+            RedirectUrlTypeEnum.EXT_SERVICE_REPOSITORY -> {
                 val mf = MessageFormat(redirectServiceRepositoryUrl)
                 val atomCode = authParams["atomCode"] as? String
                 mf.format(arrayOf(atomCode))

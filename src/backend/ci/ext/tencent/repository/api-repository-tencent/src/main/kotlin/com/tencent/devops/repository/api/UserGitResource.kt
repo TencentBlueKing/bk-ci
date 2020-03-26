@@ -138,7 +138,7 @@ interface UserGitResource {
         @QueryParam("redirectUrlType")
         redirectUrlType: RedirectUrlTypeEnum?,
         @ApiParam(value = "插件代码", required = false)
-        @QueryParam("atomCode")
-        atomCode: String?
+        @QueryParam("storeCode")
+        storeCode: String?
     ): Result<AuthorizeResult>
 }
