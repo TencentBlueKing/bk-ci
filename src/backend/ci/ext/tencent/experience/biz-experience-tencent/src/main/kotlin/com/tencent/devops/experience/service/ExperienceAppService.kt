@@ -49,6 +49,7 @@ import com.tencent.devops.experience.pojo.enums.Source
 import com.tencent.devops.experience.util.DateUtil
 import com.tencent.devops.model.experience.tables.records.TExperienceRecord
 import org.jooq.DSLContext
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 @Service
@@ -64,6 +65,10 @@ class ExperienceAppService(
     private val experienceServiceCode: BSExperienceAuthServiceCode,
     private val client: Client
 ) {
+
+    @Value("\${s3.endpointUrl:#{null}}")
+    private val endpointUrl: String? = null
+
     fun list(userId: String, offset: Int, limit: Int): List<AppExperience> {
         val expireTime = DateUtil.today()
 
@@ -133,7 +138,7 @@ class ExperienceAppService(
 
         return subUserCanExperienceList.map {
             val projectId = it.projectId
-            val logoUrl = projectMap[projectId]!!.logoAddr
+            val logoUrl = transformLogoAddr(projectMap[projectId]!!.logoAddr)
             val projectName = projectMap[projectId]!!.projectName
             AppExperience(
                     HashUtil.encodeLongId(it.id),
@@ -157,7 +162,7 @@ class ExperienceAppService(
         val canExperience = experienceService.userCanExperience(userId, experienceId)
 
         val bkAuthProject = bsCCProjectApi.getProjectListAsOuter(setOf(projectId)).first()
-        val logoUrl = bkAuthProject.logoAddr
+        val logoUrl = transformLogoAddr(bkAuthProject.logoAddr)
         val projectName = bkAuthProject.projectName
         val version = experience.version
         val shareUrl = "${HomeHostUtil.outerServerHost()}/app/download/devops_app_forward.html?flag=experienceDetail&experienceId=$experienceHashId"
@@ -209,7 +214,7 @@ class ExperienceAppService(
         if (bkAuthProjectList.isEmpty()) {
             throw RuntimeException("ProjectId $projectId cannot find in CC")
         }
-        val logoUrl = bkAuthProjectList.first().logoAddr
+        val logoUrl = transformLogoAddr(bkAuthProjectList.first().logoAddr)
 
         val groupIdSet = mutableSetOf<String>()
         experienceList.forEach {
@@ -245,6 +250,14 @@ class ExperienceAppService(
                     canExperience,
                     it.online
             )
+        }
+    }
+
+    fun transformLogoAddr(innerLogoAddr: String): String {
+        return if (endpointUrl != null) {
+            innerLogoAddr.replace(endpointUrl, "${HomeHostUtil.outerServerHost()}/images")
+        } else {
+            innerLogoAddr
         }
     }
 }
