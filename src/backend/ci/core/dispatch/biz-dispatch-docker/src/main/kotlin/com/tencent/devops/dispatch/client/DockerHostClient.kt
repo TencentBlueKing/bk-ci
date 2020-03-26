@@ -224,7 +224,7 @@ class DockerHostClient @Autowired constructor(
         }
 
         if (dockerIp == "") {
-            throw DockerServiceException(500, "Start build Docker VM failed, no available VM ip.")
+            throw DockerServiceException("Start build Docker VM failed, no available VM ip.")
         }
 
         return dockerIp
