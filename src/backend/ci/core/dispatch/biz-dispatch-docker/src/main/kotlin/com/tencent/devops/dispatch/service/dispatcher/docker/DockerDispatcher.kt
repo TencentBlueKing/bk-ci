@@ -111,13 +111,14 @@ class DockerDispatcher @Autowired constructor(
         } catch (e: DockerServiceException) {
             logger.error("[${pipelineAgentStartupEvent.projectId}|${pipelineAgentStartupEvent.pipelineId}|${pipelineAgentStartupEvent.buildId}] Start build Docker VM failed.", e)
             errorFlag = true
-            errorMsg = e.message.toString()
+            errorMsg = e.message!! + "==" + e.cause!!.message
         } catch (e: Exception) {
             logger.error("[${pipelineAgentStartupEvent.projectId}|${pipelineAgentStartupEvent.pipelineId}|${pipelineAgentStartupEvent.buildId}] Start build Docker VM failed.", e)
             errorFlag = true
             errorMsg = "Start build Docker VM failed."
         } finally {
             if (errorFlag) {
+                logger.error("errorMsg: $errorMsg")
                 pipelineDockerTaskSimpleDao.updateStatus(dslContext, pipelineAgentStartupEvent.pipelineId, pipelineAgentStartupEvent.vmSeqId, VolumeStatus.FAILURE.status)
                 onFailBuild(client, rabbitTemplate, pipelineAgentStartupEvent, errorMsg)
             }
