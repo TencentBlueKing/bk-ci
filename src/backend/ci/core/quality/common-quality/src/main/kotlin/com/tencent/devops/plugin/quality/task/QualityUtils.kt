@@ -52,10 +52,10 @@ object QualityUtils {
     ): Set<String> {
         return try {
             client.get(ServiceQualityRuleResource::class).getAuditUserList(
-                projectId,
-                pipelineId,
-                buildId,
-                taskId
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                taskId = taskId
             ).data ?: setOf()
         } catch (e: Exception) {
             logger.error("quality get audit user list fail: ${e.message}", e)
@@ -65,16 +65,14 @@ object QualityUtils {
 
     private fun check(client: Client, buildCheckParams: BuildCheckParams): RuleCheckResult {
         return try {
-            client.getWithoutRetry(ServiceQualityRuleResource::class).check(
-                buildCheckParams
-            ).data!!
+            client.getWithoutRetry(ServiceQualityRuleResource::class).check(buildCheckParams).data!!
         } catch (e: Exception) {
             logger.error("quality get audit user list fail: ${e.message}", e)
             return RuleCheckResult(
-                true,
-                true,
-                15 * 6000,
-                listOf()
+                success = true,
+                failEnd = true,
+                auditTimeoutSeconds = 15 * 6000,
+                resultList = listOf()
             )
         }
     }

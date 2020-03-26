@@ -85,12 +85,12 @@ class QualityGateInTaskAtom @Autowired constructor(
                 AtomResponse(BuildStatus.REVIEW_PROCESSED)
             } else {
                 LogUtils.addRedLine(
-                    rabbitTemplate,
-                    buildId,
-                    "${taskName}审核超时",
-                    taskId,
-                    task.containerHashId,
-                    task.executeCount ?: 1
+                    rabbitTemplate = rabbitTemplate,
+                    buildId = buildId,
+                    message = "${taskName}审核超时",
+                    tag = taskId,
+                    jobId = task.containerHashId,
+                    executeCount = task.executeCount ?: 1
                 )
                 AtomResponse(BuildStatus.QUALITY_CHECK_FAIL)
             }
@@ -101,23 +101,23 @@ class QualityGateInTaskAtom @Autowired constructor(
                 when (ManualReviewAction.valueOf(manualAction)) {
                     ManualReviewAction.PROCESS -> {
                         LogUtils.addYellowLine(
-                            rabbitTemplate,
-                            buildId,
-                            "步骤审核结束，审核结果：[继续]，审核人：$actionUser",
-                            taskId,
-                            task.containerHashId,
-                            task.executeCount ?: 1
+                            rabbitTemplate = rabbitTemplate,
+                            buildId = buildId,
+                            message = "步骤审核结束，审核结果：[继续]，审核人：$actionUser",
+                            tag = taskId,
+                            jobId = task.containerHashId,
+                            executeCount = task.executeCount ?: 1
                         )
                         AtomResponse(BuildStatus.SUCCEED)
                     }
                     ManualReviewAction.ABORT -> {
                         LogUtils.addYellowLine(
-                            rabbitTemplate,
-                            buildId,
-                            "步骤审核结束，审核结果：[驳回]，审核人：$actionUser",
-                            taskId,
-                            task.containerHashId,
-                            task.executeCount ?: 1
+                            rabbitTemplate = rabbitTemplate,
+                            buildId = buildId,
+                            message = "步骤审核结束，审核结果：[驳回]，审核人：$actionUser",
+                            tag = taskId,
+                            jobId = task.containerHashId,
+                            executeCount = task.executeCount ?: 1
                         )
                         AtomResponse(BuildStatus.REVIEW_ABORT)
                     }
@@ -158,31 +158,31 @@ class QualityGateInTaskAtom @Autowired constructor(
 
             if (checkResult.success) {
                 LogUtils.addLine(
-                    rabbitTemplate,
-                    buildId,
-                    "质量红线(准入)检测已通过",
-                    elementId,
-                    task.containerHashId,
-                    task.executeCount ?: 1
+                    rabbitTemplate = rabbitTemplate,
+                    buildId = buildId,
+                    message = "质量红线(准入)检测已通过",
+                    tag = elementId,
+                    jobId = task.containerHashId,
+                    executeCount = task.executeCount ?: 1
                 )
 
                 checkResult.resultList.forEach {
                     LogUtils.addLine(
-                        rabbitTemplate,
-                        buildId,
-                        "规则：${it.ruleName}",
-                        elementId,
-                        task.containerHashId,
-                        task.executeCount ?: 1
+                        rabbitTemplate = rabbitTemplate,
+                        buildId = buildId,
+                        message = "规则：${it.ruleName}",
+                        tag = elementId,
+                        jobId = task.containerHashId,
+                        executeCount = task.executeCount ?: 1
                     )
                     it.messagePairs.forEach { message ->
                         LogUtils.addLine(
-                            rabbitTemplate,
-                            buildId,
-                            message.first + " " + message.second,
-                            elementId,
-                            task.containerHashId,
-                            task.executeCount ?: 1
+                            rabbitTemplate = rabbitTemplate,
+                            buildId = buildId,
+                            message = message.first + " " + message.second,
+                            tag = elementId,
+                            jobId = task.containerHashId,
+                            executeCount = task.executeCount ?: 1
                         )
                     }
                 }
@@ -193,31 +193,31 @@ class QualityGateInTaskAtom @Autowired constructor(
                 task.taskParams[QUALITY_RESULT] = checkResult.success
             } else {
                 LogUtils.addRedLine(
-                    rabbitTemplate,
-                    buildId,
-                    "质量红线(准入)检测被拦截",
-                    elementId,
-                    task.containerHashId,
-                    task.executeCount ?: 1
+                    rabbitTemplate = rabbitTemplate,
+                    buildId = buildId,
+                    message = "质量红线(准入)检测被拦截",
+                    tag = elementId,
+                    jobId = task.containerHashId,
+                    executeCount = task.executeCount ?: 1
                 )
 
                 checkResult.resultList.forEach {
                     LogUtils.addRedLine(
-                        rabbitTemplate,
-                        buildId,
-                        "规则：${it.ruleName}",
-                        elementId,
-                        task.containerHashId,
-                        task.executeCount ?: 1
+                        rabbitTemplate = rabbitTemplate,
+                        buildId = buildId,
+                        message = "规则：${it.ruleName}",
+                        tag = elementId,
+                        jobId = task.containerHashId,
+                        executeCount = task.executeCount ?: 1
                     )
                     it.messagePairs.forEach { message ->
                         LogUtils.addRedLine(
-                            rabbitTemplate,
-                            buildId,
-                            message.first + " " + message.second,
-                            elementId,
-                            task.containerHashId,
-                            task.executeCount ?: 1
+                            rabbitTemplate = rabbitTemplate,
+                            buildId = buildId,
+                            message = message.first + " " + message.second,
+                            tag = elementId,
+                            jobId = task.containerHashId,
+                            executeCount = task.executeCount ?: 1
                         )
                     }
                 }

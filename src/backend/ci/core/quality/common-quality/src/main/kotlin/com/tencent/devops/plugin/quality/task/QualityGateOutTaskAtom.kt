@@ -82,7 +82,14 @@ class QualityGateOutTaskAtom @Autowired constructor(
             if (success.toBoolean()) {
                 AtomResponse(BuildStatus.REVIEW_PROCESSED)
             } else {
-                LogUtils.addRedLine(rabbitTemplate, buildId, "${taskName}审核超时", taskId, task.containerHashId, task.executeCount ?: 1)
+                LogUtils.addRedLine(
+                    rabbitTemplate = rabbitTemplate,
+                    buildId = buildId,
+                    message = "${taskName}审核超时",
+                    tag = taskId,
+                    jobId = task.containerHashId,
+                    executeCount = task.executeCount ?: 1
+                )
                 AtomResponse(BuildStatus.QUALITY_CHECK_FAIL)
             }
         } else {
@@ -91,11 +98,25 @@ class QualityGateOutTaskAtom @Autowired constructor(
             if (manualAction.isNotEmpty()) {
                 when (ManualReviewAction.valueOf(manualAction)) {
                     ManualReviewAction.PROCESS -> {
-                        LogUtils.addYellowLine(rabbitTemplate, buildId, "步骤审核结束，审核结果：[继续]，审核人：$actionUser", taskId, task.containerHashId, task.executeCount ?: 1)
+                        LogUtils.addYellowLine(
+                            rabbitTemplate = rabbitTemplate,
+                            buildId = buildId,
+                            message = "步骤审核结束，审核结果：[继续]，审核人：$actionUser",
+                            tag = taskId,
+                            jobId = task.containerHashId,
+                            executeCount = task.executeCount ?: 1
+                        )
                         AtomResponse(BuildStatus.SUCCEED)
                     }
                     ManualReviewAction.ABORT -> {
-                        LogUtils.addYellowLine(rabbitTemplate, buildId, "步骤审核结束，审核结果：[驳回]，审核人：$actionUser", taskId, task.containerHashId, task.executeCount ?: 1)
+                        LogUtils.addYellowLine(
+                            rabbitTemplate = rabbitTemplate,
+                            buildId = buildId,
+                            message = "步骤审核结束，审核结果：[驳回]，审核人：$actionUser",
+                            tag = taskId,
+                            jobId = task.containerHashId,
+                            executeCount = task.executeCount ?: 1
+                        )
                         AtomResponse(BuildStatus.REVIEW_ABORT)
                     }
                 }
@@ -131,12 +152,26 @@ class QualityGateOutTaskAtom @Autowired constructor(
             ))
 
             if (checkResult.success) {
-                LogUtils.addLine(rabbitTemplate, buildId, "质量红线(准出)检测已通过", elementId, task.containerHashId, task.executeCount ?: 1)
+                LogUtils.addLine(
+                    rabbitTemplate = rabbitTemplate,
+                    buildId = buildId,
+                    message = "质量红线(准出)检测已通过",
+                    tag = elementId,
+                    jobId = task.containerHashId,
+                    executeCount = task.executeCount ?: 1
+                )
 
                 checkResult.resultList.forEach {
                     LogUtils.addLine(rabbitTemplate, buildId, "规则：${it.ruleName}", elementId, task.containerHashId, task.executeCount ?: 1)
                     it.messagePairs.forEach { message ->
-                        LogUtils.addLine(rabbitTemplate, buildId, message.first + " " + message.second, elementId, task.containerHashId, task.executeCount ?: 1)
+                        LogUtils.addLine(
+                            rabbitTemplate = rabbitTemplate,
+                            buildId = buildId,
+                            message = message.first + " " + message.second,
+                            tag = elementId,
+                            jobId = task.containerHashId,
+                            executeCount = task.executeCount ?: 1
+                        )
                     }
                 }
 
@@ -148,9 +183,23 @@ class QualityGateOutTaskAtom @Autowired constructor(
                 LogUtils.addRedLine(rabbitTemplate, buildId, "质量红线(准出)检测被拦截", elementId, task.containerHashId, task.executeCount ?: 1)
 
                 checkResult.resultList.forEach {
-                    LogUtils.addRedLine(rabbitTemplate, buildId, "规则：${it.ruleName}", elementId, task.containerHashId, task.executeCount ?: 1)
+                    LogUtils.addRedLine(
+                        rabbitTemplate = rabbitTemplate,
+                        buildId = buildId,
+                        message = "规则：${it.ruleName}",
+                        tag = elementId,
+                        jobId = task.containerHashId,
+                        executeCount = task.executeCount ?: 1
+                    )
                     it.messagePairs.forEach { message ->
-                        LogUtils.addRedLine(rabbitTemplate, buildId, message.first + " " + message.second, elementId, task.containerHashId, task.executeCount ?: 1)
+                        LogUtils.addRedLine(
+                            rabbitTemplate = rabbitTemplate,
+                            buildId = buildId,
+                            message = message.first + " " + message.second,
+                            tag = elementId,
+                            jobId = task.containerHashId,
+                            executeCount = task.executeCount ?: 1
+                        )
                     }
                 }
 
@@ -164,7 +213,14 @@ class QualityGateOutTaskAtom @Autowired constructor(
                 // 产生MQ消息，等待5分钟审核时间
                 logger.info("[$buildId]|QUALITY_OUT|taskId=$elementId|quality check fail wait reviewing")
                 val auditUsers = QualityUtils.getAuditUserList(client, projectId, pipelineId, buildId, param.interceptTask!!)
-                LogUtils.addLine(rabbitTemplate, buildId, "质量红线(准出)待审核!审核人：$auditUsers", elementId, task.containerHashId, task.executeCount ?: 1)
+                LogUtils.addLine(
+                    rabbitTemplate = rabbitTemplate,
+                    buildId = buildId,
+                    message = "质量红线(准出)待审核!审核人：$auditUsers",
+                    tag = elementId,
+                    jobId = task.containerHashId,
+                    executeCount = task.executeCount ?: 1
+                )
                 task.taskParams[BS_ATOM_STATUS_REFRESH_DELAY_MILLS] = checkResult.auditTimeoutSeconds * 1000 // 60000*5
                 task.taskParams[QUALITY_RESULT] = checkResult.success
             }
