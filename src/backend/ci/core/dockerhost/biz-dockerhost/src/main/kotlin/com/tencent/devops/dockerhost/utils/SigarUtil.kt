@@ -257,8 +257,10 @@ object SigarUtil {
             var line = ""
             while (lnr.readLine().also { line = it } != null) {
                 info.append(line).append("\n")
+                logger.info(info.toString())
             }
         } catch (e: Exception) {
+            logger.error("runCommand error.", e)
             info = StringBuilder(e.toString())
         }
         return info.toString()
