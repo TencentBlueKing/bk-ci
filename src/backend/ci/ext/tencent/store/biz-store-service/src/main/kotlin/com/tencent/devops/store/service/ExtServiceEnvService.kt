@@ -64,7 +64,7 @@ class ExtServiceEnvService @Autowired constructor(
         logger.info("updateExtServiceEnvInfo version is :$version,updateExtServiceEnvInfo is :$updateExtServiceEnvInfo")
         val extServiceRecord = extServiceDao.getExtService(dslContext, serviceCode, version.replace("*", ""))
         logger.info("the extServiceRecord is :$extServiceRecord")
-        if (null == extServiceRecord || !extServiceRecord.deleteFlag) {
+        if (null == extServiceRecord || extServiceRecord.deleteFlag) {
             return MessageCodeUtil.generateResponseDataObject(
                 CommonMessageCode.PARAMETER_IS_INVALID,
                 arrayOf("$serviceCode+$version"),
