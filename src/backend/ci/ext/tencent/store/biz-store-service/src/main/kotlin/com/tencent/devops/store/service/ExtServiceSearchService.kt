@@ -254,8 +254,7 @@ class ExtServiceSearchService @Autowired constructor(
         visibleList: MutableList<Int>?,
         userDeptList: List<Int>
     ): Boolean {
-        logger.info("generateInstallFlag members is:$members,userId is:$userId")
-        logger.info("generateInstallFlag visibleList is:$visibleList,userDeptList is:$userDeptList")
+        logger.info("generateInstallFlag publicFlag is: $publicFlag visibleList is:$visibleList,userDeptList is:$userDeptList members is:$members,userId is:$userId")
         return if (publicFlag || (members != null && members.contains(userId))) {
             true
         } else {

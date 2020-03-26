@@ -76,7 +76,7 @@ import com.tencent.devops.store.pojo.dto.ServiceOfflineDTO
 import com.tencent.devops.store.pojo.dto.SubmitDTO
 import com.tencent.devops.store.pojo.enums.ExtServicePackageSourceTypeEnum
 import com.tencent.devops.store.pojo.enums.ExtServiceStatusEnum
-import com.tencent.devops.store.pojo.vo.MyExtServiceRespItem
+import com.tencent.devops.store.pojo.vo.ExtServiceRespItem
 import com.tencent.devops.store.pojo.vo.MyServiceVO
 import com.tencent.devops.store.pojo.vo.ServiceVersionListItem
 import com.tencent.devops.store.pojo.vo.ServiceVersionListResp
@@ -503,7 +503,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         }
         logger.info("the getMyService userId is :$userId,itemRecordList is :$itemRecordList, itemInfoMap is :$itemInfoMap")
 
-        val myService = mutableListOf<MyExtServiceRespItem?>()
+        val myService = mutableListOf<ExtServiceRespItem?>()
         records?.forEach {
             val serviceCode = it["serviceCode"] as String
             val serviceId = it["serviceId"] as String
@@ -525,7 +525,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
             itemName = itemName.substringBeforeLast(",")
             logger.info("the getMyService serviceId is :$serviceId, itemName is :$itemName")
             myService.add(
-                MyExtServiceRespItem(
+                ExtServiceRespItem(
                     serviceId = serviceId,
                     serviceName = it["serviceName"] as String,
                     serviceCode = serviceCode,

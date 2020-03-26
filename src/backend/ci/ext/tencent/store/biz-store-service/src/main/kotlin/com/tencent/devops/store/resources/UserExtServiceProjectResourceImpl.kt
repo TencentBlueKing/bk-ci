@@ -5,8 +5,10 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.UserExtServiceProjectResource
 import com.tencent.devops.store.pojo.common.InstalledProjRespItem
+import com.tencent.devops.store.pojo.common.UnInstallReq
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.dto.InstallExtServiceReq
+import com.tencent.devops.store.pojo.vo.ExtServiceRespItem
 import com.tencent.devops.store.service.ExtServiceProjectService
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -38,5 +40,23 @@ class UserExtServiceProjectResourceImpl @Autowired constructor(
             storeCode = serviceCode,
             storeType = StoreTypeEnum.SERVICE
         )
+    }
+
+    override fun getServiceByInstalledProject(
+        accessToken: String,
+        userId: String,
+        projectCode: String
+    ): Result<List<ExtServiceRespItem>> {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
+    override fun unInstallService(
+        accessToken: String,
+        userId: String,
+        serviceCode: String,
+        projectCode: String,
+        unInstallReq: UnInstallReq
+    ): Result<Boolean> {
+        return extServiceProjectService.uninstallService(userId, projectCode, serviceCode, unInstallReq)
     }
 }

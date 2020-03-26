@@ -4,7 +4,11 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ACCESS_TOKEN
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.common.InstalledProjRespItem
+import com.tencent.devops.store.pojo.common.UnInstallReq
 import com.tencent.devops.store.pojo.dto.InstallExtServiceReq
+import com.tencent.devops.store.pojo.vo.ExtServiceRespItem
+import com.tencent.devops.store.pojo.vo.MyServiceVO
+import com.tencent.devops.store.pojo.vo.ServiceVersionVO
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -12,6 +16,7 @@ import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
+import javax.ws.rs.PUT
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
@@ -50,4 +55,39 @@ interface UserExtServiceProjectResource {
         @PathParam("serviceCode")
         serviceCode: String
     ): Result<List<InstalledProjRespItem>>
+
+    @ApiOperation("根据项目查询扩展服务")
+    @GET
+    @Path("/{projectCode}/installed/service")
+    fun getServiceByInstalledProject(
+        @ApiParam("token", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
+        accessToken: String,
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("模版代码", required = true)
+        @PathParam("projectCode")
+        projectCode: String
+    ): Result<List<ExtServiceRespItem>>
+
+    @ApiOperation("卸载扩展服务")
+    @PUT
+    @Path("{projectCode}/serviceCodes/{serviceCode}/uninstalled/")
+    fun unInstallService(
+        @ApiParam("token", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
+        accessToken: String,
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("服务Code", required = true)
+        @PathParam("serviceCode")
+        serviceCode: String,
+        @ApiParam("服务Code", required = true)
+        @PathParam("projectCode")
+        projectCode: String,
+        @ApiParam("卸载扩展请求包体", required = true)
+        unInstallReq: UnInstallReq
+    ): Result<Boolean>
 }

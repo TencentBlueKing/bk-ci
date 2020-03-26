@@ -152,7 +152,8 @@ class OpExtServiceService @Autowired constructor(
                     summary = baseInfo.summary,
                     description = baseInfo.description,
                     modifierUser = userId,
-                    status = null
+                    status = null,
+                    latestFlag = null
                 )
             )
             val itemIds = baseInfo.itemIds

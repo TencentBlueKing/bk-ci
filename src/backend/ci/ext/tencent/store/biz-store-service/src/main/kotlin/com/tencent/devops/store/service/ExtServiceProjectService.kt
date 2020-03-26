@@ -1,17 +1,26 @@
 package com.tencent.devops.store.service
 
+import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.store.dao.ExtServiceDao
 import com.tencent.devops.store.dao.ExtServiceFeatureDao
+import com.tencent.devops.store.dao.common.ReasonDao
+import com.tencent.devops.store.dao.common.ReasonRelDao
+import com.tencent.devops.store.dao.common.StoreMemberDao
 import com.tencent.devops.store.dao.common.StoreProjectRelDao
 import com.tencent.devops.store.pojo.common.InstalledProjRespItem
+import com.tencent.devops.store.pojo.common.UnInstallReq
+import com.tencent.devops.store.pojo.common.enums.ReasonTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.common.StoreProjectService
 import org.jooq.DSLContext
+import org.jooq.impl.DSL
 import org.springframework.stereotype.Service
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -22,6 +31,8 @@ import java.lang.RuntimeException
 class ExtServiceProjectService @Autowired constructor(
     val extServiceDao: ExtServiceDao,
     val extServiceFeatureDao: ExtServiceFeatureDao,
+    val storeMemberDao: StoreMemberDao,
+    val reasonRelDao: ReasonRelDao,
     private val storeProjectRelDao: StoreProjectRelDao,
     val dslContext: DSLContext,
     val client: Client,
@@ -102,6 +113,44 @@ class ExtServiceProjectService @Autowired constructor(
         watch.stop()
         logger.info("getInstalledProjects:watch:$watch")
         return Result(result)
+    }
+
+    // 卸载扩展
+    fun uninstallService(
+        userId: String,
+        projectCode: String,
+        serviceCode: String,
+        unInstallReq: UnInstallReq
+    ): Result<Boolean> {
+        logger.info("uninstallService, $projectCode | $serviceCode | $userId")
+        // 用户是否有权限卸载
+        val isInstaller = storeProjectRelDao.isInstaller(dslContext, userId, serviceCode, StoreTypeEnum.SERVICE.type.toByte())
+        logger.info("uninstallService, isInstaller=$isInstaller")
+
+        val isAdmin = storeMemberDao.isStoreAdmin(dslContext, userId, serviceCode, StoreTypeEnum.SERVICE.type.toByte())
+        logger.info("uninstallService, isAdmin=$isAdmin")
+
+        if (!( isAdmin || isInstaller)) {
+            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED, arrayOf(serviceCode))
+        }
+
+        dslContext.transaction { t ->
+            val context = DSL.using(t)
+
+            // 卸载
+            storeProjectService.uninstall(StoreTypeEnum.SERVICE, serviceCode, projectCode)
+
+
+            // 入库卸载原因
+            unInstallReq.reasonList.forEach {
+                if (it?.reasonId != null) {
+                    val id = UUIDUtil.generate()
+                    reasonRelDao.add(context, id, userId, serviceCode, it.reasonId, it.note, ReasonTypeEnum.UNINSTALLATOM.type)
+                }
+            }
+        }
+
+        return Result(true)
     }
 
     companion object {
