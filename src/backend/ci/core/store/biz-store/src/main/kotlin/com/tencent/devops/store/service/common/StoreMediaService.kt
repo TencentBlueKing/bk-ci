@@ -26,6 +26,15 @@ interface StoreMediaService {
     ): Result<Boolean>
 
     /**
+     * 删除媒体文件
+     */
+    fun deleteByStoreCode(
+        userId: String,
+        storeCode: String,
+        storeType: StoreTypeEnum
+    ): Result<Boolean>
+
+    /**
      * 获取单条媒体信息
      */
     fun get(
