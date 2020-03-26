@@ -368,6 +368,9 @@ abstract class ExtServiceBaseService @Autowired constructor() {
                         serviceName = submitDTO.serviceName,
                         creatorUser = userId,
                         version = submitDTO.version,
+                        logoUrl = submitDTO.logoUrl,
+                        summary = submitDTO.summary,
+                        description = submitDTO.description,
                         publisher = userId,
                         publishTime = System.currentTimeMillis(),
                         status = 0

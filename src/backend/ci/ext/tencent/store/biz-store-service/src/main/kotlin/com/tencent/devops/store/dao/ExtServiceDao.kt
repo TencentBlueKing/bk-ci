@@ -69,7 +69,7 @@ class ExtServiceDao {
                     extServiceCreateInfo.statusMsg,
                     extServiceCreateInfo.logoUrl,
                     extServiceCreateInfo.icon,
-                    extServiceCreateInfo.sunmmary,
+                    extServiceCreateInfo.summary,
                     extServiceCreateInfo.description,
                     extServiceCreateInfo.publisher,
                     LocalDateTime.now(),
