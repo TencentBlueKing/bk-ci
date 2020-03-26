@@ -119,8 +119,8 @@ class DockerDispatcher @Autowired constructor(
             errorMsg = "Start build Docker VM failed."
         } finally {
             if (errorFlag) {
-                logger.error("errorMsg: $errorMsg")
                 pipelineDockerTaskSimpleDao.updateStatus(dslContext, pipelineAgentStartupEvent.pipelineId, pipelineAgentStartupEvent.vmSeqId, VolumeStatus.FAILURE.status)
+                logger.error("errorMsg: $errorMsg")
                 onFailBuild(client, rabbitTemplate, pipelineAgentStartupEvent, errorMsg)
             }
         }
