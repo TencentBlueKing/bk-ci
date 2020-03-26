@@ -68,7 +68,7 @@ class ServicePTemplateResourceImpl @Autowired constructor(
         templateType: TemplateType?,
         storeFlag: Boolean?
     ): Result<TemplateListModel> {
-        return Result(templateService.listTemplate(projectId, userId, templateType, storeFlag, 1, 9999))
+        return Result(templateService.listTemplate(projectId, userId, templateType, storeFlag, 1, 9999, null))
     }
 
     override fun getTemplate(

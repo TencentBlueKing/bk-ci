@@ -469,7 +469,7 @@ class TemplateService @Autowired constructor(
         storeFlag: Boolean?,
         page: Int?,
         pageSize: Int?,
-        keywords: String? = null
+        keywords: String?
     ): TemplateListModel {
         logger.info("[$projectId|$userId|$templateType|$storeFlag|$page|$pageSize|$keywords] List template")
         val hasManagerPermission = hasManagerPermission(projectId, userId)
@@ -568,10 +568,10 @@ class TemplateService @Autowired constructor(
                 val model: Model = objectMapper.readValue(modelStr)
 
                 val setting = settings[templateId]
-                val templateName = setting?.name ?: model.name
+                val templateName = setting.name ?: model.name
 
                 // 根据keywords搜索过滤
-                if (!keywords.isNullOrBlank() && !templateName.contains(keywords!!)) return@forEach
+                if (!keywords.isNullOrBlank() && !templateName.contains(keywords)) return@forEach
 
                 val associateCodes = listAssociateCodes(record["projectId"] as String, model)
                 val associatePipeline =
@@ -794,7 +794,7 @@ class TemplateService @Autowired constructor(
                     val categoryStr = record["category"] as? String
                     val key = if (type == TemplateType.CONSTRAINT.name) record["srcTemplateId"] as String else templateId
                     result[key] = OptionalTemplate(
-                        name = setting?.name ?: model.name,
+                        name = setting.name ?: model.name,
                         templateId = templateId,
                         projectId = templateRecord["projectId"] as String,
                         version = version,
@@ -1848,7 +1848,7 @@ class TemplateService @Autowired constructor(
         logger.info("the userId is:$userId,updateMarketTemplateReference Request is:$updateMarketTemplateRequest")
         val templateCode = updateMarketTemplateRequest.templateCode
         val category = JsonUtil.toJson(updateMarketTemplateRequest.categoryCodeList ?: listOf<String>())
-        val referenceList = templateDao.listTemplateReference(dslContext, templateCode).map { it["ID"] as String }
+        val referenceList = templateDao.listTemplateReference(dslContext, templateCode).map { it["ID"] }
         if (referenceList.isNotEmpty()) {
             pipelineSettingDao.updateSettingName(dslContext, referenceList, updateMarketTemplateRequest.templateName)
             templateDao.updateTemplateReference(

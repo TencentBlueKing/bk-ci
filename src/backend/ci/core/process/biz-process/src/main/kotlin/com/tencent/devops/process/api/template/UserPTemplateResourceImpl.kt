@@ -84,7 +84,7 @@ class UserPTemplateResourceImpl @Autowired constructor(private val templateServi
         page: Int?,
         pageSize: Int?
     ): Result<TemplateListModel> {
-        return Result(templateService.listTemplate(projectId, userId, templateType, storeFlag, page, pageSize))
+        return Result(templateService.listTemplate(projectId, userId, templateType, storeFlag, page, pageSize, null))
     }
 
     override fun listAllTemplate(
