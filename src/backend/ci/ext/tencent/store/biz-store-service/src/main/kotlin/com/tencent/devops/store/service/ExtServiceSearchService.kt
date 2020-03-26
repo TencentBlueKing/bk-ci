@@ -116,7 +116,7 @@ class ExtServiceSearchService @Autowired constructor(
         }
         for (index in futureList.indices) {
             val serviceInfo = serviceInfoList[index]
-            if(!(futureList[index].records == null || futureList[index].records.isEmpty())) {
+            if (!(futureList[index].records == null || futureList[index].records.isEmpty())) {
                 result.add(
                     ExtServiceMainItemVo(
                         key = serviceInfo.key,

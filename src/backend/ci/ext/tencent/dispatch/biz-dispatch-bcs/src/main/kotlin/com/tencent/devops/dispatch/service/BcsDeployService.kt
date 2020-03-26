@@ -42,10 +42,12 @@ import io.fabric8.kubernetes.api.model.extensions.IngressBackend
 import io.fabric8.kubernetes.api.model.extensions.IngressBackendBuilder
 import io.fabric8.kubernetes.api.model.extensions.IngressBuilder
 import io.fabric8.kubernetes.api.model.extensions.IngressRule
+import io.fabric8.kubernetes.client.KubernetesClient
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.util.Collections
+import java.text.MessageFormat
 
 @Service
 class BcsDeployService @Autowired constructor(private val redisOperation: RedisOperation) {
@@ -53,6 +55,12 @@ class BcsDeployService @Autowired constructor(private val redisOperation: RedisO
     private val logger = LoggerFactory.getLogger(BcsDeployService::class.java)
 
     private final val defaultLabelKey = "app"
+
+    private final val ingressRedisPrefixKey = "ext:service:ingress"
+
+    private final val dateConfigName = "date-config"
+
+    private final val dateConfigPath = "/etc/localtime"
 
     fun deployApp(
         userId: String,
@@ -77,19 +85,30 @@ class BcsDeployService @Autowired constructor(private val redisOperation: RedisO
             .withNewTemplate()
             .withNewMetadata()
             .addToLabels(defaultLabelKey, serviceCode)
+            .addToAnnotations("dummy", "du_" + System.currentTimeMillis()) // 保证滚动更新时每次从仓库拉取最新镜像
             .endMetadata()
             .withNewSpec()
             .addNewContainer()
             .withName(serviceCode)
             .withImage(appDeployment.image)
-            .withImagePullPolicy("Always") //更新为总是从仓库拉取镜像
+            .withImagePullPolicy("Always") // 更新为总是从仓库拉取镜像
             .addNewPort()
             .withContainerPort(containerPort)
             .endPort()
+            .addNewVolumeMount()
+            .withName(dateConfigName)
+            .withMountPath(dateConfigPath)
+            .endVolumeMount()
             .endContainer()
             .addNewImagePullSecret()
             .withName(appDeployment.pullImageSecretName)
             .endImagePullSecret()
+            .addNewVolume()
+            .withName(dateConfigName)
+            .withNewHostPath()
+            .withPath(dateConfigPath)
+            .endHostPath()
+            .endVolume()
             .endSpec()
             .endTemplate()
             .withNewSelector()
@@ -133,7 +152,7 @@ class BcsDeployService @Autowired constructor(private val redisOperation: RedisO
                 listOf(ingressPath)
             )
         )
-        val ingressRedisKey = "ext:service:ingress:$namespaceName"
+        val ingressRedisKey = "$ingressRedisPrefixKey:$namespaceName"
         val ingressName = redisOperation.get(ingressRedisKey)
         logger.info("deployApp ingressName is: $ingressName")
         if (ingressName.isNullOrBlank()) {
@@ -214,16 +233,45 @@ class BcsDeployService @Autowired constructor(private val redisOperation: RedisO
         val bcsUrl = stopApp.bcsUrl
         val token = stopApp.token
         val bcsKubernetesClient = BcsClientUtils.getBcsKubernetesClient(bcsUrl, token)
-        val grayNamespaceName = stopApp.namespaceName
-        // 删除deployment
-        bcsKubernetesClient.apps().deployments().inNamespace(grayNamespaceName).withName(stopApp.deploymentName).delete()
-        // 删除service
-        bcsKubernetesClient.services().inNamespace(grayNamespaceName).withName(stopApp.serviceName).delete()
+        val deploymentName = stopApp.deploymentName
+        // 停止灰度命名空间的应用
+        val grayNamespaceName = stopApp.grayNamespaceName
+        var deployment = bcsKubernetesClient.apps().deployments().inNamespace(grayNamespaceName).withName(deploymentName).get()
+        if (deployment != null) {
+            // 删除deployment
+            bcsKubernetesClient.apps().deployments().inNamespace(grayNamespaceName).withName(deploymentName).delete()
+            // 删除service
+            bcsKubernetesClient.services().inNamespace(grayNamespaceName).withName(stopApp.serviceName).delete()
+            // 更新ingress规则
+            deleteIngressRule(bcsKubernetesClient, grayNamespaceName, stopApp.grayHost, deploymentName, bcsUrl, token)
+        }
+        // 停止正式命名空间的应用
         val namespaceName = stopApp.namespaceName
-        // 删除deployment
-        bcsKubernetesClient.apps().deployments().inNamespace(namespaceName).withName(stopApp.deploymentName).delete()
-        // 删除service
-        bcsKubernetesClient.services().inNamespace(namespaceName).withName(stopApp.serviceName).delete()
+        deployment = bcsKubernetesClient.apps().deployments().inNamespace(namespaceName).withName(deploymentName).get()
+        if (deployment != null) {
+            // 删除deployment
+            bcsKubernetesClient.apps().deployments().inNamespace(namespaceName).withName(deploymentName).delete()
+            // 删除service
+            bcsKubernetesClient.services().inNamespace(namespaceName).withName(stopApp.serviceName).delete()
+            // 更新ingress规则
+            deleteIngressRule(bcsKubernetesClient, namespaceName, stopApp.host, deploymentName, bcsUrl, token)
+        }
         return Result(true)
+    }
+
+    private fun deleteIngressRule(
+        bcsKubernetesClient: KubernetesClient,
+        namespaceName: String,
+        host: String,
+        deploymentName: String,
+        bcsUrl: String,
+        token: String
+    ) {
+        val ingressRedisKey = "$ingressRedisPrefixKey:$namespaceName"
+        val ingressName = redisOperation.get(ingressRedisKey)
+        val ingress =
+            bcsKubernetesClient.extensions().ingresses().inNamespace(namespaceName).withName(ingressName).get()
+        ingress.spec.rules.removeIf { rule -> rule.host == MessageFormat(host).format(arrayOf(deploymentName)) }
+        BcsClientUtils.createIngress(bcsUrl, token, namespaceName, ingress)
     }
 }

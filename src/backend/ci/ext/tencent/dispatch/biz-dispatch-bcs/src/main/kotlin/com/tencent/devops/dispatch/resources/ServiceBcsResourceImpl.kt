@@ -50,7 +50,8 @@ class ServiceBcsResourceImpl @Autowired constructor(
             bcsUrl = createBcsNameSpaceRequest.bcsUrl,
             token = createBcsNameSpaceRequest.token,
             namespaceName = namespaceName,
-            labelInfo = createBcsNameSpaceRequest.kubernetesLabel
+            labelInfo = createBcsNameSpaceRequest.kubernetesLabel,
+            limitRangeInfo = createBcsNameSpaceRequest.limitRangeInfo
         )
         return Result(true)
     }

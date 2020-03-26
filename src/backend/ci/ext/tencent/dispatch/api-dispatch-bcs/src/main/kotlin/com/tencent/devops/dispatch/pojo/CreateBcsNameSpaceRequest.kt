@@ -34,5 +34,7 @@ data class CreateBcsNameSpaceRequest(
     @ApiModelProperty("请求token", required = true)
     val token: String,
     @ApiModelProperty("命名空间标签信息", required = true)
-    val kubernetesLabel: KubernetesLabel
+    val kubernetesLabel: KubernetesLabel,
+    @ApiModelProperty("k8s资源限制信息", required = false)
+    val limitRangeInfo: KubernetesLimitRange? = null
 )

@@ -51,6 +51,10 @@ object BcsClientUtils {
 
     private val logger = LoggerFactory.getLogger(BcsClientUtils::class.java)
 
+    private val cpu = "cpu"
+
+    private val memory = "memory"
+
     private val bcsKubernetesClientMap = ConcurrentHashMap<String, KubernetesClient>()
 
     fun getBcsKubernetesClientMap(): ConcurrentHashMap<String, KubernetesClient> {
@@ -90,6 +94,7 @@ object BcsClientUtils {
      * @param token token
      * @param namespaceName 命名空间名称
      * @param labelInfo 标签信息
+     * @param limitRangeInfo k8s资源限制信息
      */
     fun createNamespace(
         bcsUrl: String,
@@ -98,7 +103,7 @@ object BcsClientUtils {
         labelInfo: KubernetesLabel,
         limitRangeInfo: KubernetesLimitRange? = null
     ): Namespace {
-        logger.info("createNamespace namespaceName is: $namespaceName,labelInfo is: $labelInfo")
+        logger.info("createNamespace namespaceName is: $namespaceName,labelInfo is: $labelInfo,limitRangeInfo is: $limitRangeInfo")
         val bcsKubernetesClient = getBcsKubernetesClient(bcsUrl, token)
         var ns = bcsKubernetesClient.namespaces().withName(namespaceName).get()
         logger.info("the namespace is: $ns")
@@ -112,9 +117,9 @@ object BcsClientUtils {
         }
         val limitRangeItem = LimitRangeItem()
         if (null != limitRangeInfo) {
-            limitRangeItem.default = mapOf("cpu" to Quantity("1"), "memory" to Quantity("2Gi"))
-            limitRangeItem.defaultRequest = mapOf("cpu" to Quantity("0.5"), "memory" to Quantity("1Gi"))
-            limitRangeItem.type = "Container"
+            limitRangeItem.default = mapOf(cpu to Quantity(limitRangeInfo.defaultCpu), memory to Quantity(limitRangeInfo.defaultMemory))
+            limitRangeItem.defaultRequest = mapOf(cpu to Quantity(limitRangeInfo.defaultRequestCpu), memory to Quantity(limitRangeInfo.defaultRequestMemory))
+            limitRangeItem.type = limitRangeInfo.limitType
             val limitRange = LimitRangeBuilder().withNewMetadata().withName("$namespaceName-limit")
                 .endMetadata().withNewSpec().addToLimits(limitRangeItem).endSpec().build()
             bcsKubernetesClient.limitRanges().inNamespace(namespaceName).createOrReplace(limitRange)
