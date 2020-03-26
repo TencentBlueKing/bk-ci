@@ -224,14 +224,6 @@ class DockerHostClient @Autowired constructor(
         }
 
         if (dockerIp == "") {
-            LogUtils.addRedLine(
-                rabbitTemplate = rabbitTemplate,
-                buildId = event.buildId,
-                message = "Start build Docker VM failed, no available VM ip.",
-                tag = "",
-                jobId = event.containerHashId,
-                executeCount = event.executeCount ?: 1
-            )
             throw RuntimeException("Start build Docker VM failed, no available VM ip.")
         }
 
