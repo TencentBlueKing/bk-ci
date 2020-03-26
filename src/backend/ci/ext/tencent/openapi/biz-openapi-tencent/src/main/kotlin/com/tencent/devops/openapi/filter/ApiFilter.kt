@@ -25,6 +25,7 @@
  */
 package com.tencent.devops.openapi.filter
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.service.utils.SpringContextUtil
@@ -54,6 +55,32 @@ class ApiFilter : ContainerRequestFilter {
 
     private val excludeVeritfyPath = listOf("swagger.json", "external/service/versionInfo")
 
+    override fun filter(requestContext: ContainerRequestContext) {
+        // path为为空的时候，直接退出
+        val path = requestContext.uriInfo.requestUri.path
+        logger.info("uriInfo uriInfo[$path]")
+        // 目录不是apigw的不做过滤
+        if (!path.startsWith("/api/apigw/") && !path.startsWith("/api/apigw-user/") && !path.startsWith("/api/apigw-app/")) {
+            return
+        }
+        if (!path.isNullOrBlank()) {
+            if (excludeVeritfyPath.contains(path)) {
+                logger.info("The path($path) already exclude")
+                return
+            }
+        }
+        val valid = verifyJWT(requestContext)
+        // 验证通过
+        if (!valid) {
+            requestContext.abortWith(
+                Response.status(Response.Status.BAD_REQUEST)
+                    .entity("Devops OpenAPI Auth fail：user or app auth fail.")
+                    .build()
+            )
+            return
+        }
+    }
+
     fun verifyJWT(requestContext: ContainerRequestContext): Boolean {
         val bkApiJwt = requestContext.getHeaderString("X-Bkapi-JWT")
         val apigwtType = requestContext.getHeaderString("X-DEVOPS-APIGW-TYPE")
@@ -79,8 +106,18 @@ class ApiFilter : ContainerRequestFilter {
             if (app.has("app_code")) {
                 val appCode = app.getString("app_code")
                 val verified = app.get("verified") as Boolean
-                if (appCode.isNullOrEmpty() || !verified) {
+                if (apigwtType == "apigw-app" && (appCode.isNullOrEmpty() || !verified)) {
                     return false
+                } else {
+                    if (!appCode.isNullOrBlank()) {
+                        // 将appCode头部置空
+                        requestContext.headers[AUTH_HEADER_DEVOPS_APP_CODE]?.set(0, null)
+                        if (requestContext.headers[AUTH_HEADER_DEVOPS_APP_CODE] != null) {
+                            requestContext.headers[AUTH_HEADER_DEVOPS_APP_CODE]?.set(0, appCode)
+                        } else {
+                            requestContext.headers.add(AUTH_HEADER_DEVOPS_APP_CODE, appCode)
+                        }
+                    }
                 }
             }
         }
@@ -94,7 +131,7 @@ class ApiFilter : ContainerRequestFilter {
                 val verified = user.get("verified") as Boolean
                 // 名字为空或者没有通过认证的时候，直接失败
                 if (username.isNotBlank() && verified) {
-                    // 将头部置空
+                    // 将user头部置空
                     requestContext.headers[AUTH_HEADER_DEVOPS_USER_ID]?.set(0, null)
                     if (requestContext.headers[AUTH_HEADER_DEVOPS_USER_ID] != null) {
                         requestContext.headers[AUTH_HEADER_DEVOPS_USER_ID]?.set(0, username)
@@ -110,26 +147,6 @@ class ApiFilter : ContainerRequestFilter {
             }
         }
         return true
-    }
-
-    override fun filter(requestContext: ContainerRequestContext) {
-        val path = requestContext.uriInfo?.path
-        if (!path.isNullOrBlank()) {
-            if (excludeVeritfyPath.contains(path)) {
-                logger.info("The path($path) already exclude")
-                return
-            }
-        }
-        val valid = verifyJWT(requestContext)
-        // 验证通过
-        if (!valid) {
-            requestContext.abortWith(
-                Response.status(Response.Status.BAD_REQUEST)
-                    .entity("Devops OpenAPI Auth fail：user or app auth fail.")
-                    .build()
-            )
-            return
-        }
     }
 
     private fun parseJwt(bkApiJwt: String, apigwtType: String?): JSONObject {
