@@ -26,4 +26,5 @@
 
 package com.tencent.devops.dispatch.exception
 
-open class DockerServiceException(val status: Int, message: String) : RuntimeException(message)
+open class DockerServiceException(message: String) : Exception(message) {
+}
