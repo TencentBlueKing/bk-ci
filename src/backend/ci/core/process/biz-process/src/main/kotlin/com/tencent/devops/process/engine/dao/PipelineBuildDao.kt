@@ -292,13 +292,13 @@ class PipelineBuildDao {
                 baseQuery = baseQuery.set(REMARK, remark)
             }
             if (errorType != null) {
-                val maxLength = ERROR_MSG.dataType.length()
-                val realErrorMsg = if (errorMsg != null && errorMsg.length > maxLength) {
-                    errorMsg.substring(0, maxLength - 1)
-                } else errorMsg
+//                val maxLength = ERROR_MSG.dataType.length()
+//                val realErrorMsg = if (errorMsg != null && errorMsg.length > maxLength) {
+//                    errorMsg.substring(0, maxLength - 1)
+//                } else errorMsg
                 baseQuery = baseQuery.set(ERROR_TYPE, errorType.ordinal)
                 baseQuery = baseQuery.set(ERROR_CODE, errorCode)
-                baseQuery = baseQuery.set(ERROR_MSG, realErrorMsg)
+                baseQuery = baseQuery.set(ERROR_MSG, errorMsg)
             }
             baseQuery.where(BUILD_ID.eq(buildId))
                 .execute()

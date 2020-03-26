@@ -104,7 +104,7 @@ class PipelineBuildTaskDao @Autowired constructor(private val objectMapper: Obje
         val records =
             mutableListOf<InsertSetMoreStep<TPipelineBuildTaskRecord>>()
         with(T_PIPELINE_BUILD_TASK) {
-            val maxLength = ERROR_MSG.dataType.length()
+//            val maxLength = ERROR_MSG.dataType.length()
             taskList.forEach {
                 records.add(
                     dslContext.insertInto(this)
@@ -133,9 +133,7 @@ class PipelineBuildTaskDao @Autowired constructor(private val objectMapper: Obje
                         } else null)
                         .set(ERROR_TYPE, it.errorType?.ordinal)
                         .set(ERROR_CODE, it.errorCode)
-                        .set(ERROR_MSG, if (it.errorMsg != null && it.errorMsg!!.length > maxLength) {
-                            it.errorMsg!!.substring(0, maxLength - 1)
-                        } else it.errorMsg)
+                        .set(ERROR_MSG,  it.errorMsg)
                         .set(CONTAINER_HASH_ID, it.containerHashId)
                 )
             }
@@ -263,13 +261,13 @@ class PipelineBuildTaskDao @Autowired constructor(private val objectMapper: Obje
                     update.set(STARTER, userId)
             }
             if (errorType != null) {
-                val maxLength = ERROR_MSG.dataType.length()
-                val realErrorMsg = if (errorMsg != null && errorMsg.length > maxLength && maxLength > 0) {
-                    errorMsg.substring(0, maxLength - 1)
-                } else errorMsg
+//                val maxLength = ERROR_MSG.dataType.length()
+//                val realErrorMsg = if (errorMsg != null && errorMsg.length > maxLength && maxLength > 0) {
+//                    errorMsg.substring(0, maxLength - 1)
+//                } else errorMsg
                 update.set(ERROR_TYPE, errorType.ordinal)
                 update.set(ERROR_CODE, errorCode)
-                update.set(ERROR_MSG, realErrorMsg)
+                update.set(ERROR_MSG, errorMsg)
             }
             update.where(BUILD_ID.eq(buildId)).and(TASK_ID.eq(taskId)).execute()
 
