@@ -15,13 +15,13 @@ import com.tencent.devops.dispatch.dao.PipelineDockerBuildDao
 import com.tencent.devops.dispatch.dao.PipelineDockerHostDao
 import com.tencent.devops.dispatch.dao.PipelineDockerIPInfoDao
 import com.tencent.devops.dispatch.dao.PipelineDockerTaskSimpleDao
+import com.tencent.devops.dispatch.exception.DockerServiceException
 import com.tencent.devops.dispatch.pojo.DockerHostBuildInfo
 import com.tencent.devops.dispatch.pojo.VolumeStatus
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.dispatch.pojo.redis.RedisBuild
 import com.tencent.devops.dispatch.utils.CommonUtils
 import com.tencent.devops.dispatch.utils.redis.RedisUtils
-import com.tencent.devops.log.utils.LogUtils
 import com.tencent.devops.model.dispatch.tables.records.TDispatchPipelineDockerIpInfoRecord
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
 import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
@@ -224,7 +224,7 @@ class DockerHostClient @Autowired constructor(
         }
 
         if (dockerIp == "") {
-            throw RuntimeException("Start build Docker VM failed, no available VM ip.")
+            throw DockerServiceException(500, "Start build Docker VM failed, no available VM ip.")
         }
 
         return dockerIp
