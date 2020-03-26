@@ -43,12 +43,16 @@ object SigarUtil {
     private val memQueue = ArrayDeque<Int>()
     private val cpuQueue = ArrayDeque<Int>()
     private val diskQueue = ArrayDeque<Int>()
+    private val diskIOQueue = ArrayDeque<Int>()
 
     private const val queueMaxSize = 20
 
     private var queueMemValueSum = 0
     private var queueCpuValueSum = 0
     private var queueDiskValueSum = 0
+    private var queueDiskIOValueSum = 0
+
+    private var lastTotalDiskBytes = 0L
 
     fun loadEnable(): Boolean {
         return try {
@@ -84,6 +88,14 @@ object SigarUtil {
         }
     }
 
+    fun getAverageDiskIOLoad(): Int {
+        return try {
+            queueDiskIOValueSum / diskIOQueue.size
+        } catch (e: Exception) {
+            0
+        }
+    }
+
     fun pushMem() {
         val element = getMemUsedPercent()
         if (memQueue.size >= queueMaxSize) {
@@ -105,13 +117,22 @@ object SigarUtil {
     }
 
     fun pushDisk() {
-        val element = getDiskUsedPercent()
+        val pair = getDiskUsedPercent()
+        val element = pair.first
         if (diskQueue.size >= queueMaxSize) {
             queueDiskValueSum -= diskQueue.pollLast()
         }
 
         diskQueue.push(element)
         queueDiskValueSum += element
+
+        val element2 = pair.second
+        if (diskIOQueue.size >= queueMaxSize) {
+            queueDiskIOValueSum -= diskIOQueue.pollLast()
+        }
+
+        diskIOQueue.push(element2)
+        queueDiskIOValueSum += element2
     }
 
     fun getMemQueue(): ArrayDeque<Int> {
@@ -148,18 +169,31 @@ object SigarUtil {
         }
     }
 
-    private fun getDiskUsedPercent(): Int {
-        val element = file()
+    private fun getDiskUsedPercent(): Pair<Int, Int> {
+        val pair = file()
+        var element = pair.first
+        val totalDiskBytes = pair.second
         logger.info("getDiskUsedPercent ==========>：$element")
-        return if (element in 0..100) {
-            element
-        } else {
-            0
+        logger.info("totalDiskBytes ==========>：$totalDiskBytes")
+        if (element !in 0..100) {
+            element = 0
         }
+
+        var element2 = 0
+        if (lastTotalDiskBytes != 0L) {
+            element2 = ((totalDiskBytes - lastTotalDiskBytes) / (10 * 1000).toDouble()).roundToInt()
+        }
+        lastTotalDiskBytes = totalDiskBytes
+
+        logger.info("lastTotalDiskBytes ==========>：$lastTotalDiskBytes")
+        logger.info("Disk io rate ==========>：$element2")
+
+        return Pair(element, element2)
     }
 
     @Throws(Exception::class)
-    private fun file(): Int {
+    private fun file(): Pair<Int, Long> {
+        var totalBytes = 0L
         var diskUsedPercent = 0
         val sigar = Sigar()
         val fslist: Array<FileSystem> = sigar.fileSystemList
@@ -185,13 +219,18 @@ object SigarUtil {
                     // 文件系统资源的利用率
                     logger.info(fs.devName.toString() + "资源的利用率:    " + usePercent + "%")
 
+                    logger.info(fs.devName.toString() + "磁盘读： " + usage.diskReadBytes + "||||" + usage.diskReads)
+                    logger.info(fs.devName.toString() + "磁盘写： " + usage.diskWriteBytes + "||||" + usage.diskWrites)
+                    logger.info(fs.devName.toString() + "磁盘读： " + usage.diskReadBytes + "||||" + usage.diskReads)
+
                     if (fs.dirName == "/data") {
                         diskUsedPercent = (usage.usePercent * 100).roundToInt()
+                        totalBytes += usage.diskReadBytes + usage.diskWriteBytes
                     }
                 }
             }
         }
 
-        return diskUsedPercent
+        return Pair(diskUsedPercent, totalBytes)
     }
 }

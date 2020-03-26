@@ -45,8 +45,7 @@ class DockerHostClient @Autowired constructor(
     private val pipelineDockerHostDao: PipelineDockerHostDao,
     private val redisUtils: RedisUtils,
     private val client: Client,
-    private val dslContext: DSLContext,
-    private val rabbitTemplate: RabbitTemplate
+    private val dslContext: DSLContext
 ) {
 
     companion object {
@@ -189,7 +188,7 @@ class DockerHostClient @Autowired constructor(
             } else {
                 val msg = response["message"] as String
                 logger.error("[${event.projectId}|${event.pipelineId}|${event.buildId}] End build Docker VM failed, msg: $msg")
-                throw RuntimeException("End build Docker VM failed, msg: $msg")
+                throw DockerServiceException("End build Docker VM failed, msg: $msg")
             }
         }
     }
@@ -293,7 +292,7 @@ class DockerHostClient @Autowired constructor(
                         )
 
                         logger.error("[${event.projectId}|${event.pipelineId}|${event.buildId}] Start build Docker VM failed, retry $retryTime times.")
-                        throw RuntimeException("Start build Docker VM failed, retry $retryTime times.")
+                        throw DockerServiceException("Start build Docker VM failed, retry $retryTime times.")
                     }
                 }
                 else -> {
@@ -305,7 +304,7 @@ class DockerHostClient @Autowired constructor(
                         event.vmSeqId,
                         VolumeStatus.FAILURE.status
                     )
-                    throw RuntimeException("Start build Docker VM failed, msg: $msg")
+                    throw DockerServiceException("Start build Docker VM failed, msg: $msg")
                 }
             }
         }
