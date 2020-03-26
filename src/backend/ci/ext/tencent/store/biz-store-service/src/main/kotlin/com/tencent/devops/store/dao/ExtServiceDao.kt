@@ -147,6 +147,12 @@ class ExtServiceDao {
             if (null != icon) {
                 baseStep.set(ICON, icon)
             }
+
+            val latest = extServiceUpdateInfo.latestFlag
+            if(null != latest) {
+                baseStep.set(LATEST_FLAG, latest)
+            }
+
             val publisher = extServiceUpdateInfo.publisher
             if (null != publisher) {
                 baseStep.set(PUBLISHER, publisher)

@@ -26,7 +26,7 @@ data class ExtServiceUpdateInfo(
     @ApiModelProperty("发布时间")
     val publishTime: Long? = 0,
     @ApiModelProperty("是否是最后版本")
-    val latestFlag: Boolean? = true,
+    val latestFlag: Boolean? = false,
     @ApiModelProperty("修改用户")
     val modifierUser: String
 )
