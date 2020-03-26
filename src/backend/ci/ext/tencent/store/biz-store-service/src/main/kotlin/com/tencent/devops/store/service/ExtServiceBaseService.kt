@@ -1327,7 +1327,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
             user = userId,
             projectCode = projectCode,
             serviceCode = bsProjectServiceCodec,
-            resourceType = AuthResourceType.PROJECT,
+            resourceType = AuthResourceType.PIPELINE_DEFAULT,
             resourceCode = "*",
             permission = AuthPermission.CREATE
         )
