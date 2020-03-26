@@ -31,8 +31,10 @@ import com.tencent.devops.dispatch.api.ServiceBcsResource
 import com.tencent.devops.dispatch.pojo.CreateBcsNameSpaceRequest
 import com.tencent.devops.dispatch.pojo.CreateImagePullSecretRequest
 import com.tencent.devops.dispatch.pojo.KubernetesLabel
+import com.tencent.devops.dispatch.pojo.KubernetesLimitRange
 import com.tencent.devops.dispatch.pojo.KubernetesRepo
 import com.tencent.devops.store.config.ExtServiceBcsConfig
+import com.tencent.devops.store.config.ExtServiceBcsLimitRangeConfig
 import com.tencent.devops.store.config.ExtServiceBcsNameSpaceConfig
 import com.tencent.devops.store.config.ExtServiceImageSecretConfig
 import org.slf4j.LoggerFactory
@@ -47,6 +49,7 @@ class ExtServiceBcsInitService @Autowired constructor(
     private val client: Client,
     private val extServiceBcsConfig: ExtServiceBcsConfig,
     private val extServiceBcsNameSpaceConfig: ExtServiceBcsNameSpaceConfig,
+    private val extServiceBcsLimitRangeConfig: ExtServiceBcsLimitRangeConfig,
     private val extServiceImageSecretConfig: ExtServiceImageSecretConfig
 ) {
 
@@ -63,6 +66,13 @@ class ExtServiceBcsInitService @Autowired constructor(
             kubernetesLabel = KubernetesLabel(
                 labelKey = extServiceBcsNameSpaceConfig.labelKey,
                 labelValue = extServiceBcsNameSpaceConfig.labelValue
+            ),
+            limitRangeInfo = KubernetesLimitRange(
+                defaultCpu = extServiceBcsLimitRangeConfig.defaultCpu,
+                defaultMemory = extServiceBcsLimitRangeConfig.defaultMemory,
+                defaultRequestCpu = extServiceBcsLimitRangeConfig.defaultRequestCpu,
+                defaultRequestMemory = extServiceBcsLimitRangeConfig.defaultRequestMemory,
+                limitType = extServiceBcsLimitRangeConfig.limitType
             )
         )
         // 创建已发布扩展服务版本的命名空间

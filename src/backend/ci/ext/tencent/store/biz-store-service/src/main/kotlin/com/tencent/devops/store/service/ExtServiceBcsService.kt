@@ -28,7 +28,6 @@ package com.tencent.devops.store.service
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.dispatch.api.ServiceBcsResource
 import com.tencent.devops.dispatch.pojo.AppDeployment
 import com.tencent.devops.dispatch.pojo.AppIngress
@@ -41,8 +40,6 @@ import com.tencent.devops.store.config.ExtServiceDeploymentConfig
 import com.tencent.devops.store.config.ExtServiceImageSecretConfig
 import com.tencent.devops.store.config.ExtServiceIngressConfig
 import com.tencent.devops.store.config.ExtServiceServiceConfig
-import com.tencent.devops.store.dao.common.StoreProjectRelDao
-import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -55,15 +52,6 @@ class ExtServiceBcsService {
 
     @Autowired
     private lateinit var client: Client
-
-    @Autowired
-    private lateinit var dslContext: DSLContext
-
-    @Autowired
-    private lateinit var redisOperation: RedisOperation
-
-    @Autowired
-    private lateinit var storeProjectRelDao: StoreProjectRelDao
 
     @Autowired
     private lateinit var extServiceBcsConfig: ExtServiceBcsConfig
@@ -161,7 +149,9 @@ class ExtServiceBcsService {
                 bcsUrl = extServiceBcsConfig.masterUrl,
                 token = extServiceBcsConfig.token,
                 grayNamespaceName = extServiceBcsNameSpaceConfig.grayNamespaceName,
+                grayHost = extServiceIngressConfig.grayHost,
                 namespaceName = extServiceBcsNameSpaceConfig.namespaceName,
+                host = extServiceIngressConfig.host,
                 deploymentName = serviceCode,
                 serviceName = "$serviceCode-service"
             )

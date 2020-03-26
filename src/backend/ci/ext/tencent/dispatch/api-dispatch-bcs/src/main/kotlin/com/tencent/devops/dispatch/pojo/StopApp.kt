@@ -35,8 +35,12 @@ data class StopApp(
     val token: String,
     @ApiModelProperty("k8s灰度命名空间名称", required = true)
     val grayNamespaceName: String,
+    @ApiModelProperty("灰度host", required = true)
+    val grayHost: String,
     @ApiModelProperty("k8s命名空间名称", required = true)
     val namespaceName: String,
+    @ApiModelProperty("host", required = true)
+    val host: String,
     @ApiModelProperty("deployment名称", required = true)
     val deploymentName: String,
     @ApiModelProperty("应用deployment", required = true)
