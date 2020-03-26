@@ -104,6 +104,7 @@ class DockerDispatcher @Autowired constructor(
 
             dockerHostClient.startBuild(pipelineAgentStartupEvent, dockerIp)
         } catch (e: RuntimeException) {
+            logger.error("[${pipelineAgentStartupEvent.projectId}|${pipelineAgentStartupEvent.pipelineId}|${pipelineAgentStartupEvent.buildId}] Start build Docker VM failed.", e.message)
             onFailBuild(client, rabbitTemplate, pipelineAgentStartupEvent, e.message!!)
         } catch (e: Exception) {
             logger.error("[${pipelineAgentStartupEvent.projectId}|${pipelineAgentStartupEvent.pipelineId}|${pipelineAgentStartupEvent.buildId}] Start build Docker VM failed.", e)
