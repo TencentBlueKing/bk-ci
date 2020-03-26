@@ -41,7 +41,7 @@ class ExtServiceResourceApi : AbstractBuildResourceApi() {
         version: String,
         updateExtServiceEnvInfo: UpdateExtServiceEnvInfoDTO
     ): Result<Boolean> {
-        val path = "/ms/dispatch/api/build/ext/services/env/projects/$projectCode/services/$serviceCode/versions/$version"
+        val path = "/ms/store/api/build/ext/services/env/projects/$projectCode/services/$serviceCode/versions/$version"
         val body = RequestBody.create(
             MediaType.parse("application/json; charset=utf-8"),
             objectMapper.writeValueAsString(updateExtServiceEnvInfo)
