@@ -24,16 +24,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":ext:tencent:common:common-digest-tencent")
-    compile project(":core:worker:worker-common")
-    compile project(":core:artifactory:api-artifactory-store")
-    compile project(":ext:tencent:common:common-archive-tencent")
-    compile project(":ext:tencent:common:common-pipeline-tencent")
-    compile project(":ext:tencent:store:api-store-service")
-    compile project(":ext:tencent:dispatch:api-dispatch-bcs")
-    compile group: 'me.cassiano', name: 'ktlint-html-reporter', version: '0.1.2'
-    compile group: 'com.github.shyiko', name: 'ktlint', version: '0.29.0'
-}
 
-apply from: "$rootDir/task_deploy_to_maven.gradle"
+package com.tencent.devops.store.pojo.dto
+
+import io.swagger.annotations.ApiModelProperty
+
+data class UpdateExtServiceEnvInfoDTO(
+    @ApiModelProperty("用户Id", required = true)
+    val userId: String,
+    @ApiModelProperty("扩展服务执行包路径")
+    val pkgPath: String? = null,
+    @ApiModelProperty("扩展服务执行包SHA签名串")
+    val pkgShaContent: String? = null,
+    @ApiModelProperty("dockefile内容")
+    val dockerFileContent: String? = null,
+    @ApiModelProperty("扩展服务镜像路径")
+    val imagePath: String? = null
+)

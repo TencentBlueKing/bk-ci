@@ -24,16 +24,40 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":ext:tencent:common:common-digest-tencent")
-    compile project(":core:worker:worker-common")
-    compile project(":core:artifactory:api-artifactory-store")
-    compile project(":ext:tencent:common:common-archive-tencent")
-    compile project(":ext:tencent:common:common-pipeline-tencent")
-    compile project(":ext:tencent:store:api-store-service")
-    compile project(":ext:tencent:dispatch:api-dispatch-bcs")
-    compile group: 'me.cassiano', name: 'ktlint-html-reporter', version: '0.1.2'
-    compile group: 'com.github.shyiko', name: 'ktlint', version: '0.29.0'
-}
+package com.tencent.devops.store.api
 
-apply from: "$rootDir/task_deploy_to_maven.gradle"
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.store.pojo.dto.UpdateExtServiceEnvInfoDTO
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.PUT
+import javax.ws.rs.Path
+import javax.ws.rs.PathParam
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
+
+@Api(tags = ["BUILD_EXTENSION_SERVICE_ENV"], description = "扩展服务-扩展服务执行环境")
+@Path("/build/ext/services/env/")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface BuildExtServiceEnvResource {
+
+    @ApiOperation("更新插件执行环境信息")
+    @PUT
+    @Path("/projects/{projectCode}/services/{serviceCode}/versions/{version}")
+    fun updateExtServiceEnv(
+        @ApiParam("项目代码", required = true)
+        @PathParam("projectCode")
+        projectCode: String,
+        @ApiParam("扩展服务代码", required = true)
+        @PathParam("serviceCode")
+        serviceCode: String,
+        @ApiParam("版本号", required = true)
+        @PathParam("version")
+        version: String,
+        @ApiParam(value = "更新扩展服务环境信息请求报文体", required = true)
+        updateExtServiceEnvInfo: UpdateExtServiceEnvInfoDTO
+    ): Result<Boolean>
+}

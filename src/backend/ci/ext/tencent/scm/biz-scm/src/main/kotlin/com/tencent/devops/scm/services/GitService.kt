@@ -483,8 +483,8 @@ class GitService @Autowired constructor(
             val data = response.body()!!.string()
             logger.info("createGitRepository token is:$token, response>> $data")
             val dataMap = JsonUtil.toMap(data)
-            val atomRepositoryUrl = dataMap["http_url_to_repo"]
-            if (StringUtils.isEmpty(atomRepositoryUrl)) {
+            val repositoryUrl = dataMap["http_url_to_repo"]
+            if (StringUtils.isEmpty(repositoryUrl)) {
                 val validateResult: Result<String?> = MessageCodeUtil.generateResponseDataObject(RepositoryMessageCode.USER_CREATE_GIT_CODE_REPOSITORY_FAIL)
                 logger.info("createOAuthCodeRepository validateResult>> $validateResult")
                 // 把工蜂的错误提示抛出去
@@ -497,10 +497,10 @@ class GitService @Autowired constructor(
                 addGitProjectMember(listOf(userId), nameSpaceName, GitAccessLevelEnum.MASTER, token, tokenType)
                 if (!sampleProjectPath.isNullOrBlank()) {
                     // 把样例工程代码添加到用户的仓库
-                    initRepositoryInfo(userId, sampleProjectPath!!, token, tokenType, repositoryName, atomRepositoryUrl as String)
+                    initRepositoryInfo(userId, sampleProjectPath!!, token, tokenType, repositoryName, repositoryUrl as String)
                 }
             }
-            return Result(GitRepositoryResp(nameSpaceName, atomRepositoryUrl as String))
+            return Result(GitRepositoryResp(nameSpaceName, repositoryUrl as String))
         }
     }
 
@@ -510,9 +510,9 @@ class GitService @Autowired constructor(
         token: String,
         tokenType: TokenTypeEnum,
         repositoryName: String,
-        atomRepositoryUrl: String
+        repositoryUrl: String
     ): Result<Boolean> {
-        logger.info("initRepositoryInfo userId is:$userId,sampleProjectPath is:$sampleProjectPath,atomRepositoryUrl is:$atomRepositoryUrl")
+        logger.info("initRepositoryInfo userId is:$userId,sampleProjectPath is:$sampleProjectPath,repositoryUrl is:$repositoryUrl")
         logger.info("initRepositoryInfo token is:$token,tokenType is:$tokenType,repositoryName is:$repositoryName")
         val atomTmpWorkspace = Files.createTempDirectory(repositoryName).toFile()
         logger.info("initRepositoryInfo atomTmpWorkspace is:${atomTmpWorkspace.absolutePath}")
@@ -534,7 +534,7 @@ class GitService @Autowired constructor(
             // 3、重新生成git信息
             CommonScriptUtils.execute("git init", atomFileDir)
             // 4、添加远程仓库
-            CommonScriptUtils.execute("git remote add origin ${credentialSetter.getCredentialUrl(atomRepositoryUrl)}", atomFileDir)
+            CommonScriptUtils.execute("git remote add origin ${credentialSetter.getCredentialUrl(repositoryUrl)}", atomFileDir)
             // 5、给文件添加git信息
             CommonScriptUtils.execute("git config user.email \"$gitPublicEmail\"", atomFileDir)
             CommonScriptUtils.execute("git config user.name \"$gitPublicAccount\"", atomFileDir)

@@ -77,7 +77,8 @@ class ExtServiceBcsService {
         version: String
     ): DeployApp {
         val imageName = "${extServiceImageSecretConfig.imageNamePrefix}$serviceCode"
-        val host = if (namespaceName == extServiceBcsNameSpaceConfig.grayNamespaceName) extServiceIngressConfig.grayHost else extServiceIngressConfig.host
+        val grayFlag = namespaceName == extServiceBcsNameSpaceConfig.grayNamespaceName
+        val host = if (grayFlag) extServiceIngressConfig.grayHost else extServiceIngressConfig.host
         return DeployApp(
             bcsUrl = extServiceBcsConfig.masterUrl,
             token = extServiceBcsConfig.token,
@@ -86,7 +87,7 @@ class ExtServiceBcsService {
             appDeployment = AppDeployment(
                 replicas = extServiceDeploymentConfig.replicas.toInt(),
                 image = "${extServiceImageSecretConfig.repoRegistryUrl}/$imageName:$version",
-                pullImageSecretName = extServiceDeploymentConfig.grayPullImageSecretName,
+                pullImageSecretName = if (grayFlag) extServiceDeploymentConfig.grayPullImageSecretName else extServiceDeploymentConfig.pullImageSecretName,
                 containerPort = extServiceDeploymentConfig.containerPort.toInt()
             ),
             appService = AppService(

@@ -24,7 +24,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.worker.common.api.atom
+package com.tencent.devops.worker.common.api.store
 
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.google.gson.JsonParser
@@ -45,6 +45,7 @@ import com.tencent.devops.worker.common.api.archive.ARCHIVE_PROPS_PIPELINE_ID
 import com.tencent.devops.worker.common.api.archive.ARCHIVE_PROPS_PROJECT_ID
 import com.tencent.devops.worker.common.api.archive.ARCHIVE_PROPS_SOURCE
 import com.tencent.devops.worker.common.api.archive.ARCHIVE_PROPS_USER_ID
+import com.tencent.devops.worker.common.api.atom.AtomArchiveSDKApi
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.utils.ArchiveUtils
 import okhttp3.MediaType
@@ -52,7 +53,8 @@ import okhttp3.RequestBody
 import java.io.File
 
 @ApiPriority(priority = 9)
-class TencentAtomArchiveResourceApi : AbstractBuildResourceApi(), AtomArchiveSDKApi {
+class TencentAtomArchiveResourceApi : AbstractBuildResourceApi(),
+    AtomArchiveSDKApi {
 
     /**
      * 获取原子信息
