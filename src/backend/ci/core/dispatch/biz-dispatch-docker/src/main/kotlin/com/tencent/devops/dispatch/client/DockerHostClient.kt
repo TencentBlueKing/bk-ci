@@ -200,11 +200,11 @@ class DockerHostClient @Autowired constructor(
         if (gray == "grayproject") {
             grayEnv = true
         }
-        logger.info("getAvailableDockerIp grayEnv: $grayEnv")
+
         var dockerIp = ""
         // 先判断是否OP已配置专机，若配置了专机，从列表中选择一个容量最小的
         val specialIpSet = pipelineDockerHostDao.getHostIps(dslContext, event.projectId).toSet()
-
+        logger.info("getAvailableDockerIp grayEnv: $grayEnv | $specialIpSet")
         // 先取容量负载比较小的，同时满足磁盘空间使用率小于60%并且内存CPU使用率均低于80%，从满足的节点中选择磁盘空间使用率最小的
         val firstDockerIpList = pipelineDockerIpInfoDao.getAvailableDockerIpList(dslContext, grayEnv, 80, 80, 60, specialIpSet)
         if (firstDockerIpList.isNotEmpty) {
