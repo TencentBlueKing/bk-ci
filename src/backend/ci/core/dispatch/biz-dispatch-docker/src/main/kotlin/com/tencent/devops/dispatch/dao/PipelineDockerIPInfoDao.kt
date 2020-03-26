@@ -48,6 +48,7 @@ class PipelineDockerIPInfoDao {
         cpuLoad: Int,
         memLoad: Int,
         diskLoad: Int,
+        diskIOLoad: Int,
         enable: Boolean
     ) {
         with(TDispatchPipelineDockerIpInfo.T_DISPATCH_PIPELINE_DOCKER_IP_INFO) {
@@ -57,6 +58,7 @@ class PipelineDockerIPInfoDao {
                 .set(CPU_LOAD, cpuLoad)
                 .set(MEM_LOAD, memLoad)
                 .set(DISK_LOAD, diskLoad)
+                .set(DISK_IO_LOAD, diskIOLoad)
                 .set(ENABLE, enable)
                 .set(GMT_MODIFIED, LocalDateTime.now())
                 .where(DOCKER_IP.eq(idcIp))
