@@ -35,6 +35,8 @@ import com.tencent.devops.model.process.tables.TPipelineBuildTask
 import com.tencent.devops.model.process.tables.records.TPipelineBuildTaskRecord
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.common.service.utils.CommonUtils
+import com.tencent.devops.process.utils.PIPELINE_MESSAGE_STRING_LENGTH_MAX
 import org.jooq.DSLContext
 import org.jooq.InsertSetMoreStep
 import org.jooq.Result
@@ -104,7 +106,6 @@ class PipelineBuildTaskDao @Autowired constructor(private val objectMapper: Obje
         val records =
             mutableListOf<InsertSetMoreStep<TPipelineBuildTaskRecord>>()
         with(T_PIPELINE_BUILD_TASK) {
-            val maxLength = ERROR_MSG.dataType.length()
             taskList.forEach {
                 records.add(
                     dslContext.insertInto(this)
@@ -133,9 +134,7 @@ class PipelineBuildTaskDao @Autowired constructor(private val objectMapper: Obje
                         } else null)
                         .set(ERROR_TYPE, it.errorType?.ordinal)
                         .set(ERROR_CODE, it.errorCode)
-                        .set(ERROR_MSG, if (it.errorMsg != null && it.errorMsg!!.length > maxLength) {
-                            it.errorMsg!!.substring(0, maxLength - 1)
-                        } else it.errorMsg)
+                        .set(ERROR_MSG, CommonUtils.interceptStringInLength(it.errorMsg, PIPELINE_MESSAGE_STRING_LENGTH_MAX))
                         .set(CONTAINER_HASH_ID, it.containerHashId)
                 )
             }
@@ -263,13 +262,9 @@ class PipelineBuildTaskDao @Autowired constructor(private val objectMapper: Obje
                     update.set(STARTER, userId)
             }
             if (errorType != null) {
-                val maxLength = ERROR_MSG.dataType.length()
-                val realErrorMsg = if (errorMsg != null && errorMsg.length > maxLength) {
-                    errorMsg.substring(0, maxLength - 1)
-                } else errorMsg
                 update.set(ERROR_TYPE, errorType.ordinal)
                 update.set(ERROR_CODE, errorCode)
-                update.set(ERROR_MSG, realErrorMsg)
+                update.set(ERROR_MSG, CommonUtils.interceptStringInLength(errorMsg, PIPELINE_MESSAGE_STRING_LENGTH_MAX))
             }
             update.where(BUILD_ID.eq(buildId)).and(TASK_ID.eq(taskId)).execute()
 
