@@ -13,6 +13,7 @@ class PipelineDockerTaskSimpleDao @Autowired constructor() {
     fun create(
         dslContext: DSLContext,
         pipelineId: String,
+        buildId: String,
         vmSeq: String,
         idcIp: String,
         status: Int
@@ -21,6 +22,7 @@ class PipelineDockerTaskSimpleDao @Autowired constructor() {
             dslContext.insertInto(
                 this,
                 PIPELINE_ID,
+                BUILD_ID,
                 VM_SEQ,
                 DOCKER_IP,
                 STATUS,
@@ -28,6 +30,7 @@ class PipelineDockerTaskSimpleDao @Autowired constructor() {
                 GMT_MODIFIED
             ).values(
                 pipelineId,
+                buildId,
                 vmSeq,
                 idcIp,
                 status,
@@ -98,13 +101,15 @@ class PipelineDockerTaskSimpleDao @Autowired constructor() {
         }
     }
 
-    fun getByPipelineId(
+    fun getByPipelineIdAndBuildId(
         dslContext: DSLContext,
-        pipelineId: String
+        pipelineId: String,
+        buildId: String
     ): Result<TDispatchPipelineDockerTaskSimpleRecord> {
         with(TDispatchPipelineDockerTaskSimple.T_DISPATCH_PIPELINE_DOCKER_TASK_SIMPLE) {
             return dslContext.selectFrom(this)
                 .where(PIPELINE_ID.eq(pipelineId))
+                .and(BUILD_ID.eq(buildId))
                 .fetch()
         }
     }

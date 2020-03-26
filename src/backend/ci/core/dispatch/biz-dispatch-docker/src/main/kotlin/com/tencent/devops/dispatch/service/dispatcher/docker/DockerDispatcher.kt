@@ -101,6 +101,7 @@ class DockerDispatcher @Autowired constructor(
                 pipelineDockerTaskSimpleDao.create(
                     dslContext,
                     pipelineAgentStartupEvent.pipelineId,
+                    pipelineAgentStartupEvent.buildId,
                     pipelineAgentStartupEvent.vmSeqId,
                     dockerIp,
                     VolumeStatus.RUNNING.status
@@ -111,7 +112,7 @@ class DockerDispatcher @Autowired constructor(
         } catch (e: DockerServiceException) {
             logger.error("[${pipelineAgentStartupEvent.projectId}|${pipelineAgentStartupEvent.pipelineId}|${pipelineAgentStartupEvent.buildId}] Start build Docker VM failed.", e)
             errorFlag = true
-            errorMsg = e.message!! + "==" + e.cause!!.message
+            errorMsg = e.message!!
         } catch (e: Exception) {
             logger.error("[${pipelineAgentStartupEvent.projectId}|${pipelineAgentStartupEvent.pipelineId}|${pipelineAgentStartupEvent.buildId}] Start build Docker VM failed.", e)
             errorFlag = true
@@ -136,12 +137,23 @@ class DockerDispatcher @Autowired constructor(
         val lock = DockerHostLock(redisOperation, pipelineAgentShutdownEvent.pipelineId)
         try {
             lock.lock()
-            val taskHistory = pipelineDockerTaskSimpleDao
-                .getByPipelineIdAndVMSeq(dslContext, pipelineAgentShutdownEvent.pipelineId, pipelineAgentShutdownEvent.vmSeqId!!)
-            if (taskHistory != null) {
-                dockerHostClient.endBuild(pipelineAgentShutdownEvent, taskHistory.dockerIp as String, taskHistory.containerId as String)
-                pipelineDockerTaskSimpleDao.updateStatus(dslContext, pipelineAgentShutdownEvent.pipelineId, pipelineAgentShutdownEvent.vmSeqId!!, VolumeStatus.FINISH.status)
+            if (pipelineAgentShutdownEvent.vmSeqId != null) {
+                val taskHistory = pipelineDockerTaskSimpleDao
+                    .getByPipelineIdAndVMSeq(dslContext, pipelineAgentShutdownEvent.pipelineId, pipelineAgentShutdownEvent.vmSeqId!!)
+                if (taskHistory != null) {
+                    dockerHostClient.endBuild(pipelineAgentShutdownEvent, taskHistory.dockerIp as String, taskHistory.containerId as String)
+                    pipelineDockerTaskSimpleDao.updateStatus(dslContext, pipelineAgentShutdownEvent.pipelineId, pipelineAgentShutdownEvent.vmSeqId!!, VolumeStatus.FINISH.status)
+                }
+            } else {
+                val taskHistoryList = pipelineDockerTaskSimpleDao.getByPipelineIdAndBuildId(dslContext, pipelineAgentShutdownEvent.pipelineId, pipelineAgentShutdownEvent.buildId)
+                taskHistoryList.forEach {
+                    dockerHostClient.endBuild(pipelineAgentShutdownEvent, it.dockerIp as String, it.containerId as String)
+                    if (it.status == VolumeStatus.RUNNING.status) {
+                        pipelineDockerTaskSimpleDao.updateStatus(dslContext, pipelineAgentShutdownEvent.pipelineId, it.vmSeq as String, VolumeStatus.FINISH.status)
+                    }
+                }
             }
+
         } catch (e: Exception) {
             logger.error("[${pipelineAgentShutdownEvent.projectId}|${pipelineAgentShutdownEvent.pipelineId}|${pipelineAgentShutdownEvent.buildId}] Shutdown Docker job failed. ", e)
         } finally {
