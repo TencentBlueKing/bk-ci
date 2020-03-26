@@ -255,7 +255,7 @@ class ExperienceAppService(
 
     fun transformLogoAddr(innerLogoAddr: String): String {
         return if (endpointUrl != null) {
-            innerLogoAddr.replace(endpointUrl, "${HomeHostUtil.outerServerHost()}/images")
+            innerLogoAddr.replace(endpointUrl?:"http://radosgw.open.oa.com", "${HomeHostUtil.outerServerHost()}/images")
         } else {
             innerLogoAddr
         }
