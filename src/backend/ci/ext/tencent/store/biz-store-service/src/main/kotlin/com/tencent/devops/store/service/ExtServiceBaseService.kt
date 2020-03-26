@@ -1335,7 +1335,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         if(projectInfo == null) {
             throw RuntimeException(MessageCodeUtil.getCodeLanMessage(StoreMessageCode.USER_SERVICE_PROJECT_UNENABLE))
         } else {
-            if(projectInfo.enableExternal == false) {
+            if(projectInfo.enabled == false) {
                 throw RuntimeException(MessageCodeUtil.getCodeLanMessage(StoreMessageCode.USER_SERVICE_PROJECT_UNENABLE))
             }
         }
