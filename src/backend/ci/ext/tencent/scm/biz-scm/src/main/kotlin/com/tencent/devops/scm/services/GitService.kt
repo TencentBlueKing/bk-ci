@@ -483,8 +483,8 @@ class GitService @Autowired constructor(
             val data = response.body()!!.string()
             logger.info("createGitRepository token is:$token, response>> $data")
             val dataMap = JsonUtil.toMap(data)
-            val atomRepositoryUrl = dataMap["http_url_to_repo"]
-            if (StringUtils.isEmpty(atomRepositoryUrl)) {
+            val repositoryUrl = dataMap["http_url_to_repo"]
+            if (StringUtils.isEmpty(repositoryUrl)) {
                 val validateResult: Result<String?> = MessageCodeUtil.generateResponseDataObject(RepositoryMessageCode.USER_CREATE_GIT_CODE_REPOSITORY_FAIL)
                 logger.info("createOAuthCodeRepository validateResult>> $validateResult")
                 // 把工蜂的错误提示抛出去
@@ -497,10 +497,10 @@ class GitService @Autowired constructor(
                 addGitProjectMember(listOf(userId), nameSpaceName, GitAccessLevelEnum.MASTER, token, tokenType)
                 if (!sampleProjectPath.isNullOrBlank()) {
                     // 把样例工程代码添加到用户的仓库
-                    initRepositoryInfo(userId, sampleProjectPath!!, token, tokenType, repositoryName, atomRepositoryUrl as String)
+                    initRepositoryInfo(userId, sampleProjectPath!!, token, tokenType, repositoryName, repositoryUrl as String)
                 }
             }
-            return Result(GitRepositoryResp(nameSpaceName, atomRepositoryUrl as String))
+            return Result(GitRepositoryResp(nameSpaceName, repositoryUrl as String))
         }
     }
 
