@@ -4,7 +4,7 @@ import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.model.store.tables.TExtensionServiceEnvInfo
 import com.tencent.devops.model.store.tables.records.TExtensionServiceEnvInfoRecord
 import com.tencent.devops.store.pojo.ExtServiceEnvCreateInfo
-import com.tencent.devops.store.pojo.ExtServiceEnvUpdateInfo
+import com.tencent.devops.store.pojo.dto.UpdateExtServiceEnvInfoDTO
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
@@ -49,33 +49,28 @@ class ExtServiceEnvDao {
 
     fun updateExtServiceEnvInfo(
         dslContext: DSLContext,
-        userId: String,
         serviceId: String,
-        extServiceEnvUpdateInfo: ExtServiceEnvUpdateInfo
+        updateExtServiceEnvInfo: UpdateExtServiceEnvInfoDTO
     ) {
         with(TExtensionServiceEnvInfo.T_EXTENSION_SERVICE_ENV_INFO) {
             val baseStep = dslContext.update(this)
-            val language = extServiceEnvUpdateInfo.language
-            if (null != language) {
-                baseStep.set(LANGUAGE, language)
-            }
-            val pkgPath = extServiceEnvUpdateInfo.pkgPath
+            val pkgPath = updateExtServiceEnvInfo.pkgPath
             if (null != pkgPath) {
                 baseStep.set(PKG_PATH, pkgPath)
             }
-            val pkgShaContent = extServiceEnvUpdateInfo.pkgShaContent
+            val pkgShaContent = updateExtServiceEnvInfo.pkgShaContent
             if (null != pkgShaContent) {
                 baseStep.set(PKG_SHA_CONTENT, pkgShaContent)
             }
-            val dockerFileContent = extServiceEnvUpdateInfo.dockerFileContent
+            val dockerFileContent = updateExtServiceEnvInfo.dockerFileContent
             if (null != dockerFileContent) {
                 baseStep.set(DOCKER_FILE_CONTENT, dockerFileContent)
             }
-            val imagePath = extServiceEnvUpdateInfo.imagePath
+            val imagePath = updateExtServiceEnvInfo.imagePath
             if (null != imagePath) {
                 baseStep.set(IMAGE_PATH, imagePath)
             }
-            baseStep.set(MODIFIER, userId).set(UPDATE_TIME, LocalDateTime.now())
+            baseStep.set(MODIFIER, updateExtServiceEnvInfo.userId).set(UPDATE_TIME, LocalDateTime.now())
                 .where(SERVICE_ID.eq(serviceId))
                 .execute()
         }

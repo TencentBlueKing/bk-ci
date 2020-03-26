@@ -37,15 +37,18 @@ import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.pipeline.element.market.ExtServiceBuildDeployElement
 import com.tencent.devops.common.pipeline.utils.ParameterUtils
 import com.tencent.devops.dockerhost.pojo.DockerBuildParam
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
+import com.tencent.devops.store.pojo.dto.UpdateExtServiceEnvInfoDTO
 import com.tencent.devops.worker.common.api.ApiFactory
 import com.tencent.devops.worker.common.api.archive.ArchiveSDKApi
 import com.tencent.devops.worker.common.api.dispatch.BcsResourceApi
+import com.tencent.devops.worker.common.api.store.ExtServiceResourceApi
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.task.ITask
 import com.tencent.devops.worker.common.task.TaskClassType
@@ -183,6 +186,36 @@ class ExtServiceBuildDeployTask : ITask() {
             )
         }
         LoggerService.addNormalLine("dockerBuildAndPushImage success")
+        val dockerfile = File(workspace, " Dockerfile")
+        if (!dockerfile.exists()) {
+            throw TaskExecuteException(
+                errorMsg = "Dockerfile is not exist",
+                errorType = ErrorType.SYSTEM,
+                errorCode = ErrorCode.SYSTEM_SERVICE_ERROR
+            )
+        }
+        val updateExtServiceEnvInfo = UpdateExtServiceEnvInfoDTO(
+            userId = userId,
+            pkgPath = destPath,
+            pkgShaContent = ShaUtils.sha1(file.readBytes()),
+            dockerFileContent = dockerfile.readText(),
+            imagePath = "$repoAddr/$imageName:$imageTag"
+        )
+        val updateExtServiceEnvInfoResult = ExtServiceResourceApi().updateExtServiceEnv(
+            buildVariables.projectId,
+            serviceCode,
+            serviceVersion,
+            updateExtServiceEnvInfo
+        )
+        if (updateExtServiceEnvInfoResult.isOk()) {
+            LoggerService.addNormalLine("update extService env ok!")
+        } else {
+            throw TaskExecuteException(
+                errorMsg = "update extService env fail: ${updateExtServiceEnvInfoResult.message}",
+                errorType = ErrorType.SYSTEM,
+                errorCode = ErrorCode.SYSTEM_SERVICE_ERROR
+            )
+        }
         // 开始部署扩展服务
         LoggerService.addNormalLine("start deploy extService:$serviceCode(version:$serviceVersion)")
         val deployAppResult = BcsResourceApi().deployApp(
