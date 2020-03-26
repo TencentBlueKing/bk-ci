@@ -32,6 +32,7 @@ import org.hyperic.sigar.Sigar
 import org.slf4j.LoggerFactory
 import java.io.InputStreamReader
 import java.io.LineNumberReader
+import java.nio.charset.Charset
 import java.util.ArrayDeque
 import kotlin.math.roundToInt
 
@@ -238,20 +239,13 @@ object SigarUtil {
      * @return 字符串结果
      */
     private fun runCommand(CMD: String): String? {
-        var info = StringBuilder()
         try {
             val pos = Runtime.getRuntime().exec(CMD)
             pos.waitFor()
-            val isr = InputStreamReader(pos.inputStream)
-            val lnr = LineNumberReader(isr)
-            while (lnr.readLine() != null) {
-                info.append(lnr.readLine()).append("\n")
-                logger.info(lnr.readLine())
-            }
+            return pos.inputStream.readBytes().toString(Charset.defaultCharset())
         } catch (e: Exception) {
             logger.error("runCommand error.", e)
-            info = StringBuilder(e.toString())
+            return ""
         }
-        return info.toString()
     }
 }
