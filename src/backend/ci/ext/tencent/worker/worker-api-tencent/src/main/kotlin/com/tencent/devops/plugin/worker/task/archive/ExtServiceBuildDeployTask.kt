@@ -186,7 +186,7 @@ class ExtServiceBuildDeployTask : ITask() {
             )
         }
         LoggerService.addNormalLine("dockerBuildAndPushImage success")
-        val dockerfile = File(workspace, " Dockerfile")
+        val dockerfile = File(workspace, "Dockerfile")
         if (!dockerfile.exists()) {
             throw TaskExecuteException(
                 errorMsg = "Dockerfile is not exist",
