@@ -14,10 +14,13 @@ import com.tencent.devops.store.dao.common.ReasonDao
 import com.tencent.devops.store.dao.common.ReasonRelDao
 import com.tencent.devops.store.dao.common.StoreMemberDao
 import com.tencent.devops.store.dao.common.StoreProjectRelDao
+import com.tencent.devops.store.pojo.ExtServiceItem
 import com.tencent.devops.store.pojo.common.InstalledProjRespItem
 import com.tencent.devops.store.pojo.common.UnInstallReq
 import com.tencent.devops.store.pojo.common.enums.ReasonTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.pojo.enums.ExtServiceStatusEnum
+import com.tencent.devops.store.pojo.vo.ExtServiceRespItem
 import com.tencent.devops.store.service.common.StoreProjectService
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -26,6 +29,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.util.StopWatch
 import java.lang.RuntimeException
+import java.time.LocalDateTime
 
 @Service
 class ExtServiceProjectService @Autowired constructor(
@@ -113,6 +117,35 @@ class ExtServiceProjectService @Autowired constructor(
         watch.stop()
         logger.info("getInstalledProjects:watch:$watch")
         return Result(result)
+    }
+
+    fun getServiceByProjectCode(projectCode: String): Result<List<ExtServiceRespItem>> {
+        val projectRelRecords = storeProjectRelDao.getInstalledComponent(dslContext, projectCode, StoreTypeEnum.SERVICE.type.toByte(), 0, 100)
+            ?: return Result(emptyList<ExtServiceRespItem>())
+        val serviceRecords = mutableListOf<ExtServiceRespItem>()
+        projectRelRecords.forEach {
+            val serviceRecord = extServiceDao.getServiceLatestByCode(dslContext, it.storeCode)
+            serviceRecords?.add(
+                ExtServiceRespItem(
+                    serviceId = serviceRecord!!.id,
+                    serviceName = serviceRecord.serviceName,
+                    serviceCode = serviceRecord.serviceCode,
+                    language = "",
+                    category = "",
+                    version = serviceRecord.version,
+                    logoUrl = serviceRecord.logoUrl,
+                    serviceStatus = ExtServiceStatusEnum.getServiceStatus(serviceRecord.serviceStatus.toInt()),
+                    projectName = projectCode,
+                    creator = serviceRecord.creator,
+                    releaseFlag = true,
+                    modifier = serviceRecord.modifier,
+                    itemName = "",
+                    createTime = DateTimeUtil.toDateTime(serviceRecord.createTime as LocalDateTime),
+                    updateTime = DateTimeUtil.toDateTime(serviceRecord.updateTime as LocalDateTime)
+                )
+            )
+        }
+        return Result(serviceRecords)
     }
 
     // 卸载扩展
