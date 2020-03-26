@@ -144,6 +144,12 @@ object SigarUtil {
     private fun getMemUsedPercent(): Int {
         val sigar = Sigar()
         val mem = sigar.mem
+        logger.info("usedPercent: " + mem.usedPercent)
+        logger.info("used: " + mem.used)
+        logger.info("total: " + mem.total)
+        logger.info("actualUsed: " + mem.actualUsed)
+        logger.info("actualFree: " + mem.actualFree)
+        logger.info("free: " + mem.free)
         val element = (mem.usedPercent).roundToInt()
         return if (element in 0..100) {
             element
@@ -209,22 +215,6 @@ object SigarUtil {
                     logger.info("盘符名称:    " + fs.devName)
                     // 分区的盘符名称
                     logger.info("盘符路径:    " + fs.dirName)
-                    // 文件系统总大小
-                    logger.info(fs.devName.toString() + "总大小:    " + usage.total + "KB")
-                    // 文件系统剩余大小
-                    logger.info(fs.devName.toString() + "剩余大小:    " + usage.free + "KB")
-                    // 文件系统可用大小
-                    logger.info(fs.devName.toString() + "可用大小:    " + usage.avail + "KB")
-                    // 文件系统已经使用量
-                    logger.info(fs.devName.toString() + "已经使用量:    " + usage.used + "KB")
-                    val usePercent = usage.usePercent * 100
-                    // 文件系统资源的利用率
-                    logger.info(fs.devName.toString() + "资源的利用率:    " + usePercent + "%")
-
-                    logger.info(fs.devName.toString() + "磁盘读： " + usage.diskReadBytes + "||||" + usage.diskReads)
-                    logger.info(fs.devName.toString() + "磁盘写： " + usage.diskWriteBytes + "||||" + usage.diskWrites)
-                    logger.info(fs.devName.toString() + "磁盘读： " + usage.diskReadBytes + "||||" + usage.diskReads)
-
                     if (fs.dirName == "/data") {
                         diskUsedPercent = (usage.usePercent * 100).roundToInt()
                         totalBytes += usage.diskReadBytes + usage.diskWriteBytes
@@ -256,6 +246,7 @@ object SigarUtil {
             val lnr = LineNumberReader(isr)
             while (lnr.readLine() != null) {
                 info.append(lnr.readLine()).append("\n")
+                logger.info(lnr.readLine())
             }
         } catch (e: Exception) {
             logger.error("runCommand error.", e)
