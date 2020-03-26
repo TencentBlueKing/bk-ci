@@ -200,6 +200,7 @@ class DockerHostClient @Autowired constructor(
         if (gray == "grayproject") {
             grayEnv = true
         }
+        logger.info("getAvailableDockerIp grayEnv: $grayEnv")
         var dockerIp = ""
         // 先判断是否OP已配置专机，若配置了专机，从列表中选择一个容量最小的
         val specialIpSet = pipelineDockerHostDao.getHostIps(dslContext, event.projectId).toSet()
