@@ -46,7 +46,7 @@ class ExtServiceResourceApi : AbstractBuildResourceApi() {
             MediaType.parse("application/json; charset=utf-8"),
             objectMapper.writeValueAsString(updateExtServiceEnvInfo)
         )
-        val request = buildPost(path, body)
+        val request = buildPut(path, body)
         val responseContent = request(request, "updateExtServiceEnv fail")
         return objectMapper.readValue(responseContent)
     }
