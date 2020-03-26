@@ -26,6 +26,7 @@
 
 package com.tencent.devops.dispatch.service.dispatcher.docker
 
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.dispatch.client.DockerHostClient
@@ -46,6 +47,7 @@ import org.springframework.stereotype.Component
 
 @Component
 class DockerDispatcher @Autowired constructor(
+    private val client: Client,
     private val rabbitTemplate: RabbitTemplate,
     private val dockerHostBuildService: DockerHostBuildService,
     private val dockerHostClient: DockerHostClient,
@@ -72,40 +74,41 @@ class DockerDispatcher @Autowired constructor(
             pipelineAgentStartupEvent.containerHashId,
             pipelineAgentStartupEvent.executeCount ?: 1
         )
+        try {
+            val taskHistory = pipelineDockerTaskSimpleDao.getByPipelineIdAndVMSeq(dslContext, pipelineAgentStartupEvent.pipelineId, pipelineAgentStartupEvent.vmSeqId)
+            var dockerIp: String
+            if (taskHistory != null) {
+                dockerIp = taskHistory.dockerIp
+                // 查看当前IP负载情况，当前IP负载未超额（内存低于90%且硬盘低于90%），可直接下发，当负载超额，重新选择构建机
+                val ipInfo = pipelineDockerIpInfoDao.getDockerIpInfo(dslContext, dockerIp)
+                if (ipInfo.diskLoad > 90 || ipInfo.memLoad > 90) {
+                    dockerIp = dockerHostClient.getAvailableDockerIp(pipelineAgentStartupEvent)
+                    pipelineDockerTaskSimpleDao.updateDockerIp(dslContext, pipelineAgentStartupEvent.pipelineId, pipelineAgentStartupEvent.vmSeqId, dockerIp)
+                    logger.info("${pipelineAgentStartupEvent.pipelineId}|${pipelineAgentStartupEvent.buildId}|${pipelineAgentStartupEvent.vmSeqId}| origin host: ${taskHistory.dockerIp} " +
+                            "overload, DiskLoad: ${ipInfo.diskLoad}|MemLoad: ${ipInfo.memLoad}, switch to new host: $dockerIp")
+                }
 
-        val taskHistory = pipelineDockerTaskSimpleDao.getByPipelineIdAndVMSeq(dslContext, pipelineAgentStartupEvent.pipelineId, pipelineAgentStartupEvent.vmSeqId)
-        var dockerIp: String
-        if (taskHistory != null) {
-            dockerIp = taskHistory.dockerIp
-            // 查看当前IP负载情况，当前IP负载未超额（内存低于90%且硬盘低于90%），可直接下发，当负载超额，重新选择构建机
-            val ipInfo = pipelineDockerIpInfoDao.getDockerIpInfo(dslContext, dockerIp)
-            if (ipInfo.diskLoad > 90 || ipInfo.memLoad > 90) {
+                // 更新状态running
+                pipelineDockerTaskSimpleDao.updateStatus(dslContext, pipelineAgentStartupEvent.pipelineId, pipelineAgentStartupEvent.vmSeqId, VolumeStatus.RUNNING.status)
+            } else {
                 dockerIp = dockerHostClient.getAvailableDockerIp(pipelineAgentStartupEvent)
-                pipelineDockerTaskSimpleDao.updateDockerIp(dslContext, pipelineAgentStartupEvent.pipelineId, pipelineAgentStartupEvent.vmSeqId, dockerIp)
-                logger.info("${pipelineAgentStartupEvent.pipelineId}|${pipelineAgentStartupEvent.buildId}|${pipelineAgentStartupEvent.vmSeqId}| origin host: ${taskHistory.dockerIp} " +
-                        "overload, DiskLoad: ${ipInfo.diskLoad}|MemLoad: ${ipInfo.memLoad}, switch to new host: $dockerIp")
+
+                pipelineDockerTaskSimpleDao.create(
+                    dslContext,
+                    pipelineAgentStartupEvent.pipelineId,
+                    pipelineAgentStartupEvent.vmSeqId,
+                    dockerIp,
+                    VolumeStatus.RUNNING.status
+                )
             }
 
-            // 更新状态running
-            pipelineDockerTaskSimpleDao.updateStatus(dslContext, pipelineAgentStartupEvent.pipelineId, pipelineAgentStartupEvent.vmSeqId, VolumeStatus.RUNNING.status)
-        } else {
-            dockerIp = dockerHostClient.getAvailableDockerIp(pipelineAgentStartupEvent)
-
-            pipelineDockerTaskSimpleDao.create(
-                dslContext,
-                pipelineAgentStartupEvent.pipelineId,
-                pipelineAgentStartupEvent.vmSeqId,
-                dockerIp,
-                VolumeStatus.RUNNING.status
-            )
-        }
-
-        try {
             dockerHostClient.startBuild(pipelineAgentStartupEvent, dockerIp)
+        } catch (e: RuntimeException) {
+            onFailBuild(client, rabbitTemplate, pipelineAgentStartupEvent, e.message!!)
         } catch (e: Exception) {
             logger.error("[${pipelineAgentStartupEvent.projectId}|${pipelineAgentStartupEvent.pipelineId}|${pipelineAgentStartupEvent.buildId}] Start build Docker VM failed.", e)
             pipelineDockerTaskSimpleDao.updateStatus(dslContext, pipelineAgentStartupEvent.pipelineId, pipelineAgentStartupEvent.vmSeqId, VolumeStatus.FAILURE.status)
-            throw RuntimeException(e.message)
+            onFailBuild(client, rabbitTemplate, pipelineAgentStartupEvent, "Start build Docker VM failed.")
         }
     }
 
