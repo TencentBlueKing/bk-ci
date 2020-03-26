@@ -50,6 +50,7 @@ import com.tencent.devops.dispatch.dao.PipelineDockerTaskDao
 import com.tencent.devops.dispatch.pojo.ContainerInfo
 import com.tencent.devops.dispatch.pojo.DockerHostBuildInfo
 import com.tencent.devops.dispatch.pojo.DockerHostInfo
+import com.tencent.devops.dispatch.pojo.enums.DockerHostType
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.dispatch.pojo.redis.RedisBuild
 import com.tencent.devops.dispatch.utils.CommonUtils
@@ -173,25 +174,30 @@ class DockerHostBuildService @Autowired constructor(
             }
 
             // 如果固定构建机的表中设置了该项目的母机IP，则把该母机IP也写入dockerTask表
-            val dockerHost = pipelineDockerHostDao.getHost(dslContext, event.projectId)
+//            val dockerHost = pipelineDockerHostDao.getHost(dslContext, event.projectId)
+//            val lastHostIp = redisUtils.getDockerBuildLastHost(event.pipelineId, event.vmSeqId)
+//            val hostTag = when {
+//                null != dockerHost -> {
+//                    logger.info("Fixed build host machine, hostIp:${dockerHost.hostIp}")
+//                    dockerHost.hostIp
+//                }
+//                null != lastHostIp -> {
+//                    logger.info("Use last build hostIp: $lastHostIp")
+//                    val lastHostZone = pipelineDockerHostZoneDao.getHostZone(dslContext, lastHostIp)
+//                    if (null != lastHostZone && (event.zone != Zone.valueOf(lastHostZone.zone))) {
+//                        logger.info("Last build hostIp zone is different with buildMessage.zone, so clean hostTag")
+//                        ""
+//                    } else {
+//                        lastHostIp
+//                    }
+//                }
+//                else -> ""
+//            }
+            // 当专用构建机不允许柔性处理，只能使用专用的构建机进行处理
+            val dockerHosts = pipelineDockerHostDao.getHostIps(dslContext, event.projectId)
             val lastHostIp = redisUtils.getDockerBuildLastHost(event.pipelineId, event.vmSeqId)
-            val hostTag = when {
-                null != dockerHost -> {
-                    logger.info("Fixed build host machine, hostIp:${dockerHost.hostIp}")
-                    dockerHost.hostIp
-                }
-                null != lastHostIp -> {
-                    logger.info("Use last build hostIp: $lastHostIp")
-                    val lastHostZone = pipelineDockerHostZoneDao.getHostZone(dslContext, lastHostIp)
-                    if (null != lastHostZone && (event.zone != Zone.valueOf(lastHostZone.zone))) {
-                        logger.info("Last build hostIp zone is different with buildMessage.zone, so clean hostTag")
-                        ""
-                    } else {
-                        lastHostIp
-                    }
-                }
-                else -> ""
-            }
+            val hostTag =
+                DockerUtils.getDockerHostIp(dockerHosts = dockerHosts, lastHostIp = lastHostIp, buildId = event.buildId)
 
             pipelineDockerTaskDao.insertTask(
                 dslContext = context,
@@ -503,12 +509,22 @@ class DockerHostBuildService @Autowired constructor(
             redisLock.lock()
             val unclaimedTask = pipelineDockerTaskDao.getUnclaimedHostTask(dslContext)
             if (unclaimedTask.isNotEmpty) {
+                val dockhostCache = mutableMapOf<String, Set<String>>()
                 logger.info("There is ${unclaimedTask.size} build task have/has queued for a long time, clear hostTag.")
                 for (i in unclaimedTask.indices) {
-                    logger.info("clear hostTag, pipelineId:(${unclaimedTask[i].pipelineId}), vmSeqId:(${unclaimedTask[i].vmSeqId}), buildId: ${unclaimedTask[i].buildId} ")
-                    redisUtils.deleteDockerBuildLastHost(unclaimedTask[i].pipelineId, unclaimedTask[i].vmSeqId.toString())
+                    val set = dockhostCache.computeIfAbsent(unclaimedTask[i].projectId) {
+                        pipelineDockerHostDao.getHostIps(dslContext, unclaimedTask[i].projectId).toSet()
+                    }
+                    // 在专用构建机列表的不做重置，让其仍然继续等待认领
+                    if (!set.contains(unclaimedTask[i].hostTag)) {
+                        logger.info("[${unclaimedTask[i].buildId}]|clear hostTag, pipelineId:(${unclaimedTask[i].pipelineId}), vmSeqId:(${unclaimedTask[i].vmSeqId})")
+                        pipelineDockerTaskDao.clearHostTagForUnclaimedHostTask(dslContext, unclaimedTask[i].buildId, unclaimedTask[i].vmSeqId)
+                        redisUtils.deleteDockerBuildLastHost(
+                            pipelineId = unclaimedTask[i].pipelineId,
+                            vmSeqId = unclaimedTask[i].vmSeqId.toString()
+                        )
+                    }
                 }
-                pipelineDockerTaskDao.clearHostTagForUnclaimedHostTask(dslContext)
             }
         } finally {
             redisLock.unlock()
@@ -592,17 +608,18 @@ class DockerHostBuildService @Autowired constructor(
             logger.info("[${event.buildId}]|BUILD_LESS| Docker images is: $dockerImage")
 
             // 查找专用机 和 最近一次构建分配的机器
-            val dockerHost = pipelineDockerHostDao.getHost(dslContext, event.projectId)
-            val hostTag = if (dockerHost != null) {
-                logger.info("[${event.buildId}]|BUILD_LESS| Fixed build host machine, hostIp:${dockerHost.hostIp}")
-                dockerHost.hostIp
-            } else {
-                ""
-            }
+            val dockerHost = pipelineDockerHostDao.getHostIps(
+                dslContext = dslContext, projectId = event.projectId, type = DockerHostType.BUILD_LESS
+            )
+            val hostTag = DockerUtils.getDockerHostIp(
+                dockerHosts = dockerHost,
+                lastHostIp = null,
+                buildId = event.buildId
+            )
 
             // 根据机器IP 查找出路由Key
             val hostZone =
-                if (hostTag.isNullOrBlank()) {
+                if (hostTag.isBlank()) {
                     // 从相同区域中找出一台主机，获得他的信息
                     pipelineDockerHostZoneDao.getOneHostZoneByZone(dslContext, zone)
                 } else {

@@ -97,6 +97,8 @@ interface ScmWebhookMatcher {
         val repositoryConfig: RepositoryConfig,
         var branchName: String? = null,
         var excludeBranchName: String? = null,
+        var tagName: String? = null,
+        var excludeTagName: String? = null,
         var includePaths: String? = null,
         var excludePaths: String? = null,
         var eventType: CodeEventType? = null,

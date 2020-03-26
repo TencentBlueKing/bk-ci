@@ -111,8 +111,13 @@ class ServiceBuildResourceImpl @Autowired constructor(
         return Result(
             BuildId(
                 buildService.buildManualStartup(
-                    userId, StartType.SERVICE,
-                    projectId, pipelineId, values, channelCode, ChannelCode.isNeedAuth(channelCode)
+                    userId = userId,
+                    startType = StartType.SERVICE,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    values = values,
+                    channelCode = channelCode,
+                    checkPermission = ChannelCode.isNeedAuth(channelCode)
                 )
             )
         )

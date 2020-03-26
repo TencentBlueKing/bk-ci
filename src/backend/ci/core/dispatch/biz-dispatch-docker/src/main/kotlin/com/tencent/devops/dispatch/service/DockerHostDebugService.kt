@@ -41,6 +41,7 @@ import com.tencent.devops.dispatch.pojo.ContainerInfo
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.dispatch.utils.CommonUtils
 import com.tencent.devops.dispatch.utils.DockerHostDebugLock
+import com.tencent.devops.dispatch.utils.DockerUtils
 import com.tencent.devops.dispatch.utils.redis.RedisUtils
 import com.tencent.devops.store.pojo.image.exception.UnknownImageType
 import com.tencent.devops.store.pojo.image.response.ImageRepoInfo
@@ -141,19 +142,23 @@ class DockerHostDebugService @Autowired constructor(
             password = ticketsMap["v2"] as String
         }
 
-        val dockerHost = pipelineDockerHostDao.getHost(dslContext, projectId)
+//        val dockerHost = pipelineDockerHostDao.getHost(dslContext, projectId)
+//        val lastHostIp = redisUtils.getDockerBuildLastHost(pipelineId, vmSeqId)
+//        val hostTag = when {
+//            null != dockerHost -> {
+//                logger.info("Fixed debug host machine, hostIp:${dockerHost.hostIp}, pipelineId:$pipelineId")
+//                dockerHost.hostIp
+//            }
+//            null != lastHostIp -> {
+//                logger.info("Use last build hostIp: $lastHostIp, pipelineId:$pipelineId")
+//                lastHostIp
+//            }
+//            else -> ""
+//        }
+        val dockerHosts = pipelineDockerHostDao.getHostIps(dslContext, projectId)
         val lastHostIp = redisUtils.getDockerBuildLastHost(pipelineId, vmSeqId)
-        val hostTag = when {
-            null != dockerHost -> {
-                logger.info("Fixed debug host machine, hostIp:${dockerHost.hostIp}, pipelineId:$pipelineId")
-                dockerHost.hostIp
-            }
-            null != lastHostIp -> {
-                logger.info("Use last build hostIp: $lastHostIp, pipelineId:$pipelineId")
-                lastHostIp
-            }
-            else -> ""
-        }
+        val hostTag =
+            DockerUtils.getDockerHostIp(dockerHosts = dockerHosts, lastHostIp = lastHostIp, buildId = "debug_")
 
         pipelineDockerDebugDao.insertDebug(
             dslContext = dslContext,
@@ -338,6 +343,7 @@ class DockerHostDebugService @Autowired constructor(
         }
     }
 
+    // FIXME 需要记录如果是从某个构建ID启动的调试必须不允许漂移，另起issue处理
     @Scheduled(initialDelay = 90 * 1000, fixedDelay = 60 * 1000)
     fun resetHostTag() {
         val redisLock = DockerHostDebugLock(redisOperation)

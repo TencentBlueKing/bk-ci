@@ -99,8 +99,8 @@ object StoreMessageCode {
     const val USER_SERVICE_VERSION_IS_NOT_FINISH = "2120404" // 研发商店：扩展服务{0}的{1}版本发布未结束，请稍后再试
     const val USER_SERVICE_CODE_DIFF = "2120405" // 研发商店：扩展编码与extension.json文件内编码不一致
     const val USER_SERVICE_RELEASE_STEPS_ERROR = "2120406" // 研发商店：扩展服务发布流程状态变更顺序不正确
-
-
+    const val USER_SERVICE_PROJECT_UNENABLE = "2120407" // 研发商店：选中调试项目已被禁用
+    const val USER_SERVICE_PROJECT_NOT_PERMISSION = "2120408" // 研发商店：选中调试项目无权限
 
     // store公共业务相关的错误提示
     const val USER_PRAISE_IS_INVALID = "2120901" // 研发商店：你已点赞过

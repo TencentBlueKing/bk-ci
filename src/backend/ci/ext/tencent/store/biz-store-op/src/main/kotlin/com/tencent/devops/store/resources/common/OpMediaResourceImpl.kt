@@ -17,9 +17,10 @@ class OpMediaResourceImpl @Autowired constructor(
     override fun createStoreMedia(
         userId: String,
         storeCode: String,
-        labelType: StoreTypeEnum,
+        storeType: StoreTypeEnum,
         mediaInfoList: List<MediaInfoReq>
     ): Result<Boolean> {
+        storeMediaService.deleteByStoreCode(userId, storeCode, storeType)
         mediaInfoList.forEach {
             val storeMediaInfoRequest = StoreMediaInfoRequest(
                 storeCode = storeCode,
@@ -29,7 +30,7 @@ class OpMediaResourceImpl @Autowired constructor(
             )
             storeMediaService.add(
                 userId = userId,
-                type = labelType,
+                type = storeType,
                 storeMediaInfo = storeMediaInfoRequest
             )
         }

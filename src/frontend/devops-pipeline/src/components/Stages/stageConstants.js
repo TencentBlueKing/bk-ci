@@ -63,50 +63,6 @@ export const ICON_MAP = {
     wetestElement: 'wetest'
 }
 
-const PIPELINE_STATUS = [
-    {
-        status: 'RUNNING',
-        name: '',
-        icon: '',
-        color: ''
-    },
-    {
-        status: 'PREPARE_ENV',
-        name: '',
-        icon: '',
-        color: ''
-    },
-    {
-        status: 'WAITING',
-        name: '',
-        icon: '',
-        color: ''
-    },
-    {
-        status: 'CANCELED',
-        name: '',
-        icon: '',
-        color: ''
-    },
-    {
-        status: 'FAILED',
-        name: '',
-        icon: '',
-        color: ''
-    },
-    {
-        status: 'SUCCEED',
-        name: '',
-        icon: '',
-        color: ''
-    },
-    {
-        status: 'HEARTBEAT_TIMEOUT',
-        name: '',
-        icon: '',
-        color: ''
-    }
-]
 export function getIconByType (type) {
     return ICON_MAP[type] || 'order'
 }

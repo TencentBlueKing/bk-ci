@@ -26,6 +26,7 @@
 
 package com.tencent.devops.process.engine.dao
 
+import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.BuildNo
 import com.tencent.devops.model.process.Tables.T_PIPELINE_BUILD_SUMMARY
@@ -305,6 +306,34 @@ class PipelineBuildSummaryDao {
                         .set(RUNNING_COUNT, RUNNING_COUNT - 1)
                         .where(PIPELINE_ID.eq(pipelineId)).execute()
                 }
+            }
+        }
+    }
+
+    /**
+     * 4：正在队列中运行的数量刷新
+     */
+    fun updateRunningCount(dslContext: DSLContext, pipelineId: String, buildId: String, runningIncrement: Int = 1) {
+        with(T_PIPELINE_BUILD_SUMMARY) {
+            val count = dslContext.update(this)
+                .set(RUNNING_COUNT, RUNNING_COUNT + runningIncrement)
+                .where(PIPELINE_ID.eq(pipelineId))
+                .and(LATEST_BUILD_ID.eq(buildId))
+                .execute()
+
+            // 如果本次构建是最新一次，则要把状态和完成时间也刷新
+            if (count > 0) {
+                val update =
+                    dslContext.update(this).set(LATEST_END_TIME, LocalDateTime.now())
+                if (runningIncrement > 0) {
+                    update.set(LATEST_STATUS, BuildStatus.RUNNING.ordinal)
+                } else {
+                    update.set(LATEST_STATUS, BuildStatus.STAGE_SUCCESS.ordinal)
+                        .set(LATEST_END_TIME, LocalDateTime.now())
+                }
+                update.where(PIPELINE_ID.eq(pipelineId))
+                    .and(LATEST_BUILD_ID.eq(buildId))
+                    .execute()
             }
         }
     }

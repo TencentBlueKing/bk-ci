@@ -23,6 +23,10 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.UUIDUtil
+import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.common.auth.api.BSAuthPermissionApi
+import com.tencent.devops.common.auth.code.BSProjectServiceCodec
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.project.api.pojo.ServiceItem
@@ -135,6 +139,10 @@ abstract class ExtServiceBaseService @Autowired constructor() {
     lateinit var extServiceBcsService: ExtServiceBcsService
     @Autowired
     lateinit var extServiceBcsNameSpaceConfig: ExtServiceBcsNameSpaceConfig
+    @Autowired
+    lateinit var permissionApi: BSAuthPermissionApi
+    @Autowired
+    lateinit var bsProjectServiceCodec: BSProjectServiceCodec
 
     val bkServiceMap = mutableMapOf<String, Long>()
 
@@ -146,8 +154,10 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         logger.info("addExtService user[$userId], serviceCode[$serviceCode], info[$extensionInfo]")
         // 校验信息
         validateAddServiceReq(userId, extensionInfo)
+        checkProjectInfo(userId, extensionInfo.projectCode)
         val handleServicePackageResult = handleServicePackage(extensionInfo, userId, serviceCode)
         logger.info("addExtService the handleServicePackage is :$handleServicePackageResult")
+
         if (handleServicePackageResult.isNotOk()) {
             return Result(handleServicePackageResult.status, handleServicePackageResult.message, null)
         }
@@ -748,6 +758,8 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         if (!checkResult) {
             return MessageCodeUtil.generateResponseDataObject(code)
         }
+        // 先集中删除，再添加媒体信息
+        mediaService.deleteByStoreCode(userId, serviceCode, StoreTypeEnum.SERVICE)
         mediaList?.forEach {
             mediaService.add(
                 userId = userId,
@@ -1302,6 +1314,28 @@ abstract class ExtServiceBaseService @Autowired constructor() {
                 bkService
             } else {
                 0
+            }
+        }
+    }
+
+    private fun checkProjectInfo(userId: String, projectCode: String) {
+        val permissionCheck = permissionApi.validateUserResourcePermission(
+            user = userId,
+            projectCode = projectCode,
+            serviceCode = bsProjectServiceCodec,
+            resourceType = AuthResourceType.PROJECT,
+            resourceCode = "*",
+            permission = AuthPermission.CREATE
+        )
+        if(!permissionCheck){
+            throw RuntimeException(MessageCodeUtil.getCodeLanMessage(StoreMessageCode.USER_SERVICE_PROJECT_NOT_PERMISSION))
+        }
+        val projectInfo = client.get(ServiceProjectResource::class).get(projectCode).data
+        if(projectInfo == null) {
+            throw RuntimeException(MessageCodeUtil.getCodeLanMessage(StoreMessageCode.USER_SERVICE_PROJECT_UNENABLE))
+        } else {
+            if(projectInfo.enableExternal == false) {
+                throw RuntimeException(MessageCodeUtil.getCodeLanMessage(StoreMessageCode.USER_SERVICE_PROJECT_UNENABLE))
             }
         }
     }

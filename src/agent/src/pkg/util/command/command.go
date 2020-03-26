@@ -56,7 +56,7 @@ func RunCommand(command string, args []string, workDir string, envMap map[string
 	logs.Info("cmd.Args: ", cmd.Args)
 	logs.Info("cmd.workDir: ", cmd.Dir)
 
-	outPut, err := cmd.Output()
+	outPut, err := cmd.CombinedOutput()
 	logs.Info("output: ", string(outPut))
 	if err != nil {
 		return outPut, err
