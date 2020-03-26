@@ -254,10 +254,8 @@ object SigarUtil {
             pos.waitFor()
             val isr = InputStreamReader(pos.inputStream)
             val lnr = LineNumberReader(isr)
-            var line = ""
-            while (lnr.readLine().also { line = it } != null) {
-                info.append(line).append("\n")
-                logger.info(info.toString())
+            while (lnr.readLine() != null) {
+                info.append(lnr.readLine()).append("\n")
             }
         } catch (e: Exception) {
             logger.error("runCommand error.", e)
