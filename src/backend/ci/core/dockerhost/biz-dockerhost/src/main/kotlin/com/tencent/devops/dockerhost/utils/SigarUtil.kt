@@ -230,6 +230,10 @@ object SigarUtil {
     fun getDiskIORate() {
         val commandStr = runCommand("iostat -d -x -k 1 8")
         logger.info(commandStr)
+        val stringArray = commandStr!!.split("\n")
+        stringArray.forEach {
+            logger.info("====: $it")
+        }
     }
 
     /**
