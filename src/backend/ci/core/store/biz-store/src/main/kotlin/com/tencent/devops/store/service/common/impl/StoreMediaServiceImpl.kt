@@ -48,6 +48,12 @@ class StoreMediaServiceImpl : StoreMediaService{
         return Result(true)
     }
 
+    override fun deleteByStoreCode(userId: String, storeCode: String, storeType: StoreTypeEnum): Result<Boolean> {
+        logger.info("deleteByStoreCode input: userId[$userId] storeCode[$storeCode] storeType:[${storeType.type}]")
+        storeMediaInfoDao.deleteByStoreCode(dslContext, storeCode, storeType)
+        return Result(true)
+    }
+
     override fun get(userId: String, id: String): Result<StoreMediaInfo?> {
         logger.info("getMedia input: userId[$userId] id[$id] ")
         val storeMediaRecord = storeMediaInfoDao.getMediaInfo(

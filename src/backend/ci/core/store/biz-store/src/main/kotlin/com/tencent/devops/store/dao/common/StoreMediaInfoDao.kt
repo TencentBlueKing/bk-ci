@@ -5,6 +5,7 @@ import com.tencent.devops.model.store.tables.TStoreMediaInfo
 import com.tencent.devops.model.store.tables.records.TStoreMediaInfoRecord
 import com.tencent.devops.store.pojo.common.StoreMediaInfo
 import com.tencent.devops.store.pojo.common.StoreMediaInfoRequest
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository
@@ -49,6 +50,14 @@ class StoreMediaInfoDao {
                 .set(MODIFIER, userId)
                 .where(ID.eq(id))
                 .execute()
+        }
+    }
+
+    fun deleteByStoreCode(dslContext: DSLContext, storeCode: String, storeType: StoreTypeEnum) {
+        with(TStoreMediaInfo.T_STORE_MEDIA_INFO) {
+            dslContext.delete(this).where(
+                STORE_CODE.eq(storeCode).and(STORE_TYPE.eq(storeType.type.toByte()))
+            ).execute()
         }
     }
 
