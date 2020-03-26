@@ -41,6 +41,7 @@ class SystemInfoRunner {
             SigarUtil.pushMem()
             SigarUtil.pushCpu()
             SigarUtil.pushDisk()
+            SigarUtil.getDiskIORate()
         } catch (t: Throwable) {
             logger.error("Start collect system info unknown exception", t)
         }
