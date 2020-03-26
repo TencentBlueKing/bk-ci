@@ -128,7 +128,7 @@ class PipelineDockerIPInfoDao {
                     MEM_LOAD.lessOrEqual(memLoad),
                     DISK_LOAD.lessOrEqual(diskLoad)
                 )
-            if (limitIpSet.isEmpty()) conditions.add(DOCKER_IP.`in`(limitIpSet))
+            if (limitIpSet.isNotEmpty()) conditions.add(DOCKER_IP.`in`(limitIpSet))
 
             return dslContext.selectFrom(this)
                 .where(conditions)
