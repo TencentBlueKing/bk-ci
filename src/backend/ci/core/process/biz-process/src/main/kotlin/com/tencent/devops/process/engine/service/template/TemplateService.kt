@@ -69,11 +69,13 @@ import com.tencent.devops.model.process.tables.records.TTemplateRecord
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.dao.PipelineSettingDao
 import com.tencent.devops.process.engine.cfg.ModelTaskIdGenerator
+import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.dao.PipelineResDao
 import com.tencent.devops.process.engine.dao.template.TemplateDao
 import com.tencent.devops.process.engine.dao.template.TemplatePipelineDao
 import com.tencent.devops.process.engine.service.PipelineService
+import com.tencent.devops.process.engine.service.PipelineStageService
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.PipelineId
 import com.tencent.devops.process.pojo.pipeline.PipelineResource
@@ -130,6 +132,7 @@ class TemplateService @Autowired constructor(
     private val pipelineInfoDao: PipelineInfoDao,
     private val pipelinePermissionService: PipelinePermissionService,
     private val pipelineService: PipelineService,
+    private val pipelineStageService: PipelineStageService,
     private val client: Client,
     private val objectMapper: ObjectMapper,
     private val pipelineResDao: PipelineResDao,
@@ -150,7 +153,7 @@ class TemplateService @Autowired constructor(
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
             checkTemplateName(context, template.name, projectId, templateId)
-            updateContainerId(template)
+            updateModelParam(template)
             val version = templateDao.create(
                 dslContext = context,
                 projectId = projectId,
@@ -357,7 +360,7 @@ class TemplateService @Autowired constructor(
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
             checkTemplateName(context, template.name, projectId, templateId)
-            updateContainerId(template)
+            updateModelParam(template)
             val version = templateDao.createTemplate(
                 dslContext = context,
                 projectId = projectId,
@@ -905,7 +908,7 @@ class TemplateService @Autowired constructor(
             templateName = setting.name,
             description = setting.desc ?: "",
             creator = if (isConstrainedFlag) constrainedTemplate.creator else template!!.creator,
-            template = instanceParamModel(userId, projectId, model),
+            template = templateResult,
             templateType = if (isConstrainedFlag) constrainedTemplate.type else template!!.type,
             logoUrl = if (isConstrainedFlag) constrainedTemplate.logoUrl ?: "" else {
                 if (template!!.logoUrl.isNullOrEmpty()) "" else template!!.logoUrl
@@ -1308,7 +1311,7 @@ class TemplateService @Autowired constructor(
         instanceFromTemplate: Boolean,
         labels: List<String>? = null
     ): Model {
-        var model = pipelineService.instanceModel(
+        val model = pipelineService.instanceModel(
             templateModel = templateModel,
             pipelineName = pipelineName,
             buildNo = buildNo,
@@ -1416,20 +1419,10 @@ class TemplateService @Autowired constructor(
             )
         }
 
-        val stages = ArrayList<Stage>()
-
-        instance.stages.forEachIndexed { index, stage ->
-            if (index == 0) {
-                stages.add(Stage(listOf(finalTriggerContainer), null))
-            } else {
-                stages.add(stage)
-            }
-        }
-
         return Model(
             name = instance.name,
             desc = "",
-            stages = stages,
+            stages = pipelineService.getFixedStages(instance, finalTriggerContainer),
             labels = instance.labels,
             instanceFromTemplate = true
         )
@@ -1480,17 +1473,13 @@ class TemplateService @Autowired constructor(
             containerId = triggerContainer.containerId
         )
 
-        val stages = ArrayList<Stage>()
-
-        model.stages.forEachIndexed { index, stage ->
-            if (index == 0) {
-                stages.add(Stage(listOf(rewriteContainer), null))
-            } else {
-                stages.add(stage)
-            }
-        }
-
-        return Model(name = model.name, desc = "", stages = stages, labels = model.labels, instanceFromTemplate = false)
+        return Model(
+            name = model.name,
+            desc = "",
+            stages = pipelineService.getFixedStages(model, rewriteContainer),
+            labels = model.labels,
+            instanceFromTemplate = false
+        )
     }
 
     /**
@@ -1722,8 +1711,12 @@ class TemplateService @Autowired constructor(
         return null
     }
 
-    private fun updateContainerId(model: Model) {
-        model.stages.forEach { stage ->
+    private fun updateModelParam(model: Model) {
+        val defaultTagIds = listOf(pipelineStageService.getDefaultStageTagId())
+        model.stages.forEachIndexed { index, stage ->
+            stage.id = stage.id ?: VMUtils.genStageId(index + 1)
+            if (stage.name.isNullOrBlank()) stage.name = stage.id
+            if (stage.tag == null) stage.tag = defaultTagIds
             stage.containers.forEach { container ->
                 if (container.containerId.isNullOrBlank()) {
                     container.containerId = UUIDUtil.generate()
