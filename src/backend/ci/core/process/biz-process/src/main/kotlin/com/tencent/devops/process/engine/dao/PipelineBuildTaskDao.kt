@@ -264,7 +264,7 @@ class PipelineBuildTaskDao @Autowired constructor(private val objectMapper: Obje
             }
             if (errorType != null) {
                 val maxLength = ERROR_MSG.dataType.length()
-                val realErrorMsg = if (errorMsg != null && errorMsg.length > maxLength) {
+                val realErrorMsg = if (errorMsg != null && errorMsg.length > maxLength && maxLength > 0) {
                     errorMsg.substring(0, maxLength - 1)
                 } else errorMsg
                 update.set(ERROR_TYPE, errorType.ordinal)
