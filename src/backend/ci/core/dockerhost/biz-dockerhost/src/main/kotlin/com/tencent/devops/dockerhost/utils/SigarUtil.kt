@@ -30,6 +30,8 @@ import org.hyperic.sigar.FileSystem
 import org.hyperic.sigar.FileSystemUsage
 import org.hyperic.sigar.Sigar
 import org.slf4j.LoggerFactory
+import java.io.InputStreamReader
+import java.io.LineNumberReader
 import java.util.ArrayDeque
 import kotlin.math.roundToInt
 
@@ -232,5 +234,33 @@ object SigarUtil {
         }
 
         return Pair(diskUsedPercent, totalBytes)
+    }
+
+    fun getDiskIORate() {
+        val commandStr = runCommand("iostat -d -x -k 1 8")
+        logger.info(commandStr)
+    }
+
+    /**
+     * 执行系统命令
+     *
+     * @param CMD 命令
+     * @return 字符串结果
+     */
+    private fun runCommand(CMD: String): String? {
+        var info = StringBuilder()
+        try {
+            val pos = Runtime.getRuntime().exec(CMD)
+            pos.waitFor()
+            val isr = InputStreamReader(pos.inputStream)
+            val lnr = LineNumberReader(isr)
+            var line = ""
+            while (lnr.readLine().also { line = it } != null) {
+                info.append(line).append("\n")
+            }
+        } catch (e: Exception) {
+            info = StringBuilder(e.toString())
+        }
+        return info.toString()
     }
 }
