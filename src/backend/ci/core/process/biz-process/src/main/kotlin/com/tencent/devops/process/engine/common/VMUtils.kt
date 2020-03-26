@@ -32,6 +32,8 @@ package com.tencent.devops.process.engine.common
  */
 object VMUtils {
 
+    fun genStageId(seq: Int) = "stage-$seq"
+
     fun genStopVMTaskId(seq: Int) = "stopVM-$seq"
 
     fun genEndPointTaskId(seq: Int) = "end-$seq"
