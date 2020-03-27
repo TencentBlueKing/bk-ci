@@ -96,43 +96,59 @@ object SigarUtil {
     }
 
     fun pushMem() {
-        val element = getMemUsedPercent()
-        if (memQueue.size >= queueMaxSize) {
-            queueMemValueSum -= memQueue.pollLast()
-        }
+        try {
+            val element = getMemUsedPercent()
+            if (memQueue.size >= queueMaxSize) {
+                queueMemValueSum -= memQueue.pollLast()
+            }
 
-        memQueue.push(element)
-        queueMemValueSum += element
+            memQueue.push(element)
+            queueMemValueSum += element
+        } catch (e: Exception) {
+            logger.error("push mem error.", e)
+        }
     }
 
     fun pushCpu() {
-        val element = getCpuUsedPercent()
-        if (cpuQueue.size >= queueMaxSize) {
-            queueCpuValueSum -= cpuQueue.pollLast()
-        }
+        try {
+            val element = getCpuUsedPercent()
+            if (cpuQueue.size >= queueMaxSize) {
+                queueCpuValueSum -= cpuQueue.pollLast()
+            }
 
-        cpuQueue.push(element)
-        queueCpuValueSum += element
+            cpuQueue.push(element)
+            queueCpuValueSum += element
+        } catch (e: Exception) {
+            logger.error("push cpu error.", e)
+        }
     }
 
     fun pushDisk() {
-        val element = getDiskUsedPercent()
-        if (diskQueue.size >= queueMaxSize) {
-            queueDiskValueSum -= diskQueue.pollLast()
-        }
+        try {
+            val element = getDiskUsedPercent()
+            if (diskQueue.size >= queueMaxSize) {
+                queueDiskValueSum -= diskQueue.pollLast()
+            }
 
-        diskQueue.push(element)
-        queueDiskValueSum += element
+            diskQueue.push(element)
+            queueDiskValueSum += element
+        } catch (e: Exception) {
+            logger.error(" push disk error.", e)
+        }
     }
 
     fun pushDiskIOUtil() {
-        val element = getDiskIORate()
-        if (diskIOQueue.size >= queueMaxSize) {
-            queueDiskIOValueSum -= diskIOQueue.pollLast()
-        }
+        try {
+            val element = getDiskIORate()
+            if (diskIOQueue.size >= queueMaxSize) {
+                queueDiskIOValueSum -= diskIOQueue.pollLast()
+            }
 
-        diskIOQueue.push(element)
-        queueDiskIOValueSum += element
+            diskIOQueue.push(element)
+            queueDiskIOValueSum += element
+        } catch (e: Exception) {
+            logger.error("push disk ioUtil error.", e)
+        }
     }
 
     fun getMemQueue(): ArrayDeque<Int> {
@@ -209,12 +225,12 @@ object SigarUtil {
         return diskUsedPercent
     }
 
-    fun getDiskIORate(): Int {
+    private fun getDiskIORate(): Int {
         var totalIOUtil = 0
         val commandStr = runCommand("iostat -d -x -k 1 8")
         val stringArray = commandStr!!.split("\n")
         stringArray.forEach {
-            if (it.isNotEmpty() && !it.contains("Device:")) {
+            if (it.isNotEmpty() && !it.contains("Device:") && !it.contains("Linux")) {
                 logger.info("====: $it")
                 val strArr = it.split("   ")
                 val ioUtil = (strArr[strArr.size - 1].toDouble() * 100).roundToInt()
