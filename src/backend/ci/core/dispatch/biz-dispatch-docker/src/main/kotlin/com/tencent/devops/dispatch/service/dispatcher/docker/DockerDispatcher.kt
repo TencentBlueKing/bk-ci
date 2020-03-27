@@ -37,6 +37,7 @@ import com.tencent.devops.dispatch.pojo.VolumeStatus
 import com.tencent.devops.dispatch.service.DockerHostBuildService
 import com.tencent.devops.dispatch.service.dispatcher.Dispatcher
 import com.tencent.devops.dispatch.utils.DockerHostLock
+import com.tencent.devops.dispatch.utils.DockerHostUtils
 import com.tencent.devops.log.utils.LogUtils
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
 import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
@@ -52,6 +53,7 @@ class DockerDispatcher @Autowired constructor(
     private val rabbitTemplate: RabbitTemplate,
     private val dockerHostBuildService: DockerHostBuildService,
     private val dockerHostClient: DockerHostClient,
+    private val dockerHostUtils: DockerHostUtils,
     private val pipelineDockerTaskSimpleDao: PipelineDockerTaskSimpleDao,
     private val pipelineDockerIpInfoDao: PipelineDockerIPInfoDao,
     private val dslContext: DSLContext,
@@ -87,7 +89,7 @@ class DockerDispatcher @Autowired constructor(
                 // 查看当前IP负载情况，当前IP负载未超额（内存低于90%且硬盘低于90%），可直接下发，当负载超额，重新选择构建机
                 val ipInfo = pipelineDockerIpInfoDao.getDockerIpInfo(dslContext, dockerIp)
                 if (ipInfo.diskLoad > 90 || ipInfo.memLoad > 90) {
-                    dockerIp = dockerHostClient.getAvailableDockerIp(pipelineAgentStartupEvent)
+                    dockerIp = dockerHostUtils.getAvailableDockerIp(pipelineAgentStartupEvent)
                     pipelineDockerTaskSimpleDao.updateDockerIp(dslContext, pipelineAgentStartupEvent.pipelineId, pipelineAgentStartupEvent.vmSeqId, dockerIp)
                     logger.info("${pipelineAgentStartupEvent.pipelineId}|${pipelineAgentStartupEvent.buildId}|${pipelineAgentStartupEvent.vmSeqId}| origin host: ${taskHistory.dockerIp} " +
                             "overload, DiskLoad: ${ipInfo.diskLoad}|MemLoad: ${ipInfo.memLoad}, switch to new host: $dockerIp")
@@ -96,7 +98,7 @@ class DockerDispatcher @Autowired constructor(
                 // 更新状态running
                 pipelineDockerTaskSimpleDao.updateStatus(dslContext, pipelineAgentStartupEvent.pipelineId, pipelineAgentStartupEvent.vmSeqId, VolumeStatus.RUNNING.status)
             } else {
-                dockerIp = dockerHostClient.getAvailableDockerIp(pipelineAgentStartupEvent)
+                dockerIp = dockerHostUtils.getAvailableDockerIp(pipelineAgentStartupEvent)
 
                 pipelineDockerTaskSimpleDao.create(
                     dslContext,
