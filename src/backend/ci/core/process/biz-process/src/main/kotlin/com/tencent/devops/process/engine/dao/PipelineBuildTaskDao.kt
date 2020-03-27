@@ -133,7 +133,7 @@ class PipelineBuildTaskDao @Autowired constructor(private val objectMapper: Obje
                         } else null)
                         .set(ERROR_TYPE, it.errorType?.ordinal)
                         .set(ERROR_CODE, it.errorCode)
-                        .set(ERROR_MSG,  it.errorMsg)
+                        .set(ERROR_MSG, it.errorMsg)
                         .set(CONTAINER_HASH_ID, it.containerHashId)
                 )
             }

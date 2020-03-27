@@ -165,7 +165,7 @@ class ExperienceAppService(
         val projectInfo = client.get(ServiceProjectResource::class).get(projectId).data
             ?: throw RuntimeException("ProjectId $projectId cannot find.")
         val logoUrl = transformLogoAddr(projectInfo.logoAddr)
-        val projectName = projectInfo.projectName?:""
+        val projectName = projectInfo.projectName ?: ""
         val version = experience.version
         val shareUrl = "${HomeHostUtil.outerServerHost()}/app/download/devops_app_forward.html?flag=experienceDetail&experienceId=$experienceHashId"
 
@@ -254,9 +254,9 @@ class ExperienceAppService(
     }
 
     fun transformLogoAddr(innerLogoAddr: String?): String {
-        if(innerLogoAddr == null) return ""
+        if (innerLogoAddr == null) return ""
         return if (endpointUrl != null) {
-            innerLogoAddr.replace(endpointUrl?:"http://radosgw.open.oa.com", "${HomeHostUtil.outerServerHost()}/images")
+            innerLogoAddr.replace(endpointUrl ?: "http://radosgw.open.oa.com", "${HomeHostUtil.outerServerHost()}/images")
         } else {
             innerLogoAddr
         }
