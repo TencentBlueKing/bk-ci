@@ -131,6 +131,7 @@ class PipelineDockerIPInfoDao {
         cpuLoad: Int,
         memLoad: Int,
         diskLoad: Int,
+        diskIOLoad: Int,
         limitIpSet: Set<String> = setOf()
     ): Result<TDispatchPipelineDockerIpInfoRecord> {
         with(TDispatchPipelineDockerIpInfo.T_DISPATCH_PIPELINE_DOCKER_IP_INFO) {
@@ -140,7 +141,8 @@ class PipelineDockerIPInfoDao {
                     GRAY_ENV.eq(grayEnv),
                     CPU_LOAD.lessOrEqual(cpuLoad),
                     MEM_LOAD.lessOrEqual(memLoad),
-                    DISK_LOAD.lessOrEqual(diskLoad)
+                    DISK_LOAD.lessOrEqual(diskLoad),
+                    DISK_IO_LOAD.lessOrEqual(diskIOLoad)
                 )
             if (limitIpSet.isNotEmpty()) conditions.add(DOCKER_IP.`in`(limitIpSet))
 
