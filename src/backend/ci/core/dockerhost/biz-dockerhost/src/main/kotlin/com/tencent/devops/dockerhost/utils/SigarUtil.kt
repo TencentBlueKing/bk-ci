@@ -233,7 +233,7 @@ object SigarUtil {
         stringArray.forEach {
             if (it.isNotEmpty() && !it.contains("Device:") && !it.contains("Linux")) {
                 logger.info("====: $it")
-                val strArr = it.split("   ")
+                val strArr = it.split(" ")
                 val ioUtil = (strArr[strArr.size - 1].toDouble() * 100).roundToInt()
                 totalIOUtil += ioUtil
             }
