@@ -13,6 +13,14 @@ data class DockerIpInfoVO(
     val capacity: Int,
     @ApiModelProperty("IDC构建机已使用量")
     val usedNum: Int,
+    @ApiModelProperty("IDC构建机CPU负载")
+    val averageCpuLoad: Int,
+    @ApiModelProperty("IDC构建机内存负载")
+    val averageMemLoad: Int,
+    @ApiModelProperty("IDC构建机硬盘负载")
+    val averageDiskLoad: Int,
+    @ApiModelProperty("IDC构建机硬盘IO负载")
+    val averageDiskIOLoad: Int,
     @ApiModelProperty("IDC构建机是否可用")
     val enable: Boolean,
     @ApiModelProperty("是否为灰度节点")
