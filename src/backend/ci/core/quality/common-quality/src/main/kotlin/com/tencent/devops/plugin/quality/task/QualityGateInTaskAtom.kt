@@ -29,17 +29,9 @@ package com.tencent.devops.plugin.quality.task
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
-import com.tencent.devops.common.pipeline.enums.BuildStatus
-import com.tencent.devops.common.pipeline.enums.ManualReviewAction
-import com.tencent.devops.log.utils.LogUtils
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.IAtomTask
-import com.tencent.devops.process.engine.common.BS_ATOM_STATUS_REFRESH_DELAY_MILLS
-import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION
-import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION_USERID
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
-import com.tencent.devops.process.websocket.ChangeType
-import com.tencent.devops.process.websocket.PipelineStatusChangeEvent
 import com.tencent.devops.quality.QualityGateInElement
 import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
 import org.slf4j.LoggerFactory
@@ -63,62 +55,7 @@ class QualityGateInTaskAtom @Autowired constructor(
         runVariables: Map<String, String>,
         force: Boolean
     ): AtomResponse {
-        val pipelineId = task.pipelineId
-        logger.info("[$pipelineId]")
-
-        val buildId = task.buildId
-        val taskId = task.taskId
-        val taskName = task.taskName
-        val success = task.getTaskParam(QUALITY_RESULT)
-        val actionUser = task.getTaskParam(BS_MANUAL_ACTION_USERID)
-
-        return if (success.isNotEmpty()) {
-            logger.info("[$buildId]|QUALITY_FINISH|taskName=$taskName|taskId=$taskId|success=$success")
-            if (success.toBoolean()) {
-                AtomResponse(BuildStatus.REVIEW_PROCESSED)
-            } else {
-                LogUtils.addRedLine(
-                    rabbitTemplate = rabbitTemplate,
-                    buildId = buildId,
-                    message = "${taskName}审核超时",
-                    tag = taskId,
-                    jobId = task.containerHashId,
-                    executeCount = task.executeCount ?: 1
-                )
-                AtomResponse(BuildStatus.QUALITY_CHECK_FAIL)
-            }
-        } else {
-            val manualAction = task.getTaskParam(BS_MANUAL_ACTION)
-            logger.info("[$buildId]|QUALITY_FINISH|taskName=$taskName|taskId=${task.taskId}|action=$manualAction")
-            if (manualAction.isNotEmpty()) {
-                when (ManualReviewAction.valueOf(manualAction)) {
-                    ManualReviewAction.PROCESS -> {
-                        LogUtils.addYellowLine(
-                            rabbitTemplate = rabbitTemplate,
-                            buildId = buildId,
-                            message = "步骤审核结束，审核结果：[继续]，审核人：$actionUser",
-                            tag = taskId,
-                            jobId = task.containerHashId,
-                            executeCount = task.executeCount ?: 1
-                        )
-                        AtomResponse(BuildStatus.SUCCEED)
-                    }
-                    ManualReviewAction.ABORT -> {
-                        LogUtils.addYellowLine(
-                            rabbitTemplate = rabbitTemplate,
-                            buildId = buildId,
-                            message = "步骤审核结束，审核结果：[驳回]，审核人：$actionUser",
-                            tag = taskId,
-                            jobId = task.containerHashId,
-                            executeCount = task.executeCount ?: 1
-                        )
-                        AtomResponse(BuildStatus.REVIEW_ABORT)
-                    }
-                }
-            } else {
-                AtomResponse(BuildStatus.REVIEWING)
-            }
-        }
+        return QualityUtils.tryFinish(task, rabbitTemplate)
     }
 
     override fun execute(
@@ -126,139 +63,25 @@ class QualityGateInTaskAtom @Autowired constructor(
         param: QualityGateInElement,
         runVariables: Map<String, String>
     ): AtomResponse {
-        logger.info("QualityGateInTask start for common...")
-        with(task) {
-            val checkResult = QualityUtils.getCheckResult(
-                task = task,
-                interceptTaskName = param.interceptTaskName,
-                interceptTask = param.interceptTask,
-                runVariables = runVariables,
-                client = client,
-                rabbitTemplate = rabbitTemplate,
-                position = ControlPointPosition.BEFORE_POSITION
-            )
-            logger.info("quality gateway in check result for ${task.buildId}: $checkResult")
+        val checkResult = QualityUtils.getCheckResult(
+            task = task,
+            interceptTaskName = param.interceptTaskName,
+            interceptTask = param.interceptTask,
+            runVariables = runVariables,
+            client = client,
+            rabbitTemplate = rabbitTemplate,
+            position = ControlPointPosition.BEFORE_POSITION
+        )
 
-
-            val elementId = task.taskId
-
-            pipelineEventDispatcher.dispatch(
-                PipelineStatusChangeEvent(
-                    source = "pipelineDetailChangeEvent",
-                    pipelineId = pipelineId,
-                    changeType = ChangeType.DETAIL,
-                    buildId = buildId,
-                    projectId = projectId,
-                    userId = task.starter
-                )
-            )
-
-            if (checkResult.success) {
-                LogUtils.addLine(
-                    rabbitTemplate = rabbitTemplate,
-                    buildId = buildId,
-                    message = "质量红线(准入)检测已通过",
-                    tag = elementId,
-                    jobId = task.containerHashId,
-                    executeCount = task.executeCount ?: 1
-                )
-
-                checkResult.resultList.forEach {
-                    LogUtils.addLine(
-                        rabbitTemplate = rabbitTemplate,
-                        buildId = buildId,
-                        message = "规则：${it.ruleName}",
-                        tag = elementId,
-                        jobId = task.containerHashId,
-                        executeCount = task.executeCount ?: 1
-                    )
-                    it.messagePairs.forEach { message ->
-                        LogUtils.addLine(
-                            rabbitTemplate = rabbitTemplate,
-                            buildId = buildId,
-                            message = message.first + " " + message.second,
-                            tag = elementId,
-                            jobId = task.containerHashId,
-                            executeCount = task.executeCount ?: 1
-                        )
-                    }
-                }
-
-                // 产生MQ消息，等待5秒时间
-                logger.info("[$buildId]|QUALITY_IN|taskId=$elementId|quality check success wait end")
-                task.taskParams[BS_ATOM_STATUS_REFRESH_DELAY_MILLS] = 5000
-                task.taskParams[QUALITY_RESULT] = checkResult.success
-            } else {
-                LogUtils.addLine(
-                    rabbitTemplate = rabbitTemplate,
-                    buildId = buildId,
-                    message = "检测完毕",
-                    tag = elementId,
-                    jobId = task.containerHashId,
-                    executeCount = task.executeCount ?: 1
-                )
-
-                LogUtils.addRedLine(
-                    rabbitTemplate = rabbitTemplate,
-                    buildId = buildId,
-                    message = "质量红线(准入)检测被拦截",
-                    tag = elementId,
-                    jobId = task.containerHashId,
-                    executeCount = task.executeCount ?: 1
-                )
-
-                checkResult.resultList.forEach {
-                    LogUtils.addLine(
-                        rabbitTemplate = rabbitTemplate,
-                        buildId = buildId,
-                        message = "---------",
-                        tag = elementId,
-                        jobId = task.containerHashId,
-                        executeCount = task.executeCount ?: 1
-                    )
-                    LogUtils.addRedLine(
-                        rabbitTemplate = rabbitTemplate,
-                        buildId = buildId,
-                        message = "规则：${it.ruleName}",
-                        tag = elementId,
-                        jobId = task.containerHashId,
-                        executeCount = task.executeCount ?: 1
-                    )
-                    it.messagePairs.forEach { message ->
-                        LogUtils.addRedLine(
-                            rabbitTemplate = rabbitTemplate,
-                            buildId = buildId,
-                            message = message.first + " " + message.second,
-                            tag = elementId,
-                            jobId = task.containerHashId,
-                            executeCount = task.executeCount ?: 1
-                        )
-                    }
-                }
-
-                // 直接结束流水线的
-                if (checkResult.failEnd) {
-                    logger.info("quality check fail stop directly")
-                    // LogUtils.addFoldEndLine(rabbitTemplate, buildId, elementName, elementId, task.containerHashId,task.executeCount ?: 1)
-                    return AtomResponse(BuildStatus.QUALITY_CHECK_FAIL) // 拦截到直接失败
-                }
-
-                // 产生MQ消息，等待5分钟审核时间
-                logger.info("quality check fail wait reviewing")
-                val auditUsers = QualityUtils.getAuditUserList(client, projectId, pipelineId, buildId, param.interceptTask!!)
-                LogUtils.addLine(
-                    rabbitTemplate = rabbitTemplate,
-                    buildId = buildId,
-                    message = "质量红线(准入)待审核!审核人：$auditUsers",
-                    tag = elementId,
-                    jobId = task.containerHashId,
-                    executeCount = task.executeCount ?: 1
-                )
-                task.taskParams[BS_ATOM_STATUS_REFRESH_DELAY_MILLS] = checkResult.auditTimeoutSeconds * 1000 // 15 min
-                task.taskParams[QUALITY_RESULT] = checkResult.success
-            }
-            return AtomResponse(BuildStatus.RUNNING)
-        }
+        return QualityUtils.handleResult(
+            position = ControlPointPosition.BEFORE_POSITION,
+            task = task,
+            interceptTask = param.interceptTask!!,
+            checkResult = checkResult,
+            client = client,
+            rabbitTemplate = rabbitTemplate,
+            pipelineEventDispatcher = pipelineEventDispatcher
+        )
     }
 
     companion object {
