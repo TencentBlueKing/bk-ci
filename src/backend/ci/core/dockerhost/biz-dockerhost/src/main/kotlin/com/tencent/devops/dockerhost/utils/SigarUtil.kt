@@ -30,8 +30,6 @@ import org.hyperic.sigar.FileSystem
 import org.hyperic.sigar.FileSystemUsage
 import org.hyperic.sigar.Sigar
 import org.slf4j.LoggerFactory
-import java.io.InputStreamReader
-import java.io.LineNumberReader
 import java.nio.charset.Charset
 import java.util.ArrayDeque
 import kotlin.math.roundToInt
@@ -54,8 +52,6 @@ object SigarUtil {
     private var queueCpuValueSum = 0
     private var queueDiskValueSum = 0
     private var queueDiskIOValueSum = 0
-
-    private var lastTotalDiskBytes = 0L
 
     fun loadEnable(): Boolean {
         return try {
@@ -120,22 +116,23 @@ object SigarUtil {
     }
 
     fun pushDisk() {
-        val pair = getDiskUsedPercent()
-        val element = pair.first
+        val element = getDiskUsedPercent()
         if (diskQueue.size >= queueMaxSize) {
             queueDiskValueSum -= diskQueue.pollLast()
         }
 
         diskQueue.push(element)
         queueDiskValueSum += element
+    }
 
-        val element2 = pair.second
+    fun pushDiskIOUtil() {
+        val element = getDiskIORate()
         if (diskIOQueue.size >= queueMaxSize) {
             queueDiskIOValueSum -= diskIOQueue.pollLast()
         }
 
-        diskIOQueue.push(element2)
-        queueDiskIOValueSum += element2
+        diskIOQueue.push(element)
+        queueDiskIOValueSum += element
     }
 
     fun getMemQueue(): ArrayDeque<Int> {
@@ -178,31 +175,17 @@ object SigarUtil {
         }
     }
 
-    private fun getDiskUsedPercent(): Pair<Int, Int> {
-        val pair = file()
-        var element = pair.first
-        val totalDiskBytes = pair.second
+    private fun getDiskUsedPercent(): Int {
+        var element = file()
         logger.info("getDiskUsedPercent ==========>：$element")
-        logger.info("totalDiskBytes ==========>：$totalDiskBytes")
         if (element !in 0..100) {
             element = 0
         }
-
-        var element2 = 0
-        if (lastTotalDiskBytes != 0L) {
-            element2 = ((totalDiskBytes - lastTotalDiskBytes) / (10 * 1000).toDouble()).roundToInt()
-        }
-        lastTotalDiskBytes = totalDiskBytes
-
-        logger.info("lastTotalDiskBytes ==========>：$lastTotalDiskBytes")
-        logger.info("Disk io rate ==========>：$element2")
-
-        return Pair(element, element2)
+        return element
     }
 
     @Throws(Exception::class)
-    private fun file(): Pair<Int, Long> {
-        var totalBytes = 0L
+    private fun file(): Int {
         var diskUsedPercent = 0
         val sigar = Sigar()
         val fslist: Array<FileSystem> = sigar.fileSystemList
@@ -218,22 +201,28 @@ object SigarUtil {
                     logger.info("盘符路径:    " + fs.dirName)
                     if (fs.dirName == "/data") {
                         diskUsedPercent = (usage.usePercent * 100).roundToInt()
-                        totalBytes += usage.diskReadBytes + usage.diskWriteBytes
                     }
                 }
             }
         }
 
-        return Pair(diskUsedPercent, totalBytes)
+        return diskUsedPercent
     }
 
-    fun getDiskIORate() {
+    fun getDiskIORate(): Int {
+        var totalIOUtil = 0
         val commandStr = runCommand("iostat -d -x -k 1 8")
-        logger.info(commandStr)
         val stringArray = commandStr!!.split("\n")
         stringArray.forEach {
-            logger.info("====: $it")
+            if (it.isNotEmpty() && !it.contains("Device:")) {
+                logger.info("====: $it")
+                val strArr = it.split("   ")
+                val ioUtil = (strArr[strArr.size - 1].toDouble() * 100).roundToInt()
+                totalIOUtil += ioUtil
+            }
         }
+
+        return totalIOUtil / 8
     }
 
     /**
