@@ -68,6 +68,7 @@ class DockerHostUtils @Autowired constructor(
 
         // 获取负载配置
         val dockerHostLoadConfigTriple = getLoadConfig()
+        logger.info("dockerHostLoadConfigTriple: ${JsonUtil.toJson(dockerHostLoadConfigTriple)}")
 
         // 先取容量负载比较小的，同时满足磁盘空间使用率小于60%并且内存CPU使用率均低于80%，从满足的节点中选择磁盘空间使用率最小的
         val firstLoadConfig = dockerHostLoadConfigTriple.first
