@@ -26,4 +26,4 @@
 
 package com.tencent.devops.store.pojo.constants
 
-const val KEY_EXT_SERVICE_INIT_TEST_PROJECT_PREFIX = "ext:project:"
+const val KEY_EXT_SERVICE_ITEMS_PREFIX = "ext:service:items:"

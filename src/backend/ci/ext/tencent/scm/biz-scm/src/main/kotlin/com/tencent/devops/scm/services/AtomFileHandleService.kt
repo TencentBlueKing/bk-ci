@@ -24,40 +24,37 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.api
+package com.tencent.devops.scm.services
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.pojo.dto.UpdateExtServiceEnvInfoDTO
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
-import javax.ws.rs.Consumes
-import javax.ws.rs.PUT
-import javax.ws.rs.Path
-import javax.ws.rs.PathParam
-import javax.ws.rs.Produces
-import javax.ws.rs.core.MediaType
+import com.tencent.devops.common.api.util.JsonUtil
+import org.springframework.stereotype.Service
+import java.io.File
+import java.nio.charset.Charset
 
-@Api(tags = ["BUILD_EXTENSION_SERVICE_ENV"], description = "扩展服务-扩展服务执行环境")
-@Path("/build/ext/services/env/")
-@Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
-interface BuildExtServiceEnvResource {
+@Service("ATOM_FILE_HANDLE")
+class AtomFileHandleService : AbstractFileHandleService() {
 
-    @ApiOperation("更新扩展服务环境信息")
-    @PUT
-    @Path("/projects/{projectCode}/services/{serviceCode}/versions/{version}")
-    fun updateExtServiceEnv(
-        @ApiParam("项目代码", required = true)
-        @PathParam("projectCode")
-        projectCode: String,
-        @ApiParam("扩展服务代码", required = true)
-        @PathParam("serviceCode")
-        serviceCode: String,
-        @ApiParam("版本号", required = true)
-        @PathParam("version")
-        version: String,
-        @ApiParam(value = "更新扩展服务环境信息请求报文体", required = true)
-        updateExtServiceEnvInfo: UpdateExtServiceEnvInfoDTO
-    ): Result<Boolean>
+    /**
+     * 处理task.json文件
+     */
+    override fun handleFile(
+        repositoryName: String,
+        fileName: String,
+        workspace: File?
+    ): Result<Boolean> {
+        // 把task.json中的atomCode修改成用户对应的
+        val taskJsonFile = File(workspace, fileName)
+        if (taskJsonFile.exists()) {
+            val taskJsonStr = taskJsonFile.readText(Charset.forName("UTF-8"))
+            val taskJsonMap = JsonUtil.toMap(taskJsonStr).toMutableMap()
+            taskJsonMap["atomCode"] = repositoryName
+            val deleteFlag = taskJsonFile.delete()
+            if (deleteFlag) {
+                taskJsonFile.createNewFile()
+                taskJsonFile.writeText(JsonUtil.toJson(taskJsonMap), Charset.forName("UTF-8"))
+            }
+        }
+        return Result(true)
+    }
 }
