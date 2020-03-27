@@ -79,6 +79,7 @@ class DockerHostUtils @Autowired constructor(
                 firstLoadConfig.cpuLoadThreshold,
                 firstLoadConfig.memLoadThreshold,
                 firstLoadConfig.diskLoadThreshold,
+                firstLoadConfig.diskIOLoadThreshold,
                 specialIpSet)
         if (firstDockerIpList.isNotEmpty) {
             dockerIp = selectAvailableDockerIp(firstDockerIpList, unAvailableIpList)
@@ -92,6 +93,7 @@ class DockerHostUtils @Autowired constructor(
                     secondLoadConfig.cpuLoadThreshold,
                     secondLoadConfig.memLoadThreshold,
                     secondLoadConfig.diskLoadThreshold,
+                    secondLoadConfig.diskIOLoadThreshold,
                     specialIpSet)
             if (secondDockerIpList.isNotEmpty) {
                 dockerIp = selectAvailableDockerIp(secondDockerIpList, unAvailableIpList)
@@ -105,6 +107,7 @@ class DockerHostUtils @Autowired constructor(
                         thirdLoadConfig.cpuLoadThreshold,
                         thirdLoadConfig.memLoadThreshold,
                         thirdLoadConfig.diskLoadThreshold,
+                        thirdLoadConfig.diskIOLoadThreshold,
                         specialIpSet)
                 if (thirdDockerIpList.isNotEmpty) {
                     dockerIp = selectAvailableDockerIp(thirdDockerIpList, unAvailableIpList)
