@@ -107,5 +107,4 @@ interface ServiceQualityRuleResource {
         @ApiParam("构建ID", required = true)
         buildId: String
     ): Result<List<QualityHisMetadata>>
-
 }
