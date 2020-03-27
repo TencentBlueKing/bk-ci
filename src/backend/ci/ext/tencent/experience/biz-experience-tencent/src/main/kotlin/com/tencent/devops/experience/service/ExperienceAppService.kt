@@ -142,13 +142,13 @@ class ExperienceAppService(
             val logoUrl = transformLogoAddr(projectMap[projectId]!!.logoAddr)
             val projectName = projectMap[projectId]!!.projectName
             AppExperience(
-                HashUtil.encodeLongId(it.id),
-                Platform.valueOf(it.platform),
-                Source.valueOf(it.source),
-                logoUrl,
-                projectName,
-                it.version,
-                it.bundleIdentifier
+                experienceHashId = HashUtil.encodeLongId(it.id),
+                platform = Platform.valueOf(it.platform),
+                source = Source.valueOf(it.source),
+                logoUrl = logoUrl,
+                name = projectName,
+                version = it.version,
+                bundleIdentifier = it.bundleIdentifier
             )
         }
     }
@@ -176,25 +176,25 @@ class ExperienceAppService(
         val experienceList = experienceDao.listByBundleIdentifier(dslContext, projectId, bundleIdentifier)
         val changeLog = experienceList.map {
             ExperienceChangeLog(
-                HashUtil.encodeLongId(it.id),
-                it.version,
-                it.creator,
-                it.createTime.timestamp(),
-                it.remark ?: ""
+                experienceHashId = HashUtil.encodeLongId(it.id),
+                version = it.version,
+                creator = it.creator,
+                createDate = it.createTime.timestamp(),
+                changelog = it.remark ?: ""
             )
         }
         return AppExperienceDetail(
-            experienceHashId,
-            fileDetail.size,
-            logoUrl,
-            shareUrl,
-            projectName,
-            Platform.valueOf(experience.platform),
-            version,
-            isExpired,
-            canExperience,
-            experience.online,
-            changeLog
+            experienceHashId = experienceHashId,
+            size = fileDetail.size,
+            logoUrl = logoUrl,
+            shareUrl = shareUrl,
+            name = projectName,
+            platform = Platform.valueOf(experience.platform),
+            version = version,
+            expired = isExpired,
+            canExperience = canExperience,
+            online = experience.online,
+            changeLog = changeLog
         )
     }
 
@@ -237,18 +237,18 @@ class ExperienceAppService(
             val canExperience = userSet.contains(userId) || userId == it.creator
 
             AppExperienceSummary(
-                HashUtil.encodeLongId(it.id),
-                it.name,
-                Platform.valueOf(it.platform),
-                it.version,
-                it.remark ?: "",
-                it.endDate.timestamp(),
-                Source.valueOf(it.source),
-                logoUrl,
-                it.creator,
-                isExpired,
-                canExperience,
-                it.online
+                experienceHashId = HashUtil.encodeLongId(it.id),
+                name = it.name,
+                platform = Platform.valueOf(it.platform),
+                version = it.version,
+                remark = it.remark ?: "",
+                expireDate = it.endDate.timestamp(),
+                source = Source.valueOf(it.source),
+                logoUrl = logoUrl,
+                creator = it.creator,
+                expired = isExpired,
+                canExperience = canExperience,
+                online = it.online
             )
         }
     }
