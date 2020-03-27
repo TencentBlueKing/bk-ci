@@ -197,7 +197,7 @@ class ExtServiceSearchService @Autowired constructor(
         logger.info("[list] userId[$userId],userDeptList[$userDeptList],serviceName[$serviceName],bkService[$bkServiceId],labelCode[$labelCode] get services: $services")
 
         val serviceCodeList = services.map {
-            it["SERVICE_ID"] as String
+            it["SERVICE_CODE"] as String
         }.toList()
         // 获取可见范围
         val serviceVisibleData =
