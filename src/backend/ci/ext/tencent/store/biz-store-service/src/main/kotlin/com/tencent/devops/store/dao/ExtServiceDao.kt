@@ -604,7 +604,7 @@ class ExtServiceDao {
             ta.ID.`as`("SERVICE_ID"),
             ta.SERVICE_NAME,
             ta.CLASSIFY_ID,
-            ta.SERVICE_CODE,
+            ta.SERVICE_CODE.`as`("SERVICE_CODE"),
             ta.LOGO_URL,
             ta.PUBLISHER,
             ta.SUMMARY,
