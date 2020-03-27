@@ -159,12 +159,12 @@ object SigarUtil {
     private fun getMemUsedPercent(): Int {
         val sigar = Sigar()
         val mem = sigar.mem
-        logger.info("usedPercent: " + mem.usedPercent)
+        /*logger.info("usedPercent: " + mem.usedPercent)
         logger.info("used: " + mem.used)
         logger.info("total: " + mem.total)
         logger.info("actualUsed: " + mem.actualUsed)
         logger.info("actualFree: " + mem.actualFree)
-        logger.info("free: " + mem.free)
+        logger.info("free: " + mem.free)*/
         val element = (mem.usedPercent).roundToInt()
         return if (element in 0..100) {
             element
@@ -213,9 +213,9 @@ object SigarUtil {
             when (fs.type) {
                 2 -> {
                     // 分区的盘符名称
-                    logger.info("盘符名称:    " + fs.devName)
+                    // logger.info("盘符名称:    " + fs.devName)
                     // 分区的盘符名称
-                    logger.info("盘符路径:    " + fs.dirName)
+                    // logger.info("盘符路径:    " + fs.dirName)
                     if (fs.dirName == "/data") {
                         diskUsedPercent = (usage.usePercent * 100).roundToInt()
                     }
@@ -240,7 +240,7 @@ object SigarUtil {
         }
 
         logger.info("totalIOUtil: $totalIOUtil")
-        return totalIOUtil / 8
+        return totalIOUtil / 800
     }
 
     /**
