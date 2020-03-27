@@ -54,6 +54,7 @@ import org.springframework.stereotype.Service
 
 @Service
 class TxImageReleaseService @Autowired constructor() : ImageReleaseService() {
+
     private val logger = LoggerFactory.getLogger(TxImageReleaseService::class.java)
 
     override fun getPassTestStatus(isNormalUpgrade: Boolean): Byte {
@@ -90,11 +91,6 @@ class TxImageReleaseService @Autowired constructor() : ImageReleaseService() {
         return processInfo
     }
 
-    override fun getAllowReleaseStatus(isNormalUpgrade: Boolean?): ImageStatusEnum {
-        // fix compile error
-        TODO("not implemented") // To change body of created functions use File | Settings | File Templates.
-    }
-
     /**
      * 初始化进度
      */
@@ -111,5 +107,13 @@ class TxImageReleaseService @Autowired constructor() : ImageReleaseService() {
             processInfo.add(ReleaseProcessItem(MessageCodeUtil.getCodeLanMessage(END), END, NUM_SIX, UNDO))
         }
         return processInfo
+    }
+
+    /**
+     * 获取允许发布的状态
+     */
+    override fun getAllowReleaseStatus(isNormalUpgrade: Boolean?): ImageStatusEnum {
+        return if (isNormalUpgrade != null && isNormalUpgrade) ImageStatusEnum.TESTING
+        else ImageStatusEnum.AUDITING
     }
 }
