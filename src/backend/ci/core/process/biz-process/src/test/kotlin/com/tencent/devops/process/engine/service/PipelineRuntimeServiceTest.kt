@@ -71,7 +71,7 @@ class PipelineRuntimeServiceTest {
     private val pipelineBuildVarDao: PipelineBuildVarDao = mock()
     private val buildDetailDao: BuildDetailDao = mock()
     private val buildStartupParamService: BuildStartupParamService = mock()
-    private val stageTagService: StageTagService = mock()
+    private val pipelineStageService: PipelineStageService = mock()
     private val redisOperation: RedisOperation = RedisOperation(redisTemplate)
 
     private val pipelineRuntimeService = PipelineRuntimeService(
@@ -88,7 +88,7 @@ class PipelineRuntimeServiceTest {
         pipelineBuildVarDao = pipelineBuildVarDao,
         buildDetailDao = buildDetailDao,
         buildStartupParamService = buildStartupParamService,
-        stageTagService = stageTagService,
+        pipelineStageService = pipelineStageService,
         redisOperation = redisOperation
     )
 
