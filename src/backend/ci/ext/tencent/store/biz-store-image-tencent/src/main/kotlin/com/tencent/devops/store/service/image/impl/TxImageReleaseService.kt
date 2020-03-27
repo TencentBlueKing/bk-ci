@@ -92,7 +92,7 @@ class TxImageReleaseService @Autowired constructor() : ImageReleaseService() {
 
     override fun getAllowReleaseStatus(isNormalUpgrade: Boolean?): ImageStatusEnum {
         // fix compile error
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        TODO("not implemented") // To change body of created functions use File | Settings | File Templates.
     }
 
     /**
