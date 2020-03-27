@@ -27,6 +27,7 @@
 package com.tencent.devops.process.engine.dao
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
@@ -34,7 +35,6 @@ import com.tencent.devops.model.process.Tables.T_PIPELINE_BUILD_TASK
 import com.tencent.devops.model.process.tables.TPipelineBuildTask
 import com.tencent.devops.model.process.tables.records.TPipelineBuildTaskRecord
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
-import com.tencent.devops.common.api.pojo.ErrorType
 import org.jooq.DSLContext
 import org.jooq.InsertSetMoreStep
 import org.jooq.Result
@@ -51,7 +51,6 @@ class PipelineBuildTaskDao @Autowired constructor(private val objectMapper: Obje
         dslContext: DSLContext,
         buildTask: PipelineBuildTask
     ) {
-
         val count =
             with(T_PIPELINE_BUILD_TASK) {
                 dslContext.insertInto(
@@ -133,7 +132,7 @@ class PipelineBuildTaskDao @Autowired constructor(private val objectMapper: Obje
                         } else null)
                         .set(ERROR_TYPE, it.errorType?.ordinal)
                         .set(ERROR_CODE, it.errorCode)
-                        .set(ERROR_MSG,  it.errorMsg)
+                        .set(ERROR_MSG, it.errorMsg)
                         .set(CONTAINER_HASH_ID, it.containerHashId)
                 )
             }
