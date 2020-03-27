@@ -12,8 +12,6 @@ import com.tencent.devops.common.pipeline.enums.DockerVersion
 import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
 import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.dispatch.dao.PipelineDockerBuildDao
-import com.tencent.devops.dispatch.dao.PipelineDockerHostDao
-import com.tencent.devops.dispatch.dao.PipelineDockerIPInfoDao
 import com.tencent.devops.dispatch.dao.PipelineDockerTaskSimpleDao
 import com.tencent.devops.dispatch.exception.DockerServiceException
 import com.tencent.devops.dispatch.pojo.DockerHostBuildInfo
@@ -21,8 +19,8 @@ import com.tencent.devops.dispatch.pojo.VolumeStatus
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.dispatch.pojo.redis.RedisBuild
 import com.tencent.devops.dispatch.utils.CommonUtils
+import com.tencent.devops.dispatch.utils.DockerHostUtils
 import com.tencent.devops.dispatch.utils.redis.RedisUtils
-import com.tencent.devops.model.dispatch.tables.records.TDispatchPipelineDockerIpInfoRecord
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
 import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
 import com.tencent.devops.ticket.pojo.enums.CredentialType
@@ -31,7 +29,6 @@ import okhttp3.Request
 import okhttp3.RequestBody
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
@@ -40,9 +37,8 @@ import java.net.URLEncoder
 @Component
 class DockerHostClient @Autowired constructor(
     private val pipelineDockerTaskSimpleDao: PipelineDockerTaskSimpleDao,
-    private val pipelineDockerIpInfoDao: PipelineDockerIPInfoDao,
     private val pipelineDockerBuildDao: PipelineDockerBuildDao,
-    private val pipelineDockerHostDao: PipelineDockerHostDao,
+    private val dockerHostUtils: DockerHostUtils,
     private val redisUtils: RedisUtils,
     private val client: Client,
     private val dslContext: DSLContext
@@ -193,7 +189,7 @@ class DockerHostClient @Autowired constructor(
         }
     }
 
-    fun getAvailableDockerIp(event: PipelineAgentStartupEvent, unAvailableIpList: Set<String> = setOf()): String {
+ /*   fun getAvailableDockerIp(event: PipelineAgentStartupEvent, unAvailableIpList: Set<String> = setOf()): String {
         var grayEnv = false
         val gray = System.getProperty("gray.project", "none")
         if (gray == "grayproject") {
@@ -243,7 +239,7 @@ class DockerHostClient @Autowired constructor(
         }
 
         return ""
-    }
+    }*/
 
     private fun dockerBuildStart(dockerIp: String,
                                  requestBody: DockerHostBuildInfo,
@@ -281,7 +277,7 @@ class DockerHostClient @Autowired constructor(
                         val unAvailableIpListLocal: Set<String> = unAvailableIpList?.plus(dockerIp) ?: setOf(dockerIp)
                         val retryTimeLocal = retryTime + 1
                         // 当前IP不可用，重新获取可用ip
-                        val idcIpLocal = getAvailableDockerIp(event, unAvailableIpListLocal)
+                        val idcIpLocal = dockerHostUtils.getAvailableDockerIp(event, unAvailableIpListLocal)
                         dockerBuildStart(idcIpLocal, requestBody, event, retryTimeLocal, unAvailableIpListLocal)
                     } else {
                         pipelineDockerTaskSimpleDao.updateStatus(
