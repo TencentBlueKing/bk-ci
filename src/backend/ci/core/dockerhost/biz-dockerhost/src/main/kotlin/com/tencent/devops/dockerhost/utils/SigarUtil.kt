@@ -140,6 +140,7 @@ object SigarUtil {
     fun pushDiskIOUtil() {
         try {
             val element = getDiskIORate()
+            logger.info("push disk ioUtil element: $element")
             if (diskIOQueue.size >= queueMaxSize) {
                 queueDiskIOValueSum -= diskIOQueue.pollLast()
             }
