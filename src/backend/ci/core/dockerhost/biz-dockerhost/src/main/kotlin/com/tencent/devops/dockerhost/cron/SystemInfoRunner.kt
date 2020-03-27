@@ -33,17 +33,12 @@ import org.springframework.stereotype.Component
 
 @Component
 class SystemInfoRunner {
-    private val logger = LoggerFactory.getLogger(SystemInfoRunner::class.java)
 
     @Scheduled(cron = "0/10 * * * * ?")
     fun startCollect() {
-        try {
-            SigarUtil.pushMem()
-            SigarUtil.pushCpu()
-            SigarUtil.pushDisk()
-            SigarUtil.pushDiskIOUtil()
-        } catch (t: Throwable) {
-            logger.error("Start collect system info unknown exception", t)
-        }
+        SigarUtil.pushMem()
+        SigarUtil.pushCpu()
+        SigarUtil.pushDisk()
+        SigarUtil.pushDiskIOUtil()
     }
 }
