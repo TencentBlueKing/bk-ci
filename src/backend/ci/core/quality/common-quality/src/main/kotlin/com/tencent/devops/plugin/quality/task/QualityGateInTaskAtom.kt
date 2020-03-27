@@ -26,11 +26,7 @@
 
 package com.tencent.devops.plugin.quality.task
 
-import com.tencent.devops.common.api.exception.TaskExecuteException
-import com.tencent.devops.common.api.pojo.ErrorCode
-import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.pipeline.enums.BuildStatus
@@ -42,17 +38,14 @@ import com.tencent.devops.process.engine.common.BS_ATOM_STATUS_REFRESH_DELAY_MIL
 import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION
 import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION_USERID
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
-import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
 import com.tencent.devops.process.websocket.ChangeType
 import com.tencent.devops.process.websocket.PipelineStatusChangeEvent
 import com.tencent.devops.quality.QualityGateInElement
 import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
-import com.tencent.devops.quality.api.v2.pojo.request.BuildCheckParams
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
-import java.time.LocalDateTime
 
 @Component
 class QualityGateInTaskAtom @Autowired constructor(
@@ -133,7 +126,7 @@ class QualityGateInTaskAtom @Autowired constructor(
         param: QualityGateInElement,
         runVariables: Map<String, String>
     ): AtomResponse {
-        logger.info("QualityGateInTask start...")
+        logger.info("QualityGateInTask start for common...")
         with(task) {
             val checkResult = QualityUtils.getCheckResult(
                 task = task,
@@ -141,8 +134,12 @@ class QualityGateInTaskAtom @Autowired constructor(
                 interceptTask = param.interceptTask,
                 runVariables = runVariables,
                 client = client,
+                rabbitTemplate = rabbitTemplate,
                 position = ControlPointPosition.BEFORE_POSITION
             )
+            logger.info("quality gateway in check result for ${task.buildId}: $checkResult")
+
+
             val elementId = task.taskId
 
             pipelineEventDispatcher.dispatch(
@@ -192,6 +189,15 @@ class QualityGateInTaskAtom @Autowired constructor(
                 task.taskParams[BS_ATOM_STATUS_REFRESH_DELAY_MILLS] = 5000
                 task.taskParams[QUALITY_RESULT] = checkResult.success
             } else {
+                LogUtils.addLine(
+                    rabbitTemplate = rabbitTemplate,
+                    buildId = buildId,
+                    message = "检测完毕",
+                    tag = elementId,
+                    jobId = task.containerHashId,
+                    executeCount = task.executeCount ?: 1
+                )
+
                 LogUtils.addRedLine(
                     rabbitTemplate = rabbitTemplate,
                     buildId = buildId,
@@ -202,6 +208,14 @@ class QualityGateInTaskAtom @Autowired constructor(
                 )
 
                 checkResult.resultList.forEach {
+                    LogUtils.addLine(
+                        rabbitTemplate = rabbitTemplate,
+                        buildId = buildId,
+                        message = "---------",
+                        tag = elementId,
+                        jobId = task.containerHashId,
+                        executeCount = task.executeCount ?: 1
+                    )
                     LogUtils.addRedLine(
                         rabbitTemplate = rabbitTemplate,
                         buildId = buildId,
@@ -233,12 +247,12 @@ class QualityGateInTaskAtom @Autowired constructor(
                 logger.info("quality check fail wait reviewing")
                 val auditUsers = QualityUtils.getAuditUserList(client, projectId, pipelineId, buildId, param.interceptTask!!)
                 LogUtils.addLine(
-                    rabbitTemplate,
-                    buildId,
-                    "质量红线(准入)待审核!审核人：$auditUsers",
-                    elementId,
-                    task.containerHashId,
-                    task.executeCount ?: 1
+                    rabbitTemplate = rabbitTemplate,
+                    buildId = buildId,
+                    message = "质量红线(准入)待审核!审核人：$auditUsers",
+                    tag = elementId,
+                    jobId = task.containerHashId,
+                    executeCount = task.executeCount ?: 1
                 )
                 task.taskParams[BS_ATOM_STATUS_REFRESH_DELAY_MILLS] = checkResult.auditTimeoutSeconds * 1000 // 15 min
                 task.taskParams[QUALITY_RESULT] = checkResult.success

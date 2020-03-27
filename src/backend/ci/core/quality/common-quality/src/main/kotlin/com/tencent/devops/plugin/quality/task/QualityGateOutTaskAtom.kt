@@ -27,7 +27,6 @@
 package com.tencent.devops.plugin.quality.task
 
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.pipeline.enums.BuildStatus
@@ -39,17 +38,14 @@ import com.tencent.devops.process.engine.common.BS_ATOM_STATUS_REFRESH_DELAY_MIL
 import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION
 import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION_USERID
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
-import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
 import com.tencent.devops.process.websocket.ChangeType
 import com.tencent.devops.process.websocket.PipelineStatusChangeEvent
 import com.tencent.devops.quality.QualityGateOutElement
 import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
-import com.tencent.devops.quality.api.v2.pojo.request.BuildCheckParams
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
-import java.time.LocalDateTime
 
 @Component
 class QualityGateOutTaskAtom @Autowired constructor(
@@ -138,9 +134,11 @@ class QualityGateOutTaskAtom @Autowired constructor(
                 interceptTask = param.interceptTask,
                 runVariables = runVariables,
                 client = client,
+                rabbitTemplate = rabbitTemplate,
                 position = ControlPointPosition.AFTER_POSITION
             )
             val elementId = task.taskId
+            logger.info("quality gateway out check result for ${task.buildId}: $checkResult")
 
             pipelineEventDispatcher.dispatch(PipelineStatusChangeEvent(
                 source = "pipelineDetailChangeEvent",

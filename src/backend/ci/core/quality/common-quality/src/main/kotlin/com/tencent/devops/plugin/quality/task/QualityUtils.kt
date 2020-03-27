@@ -31,12 +31,14 @@ import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.log.utils.LogUtils
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
 import com.tencent.devops.quality.api.v2.ServiceQualityRuleResource
 import com.tencent.devops.quality.api.v2.pojo.request.BuildCheckParams
 import com.tencent.devops.quality.pojo.RuleCheckResult
 import org.slf4j.LoggerFactory
+import org.springframework.amqp.rabbit.core.RabbitTemplate
 import java.time.LocalDateTime
 
 object QualityUtils {
@@ -83,6 +85,7 @@ object QualityUtils {
         interceptTask: String?,
         runVariables: Map<String, String>,
         client: Client,
+        rabbitTemplate: RabbitTemplate,
         position: String
     ): RuleCheckResult {
 
@@ -91,6 +94,7 @@ object QualityUtils {
         val buildId = task.buildId
         val templateId = task.templateId
         val buildNo = runVariables[PIPELINE_BUILD_NUM].toString()
+        val elementId = task.taskId
 
         if (interceptTask == null) {
             logger.error("Fail to find quality gate intercept element")
@@ -115,14 +119,33 @@ object QualityUtils {
                 runtimeVariable = runVariables
             )
             if (QUALITY_CODECC_LAZY_ATOM.contains(interceptTask)) {
-                for (gap in QUALITY_LAZY_TIME_GAP) {
-                    val hisMetadata = client.get(ServiceQualityRuleResource::class).getHisMetadata(buildId).data ?: listOf()
-                    val hasMetadata = hisMetadata.any { it.elementType in QUALITY_CODECC_LAZY_ATOM }
-                    if (hasMetadata) break
-                    Thread.sleep(gap * 1000L)
+                run loop@{
+                    QUALITY_LAZY_TIME_GAP.forEachIndexed { index, gap ->
+                        val hisMetadata =
+                            client.get(ServiceQualityRuleResource::class).getHisMetadata(buildId).data ?: listOf()
+                        val hasMetadata = hisMetadata.any { it.elementType in QUALITY_CODECC_LAZY_ATOM }
+                        if (hasMetadata) return@loop
+                        LogUtils.addLine(
+                            rabbitTemplate = rabbitTemplate,
+                            buildId = buildId,
+                            message = "第 $index 次轮询等待红线结果",
+                            tag = elementId,
+                            jobId = task.containerHashId,
+                            executeCount = task.executeCount ?: 1
+                        )
+                        Thread.sleep(gap * 1000L)
+                    }
                 }
                 check(client, buildCheckParams)
             } else {
+                LogUtils.addLine(
+                    rabbitTemplate = rabbitTemplate,
+                    buildId = buildId,
+                    message = "检测红线结果",
+                    tag = elementId,
+                    jobId = task.containerHashId,
+                    executeCount = task.executeCount ?: 1
+                )
                 check(client, buildCheckParams)
             }
         } catch (t: Throwable) {
