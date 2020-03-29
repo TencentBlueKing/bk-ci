@@ -48,19 +48,19 @@ data class ImageUpdateRequest(
     val projectCode: String?,
     @ApiModelProperty("镜像来源", required = true)
     val imageSourceType: ImageType,
-    @ApiModelProperty("镜像仓库地址", required = true)
+    @ApiModelProperty("镜像仓库地址", required = false)
     val imageRepoUrl: String?,
     @ApiModelProperty("镜像在仓库的名称", required = true)
     val imageRepoName: String,
-    @ApiModelProperty("凭证ID", required = true)
+    @ApiModelProperty("凭证ID", required = false)
     val ticketId: String?,
     @ApiModelProperty("镜像大小", required = false)
     val imageSize: String?,
     @ApiModelProperty("镜像TAG", required = true)
     val imageTag: String,
-    @ApiModelProperty("dockerFile类型", required = true)
+    @ApiModelProperty("dockerFile类型", required = false)
     val dockerFileType: String?,
-    @ApiModelProperty("dockerFile内容", required = true)
+    @ApiModelProperty("dockerFile内容", required = false)
     val dockerFileContent: String?,
     @ApiModelProperty("LOGO url", required = true)
     val logoUrl: String,

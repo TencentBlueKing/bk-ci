@@ -101,6 +101,7 @@ func DetectAgentVersion() string {
 	output, err := command.RunCommand(workDir+"/"+GetClienAgentFile(), []string{"version"}, workDir, nil)
 	if err != nil {
 		logs.Warn("detect agent version failed: ", err.Error())
+		logs.Warn("output: ", string(output))
 		GAgentEnv.AgentVersion = ""
 		return ""
 	}
@@ -115,6 +116,7 @@ func DetectWorkerVersion() string {
 
 	if err != nil {
 		logs.Warn("detect worker version failed: ", err.Error())
+		logs.Warn("output: ", string(output))
 		GAgentEnv.SlaveVersion = ""
 		return ""
 	}

@@ -1,14 +1,14 @@
 <template>
     <div
         ref="stageContainer"
-        :class="{ &quot;soda-stage-container&quot;: true, &quot;first-container&quot;: stageIndex === 0, &quot;readonly&quot;: !editable || containerDisabled }"
+        :class="{ 'soda-stage-container': true, 'first-container': stageIndex === 0, 'readonly': !editable || containerDisabled }"
     >
         <template v-if="!isOnlyOneContainer && containerLength - 1 !== containerIndex">
-            <span class="connect-line left" :class="{ &quot;cruve&quot;: containerIndex === 0 }"></span>
-            <span class="connect-line right" :class="{ &quot;cruve&quot;: containerIndex === 0 }"></span>
+            <span class="connect-line left" :class="{ 'cruve': containerIndex === 0 }"></span>
+            <span class="connect-line right" :class="{ 'cruve': containerIndex === 0 }"></span>
         </template>
-        <h3 :class="{ &quot;container-title&quot;: true, &quot;first-ctitle&quot;: containerIndex === 0, [container.status]: container.status }" @click="showContainerPanel">
-            <status-icon type="container" :editable="editable" :job-option="container.jobControlOption" :status="container.status">
+        <h3 :class="{ 'container-title': true, 'first-ctitle': containerIndex === 0, [container.status]: container.status }" @click.stop="showContainerPanel">
+            <status-icon type="container" :editable="editable" :container-disabled="containerDisabled" :status="container.status">
                 {{ containerSerialNum }}
             </status-icon>
             <p class="container-name">
@@ -23,7 +23,16 @@
                 <bk-checkbox class="atom-canskip-checkbox" v-model="container.runContainer" :disabled="containerDisabled"></bk-checkbox>
             </span>
         </h3>
-        <atom-list :container="container" :editable="editable" :is-preview="isPreview" :can-skip-element="canSkipElement" :stage-index="stageIndex" :container-index="containerIndex" :container-status="container.status">
+        <atom-list
+            :container="container"
+            :editable="editable"
+            :is-preview="isPreview"
+            :can-skip-element="canSkipElement"
+            :stage-index="stageIndex"
+            :container-index="containerIndex"
+            :container-status="container.status"
+            :container-disabled="containerDisabled"
+        >
         </atom-list>
     </div>
 </template>
@@ -49,6 +58,7 @@
             containerIndex: Number,
             stageLength: Number,
             containerLength: Number,
+            stageDisabled: Boolean,
             editable: {
                 type: Boolean,
                 default: true
@@ -96,7 +106,7 @@
                 return this.$route.params.projectId
             },
             containerDisabled () {
-                return !!(this.container.jobControlOption && this.container.jobControlOption.enable === false)
+                return !!(this.container.jobControlOption && this.container.jobControlOption.enable === false) || this.stageDisabled
             }
         },
         watch: {
@@ -108,7 +118,7 @@
             'container.runContainer' (newVal) {
                 const { container, updateContainer } = this
                 const { elements } = container
-                if (this.containerDisabled) return
+                if (this.containerDisabled && newVal) return
                 elements.filter(item => (item.additionalOptions === undefined || item.additionalOptions.enable)).map(item => {
                     item.canElementSkip = newVal
                     return false

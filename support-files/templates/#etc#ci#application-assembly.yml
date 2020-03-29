@@ -190,6 +190,8 @@ store:
   artifactoryServiceUrlPrefix: __HTTP_SCHEMA__://__BKCI_FQDN__:__BKCI_HTTP_PORT__/ms/artifactory/api
   ideAtomDetailBaseUrl: __HTTP_SCHEMA__://__BKCI_FQDN__:__BKCI_HTTP_PORT__/console/store/atomStore/detail/ide/
   imageDetailBaseUrl: __HTTP_SCHEMA__://__BKCI_FQDN__:__BKCI_HTTP_PORT__/console/store/atomStore/detail/image/
+  templateApproveSwitch: close
+  imageApproveSwitch: close
 
 logo:
   allowUploadLogoTypes: jpg,png,svg

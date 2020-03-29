@@ -31,5 +31,5 @@ data class PipelineBuildCreate(
     val pipelineId: String,
     val buildId: String,
     val vmSeqId: String,
-    val vmId: Int
+    val vmId: Long
 )

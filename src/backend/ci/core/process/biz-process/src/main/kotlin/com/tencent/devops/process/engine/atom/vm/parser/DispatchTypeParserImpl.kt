@@ -84,6 +84,7 @@ class DispatchTypeParserImpl @Autowired constructor(
                 // 镜像来源替换为原始来源
                 dispatchType.imageType = imageRepoInfo.sourceType
                 dispatchType.value = completeImageName
+                dispatchType.dockerBuildVersion = completeImageName
                 dispatchType.credentialId = imageRepoInfo.ticketId
                 dispatchType.credentialProject = imageRepoInfo.ticketProject
                 dispatchType.imagePublicFlag = imageRepoInfo.publicFlag

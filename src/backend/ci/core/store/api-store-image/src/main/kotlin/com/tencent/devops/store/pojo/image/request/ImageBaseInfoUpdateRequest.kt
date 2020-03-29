@@ -48,6 +48,10 @@ data class ImageBaseInfoUpdateRequest(
     val publisher: String? = null,
     @ApiModelProperty(value = "镜像大小", required = false)
     var imageSize: String? = null,
+    @ApiModelProperty("dockerFile类型", required = false)
+    val dockerFileType: String? = null,
+    @ApiModelProperty("dockerFile内容", required = false)
+    val dockerFileContent: String? = null,
     @ApiModelProperty("删除标识", required = false)
     val deleteFlag: Boolean? = null
 )

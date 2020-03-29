@@ -104,13 +104,13 @@ class VMDao {
                     .limit(offset, limit)
                     .fetch()
 
-    fun findVMById(dslContext: DSLContext, id: Int): TDispatchVmRecord? {
+    fun findVMById(dslContext: DSLContext, id: Long): TDispatchVmRecord? {
         return dslContext.selectFrom(TDispatchVm.T_DISPATCH_VM)
                 .where(TDispatchVm.T_DISPATCH_VM.VM_ID.eq(id))
                 .fetchAny()
     }
 
-    fun findVMByIds(dslContext: DSLContext, ids: Set<Int>): Result<TDispatchVmRecord> {
+    fun findVMByIds(dslContext: DSLContext, ids: Set<Long>): Result<TDispatchVmRecord> {
         return dslContext.selectFrom(TDispatchVm.T_DISPATCH_VM)
                 .where(TDispatchVm.T_DISPATCH_VM.VM_ID.`in`(ids))
                 .fetch()
@@ -136,7 +136,7 @@ class VMDao {
         }
     }
 
-    fun maintainVM(dslContext: DSLContext, vmId: Int, maintain: Boolean) {
+    fun maintainVM(dslContext: DSLContext, vmId: Long, maintain: Boolean) {
         with(TDispatchVm.T_DISPATCH_VM) {
             dslContext.update(this)
                     .set(VM_MAINTAIN, ByteUtils.bool2Byte(maintain))
@@ -185,7 +185,7 @@ class VMDao {
         }
     }
 
-    fun deleteVM(dslContext: DSLContext, id: Int): Int {
+    fun deleteVM(dslContext: DSLContext, id: Long): Int {
         with(TDispatchVm.T_DISPATCH_VM) {
             return dslContext.deleteFrom(this)
                     .where(VM_ID.eq(id))

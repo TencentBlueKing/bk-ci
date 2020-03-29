@@ -29,8 +29,11 @@ package com.tencent.devops.process.engine.control
 import com.tencent.devops.common.pipeline.NameAndValue
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.JobRunCondition
+import com.tencent.devops.common.pipeline.enums.StageRunCondition
 import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
 import com.tencent.devops.common.pipeline.pojo.element.RunCondition
+import com.tencent.devops.process.utils.TASK_FAIL_RETRY_MAX_COUNT
+import com.tencent.devops.process.utils.TASK_FAIL_RETRY_MIN_COUNT
 import org.slf4j.LoggerFactory
 
 /**
@@ -62,6 +65,26 @@ object ControlUtils {
             return false
         }
         return additionalOptions.continueWhenFailed
+    }
+
+    fun retryWhenFailure(additionalOptions: ElementAdditionalOptions?, retryCount: Int): Boolean {
+        if (additionalOptions == null) {
+            return false
+        }
+        val retryWhenFailed = additionalOptions.retryWhenFailed ?: false
+
+        return if (retryWhenFailed) {
+            var settingRetryCount = additionalOptions!!.retryCount ?: 1
+            if (settingRetryCount > TASK_FAIL_RETRY_MAX_COUNT) {
+                settingRetryCount = TASK_FAIL_RETRY_MAX_COUNT
+            }
+            if (settingRetryCount < TASK_FAIL_RETRY_MIN_COUNT) {
+                settingRetryCount = TASK_FAIL_RETRY_MIN_COUNT
+            }
+            retryCount < settingRetryCount
+        } else {
+            false
+        }
     }
 
     fun checkAdditionalSkip(
@@ -126,7 +149,7 @@ object ControlUtils {
             !hasFailedTaskInSuccessContainer
     }
 
-    fun checkSkipCondition(
+    fun checkJobSkipCondition(
         conditions: List<NameAndValue>,
         variables: Map<String, Any>,
         buildId: String,
@@ -142,7 +165,30 @@ object ControlUtils {
             val value = names.value
             val existValue = variables[key]
             if (value != existValue) {
-                logger.info("[$buildId]|$runCondition|key=$key|actual=$existValue|expect=$value")
+                logger.info("[$buildId]|JOB_CONDITION|$runCondition|key=$key|actual=$existValue|expect=$value")
+                return !skip // 不满足则取反
+            }
+        }
+        return skip
+    }
+
+    fun checkStageSkipCondition(
+        conditions: List<NameAndValue>,
+        variables: Map<String, Any>,
+        buildId: String,
+        runCondition: StageRunCondition
+    ): Boolean {
+        val skip = when (runCondition) {
+            StageRunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN -> true // 条件匹配就跳过
+            StageRunCondition.CUSTOM_VARIABLE_MATCH -> false // 条件全匹配就运行
+            else -> return false // 其它类型直接返回不跳过
+        }
+        for (names in conditions) {
+            val key = names.key
+            val value = names.value
+            val existValue = variables[key]
+            if (value != existValue) {
+                logger.info("[$buildId]|STAGE_CONDITION|$runCondition|key=$key|actual=$existValue|expect=$value")
                 return !skip // 不满足则取反
             }
         }
