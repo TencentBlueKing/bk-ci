@@ -823,14 +823,14 @@ class PipelineBuildDetailService @Autowired constructor(
             val record = buildDetailDao.get(dslContext, buildId)
             stopWatch.stop()
             if (record == null) {
-                message = "WARN: The build detail of build $buildId is not exist, ignore"
+                message = "WARN: The build detail is not exist, ignore"
                 return
             }
             stopWatch.start("model")
             val model = JsonUtil.to(record.model, Model::class.java)
             stopWatch.stop()
             if (model.stages.size <= 1) {
-                message = "WARN: It only contains trigger container of build $buildId - $model"
+                message = "Trigger container only"
                 return
             }
 
@@ -839,7 +839,7 @@ class PipelineBuildDetailService @Autowired constructor(
             stopWatch.stop()
 
             if (!modelInterface.needUpdate()) {
-                message = "Will not update the $model"
+                message = "Will not update"
                 return
             }
 
@@ -864,7 +864,7 @@ class PipelineBuildDetailService @Autowired constructor(
             stopWatch.start("unlock")
             lock.unlock()
             stopWatch.stop()
-            logger.info("[$buildId|$buildStatus]|update| $message| watch=$stopWatch")
+            logger.info("[$buildId|$buildStatus]|update_detail_model| $message| watch=$stopWatch")
         }
     }
 
