@@ -183,5 +183,4 @@ class UserDockerHostResourceImpl @Autowired constructor(
             throw PermissionForbiddenException("用户($userId)无权限在工程($projectId)下编辑流水线($pipelineId)")
         }
     }
-
 }

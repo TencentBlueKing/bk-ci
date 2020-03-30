@@ -104,7 +104,7 @@ class DockerHostBuildService @Autowired constructor(
     fun enable(pipelineId: String, vmSeqId: Int?, enable: Boolean) =
         pipelineDockerEnableDao.enable(dslContext, pipelineId, vmSeqId, enable)
 
-    /*fun dockerHostBuild(event: PipelineAgentStartupEvent) {
+    fun dockerHostBuild(event: PipelineAgentStartupEvent) {
         logger.info("Start docker host build ($event)}")
         val dispatchType = event.dispatchType as DockerDispatchType
         dslContext.transaction { configuration ->
@@ -241,9 +241,9 @@ class DockerHostBuildService @Autowired constructor(
                 dockerImage = dockerImage
             )
         }
-    }*/
+    }
 
-/*    private fun saveDockerInfoToBuildDetail(
+    private fun saveDockerInfoToBuildDetail(
         projectId: String,
         pipelineId: String,
         buildId: String,
@@ -258,7 +258,7 @@ class DockerHostBuildService @Autowired constructor(
             vmSeqId,
             VmInfo("", DockerUtils.parseShortImage(dockerImage))
         )
-    }*/
+    }
 
     fun finishDockerBuild(buildId: String, vmSeqId: String?, success: Boolean) {
         logger.info("Finish docker build of buildId($buildId) and vmSeqId($vmSeqId) with result($success)")
@@ -481,7 +481,7 @@ class DockerHostBuildService @Autowired constructor(
     /**
      * 每30分钟执行一次，清理大于两天的任务
      */
-    // @Scheduled(initialDelay = 30 * 1000, fixedDelay = 1800 * 1000)
+    @Scheduled(initialDelay = 30 * 1000, fixedDelay = 1800 * 1000)
     @Deprecated("this function is deprecated!")
     fun clearTimeoutTask() {
         val redisLock = DockerHostLock(redisOperation)
@@ -503,7 +503,7 @@ class DockerHostBuildService @Autowired constructor(
     /**
      * 每20秒执行一次，清理固定构建机的任务IP，以让其他构建机可以认领
      */
-    // @Scheduled(initialDelay = 60 * 1000, fixedDelay = 20 * 1000)
+    @Scheduled(initialDelay = 60 * 1000, fixedDelay = 20 * 1000)
     @Deprecated("this function is deprecated!")
     fun resetHostTag() {
         val redisLock = DockerHostLock(redisOperation)
@@ -536,7 +536,7 @@ class DockerHostBuildService @Autowired constructor(
     /**
      * 每40秒执行一次，重置长时间未认领的固定区域的任务，重置为深圳区域
      */
-    // @Scheduled(initialDelay = 90 * 1000, fixedDelay = 40 * 1000)
+    @Scheduled(initialDelay = 90 * 1000, fixedDelay = 40 * 1000)
     @Deprecated("this function is deprecated!")
     fun resetTaskZone() {
         val redisLock = DockerHostLock(redisOperation)

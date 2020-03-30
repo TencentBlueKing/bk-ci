@@ -74,7 +74,8 @@ class DockerHostClient @Autowired constructor(
                 Zone.SHENZHEN.name
             } else {
                 event.zone!!.name
-            })
+            }
+        )
         val agentId = HashUtil.encodeLongId(id)
         redisUtils.setDockerBuild(
             id, secretKey,
@@ -170,7 +171,12 @@ class DockerHostClient @Autowired constructor(
         val url = "http://$dockerIp/api/docker/build/end"
         val proxyUrl = "$idcProxy/proxy-devnet?url=${urlEncode(url)}"
         val request = Request.Builder().url(proxyUrl)
-            .delete(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), JsonUtil.toJson(requestBody)))
+            .delete(
+                RequestBody.create(
+                    MediaType.parse("application/json; charset=utf-8"),
+                    JsonUtil.toJson(requestBody)
+                )
+            )
             .addHeader("Accept", "application/json; charset=utf-8")
             .addHeader("Content-Type", "application/json; charset=utf-8")
             .build()
@@ -189,11 +195,13 @@ class DockerHostClient @Autowired constructor(
         }
     }
 
-    private fun dockerBuildStart(dockerIp: String,
-                                 requestBody: DockerHostBuildInfo,
-                                 event: PipelineAgentStartupEvent,
-                                 retryTime: Int = 0,
-                                 unAvailableIpList: Set<String>? = null) {
+    private fun dockerBuildStart(
+        dockerIp: String,
+        requestBody: DockerHostBuildInfo,
+        event: PipelineAgentStartupEvent,
+        retryTime: Int = 0,
+        unAvailableIpList: Set<String>? = null
+    ) {
         logger.info("[${event.projectId}|${event.pipelineId}|${event.buildId}|$retryTime] Start build Docker VM $dockerIp requestBody: $requestBody")
         val url = "http://$dockerIp/api/docker/build/start"
         val proxyUrl = "$idcProxy/proxy-devnet?url=${urlEncode(url)}"
@@ -256,4 +264,3 @@ class DockerHostClient @Autowired constructor(
 
     private fun urlEncode(s: String) = URLEncoder.encode(s, "UTF-8")
 }
-
