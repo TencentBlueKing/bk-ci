@@ -652,7 +652,7 @@ class ExtServiceDao {
             val t = dslContext.select(
                 tas.STORE_CODE,
                 tas.STORE_TYPE,
-                tas.DOWNLOADS.`as`(ExtServiceSortTypeEnum.DOWNLOAD_COUNT.sortType),
+                tas.DOWNLOADS.`as`(ExtServiceSortTypeEnum.DOWNLOAD_COUNT.name),
                 tas.SCORE_AVERAGE
             ).from(tas).asTable("t")
             baseStep.leftJoin(t).on(ta.SERVICE_CODE.eq(t.field("STORE_CODE", String::class.java)))
@@ -664,7 +664,7 @@ class ExtServiceDao {
             if (sortType == ExtServiceSortTypeEnum.DOWNLOAD_COUNT && score == null) {
                 val tas = TStoreStatisticsTotal.T_STORE_STATISTICS_TOTAL.`as`("tas")
                 val t =
-                    dslContext.select(tas.STORE_CODE, tas.DOWNLOADS.`as`(ExtServiceSortTypeEnum.DOWNLOAD_COUNT.sortType))
+                    dslContext.select(tas.STORE_CODE, tas.DOWNLOADS.`as`(ExtServiceSortTypeEnum.DOWNLOAD_COUNT.name))
                         .from(tas).where(tas.STORE_TYPE.eq(storeType)).asTable("t")
                 baseStep.leftJoin(t).on(ta.SERVICE_CODE.eq(t.field("STORE_CODE", String::class.java)))
             }

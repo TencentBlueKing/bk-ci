@@ -76,7 +76,7 @@ class OpExtServiceService @Autowired constructor(
             itemId = itemId,
             lableId = lableId,
             isApprove = isApprove,
-            sortType = sortType ?: ExtServiceSortTypeEnum.UPDATE_TIME.sortType,
+            sortType = sortType ?: ExtServiceSortTypeEnum.UPDATE_TIME.name,
             desc = desc ?: true,
             page = page,
             pageSize = pageSize

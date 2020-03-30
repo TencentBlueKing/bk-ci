@@ -26,10 +26,10 @@
 
 package com.tencent.devops.store.pojo.enums
 
-enum class ExtServiceSortTypeEnum(val sortType: String) {
-    CREATOR("CREATOR"),
-    MODIFIER("MODIFIER"),
-    CREATE_TIME("CREATE_TIME"),
-    UPDATE_TIME("UPDATE_TIME"),
-    DOWNLOAD_COUNT("DOWNLOAD_COUNT")
+enum class ExtServiceSortTypeEnum() {
+    CREATOR,
+    MODIFIER,
+    CREATE_TIME,
+    UPDATE_TIME,
+    DOWNLOAD_COUNT
 }

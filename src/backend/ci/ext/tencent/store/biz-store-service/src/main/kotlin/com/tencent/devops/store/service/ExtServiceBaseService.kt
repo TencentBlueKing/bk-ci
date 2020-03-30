@@ -401,15 +401,13 @@ abstract class ExtServiceBaseService @Autowired constructor() {
             val itemIdList = submitDTO.extensionItemList
             val itemCreateInfoList =
                 getFileServiceProps(serviceCode, featureInfoRecord!!.repositoryHashId, EXTENSION_JSON_NAME, itemIdList)
-            if (null != itemIdList) {
-                extServiceItemRelDao.deleteByServiceId(context, serviceId)
-                extServiceItemRelDao.batchAdd(
-                    dslContext = dslContext,
-                    userId = userId,
-                    serviceId = serviceId,
-                    itemPropList = itemCreateInfoList!!
-                )
-            }
+            extServiceItemRelDao.deleteByServiceId(context, serviceId)
+            extServiceItemRelDao.batchAdd(
+                dslContext = dslContext,
+                userId = userId,
+                serviceId = serviceId,
+                itemPropList = itemCreateInfoList!!
+            )
             // 添加扩展点使用记录
             client.get(ServiceItemResource::class).addServiceNum(itemIdList)
 
@@ -879,7 +877,6 @@ abstract class ExtServiceBaseService @Autowired constructor() {
             val featureInfoRecord = extFeatureDao.getLatestServiceByCode(dslContext, serviceCode)
             logger.info("getServiceVersion featureInfoRecord: $featureInfoRecord")
 
-            val repositoryHashId = featureInfoRecord!!.repositoryHashId
             val flag =
                 storeUserService.isCanInstallStoreComponent(defaultFlag, userId, serviceCode, StoreTypeEnum.SERVICE)
             val userCommentInfo =
@@ -1131,9 +1128,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         val nameInfo = extServiceDao.listServiceByName(dslContext, serviceName)
         if (nameInfo != null) {
             for (code in nameInfo) {
-                if (serviceCode != code!!.serviceCode) {
-                    return true
-                }
+                if (serviceCode != code!!.serviceCode) return true
             }
         }
         return false
