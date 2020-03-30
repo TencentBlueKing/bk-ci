@@ -300,8 +300,21 @@ class DockerHostBuildService @Autowired constructor(
         val redisLock = DockerHostLock(redisOperation)
         try {
             val gray = !grayFlag.isNullOrBlank() && grayFlag!!.toBoolean()
+            logger.info("[$hostTag|$grayFlag] Start to get gray Project")
             val grayProjectSet = this.gray.grayProjectSet(redisOperation)
-            redisLock.lock()
+            logger.info("[$hostTag|$grayFlag] start to get lock")
+            val start = System.currentTimeMillis()
+            var tryLock = redisLock.tryLock()
+            var c = 0
+            while(!tryLock && c++< 20) {
+                Thread.sleep(200)
+                tryLock = redisLock.tryLock()
+            }
+            val time = System.currentTimeMillis() - start
+            logger.info("[$hostTag|$grayFlag] gray=$gray, tryLock=$tryLock, time=$time")
+            if (!tryLock) {
+                return Result(1, "lock fail")
+            }
             if (gray) {
                 // 优先取设置了IP的任务（可能是固定构建机，也可能是上次用的构建机）
                 var task = pipelineDockerTaskDao.getQueueTasksByProj(dslContext, grayProjectSet, hostTag)
