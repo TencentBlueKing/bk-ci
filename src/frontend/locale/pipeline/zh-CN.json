@@ -85,7 +85,7 @@
     "stageTimeoutLabel": "Stage超时时间",
     "stageTimeoutError": "Stage超时时间错误",
     "stageTimeoutDesc": "1-720之间的整数",
-    "stageUserTriggers": "Stag审核人",
+    "stageUserTriggers": "Stage审核人",
     "stageOptionLabel": "本Stage执行条件",
     "stageTriggerDesc": "多个人员用英文逗号分隔",
     "skipStageDesc": "已跳过",
