@@ -1603,10 +1603,15 @@ class PipelineRuntimeService @Autowired constructor(
             }
             logger.info("[$pipelineId]|getRecommendVersion-$buildId recommendVersion: $recommendVersion")
             val remark = getVariable(buildId, PIPELINE_BUILD_REMARK)
+            val finalStatus = if (BuildStatus.isFinish(status) || status == BuildStatus.STAGE_SUCCESS) {
+                status
+            } else {
+                BuildStatus.FAILED
+            }
             pipelineBuildDao.finishBuild(
                 dslContext = dslContext,
                 buildId = buildId,
-                buildStatus = if (BuildStatus.isFinish(status)) status else BuildStatus.FAILED,
+                buildStatus = finalStatus,
                 executeTime = executeTime,
                 buildParameters = JsonUtil.toJson(buildParameters),
                 recommendVersion = recommendVersion,
