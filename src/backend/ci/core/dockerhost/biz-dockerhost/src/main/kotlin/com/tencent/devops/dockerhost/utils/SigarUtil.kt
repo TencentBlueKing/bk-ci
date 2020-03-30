@@ -233,12 +233,12 @@ object SigarUtil {
             if (it.isNotEmpty() && !it.contains("Device:") && !it.contains("Linux")) {
                 val strArr = it.split(" ")
                 val ioUtil = (strArr[strArr.size - 1].toDouble() * 100).roundToInt()
-                logger.info("====: $it || $ioUtil")
+                // logger.info("====: $it || $ioUtil")
                 totalIOUtil += ioUtil
             }
         }
 
-        logger.info("totalIOUtil: $totalIOUtil")
+        // logger.info("totalIOUtil: $totalIOUtil")
         return totalIOUtil / 800
     }
 
@@ -249,13 +249,13 @@ object SigarUtil {
      * @return 字符串结果
      */
     private fun runCommand(CMD: String): String? {
-        try {
+        return try {
             val pos = Runtime.getRuntime().exec(CMD)
             pos.waitFor()
-            return pos.inputStream.readBytes().toString(Charset.defaultCharset())
+            pos.inputStream.readBytes().toString(Charset.defaultCharset())
         } catch (e: Exception) {
             logger.error("runCommand error.", e)
-            return ""
+            ""
         }
     }
 }
