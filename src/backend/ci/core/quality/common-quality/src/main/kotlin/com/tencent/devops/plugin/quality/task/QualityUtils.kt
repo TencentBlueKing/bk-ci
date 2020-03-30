@@ -184,17 +184,6 @@ object QualityUtils {
             val atomDesc = if (position == ControlPointPosition.BEFORE_POSITION) "准入" else "准出"
             val elementId = task.taskId
 
-            pipelineEventDispatcher.dispatch(
-                PipelineStatusChangeEvent(
-                    source = "pipelineDetailChangeEvent",
-                    pipelineId = pipelineId,
-                    changeType = ChangeType.DETAIL,
-                    buildId = buildId,
-                    projectId = projectId,
-                    userId = task.starter
-                )
-            )
-
             if (checkResult.success) {
                 LogUtils.addLine(
                     rabbitTemplate = rabbitTemplate,
