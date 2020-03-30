@@ -34,7 +34,6 @@ import java.nio.charset.Charset
 import java.util.ArrayDeque
 import kotlin.math.roundToInt
 
-
 object SigarUtil {
     private val logger = LoggerFactory.getLogger(SigarUtil::class.java)
 

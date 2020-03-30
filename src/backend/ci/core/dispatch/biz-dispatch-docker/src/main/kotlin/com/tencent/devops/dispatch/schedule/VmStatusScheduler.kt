@@ -31,19 +31,48 @@ class VmStatusScheduler @Autowired constructor(
     @Value("\${devopsGateway.idcProxy}")
     val idcProxy: String? = null
 
+    /**
+     * 每隔五分钟定时刷新check母机状态
+     */
     @Scheduled(cron = "0 0/5 * * * ?")
     fun run() {
-        logger.info("VolumeStatusUpdateJob start")
-
         val redisLock = RedisLock(redisOperation, jobLockKey, 3600L)
         try {
             val lockSuccess = redisLock.tryLock()
             if (lockSuccess) {
-                logger.info("IDC VM status fresh start")
+                logger.info("Docker VM status fresh start")
                 executeTask()
             }
         } catch (e: Throwable) {
-            logger.error("IDC VM status fresh exception", e)
+            logger.error(" Docker status fresh exception", e)
+        } finally {
+            redisLock.unlock()
+        }
+    }
+
+    /**
+     * 每隔一小时定时重新check母机状态
+     */
+    @Scheduled(cron = "0 0 0/1 * * ?")
+    fun checkVMStatus() {
+        val redisLock = RedisLock(redisOperation, jobLockKey, 3600L)
+        try {
+            val lockSuccess = redisLock.tryLock()
+            if (lockSuccess) {
+                logger.info("Start check docker VM status.")
+                var grayEnv = false
+                val gray = System.getProperty("gray.project", "none")
+                if (gray == "grayproject") {
+                    grayEnv = true
+                }
+                logger.info("checkVMStatus gray: $gray")
+                val unableDockerIpList = pipelineDockerIpInfoDao.getEnableDockerIpList(dslContext, false, grayEnv)
+                unableDockerIpList.stream().forEach {
+                    singleTask(it)
+                }
+            }
+        } catch (e: Throwable) {
+            logger.error("Start check docker VM status fail.", e)
         } finally {
             redisLock.unlock()
         }
@@ -56,7 +85,7 @@ class VmStatusScheduler @Autowired constructor(
             grayEnv = true
         }
         logger.info("getAvailableDockerIp gray: $gray")
-        val dockerIpList = pipelineDockerIpInfoDao.getEnableDockerIpList(dslContext, grayEnv)
+        val dockerIpList = pipelineDockerIpInfoDao.getEnableDockerIpList(dslContext, true, grayEnv)
         dockerIpList.parallelStream().forEach {
             singleTask(it)
         }
@@ -64,7 +93,6 @@ class VmStatusScheduler @Autowired constructor(
 
     private fun singleTask(it: TDispatchPipelineDockerIpInfoRecord) {
         val itDockerIp = it.dockerIp as String
-        val capacity = it.capacity as Int
         val enable = it.enable as Boolean
         val url = "http://$itDockerIp/api/docker/host/load"
         val proxyUrl = "$idcProxy/proxy-devnet?url=${urlEncode(url)}"
@@ -86,20 +114,23 @@ class VmStatusScheduler @Autowired constructor(
                     val averageMemLoad = dockerHostLoad["averageMemLoad"] as Int
                     val averageDiskLoad = dockerHostLoad["averageDiskLoad"] as Int
                     val averageDiskIOLoad = dockerHostLoad["averageDiskIOLoad"] as Int
-                    pipelineDockerIpInfoDao.update(dslContext, itDockerIp, capacity, usedNum, averageCpuLoad,
-                        averageMemLoad, averageDiskLoad, averageDiskIOLoad, enable)
+                    pipelineDockerIpInfoDao.update(dslContext, itDockerIp, usedNum, averageCpuLoad,
+                        averageMemLoad, averageDiskLoad, averageDiskIOLoad, true)
                 } else {
-                    // 更新容器状态
-                    pipelineDockerIpInfoDao.updateDockerIpStatus(dslContext, it.id, false)
+                    // 如果之前可用，更新容器状态
+                    if (enable) {
+                        pipelineDockerIpInfoDao.updateDockerIpStatus(dslContext, it.id, false)
+                    }
 
                     val msg = response["message"] as String
                     logger.error("Get Docker VM container failed, msg: $msg")
-
                 }
             }
         } catch (e: Exception) {
-            // 更新容器状态
-            pipelineDockerIpInfoDao.updateDockerIpStatus(dslContext, it.id, false)
+            // 如果之前可用，更新容器状态
+            if (enable) {
+                pipelineDockerIpInfoDao.updateDockerIpStatus(dslContext, it.id, false)
+            }
             logger.error("Get Docker VM: $itDockerIp container failed.", e)
         }
     }

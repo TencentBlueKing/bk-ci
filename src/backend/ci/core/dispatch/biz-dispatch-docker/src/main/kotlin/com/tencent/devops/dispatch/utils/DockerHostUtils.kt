@@ -66,22 +66,25 @@ class DockerHostUtils @Autowired constructor(
         var dockerIp = ""
         // 先判断是否OP已配置专机，若配置了专机，从列表中选择一个容量最小的
         val specialIpSet = pipelineDockerHostDao.getHostIps(dslContext, event.projectId).toSet()
-        logger.info("getAvailableDockerIp grayEnv: $grayEnv | $specialIpSet")
+        logger.info("getAvailableDockerIp grayEnv: $grayEnv | specialIpSet: $specialIpSet")
 
         // 获取负载配置
         val dockerHostLoadConfigTriple = getLoadConfig()
-        logger.info("dockerHostLoadConfigTriple: ${JsonUtil.toJson(dockerHostLoadConfigTriple)}")
 
         // 判断流水线上次关联的hostTag，如果存在并且构建机容量符合第一档负载则优先分配（降低被重新洗牌的概率）
         val lastHostIp = redisUtils.getDockerBuildLastHost(event.pipelineId, event.vmSeqId)
         if (lastHostIp != null && lastHostIp.isNotEmpty()) {
             val lastHostIpInfo = pipelineDockerIpInfoDao.getDockerIpInfo(dslContext, lastHostIp)
-            if (lastHostIpInfo.enable && lastHostIpInfo.diskLoad < 60 && lastHostIpInfo.memLoad < 80 && lastHostIpInfo.cpuLoad < 80) {
+            if (lastHostIpInfo.enable &&
+                lastHostIpInfo.diskLoad < dockerHostLoadConfigTriple.first.diskLoadThreshold &&
+                lastHostIpInfo.memLoad < dockerHostLoadConfigTriple.first.memLoadThreshold &&
+                lastHostIpInfo.cpuLoad < dockerHostLoadConfigTriple.first.cpuLoadThreshold
+            ) {
                 return lastHostIp
             }
         }
 
-        // 先取容量负载比较小的，同时满足磁盘空间使用率小于60%并且内存CPU使用率均低于80%，从满足的节点中选择磁盘空间使用率最小的
+        // 先取容量负载比较小的，同时满足磁盘空间使用率小于60%并且内存CPU使用率均低于80%(具体负载由OP平台配置)，从满足的节点中选择磁盘空间使用率最小的
         val firstLoadConfig = dockerHostLoadConfigTriple.first
         val firstDockerIpList =
             pipelineDockerIpInfoDao.getAvailableDockerIpList(
@@ -91,7 +94,8 @@ class DockerHostUtils @Autowired constructor(
                 firstLoadConfig.memLoadThreshold,
                 firstLoadConfig.diskLoadThreshold,
                 firstLoadConfig.diskIOLoadThreshold,
-                specialIpSet)
+                specialIpSet
+            )
         if (firstDockerIpList.isNotEmpty) {
             dockerIp = selectAvailableDockerIp(firstDockerIpList, unAvailableIpList)
         } else {
@@ -105,7 +109,8 @@ class DockerHostUtils @Autowired constructor(
                     secondLoadConfig.memLoadThreshold,
                     secondLoadConfig.diskLoadThreshold,
                     secondLoadConfig.diskIOLoadThreshold,
-                    specialIpSet)
+                    specialIpSet
+                )
             if (secondDockerIpList.isNotEmpty) {
                 dockerIp = selectAvailableDockerIp(secondDockerIpList, unAvailableIpList)
             } else {
@@ -119,7 +124,8 @@ class DockerHostUtils @Autowired constructor(
                         thirdLoadConfig.memLoadThreshold,
                         thirdLoadConfig.diskLoadThreshold,
                         thirdLoadConfig.diskIOLoadThreshold,
-                        specialIpSet)
+                        specialIpSet
+                    )
                 if (thirdDockerIpList.isNotEmpty) {
                     dockerIp = selectAvailableDockerIp(thirdDockerIpList, unAvailableIpList)
                 }
@@ -139,7 +145,7 @@ class DockerHostUtils @Autowired constructor(
 
     private fun getLoadConfig(): Triple<DockerHostLoadConfig, DockerHostLoadConfig, DockerHostLoadConfig> {
         val loadConfig = redisOperation.get(LOAD_CONFIG_KEY)
-        if (loadConfig!= null &&loadConfig.isNotEmpty()) {
+        if (loadConfig != null && loadConfig.isNotEmpty()) {
             try {
                 val dockerHostLoadConfig = objectMapper.readValue<Map<String, DockerHostLoadConfig>>(loadConfig)
                 return Triple(

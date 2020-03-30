@@ -114,3 +114,19 @@ class PipelineDockerTaskSimpleDao @Autowired constructor() {
         }
     }
 }
+
+/*
+CREATE TABLE `T_DISPATCH_PIPELINE_DOCKER_TASK_SIMPLE` (
+    `ID` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '主键',
+    `PIPELINE_ID` varchar(64) NOT NULL DEFAULT '' COMMENT '流水线ID',
+    `BUILD_ID` varchar(64) NOT NULL DEFAULT '' COMMENT '构建ID',
+    `VM_SEQ` varchar(64) NOT NULL DEFAULT '' COMMENT '构建机序号',
+    `CONTAINER_ID` varchar(64) NOT NULL DEFAULT '' COMMENT '构建容器ID',
+    `DOCKER_IP` varchar(64) NOT NULL DEFAULT '' COMMENT '构建容器IP',
+    `STATUS` int(11) DEFAULT 0 COMMENT '构建机状态',
+    `GMT_CREATE` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `GMT_MODIFIED` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '修改时间',
+    PRIMARY KEY (`ID`),
+    UNIQUE KEY `UNI_BUILD_SEQ` (`PIPELINE_ID`,`VM_SEQ`),
+    INDEX `IDX_P_B`(`PIPELINE_ID`, `BUILD_ID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='DOCKER构建任务表';*/
