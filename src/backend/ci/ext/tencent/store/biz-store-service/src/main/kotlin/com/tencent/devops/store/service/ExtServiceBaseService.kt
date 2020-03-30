@@ -55,6 +55,7 @@ import com.tencent.devops.store.pojo.ExtServiceUpdateInfo
 import com.tencent.devops.store.pojo.ExtServiceVersionLogCreateInfo
 import com.tencent.devops.store.pojo.ExtensionJson
 import com.tencent.devops.store.pojo.ItemPropCreateInfo
+import com.tencent.devops.store.pojo.common.EXTENSION_JSON_NAME
 import com.tencent.devops.store.pojo.common.KEY_LABEL_CODE
 import com.tencent.devops.store.pojo.common.KEY_LABEL_ID
 import com.tencent.devops.store.pojo.common.KEY_LABEL_NAME
@@ -93,6 +94,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import org.springframework.util.StringUtils
 import java.time.LocalDateTime
+import java.util.regex.Pattern
 
 @Service
 abstract class ExtServiceBaseService @Autowired constructor() {
@@ -1040,23 +1042,14 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         extensionInfo: InitExtServiceDTO
     ): Result<Boolean> {
         logger.info("the validateExtServiceReq userId is :$userId,info[$extensionInfo]")
-        if (extensionInfo.serviceCode == null) {
-            // 抛出错误提示
-            return MessageCodeUtil.generateResponseDataObject(
-                CommonMessageCode.PARAMETER_IS_EXIST,
-                arrayOf("serviceCode"),
-                false
-            )
-        }
-        if (extensionInfo.serviceName == null) {
-            // 抛出错误提示
-            return MessageCodeUtil.generateResponseDataObject(
-                CommonMessageCode.PARAMETER_IS_EXIST,
-                arrayOf("serviceName"),
-                false
-            )
-        }
         val serviceCode = extensionInfo.serviceCode
+        if (!Pattern.matches("^[a-z]([-a-z-0-9]*[a-z-0-9])?\$", serviceCode)) {
+            return MessageCodeUtil.generateResponseDataObject(
+                CommonMessageCode.PARAMETER_IS_INVALID,
+                arrayOf(serviceCode),
+                false
+            )
+        }
         // 判断扩展服务是否存在
         val codeInfo = extServiceDao.getServiceLatestByCode(dslContext, serviceCode)
         if (codeInfo != null) {
@@ -1369,6 +1362,5 @@ abstract class ExtServiceBaseService @Autowired constructor() {
 
     companion object {
         val logger = LoggerFactory.getLogger(ExtServiceBaseService::class.java)
-        const val EXTENSION_JSON_NAME = "extension.json"
     }
 }
