@@ -89,9 +89,9 @@ class DockerDispatcher @Autowired constructor(
             var dockerIp: String
             if (taskHistory != null) {
                 dockerIp = taskHistory.dockerIp
-                // 查看当前IP负载情况，当前IP负载未超额（内存低于90%且硬盘低于90%），可直接下发，当负载超额，重新选择构建机
+                // 查看当前IP负载情况，当前IP可用，且负载未超额（内存低于90%且硬盘低于90%），可直接下发，当负载超额，重新选择构建机
                 val ipInfo = pipelineDockerIpInfoDao.getDockerIpInfo(dslContext, dockerIp)
-                if (ipInfo.diskLoad > 90 || ipInfo.memLoad > 90) {
+                if (!ipInfo.enable || ipInfo.diskLoad > 90 || ipInfo.memLoad > 90) {
                     dockerIp = dockerHostUtils.getAvailableDockerIp(pipelineAgentStartupEvent)
                     pipelineDockerTaskSimpleDao.updateDockerIp(
                         dslContext,
