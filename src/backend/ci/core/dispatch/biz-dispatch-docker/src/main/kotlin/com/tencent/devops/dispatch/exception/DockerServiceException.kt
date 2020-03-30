@@ -26,5 +26,4 @@
 
 package com.tencent.devops.dispatch.exception
 
-open class DockerServiceException(message: String) : Exception(message) {
-}
+open class DockerServiceException(message: String) : Exception(message)

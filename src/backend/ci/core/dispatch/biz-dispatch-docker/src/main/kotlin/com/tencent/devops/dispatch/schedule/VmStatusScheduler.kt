@@ -91,10 +91,12 @@ class VmStatusScheduler @Autowired constructor(
                 } else {
                     val msg = response["message"] as String
                     logger.error("Get Docker VM container failed, msg: $msg")
-                    throw RuntimeException("Get Docker VM container failed, msg: $msg")
+
                 }
             }
         } catch (e: Exception) {
+            // 更新容器状态
+            pipelineDockerIpInfoDao.updateDockerIpStatus(dslContext, it.id, false)
             logger.error("Get Docker VM: $itDockerIp container failed.", e)
         }
     }
