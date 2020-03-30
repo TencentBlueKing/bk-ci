@@ -175,6 +175,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
                 extServiceCreateInfo = ExtServiceCreateInfo(
                     serviceCode = extensionInfo.serviceCode,
                     serviceName = extensionInfo.serviceName,
+                    latestFlag = true,
                     creatorUser = userId,
                     publisher = userId,
                     publishTime = System.currentTimeMillis(),
@@ -346,7 +347,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
                         logoUrl = submitDTO.logoUrl,
                         summary = submitDTO.summary,
                         description = submitDTO.description,
-                        latestFlag = true,
+                        latestFlag = null,
                         modifierUser = userId
                     ),
                     extServiceVersionLogCreateInfo = ExtServiceVersionLogCreateInfo(
