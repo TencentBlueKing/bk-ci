@@ -1168,17 +1168,17 @@ class LogServiceV2 @Autowired constructor(
             moreLogs.logs.addAll(logs)
             moreLogs.hasMore = moreLogs.logs.size >= Constants.MAX_LINES
         } catch (ex: IndexNotFoundException) {
-            logger.error("Query init logs failed because of IndexNotFoundException. buildId: $buildId", ex)
+            logger.error("Query after logs failed because of IndexNotFoundException. buildId: $buildId", ex)
             queryLogs.status = LogStatus.CLEAN
             queryLogs.finished = true
             queryLogs.hasMore = false
         } catch (e: IndexClosedException) {
-            logger.error("Query init logs failed because of IndexClosedException. buildId: $buildId", e)
+            logger.error("Query after logs failed because of IndexClosedException. buildId: $buildId", e)
             queryLogs.status = LogStatus.CLOSED
             queryLogs.finished = true
             queryLogs.hasMore = false
         } catch (e: Exception) {
-            logger.error("Query init logs failed because of ${e.javaClass}. buildId: $buildId", e)
+            logger.error("Query after logs failed because of ${e.javaClass}. buildId: $buildId", e)
             queryLogs.status = LogStatus.FAIL
             queryLogs.finished = true
             queryLogs.hasMore = false
