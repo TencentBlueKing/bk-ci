@@ -73,6 +73,7 @@ import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.dao.PipelineResDao
 import com.tencent.devops.process.engine.dao.template.TemplateDao
 import com.tencent.devops.process.engine.dao.template.TemplatePipelineDao
+import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineService
 import com.tencent.devops.process.engine.service.PipelineStageService
 import com.tencent.devops.process.permission.PipelinePermissionService
@@ -132,6 +133,7 @@ class TemplateService @Autowired constructor(
     private val pipelinePermissionService: PipelinePermissionService,
     private val pipelineService: PipelineService,
     private val pipelineStageService: PipelineStageService,
+    private val pipelineRepositoryService: PipelineRepositoryService,
     private val client: Client,
     private val objectMapper: ObjectMapper,
     private val pipelineResDao: PipelineResDao,
@@ -1089,30 +1091,32 @@ class TemplateService @Autowired constructor(
     ): Map<String, TemplateInstanceParams> {
         try {
             val template = templateDao.getTemplate(dslContext, version)
-            val model: Model = objectMapper.readValue(template.template)
-            val triggerContainer = model.stages[0].containers[0] as TriggerContainer
-            val buildNo = triggerContainer.buildNo
-            val params = triggerContainer.params
-            val pipelines = listLatestModel(pipelineIds)
-            logger.info("[$userId|$projectId|$templateId|$version] Get the pipelines - $pipelines")
+            val templateModel: Model = objectMapper.readValue(template.template)
+            val templateTriggerContainer = templateModel.stages[0].containers[0] as TriggerContainer
+            val templateBuildNo = templateTriggerContainer.buildNo
+            val templateParams = templateTriggerContainer.params
+            val latestInstances = listLatestModel(pipelineIds)
+
+            logger.info("[$userId|$projectId|$templateId|$version] Get the pipelines - $latestInstances")
             val settings = pipelineSettingDao.getSettings(dslContext, pipelineIds)
 
-            return pipelines.map {
+            return latestInstances.map {
                 val pipelineId = it.key
-                val m: Model = objectMapper.readValue(it.value)
-                val container = m.stages[0].containers[0] as TriggerContainer
-                val param = paramService.filterParams(userId, projectId, pipelineId, removeProperties(params, container.params))
-                logger.info("[$userId|$projectId|$templateId|$version] Get the param ($param)")
-                val no = if (container.buildNo != null) {
-                    container.buildNo
-                } else {
-                    buildNo
+                val instanceModel: Model = objectMapper.readValue(it.value)
+                val instanceTriggerContainer = instanceModel.stages[0].containers[0] as TriggerContainer
+                val instanceParams = paramService.filterParams(userId, projectId, pipelineId, removeProperties(templateParams, instanceTriggerContainer.params))
+                logger.info("[$userId|$projectId|$templateId|$version] Get the param ($instanceParams)")
+
+                val buildNo = instanceTriggerContainer.buildNo ?: templateTriggerContainer.buildNo
+                if (buildNo != null) {
+                    buildNo.buildNo = pipelineRepositoryService.getBuildNo(projectId, pipelineId) ?: buildNo.buildNo
                 }
+
                 pipelineId to TemplateInstanceParams(
                     pipelineId = pipelineId,
-                    pipelineName = getPipelineName(settings, pipelineId) ?: model.name,
-                    buildNo = no,
-                    param = param
+                    pipelineName = getPipelineName(settings, pipelineId) ?: templateModel.name,
+                    buildNo = buildNo,
+                    param = instanceParams
                 )
             }.toMap()
         } catch (t: Throwable) {
