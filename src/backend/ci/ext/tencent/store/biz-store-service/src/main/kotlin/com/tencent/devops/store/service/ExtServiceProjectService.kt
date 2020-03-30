@@ -140,6 +140,8 @@ class ExtServiceProjectService @Autowired constructor(
                     releaseFlag = true,
                     modifier = serviceRecord.modifier,
                     itemName = "",
+                    publisher = serviceRecord.publisher,
+                    publishTime = DateTimeUtil.toDateTime(serviceRecord.pubTime as LocalDateTime),
                     createTime = DateTimeUtil.toDateTime(serviceRecord.createTime as LocalDateTime),
                     updateTime = DateTimeUtil.toDateTime(serviceRecord.updateTime as LocalDateTime)
                 )

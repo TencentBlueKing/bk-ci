@@ -8,5 +8,7 @@ class ExtServiceEntity (
     @ApiModelProperty("主键ID")
     val id: String,
     @ApiModelProperty("名称")
-    val name: String
+    val name: String,
+    @ApiModelProperty("编码")
+    val code: String
 )

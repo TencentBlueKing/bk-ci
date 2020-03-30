@@ -26,6 +26,10 @@ data class ExtServiceRespItem(
     val projectName: String,
     @ApiModelProperty("是否有处于上架状态的扩展服务扩展服务版本", required = true)
     val releaseFlag: Boolean,
+    @ApiModelProperty("发布者", required = true)
+    val publisher: String,
+    @ApiModelProperty("发布时间", required = true)
+    val publishTime: String,
     @ApiModelProperty("创建人", required = true)
     val creator: String,
     @ApiModelProperty("扩展点", required = true)
