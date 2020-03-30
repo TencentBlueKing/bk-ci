@@ -1,6 +1,5 @@
 package com.tencent.devops.artifactory.resources.service
 
-
 import com.tencent.devops.artifactory.api.service.ServiceArtifactoryDownLoadResource
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.artifactory.service.artifactory.ArtifactoryDownloadService
@@ -18,7 +17,7 @@ class ServiceArtifactoryDownLoadResourceImpl @Autowired constructor(
     private val artifactoryDownloadService: ArtifactoryDownloadService,
     private val redisOperation: RedisOperation,
     private val repoGray: RepoGray
-    ): ServiceArtifactoryDownLoadResource {
+) : ServiceArtifactoryDownLoadResource {
 
     override fun getThirdPartyDownloadUrl(
         projectId: String,

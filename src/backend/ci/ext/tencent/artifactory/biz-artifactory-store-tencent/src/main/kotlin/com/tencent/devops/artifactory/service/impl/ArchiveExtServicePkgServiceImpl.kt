@@ -29,6 +29,7 @@
 
 package com.tencent.devops.artifactory.service.impl
 
+import com.tencent.devops.artifactory.config.BkRepoExtServiceConfig
 import com.tencent.devops.artifactory.service.ArchiveExtServicePkgService
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.UUIDUtil
@@ -52,6 +53,8 @@ class ArchiveExtServicePkgServiceImpl : ArchiveExtServicePkgService {
     @Autowired
     private lateinit var bkRepoConfig: BkRepoConfig
     @Autowired
+    private lateinit var bkRepoExtServiceConfig: BkRepoExtServiceConfig
+    @Autowired
     private lateinit var bkRepoClient: BkRepoClient
     @Autowired
     private lateinit var client: Client
@@ -64,7 +67,7 @@ class ArchiveExtServicePkgServiceImpl : ArchiveExtServicePkgService {
         destPath: String,
         inputStream: InputStream,
         disposition: FormDataContentDisposition
-    ): Result<Boolean>{
+    ): Result<Boolean> {
         logger.info("archiveExtService userId is:$userId,projectCode info is:$projectCode,serviceCode is:$serviceCode")
         logger.info("archiveExtService version is:$version,file info is:$disposition")
         // 校验用户上传的扩展服务包是否合法
@@ -84,13 +87,14 @@ class ArchiveExtServicePkgServiceImpl : ArchiveExtServicePkgService {
         try {
             bkRepoClient.uploadLocalFile(
                 userId = userId,
-                projectId = bkRepoConfig.bkrepoExtServiceProjectName,
-                repoName = bkRepoConfig.bkrepoExtServicePkgRepoName,
+                projectId = bkRepoExtServiceConfig.bkrepoExtServiceProjectName,
+                repoName = bkRepoConfig.bkrepoPkgRepoName,
                 path = destPath,
                 file = file,
                 gatewayFlag = false,
-                userName = bkRepoConfig.bkrepoExtServiceUserName,
-                password = bkRepoConfig.bkrepoExtServicePassword
+                bkrepoApiUrl = bkRepoConfig.bkrepoApiUrl,
+                userName = bkRepoExtServiceConfig.bkrepoExtServiceUserName,
+                password = bkRepoExtServiceConfig.bkrepoExtServicePassword
             )
         } finally {
             file.delete()
