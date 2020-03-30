@@ -419,7 +419,7 @@ class StageControl @Autowired constructor(
                 source = source,
                 projectId = projectId,
                 pipelineId = pipelineId,
-                userId = "",
+                userId = userId,
                 buildId = buildId,
                 stageId = stageId,
                 actionType = ActionType.START
