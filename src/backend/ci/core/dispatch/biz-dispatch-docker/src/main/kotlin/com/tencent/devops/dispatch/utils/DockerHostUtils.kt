@@ -80,7 +80,8 @@ class DockerHostUtils @Autowired constructor(
         val lastHostIp = redisUtils.getDockerBuildLastHost(event.pipelineId, event.vmSeqId)
         if (lastHostIp != null && lastHostIp.isNotEmpty()) {
             val lastHostIpInfo = pipelineDockerIpInfoDao.getDockerIpInfo(dslContext, lastHostIp)
-            if (lastHostIpInfo.enable &&
+            if (lastHostIpInfo != null &&
+                lastHostIpInfo.enable &&
                 lastHostIpInfo.diskLoad < dockerHostLoadConfigTriple.first.diskLoadThreshold &&
                 lastHostIpInfo.memLoad < dockerHostLoadConfigTriple.first.memLoadThreshold &&
                 lastHostIpInfo.cpuLoad < dockerHostLoadConfigTriple.first.cpuLoadThreshold
