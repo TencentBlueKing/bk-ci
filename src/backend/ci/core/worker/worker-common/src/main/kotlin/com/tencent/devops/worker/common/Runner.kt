@@ -64,7 +64,7 @@ object Runner {
             val variables = buildVariables.variablesWithType
             val retryCount = ParameterUtils.getListValueByKey(variables, PIPELINE_RETRY_COUNT) ?: "0"
             LoggerService.executeCount = retryCount.toInt() + 1
-            LoggerService.jobId = buildVariables.containerId
+            LoggerService.jobId = buildVariables.containerHashId
 
             Heartbeat.start()
             // 开始轮询
@@ -108,7 +108,7 @@ object Runner {
                                     taskId = taskId,
                                     elementId = buildTask.elementId!!,
                                     elementName = buildTask.elementName ?: "",
-                                    containerId = buildVariables.containerId,
+                                    containerId = buildVariables.containerHashId,
                                     isSuccess = true,
                                     buildResult = env,
                                     type = buildTask.type
@@ -152,7 +152,7 @@ object Runner {
                                     taskId = taskId,
                                     elementId = buildTask.elementId!!,
                                     elementName = buildTask.elementName ?: "",
-                                    containerId = buildVariables.containerId,
+                                    containerId = buildVariables.containerHashId,
                                     isSuccess = false,
                                     buildResult = env,
                                     type = buildTask.type,
