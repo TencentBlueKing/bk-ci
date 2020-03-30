@@ -10,11 +10,9 @@ import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.store.dao.ExtServiceDao
 import com.tencent.devops.store.dao.ExtServiceFeatureDao
-import com.tencent.devops.store.dao.common.ReasonDao
 import com.tencent.devops.store.dao.common.ReasonRelDao
 import com.tencent.devops.store.dao.common.StoreMemberDao
 import com.tencent.devops.store.dao.common.StoreProjectRelDao
-import com.tencent.devops.store.pojo.ExtServiceItem
 import com.tencent.devops.store.pojo.common.InstalledProjRespItem
 import com.tencent.devops.store.pojo.common.UnInstallReq
 import com.tencent.devops.store.pojo.common.enums.ReasonTypeEnum
@@ -120,8 +118,11 @@ class ExtServiceProjectService @Autowired constructor(
     }
 
     fun getServiceByProjectCode(projectCode: String): Result<List<ExtServiceRespItem>> {
+        logger.info("getServiceByProjectCode projectCode[$projectCode]")
         val projectRelRecords = storeProjectRelDao.getInstalledComponent(dslContext, projectCode, StoreTypeEnum.SERVICE.type.toByte(), 0, 100)
-            ?: return Result(emptyList<ExtServiceRespItem>())
+        if(projectRelRecords == null || projectRelRecords.size == 0){
+            return Result(emptyList<ExtServiceRespItem>())
+        }
         val serviceRecords = mutableListOf<ExtServiceRespItem>()
         projectRelRecords.forEach {
             val serviceRecord = extServiceDao.getServiceLatestByCode(dslContext, it.storeCode)
