@@ -105,7 +105,7 @@ class PipelineDockerIPInfoDao {
     fun getDockerIpInfo(
         dslContext: DSLContext,
         dockerIp: String
-    ): TDispatchPipelineDockerIpInfoRecord {
+    ): TDispatchPipelineDockerIpInfoRecord? {
         with(TDispatchPipelineDockerIpInfo.T_DISPATCH_PIPELINE_DOCKER_IP_INFO) {
             return dslContext.selectFrom(this)
                 .where(DOCKER_IP.eq(dockerIp))

@@ -31,6 +31,7 @@ import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.dispatch.client.DockerHostClient
 import com.tencent.devops.dispatch.dao.PipelineDockerIPInfoDao
+import com.tencent.devops.dispatch.dao.PipelineDockerTaskDriftDao
 import com.tencent.devops.dispatch.dao.PipelineDockerTaskSimpleDao
 import com.tencent.devops.dispatch.exception.DockerServiceException
 import com.tencent.devops.dispatch.pojo.VolumeStatus
@@ -55,6 +56,7 @@ class DockerDispatcher @Autowired constructor(
     private val dockerHostClient: DockerHostClient,
     private val dockerHostUtils: DockerHostUtils,
     private val pipelineDockerTaskSimpleDao: PipelineDockerTaskSimpleDao,
+    private val pipelineDockerTaskDriftDao: PipelineDockerTaskDriftDao,
     private val pipelineDockerIpInfoDao: PipelineDockerIPInfoDao,
     private val dslContext: DSLContext,
     private val redisOperation: RedisOperation
@@ -89,9 +91,9 @@ class DockerDispatcher @Autowired constructor(
             var dockerIp: String
             if (taskHistory != null) {
                 dockerIp = taskHistory.dockerIp
-                // 查看当前IP负载情况，当前IP负载未超额（内存低于90%且硬盘低于90%），可直接下发，当负载超额，重新选择构建机
+                // 查看当前IP负载情况，当前IP可用，且负载未超额（内存低于90%且硬盘低于90%），可直接下发，当负载超额，重新选择构建机
                 val ipInfo = pipelineDockerIpInfoDao.getDockerIpInfo(dslContext, dockerIp)
-                if (ipInfo.diskLoad > 90 || ipInfo.memLoad > 90) {
+                if (ipInfo == null || !ipInfo.enable || ipInfo.diskLoad > 90 || ipInfo.memLoad > 90) {
                     dockerIp = dockerHostUtils.getAvailableDockerIp(pipelineAgentStartupEvent)
                     pipelineDockerTaskSimpleDao.updateDockerIp(
                         dslContext,
@@ -99,9 +101,15 @@ class DockerDispatcher @Autowired constructor(
                         pipelineAgentStartupEvent.vmSeqId,
                         dockerIp
                     )
-                    logger.info(
-                        "${pipelineAgentStartupEvent.pipelineId}|${pipelineAgentStartupEvent.buildId}|${pipelineAgentStartupEvent.vmSeqId}| origin host: ${taskHistory.dockerIp} " +
-                                "overload, DiskLoad: ${ipInfo.diskLoad}|MemLoad: ${ipInfo.memLoad}, switch to new host: $dockerIp"
+
+                    // 记录漂移日志
+                    pipelineDockerTaskDriftDao.create(
+                        dslContext,
+                        pipelineAgentStartupEvent.pipelineId,
+                        pipelineAgentStartupEvent.buildId,
+                        pipelineAgentStartupEvent.vmSeqId,
+                        taskHistory.dockerIp,
+                        dockerIp
                     )
                 }
 

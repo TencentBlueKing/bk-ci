@@ -58,7 +58,6 @@ class UserDockerHostResourceImpl @Autowired constructor(
     private val pipelineAuthServiceCode: PipelineAuthServiceCode,
     private val pipelineDockerTaskSimpleDao: PipelineDockerTaskSimpleDao,
     private val pipelineDockerDebugDao: PipelineDockerDebugDao,
-    private val client: Client,
     private val dslContext: DSLContext
 ) : UserDockerHostResource {
     companion object {

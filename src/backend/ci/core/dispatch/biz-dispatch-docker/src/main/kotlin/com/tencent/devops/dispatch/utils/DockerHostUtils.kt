@@ -71,11 +71,12 @@ class DockerHostUtils @Autowired constructor(
         // 获取负载配置
         val dockerHostLoadConfigTriple = getLoadConfig()
 
-        // 判断流水线上次关联的hostTag，如果存在并且构建机容量符合第一档负载则优先分配（降低被重新洗牌的概率）
+        // 判断流水线上次关联的hostTag，如果存在并且构建机容量符合第一档负载则优先分配（降低版本更新时被重新洗牌的概率）
         val lastHostIp = redisUtils.getDockerBuildLastHost(event.pipelineId, event.vmSeqId)
         if (lastHostIp != null && lastHostIp.isNotEmpty()) {
             val lastHostIpInfo = pipelineDockerIpInfoDao.getDockerIpInfo(dslContext, lastHostIp)
-            if (lastHostIpInfo.enable &&
+            if (lastHostIpInfo != null &&
+                lastHostIpInfo.enable &&
                 lastHostIpInfo.diskLoad < dockerHostLoadConfigTriple.first.diskLoadThreshold &&
                 lastHostIpInfo.memLoad < dockerHostLoadConfigTriple.first.memLoadThreshold &&
                 lastHostIpInfo.cpuLoad < dockerHostLoadConfigTriple.first.cpuLoadThreshold
@@ -133,7 +134,7 @@ class DockerHostUtils @Autowired constructor(
         }
 
         if (dockerIp == "") {
-            throw DockerServiceException("Start build Docker VM failed, no available VM ip.")
+            throw DockerServiceException("Start build Docker VM failed, no available Docker VM.")
         }
 
         return dockerIp
