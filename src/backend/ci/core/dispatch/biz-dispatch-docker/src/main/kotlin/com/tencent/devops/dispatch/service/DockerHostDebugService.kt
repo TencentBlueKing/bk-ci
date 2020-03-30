@@ -39,8 +39,6 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.common.web.mq.alert.AlertLevel
 import com.tencent.devops.common.web.mq.alert.AlertUtils
-import com.tencent.devops.dispatch.client.DockerHostClient
-import com.tencent.devops.dispatch.controller.UserDockerHostResourceImpl
 import com.tencent.devops.dispatch.dao.PipelineDockerDebugDao
 import com.tencent.devops.dispatch.dao.PipelineDockerEnableDao
 import com.tencent.devops.dispatch.dao.PipelineDockerHostDao
@@ -48,7 +46,6 @@ import com.tencent.devops.dispatch.pojo.ContainerInfo
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.dispatch.utils.CommonUtils
 import com.tencent.devops.dispatch.utils.DockerHostDebugLock
-import com.tencent.devops.dispatch.utils.DockerUtils
 import com.tencent.devops.dispatch.utils.redis.RedisUtils
 import com.tencent.devops.store.api.container.ServiceContainerAppResource
 import com.tencent.devops.store.pojo.app.BuildEnv
@@ -92,7 +89,7 @@ class DockerHostDebugService @Autowired constructor(
     private val TLINUX2_2_IMAGE = "/bkdevops/docker-builder2.2:v1"
 
     fun startDebug(
-        dockerIp:String,
+        dockerIp: String,
         userId: String,
         projectId: String,
         pipelineId: String,
@@ -182,13 +179,13 @@ class DockerHostDebugService @Autowired constructor(
                 }
                 ObjectMapper().writeValueAsString(buildEnvResult)
             } catch (e: Exception) {
-                logger.error("${pipelineId}|${vmSeqId}| start debug. get build env failed msg: $e")
+                logger.error("$pipelineId|$vmSeqId| start debug. get build env failed msg: $e")
                 ""
             }
         } else {
             ""
         }
-        logger.info("${pipelineId}|${vmSeqId}| start debug. Container ready to start, buildEnvStr: $buildEnvStr")
+        logger.info("$pipelineId|$vmSeqId| start debug. Container ready to start, buildEnvStr: $buildEnvStr")
 
         // 根据dockerIp定向调用dockerhost
         val url = "http://$dockerIp/api/docker/debug/start"
@@ -201,10 +198,10 @@ class DockerHostDebugService @Autowired constructor(
             .addHeader("Content-Type", "application/json; charset=utf-8")
             .build()
 
-        logger.info("[${projectId}|${pipelineId}] Start debug Docker VM $dockerIp url: $proxyUrl, requestBody: ${JsonUtil.toJson(requestBody)}")
+        logger.info("[$projectId|$pipelineId] Start debug Docker VM $dockerIp url: $proxyUrl, requestBody: ${JsonUtil.toJson(requestBody)}")
         OkhttpUtils.doLongHttp(request).use { resp ->
             val responseBody = resp.body()!!.string()
-            logger.info("[${projectId}|${pipelineId}] Start debug Docker VM $dockerIp responseBody: $responseBody")
+            logger.info("[$projectId|$pipelineId] Start debug Docker VM $dockerIp responseBody: $responseBody")
             val response: Map<String, Any> = jacksonObjectMapper().readValue(responseBody)
             when {
                 response["status"] == 0 -> {
@@ -229,7 +226,6 @@ class DockerHostDebugService @Autowired constructor(
                 }
                 response["status"] == 1 -> {
                     // 因为母机负载过高，重试策略
-
                 }
                 else -> {
                     val msg = response["message"]
@@ -268,10 +264,10 @@ class DockerHostDebugService @Autowired constructor(
                 .addHeader("Content-Type", "application/json; charset=utf-8")
                 .build()
 
-            logger.info("[${projectId}|${pipelineId}] Stop debug Docker VM $dockerIp url: $proxyUrl, requestBody: ${JsonUtil.toJson(requestBody)}")
+            logger.info("[$projectId|$pipelineId] Stop debug Docker VM $dockerIp url: $proxyUrl, requestBody: ${JsonUtil.toJson(requestBody)}")
             OkhttpUtils.doLongHttp(request).use { resp ->
                 val responseBody = resp.body()!!.string()
-                logger.info("[${projectId}|${pipelineId}] Stop debug Docker VM $dockerIp responseBody: $responseBody")
+                logger.info("[$projectId|$pipelineId] Stop debug Docker VM $dockerIp responseBody: $responseBody")
                 val response: Map<String, Any> = jacksonObjectMapper().readValue(responseBody)
                 when {
                     response["status"] == 0 -> {

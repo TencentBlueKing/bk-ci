@@ -26,7 +26,7 @@
 
 package com.tencent.devops.dispatch.pojo
 
-data class DockerHostLoadConfig (
+data class DockerHostLoadConfig(
     val cpuLoadThreshold: Int,
     val memLoadThreshold: Int,
     val diskLoadThreshold: Int,
