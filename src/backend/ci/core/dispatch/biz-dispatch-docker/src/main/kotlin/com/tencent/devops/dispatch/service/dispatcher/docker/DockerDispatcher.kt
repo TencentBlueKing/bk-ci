@@ -73,7 +73,7 @@ class DockerDispatcher @Autowired constructor(
             rabbitTemplate,
             pipelineAgentStartupEvent.buildId,
             "Start docker ${dockerDispatch.dockerBuildVersion} for the build",
-            "",
+            "startVM-${pipelineAgentStartupEvent.containerId}",
             pipelineAgentStartupEvent.containerHashId,
             pipelineAgentStartupEvent.executeCount ?: 1
         )
@@ -122,8 +122,7 @@ class DockerDispatcher @Autowired constructor(
         } finally {
             if (errorFlag) {
                 pipelineDockerTaskSimpleDao.updateStatus(dslContext, pipelineAgentStartupEvent.pipelineId, pipelineAgentStartupEvent.vmSeqId, VolumeStatus.FAILURE.status)
-                logger.error("errorMsg: $errorMsg")
-                onFailBuild(client, rabbitTemplate, pipelineAgentStartupEvent, errorMsg)
+                onFailBuild(client, rabbitTemplate, pipelineAgentStartupEvent, errorMsg, "startVM-${pipelineAgentStartupEvent.containerId}")
             }
         }
     }
