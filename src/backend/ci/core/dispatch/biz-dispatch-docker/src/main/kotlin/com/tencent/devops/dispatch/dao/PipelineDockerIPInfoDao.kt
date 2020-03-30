@@ -55,7 +55,6 @@ class PipelineDockerIPInfoDao {
     fun update(
         dslContext: DSLContext,
         idcIp: String,
-        capacity: Int,
         used: Int,
         cpuLoad: Int,
         memLoad: Int,
@@ -65,7 +64,6 @@ class PipelineDockerIPInfoDao {
     ) {
         with(TDispatchPipelineDockerIpInfo.T_DISPATCH_PIPELINE_DOCKER_IP_INFO) {
             dslContext.update(this)
-                .set(CAPACITY, capacity)
                 .set(USED_NUM, used)
                 .set(CPU_LOAD, cpuLoad)
                 .set(MEM_LOAD, memLoad)
@@ -155,11 +153,12 @@ class PipelineDockerIPInfoDao {
 
     fun getEnableDockerIpList(
         dslContext: DSLContext,
+        enable: Boolean,
         grayEnv: Boolean
     ): Result<TDispatchPipelineDockerIpInfoRecord> {
         with(TDispatchPipelineDockerIpInfo.T_DISPATCH_PIPELINE_DOCKER_IP_INFO) {
             return dslContext.selectFrom(this)
-                .where(ENABLE.eq(true))
+                .where(ENABLE.eq(enable))
                 .and(GRAY_ENV.eq(grayEnv))
                 .fetch()
         }
@@ -176,3 +175,22 @@ class PipelineDockerIPInfoDao {
         }
     }
 }
+
+/*
+CREATE TABLE `T_DISPATCH_PIPELINE_DOCKER_IP_INFO` (
+    `ID` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '主键',
+    `DOCKER_IP` varchar(64) NOT NULL DEFAULT '' COMMENT 'DOCKER IP',
+    `CAPACITY` int(11) NOT NULL DEFAULT 0 COMMENT '节点容器总容量',
+    `USED_NUM` int(11) NOT NULL DEFAULT 0 COMMENT '节点容器已使用容量',
+    `CPU_LOAD` int(11) NOT NULL DEFAULT 0 COMMENT '节点容器CPU负载',
+    `MEM_LOAD` int(11) NOT NULL DEFAULT 0 COMMENT '节点容器MEM负载',
+    `DISK_LOAD` int(11) NOT NULL DEFAULT 0 COMMENT '节点容器DISK负载',
+    `DISK_IO_LOAD` int(11) NOT NULL DEFAULT 0 COMMENT '节点容器DISK IO负载',
+    `ENABLE` bit(1) DEFAULT 0 COMMENT '节点是否可用',
+    `GRAY_ENV` bit(1) DEFAULT 0 COMMENT '是否为灰度节点',
+    `GMT_CREATE` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `GMT_MODIFIED` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '修改时间',
+    PRIMARY KEY (`ID`),
+    UNIQUE KEY `UNI_IP` (`DOCKER_IP`),
+    INDEX `idx_1` (`ENABLE`, `GRAY_ENV`, `CPU_LOAD`, `MEM_LOAD`, `DISK_LOAD`, `DISK_IO_LOAD`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='DOCKER构建机负载表';*/

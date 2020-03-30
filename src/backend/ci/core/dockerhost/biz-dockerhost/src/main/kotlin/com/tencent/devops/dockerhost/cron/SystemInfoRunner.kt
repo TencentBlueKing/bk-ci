@@ -27,7 +27,6 @@
 package com.tencent.devops.dockerhost.cron
 
 import com.tencent.devops.dockerhost.utils.SigarUtil
-import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 
