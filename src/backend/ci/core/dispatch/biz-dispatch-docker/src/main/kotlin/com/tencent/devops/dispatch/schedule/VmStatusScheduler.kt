@@ -89,6 +89,9 @@ class VmStatusScheduler @Autowired constructor(
                     pipelineDockerIpInfoDao.update(dslContext, itDockerIp, capacity, usedNum, averageCpuLoad,
                         averageMemLoad, averageDiskLoad, averageDiskIOLoad, enable)
                 } else {
+                    // 更新容器状态
+                    pipelineDockerIpInfoDao.updateDockerIpStatus(dslContext, it.id, false)
+
                     val msg = response["message"] as String
                     logger.error("Get Docker VM container failed, msg: $msg")
 
