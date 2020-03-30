@@ -189,58 +189,6 @@ class DockerHostClient @Autowired constructor(
         }
     }
 
- /*   fun getAvailableDockerIp(event: PipelineAgentStartupEvent, unAvailableIpList: Set<String> = setOf()): String {
-        var grayEnv = false
-        val gray = System.getProperty("gray.project", "none")
-        if (gray == "grayproject") {
-            grayEnv = true
-        }
-
-        var dockerIp = ""
-        // 先判断是否OP已配置专机，若配置了专机，从列表中选择一个容量最小的
-        val specialIpSet = pipelineDockerHostDao.getHostIps(dslContext, event.projectId).toSet()
-        logger.info("getAvailableDockerIp grayEnv: $grayEnv | $specialIpSet")
-        // 先取容量负载比较小的，同时满足磁盘空间使用率小于60%并且内存CPU使用率均低于80%，从满足的节点中选择磁盘空间使用率最小的
-        val firstDockerIpList = pipelineDockerIpInfoDao.getAvailableDockerIpList(dslContext, grayEnv, 80, 80, 60, specialIpSet)
-        if (firstDockerIpList.isNotEmpty) {
-            dockerIp = selectAvailableDockerIp(firstDockerIpList, unAvailableIpList)
-        } else {
-            // 没有满足1的，优先选择磁盘空间，内存使用率均低于80%的
-            val secondDockerIpList = pipelineDockerIpInfoDao.getAvailableDockerIpList(dslContext, grayEnv, 80, 80, 80, specialIpSet)
-            if (secondDockerIpList.isNotEmpty) {
-                dockerIp = selectAvailableDockerIp(secondDockerIpList, unAvailableIpList)
-            } else {
-                // 通过2依旧没有找到满足的构建机，选择内存使用率小于80%的
-                val thirdDockerIpList = pipelineDockerIpInfoDao.getAvailableDockerIpList(dslContext, grayEnv, 90, 80, 100, specialIpSet)
-                if (thirdDockerIpList.isNotEmpty) {
-                    dockerIp = selectAvailableDockerIp(thirdDockerIpList, unAvailableIpList)
-                }
-            }
-        }
-
-        if (dockerIp == "") {
-            throw DockerServiceException("Start build Docker VM failed, no available VM ip.")
-        }
-
-        return dockerIp
-    }
-
-    private fun selectAvailableDockerIp(dockerIpList: List<TDispatchPipelineDockerIpInfoRecord>, unAvailableIpList: Set<String> = setOf()): String {
-        if (unAvailableIpList.isEmpty()) {
-            return dockerIpList[0].dockerIp
-        } else {
-            dockerIpList.forEach {
-                if (unAvailableIpList.contains(it.dockerIp)) {
-                    return@forEach
-                } else {
-                    return it.dockerIp
-                }
-            }
-        }
-
-        return ""
-    }*/
-
     private fun dockerBuildStart(dockerIp: String,
                                  requestBody: DockerHostBuildInfo,
                                  event: PipelineAgentStartupEvent,
@@ -292,7 +240,7 @@ class DockerHostClient @Autowired constructor(
                     }
                 }
                 else -> {
-                    val msg = response["event"] as String
+                    val msg = response["message"] as String
                     logger.error("[${event.projectId}|${event.pipelineId}|${event.buildId}] Start build Docker VM failed, msg: $msg")
                     pipelineDockerTaskSimpleDao.updateStatus(
                         dslContext,
