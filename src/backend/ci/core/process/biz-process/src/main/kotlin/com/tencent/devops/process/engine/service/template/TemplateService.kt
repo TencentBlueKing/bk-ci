@@ -1104,11 +1104,17 @@ class TemplateService @Autowired constructor(
                 val pipelineId = it.key
                 val instanceModel: Model = objectMapper.readValue(it.value)
                 val instanceTriggerContainer = instanceModel.stages[0].containers[0] as TriggerContainer
-                val instanceParams = paramService.filterParams(userId, projectId, pipelineId, removeProperties(templateParams, instanceTriggerContainer.params))
+                val instanceParams = paramService.filterParams(
+                    userId = userId,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    params = removeProperties(templateParams, instanceTriggerContainer.params)
+                )
                 logger.info("[$userId|$projectId|$templateId|$version] Get the param ($instanceParams)")
 
                 val buildNo = instanceTriggerContainer.buildNo ?: templateTriggerContainer.buildNo
                 if (buildNo != null) {
+                    buildNo.required = templateBuildNo?.required ?: buildNo.required
                     buildNo.buildNo = pipelineRepositoryService.getBuildNo(projectId, pipelineId) ?: buildNo.buildNo
                 }
 
