@@ -127,12 +127,12 @@
 
             addLogData (data) {
                 const scroll = this.$refs.scroll
-                scroll.addLogData(data)
+                if (scroll) scroll.addLogData(data)
             },
 
             handleApiErr (err) {
                 const scroll = this.$refs.scroll
-                scroll.handleApiErr(err)
+                if (scroll) scroll.handleApiErr(err)
             }
         }
     }
