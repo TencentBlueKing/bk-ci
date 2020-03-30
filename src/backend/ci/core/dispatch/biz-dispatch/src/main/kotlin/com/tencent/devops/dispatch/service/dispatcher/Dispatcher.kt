@@ -64,7 +64,8 @@ interface Dispatcher {
         client: Client,
         rabbitTemplate: RabbitTemplate,
         event: PipelineAgentStartupEvent,
-        errorMessage: String
+        errorMessage: String,
+        tag: String ?= ""
     ) {
         LogUtils.addRedLine(rabbitTemplate, event.buildId, errorMessage,
             "", event.containerHashId, event.executeCount ?: 1)
