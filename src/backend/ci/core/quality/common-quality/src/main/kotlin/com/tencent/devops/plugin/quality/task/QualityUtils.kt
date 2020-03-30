@@ -41,8 +41,6 @@ import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION
 import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION_USERID
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
-import com.tencent.devops.process.websocket.ChangeType
-import com.tencent.devops.process.websocket.PipelineStatusChangeEvent
 import com.tencent.devops.quality.api.v2.ServiceQualityRuleResource
 import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
 import com.tencent.devops.quality.api.v2.pojo.request.BuildCheckParams
@@ -183,17 +181,6 @@ object QualityUtils {
         with(task) {
             val atomDesc = if (position == ControlPointPosition.BEFORE_POSITION) "准入" else "准出"
             val elementId = task.taskId
-
-            pipelineEventDispatcher.dispatch(
-                PipelineStatusChangeEvent(
-                    source = "pipelineDetailChangeEvent",
-                    pipelineId = pipelineId,
-                    changeType = ChangeType.DETAIL,
-                    buildId = buildId,
-                    projectId = projectId,
-                    userId = task.starter
-                )
-            )
 
             if (checkResult.success) {
                 LogUtils.addLine(
