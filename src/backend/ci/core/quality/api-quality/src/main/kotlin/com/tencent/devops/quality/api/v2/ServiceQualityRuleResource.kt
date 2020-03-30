@@ -101,10 +101,11 @@ interface ServiceQualityRuleResource {
     ): Result<List<String>>
 
     @ApiOperation("获取历史元数据")
-    @Path("/getHisMetadata")
+    @Path("/builds/{buildId}/getHisMetadata")
     @GET
     fun getHisMetadata(
         @ApiParam("构建ID", required = true)
+        @PathParam("buildId")
         buildId: String
     ): Result<List<QualityHisMetadata>>
 }
