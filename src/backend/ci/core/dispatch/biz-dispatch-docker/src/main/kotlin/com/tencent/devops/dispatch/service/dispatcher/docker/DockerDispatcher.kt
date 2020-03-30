@@ -160,8 +160,7 @@ class DockerDispatcher @Autowired constructor(
                     client,
                     rabbitTemplate,
                     pipelineAgentStartupEvent,
-                    errorMsg,
-                    "startVM-${pipelineAgentStartupEvent.containerId}"
+                    errorMsg
                 )
             }
         }
@@ -229,21 +228,4 @@ class DockerDispatcher @Autowired constructor(
             lock.unlock()
         }
     }
-
-//    override fun canDispatch(buildMessage: PipelineBuildMessage) =
-//        buildMessage.dispatchType.buildType == BuildType.DOCKER
-//
-//    override fun build(buildMessage: PipelineBuildMessage) {
-//        val dockerDispatch = buildMessage.dispatchType as DockerDispatchType
-//        LogUtils.addLine(client, buildMessage.buildId, "Start docker ${dockerDispatch.dockerBuildVersion} for the build", "", buildMessage.executeCount ?: 1)
-//        dockerHostBuildService.dockerHostBuild(buildMessage)
-//    }
-//
-//    override fun finish(buildFinishMessage: PipelineFinishMessage) {
-//        dockerHostBuildService.finishDockerBuild(
-//            buildFinishMessage.buildId,
-//            buildFinishMessage.vmSeqId,
-//            buildFinishMessage.buildResult
-//        )
-//    }
 }

@@ -202,7 +202,6 @@ class DockerHostClient @Autowired constructor(
         retryTime: Int = 0,
         unAvailableIpList: Set<String>? = null
     ) {
-        logger.info("[${event.projectId}|${event.pipelineId}|${event.buildId}|$retryTime] Start build Docker VM $dockerIp requestBody: $requestBody")
         val url = "http://$dockerIp/api/docker/build/start"
         val proxyUrl = "$idcProxy/proxy-devnet?url=${urlEncode(url)}"
         val request = Request.Builder().url(proxyUrl)
@@ -211,15 +210,15 @@ class DockerHostClient @Autowired constructor(
             .addHeader("Content-Type", "application/json; charset=utf-8")
             .build()
 
-        logger.info("[${event.projectId}|${event.pipelineId}|${event.buildId}] Start build Docker VM $dockerIp url: $proxyUrl")
+        logger.info("[${event.projectId}|${event.pipelineId}|${event.buildId}|$retryTime] Start build Docker VM $dockerIp, url: $proxyUrl, requestBody: $requestBody")
         OkhttpUtils.doLongHttp(request).use { resp ->
             val responseBody = resp.body()!!.string()
-            logger.info("[${event.projectId}|${event.pipelineId}|${event.buildId}] Start build Docker VM $dockerIp responseBody: $responseBody")
+            logger.info("[${event.projectId}|${event.pipelineId}|${event.buildId}|$retryTime] Start build Docker VM $dockerIp responseBody: $responseBody")
             val response: Map<String, Any> = jacksonObjectMapper().readValue(responseBody)
             when {
                 response["status"] == 0 -> {
                     val containId = response["data"] as String
-                    logger.info("[${event.projectId}|${event.pipelineId}|${event.buildId}] update container: $containId")
+                    logger.info("[${event.projectId}|${event.pipelineId}|${event.buildId}|$retryTime] update container: $containId")
                     pipelineDockerTaskSimpleDao.updateContainerId(
                         dslContext,
                         event.pipelineId,
@@ -243,13 +242,13 @@ class DockerHostClient @Autowired constructor(
                             VolumeStatus.FAILURE.status
                         )
 
-                        logger.error("[${event.projectId}|${event.pipelineId}|${event.buildId}] Start build Docker VM failed, retry $retryTime times.")
+                        logger.error("[${event.projectId}|${event.pipelineId}|${event.buildId}|$retryTime] Start build Docker VM failed, retry $retryTime times.")
                         throw DockerServiceException("Start build Docker VM failed, retry $retryTime times.")
                     }
                 }
                 else -> {
                     val msg = response["message"] as String
-                    logger.error("[${event.projectId}|${event.pipelineId}|${event.buildId}] Start build Docker VM failed, msg: $msg")
+                    logger.error("[${event.projectId}|${event.pipelineId}|${event.buildId}|$retryTime] Start build Docker VM failed, msg: $msg")
                     pipelineDockerTaskSimpleDao.updateStatus(
                         dslContext,
                         event.pipelineId,

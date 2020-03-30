@@ -70,6 +70,7 @@ class DockerHostUtils @Autowired constructor(
 
         // 获取负载配置
         val dockerHostLoadConfigTriple = getLoadConfig()
+        logger.info("Docker host load config: ${JsonUtil.toJson(dockerHostLoadConfigTriple)}")
 
         // 判断流水线上次关联的hostTag，如果存在并且构建机容量符合第一档负载则优先分配（降低版本更新时被重新洗牌的概率）
         val lastHostIp = redisUtils.getDockerBuildLastHost(event.pipelineId, event.vmSeqId)
@@ -133,11 +134,7 @@ class DockerHostUtils @Autowired constructor(
             }
         }
 
-        if (dockerIp == "") {
-            throw DockerServiceException("Start build Docker VM failed, no available Docker VM.")
-        }
-
-        return dockerIp
+        return if (dockerIp.isNotEmpty()) dockerIp else throw DockerServiceException("Start build Docker VM failed, no available Docker VM.")
     }
 
     fun createLoadConfig(loadConfigMap: Map<String, DockerHostLoadConfig>) {
