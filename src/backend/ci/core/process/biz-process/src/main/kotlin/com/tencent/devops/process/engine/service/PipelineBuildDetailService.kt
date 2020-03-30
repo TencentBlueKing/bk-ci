@@ -211,6 +211,7 @@ class PipelineBuildDetailService @Autowired constructor(
                 if (id == containerId) {
                     container.startEpoch = System.currentTimeMillis()
                     container.status = BuildStatus.PREPARE_ENV.name
+                    container.startVMStatus = BuildStatus.RUNNING.name
                     update = true
                     return Traverse.BREAK
                 }
