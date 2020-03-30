@@ -1123,8 +1123,7 @@ class LogServiceV2 @Autowired constructor(
         } else {
             getLogStatus(buildId, tag, jobId, executeCount)
         }
-        val moreLogs = QueryLogs(buildId, getLogStatus(buildId, tag, jobId, executeCount))
-        val queryLogs = QueryLogs(buildId, logStatus)
+        val moreLogs = QueryLogs(buildId, logStatus)
 
         try {
             val startTime = System.currentTimeMillis()
@@ -1164,26 +1163,25 @@ class LogServiceV2 @Autowired constructor(
             } while (scrollResp.hits.hits.isNotEmpty() && times < Constants.SCROLL_MAX_TIMES)
 
             logger.info("logs query time cost($type): ${System.currentTimeMillis() - startTime}")
-            queryLogs.logs.addAll(logs)
             moreLogs.logs.addAll(logs)
             moreLogs.hasMore = moreLogs.logs.size >= Constants.MAX_LINES * Constants.SCROLL_MAX_TIMES
         } catch (ex: IndexNotFoundException) {
             logger.error("Query after logs failed because of IndexNotFoundException. buildId: $buildId", ex)
-            queryLogs.status = LogStatus.CLEAN
-            queryLogs.finished = true
-            queryLogs.hasMore = false
+            moreLogs.status = LogStatus.CLEAN
+            moreLogs.finished = true
+            moreLogs.hasMore = false
         } catch (e: IndexClosedException) {
             logger.error("Query after logs failed because of IndexClosedException. buildId: $buildId", e)
-            queryLogs.status = LogStatus.CLOSED
-            queryLogs.finished = true
-            queryLogs.hasMore = false
+            moreLogs.status = LogStatus.CLOSED
+            moreLogs.finished = true
+            moreLogs.hasMore = false
         } catch (e: Exception) {
             logger.error("Query after logs failed because of ${e.javaClass}. buildId: $buildId", e)
-            queryLogs.status = LogStatus.FAIL
-            queryLogs.finished = true
-            queryLogs.hasMore = false
+            moreLogs.status = LogStatus.FAIL
+            moreLogs.finished = true
+            moreLogs.hasMore = false
         }
-        return queryLogs
+        return moreLogs
     }
 
     private fun getLogStatus(buildId: String, tag: String?, jobId: String?, executeCount: Int?): Boolean {
