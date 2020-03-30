@@ -29,6 +29,7 @@ package com.tencent.devops.dispatch.service
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
@@ -225,12 +226,22 @@ class DockerHostDebugService @Autowired constructor(
                     )
                 }
                 response["status"] == 1 -> {
-                    // 因为母机负载过高，重试策略
+                    // 母机负载过高
+                    logger.error("[$projectId|$pipelineId] Debug docker VM overload, please wait a moment and try again.")
+                    throw ErrorCodeException(
+                        errorCode = "2103505",
+                        defaultMessage = "Debug docker VM overload, please wait a moment and try again.",
+                        params = arrayOf(pipelineId)
+                    )
                 }
                 else -> {
                     val msg = response["message"]
                     logger.error("[$projectId|$pipelineId] Start debug Docker VM failed. $msg")
-                    throw RuntimeException("Start debug Docker VM failed. $msg")
+                    throw ErrorCodeException(
+                        errorCode = "2103503",
+                        defaultMessage = "Start debug Docker VM failed.",
+                        params = arrayOf(pipelineId)
+                    )
                 }
             }
         }
