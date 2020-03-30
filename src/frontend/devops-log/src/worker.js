@@ -34,13 +34,13 @@ function handleColor (val) {
     return res
 }
 
-let allListData = {}
+const allListData = {}
 let curListData = []
-let allTagList = {}
+const allTagList = {}
 let curTagList = []
-let allMainWidth = {}
-let allMainWordNum = {}
-let allRepeatLineNum = {}
+const allMainWidth = {}
+const allMainWordNum = {}
+const allRepeatLineNum = {}
 let curId
 
 onmessage = function (e) {
@@ -87,13 +87,26 @@ onmessage = function (e) {
             getSearchRes(data.index)
             break
         case 'resetData':
-            allListData = {}
-            allTagList = {}
-            allMainWidth = {}
-            allMainWordNum = {}
-            allRepeatLineNum = {}
+            const resetList = [
+                { data: allListData, default: [] },
+                { data: allTagList, default: [] },
+                { data: allMainWidth, default: 0 },
+                { data: allMainWordNum, default: 0 },
+                { data: allRepeatLineNum, default: -1 }
+            ]
+            resetData(resetList)
             break
     }
+}
+
+function resetData (resetList) {
+    resetList.forEach((reset) => {
+        const data = reset.data
+        const keys = Object.keys(data)
+        keys.forEach((key) => {
+            data[key] = reset.default
+        })
+    })
 }
 
 let searchRes
