@@ -65,6 +65,18 @@
                 />
             </template>
         </template>
+        <template v-if="execDetail">
+            <log v-if="showCompleteLog"
+                :title="execDetail.pipelineName"
+                :status="execDetail.status"
+                :id="execDetail.id"
+                :down-load-name="execDetail.pipelineName"
+                :down-load-link="downLoadAllLink"
+                @closeLog="closeLog"
+                ref="log"
+            >
+            </log>
+        </template>
     </section>
 </template>
 
@@ -130,11 +142,17 @@
                 'execDetail',
                 'editingElementPos',
                 'isPropertyPanelVisible',
+                'isShowCompleteLog',
                 'fetchingAtomList'
             ]),
             ...mapState([
                 'fetchError'
             ]),
+
+            downLoadAllLink () {
+                const fileName = encodeURI(encodeURI(this.execDetail.pipelineName))
+                return `${AJAX_URL_PIRFIX}/log/api/user/logs/${this.$route.params.projectId}/${this.$route.params.pipelineId}/${this.execDetail.id}/download?executeCount=1&fileName=${fileName}`
+            },
 
             downLoadJobLink () {
                 const editingElementPos = this.editingElementPos
@@ -197,6 +215,12 @@
                         isShow: value
                     })
                 }
+            },
+            showCompleteLog () {
+                const { isShowCompleteLog, $route: { params } } = this
+                const res = isShowCompleteLog && params.buildNo
+                if (res) this.$nextTick(this.initAllLog)
+                return res
             },
             showContainerPanel () {
                 const { editingElementPos } = this
@@ -339,33 +363,55 @@
             changeExecute (tag, currentExe) {
                 const curLogPostData = this.logPostData[tag]
                 curLogPostData.currentExe = currentExe
+                curLogPostData.lineNo = 0
                 clearTimeout(curLogPostData.id)
+                curLogPostData.clearIds.push(curLogPostData.id)
                 curLogPostData.id = undefined
-                this.initLog(curLogPostData.tag, curLogPostData.ref)
+                this.openLogApi(curLogPostData)
             },
 
             closePlugin (tag) {
-                this.logPostData[tag].id = undefined
+                const curLogPostData = this.logPostData[tag]
+                clearTimeout(curLogPostData.id)
+                curLogPostData.clearIds.push(curLogPostData.id)
+                curLogPostData.id = undefined
+            },
+
+            initAllLog () {
+                const route = this.$route.params || {}
+                const tag = this.execDetail.id
+                this.logPostData[tag] = {
+                    projectId: route.projectId,
+                    pipelineId: route.pipelineId,
+                    buildId: this.execDetail.id,
+                    lineNo: 0,
+                    id: undefined,
+                    clearIds: [],
+                    ref: this.$refs.log,
+                    currentExe: 1
+                }
+                this.openLogApi(this.logPostData[tag])
             },
 
             initLog (tag = this.currentElement.id, ref = this.$refs.log) {
                 const route = this.$route.params || {}
                 let currentLogPost = this.logPostData[tag]
                 if (!currentLogPost) {
+                    const curEle = this.pluginList.find(x => x.id === tag) || {}
                     currentLogPost = {
                         projectId: route.projectId,
                         pipelineId: route.pipelineId,
                         buildId: this.execDetail.id,
                         tag,
-                        currentExe: 1,
+                        currentExe: curEle.executeCount || 1,
                         ref,
                         lineNo: 0,
-                        id: 1
+                        id: undefined,
+                        clearIds: []
                     }
                     this.logPostData[tag] = currentLogPost
                     this.openLogApi(currentLogPost)
                 } else {
-                    currentLogPost.id = 1
                     this.getAfterLogApi(100, currentLogPost)
                 }
             },
@@ -379,8 +425,8 @@
                 })
             },
 
-            handleLogRes (res, currentLogPost) {
-                if (currentLogPost.id === undefined || currentLogPost.ref === undefined) return
+            handleLogRes (res, currentLogPost, curId = currentLogPost.id) {
+                if (currentLogPost.clearIds.includes(curId) || currentLogPost.ref === undefined) return
                 res = res.data || {}
                 if (res.status !== 0) {
                     let errMessage
@@ -420,10 +466,10 @@
             },
 
             getAfterLogApi (mis, currentLogPost) {
-                currentLogPost.id = setTimeout(() => {
-                    if (currentLogPost.id === undefined || currentLogPost.ref === undefined) return
+                const curId = currentLogPost.id = setTimeout(() => {
+                    if (currentLogPost.clearIds.includes(curId) || currentLogPost.ref === undefined) return
                     this.getAfterLog(currentLogPost).then((res) => {
-                        this.handleLogRes(res, currentLogPost)
+                        this.handleLogRes(res, currentLogPost, curId)
                     }).catch((err) => {
                         this.$bkMessage({ theme: 'error', message: err.message || err })
                         currentLogPost.ref.handleApiErr(err.message)
@@ -437,6 +483,7 @@
                     const currentPostData = this.logPostData[key] || {}
                     const currentId = currentPostData.id || ''
                     clearTimeout(currentId)
+                    currentPostData.clearIds.push(currentId)
                     currentPostData.id = undefined
                 })
                 this.logPostData = {}
