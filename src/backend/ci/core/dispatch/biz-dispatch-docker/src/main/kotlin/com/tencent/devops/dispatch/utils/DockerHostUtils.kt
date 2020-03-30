@@ -34,6 +34,7 @@ import com.tencent.devops.dispatch.dao.PipelineDockerHostDao
 import com.tencent.devops.dispatch.dao.PipelineDockerIPInfoDao
 import com.tencent.devops.dispatch.exception.DockerServiceException
 import com.tencent.devops.dispatch.pojo.DockerHostLoadConfig
+import com.tencent.devops.dispatch.utils.redis.RedisUtils
 import com.tencent.devops.model.dispatch.tables.records.TDispatchPipelineDockerIpInfoRecord
 import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
 import org.jooq.DSLContext
@@ -45,6 +46,7 @@ import org.springframework.stereotype.Component
 class DockerHostUtils @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val objectMapper: ObjectMapper,
+    private val redisUtils: RedisUtils,
     private val pipelineDockerIpInfoDao: PipelineDockerIPInfoDao,
     private val pipelineDockerHostDao: PipelineDockerHostDao,
     private val dslContext: DSLContext
@@ -69,6 +71,15 @@ class DockerHostUtils @Autowired constructor(
         // 获取负载配置
         val dockerHostLoadConfigTriple = getLoadConfig()
         logger.info("dockerHostLoadConfigTriple: ${JsonUtil.toJson(dockerHostLoadConfigTriple)}")
+
+        // 判断流水线上次关联的hostTag，如果存在并且构建机容量符合第一档负载则优先分配（降低被重新洗牌的概率）
+        val lastHostIp = redisUtils.getDockerBuildLastHost(event.pipelineId, event.vmSeqId)
+        if (lastHostIp != null && lastHostIp.isNotEmpty()) {
+            val lastHostIpInfo = pipelineDockerIpInfoDao.getDockerIpInfo(dslContext, lastHostIp)
+            if (lastHostIpInfo.enable && lastHostIpInfo.diskLoad < 60 && lastHostIpInfo.memLoad < 80 && lastHostIpInfo.cpuLoad < 80) {
+                return lastHostIp
+            }
+        }
 
         // 先取容量负载比较小的，同时满足磁盘空间使用率小于60%并且内存CPU使用率均低于80%，从满足的节点中选择磁盘空间使用率最小的
         val firstLoadConfig = dockerHostLoadConfigTriple.first
