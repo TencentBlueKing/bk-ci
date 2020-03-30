@@ -31,6 +31,7 @@ import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.dispatch.client.DockerHostClient
 import com.tencent.devops.dispatch.dao.PipelineDockerIPInfoDao
+import com.tencent.devops.dispatch.dao.PipelineDockerTaskDriftDao
 import com.tencent.devops.dispatch.dao.PipelineDockerTaskSimpleDao
 import com.tencent.devops.dispatch.exception.DockerServiceException
 import com.tencent.devops.dispatch.pojo.VolumeStatus
@@ -55,6 +56,7 @@ class DockerDispatcher @Autowired constructor(
     private val dockerHostClient: DockerHostClient,
     private val dockerHostUtils: DockerHostUtils,
     private val pipelineDockerTaskSimpleDao: PipelineDockerTaskSimpleDao,
+    private val pipelineDockerTaskDriftDao: PipelineDockerTaskDriftDao,
     private val pipelineDockerIpInfoDao: PipelineDockerIPInfoDao,
     private val dslContext: DSLContext,
     private val redisOperation: RedisOperation
@@ -99,9 +101,15 @@ class DockerDispatcher @Autowired constructor(
                         pipelineAgentStartupEvent.vmSeqId,
                         dockerIp
                     )
-                    logger.info(
-                        "${pipelineAgentStartupEvent.pipelineId}|${pipelineAgentStartupEvent.buildId}|${pipelineAgentStartupEvent.vmSeqId}| origin host: ${taskHistory.dockerIp} " +
-                                "overload, DiskLoad: ${ipInfo.diskLoad}|MemLoad: ${ipInfo.memLoad}, switch to new host: $dockerIp"
+
+                    // 记录漂移日志
+                    pipelineDockerTaskDriftDao.create(
+                        dslContext,
+                        pipelineAgentStartupEvent.pipelineId,
+                        pipelineAgentStartupEvent.buildId,
+                        pipelineAgentStartupEvent.vmSeqId,
+                        taskHistory.dockerIp,
+                        dockerIp
                     )
                 }
 
