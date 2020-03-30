@@ -69,6 +69,7 @@ import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.dao.PipelineSettingDao
 import com.tencent.devops.process.engine.cfg.ModelTaskIdGenerator
 import com.tencent.devops.process.engine.common.VMUtils
+import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.dao.PipelineResDao
 import com.tencent.devops.process.engine.dao.template.TemplateDao
@@ -133,11 +134,11 @@ class TemplateService @Autowired constructor(
     private val pipelinePermissionService: PipelinePermissionService,
     private val pipelineService: PipelineService,
     private val pipelineStageService: PipelineStageService,
-    private val pipelineRepositoryService: PipelineRepositoryService,
     private val client: Client,
     private val objectMapper: ObjectMapper,
     private val pipelineResDao: PipelineResDao,
     private val pipelineTemplateDao: PipelineTemplateDao,
+    private val pipelineBuildSummaryDao: PipelineBuildSummaryDao,
     private val pipelineGroupService: PipelineGroupService,
     private val modelTaskIdGenerator: ModelTaskIdGenerator,
     private val paramService: ParamService,
@@ -1093,12 +1094,11 @@ class TemplateService @Autowired constructor(
             val template = templateDao.getTemplate(dslContext, version)
             val templateModel: Model = objectMapper.readValue(template.template)
             val templateTriggerContainer = templateModel.stages[0].containers[0] as TriggerContainer
-            val templateBuildNo = templateTriggerContainer.buildNo
-            val templateParams = templateTriggerContainer.params
             val latestInstances = listLatestModel(pipelineIds)
-
-            logger.info("[$userId|$projectId|$templateId|$version] Get the pipelines - $latestInstances")
             val settings = pipelineSettingDao.getSettings(dslContext, pipelineIds)
+            val buildNos = pipelineBuildSummaryDao.getSummaries(dslContext, pipelineIds).map {
+                it.pipelineId to it.buildNo
+            }.toMap()
 
             return latestInstances.map {
                 val pipelineId = it.key
@@ -1108,14 +1108,14 @@ class TemplateService @Autowired constructor(
                     userId = userId,
                     projectId = projectId,
                     pipelineId = pipelineId,
-                    params = removeProperties(templateParams, instanceTriggerContainer.params)
+                    params = removeProperties(templateTriggerContainer.params, instanceTriggerContainer.params)
                 )
                 logger.info("[$userId|$projectId|$templateId|$version] Get the param ($instanceParams)")
 
                 val buildNo = instanceTriggerContainer.buildNo ?: templateTriggerContainer.buildNo
                 if (buildNo != null) {
-                    buildNo.required = templateBuildNo?.required ?: buildNo.required
-                    buildNo.buildNo = pipelineRepositoryService.getBuildNo(projectId, pipelineId) ?: buildNo.buildNo
+                    buildNo.required = templateTriggerContainer.buildNo?.required ?: buildNo.required
+                    buildNo.buildNo = buildNos[pipelineId] ?: buildNo.buildNo
                 }
 
                 pipelineId to TemplateInstanceParams(
