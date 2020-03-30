@@ -126,27 +126,29 @@ class ExtServiceProjectService @Autowired constructor(
         val serviceRecords = mutableListOf<ExtServiceRespItem>()
         projectRelRecords.forEach {
             val serviceRecord = extServiceDao.getServiceLatestByCode(dslContext, it.storeCode)
-            serviceRecords?.add(
-                ExtServiceRespItem(
-                    serviceId = serviceRecord!!.id,
-                    serviceName = serviceRecord.serviceName,
-                    serviceCode = serviceRecord.serviceCode,
-                    language = "",
-                    category = "",
-                    version = serviceRecord.version,
-                    logoUrl = serviceRecord.logoUrl,
-                    serviceStatus = ExtServiceStatusEnum.getServiceStatus(serviceRecord.serviceStatus.toInt()),
-                    projectName = projectCode,
-                    creator = serviceRecord.creator,
-                    releaseFlag = true,
-                    modifier = serviceRecord.modifier,
-                    itemName = "",
-                    publisher = serviceRecord.publisher,
-                    publishTime = DateTimeUtil.toDateTime(serviceRecord.pubTime as LocalDateTime),
-                    createTime = DateTimeUtil.toDateTime(serviceRecord.createTime as LocalDateTime),
-                    updateTime = DateTimeUtil.toDateTime(serviceRecord.updateTime as LocalDateTime)
+            if(serviceRecord != null) {
+                serviceRecords?.add(
+                    ExtServiceRespItem(
+                        serviceId = serviceRecord!!.id,
+                        serviceName = serviceRecord.serviceName,
+                        serviceCode = serviceRecord.serviceCode,
+                        language = "",
+                        category = "",
+                        version = serviceRecord.version,
+                        logoUrl = serviceRecord.logoUrl,
+                        serviceStatus = ExtServiceStatusEnum.getServiceStatus(serviceRecord.serviceStatus.toInt()),
+                        projectName = projectCode,
+                        creator = serviceRecord.creator,
+                        releaseFlag = true,
+                        modifier = serviceRecord.modifier,
+                        itemName = "",
+                        publisher = serviceRecord.publisher,
+                        publishTime = DateTimeUtil.toDateTime(serviceRecord.pubTime as LocalDateTime),
+                        createTime = DateTimeUtil.toDateTime(serviceRecord.createTime as LocalDateTime),
+                        updateTime = DateTimeUtil.toDateTime(serviceRecord.updateTime as LocalDateTime)
+                    )
                 )
-            )
+            }
         }
         return Result(serviceRecords)
     }
