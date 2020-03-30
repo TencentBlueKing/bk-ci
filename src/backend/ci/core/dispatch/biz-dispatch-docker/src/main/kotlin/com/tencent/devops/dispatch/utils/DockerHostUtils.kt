@@ -68,10 +68,15 @@ class DockerHostUtils @Autowired constructor(
         val specialIpSet = pipelineDockerHostDao.getHostIps(dslContext, event.projectId).toSet()
         logger.info("getAvailableDockerIp grayEnv: $grayEnv | specialIpSet: $specialIpSet")
 
+        // 没有查询到专机配置，则根据漂移日志选择之前构建过的母机
+        if (specialIpSet.isEmpty()) {
+
+        }
+
         // 获取负载配置
         val dockerHostLoadConfigTriple = getLoadConfig()
 
-        // 判断流水线上次关联的hostTag，如果存在并且构建机容量符合第一档负载则优先分配（降低被重新洗牌的概率）
+        // 判断流水线上次关联的hostTag，如果存在并且构建机容量符合第一档负载则优先分配（降低版本更新时被重新洗牌的概率）
         val lastHostIp = redisUtils.getDockerBuildLastHost(event.pipelineId, event.vmSeqId)
         if (lastHostIp != null && lastHostIp.isNotEmpty()) {
             val lastHostIpInfo = pipelineDockerIpInfoDao.getDockerIpInfo(dslContext, lastHostIp)
