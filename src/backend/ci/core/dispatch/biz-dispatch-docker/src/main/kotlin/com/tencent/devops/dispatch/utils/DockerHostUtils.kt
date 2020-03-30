@@ -68,11 +68,6 @@ class DockerHostUtils @Autowired constructor(
         val specialIpSet = pipelineDockerHostDao.getHostIps(dslContext, event.projectId).toSet()
         logger.info("getAvailableDockerIp grayEnv: $grayEnv | specialIpSet: $specialIpSet")
 
-        // 没有查询到专机配置，则根据漂移日志选择之前构建过的母机
-        if (specialIpSet.isEmpty()) {
-
-        }
-
         // 获取负载配置
         val dockerHostLoadConfigTriple = getLoadConfig()
 
@@ -139,7 +134,7 @@ class DockerHostUtils @Autowired constructor(
         }
 
         if (dockerIp == "") {
-            throw DockerServiceException("Start build Docker VM failed, no available VM ip.")
+            throw DockerServiceException("Start build Docker VM failed, no available Docker VM.")
         }
 
         return dockerIp
