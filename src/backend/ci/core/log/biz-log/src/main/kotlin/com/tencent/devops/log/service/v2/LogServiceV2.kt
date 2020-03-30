@@ -1166,7 +1166,7 @@ class LogServiceV2 @Autowired constructor(
             logger.info("logs query time cost($type): ${System.currentTimeMillis() - startTime}")
             queryLogs.logs.addAll(logs)
             moreLogs.logs.addAll(logs)
-            moreLogs.hasMore = moreLogs.logs.size >= Constants.MAX_LINES
+            moreLogs.hasMore = moreLogs.logs.size >= Constants.MAX_LINES * times
         } catch (ex: IndexNotFoundException) {
             logger.error("Query after logs failed because of IndexNotFoundException. buildId: $buildId", ex)
             queryLogs.status = LogStatus.CLEAN
