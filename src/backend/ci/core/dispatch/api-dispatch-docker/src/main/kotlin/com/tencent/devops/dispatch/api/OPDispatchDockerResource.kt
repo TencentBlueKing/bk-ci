@@ -3,6 +3,7 @@ package com.tencent.devops.dispatch.api
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.dispatch.pojo.DockerHostLoadConfig
 import com.tencent.devops.dispatch.pojo.DockerIpInfoVO
 import com.tencent.devops.dispatch.pojo.DockerIpListPage
 import io.swagger.annotations.Api
@@ -75,5 +76,16 @@ interface OPDispatchDockerResource {
         @ApiParam("服务ID", required = true)
         @PathParam("dockerIpInfoId")
         dockerIpInfoId: Long
+    ): Result<Boolean>
+
+    @POST
+    @Path("/load-config/add")
+    @ApiOperation("新增Docker构建机负载配置")
+    fun createDockerHostLoadConfig(
+        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @ApiParam("创建IDC构建机所需信息", required = true)
+        dockerHostLoadConfigMap: Map<String, DockerHostLoadConfig>
     ): Result<Boolean>
 }

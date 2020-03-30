@@ -163,7 +163,8 @@ class DockerService @Autowired constructor(private val dockerHostBuildService: D
             dockerHostBuildService.getContainerNum(),
             SigarUtil.getAverageCpuLoad(),
             SigarUtil.getAverageMemLoad(),
-            SigarUtil.getAverageDiskLoad()
+            SigarUtil.getAverageDiskLoad(),
+            SigarUtil.getAverageDiskIOLoad()
             )
     }
 

@@ -30,6 +30,7 @@ import org.hyperic.sigar.FileSystem
 import org.hyperic.sigar.FileSystemUsage
 import org.hyperic.sigar.Sigar
 import org.slf4j.LoggerFactory
+import java.nio.charset.Charset
 import java.util.ArrayDeque
 import kotlin.math.roundToInt
 
@@ -43,12 +44,14 @@ object SigarUtil {
     private val memQueue = ArrayDeque<Int>()
     private val cpuQueue = ArrayDeque<Int>()
     private val diskQueue = ArrayDeque<Int>()
+    private val diskIOQueue = ArrayDeque<Int>()
 
     private const val queueMaxSize = 20
 
     private var queueMemValueSum = 0
     private var queueCpuValueSum = 0
     private var queueDiskValueSum = 0
+    private var queueDiskIOValueSum = 0
 
     fun loadEnable(): Boolean {
         return try {
@@ -84,34 +87,69 @@ object SigarUtil {
         }
     }
 
-    fun pushMem() {
-        val element = getMemUsedPercent()
-        if (memQueue.size >= queueMaxSize) {
-            queueMemValueSum -= memQueue.pollLast()
+    fun getAverageDiskIOLoad(): Int {
+        return try {
+            queueDiskIOValueSum / diskIOQueue.size
+        } catch (e: Exception) {
+            0
         }
+    }
 
-        memQueue.push(element)
-        queueMemValueSum += element
+    fun pushMem() {
+        try {
+            val element = getMemUsedPercent()
+            if (memQueue.size >= queueMaxSize) {
+                queueMemValueSum -= memQueue.pollLast()
+            }
+
+            memQueue.push(element)
+            queueMemValueSum += element
+        } catch (e: Exception) {
+            logger.error("push mem error.", e)
+        }
     }
 
     fun pushCpu() {
-        val element = getCpuUsedPercent()
-        if (cpuQueue.size >= queueMaxSize) {
-            queueCpuValueSum -= cpuQueue.pollLast()
-        }
+        try {
+            val element = getCpuUsedPercent()
+            if (cpuQueue.size >= queueMaxSize) {
+                queueCpuValueSum -= cpuQueue.pollLast()
+            }
 
-        cpuQueue.push(element)
-        queueCpuValueSum += element
+            cpuQueue.push(element)
+            queueCpuValueSum += element
+        } catch (e: Exception) {
+            logger.error("push cpu error.", e)
+        }
     }
 
     fun pushDisk() {
-        val element = getDiskUsedPercent()
-        if (diskQueue.size >= queueMaxSize) {
-            queueDiskValueSum -= diskQueue.pollLast()
-        }
+        try {
+            val element = getDiskUsedPercent()
+            if (diskQueue.size >= queueMaxSize) {
+                queueDiskValueSum -= diskQueue.pollLast()
+            }
 
-        diskQueue.push(element)
-        queueDiskValueSum += element
+            diskQueue.push(element)
+            queueDiskValueSum += element
+        } catch (e: Exception) {
+            logger.error(" push disk error.", e)
+        }
+    }
+
+    fun pushDiskIOUtil() {
+        try {
+            val element = getDiskIORate()
+            logger.info("push disk ioUtil element: $element")
+            if (diskIOQueue.size >= queueMaxSize) {
+                queueDiskIOValueSum -= diskIOQueue.pollLast()
+            }
+
+            diskIOQueue.push(element)
+            queueDiskIOValueSum += element
+        } catch (e: Exception) {
+            logger.error("push disk ioUtil error.", e)
+        }
     }
 
     fun getMemQueue(): ArrayDeque<Int> {
@@ -121,6 +159,12 @@ object SigarUtil {
     private fun getMemUsedPercent(): Int {
         val sigar = Sigar()
         val mem = sigar.mem
+        /*logger.info("usedPercent: " + mem.usedPercent)
+        logger.info("used: " + mem.used)
+        logger.info("total: " + mem.total)
+        logger.info("actualUsed: " + mem.actualUsed)
+        logger.info("actualFree: " + mem.actualFree)
+        logger.info("free: " + mem.free)*/
         val element = (mem.usedPercent).roundToInt()
         return if (element in 0..100) {
             element
@@ -149,13 +193,12 @@ object SigarUtil {
     }
 
     private fun getDiskUsedPercent(): Int {
-        val element = file()
+        var element = file()
         logger.info("getDiskUsedPercent ==========>：$element")
-        return if (element in 0..100) {
-            element
-        } else {
-            0
+        if (element !in 0..100) {
+            element = 0
         }
+        return element
     }
 
     @Throws(Exception::class)
@@ -170,21 +213,9 @@ object SigarUtil {
             when (fs.type) {
                 2 -> {
                     // 分区的盘符名称
-                    logger.info("盘符名称:    " + fs.devName)
+                    // logger.info("盘符名称:    " + fs.devName)
                     // 分区的盘符名称
-                    logger.info("盘符路径:    " + fs.dirName)
-                    // 文件系统总大小
-                    logger.info(fs.devName.toString() + "总大小:    " + usage.total + "KB")
-                    // 文件系统剩余大小
-                    logger.info(fs.devName.toString() + "剩余大小:    " + usage.free + "KB")
-                    // 文件系统可用大小
-                    logger.info(fs.devName.toString() + "可用大小:    " + usage.avail + "KB")
-                    // 文件系统已经使用量
-                    logger.info(fs.devName.toString() + "已经使用量:    " + usage.used + "KB")
-                    val usePercent = usage.usePercent * 100
-                    // 文件系统资源的利用率
-                    logger.info(fs.devName.toString() + "资源的利用率:    " + usePercent + "%")
-
+                    // logger.info("盘符路径:    " + fs.dirName)
                     if (fs.dirName == "/data") {
                         diskUsedPercent = (usage.usePercent * 100).roundToInt()
                     }
@@ -193,5 +224,39 @@ object SigarUtil {
         }
 
         return diskUsedPercent
+    }
+
+    private fun getDiskIORate(): Int {
+        var totalIOUtil = 0
+        val commandStr = runCommand("iostat -d -x -k 1 8")
+        val stringArray = commandStr!!.split("\n")
+        stringArray.forEach {
+            if (it.isNotEmpty() && !it.contains("Device:") && !it.contains("Linux")) {
+                val strArr = it.split(" ")
+                val ioUtil = (strArr[strArr.size - 1].toDouble() * 100).roundToInt()
+                logger.info("====: $it || $ioUtil")
+                totalIOUtil += ioUtil
+            }
+        }
+
+        logger.info("totalIOUtil: $totalIOUtil")
+        return totalIOUtil / 800
+    }
+
+    /**
+     * 执行系统命令
+     *
+     * @param CMD 命令
+     * @return 字符串结果
+     */
+    private fun runCommand(CMD: String): String? {
+        try {
+            val pos = Runtime.getRuntime().exec(CMD)
+            pos.waitFor()
+            return pos.inputStream.readBytes().toString(Charset.defaultCharset())
+        } catch (e: Exception) {
+            logger.error("runCommand error.", e)
+            return ""
+        }
     }
 }

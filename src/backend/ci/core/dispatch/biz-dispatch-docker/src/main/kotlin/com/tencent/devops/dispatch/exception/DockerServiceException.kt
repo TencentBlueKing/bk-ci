@@ -24,21 +24,6 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dockerhost.cron
+package com.tencent.devops.dispatch.exception
 
-import com.tencent.devops.dockerhost.utils.SigarUtil
-import org.slf4j.LoggerFactory
-import org.springframework.scheduling.annotation.Scheduled
-import org.springframework.stereotype.Component
-
-@Component
-class SystemInfoRunner {
-
-    @Scheduled(cron = "0/10 * * * * ?")
-    fun startCollect() {
-        SigarUtil.pushMem()
-        SigarUtil.pushCpu()
-        SigarUtil.pushDisk()
-        SigarUtil.pushDiskIOUtil()
-    }
-}
+open class DockerServiceException(message: String) : Exception(message)

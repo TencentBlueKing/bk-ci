@@ -6,6 +6,7 @@ import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.dispatch.dao.PipelineDockerIPInfoDao
+import com.tencent.devops.model.dispatch.tables.records.TDispatchPipelineDockerIpInfoRecord
 import okhttp3.Request
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -13,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
+import java.lang.Exception
 import java.net.URLEncoder
 
 @Component
@@ -56,17 +58,23 @@ class VmStatusScheduler @Autowired constructor(
         logger.info("getAvailableDockerIp gray: $gray")
         val dockerIpList = pipelineDockerIpInfoDao.getEnableDockerIpList(dslContext, grayEnv)
         dockerIpList.parallelStream().forEach {
-            val itDockerIp = it.dockerIp as String
-            val capacity = it.capacity as Int
-            val enable = it.enable as Boolean
-            val url = "http://$itDockerIp/api/docker/host/load"
-            val proxyUrl = "$idcProxy/proxy-devnet?url=${urlEncode(url)}"
-            val request = Request.Builder().url(proxyUrl)
-                .addHeader("Accept", "application/json; charset=utf-8")
-                .addHeader("Content-Type", "application/json; charset=utf-8")
-                .build()
+            singleTask(it)
+        }
+    }
 
-            logger.info("Docker VM status fresh url: $proxyUrl")
+    private fun singleTask(it: TDispatchPipelineDockerIpInfoRecord) {
+        val itDockerIp = it.dockerIp as String
+        val capacity = it.capacity as Int
+        val enable = it.enable as Boolean
+        val url = "http://$itDockerIp/api/docker/host/load"
+        val proxyUrl = "$idcProxy/proxy-devnet?url=${urlEncode(url)}"
+        val request = Request.Builder().url(proxyUrl)
+            .addHeader("Accept", "application/json; charset=utf-8")
+            .addHeader("Content-Type", "application/json; charset=utf-8")
+            .build()
+
+        logger.info("Docker VM status fresh url: $proxyUrl")
+        try {
             OkhttpUtils.doHttp(request).use { resp ->
                 val responseBody = resp.body()!!.string()
                 logger.info("Docker VM $itDockerIp status fresh responseBody: $responseBody")
@@ -77,14 +85,19 @@ class VmStatusScheduler @Autowired constructor(
                     val averageCpuLoad = dockerHostLoad["averageCpuLoad"] as Int
                     val averageMemLoad = dockerHostLoad["averageMemLoad"] as Int
                     val averageDiskLoad = dockerHostLoad["averageDiskLoad"] as Int
+                    val averageDiskIOLoad = dockerHostLoad["averageDiskIOLoad"] as Int
                     pipelineDockerIpInfoDao.update(dslContext, itDockerIp, capacity, usedNum, averageCpuLoad,
-                        averageMemLoad, averageDiskLoad, enable)
+                        averageMemLoad, averageDiskLoad, averageDiskIOLoad, enable)
                 } else {
                     val msg = response["message"] as String
                     logger.error("Get Docker VM container failed, msg: $msg")
-                    throw RuntimeException("Get Docker VM container failed, msg: $msg")
+
                 }
             }
+        } catch (e: Exception) {
+            // 更新容器状态
+            pipelineDockerIpInfoDao.updateDockerIpStatus(dslContext, it.id, false)
+            logger.error("Get Docker VM: $itDockerIp container failed.", e)
         }
     }
 

@@ -228,7 +228,7 @@ class DockerHostDebugService @Autowired constructor(
                     )
                 }
                 response["status"] == 1 -> {
-                    // 因为母机负载问题，重试策略
+                    // 因为母机负载过高，重试策略
 
                 }
                 else -> {

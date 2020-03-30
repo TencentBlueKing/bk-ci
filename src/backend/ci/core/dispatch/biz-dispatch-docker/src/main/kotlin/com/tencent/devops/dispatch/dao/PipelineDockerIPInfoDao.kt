@@ -15,6 +15,10 @@ class PipelineDockerIPInfoDao {
         idcIp: String,
         capacity: Int,
         used: Int,
+        cpuLoad: Int,
+        memLoad: Int,
+        diskLoad: Int,
+        diskIOLoad: Int,
         enable: Boolean,
         grayEnv: Boolean
     ) {
@@ -24,6 +28,10 @@ class PipelineDockerIPInfoDao {
                 DOCKER_IP,
                 CAPACITY,
                 USED_NUM,
+                CPU_LOAD,
+                MEM_LOAD,
+                DISK_LOAD,
+                DISK_IO_LOAD,
                 ENABLE,
                 GRAY_ENV,
                 GMT_CREATE,
@@ -32,6 +40,10 @@ class PipelineDockerIPInfoDao {
                 idcIp,
                 capacity,
                 used,
+                cpuLoad,
+                memLoad,
+                diskLoad,
+                diskIOLoad,
                 enable,
                 grayEnv,
                 LocalDateTime.now(),
@@ -48,6 +60,7 @@ class PipelineDockerIPInfoDao {
         cpuLoad: Int,
         memLoad: Int,
         diskLoad: Int,
+        diskIOLoad: Int,
         enable: Boolean
     ) {
         with(TDispatchPipelineDockerIpInfo.T_DISPATCH_PIPELINE_DOCKER_IP_INFO) {
@@ -57,6 +70,7 @@ class PipelineDockerIPInfoDao {
                 .set(CPU_LOAD, cpuLoad)
                 .set(MEM_LOAD, memLoad)
                 .set(DISK_LOAD, diskLoad)
+                .set(DISK_IO_LOAD, diskIOLoad)
                 .set(ENABLE, enable)
                 .set(GMT_MODIFIED, LocalDateTime.now())
                 .where(DOCKER_IP.eq(idcIp))
@@ -117,6 +131,7 @@ class PipelineDockerIPInfoDao {
         cpuLoad: Int,
         memLoad: Int,
         diskLoad: Int,
+        diskIOLoad: Int,
         limitIpSet: Set<String> = setOf()
     ): Result<TDispatchPipelineDockerIpInfoRecord> {
         with(TDispatchPipelineDockerIpInfo.T_DISPATCH_PIPELINE_DOCKER_IP_INFO) {
@@ -126,7 +141,8 @@ class PipelineDockerIPInfoDao {
                     GRAY_ENV.eq(grayEnv),
                     CPU_LOAD.lessOrEqual(cpuLoad),
                     MEM_LOAD.lessOrEqual(memLoad),
-                    DISK_LOAD.lessOrEqual(diskLoad)
+                    DISK_LOAD.lessOrEqual(diskLoad),
+                    DISK_IO_LOAD.lessOrEqual(diskIOLoad)
                 )
             if (limitIpSet.isNotEmpty()) conditions.add(DOCKER_IP.`in`(limitIpSet))
 
