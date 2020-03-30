@@ -78,9 +78,10 @@ class DockerDispatcher @Autowired constructor(
             pipelineAgentStartupEvent.executeCount ?: 1
         )
 
-        var errorFlag = false
-        var errorMsg = ""
+        dockerHostBuildService.dockerHostBuild(pipelineAgentStartupEvent)
 
+        /*var errorFlag = false
+        var errorMsg = ""
         try {
             val taskHistory = pipelineDockerTaskSimpleDao.getByPipelineIdAndVMSeq(dslContext, pipelineAgentStartupEvent.pipelineId, pipelineAgentStartupEvent.vmSeqId)
             var dockerIp: String
@@ -124,7 +125,7 @@ class DockerDispatcher @Autowired constructor(
                 pipelineDockerTaskSimpleDao.updateStatus(dslContext, pipelineAgentStartupEvent.pipelineId, pipelineAgentStartupEvent.vmSeqId, VolumeStatus.FAILURE.status)
                 onFailBuild(client, rabbitTemplate, pipelineAgentStartupEvent, errorMsg, "startVM-${pipelineAgentStartupEvent.containerId}")
             }
-        }
+        }*/
     }
 
     override fun shutdown(pipelineAgentShutdownEvent: PipelineAgentShutdownEvent) {
