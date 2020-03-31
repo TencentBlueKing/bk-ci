@@ -684,7 +684,7 @@ class ExtServiceDao {
         } else {
             baseStep.where(conditions)
         }
-        logger.info(finalStep.getSQL(true))
+        logger.info(baseStep.getSQL(true))
         return if (null != page && null != pageSize) {
             baseStep.limit((page - 1) * pageSize, pageSize).fetch()
         } else {
