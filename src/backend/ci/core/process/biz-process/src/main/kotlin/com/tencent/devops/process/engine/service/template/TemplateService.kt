@@ -69,6 +69,7 @@ import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.dao.PipelineSettingDao
 import com.tencent.devops.process.engine.cfg.ModelTaskIdGenerator
 import com.tencent.devops.process.engine.common.VMUtils
+import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.dao.PipelineResDao
 import com.tencent.devops.process.engine.dao.template.TemplateDao
@@ -136,6 +137,7 @@ class TemplateService @Autowired constructor(
     private val objectMapper: ObjectMapper,
     private val pipelineResDao: PipelineResDao,
     private val pipelineTemplateDao: PipelineTemplateDao,
+    private val pipelineBuildSummaryDao: PipelineBuildSummaryDao,
     private val pipelineGroupService: PipelineGroupService,
     private val modelTaskIdGenerator: ModelTaskIdGenerator,
     private val paramService: ParamService,
@@ -1089,30 +1091,37 @@ class TemplateService @Autowired constructor(
     ): Map<String, TemplateInstanceParams> {
         try {
             val template = templateDao.getTemplate(dslContext, version)
-            val model: Model = objectMapper.readValue(template.template)
-            val triggerContainer = model.stages[0].containers[0] as TriggerContainer
-            val buildNo = triggerContainer.buildNo
-            val params = triggerContainer.params
-            val pipelines = listLatestModel(pipelineIds)
-            logger.info("[$userId|$projectId|$templateId|$version] Get the pipelines - $pipelines")
+            val templateModel: Model = objectMapper.readValue(template.template)
+            val templateTriggerContainer = templateModel.stages[0].containers[0] as TriggerContainer
+            val latestInstances = listLatestModel(pipelineIds)
             val settings = pipelineSettingDao.getSettings(dslContext, pipelineIds)
+            val buildNos = pipelineBuildSummaryDao.getSummaries(dslContext, pipelineIds).map {
+                it.pipelineId to it.buildNo
+            }.toMap()
 
-            return pipelines.map {
+            return latestInstances.map {
                 val pipelineId = it.key
-                val m: Model = objectMapper.readValue(it.value)
-                val container = m.stages[0].containers[0] as TriggerContainer
-                val param = paramService.filterParams(userId, projectId, pipelineId, removeProperties(params, container.params))
-                logger.info("[$userId|$projectId|$templateId|$version] Get the param ($param)")
-                val no = if (container.buildNo != null) {
-                    container.buildNo
-                } else {
-                    buildNo
+                val instanceModel: Model = objectMapper.readValue(it.value)
+                val instanceTriggerContainer = instanceModel.stages[0].containers[0] as TriggerContainer
+                val instanceParams = paramService.filterParams(
+                    userId = userId,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    params = removeProperties(templateTriggerContainer.params, instanceTriggerContainer.params)
+                )
+                logger.info("[$userId|$projectId|$templateId|$version] Get the param ($instanceParams)")
+
+                val buildNo = instanceTriggerContainer.buildNo ?: templateTriggerContainer.buildNo
+                if (buildNo != null) {
+                    buildNo.required = templateTriggerContainer.buildNo?.required ?: buildNo.required
+                    buildNo.buildNo = buildNos[pipelineId] ?: buildNo.buildNo
                 }
+
                 pipelineId to TemplateInstanceParams(
                     pipelineId = pipelineId,
-                    pipelineName = getPipelineName(settings, pipelineId) ?: model.name,
-                    buildNo = no,
-                    param = param
+                    pipelineName = getPipelineName(settings, pipelineId) ?: templateModel.name,
+                    buildNo = buildNo,
+                    param = instanceParams
                 )
             }.toMap()
         } catch (t: Throwable) {
