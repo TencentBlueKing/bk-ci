@@ -32,11 +32,13 @@ package com.tencent.devops.process.engine.common
  */
 object VMUtils {
 
+    fun genStageId(seq: Int) = "stage-$seq"
+
     fun genStopVMTaskId(seq: Int) = "stopVM-$seq"
 
     fun genEndPointTaskId(seq: Int) = "end-$seq"
 
     fun genVMSeq(containerSeq: Int, taskSeq: Int): Int = containerSeq * 1000 + taskSeq
 
-    fun genStartVMTaskId(containerSeq: Int, taskSeq: Int) = "startVM-${genVMSeq(containerSeq, taskSeq)}"
+    fun genStartVMTaskId(containerSeq: String) = "startVM-$containerSeq"
 }

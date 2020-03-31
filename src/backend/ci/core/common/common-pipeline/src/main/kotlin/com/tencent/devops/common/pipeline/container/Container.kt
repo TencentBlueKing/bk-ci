@@ -49,6 +49,7 @@ interface Container {
     var elementElapsed: Long? // 插件执行耗时
     var canRetry: Boolean? // 当前job是否能重试
     var containerId: String? // container 唯一ID
+    var startVMStatus: String?
 
     /**
      * 只存储Container相关的配置，elements不会存储。
