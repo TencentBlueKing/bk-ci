@@ -1,5 +1,5 @@
 <template>
-    <section :class="['scroll-home', id, { 'min-height': totalNumber <= 0 }]" :style="`height: ${visHeight}px`" @mousewheel="handleWheel" @DOMMouseScroll="handleWheel">
+    <section :class="['scroll-home', id, { 'min-height': totalNumber <= 0, 'show-empty': hasCompleteInit }]" :style="`height: ${visHeight}px`" @mousewheel="handleWheel" @DOMMouseScroll="handleWheel">
         <template v-if="!isLogErr">
             <ul class="scroll-index scroll" :style="`top: ${-totalScrollHeight}px; width: ${indexWidth}px; height: ${ulHeight}px`">
                 <li class="scroll-item" :style="`height: ${itemHeight}px; top: ${item.top}px`" v-for="(item) in indexList" :key="item">
@@ -459,76 +459,10 @@
 </script>
 
 <style lang="scss" scoped>
-    .loaing-more {
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        height: 16px;
-        background: #1e1e1e;
-    }
-    .lds-ellipsis {
-        display: inline-block;
-        position: relative;
-        width: 84px;
-        height: 10px;
-        margin-left: 50%;
-        transform: translateX(-50%);
-    }
-    .lds-ellipsis div {
-        position: absolute;
-        top: 0;
-        width: 10px;
-        height: 10px;
-        border-radius: 50%;
-        background: #fff;
-        animation-timing-function: cubic-bezier(0, 1, 1, 0);
-    }
-    .lds-ellipsis div:nth-child(1) {
-        left: 8px;
-        animation: lds-ellipsis1 0.6s infinite;
-    }
-    .lds-ellipsis div:nth-child(2) {
-        left: 8px;
-        animation: lds-ellipsis2 0.6s infinite;
-    }
-    .lds-ellipsis div:nth-child(3) {
-        left: 32px;
-        animation: lds-ellipsis2 0.6s infinite;
-    }
-    .lds-ellipsis div:nth-child(4) {
-        left: 56px;
-        animation: lds-ellipsis3 0.6s infinite;
-    }
-    @keyframes lds-ellipsis1 {
-        0% {
-            transform: scale(0);
-        }
-        100% {
-            transform: scale(1);
-        }
-    }
-    @keyframes lds-ellipsis3 {
-        0% {
-            transform: scale(1);
-        }
-        100% {
-            transform: scale(0);
-        }
-    }
-    @keyframes lds-ellipsis2 {
-        0% {
-            transform: translate(0, 0);
-        }
-        100% {
-            transform: translate(24px, 0);
-        }
-    }
-
     .log-loading {
         position: absolute;
-        bottom: 0;
-        height: calc(100% - 84px);
+        top: 50%;
+        transform: translateY(-50%);
         width: 100%;
         background: #1e1e1e;
         z-index: 100;
@@ -537,9 +471,8 @@
             position: relative;
             width: 80px;
             height: 80px;
-            top: 50%;
             left: 50%;
-            transform: translate3d(-50%, -50%, 0);
+            transform: translateX(-50%);
         }
         .lds-ring div {
             box-sizing: border-box;
@@ -547,7 +480,6 @@
             position: absolute;
             width: 37px;
             height: 37px;
-            margin: 8px;
             border: 3px solid #fff;
             border-radius: 50%;
             animation: lds-ring 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
@@ -582,7 +514,10 @@
         height: 100%;
         overflow-y: hidden;
         &.min-height {
-            min-height: 150px;
+            min-height: 20px;
+            &.show-empty {
+                min-height: 100px;
+            }
         }
         .list-empty {
             position: absolute;
