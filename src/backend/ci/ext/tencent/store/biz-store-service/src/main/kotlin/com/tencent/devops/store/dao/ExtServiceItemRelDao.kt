@@ -54,9 +54,7 @@ class ExtServiceItemRelDao {
         with(TExtensionServiceItemRel.T_EXTENSION_SERVICE_ITEM_REL) {
             val baseStep = dslContext.update(this)
             val itemId = extServiceItemRelUpdateInfo.itemId
-            if (null != itemId) {
-                baseStep.set(ITEM_ID, itemId)
-            }
+            baseStep.set(ITEM_ID, itemId)
 
             baseStep.set(MODIFIER, userId).set(UPDATE_TIME, LocalDateTime.now())
                 .where(SERVICE_ID.eq(serviceId))

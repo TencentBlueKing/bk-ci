@@ -24,7 +24,7 @@ import javax.ws.rs.core.MediaType
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface OpMediaResource {
-    @ApiOperation("添加媒体信息")
+    @ApiOperation("提交媒体信息")
     @Path("/storeCodes/{storeCode}/types/{storeType}/media")
     @POST
     fun createStoreMedia(
@@ -39,23 +39,6 @@ interface OpMediaResource {
         storeType: StoreTypeEnum,
         @ApiParam("评论信息", required = true)
         mediaInfoList: List<MediaInfoReq>
-    ): Result<Boolean>
-
-    @ApiOperation("修改媒体信息")
-    @Path("/ids/{mediaId}/")
-    @PUT
-    fun updateStoreMedia(
-        @ApiParam("userId", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam("媒体ID", required = true)
-        @QueryParam("mediaId")
-        mediaId: String,
-        @ApiParam("研发商店代码", required = true)
-        @QueryParam("storeCode")
-        storeCode: String,
-        @ApiParam("媒体信息", required = true)
-        mediaInfoReq: MediaInfoReq
     ): Result<Boolean>
 
     @ApiOperation("获取单条媒体信息")

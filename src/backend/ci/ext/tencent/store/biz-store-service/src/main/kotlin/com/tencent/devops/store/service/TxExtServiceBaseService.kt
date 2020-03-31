@@ -4,10 +4,12 @@ import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServiceExtServiceBuildPipelineInitResource
 import com.tencent.devops.process.pojo.pipeline.ExtServiceBuildInitPipelineReq
+import com.tencent.devops.project.api.service.service.ServiceItemResource
 import com.tencent.devops.repository.api.ServiceGitRepositoryResource
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.RepositoryInfo
@@ -20,6 +22,7 @@ import com.tencent.devops.store.dao.ExtServiceBuildInfoDao
 import com.tencent.devops.store.dao.common.StorePipelineBuildRelDao
 import com.tencent.devops.store.dao.common.StorePipelineRelDao
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.pojo.constants.KEY_EXT_SERVICE_ITEMS_PREFIX
 import com.tencent.devops.store.pojo.dto.ExtServiceBaseInfoDTO
 import com.tencent.devops.store.pojo.dto.ExtServiceImageInfoDTO
 import com.tencent.devops.store.pojo.dto.InitExtServiceDTO
@@ -29,9 +32,13 @@ import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import java.util.concurrent.TimeUnit
 
 @Service
 class TxExtServiceBaseService : ExtServiceBaseService() {
+
+    @Autowired
+    private lateinit var redisOperation: RedisOperation
 
     @Value("\${git.service.nameSpaceId}")
     private lateinit var serviceNameSpaceId: String
@@ -77,6 +84,13 @@ class TxExtServiceBaseService : ExtServiceBaseService() {
                 )
             }
         }
+        // 把扩展服务对应的扩展点放入redis中（初始化扩展服务代码库的时候需将extension.json改成用户对应的模板）
+        val itemInfoList = client.get(ServiceItemResource::class).getItemInfoByIds(extensionInfo.extensionItemList).data
+        val itemCodeSet = mutableSetOf<String>()
+        itemInfoList?.forEach {
+            itemCodeSet.add(it.itemCode)
+        }
+        redisOperation.set("$KEY_EXT_SERVICE_ITEMS_PREFIX:$serviceCode", JsonUtil.toJson(itemCodeSet), TimeUnit.DAYS.toSeconds(1))
         // 远程调工蜂接口创建代码库
         try {
             val createGitRepositoryResult = client.get(ServiceGitRepositoryResource::class).createGitCodeRepository(

@@ -44,7 +44,7 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface BuildExtServiceEnvResource {
 
-    @ApiOperation("更新插件执行环境信息")
+    @ApiOperation("更新扩展服务环境信息")
     @PUT
     @Path("/projects/{projectCode}/services/{serviceCode}/versions/{version}")
     fun updateExtServiceEnv(

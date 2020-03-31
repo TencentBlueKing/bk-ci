@@ -14,6 +14,7 @@ import com.tencent.devops.store.pojo.common.HOTTEST
 import com.tencent.devops.store.pojo.common.LATEST
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.enums.ExtServiceSortTypeEnum
+import com.tencent.devops.store.pojo.enums.ServiceTypeEnum
 import com.tencent.devops.store.pojo.vo.ExtServiceMainItemVo
 import com.tencent.devops.store.pojo.vo.SearchExtServiceVO
 import com.tencent.devops.store.service.common.ClassifyService
@@ -130,7 +131,7 @@ class ExtServiceSearchService @Autowired constructor(
     }
 
     /**
-     * 插件市场，查询插件列表
+     * 研发商店-扩展服务，查询插件列表
      */
     fun list(
         userId: String,
@@ -139,11 +140,13 @@ class ExtServiceSearchService @Autowired constructor(
         labelCode: String?,
         bkServiceId: Long?,
         score: Int?,
+        rdType: ServiceTypeEnum? = null,
         sortType: ExtServiceSortTypeEnum?,
         page: Int?,
         pageSize: Int?
     ): SearchExtServiceVO {
 
+        logger.info("[list]get rdType:$rdType, sortType:$sortType")
         // 获取用户组织架构
         val userDeptList = storeUserService.getUserDeptList(userId)
         logger.info("[list]get userDeptList:$userDeptList")
@@ -156,6 +159,7 @@ class ExtServiceSearchService @Autowired constructor(
             labelCode = labelCode,
             bkServiceId = bkServiceId,
             score = score,
+            rdType = rdType,
             sortType = sortType,
             desc = true,
             page = page,
@@ -172,6 +176,7 @@ class ExtServiceSearchService @Autowired constructor(
         labelCode: String?,
         bkServiceId: Long?,
         score: Int?,
+        rdType: ServiceTypeEnum? = null,
         sortType: ExtServiceSortTypeEnum?,
         desc: Boolean?,
         page: Int?,
@@ -180,21 +185,22 @@ class ExtServiceSearchService @Autowired constructor(
         val results = mutableListOf<ExtServiceItem>()
         // 获取扩展服务
         val labelCodeList = if (labelCode.isNullOrEmpty()) listOf() else labelCode?.split(",")
-        val count = extServiceDao.count(dslContext, serviceName, classifyCode, bkServiceId, labelCodeList, score)
-        logger.info("doList userId[$userId],userDeptList[$userDeptList],serviceName[$serviceName],classifyCode[$classifyCode],labelCode[$labelCode], bkService[$bkServiceId] count[$count]")
+        val count = extServiceDao.count(dslContext, serviceName, classifyCode, bkServiceId, rdType, labelCodeList, score)
+        logger.info("doList userId[$userId],userDeptList[$userDeptList],serviceName[$serviceName], rdType[$rdType],classifyCode[$classifyCode],labelCode[$labelCode], bkService[$bkServiceId] count[$count]")
         val services = extServiceDao.list(
-            dslContext,
-            serviceName,
-            classifyCode,
-            bkServiceId,
-            labelCodeList,
-            score,
-            sortType,
-            desc,
-            page,
-            pageSize
+            dslContext = dslContext,
+            serviceName = serviceName,
+            classifyCode = classifyCode,
+            bkService = bkServiceId,
+            labelCodeList = labelCodeList,
+            score = score,
+            rdType = rdType,
+            sortType = sortType,
+            desc = desc,
+            page = page,
+            pageSize = pageSize
         ) ?: return SearchExtServiceVO(0, page, pageSize, results)
-        logger.info("[list] userId[$userId],userDeptList[$userDeptList],serviceName[$serviceName],bkService[$bkServiceId],labelCode[$labelCode] get services: $services")
+        logger.info("[list] userId[$userId],userDeptList[$userDeptList],serviceName[$serviceName],rdType[$rdType],bkService[$bkServiceId],labelCode[$labelCode] get services: $services")
 
         val serviceCodeList = services.map {
             it["SERVICE_CODE"] as String

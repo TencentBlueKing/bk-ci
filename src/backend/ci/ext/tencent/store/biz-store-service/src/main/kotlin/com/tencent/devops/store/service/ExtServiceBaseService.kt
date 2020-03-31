@@ -55,6 +55,7 @@ import com.tencent.devops.store.pojo.ExtServiceUpdateInfo
 import com.tencent.devops.store.pojo.ExtServiceVersionLogCreateInfo
 import com.tencent.devops.store.pojo.ExtensionJson
 import com.tencent.devops.store.pojo.ItemPropCreateInfo
+import com.tencent.devops.store.pojo.common.EXTENSION_JSON_NAME
 import com.tencent.devops.store.pojo.common.KEY_LABEL_CODE
 import com.tencent.devops.store.pojo.common.KEY_LABEL_ID
 import com.tencent.devops.store.pojo.common.KEY_LABEL_NAME
@@ -93,6 +94,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import org.springframework.util.StringUtils
 import java.time.LocalDateTime
+import java.util.regex.Pattern
 
 @Service
 abstract class ExtServiceBaseService @Autowired constructor() {
@@ -173,6 +175,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
                 extServiceCreateInfo = ExtServiceCreateInfo(
                     serviceCode = extensionInfo.serviceCode,
                     serviceName = extensionInfo.serviceName,
+                    latestFlag = true,
                     creatorUser = userId,
                     publisher = userId,
                     publishTime = System.currentTimeMillis(),
@@ -344,7 +347,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
                         logoUrl = submitDTO.logoUrl,
                         summary = submitDTO.summary,
                         description = submitDTO.description,
-                        latestFlag = true,
+                        latestFlag = null,
                         modifierUser = userId
                     ),
                     extServiceVersionLogCreateInfo = ExtServiceVersionLogCreateInfo(
@@ -398,15 +401,13 @@ abstract class ExtServiceBaseService @Autowired constructor() {
             val itemIdList = submitDTO.extensionItemList
             val itemCreateInfoList =
                 getFileServiceProps(serviceCode, featureInfoRecord!!.repositoryHashId, EXTENSION_JSON_NAME, itemIdList)
-            if (null != itemIdList) {
-                extServiceItemRelDao.deleteByServiceId(context, serviceId)
-                extServiceItemRelDao.batchAdd(
-                    dslContext = dslContext,
-                    userId = userId,
-                    serviceId = serviceId,
-                    itemPropList = itemCreateInfoList!!
-                )
-            }
+            extServiceItemRelDao.deleteByServiceId(context, serviceId)
+            extServiceItemRelDao.batchAdd(
+                dslContext = dslContext,
+                userId = userId,
+                serviceId = serviceId,
+                itemPropList = itemCreateInfoList!!
+            )
             // 添加扩展点使用记录
             client.get(ServiceItemResource::class).addServiceNum(itemIdList)
 
@@ -533,6 +534,8 @@ abstract class ExtServiceBaseService @Autowired constructor() {
                     category = it["category"] as String,
                     logoUrl = it["logoUrl"] as String?,
                     serviceStatus = ExtServiceStatusEnum.getServiceStatus((it["serviceStatus"] as Byte).toInt()),
+                    publisher = it["publisher"] as String,
+                    publishTime = DateTimeUtil.toDateTime(it["pubTime"] as LocalDateTime),
                     creator = it["creator"] as String,
                     createTime = DateTimeUtil.toDateTime(it["createTime"] as LocalDateTime),
                     modifier = it["modifier"] as String,
@@ -874,7 +877,6 @@ abstract class ExtServiceBaseService @Autowired constructor() {
             val featureInfoRecord = extFeatureDao.getLatestServiceByCode(dslContext, serviceCode)
             logger.info("getServiceVersion featureInfoRecord: $featureInfoRecord")
 
-            val repositoryHashId = featureInfoRecord!!.repositoryHashId
             val flag =
                 storeUserService.isCanInstallStoreComponent(defaultFlag, userId, serviceCode, StoreTypeEnum.SERVICE)
             val userCommentInfo =
@@ -1040,23 +1042,14 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         extensionInfo: InitExtServiceDTO
     ): Result<Boolean> {
         logger.info("the validateExtServiceReq userId is :$userId,info[$extensionInfo]")
-        if (extensionInfo.serviceCode == null) {
-            // 抛出错误提示
-            return MessageCodeUtil.generateResponseDataObject(
-                CommonMessageCode.PARAMETER_IS_EXIST,
-                arrayOf("serviceCode"),
-                false
-            )
-        }
-        if (extensionInfo.serviceName == null) {
-            // 抛出错误提示
-            return MessageCodeUtil.generateResponseDataObject(
-                CommonMessageCode.PARAMETER_IS_EXIST,
-                arrayOf("serviceName"),
-                false
-            )
-        }
         val serviceCode = extensionInfo.serviceCode
+        if (!Pattern.matches("^[a-z]([-a-z-0-9]*[a-z-0-9])?\$", serviceCode)) {
+            return MessageCodeUtil.generateResponseDataObject(
+                CommonMessageCode.PARAMETER_IS_INVALID,
+                arrayOf(serviceCode),
+                false
+            )
+        }
         // 判断扩展服务是否存在
         val codeInfo = extServiceDao.getServiceLatestByCode(dslContext, serviceCode)
         if (codeInfo != null) {
@@ -1135,9 +1128,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         val nameInfo = extServiceDao.listServiceByName(dslContext, serviceName)
         if (nameInfo != null) {
             for (code in nameInfo) {
-                if (serviceCode != code!!.serviceCode) {
-                    return true
-                }
+                if (serviceCode != code!!.serviceCode) return true
             }
         }
         return false
@@ -1369,6 +1360,5 @@ abstract class ExtServiceBaseService @Autowired constructor() {
 
     companion object {
         val logger = LoggerFactory.getLogger(ExtServiceBaseService::class.java)
-        const val EXTENSION_JSON_NAME = "extension.json"
     }
 }

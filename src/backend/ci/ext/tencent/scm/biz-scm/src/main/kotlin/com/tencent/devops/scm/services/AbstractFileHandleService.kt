@@ -24,6 +24,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.pojo.constants
+package com.tencent.devops.scm.services
 
-const val KEY_EXT_SERVICE_ITEMS_PREFIX = "ext:service:items"
+import com.tencent.devops.common.api.pojo.Result
+import java.io.File
+
+abstract class AbstractFileHandleService {
+
+    /**
+     * 处理文件
+     */
+    abstract fun handleFile(
+        repositoryName: String,
+        fileName: String,
+        workspace: File? = null
+    ): Result<Boolean>
+}

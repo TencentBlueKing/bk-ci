@@ -27,26 +27,26 @@
  *
  */
 
-package com.tencent.devops.common.archive.config
+package com.tencent.devops.artifactory.config
 
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 
 /**
- * 仓库配置
+ * 扩展服务仓库配置
  */
 @Component
-class BkRepoConfig {
+class BkRepoExtServiceConfig {
 
-    // 蓝盾新仓库api接口地址
-    @Value("\${bkrepo.bkrepoApiUrl}")
-    val bkrepoApiUrl: String = ""
+    // 蓝盾新仓库扩展服务项目名称
+    @Value("\${bkrepo.extService.projectName}")
+    val bkrepoExtServiceProjectName: String = ""
 
-    // 蓝盾新仓库执行包仓库名称
-    @Value("\${bkrepo.pkgRepoName}")
-    val bkrepoPkgRepoName: String = ""
+    // 蓝盾新仓库扩展服务用户名
+    @Value("\${bkrepo.extService.userName}")
+    val bkrepoExtServiceUserName: String = ""
 
-    // 蓝盾新仓库docker仓库名称
-    @Value("\${bkrepo.dockerRepoName}")
-    val bkrepoDockerRepoName: String = ""
+    // 蓝盾新仓库扩展服务密码
+    @Value("\${bkrepo.extService.password}")
+    val bkrepoExtServicePassword: String = ""
 }

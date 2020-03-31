@@ -28,7 +28,7 @@ data class ExtServiceCreateInfo(
     @ApiModelProperty("发布时间")
     val publishTime: Long,
     @ApiModelProperty("是否是最后版本")
-    val latestFlag: Boolean? = true,
+    val latestFlag: Boolean? = false,
     @ApiModelProperty("删除标签")
     val deleteFlag: Boolean? = false,
     @ApiModelProperty("添加用户")

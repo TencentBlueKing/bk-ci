@@ -12,12 +12,12 @@ import com.tencent.devops.model.store.tables.TStoreStatisticsTotal
 import com.tencent.devops.model.store.tables.records.TExtensionServiceRecord
 import com.tencent.devops.store.pojo.ExtServiceCreateInfo
 import com.tencent.devops.store.pojo.ExtServiceUpdateInfo
-import com.tencent.devops.store.pojo.atom.enums.MarketAtomSortTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.dto.ServiceApproveReq
 import com.tencent.devops.store.pojo.enums.ExtServiceSortTypeEnum
 import com.tencent.devops.store.pojo.enums.ExtServiceStatusEnum
+import com.tencent.devops.store.pojo.enums.ServiceTypeEnum
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
@@ -211,6 +211,8 @@ class ExtServiceDao {
             a.LOGO_URL.`as`("logoUrl"),
             a.VERSION.`as`("version"),
             a.SERVICE_STATUS.`as`("serviceStatus"),
+            a.PUBLISHER.`as`("publisher"),
+            a.PUB_TIME.`as`("pubTime"),
             a.CREATOR.`as`("creator"),
             a.CREATE_TIME.`as`("createTime"),
             a.MODIFIER.`as`("modifier"),
@@ -397,12 +399,20 @@ class ExtServiceDao {
         serviceName: String?,
         classifyCode: String?,
         bkService: Long?,
+        rdType: ServiceTypeEnum? = null,
         labelCodeList: List<String>?,
         score: Int?
     ): Int {
         val (ta, conditions) = formatConditions(serviceName, classifyCode, dslContext)
 
         val baseStep = dslContext.select(ta.ID.countDistinct()).from(ta)
+
+        if(rdType != null) {
+            val taf = TExtensionServiceFeature.T_EXTENSION_SERVICE_FEATURE.`as`("taf")
+            baseStep.leftJoin(taf).on(ta.SERVICE_CODE.eq(taf.SERVICE_CODE))
+            conditions.add(taf.SERVICE_TYPE.eq(rdType.type.toByte()))
+        }
+
 
         val storeType = StoreTypeEnum.SERVICE.type.toByte()
         if (labelCodeList != null && labelCodeList.isNotEmpty()) {
@@ -593,6 +603,7 @@ class ExtServiceDao {
         bkService: Long?,
         labelCodeList: List<String>?,
         score: Int?,
+        rdType: ServiceTypeEnum?,
         sortType: ExtServiceSortTypeEnum?,
         desc: Boolean?,
         page: Int?,
@@ -625,6 +636,11 @@ class ExtServiceDao {
             baseStep.leftJoin(talr).on(ta.ID.eq(talr.SERVICE_ID))
             conditions.add(talr.LABEL_ID.`in`(labelIdList))
         }
+
+        if(rdType != null) {
+            conditions.add(taf.SERVICE_TYPE.eq(rdType.type.toByte()))
+        }
+
         if (bkService != null) {
             val tir = TExtensionServiceItemRel.T_EXTENSION_SERVICE_ITEM_REL.`as`("tir")
             val serviceIdList = dslContext.select(tir.SERVICE_ID).from(tir)
@@ -636,7 +652,7 @@ class ExtServiceDao {
             val t = dslContext.select(
                 tas.STORE_CODE,
                 tas.STORE_TYPE,
-                tas.DOWNLOADS.`as`(MarketAtomSortTypeEnum.DOWNLOAD_COUNT.name),
+                tas.DOWNLOADS.`as`(ExtServiceSortTypeEnum.DOWNLOAD_COUNT.name),
                 tas.SCORE_AVERAGE
             ).from(tas).asTable("t")
             baseStep.leftJoin(t).on(ta.SERVICE_CODE.eq(t.field("STORE_CODE", String::class.java)))

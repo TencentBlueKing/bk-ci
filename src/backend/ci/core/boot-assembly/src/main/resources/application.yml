@@ -9,7 +9,7 @@ spring:
       discovery:
         service-name: bk-ci  # single service 合并后的单体服务
 file:
-  allowUploadFileTypes: jpg,png,gif,swf,txt,doc,docx,xls,xlsx,ppt,pptx,pdf,flv,rmvb,mp4,svg
+  allowUploadFileTypes: jpg,png,gif,swf,txt,doc,docx,xls,xlsx,ppt,pptx,pdf,svg,mp4,wmv,rm,rmvb,3gp,mov,m4v,avi,dat,mkv,flv,vob
   maxUploadFileSize: 52428800
 
 aes:

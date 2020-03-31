@@ -74,7 +74,8 @@ class ServiceItemService @Autowired constructor(
                     childList.add(
                         ExtServiceEntity(
                             id = itemInfo.itemId,
-                            name = itemInfo.itemName
+                            name = itemInfo.itemName,
+                            code = itemInfo.itemCode
                         )
                     )
                 }
@@ -210,7 +211,8 @@ class ServiceItemService @Autowired constructor(
         childList.add(
             ExtServiceEntity(
                 id = serviceItem.itemId,
-                name = serviceItem.itemName
+                name = serviceItem.itemName,
+                code = serviceItem.itemCode
             )
         )
         val result = ExtItemDTO(
@@ -226,7 +228,8 @@ class ServiceItemService @Autowired constructor(
             val serviceRecord = projectServiceDao.select(dslContext, serviceId.toLong())
             val serviceEntity = ExtServiceEntity(
                 id = serviceRecord!!.id.toString(),
-                name = serviceRecord.name.substringBefore("(")
+                name = serviceRecord.name.substringBefore("("),
+                code = serviceRecord.englishName
             )
             projectServiceMap[serviceId] = serviceEntity
             logger.info("set bkServiceId to map: servcieId[$serviceId], entity[${serviceEntity.toString()}]")

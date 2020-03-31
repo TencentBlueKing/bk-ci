@@ -5,7 +5,9 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.dto.ExtSubmitDTO
 import com.tencent.devops.store.pojo.enums.ExtServiceSortTypeEnum
+import com.tencent.devops.store.pojo.enums.ServiceTypeEnum
 import com.tencent.devops.store.pojo.template.MarketTemplateMain
+import com.tencent.devops.store.pojo.template.enums.TemplateRdTypeEnum
 import com.tencent.devops.store.pojo.vo.ExtServiceMainItemVo
 import com.tencent.devops.store.pojo.vo.SearchExtServiceVO
 import com.tencent.devops.store.pojo.vo.ServiceVersionListResp
@@ -65,6 +67,9 @@ interface UserExtServiceResource {
         @ApiParam("评分", required = false)
         @QueryParam("score")
         score: Int?,
+        @ApiParam("研发来源", required = false)
+        @QueryParam("rdType")
+        rdType: ServiceTypeEnum?,
         @ApiParam("排序", required = false)
         @QueryParam("sortType")
         sortType: ExtServiceSortTypeEnum? = ExtServiceSortTypeEnum.CREATE_TIME,

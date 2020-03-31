@@ -24,6 +24,37 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.pojo.constants
+package com.tencent.devops.scm.services
 
-const val KEY_EXT_SERVICE_ITEMS_PREFIX = "ext:service:items"
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.JsonUtil
+import org.springframework.stereotype.Service
+import java.io.File
+import java.nio.charset.Charset
+
+@Service("ATOM_FILE_HANDLE")
+class AtomFileHandleService : AbstractFileHandleService() {
+
+    /**
+     * 处理task.json文件
+     */
+    override fun handleFile(
+        repositoryName: String,
+        fileName: String,
+        workspace: File?
+    ): Result<Boolean> {
+        // 把task.json中的atomCode修改成用户对应的
+        val taskJsonFile = File(workspace, fileName)
+        if (taskJsonFile.exists()) {
+            val taskJsonStr = taskJsonFile.readText(Charset.forName("UTF-8"))
+            val taskJsonMap = JsonUtil.toMap(taskJsonStr).toMutableMap()
+            taskJsonMap["atomCode"] = repositoryName
+            val deleteFlag = taskJsonFile.delete()
+            if (deleteFlag) {
+                taskJsonFile.createNewFile()
+                taskJsonFile.writeText(JsonUtil.toJson(taskJsonMap), Charset.forName("UTF-8"))
+            }
+        }
+        return Result(true)
+    }
+}

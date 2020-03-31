@@ -37,24 +37,6 @@ class OpMediaResourceImpl @Autowired constructor(
         return Result(true)
     }
 
-    override fun updateStoreMedia(
-        userId: String,
-        mediaId: String,
-        storeCode: String,
-        mediaInfoReq: MediaInfoReq
-    ): Result<Boolean> {
-        return storeMediaService.update(
-            userId = userId,
-            id = mediaId,
-            storeMediaInfo = StoreMediaInfoRequest(
-                storeCode = storeCode,
-                mediaUrl = mediaInfoReq.mediaUrl,
-                mediaType = mediaInfoReq.mediaType.toString(),
-                modifier = userId
-            )
-        )
-    }
-
     override fun getStoreMedia(userId: String, mediaId: String): Result<StoreMediaInfo?> {
         return storeMediaService.get(
             userId = userId,

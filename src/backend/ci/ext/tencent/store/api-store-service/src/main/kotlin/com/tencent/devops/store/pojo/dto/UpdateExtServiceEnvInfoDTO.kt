@@ -36,7 +36,7 @@ data class UpdateExtServiceEnvInfoDTO(
     val pkgPath: String? = null,
     @ApiModelProperty("扩展服务执行包SHA签名串")
     val pkgShaContent: String? = null,
-    @ApiModelProperty("dockefile内容")
+    @ApiModelProperty("dockerfile内容")
     val dockerFileContent: String? = null,
     @ApiModelProperty("扩展服务镜像路径")
     val imagePath: String? = null

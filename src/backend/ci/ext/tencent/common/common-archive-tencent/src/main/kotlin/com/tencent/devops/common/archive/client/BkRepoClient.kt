@@ -277,12 +277,13 @@ class BkRepoClient constructor(
         path: String,
         file: File,
         gatewayFlag: Boolean = true,
+        bkrepoApiUrl: String? = null,
         userName: String? = null,
         password: String? = null
     ) {
         logger.info("uploadLocalFile, projectId: $projectId, repoName: $repoName, path: $path, localFile: ${file.canonicalPath}")
         logger.info("uploadLocalFile, userName: $userName, password: $password")
-        val repoUrlPrefix = if (gatewayFlag) "${getGatewaytUrl()}/bkrepo/api/service/generic" else bkRepoConfig.bkrepoApiUrl
+        val repoUrlPrefix = if (gatewayFlag) "${getGatewaytUrl()}/bkrepo/api/service/generic" else bkrepoApiUrl
         val url = "$repoUrlPrefix/$projectId/$repoName/${path.removePrefix("/")}"
         val requestBuilder = Request.Builder()
             .url(url)

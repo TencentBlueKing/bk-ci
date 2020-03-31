@@ -31,6 +31,7 @@ import com.tencent.devops.store.pojo.enums.ExtServiceSortTypeEnum
 import com.tencent.devops.store.pojo.enums.ExtServiceStatusEnum
 import com.tencent.devops.store.pojo.vo.ExtServiceInfoResp
 import com.tencent.devops.store.pojo.vo.ExtensionServiceVO
+import com.tencent.devops.store.service.common.StoreMediaService
 import org.jooq.impl.DSL
 import org.jooq.impl.DefaultDSLContext
 import org.slf4j.LoggerFactory
@@ -48,6 +49,7 @@ class OpExtServiceService @Autowired constructor(
     private val storeMemberService: TxExtServiceMemberImpl,
     private val extServiceItemDao: ExtServiceItemRelDao,
     private val storeMediaInfoDao: StoreMediaInfoDao,
+    private val storeMediaService: StoreMediaService,
     private val dslContext: DefaultDSLContext,
     private val serviceNotifyService: ExtServiceNotifyService,
     private val extServiceBcsService: ExtServiceBcsService,
@@ -76,7 +78,7 @@ class OpExtServiceService @Autowired constructor(
             itemId = itemId,
             lableId = lableId,
             isApprove = isApprove,
-            sortType = sortType ?: ExtServiceSortTypeEnum.UPDATE_TIME.sortType,
+            sortType = sortType ?: ExtServiceSortTypeEnum.UPDATE_TIME.name,
             desc = desc ?: true,
             page = page,
             pageSize = pageSize
@@ -193,6 +195,7 @@ class OpExtServiceService @Autowired constructor(
             }
         }
 
+        storeMediaService.deleteByStoreCode(userId, serviceCode, StoreTypeEnum.SERVICE)
         infoResp.mediaInfo?.forEach {
             storeMediaInfoDao.add(
                 dslContext = dslContext,
@@ -294,13 +297,13 @@ class OpExtServiceService @Autowired constructor(
 
             // 入库信息，并设置当前版本的LATEST_FLAG
             extServiceDao.approveServiceFromOp(
-                context,
-                userId,
-                serviceId,
-                serviceStatus,
-                approveReq,
-                releaseFlag,
-                pubTime
+                dslContext = context,
+                userId = userId,
+                serviceId = serviceId,
+                serviceStatus = serviceStatus,
+                approveReq = approveReq,
+                latestFlag = releaseFlag,
+                pubTime = pubTime
             )
             extServiceFeatureDao.updateExtServiceFeatureBaseInfo(
                 dslContext = dslContext,
