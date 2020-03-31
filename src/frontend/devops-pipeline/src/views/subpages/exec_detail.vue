@@ -54,7 +54,8 @@
                 />
             </template>
             <template v-else-if="showContainerPanel">
-                <job :title="currentJob.name"
+                <job v-if="currentJob['@type'] !== 'trigger'"
+                    :title="currentJob.name"
                     :status="currentJob.status"
                     :plugin-list="pluginList"
                     :down-load-link="downLoadJobLink"
@@ -62,6 +63,13 @@
                     @closePlugin="closePlugin"
                     @openPlugin="initLog"
                     ref="log"
+                />
+                <container-property-panel v-else
+                    :title="sidePanelConfig.title"
+                    :container-index="editingElementPos.containerIndex"
+                    :stage-index="editingElementPos.stageIndex"
+                    :stages="execDetail.model.stages"
+                    :editable="false"
                 />
             </template>
         </template>
@@ -225,6 +233,7 @@
             showContainerPanel () {
                 const { editingElementPos } = this
                 const res = typeof editingElementPos.containerIndex !== 'undefined'
+                console.log(this.currentJob)
                 return res
             },
             pluginList () {

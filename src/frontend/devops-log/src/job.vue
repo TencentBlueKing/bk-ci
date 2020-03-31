@@ -5,14 +5,14 @@
         :show-time.sync="showTime"
         :search-str.sync="searchStr"
         :worker="worker">
-        <ul class="plugin-list">
+        <ul class="plugin-list" ref="pluginList">
             <li v-for="plugin in pluginList" :key="plugin.id" class="plugin-item">
                 <p class="item-head" @click="expendLog(plugin)">
                     <span :class="[{ 'show-all': !!curFoldList[plugin.id] }, 'log-folder']"></span>
                     <status-icon :status="plugin.status"></status-icon>
                     {{ plugin.name }}
                 </p>
-                <virtual-scroll class="log-scroll" :ref="plugin.id" v-show="curFoldList[plugin.id]" :max-height="500" :id="plugin.id" :worker="worker">
+                <virtual-scroll class="log-scroll" :ref="plugin.id" v-show="curFoldList[plugin.id]" :max-height="maxHeight" :id="plugin.id" :worker="worker">
                     <template slot-scope="item">
                         <span class="item-txt selection-color">
                             <span class="item-time selection-color" v-if="showTime">{{(item.data.isNewLine ? '' : item.data.timestamp)|timeFilter}}</span>
@@ -85,12 +85,15 @@
                 curFoldList: this.pluginList.map(plugin => ({ [plugin.id]: false })),
                 showTime: false,
                 searchStr: '',
-                curSearchIndex: 0
+                curSearchIndex: 0,
+                maxHeight: 0
             }
         },
 
         mounted () {
             this.worker.postMessage({ type: 'initStatus', pluginList: this.pluginList.map(x => x.id) })
+            const pluginListEle = this.$refs.pluginList || {}
+            this.maxHeight = (pluginListEle.offsetHeight || 500) - 80
         },
 
         beforeDestroy () {
@@ -204,6 +207,14 @@
         font-size: 12px;
         line-height: 16px;
         margin: 0 20px;
+        /deep/ .log-loading .lds-ring {
+            height: 16px;
+            width: 16px;
+            div {
+                height: 16px;
+                width: 16px;
+            }
+        }
         .item-txt {
             position: relative;
             padding: 0 5px;
