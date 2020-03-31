@@ -37,6 +37,10 @@ data class GitCIDispatchType(@JsonProperty("value") var image: String)
     image,
     DispatchRouteKeySuffix.GITCI
 ) {
+    override fun cleanDataBeforeSave() {
+        this.image = this.image.trim()
+    }
+
     override fun replaceField(variables: Map<String, String>) {
         image = EnvUtils.parseEnv(image, variables)
     }
