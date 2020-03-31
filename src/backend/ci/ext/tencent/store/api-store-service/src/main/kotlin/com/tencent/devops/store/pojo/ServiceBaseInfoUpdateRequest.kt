@@ -1,6 +1,7 @@
 package com.tencent.devops.store.pojo
 
 import com.tencent.devops.store.pojo.common.StoreMediaInfo
+import com.tencent.devops.store.pojo.enums.DescInputTypeEnum
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -23,5 +24,7 @@ data class ServiceBaseInfoUpdateRequest (
     @ApiModelProperty("扩展点列表", required = false)
     val itemIdList: Set<String>? = null,
     @ApiModelProperty("媒体信息列表", required = false)
-    val mediaInfoList: List<StoreMediaInfo>? = null
+    val mediaInfoList: List<StoreMediaInfo>? = null,
+    @ApiModelProperty("描述录入类型")
+    val descInputType: DescInputTypeEnum?= DescInputTypeEnum.MANUAL
 )

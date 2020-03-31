@@ -75,6 +75,11 @@ class ExtServiceFeatureDao {
             if (null != certificationFlag) {
                 baseStep.set(CERTIFICATION_FLAG, certificationFlag)
             }
+
+            val descInputType = extServiceFeatureUpdateInfo.descInputType
+            if (null != descInputType) {
+                baseStep.set(DESC_INPUT_TYPE, descInputType.name)
+            }
             val weight = extServiceFeatureUpdateInfo.weight
             if (null != weight) {
                 baseStep.set(WEIGHT, weight)

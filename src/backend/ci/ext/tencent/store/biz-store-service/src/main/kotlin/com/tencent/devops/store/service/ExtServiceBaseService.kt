@@ -78,6 +78,7 @@ import com.tencent.devops.store.pojo.dto.ExtSubmitDTO
 import com.tencent.devops.store.pojo.dto.InitExtServiceDTO
 import com.tencent.devops.store.pojo.dto.ServiceOfflineDTO
 import com.tencent.devops.store.pojo.dto.SubmitDTO
+import com.tencent.devops.store.pojo.enums.DescInputTypeEnum
 import com.tencent.devops.store.pojo.enums.ExtServicePackageSourceTypeEnum
 import com.tencent.devops.store.pojo.enums.ExtServiceStatusEnum
 import com.tencent.devops.store.pojo.vo.ExtServiceRespItem
@@ -938,6 +939,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
                     recommendFlag = featureInfoRecord?.recommendFlag,
                     publicFlag = featureInfoRecord.publicFlag,
                     certificationFlag = featureInfoRecord.certificationFlag,
+                    descInputType = featureInfoRecord.descInputType,
                     weight = featureInfoRecord.weight,
                     serviceType = featureInfoRecord.serviceType.toInt(),
                     extensionItemList = itemList,
@@ -1420,7 +1422,8 @@ abstract class ExtServiceBaseService @Autowired constructor() {
                     recommentFlag = settingInfo.recommendFlag,
                     certificationFlag = settingInfo.certificationFlag,
                     modifierUser = userId,
-                    serviceTypeEnum = settingInfo.type
+                    serviceTypeEnum = settingInfo.type,
+                    descInputType = baseInfo?.descInputType?: DescInputTypeEnum.MANUAL
                 )
             )
         }
