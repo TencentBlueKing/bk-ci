@@ -41,6 +41,7 @@ class UserExtServiceResourceImpl @Autowired constructor(
             classifyCode = classifyCode,
             labelCode = labelCode,
             bkServiceId = bkServiceId,
+            rdType = rdType,
             score = score,
             sortType = sortType,
             pageSize = pageSize,

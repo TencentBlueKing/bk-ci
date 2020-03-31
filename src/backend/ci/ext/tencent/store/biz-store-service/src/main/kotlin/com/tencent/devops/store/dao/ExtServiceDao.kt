@@ -668,11 +668,11 @@ class ExtServiceDao {
                         .from(tas).where(tas.STORE_TYPE.eq(storeType)).asTable("t")
                 baseStep.leftJoin(t).on(ta.SERVICE_CODE.eq(t.field("STORE_CODE", String::class.java)))
             }
-
+            val sortTypeField = ExtServiceSortTypeEnum.getSortType(sortType.name)
             val realSortType = if (sortType == ExtServiceSortTypeEnum.DOWNLOAD_COUNT) {
-                DSL.field(sortType.name)
+                DSL.field(sortTypeField)
             } else {
-                ta.field(sortType.name)
+                ta.field(sortTypeField)
             }
 
             if (desc != null && desc) {

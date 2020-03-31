@@ -27,9 +27,25 @@
 package com.tencent.devops.store.pojo.enums
 
 enum class ExtServiceSortTypeEnum() {
+    NAME,
     CREATOR,
     MODIFIER,
+    PUBLISHER,
     CREATE_TIME,
     UPDATE_TIME,
-    DOWNLOAD_COUNT
+    DOWNLOAD_COUNT;
+
+    companion object {
+        fun getSortType(type: String?): String {
+            return when (type) {
+                NAME.name -> "SERVICE_NAME"
+                UPDATE_TIME.name -> UPDATE_TIME.name
+                PUBLISHER.name -> PUBLISHER.name
+                DOWNLOAD_COUNT.name -> DOWNLOAD_COUNT.name
+                CREATOR.name -> CREATOR.name
+                MODIFIER.name -> MODIFIER.name
+                else -> CREATE_TIME.name
+            }
+        }
+    }
 }
