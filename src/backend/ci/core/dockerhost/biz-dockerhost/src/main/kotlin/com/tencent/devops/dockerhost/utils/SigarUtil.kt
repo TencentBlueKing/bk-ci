@@ -239,7 +239,11 @@ object SigarUtil {
         }
 
         // logger.info("totalIOUtil: $totalIOUtil")
-        return totalIOUtil / 800
+        var element = totalIOUtil / 800
+        if (element !in 0..100) {
+            element = 0
+        }
+        return element
     }
 
     /**
