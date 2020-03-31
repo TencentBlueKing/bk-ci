@@ -3,7 +3,7 @@ package com.tencent.devops.store.resources
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.OpServiceResource
-import com.tencent.devops.store.pojo.OpEditInfoDTO
+import com.tencent.devops.store.pojo.EditInfoDTO
 import com.tencent.devops.store.pojo.atom.enums.OpSortTypeEnum
 import com.tencent.devops.store.pojo.common.StoreVisibleDeptResp
 import com.tencent.devops.store.pojo.common.VisibleApproveReq
@@ -59,9 +59,9 @@ class OpServiceResourceImpl @Autowired constructor(
         userId: String,
         serviceId: String,
         serviceCode: String,
-        updateInfo: OpEditInfoDTO
+        updateInfo: EditInfoDTO
     ): Result<Boolean> {
-        return opExtServiceService.editExtInfo(userId, serviceId, serviceCode, updateInfo)
+        return extServiceBaseService.updateExtInfo(userId, serviceId, serviceCode, updateInfo)
     }
 
     override fun listServiceByCode(

@@ -3,7 +3,7 @@ package com.tencent.devops.store.api
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.pojo.OpEditInfoDTO
+import com.tencent.devops.store.pojo.EditInfoDTO
 import com.tencent.devops.store.pojo.atom.enums.OpSortTypeEnum
 import com.tencent.devops.store.pojo.common.StoreVisibleDeptResp
 import com.tencent.devops.store.pojo.common.VisibleApproveReq
@@ -112,7 +112,7 @@ interface OpServiceResource {
         @PathParam("serviceCode")
         serviceCode: String,
         @ApiParam("修改信息", required = true)
-        updateInfo: OpEditInfoDTO
+        updateInfo: EditInfoDTO
     ): Result<Boolean>
 
     @ApiOperation("根据ID获取扩展服务信息")

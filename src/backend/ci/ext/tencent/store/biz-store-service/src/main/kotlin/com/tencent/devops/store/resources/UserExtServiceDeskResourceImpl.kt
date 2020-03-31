@@ -30,7 +30,7 @@ class UserExtServiceDeskResourceImpl @Autowired constructor(
         userId: String,
         extensionInfo: SubmitDTO
     ): Result<String> {
-        return extServiceBaseService.updateExtService(
+        return extServiceBaseService.submitExtService(
             userId = userId,
             submitDTO = extensionInfo
         )

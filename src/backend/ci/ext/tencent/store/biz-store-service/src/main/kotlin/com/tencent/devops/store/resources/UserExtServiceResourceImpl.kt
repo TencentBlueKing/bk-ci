@@ -3,6 +3,11 @@ package com.tencent.devops.store.resources
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.UserExtServiceResource
+import com.tencent.devops.store.pojo.EditInfoDTO
+import com.tencent.devops.store.pojo.ServiceBaseInfoUpdateRequest
+import com.tencent.devops.store.pojo.UpdateExtBaseInfo
+import com.tencent.devops.store.pojo.UpdateMediaInfo
+import com.tencent.devops.store.pojo.common.enums.MediaTypeEnum
 import com.tencent.devops.store.pojo.dto.ExtSubmitDTO
 import com.tencent.devops.store.pojo.enums.ExtServiceSortTypeEnum
 import com.tencent.devops.store.pojo.enums.ServiceTypeEnum
@@ -66,5 +71,38 @@ class UserExtServiceResourceImpl @Autowired constructor(
 
     override fun createMediaAndVisible(userId: String, serviceId: String): Result<Boolean> {
         return extServiceBaseService.backToTest(userId, serviceId)
+    }
+
+    override fun updateServiceBaseInfo(
+        userId: String,
+        serviceCode: String,
+        serviceId: String,
+        serviceBaseInfoUpdateRequest: ServiceBaseInfoUpdateRequest
+    ): Result<Boolean> {
+        val baseInfo = UpdateExtBaseInfo(
+            serviceName = serviceBaseInfoUpdateRequest.name,
+            labels = serviceBaseInfoUpdateRequest.labelIdList,
+            itemIds = serviceBaseInfoUpdateRequest.itemIdList,
+            summary = serviceBaseInfoUpdateRequest.summary,
+            logoUrl = serviceBaseInfoUpdateRequest.logoUrl,
+            description = serviceBaseInfoUpdateRequest.description
+        )
+        val mediaInfos = mutableListOf<UpdateMediaInfo>()
+        if(serviceBaseInfoUpdateRequest.mediaInfoList != null){
+            serviceBaseInfoUpdateRequest.mediaInfoList!!.forEach {
+                mediaInfos.add(
+                    UpdateMediaInfo(
+                        mediaUrl = it.mediaUrl,
+                        mediaType = MediaTypeEnum.valueOf(it.mediaType)
+                    )
+                )
+            }
+        }
+        val editInfo = EditInfoDTO(
+            baseInfo = baseInfo,
+            mediaInfo = mediaInfos,
+            settingInfo = null
+        )
+        return extServiceBaseService.updateExtInfo(userId, serviceCode, serviceId, editInfo)
     }
 }

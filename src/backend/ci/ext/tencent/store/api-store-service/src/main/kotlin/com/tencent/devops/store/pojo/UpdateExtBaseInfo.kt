@@ -4,9 +4,9 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import io.swagger.annotations.ApiModelProperty
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-data class OpExtBaseInfo(
+data class UpdateExtBaseInfo(
     @ApiModelProperty("扩展服务Name")
-    val serviceName: String,
+    val serviceName: String?,
     @ApiModelProperty("扩展点")
     val itemIds: Set<String>?,
     @ApiModelProperty("标签")

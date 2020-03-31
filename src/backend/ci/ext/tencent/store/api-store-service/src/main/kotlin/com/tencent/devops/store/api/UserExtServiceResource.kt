@@ -2,7 +2,10 @@ package com.tencent.devops.store.api
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BK_TICKET
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.store.pojo.ServiceBaseInfoUpdateRequest
+import com.tencent.devops.store.pojo.atom.AtomBaseInfoUpdateRequest
 import com.tencent.devops.store.pojo.dto.ExtSubmitDTO
 import com.tencent.devops.store.pojo.enums.ExtServiceSortTypeEnum
 import com.tencent.devops.store.pojo.enums.ServiceTypeEnum
@@ -19,6 +22,7 @@ import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
+import javax.ws.rs.PUT
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
@@ -132,5 +136,22 @@ interface UserExtServiceResource {
         @ApiParam("serviceId", required = true)
         @PathParam("serviceId")
         serviceId: String
+    ): Result<Boolean>
+
+    @ApiOperation("更新扩展服务信息")
+    @PUT
+    @Path("/baseInfo/serviceCodes/{serviceCode}/serviceIds/{serviceId}")
+    fun updateServiceBaseInfo(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("扩展服务编码 ", required = true)
+        @PathParam("serviceCode")
+        serviceCode: String,
+        @ApiParam("扩展服务Id ", required = true)
+        @PathParam("serviceId")
+        serviceId: String,
+        @ApiParam(value = "扩展服务基本信息修改请求报文体", required = true)
+        serviceBaseInfoUpdateRequest: ServiceBaseInfoUpdateRequest
     ): Result<Boolean>
 }

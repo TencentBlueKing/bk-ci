@@ -44,12 +44,15 @@ import com.tencent.devops.store.dao.ExtServiceItemRelDao
 import com.tencent.devops.store.dao.ExtServiceLableRelDao
 import com.tencent.devops.store.dao.ExtServiceVersionLogDao
 import com.tencent.devops.store.dao.common.StoreBuildInfoDao
+import com.tencent.devops.store.dao.common.StoreMediaInfoDao
 import com.tencent.devops.store.dao.common.StoreMemberDao
 import com.tencent.devops.store.dao.common.StoreProjectRelDao
 import com.tencent.devops.store.dao.common.StoreReleaseDao
+import com.tencent.devops.store.pojo.EditInfoDTO
 import com.tencent.devops.store.pojo.ExtServiceCreateInfo
 import com.tencent.devops.store.pojo.ExtServiceEnvCreateInfo
 import com.tencent.devops.store.pojo.ExtServiceFeatureCreateInfo
+import com.tencent.devops.store.pojo.ExtServiceFeatureUpdateInfo
 import com.tencent.devops.store.pojo.ExtServiceItemRelCreateInfo
 import com.tencent.devops.store.pojo.ExtServiceUpdateInfo
 import com.tencent.devops.store.pojo.ExtServiceVersionLogCreateInfo
@@ -143,6 +146,8 @@ abstract class ExtServiceBaseService @Autowired constructor() {
     lateinit var extServiceBcsNameSpaceConfig: ExtServiceBcsNameSpaceConfig
     @Autowired
     lateinit var permissionApi: BSAuthPermissionApi
+    @Autowired
+    lateinit var storeMediaInfoDao: StoreMediaInfoDao
     @Autowired
     lateinit var bsProjectServiceCodec: BSProjectServiceCodec
 
@@ -253,7 +258,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         return Result(true)
     }
 
-    fun updateExtService(
+    fun submitExtService(
         userId: String,
         submitDTO: SubmitDTO
     ): Result<String> {
@@ -336,7 +341,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
                 } else {
                     releaseType.releaseType.toByte()
                 }
-                updateExtService(
+                submitExtService(
                     userId = userId,
                     serviceId = serviceId,
                     extServiceUpdateInfo = ExtServiceUpdateInfo(
@@ -963,7 +968,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         return releaseTotalNum > currentNum
     }
 
-    private fun updateExtService(
+    private fun submitExtService(
         userId: String,
         serviceId: String,
         extServiceUpdateInfo: ExtServiceUpdateInfo,
@@ -1334,6 +1339,93 @@ abstract class ExtServiceBaseService @Autowired constructor() {
                 0
             }
         }
+    }
+
+    fun updateExtInfo(userId: String, serviceId: String, serviceCode: String, infoResp: EditInfoDTO): Result<Boolean> {
+        val baseInfo = infoResp.baseInfo
+        val settingInfo = infoResp.settingInfo
+        if (baseInfo != null) {
+            extServiceDao.updateExtServiceBaseInfo(
+                dslContext = dslContext,
+                userId = userId,
+                serviceId = serviceId,
+                extServiceUpdateInfo = ExtServiceUpdateInfo(
+                    serviceName = baseInfo.serviceName,
+                    logoUrl = baseInfo.logoUrl,
+                    summary = baseInfo.summary,
+                    description = baseInfo.description,
+                    modifierUser = userId,
+                    status = null,
+                    latestFlag = null
+                )
+            )
+
+            // 更新标签信息
+            val labelIdList = baseInfo.labels
+            if (null != labelIdList) {
+                extServiceLabelDao.deleteByServiceId(dslContext, serviceId)
+                if (labelIdList.isNotEmpty())
+                    extServiceLabelDao.batchAdd(dslContext, userId, serviceId, labelIdList)
+            }
+            val itemIds = baseInfo.itemIds
+            if (itemIds != null) {
+                val existenceItems = extServiceItemRelDao.getItemByServiceId(dslContext, serviceId)
+                val existenceItemIds = mutableListOf<String>()
+                existenceItems?.forEach {
+                    existenceItemIds.add(it.itemId)
+                }
+                itemIds.forEach { itemId ->
+                    if (!existenceItemIds.contains(itemId)) {
+                        extServiceItemRelDao.create(
+                            userId = userId,
+                            dslContext = dslContext,
+                            extServiceItemRelCreateInfo = ExtServiceItemRelCreateInfo(
+                                serviceId = serviceId,
+                                modifierUser = userId,
+                                creatorUser = userId,
+                                itemId = itemId,
+                                bkServiceId = getItemBkServiceId(itemId)
+                            )
+                        )
+                    }
+                }
+                // 添加扩展点使用记录
+                client.get(ServiceItemResource::class).addServiceNum(itemIds)
+            }
+        }
+
+        mediaService.deleteByStoreCode(userId, serviceCode, StoreTypeEnum.SERVICE)
+        infoResp.mediaInfo?.forEach {
+            storeMediaInfoDao.add(
+                dslContext = dslContext,
+                userId = userId,
+                type = StoreTypeEnum.SERVICE.type.toByte(),
+                id = UUIDUtil.generate(),
+                storeMediaInfoReq = StoreMediaInfoRequest(
+                    storeCode = serviceCode,
+                    mediaUrl = it.mediaUrl,
+                    mediaType = it.mediaType.name,
+                    modifier = userId
+                )
+            )
+        }
+
+        if (settingInfo != null) {
+            extFeatureDao.updateExtServiceFeatureBaseInfo(
+                dslContext = dslContext,
+                userId = userId,
+                serviceCode = serviceCode,
+                extServiceFeatureUpdateInfo = ExtServiceFeatureUpdateInfo(
+                    publicFlag = settingInfo.publicFlag,
+                    recommentFlag = settingInfo.recommendFlag,
+                    certificationFlag = settingInfo.certificationFlag,
+                    modifierUser = userId,
+                    serviceTypeEnum = settingInfo.type
+                )
+            )
+        }
+
+        return Result(true)
     }
 
     private fun checkProjectInfo(userId: String, projectCode: String) {

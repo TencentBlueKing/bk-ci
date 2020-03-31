@@ -19,7 +19,7 @@ import com.tencent.devops.store.dao.common.StoreReleaseDao
 import com.tencent.devops.store.pojo.ExtServiceFeatureUpdateInfo
 import com.tencent.devops.store.pojo.ExtServiceItemRelCreateInfo
 import com.tencent.devops.store.pojo.ExtServiceUpdateInfo
-import com.tencent.devops.store.pojo.OpEditInfoDTO
+import com.tencent.devops.store.pojo.EditInfoDTO
 import com.tencent.devops.store.pojo.common.PASS
 import com.tencent.devops.store.pojo.common.REJECT
 import com.tencent.devops.store.pojo.common.StoreMediaInfoRequest
@@ -142,92 +142,92 @@ class OpExtServiceService @Autowired constructor(
         return Result(ExtServiceInfoResp(count, page, pageSize, extensionServiceInfoList))
     }
 
-    fun editExtInfo(userId: String, serviceId: String, serviceCode: String, infoResp: OpEditInfoDTO): Result<Boolean> {
-        val baseInfo = infoResp.baseInfo
-        val settingInfo = infoResp.settingInfo
-        if (baseInfo != null) {
-            extServiceDao.updateExtServiceBaseInfo(
-                dslContext = dslContext,
-                userId = userId,
-                serviceId = serviceId,
-                extServiceUpdateInfo = ExtServiceUpdateInfo(
-                    serviceName = baseInfo.serviceName,
-                    logoUrl = baseInfo.logoUrl,
-                    summary = baseInfo.summary,
-                    description = baseInfo.description,
-                    modifierUser = userId,
-                    status = null,
-                    latestFlag = null
-                )
-            )
-
-            // 更新标签信息
-            val labelIdList = baseInfo.labels
-            if (null != labelIdList) {
-                extServiceLabelDao.deleteByServiceId(dslContext, serviceId)
-                if (labelIdList.isNotEmpty())
-                    extServiceLabelDao.batchAdd(dslContext, userId, serviceId, labelIdList)
-            }
-            val itemIds = baseInfo.itemIds
-            if (itemIds != null) {
-                val existenceItems = extServiceItemDao.getItemByServiceId(dslContext, serviceId)
-                val existenceItemIds = mutableListOf<String>()
-                existenceItems?.forEach {
-                    existenceItemIds.add(it.itemId)
-                }
-                itemIds.forEach { itemId ->
-                    if (!existenceItemIds.contains(itemId)) {
-                        extServiceItemDao.create(
-                            userId = userId,
-                            dslContext = dslContext,
-                            extServiceItemRelCreateInfo = ExtServiceItemRelCreateInfo(
-                                serviceId = serviceId,
-                                modifierUser = userId,
-                                creatorUser = userId,
-                                itemId = itemId,
-                                bkServiceId = extServiceBaseService.getItemBkServiceId(itemId)
-                            )
-                        )
-                    }
-                }
-                // 添加扩展点使用记录
-                client.get(ServiceItemResource::class).addServiceNum(itemIds)
-            }
-        }
-
-        storeMediaService.deleteByStoreCode(userId, serviceCode, StoreTypeEnum.SERVICE)
-        infoResp.mediaInfo?.forEach {
-            storeMediaInfoDao.add(
-                dslContext = dslContext,
-                userId = userId,
-                type = StoreTypeEnum.SERVICE.type.toByte(),
-                id = UUIDUtil.generate(),
-                storeMediaInfoReq = StoreMediaInfoRequest(
-                    storeCode = serviceCode,
-                    mediaUrl = it.mediaUrl,
-                    mediaType = it.mediaType.name,
-                    modifier = userId
-                )
-            )
-        }
-
-        if (settingInfo != null) {
-            extServiceFeatureDao.updateExtServiceFeatureBaseInfo(
-                dslContext = dslContext,
-                userId = userId,
-                serviceCode = serviceCode,
-                extServiceFeatureUpdateInfo = ExtServiceFeatureUpdateInfo(
-                    publicFlag = settingInfo.publicFlag,
-                    recommentFlag = settingInfo.recommendFlag,
-                    certificationFlag = settingInfo.certificationFlag,
-                    modifierUser = userId,
-                    serviceTypeEnum = settingInfo.type
-                )
-            )
-        }
-
-        return Result(true)
-    }
+//    fun editExtInfo(userId: String, serviceId: String, serviceCode: String, infoResp: EditInfoDTO): Result<Boolean> {
+//        val baseInfo = infoResp.baseInfo
+//        val settingInfo = infoResp.settingInfo
+//        if (baseInfo != null) {
+//            extServiceDao.updateExtServiceBaseInfo(
+//                dslContext = dslContext,
+//                userId = userId,
+//                serviceId = serviceId,
+//                extServiceUpdateInfo = ExtServiceUpdateInfo(
+//                    serviceName = baseInfo.serviceName,
+//                    logoUrl = baseInfo.logoUrl,
+//                    summary = baseInfo.summary,
+//                    description = baseInfo.description,
+//                    modifierUser = userId,
+//                    status = null,
+//                    latestFlag = null
+//                )
+//            )
+//
+//            // 更新标签信息
+//            val labelIdList = baseInfo.labels
+//            if (null != labelIdList) {
+//                extServiceLabelDao.deleteByServiceId(dslContext, serviceId)
+//                if (labelIdList.isNotEmpty())
+//                    extServiceLabelDao.batchAdd(dslContext, userId, serviceId, labelIdList)
+//            }
+//            val itemIds = baseInfo.itemIds
+//            if (itemIds != null) {
+//                val existenceItems = extServiceItemDao.getItemByServiceId(dslContext, serviceId)
+//                val existenceItemIds = mutableListOf<String>()
+//                existenceItems?.forEach {
+//                    existenceItemIds.add(it.itemId)
+//                }
+//                itemIds.forEach { itemId ->
+//                    if (!existenceItemIds.contains(itemId)) {
+//                        extServiceItemDao.create(
+//                            userId = userId,
+//                            dslContext = dslContext,
+//                            extServiceItemRelCreateInfo = ExtServiceItemRelCreateInfo(
+//                                serviceId = serviceId,
+//                                modifierUser = userId,
+//                                creatorUser = userId,
+//                                itemId = itemId,
+//                                bkServiceId = extServiceBaseService.getItemBkServiceId(itemId)
+//                            )
+//                        )
+//                    }
+//                }
+//                // 添加扩展点使用记录
+//                client.get(ServiceItemResource::class).addServiceNum(itemIds)
+//            }
+//        }
+//
+//        storeMediaService.deleteByStoreCode(userId, serviceCode, StoreTypeEnum.SERVICE)
+//        infoResp.mediaInfo?.forEach {
+//            storeMediaInfoDao.add(
+//                dslContext = dslContext,
+//                userId = userId,
+//                type = StoreTypeEnum.SERVICE.type.toByte(),
+//                id = UUIDUtil.generate(),
+//                storeMediaInfoReq = StoreMediaInfoRequest(
+//                    storeCode = serviceCode,
+//                    mediaUrl = it.mediaUrl,
+//                    mediaType = it.mediaType.name,
+//                    modifier = userId
+//                )
+//            )
+//        }
+//
+//        if (settingInfo != null) {
+//            extServiceFeatureDao.updateExtServiceFeatureBaseInfo(
+//                dslContext = dslContext,
+//                userId = userId,
+//                serviceCode = serviceCode,
+//                extServiceFeatureUpdateInfo = ExtServiceFeatureUpdateInfo(
+//                    publicFlag = settingInfo.publicFlag,
+//                    recommentFlag = settingInfo.recommendFlag,
+//                    certificationFlag = settingInfo.certificationFlag,
+//                    modifierUser = userId,
+//                    serviceTypeEnum = settingInfo.type
+//                )
+//            )
+//        }
+//
+//        return Result(true)
+//    }
 
     fun approveService(userId: String, serviceId: String, approveReq: ServiceApproveReq): Result<Boolean> {
         // 判断扩展服务是否存在
