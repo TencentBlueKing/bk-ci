@@ -12,6 +12,7 @@ import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.dao.ExtServiceDao
 import com.tencent.devops.store.dao.ExtServiceFeatureDao
 import com.tencent.devops.store.dao.ExtServiceItemRelDao
+import com.tencent.devops.store.dao.ExtServiceLableRelDao
 import com.tencent.devops.store.dao.common.StoreMediaInfoDao
 import com.tencent.devops.store.dao.common.StoreProjectRelDao
 import com.tencent.devops.store.dao.common.StoreReleaseDao
@@ -50,6 +51,7 @@ class OpExtServiceService @Autowired constructor(
     private val dslContext: DefaultDSLContext,
     private val serviceNotifyService: ExtServiceNotifyService,
     private val extServiceBcsService: ExtServiceBcsService,
+    private val extServiceLabelDao: ExtServiceLableRelDao,
     private val extServiceBcsNameSpaceConfig: ExtServiceBcsNameSpaceConfig,
     private val client: Client
 ) {
@@ -156,6 +158,14 @@ class OpExtServiceService @Autowired constructor(
                     latestFlag = null
                 )
             )
+
+            // 更新标签信息
+            val labelIdList = baseInfo.labels
+            if (null != labelIdList) {
+                extServiceLabelDao.deleteByServiceId(dslContext, serviceId)
+                if (labelIdList.isNotEmpty())
+                    extServiceLabelDao.batchAdd(dslContext, userId, serviceId, labelIdList)
+            }
             val itemIds = baseInfo.itemIds
             if (itemIds != null) {
                 val existenceItems = extServiceItemDao.getItemByServiceId(dslContext, serviceId)
