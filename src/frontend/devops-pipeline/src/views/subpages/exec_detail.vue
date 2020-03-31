@@ -233,7 +233,6 @@
             showContainerPanel () {
                 const { editingElementPos } = this
                 const res = typeof editingElementPos.containerIndex !== 'undefined'
-                console.log(this.currentJob)
                 return res
             },
             pluginList () {
