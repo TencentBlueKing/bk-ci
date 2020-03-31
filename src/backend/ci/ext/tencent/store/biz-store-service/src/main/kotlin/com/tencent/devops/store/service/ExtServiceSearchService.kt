@@ -145,8 +145,6 @@ class ExtServiceSearchService @Autowired constructor(
         page: Int?,
         pageSize: Int?
     ): SearchExtServiceVO {
-
-        logger.info("[list]get rdType:$rdType, sortType:$sortType")
         // 获取用户组织架构
         val userDeptList = storeUserService.getUserDeptList(userId)
         logger.info("[list]get userDeptList:$userDeptList")

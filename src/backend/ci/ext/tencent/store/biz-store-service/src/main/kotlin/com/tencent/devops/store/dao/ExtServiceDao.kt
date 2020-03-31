@@ -23,6 +23,7 @@ import org.jooq.DSLContext
 import org.jooq.Record
 import org.jooq.Result
 import org.jooq.impl.DSL
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
 import java.math.BigDecimal
 import java.time.LocalDateTime
@@ -683,7 +684,7 @@ class ExtServiceDao {
         } else {
             baseStep.where(conditions)
         }
-
+        logger.info(finalStep.getSQL(true))
         return if (null != page && null != pageSize) {
             baseStep.limit((page - 1) * pageSize, pageSize).fetch()
         } else {
@@ -739,4 +740,6 @@ class ExtServiceDao {
         }
         return Pair(ta, conditions)
     }
+    private val logger = LoggerFactory.getLogger(ExtServiceDao::class.java)
+
 }
