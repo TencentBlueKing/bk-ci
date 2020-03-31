@@ -294,10 +294,6 @@ class PipelineBuildDao {
                 baseQuery = baseQuery.set(REMARK, remark)
             }
             if (errorType != null) {
-//                val maxLength = ERROR_MSG.dataType.length()
-//                val realErrorMsg = if (errorMsg != null && errorMsg.length > maxLength) {
-//                    errorMsg.substring(0, maxLength - 1)
-//                } else errorMsg
                 baseQuery = baseQuery.set(ERROR_TYPE, errorType.ordinal)
                 baseQuery = baseQuery.set(ERROR_CODE, errorCode)
                 baseQuery = baseQuery.set(ERROR_MSG, CommonUtils.interceptStringInLength(errorMsg, PIPELINE_MESSAGE_STRING_LENGTH_MAX))
