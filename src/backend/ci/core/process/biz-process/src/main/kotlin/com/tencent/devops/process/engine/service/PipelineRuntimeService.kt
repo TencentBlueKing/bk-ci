@@ -38,6 +38,7 @@ import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
+import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.ManualReviewAction
@@ -788,20 +789,7 @@ class PipelineRuntimeService @Autowired constructor(
         // --- 第1层循环：Stage遍历处理 ---
         sModel.stages.forEachIndexed s@{ index, stage ->
             val stageId = stage.id!!
-            val stageOption =
-                if (index != 0) PipelineBuildStageControlOption(
-                    stageControlOption = stage.stageControlOption ?: StageControlOption(
-                        enable = true,
-                        runCondition = StageRunCondition.AFTER_LAST_FINISHED,
-                        timeout = Timeout.DEFAULT_STAGE_TIMEOUT_HOURS,
-                        manualTrigger = false,
-                        triggerUsers = null
-                    ),
-                    fastKill = stage.fastKill
-                ) else null
             var needUpdateStage = false
-            if (stage.name.isNullOrBlank()) stage.name = stage.id
-            if (stage.tag == null) stage.tag = listOf(defaultStageTagId)
 
             // --- 第2层循环：Container遍历处理 ---
             stage.containers.forEach c@{ container ->
@@ -813,6 +801,7 @@ class PipelineRuntimeService @Autowired constructor(
                 val containerType = container.getClassType()
                 // 构建机环境 或者 无构建环境
                 makeStartVMTask(
+                    stage = stage,
                     container = container,
                     containerSeq = containerSeq,
                     taskSeq = taskSeq,
@@ -875,8 +864,9 @@ class PipelineRuntimeService @Autowired constructor(
                             if (!retryStartTaskId.isNullOrBlank()) {
                                 if (retryStartTaskId == atomElement.id) {
                                     // 重试判断是否存在原子重试，其他保持不变
-                                    val taskRecord = retryTaskContainerStatus(
+                                    val taskRecord = retryDetailModelStatus(
                                         lastTimeBuildTaskRecords = lastTimeBuildTaskRecords,
+                                        stage = stage,
                                         container = container,
                                         retryStartTaskId = retryStartTaskId!!,
                                         atomElement = atomElement
@@ -896,8 +886,9 @@ class PipelineRuntimeService @Autowired constructor(
                                         return@nextElement
                                     }
 
-                                    val taskRecord = retryTaskContainerStatus(
+                                    val taskRecord = retryDetailModelStatus(
                                         lastTimeBuildTaskRecords = lastTimeBuildTaskRecords,
+                                        stage = stage,
                                         container = container,
                                         retryStartTaskId = atomElement.id!!,
                                         atomElement = atomElement
@@ -913,8 +904,9 @@ class PipelineRuntimeService @Autowired constructor(
                                     return@nextElement
                                 }
 
-                                val taskRecord = retryTaskContainerStatus(
+                                val taskRecord = retryDetailModelStatus(
                                     lastTimeBuildTaskRecords = lastTimeBuildTaskRecords,
+                                    stage = stage,
                                     container = container,
                                     retryStartTaskId = atomElement.id!!,
                                     atomElement = atomElement
@@ -964,6 +956,7 @@ class PipelineRuntimeService @Autowired constructor(
                 }
                 // 构建机或原子市场原子的环境处理，需要一个的清理构建机原子任务
                 makeStopVMTask(
+                    stage = stage,
                     container = container,
                     containerSeq = containerSeq,
                     taskSeq = taskSeq,
@@ -1021,6 +1014,23 @@ class PipelineRuntimeService @Autowired constructor(
                     needUpdateStage = true
                 }
                 containerSeq++
+            }
+
+            // 非触发Stage填充默认参数
+            var stageOption: PipelineBuildStageControlOption? = null
+            if (index != 0) {
+                stageOption = PipelineBuildStageControlOption(
+                    stageControlOption = stage.stageControlOption ?: StageControlOption(
+                        enable = true,
+                        runCondition = StageRunCondition.AFTER_LAST_FINISHED,
+                        timeout = Timeout.DEFAULT_STAGE_TIMEOUT_HOURS,
+                        manualTrigger = false,
+                        triggerUsers = null
+                    ),
+                    fastKill = stage.fastKill
+                )
+                if (stage.name.isNullOrBlank()) stage.name = stage.id
+                if (stage.tag == null) stage.tag = listOf(defaultStageTagId)
             }
 
             if (lastTimeBuildStageRecords.isNotEmpty()) {
@@ -1166,6 +1176,7 @@ class PipelineRuntimeService @Autowired constructor(
     }
 
     private fun makeStartVMTask(
+        stage: Stage,
         container: Container,
         containerSeq: Int,
         taskSeq: Int,
@@ -1197,7 +1208,7 @@ class PipelineRuntimeService @Autowired constructor(
             }
             val taskId = VMUtils.genStartVMTaskId(containerSeq, taskSeq)
             val taskRecord =
-                retryTaskContainerStatus(lastTimeBuildTaskRecords, container, taskId)
+                retryDetailModelStatus(lastTimeBuildTaskRecords, stage, container, taskId)
             if (taskRecord != null) {
                 updateExistsRecord.add(taskRecord)
             } else {
@@ -1248,6 +1259,7 @@ class PipelineRuntimeService @Autowired constructor(
     }
 
     private fun makeStopVMTask(
+        stage: Stage,
         container: Container,
         containerSeq: Int,
         taskSeq: Int,
@@ -1277,12 +1289,12 @@ class PipelineRuntimeService @Autowired constructor(
 
             val endPointTaskId = VMUtils.genEndPointTaskId(VMUtils.genVMSeq(containerSeq, taskSeq - 1))
             var taskRecord =
-                retryTaskContainerStatus(lastTimeBuildTaskRecords, container, endPointTaskId)
+                retryDetailModelStatus(lastTimeBuildTaskRecords, stage, container, endPointTaskId)
             if (taskRecord != null) {
                 updateExistsRecord.add(taskRecord)
                 val stopVmTaskId = VMUtils.genStopVMTaskId(VMUtils.genVMSeq(containerSeq, taskSeq))
                 taskRecord =
-                    retryTaskContainerStatus(lastTimeBuildTaskRecords, container, stopVmTaskId)
+                    retryDetailModelStatus(lastTimeBuildTaskRecords, stage, container, stopVmTaskId)
                 if (taskRecord != null) {
                     updateExistsRecord.add(taskRecord)
                 } else {
@@ -1333,8 +1345,9 @@ class PipelineRuntimeService @Autowired constructor(
      * @param retryStartTaskId 要重试的任务i
      * @param atomElement 需要重置状态的任务原子Element，可以为空。
      */
-    private fun retryTaskContainerStatus(
+    private fun retryDetailModelStatus(
         lastTimeBuildTaskRecords: Collection<TPipelineBuildTaskRecord>,
+        stage: Stage,
         container: Container,
         retryStartTaskId: String,
         atomElement: Element? = null
@@ -1346,6 +1359,9 @@ class PipelineRuntimeService @Autowired constructor(
         )
 
         if (target != null) {
+            stage.status = null
+            stage.startEpoch = null
+            stage.elapsed = null
             container.status = null // 重置状态为空
             container.startEpoch = null
             container.elementElapsed = null
