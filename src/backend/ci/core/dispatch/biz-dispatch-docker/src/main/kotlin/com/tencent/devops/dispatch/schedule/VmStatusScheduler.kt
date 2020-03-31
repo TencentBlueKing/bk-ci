@@ -25,7 +25,7 @@ class VmStatusScheduler @Autowired constructor(
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(VmStatusScheduler::class.java)
-        private const val jobLockKey = "dispatch_idc_cron_volume_fresh_job"
+        private const val jobLockKey = "dispatch_docker_cron_volume_fresh_job"
     }
 
     @Value("\${devopsGateway.idcProxy}")
