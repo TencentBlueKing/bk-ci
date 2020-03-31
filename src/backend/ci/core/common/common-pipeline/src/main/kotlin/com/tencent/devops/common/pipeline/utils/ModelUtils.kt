@@ -125,7 +125,7 @@ object ModelUtils {
             e.canRetry = e.canRetry ?: false && BuildStatus.isFailure(status)
         }
         val additionalOptions = e.additionalOptions
-        if (additionalOptions != null) {
+        if (additionalOptions != null && additionalOptions.enable) {
             if (additionalOptions.continueWhenFailed) {
                 e.canRetry = false
             } else if (additionalOptions.runCondition == RunCondition.PRE_TASK_FAILED_BUT_CANCEL ||
