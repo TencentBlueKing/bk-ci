@@ -63,7 +63,7 @@ class DispatchTypeParserTxImpl @Autowired constructor(
                     if (dispatchType is PublicDevCloudDispathcType) {
                         var user = ""
                         var password = ""
-                        //通过凭证获取账号密码
+                        // 通过凭证获取账号密码
                         if (!dispatchType.credentialId.isNullOrBlank()) {
                             val ticketsMap = CommonUtils.getCredential(
                                 client = client,
