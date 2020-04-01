@@ -2,11 +2,9 @@ package com.tencent.devops.store.service
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.MessageCodeUtil
-import com.tencent.devops.project.api.service.service.ServiceItemResource
 import com.tencent.devops.store.config.ExtServiceBcsNameSpaceConfig
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.dao.ExtServiceDao
@@ -17,12 +15,8 @@ import com.tencent.devops.store.dao.common.StoreMediaInfoDao
 import com.tencent.devops.store.dao.common.StoreProjectRelDao
 import com.tencent.devops.store.dao.common.StoreReleaseDao
 import com.tencent.devops.store.pojo.ExtServiceFeatureUpdateInfo
-import com.tencent.devops.store.pojo.ExtServiceItemRelCreateInfo
-import com.tencent.devops.store.pojo.ExtServiceUpdateInfo
-import com.tencent.devops.store.pojo.EditInfoDTO
 import com.tencent.devops.store.pojo.common.PASS
 import com.tencent.devops.store.pojo.common.REJECT
-import com.tencent.devops.store.pojo.common.StoreMediaInfoRequest
 import com.tencent.devops.store.pojo.common.StoreReleaseCreateRequest
 import com.tencent.devops.store.pojo.common.enums.AuditTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
