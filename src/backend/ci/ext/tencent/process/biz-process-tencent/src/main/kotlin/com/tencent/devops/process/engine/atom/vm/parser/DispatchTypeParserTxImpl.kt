@@ -61,22 +61,7 @@ class DispatchTypeParserTxImpl @Autowired constructor(
                 } else {
                     // 第三方镜像
                     if (dispatchType is PublicDevCloudDispathcType) {
-                        var user = ""
-                        var password = ""
-                        // 通过凭证获取账号密码
-                        if (!dispatchType.credentialId.isNullOrBlank()) {
-                            val ticketsMap = CommonUtils.getCredential(
-                                client = client,
-                                projectId = dispatchType.credentialProject ?: projectId,
-                                credentialId = dispatchType.credentialId!!,
-                                type = CredentialType.USERNAME_PASSWORD
-                            )
-                            user = ticketsMap["v1"] as String
-                            password = ticketsMap["v2"] as String
-                        }
-                        val credential = Credential(user, password)
-                        val pool = Pool(dispatchType.value, credential)
-                        dispatchType.image = JsonUtil.toJson(pool)
+                        genDevCloudDispatchMessage(dispatchType, projectId)
                     } else if (dispatchType is IDCDispatchType) {
                         dispatchType.image = dispatchType.value
                     } else {
@@ -97,10 +82,38 @@ class DispatchTypeParserTxImpl @Autowired constructor(
                         dispatchType.image = "devcloud/" + dispatchType.image!!.removePrefix("/")
                     }
                 }
+            } else {
+                // 第三方镜像 DevCloud
+                if (dispatchType is PublicDevCloudDispathcType) {
+                    genDevCloudDispatchMessage(dispatchType, projectId)
+                }
             }
             logger.info("DispatchTypeParserTxImpl:AfterTransfer:dispatchType=(${JsonUtil.toJson(dispatchType)})")
         } else {
             logger.info("DispatchTypeParserTxImpl:not StoreDispatchType, no transfer")
         }
+    }
+
+    private fun genDevCloudDispatchMessage(dispatchType: PublicDevCloudDispathcType, projectId: String) {
+        var user = ""
+        var password = ""
+        var credentialProject = projectId
+        if (!dispatchType.credentialProject.isNullOrBlank()) {
+            credentialProject = dispatchType.credentialProject!!
+        }
+        // 通过凭证获取账号密码
+        if (!dispatchType.credentialId.isNullOrBlank()) {
+            val ticketsMap = CommonUtils.getCredential(
+                client = client,
+                projectId = credentialProject,
+                credentialId = dispatchType.credentialId!!,
+                type = CredentialType.USERNAME_PASSWORD
+            )
+            user = ticketsMap["v1"] as String
+            password = ticketsMap["v2"] as String
+        }
+        val credential = Credential(user, password)
+        val pool = Pool(dispatchType.value, credential)
+        dispatchType.image = JsonUtil.toJson(pool)
     }
 }
