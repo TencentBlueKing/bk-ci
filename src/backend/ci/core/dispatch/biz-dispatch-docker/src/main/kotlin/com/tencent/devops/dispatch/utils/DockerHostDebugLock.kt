@@ -34,9 +34,7 @@ class DockerHostDebugLock(redisOperation: RedisOperation) {
 
     private val redisLock = RedisLock(redisOperation, "DISPATCH_REDIS_LOCK_DOCKER_HOST_DEBUG_KEY", 60L)
 
-    fun tryLock() = tryLockElapse(timeout = 0, interval = 0)
-
-    fun tryLockElapse(timeout: Long = 4000, interval: Long = 40): Boolean {
+    fun tryLock(timeout: Long = 4000, interval: Long = 40): Boolean {
         val sleep = min(interval, timeout) // 不允许sleep过长时间，最大1000ms
         val start = System.currentTimeMillis()
         var tryLock = redisLock.tryLock()
