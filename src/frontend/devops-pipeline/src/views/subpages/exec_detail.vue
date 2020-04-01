@@ -126,7 +126,9 @@
             outputOption,
             emptyTips,
             log,
-            job
+            job,
+            ReviewDialog,
+            Logo
         },
         mixins: [pipelineOperateMixin, pipelineConstMixin],
 
