@@ -107,8 +107,4 @@ class UserExtServiceResourceImpl @Autowired constructor(
         )
         return extServiceBaseService.updateExtInfo(userId, serviceCode, serviceId, editInfo)
     }
-
-    override fun getReadme(userId: String, serviceId: String) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
 }
