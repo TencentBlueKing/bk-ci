@@ -209,7 +209,7 @@ class DockerHostBuildService @Autowired constructor(
                 vmSeqId = event.vmSeqId.toInt(),
                 status = PipelineTaskStatus.QUEUE,
                 secretKey = secretKey,
-                imageName = dockerImage!!,
+                imageName = dockerImage!!.trim(),
                 hostTag = hostTag,
                 channelCode = event.channelCode,
                 zone = if (null == event.zone) {
