@@ -44,7 +44,7 @@ class Gray {
 
     private val cache = CacheBuilder.newBuilder()
         .maximumSize(2000)
-        .expireAfterWrite(30, TimeUnit.SECONDS)
+        .expireAfterWrite(30, TimeUnit.DAYS) // 临时快速上线解决数量过大导致加载慢的问题，FIXME
         .build<String/*Redis Keys*/, Set<String>/*Project Names*/>()
 
     fun isGray(): Boolean {
