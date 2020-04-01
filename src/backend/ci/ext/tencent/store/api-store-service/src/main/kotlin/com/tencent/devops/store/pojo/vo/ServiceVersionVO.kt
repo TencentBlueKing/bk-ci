@@ -3,6 +3,7 @@ package com.tencent.devops.store.pojo.vo
 import com.tencent.devops.store.pojo.common.Label
 import com.tencent.devops.store.pojo.common.StoreMediaInfo
 import com.tencent.devops.store.pojo.common.StoreUserCommentInfo
+import com.tencent.devops.store.pojo.enums.DescInputTypeEnum
 import com.tencent.devops.store.pojo.enums.ServiceTypeEnum
 import io.swagger.annotations.ApiModelProperty
 
@@ -53,6 +54,8 @@ data class ServiceVersionVO(
 //    val privateReason: String?,
     @ApiModelProperty("扩展服务类型：0：官方自研，1：第三方", required = true)
     val serviceType: Int ? = ServiceTypeEnum.SELF_DEVELOPED.type,
+    @ApiModelProperty("描述录入类型")
+    val descInputType: String,
     @ApiModelProperty("是否推荐标识 true：推荐，false：不推荐")
     val recommendFlag: Boolean? = false,
     @ApiModelProperty("是否公共 true：推荐，false：不推荐")

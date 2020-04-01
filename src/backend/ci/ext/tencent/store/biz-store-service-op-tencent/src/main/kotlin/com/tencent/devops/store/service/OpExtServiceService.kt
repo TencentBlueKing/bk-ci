@@ -314,7 +314,8 @@ class OpExtServiceService @Autowired constructor(
                     recommentFlag = approveReq.recommendFlag,
                     publicFlag = approveReq.publicFlag,
                     certificationFlag = approveReq.certificationFlag,
-                    serviceTypeEnum = approveReq.serviceType
+                    serviceTypeEnum = approveReq.serviceType,
+                    descInputType = approveReq.descInputType
                 )
             )
         }

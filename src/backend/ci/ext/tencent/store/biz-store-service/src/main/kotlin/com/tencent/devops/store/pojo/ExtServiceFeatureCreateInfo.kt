@@ -1,5 +1,6 @@
 package com.tencent.devops.store.pojo
 
+import com.tencent.devops.store.pojo.enums.DescInputTypeEnum
 import io.swagger.annotations.ApiModelProperty
 
 data class ExtServiceFeatureCreateInfo(
@@ -15,6 +16,8 @@ data class ExtServiceFeatureCreateInfo(
     val weight: Int? = null,
     @ApiModelProperty("扩展服务可见范围 0：私有 10：登录用户开源")
     val visibilityLevel: Int? = 10,
+    @ApiModelProperty("描述录入类型")
+    val descInputType: DescInputTypeEnum?= DescInputTypeEnum.MANUAL,
     @ApiModelProperty("代码库hashId")
     val repositoryHashId: String? = null,
     @ApiModelProperty("代码库地址")

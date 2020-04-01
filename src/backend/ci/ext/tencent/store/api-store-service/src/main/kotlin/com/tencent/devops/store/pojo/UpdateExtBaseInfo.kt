@@ -1,6 +1,7 @@
 package com.tencent.devops.store.pojo
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.tencent.devops.store.pojo.enums.DescInputTypeEnum
 import io.swagger.annotations.ApiModelProperty
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -16,5 +17,7 @@ data class UpdateExtBaseInfo(
     @ApiModelProperty("LOGO url")
     val logoUrl: String?,
     @ApiModelProperty("扩展服务描述")
-    val description: String? = null
+    val description: String? = null,
+    @ApiModelProperty("描述录入类型")
+    val descInputType: DescInputTypeEnum?= DescInputTypeEnum.MANUAL
 )
