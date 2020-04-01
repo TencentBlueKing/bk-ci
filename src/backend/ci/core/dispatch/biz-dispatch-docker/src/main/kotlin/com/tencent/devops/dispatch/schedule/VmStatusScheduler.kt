@@ -33,9 +33,9 @@ class VmStatusScheduler @Autowired constructor(
     val idcProxy: String? = null
 
     /**
-     * 每隔五分钟定时刷新check母机状态
+     * 定时刷新check母机状态
      */
-    @Scheduled(cron = "0 0/5 * * * ?")
+    @Scheduled(cron = "0 0/3 * * * ?")
     fun run() {
         val redisLock = RedisLock(redisOperation, jobLockKey, 3600L)
         try {
