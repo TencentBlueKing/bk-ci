@@ -84,9 +84,9 @@ class Gray {
 //        return isGrayMatchProject(projectId, grayProjectSet(redisOperation))
     }
 
-    fun isGrayMatchProject(projectId: String, grayProjectSet: Set<String>): Boolean {
-        return isGray() == grayProjectSet.contains(projectId)
-    }
+//    fun isGrayMatchProject(projectId: String, grayProjectSet: Set<String>): Boolean {
+//        return isGray() == grayProjectSet.contains(projectId)
+//    }
 
     fun grayProjectSet(redisOperation: RedisOperation): Set<String> {
         var projects = cache.getIfPresent(getGrayRedisKey())
