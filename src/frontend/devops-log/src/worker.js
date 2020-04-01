@@ -84,7 +84,8 @@ onmessage = function (e) {
             handleSearch(data.val)
             break
         case 'getSearchRes':
-            getSearchRes(data.index)
+            const searchRes = getSearchRes(data.index)
+            postMessage({ type: 'completeGetSearchRes', searchRes })
             break
         case 'resetData':
             const resetList = [
@@ -125,8 +126,8 @@ function handleSearch (val) {
             })
         })
     }
-    postMessage({ type: 'completeSearch', num: searchRes.length })
-    getSearchRes(0)
+    const curSearchRes = getSearchRes(0)
+    postMessage({ type: 'completeSearch', num: searchRes.length, curSearchRes })
 }
 
 // 分页获取搜索结果
@@ -141,7 +142,7 @@ function getSearchRes (index) {
         if (startIndex < 0) curSearchRes = [...searchRes.slice(index, endIndex), ...searchRes.slice(startIndex), ...searchRes.slice(0, index)]
         if (endIndex > searchRes.length) curSearchRes = [...searchRes.slice(index), ...searchRes.slice(0, endIndex - searchRes.length), ...searchRes.slice(startIndex, index)]
     }
-    postMessage({ type: 'completeGetSearchRes', searchRes: curSearchRes })
+    return curSearchRes
 }
 
 function foldListData ({ startIndex }) {
