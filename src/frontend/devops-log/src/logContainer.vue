@@ -89,7 +89,7 @@
                 const data = event.data
                 switch (data.type) {
                     case 'completeSearch':
-                        this.handleSearch(data.num)
+                        this.handleSearch(data.num, data.curSearchRes)
                         break
                     case 'completeGetSearchRes':
                         this.handleSearchRes(data.searchRes)
@@ -138,10 +138,12 @@
                 this.realSearchIndex = 0
             },
 
-            handleSearch (num = 0) {
+            handleSearch (num = 0, searchRes) {
+                this.handleSearchRes(searchRes)
                 this.isSearching = false
                 this.searchNum = num
                 this.searchIndex = num > 0 ? 1 : 0
+                if (num > 0) this.$emit('showSearchLog', searchRes[0])
             },
 
             showLogTime () {
