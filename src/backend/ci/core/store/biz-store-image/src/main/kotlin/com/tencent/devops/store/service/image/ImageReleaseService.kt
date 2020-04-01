@@ -26,6 +26,7 @@
 
 package com.tencent.devops.store.service.image
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.LATEST
 import com.tencent.devops.common.api.exception.DataConsistencyException
@@ -33,6 +34,7 @@ import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DHUtil
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
@@ -50,12 +52,18 @@ import com.tencent.devops.store.dao.common.StorePipelineBuildRelDao
 import com.tencent.devops.store.dao.common.StorePipelineRelDao
 import com.tencent.devops.store.dao.common.StoreProjectRelDao
 import com.tencent.devops.store.dao.common.StoreReleaseDao
+import com.tencent.devops.store.dao.image.ImageAgentTypeDao
 import com.tencent.devops.store.dao.image.ImageCategoryRelDao
 import com.tencent.devops.store.dao.image.ImageDao
+import com.tencent.devops.store.dao.image.ImageFeatureDao
 import com.tencent.devops.store.dao.image.ImageLabelRelDao
 import com.tencent.devops.store.dao.image.MarketImageDao
 import com.tencent.devops.store.dao.image.MarketImageFeatureDao
 import com.tencent.devops.store.dao.image.MarketImageVersionLogDao
+import com.tencent.devops.store.pojo.common.OPEN
+import com.tencent.devops.store.pojo.common.CLOSE
+import com.tencent.devops.store.pojo.common.PASS
+import com.tencent.devops.store.pojo.common.REJECT
 import com.tencent.devops.store.pojo.common.ReleaseProcessItem
 import com.tencent.devops.store.pojo.common.StoreProcessInfo
 import com.tencent.devops.store.pojo.common.StoreReleaseCreateRequest
@@ -64,7 +72,10 @@ import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreMemberTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.pojo.image.enums.ImageAgentTypeEnum
+import com.tencent.devops.store.pojo.image.enums.ImageRDTypeEnum
 import com.tencent.devops.store.pojo.image.enums.ImageStatusEnum
+import com.tencent.devops.store.pojo.image.request.ApproveImageReq
 import com.tencent.devops.store.pojo.image.request.ImageFeatureCreateRequest
 import com.tencent.devops.store.pojo.image.request.ImageStatusInfoUpdateRequest
 import com.tencent.devops.store.pojo.image.request.MarketImageRelRequest
@@ -75,6 +86,7 @@ import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import org.springframework.util.StringUtils
 import java.time.LocalDateTime
@@ -110,6 +122,10 @@ abstract class ImageReleaseService {
     @Autowired
     lateinit var storeReleaseDao: StoreReleaseDao
     @Autowired
+    lateinit var imageAgentTypeDao: ImageAgentTypeDao
+    @Autowired
+    lateinit var imageFeatureDao: ImageFeatureDao
+    @Autowired
     lateinit var storeCommonService: StoreCommonService
     @Autowired
     lateinit var imageNotifyService: ImageNotifyService
@@ -119,6 +135,9 @@ abstract class ImageReleaseService {
     lateinit var client: Client
 
     private val logger = LoggerFactory.getLogger(ImageReleaseService::class.java)
+
+    @Value("\${store.imageApproveSwitch}")
+    protected lateinit var imageApproveSwitch: String
 
     fun addMarketImage(
         accessToken: String,
@@ -225,7 +244,7 @@ abstract class ImageReleaseService {
     fun updateMarketImage(
         userId: String,
         marketImageUpdateRequest: MarketImageUpdateRequest,
-        checkLatest: Boolean = true,
+        checkLatest: Boolean = false,
         sendCheckResultNotify: Boolean = true,
         runCheckPipeline: Boolean = true
     ): Result<String?> {
@@ -451,35 +470,42 @@ abstract class ImageReleaseService {
             return MessageCodeUtil.generateResponseDataObject(code!!, params, false)
         }
         if (isNormalUpgrade) {
-            dslContext.transaction { t ->
-                val context = DSL.using(t)
-                // 清空旧版本LATEST_FLAG
-                marketImageDao.cleanLatestFlag(context, imageRecord.imageCode)
-                val pubTime = LocalDateTime.now()
-                // 记录发布信息
-                storeReleaseDao.addStoreReleaseInfo(
-                    dslContext = context,
+            val imageFeature = imageFeatureDao.getImageFeature(dslContext, imageCode)
+            // 自动通过
+            approveImage(
+                userId = userId,
+                imageId = imageId,
+                approveImageReq = ApproveImageReq(
+                    imageCode = imageCode,
+                    publicFlag = imageFeature.publicFlag ?: false,
+                    recommendFlag = imageFeature.recommendFlag ?: true,
+                    certificationFlag = imageFeature.certificationFlag ?: false,
+                    rdType = ImageRDTypeEnum.getImageRDType(imageFeature.imageType.toInt()),
+                    weight = imageFeature.weight ?: 0,
+                    result = PASS,
+                    message = "ok"
+                )
+            )
+        } else {
+            if (imageApproveSwitch == OPEN) {
+                marketImageDao.updateImageStatusById(dslContext, imageId, imageStatus, userId, "")
+            } else {
+                // 自动通过
+                approveImage(
                     userId = userId,
-                    storeReleaseCreateRequest = StoreReleaseCreateRequest(
-                        storeCode = imageCode,
-                        storeType = StoreTypeEnum.IMAGE,
-                        latestUpgrader = imageRecord.creator,
-                        latestUpgradeTime = pubTime
+                    imageId = imageId,
+                    approveImageReq = ApproveImageReq(
+                        imageCode = imageCode,
+                        publicFlag = false,
+                        recommendFlag = true,
+                        certificationFlag = false,
+                        rdType = ImageRDTypeEnum.THIRD_PARTY,
+                        weight = 1,
+                        result = PASS,
+                        message = "ok"
                     )
                 )
-                marketImageDao.updateImageStatusInfo(
-                    dslContext = context,
-                    imageId = imageId,
-                    imageStatus = imageStatus,
-                    imageStatusMsg = "",
-                    latestFlag = true,
-                    pubTime = pubTime
-                )
             }
-            // 通知发布者
-            imageNotifyService.sendImageReleaseAuditNotifyMessage(imageId, AuditTypeEnum.AUDIT_SUCCESS)
-        } else {
-            marketImageDao.updateImageStatusById(dslContext, imageId, imageStatus, userId, "")
         }
         return Result(true)
     }
@@ -707,8 +733,13 @@ abstract class ImageReleaseService {
         } else {
             val status = record.imageStatus.toInt()
             val imageCode = record.imageCode
-            // 查看当前版本之前的版本是否有已发布的，如果有已发布的版本则只是普通的升级操作而不需要审核
-            val isNormalUpgrade = getNormalUpgradeFlag(imageCode, status)
+            val isNormalUpgrade: Boolean
+            if (imageApproveSwitch == CLOSE) {
+                isNormalUpgrade = true
+            } else {
+                // 查看当前版本之前的版本是否有已发布的，如果有已发布的版本则只是普通的升级操作而不需要审核
+                isNormalUpgrade = getNormalUpgradeFlag(imageCode, status)
+            }
             logger.info("getProcessInfo isNormalUpgrade: $isNormalUpgrade")
             val processInfo = handleProcessInfo(isNormalUpgrade, status)
 
@@ -774,8 +805,7 @@ abstract class ImageReleaseService {
             return Triple(false, CommonMessageCode.PERMISSION_DENIED, null)
         }
         logger.info("imageRecord status=$imageStatus, status=$status")
-        val allowReleaseStatus = if (isNormalUpgrade != null && isNormalUpgrade) ImageStatusEnum.TESTING
-        else ImageStatusEnum.AUDITING
+        val allowReleaseStatus = getAllowReleaseStatus(isNormalUpgrade)
         var validateFlag = true
         if (status == ImageStatusEnum.COMMITTING.status.toByte() &&
             imageStatus != ImageStatusEnum.INIT.status.toByte()
@@ -840,6 +870,8 @@ abstract class ImageReleaseService {
             null
         )
     }
+
+    abstract fun getAllowReleaseStatus(isNormalUpgrade: Boolean?): ImageStatusEnum
 
     private fun validateNameIsExist(
         count: Int,
@@ -981,5 +1013,138 @@ abstract class ImageReleaseService {
         }
         logger.info("$interfaceName:offlineMarketImage:Output:true")
         return Result(true)
+    }
+
+    /**
+     * 审核镜像
+     */
+    fun approveImageWithoutNotify(userId: String, imageId: String, approveImageReq: ApproveImageReq, checkCurrentStatus: Boolean = true): AuditTypeEnum {
+        // 参数校验
+        // 判断镜像是否存在
+        val image = imageDao.getImage(dslContext, imageId)
+            ?: throw InvalidParamException(
+                message = "imageId=$imageId is not valid",
+                params = arrayOf(imageId)
+            )
+        val oldStatus = image.imageStatus
+        val standardStatus = if (imageApproveSwitch == OPEN) ImageStatusEnum.AUDITING.status.toByte() else ImageStatusEnum.TESTING.status.toByte()
+        // 非待审核状态直接返回
+        if (checkCurrentStatus && oldStatus != standardStatus) {
+            throw InvalidParamException(
+                message = "imageId=$imageId is not in approving state",
+                params = arrayOf(imageId)
+            )
+        }
+        // 审核结果校验
+        val approveResult = approveImageReq.result
+        if (approveResult != PASS && approveResult != REJECT) {
+            throw InvalidParamException(
+                message = "approveResult=$approveResult is not valid,should be PASS/REJECT",
+                params = arrayOf(approveResult)
+            )
+        }
+        val imageStatus =
+            if (approveResult == PASS) {
+                ImageStatusEnum.RELEASED.status.toByte()
+            } else {
+                ImageStatusEnum.AUDIT_REJECT.status.toByte()
+            }
+        val type = if (approveResult == PASS) AuditTypeEnum.AUDIT_SUCCESS else AuditTypeEnum.AUDIT_REJECT
+        val imageStatusMsg = approveImageReq.message
+        dslContext.transaction { t ->
+            val context = DSL.using(t)
+            handleImageRelease(
+                context = context,
+                userId = userId,
+                approveResult = approveResult,
+                image = image,
+                imageStatus = imageStatus,
+                imageStatusMsg = imageStatusMsg,
+                publicFlag = approveImageReq.publicFlag,
+                recommendFlag = approveImageReq.recommendFlag,
+                certificationFlag = approveImageReq.certificationFlag,
+                rdType = approveImageReq.rdType,
+                weight = approveImageReq.weight
+            )
+        }
+        return type
+    }
+
+    fun approveImage(userId: String, imageId: String, approveImageReq: ApproveImageReq): Result<Boolean> {
+        val type = approveImageWithoutNotify(
+            userId = userId,
+            imageId = imageId,
+            approveImageReq = approveImageReq
+        )
+        // 通知发布者
+        imageNotifyService.sendImageReleaseAuditNotifyMessage(imageId, type)
+        return Result(true)
+    }
+
+    fun saveImageAgentTypeToFeature(
+        context: DSLContext,
+        imageCode: String,
+        agentTypeList: List<ImageAgentTypeEnum>
+    ) {
+        imageAgentTypeDao.deleteAgentTypeByImageCode(context, imageCode)
+        agentTypeList.forEach {
+            imageAgentTypeDao.addAgentTypeByImageCode(context, imageCode, it)
+        }
+    }
+
+    fun handleImageRelease(
+        context: DSLContext,
+        userId: String,
+        approveResult: String,
+        image: TImageRecord,
+        imageStatus: Byte,
+        imageStatusMsg: String,
+        publicFlag: Boolean,
+        recommendFlag: Boolean,
+        certificationFlag: Boolean,
+        rdType: ImageRDTypeEnum?,
+        weight: Int?
+    ) {
+        val latestFlag = approveResult == PASS
+        var pubTime: LocalDateTime? = null
+        if (latestFlag) {
+            // 清空旧版本LATEST_FLAG
+            marketImageDao.cleanLatestFlag(context, image.imageCode)
+            pubTime = LocalDateTime.now()
+            // 记录发布信息
+            storeReleaseDao.addStoreReleaseInfo(
+                dslContext = context,
+                userId = userId,
+                storeReleaseCreateRequest = StoreReleaseCreateRequest(
+                    storeCode = image.imageCode,
+                    storeType = StoreTypeEnum.IMAGE,
+                    latestUpgrader = image.creator,
+                    latestUpgradeTime = pubTime
+                )
+            )
+            imageFeatureDao.update(
+                dslContext = context,
+                imageCode = image.imageCode,
+                publicFlag = publicFlag,
+                recommendFlag = recommendFlag,
+                certificationFlag = certificationFlag,
+                rdType = rdType,
+                modifier = userId,
+                weight = weight
+            )
+        }
+        marketImageDao.updateImageStatusInfo(
+            dslContext = context,
+            imageId = image.id,
+            imageStatus = imageStatus,
+            imageStatusMsg = imageStatusMsg,
+            latestFlag = latestFlag,
+            pubTime = pubTime
+        )
+        saveImageAgentTypeToFeature(
+            context,
+            image.imageCode,
+            JsonUtil.to(image.agentTypeScope, object : TypeReference<List<ImageAgentTypeEnum>>() {})
+        )
     }
 }

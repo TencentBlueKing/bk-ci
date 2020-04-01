@@ -127,27 +127,29 @@
                     return
                 }
 
-                let url = this.url || ''
-                let isErrorParam = false
-                url = url.replace(/{([^\{\}]+)}/g, (str, key) => {
-                    const value = this.paramValues[key]
-                    if (typeof value === 'undefined') isErrorParam = true
-                    return value
-                })
+                if (typeof this.url === 'string' && this.url !== '') { // 只有存在url字段时才去请求
+                    let url = this.url
+                    let isErrorParam = false
+                    url = url.replace(/{([^\{\}]+)}/g, (str, key) => {
+                        const value = this.paramValues[key]
+                        if (typeof value === 'undefined') isErrorParam = true
+                        return value
+                    })
 
-                const urlQuery = this.urlQuery || {}
-                this.queryKey = []
-                Object.keys(urlQuery).forEach((key, index) => {
-                    this.queryKey.push(key)
-                    const value = typeof this.paramValues[key] === 'undefined' ? urlQuery[key] : this.paramValues[key]
-                    url += `${index <= 0 ? '?' : '&'}${key}=${value}`
-                })
+                    const urlQuery = this.urlQuery || {}
+                    this.queryKey = []
+                    Object.keys(urlQuery).forEach((key, index) => {
+                        this.queryKey.push(key)
+                        const value = typeof this.paramValues[key] === 'undefined' ? urlQuery[key] : this.paramValues[key]
+                        url += `${index <= 0 ? '?' : '&'}${key}=${value}`
+                    })
 
-                if (isErrorParam) return
-                this.loading = true
-                this.$ajax.get(url).then((res) => {
-                    this.paramList = res.data || []
-                }).catch(e => this.$showTips({ message: e.message, theme: 'error' })).finally(() => (this.loading = false))
+                    if (isErrorParam) return
+                    this.loading = true
+                    this.$ajax.get(url).then((res) => {
+                        this.paramList = res.data || []
+                    }).catch(e => this.$showTips({ message: e.message, theme: 'error' })).finally(() => (this.loading = false))
+                }
             }
         }
     }

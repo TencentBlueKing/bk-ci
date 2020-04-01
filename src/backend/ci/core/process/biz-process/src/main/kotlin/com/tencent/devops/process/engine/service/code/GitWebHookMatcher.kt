@@ -246,12 +246,12 @@ class GitWebHookMatcher(val event: GitEvent) : ScmWebhookMatcher {
         // 匹配
         val eventTag = getTag(gitTagPushEvent.ref)
         with(webHookParams) {
-            if (doExcludeBranchMatch(excludeBranchName, eventTag, pipelineId)) {
+            if (doExcludeBranchMatch(excludeTagName, eventTag, pipelineId)) {
                 logger.warn("Do tag event match fail for exclude branch match for pipeline: $pipelineId")
                 return ScmWebhookMatcher.MatchResult(false)
             }
 
-            val matchBranch = doIncludeBranchMatch(branchName, eventTag, pipelineId)
+            val matchBranch = doIncludeBranchMatch(tagName, eventTag, pipelineId)
             if (matchBranch == null) {
                 logger.warn("Do tag event match fail for include branch not match for pipeline: $pipelineId")
                 return ScmWebhookMatcher.MatchResult(false)

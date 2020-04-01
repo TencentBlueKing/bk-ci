@@ -76,8 +76,12 @@ open class CodeccUtils {
 
     fun executeCommand(codeccExecuteConfig: CodeccExecuteConfig): String {
         val codeccWorkspace = getCodeccWorkspace(codeccExecuteConfig)
-        initData(codeccExecuteConfig.scriptType, codeccWorkspace)
-        return doRun(codeccExecuteConfig, codeccWorkspace)
+        try {
+            initData(codeccExecuteConfig.scriptType, codeccWorkspace)
+            return doRun(codeccExecuteConfig, codeccWorkspace)
+        } finally {
+            codeccWorkspace.deleteRecursively()
+        }
     }
 
     private fun getCodeccWorkspace(codeccExecuteConfig: CodeccExecuteConfig): File {
@@ -304,7 +308,7 @@ open class CodeccUtils {
         command.add("-DSCAN_TOOLS=${scanTools.joinToString(",").toLowerCase()}")
         command.add("-DCOVERITY_RESULT_PATH=${File(coverityStartFile).parent}")
 
-        val buildCmd = when (CodeccParamsHelper.getProjectType(taskParams["languages"]!!)) {
+        val buildCmd = when (CodeccParamsHelper.getProjectType(taskParams["languages"])) {
             CoverityProjectType.UN_COMPILE -> {
                 "--no-command --fs-capture-search ."
             }
