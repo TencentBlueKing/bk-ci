@@ -47,6 +47,15 @@ data class IDCDispatchType(
     override var imageName: String? = ""
 ) : StoreDispatchType(if (image.isNullOrBlank())
     imageCode else image, DispatchRouteKeySuffix.IDC, imageType, credentialId, credentialProject, imageCode, imageVersion, imageName) {
+    override fun cleanDataBeforeSave() {
+        this.image = this.image?.trim()
+        this.credentialId = this.credentialId?.trim()
+        this.credentialProject = this.credentialProject?.trim()
+        this.imageCode = this.imageCode?.trim()
+        this.imageVersion = this.imageVersion?.trim()
+        this.imageName = this.imageName?.trim()
+    }
+
     override fun replaceField(variables: Map<String, String>) {
         val valueMap = mutableMapOf<String, Any?>()
         valueMap["image"] = EnvUtils.parseEnv(image!!, variables)
