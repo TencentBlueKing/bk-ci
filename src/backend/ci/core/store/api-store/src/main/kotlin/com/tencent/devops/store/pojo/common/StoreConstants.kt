@@ -51,6 +51,9 @@ const val STORE_COMMENT_REPLY_NOTIFY_TEMPLATE = "STORE_COMMENT_REPLY_NOTIFY_TEMP
 const val OPEN = "open" // 开关打开
 const val CLOSE = "close" // 开关关闭
 
+const val EXTENSION_RELEASE_AUDIT_PASS_TEMPLATE = "EXTENSION_RELEASE_AUDIT_PASS_TEMPLATE" // 扩展服务发布审核通过消息通知模板
+const val EXTENSION_RELEASE_AUDIT_REFUSE_TEMPLATE = "EXTENSION_RELEASE_AUDIT_REFUSE_TEMPLATE" // 扩展服务发布审核被拒消息通知模板
+
 const val KEY_ID = "id"
 const val KEY_PUB_TIME = "pubTime"
 const val KEY_PUBLISHER = "publisher"
