@@ -238,7 +238,7 @@ class DockerHostDebugService @Autowired constructor(
             val grayProjectSet = this.gray.grayProjectSet(redisOperation)
             stopWatch.stop()
             stopWatch.start("tryLock")
-            val tryLock = redisLock.tryLockElapse()
+            val tryLock = redisLock.tryLock(timeout = 4000)
             stopWatch.stop()
 
             if (!tryLock) {
@@ -325,7 +325,7 @@ class DockerHostDebugService @Autowired constructor(
         val redisLock = DockerHostDebugLock(redisOperation)
         try {
             stopWatch.start("tryLock")
-            val tryLock = redisLock.tryLockElapse()
+            val tryLock = redisLock.tryLock(timeout = 4000)
             stopWatch.stop()
             if (!tryLock) {
                 message1 = "try lock fail in ${stopWatch.lastTaskTimeMillis}"
@@ -404,7 +404,7 @@ class DockerHostDebugService @Autowired constructor(
         val redisLock = DockerHostDebugLock(redisOperation)
         try {
             stopWatch.start("tryLock")
-            val tryLock = redisLock.tryLockElapse()
+            val tryLock = redisLock.tryLock(timeout = 4000)
             stopWatch.stop()
             if (!tryLock) {
                 message = "try lock fail in ${stopWatch.lastTaskTimeMillis}"
