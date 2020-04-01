@@ -38,13 +38,13 @@ interface UserExtServiceRepositoryResource {
 
     @ApiOperation("自动获取Readme.md信息")
     @GET
-    @Path("/serviceIds/{serviceId}/readme/")
+    @Path("/serviceCodes/{serviceCode}/readme/")
     fun getReadme(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("扩展服务Id ", required = true)
-        @PathParam("serviceId")
-        serviceId: String
-    )
+        @ApiParam("扩展服务Code ", required = true)
+        @PathParam("serviceCode")
+        serviceCode: String
+    ): Result<String?>
 }

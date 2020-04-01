@@ -19,7 +19,7 @@ class UserExtServiceRepositoryResourceImpl @Autowired constructor(
         return serviceRepositoryService.updateServiceRepositoryUserInfo(userId, projectCode, serviceCode)
     }
 
-    override fun getReadme(userId: String, serviceId: String) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    override fun getReadme(userId: String, serviceCode: String): Result<String?> {
+        return serviceRepositoryService.getReadMeFile(userId, serviceCode)
     }
 }

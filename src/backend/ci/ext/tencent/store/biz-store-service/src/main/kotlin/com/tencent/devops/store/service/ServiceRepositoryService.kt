@@ -9,6 +9,7 @@ import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.dao.ExtServiceDao
 import com.tencent.devops.store.dao.ExtServiceFeatureDao
 import com.tencent.devops.store.dao.common.StoreMemberDao
+import com.tencent.devops.store.pojo.common.README
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -59,12 +60,10 @@ class ServiceRepositoryService {
 
     fun getReadMeFile(userId: String, serviceCode: String) : Result<String?> {
         val featureRecord = extServiceFeatureDao.getLatestServiceByCode(dslContext, serviceCode)
-        if(featureRecord == null) {
-            throw RuntimeException(MessageCodeUtil.getCodeLanMessage(StoreMessageCode.))
-        }
+            ?: throw RuntimeException(MessageCodeUtil.getCodeMessage(StoreMessageCode.USER_SERVICE_NOT_EXIST, arrayOf(serviceCode)))
         val fileStr = client.get(ServiceGitRepositoryResource::class).getFileContent(
             featureRecord.repositoryHashId,
-            "Readme.md", null, null, null
+            README, null, null, null
         ).data
         return Result(fileStr)
     }
