@@ -98,7 +98,7 @@ class ExtServiceBcsService {
                 contextPath = extServiceIngressConfig.contextPath,
                 ingressAnnotationMap = mapOf(
                     "kubernetes.io/ingress.class" to extServiceIngressConfig.annotationClass,
-                    "kubernetes.io/ingress.subnetId" to extServiceIngressConfig.annotationSubnetId
+                    "kubernetes.io/ingress.existLbId" to if (grayFlag) extServiceIngressConfig.annotationGrayExistLbId else extServiceIngressConfig.annotationExistLbId
                 )
             )
         )
