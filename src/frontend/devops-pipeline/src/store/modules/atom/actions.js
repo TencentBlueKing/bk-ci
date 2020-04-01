@@ -362,8 +362,8 @@ export default {
     toggleAtomSelectorPopup: actionCreator(TOGGLE_ATOM_SELECTOR_POPUP),
 
     // 安装插件
-    installAtom ({ commit }, param) {
-        return request.post(`${STORE_API_URL_PREFIX}/user/market/atom/install`, param)
+    installAtom ({ dispatch }, param) {
+        return request.post(`${STORE_API_URL_PREFIX}/user/market/atom/install`, param).then(() => dispatch('fetchAtoms', { projectCode: param.projectCode[0] }))
     },
 
     // 获取项目下已安装的插件列表
