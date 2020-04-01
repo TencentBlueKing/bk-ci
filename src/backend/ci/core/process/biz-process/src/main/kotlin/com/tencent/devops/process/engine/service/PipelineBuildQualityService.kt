@@ -230,7 +230,7 @@ class PipelineBuildQualityService(
 
     fun check(client: Client, buildCheckParams: BuildCheckParams): RuleCheckResult {
         return try {
-            client.get(ServiceQualityRuleResource::class).check(buildCheckParams).data!!
+            client.getWithoutRetry(ServiceQualityRuleResource::class).check(buildCheckParams).data!!
         } catch (e: Exception) {
             logger.error("quality check fail for build(${buildCheckParams.buildId})", e)
             return RuleCheckResult(

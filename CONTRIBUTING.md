@@ -48,8 +48,8 @@ git commit -m 'bugfix: 部分第三方构建机上出现worker-agent.jar进程�
 | 标记     | 说明                                   |
 | -------- | -------------------------------------- |
 | feature  | 新功能开发                             |
-| bugfix   | bug修复                                |
-| refactor | 不修改业务逻辑下，仅对现有代码进行重构 |
+| bug/fix/bugfix   | bug修复                                |
+| refactor | 重构代码/优化配置&参数/优化逻辑及功能 |
 | test     | 添加单元测试用例相关                   |
 | docs     | 添加文档                               |
 | info     | 添加注释类信息                         |
@@ -57,6 +57,7 @@ git commit -m 'bugfix: 部分第三方构建机上出现worker-agent.jar进程�
 | merge    | 仅做分支合并同步                       |
 | depend   | 对工程的依赖进行增删改                 |
 | chore    | 构建脚本、任务等相关代码                 |
+| del    | 删除可能仍然有人用到的功能、API等破坏性动作               |
 
 
 

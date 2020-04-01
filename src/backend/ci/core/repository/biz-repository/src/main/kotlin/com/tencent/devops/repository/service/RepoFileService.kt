@@ -191,16 +191,27 @@ class RepoFileService @Autowired constructor(
         val pathArr = uri.path.split("/")
         val projectName = StringBuilder()
         for (item in pathArr) {
+            if (item.isBlank()) continue
             projectName.append(item).append("/")
             if (item.endsWith("_proj")) break
         }
-        val projectUrl = uri.scheme + "://" + uri.host + "/" + projectName.toString()
+        val projectNameStr = projectName.toString().removePrefix("/").removeSuffix("/")
+        val projectUrl = uri.scheme + "://" + uri.host + "/" + projectNameStr
+
+        // 三节项目名的话，Codecc传的filePath会带项目名，需要去掉
+        val projectNameArr = projectNameStr.split("/")
+        val filterFilePath = if (projectNameArr.size == 3) {
+            filePath.removePrefix("/").removePrefix(projectNameArr.last())
+        } else {
+            filePath
+        }
+
         return if (svnType == "HTTP") {
             svnService.getFileContent(
                 url = projectUrl,
                 userId = repo.userName,
                 svnType = svnType,
-                filePath = filePath,
+                filePath = filterFilePath,
                 reversion = reversion,
                 credential1 = credInfo.username,
                 credential2 = credInfo.privateKey
@@ -210,7 +221,7 @@ class RepoFileService @Autowired constructor(
                 url = projectUrl,
                 userId = repo.userName,
                 svnType = if (svnType.isBlank()) "SSH" else svnType,
-                filePath = filePath,
+                filePath = filterFilePath,
                 reversion = reversion,
                 credential1 = credInfo.privateKey,
                 credential2 = credInfo.passPhrase

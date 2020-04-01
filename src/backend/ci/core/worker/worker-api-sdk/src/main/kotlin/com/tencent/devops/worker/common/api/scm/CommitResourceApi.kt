@@ -29,6 +29,7 @@ package com.tencent.devops.worker.common.api.scm
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.enums.RepositoryConfig
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.process.pojo.PipelineBuildMaterial
 import com.tencent.devops.repository.pojo.commit.CommitData
 import com.tencent.devops.ticket.pojo.CertIOS
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
@@ -53,6 +54,13 @@ class CommitResourceApi : AbstractBuildResourceApi(), CommitSDKApi {
             "&elementId=$elementId&repoId=$repositoryId&repositoryType=$name"
         val request = buildGet(path)
         val responseContent = request(request, "获取最后一次代码commit信息失败")
+        return objectMapper.readValue(responseContent)
+    }
+
+    override fun saveBuildMaterial(materialList: List<PipelineBuildMaterial>): Result<Int> {
+        val path = "/process/api/build/repository/saveBuildMaterial"
+        val request = buildPost(path, getJsonRequest(materialList), mutableMapOf())
+        val responseContent = request(request, "添加源材料信息失败")
         return objectMapper.readValue(responseContent)
     }
 }
