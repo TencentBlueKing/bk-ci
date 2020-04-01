@@ -5,12 +5,9 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.ServiceBaseInfoUpdateRequest
-import com.tencent.devops.store.pojo.atom.AtomBaseInfoUpdateRequest
 import com.tencent.devops.store.pojo.dto.ExtSubmitDTO
 import com.tencent.devops.store.pojo.enums.ExtServiceSortTypeEnum
 import com.tencent.devops.store.pojo.enums.ServiceTypeEnum
-import com.tencent.devops.store.pojo.template.MarketTemplateMain
-import com.tencent.devops.store.pojo.template.enums.TemplateRdTypeEnum
 import com.tencent.devops.store.pojo.vo.ExtServiceMainItemVo
 import com.tencent.devops.store.pojo.vo.SearchExtServiceVO
 import com.tencent.devops.store.pojo.vo.ServiceVersionListResp
@@ -85,7 +82,7 @@ interface UserExtServiceResource {
         pageSize: Int?
     ): Result<SearchExtServiceVO>
 
-    @ApiOperation("根据插件标识获取插件正式版本详情")
+    @ApiOperation("根据插件标识获取扩展正式版本详情")
     @GET
     @Path("/service/{serviceCode}")
     fun getServiceByCode(
@@ -154,4 +151,5 @@ interface UserExtServiceResource {
         @ApiParam(value = "扩展服务基本信息修改请求报文体", required = true)
         serviceBaseInfoUpdateRequest: ServiceBaseInfoUpdateRequest
     ): Result<Boolean>
+
 }

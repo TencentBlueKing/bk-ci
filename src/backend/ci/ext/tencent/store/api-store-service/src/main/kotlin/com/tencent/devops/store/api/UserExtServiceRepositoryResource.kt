@@ -1,11 +1,13 @@
 package com.tencent.devops.store.api
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
+import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.PUT
 import javax.ws.rs.Path
@@ -33,4 +35,16 @@ interface UserExtServiceRepositoryResource {
         @PathParam("serviceCode")
         serviceCode: String
     ): Result<Boolean>
+
+    @ApiOperation("自动获取Readme.md信息")
+    @GET
+    @Path("/serviceIds/{serviceId}/readme/")
+    fun getReadme(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("扩展服务Id ", required = true)
+        @PathParam("serviceId")
+        serviceId: String
+    )
 }

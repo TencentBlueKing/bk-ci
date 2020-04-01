@@ -5,6 +5,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.repository.api.ServiceGitRepositoryResource
+import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.dao.ExtServiceDao
 import com.tencent.devops.store.dao.ExtServiceFeatureDao
 import com.tencent.devops.store.dao.common.StoreMemberDao
@@ -40,7 +41,7 @@ class ServiceRepositoryService {
      * @param serviceCode 扩展代码
      */
     fun updateServiceRepositoryUserInfo(userId: String, projectCode: String, serviceCode: String): Result<Boolean> {
-        logger.info("updateAtomRepositoryUserInfo userId is:$userId,projectCode is:$projectCode,serviceCode is:$serviceCode")
+        logger.info("updateServiceRepositoryUserInfo userId is:$userId,projectCode is:$projectCode,serviceCode is:$serviceCode")
         // 判断用户是否是插件管理员，移交代码库只能针对插件管理员
         if (! storeMemberDao.isStoreAdmin(dslContext, userId, serviceCode, StoreTypeEnum.ATOM.type.toByte())) {
             return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED)
@@ -54,5 +55,17 @@ class ServiceRepositoryService {
             .updateRepositoryUserInfo(userId, projectCode, serviceRecord.repositoryHashId)
         logger.info("updateServiceRepositoryUserInfo is:$updateServiceRepositoryUserInfoResult")
         return updateServiceRepositoryUserInfoResult
+    }
+
+    fun getReadMeFile(userId: String, serviceCode: String) : Result<String?> {
+        val featureRecord = extServiceFeatureDao.getLatestServiceByCode(dslContext, serviceCode)
+        if(featureRecord == null) {
+            throw RuntimeException(MessageCodeUtil.getCodeLanMessage(StoreMessageCode.))
+        }
+        val fileStr = client.get(ServiceGitRepositoryResource::class).getFileContent(
+            featureRecord.repositoryHashId,
+            "Readme.md", null, null, null
+        ).data
+        return Result(fileStr)
     }
 }
