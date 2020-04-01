@@ -18,7 +18,7 @@ data class ExtServiceFeatureUpdateInfo(
     @ApiModelProperty("扩展服务可见范围 0：私有 10：登录用户开源")
     val visibilityLevel: Int? = null,
     @ApiModelProperty("描述录入类型")
-    val descInputType: DescInputTypeEnum?= DescInputTypeEnum.MANUAL,
+    val descInputType: DescInputTypeEnum?,
     @ApiModelProperty("代码库hashId")
     val repositoryHashId: String? = null,
     @ApiModelProperty("代码库地址")

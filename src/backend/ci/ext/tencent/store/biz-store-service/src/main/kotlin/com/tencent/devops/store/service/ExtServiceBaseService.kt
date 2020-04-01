@@ -393,6 +393,17 @@ abstract class ExtServiceBaseService @Autowired constructor() {
                     )
                 )
             }
+            if(submitDTO.descInputType != null) {
+                val extServiceFeatureUpdateInfo = ExtServiceFeatureUpdateInfo(
+                    descInputType = submitDTO.descInputType
+                )
+                extFeatureDao.updateExtServiceFeatureBaseInfo(
+                    dslContext,
+                    userId,
+                    serviceCode,
+                    extServiceFeatureUpdateInfo
+                )
+            }
 
             // 更新标签信息
             val labelIdList = submitDTO.labelIdList
