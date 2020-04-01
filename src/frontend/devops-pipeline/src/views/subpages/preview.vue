@@ -49,6 +49,13 @@
                     :editable="false"
                 />
             </template>
+            <template v-else-if="typeof editingElementPos.stageIndex !== 'undefined'">
+                <stage-property-panel
+                    :stage="currentStage"
+                    :stage-index="editingElementPos.stageIndex"
+                    :editable="false"
+                />
+            </template>
         </template>
     </div>
 </template>
@@ -58,6 +65,7 @@
     import Stages from '@/components/Stages'
     import AtomPropertyPanel from '@/components/AtomPropertyPanel'
     import ContainerPropertyPanel from '@/components/ContainerPropertyPanel'
+    import StagePropertyPanel from '@/components/StagePropertyPanel'
     import Vue from 'vue'
     import { bus } from '@/utils/bus'
     import { getParamsValuesMap } from '@/utils/util'
@@ -71,7 +79,8 @@
             AtomPropertyPanel,
             ContainerPropertyPanel,
             PipelineParamsForm,
-            PipelineVersionsForm
+            PipelineVersionsForm,
+            StagePropertyPanel
         },
         mixins: [pipelineOperateMixin],
         data () {
@@ -108,6 +117,10 @@
             pipelineId () {
                 return this.$route.params.pipelineId
             },
+            currentStage () {
+                const { stageIndex } = this.editingElementPos
+                return this.getStageByIndex(stageIndex)
+            },
             panelTitle () {
                 const { stageIndex, containerIndex, elementIndex } = this.editingElementPos
                 if (typeof elementIndex !== 'undefined') {
@@ -132,9 +145,14 @@
             },
             checkTotal (val) {
                 this.pipeline.stages.forEach(stage => {
+                    const stageDisabled = stage.stageControlOption && stage.stageControlOption.enable === false
+                    if (!stageDisabled) {
+                        stage.runStage = val
+                    }
+
                     stage.containers.forEach(container => {
                         if (container['@type'] !== 'trigger') {
-                            const containerDisabled = container.jobControlOption && container.jobControlOption.enable === false
+                            const containerDisabled = stageDisabled || (container.jobControlOption && container.jobControlOption.enable === false)
                             if (!containerDisabled) {
                                 container.runContainer = val
                             }
@@ -145,6 +163,8 @@
             'pipeline.stages' (val) {
                 if (val) {
                     val.forEach(stage => {
+                        const stageDisabled = stage.stageControlOption && stage.stageControlOption.enable === false
+                        Vue.set(stage, 'runStage', !stageDisabled)
                         stage.containers.forEach(container => {
                             if (container['@type'] !== 'trigger') {
                                 const containerDisabled = container.jobControlOption && container.jobControlOption.enable === false
@@ -380,7 +400,7 @@
                 }
             }
         }
-        .sodaci-property-panel {
+        .bkci-property-panel {
             .bk-sideslider-wrapper {
                 top: 0;
                 .bk-sideslider-title {

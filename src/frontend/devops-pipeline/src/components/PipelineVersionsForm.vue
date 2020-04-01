@@ -23,7 +23,7 @@
     import VuexInput from '@/components/atomFormField/VuexInput'
     import EnumInput from '@/components/atomFormField/EnumInput'
     import FormField from '@/components/AtomPropertyPanel/FormField'
-    import { allVersionKeyList, versionConfig } from '@/utils/pipelineConst'
+    import { allVersionKeyList, getVersionConfig } from '@/utils/pipelineConst'
 
     export default {
         components: {
@@ -64,7 +64,7 @@
                 return allVersionKeyList
             },
             versionConfig () {
-                return versionConfig
+                return getVersionConfig()
             },
             versionLabel () {
                 return {

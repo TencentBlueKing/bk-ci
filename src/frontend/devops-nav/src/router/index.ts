@@ -172,12 +172,11 @@ function parseOS (): string {
 function getProjectId (store, params): string {
     try {
         const cookiePid = cookie.get(X_DEVOPS_PROJECT_ID)
-        const projectId = window.GLOBAL_PID || cookiePid || localStorage.getItem('projectId') || store.getters.enableProjectList[0].projectCode
+        const projectId = window.GLOBAL_PID || cookiePid
         return String(params.projectId) !== '0' && params.projectId ? params.projectId : projectId
     } catch (e) {
         return ''
     }
-    
 }
 
 function initProjectId (to, store): string {

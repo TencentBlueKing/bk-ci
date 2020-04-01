@@ -15,6 +15,7 @@
 </template>
 
 <script>
+    import Vue from 'vue'
     import { mapActions } from 'vuex'
     import atomMixin from './atomMixin'
     import validMixins from '../validMixins'
@@ -57,6 +58,9 @@
             ]),
             // getAtomOptionDefault,
             handleUpdateElementOption (name, value) {
+                if (this.element.additionalOptions && this.element.additionalOptions[name] === undefined) {
+                    Vue.set(this.element.additionalOptions, name, value)
+                }
                 this.setPipelineEditing(true)
                 this.handleUpdateElement('additionalOptions',
                                          Object.assign(this.element.additionalOptions || {}, { [name]: value })

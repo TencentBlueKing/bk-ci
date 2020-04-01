@@ -27,6 +27,7 @@
 package com.tencent.devops.process.engine.service
 
 import com.fasterxml.jackson.core.JsonParseException
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.PipelineAlreadyExistException
@@ -44,14 +45,17 @@ import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.pipeline.enums.PipelineInstanceTypeEnum
 import com.tencent.devops.common.pipeline.extend.ModelCheckPlugin
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildNo
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.dao.PipelineSettingDao
+import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.compatibility.BuildPropertyCompatibilityTools
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
+import com.tencent.devops.process.engine.dao.template.TemplateDao
 import com.tencent.devops.process.engine.dao.template.TemplatePipelineDao
 import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.jmx.api.ProcessJmxApi
@@ -70,6 +74,7 @@ import com.tencent.devops.process.pojo.classify.enums.Logic
 import com.tencent.devops.process.pojo.pipeline.SimplePipeline
 import com.tencent.devops.process.pojo.setting.PipelineRunLockType
 import com.tencent.devops.process.pojo.setting.PipelineSetting
+import com.tencent.devops.process.pojo.template.TemplateType
 import com.tencent.devops.process.service.PipelineSettingService
 import com.tencent.devops.process.service.PipelineUserService
 import com.tencent.devops.process.service.label.PipelineGroupService
@@ -98,17 +103,20 @@ class PipelineService @Autowired constructor(
     private val pipelineGroupService: PipelineGroupService,
     private val pipelineViewService: PipelineViewService,
     private val pipelineUserService: PipelineUserService,
+    private val pipelineSettingService: PipelineSettingService,
+    private val pipelineStageService: PipelineStageService,
     private val pipelineBean: PipelineBean,
     private val processJmxApi: ProcessJmxApi,
     private val dslContext: DSLContext,
+    private val templateDao: TemplateDao,
     private val templatePipelineDao: TemplatePipelineDao,
     private val pipelineInfoDao: PipelineInfoDao,
     private val pipelineSettingDao: PipelineSettingDao,
-    private val pipelineSettingService: PipelineSettingService,
     private val modelCheckPlugin: ModelCheckPlugin,
     private val pipelineBuildDao: PipelineBuildDao,
     private val authPermissionApi: AuthPermissionApi,
     private val pipelineAuthServiceCode: PipelineAuthServiceCode,
+    private val objectMapper: ObjectMapper,
     private val client: Client
 ) {
 
@@ -138,8 +146,12 @@ class PipelineService @Autowired constructor(
         model: Model,
         channelCode: ChannelCode,
         checkPermission: Boolean = true,
-        fixPipelineId: String? = null
+        fixPipelineId: String? = null,
+        instanceType: String? = PipelineInstanceTypeEnum.FREEDOM.type,
+        buildNo: BuildNo? = null,
+        param: List<BuildFormProperty>? = null
     ): String {
+        logger.info("createPipeline: $userId|$projectId|$channelCode|$checkPermission|$fixPipelineId|$instanceType")
         val apiStartEpoch = System.currentTimeMillis()
         var success = false
         try {
@@ -175,7 +187,7 @@ class PipelineService @Autowired constructor(
 
             var pipelineId: String? = null
             try {
-                val instance = if (model.instanceFromTemplate == null || !model.instanceFromTemplate!!) {
+                val instance = if (instanceType == PipelineInstanceTypeEnum.FREEDOM.type) {
                     // 将模版常量变更实例化为流水线变量
                     val triggerContainer = model.stages[0].containers[0] as TriggerContainer
                     instanceModel(
@@ -215,6 +227,12 @@ class PipelineService @Autowired constructor(
                 }
                 pipelineGroupService.addPipelineLabel(userId = userId, pipelineId = pipelineId, labelIds = model.labels)
                 pipelineUserService.create(pipelineId, userId)
+                logger.info("instanceType: $instanceType")
+                if (model.templateId != null) {
+                    val templateId = model.templateId as String
+                    logger.info("templateId: $templateId")
+                    createRelationBtwTemplate(userId, templateId, pipelineId, instanceType!!, buildNo, param)
+                }
                 success = true
                 return pipelineId
             } catch (duplicateKeyException: DuplicateKeyException) {
@@ -238,6 +256,53 @@ class PipelineService @Autowired constructor(
             pipelineBean.create(success)
             processJmxApi.execute(ProcessJmxApi.NEW_PIPELINE_CREATE, System.currentTimeMillis() - apiStartEpoch)
         }
+    }
+
+    /**
+     * 创建模板和流水线关联关系
+     */
+    fun createRelationBtwTemplate(
+        userId: String,
+        templateId: String,
+        pipelineId: String,
+        instanceType: String,
+        buildNo: BuildNo? = null,
+        param: List<BuildFormProperty>? = null
+    ): Boolean {
+        logger.info("start createRelationBtwTemplate: $userId|$templateId|$pipelineId|$instanceType")
+        val template = templateDao.getLatestTemplate(dslContext, templateId)
+        var rootTemplateId = templateId
+        var templateVersion = template.version
+        var versionName = template.versionName
+        if (template.type == TemplateType.CONSTRAINT.name) {
+            logger.info("template[$templateId] is from store, srcTemplateId is ${template.srcTemplateId}")
+            val rootTemplate = templateDao.getLatestTemplate(dslContext, template.srcTemplateId)
+            rootTemplateId = rootTemplate.id
+            templateVersion = rootTemplate.version
+            versionName = rootTemplate.versionName
+        }
+
+        templatePipelineDao.create(
+            dslContext = dslContext,
+            pipelineId = pipelineId,
+            instanceType = instanceType,
+            rootTemplateId = rootTemplateId,
+            templateVersion = templateVersion,
+            versionName = versionName,
+            templateId = templateId,
+            userId = userId,
+            buildNo = if (buildNo == null) {
+                null
+            } else {
+                objectMapper.writeValueAsString(buildNo)
+            },
+            param = if (param == null) {
+                null
+            } else {
+                objectMapper.writeValueAsString(param)
+            }
+        )
+        return true
     }
 
     /**
@@ -273,17 +338,13 @@ class PipelineService @Autowired constructor(
             containerId = templateTrigger.containerId
         )
 
-        val stages = ArrayList<Stage>()
-
-        templateModel.stages.forEachIndexed { index, stage ->
-            if (index == 0) {
-                stages.add(Stage(listOf(triggerContainer), null))
-            } else {
-                stages.add(stage)
-            }
-        }
-
-        return Model(pipelineName, "", stages, labels ?: templateModel.labels, instanceFromTemplate)
+        return Model(
+            name = pipelineName,
+            desc = "",
+            stages = getFixedStages(templateModel, triggerContainer),
+            labels = labels ?: templateModel.labels,
+            instanceFromTemplate = instanceFromTemplate
+        )
     }
 
     /**
@@ -615,6 +676,12 @@ class PipelineService @Autowired constructor(
             model.desc = pipelineInfo.pipelineDesc
             model.pipelineCreator = pipelineInfo.creator
 
+            val defaultTagIds = listOf(pipelineStageService.getDefaultStageTagId())
+            model.stages.forEach {
+                if (it.name.isNullOrBlank()) it.name = it.id
+                if (it.tag == null) it.tag = defaultTagIds
+            }
+
             return model
         } catch (e: Exception) {
             logger.warn("Fail to get the pipeline($pipelineId) definition of project($projectId)", e)
@@ -703,7 +770,8 @@ class PipelineService @Autowired constructor(
         }
 
         if (templateIdList != null) {
-            val templatePipelineIds = templatePipelineDao.listPipeline(dslContext, templateIdList).map { it.pipelineId }
+            val templatePipelineIds =
+                templatePipelineDao.listPipeline(dslContext, PipelineInstanceTypeEnum.CONSTRAINT.type, templateIdList).map { it.pipelineId }
             resultPipelineIds.addAll(templatePipelineIds)
         }
 
@@ -1372,6 +1440,7 @@ class PipelineService @Autowired constructor(
             val buildNum = it["BUILD_NUM"] as Int
             val version = it["VERSION"] as Int
             val taskCount = it["TASK_COUNT"] as Int
+            val creator = it["CREATOR"] as String
             val createTime = (it["CREATE_TIME"] as LocalDateTime?)?.timestampmilli() ?: 0
             val updateTime = (it["UPDATE_TIME"] as LocalDateTime?)?.timestampmilli() ?: 0
 
@@ -1422,7 +1491,8 @@ class PipelineService @Autowired constructor(
                     hasPermission = authPipelines.contains(pipelineId),
                     hasCollect = favorPipelines.contains(pipelineId),
                     latestBuildUserId = starter,
-                    instanceFromTemplate = templatePipelineDao.get(dslContext, pipelineId) != null
+                    instanceFromTemplate = templatePipelineDao.get(dslContext, pipelineId) != null,
+                    creator = creator
                 )
             )
         }
@@ -1567,6 +1637,24 @@ class PipelineService @Autowired constructor(
 
         logger.info("listPermissionPipelineCount|[$projectId]|$userId|$count|watch=$watch")
         return count
+    }
+
+    fun getFixedStages(model: Model, fixedTriggerContainer: TriggerContainer): List<Stage> {
+        val stages = ArrayList<Stage>()
+        val defaultTagIds = listOf(pipelineStageService.getDefaultStageTagId())
+        model.stages.forEachIndexed { index, stage ->
+            stage.id = stage.id ?: VMUtils.genStageId(index + 1)
+            if (index == 0) {
+                stages.add(Stage(listOf(fixedTriggerContainer), stage.id))
+            } else {
+                model.stages.forEach {
+                    if (it.name.isNullOrBlank()) it.name = it.id
+                    if (it.tag == null) it.tag = defaultTagIds
+                }
+                stages.add(stage)
+            }
+        }
+        return stages
     }
 
     fun getPipelineIdByNames(projectId: String, pipelineNames: Set<String>, filterDelete: Boolean): Map<String, String> {
