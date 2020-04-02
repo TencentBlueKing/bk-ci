@@ -64,7 +64,7 @@
     import TimePicker from '@/components/AtomFormComponent/TimePicker'
     import Parameter from '@/components/AtomFormComponent/Parameter'
     import Tips from '@/components/AtomFormComponent/Tips'
-
+    import { getAtomDefaultValue } from '@/store/modules/atom/atomUtil'
     export default {
         name: 'normal-atom-v2',
         components: {
@@ -170,6 +170,11 @@
             },
             atomValue () {
                 try {
+                    const atomDefaultValue = getAtomDefaultValue(this.atomPropsModel.input)
+                    // 新增字段，已添加插件读取默认值
+                    Object.keys(atomDefaultValue).filter(key => !this.element.data.input.hasOwnProperty(key)).map(key => {
+                        this.handleUpdateAtomInput(key, atomDefaultValue[key])
+                    })
                     return {
                         ...this.element.data.input
                     }

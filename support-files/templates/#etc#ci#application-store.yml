@@ -17,3 +17,26 @@ store:
   artifactoryServiceUrlPrefix: __HTTP_SCHEMA__://__BKCI_FQDN__:__BKCI_HTTP_PORT__/ms/artifactory/api
   ideAtomDetailBaseUrl: __HTTP_SCHEMA__://__BKCI_FQDN__:__BKCI_HTTP_PORT__/console/store/atomStore/detail/ide/
   imageDetailBaseUrl: __HTTP_SCHEMA__://__BKCI_FQDN__:__BKCI_HTTP_PORT__/console/store/atomStore/detail/image/
+  baseImageDocsLink: /console/store/atomStore/detail/image/
+  imageAdminUsers: admin
+  buildResultBaseUrl: __HTTP_SCHEMA__://__BKCI_FQDN__:__BKCI_HTTP_PORT__/console/pipeline
+  defaultImageSourceType: bkdevops
+  defaultImageRepoUrl: __HTTP_SCHEMA__://__JFROG_FQDN__:__DOCKER_PORT__
+  defaultImageRepoName: paas/bkdevops/docker-builder2.2
+  defaultImageTag: v1
+  defaultTicketId:
+  defaultTicketProject:
+  defaultImageRDType: SELF_DEVELOPED
+  imageExecuteNullNotifyTplCode: IMAGE_EXECUTE_NULL_NOTIFY_TPL
+  templateApproveSwitch: close
+  imageApproveSwitch: close
+
+logo:
+  allowUploadLogoTypes:
+  allowUploadLogoWidth:
+  allowUploadLogoHeight:
+  maxUploadLogoSize:
+
+aes:
+  aesKey:
+  aesMock:

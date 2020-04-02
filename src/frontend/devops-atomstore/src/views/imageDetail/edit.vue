@@ -57,7 +57,7 @@
                         @imgAdd="uploadimg"
                     />
                 </bk-form-item>
-                <bk-form-item label="Dockerfile" :required="true" property="dockerFileContent" :rules="[requireRule]" ref="dockerFileContent">
+                <bk-form-item label="Dockerfile" property="dockerFileContent" ref="dockerFileContent">
                     <section class="dockerfile" @click="freshCodeMirror"></section>
                 </bk-form-item>
                 <div class="version-msg">

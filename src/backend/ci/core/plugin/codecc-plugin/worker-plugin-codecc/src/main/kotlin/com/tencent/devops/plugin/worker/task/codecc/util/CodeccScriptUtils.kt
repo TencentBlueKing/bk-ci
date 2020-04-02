@@ -56,7 +56,7 @@ class CodeccScriptUtils : AbstractBuildResourceApi() {
             .build()
         OkhttpUtils.doHttp(downloadRequest).use {
             val data = it.body()!!.string()
-            LoggerService.addNormalLine("get file content: $data")
+            LoggerService.addNormalLine("get file content success")
             val file = File(codeccWorkspace, fileName)
             file.writeText(data)
             return file

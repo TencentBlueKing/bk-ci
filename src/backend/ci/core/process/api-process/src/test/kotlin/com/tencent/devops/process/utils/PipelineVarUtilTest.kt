@@ -27,6 +27,7 @@
 package com.tencent.devops.process.utils
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotEquals
 import org.junit.Test
 
 class PipelineVarUtilTest {
@@ -55,6 +56,20 @@ class PipelineVarUtilTest {
         vars.forEach {
             println(it)
         }
+    }
+
+    @Test
+    fun mixOldVarAndNewVar() {
+        val vars = mutableMapOf(
+            "repoName" to "hello/world",
+            PIPELINE_REPO_NAME to "tencent/bk-ci"
+        )
+
+        assertNotEquals(vars[PIPELINE_REPO_NAME], vars["repoName"])
+        val mixOldVarAndNewVar = PipelineVarUtil.mixOldVarAndNewVar(vars)
+        println(mixOldVarAndNewVar)
+        assertEquals(vars[PIPELINE_REPO_NAME], "tencent/bk-ci")
+        assertEquals(vars[PIPELINE_REPO_NAME], mixOldVarAndNewVar["repoName"])
     }
 
     @Test

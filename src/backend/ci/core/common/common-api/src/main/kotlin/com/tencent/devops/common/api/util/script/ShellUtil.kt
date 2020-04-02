@@ -26,7 +26,10 @@
 
 package com.tencent.devops.common.api.util.script
 
+import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.CommonEnv
+import com.tencent.devops.common.api.pojo.ErrorCode
+import com.tencent.devops.common.api.pojo.ErrorType
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.nio.file.Files
@@ -87,7 +90,11 @@ object ShellUtil {
             return CommandLineUtils.execute(command, sourceDir, true)
         } catch (e: Throwable) {
             logger.info("Fail to run the command because of error(${e.message})")
-            throw e
+            throw TaskExecuteException(
+                errorType = ErrorType.SYSTEM,
+                errorCode = ErrorCode.SYSTEM_INNER_TASK_ERROR,
+                errorMsg = e.message ?: ""
+            )
         }
     }
 
