@@ -40,7 +40,7 @@ class PowerOnVM(
     private val projectSnapshotService: ProjectSnapshotService
 ) {
 
-    fun powerOn(vmId: Int): Boolean {
+    fun powerOn(vmId: Long): Boolean {
         val vm = vmCache.getVM(vmId)
         if (vm == null) {
             logger.error("ShutdownVM: Cannot find vm $vmId")
@@ -53,7 +53,7 @@ class PowerOnVM(
         return false
     }
 
-    fun powerOn(projectId: String, vmId: Int, snapshotKey: String): Boolean {
+    fun powerOn(projectId: String, vmId: Long, snapshotKey: String): Boolean {
         val vm = vmCache.getVM(vmId)
         if (vm == null) {
             logger.error("PowerOn: Cannot find vm $vmId")

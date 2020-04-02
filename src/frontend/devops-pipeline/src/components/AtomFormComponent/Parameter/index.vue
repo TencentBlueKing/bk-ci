@@ -62,7 +62,7 @@
             initData () {
                 if (this.param.paramType === 'list') {
                     const list = this.param.parameters || []
-                    this.parameters = [...list]
+                    this.parameters = JSON.parse(JSON.stringify(list))
                     this.setValue()
                     return
                 }
@@ -104,9 +104,20 @@
 
                 this.parameters.forEach((param) => {
                     const key = param.key
-                    const value = values.find(x => x.key === key) || {}
+                    const id = param.id
+                    const value = values.find((x) => {
+                        if (typeof id === 'undefined') {
+                            return x.key === key
+                        } else {
+                            return x.id === id
+                        }
+                    }) || {}
                     const defaultValue = defaultValues.find(x => x.key === key) || {}
                     param.value = value.value || defaultValue.value || param.value
+                    param.key = value.key || defaultValue.key || param.key
+                    if (Array.isArray(param.value)) { // 去掉空字符串, 空字符串无意义
+                        param.value = param.value.filter(v => v !== '')
+                    }
                 })
                 this.updateParameters()
             },
@@ -117,7 +128,7 @@
             },
 
             updateParameters () {
-                const res = this.parameters.map((x) => ({ key: x.key, value: x.value }))
+                const res = this.parameters.map((x) => ({ id: x.id, key: x.key, value: x.value }))
                 this.handleChange(this.name, String(JSON.stringify(res)))
             }
         }

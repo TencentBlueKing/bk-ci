@@ -61,9 +61,9 @@ data class MarketImageUpdateRequest(
     val imageRepoName: String,
     @ApiModelProperty("镜像tag", required = true)
     val imageTag: String,
-    @ApiModelProperty("dockerFile类型", required = true)
+    @ApiModelProperty("dockerFile类型", required = false)
     val dockerFileType: String?,
-    @ApiModelProperty("dockerFile内容", required = true)
+    @ApiModelProperty("dockerFile内容", required = false)
     val dockerFileContent: String?,
     @ApiModelProperty("版本号", required = true)
     val version: String,
