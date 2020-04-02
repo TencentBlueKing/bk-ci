@@ -567,6 +567,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
                     ) ?: "",
                     language = language ?: "",
                     itemName = itemName,
+                    itemIds = itemIdList,
                     releaseFlag = releaseFlag
                 )
             )

@@ -692,11 +692,10 @@ class ExtServiceDao {
         }
     }
 
-    fun getProjectServiceBy(dslContext: DSLContext, projectCode: String , itemId: String?) : Result<out Record>? {
+    fun getProjectServiceBy(dslContext: DSLContext, projectCode: String) : Result<out Record>? {
         val sa = TExtensionService.T_EXTENSION_SERVICE.`as`("sa")
         val sp = TStoreProjectRel.T_STORE_PROJECT_REL.`as`("sp")
         val sf = TExtensionServiceFeature.T_EXTENSION_SERVICE_FEATURE.`as`("sf")
-        val si = TExtensionServiceItemRel.T_EXTENSION_SERVICE_ITEM_REL.`as`("si")
         val baseStep = dslContext.select(
             sa.ID.`as`("serviceId"),
             sa.SERVICE_NAME.`as`("serviceName"),
@@ -719,11 +718,6 @@ class ExtServiceDao {
         condition.add(sp.PROJECT_CODE.eq(projectCode))
         condition.add(sp.STORE_TYPE.eq(StoreTypeEnum.SERVICE.type.toByte()))
         condition.add(sa.DELETE_FLAG.eq(false))
-
-        if(itemId != null) {
-            baseStep.leftJoin(si).on(sa.ID.eq(si.SERVICE_ID))
-            condition.add(si.ITEM_ID.eq(itemId))
-        }
 
         return baseStep.where(condition).groupBy(sa.SERVICE_CODE).orderBy(sa.UPDATE_TIME.desc()).fetch()
     }

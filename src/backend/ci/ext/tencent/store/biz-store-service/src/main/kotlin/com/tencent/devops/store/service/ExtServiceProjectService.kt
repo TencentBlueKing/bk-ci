@@ -4,12 +4,12 @@ import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.UUIDUtil
-import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.project.api.service.ServiceProjectResource
+import com.tencent.devops.store.dao.ExtItemServiceDao
 import com.tencent.devops.store.dao.ExtServiceDao
 import com.tencent.devops.store.dao.ExtServiceFeatureDao
 import com.tencent.devops.store.dao.common.ReasonRelDao
@@ -36,6 +36,7 @@ import java.time.LocalDateTime
 class ExtServiceProjectService @Autowired constructor(
     val extServiceDao: ExtServiceDao,
     val extServiceFeatureDao: ExtServiceFeatureDao,
+    val extItemServiceDao: ExtItemServiceDao,
     val storeMemberDao: StoreMemberDao,
     val reasonRelDao: ReasonRelDao,
     private val storeProjectRelDao: StoreProjectRelDao,
@@ -120,12 +121,32 @@ class ExtServiceProjectService @Autowired constructor(
         return Result(result)
     }
 
-    fun getServiceByProjectCode(projectCode: String, itemId: String?): Result<List<ExtServiceRespItem>> {
-        logger.info("getServiceByProjectCode projectCode[$projectCode], itemId[$itemId]")
-        val projectRelRecords = extServiceDao.getProjectServiceBy(dslContext, projectCode, itemId)
+    fun getServiceByProjectCode(projectCode: String): Result<List<ExtServiceRespItem>> {
+        logger.info("getServiceByProjectCode projectCode[$projectCode]")
+        val projectRelRecords = extServiceDao.getProjectServiceBy(dslContext, projectCode)
         if (projectRelRecords == null || projectRelRecords.size == 0) {
             return Result(emptyList<ExtServiceRespItem>())
         }
+
+        val serviceIds = projectRelRecords.map { it["serviceId"] as String }
+
+        val serviceItemMap = mutableMapOf<String, Set<String>>()
+        extItemServiceDao.getItemByServiceId(dslContext, serviceIds)?.forEach {
+            val serviceId = it.serviceId
+            val itemId = it.itemId
+            var itemList = mutableSetOf<String>()
+
+            if(serviceItemMap.containsKey(serviceId)) {
+                itemList = serviceItemMap[serviceId] as MutableSet<String>
+                itemList.add(serviceId)
+                serviceItemMap[serviceId] = itemList
+            } else {
+                itemList.add(itemId)
+                serviceItemMap[serviceId] = itemList
+            }
+        }
+        logger.info("getServiceByProjectCode serviceItemMap[$serviceItemMap]")
+
         val serviceRecords = mutableListOf<ExtServiceRespItem>()
         projectRelRecords.forEach {
             val publicFlag = it["publicFlag"] as Boolean
@@ -158,7 +179,8 @@ class ExtServiceProjectService @Autowired constructor(
                     publisher = installUser,
                     publishTime = installTime,
                     createTime = (it["createTime"] as LocalDateTime)?.timestampmilli().toString(),
-                    updateTime = (it["updateTime"] as LocalDateTime)?.timestampmilli().toString()
+                    updateTime = (it["updateTime"] as LocalDateTime)?.timestampmilli().toString(),
+                    itemIds = serviceItemMap[it["serviceId"] as String] ?: emptySet()
                 )
             )
         }

@@ -67,10 +67,7 @@ interface UserExtServiceProjectResource {
         userId: String,
         @ApiParam("模版代码", required = true)
         @PathParam("projectCode")
-        projectCode: String,
-        @ApiParam("扩展点Id")
-        @QueryParam("itemId")
-        itemId: String?
+        projectCode: String
     ): Result<List<ExtServiceRespItem>>
 
     @ApiOperation("卸载扩展服务")

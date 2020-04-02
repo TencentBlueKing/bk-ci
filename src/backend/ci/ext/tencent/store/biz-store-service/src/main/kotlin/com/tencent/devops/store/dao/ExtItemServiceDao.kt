@@ -30,6 +30,7 @@ import com.tencent.devops.model.store.tables.TExtensionService
 import com.tencent.devops.model.store.tables.TExtensionServiceFeature
 import com.tencent.devops.model.store.tables.TExtensionServiceItemRel
 import com.tencent.devops.model.store.tables.TStoreProjectRel
+import com.tencent.devops.model.store.tables.records.TExtensionServiceItemRelRecord
 import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.enums.ExtServiceStatusEnum
@@ -105,6 +106,15 @@ class ExtItemServiceDao {
                 .join(tesf)
                 .on(tes.SERVICE_CODE.eq(tesf.SERVICE_CODE))
                 .where(conditions).fetchOne(0, Long::class.java)
+        }
+    }
+
+    fun getItemByServiceId(
+        dslContext: DSLContext,
+        serviceIds: List<String>
+    ): Result<TExtensionServiceItemRelRecord>? {
+         with(TExtensionServiceItemRel.T_EXTENSION_SERVICE_ITEM_REL){
+             return dslContext.selectFrom(this).where(SERVICE_ID.`in`(serviceIds)).fetch()
         }
     }
 
