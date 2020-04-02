@@ -4,6 +4,7 @@ import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.UUIDUtil
+import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.service.utils.MessageCodeUtil
@@ -145,9 +146,9 @@ class ExtServiceProjectService @Autowired constructor(
                     itemName = "",
                     isUninstall = canUninstall(publicFlag, projectType),
                     publisher = it["PUBLISHER"] as String,
-                    publishTime = DateTimeUtil.toDateTime(it["PUB_TIME"] as LocalDateTime),
-                    createTime = DateTimeUtil.toDateTime(it["CREATE_TIME"] as LocalDateTime),
-                    updateTime = DateTimeUtil.toDateTime(it["UPDATE_TIME"] as LocalDateTime)
+                    publishTime = (it["PUB_TIME"] as LocalDateTime).timestamp().toString(),
+                    createTime = (it["CREATE_TIME"] as LocalDateTime).timestamp().toString(),
+                    updateTime = (it["UPDATE_TIME"] as LocalDateTime).timestamp().toString()
                 )
             )
         }
