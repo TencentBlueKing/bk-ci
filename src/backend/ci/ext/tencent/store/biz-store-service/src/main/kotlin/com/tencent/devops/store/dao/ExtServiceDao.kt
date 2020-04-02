@@ -698,19 +698,19 @@ class ExtServiceDao {
         val sf = TExtensionServiceFeature.T_EXTENSION_SERVICE_FEATURE.`as`("sf")
         val si = TExtensionServiceItemRel.T_EXTENSION_SERVICE_ITEM_REL.`as`("si")
         val baseStep = dslContext.select(
-            sa.ID.`as`("SERVICE_ID"),
-            sa.SERVICE_NAME,
-            sa.SERVICE_CODE,
-            sa.PUBLISHER,
-            sa.PUB_TIME,
-            sa.VERSION,
-            sa.CREATOR,
-            sa.CREATE_TIME,
-            sa.MODIFIER,
-            sa.UPDATE_TIME,
-            sa.SERVICE_STATUS,
-            sf.PUBLIC_FLAG,
-            sp.TYPE
+            sa.ID.`as`("serviceId"),
+            sa.SERVICE_NAME.`as`("serviceName"),
+            sa.SERVICE_CODE.`as`("serviceCode"),
+            sa.PUBLISHER.`as`("publisher"),
+            sa.PUB_TIME.`as`("pubTime"),
+            sa.VERSION.`as`("version"),
+            sa.CREATOR.`as`("creator"),
+            sa.CREATE_TIME.`as`("createTime"),
+            sa.MODIFIER.`as`("modifier"),
+            sa.UPDATE_TIME.`as`("updateTime"),
+            sa.SERVICE_STATUS.`as`("serviceStatus"),
+            sf.PUBLIC_FLAG.`as`("publicFlag"),
+            sp.TYPE.`as`("projectType")
         ).from(sa).leftOuterJoin(sp).on(sa.SERVICE_CODE.eq(sp.STORE_CODE)).leftJoin(sf).on(sa.SERVICE_CODE.eq(sf.SERVICE_CODE))
         val condition = mutableListOf<Condition>()
         condition.add(sa.LATEST_FLAG.eq(true))

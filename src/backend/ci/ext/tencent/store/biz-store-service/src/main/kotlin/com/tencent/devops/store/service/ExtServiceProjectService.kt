@@ -125,30 +125,31 @@ class ExtServiceProjectService @Autowired constructor(
         if (projectRelRecords == null || projectRelRecords.size == 0) {
             return Result(emptyList<ExtServiceRespItem>())
         }
+        logger.info("getServiceByProjectCode $projectRelRecords")
         val serviceRecords = mutableListOf<ExtServiceRespItem>()
         projectRelRecords.forEach {
-            val publicFlag = it["PUBLIC_FLAG"] as Boolean
-            val projectType = it["TYPE"] as Byte
+            val publicFlag = it["publicFlag"] as Boolean
+            val projectType = it["projectType"] as Byte
             serviceRecords?.add(
                 ExtServiceRespItem(
-                    serviceId = it["SERVICE_ID"] as String,
-                    serviceName = it["SERVICE_NAME"] as String,
-                    serviceCode = it["SERVICE_CODE"] as String,
+                    serviceId = it["serviceId"] as String,
+                    serviceName = it["serviceName"] as String,
+                    serviceCode = it["serviceCode"] as String,
                     language = "",
                     category = "",
-                    version = it["VERSION"] as String,
+                    version = it["version"] as String,
                     logoUrl = "",
-                    serviceStatus = ExtServiceStatusEnum.getServiceStatus((it["SERVICE_STATUS"] as Byte).toInt()),
+                    serviceStatus = ExtServiceStatusEnum.getServiceStatus((it["serviceStatus"] as Byte).toInt()),
                     projectName = projectCode,
-                    creator = it["CREATOR"] as String,
+                    creator = it["creator"] as String,
                     releaseFlag = true,
-                    modifier = it["MODIFIER"] as String,
+                    modifier = it["modifier"] as String,
                     itemName = "",
                     isUninstall = canUninstall(publicFlag, projectType),
-                    publisher = it["PUBLISHER"] as String,
-                    publishTime = (it["PUB_TIME"] as LocalDateTime).timestamp().toString(),
-                    createTime = (it["CREATE_TIME"] as LocalDateTime).timestamp().toString(),
-                    updateTime = (it["UPDATE_TIME"] as LocalDateTime).timestamp().toString()
+                    publisher = it["publisher"] as String,
+                    publishTime = (it["pubTime"] as LocalDateTime).timestamp().toString(),
+                    createTime = (it["createTime"] as LocalDateTime).timestamp().toString(),
+                    updateTime = (it["updateTime"] as LocalDateTime).timestamp().toString()
                 )
             )
         }
