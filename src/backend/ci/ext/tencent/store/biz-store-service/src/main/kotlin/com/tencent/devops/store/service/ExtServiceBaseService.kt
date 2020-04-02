@@ -1356,6 +1356,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
     }
 
     fun updateExtInfo(userId: String, serviceId: String, serviceCode: String, infoResp: EditInfoDTO): Result<Boolean> {
+        logger.info("updateExtInfo: serviceId[$serviceId], serviceCode[$serviceCode] infoResp[$infoResp]")
         val baseInfo = infoResp.baseInfo
         val settingInfo = infoResp.settingInfo
         if (baseInfo != null) {
