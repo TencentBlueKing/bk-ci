@@ -105,6 +105,6 @@ class UserExtServiceResourceImpl @Autowired constructor(
             mediaInfo = mediaInfos,
             settingInfo = null
         )
-        return extServiceBaseService.updateExtInfo(userId, serviceCode, serviceId, editInfo)
+        return extServiceBaseService.updateExtInfo(userId, serviceId, serviceCode, editInfo)
     }
 }
