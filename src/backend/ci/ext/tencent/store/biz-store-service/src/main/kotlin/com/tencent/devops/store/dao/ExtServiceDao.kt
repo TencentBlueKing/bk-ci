@@ -706,7 +706,6 @@ class ExtServiceDao {
             sa.VERSION,
             sa.CREATOR,
             sa.CREATE_TIME,
-            sa.LOGO_URL,
             sa.MODIFIER,
             sa.UPDATE_TIME,
             sa.SERVICE_STATUS,

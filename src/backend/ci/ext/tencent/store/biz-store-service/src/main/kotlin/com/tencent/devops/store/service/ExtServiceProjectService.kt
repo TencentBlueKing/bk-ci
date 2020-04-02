@@ -136,7 +136,7 @@ class ExtServiceProjectService @Autowired constructor(
                     language = "",
                     category = "",
                     version = it["VERSION"] as String,
-                    logoUrl = it["LOGO_URL"] as String,
+                    logoUrl = "",
                     serviceStatus = ExtServiceStatusEnum.getServiceStatus((it["SERVICE_STATUS"] as Byte).toInt()),
                     projectName = projectCode,
                     creator = it["CREATOR"] as String,
