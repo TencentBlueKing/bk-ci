@@ -44,6 +44,9 @@ class ExtServiceIngressConfig {
     @Value("\${store.extService.bcs.ingress.annotation.class}")
     val annotationClass: String = ""
 
-    @Value("\${store.extService.bcs.ingress.annotation.subnetId}")
-    val annotationSubnetId: String = ""
+    @Value("\${store.extService.bcs.ingress.annotation.existLbId}")
+    val annotationExistLbId: String = ""
+
+    @Value("\${store.extService.bcs.ingress.annotation.grayExistLbId}")
+    val annotationGrayExistLbId: String = ""
 }
