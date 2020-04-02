@@ -129,7 +129,7 @@ class ExtServiceProjectService @Autowired constructor(
         projectRelRecords.forEach {
             val publicFlag = it["publicFlag"] as Boolean
             val projectType = it["projectType"] as Byte
-            logger.info("getServiceByProjectCode $it")
+            logger.info("getServiceByProjectCode serviceCode[${it["serviceName"] as String}, pubTime[${(it["pubTime"] as LocalDateTime)}]")
             serviceRecords?.add(
                 ExtServiceRespItem(
                     serviceId = it["serviceId"] as String,

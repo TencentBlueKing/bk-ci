@@ -723,7 +723,7 @@ class ExtServiceDao {
             condition.add(si.ITEM_ID.eq(itemId))
         }
 
-        return baseStep.orderBy(sa.UPDATE_TIME.desc()).fetch()
+        return baseStep.where(condition).groupBy(sa.SERVICE_CODE).orderBy(sa.UPDATE_TIME.desc()).fetch()
     }
 
     /**
