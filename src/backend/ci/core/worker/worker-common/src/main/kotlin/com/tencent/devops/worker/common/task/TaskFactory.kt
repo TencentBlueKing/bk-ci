@@ -54,7 +54,6 @@ object TaskFactory {
 
         val reflections = Reflections("com.tencent.devops.plugin.worker.task")
         val taskClasses = reflections.getSubTypesOf(ITask::class.java)
-        LoggerService.addNormalLine("Get the ITask classes $taskClasses")
         val candidatePriorityMap = mutableMapOf<String, Int>()
         val candidateMap = HashMap<String, KClass<out ITask>>()
         taskClasses?.forEach { taskClazz ->
