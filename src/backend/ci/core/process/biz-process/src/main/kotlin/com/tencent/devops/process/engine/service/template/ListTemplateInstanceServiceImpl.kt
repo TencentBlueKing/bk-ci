@@ -29,6 +29,7 @@ package com.tencent.devops.process.engine.service.template
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.pipeline.enums.PipelineInstanceTypeEnum
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.dao.PipelineSettingDao
 import com.tencent.devops.process.engine.dao.template.TemplatePipelineDao
@@ -59,7 +60,8 @@ class ListTemplateInstanceServiceImpl @Autowired constructor(
 
     override fun listTemplateInstances(projectId: String, userId: String, templateId: String): TemplateInstances {
         logger.info("[$projectId|$userId|$templateId] List the template instances")
-        val associatePipelines = templatePipelineDao.listPipeline(dslContext, setOf(templateId))
+        val associatePipelines =
+            templatePipelineDao.listPipeline(dslContext, PipelineInstanceTypeEnum.CONSTRAINT.type, setOf(templateId))
 
         val pipelineIds = associatePipelines.map { it.pipelineId }.toSet()
         logger.info("Get the pipelineIds - $associatePipelines")

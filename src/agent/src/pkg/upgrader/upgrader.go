@@ -126,11 +126,13 @@ func UninstallAgent() error {
 
 	workDir := systemutil.GetWorkDir()
 	startCmd := workDir + "/" + config.GetUninstallScript()
-	_, err := command.RunCommand(startCmd, []string{} /*args*/, workDir, nil)
+	output, err := command.RunCommand(startCmd, []string{} /*args*/, workDir, nil)
 	if err != nil {
 		logs.Error("run uninstall script failed: ", err.Error())
+		logs.Error("output: ", string(output))
 		return errors.New("run uninstall script failed")
 	}
+	logs.Info("output: ", string(output))
 	return nil
 }
 
@@ -139,11 +141,13 @@ func StopAgent() error {
 
 	workDir := systemutil.GetWorkDir()
 	startCmd := workDir + "/" + config.GetStopScript()
-	_, err := command.RunCommand(startCmd, []string{} /*args*/, workDir, nil)
+	output, err := command.RunCommand(startCmd, []string{} /*args*/, workDir, nil)
 	if err != nil {
-		logs.Error("run uninstall script failed: ", err.Error())
-		return errors.New("run uninstall script failed")
+		logs.Error("run stop script failed: ", err.Error())
+		logs.Error("output: ", string(output))
+		return errors.New("run stop script failed")
 	}
+	logs.Info("output: ", string(output))
 	return nil
 }
 
@@ -152,11 +156,13 @@ func StartAgent() error {
 
 	workDir := systemutil.GetWorkDir()
 	startCmd := workDir + "/" + config.GetStartScript()
-	_, err := command.RunCommand(startCmd, []string{} /*args*/, workDir, nil)
+	output, err := command.RunCommand(startCmd, []string{} /*args*/, workDir, nil)
 	if err != nil {
-		logs.Error("run uninstall script failed: ", err.Error())
-		return errors.New("run uninstall script failed")
+		logs.Error("run start script failed: ", err.Error())
+		logs.Error("output: ", string(output))
+		return errors.New("run start script failed")
 	}
+	logs.Info("output: ", string(output))
 	return nil
 }
 
@@ -179,10 +185,12 @@ func InstallAgent() error {
 		return fmt.Errorf("chmod install script failed: %s", err.Error())
 	}
 
-	_, err = command.RunCommand(startCmd, []string{} /*args*/, workDir, nil)
+	output, err := command.RunCommand(startCmd, []string{} /*args*/, workDir, nil)
 	if err != nil {
 		logs.Error("run install script failed: ", err.Error())
+		logs.Error("output: ", string(output))
 		return errors.New("run install script failed")
 	}
+	logs.Info("output: ", string(output))
 	return nil
 }

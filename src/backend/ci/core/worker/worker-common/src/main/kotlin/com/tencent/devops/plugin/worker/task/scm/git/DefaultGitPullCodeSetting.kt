@@ -77,21 +77,24 @@ abstract class DefaultGitPullCodeSetting(
                 workspace = workspace,
                 credentialSetter = credentialSetter,
                 userName = repo.userName,
-                projectName = repo.projectName
+                projectName = repo.projectName,
+                aliasName = repo.aliasName
             )
             CodePullStrategy.REVERT_UPDATE -> revertCheckoutTask(
                 url = repo.url,
                 workspace = workspace,
                 credentialSetter = credentialSetter,
                 userName = repo.userName,
-                projectName = repo.projectName
+                projectName = repo.projectName,
+                aliasName = repo.aliasName
             )
             else -> updateTask(
                 url = repo.url,
                 workspace = workspace,
                 credentialSetter = credentialSetter,
                 userName = repo.userName,
-                projectName = repo.projectName
+                projectName = repo.projectName,
+                aliasName = repo.aliasName
             )
         }
         val env = mutableMapOf<String, String>()
@@ -110,7 +113,8 @@ abstract class DefaultGitPullCodeSetting(
         workspace: File,
         credentialSetter: GitCredentialSetter,
         userName: String,
-        projectName: String
+        projectName: String,
+        aliasName: String
     ) =
         FreshCheckoutTask(
             projectName = projectName,
@@ -129,7 +133,8 @@ abstract class DefaultGitPullCodeSetting(
             buildId = buildId,
             repositoryConfig = repositoryConfig,
             gitType = gitType,
-            variables = taskParams
+            variables = taskParams,
+            aliasName = aliasName
         )
 
     private fun updateTask(
@@ -137,7 +142,8 @@ abstract class DefaultGitPullCodeSetting(
         workspace: File,
         credentialSetter: GitCredentialSetter,
         userName: String,
-        projectName: String
+        projectName: String,
+        aliasName: String
     ) =
         GitUpdateTask(
             projectName = projectName,
@@ -156,7 +162,8 @@ abstract class DefaultGitPullCodeSetting(
             buildId = buildId,
             repositoryConfig = repositoryConfig,
             gitType = gitType,
-            variables = taskParams
+            variables = taskParams,
+            aliasName = aliasName
         )
 
     private fun revertCheckoutTask(
@@ -164,7 +171,8 @@ abstract class DefaultGitPullCodeSetting(
         workspace: File,
         credentialSetter: GitCredentialSetter,
         userName: String,
-        projectName: String
+        projectName: String,
+        aliasName: String
     ) =
         RevertCheckoutTask(
             projectName = projectName,
@@ -183,6 +191,7 @@ abstract class DefaultGitPullCodeSetting(
             buildId = buildId,
             repositoryConfig = repositoryConfig,
             gitType = gitType,
-            variables = taskParams
+            variables = taskParams,
+            aliasName = aliasName
         )
 }

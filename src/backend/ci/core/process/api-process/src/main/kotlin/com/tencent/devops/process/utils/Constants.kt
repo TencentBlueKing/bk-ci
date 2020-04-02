@@ -52,7 +52,7 @@ const val PIPELINE_WEBHOOK_BLOCK = "BK_CI_HOOK_BLOCK" // hookBlock
 const val PIPELINE_WEBHOOK_TYPE = "BK_CI_HOOK_TYPE" // hookType
 const val PIPELINE_WEBHOOK_EVENT_TYPE = "BK_CI_HOOK_EVENT_TYPE" // hookEventType
 const val PIPELINE_WEBHOOK_MR_ID = "BK_CI_HOOK_MR_ID" // bk_hookMergeRequestId
-const val PIPELINE_REPO_NAME = "BL_CI_REPO_NAME" // "repoName"
+const val PIPELINE_REPO_NAME = "BK_CI_REPO_NAME" // "repoName"
 const val PIPELINE_WEBHOOK_MR_COMMITTER = "BK_CI_HOOK_MR_COMMITTER" // "bk_hookMergeRequest_committer"
 
 const val GIT_MR_NUMBER = "BK_CI_GIT_MR_NUMBER" // git_mr_number
@@ -109,6 +109,15 @@ const val PIPELINE_BUILD_REMARK = "BK_CI_BUILD_REMARK" // "流水线构建备注
  */
 const val PIPELINE_SETTING_MAX_QUEUE_SIZE_DEFAULT = 10
 /**
+ * 流水线插件设置-失败重试最大值
+ */
+const val TASK_FAIL_RETRY_MAX_COUNT = 5
+/**
+ * 流水线插件设置-失败重试最小值
+ */
+const val TASK_FAIL_RETRY_MIN_COUNT = 1
+
+/**
  * 流水线设置-最大排队数量-最小值
  */
 const val PIPELINE_SETTING_MAX_QUEUE_SIZE_MIN = 0
@@ -129,6 +138,10 @@ const val PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MIN = 1
  * 流水线设置-最大排队时间-默认值 单位:分钟
  */
 const val PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MAX = 1440
+/**
+ * 流水线设置-错误信息入库长度最大值 单位:分钟
+ */
+const val PIPELINE_MESSAGE_STRING_LENGTH_MAX = 4000
 
 const val PIPELINE_TIME_START = "BK_CI_BUILD_START_TIME" // "pipeline.time.start"
 
@@ -217,10 +230,35 @@ object PipelineVarUtil {
     }
 
     /**
-     * 从新变量前缀的变量中查出并增加旧变量前缀的变量
+     * 从新变量前缀的变量中查出并增加旧变量，会做去重
+     * @param vars 变量Map
+     * @return 包含新旧变量的Map
      */
-    fun fillOldVarPrefixTurning(vars: MutableMap<String, String>, replace: Boolean = false) {
-        prefixTurning(newPrefixMappingOld, vars, replace)
+    fun mixOldVarAndNewVar(vars: MutableMap<String, String>): MutableMap<String, String> {
+        // 旧流水线的前缀变量追加 一些旧代码类插件生成的
+        prefixTurning(newPrefixMappingOld, vars)
+
+        val allVars = mutableMapOf<String, String>()
+        vars.forEach {
+            // 从新转旧: 新流水线产生的变量 兼容在旧流水线中已经使用到的旧变量
+            val oldVarName = newVarToOldVar(it.key)
+            if (!oldVarName.isNullOrBlank()) {
+                allVars[oldVarName!!] = it.value // 旧变量写入，如果之前有了，则替换
+                allVars[it.key] = it.value // 新变量仍然写入
+            } else {
+                // 从旧转新: 兼容从旧入口写入的数据转到新的流水线运行
+                val newVarName = oldVarToNewVar(it.key)
+                // 新变量已经存在，忽略旧变量转换
+                if (!newVarName.isNullOrBlank() && !vars.contains(newVarName)) {
+                    allVars[newVarName!!] = it.value
+                }
+                // 已经存在从新变量转化过来的旧变量，则不覆盖，放弃
+                if (!allVars.containsKey(it.key)) {
+                    allVars[it.key] = it.value
+                }
+            }
+        }
+        return allVars
     }
 
     /**

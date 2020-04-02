@@ -18,11 +18,20 @@
  */
 
 import Vue from 'vue'
-import { SET_PIPELINE_STAGE, SET_PIPELINE_CONTAINER, SET_TEMPLATE, SET_ATOMS, SET_ATOM_MODAL_FETCHING, SET_ATOM_MODAL, SET_CONTAINER_FETCHING, UPDATE_ATOM_TYPE, SET_CONTAINER_DETAIL, ADD_CONTAINER, PROPERTY_PANEL_VISIBLE, INSERT_ATOM, DELETE_ATOM, DELETE_CONTAINER, UPDATE_CONTAINER, DELETE_STAGE, ADD_STAGE, CONTAINER_TYPE_SELECTION_VISIBLE, SET_INSERT_STAGE_INDEX, UPDATE_ATOM, SET_PIPELINE_EDITING, SET_PIPELINE, SET_BUILD_PARAM, DELETE_ATOM_PROP, SET_PIPELINE_EXEC_DETAIL, SET_REMOTE_TRIGGER_TOKEN, SET_GLOBAL_ENVS, TOGGLE_ATOM_SELECTOR_POPUP, UPDATE_ATOM_INPUT, UPDATE_WHOLE_ATOM_INPUT, UPDATE_ATOM_OUTPUT, UPDATE_ATOM_OUTPUT_NAMESPACE, FETCHING_ATOM_LIST, SET_STORE_DATA, SET_STORE_LOADING, SET_STORE_SEARCH, FETCHING_ATOM_VERSION, SET_ATOM_VERSION_LIST, SET_EXECUTE_STATUS, SET_SAVE_STATUS } from './constants'
+import { SET_STAGE_TAG_LIST, SET_PIPELINE_STAGE, SET_PIPELINE_CONTAINER, SET_TEMPLATE, SET_ATOMS, SET_ATOM_MODAL_FETCHING, SET_ATOM_MODAL, SET_CONTAINER_FETCHING, UPDATE_ATOM_TYPE, SET_CONTAINER_DETAIL, ADD_CONTAINER, PROPERTY_PANEL_VISIBLE, INSERT_ATOM, DELETE_ATOM, DELETE_CONTAINER, UPDATE_CONTAINER, DELETE_STAGE, UPDATE_STAGE, ADD_STAGE, CONTAINER_TYPE_SELECTION_VISIBLE, SET_INSERT_STAGE_INDEX, UPDATE_ATOM, SET_PIPELINE_EDITING, SET_PIPELINE, SET_BUILD_PARAM, DELETE_ATOM_PROP, SET_PIPELINE_EXEC_DETAIL, SET_REMOTE_TRIGGER_TOKEN, SET_GLOBAL_ENVS, TOGGLE_ATOM_SELECTOR_POPUP, UPDATE_ATOM_INPUT, UPDATE_WHOLE_ATOM_INPUT, UPDATE_ATOM_OUTPUT, UPDATE_ATOM_OUTPUT_NAMESPACE, FETCHING_ATOM_LIST, SET_STORE_DATA, SET_STORE_LOADING, SET_STORE_SEARCH, FETCHING_ATOM_VERSION, SET_ATOM_VERSION_LIST, SET_EXECUTE_STATUS, SET_SAVE_STATUS, SET_DEFAULT_STAGE_TAG, TOGGLE_REVIEW_DIALOG } from './constants'
 import { getAtomModalKey, getAtomDefaultValue, getAtomOutputObj, isNewAtomTemplate } from './atomUtil'
-import { hashID } from '@/utils/util'
 
 export default {
+    [TOGGLE_REVIEW_DIALOG]: (state, { isShow: showReviewDialog, reviewInfo }) => {
+        Vue.set(state, 'showReviewDialog', showReviewDialog)
+        Vue.set(state, 'reviewInfo', reviewInfo)
+    },
+    [SET_DEFAULT_STAGE_TAG]: (state, defaultStageTags) => {
+        Vue.set(state, 'defaultStageTags', defaultStageTags)
+    },
+    [SET_STAGE_TAG_LIST]: (state, stageTagList) => {
+        Vue.set(state, 'stageTagList', stageTagList)
+    },
     [SET_PIPELINE_STAGE]: (state, stages) => {
         state.pipeline.stages = stages
     },
@@ -30,8 +39,8 @@ export default {
         const stages = state.pipeline.stages || []
         const stageIndex = stages.findIndex(stage => stage.containers === oldContainers)
         if (containers.length > 0) {
-            const currentStages = state.pipeline.stages[stageIndex] || {}
-            currentStages.containers = containers
+            const currentStage = state.pipeline.stages[stageIndex] || {}
+            currentStage.containers = containers
         } else {
             state.pipeline.stages.splice(stageIndex, 1)
         }
@@ -199,9 +208,14 @@ export default {
         state.pipeline.stages.splice(stageIndex, 1)
         return state
     },
+    [UPDATE_STAGE]: (state, { stage, newParam }) => {
+        Object.assign(stage, newParam)
+    },
     [ADD_STAGE]: (state, { stages, insertStageIndex }) => {
         stages.splice(insertStageIndex, 0, {
-            id: hashID(8),
+            id: `stage-${insertStageIndex + 1}`,
+            name: `stage-${insertStageIndex + 1}`,
+            tag: [...state.defaultStageTags],
             containers: []
         })
         return state

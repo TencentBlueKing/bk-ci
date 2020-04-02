@@ -48,6 +48,7 @@ import com.tencent.devops.process.pojo.PipelineName
 import com.tencent.devops.process.pojo.PipelineRemoteToken
 import com.tencent.devops.process.pojo.PipelineSortType
 import com.tencent.devops.process.pojo.PipelineStatus
+import com.tencent.devops.process.pojo.PipelineStageTag
 import com.tencent.devops.process.pojo.app.PipelinePage
 import com.tencent.devops.process.pojo.classify.PipelineViewAndPipelines
 import com.tencent.devops.process.pojo.classify.PipelineViewPipelinePage
@@ -55,6 +56,7 @@ import com.tencent.devops.process.pojo.setting.PipelineModelAndSetting
 import com.tencent.devops.process.pojo.setting.PipelineRunLockType
 import com.tencent.devops.process.pojo.setting.PipelineSetting
 import com.tencent.devops.process.service.PipelineRemoteAuthService
+import com.tencent.devops.process.service.StageTagService
 import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_QUEUE_SIZE_MAX
 import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_QUEUE_SIZE_MIN
@@ -67,7 +69,8 @@ class UserPipelineResourceImpl @Autowired constructor(
     private val pipelineService: PipelineService,
     private val pipelineGroupService: PipelineGroupService,
     private val pipelineRemoteAuthService: PipelineRemoteAuthService,
-    private val pipelinePermissionService: PipelinePermissionService
+    private val pipelinePermissionService: PipelinePermissionService,
+    private val stageTagService: StageTagService
 ) : UserPipelineResource {
 
     override fun hasCreatePermission(userId: String, projectId: String): Result<Boolean> {
@@ -304,8 +307,17 @@ class UserPipelineResourceImpl @Autowired constructor(
         checkParam(userId, projectId)
         return Result(
             pipelineService.listViewPipelines(
-                userId, projectId, page, pageSize, sortType ?: PipelineSortType.CREATE_TIME,
-                ChannelCode.BS, viewId, true, filterByPipelineName, filterByCreator, filterByLabels
+                userId = userId,
+                projectId = projectId,
+                page = page,
+                pageSize = pageSize,
+                sortType = sortType ?: PipelineSortType.CREATE_TIME,
+                channelCode = ChannelCode.BS,
+                viewId = viewId,
+                checkPermission = true,
+                filterByPipelineName = filterByPipelineName,
+                filterByCreator = filterByCreator,
+                filterByLabels = filterByLabels
             )
         )
     }
@@ -352,6 +364,11 @@ class UserPipelineResourceImpl @Autowired constructor(
                 it.hasCollect
             )
         }.toMap())
+    }
+
+    override fun getStageTag(userId: String): Result<List<PipelineStageTag>> {
+        if (userId.isBlank()) throw ParamBlankException("Invalid userId")
+        return stageTagService.getAllStageTag()
     }
 
     override fun favor(userId: String, projectId: String, pipelineId: String, favor: Boolean): Result<Boolean> {

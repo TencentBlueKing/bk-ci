@@ -42,6 +42,6 @@ class ServiceVMResourceImpl @Autowired constructor(val vmService: VMService) : S
         if (vmHashId.isBlank()) {
             throw ParamBlankException("无效的VM哈希ID")
         }
-        return Result(vmService.queryVMById(HashUtil.decodeOtherIdToInt(vmHashId)))
+        return Result(vmService.queryVMById(HashUtil.decodeOtherIdToLong(vmHashId)))
     }
 }
