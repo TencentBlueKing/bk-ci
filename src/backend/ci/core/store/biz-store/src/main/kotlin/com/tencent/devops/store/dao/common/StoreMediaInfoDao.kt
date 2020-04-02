@@ -73,7 +73,7 @@ class StoreMediaInfoDao {
         with(TStoreMediaInfo.T_STORE_MEDIA_INFO) {
             return dslContext
                 .selectFrom(this)
-                .where(STORE_TYPE.eq(type).and(STORE_CODE.eq(storeCode)))
+                .where(STORE_TYPE.eq(type).and(STORE_CODE.eq(storeCode))).orderBy(MEDIA_TYPE.desc())
                 .fetch()
         }
     }
