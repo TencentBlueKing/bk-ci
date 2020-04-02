@@ -692,6 +692,40 @@ class ExtServiceDao {
         }
     }
 
+    fun getProjectServiceBy(dslContext: DSLContext, projectCode: String , itemId: String?) : Result<out Record>? {
+        val sa = TExtensionService.T_EXTENSION_SERVICE.`as`("sa")
+        val sp = TStoreProjectRel.T_STORE_PROJECT_REL.`as`("sp")
+        val sf = TExtensionServiceFeature.T_EXTENSION_SERVICE_FEATURE.`as`("sf")
+        val si = TExtensionServiceItemRel.T_EXTENSION_SERVICE_ITEM_REL.`as`("si")
+        val baseStep = dslContext.select(
+            sa.ID.`as`("SERVICE_ID"),
+            sa.SERVICE_NAME,
+            sa.SERVICE_CODE,
+            sa.PUBLISHER,
+            sa.PUB_TIME,
+            sa.VERSION,
+            sa.CREATOR,
+            sa.CREATE_TIME,
+            sa.MODIFIER,
+            sa.UPDATE_TIME,
+            sa.SERVICE_STATUS,
+            sf.PUBLIC_FLAG,
+            sp.TYPE
+        ).from(sa).leftOuterJoin(sp).on(sa.SERVICE_CODE.eq(sp.STORE_CODE)).leftJoin(sf).on(sa.SERVICE_CODE.eq(sf.SERVICE_CODE))
+        val condition = mutableListOf<Condition>()
+        condition.add(sa.LATEST_FLAG.eq(true))
+        condition.add(sp.PROJECT_CODE.eq(projectCode))
+        condition.add(sp.STORE_TYPE.eq(StoreTypeEnum.SERVICE.type.toByte()))
+        condition.add(sa.DELETE_FLAG.eq(false))
+
+        if(itemId != null) {
+            baseStep.leftJoin(si).on(sa.ID.eq(si.SERVICE_ID))
+            condition.add(si.ITEM_ID.eq(itemId))
+        }
+
+        return baseStep.orderBy(sa.UPDATE_TIME.desc()).fetch()
+    }
+
     /**
      * 设置见扩展查询条件
      */

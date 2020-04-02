@@ -16,6 +16,7 @@ import com.tencent.devops.store.dao.common.StoreProjectRelDao
 import com.tencent.devops.store.pojo.common.InstalledProjRespItem
 import com.tencent.devops.store.pojo.common.UnInstallReq
 import com.tencent.devops.store.pojo.common.enums.ReasonTypeEnum
+import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.enums.ExtServiceStatusEnum
 import com.tencent.devops.store.pojo.vo.ExtServiceRespItem
@@ -117,38 +118,38 @@ class ExtServiceProjectService @Autowired constructor(
         return Result(result)
     }
 
-    fun getServiceByProjectCode(projectCode: String): Result<List<ExtServiceRespItem>> {
-        logger.info("getServiceByProjectCode projectCode[$projectCode]")
-        val projectRelRecords = storeProjectRelDao.getInstalledComponent(dslContext, projectCode, StoreTypeEnum.SERVICE.type.toByte(), 0, 100)
-        if(projectRelRecords == null || projectRelRecords.size == 0){
+    fun getServiceByProjectCode(projectCode: String, itemId: String?): Result<List<ExtServiceRespItem>> {
+        logger.info("getServiceByProjectCode projectCode[$projectCode], itemId[$itemId]")
+        val projectRelRecords = extServiceDao.getProjectServiceBy(dslContext, projectCode, itemId)
+        if (projectRelRecords == null || projectRelRecords.size == 0) {
             return Result(emptyList<ExtServiceRespItem>())
         }
         val serviceRecords = mutableListOf<ExtServiceRespItem>()
         projectRelRecords.forEach {
-            val serviceRecord = extServiceDao.getServiceLatestByCode(dslContext, it.storeCode)
-            if(serviceRecord != null) {
-                serviceRecords?.add(
-                    ExtServiceRespItem(
-                        serviceId = serviceRecord!!.id,
-                        serviceName = serviceRecord.serviceName,
-                        serviceCode = serviceRecord.serviceCode,
-                        language = "",
-                        category = "",
-                        version = serviceRecord.version,
-                        logoUrl = serviceRecord.logoUrl,
-                        serviceStatus = ExtServiceStatusEnum.getServiceStatus(serviceRecord.serviceStatus.toInt()),
-                        projectName = projectCode,
-                        creator = serviceRecord.creator,
-                        releaseFlag = true,
-                        modifier = serviceRecord.modifier,
-                        itemName = "",
-                        publisher = serviceRecord.publisher,
-                        publishTime = DateTimeUtil.toDateTime(serviceRecord.pubTime as LocalDateTime),
-                        createTime = DateTimeUtil.toDateTime(serviceRecord.createTime as LocalDateTime),
-                        updateTime = DateTimeUtil.toDateTime(serviceRecord.updateTime as LocalDateTime)
-                    )
+            val publicFlag = it["PUBLIC_FLAG"] as Boolean
+            val projectType = it["TYPE"] as Byte
+            serviceRecords?.add(
+                ExtServiceRespItem(
+                    serviceId = it["SERVICE_ID"] as String,
+                    serviceName = it["SERVICE_NAME"] as String,
+                    serviceCode = it["SERVICE_CODE"] as String,
+                    language = "",
+                    category = "",
+                    version = it["VERSION"] as String,
+                    logoUrl = it["LOGO_URL"] as String,
+                    serviceStatus = ExtServiceStatusEnum.getServiceStatus((it["SERVICE_STATUS"] as Byte).toInt()),
+                    projectName = projectCode,
+                    creator = it["CREATOR"] as String,
+                    releaseFlag = true,
+                    modifier = it["MODIFIER"] as String,
+                    itemName = "",
+                    isUninstall = canUninstall(publicFlag, projectType),
+                    publisher = it["PUBLISHER"] as String,
+                    publishTime = DateTimeUtil.toDateTime(it["PUB_TIME"] as LocalDateTime),
+                    createTime = DateTimeUtil.toDateTime(it["CREATE_TIME"] as LocalDateTime),
+                    updateTime = DateTimeUtil.toDateTime(it["UPDATE_TIME"] as LocalDateTime)
                 )
-            }
+            )
         }
         return Result(serviceRecords)
     }
@@ -162,13 +163,14 @@ class ExtServiceProjectService @Autowired constructor(
     ): Result<Boolean> {
         logger.info("uninstallService, $projectCode | $serviceCode | $userId")
         // 用户是否有权限卸载
-        val isInstaller = storeProjectRelDao.isInstaller(dslContext, userId, serviceCode, StoreTypeEnum.SERVICE.type.toByte())
+        val isInstaller =
+            storeProjectRelDao.isInstaller(dslContext, userId, serviceCode, StoreTypeEnum.SERVICE.type.toByte())
         logger.info("uninstallService, isInstaller=$isInstaller")
 
         val isAdmin = storeMemberDao.isStoreAdmin(dslContext, userId, serviceCode, StoreTypeEnum.SERVICE.type.toByte())
         logger.info("uninstallService, isAdmin=$isAdmin")
 
-        if (!( isAdmin || isInstaller)) {
+        if (!(isAdmin || isInstaller)) {
             return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED, arrayOf(serviceCode))
         }
 
@@ -178,17 +180,36 @@ class ExtServiceProjectService @Autowired constructor(
             // 卸载
             storeProjectService.uninstall(StoreTypeEnum.SERVICE, serviceCode, projectCode)
 
-
             // 入库卸载原因
             unInstallReq.reasonList.forEach {
                 if (it?.reasonId != null) {
                     val id = UUIDUtil.generate()
-                    reasonRelDao.add(context, id, userId, serviceCode, it.reasonId, it.note, ReasonTypeEnum.UNINSTALLATOM.type)
+                    reasonRelDao.add(
+                        context,
+                        id,
+                        userId,
+                        serviceCode,
+                        it.reasonId,
+                        it.note,
+                        ReasonTypeEnum.UNINSTALLATOM.type
+                    )
                 }
             }
         }
 
         return Result(true)
+    }
+
+    private fun canUninstall(publicFlag: Boolean, projectType: Byte): Boolean {
+        // 公共的不可卸载
+        if (publicFlag) {
+            return false
+        }
+        // 扩展初始化绑定项目不可卸载
+        if (StoreProjectTypeEnum.getProjectType(projectType.toInt()).equals(StoreProjectTypeEnum.INIT)) {
+            return false
+        }
+        return true
     }
 
     companion object {

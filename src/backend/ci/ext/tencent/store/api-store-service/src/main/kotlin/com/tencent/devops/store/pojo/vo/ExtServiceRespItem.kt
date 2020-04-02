@@ -34,6 +34,8 @@ data class ExtServiceRespItem(
     val creator: String,
     @ApiModelProperty("扩展点", required = true)
     val itemName: String,
+    @ApiModelProperty("是否可卸载标签")
+    val isUninstall: Boolean? = false,
     @ApiModelProperty("修改人", required = true)
     val modifier: String,
     @ApiModelProperty("创建时间", required = true)

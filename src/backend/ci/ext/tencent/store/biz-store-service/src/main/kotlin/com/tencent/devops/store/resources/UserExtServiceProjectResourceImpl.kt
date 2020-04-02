@@ -45,9 +45,10 @@ class UserExtServiceProjectResourceImpl @Autowired constructor(
     override fun getServiceByInstalledProject(
         accessToken: String,
         userId: String,
-        projectCode: String
+        projectCode: String,
+        itemId: String?
     ): Result<List<ExtServiceRespItem>> {
-        return extServiceProjectService.getServiceByProjectCode(projectCode)
+        return extServiceProjectService.getServiceByProjectCode(projectCode, itemId)
     }
 
     override fun unInstallService(

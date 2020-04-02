@@ -7,8 +7,6 @@ import com.tencent.devops.store.pojo.common.InstalledProjRespItem
 import com.tencent.devops.store.pojo.common.UnInstallReq
 import com.tencent.devops.store.pojo.dto.InstallExtServiceReq
 import com.tencent.devops.store.pojo.vo.ExtServiceRespItem
-import com.tencent.devops.store.pojo.vo.MyServiceVO
-import com.tencent.devops.store.pojo.vo.ServiceVersionVO
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -20,6 +18,7 @@ import javax.ws.rs.PUT
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["USER_EXT_SERVICE_PROJECT"], description = "研发商店-扩展服务项目间关系")
@@ -68,7 +67,10 @@ interface UserExtServiceProjectResource {
         userId: String,
         @ApiParam("模版代码", required = true)
         @PathParam("projectCode")
-        projectCode: String
+        projectCode: String,
+        @ApiParam("扩展点Id")
+        @QueryParam("itemId")
+        itemId: String?
     ): Result<List<ExtServiceRespItem>>
 
     @ApiOperation("卸载扩展服务")
