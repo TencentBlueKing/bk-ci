@@ -710,6 +710,8 @@ class ExtServiceDao {
             sa.UPDATE_TIME.`as`("updateTime"),
             sa.SERVICE_STATUS.`as`("serviceStatus"),
             sf.PUBLIC_FLAG.`as`("publicFlag"),
+            sp.CREATE_TIME.`as`("projectInstallTime"),
+            sp.CREATOR.`as`("projectInstallUser"),
             sp.TYPE.`as`("projectType")
         ).from(sa).leftOuterJoin(sp).on(sa.SERVICE_CODE.eq(sp.STORE_CODE)).leftJoin(sf).on(sa.SERVICE_CODE.eq(sf.SERVICE_CODE))
         val condition = mutableListOf<Condition>()

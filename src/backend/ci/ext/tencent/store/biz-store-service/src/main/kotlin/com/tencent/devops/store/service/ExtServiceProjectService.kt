@@ -5,6 +5,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.api.util.timestamp
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.service.utils.MessageCodeUtil
@@ -129,7 +130,15 @@ class ExtServiceProjectService @Autowired constructor(
         projectRelRecords.forEach {
             val publicFlag = it["publicFlag"] as Boolean
             val projectType = it["projectType"] as Byte
-            logger.info("getServiceByProjectCode serviceCode[${it["serviceName"] as String}, pubTime[${(it["pubTime"] as LocalDateTime)}]")
+            var installUser = ""
+            var installTime = ""
+            if( projectType.equals(StoreProjectTypeEnum.INIT)){
+                installUser = it["publisher"] as String
+                installTime = (it["pubTime"] as LocalDateTime)?.timestampmilli().toString()
+            } else {
+                installUser = it["projectInstallUser"] as String
+                installTime = (it["projectInstallTime"] as LocalDateTime)?.timestampmilli().toString()
+            }
             serviceRecords?.add(
                 ExtServiceRespItem(
                     serviceId = it["serviceId"] as String,
@@ -146,10 +155,10 @@ class ExtServiceProjectService @Autowired constructor(
                     modifier = it["modifier"] as String,
                     itemName = "",
                     isUninstall = canUninstall(publicFlag, projectType),
-                    publisher = it["publisher"] as String,
-                    publishTime = (it["pubTime"] as LocalDateTime)?.timestamp().toString(),
-                    createTime = (it["createTime"] as LocalDateTime)?.timestamp().toString(),
-                    updateTime = (it["updateTime"] as LocalDateTime)?.timestamp().toString()
+                    publisher = installUser,
+                    publishTime = installTime,
+                    createTime = (it["createTime"] as LocalDateTime)?.timestampmilli().toString(),
+                    updateTime = (it["updateTime"] as LocalDateTime)?.timestampmilli().toString()
                 )
             )
         }
