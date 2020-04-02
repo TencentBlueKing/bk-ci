@@ -125,11 +125,11 @@ class ExtServiceProjectService @Autowired constructor(
         if (projectRelRecords == null || projectRelRecords.size == 0) {
             return Result(emptyList<ExtServiceRespItem>())
         }
-        logger.info("getServiceByProjectCode $projectRelRecords")
         val serviceRecords = mutableListOf<ExtServiceRespItem>()
         projectRelRecords.forEach {
             val publicFlag = it["publicFlag"] as Boolean
             val projectType = it["projectType"] as Byte
+            logger.info("getServiceByProjectCode $it")
             serviceRecords?.add(
                 ExtServiceRespItem(
                     serviceId = it["serviceId"] as String,
@@ -147,9 +147,9 @@ class ExtServiceProjectService @Autowired constructor(
                     itemName = "",
                     isUninstall = canUninstall(publicFlag, projectType),
                     publisher = it["publisher"] as String,
-                    publishTime = (it["pubTime"] as LocalDateTime).timestamp().toString(),
-                    createTime = (it["createTime"] as LocalDateTime).timestamp().toString(),
-                    updateTime = (it["updateTime"] as LocalDateTime).timestamp().toString()
+                    publishTime = (it["pubTime"] as LocalDateTime)?.timestamp().toString(),
+                    createTime = (it["createTime"] as LocalDateTime)?.timestamp().toString(),
+                    updateTime = (it["updateTime"] as LocalDateTime)?.timestamp().toString()
                 )
             )
         }
