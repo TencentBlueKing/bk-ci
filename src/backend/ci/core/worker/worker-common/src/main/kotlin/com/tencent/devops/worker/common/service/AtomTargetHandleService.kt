@@ -29,9 +29,7 @@ package com.tencent.devops.worker.common.service
 import com.tencent.devops.common.api.enums.OSType
 import com.tencent.devops.store.pojo.app.BuildEnv
 import com.tencent.devops.store.pojo.common.enums.BuildHostTypeEnum
-import org.springframework.stereotype.Service
 
-@Service
 interface AtomTargetHandleService {
 
     /**

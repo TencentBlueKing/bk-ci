@@ -26,16 +26,13 @@
 
 package com.tencent.devops.worker.common.service.impl
 
-import com.tencent.devops.common.api.constant.JAVA
 import com.tencent.devops.common.api.enums.OSType
 import com.tencent.devops.store.pojo.app.BuildEnv
 import com.tencent.devops.store.pojo.common.enums.BuildHostTypeEnum
 import com.tencent.devops.worker.common.JAVA_PATH_ENV
 import com.tencent.devops.worker.common.service.AtomTargetHandleService
 import org.slf4j.LoggerFactory
-import org.springframework.stereotype.Service
 
-@Service(JAVA + "_ATOM_TARGET_HANDLE")
 class JavaAtomTargetHandleServiceImpl : AtomTargetHandleService {
 
     private val logger = LoggerFactory.getLogger(JavaAtomTargetHandleServiceImpl::class.java)
