@@ -51,8 +51,10 @@ import java.net.URLEncoder
 class JFrogApiService @Autowired constructor(private val objectMapper: ObjectMapper) {
     @Value("\${jfrog.url:#{null}}")
     private val JFROG_BASE_URL: String? = null
+
     @Value("\${jfrog.username:#{null}}")
     private val JFROG_USERNAME: String? = null
+
     @Value("\${jfrog.password:#{null}}")
     private val JFROG_PASSWORD: String? = null
 

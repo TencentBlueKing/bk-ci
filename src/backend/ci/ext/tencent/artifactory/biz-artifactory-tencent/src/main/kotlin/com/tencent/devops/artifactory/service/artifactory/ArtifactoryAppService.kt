@@ -32,7 +32,6 @@ import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.artifactory.service.AppService
 import com.tencent.devops.artifactory.service.PipelineService
 import com.tencent.devops.artifactory.util.JFrogUtil
-import com.tencent.devops.artifactory.util.RegionUtil
 import com.tencent.devops.artifactory.util.StringUtil
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.archive.api.JFrogPropertiesApi
@@ -77,6 +76,7 @@ class ArtifactoryAppService @Autowired constructor(
     override fun getExternalDownloadUrlDirected(userId: String, projectId: String, artifactoryType: ArtifactoryType, argPath: String, ttl: Int): Url {
         return getExternalDownloadUrl(userId, projectId, artifactoryType, argPath, ttl, true)
     }
+
     override fun getExternalPlistDownloadUrl(userId: String, projectId: String, artifactoryType: ArtifactoryType, argPath: String, ttl: Int, directed: Boolean): Url {
         val path = JFrogUtil.normalize(argPath)
         if (!JFrogUtil.isValid(path)) {
