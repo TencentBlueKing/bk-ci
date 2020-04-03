@@ -24,7 +24,7 @@ data class ServiceBaseInfoUpdateRequest(
     @ApiModelProperty("扩展点列表", required = false)
     val extensionItemIdList: Set<String>? = null,
     @ApiModelProperty("媒体信息列表", required = false)
-    val mediaList: List<StoreMediaInfo>? = null,
+    val mediaList: List<UpdateMediaInfo>? = null,
     @ApiModelProperty("描述录入类型")
     val descInputType: DescInputTypeEnum? = DescInputTypeEnum.MANUAL
 )

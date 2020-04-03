@@ -88,21 +88,10 @@ class UserExtServiceResourceImpl @Autowired constructor(
             description = serviceBaseInfoUpdateRequest.description,
             descInputType = serviceBaseInfoUpdateRequest.descInputType
         )
-        val mediaInfos = mutableListOf<UpdateMediaInfo>()
-        if (serviceBaseInfoUpdateRequest.mediaList != null) {
-            serviceBaseInfoUpdateRequest.mediaList!!.forEach {
-                mediaInfos.add(
-                    UpdateMediaInfo(
-                        mediaUrl = it.mediaUrl,
-                        mediaType = MediaTypeEnum.valueOf(it.mediaType)
-                    )
-                )
-            }
-        }
 
         val editInfo = EditInfoDTO(
             baseInfo = baseInfo,
-            mediaInfo = mediaInfos,
+            mediaInfo = serviceBaseInfoUpdateRequest.mediaList,
             settingInfo = null
         )
         return extServiceBaseService.updateExtInfo(userId, serviceId, serviceCode, editInfo)
