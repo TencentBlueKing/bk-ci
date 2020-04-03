@@ -40,6 +40,7 @@ const allTagList = {}
 let curTagList = []
 const allMainWidth = {}
 const allMainWordNum = {}
+const allFoldLineNum = {}
 const allRepeatLineNum = {}
 let curId
 
@@ -59,6 +60,7 @@ onmessage = function (e) {
                 allMainWidth[curId] = 0
                 allMainWordNum[curId] = 0
                 allRepeatLineNum[curId] = -1
+                allFoldLineNum[curId] = 0
             })
             break
         case 'initLog':
@@ -93,7 +95,8 @@ onmessage = function (e) {
                 { data: allTagList, default: [] },
                 { data: allMainWidth, default: 0 },
                 { data: allMainWordNum, default: 0 },
-                { data: allRepeatLineNum, default: -1 }
+                { data: allRepeatLineNum, default: -1 },
+                { data: allFoldLineNum, default: 0 }
             ]
             resetData(resetList)
             break
@@ -117,9 +120,10 @@ function handleSearch (val) {
         const keys = Object.keys(allListData) || []
         keys.forEach((key) => {
             const curList = allListData[key] || []
-            curList.forEach(({ message, realIndex }) => {
+            curList.forEach(({ message, realIndex }, index) => {
                 const searchData = {
-                    index: realIndex,
+                    index,
+                    realIndex,
                     refId: key
                 }
                 if (message.includes(val)) searchRes.push(searchData)
@@ -162,14 +166,14 @@ function foldListData ({ startIndex }) {
                 totalNum = 0
             }
             const subList = curListData.splice(realIndex + 1, currentNum)
-            allRepeatLineNum[curId] -= subList.length
+            allFoldLineNum[curId] -= subList.length
             currentItem.children = currentItem.children.concat(subList)
         }
     } else {
         for (let index = 0; index < currentItem.children.length;) {
             const someList = currentItem.children.slice(index, index + 10000)
             curListData.splice(realIndex + 1 + index, 0, ...someList)
-            allRepeatLineNum[curId] += someList.length
+            allFoldLineNum[curId] += someList.length
             index += 10000
         }
         currentItem.children = []
@@ -188,8 +192,8 @@ function addListData ({ list }) {
                     message,
                     color,
                     isNewLine: i > 0 ? (allRepeatLineNum[curId]++, true) : false,
-                    showIndex: curListData.length - allRepeatLineNum[curId],
-                    realIndex: currentIndex,
+                    showIndex: currentIndex - allRepeatLineNum[curId] - allFoldLineNum[curId],
+                    realIndex: currentIndex + allFoldLineNum[curId],
                     timestamp: item.timestamp
                 }
                 if (message.startsWith('##[group]')) {
@@ -300,6 +304,7 @@ function getListData ({ totalScrollHeight, itemHeight, itemNumber, canvasHeight,
             value: currentItem.showIndex,
             isNewLine: currentItem.isNewLine,
             index: currentItem.realIndex,
+            listIndex: i,
             isFold: currentItem.endIndex !== undefined,
             hasFolded: (currentItem.children || []).length > 0
         })

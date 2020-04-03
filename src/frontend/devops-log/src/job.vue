@@ -101,8 +101,8 @@
         },
 
         methods: {
-            showSearchLog ({ index, refId }) {
-                this.curSearchIndex = index
+            showSearchLog ({ index, refId, realIndex }) {
+                this.curSearchIndex = realIndex
                 index -= 5
                 if (index < 0) index = 0
                 const ref = this.$refs[refId][0]
