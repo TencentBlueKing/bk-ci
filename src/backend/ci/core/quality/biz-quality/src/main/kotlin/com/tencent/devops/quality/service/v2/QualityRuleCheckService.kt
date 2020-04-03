@@ -178,7 +178,7 @@ class QualityRuleCheckService @Autowired constructor(
             }
 
             // start to check
-            val metadataList = lazyGetHisMetadata(buildId, hasCodeccIndicator(filterRuleList))
+            val metadataList = qualityHisMetadataService.serviceGetHisMetadata(buildId)
             logger.info("Rule metadata serviceList for build(${buildCheckParams.buildId}):\n metadataList=$metadataList")
             filterRuleList.forEach { rule ->
                 logger.info("start to check rule(${rule.name})")
@@ -207,30 +207,6 @@ class QualityRuleCheckService @Autowired constructor(
             logger.info("check result allPass($allPass) allEnd($allEnd) auditTimeoutMinutes($auditTimeOutMinutes)")
             logger.info("end check pipeline($pipelineId) build($buildId) task(${buildCheckParams.taskId})")
             return RuleCheckResult(allPass, allEnd, auditTimeOutMinutes * 60, resultList)
-        }
-    }
-
-    private fun hasCodeccIndicator(ruleList: List<QualityRule>): Boolean {
-        ruleList.forEach { rule ->
-            rule.indicators.forEach {
-                val isContains = CodeccUtils.isCodeccAtom(it.elementType)
-                if (isContains) return true
-            }
-        }
-        return false
-    }
-
-    // codecc回调数据是异步的，为空加个等待
-    private fun lazyGetHisMetadata(buildId: String, hasCodeccIndicator: Boolean): List<QualityHisMetadata> {
-        if (hasCodeccIndicator) {
-            for (i in setOf(1, 3, 5, 7, 9, 11, 13, 15, 17, 19, 2, 4, 6, 8, 10, 12, 14, 16, 18)) {
-                val result = qualityHisMetadataService.serviceGetHisMetadata(buildId)
-                if (result.isNotEmpty()) return result
-                Thread.sleep(i * 1000L)
-            }
-            return listOf()
-        } else {
-            return qualityHisMetadataService.serviceGetHisMetadata(buildId)
         }
     }
 
