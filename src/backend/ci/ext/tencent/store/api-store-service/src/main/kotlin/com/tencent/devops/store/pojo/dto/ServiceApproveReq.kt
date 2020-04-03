@@ -1,6 +1,5 @@
 package com.tencent.devops.store.pojo.dto
 
-import com.tencent.devops.store.pojo.enums.DescInputTypeEnum
 import com.tencent.devops.store.pojo.enums.ServiceTypeEnum
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty

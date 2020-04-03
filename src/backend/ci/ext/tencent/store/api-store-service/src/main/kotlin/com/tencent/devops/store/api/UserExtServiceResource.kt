@@ -151,5 +151,4 @@ interface UserExtServiceResource {
         @ApiParam(value = "扩展服务基本信息修改请求报文体", required = true)
         serviceBaseInfoUpdateRequest: ServiceBaseInfoUpdateRequest
     ): Result<Boolean>
-
 }

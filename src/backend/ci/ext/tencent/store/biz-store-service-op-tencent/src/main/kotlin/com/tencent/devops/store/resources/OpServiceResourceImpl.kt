@@ -83,12 +83,12 @@ class OpServiceResourceImpl @Autowired constructor(
 
     override fun offlineService(
         userId: String,
-        serviceId: String,
+        serviceCode: String,
         serviceOffline: ServiceOfflineDTO
     ): Result<Boolean> {
         return extServiceBaseService.offlineService(
             userId = userId,
-            serviceCode = serviceId,
+            serviceCode = serviceCode,
             serviceOfflineDTO = serviceOffline
         )
     }

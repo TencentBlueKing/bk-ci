@@ -150,7 +150,7 @@ class ExtServiceDao {
             }
 
             val latest = extServiceUpdateInfo.latestFlag
-            if(null != latest) {
+            if (null != latest) {
                 baseStep.set(LATEST_FLAG, latest)
             }
 
@@ -320,7 +320,7 @@ class ExtServiceDao {
         }
     }
 
-    fun listServiceByName(dslContext: DSLContext, serviceName: String): Result<TExtensionServiceRecord?> {
+    fun listServiceByName(dslContext: DSLContext, serviceName: String): Result<TExtensionServiceRecord>? {
         return with(TExtensionService.T_EXTENSION_SERVICE) {
             dslContext.selectFrom(this).where(DELETE_FLAG.eq(false)).and(SERVICE_NAME.eq(serviceName))
                 .orderBy(CREATE_TIME.desc()).fetch()
@@ -408,12 +408,11 @@ class ExtServiceDao {
 
         val baseStep = dslContext.select(ta.ID.countDistinct()).from(ta)
 
-        if(rdType != null) {
+        if (rdType != null) {
             val taf = TExtensionServiceFeature.T_EXTENSION_SERVICE_FEATURE.`as`("taf")
             baseStep.leftJoin(taf).on(ta.SERVICE_CODE.eq(taf.SERVICE_CODE))
             conditions.add(taf.SERVICE_TYPE.eq(rdType.type.toByte()))
         }
-
 
         val storeType = StoreTypeEnum.SERVICE.type.toByte()
         if (labelCodeList != null && labelCodeList.isNotEmpty()) {
@@ -638,7 +637,7 @@ class ExtServiceDao {
             conditions.add(talr.LABEL_ID.`in`(labelIdList))
         }
 
-        if(rdType != null) {
+        if (rdType != null) {
             conditions.add(taf.SERVICE_TYPE.eq(rdType.type.toByte()))
         }
 
@@ -692,7 +691,7 @@ class ExtServiceDao {
         }
     }
 
-    fun getProjectServiceBy(dslContext: DSLContext, projectCode: String) : Result<out Record>? {
+    fun getProjectServiceBy(dslContext: DSLContext, projectCode: String): Result<out Record>? {
         val sa = TExtensionService.T_EXTENSION_SERVICE.`as`("sa")
         val sp = TStoreProjectRel.T_STORE_PROJECT_REL.`as`("sp")
         val sf = TExtensionServiceFeature.T_EXTENSION_SERVICE_FEATURE.`as`("sf")
@@ -718,6 +717,7 @@ class ExtServiceDao {
         condition.add(sp.PROJECT_CODE.eq(projectCode))
         condition.add(sp.STORE_TYPE.eq(StoreTypeEnum.SERVICE.type.toByte()))
         condition.add(sa.DELETE_FLAG.eq(false))
+        condition.add(sp.TYPE.notEqual(StoreProjectTypeEnum.TEST.type.toByte()))
 
         return baseStep.where(condition).groupBy(sa.SERVICE_CODE).orderBy(sa.UPDATE_TIME.desc()).fetch()
     }
@@ -771,5 +771,4 @@ class ExtServiceDao {
         return Pair(ta, conditions)
     }
     private val logger = LoggerFactory.getLogger(ExtServiceDao::class.java)
-
 }

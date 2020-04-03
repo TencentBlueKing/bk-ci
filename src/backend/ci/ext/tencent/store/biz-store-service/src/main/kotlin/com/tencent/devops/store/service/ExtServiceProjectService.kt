@@ -136,7 +136,7 @@ class ExtServiceProjectService @Autowired constructor(
             val itemId = it.itemId
             var itemList = mutableSetOf<String>()
 
-            if(serviceItemMap.containsKey(serviceId)) {
+            if (serviceItemMap.containsKey(serviceId)) {
                 itemList = serviceItemMap[serviceId] as MutableSet<String>
                 itemList.add(serviceId)
                 serviceItemMap[serviceId] = itemList
@@ -153,14 +153,14 @@ class ExtServiceProjectService @Autowired constructor(
             val projectType = it["projectType"] as Byte
             var installUser = ""
             var installTime = ""
-            if( projectType.equals(StoreProjectTypeEnum.INIT)){
+            if (projectType.equals(StoreProjectTypeEnum.INIT)) {
                 installUser = it["publisher"] as String
-                installTime = (it["pubTime"] as LocalDateTime)?.timestampmilli().toString()
+                installTime = (it["pubTime"] as LocalDateTime).timestampmilli().toString()
             } else {
                 installUser = it["projectInstallUser"] as String
-                installTime = (it["projectInstallTime"] as LocalDateTime)?.timestampmilli().toString()
+                installTime = (it["projectInstallTime"] as LocalDateTime).timestampmilli().toString()
             }
-            serviceRecords?.add(
+            serviceRecords.add(
                 ExtServiceRespItem(
                     serviceId = it["serviceId"] as String,
                     serviceName = it["serviceName"] as String,
@@ -178,7 +178,7 @@ class ExtServiceProjectService @Autowired constructor(
                     isUninstall = canUninstall(publicFlag, projectType),
                     publisher = installUser,
                     publishTime = installTime,
-                    createTime = (it["createTime"] as LocalDateTime)?.timestampmilli().toString(),
+                    createTime = (it["createTime"] as LocalDateTime).timestampmilli().toString(),
                     updateTime = (it["updateTime"] as LocalDateTime)?.timestampmilli().toString(),
                     itemIds = serviceItemMap[it["serviceId"] as String] ?: emptySet()
                 )
@@ -239,7 +239,7 @@ class ExtServiceProjectService @Autowired constructor(
             return false
         }
         // 扩展初始化绑定项目不可卸载
-        if (StoreProjectTypeEnum.getProjectType(projectType.toInt()).equals(StoreProjectTypeEnum.INIT)) {
+        if (projectType.toInt() == StoreProjectTypeEnum.INIT.type) {
             return false
         }
         return true

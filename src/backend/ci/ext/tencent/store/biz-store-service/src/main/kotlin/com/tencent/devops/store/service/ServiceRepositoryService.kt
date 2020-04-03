@@ -58,7 +58,7 @@ class ServiceRepositoryService {
         return updateServiceRepositoryUserInfoResult
     }
 
-    fun getReadMeFile(userId: String, serviceCode: String) : Result<String?> {
+    fun getReadMeFile(userId: String, serviceCode: String): Result<String?> {
         val featureRecord = extServiceFeatureDao.getLatestServiceByCode(dslContext, serviceCode)
             ?: throw RuntimeException(MessageCodeUtil.getCodeMessage(StoreMessageCode.USER_SERVICE_NOT_EXIST, arrayOf(serviceCode)))
         val fileStr = client.get(ServiceGitRepositoryResource::class).getFileContent(

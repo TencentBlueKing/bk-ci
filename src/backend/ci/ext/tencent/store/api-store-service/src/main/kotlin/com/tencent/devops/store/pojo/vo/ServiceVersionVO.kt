@@ -3,7 +3,6 @@ package com.tencent.devops.store.pojo.vo
 import com.tencent.devops.store.pojo.common.Label
 import com.tencent.devops.store.pojo.common.StoreMediaInfo
 import com.tencent.devops.store.pojo.common.StoreUserCommentInfo
-import com.tencent.devops.store.pojo.enums.DescInputTypeEnum
 import com.tencent.devops.store.pojo.enums.ServiceTypeEnum
 import io.swagger.annotations.ApiModelProperty
 

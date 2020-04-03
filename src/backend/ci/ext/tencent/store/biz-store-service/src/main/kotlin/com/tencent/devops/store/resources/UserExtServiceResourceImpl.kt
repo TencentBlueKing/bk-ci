@@ -80,17 +80,17 @@ class UserExtServiceResourceImpl @Autowired constructor(
         serviceBaseInfoUpdateRequest: ServiceBaseInfoUpdateRequest
     ): Result<Boolean> {
         val baseInfo = UpdateExtBaseInfo(
-            serviceName = serviceBaseInfoUpdateRequest.name,
+            serviceName = serviceBaseInfoUpdateRequest.serviceName,
             labels = serviceBaseInfoUpdateRequest.labelIdList,
-            itemIds = serviceBaseInfoUpdateRequest.itemIdList,
+            itemIds = serviceBaseInfoUpdateRequest.extensionItemIdList,
             summary = serviceBaseInfoUpdateRequest.summary,
             logoUrl = serviceBaseInfoUpdateRequest.logoUrl,
             description = serviceBaseInfoUpdateRequest.description,
             descInputType = serviceBaseInfoUpdateRequest.descInputType
         )
         val mediaInfos = mutableListOf<UpdateMediaInfo>()
-        if(serviceBaseInfoUpdateRequest.mediaInfoList != null){
-            serviceBaseInfoUpdateRequest.mediaInfoList!!.forEach {
+        if (serviceBaseInfoUpdateRequest.mediaList != null) {
+            serviceBaseInfoUpdateRequest.mediaList!!.forEach {
                 mediaInfos.add(
                     UpdateMediaInfo(
                         mediaUrl = it.mediaUrl,

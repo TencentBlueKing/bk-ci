@@ -393,7 +393,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
                     )
                 )
             }
-            if(submitDTO.descInputType != null) {
+            if (submitDTO.descInputType != null) {
                 val extServiceFeatureUpdateInfo = ExtServiceFeatureUpdateInfo(
                     descInputType = submitDTO.descInputType
                 )
@@ -423,7 +423,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
                 dslContext = dslContext,
                 userId = userId,
                 serviceId = serviceId,
-                itemPropList = itemCreateInfoList!!
+                itemPropList = itemCreateInfoList
             )
             // 添加扩展点使用记录
             client.get(ServiceItemResource::class).addServiceNum(itemIdList)
@@ -535,9 +535,9 @@ abstract class ExtServiceBaseService @Autowired constructor() {
             logger.info("the getMyService serviceId is :$serviceId, itemList is :$serviceItemList")
             var itemName = ""
             serviceItemList?.forEach { itId ->
-                val itemInfo = itemInfoMap?.get(itId)
+                val itemInfo = itemInfoMap.get(itId)
                 if (itemInfo != null) {
-                    itemName += itemInfo!!.parentName + "-" + itemInfo.itemName + ","
+                    itemName += itemInfo.parentName + "-" + itemInfo.itemName + ","
                 }
             }
             itemName = itemName.substringBeforeLast(",")
@@ -784,7 +784,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         }
         // 先集中删除，再添加媒体信息
         mediaService.deleteByStoreCode(userId, serviceCode, StoreTypeEnum.SERVICE)
-        mediaList?.forEach {
+        mediaList.forEach {
             mediaService.add(
                 userId = userId,
                 type = StoreTypeEnum.SERVICE,
@@ -868,7 +868,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
 
         extServiceDao.setServiceStatusById(
             dslContext = dslContext,
-            serviceId =  serviceId,
+            serviceId = serviceId,
             userId = userId,
             serviceStatus = newStatus.status.toByte(),
             msg = "back to test"
@@ -948,7 +948,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
                     labelIdList = lableList.map { it.id },
                     userCommentInfo = userCommentInfo,
                     visibilityLevel = VisibilityLevelEnum.getVisibilityLevel(featureInfoRecord.visibilityLevel),
-                    recommendFlag = featureInfoRecord?.recommendFlag,
+                    recommendFlag = featureInfoRecord.recommendFlag,
                     publicFlag = featureInfoRecord.publicFlag,
                     certificationFlag = featureInfoRecord.certificationFlag,
                     descInputType = featureInfoRecord.descInputType,
@@ -1196,8 +1196,8 @@ abstract class ExtServiceBaseService @Autowired constructor() {
 
         // 文件与输入itemCode取交集，若文件内有props，以文件props为准
         val filePropMap = mutableMapOf<String, String>()
-        fileItemList!!.forEach {
-            filePropMap[it.itemCode!!] = JsonUtil.toJson(it.props ?: "")
+        fileItemList.forEach {
+            filePropMap[it.itemCode] = JsonUtil.toJson(it.props ?: "")
         }
         val itemRecords = client.get(ServiceItemResource::class).getItemInfoByIds(inputItemList).data
         itemRecords?.forEach {
@@ -1214,7 +1214,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         }
 
         // 返回取完交集后的数据
-        inputItemMap.forEach { (t, u) ->
+        inputItemMap.forEach { (_, u) ->
             itemCreateList.add(u)
         }
         logger.info("getServiceProps itemCreateList[$itemCreateList], filePropMap[$filePropMap]")
@@ -1436,7 +1436,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
                     certificationFlag = settingInfo.certificationFlag,
                     modifierUser = userId,
                     serviceTypeEnum = settingInfo.type,
-                    descInputType = baseInfo?.descInputType?: DescInputTypeEnum.MANUAL
+                    descInputType = baseInfo?.descInputType ?: DescInputTypeEnum.MANUAL
                 )
             )
         }
@@ -1453,14 +1453,14 @@ abstract class ExtServiceBaseService @Autowired constructor() {
             resourceCode = "*",
             permission = AuthPermission.CREATE
         )
-        if(!permissionCheck){
+        if (!permissionCheck) {
             throw RuntimeException(MessageCodeUtil.getCodeLanMessage(StoreMessageCode.USER_SERVICE_PROJECT_NOT_PERMISSION))
         }
         val projectInfo = client.get(ServiceProjectResource::class).get(projectCode).data
-        if(projectInfo == null) {
+        if (projectInfo == null) {
             throw RuntimeException(MessageCodeUtil.getCodeLanMessage(StoreMessageCode.USER_SERVICE_PROJECT_UNENABLE))
         } else {
-            if(projectInfo.enabled == false) {
+            if (projectInfo.enabled == false) {
                 throw RuntimeException(MessageCodeUtil.getCodeLanMessage(StoreMessageCode.USER_SERVICE_PROJECT_UNENABLE))
             }
         }

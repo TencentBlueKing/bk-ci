@@ -6,9 +6,9 @@ import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("扩展服务基本信息修改请求报文体")
-data class ServiceBaseInfoUpdateRequest (
+data class ServiceBaseInfoUpdateRequest(
     @ApiModelProperty("扩展名称", required = false)
-    val name: String? = null,
+    val serviceName: String? = null,
     @ApiModelProperty("所属分类代码", required = false)
     val classifyCode: String? = null,
     @ApiModelProperty("插件简介", required = false)
@@ -22,9 +22,9 @@ data class ServiceBaseInfoUpdateRequest (
     @ApiModelProperty("原子标签列表", required = false)
     val labelIdList: ArrayList<String>? = null,
     @ApiModelProperty("扩展点列表", required = false)
-    val itemIdList: Set<String>? = null,
+    val extensionItemIdList: Set<String>? = null,
     @ApiModelProperty("媒体信息列表", required = false)
-    val mediaInfoList: List<StoreMediaInfo>? = null,
+    val mediaList: List<StoreMediaInfo>? = null,
     @ApiModelProperty("描述录入类型")
-    val descInputType: DescInputTypeEnum?= DescInputTypeEnum.MANUAL
+    val descInputType: DescInputTypeEnum? = DescInputTypeEnum.MANUAL
 )

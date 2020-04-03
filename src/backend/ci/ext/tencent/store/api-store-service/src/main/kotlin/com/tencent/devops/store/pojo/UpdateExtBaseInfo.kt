@@ -19,5 +19,5 @@ data class UpdateExtBaseInfo(
     @ApiModelProperty("扩展服务描述")
     val description: String? = null,
     @ApiModelProperty("描述录入类型")
-    val descInputType: DescInputTypeEnum?= DescInputTypeEnum.MANUAL
+    val descInputType: DescInputTypeEnum? = DescInputTypeEnum.MANUAL
 )
