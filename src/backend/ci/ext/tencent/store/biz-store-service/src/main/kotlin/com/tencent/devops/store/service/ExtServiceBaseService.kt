@@ -1013,9 +1013,9 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         return itemIds
     }
 
-    private fun getBkServiceByItems(serviceId: String): List<Long> {
+    private fun getBkServiceByItems(serviceId: String): Set<Long> {
         val serviceItems = extServiceItemRelDao.getItemByServiceId(dslContext, serviceId)
-        val bkServiceIds = mutableListOf<Long>()
+        val bkServiceIds = mutableSetOf<Long>()
         serviceItems?.forEach { it ->
             bkServiceIds.add(it.bkServiceId)
         }
