@@ -957,6 +957,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
                     extensionItemList = itemList,
                     mediaList = mediaList,
                     itemName = extensionName,
+                    bkServiceId = getBkServiceByItems(serviceId),
                     versionContent = serviceVersion?.content ?: "",
                     releaseType = ReleaseTypeEnum.getReleaseType(
                         serviceVersion?.releaseType?.toInt() ?: ReleaseTypeEnum.NEW.releaseType
@@ -1010,6 +1011,16 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         }
         logger.info("getItemByItems serviceId[$serviceId] items[$itemIds]")
         return itemIds
+    }
+
+    private fun getBkServiceByItems(serviceId: String): List<Long> {
+        val serviceItems = extServiceItemRelDao.getItemByServiceId(dslContext, serviceId)
+        val bkServiceIds = mutableListOf<Long>()
+        serviceItems?.forEach { it ->
+            bkServiceIds.add(it.bkServiceId)
+        }
+        logger.info("getItemByItems serviceId[$serviceId] bkServiceIds[$bkServiceIds]")
+        return bkServiceIds
     }
 
     private fun getAllItemName(itemList: Set<String>): String {
