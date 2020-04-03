@@ -38,7 +38,9 @@ import com.tencent.devops.process.engine.control.lock.TaskIdLock
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildAtomTaskEvent
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.pojo.mq.PipelineBuildContainerEvent
+import com.tencent.devops.process.service.PipelineTaskService
 import org.slf4j.LoggerFactory
+import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -49,9 +51,11 @@ import org.springframework.stereotype.Service
 @Service
 class TaskControl @Autowired constructor(
     private val redisOperation: RedisOperation,
+    private val rabbitTemplate: RabbitTemplate,
     private val taskAtomService: TaskAtomService,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
-    private val pipelineRuntimeService: PipelineRuntimeService
+    private val pipelineRuntimeService: PipelineRuntimeService,
+    private val pipelineTaskService: PipelineTaskService
 ) {
 
     private val logger = LoggerFactory.getLogger(javaClass)
@@ -90,6 +94,8 @@ class TaskControl @Autowired constructor(
         }
 
         buildTask.starter = userId
+
+        var delayMillsNext = delayMills
 
         if (taskParam.isNotEmpty()) { // 追加事件传递的参数变量值
             buildTask.taskParams.putAll(taskParam)
@@ -130,8 +136,13 @@ class TaskControl @Autowired constructor(
             pipelineEventDispatcher.dispatch(this)
         } else {
             val nextActionType = if (BuildStatus.isFailure(buildStatus)) {
-                // 如果配置了失败继续，则继续下去
-                if (ControlUtils.continueWhenFailure(buildTask.additionalOptions)) {
+                // 如果配置了失败重试，且重试次数上线未达上限，则进行重试
+                if (pipelineTaskService.isRetryWhenFail(taskId, buildId)) {
+                    logger.info("retry task [$buildId]|ATOM|stageId=$stageId|container=$containerId|taskId=$taskId |vm atom will retry, even the task is failure")
+                    pipelineRuntimeService.updateTaskStatus(buildId, taskId, userId, BuildStatus.RETRY)
+                    delayMillsNext = 5000
+                    ActionType.RETRY
+                } else if (ControlUtils.continueWhenFailure(buildTask.additionalOptions)) { // 如果配置了失败继续，则继续下去
                     logger.info("[$buildId]|ATOM|stageId=$stageId|container=$containerId|taskId=$taskId|vm atom will continue, even the task is failure")
                     if (ActionType.isEnd(actionType)) ActionType.START
                     else actionType
@@ -140,6 +151,8 @@ class TaskControl @Autowired constructor(
                     else actionType // 如果是结束动作，继承它
                 }
             } else {
+                // 清除该原子内的重试记录
+                pipelineTaskService.removeRetryCache(buildId, taskId)
                 // 当前原子成功结束后，继续继承动作，发消息请求执行
                 actionType
             }
@@ -154,7 +167,8 @@ class TaskControl @Autowired constructor(
                     stageId = stageId,
                     containerId = containerId,
                     containerType = containerType,
-                    actionType = nextActionType
+                    actionType = nextActionType,
+                    delayMills = delayMillsNext
                 )
             )
         }

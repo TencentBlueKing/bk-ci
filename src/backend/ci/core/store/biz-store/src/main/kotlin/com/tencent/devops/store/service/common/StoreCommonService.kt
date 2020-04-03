@@ -71,7 +71,7 @@ interface StoreCommonService {
         storeId: String,
         storeCode: String,
         storeType: StoreTypeEnum,
-        modifier: String,
+        creator: String,
         processInfo: List<ReleaseProcessItem>
     ): StoreProcessInfo
 

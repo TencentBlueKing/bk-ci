@@ -7,6 +7,7 @@
                     <pipeline-versions-form ref="versionForm"
                         v-if="isDropdownShowVersion"
                         :build-no="buildNo"
+                        :is-preview="true"
                         :version-param-values="versionParamValues"
                         :handle-version-change="handleVersionChange"
                         :handle-build-no-change="handleBuildNoChange"
@@ -48,6 +49,13 @@
                     :editable="false"
                 />
             </template>
+            <template v-else-if="typeof editingElementPos.stageIndex !== 'undefined'">
+                <stage-property-panel
+                    :stage="currentStage"
+                    :stage-index="editingElementPos.stageIndex"
+                    :editable="false"
+                />
+            </template>
         </template>
     </div>
 </template>
@@ -57,8 +65,10 @@
     import Stages from '@/components/Stages'
     import AtomPropertyPanel from '@/components/AtomPropertyPanel'
     import ContainerPropertyPanel from '@/components/ContainerPropertyPanel'
+    import StagePropertyPanel from '@/components/StagePropertyPanel'
     import Vue from 'vue'
     import { bus } from '@/utils/bus'
+    import { getParamsValuesMap } from '@/utils/util'
     import PipelineParamsForm from '@/components/pipelineParamsForm.vue'
     import PipelineVersionsForm from '@/components/PipelineVersionsForm.vue'
     import pipelineOperateMixin from '@/mixins/pipeline-operate-mixin'
@@ -69,7 +79,8 @@
             AtomPropertyPanel,
             ContainerPropertyPanel,
             PipelineParamsForm,
-            PipelineVersionsForm
+            PipelineVersionsForm,
+            StagePropertyPanel
         },
         mixins: [pipelineOperateMixin],
         data () {
@@ -106,6 +117,10 @@
             pipelineId () {
                 return this.$route.params.pipelineId
             },
+            currentStage () {
+                const { stageIndex } = this.editingElementPos
+                return this.getStageByIndex(stageIndex)
+            },
             panelTitle () {
                 const { stageIndex, containerIndex, elementIndex } = this.editingElementPos
                 if (typeof elementIndex !== 'undefined') {
@@ -130,9 +145,14 @@
             },
             checkTotal (val) {
                 this.pipeline.stages.forEach(stage => {
+                    const stageDisabled = stage.stageControlOption && stage.stageControlOption.enable === false
+                    if (!stageDisabled) {
+                        stage.runStage = val
+                    }
+
                     stage.containers.forEach(container => {
                         if (container['@type'] !== 'trigger') {
-                            const containerDisabled = container.jobControlOption && container.jobControlOption.enable === false
+                            const containerDisabled = stageDisabled || (container.jobControlOption && container.jobControlOption.enable === false)
                             if (!containerDisabled) {
                                 container.runContainer = val
                             }
@@ -143,6 +163,8 @@
             'pipeline.stages' (val) {
                 if (val) {
                     val.forEach(stage => {
+                        const stageDisabled = stage.stageControlOption && stage.stageControlOption.enable === false
+                        Vue.set(stage, 'runStage', !stageDisabled)
                         stage.containers.forEach(container => {
                             if (container['@type'] !== 'trigger') {
                                 const containerDisabled = container.jobControlOption && container.jobControlOption.enable === false
@@ -194,12 +216,6 @@
                 const { getStage, pipeline } = this
                 return getStage(pipeline.stages, stageIndex)
             },
-            getParamsValue (params) {
-                return params.reduce((values, param) => {
-                    values[param.id] = param.defaultValue
-                    return values
-                }, {})
-            },
             async init () {
                 this.isLoading = true
 
@@ -222,8 +238,8 @@
                         }
                         this.paramList = this.curPipelineInfo.properties.filter(p => p.required)
                         this.versionParamList = this.curPipelineInfo.properties.filter(p => !p.required)
-                        this.paramValues = this.getParamsValue(this.paramList)
-                        this.versionParamValues = this.getParamsValue(this.versionParamList)
+                        this.paramValues = getParamsValuesMap(this.paramList)
+                        this.versionParamValues = getParamsValuesMap(this.versionParamList)
                         this.requestPipeline(this.$route.params)
                     } else {
                         throw new Error(this.$t('newlist.withoutManualAtom'))
@@ -384,7 +400,7 @@
                 }
             }
         }
-        .sodaci-property-panel {
+        .bkci-property-panel {
             .bk-sideslider-wrapper {
                 top: 0;
                 .bk-sideslider-title {

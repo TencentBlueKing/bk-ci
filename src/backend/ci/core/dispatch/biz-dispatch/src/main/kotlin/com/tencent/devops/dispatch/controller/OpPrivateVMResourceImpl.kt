@@ -38,12 +38,12 @@ class OpPrivateVMResourceImpl @Autowired constructor(private val privateVMServic
     override fun list() =
             Result(privateVMService.list())
 
-    override fun bind(vmId: Int, projectId: String): Result<Boolean> {
+    override fun bind(vmId: Long, projectId: String): Result<Boolean> {
         privateVMService.add(vmId, projectId)
         return Result(true)
     }
 
-    override fun unbind(vmId: Int, projectId: String): Result<Boolean> {
+    override fun unbind(vmId: Long, projectId: String): Result<Boolean> {
         privateVMService.delete(vmId, projectId)
         return Result(true)
     }

@@ -114,8 +114,10 @@ class PipelineSettingDao {
                 FAIL_TYPE,
                 FAIL_WECHAT_GROUP_FLAG,
                 FAIL_WECHAT_GROUP,
+                FAIL_WECHAT_GROUP_MARKDOWN_FLAG,
                 SUCCESS_WECHAT_GROUP_FLAG,
                 SUCCESS_WECHAT_GROUP,
+                SUCCESS_WECHAT_GROUP_MARKDOWN_FLAG,
                 SUCCESS_DETAIL_FLAG,
                 FAIL_DETAIL_FLAG,
                 SUCCESS_CONTENT,
@@ -138,8 +140,10 @@ class PipelineSettingDao {
                     setting.failSubscription.types.joinToString(",") { it.name },
                     setting.failSubscription.wechatGroupFlag,
                     setting.failSubscription.wechatGroup,
+                    setting.failSubscription.wechatGroupMarkdownFlag,
                     setting.successSubscription.wechatGroupFlag,
                     setting.successSubscription.wechatGroup,
+                    setting.successSubscription.wechatGroupMarkdownFlag,
                     setting.successSubscription.detailFlag,
                     setting.failSubscription.detailFlag,
                     setting.successSubscription.content,
@@ -159,8 +163,10 @@ class PipelineSettingDao {
                 .set(FAIL_TYPE, setting.failSubscription.types.joinToString(",") { it.name })
                 .set(FAIL_WECHAT_GROUP_FLAG, setting.failSubscription.wechatGroupFlag)
                 .set(FAIL_WECHAT_GROUP, setting.failSubscription.wechatGroup)
+                .set(FAIL_WECHAT_GROUP_MARKDOWN_FLAG, setting.failSubscription.wechatGroupMarkdownFlag)
                 .set(SUCCESS_WECHAT_GROUP_FLAG, setting.successSubscription.wechatGroupFlag)
                 .set(SUCCESS_WECHAT_GROUP, setting.successSubscription.wechatGroup)
+                .set(SUCCESS_WECHAT_GROUP_MARKDOWN_FLAG, setting.successSubscription.wechatGroupMarkdownFlag)
                 .set(SUCCESS_DETAIL_FLAG, setting.successSubscription.detailFlag)
                 .set(FAIL_DETAIL_FLAG, setting.failSubscription.detailFlag)
                 .set(SUCCESS_CONTENT, setting.successSubscription.content)

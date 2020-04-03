@@ -26,8 +26,20 @@
 
 package com.tencent.devops.process.pojo.template
 
-data class TemplateOperationMessage(
+data class TemplateOperationMessage constructor(
     val successPipelines: List<String>,
     val failurePipelines: List<String>,
-    val failureMessages: Map<String/*PipelineName*/, String/*Message*/>
-)
+    val failureMessages: Map<String/*PipelineName*/, String/*Message*/>,
+    val successPipelinesId: List<String>
+) {
+    constructor(
+        successPipelines: List<String>,
+        failurePipelines: List<String>,
+        failureMessages: Map<String, String>
+    ) : this(
+        successPipelines = successPipelines,
+        failurePipelines = failurePipelines,
+        failureMessages = failureMessages,
+        successPipelinesId = emptyList()
+    )
+}

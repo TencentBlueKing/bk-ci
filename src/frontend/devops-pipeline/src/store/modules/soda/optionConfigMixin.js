@@ -32,9 +32,27 @@ const optionConfigMixin = {
                 continueWhenFailed: {
                     rule: {},
                     type: 'boolean',
+                    desc: this.$t('storeMap.continueWhenFailedDesc'),
                     component: 'atom-checkbox',
                     text: this.$t('storeMap.continueWhenFailed'),
                     default: false
+                },
+                retryWhenFailed: {
+                    rule: {},
+                    type: 'boolean',
+                    component: 'atom-checkbox',
+                    text: this.$t('storeMap.retryWhenFailed'),
+                    default: false
+                },
+                retryCount: {
+                    rule: { 'numeric': true, 'max_value': 5, 'min_value': 1 },
+                    component: 'vuex-input',
+                    label: this.$t('storeMap.retryCount'),
+                    placeholder: this.$t('storeMap.retryCountPlaceholder'),
+                    default: '1',
+                    isHidden: (element) => {
+                        return !(element.additionalOptions && (element.additionalOptions.retryWhenFailed === true))
+                    }
                 },
                 timeout: {
                     rule: { 'numeric': true, 'max_value': 10080 },

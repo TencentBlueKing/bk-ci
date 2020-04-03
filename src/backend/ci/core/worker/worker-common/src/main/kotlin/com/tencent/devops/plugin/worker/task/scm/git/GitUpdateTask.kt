@@ -37,6 +37,7 @@ import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.plugin.worker.task.scm.util.GitUtil
 import com.tencent.devops.plugin.worker.task.scm.util.RepoCommitUtil
+import com.tencent.devops.process.pojo.PipelineBuildMaterial
 import com.tencent.devops.process.utils.GITHUB_PR_NUMBER
 import com.tencent.devops.process.utils.GIT_MR_NUMBER
 import com.tencent.devops.process.utils.PIPELINE_MATERIAL_NEW_COMMIT_COMMENT
@@ -51,6 +52,8 @@ import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_TARGET_URL
 import com.tencent.devops.scm.code.git.api.GitCredentialSetter
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import com.tencent.devops.scm.utils.code.github.GithubUtils
+import com.tencent.devops.worker.common.api.ApiFactory
+import com.tencent.devops.worker.common.api.scm.CommitSDKApi
 import com.tencent.devops.worker.common.logger.LoggerService
 import org.apache.commons.lang.exception.ExceptionUtils
 import org.eclipse.jgit.api.CreateBranchCommand
@@ -89,8 +92,11 @@ open class GitUpdateTask constructor(
     protected open val buildId: String,
     protected open val repositoryConfig: RepositoryConfig,
     protected open val gitType: ScmType,
-    protected open val variables: Map<String, String>
+    protected open val variables: Map<String, String>,
+    protected open val aliasName: String
 ) {
+
+    private val commitResourceApi = ApiFactory.create(CommitSDKApi::class)
 
     private val writer = object : Writer() {
         override fun write(cbuf: CharArray?, off: Int, len: Int) {
@@ -253,6 +259,16 @@ open class GitUpdateTask constructor(
                 commitMaterial.commitTimes.toString()
         }
 
+        commitResourceApi.saveBuildMaterial(listOf(
+            PipelineBuildMaterial(
+                aliasName = aliasName,
+                url = url,
+                branchName = modeValue,
+                newCommitId = commitMaterial.newCommitId ?: commitMaterial.lastCommitId,
+                newCommitComment = commitMaterial.newCommitComment,
+                commitTimes = commitMaterial.commitTimes
+            )
+        ))
         return env
     }
 

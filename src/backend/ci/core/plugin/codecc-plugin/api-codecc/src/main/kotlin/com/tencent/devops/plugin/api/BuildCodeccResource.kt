@@ -29,6 +29,7 @@ package com.tencent.devops.plugin.api
 import com.tencent.devops.common.api.annotation.ServiceInterface
 import com.tencent.devops.common.api.enums.OSType
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.plugin.codecc.config.CodeccScriptConfig
 import com.tencent.devops.plugin.codecc.pojo.CodeccCallback
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -128,4 +129,9 @@ interface BuildCodeccResource {
         @PathParam(value = "buildId")
         buildId: String
     ): Result<CodeccCallback?>
+
+    @ApiOperation("获取codecc执行脚本")
+    @GET
+    @Path("/singleScript")
+    fun getCodeccSingleScriptConfig(): Result<CodeccScriptConfig>
 }

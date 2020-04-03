@@ -2,6 +2,7 @@
     "pipeline": "Pipeline",
     "pipelineName": "Name",
     "labelManage": "Labels",
+    "label": "Label",
     "viewManage": "Views",
     "templateManage": "Templates",
     "pluginManage": "Installed plugins",
@@ -76,6 +77,18 @@
     "loadingTips": "Data is Loading, Please wait",
     "metaData": "Meta Data",
     "download": "Download",
+    "enableStage": "Enable Stage",
+    "stageFastKill": "Enable FastKill",
+    "stageFastKillDesc": "Fast kill Stage when Job error",
+    "enableStageReview": "Enable Stage Review",
+    "stageReviewDesc": "30-day unreviewed automatically ends the pipeline and marks it as STAGE_SUCCESS",
+    "stageTimeoutLabel": "Stage Timeout",
+    "stageTimeoutError": "Stage timeout field error",
+    "stageTimeoutDesc": "All the integers between 1 and 720",
+    "stageUserTriggers": "Trigger Users",
+    "stageOptionLabel": "Run this Stage",
+    "stageTriggerDesc": "Multiple people separated by commas",
+    "skipStageDesc": "SKIPED",
     "timeMap": {
         "days": "days ",
         "hours": "h ",
@@ -188,6 +201,7 @@
         "enableGroup": "Enable group notification on Wechat Work",
         "groupIdTips": "Please enter the ID of the group. If there are multiple groups, please separate IDs with semicolons",
         "groupIdDesc": "Capable of sending notifications to groups on Wechat Work. How to obtain group ID: add 'DevOpsRobot' into the group, @ it and send '会话ID', then you will get the group ID.", 
+        "wechatGroupMarkdownFlag": "Show group message with Markdown format",
         "buildSuc": "Build successfully",
         "buildFail": "Build failed",
         "rtxNotice": "Wechat Work",
@@ -338,6 +352,7 @@
         "stopFail": "cancel failed"
     },
     "history": {
+        "stageStatus": "Stage",
         "execHistory": "Builds",
         "trendData": "Artifacts size trending",
         "chooseDateRange": "Please select a date range",
@@ -424,6 +439,10 @@
         "noMetaData": "No meta data at the moment",
         "viewDetail": "Details",
         "artifactory": "Artifactory",
+        "checkDesc": "Review countdown",
+        "checkDescInfo": "The review function will end on {0}, and overdue will be automatically identified as Stage success status",
+        "abort": "Cancel (immediately mark Stage success status)",
+        "agree": "Continue execution",
         "statusMap": {
             "RUNNING": "Building",
             "PREPARE_ENV": "Preparing build-resource",
@@ -445,7 +464,8 @@
             "CALL_WAITING": "Call Waiting",
             "TRY_FINALLY": "Try Finally",
             "QUEUE_CACHE": "Queue cache",
-            "UNKNOWN": "Unknow"
+            "UNKNOWN": "Unknow",
+            "STAGE_SUCCESS": "STAGE_SUCCESS"
         },
         "toArtifactory": "locate",
         "saveToCustom": " Copy to custom artifactory",
@@ -512,6 +532,9 @@
         "prepareEnv": " Preparing build resource",
         "copyJob": "Duplicate job",
         "copyJobFail": "Duplicate job failed",
+        "copyStage": "Duplicate stage",
+        "copyStageFail": "Duplicate stage failed",
+        "stageManualTriggerUserNoEmptyTips": "Manual Trigger Stage User Field can not be empty",
         "triggerTooltips": " Click builds to trigger the configurable recommended version and pipeline variables",
         "userTime": "User time",
         "systemTime": "System time",
@@ -523,7 +546,8 @@
         "customVar": "Custom variables",
         "abortSuc": "Abort successfully",
         "agreeSuc": "Approval successfully",
-        "toCheck": "To Review",
+        "toCheck": "Review",
+        "noAuthToCheck": "No Access",
         "abortTips": "Review has not passed",
         "checkUser": "Reviewer",
         "aborted": "Aborted",
@@ -686,7 +710,8 @@
             "serviceId": "Service ID",
             "templateDownload": "Download",
             "otherChoice": "Other Choice"
-        }
+        },
+        "stageOption": "Advance"
     },
     "storeMap": {
         "string": "String",
@@ -711,6 +736,10 @@
         "every_build_increment": "+1",
         "enableAtom": "Enabled",
         "continueWhenFailed": "Continue on error",
+        "continueWhenFailedDesc": "If you open the option 'Continue on error' at the same time, we will continue only when all retry failed",
+        "retryWhenFailed": "Retry on error",
+        "retryCount": "Retry count",
+        "retryCountPlaceholder": "Integers between 1 and 5, default 1",
         "atomTimeout": "Timeout",
         "timeoutDesc": "All the integers between 0 and 10080 with 0 indicating the maximum timeout allowed by the system",
         "timeoutPlaceholder": "Specifies the maximum time, in minutes, that a task is allowed to execute before being canceled by server. A zero value indicates an infinite timeout.",
@@ -732,6 +761,8 @@
         "mutualTimeoutPlaceholder": "Please fill in an integer between 1 and 10080 ",
         "queueLabel": " Maximum tasks in queues ",
         "queuePlaceholder": " Please fill in an integer between 1 and 10",
-        "noEnv": "Agentless" 
+        "noEnv": "Agentless",
+        "afterPreStageSuccess": "after Pre Stage done",
+        "manualRunStage": "Manual"
     }
 }

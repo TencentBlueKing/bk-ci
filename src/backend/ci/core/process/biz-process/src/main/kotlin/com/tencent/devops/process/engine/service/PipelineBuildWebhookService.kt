@@ -107,6 +107,8 @@ import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_CREATE_TIMESTAMP
 import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_DESCRIPTION
 import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_ID
 import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_LABELS
+import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_LAST_COMMIT
+import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_LAST_COMMIT_MSG
 import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_MILESTONE
 import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_MILESTONE_DUE_DATE
 import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_NUMBER
@@ -449,6 +451,8 @@ class PipelineBuildWebhookService @Autowired constructor(
                 params.includePaths = EnvUtils.parseEnv(element.includePaths ?: "", variables)
                 params.excludePaths = EnvUtils.parseEnv(element.excludePaths ?: "", variables)
                 params.codeType = CodeType.GIT
+                params.tagName = EnvUtils.parseEnv(element.tagName ?: "", variables)
+                params.excludeTagName = EnvUtils.parseEnv(element.excludeTagName ?: "", variables)
             }
             is CodeGithubWebHookTriggerElement -> {
                 params = WebHookParams(
@@ -590,6 +594,10 @@ class PipelineBuildWebhookService @Autowired constructor(
                 startParams[BK_REPO_GIT_WEBHOOK_MR_MILESTONE] = mrInfo?.milestone?.title ?: ""
                 startParams[BK_REPO_GIT_WEBHOOK_MR_MILESTONE_DUE_DATE] = mrInfo?.milestone?.dueDate ?: ""
                 startParams[BK_REPO_GIT_WEBHOOK_MR_LABELS] = mrInfo?.labels?.joinToString(",") ?: ""
+
+                val lastCommit = gitMatcher.event.object_attributes.last_commit
+                startParams[BK_REPO_GIT_WEBHOOK_MR_LAST_COMMIT] = lastCommit.id
+                startParams[BK_REPO_GIT_WEBHOOK_MR_LAST_COMMIT_MSG] = lastCommit.message
             }
 
             if (params.eventType == CodeEventType.TAG_PUSH) {
@@ -690,15 +698,19 @@ class PipelineBuildWebhookService @Autowired constructor(
         // 添加质量红线原子
         val fullModel = pipelineBuildQualityService.fillingRuleInOutElement(projectId, pipelineId, startParams, model)
         // 兼容从旧v1版本下发过来的请求携带旧的变量命名
-        val params = startParams.map { (PipelineVarUtil.oldVarToNewVar(it.key) ?: it.key) to it.value }.toMap()
-
+        val params = mutableMapOf<String, Any>()
         val startParamsWithType = mutableListOf<BuildParameters>()
-        params.forEach { t, u -> startParamsWithType.add(
-            BuildParameters(
-                t,
-                u
-            )
-        ) }
+        startParams.forEach {
+            // 从旧转新: 兼容从旧入口写入的数据转到新的流水线运行
+            val newVarName = PipelineVarUtil.oldVarToNewVar(it.key)
+            if (newVarName == null) { // 为空表示该变量是新的，或者不需要兼容，直接加入，能会覆盖旧变量转换而来的新变量
+                params[it.key] = it.value
+                startParamsWithType.add(BuildParameters(it.key, it.value))
+            } else if (!params.contains(newVarName)) { // 新变量还不存在，加入
+                params[newVarName] = it.value
+                startParamsWithType.add(BuildParameters(newVarName, it.value))
+            }
+        }
 
         try {
             val buildId = pipelineBuildService.startPipeline(

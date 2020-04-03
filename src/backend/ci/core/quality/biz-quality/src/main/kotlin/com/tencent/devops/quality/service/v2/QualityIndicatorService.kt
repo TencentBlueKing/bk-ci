@@ -30,9 +30,8 @@ import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxCodeCCScriptElement
-import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxPaasCodeCCScriptElement
 import com.tencent.devops.model.quality.tables.records.TQualityIndicatorRecord
+import com.tencent.devops.plugin.codecc.CodeccUtils
 import com.tencent.devops.quality.api.v2.pojo.QualityIndicator
 import com.tencent.devops.quality.api.v2.pojo.enums.IndicatorType
 import com.tencent.devops.quality.api.v2.pojo.enums.QualityDataType
@@ -55,7 +54,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.util.Base64
-import kotlin.Comparator
 
 @Service
 class QualityIndicatorService @Autowired constructor(
@@ -96,7 +94,7 @@ class QualityIndicatorService @Autowired constructor(
                 val elementType = controlPoint.key
 
                 // 根据codeccToolNameMap的key顺序排序
-                if (isCodeccControlPoint(elementType)) {
+                if (CodeccUtils.isCodeccAtom(elementType)) {
                     val propertyMap = codeccToolNameMap.entries.mapIndexed { index, entry ->
                         entry.key to index
                     }.toMap()
@@ -112,7 +110,7 @@ class QualityIndicatorService @Autowired constructor(
                     val indicatorList: List<QualityIndicator> = detailEntry.value
 
                     // codecc的指标要排序和中文特殊处理
-                    if (isCodeccControlPoint(elementType)) {
+                    if (CodeccUtils.isCodeccAtom(elementType)) {
                         detailCnName = codeccToolNameMap[elementDetail] ?: elementDetail
                     }
 
@@ -130,10 +128,6 @@ class QualityIndicatorService @Autowired constructor(
                 controlPoints = stageGroup
             )
         }
-    }
-
-    private fun isCodeccControlPoint(elementType: String): Boolean {
-        return elementType == LinuxCodeCCScriptElement.classType || elementType == LinuxPaasCodeCCScriptElement.classType
     }
 
     fun serviceList(indicatorIds: Collection<Long>): List<QualityIndicator> {
@@ -294,7 +288,10 @@ class QualityIndicatorService @Autowired constructor(
         val systemIndicators = mutableListOf<IndicatorListResponse.IndicatorListItem>()
         val marketIndicators = mutableListOf<IndicatorListResponse.IndicatorListItem>()
 
-        listIndicatorByProject(projectId).groupBy { it.elementType }.forEach { elementType, indicators ->
+        listIndicatorByProject(projectId).filter {
+            if (keyword.isNullOrBlank()) true
+            else it.cnName.contains(keyword!!)
+        }.groupBy { it.elementType }.forEach { elementType, indicators ->
             indicators.map { indicator ->
                 val metadataIds = convertMetaIds(indicator.metadataIds)
                 val metadata = metadataService.serviceListMetadata(metadataIds).map {
