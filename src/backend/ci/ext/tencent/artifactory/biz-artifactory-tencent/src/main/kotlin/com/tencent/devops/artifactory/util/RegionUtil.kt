@@ -62,14 +62,10 @@ object RegionUtil {
     }
 
     fun replaceRegionServer(url: String, region: String?): String {
-        return when (region) {
-            null, "", DEVNET -> replaceServerHost(url, devHost())
-            IDC, OSS, EXTERNAL -> replaceServerHost(url, idcHost())
-            else -> return url
-        }
+        return replaceServerHost(url, getRegionUrl(region))
     }
 
-    fun replaceServerHost(originUrl: String, regionHost: String): String {
+    fun replaceServerHost(originUrl: String, targetHost: String): String {
         val index = originUrl.indexOf("//")
         if (index == -1) {
             return originUrl
@@ -78,6 +74,6 @@ object RegionUtil {
         if (index2 == -1) {
             return originUrl
         }
-        return "${regionHost.removeSuffix("/")}/${originUrl.substring(index2 + 1)}"
+        return "${targetHost.removeSuffix("/")}/${originUrl.substring(index2 + 1)}"
     }
 }
