@@ -247,8 +247,8 @@
                 const firstIndex = this.indexList[0] || {}
                 const lastIndex = this.indexList[this.indexList.length - 1] || {}
                 const scrollEle = this.$el.parentElement.parentElement || {}
-                const downPreDefault = lastIndex.index + 1 < this.totalNumber || scrollEle.scrollTop + scrollEle.offsetHeight >= scrollEle.scrollHeight
-                const upPreDefault = firstIndex.index > 0 || scrollEle.scrollTop <= 0
+                const downPreDefault = lastIndex.listIndex + 1 < this.totalNumber || scrollEle.scrollTop + scrollEle.offsetHeight >= scrollEle.scrollHeight
+                const upPreDefault = firstIndex.listIndex > 0 || scrollEle.scrollTop <= 0
                 const shouldPreDefault = deltaY < 0 ? downPreDefault : upPreDefault
                 if (shouldPreDefault) event.preventDefault()
 
@@ -324,8 +324,8 @@
                             this.hasCompleteInit = true
                             break
                         case 'completeAdd':
-                            const lastIndexData = this.indexList[this.indexList.length - 1] || { index: 0 }
-                            if (this.totalNumber - lastIndexData.index <= 3) {
+                            const lastIndexData = this.indexList[this.indexList.length - 1] || { listIndex: 0 }
+                            if (this.totalNumber - lastIndexData.listIndex <= 3) {
                                 this.freshDataScrollBottom(data)
                             } else {
                                 this.freshDataNoScroll(data)
