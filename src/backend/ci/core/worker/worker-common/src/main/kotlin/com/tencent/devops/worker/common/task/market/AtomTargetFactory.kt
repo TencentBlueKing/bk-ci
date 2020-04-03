@@ -28,25 +28,35 @@ package com.tencent.devops.worker.common.task.market
 
 import com.tencent.devops.common.api.constant.JAVA
 import com.tencent.devops.common.api.constant.NODEJS
-import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.worker.common.service.AtomTargetHandleService
+import com.tencent.devops.worker.common.service.impl.JavaAtomTargetHandleServiceImpl
+import java.util.concurrent.ConcurrentHashMap
 
 object AtomTargetFactory {
+
+    private val atomTargetMap = ConcurrentHashMap<String, AtomTargetHandleService>()
 
     fun createAtomTargetHandleService(
         language: String
     ): AtomTargetHandleService {
-        val atomTargetHandleName = when (language) {
+        return when (language) {
             JAVA -> {
-                JAVA
+                getAtomTargetHandleService(JAVA)
             }
             NODEJS -> {
-                NODEJS
+                getAtomTargetHandleService(NODEJS)
             }
             else -> {
-                "COMMON"
+                getAtomTargetHandleService("COMMON")
             }
         }
-        return SpringContextUtil.getBean(AtomTargetHandleService::class.java, "${atomTargetHandleName}_ATOM_TARGET_HANDLE")
+    }
+
+    private fun getAtomTargetHandleService(language: String): AtomTargetHandleService {
+        var atomTargetHandleService = atomTargetMap[language]
+        if (atomTargetHandleService == null) {
+            atomTargetHandleService = JavaAtomTargetHandleServiceImpl()
+        }
+        return atomTargetHandleService
     }
 }
