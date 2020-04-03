@@ -29,7 +29,9 @@ package com.tencent.devops.worker.common.task.market
 import com.tencent.devops.common.api.constant.JAVA
 import com.tencent.devops.common.api.constant.NODEJS
 import com.tencent.devops.worker.common.service.AtomTargetHandleService
+import com.tencent.devops.worker.common.service.impl.CommonAtomTargetHandleServiceImpl
 import com.tencent.devops.worker.common.service.impl.JavaAtomTargetHandleServiceImpl
+import com.tencent.devops.worker.common.service.impl.NodeJsAtomTargetHandleServiceImpl
 import java.util.concurrent.ConcurrentHashMap
 
 object AtomTargetFactory {
@@ -39,24 +41,26 @@ object AtomTargetFactory {
     fun createAtomTargetHandleService(
         language: String
     ): AtomTargetHandleService {
-        return when (language) {
+        var atomTargetHandleService = atomTargetMap[language]
+        when (language) {
             JAVA -> {
-                getAtomTargetHandleService(JAVA)
+                if (atomTargetHandleService == null) {
+                    atomTargetHandleService = JavaAtomTargetHandleServiceImpl()
+                    atomTargetMap[language] = atomTargetHandleService
+                }
             }
             NODEJS -> {
-                getAtomTargetHandleService(NODEJS)
+                if (atomTargetHandleService == null) {
+                    atomTargetHandleService = NodeJsAtomTargetHandleServiceImpl()
+                    atomTargetMap[language] = atomTargetHandleService
+                }
             }
             else -> {
-                getAtomTargetHandleService("COMMON")
+                if (atomTargetHandleService == null) {
+                    atomTargetHandleService = CommonAtomTargetHandleServiceImpl()
+                    atomTargetMap[language] = atomTargetHandleService
+                }
             }
-        }
-    }
-
-    private fun getAtomTargetHandleService(language: String): AtomTargetHandleService {
-        var atomTargetHandleService = atomTargetMap[language]
-        if (atomTargetHandleService == null) {
-            atomTargetHandleService = JavaAtomTargetHandleServiceImpl()
-            atomTargetMap[language] = atomTargetHandleService
         }
         return atomTargetHandleService
     }
