@@ -28,6 +28,7 @@ package com.tencent.devops.project.api.user
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ACCESS_TOKEN
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
@@ -109,6 +110,21 @@ interface UserProjectResource {
         @ApiParam("access_token")
         @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
         accessToken: String?
+    ): Result<Boolean>
+
+    @PUT
+    @Path("/{project_id}/enable")
+    @ApiOperation("启用或停用项目")
+    fun enable(
+        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("project_id")
+        projectId: String,
+        @ApiParam("待变更的新状态", required = true)
+        @QueryParam("enabled")
+        enabled: Boolean
     ): Result<Boolean>
 
     @PUT

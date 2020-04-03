@@ -31,6 +31,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.NormalContainer
+import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.JobRunCondition
@@ -41,13 +42,17 @@ import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_NO_PARAM_IN_JOB_CONDITION
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_NO_PUBLIC_WINDOWS_BUILDER
+import com.tencent.devops.process.engine.utils.PipelineUtils
 import com.tencent.devops.process.plugin.load.ContainerBizRegistrar
 import com.tencent.devops.process.plugin.load.ElementBizRegistrar
 import org.slf4j.LoggerFactory
 
-class DefaultModelCheckPlugin constructor(val client: Client) : ModelCheckPlugin {
+open class DefaultModelCheckPlugin constructor(open val client: Client) : ModelCheckPlugin {
 
     override fun checkModelIntegrity(model: Model) {
+
+        // 检查流水线名称
+        PipelineUtils.checkPipelineName(model.name)
 
         val stage = model.stages.getOrNull(0)
             ?: throw ErrorCodeException(
@@ -62,10 +67,8 @@ class DefaultModelCheckPlugin constructor(val client: Client) : ModelCheckPlugin
             )
         }
 
-        (stage.containers.getOrNull(0) ?: throw ErrorCodeException(
-            defaultMessage = "流水线Stage为空",
-            errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NEED_JOB
-        )) as TriggerContainer
+        // 检查触发容器
+        checkTriggerContainer(stage)
 
         val elementCnt = mutableMapOf<String, Int>()
         val containerCnt = mutableMapOf<String, Int>()
@@ -76,6 +79,11 @@ class DefaultModelCheckPlugin constructor(val client: Client) : ModelCheckPlugin
                     errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NEED_JOB
                 )
             }
+            if (s.stageControlOption?.manualTrigger == true && s.stageControlOption?.triggerUsers?.isEmpty() == true)
+                throw ErrorCodeException(
+                    defaultMessage = "手动触发的Stage没有未配置可执行人",
+                    errorCode = ProcessMessageCode.ERROR_PIPELINE_STAGE_NO_TRIGGER_USER
+                )
             s.containers.forEach { c ->
                 val cCnt = containerCnt.computeIfPresent(c.getClassType()) { _, oldValue -> oldValue + 1 }
                     ?: containerCnt.computeIfAbsent(c.getClassType()) { 1 } // 第一次时出现1次
@@ -87,6 +95,14 @@ class DefaultModelCheckPlugin constructor(val client: Client) : ModelCheckPlugin
                 }
             }
         }
+    }
+
+    open fun checkTriggerContainer(stage: Stage) {
+        val triggerContainer = (stage.containers.getOrNull(0) ?: throw ErrorCodeException(
+            defaultMessage = "流水线Stage为空",
+            errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NEED_JOB
+        )) as TriggerContainer
+        PipelineUtils.checkPipelineParams(triggerContainer.params)
     }
 
     companion object {
@@ -152,7 +168,7 @@ class DefaultModelCheckPlugin constructor(val client: Client) : ModelCheckPlugin
         if (jobContainer is VMBuildContainer && jobContainer.baseOS == VMBaseOS.WINDOWS) {
             if (isThirdPartyAgentEmpty(jobContainer)) {
                 throw ErrorCodeException(
-                    errorCode = ERROR_NO_PUBLIC_WINDOWS_BUILDER.toString(),
+                    errorCode = ERROR_NO_PUBLIC_WINDOWS_BUILDER,
                     defaultMessage = "请设置Windows构建机"
                 )
             }
@@ -171,7 +187,7 @@ class DefaultModelCheckPlugin constructor(val client: Client) : ModelCheckPlugin
                 jobControlOption.customVariables!!.isEmpty()
             ) {
                 throw ErrorCodeException(
-                    errorCode = ERROR_NO_PARAM_IN_JOB_CONDITION.toString(),
+                    errorCode = ERROR_NO_PARAM_IN_JOB_CONDITION,
                     defaultMessage = "请设置Job运行条件时的自定义变量"
                 )
             }
@@ -183,15 +199,10 @@ class DefaultModelCheckPlugin constructor(val client: Client) : ModelCheckPlugin
         if (vmBuildContainer.thirdPartyAgentId.isNullOrBlank() && vmBuildContainer.thirdPartyAgentEnvId.isNullOrBlank()) {
             // New logic
             val dispatchType = vmBuildContainer.dispatchType ?: return true
-            if (dispatchType.buildType() == BuildType.THIRD_PARTY_AGENT_ID ||
-                dispatchType.buildType() == BuildType.THIRD_PARTY_AGENT_ENV
-            ) {
-                if (dispatchType.value.isBlank()) {
-                    return true
-                }
-                return false
+            return when (dispatchType.buildType()) {
+                BuildType.THIRD_PARTY_AGENT_ID, BuildType.THIRD_PARTY_AGENT_ENV -> dispatchType.value.isBlank()
+                else -> true
             }
-            return true
         }
 
         return false

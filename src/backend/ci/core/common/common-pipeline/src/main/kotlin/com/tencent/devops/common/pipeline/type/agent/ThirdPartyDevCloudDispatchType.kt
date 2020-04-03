@@ -38,6 +38,11 @@ data class ThirdPartyDevCloudDispatchType(
 ) : DispatchType(
     displayName
 ) {
+    override fun cleanDataBeforeSave() {
+        this.displayName = this.displayName.trim()
+        this.workspace = this.workspace?.trim()
+    }
+
     override fun replaceField(variables: Map<String, String>) {
         displayName = EnvUtils.parseEnv(displayName, variables)
         if (!workspace.isNullOrBlank()) {
@@ -45,5 +50,5 @@ data class ThirdPartyDevCloudDispatchType(
         }
     }
 
-    override fun buildType() = BuildType.THIRD_PARTY_DEVCLOUD
+    override fun buildType() = BuildType.valueOf(BuildType.THIRD_PARTY_DEVCLOUD.name)
 }

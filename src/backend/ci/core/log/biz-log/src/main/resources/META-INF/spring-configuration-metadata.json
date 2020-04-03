@@ -1,0 +1,27 @@
+{
+  "hints": [],
+  "groups": [
+    {
+      "sourceType": "com.tencent.devops.common.es.ESProperties",
+      "name": "elasticsearch",
+      "type": "com.tencent.devops.common.es.ESProperties"
+    }
+  ],
+  "properties": [
+    {
+      "sourceType": "com.tencent.devops.common.es.ESProperties",
+      "name": "elasticsearch.ip",
+      "type": "java.lang.String"
+    },
+    {
+      "sourceType": "com.tencent.devops.common.es.ESProperties",
+      "name": "elasticsearch.port",
+      "type": "java.lang.Integer"
+    },
+    {
+      "sourceType": "com.tencent.devops.common.es.ESProperties",
+      "name": "elasticsearch.cluster",
+      "type": "java.lang.String"
+    }
+  ]
+}

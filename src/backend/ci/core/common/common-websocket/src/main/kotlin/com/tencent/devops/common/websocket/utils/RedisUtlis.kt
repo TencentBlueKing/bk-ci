@@ -25,11 +25,7 @@
  */
 
 package com.tencent.devops.common.websocket.utils
-
-import com.fasterxml.jackson.module.kotlin.readValue
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.redis.RedisOperation
-import java.util.concurrent.TimeUnit
 
 object RedisUtlis {
 
@@ -55,7 +51,7 @@ object RedisUtlis {
                 redisOperation.set(USER_SESSION_REDIS_KEY + userId, newSessionList, null, true)
             }
         }
-        saveSessionTimeOutBySessionId(redisOperation, sessionId, userId)
+//        saveSessionTimeOutBySessionId(redisOperation, sessionId, userId)
     }
 
     // 获取userId对应的session集合。多个session以“,”隔开，用于做切割
@@ -204,45 +200,45 @@ object RedisUtlis {
         redisOperation.delete(PAGE_SESSION_REDIS_KEY + page)
     }
 
-    // 存储session对应的超时时间。所有session统一放到一个大的map内。默认超时时间是5天。此处可以做成可配置。
-    fun saveSessionTimeOutBySessionId(redisOperation: RedisOperation, sessionId: String, userId: String) {
-        // 默认超时时间，有清理线程定时清理已经超时的sessionId记录，防止在变更时调用loginOut失败。
-        val timeout = System.currentTimeMillis() + TimeUnit.DAYS.toMillis(5)
-        val objectMapper = JsonUtil.getObjectMapper()
-        // 此处有一个内存隐患，get出来的map若很大，可能会导致频繁的gc
-        val cacheStr = redisOperation.get(USER_TIMEOUT_REDIS_KEY)
-        if (cacheStr != null) {
-            val cacheMap: MutableMap<String, String> = objectMapper.readValue(cacheStr)
-            cacheMap[sessionId] = "$timeout#$userId"
-            saveSessionTimeOutAll(redisOperation, objectMapper.writeValueAsString(cacheMap))
-        } else {
-            val map = mutableMapOf<String, String>()
-            map[sessionId] = "$timeout#$userId"
-            saveSessionTimeOutAll(redisOperation, objectMapper.writeValueAsString(map))
-        }
-    }
+//    // 存储session对应的超时时间。所有session统一放到一个大的map内。默认超时时间是5天。此处可以做成可配置。
+//    fun saveSessionTimeOutBySessionId(redisOperation: RedisOperation, sessionId: String, userId: String) {
+//        // 默认超时时间，有清理线程定时清理已经超时的sessionId记录，防止在变更时调用loginOut失败。
+//        val timeout = System.currentTimeMillis() + TimeUnit.DAYS.toMillis(5)
+//        val objectMapper = JsonUtil.getObjectMapper()
+//        // 此处有一个内存隐患，get出来的map若很大，可能会导致频繁的gc
+//        val cacheStr = redisOperation.get(USER_TIMEOUT_REDIS_KEY)
+//        if (cacheStr != null) {
+//            val cacheMap: MutableMap<String, String> = objectMapper.readValue(cacheStr)
+//            cacheMap[sessionId] = "$timeout#$userId"
+//            saveSessionTimeOutAll(redisOperation, objectMapper.writeValueAsString(cacheMap))
+//        } else {
+//            val map = mutableMapOf<String, String>()
+//            map[sessionId] = "$timeout#$userId"
+//            saveSessionTimeOutAll(redisOperation, objectMapper.writeValueAsString(map))
+//        }
+//    }
 
-    // 保存session-timeout数据
-    fun saveSessionTimeOutAll(redisOperation: RedisOperation, sessionMap: String) {
-        redisOperation.getAndSet(USER_TIMEOUT_REDIS_KEY, sessionMap)
-    }
+//    // 保存session-timeout数据
+//    fun saveSessionTimeOutAll(redisOperation: RedisOperation, sessionMap: String) {
+//        redisOperation.getAndSet(USER_TIMEOUT_REDIS_KEY, sessionMap)
+//    }
 
-    fun getSessionTimeOutFromRedis(redisOperation: RedisOperation): String? {
-        return redisOperation.get(USER_TIMEOUT_REDIS_KEY)
-    }
+//    fun getSessionTimeOutFromRedis(redisOperation: RedisOperation): String? {
+//        return redisOperation.get(USER_TIMEOUT_REDIS_KEY)
+//    }
 
     // 清理超时map内的sessionId，用于loginOut，清理session
-    fun cleanSessionTimeOutBySession(redisOperation: RedisOperation, sessionId: String) {
-        val allSessionMap = getSessionTimeOutFromRedis(redisOperation)
-        if (allSessionMap != null) {
-            val objectMapper = JsonUtil.getObjectMapper()
-            var sessionMap: MutableMap<String, String> = objectMapper.readValue(allSessionMap)
-            if (sessionMap.containsKey(sessionId)) {
-                sessionMap.remove(sessionId)
-            }
-            saveSessionTimeOutAll(redisOperation, objectMapper.writeValueAsString(sessionMap))
-        }
-    }
+//    fun cleanSessionTimeOutBySession(redisOperation: RedisOperation, sessionId: String) {
+//        val allSessionMap = getSessionTimeOutFromRedis(redisOperation)
+//        if (allSessionMap != null) {
+//            val objectMapper = JsonUtil.getObjectMapper()
+//            var sessionMap: MutableMap<String, String> = objectMapper.readValue(allSessionMap)
+//            if (sessionMap.containsKey(sessionId)) {
+//                sessionMap.remove(sessionId)
+//            }
+//            saveSessionTimeOutAll(redisOperation, objectMapper.writeValueAsString(sessionMap))
+//        }
+//    }
 
     // 构建结束，清理所有再当前页面的websocket缓存。
     fun cleanBuildWebSocketCache(redisOperation: RedisOperation, page: String) {

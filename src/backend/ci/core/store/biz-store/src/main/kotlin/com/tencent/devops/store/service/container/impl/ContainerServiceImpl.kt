@@ -35,6 +35,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.model.store.tables.records.TContainerRecord
+import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.dao.container.BuildResourceDao
 import com.tencent.devops.store.dao.container.ContainerDao
 import com.tencent.devops.store.dao.container.ContainerResourceRelDao
@@ -78,9 +79,9 @@ abstract class ContainerServiceImpl @Autowired constructor() : ContainerService 
     private val logger = LoggerFactory.getLogger(ContainerServiceImpl::class.java)
 
     private val OSDefaultBuildType = mapOf(
-        OS.LINUX to BuildType.DOCKER,
-        OS.WINDOWS to BuildType.THIRD_PARTY_AGENT_ID,
-        OS.MACOS to BuildType.ESXi
+        OS.LINUX to BuildType.valueOf(BuildType.DOCKER.name),
+        OS.WINDOWS to BuildType.valueOf(BuildType.THIRD_PARTY_AGENT_ID.name),
+        OS.MACOS to BuildType.valueOf(BuildType.ESXi.name)
     )
 
     /**
@@ -136,7 +137,17 @@ abstract class ContainerServiceImpl @Autowired constructor() : ContainerService 
             val typeList = mutableListOf<ContainerBuildType>()
             BuildType.values().filter { type -> type.visable == true }.forEach { type ->
                 if ((containerOS == null || type.osList.contains(containerOS)) && buildTypeEnable(type, projectCode)) {
-                        typeList.add(ContainerBuildType(type.name, type.value, type.enableApp, !clickable(type, projectCode)))
+                    // 构建资源国际化转换
+                    val i18nTypeName = MessageCodeUtil.getCodeLanMessage(
+                        messageCode = "${StoreMessageCode.MSG_CODE_BUILD_TYPE_PREFIX}${type.name}",
+                        defaultMessage = type.value
+                    )
+                    typeList.add(ContainerBuildType(
+                        type = type.name,
+                        name = i18nTypeName,
+                        enableApp = type.enableApp,
+                        disabled = !clickable(buildType = type, projectCode = projectCode)
+                    ))
                 }
                 if (!queryAllFlag && containerOS != null) {
                     val resource = try {

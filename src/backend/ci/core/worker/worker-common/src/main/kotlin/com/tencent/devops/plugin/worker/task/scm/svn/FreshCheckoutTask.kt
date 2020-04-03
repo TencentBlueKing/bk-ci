@@ -29,6 +29,7 @@ package com.tencent.devops.plugin.worker.task.scm.svn
 import com.tencent.devops.common.api.enums.RepositoryConfig
 import com.tencent.devops.common.pipeline.enums.CodePullStrategy
 import com.tencent.devops.common.pipeline.enums.SVNVersion
+import com.tencent.devops.repository.pojo.CodeSvnRepository
 import org.tmatesoft.svn.core.SVNDepth
 import org.tmatesoft.svn.core.SVNURL
 import org.tmatesoft.svn.core.wc.SVNRevision
@@ -49,23 +50,25 @@ class FreshCheckoutTask constructor(
     override val pipelineId: String,
     override val buildId: String,
     override val repositoryConfig: RepositoryConfig,
-    override val svnVersion: SVNVersion?
+    override val svnVersion: SVNVersion?,
+    override val svnRepo: CodeSvnRepository
 ) : SvnUpdateTask(
-    svnUrl,
-    projectName,
-    username,
-    privateKey,
-    passPhrase,
-    revision,
-    workspace,
-    strategy,
-    update,
-    enableSubmodule,
-    svnDepth,
-    pipelineId,
-    buildId,
-    repositoryConfig,
-    svnVersion
+    svnUrl = svnUrl,
+    projectName = projectName,
+    username = username,
+    privateKey = privateKey,
+    passPhrase = passPhrase,
+    revision = revision,
+    workspace = workspace,
+    strategy = strategy,
+    update = update,
+    enableSubmodule = enableSubmodule,
+    svnDepth = svnDepth,
+    pipelineId = pipelineId,
+    buildId = buildId,
+    repositoryConfig = repositoryConfig,
+    svnVersion = svnVersion,
+    svnRepo = svnRepo
 ) {
 
     override fun preUpdate() {

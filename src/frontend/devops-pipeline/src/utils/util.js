@@ -304,7 +304,7 @@ function convertToEn (time) {
     const sec = time / 1000
     let res = ''
     if (sec <= 60) {
-        res = 'less than one minute'
+        res = 'less than 1 minute'
     } else if (sec <= 60 * 60) {
         res = `${Math.floor(sec / 60)}m and ${(Math.floor(sec % 60))}s`
     } else if (time <= 60 * 60 * 24) {
@@ -586,4 +586,14 @@ export function getQueryParamList (arr = [], key) {
     } else if (arr && typeof arr === 'string') {
         return `${key}=${arr}`
     }
+}
+
+export function getParamsValuesMap (params = []) {
+    if (!Array.isArray(params)) return {}
+    return params.reduce((values, param) => {
+        if (param.id) {
+            values[param.id] = param.defaultValue
+        }
+        return values
+    }, {})
 }

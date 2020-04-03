@@ -34,13 +34,13 @@ import (
 	"pkg/job"
 	"pkg/upgrade"
 	"pkg/util"
+	"pkg/util/systemutil"
 	"time"
 )
 
 func DoAgentHeartbeat() {
 	for {
 		agentHeartbeat()
-
 		time.Sleep(10 * time.Second)
 	}
 }
@@ -68,14 +68,32 @@ func agentHeartbeat() error {
 		return nil
 	}
 
-	// 修改agent配置
+	// agent配置
+	configChanged := false
 	if config.GAgentConfig.ParallelTaskCount != heartbeatResponse.ParallelTaskCount {
 		config.GAgentConfig.ParallelTaskCount = heartbeatResponse.ParallelTaskCount
+		configChanged = true
+	}
+	if heartbeatResponse.Gateway != "" &&  heartbeatResponse.Gateway != config.GAgentConfig.Gateway {
+		config.GAgentConfig.Gateway = heartbeatResponse.Gateway
+		configChanged = true
+	}
+	if configChanged {
 		config.GAgentConfig.SaveConfig()
 	}
 
 	// agent环境变量
 	config.GEnvVars = heartbeatResponse.Envs
+
+	// 检测agent版本与agent文件是否匹配
+	if config.AgentVersion != heartbeatResponse.MasterVersion {
+		agentFileVersion := config.DetectAgentVersion()
+		if agentFileVersion != "" && config.AgentVersion != agentFileVersion {
+			logs.Warn("agent version mismatch, exiting agent process")
+			systemutil.ExitProcess(1)
+		}
+	}
+
 	logs.Info("agent heartbeat done")
 	return nil
 }
