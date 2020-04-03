@@ -87,8 +87,8 @@
         },
 
         methods: {
-            showSearchLog ({ index }) {
-                this.curSearchIndex = index
+            showSearchLog ({ index, realIndex }) {
+                this.curSearchIndex = realIndex
                 index -= 5
                 if (index < 0) index = 0
                 this.$refs.scroll.scrollPageByIndex(index)
