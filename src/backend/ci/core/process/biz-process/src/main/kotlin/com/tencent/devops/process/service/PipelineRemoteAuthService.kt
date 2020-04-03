@@ -92,8 +92,15 @@ class PipelineRemoteAuthService @Autowired constructor(
         logger.info("Start the pipeline remotely of $userId ${pipeline.pipelineId} of project ${pipeline.projectId}")
         return BuildId(
             pipelineBuildService.buildManualStartup(
-                userId!!, StartType.REMOTE, pipeline.projectId, pipeline.pipelineId, values,
-                ChannelCode.BS, true, false, "m-$auth"
+                userId = userId!!,
+                startType = StartType.REMOTE,
+                projectId = pipeline.projectId,
+                pipelineId = pipeline.pipelineId,
+                values = values,
+                channelCode = ChannelCode.BS,
+                checkPermission = true,
+                isMobile = false,
+                startByMessage = "m-$auth"
             )
         )
     }

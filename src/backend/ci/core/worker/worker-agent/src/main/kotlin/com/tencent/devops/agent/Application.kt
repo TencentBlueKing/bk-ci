@@ -27,6 +27,7 @@
 package com.tencent.devops.agent
 
 import com.tencent.devops.agent.runner.WorkRunner
+import com.tencent.devops.common.api.enums.EnumLoader
 import com.tencent.devops.common.pipeline.ElementSubTypeRegisterLoader
 import com.tencent.devops.worker.common.BUILD_TYPE
 import com.tencent.devops.worker.common.Runner
@@ -38,6 +39,7 @@ import java.io.File
 import java.lang.RuntimeException
 
 fun main(args: Array<String>) {
+    EnumLoader.enumModified()
     ElementSubTypeRegisterLoader.registerElementForJsonUtil()
     ApiFactory.init()
     TaskFactory.init()

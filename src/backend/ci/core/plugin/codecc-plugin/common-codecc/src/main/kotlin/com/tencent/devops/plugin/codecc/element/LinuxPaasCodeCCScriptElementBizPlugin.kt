@@ -76,11 +76,14 @@ class LinuxPaasCodeCCScriptElementBizPlugin constructor(
                 }
                 // Create a new one
                 val task = coverityApi.createTask(projectId, pipelineId, pipelineName, userId, element)
+                // 返回data可能是map，也可能是true
                 logger.info("Create the coverity task($task)")
-                val dataMap = task.data as Map<String, Any>
-                codeCCTaskId = (dataMap["taskId"] as Int).toString()
-                codeCCTaskName = dataMap["nameEn"] as String
-                codeCCTaskCnName = pipelineName
+                if (task.data is Map<*, *>) {
+                    val dataMap = task.data as Map<String, Any>
+                    codeCCTaskId = (dataMap["taskId"] as Int).toString()
+                    codeCCTaskName = dataMap["nameEn"] as String
+                    codeCCTaskCnName = pipelineName
+                }
             } catch (e: Exception) {
                 logger.warn(
                     "Fail to create the coverity codecc task($projectId|$pipelineId|$pipelineName|$userId|$name)",

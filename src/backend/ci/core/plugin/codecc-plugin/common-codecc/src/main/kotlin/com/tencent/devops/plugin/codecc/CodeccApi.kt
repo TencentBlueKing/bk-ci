@@ -52,7 +52,7 @@ open class CodeccApi constructor(
     private val existPath: String = "/ms/task/api/service/task/exists",
     private val deletePath: String = "/ms/task/api/service/task",
     private val report: String = "/api",
-    private val getRuleSetsPath: String = "/ms/task/api/service/checker/tasks/0/checkerSets"
+    private val getRuleSetsPath: String = "/ms/defect/api/service/checker/tools/{toolName}/pipelineCheckerSets"
 ) {
 
     companion object {
@@ -141,7 +141,9 @@ open class CodeccApi constructor(
                 "taskId" to codeCCTaskId!!,
                 "devopsToolParams" to devopsToolParams,
                 "toolCheckerSets" to genToolChecker(element),
-                "nameCn" to pipelineName
+                "nameCn" to pipelineName,
+                "projectBuildType" to scriptType.name,
+                "projectBuildCommand" to script
             )
             logger.info("Update the coverity task($body)")
             val header = mapOf(
@@ -281,6 +283,19 @@ open class CodeccApi constructor(
                 errorMsg = "获取CodeCC报告失败"
             )
         }
+    }
+
+    fun getLanguageRuleSets(projectId: String, userId: String): Result<Map<String, Any>> {
+        val headers = mapOf(
+                AUTH_HEADER_DEVOPS_PROJECT_ID to projectId
+        )
+        val result = taskExecution(
+                body = mapOf(),
+                path = "/ms/defect/api/service/checkerSet/categoryList",
+                headers = headers,
+                method = "GET"
+        )
+        return objectMapper.readValue(result)
     }
 
     private fun genToolChecker(element: LinuxCodeCCScriptElement): List<ToolChecker> {

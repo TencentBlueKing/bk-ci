@@ -1,5 +1,5 @@
 <template>
-    <span :class="{ 'stage-status': true, [type]: type, 'readonly': !editable || (jobOption && jobOption.enable === false) }">
+    <span :class="{ 'stage-status': true, [type]: type, 'readonly': !editable || containerDisabled }">
         <transition name="slide-top">
             <i v-if="status === 'RUNNING' || status === 'PREPARE_ENV' || status === 'QUEUE' || status === 'LOOP_WAITING' || status === 'CALL_WAITING'"
                 class="bk-icon icon-circle-2-1 executing-job" />
@@ -8,7 +8,7 @@
             <i v-if="status === 'WAITING'" class="bk-icon icon-clock" />
         </transition>
         <transition name="slide-down">
-            <i v-if="status === 'CANCELED'" class="bk-icon warning icon-exclamation-circle-shape" />
+            <i v-if="status === 'CANCELED' || status === 'TERMINATE'" class="bk-icon warning icon-exclamation-circle-shape" />
         </transition>
         <transition name="slide-down">
             <i v-if="status === 'REVIEWING' || status === 'REVIEW_ABORT'" class="bk-icon warning icon-exclamation-triangle-shape" />
@@ -32,7 +32,7 @@
             type: String,
             editable: Boolean,
             serialNum: String,
-            jobOption: Object
+            containerDisabled: Boolean
         }
     }
 </script>

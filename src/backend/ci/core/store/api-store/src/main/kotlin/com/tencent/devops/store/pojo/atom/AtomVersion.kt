@@ -89,6 +89,8 @@ data class AtomVersion(
     val repositoryAuthorizer: String?,
     @ApiModelProperty("插件的调试项目")
     val projectCode: String?,
+    @ApiModelProperty("插件的初始化项目")
+    val initProjectCode: String?,
     @ApiModelProperty("标签列表", required = false)
     val labelList: List<Label>?,
     @ApiModelProperty("插件包名")

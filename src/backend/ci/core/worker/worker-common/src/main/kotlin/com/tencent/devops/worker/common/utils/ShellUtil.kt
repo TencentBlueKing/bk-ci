@@ -26,6 +26,9 @@
 
 package com.tencent.devops.worker.common.utils
 
+import com.tencent.devops.common.api.exception.TaskExecuteException
+import com.tencent.devops.common.api.pojo.ErrorCode
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.log.Ansi
 import com.tencent.devops.store.pojo.app.BuildEnv
 import com.tencent.devops.worker.common.CommonEnv
@@ -199,7 +202,11 @@ object ShellUtil {
             return CommandLineUtils.execute(command, sourceDir, true, prefix)
         } catch (ignored: Throwable) {
             LoggerService.addNormalLine("Fail to run the command $command because of error(${ignored.message})")
-            throw ignored
+            throw throw TaskExecuteException(
+                errorType = ErrorType.SYSTEM,
+                errorCode = ErrorCode.SYSTEM_INNER_TASK_ERROR,
+                errorMsg = ignored.message ?: ""
+            )
         }
     }
 

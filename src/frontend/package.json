@@ -20,6 +20,7 @@
     "devops-codelib",
     "devops-environment",
     "devops-atomstore",
+    "devops-artifactory",
     "devops-ticket",
     "devops-pipeline",
     "devops-quality",

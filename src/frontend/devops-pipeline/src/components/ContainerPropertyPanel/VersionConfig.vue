@@ -22,24 +22,14 @@
                     <input class="accordion-checkbox" :disabled="disabled" type="checkbox" name="versions" :checked="showVersions" @click.stop @change="toggleVersions" />
                 </template>
                 <div slot="content">
-                    <div class="params-flex-col" v-if="showVersions">
-                        <!--<form-field v-for='v in versions' :key='v.id' :required='v.required' :label='versionConfig[v.id].label' :is-error='errors.has(v.id)' :errorMsg='errors.first(v.id)'>
-                            <vuex-input :disabled='disabled' inputType='number' :name='v.id' :placeholder='versionConfig[v.id].placeholder' v-validate.initial='"required|numeric"' :value='v.defaultValue' :handleChange='handleVersionsChange' />
-                        </form-field>-->
-                        <form-field v-for="v in allVersionKeyList" :key="v" :required="v.required" :label="versionConfig[v].label" :is-error="errors.has(v)" :error-msg="errors.first(v)">
-                            <vuex-input :disabled="disabled" input-type="number" :name="v" :placeholder="versionConfig[v].placeholder" v-validate.initial="&quot;required|numeric&quot;" :value="getVersionById(v).defaultValue" :handle-change="handleVersionsChange" />
-                        </form-field>
-                    </div>
-                    <template v-if="buildNo">
-                        <div class="params-flex-col">
-                            <form-field :required="true" :label="$t('buildNum')" :is-error="errors.has(&quot;buildNo&quot;)" :error-msg="errors.first(&quot;buildNo&quot;)">
-                                <vuex-input :disabled="disabled" input-type="number" name="buildNo" placeholder="BuildNo" v-validate.initial="&quot;required|numeric&quot;" :value="buildNo.buildNo" :handle-change="handleBuildNoChange" />
-                            </form-field>
-                            <form-field class="flex-colspan-2" :required="true" :is-error="errors.has(&quot;buildNoType&quot;)" :error-msg="errors.first(&quot;buildNoType&quot;)">
-                                <enum-input :list="buildNoRules" :disabled="disabled" name="buildNoType" v-validate.initial="&quot;required|string&quot;" :value="buildNo.buildNoType" :handle-change="handleBuildNoChange" />
-                            </form-field>
-                        </div>
-                    </template>
+                    <pipeline-versions-form ref="versionForm"
+                        v-if="showVersions"
+                        :build-no="buildNo"
+                        :disabled="!showVersions || disabled"
+                        :version-param-values="versionValues"
+                        :handle-version-change="handleVersionsChange"
+                        :handle-build-no-change="handleBuildNoChange"
+                    ></pipeline-versions-form>
                     <form-field class="params-flex-col">
                         <atom-checkbox :disabled="disabled" :text="$t('editPage.showOnStarting')" :value="execuVisible" name="required" :handle-change="handleBuildNoChange" />
                     </form-field>
@@ -52,14 +42,15 @@
 
 <script>
     import { mapGetters, mapActions, mapState } from 'vuex'
-    import { deepCopy } from '@/utils/util'
+    import { deepCopy, getParamsValuesMap } from '@/utils/util'
     import Accordion from '@/components/atomFormField/Accordion'
     import VuexInput from '@/components/atomFormField/VuexInput'
-    import EnumInput from '@/components/atomFormField/EnumInput'
     import AtomCheckbox from '@/components/atomFormField/AtomCheckbox'
     import FormField from '@/components/AtomPropertyPanel/FormField'
     import validMixins from '../validMixins'
     import { isMultipleParam, DEFAULT_PARAM, STRING } from '@/store/modules/atom/paramsConfig'
+    import PipelineVersionsForm from '@/components/PipelineVersionsForm.vue'
+    import { allVersionKeyList, getVersionConfig } from '@/utils/pipelineConst'
 
     export default {
         name: 'version-config',
@@ -67,8 +58,8 @@
             Accordion,
             VuexInput,
             FormField,
-            EnumInput,
-            AtomCheckbox
+            AtomCheckbox,
+            PipelineVersionsForm
         },
         mixins: [validMixins],
         props: {
@@ -102,41 +93,8 @@
             ...mapState('atom', [
                 'buildParamsMap'
             ]),
-            allVersionKeyList () {
-                return [
-                    'MajorVersion',
-                    'MinorVersion',
-                    'FixVersion'
-                ]
-            },
-            versionConfig () {
-                return {
-                    MajorVersion: {
-                        label: this.$t('preview.majorVersion'),
-                        type: 'STRING',
-                        desc: 'MajorVersion',
-                        default: '0',
-                        placeholder: 'MajorVersion'
-                    },
-                    MinorVersion: {
-                        label: this.$t('preview.minorVersion'),
-                        type: 'STRING',
-                        desc: 'MinorVersion',
-                        default: '0',
-                        placeholder: 'MinorVersion'
-                    },
-                    FixVersion: {
-                        label: this.$t('preview.fixVersion'),
-                        type: 'STRING',
-                        desc: 'FixVersion',
-                        default: '0',
-                        placeholder: 'FixVersion'
-                    }
-                }
-            },
             globalParams: {
                 get () {
-                    const allVersionKeyList = this.allVersionKeyList
                     return this.params.filter(p => !allVersionKeyList.includes(p.id))
                 },
                 set (params) {
@@ -144,8 +102,10 @@
                 }
             },
             versions () {
-                const allVersionKeyList = this.allVersionKeyList
                 return this.params.filter(p => allVersionKeyList.includes(p.id))
+            },
+            versionValues () {
+                return getParamsValuesMap(this.versions)
             },
             showVersions () {
                 return this.versions.length !== 0
@@ -246,15 +206,15 @@
 
             toggleVersions (e) {
                 const isShow = e.target.checked
-                const allVersionKeyList = this.allVersionKeyList
+                const versionConfig = getVersionConfig()
 
                 if (isShow) {
                     const newVersions = allVersionKeyList.map(v => ({
-                        desc: this.versionConfig[v].desc,
-                        defaultValue: this.versionConfig[v].default,
+                        desc: versionConfig[v].desc,
+                        defaultValue: versionConfig[v].default,
                         id: v,
                         required: false,
-                        type: this.versionConfig[v].type
+                        type: versionConfig[v].type
                     }))
 
                     this.updateContainerParams('params', [

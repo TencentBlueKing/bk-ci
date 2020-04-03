@@ -33,7 +33,6 @@ import com.tencent.devops.worker.common.api.ApiFactory
 import com.tencent.devops.worker.common.api.codecc.CodeccSDKApi
 import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.env.BuildEnv
-import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.task.script.ScriptEnvUtils
 import java.io.File
 
@@ -72,13 +71,13 @@ object CodeccEnvHelper {
         } else {
             // mac公共机需要安装 python3 环境
             if (AgentEnv.getOS() == OSType.MAC_OS) {
-                val pythonExist =
-                    CodeccInstaller.pythonExist(File("/data/soda/apps/python/3.5/IDLE.app/Contents/MacOS/Python"))
-                LoggerService.addNormalLine("check mac python is exist : $pythonExist")
-                if (!pythonExist) {
-                    LoggerService.addNormalLine("python installing...")
-                    CodeccInstaller.installMacPython()
-                }
+//                val pythonExist =
+//                    CodeccInstaller.pythonExist(File("~/.pyenv/shims/python"))
+//                LoggerService.addNormalLine("check mac python is exist : $pythonExist")
+//                if (!pythonExist) {
+//                    LoggerService.addNormalLine("python installing...")
+//                    CodeccInstaller.installMacPython()
+//                }
             }
         }
     }

@@ -646,7 +646,8 @@
 
                             const res = await this.$store.dispatch('store/editAtom', {
                                 projectCode: this.atomForm.projectCode,
-                                params: params
+                                params: params,
+                                initProject: this.atomForm.initProjectCode
                             })
 
                             message = this.$t('store.提交成功')

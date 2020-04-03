@@ -28,7 +28,6 @@ package com.tencent.devops.process.engine.service
 
 import com.nhaarman.mockito_kotlin.mock
 import com.nhaarman.mockito_kotlin.whenever
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.websocket.dispatch.WebSocketDispatcher
@@ -42,12 +41,6 @@ import com.tencent.devops.process.engine.dao.PipelineBuildTaskDao
 import com.tencent.devops.process.engine.dao.PipelineBuildVarDao
 import com.tencent.devops.process.service.BuildStartupParamService
 import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
-import com.tencent.devops.process.utils.PIPELINE_MATERIAL_ALIASNAME
-import com.tencent.devops.process.utils.PIPELINE_MATERIAL_BRANCHNAME
-import com.tencent.devops.process.utils.PIPELINE_MATERIAL_NEW_COMMIT_COMMENT
-import com.tencent.devops.process.utils.PIPELINE_MATERIAL_NEW_COMMIT_ID
-import com.tencent.devops.process.utils.PIPELINE_MATERIAL_NEW_COMMIT_TIMES
-import com.tencent.devops.process.utils.PIPELINE_MATERIAL_URL
 import com.tencent.devops.process.utils.PIPELINE_NAME
 import com.tencent.devops.process.utils.PIPELINE_START_CHANNEL
 import com.tencent.devops.process.utils.PIPELINE_START_MOBILE
@@ -77,6 +70,7 @@ class PipelineRuntimeServiceTest {
     private val pipelineBuildVarDao: PipelineBuildVarDao = mock()
     private val buildDetailDao: BuildDetailDao = mock()
     private val buildStartupParamService: BuildStartupParamService = mock()
+    private val pipelineStageService: PipelineStageService = mock()
     private val redisOperation: RedisOperation = RedisOperation(redisTemplate)
 
     private val pipelineRuntimeService = PipelineRuntimeService(
@@ -93,40 +87,9 @@ class PipelineRuntimeServiceTest {
         pipelineBuildVarDao = pipelineBuildVarDao,
         buildDetailDao = buildDetailDao,
         buildStartupParamService = buildStartupParamService,
+        pipelineStageService = pipelineStageService,
         redisOperation = redisOperation
     )
-
-    @Test
-    fun getPipelineBuildMaterial() {
-        val repoIds = setOf("11", "12", "13")
-        val relation = mutableMapOf<String, String>()
-        val mockVars = mutableMapOf<String, String>()
-        repoIds.forEach { repoId ->
-            mockVars["$PIPELINE_MATERIAL_URL$repoId"] = "http://xxxx/$repoId"
-            relation["http://xxxx/$repoId"] = repoId
-            mockVars["$PIPELINE_MATERIAL_NEW_COMMIT_TIMES$repoId"] = repoId
-            mockVars["$PIPELINE_MATERIAL_ALIASNAME$repoId"] = "aliasName$repoId"
-            mockVars["$PIPELINE_MATERIAL_BRANCHNAME$repoId"] = "branch_$repoId"
-            mockVars["$PIPELINE_MATERIAL_NEW_COMMIT_ID$repoId"] = "new_commit_id_$repoId"
-            mockVars["$PIPELINE_MATERIAL_NEW_COMMIT_COMMENT$repoId"] = "comment_$repoId"
-        }
-
-        val buildId = "b-12345678901234567890123456789012"
-        whenever(pipelineBuildVarDao.getVars(dslContext, buildId)).thenReturn(mockVars)
-        val pipelineBuildMaterial = pipelineRuntimeService.getPipelineBuildMaterial(buildId)
-        Assert.assertEquals(pipelineBuildMaterial.size, repoIds.size)
-        pipelineBuildMaterial.forEach {
-            val repoId = relation[it.url]
-            Assert.assertEquals("http://xxxx/$repoId", it.url)
-            Assert.assertEquals("aliasName$repoId", it.aliasName)
-            Assert.assertEquals("branch_$repoId", it.branchName)
-            Assert.assertEquals("new_commit_id_$repoId", it.newCommitId)
-            Assert.assertEquals("comment_$repoId", it.newCommitComment)
-            Assert.assertEquals(repoId, "${it.commitTimes}")
-        }
-
-        println(JsonUtil.toJson(pipelineBuildMaterial))
-    }
 
     @Test
     fun getAllVariable() {

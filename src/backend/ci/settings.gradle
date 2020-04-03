@@ -127,6 +127,7 @@ include ":core:store:api-store-image"
 include ":core:store:biz-store"
 include ":core:store:biz-store-sample"
 include ":core:store:biz-store-image"
+include ":core:store:biz-store-image-sample"
 include ":core:store:boot-store"
 include ":core:store:model-store"
 

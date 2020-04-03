@@ -17,6 +17,12 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+export const allVersionKeyList = [
+    'BK_CI_MAJOR_VERSION',
+    'BK_CI_MINOR_VERSION',
+    'BK_CI_FIX_VERSION'
+]
+
 export const jobConst = {
     LINUX: 'Linux',
     MACOS: 'macOS',
@@ -42,3 +48,26 @@ export const BUILD_HISTORY_TABLE_DEFAULT_COLUMNS = [
     'pipelineVersion',
     'remark'
 ]
+
+export function getVersionConfig () {
+    return {
+        BK_CI_MAJOR_VERSION: {
+            type: 'STRING',
+            desc: (window.pipelineVue && window.pipelineVue.$i18n.t('preview.majorVersion')) || 'majorVersion',
+            default: '0',
+            placeholder: 'BK_CI_MAJOR_VERSION'
+        },
+        BK_CI_MINOR_VERSION: {
+            type: 'STRING',
+            desc: (window.pipelineVue && window.pipelineVue.$i18n.t('preview.minorVersion')) || 'minorVersion',
+            default: '0',
+            placeholder: 'BK_CI_MINOR_VERSION'
+        },
+        BK_CI_FIX_VERSION: {
+            type: 'STRING',
+            desc: (window.pipelineVue && window.pipelineVue.$i18n.t('preview.fixVersion')) || 'fixVersion',
+            default: '0',
+            placeholder: 'BK_CI_FIX_VERSION'
+        }
+    }
+}

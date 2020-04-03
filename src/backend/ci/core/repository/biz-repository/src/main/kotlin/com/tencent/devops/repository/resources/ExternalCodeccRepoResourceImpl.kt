@@ -45,6 +45,10 @@ class ExternalCodeccRepoResourceImpl @Autowired constructor(
         return Result(repoFileService.getFileContent(buildConfig(repoId, repositoryType), filePath, reversion, branch, subModule))
     }
 
+    override fun getFileContentV2(repoId: String, filePath: String, reversion: String?, branch: String?, subModule: String?, repositoryType: RepositoryType?): Result<String> {
+        return Result(repoFileService.getFileContent(buildConfig(repoId, repositoryType), filePath, reversion, branch, subModule, true))
+    }
+
     override fun getGitFileContentCommon(repoUrl: String, filePath: String, ref: String?, token: String, authType: RepoAuthType?, subModule: String?): Result<String> {
         return Result(commonRepoFileService.getGitFileContent(repoUrl, filePath, ref, token, authType, subModule))
     }

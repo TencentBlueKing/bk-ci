@@ -341,7 +341,7 @@ class NodeService @Autowired constructor(
             errorCode = ERROR_NODE_NOT_EXISTS,
             params = arrayOf(nodeHashId)
         )
-        if (!environmentPermissionService.checkNodePermission(userId, projectId, AuthPermission.EDIT)) {
+        if (!environmentPermissionService.checkNodePermission(userId, projectId, nodeId, AuthPermission.EDIT)) {
             throw ErrorCodeException(errorCode = ERROR_NODE_NO_EDIT_PERMISSSION)
         }
         checkDisplayName(projectId, nodeId, displayName)

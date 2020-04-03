@@ -44,8 +44,17 @@ data class DockerDispatchType(
     override var imageName: String? = ""
 ) : StoreDispatchType(if (dockerBuildVersion.isNullOrBlank())
     imageCode else dockerBuildVersion, null, imageType, credentialId, credentialProject, imageCode, imageVersion, imageName) {
+    override fun cleanDataBeforeSave() {
+        this.dockerBuildVersion = this.dockerBuildVersion?.trim()
+        this.credentialId = this.credentialId?.trim()
+        this.credentialProject = this.credentialProject?.trim()
+        this.imageCode = this.imageCode?.trim()
+        this.imageVersion = this.imageVersion?.trim()
+        this.imageName = this.imageName?.trim()
+    }
+
     override fun buildType(): BuildType {
-        return BuildType.DOCKER
+        return BuildType.valueOf(BuildType.DOCKER.name)
     }
 
     override fun replaceField(variables: Map<String, String>) {

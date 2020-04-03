@@ -30,6 +30,7 @@ import com.tencent.devops.common.web.mq.alert.AlertLevel
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.dockerhost.dispatch.AlertApi
 import com.tencent.devops.dockerhost.exception.ContainerException
+import com.tencent.devops.dockerhost.exception.NoSuchImageException
 import com.tencent.devops.dockerhost.services.DockerHostBuildService
 import com.tencent.devops.dockerhost.utils.CommonUtils
 import com.tencent.devops.dockerhost.utils.SigarUtil
@@ -42,15 +43,15 @@ class Runner @Autowired constructor(private val dockerHostBuildService: DockerHo
     private val maxRunningContainerNum = 200
     private val alertApi: AlertApi = AlertApi()
 
-//    @Scheduled(initialDelay = 60 * 1000, fixedDelay = 5 * 1000)
+    //    @Scheduled(initialDelay = 60 * 1000, fixedDelay = 5 * 1000)
     fun startBuild() {
-    logger.info("Start to start build")
+        logger.info("Start to start build")
         try {
             // 优先判断机器负载
             if (!SigarUtil.loadEnable()) {
                 logger.warn("Docker构建机负载过高, 正在尝试其他构建机, cpuLoad: ${SigarUtil.getAverageCpuLoad()}, memLoad: ${SigarUtil.getAverageMemLoad()}")
                 alertApi.alert(AlertLevel.HIGH.name, "Docker构建机负载过高", "Docker构建机负载过高, " +
-                        "母机IP:${CommonUtils.getInnerIP()}， cpuLoad: ${SigarUtil.getAverageCpuLoad()}, memLoad: ${SigarUtil.getAverageMemLoad()}, memQueue: ${SigarUtil.getMemQueue()}")
+                    "母机IP:${CommonUtils.getInnerIP()}， cpuLoad: ${SigarUtil.getAverageCpuLoad()}, memLoad: ${SigarUtil.getAverageMemLoad()}, memQueue: ${SigarUtil.getMemQueue()}")
                 return
             }
 
@@ -58,7 +59,7 @@ class Runner @Autowired constructor(private val dockerHostBuildService: DockerHo
             if (containerNum >= maxRunningContainerNum) {
                 logger.warn("Too many containers in this host, break to start build.")
                 alertApi.alert(AlertLevel.HIGH.name, "Docker构建机运行的容器太多", "Docker构建机运行的容器太多, " +
-                        "母机IP:${CommonUtils.getInnerIP()}， 容器数量: $containerNum")
+                    "母机IP:${CommonUtils.getInnerIP()}， 容器数量: $containerNum")
                 return
             }
 
@@ -88,7 +89,7 @@ class Runner @Autowired constructor(private val dockerHostBuildService: DockerHo
                                 containerHashId = dockerStartBuildInfo.containerHashId
                             )
                         } else {
-                        logger.error("Create container container failed, no such image. pipelineId: ${dockerStartBuildInfo.pipelineId}, vmSeqId: ${dockerStartBuildInfo.vmSeqId}")
+                            logger.error("Create container container failed, no such image. pipelineId: ${dockerStartBuildInfo.pipelineId}, vmSeqId: ${dockerStartBuildInfo.vmSeqId}")
                             dockerHostBuildService.rollbackBuild(
                                 buildId = dockerStartBuildInfo.buildId,
                                 vmSeqId = dockerStartBuildInfo.vmSeqId,
@@ -96,6 +97,14 @@ class Runner @Autowired constructor(private val dockerHostBuildService: DockerHo
                                 containerHashId = dockerStartBuildInfo.containerHashId
                             )
                         }
+                    } catch (e: NoSuchImageException) {
+                        logger.error("Create container container failed, no such image. pipelineId: ${dockerStartBuildInfo.pipelineId}, vmSeqId: ${dockerStartBuildInfo.vmSeqId}, err: ${e.message}")
+                        dockerHostBuildService.rollbackBuild(
+                            buildId = dockerStartBuildInfo.buildId,
+                            vmSeqId = dockerStartBuildInfo.vmSeqId,
+                            shutdown = true,
+                            containerHashId = dockerStartBuildInfo.containerHashId
+                        )
                     } catch (e: ContainerException) {
                         logger.error("Create container failed, rollback build. buildId: ${dockerStartBuildInfo.buildId}, vmSeqId: ${dockerStartBuildInfo.vmSeqId}")
                         dockerHostBuildService.rollbackBuild(
@@ -114,7 +123,7 @@ class Runner @Autowired constructor(private val dockerHostBuildService: DockerHo
         }
     }
 
-//    @Scheduled(initialDelay = 120 * 1000, fixedDelay = 20 * 1000)
+    //    @Scheduled(initialDelay = 120 * 1000, fixedDelay = 20 * 1000)
     fun endBuild() {
         try {
             val dockerEndBuildInfo = try {
@@ -135,7 +144,7 @@ class Runner @Autowired constructor(private val dockerHostBuildService: DockerHo
         }
     }
 
-//    @Scheduled(initialDelay = 300 * 1000, fixedDelay = 3600 * 1000)
+    //    @Scheduled(initialDelay = 300 * 1000, fixedDelay = 3600 * 1000)
     fun clearExitedContainer() {
         try {
             dockerHostBuildService.clearContainers()

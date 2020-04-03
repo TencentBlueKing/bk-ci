@@ -21,7 +21,15 @@
                         <draggable v-model="globalParams" :options="paramsDragOptions">
                             <accordion v-for="(param, index) in globalParams" :key="param.paramIdKey" :is-error="errors.any(`param-${param.id}`)">
                                 <header class="param-header" slot="header">
-                                    <span>{{ param.id }}</span>
+                                    <span>
+                                        <bk-popover style="vertical-align: middle" v-if="errors.all(`param-${param.id}`).length" placement="top">
+                                            <i class="bk-icon icon-info-circle-shape"></i>
+                                            <div slot="content">
+                                                <p v-for="error in errors.all(`param-${param.id}`)" :key="error">{{ error }}</p>
+                                            </div>
+                                        </bk-popover>
+                                        {{ param.id }}
+                                    </span>
                                     <i v-if="!disabled && settingKey !== &quot;templateParams&quot;" @click.stop.prevent="editParamShow(index)" class="bk-icon" :class="[`${param.required ? 'icon-eye' : 'icon-eye-slash'}`]" />
                                     <i v-if="!disabled" class="bk-icon icon-move" />
                                     <i v-if="!disabled" @click.stop.prevent="editParam(index, false)" class="bk-icon icon-minus" />
@@ -45,7 +53,7 @@
                                     </div>
                                     <div class="params-flex-col pt10">
                                         <bk-form-item class="flex-col-span-1" :label="$t('name')" :is-error="errors.has(`param-${param.id}.id`)" :error-msg="errors.first(`param-${param.id}.id`)">
-                                            <vuex-input :ref="`paramId${index}Input`" :data-vv-scope="`param-${param.id}`" :disabled="disabled" :handle-change="(name, value) => handleUpdateParamId(name, value, index)" v-validate.initial="`required|unique:${validateParams.map(p => p.id).join(&quot;,&quot;)}`" name="id" :placeholder="$t('nameInputTips')" :value="param.id" />
+                                            <vuex-input :ref="`paramId${index}Input`" :data-vv-scope="`param-${param.id}`" :disabled="disabled" :handle-change="(name, value) => handleUpdateParamId(name, value, index)" v-validate.initial="`required|unique:${validateParams.map(p => p.id).join(',')}`" name="id" :placeholder="$t('nameInputTips')" :value="param.id" />
                                         </bk-form-item>
                                         <bk-form-item class="flex-col-span-1" :label="$t('editPage.defaultValue')" :required="isBooleanParam(param.type)" :is-error="errors.has(`param-${param.id}.defaultValue`)" :error-msg="errors.first(`param-${param.id}.defaultValue`)" :desc="showTips">
                                             <selector
@@ -145,6 +153,7 @@
     import KeyValueNormal from '@/components/atomFormField/KeyValueNormal'
     import validMixins from '../validMixins'
     import draggable from 'vuedraggable'
+    import { allVersionKeyList } from '@/utils/pipelineConst'
     import { STORE_API_URL_PREFIX, REPOSITORY_API_URL_PREFIX } from '@/store/constants'
     import {
         isStringParam,
@@ -234,13 +243,6 @@
                 'osList',
                 'getBuildResourceTypeList'
             ]),
-            versionConfig () {
-                return {
-                    MajorVersion: {},
-                    MinorVersion: {},
-                    FixVersion: {}
-                }
-            },
             baseOSList () {
                 return this.osList.filter(os => os.value !== 'NONE').map(os => ({
                     id: os.value,
@@ -272,7 +274,6 @@
             },
             globalParams: {
                 get () {
-                    const allVersionKeyList = Object.keys(this.versionConfig)
                     return this.renderParams.filter(p => !allVersionKeyList.includes(p.id))
                 },
                 set (params) {
@@ -280,7 +281,6 @@
                 }
             },
             versions () {
-                const allVersionKeyList = Object.keys(this.versionConfig)
                 return this.params.filter(p => allVersionKeyList.includes(p.id))
             },
             hasGlobalParams () {
@@ -362,6 +362,7 @@
                 try {
                     const param = this.globalParams[paramIndex]
                     const preValue = param[key]
+
                     if (preValue !== value) {
                         Object.assign(param, {
                             [key]: value
@@ -526,7 +527,6 @@
 
             // 全局参数添加遍历的key值
             getParams (params) {
-                const allVersionKeyList = Object.keys(this.versionConfig)
                 const result = params.map(item => {
                     const temp = { ...item }
                     if (!allVersionKeyList.includes(item.id)) {

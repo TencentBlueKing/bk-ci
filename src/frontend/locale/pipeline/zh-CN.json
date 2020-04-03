@@ -2,6 +2,7 @@
     "pipeline": "流水线",
     "pipelineName": "流水线名称",
     "labelManage": "标签管理",
+    "label": "标签",
     "viewManage": "视图管理",
     "templateManage": "模板管理",
     "pluginManage": "插件管理",
@@ -76,6 +77,18 @@
     "loadingTips": "数据加载中，请稍候",
     "metaData": "元数据",
     "download": "下载",
+    "enableStage": "启用本Stage",
+    "stageFastKill": "启用FastKill",
+    "stageFastKillDesc": "当Job失败时立即结束当前Stage",
+    "enableStageReview": "启用Stage审核",
+    "stageReviewDesc": "30天未审核自动结束该流水线并标记为Stage成功",
+    "stageTimeoutLabel": "Stage超时时间",
+    "stageTimeoutError": "Stage超时时间错误",
+    "stageTimeoutDesc": "1-720之间的整数",
+    "stageUserTriggers": "Stage审核人",
+    "stageOptionLabel": "本Stage执行条件",
+    "stageTriggerDesc": "多个人员用英文逗号分隔",
+    "skipStageDesc": "已跳过",
     "timeMap": {
         "days": "天",
         "hours": "小时",
@@ -188,6 +201,7 @@
         "enableGroup": "启用企业微信群通知",
         "groupIdTips": "请输入群ID,多个群ID以分号隔开",
         "groupIdDesc": "可发通知至企业微信群。群ID获取方法：将'DevOpsRobot(蓝盾机器人)' 拉进群，手动@DevOpsRobot(蓝盾机器人)并输入关键字'会话ID',发送后即可获取群ID ",
+        "wechatGroupMarkdownFlag": "群消息转为Markdown格式",
         "buildSuc": "构建成功",
         "buildFail": "构建失败",
         "rtxNotice": "企业微信通知",
@@ -338,6 +352,7 @@
         "stopFail": "终止失败"
     },
     "history": {
+        "stageStatus": "Stage",
         "execHistory": "执行历史",
         "trendData": "安装包趋势",
         "chooseDateRange": "请选择日期范围",
@@ -424,6 +439,10 @@
         "noMetaData": "暂无元数据",
         "viewDetail": "查看详情",
         "artifactory": "版本仓库",
+        "checkDesc": "审核倒计时",
+        "checkDescInfo": "审核功能将于 {0} 截止，逾期将自动标识为Stage成功状态",
+        "abort": "取消执行，立即标记为Stage成功状态",
+        "agree": "继续执行",
         "statusMap": {
             "RUNNING": "执行中",
             "PREPARE_ENV": "准备构建环境中",
@@ -445,7 +464,8 @@
             "CALL_WAITING": "等待回调",
             "TRY_FINALLY": "补偿任务",
             "QUEUE_CACHE": "队列待处理",
-            "UNKNOWN": "未知状态"
+            "UNKNOWN": "未知状态",
+            "STAGE_SUCCESS": "Stage成功"
         },
         "toArtifactory": "到版本仓库查看",
         "saveToCustom": "保存到自定义仓库",
@@ -512,6 +532,9 @@
         "prepareEnv": "准备构建环境中",
         "copyJob": "复制job",
         "copyJobFail": "复制job失败",
+        "copyStage": "复制stage",
+        "copyStageFail": "复制stage失败",
+        "stageManualTriggerUserNoEmptyTips": "手动执行stage执行人不能为空",
         "triggerTooltips": "点击构建触发可配置推荐版本号、流水线变量",
         "userTime": "用户耗时",
         "systemTime": "系统耗时",
@@ -523,7 +546,8 @@
         "customVar": "自定义变量",
         "abortSuc": "驳回成功",
         "agreeSuc": "审核成功",
-        "toCheck": "去审核",
+        "toCheck": "审核",
+        "noAuthToCheck": "无审核权限",
         "abortTips": "审核未通过，",
         "checkUser": "审核人为",
         "aborted": "已驳回",
@@ -686,7 +710,8 @@
             "serviceId": "业务ID",
             "templateDownload": "模板下载",
             "otherChoice": "其他选项"
-        }
+        },
+        "stageOption": "高级流程控制"
     },
     "storeMap": {
         "string": "字符串",
@@ -711,6 +736,10 @@
         "every_build_increment": "每次构建 + 1",
         "enableAtom": "启用本插件",
         "continueWhenFailed": "失败时继续",
+        "continueWhenFailedDesc": "如果同时开启了”失败时重试“，我们将优先尝试重试，如果所有重试都失败后才会继续",
+        "retryWhenFailed": "失败时自动重试",
+        "retryCount": "重试次数",
+        "retryCountPlaceholder": "1-5之间的整数，默认为1",
         "atomTimeout": "插件执行超时时间(单位分钟)",
         "timeoutDesc": "10080之间的整数，0表示系统允许的最大超时时间",
         "timeoutPlaceholder": "10080之间的整数，0表示系统允许的最大超时时间",
@@ -732,6 +761,8 @@
         "mutualTimeoutPlaceholder": "请填写1-10080之间的整数",
         "queueLabel": "队列最大任务数",
         "queuePlaceholder": "请填写1-10之间的整数",
-        "noEnv": "无编译环境" 
+        "noEnv": "无编译环境",
+        "afterPreStageSuccess": "前一个Stage成功时运行",
+        "manualRunStage": "手动触发运行"       
     }
 }

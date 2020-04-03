@@ -41,9 +41,9 @@
 </template>
 
 <script>
+    import language from './locale'
     // eslint-disable-next-line
     const Worker = require('worker-loader!./worker.js')
-    import language from './locale'
 
     export default {
         props: {
@@ -359,7 +359,7 @@
                     if (currentItem.color) canvasContext.font = `normal normal bold 2px Consolas`
                     else canvasContext.font = `normal normal normal 2px Consolas`
                     canvasContext.fillStyle = currentColor
-                    canvasContext.fillText(currentItem.message, 5, ((index + 1)* 2))
+                    canvasContext.fillText(currentItem.message, 5, ((index + 1) * 2))
                 }
                 this.isScrolling = false
             },
@@ -387,16 +387,30 @@
                 const lDiv = document.createElement('div')
                 document.body.appendChild(lDiv)
                 lDiv.style.fontFamily = "Consolas, 'Courier New', monospace"
-                lDiv.style.fontSize = "12px"
-                lDiv.style.height = "16px"
-                lDiv.style.position = "fixed"
+                lDiv.style.fontSize = '12px'
+                lDiv.style.height = '16px'
+                lDiv.style.position = 'fixed'
                 lDiv.style.wordBreak = 'keep-all'
                 lDiv.style.whiteSpace = 'nowrap'
                 lDiv.style.fontWeight = 'normal'
                 lDiv.style.letterSpacing = '0px'
                 lDiv.style.opacity = 0
-                lDiv.innerHTML = text.replace(/\s/g, '&nbsp;').replace(/<a[^>]*>/g, (a) => a.replace(/&nbsp;/g, ' ')).replace(/<br\/>/g, '')
-                const res = lDiv.clientWidth + 100
+                lDiv.innerHTML = text.replace(/\s|<|>/g, (str) => {
+                    let res = '&nbsp;'
+                    switch (str) {
+                        case '<':
+                            res = '&lt;'
+                            break
+                        case '>':
+                            res = '&gt;'
+                            break
+                        default:
+                            res = '&nbsp;'
+                            break
+                    }
+                    return res
+                }).replace(/&lt;a.+?href=["']?([^"']+)["']?.*&gt;(.+)&lt;\/a&gt;/g, "<a href='$1' target='_blank'>$2</a>")
+                const res = lDiv.clientWidth + 200
                 document.body.removeChild(lDiv)
                 return res
             },
