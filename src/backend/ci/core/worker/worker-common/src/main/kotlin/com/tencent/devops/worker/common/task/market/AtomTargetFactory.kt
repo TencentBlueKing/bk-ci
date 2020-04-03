@@ -56,6 +56,7 @@ object AtomTargetFactory {
         var atomTargetHandleService = atomTargetMap[language]
         if (atomTargetHandleService == null) {
             atomTargetHandleService = JavaAtomTargetHandleServiceImpl()
+            atomTargetMap[language] = atomTargetHandleService
         }
         return atomTargetHandleService
     }
