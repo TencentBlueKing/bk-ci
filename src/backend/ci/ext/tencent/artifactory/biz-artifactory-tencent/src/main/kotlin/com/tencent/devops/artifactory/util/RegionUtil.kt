@@ -26,6 +26,7 @@
 
 package com.tencent.devops.artifactory.util
 
+import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.service.utils.SpringContextUtil
@@ -41,7 +42,7 @@ object RegionUtil {
             null, "", DEVNET -> devHost()
             IDC, OSS -> idcHost()
             EXTERNAL -> externalHost()
-            else -> throw RuntimeException("region not supported")
+            else -> throw OperationException("region not supported")
         }
     }
 
