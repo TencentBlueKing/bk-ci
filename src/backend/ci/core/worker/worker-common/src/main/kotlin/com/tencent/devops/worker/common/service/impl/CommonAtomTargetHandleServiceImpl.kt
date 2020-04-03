@@ -31,9 +31,7 @@ import com.tencent.devops.store.pojo.app.BuildEnv
 import com.tencent.devops.store.pojo.common.enums.BuildHostTypeEnum
 import com.tencent.devops.worker.common.service.AtomTargetHandleService
 import org.slf4j.LoggerFactory
-import org.springframework.stereotype.Service
 
-@Service("COMMON_ATOM_TARGET_HANDLE")
 class CommonAtomTargetHandleServiceImpl : AtomTargetHandleService {
 
     private val logger = LoggerFactory.getLogger(CommonAtomTargetHandleServiceImpl::class.java)
