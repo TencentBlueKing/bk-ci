@@ -45,6 +45,11 @@ function _M:isInWhiteList(whiteList)
   if arrayUtil:isInArray(clientIp,whiteList) then
     return true
   end
+  -- 判断X-DEVOPS-TOKEN是否在名单中（单IP）
+  clientIp = headers["X-DEVOPS-TOKEN"] or ""
+  if arrayUtil:isInArray(clientIp,whiteList) then
+    return true
+  end
   -- 判断remote_addr是否在名单中（单IP）
   clientIp = ngx.var.remote_addr or ""
   if arrayUtil:isInArray(clientIp,whiteList) then

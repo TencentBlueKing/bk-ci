@@ -1,6 +1,7 @@
 package com.tencent.devops.process.engine.atom.vm.parser
 
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.DockerVersion
 import com.tencent.devops.common.pipeline.type.DispatchType
 import com.tencent.devops.common.pipeline.type.StoreDispatchType
@@ -8,6 +9,8 @@ import com.tencent.devops.common.pipeline.type.devcloud.PublicDevCloudDispathcTy
 import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
 import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.common.pipeline.type.idc.IDCDispatchType
+import com.tencent.devops.process.util.CommonUtils
+import com.tencent.devops.ticket.pojo.enums.CredentialType
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Qualifier
@@ -22,6 +25,7 @@ import org.springframework.stereotype.Component
 @Component
 @Primary
 class DispatchTypeParserTxImpl @Autowired constructor(
+    private val client: Client,
     @Qualifier(value = "commonDispatchTypeParser")
     private val commonDispatchTypeParser: DispatchTypeParser
 ) : DispatchTypeParser {
@@ -57,7 +61,7 @@ class DispatchTypeParserTxImpl @Autowired constructor(
                 } else {
                     // 第三方镜像
                     if (dispatchType is PublicDevCloudDispathcType) {
-                        dispatchType.image = dispatchType.value
+                        genDevCloudDispatchMessage(dispatchType, projectId)
                     } else if (dispatchType is IDCDispatchType) {
                         dispatchType.image = dispatchType.value
                     } else {
@@ -78,10 +82,38 @@ class DispatchTypeParserTxImpl @Autowired constructor(
                         dispatchType.image = "devcloud/" + dispatchType.image!!.removePrefix("/")
                     }
                 }
+            } else {
+                // 第三方镜像 DevCloud
+                if (dispatchType is PublicDevCloudDispathcType) {
+                    genDevCloudDispatchMessage(dispatchType, projectId)
+                }
             }
             logger.info("DispatchTypeParserTxImpl:AfterTransfer:dispatchType=(${JsonUtil.toJson(dispatchType)})")
         } else {
             logger.info("DispatchTypeParserTxImpl:not StoreDispatchType, no transfer")
         }
+    }
+
+    private fun genDevCloudDispatchMessage(dispatchType: PublicDevCloudDispathcType, projectId: String) {
+        var user = ""
+        var password = ""
+        var credentialProject = projectId
+        if (!dispatchType.credentialProject.isNullOrBlank()) {
+            credentialProject = dispatchType.credentialProject!!
+        }
+        // 通过凭证获取账号密码
+        if (!dispatchType.credentialId.isNullOrBlank()) {
+            val ticketsMap = CommonUtils.getCredential(
+                client = client,
+                projectId = credentialProject,
+                credentialId = dispatchType.credentialId!!,
+                type = CredentialType.USERNAME_PASSWORD
+            )
+            user = ticketsMap["v1"] as String
+            password = ticketsMap["v2"] as String
+        }
+        val credential = Credential(user, password)
+        val pool = Pool(dispatchType.value, credential)
+        dispatchType.image = JsonUtil.toJson(pool)
     }
 }

@@ -310,23 +310,23 @@ class PipelineSubscriptionService @Autowired(required = false) constructor(
                     val successWechatGroups = mutableSetOf<String>()
                     successWechatGroups.addAll(setting.successWechatGroup.split("[,;]".toRegex()))
                     successWechatGroups.forEach {
-
-                        val receiver = Receiver(ReceiverType.group, it)
-                        val richtextContentList = mutableListOf<RichtextContent>()
-                        richtextContentList.add(
-                            RichtextText(RichtextTextText("蓝盾流水线【$pipelineName】#$buildNum 构建成功\n\n"))
-                        )
-                        richtextContentList.add(RichtextText(RichtextTextText("✔️${setting.successContent}\n")))
-
-                        if (settingDetailFlag) {
-                            richtextContentList.add(
-                                RichtextView(
-                                    RichtextViewLink(text = "查看详情", key = detailUrl, browser = 1)
+                        if (setting.successWechatGroupMarkdownFlag) {
+                            wechatWorkService.sendMarkdownGroup(setting.successContent, it)
+                        } else {
+                            val receiver = Receiver(ReceiverType.group, it)
+                            val richtextContentList = mutableListOf<RichtextContent>()
+                            richtextContentList.add(RichtextText(RichtextTextText("蓝盾流水线【$pipelineName】#$buildNum 构建成功\n\n")))
+                            richtextContentList.add(RichtextText(RichtextTextText("✔️${setting.successContent}\n")))
+                            if (settingDetailFlag) {
+                                richtextContentList.add(
+                                    RichtextView(
+                                        RichtextViewLink(text = "查看详情", key = detailUrl, browser = 1)
+                                    )
                                 )
-                            )
+                            }
+                            val richtextMessage = RichtextMessage(receiver, richtextContentList)
+                            wechatWorkService.sendRichText(richtextMessage)
                         }
-                        val richtextMessage = RichtextMessage(receiver, richtextContentList)
-                        wechatWorkService.sendRichText(richtextMessage)
                     }
                 }
             } else if (shutdownType == TYPE_SHUTDOWN_FAILURE) {
@@ -371,23 +371,21 @@ class PipelineSubscriptionService @Autowired(required = false) constructor(
                     val failWechatGroups = mutableSetOf<String>()
                     failWechatGroups.addAll(setting.failWechatGroup.split("[,;]".toRegex()))
                     failWechatGroups.forEach {
-                        val receiver = Receiver(ReceiverType.group, it)
-                        val richtextContentList = mutableListOf<RichtextContent>()
-                        richtextContentList.add(
-                            RichtextText(
-                                RichtextTextText("蓝盾流水线【$pipelineName】#$buildNum 构建失败\n\n")
-                            )
-                        )
-                        richtextContentList.add(
-                            RichtextText(RichtextTextText("❌${setting.failContent}\n"))
-                        )
-                        if (settingDetailFlag) {
-                            richtextContentList.add(
-                                RichtextView(RichtextViewLink(text = "查看详情", key = detailUrl, browser = 1))
-                            )
+                        if (setting.failWechatGroupMarkdownFlag) {
+                            wechatWorkService.sendMarkdownGroup(setting.failContent, it)
+                        } else {
+                            val receiver = Receiver(ReceiverType.group, it)
+                            val richtextContentList = mutableListOf<RichtextContent>()
+                            richtextContentList.add(RichtextText(RichtextTextText("蓝盾流水线【$pipelineName】#$buildNum 构建失败\n\n")))
+                            richtextContentList.add(RichtextText(RichtextTextText("❌${setting.failContent}\n")))
+                            if (settingDetailFlag) {
+                                richtextContentList.add(
+                                    RichtextView(RichtextViewLink(text = "查看详情", key = detailUrl, browser = 1))
+                                )
+                            }
+                            val richtextMessage = RichtextMessage(receiver, richtextContentList)
+                            wechatWorkService.sendRichText(richtextMessage)
                         }
-                        val richtextMessage = RichtextMessage(receiver, richtextContentList)
-                        wechatWorkService.sendRichText(richtextMessage)
                     }
                 }
             }

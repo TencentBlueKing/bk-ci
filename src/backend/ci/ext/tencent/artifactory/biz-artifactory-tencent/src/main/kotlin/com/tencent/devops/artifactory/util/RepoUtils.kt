@@ -33,6 +33,7 @@ import com.tencent.devops.artifactory.pojo.FileDetail
 import com.tencent.devops.artifactory.pojo.FileInfo
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.common.api.util.timestamp
+import com.tencent.devops.common.archive.pojo.QueryNodeInfo
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
@@ -57,6 +58,10 @@ object RepoUtils {
     }
 
     fun isPipelineFile(nodeInfo: NodeInfo): Boolean {
+        return nodeInfo.repoName == PIPELINE_REPO
+    }
+
+    fun isPipelineFile(nodeInfo: QueryNodeInfo): Boolean {
         return nodeInfo.repoName == PIPELINE_REPO
     }
 
@@ -98,10 +103,28 @@ object RepoUtils {
                 size = nodeInfo.size,
                 createdTime = LocalDateTime.parse(nodeInfo.createdDate, DateTimeFormatter.ISO_DATE_TIME).timestamp(),
                 modifiedTime = LocalDateTime.parse(nodeInfo.lastModifiedDate, DateTimeFormatter.ISO_DATE_TIME).timestamp(),
-                checksums = FileChecksums(nodeInfo.sha256, "", ""),
+                checksums = FileChecksums(nodeInfo.sha256, "", nodeInfo.md5 ?: ""),
                 meta = metadata
             )
         }
+    }
+
+    fun toFileDetail(nodeInfo: QueryNodeInfo): FileDetail {
+        return FileDetail(
+            name = nodeInfo.name,
+            path = nodeInfo.path,
+            fullName = nodeInfo.fullPath,
+            fullPath = nodeInfo.fullPath,
+            size = nodeInfo.size,
+            createdTime = LocalDateTime.parse(nodeInfo.createdDate, DateTimeFormatter.ISO_DATE_TIME).timestamp(),
+            modifiedTime = LocalDateTime.parse(nodeInfo.lastModifiedDate, DateTimeFormatter.ISO_DATE_TIME).timestamp(),
+            checksums = FileChecksums(
+                sha256 = nodeInfo.sha256 ?: "",
+                sha1 = "",
+                md5 = nodeInfo.md5 ?: ""
+            ),
+            meta = nodeInfo.metadata
+        )
     }
 
     private fun refineFullPath(fileInfo: com.tencent.bkrepo.generic.pojo.FileInfo): String {

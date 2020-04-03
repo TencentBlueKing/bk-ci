@@ -36,11 +36,11 @@ import java.util.concurrent.TimeUnit
 @Component
 class Gray {
 
-    @Value("\${project.gray.v2:#{null}}")
+    @Value("\${project.gray:#{null}}")
     private val grayFlag: String? = "false"
 
     var gray: Boolean? = null
-    private val redisKey = "project:setting:gray:v2" // v2灰度项目列表存在redis的标识key
+    private val redisKey = "project:setting:gray" // v2灰度项目列表存在redis的标识key
 
     private val cache = CacheBuilder.newBuilder()
         .maximumSize(10)

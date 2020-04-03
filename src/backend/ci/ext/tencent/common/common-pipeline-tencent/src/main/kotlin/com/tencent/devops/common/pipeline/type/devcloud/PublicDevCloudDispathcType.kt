@@ -66,9 +66,18 @@ data class PublicDevCloudDispathcType(
     override var imageName: String? = ""
 ) : StoreDispatchType(if (image.isNullOrBlank())
     imageCode else image, DispatchRouteKeySuffix.DEVCLOUD, imageType, credentialId, credentialProject, imageCode, imageVersion, imageName) {
+    override fun cleanDataBeforeSave() {
+        this.image = this.image?.trim()
+        this.credentialId = this.credentialId?.trim()
+        this.credentialProject = this.credentialProject?.trim()
+        this.imageCode = this.imageCode?.trim()
+        this.imageVersion = this.imageVersion?.trim()
+        this.imageName = this.imageName?.trim()
+    }
+
     override fun replaceField(variables: Map<String, String>) {
         image = EnvUtils.parseEnv(image!!, variables)
     }
 
-    override fun buildType() = BuildType.PUBLIC_DEVCLOUD
+    override fun buildType() = BuildType.valueOf(BuildType.PUBLIC_DEVCLOUD.name)
 }

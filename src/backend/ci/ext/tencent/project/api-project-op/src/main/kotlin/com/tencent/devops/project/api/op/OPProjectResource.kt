@@ -155,6 +155,49 @@ interface OPProjectResource {
         @Context request: HttpServletRequest
     ): Result<Map<String, Any?>?>
 
+    @ApiOperation("获取项目信息列表，支持筛选仓库灰度")
+    @GET
+    @Path("/list/macosGrayProject")
+    fun getProjectList(
+        @ApiParam(value = "项目名称", required = false)
+        @QueryParam(value = "project_name")
+        projectName: String?,
+        @ApiParam(value = "项目简称", required = false)
+        @QueryParam(value = "english_name")
+        englishName: String?,
+        @ApiParam(value = "项目类型", required = false)
+        @QueryParam(value = "project_type")
+        projectType: Int?,
+        @ApiParam(value = "是否保密", required = false)
+        @QueryParam(value = "is_secrecy")
+        isSecrecy: Boolean?,
+        @ApiParam(value = "注册人", required = false)
+        @QueryParam(value = "creator")
+        creator: String?,
+        @ApiParam(value = "审批人", required = false)
+        @QueryParam(value = "approver")
+        approver: String?,
+        @ApiParam(value = "审核状态", required = false)
+        @QueryParam(value = "approval_status")
+        approvalStatus: Int?,
+        @ApiParam(value = "偏移量", required = true)
+        @QueryParam(value = "offset")
+        offset: Int,
+        @ApiParam(value = "查询数量", required = true)
+        @QueryParam(value = "limit")
+        limit: Int,
+        @ApiParam(value = "是否灰度 true：是 false：否", required = true)
+        @QueryParam(value = "is_gray")
+        grayFlag: Boolean,
+        @ApiParam(value = "是否仓库灰度 true：是 false：否", required = true)
+        @QueryParam(value = "is_repo_gray")
+        repoGrayFlag: Boolean,
+        @ApiParam(value = "是否MacOS公共构建机灰度 true：是 false：否", required = true)
+        @QueryParam(value = "is_repo_gray")
+        macosGrayFlag: Boolean,
+        @Context request: HttpServletRequest
+    ): Result<Map<String, Any?>?>
+
 //    @ApiOperation("获取项目信息列表")
 //    @GET
 //    @Path("/list/query")
@@ -230,10 +273,18 @@ interface OPProjectResource {
         projectGraySetRequest: OpProjectGraySetRequest
     ): Result<Boolean>
 
-    @ApiOperation("灰度项目设置")
+    @ApiOperation("bkrepo灰度项目设置")
     @PUT
     @Path("/setRepoGrayProject")
     fun setRepoGrayProject(
+        @ApiParam(value = "灰度项目设置请求实体", required = true)
+        projectGraySetRequest: OpProjectGraySetRequest
+    ): Result<Boolean>
+
+    @ApiOperation("macos灰度项目设置")
+    @PUT
+    @Path("/setMacOSGrayProject")
+    fun setMacOSGrayProject(
         @ApiParam(value = "灰度项目设置请求实体", required = true)
         projectGraySetRequest: OpProjectGraySetRequest
     ): Result<Boolean>

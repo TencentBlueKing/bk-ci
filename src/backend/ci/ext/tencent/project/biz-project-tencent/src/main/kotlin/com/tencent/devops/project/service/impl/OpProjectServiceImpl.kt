@@ -34,6 +34,7 @@ import com.tencent.devops.common.auth.api.AuthTokenApi
 import com.tencent.devops.common.auth.code.AuthServiceCode
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.Gray
+import com.tencent.devops.common.service.gray.MacOSGray
 import com.tencent.devops.common.service.gray.RepoGray
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.project.constant.ProjectMessageCode
@@ -73,6 +74,7 @@ class OpProjectServiceImpl @Autowired constructor(
     private val bkAuthProjectApi: AuthProjectApi,
     private val bsAuthTokenApi: AuthTokenApi,
     private val repoGray: RepoGray,
+    private val macosGray: MacOSGray,
     private val tofService: TOFService,
     private val projectPermissionService: ProjectPermissionService,
     private val bsPipelineAuthServiceCode: AuthServiceCode
@@ -83,6 +85,7 @@ class OpProjectServiceImpl @Autowired constructor(
     redisOperation,
     gray,
     repoGray,
+    macosGray,
     projectDispatcher
 ) {
 

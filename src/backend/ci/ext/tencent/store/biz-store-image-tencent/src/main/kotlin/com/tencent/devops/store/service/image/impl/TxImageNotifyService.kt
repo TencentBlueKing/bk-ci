@@ -46,12 +46,19 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 @Service
-class TxImageNotifyService @Autowired constructor(
-    private val dslContext: DSLContext,
-    private val imageDao: ImageDao,
-    private val imageVersionLogDao: ImageVersionLogDao,
-    private val client: Client
-) : ImageNotifyService {
+class TxImageNotifyService @Autowired constructor() : ImageNotifyService {
+
+    @Autowired
+    private lateinit var dslContext: DSLContext
+
+    @Autowired
+    private lateinit var imageDao: ImageDao
+
+    @Autowired
+    private lateinit var imageVersionLogDao: ImageVersionLogDao
+
+    @Autowired
+    private lateinit var client: Client
 
     private val logger = LoggerFactory.getLogger(TxImageNotifyService::class.java)
 

@@ -4,6 +4,9 @@ import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.common.api.auth.AUTH_HEADER_BUILD_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_PIPELINE_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_PROJECT_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_REGION
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -35,6 +38,9 @@ interface ServiceArtifactoryDownLoadResource {
         @ApiParam("构建ID", required = true)
         @HeaderParam(AUTH_HEADER_BUILD_ID)
         buildId: String,
+        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String?,
         @ApiParam("版本仓库类型", required = true)
         @QueryParam("artifactoryType")
         artifactoryType: ArtifactoryType,
@@ -52,6 +58,9 @@ interface ServiceArtifactoryDownLoadResource {
         crossPipineId: String?,
         @ApiParam("构建No", required = false)
         @QueryParam("buildNo")
-        crossBuildNo: String?
+        crossBuildNo: String?,
+        @ApiParam("客户端区域", required = false)
+        @HeaderParam(AUTH_HEADER_REGION)
+        region: String?
     ): Result<List<String>>
 }
