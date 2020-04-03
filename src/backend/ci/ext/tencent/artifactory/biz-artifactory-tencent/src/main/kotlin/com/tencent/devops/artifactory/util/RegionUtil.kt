@@ -39,9 +39,15 @@ object RegionUtil {
     fun getRegionUrl(region: String?): String {
         return when (region) {
             null, "", DEVNET -> devHost()
-            IDC, OSS, EXTERNAL -> idcHost()
+            IDC, OSS -> idcHost()
+            EXTERNAL -> externalHost()
             else -> throw RuntimeException("region not supported")
         }
+    }
+
+    private fun externalHost(): String {
+        val commonConfig = SpringContextUtil.getBean(CommonConfig::class.java)
+        return HomeHostUtil.getHost(commonConfig.devopsOuterHostGateWay!!)
     }
 
     private fun idcHost(): String {

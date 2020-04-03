@@ -35,6 +35,7 @@ import com.tencent.devops.artifactory.service.pojo.JFrogArchiveRequest
 import com.tencent.devops.artifactory.service.pojo.JFrogFolderCount
 import com.tencent.devops.artifactory.service.pojo.JFrogFolderCountRequest
 import com.tencent.devops.artifactory.service.pojo.Url
+import com.tencent.devops.artifactory.util.RegionUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import okhttp3.Credentials
 import okhttp3.MediaType
@@ -73,7 +74,7 @@ class JFrogApiService @Autowired constructor(private val objectMapper: ObjectMap
             }
 
             val jFrogApiResponse = objectMapper.readValue<JFrogApiResponse<Url>>(responseContent)
-            return jFrogApiResponse.data!!.url
+            return RegionUtil.replaceServerHost(jFrogApiResponse.data!!.url, RegionUtil.IDC)
         }
     }
 
@@ -117,7 +118,7 @@ class JFrogApiService @Autowired constructor(private val objectMapper: ObjectMap
             }
 
             val jFrogApiResponse = objectMapper.readValue<JFrogApiResponse<Url>>(responseContent)
-            return jFrogApiResponse.data!!.url
+            return RegionUtil.replaceServerHost(jFrogApiResponse.data!!.url, RegionUtil.IDC)
         }
     }
 
@@ -139,7 +140,8 @@ class JFrogApiService @Autowired constructor(private val objectMapper: ObjectMap
             }
 
             val jFrogApiResponse = objectMapper.readValue<JFrogApiResponse<Url>>(responseContent)
-            return jFrogApiResponse.data!!.url
+            val url = jFrogApiResponse.data!!.url
+            return RegionUtil.replaceServerHost(url, RegionUtil.IDC)
         }
     }
 
@@ -211,7 +213,8 @@ class JFrogApiService @Autowired constructor(private val objectMapper: ObjectMap
             }
 
             val jFrogApiResponse = objectMapper.readValue<JFrogApiResponse<Url>>(responseContent)
-            return jFrogApiResponse.data!!.url
+            val url = jFrogApiResponse.data!!.url
+            return RegionUtil.replaceRegionServer(url, RegionUtil.EXTERNAL)
         }
     }
 
