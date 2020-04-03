@@ -44,6 +44,7 @@ import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketCheckImageElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
+import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.service.PipelineBuildService
 import com.tencent.devops.process.engine.service.PipelineService
 import com.tencent.devops.process.pojo.CheckImageInitPipelineResp
@@ -181,7 +182,7 @@ class CheckImageInitPipelineService @Autowired constructor(
         )
         containerSeqId++
         val stageFirstContainers = listOf<Container>(stageFirstContainer)
-        val stageFirst = Stage(stageFirstContainers, "stage-1")
+        val stageFirst = Stage(stageFirstContainers, VMUtils.genStageId(1))
         // stage-2
         val stageSecondCheckImageElement = MarketCheckImageElement(
             id = "T-2-1-1",
@@ -206,7 +207,7 @@ class CheckImageInitPipelineService @Autowired constructor(
             dispatchType = DockerDispatchType(DockerVersion.TLINUX2_2.value)
         )
         val stageSecondContainers = listOf<Container>(stageSecondContainer)
-        val stageSecond = Stage(stageSecondContainers, "stage-2")
+        val stageSecond = Stage(stageSecondContainers, VMUtils.genStageId(2))
         val stages = mutableListOf(stageFirst, stageSecond)
         var pipelineName = "im-$projectCode-$imageCode-${System.currentTimeMillis()}"
         if (pipelineName.toCharArray().size > 64) {
