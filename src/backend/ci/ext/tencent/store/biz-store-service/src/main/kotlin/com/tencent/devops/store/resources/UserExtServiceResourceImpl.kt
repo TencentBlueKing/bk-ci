@@ -6,8 +6,6 @@ import com.tencent.devops.store.api.UserExtServiceResource
 import com.tencent.devops.store.pojo.EditInfoDTO
 import com.tencent.devops.store.pojo.ServiceBaseInfoUpdateRequest
 import com.tencent.devops.store.pojo.UpdateExtBaseInfo
-import com.tencent.devops.store.pojo.UpdateMediaInfo
-import com.tencent.devops.store.pojo.common.enums.MediaTypeEnum
 import com.tencent.devops.store.pojo.dto.ExtSubmitDTO
 import com.tencent.devops.store.pojo.enums.ExtServiceSortTypeEnum
 import com.tencent.devops.store.pojo.enums.ServiceTypeEnum

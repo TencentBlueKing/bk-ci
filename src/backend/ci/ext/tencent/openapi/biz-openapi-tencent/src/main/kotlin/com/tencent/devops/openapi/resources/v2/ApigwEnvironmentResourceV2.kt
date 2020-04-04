@@ -11,12 +11,11 @@ import com.tencent.devops.environment.pojo.NodeWithPermission
 import com.tencent.devops.openapi.api.v2.ApigwEnvironmentResourceV2
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
 
 @RestResource
 class ApigwEnvironmentResourceV2 @Autowired constructor(
     private val client: Client
-): ApigwEnvironmentResourceV2 {
+) : ApigwEnvironmentResourceV2 {
     override fun listUsableServerNodes(userId: String, projectId: String): Result<List<NodeWithPermission>> {
         logger.info("listUsableServerNodes userId[$userId] project[$projectId]")
         return client.get(ServiceNodeResource::class).listUsableServerNodes(userId, projectId)

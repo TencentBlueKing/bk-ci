@@ -135,13 +135,11 @@ class ServiceItemDao {
                 whereStep.where(PARENT_ID.eq(itemQueryInfo.serviceId))
             }
             whereStep.where(ITEM_STATUS.notEqual("DELETE"))
-            if(itemQueryInfo.page != null && itemQueryInfo.pageSize != null){
+            if (itemQueryInfo.page != null && itemQueryInfo.pageSize != null) {
                 whereStep.limit((itemQueryInfo.page - 1) * itemQueryInfo.pageSize, itemQueryInfo.pageSize).fetch()
-            }
-            else {
+            } else {
                 whereStep.orderBy(UPDATE_TIME).fetch()
             }
-
         }
     }
 
@@ -159,7 +157,6 @@ class ServiceItemDao {
 
             whereStep.fetchOne(0, Int::class.java)
         }
-
     }
 
     fun getItemById(dslContext: DSLContext, itemId: String): TServiceItemRecord? {

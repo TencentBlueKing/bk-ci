@@ -1,6 +1,5 @@
 package com.tencent.devops.openapi.resources.v2
 
-
 import com.tencent.devops.artifactory.api.service.ServiceArtifactoryDownLoadResource
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.common.api.pojo.Result
@@ -12,7 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired
 @RestResource
 class ApigwArtifactoryResourceV2Impl @Autowired constructor(
     private val client: Client
-): ApigwArtifactoryResourceV2 {
+) : ApigwArtifactoryResourceV2 {
     override fun getThirdPartyDownloadUrl(
         projectId: String,
         pipelineId: String,

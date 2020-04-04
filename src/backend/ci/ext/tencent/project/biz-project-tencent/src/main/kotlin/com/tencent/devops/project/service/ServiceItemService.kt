@@ -232,7 +232,7 @@ class ServiceItemService @Autowired constructor(
                 code = serviceRecord.englishName
             )
             projectServiceMap[serviceId] = serviceEntity
-            logger.info("set bkServiceId to map: servcieId[$serviceId], entity[${serviceEntity.toString()}]")
+            logger.info("set bkServiceId to map: servcieId[$serviceId], entity[$serviceEntity]")
             serviceEntity
         } else {
             projectServiceMap[serviceId]!!
@@ -290,7 +290,7 @@ class ServiceItemService @Autowired constructor(
             tooltip = itemInfo.tooltip
         )
         serviceItemDao.add(dslContext, userId, createInfo)
-        if(projectServiceMap[itemInfo.pid] == null){
+        if (projectServiceMap[itemInfo.pid] == null) {
             getProjectService(itemInfo.pid)
         }
         return Result(true)
@@ -340,15 +340,14 @@ class ServiceItemService @Autowired constructor(
         validProps(itemInfo.props)
     }
 
-    private fun validProps(props: String?){
-        if(props.isNullOrEmpty()){
+    private fun validProps(props: String?) {
+        if (props.isNullOrEmpty()) {
             throw RuntimeException("props信息为空")
         }
 
-        try{
+        try {
             JsonUtil.toJson(props!!)
-        }
-        catch (e: Exception){
+        } catch (e: Exception) {
             throw RuntimeException("props信息非json结构")
         }
     }

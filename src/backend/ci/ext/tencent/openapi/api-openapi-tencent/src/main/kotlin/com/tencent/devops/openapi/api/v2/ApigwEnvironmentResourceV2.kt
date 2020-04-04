@@ -89,5 +89,4 @@ interface ApigwEnvironmentResourceV2 {
         @ApiParam("节点 hashIds", required = true)
         nodeHashIds: List<String>
     ): Result<List<NodeBaseInfo>>
-
 }

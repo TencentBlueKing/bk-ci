@@ -1,6 +1,5 @@
 package com.tencent.devops.store.pojo
 
-import com.tencent.devops.store.pojo.common.StoreMediaInfo
 import com.tencent.devops.store.pojo.enums.DescInputTypeEnum
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty

@@ -4,7 +4,7 @@ import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("查询扩展点请求对象")
-class ItemListVO (
+class ItemListVO(
     @ApiModelProperty("总记录数", required = true)
     val count: Int,
     @ApiModelProperty("当前页码值", required = false)
