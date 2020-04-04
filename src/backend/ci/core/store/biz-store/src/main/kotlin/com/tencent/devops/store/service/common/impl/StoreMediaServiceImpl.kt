@@ -13,7 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
-class StoreMediaServiceImpl : StoreMediaService{
+class StoreMediaServiceImpl : StoreMediaService {
 
     @Autowired
     lateinit var dslContext: DSLContext
@@ -25,7 +25,7 @@ class StoreMediaServiceImpl : StoreMediaService{
         logger.info("addMedia input: userId[$userId] type[$type] storeMediaInfo:[$storeMediaInfo]")
         storeMediaInfoDao.add(
             dslContext = dslContext,
-            id =  UUIDUtil.generate(),
+            id = UUIDUtil.generate(),
             userId = userId,
             type = type.type.toByte(),
             storeMediaInfoReq = storeMediaInfo
@@ -41,7 +41,7 @@ class StoreMediaServiceImpl : StoreMediaService{
         logger.info("updateMedia input: userId[$userId] id[$id] storeMediaInfo:[$storeMediaInfo]")
         storeMediaInfoDao.updateById(
             dslContext = dslContext,
-            id =  id,
+            id = id,
             userId = userId,
             storeMediaInfoReq = storeMediaInfo
         )
@@ -60,11 +60,13 @@ class StoreMediaServiceImpl : StoreMediaService{
             dslContext = dslContext,
             id = id
         )
-        return Result(if (storeMediaRecord == null) {
-            null
-        } else {
-            storeMediaInfoDao.convert(storeMediaRecord)
-        })
+        return Result(
+            if (storeMediaRecord == null) {
+                null
+            } else {
+                storeMediaInfoDao.convert(storeMediaRecord)
+            }
+        )
     }
 
     override fun getByCode(storeCode: String, storeType: StoreTypeEnum): Result<List<StoreMediaInfo>?> {
@@ -75,9 +77,9 @@ class StoreMediaServiceImpl : StoreMediaService{
             storeCode = storeCode,
             type = storeType.type.toByte()
         )
-        return if(storeMediaInfoList == null){
+        return if (storeMediaInfoList == null) {
             Result(emptyList<StoreMediaInfo>())
-        }else{
+        } else {
             storeMediaRecord!!.forEach {
                 storeMediaInfoList.add(storeMediaInfoDao.convert(it))
             }
@@ -85,7 +87,7 @@ class StoreMediaServiceImpl : StoreMediaService{
         }
     }
 
-    companion object{
+    companion object {
         val logger = LoggerFactory.getLogger(this::class.java)
     }
 }
