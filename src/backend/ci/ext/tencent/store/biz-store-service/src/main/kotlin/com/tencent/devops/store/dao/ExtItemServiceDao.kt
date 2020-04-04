@@ -113,8 +113,8 @@ class ExtItemServiceDao {
         dslContext: DSLContext,
         serviceIds: List<String>
     ): Result<TExtensionServiceItemRelRecord>? {
-         with(TExtensionServiceItemRel.T_EXTENSION_SERVICE_ITEM_REL) {
-             return dslContext.selectFrom(this).where(SERVICE_ID.`in`(serviceIds)).fetch()
+        with(TExtensionServiceItemRel.T_EXTENSION_SERVICE_ITEM_REL) {
+            return dslContext.selectFrom(this).where(SERVICE_ID.`in`(serviceIds)).fetch()
         }
     }
 
