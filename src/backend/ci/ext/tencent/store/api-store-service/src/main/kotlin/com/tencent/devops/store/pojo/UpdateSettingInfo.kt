@@ -13,5 +13,5 @@ data class UpdateSettingInfo(
     @ApiModelProperty("是否官方认证", required = true)
     val certificationFlag: Boolean?,
     @ApiModelProperty("权重", required = true)
-    val weight: Float?
+    val weight: Int?
 )

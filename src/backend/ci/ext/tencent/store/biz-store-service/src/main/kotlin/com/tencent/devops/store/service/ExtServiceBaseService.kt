@@ -1395,26 +1395,17 @@ abstract class ExtServiceBaseService @Autowired constructor() {
             }
             val itemIds = baseInfo.itemIds
             if (itemIds != null) {
-                val existenceItems = extServiceItemRelDao.getItemByServiceId(dslContext, serviceId)
-                val existenceItemIds = mutableListOf<String>()
-                existenceItems?.forEach {
-                    existenceItemIds.add(it.itemId)
-                }
-                itemIds.forEach { itemId ->
-                    if (!existenceItemIds.contains(itemId)) {
-                        extServiceItemRelDao.create(
-                            userId = userId,
-                            dslContext = dslContext,
-                            extServiceItemRelCreateInfo = ExtServiceItemRelCreateInfo(
-                                serviceId = serviceId,
-                                modifierUser = userId,
-                                creatorUser = userId,
-                                itemId = itemId,
-                                bkServiceId = getItemBkServiceId(itemId)
-                            )
-                        )
-                    }
-                }
+                val featureInfoRecord = extFeatureDao.getLatestServiceByCode(dslContext, serviceCode)
+                val itemCreateInfoList =
+                    getFileServiceProps(serviceCode, featureInfoRecord!!.repositoryHashId, EXTENSION_JSON_NAME, itemIds)
+                extServiceItemRelDao.deleteByServiceId(dslContext, serviceId)
+                extServiceItemRelDao.batchAdd(
+                    dslContext = dslContext,
+                    userId = userId,
+                    serviceId = serviceId,
+                    itemPropList = itemCreateInfoList
+                )
+
                 // 添加扩展点使用记录
                 client.get(ServiceItemResource::class).addServiceNum(itemIds)
             }
@@ -1445,6 +1436,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
                     publicFlag = settingInfo.publicFlag,
                     recommentFlag = settingInfo.recommendFlag,
                     certificationFlag = settingInfo.certificationFlag,
+                    weight = settingInfo.weight,
                     modifierUser = userId,
                     serviceTypeEnum = settingInfo.type,
                     descInputType = baseInfo?.descInputType ?: DescInputTypeEnum.MANUAL
