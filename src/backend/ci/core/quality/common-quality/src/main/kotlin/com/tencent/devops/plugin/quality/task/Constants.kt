@@ -27,3 +27,7 @@
 package com.tencent.devops.plugin.quality.task
 
 const val QUALITY_RESULT = "bsQualityResult"
+
+val QUALITY_CODECC_LAZY_ATOM = setOf("CodeccCheckAtom", "linuxCodeCCScript", "linuxPaasCodeCCScript")
+
+val QUALITY_LAZY_TIME_GAP = listOf(1, 3, 5, 7, 9, 11, 13, 15, 17, 19, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20)

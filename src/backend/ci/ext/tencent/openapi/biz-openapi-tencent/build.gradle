@@ -34,6 +34,7 @@ dependencies {
     compile project (":core:common:common-client")
     compile "io.jsonwebtoken:jjwt"
     compile group: 'net.sf.json-lib', name: 'json-lib', classifier: "jdk15"
+    compile "org.springframework.boot:spring-boot-starter-aop"
 }
 
 apply from: "$rootDir/task_deploy_to_maven.gradle"

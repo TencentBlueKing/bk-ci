@@ -27,7 +27,9 @@
 dependencies {
     compile project(":ext:tencent:common:common-digest-tencent")
     compile project(":core:log:biz-log")
+    compile project(":core:notify:api-notify")
     compile project(":ext:tencent:common:common-auth:common-auth-tencent")
+    compile project(":ext:tencent:log:api-log-tencent")
 }
 
 apply from: "$rootDir/task_deploy_to_maven.gradle"

@@ -33,8 +33,6 @@ import com.tencent.devops.artifactory.api.service.ServiceArtifactoryResource
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.auth.api.BSAuthProjectApi
-import com.tencent.devops.common.auth.api.BSCCProjectApi
-import com.tencent.devops.common.auth.api.pojo.BkAuthProject
 import com.tencent.devops.common.auth.code.BSExperienceAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.HomeHostUtil
@@ -48,14 +46,16 @@ import com.tencent.devops.experience.pojo.enums.Platform
 import com.tencent.devops.experience.pojo.enums.Source
 import com.tencent.devops.experience.util.DateUtil
 import com.tencent.devops.model.experience.tables.records.TExperienceRecord
+import com.tencent.devops.project.api.service.ServiceProjectResource
+import com.tencent.devops.project.pojo.ProjectVO
 import org.jooq.DSLContext
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 @Service
 class ExperienceAppService(
     private val dslContext: DSLContext,
     private val objectMapper: ObjectMapper,
-    private val bsCCProjectApi: BSCCProjectApi,
     private val bsAuthProjectApi: BSAuthProjectApi,
     private val experienceDao: ExperienceDao,
     private val groupService: GroupService,
@@ -64,6 +64,10 @@ class ExperienceAppService(
     private val experienceServiceCode: BSExperienceAuthServiceCode,
     private val client: Client
 ) {
+
+    @Value("\${s3.endpointUrl:#{null}}")
+    private val endpointUrl: String? = null
+
     fun list(userId: String, offset: Int, limit: Int): List<AppExperience> {
         val expireTime = DateUtil.today()
 
@@ -126,23 +130,24 @@ class ExperienceAppService(
             return emptyList()
         }
         val projectIds = subUserCanExperienceList.map { it.projectId }.toSet()
-        val projectMap = mutableMapOf<String, BkAuthProject>()
-        bsCCProjectApi.getProjectListAsOuter(projectIds).forEach {
+        val projectMap = mutableMapOf<String, ProjectVO>()
+        val projectList = client.get(ServiceProjectResource::class).listByProjectCode(projectIds).data ?: listOf()
+        projectList.forEach {
             projectMap[it.projectCode] = it
         }
 
         return subUserCanExperienceList.map {
             val projectId = it.projectId
-            val logoUrl = projectMap[projectId]!!.logoAddr
+            val logoUrl = transformLogoAddr(projectMap[projectId]!!.logoAddr)
             val projectName = projectMap[projectId]!!.projectName
             AppExperience(
-                    HashUtil.encodeLongId(it.id),
-                    Platform.valueOf(it.platform),
-                    Source.valueOf(it.source),
-                    logoUrl,
-                    projectName,
-                    it.version,
-                    it.bundleIdentifier
+                experienceHashId = HashUtil.encodeLongId(it.id),
+                platform = Platform.valueOf(it.platform),
+                source = Source.valueOf(it.source),
+                logoUrl = logoUrl,
+                name = projectName,
+                version = it.version,
+                bundleIdentifier = it.bundleIdentifier
             )
         }
     }
@@ -156,9 +161,10 @@ class ExperienceAppService(
         val isExpired = DateUtil.isExpired(experience.endDate)
         val canExperience = experienceService.userCanExperience(userId, experienceId)
 
-        val bkAuthProject = bsCCProjectApi.getProjectListAsOuter(setOf(projectId)).first()
-        val logoUrl = bkAuthProject.logoAddr
-        val projectName = bkAuthProject.projectName
+        val projectInfo = client.get(ServiceProjectResource::class).get(projectId).data
+            ?: throw RuntimeException("ProjectId $projectId cannot find.")
+        val logoUrl = transformLogoAddr(projectInfo.logoAddr)
+        val projectName = projectInfo.projectName ?: ""
         val version = experience.version
         val shareUrl = "${HomeHostUtil.outerServerHost()}/app/download/devops_app_forward.html?flag=experienceDetail&experienceId=$experienceHashId"
 
@@ -169,25 +175,25 @@ class ExperienceAppService(
         val experienceList = experienceDao.listByBundleIdentifier(dslContext, projectId, bundleIdentifier)
         val changeLog = experienceList.map {
             ExperienceChangeLog(
-                    HashUtil.encodeLongId(it.id),
-                    it.version,
-                    it.creator,
-                    it.createTime.timestamp(),
-                    it.remark ?: ""
+                experienceHashId = HashUtil.encodeLongId(it.id),
+                version = it.version,
+                creator = it.creator,
+                createDate = it.createTime.timestamp(),
+                changelog = it.remark ?: ""
             )
         }
         return AppExperienceDetail(
-                experienceHashId,
-                fileDetail.size,
-                logoUrl,
-                shareUrl,
-                projectName,
-                Platform.valueOf(experience.platform),
-                version,
-                isExpired,
-                canExperience,
-                experience.online,
-                changeLog
+            experienceHashId = experienceHashId,
+            size = fileDetail.size,
+            logoUrl = logoUrl,
+            shareUrl = shareUrl,
+            name = projectName,
+            platform = Platform.valueOf(experience.platform),
+            version = version,
+            expired = isExpired,
+            canExperience = canExperience,
+            online = experience.online,
+            changeLog = changeLog
         )
     }
 
@@ -205,11 +211,9 @@ class ExperienceAppService(
         val expireTime = DateUtil.today()
         val experienceList = experienceDao.list(dslContext, projectId, null, null)
 
-        val bkAuthProjectList = bsCCProjectApi.getProjectListAsOuter(setOf(projectId))
-        if (bkAuthProjectList.isEmpty()) {
-            throw RuntimeException("ProjectId $projectId cannot find in CC")
-        }
-        val logoUrl = bkAuthProjectList.first().logoAddr
+        val projectInfo = client.get(ServiceProjectResource::class).get(projectId).data
+            ?: throw RuntimeException("ProjectId $projectId cannot find.")
+        val logoUrl = transformLogoAddr(projectInfo.logoAddr)
 
         val groupIdSet = mutableSetOf<String>()
         experienceList.forEach {
@@ -232,19 +236,28 @@ class ExperienceAppService(
             val canExperience = userSet.contains(userId) || userId == it.creator
 
             AppExperienceSummary(
-                    HashUtil.encodeLongId(it.id),
-                    it.name,
-                    Platform.valueOf(it.platform),
-                    it.version,
-                    it.remark ?: "",
-                    it.endDate.timestamp(),
-                    Source.valueOf(it.source),
-                    logoUrl,
-                    it.creator,
-                    isExpired,
-                    canExperience,
-                    it.online
+                experienceHashId = HashUtil.encodeLongId(it.id),
+                name = it.name,
+                platform = Platform.valueOf(it.platform),
+                version = it.version,
+                remark = it.remark ?: "",
+                expireDate = it.endDate.timestamp(),
+                source = Source.valueOf(it.source),
+                logoUrl = logoUrl,
+                creator = it.creator,
+                expired = isExpired,
+                canExperience = canExperience,
+                online = it.online
             )
+        }
+    }
+
+    fun transformLogoAddr(innerLogoAddr: String?): String {
+        if (innerLogoAddr == null) return ""
+        return if (endpointUrl != null) {
+            innerLogoAddr.replace(endpointUrl ?: "http://radosgw.open.oa.com", "${HomeHostUtil.outerServerHost()}/images")
+        } else {
+            innerLogoAddr
         }
     }
 }

@@ -26,56 +26,192 @@
 
 package com.tencent.devops.log.configuration
 
+import com.floragunn.searchguard.ssl.SearchGuardSSLPlugin
+import com.floragunn.searchguard.ssl.util.SSLConfigConstants
+import com.tencent.devops.common.es.ESClient
 import com.tencent.devops.common.es.ESProperties
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.WebAutoConfiguration
-import org.elasticsearch.client.transport.TransportClient
+import com.tencent.devops.log.client.impl.MultiESLogClient
+import com.tencent.devops.log.dao.TencentIndexDao
+import com.tencent.devops.log.dao.v2.IndexDaoV2
 import org.elasticsearch.common.settings.Settings
 import org.elasticsearch.common.transport.InetSocketTransportAddress
+import org.elasticsearch.plugins.Plugin
 import org.elasticsearch.transport.client.PreBuiltTransportClient
+import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.boot.autoconfigure.AutoConfigureAfter
 import org.springframework.boot.autoconfigure.AutoConfigureBefore
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import org.springframework.context.annotation.Primary
 import org.springframework.core.Ordered
 import java.net.InetAddress
 
 @Configuration
-@AutoConfigureOrder(Ordered.HIGHEST_PRECEDENCE)
+@AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
 @AutoConfigureBefore(WebAutoConfiguration::class)
+@AutoConfigureAfter(LogConfiguration::class)
 @EnableConfigurationProperties(ESProperties::class)
 class LogESAutoConfiguration {
     @Value("\${elasticsearch.ip}")
-    private val ip: String? = null
+    private val e1IP: String? = null
     @Value("\${elasticsearch.port}")
-    private val port: Int? = 0
+    private val e1Port: Int? = 0
     @Value("\${elasticsearch.cluster}")
-    private val cluster: String? = null
+    private val e1Cluster: String? = null
+    @Value("\${elasticsearch.keystore.filePath:#{null}}")
+    private val e1KeystoreFilePath: String? = null
+    @Value("\${elasticsearch.keystore.password:#{null}}")
+    private val e1KeystorePassword: String? = null
+    @Value("\${elasticsearch.truststore.filePath:#{null}}")
+    private val e1TruststoreFilePath: String? = null
+    @Value("\${elasticsearch.truststore.password:#{null}}")
+    private val e1TruststorePassword: String? = null
+    @Value("\${elasticsearch.name}")
+    private val e1Name: String? = null
+    @Value("\${elasticsearch.mainCluster:#{null}}")
+    private val e1MainCluster: String? = null
 
-    @Bean
-    @Primary
-    fun transportClient(): TransportClient {
-        if (ip == null || ip!!.isBlank()) {
+    @Value("\${elasticsearch2.ip}")
+    private val e2IP: String? = null
+    @Value("\${elasticsearch2.port}")
+    private val e2Port: Int? = 0
+    @Value("\${elasticsearch2.cluster}")
+    private val e2Cluster: String? = null
+    @Value("\${elasticsearch2.keystore.filePath:#{null}}")
+    private val e2KeystoreFilePath: String? = null
+    @Value("\${elasticsearch2.keystore.password:#{null}}")
+    private val e2KeystorePassword: String? = null
+    @Value("\${elasticsearch2.truststore.filePath:#{null}}")
+    private val e2TruststoreFilePath: String? = null
+    @Value("\${elasticsearch2.truststore.password:#{null}}")
+    private val e2TruststorePassword: String? = null
+    @Value("\${elasticsearch2.name}")
+    private val e2Name: String? = null
+    @Value("\${elasticsearch2.mainCluster:#{null}}")
+    private val e2MainCluster: String? = null
+
+    fun client(): ESClient {
+        if (e1IP.isNullOrBlank()) {
             throw IllegalArgumentException("ES集群地址尚未配置")
         }
-        if (port == null || port!! <= 0) {
+        if (e1Port == null || e1Port!! <= 0) {
             throw IllegalArgumentException("ES集群端口尚未配置")
         }
-        if (cluster == null || cluster!!.isBlank()) {
+        if (e1Cluster.isNullOrBlank()) {
             throw IllegalArgumentException("ES集群名称尚未配置")
         }
-        val settings = Settings.builder().put("cluster.name", cluster).build()
-        val ips = ip!!.split(",".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
-        val client = PreBuiltTransportClient(settings)
-        for (ipAddress in ips) {
-            client.addTransportAddress(InetSocketTransportAddress(InetAddress.getByName(ipAddress), port!!))
+        if (e1Name.isNullOrBlank()) {
+            throw IllegalArgumentException("ES唯一名称尚未配置")
         }
-        logger.info("Init ES transport client with host($ip:$port) and cluster($cluster)")
-        return client
+
+        val builder = Settings.builder().put("cluster.name", e1Cluster)
+        var plugin: Class<out Plugin>? = null
+
+        if (!e1KeystoreFilePath.isNullOrBlank()) {
+            builder.put(SSLConfigConstants.SEARCHGUARD_SSL_TRANSPORT_KEYSTORE_FILEPATH, e1KeystoreFilePath)
+                .put(SSLConfigConstants.SEARCHGUARD_SSL_TRANSPORT_ENFORCE_HOSTNAME_VERIFICATION, false)
+                .put(SSLConfigConstants.SEARCHGUARD_SSL_TRANSPORT_ENABLED, true)
+                .put(SSLConfigConstants.SEARCHGUARD_SSL_TRANSPORT_ENFORCE_HOSTNAME_VERIFICATION_RESOLVE_HOST_NAME, true)
+        }
+        if (!e1TruststoreFilePath.isNullOrBlank()) {
+            builder.put(SSLConfigConstants.SEARCHGUARD_SSL_TRANSPORT_TRUSTSTORE_FILEPATH, e1TruststoreFilePath)
+        }
+        if (!e1KeystorePassword.isNullOrBlank()) {
+            builder.put(SSLConfigConstants.SEARCHGUARD_SSL_TRANSPORT_KEYSTORE_PASSWORD, e1KeystorePassword)
+        }
+        if (!e1TruststorePassword.isNullOrBlank()) {
+            builder.put(SSLConfigConstants.SEARCHGUARD_SSL_TRANSPORT_TRUSTSTORE_PASSWORD, e1TruststorePassword)
+            plugin = SearchGuardSSLPlugin::class.java
+        }
+        val settings = builder.build()
+        val ips = e1IP!!.split(",".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
+        val client = if (plugin != null) {
+            PreBuiltTransportClient(settings, plugin)
+        } else {
+            PreBuiltTransportClient(settings)
+        }
+        for (ipAddress in ips) {
+            client.addTransportAddress(InetSocketTransportAddress(InetAddress.getByName(ipAddress), e1Port!!))
+        }
+        val mainCluster = if (!e1MainCluster.isNullOrBlank()) {
+            e1MainCluster!!.toBoolean()
+        } else {
+            false
+        }
+        logger.info("Init the log es1 transport client with host($e1Name:$mainCluster:$e1IP:$e1Port), cluster($e1Cluster), keystore($e1KeystoreFilePath|$e1KeystorePassword), truststore($e1TruststoreFilePath|$e1TruststorePassword)")
+        return ESClient(e1Name!!, client, mainCluster)
     }
+
+    fun client2(): ESClient {
+        if (e2IP.isNullOrBlank()) {
+            throw IllegalArgumentException("ES2集群地址尚未配置")
+        }
+        if (e2Port == null || e2Port!! <= 0) {
+            throw IllegalArgumentException("ES2集群端口尚未配置")
+        }
+        if (e2Cluster.isNullOrBlank()) {
+            throw IllegalArgumentException("ES2集群名称尚未配置")
+        }
+
+        if (e2Name.isNullOrBlank()) {
+            throw IllegalArgumentException("ES2唯一名称尚未配置")
+        }
+
+        val builder = Settings.builder().put("cluster.name", e2Cluster)
+
+        var plugin: Class<out Plugin>? = null
+
+        if (!e2KeystoreFilePath.isNullOrBlank()) {
+            builder.put(SSLConfigConstants.SEARCHGUARD_SSL_TRANSPORT_KEYSTORE_FILEPATH, e2KeystoreFilePath)
+                    .put(SSLConfigConstants.SEARCHGUARD_SSL_TRANSPORT_ENFORCE_HOSTNAME_VERIFICATION, false)
+                    .put(SSLConfigConstants.SEARCHGUARD_SSL_TRANSPORT_ENABLED, true)
+                    .put(SSLConfigConstants.SEARCHGUARD_SSL_TRANSPORT_ENFORCE_HOSTNAME_VERIFICATION_RESOLVE_HOST_NAME, true)
+        }
+        if (!e2TruststoreFilePath.isNullOrBlank()) {
+            builder.put(SSLConfigConstants.SEARCHGUARD_SSL_TRANSPORT_TRUSTSTORE_FILEPATH, e2TruststoreFilePath)
+        }
+        if (!e2KeystorePassword.isNullOrBlank()) {
+            builder.put(SSLConfigConstants.SEARCHGUARD_SSL_TRANSPORT_KEYSTORE_PASSWORD, e2KeystorePassword)
+        }
+        if (!e2TruststorePassword.isNullOrBlank()) {
+            builder.put(SSLConfigConstants.SEARCHGUARD_SSL_TRANSPORT_TRUSTSTORE_PASSWORD, e2TruststorePassword)
+            plugin = SearchGuardSSLPlugin::class.java
+        }
+
+        val settings = builder.build()
+        val ips = e2IP!!.split(",".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
+
+        val client = if (plugin != null) {
+            PreBuiltTransportClient(settings, plugin)
+        } else {
+            PreBuiltTransportClient(settings)
+        }
+        for (ipAddress in ips) {
+            client.addTransportAddress(InetSocketTransportAddress(InetAddress.getByName(ipAddress), e2Port!!))
+        }
+        val mainCluster = if (!e2MainCluster.isNullOrBlank()) {
+            e2MainCluster!!.toBoolean()
+        } else {
+            false
+        }
+        logger.info("Init the log es2 transport client with host($e2Name:$mainCluster:$e2IP:$e2Port), cluster($e2Cluster), keystore($e2KeystoreFilePath|$e2KeystorePassword), truststore($e2TruststoreFilePath|$e2TruststorePassword)")
+        return ESClient(e2Name!!, client, mainCluster)
+    }
+
+    @Bean
+    fun logClient(
+        @Autowired redisOperation: RedisOperation,
+        @Autowired tencentIndexDao: TencentIndexDao,
+        @Autowired indexDaoV2: IndexDaoV2,
+        @Autowired dslContext: DSLContext
+    ) = MultiESLogClient(listOf(client(), client2()), redisOperation, dslContext, tencentIndexDao, indexDaoV2)
+
     companion object {
         private val logger = LoggerFactory.getLogger(LogESAutoConfiguration::class.java)
     }

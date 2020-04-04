@@ -41,8 +41,9 @@ class BuildIptRepoResourceImpl @Autowired constructor(
         projectId: String,
         pipelineId: String,
         userId: String,
-        commitId: String
+        commitId: String,
+        filePath: String?
     ): Result<IptBuildArtifactoryInfo> {
-        return Result(iptRepoService.getCommitBuildArtifactorytInfo(projectId, pipelineId, userId, commitId))
+        return Result(iptRepoService.getCommitBuildArtifactorytInfo(projectId, pipelineId, userId, commitId, filePath))
     }
 }

@@ -23,12 +23,14 @@ class ServiceArtifactoryDownLoadResourceImpl @Autowired constructor(
         projectId: String,
         pipelineId: String,
         buildId: String,
+        userId: String?,
         artifactoryType: ArtifactoryType,
         path: String,
         ttl: Int?,
         crossProjectId: String?,
         crossPipineId: String?,
-        crossBuildNo: String?
+        crossBuildNo: String?,
+        region: String?
     ): Result<List<String>> {
         checkParam(projectId, path)
         return if (repoGray.isGray(projectId, redisOperation)) {
@@ -42,7 +44,9 @@ class ServiceArtifactoryDownLoadResourceImpl @Autowired constructor(
                     ttl,
                     crossProjectId,
                     crossPipineId,
-                    crossBuildNo
+                    crossBuildNo,
+                    region,
+                    userId
                 )
             )
         } else {
@@ -56,7 +60,9 @@ class ServiceArtifactoryDownLoadResourceImpl @Autowired constructor(
                     ttl,
                     crossProjectId,
                     crossPipineId,
-                    crossBuildNo
+                    crossBuildNo,
+                    region,
+                    userId
                 )
             )
         }

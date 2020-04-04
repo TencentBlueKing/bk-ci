@@ -28,6 +28,7 @@ package com.tencent.devops.worker.common.api.ios.sign
 
 import com.tencent.devops.common.api.util.FileUtil
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
+import com.tencent.devops.worker.common.api.archive.ArchiveResourceApi
 import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.logger.LoggerService
 import okhttp3.MediaType
@@ -40,8 +41,11 @@ class IOSSignApi : AbstractBuildResourceApi() {
     fun uploadIpa(file: File, props: String, repoType: Int, customPath: String?, certId: String?, p12Id: Int) {
         // p12Id: 1为深圳科技，2为世纪天游
         val gatewayDomain = AgentEnv.getGateway()
+
+        val bkrepoApi = ArchiveResourceApi()
+        val bkrepo = if (bkrepoApi.isRepoGrey()) 1 else 0
         val path = "/ios/sign/upload?size=${file.length()}&md5=${FileUtil.getMD5(file)}&" +
-            "properties=$props&repoType=$repoType&customPath=$customPath&certId=$certId&p12Id=$p12Id"
+            "properties=$props&repoType=$repoType&customPath=$customPath&certId=$certId&p12Id=$p12Id&bkrepo=$bkrepo"
         val fileBody = RequestBody.create(MediaType.parse("application/octet-stream"), file)
         val requestBody = MultipartBody.Builder()
             .setType(MultipartBody.FORM)

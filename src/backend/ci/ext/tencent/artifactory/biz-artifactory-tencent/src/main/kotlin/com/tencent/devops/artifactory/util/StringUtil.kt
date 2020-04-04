@@ -26,6 +26,7 @@
 
 package com.tencent.devops.artifactory.util
 
+import java.net.URLEncoder
 import java.util.Random
 
 object StringUtil {
@@ -38,5 +39,17 @@ object StringUtil {
             sb.append(BASE[random.nextInt(BASE.length)])
         }
         return sb.toString()
+    }
+
+    fun chineseUrlEncode(url: String): String {
+        var resultURL = ""
+        url.toList().forEach {
+            resultURL += if (it.toString().matches(Regex("[\u4e00-\u9fa5]"))) {
+                URLEncoder.encode(it.toString(), "UTF-8")
+            } else {
+                it
+            }
+        }
+        return resultURL
     }
 }

@@ -59,10 +59,16 @@ class TxContainerServiceImpl @Autowired constructor() : ContainerServiceImpl() {
     @Autowired
     private lateinit var pcgImageServiceImpl: PCGImageServiceImpl
 
+    @Autowired
+    private lateinit var macosServiceImpl: MacOSServiceImpl
+
     override fun buildTypeEnable(buildType: BuildType, projectCode: String): Boolean {
         return when (buildType) {
             BuildType.THIRD_PARTY_PCG -> {
                 pcgImageServiceImpl.projectEnable(projectCode)
+            }
+            BuildType.MACOS -> {
+                macosServiceImpl.isEnable(projectCode)
             }
             else -> true
         }

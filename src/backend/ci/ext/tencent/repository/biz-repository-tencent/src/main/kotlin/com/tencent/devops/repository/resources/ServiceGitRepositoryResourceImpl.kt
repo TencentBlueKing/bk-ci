@@ -87,6 +87,6 @@ class ServiceGitRepositoryResourceImpl @Autowired constructor(
     }
 
     override fun getAuthUrl(authParamJsonStr: String): Result<String> {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        return repositoryService.getAuthUrl(authParamJsonStr)
     }
 }

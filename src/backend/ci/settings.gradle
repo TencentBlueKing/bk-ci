@@ -239,7 +239,6 @@ include ":ext:tencent:artifactory:api-artifactory-store-tencent"
 include ":ext:tencent:artifactory:biz-artifactory-tencent"
 include ":ext:tencent:artifactory:biz-artifactory-store-tencent"
 include ":ext:tencent:artifactory:boot-artifactory-tencent"
-include ":ext:tencent:artifactory:model-artifactory-tencent"
 
 include ":ext:tencent:dockerhost"
 include ":ext:tencent:dockerhost:api-dockerhost-tencent"
@@ -367,6 +366,7 @@ include ":ext:tencent:openapi:boot-openapi-tencent"
 include ":ext:tencent:openapi:model-openapi"
 
 include ":ext:tencent:config-server"
+include ":ext:tencent:log:api-log-tencent"
 
 //  ==================== blueking ============================================================
 //include ":ext:blueking"
