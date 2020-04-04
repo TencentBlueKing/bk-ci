@@ -103,7 +103,6 @@ object StoreMessageCode {
     const val USER_SERVICE_PROJECT_NOT_PERMISSION = "2120408" // 研发商店：选中调试项目无创建流水线权限
     const val USER_SERVICE_NOT_EXIST = "2120409" // 研发商店：扩展服务不存在{0}
 
-
     // store公共业务相关的错误提示
     const val USER_PRAISE_IS_INVALID = "2120901" // 研发商店：你已点赞过
     const val USER_PROJECT_IS_NOT_ALLOW_INSTALL = "2120902" // 研发商店：你没有权限将组件安装到项目：{0}
