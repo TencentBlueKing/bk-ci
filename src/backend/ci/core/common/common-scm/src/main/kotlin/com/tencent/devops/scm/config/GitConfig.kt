@@ -77,7 +77,6 @@ class GitConfig {
     @Value("\${scm.git.redirectServiceRepositoryUrl:}")
     val redirectServiceRepositoryUrl: String = ""
 
-
     @Value("\${scm.git.gitHookUrl:}")
     val gitHookUrl: String = ""
 
