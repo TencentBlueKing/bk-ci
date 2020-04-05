@@ -34,6 +34,7 @@ import com.tencent.devops.dockerhost.exception.NoSuchImageException
 import com.tencent.devops.dockerhost.services.DockerHostBuildService
 import com.tencent.devops.dockerhost.utils.CommonUtils
 import com.tencent.devops.dockerhost.utils.SigarUtil
+import com.tencent.devops.process.engine.common.VMUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -86,7 +87,7 @@ class Runner @Autowired constructor(private val dockerHostBuildService: DockerHo
                             dockerHostBuildService.log(
                                 buildId = dockerStartBuildInfo.buildId,
                                 message = "构建环境启动成功，等待Agent启动...",
-                                tag = dockerStartBuildInfo.containerId,
+                                tag = VMUtils.genStartVMTaskId(dockerStartBuildInfo.vmSeqId.toString()),
                                 containerHashId = dockerStartBuildInfo.containerHashId
                             )
                         } else {
@@ -95,7 +96,7 @@ class Runner @Autowired constructor(private val dockerHostBuildService: DockerHo
                                 buildId = dockerStartBuildInfo.buildId,
                                 vmSeqId = dockerStartBuildInfo.vmSeqId,
                                 shutdown = true,
-                                containerId = dockerStartBuildInfo.containerId,
+                                containerId = dockerStartBuildInfo.vmSeqId.toString(),
                                 containerHashId = dockerStartBuildInfo.containerHashId
                             )
                         }
@@ -105,7 +106,7 @@ class Runner @Autowired constructor(private val dockerHostBuildService: DockerHo
                             buildId = dockerStartBuildInfo.buildId,
                             vmSeqId = dockerStartBuildInfo.vmSeqId,
                             shutdown = true,
-                            containerId = dockerStartBuildInfo.containerId,
+                            containerId = dockerStartBuildInfo.vmSeqId.toString(),
                             containerHashId = dockerStartBuildInfo.containerHashId
                         )
                     } catch (e: ContainerException) {
@@ -114,7 +115,7 @@ class Runner @Autowired constructor(private val dockerHostBuildService: DockerHo
                             buildId = dockerStartBuildInfo.buildId,
                             vmSeqId = dockerStartBuildInfo.vmSeqId,
                             shutdown = false,
-                            containerId = dockerStartBuildInfo.containerId,
+                            containerId = dockerStartBuildInfo.vmSeqId.toString(),
                             containerHashId = dockerStartBuildInfo.containerHashId
                         )
                     }
