@@ -271,11 +271,10 @@ class OpExtServiceService @Autowired constructor(
 
         dslContext.transaction { t ->
             val context = DSL.using(t)
-            var pubTime: LocalDateTime? = null
+            var pubTime = LocalDateTime.now()
             if (releaseFlag) {
-                pubTime = LocalDateTime.now()
 //                // 清空旧版本LATEST_FLAG
-                extServiceDao.cleanLatestFlag(context, approveReq.serviceCode)
+//                extServiceDao.cleanLatestFlag(context, approveReq.serviceCode)
                 // 记录发布信息
                 storeReleaseDao.addStoreReleaseInfo(
                     dslContext = context,
