@@ -295,7 +295,6 @@ class OpExtServiceService @Autowired constructor(
                 serviceId = serviceId,
                 serviceStatus = serviceStatus,
                 approveReq = approveReq,
-                latestFlag = releaseFlag,
                 pubTime = pubTime
             )
             extServiceFeatureDao.updateExtServiceFeatureBaseInfo(
