@@ -345,7 +345,7 @@ class BkRepoService @Autowired constructor(
 
     override fun check(projectId: String, artifactoryType: ArtifactoryType, path: String): Boolean {
         logger.info("check, projectId: $projectId, artifactoryType: $artifactoryType, path: $path")
-        bkRepoClient.getFileDetail("", projectId, RepoUtils.getRepoByType(ArtifactoryType.CUSTOM_DIR), path)
+        bkRepoClient.getFileDetail("", projectId, RepoUtils.getRepoByType(artifactoryType), path)
             ?: return false
         return true
     }
