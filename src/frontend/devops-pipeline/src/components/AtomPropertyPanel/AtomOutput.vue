@@ -2,7 +2,7 @@
     <accordion v-if="outputProps && Object.keys(outputProps).length > 0" show-checkbox show-content>
         <header class="var-header" slot="header">
             <span>插件输出</span>
-            <i class="bk-icon icon-angle-down" style="display: block"></i>
+            <i class="devops-icon icon-angle-down" style="display: block"></i>
         </header>
         <div slot="content">
             <form-field class="output-namespace" :desc="outputNamespaceDesc" label="输出字段命名空间" :is-error="errors.has(&quot;namespace&quot;)" :error-msg="errors.first(&quot;namespace&quot;)">
@@ -13,7 +13,7 @@
                 <p v-for="(output, key) in outputProps" :key="key">
                     {{ namespace ? `${namespace}_` : '' }}{{ key }}
                     <bk-popover placement="right">
-                        <i class="bk-icon icon-info-circle" />
+                        <i class="devops-icon icon-info-circle" />
                         <div slot="content">
                             {{ output.description }}
                         </div>
