@@ -13,6 +13,7 @@ import com.tencent.devops.project.api.pojo.enums.HtmlComponentTypeEnum
 import com.tencent.devops.project.api.pojo.enums.ServiceItemStatusEnum
 import com.tencent.devops.project.dao.ServiceDao
 import com.tencent.devops.project.dao.ServiceItemDao
+import com.tencent.devops.project.pojo.ITEM_BK_SERVICE_REDIS_KEY
 import com.tencent.devops.project.pojo.ItemCreateInfo
 import com.tencent.devops.project.pojo.ItemQueryInfo
 import com.tencent.devops.project.pojo.ItemUpdateInfo
@@ -430,7 +431,7 @@ class ServiceItemService @Autowired constructor(
     }
 
     private fun refreshBkRedisData(itemId: String, bkServiceId: String) {
-        redisOperation.hset("project:bkService:", itemId, bkServiceId)
+        redisOperation.hset(ITEM_BK_SERVICE_REDIS_KEY, itemId, bkServiceId)
     }
 
     companion object {

@@ -34,6 +34,7 @@ import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.project.api.pojo.ServiceItem
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.api.service.service.ServiceItemResource
+import com.tencent.devops.project.pojo.ITEM_BK_SERVICE_REDIS_KEY
 import com.tencent.devops.repository.api.ServiceGitRepositoryResource
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
@@ -156,11 +157,6 @@ abstract class ExtServiceBaseService @Autowired constructor() {
     lateinit var bsProjectServiceCodec: BSProjectServiceCodec
     @Autowired
     lateinit var redisOperation: RedisOperation
-
-    private val bkServiceMap = CacheBuilder.newBuilder()
-        .maximumSize(100000)
-        .expireAfterAccess(5, TimeUnit.MINUTES)
-        .build<String/*BuildId*/, Long/*IndexName*/>()
 
     fun addExtService(
         userId: String,
@@ -1358,7 +1354,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
     }
 
     fun getItemBkServiceId(itemId: String): Long {
-        return redisOperation.hget("project:bkService:", itemId)?.toLong() ?: 0
+        return redisOperation.hget(ITEM_BK_SERVICE_REDIS_KEY, itemId)?.toLong() ?: 0
     }
 
     fun updateExtInfo(userId: String, serviceId: String, serviceCode: String, infoResp: EditInfoDTO): Result<Boolean> {
