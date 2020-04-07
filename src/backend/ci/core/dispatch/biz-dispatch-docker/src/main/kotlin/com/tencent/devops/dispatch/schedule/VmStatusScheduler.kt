@@ -25,16 +25,17 @@ class VmStatusScheduler @Autowired constructor(
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(VmStatusScheduler::class.java)
-        private const val jobLockKey = "dispatch_idc_cron_volume_fresh_job"
+        private const val jobLockKey = "dispatch_docker_cron_volume_fresh_job"
+        private const val failJobLockKey = "dispatch_docker_cron_volume_fresh_fail_job"
     }
 
     @Value("\${devopsGateway.idcProxy}")
     val idcProxy: String? = null
 
     /**
-     * 每隔五分钟定时刷新check母机状态
+     * 定时刷新check母机状态
      */
-    @Scheduled(cron = "0 0/5 * * * ?")
+    @Scheduled(cron = "0 0/3 * * * ?")
     fun run() {
         val redisLock = RedisLock(redisOperation, jobLockKey, 3600L)
         try {
@@ -51,11 +52,11 @@ class VmStatusScheduler @Autowired constructor(
     }
 
     /**
-     * 每隔一小时定时重新check母机状态
+     * 每隔一小时定时重新check异常母机状态
      */
     @Scheduled(cron = "0 0 0/1 * * ?")
     fun checkVMStatus() {
-        val redisLock = RedisLock(redisOperation, jobLockKey, 3600L)
+        val redisLock = RedisLock(redisOperation, failJobLockKey, 3600L)
         try {
             val lockSuccess = redisLock.tryLock()
             if (lockSuccess) {

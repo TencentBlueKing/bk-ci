@@ -64,11 +64,10 @@ interface Dispatcher {
         client: Client,
         rabbitTemplate: RabbitTemplate,
         event: PipelineAgentStartupEvent,
-        errorMessage: String,
-        tag: String ?= ""
+        errorMessage: String
     ) {
         LogUtils.addRedLine(rabbitTemplate, event.buildId, errorMessage,
-            tag ?: "", event.containerHashId, event.executeCount ?: 1)
+            "", event.containerHashId, event.executeCount ?: 1)
         client.get(ServiceBuildResource::class).setVMStatus(
             projectId = event.projectId, pipelineId = event.pipelineId, buildId = event.buildId,
             vmSeqId = event.vmSeqId, status = BuildStatus.FAILED
