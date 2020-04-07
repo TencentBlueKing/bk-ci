@@ -164,8 +164,8 @@ export function isNewAtomTemplate (htmlTemplateVersion) {
  */
 export function getAtomPreviousVal (preAtomVal = {}, preAtomProps = {}, atomProps = {}) {
     return Object.keys(atomProps).reduce((formProps, key) => {
-        const atomProp = atomProps[key]
-        const preAtomProp = preAtomProps[key]
+        const atomProp = atomProps[key] || {}
+        const preAtomProp = preAtomProps[key] || {}
         const isSameMultiple = atomProp.optionsConf ? atomProp.optionsConf.multiple === (preAtomProp.optionsConf || {}).multiple : true
         if (atomProp.component === preAtomProp.component && atomProp.type === preAtomProp.type && isSameMultiple) {
             formProps[key] = preAtomVal[key]

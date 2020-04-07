@@ -133,7 +133,7 @@ export default {
         const atomModal = state.atomModalMap[key]
         const preVerEle = container.elements[atomIndex]
         const preVerkey = getAtomModalKey(preVerEle.atomCode, preVerEle.version)
-        const preVerAtomModal = state.atomModalMap[preVerkey]
+        const preVerAtomModal = state.atomModalMap[preVerkey] || { props: {} }
         let atom = null
         if (isNewAtomTemplate(atomModal.htmlTemplateVersion)) {
             atom = {
