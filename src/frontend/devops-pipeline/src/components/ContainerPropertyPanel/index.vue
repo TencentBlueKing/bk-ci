@@ -141,7 +141,7 @@
                 </form-field>
 
                 <div class="build-path-tips" v-if="hasBuildEnv">
-                    <div class="tips-icon"><i class="devops-icon icon-info-circle-shape"></i></div>
+                    <div class="tips-icon"><i class="bk-icon icon-info-circle-shape"></i></div>
                     <div class="tips-content">
                         <p class="tips-title">{{ $t('editPage.envDependencyTips') }}：</p>
                         <template v-for="(value, keys) in container.buildEnv">
