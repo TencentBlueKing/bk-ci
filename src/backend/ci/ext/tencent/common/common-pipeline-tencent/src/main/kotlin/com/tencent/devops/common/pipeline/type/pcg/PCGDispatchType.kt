@@ -57,6 +57,10 @@ data class PCGDispatchType(@JsonProperty("value") var image: String)
     image,
     DispatchRouteKeySuffix.PCG
 ) {
+    override fun cleanDataBeforeSave() {
+        this.image = this.image.trim()
+    }
+
     override fun replaceField(variables: Map<String, String>) {
         image = EnvUtils.parseEnv(image, variables)
     }
