@@ -120,7 +120,7 @@
             },
             showCheckedToatal () {
                 const { isTriggerStage, $route } = this
-                return $route.path.indexOf('preview') > 0 && !isTriggerStage
+                return $route.path.indexOf('preview') > 0 && !isTriggerStage && this.canSkipElement
             },
             stageDisabled () {
                 return !!(this.stage.stageControlOption && this.stage.stageControlOption.enable === false)
@@ -193,7 +193,7 @@
             'stage.runStage' (newVal) {
                 const { stage, updateStage } = this
                 const { containers } = stage
-                if (this.stageDisabled) return
+                if (this.stageDisabled || !this.showCheckedToatal) return
                 containers.filter(container => (container.jobControlOption === undefined || container.jobControlOption.enable)).map(container => {
                     container.runContainer = newVal
                     return false
@@ -208,7 +208,9 @@
         },
         mounted () {
             this.updateHeight()
-            Vue.set(this.stage, 'runStage', !this.stageDisabled)
+            if (this.showCheckedToatal) {
+                Vue.set(this.stage, 'runStage', !this.stageDisabled)
+            }
         },
         updated () {
             this.updateHeight()

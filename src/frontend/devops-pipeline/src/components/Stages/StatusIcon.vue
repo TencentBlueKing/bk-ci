@@ -8,7 +8,7 @@
             <i v-if="status === 'WAITING'" class="devops-icon icon-clock" />
         </transition>
         <transition name="slide-down">
-            <i v-if="status === 'CANCELED'" class="devops-icon warning icon-exclamation-circle-shape" />
+            <i v-if="status === 'CANCELED' || status === 'TERMINATE'" class="devops-icon warning icon-exclamation-circle-shape" />
         </transition>
         <transition name="slide-down">
             <i v-if="status === 'REVIEWING' || status === 'REVIEW_ABORT'" class="devops-icon warning icon-exclamation-triangle-shape" />
