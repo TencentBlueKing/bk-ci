@@ -21,7 +21,9 @@
                         <div class="bk-form-content">
                             <bk-radio-group v-model="createViewForm.projected">
                                 <bk-radio :value="false" class="view-radio">{{ $t('view.personalView') }}</bk-radio>
-                                <bk-radio :value="true" class="view-radio" :disabled="!isManagerUser">{{ $t('view.projectView') }}<span v-bk-tooltips="viewTypeTips" class="top-start"><i class="devops-icon icon-info-circle"></i></span></bk-radio>
+                                <bk-radio :value="true" class="view-radio" :disabled="!isManagerUser">{{ $t('view.projectView') }}<span v-bk-tooltips="viewTypeTips" class="top-start">
+                                    <i class="bk-icon icon-info-circle"></i></span>
+                                </bk-radio>
                             </bk-radio-group>
                         </div>
                     </div>
