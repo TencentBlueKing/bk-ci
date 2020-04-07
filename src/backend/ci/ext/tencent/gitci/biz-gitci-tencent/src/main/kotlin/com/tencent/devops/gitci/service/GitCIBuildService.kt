@@ -138,7 +138,16 @@ class GitCIBuildService @Autowired constructor(
         logger.info("pipelineId: $pipelineId")
 
         // 启动构建
-        val buildId = client.get(ServiceBuildResource::class).manualStartup(event.userId, gitProjectConf.projectCode!!, pipelineId, mapOf(), channelCode).data!!.id
+        val startParams = mutableMapOf<String, String>()
+        startParams["BK_CI_REPO_GIT_WEBHOOK_BRANCH"] = event.branch
+        startParams["BK_CI_REPO_GIT_WEBHOOK_PUSH_USERNAME"] = event.userId
+        startParams["BK_CI_REPO_GIT_WEBHOOK_MR_AUTHOR"] = event.userId
+        startParams["BK_CI_REPO_GIT_WEBHOOK_TARGET_BRANCH"] = event.targetBranch ?: ""
+        startParams["BK_CI_REPO_GIT_WEBHOOK_SOURCE_BRANCH"] = event.branch
+        startParams["BK_CI_REPO_GIT_WEBHOOK_MR_CREATE_TIMESTAMP"] = event.commitTimeStamp ?: ""
+        startParams["BK_CI_REPO_GIT_WEBHOOK_MR_ID"] = event.mergeRequestId.toString()
+        startParams["BK_CI_REPO_GIT_WEBHOOK_MR_TITLE"] = event.mrTitle ?: ""
+        val buildId = client.get(ServiceBuildResource::class).manualStartup(event.userId, gitProjectConf.projectCode!!, pipelineId, startParams, channelCode).data!!.id
         gitRequestEventBuildDao.update(dslContext, event.id!!, pipelineId, buildId)
         logger.info("buildId: $buildId")
 
