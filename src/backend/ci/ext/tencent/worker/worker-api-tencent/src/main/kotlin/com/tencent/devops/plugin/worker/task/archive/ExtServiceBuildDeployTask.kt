@@ -248,13 +248,6 @@ class ExtServiceBuildDeployTask : ITask() {
     ) {
         val startTime = System.currentTimeMillis()
         loop@ while (true) {
-            if ((System.currentTimeMillis() - startTime) > 5 * 60 * 1000) {
-                throw TaskExecuteException(
-                    errorMsg = "deployApp fail: deploy timeout",
-                    errorType = ErrorType.SYSTEM,
-                    errorCode = ErrorCode.SYSTEM_SERVICE_ERROR
-                )
-            }
             val deployment = bcsResourceApi.getBcsDeploymentInfo(
                 userId = userId,
                 namespaceName = deployApp.namespaceName,
@@ -273,12 +266,14 @@ class ExtServiceBuildDeployTask : ITask() {
             if (Readiness.isDeploymentReady(deployment)) {
                 break@loop
             } else {
-                val deploymentStatus = deployment.status
-                throw TaskExecuteException(
-                    errorMsg = "deployApp fail: availableReplicas(${deploymentStatus.availableReplicas}),unavailableReplicas(${deploymentStatus.unavailableReplicas})",
-                    errorType = ErrorType.SYSTEM,
-                    errorCode = ErrorCode.SYSTEM_SERVICE_ERROR
-                )
+                if ((System.currentTimeMillis() - startTime) > 5 * 60 * 1000) {
+                    val deploymentStatus = deployment.status
+                    throw TaskExecuteException(
+                        errorMsg = "deployApp fail: availableReplicas(${deploymentStatus.availableReplicas}),unavailableReplicas(${deploymentStatus.unavailableReplicas})",
+                        errorType = ErrorType.SYSTEM,
+                        errorCode = ErrorCode.SYSTEM_SERVICE_ERROR
+                    )
+                }
             }
         }
     }
