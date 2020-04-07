@@ -14,7 +14,7 @@
             <span class="title-desc">{{ nav.title }}</span>
             <i
                 v-if="nav.url"
-                class="bk-icon icon-question-circle"
+                class="devops-icon icon-question-circle"
                 @click="goToDoc(nav.url)"
             />
         </template>
@@ -90,7 +90,7 @@
                 .title-desc {
                     color: $fontWeightColor;
                 }
-                .bk-icon {
+                .devops-icon {
                     margin-left: 10px;
                 }
             }

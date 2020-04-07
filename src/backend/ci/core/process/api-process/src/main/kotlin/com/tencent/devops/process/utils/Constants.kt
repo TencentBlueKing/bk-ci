@@ -138,6 +138,10 @@ const val PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MIN = 1
  * 流水线设置-最大排队时间-默认值 单位:分钟
  */
 const val PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MAX = 1440
+/**
+ * 流水线设置-错误信息入库长度最大值 单位:分钟
+ */
+const val PIPELINE_MESSAGE_STRING_LENGTH_MAX = 4000
 
 const val PIPELINE_TIME_START = "BK_CI_BUILD_START_TIME" // "pipeline.time.start"
 

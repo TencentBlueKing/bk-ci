@@ -24,21 +24,21 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.websocket
+package com.tencent.devops.process.engine.common
 
-import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
-import com.tencent.devops.common.event.enums.ActionType
-import com.tencent.devops.common.event.pojo.pipeline.IPipelineEvent
+/**
+ *
+ * @version 1.0
+ */
+object VMUtils {
 
-@Event(MQ.EXCHANGE_PIPELINE_STATUS_CHANGE_TMP_FANOUT, MQ.ROUTE_PIPELINE_STATUS_CHANGE_TMP_EVENT)
-data class PipelineStatusChangeEvent(
-    override val source: String,
-    override val projectId: String,
-    override val pipelineId: String,
-    override val userId: String,
-    val changeType: ChangeType,
-    val buildId: String,
-    override var actionType: ActionType = ActionType.START,
-    override var delayMills: Int = 0
-) : IPipelineEvent(actionType, source, projectId, pipelineId, userId, delayMills)
+    fun genStageId(seq: Int) = "stage-$seq"
+
+    fun genStopVMTaskId(seq: Int) = "stopVM-$seq"
+
+    fun genEndPointTaskId(seq: Int) = "end-$seq"
+
+    fun genVMSeq(containerSeq: Int, taskSeq: Int): Int = containerSeq * 1000 + taskSeq
+
+    fun genStartVMTaskId(containerSeq: Int, taskSeq: Int) = "startVM-${genVMSeq(containerSeq, taskSeq)}"
+}

@@ -48,12 +48,12 @@
                 return this.$route.params.pipelineId
             },
             startTime () {
-                const initTime = this.dateRange[0] ? this.dateRange[0].replace('-', '/') : ''
-                return parseInt(new Date(initTime) / 1000) || 0
+                const initTime = this.formatTime(this.dateRange[0])
+                return initTime ? parseInt(new Date(initTime) / 1000) : 0
             },
             endTime () {
-                const initTime = this.dateRange[1] ? this.dateRange[1].replace('-', '/') : ''
-                return parseInt(new Date(initTime) / 1000 + 24 * 3600) || 0
+                const initTime = this.formatTime(this.dateRange[1])
+                return initTime ? parseInt(new Date(initTime) / 1000 + 24 * 3600) : 0
             },
             tabs () {
                 return this.trendList.map(item => ({
@@ -78,6 +78,9 @@
             this.init()
         },
         methods: {
+            formatTime (timeStr) {
+                return typeof timeStr === 'string' ? timeStr.replace(/\-/g, '/') : ''
+            },
             async init () {
                 const {
                     loading,
