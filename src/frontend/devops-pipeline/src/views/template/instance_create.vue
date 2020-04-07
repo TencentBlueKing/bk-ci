@@ -6,7 +6,7 @@
         }">
         <inner-header>
             <div class="instance-header" slot="left">
-                <span class="inner-header-title" slot="left"><i class="bk-icon icon-angle-left" @click="toInstanceManage()"></i>{{ $t('template.templateInstantiation') }}</span>
+                <span class="inner-header-title" slot="left"><i class="devops-icon icon-angle-left" @click="toInstanceManage()"></i>{{ $t('template.templateInstantiation') }}</span>
             </div>
         </inner-header>
         <div class="sub-view-port" v-if="showContent">
