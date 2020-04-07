@@ -4,7 +4,7 @@
             v-for="(entry, index) in menuList" :key="index"
             @click="handleNode(entry.id, entry.canUse)">
             <span>{{ entry.name }}</span>
-            <i class="bk-icon icon-right-shape" v-if="entry.children"></i>
+            <i class="devops-icon icon-right-shape" v-if="entry.children"></i>
             <ul class="dropdown-list second-col" v-if="entry.children"
                 :class="{ 'set-col': entry.id === 'hostConf' }">
                 <li v-for="(child, eindex) in entry.children" :key="eindex"

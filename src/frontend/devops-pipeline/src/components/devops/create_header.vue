@@ -5,7 +5,7 @@
                 :disabled="buttonDisabled"
                 v-if="buttonType === 'button'"
                 @click="toggleTemplatePopup">
-                <i class="bk-icon icon-plus"></i>
+                <i class="devops-icon icon-plus"></i>
                 <span>{{ createText }}</span>
             </bk-button>
 
@@ -14,7 +14,7 @@
                 :align="localDropdownMenuConfig.align || 'center'"
                 @show="localDropdownMenuConfig.showHandler"
                 @hide="!localDropdownMenuConfig.hideHandler">
-                <bk-button theme="primary" icon="bk-icon icon-plus" slot="dropdown-trigger">
+                <bk-button theme="primary" icon="devops-icon icon-plus" slot="dropdown-trigger">
                     {{ createText }}
                 </bk-button>
                 <ul class="bk-dropdown-list" slot="dropdown-content">
@@ -31,7 +31,7 @@
         <div class="create-header-right"
             v-if="$slots.addon">
             <!-- <slot name="pre-addon"></slot>
-            <i class="bk-icon toggle-layout"
+            <i class="devops-icon toggle-layout"
                 :class="`icon-${localLayout.current === 'card' ? 'panel' : 'apps'}`"
                 @click="layoutToggle">
             </i>

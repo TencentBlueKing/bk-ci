@@ -3,7 +3,7 @@
         <h3 :class="[{ 'expand': expandObtained }, 'search-title', 'gap-border', 'uninstall']" @click="expandObtained = !expandObtained">
             {{ $t('editPage.notIntroduce') }}（{{unrecommendArr.length}}）
             <bk-popover placement="top">
-                <i class="bk-icon icon-info-circle "></i>
+                <i class="devops-icon icon-info-circle "></i>
                 <div slot="content">
                     {{ $t('editPage.notIntroduceReason') }}
                 </div>
