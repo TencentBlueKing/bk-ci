@@ -15,7 +15,7 @@
             <div class="table-body">
                 <div class="table-row" v-for="(row, index) of partList" :key="index">
                     <div class="table-part-item part-item-name" @click.stop="showDetail(row)">
-                        <i :class="['bk-icon', `icon-${extForFile(row.name)}`]"></i>
+                        <i :class="['devops-icon', `icon-${extForFile(row.name)}`]"></i>
                         <span :title="row.name">{{ row.name }}</span>
                     </div>
                     <div class="table-part-item part-item-path">
@@ -39,7 +39,7 @@
                         </span>
                         <span class="handler-btn-tool qrcode"
                             v-if="(extForFile(row.name) === 'ipafile' || extForFile(row.name) === 'apkfile') && hasPermission">
-                            <i class="bk-icon icon-qrcode handler-btn"
+                            <i class="devops-icon icon-qrcode handler-btn"
                                 id="partviewqrcode"
                                 :title="$t('details.qrcode')"
                                 @click="requestUrl(row, 'url', index)"></i>
@@ -52,7 +52,7 @@
                             </p>
                         </span>
                         <bk-popover placement="left" v-if="!hasPermission">
-                            <i class="bk-icon icon-new-download disabled-btn"></i>
+                            <i class="devops-icon icon-new-download disabled-btn"></i>
                             <template slot="content">
                                 <p>{{ $t('details.noDownloadPermTips') }}</p>
                             </template>

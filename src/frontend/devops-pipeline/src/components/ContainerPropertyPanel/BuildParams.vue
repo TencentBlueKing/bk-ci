@@ -6,7 +6,7 @@
                     <span>
                         {{ title }}
                         <bk-popover placement="right">
-                            <i style="display:block;" class="bk-icon icon-info-circle"></i>
+                            <i style="display:block;" class="devops-icon icon-info-circle"></i>
                             <div slot="content" style="white-space: pre-wrap;">
                                 <div> {{ $t('editPage.paramsTips') }} </div>
                             </div>
@@ -23,16 +23,16 @@
                                 <header class="param-header" slot="header">
                                     <span>
                                         <bk-popover style="vertical-align: middle" v-if="errors.all(`param-${param.id}`).length" placement="top">
-                                            <i class="bk-icon icon-info-circle-shape"></i>
+                                            <i class="devops-icon icon-info-circle-shape"></i>
                                             <div slot="content">
                                                 <p v-for="error in errors.all(`param-${param.id}`)" :key="error">{{ error }}</p>
                                             </div>
                                         </bk-popover>
                                         {{ param.id }}
                                     </span>
-                                    <i v-if="!disabled && settingKey !== &quot;templateParams&quot;" @click.stop.prevent="editParamShow(index)" class="bk-icon" :class="[`${param.required ? 'icon-eye' : 'icon-eye-slash'}`]" />
-                                    <i v-if="!disabled" class="bk-icon icon-move" />
-                                    <i v-if="!disabled" @click.stop.prevent="editParam(index, false)" class="bk-icon icon-minus" />
+                                    <i v-if="!disabled && settingKey !== &quot;templateParams&quot;" @click.stop.prevent="editParamShow(index)" class="devops-icon" :class="[`${param.required ? 'icon-eye' : 'icon-eye-slash'}`]" />
+                                    <i v-if="!disabled" class="devops-icon icon-move" />
+                                    <i v-if="!disabled" @click.stop.prevent="editParam(index, false)" class="devops-icon icon-minus" />
                                 </header>
                                 <bk-form slot="content">
                                     <div class="params-flex-col">
@@ -130,7 +130,7 @@
                             </accordion>
                         </draggable>
                         <a class="text-link" v-if="!disabled" @click.stop.prevent="editParam(globalParams.length, true)">
-                            <i class="bk-icon icon-plus-circle" />
+                            <i class="devops-icon icon-plus-circle" />
                             <span>{{ $t('editPage.addParams') }}</span>
                         </a>
                     </template>
@@ -604,7 +604,7 @@
                 margin-right: 10px;
             }
         }
-        .bk-icon {
+        .devops-icon {
             font-size: 14px;
             padding: 10px  0 0 10px;
             cursor: pointer;
@@ -624,7 +624,7 @@
         > span {
             flex: 1;
         }
-        >.bk-icon {
+        >.devops-icon {
             width: 24px;
             text-align: center;
             &.icon-plus {

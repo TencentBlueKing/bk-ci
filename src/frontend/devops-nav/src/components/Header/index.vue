@@ -28,14 +28,14 @@
                             class="bk-selector-create-item"
                             @click.stop.prevent="popProjectDialog()"
                         >
-                            <i class="bk-icon icon-plus-circle" />
+                            <i class="devops-icon icon-plus-circle" />
                             <span class="text">{{ $t('newProject') }}</span>
                         </div>
                         <div
                             class="bk-selector-create-item"
                             @click.stop.prevent="goToPm"
                         >
-                            <i class="bk-icon icon-apps" />
+                            <i class="devops-icon icon-apps" />
                             <span class="text">{{ $t('projectManage') }}</span>
                         </div>
                     </template>
@@ -60,7 +60,7 @@
             <span class="seperate-line">|</span>
             <!-- <feed-back class='feed-back-icon'></feed-back> -->
             <i
-                class="bk-icon icon-helper"
+                class="devops-icon icon-helper"
                 @click.stop="goToDocs"
             />
             <User
@@ -302,6 +302,7 @@
                 }
                 .bk-select-angle {
                     color: white;
+                    top: 7px;
                 }
                 .bk-tooltip-ref {
                     outline: none;
@@ -342,7 +343,7 @@
             display: flex;
             align-items: center;
 
-            >.bk-icon:hover,
+            >.devops-icon:hover,
             >.feed-back-icon:hover,
             >.user-info:hover,
             >.feed-back-icon.active,
@@ -358,7 +359,7 @@
                 line-height: $headerHeight;
             }
 
-            > .bk-icon {
+            > .devops-icon {
                 padding: 0 10px;
                 font-size: 20px;
                 color: $fontLigtherColor;

@@ -187,7 +187,7 @@
                 line-height: 20px;
                 font-size: 14px;
                 color: $fontWeightColor;
-                .bk-icon {
+                .devops-icon {
                     font-size: 10px;
                     color: $fontLigtherColor;
                 }
@@ -202,7 +202,7 @@
                     text-overflow: ellipsis;
                     overflow: hidden;
                     cursor: pointer;
-                    .bk-icon {
+                    .devops-icon {
                         position: absolute;
                         right: 0;
                         top: 4px;
@@ -263,7 +263,7 @@
                         padding: 0 21px;
                         line-height: 36px;
                     }
-                    .bk-icon {
+                    .devops-icon {
                         display: none;
                         position: absolute;
                         top: 12px;
@@ -277,7 +277,7 @@
                     }
                     &:hover {
                         background-color: #ebf4ff;
-                        .bk-icon {
+                        .devops-icon {
                             display: inline-block;
                         }
                     }
@@ -302,7 +302,7 @@
                 .input-text {
                     cursor: text;
                 }
-                .bk-icon {
+                .devops-icon {
                     color: $fontLigtherColor;
                     &:hover {
                         color:$fontWeightColor;
@@ -342,7 +342,7 @@
                                 width: 228px;
                                 vertical-align: initial;
                             }
-                            .bk-icon {
+                            .devops-icon {
                                 margin-left: 10px;
                                 font-size: 10px;
                                 cursor: pointer;
