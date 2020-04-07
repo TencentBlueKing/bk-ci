@@ -20,7 +20,7 @@ class ServiceItemDao {
     fun add(dslContext: DSLContext, userId: String, info: ItemCreateInfo): String {
         val id = UUIDUtil.generate()
         with(TServiceItem.T_SERVICE_ITEM) {
-             dslContext.insertInto(
+            dslContext.insertInto(
                 this,
                 ID,
                 ITEM_CODE,
