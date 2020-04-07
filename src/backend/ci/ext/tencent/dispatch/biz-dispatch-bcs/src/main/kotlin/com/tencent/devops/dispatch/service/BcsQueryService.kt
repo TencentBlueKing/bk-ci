@@ -24,9 +24,32 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":core:dispatch:biz-dispatch")
-    compile project(":ext:tencent:dispatch:api-dispatch-bcs")
-}
+package com.tencent.devops.dispatch.service
 
-apply from: "$rootDir/task_deploy_to_maven.gradle"
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.dispatch.util.BcsClientUtils
+import io.fabric8.kubernetes.api.model.apps.Deployment
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
+
+@Service
+class BcsQueryService @Autowired constructor() {
+
+    private val logger = LoggerFactory.getLogger(BcsQueryService::class.java)
+
+    fun getBcsDeploymentInfo(
+        userId: String,
+        namespaceName: String,
+        deploymentName: String,
+        bcsUrl: String,
+        token: String
+    ): Result<Deployment> {
+        logger.info("getBcsDeploymentInfo userId is: $userId,namespaceName is: $namespaceName,deploymentName is: $deploymentName")
+        logger.info("getBcsDeploymentInfo bcsUrl is: $bcsUrl,token is: $token")
+        val bcsKubernetesClient = BcsClientUtils.getBcsKubernetesClient(bcsUrl, token)
+        val deployment = bcsKubernetesClient.apps().deployments().inNamespace(namespaceName).withName(deploymentName).get()
+        logger.info("getBcsDeploymentInfo deployment is: $deployment")
+        return Result(deployment)
+    }
+}

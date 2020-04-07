@@ -40,6 +40,7 @@ import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.pipeline.element.market.ExtServiceBuildDeployElement
 import com.tencent.devops.common.pipeline.utils.ParameterUtils
+import com.tencent.devops.dispatch.pojo.DeployApp
 import com.tencent.devops.dockerhost.pojo.DockerBuildParam
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
@@ -52,6 +53,7 @@ import com.tencent.devops.worker.common.api.store.ExtServiceResourceApi
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.task.ITask
 import com.tencent.devops.worker.common.task.TaskClassType
+import io.fabric8.kubernetes.client.internal.readiness.Readiness
 import okhttp3.MediaType
 import okhttp3.Request
 import okhttp3.RequestBody
@@ -218,7 +220,8 @@ class ExtServiceBuildDeployTask : ITask() {
         }
         // 开始部署扩展服务
         LoggerService.addNormalLine("start deploy extService:$serviceCode(version:$serviceVersion)")
-        val deployAppResult = BcsResourceApi().deployApp(
+        val bcsResourceApi = BcsResourceApi()
+        val deployAppResult = bcsResourceApi.deployApp(
             userId = userId,
             deployAppJsonStr = extServiceDeployInfo
         )
@@ -231,6 +234,52 @@ class ExtServiceBuildDeployTask : ITask() {
                 errorCode = ErrorCode.SYSTEM_SERVICE_ERROR
             )
         }
+        val deployApp = JsonUtil.to(extServiceDeployInfo, DeployApp::class.java)
+        // 轮询扩展任务部署的deployment状态
+        syncDeploymentStatus(bcsResourceApi, userId, deployApp, serviceCode)
         LoggerService.addNormalLine("deploy extService:$serviceCode(version:$serviceVersion) success")
+    }
+
+    private fun syncDeploymentStatus(
+        bcsResourceApi: BcsResourceApi,
+        userId: String,
+        deployApp: DeployApp,
+        serviceCode: String
+    ) {
+        val startTime = System.currentTimeMillis()
+        loop@ while (true) {
+            if ((System.currentTimeMillis() - startTime) > 5 * 60 * 1000) {
+                throw TaskExecuteException(
+                    errorMsg = "deployApp fail: deploy timeout",
+                    errorType = ErrorType.SYSTEM,
+                    errorCode = ErrorCode.SYSTEM_SERVICE_ERROR
+                )
+            }
+            val deployment = bcsResourceApi.getBcsDeploymentInfo(
+                userId = userId,
+                namespaceName = deployApp.namespaceName,
+                deploymentName = serviceCode,
+                bcsUrl = deployApp.bcsUrl,
+                token = deployApp.token
+            ).data
+            logger.info("ExtServiceBuildDeployTask deployment: $deployment")
+            if (deployment == null) {
+                throw TaskExecuteException(
+                    errorMsg = "get deployment info fail",
+                    errorType = ErrorType.SYSTEM,
+                    errorCode = ErrorCode.SYSTEM_SERVICE_ERROR
+                )
+            }
+            if (Readiness.isDeploymentReady(deployment)) {
+                break@loop
+            } else {
+                val deploymentStatus = deployment.status
+                throw TaskExecuteException(
+                    errorMsg = "deployApp fail: availableReplicas(${deploymentStatus.availableReplicas}),unavailableReplicas(${deploymentStatus.unavailableReplicas})",
+                    errorType = ErrorType.SYSTEM,
+                    errorCode = ErrorCode.SYSTEM_SERVICE_ERROR
+                )
+            }
+        }
     }
 }

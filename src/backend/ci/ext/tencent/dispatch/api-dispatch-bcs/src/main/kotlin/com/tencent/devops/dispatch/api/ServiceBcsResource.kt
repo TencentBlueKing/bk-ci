@@ -32,16 +32,19 @@ import com.tencent.devops.dispatch.pojo.CreateBcsNameSpaceRequest
 import com.tencent.devops.dispatch.pojo.CreateImagePullSecretRequest
 import com.tencent.devops.dispatch.pojo.DeployApp
 import com.tencent.devops.dispatch.pojo.StopApp
+import io.fabric8.kubernetes.api.model.apps.Deployment
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
+import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["SERVICE_BCS"], description = "BCS服务")
@@ -96,4 +99,25 @@ interface ServiceBcsResource {
         @ApiParam("停止部署请求对象")
         stopApp: StopApp
     ): Result<Boolean>
+
+    @ApiOperation("获取deployment信息")
+    @Path("/namespaces/{namespaceName}/deployments/{deploymentName}")
+    @GET
+    fun getBcsDeploymentInfo(
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("命名空间名称")
+        @PathParam("namespaceName")
+        namespaceName: String,
+        @ApiParam("deployment名称")
+        @PathParam("deploymentName")
+        deploymentName: String,
+        @ApiParam("bcs请求路径")
+        @QueryParam("bcsUrl")
+        bcsUrl: String,
+        @ApiParam("请求token")
+        @QueryParam("token")
+        token: String
+    ): Result<Deployment>
 }

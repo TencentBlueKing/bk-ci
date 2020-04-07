@@ -34,12 +34,15 @@ import com.tencent.devops.dispatch.pojo.CreateImagePullSecretRequest
 import com.tencent.devops.dispatch.pojo.DeployApp
 import com.tencent.devops.dispatch.pojo.StopApp
 import com.tencent.devops.dispatch.service.BcsDeployService
+import com.tencent.devops.dispatch.service.BcsQueryService
 import com.tencent.devops.dispatch.util.BcsClientUtils
+import io.fabric8.kubernetes.api.model.apps.Deployment
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ServiceBcsResourceImpl @Autowired constructor(
-    private val bcsDeployService: BcsDeployService
+    private val bcsDeployService: BcsDeployService,
+    private val bcsQueryService: BcsQueryService
 ) : ServiceBcsResource {
 
     override fun createNamespace(
@@ -77,5 +80,15 @@ class ServiceBcsResourceImpl @Autowired constructor(
 
     override fun bcsStopApp(userId: String, stopApp: StopApp): Result<Boolean> {
         return bcsDeployService.stopApp(userId, stopApp)
+    }
+
+    override fun getBcsDeploymentInfo(
+        userId: String,
+        namespaceName: String,
+        deploymentName: String,
+        bcsUrl: String,
+        token: String
+    ): Result<Deployment> {
+        return bcsQueryService.getBcsDeploymentInfo(userId, namespaceName, deploymentName, bcsUrl, token)
     }
 }

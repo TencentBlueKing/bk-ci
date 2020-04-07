@@ -31,12 +31,25 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.dispatch.api.BuildBcsResource
 import com.tencent.devops.dispatch.pojo.DeployApp
 import com.tencent.devops.dispatch.service.BcsDeployService
+import com.tencent.devops.dispatch.service.BcsQueryService
+import io.fabric8.kubernetes.api.model.apps.Deployment
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class BuildBcsResourceImpl @Autowired constructor(
-    private val bcsDeployService: BcsDeployService
+    private val bcsDeployService: BcsDeployService,
+    private val bcsQueryService: BcsQueryService
 ) : BuildBcsResource {
+
+    override fun getBcsDeploymentInfo(
+        userId: String,
+        namespaceName: String,
+        deploymentName: String,
+        bcsUrl: String,
+        token: String
+    ): Result<Deployment> {
+        return bcsQueryService.getBcsDeploymentInfo(userId, namespaceName, deploymentName, bcsUrl, token)
+    }
 
     override fun bcsDeployApp(userId: String, deployApp: DeployApp): Result<Boolean> {
         return bcsDeployService.deployApp(userId, deployApp)

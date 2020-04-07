@@ -30,6 +30,7 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
+import io.fabric8.kubernetes.api.model.apps.Deployment
 import okhttp3.MediaType
 import okhttp3.RequestBody
 
@@ -43,7 +44,21 @@ class BcsResourceApi : AbstractBuildResourceApi() {
         )
         val headMap = mapOf(AUTH_HEADER_USER_ID to userId)
         val request = buildPost(path, body, headMap)
-        val responseContent = request(request, "部署应用失败")
+        val responseContent = request(request, "deploy app fail")
+        return objectMapper.readValue(responseContent)
+    }
+
+    fun getBcsDeploymentInfo(
+        userId: String,
+        namespaceName: String,
+        deploymentName: String,
+        bcsUrl: String,
+        token: String
+    ): Result<Deployment> {
+        val path = "/ms/dispatch/api/build/bcs/namespaces/$namespaceName/deployments/$deploymentName?bcsUrl=$bcsUrl&token=$token"
+        val headMap = mapOf(AUTH_HEADER_USER_ID to userId)
+        val request = buildGet(path, headMap)
+        val responseContent = request(request, "get deployment info fail")
         return objectMapper.readValue(responseContent)
     }
 }
