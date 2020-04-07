@@ -26,6 +26,14 @@
                         {{ item.name }}
                     </li>
                 </template>
+                <template v-if="mergedOptionsConf.hasAddItem">
+                    <div class="bk-select-extension">
+                        <a :href="webUrl + mergedOptionsConf.itemTargetUrl" target="_blank">
+                            <i class="bk-icon icon-plus-circle" />
+                            {{ mergedOptionsConf.itemText }}
+                        </a>
+                    </div>
+                </template>
             </ul>
         </div>
     </div>
@@ -62,7 +70,8 @@
                 loading: this.isLoading,
                 selectedPointer: 0,
                 selectedGroupPointer: 0,
-                displayName: ''
+                displayName: '',
+                webUrl: WEB_URL_PIRFIX
             }
         },
         computed: {
@@ -378,6 +387,9 @@
                     &[disabled] {
                         color: $fontLigtherColor;
                     }
+                }
+                .bk-select-extension a {
+                    color: #63656e;
                 }
             }
         }
