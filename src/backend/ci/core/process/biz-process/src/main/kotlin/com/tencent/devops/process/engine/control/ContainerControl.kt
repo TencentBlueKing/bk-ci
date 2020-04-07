@@ -120,6 +120,16 @@ class ContainerControl @Autowired constructor(
                     startTime = LocalDateTime.now(),
                     endTime = LocalDateTime.now()
                 )
+
+                containerTaskList.forEach {
+                    pipelineRuntimeService.updateTaskStatus(
+                        buildId = buildId,
+                        taskId = it.taskId,
+                        userId = it.starter,
+                        buildStatus = BuildStatus.SKIP
+                    )
+                }
+
                 logger.info("[$buildId]|CONTAINER_SKIP|stage=$stageId|container=$containerId|action=$actionType")
                 pipelineBuildDetailService.normalContainerSkip(buildId, container.containerId)
                 // 返回stage的时候，需要解锁
@@ -370,13 +380,6 @@ class ContainerControl @Autowired constructor(
         containerTaskList.forEach nextOne@{ task ->
             if (!ControlUtils.isEnable(task.additionalOptions)) {
                 logger.info("[$buildId]|container=$containerId|task(${task.taskSeq})=${task.taskId}|${task.taskName}|is not enable, will skip")
-                pipelineRuntimeService.updateTaskStatus(
-                    buildId = buildId, taskId = task.taskId, userId = task.starter, buildStatus = BuildStatus.SKIP
-                )
-                pipelineBuildDetailService.taskEnd(
-                    buildId = buildId, taskId = task.taskId, buildStatus = BuildStatus.SKIP
-                )
-//                containerFinalStatus = BuildStatus.SKIP
 
                 LogUtils.addYellowLine(
                     rabbitTemplate = rabbitTemplate,

@@ -67,7 +67,7 @@
                         />
                     </p>
                     <span class="toggle-btn" v-if="isOverflow" @click="isDropdownShow = !isDropdownShow">{{ isDropdownShow ? $t('store.收起') : $t('store.展开') }}
-                        <i :class="['bk-icon icon-angle-down', { 'icon-flip': isDropdownShow }]"></i>
+                        <i :class="['devops-icon icon-angle-down', { 'icon-flip': isDropdownShow }]"></i>
                     </span>
                 </section>
             </bk-col>
@@ -180,7 +180,7 @@
         color: $primaryColor;
         text-align: right;
         cursor: pointer;
-        .bk-icon {
+        .devops-icon {
             display: inline-block;
             margin-left: 2px;
             transition: all ease 0.2s;
