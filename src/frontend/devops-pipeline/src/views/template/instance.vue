@@ -18,7 +18,7 @@
                 <bk-input
                     :placeholder="$t('search')"
                     :clearable="true"
-                    :right-icon="'bk-icon icon-search'"
+                    :right-icon="'devops-icon icon-search'"
                     v-model="searchKey"
                     @enter="query"
                     @clear="query">

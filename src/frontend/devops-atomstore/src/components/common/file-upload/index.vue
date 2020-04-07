@@ -17,7 +17,7 @@
                             <div :class="['file-progress-bar']" :style="`width: ${progress}%`"></div>
                         </div>
                     </div>
-                    <i class="bk-icon icon-close" @click="removeFile(index)" v-if="file.status !== 'success'"></i>
+                    <i class="devops-icon icon-close" @click="removeFile(index)" v-if="file.status !== 'success'"></i>
                 </div>
                 <p class="tip" v-if="file.statusText && file.status === 'error'">{{file.statusText}}</p>
             </div>
