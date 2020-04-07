@@ -96,7 +96,7 @@
                     <div class="bk-form-item">
                         <label class="bk-label tip-bottom">{{ $t('template.applySetting') }}
                             <span v-bk-tooltips.bottom-end="'选“是”则将流水线设置应用于复制后的模版'" class="bottom-end">
-                                <i class="bk-icon icon-info-circle"></i>
+                                <i class="devops-icon icon-info-circle"></i>
                             </span>
                         </label>
                         <div class="bk-form-content">

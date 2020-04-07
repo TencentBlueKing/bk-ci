@@ -24,7 +24,7 @@
                                 <ul class="search-key" ref="searchKey">
                                     <li class="key-node" v-for="(entry, index) in searchKeyList" :key="index">
                                         <span>{{ entry }}</span>
-                                        <i class="bk-icon icon-close" @click="deleteKey(index)"></i>
+                                        <i class="devops-icon icon-close" @click="deleteKey(index)"></i>
                                     </li>
                                     <li class="input-item">
                                         <input type="text" class="search-input" ref="searchInput"
@@ -37,8 +37,8 @@
                                 </ul>
                             </div>
                             <div class="actions">
-                                <i class="bk-icon icon-close" @click="deleteAllKey" v-if="searchKeyList.length"></i>
-                                <i class="bk-icon icon-search" @click="searchNode"></i>
+                                <i class="devops-icon icon-close" @click="deleteAllKey" v-if="searchKeyList.length"></i>
+                                <i class="devops-icon icon-search" @click="searchNode"></i>
                             </div>
                             <div class="ip-searcher-footer" v-if="isSearchFooter">
                                 <p>{{ $t('environment.nodeInfo.searchNodePlaceholder') }}</p>
@@ -385,7 +385,7 @@
                     height: 36px;
                     line-height: 36px;
 
-                    .bk-icon {
+                    .devops-icon {
                         cursor: pointer;
                     }
 
@@ -490,7 +490,7 @@
             padding-right: 10px;
             color: #ffbf00;
 
-            .bk-icon {
+            .devops-icon {
                 margin-right: 6px;
             }
         }
