@@ -101,7 +101,7 @@ class SubPipelineCallAtom constructor(
             } else {
                 val status: BuildStatus = when {
                     subBuildInfo.isSuccess() && subBuildInfo.status == BuildStatus.STAGE_SUCCESS -> BuildStatus.SUCCEED
-                    else -> task.status
+                    else -> subBuildInfo.status
                 }
 
                 LogUtils.addYellowLine(

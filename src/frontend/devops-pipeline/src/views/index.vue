@@ -16,7 +16,8 @@
         methods: {
             ...mapActions('atom', [
                 'fetchContainers',
-                'fetchAtoms'
+                'fetchAtoms',
+                'fetchStageTagList'
             ]),
             fetchData () {
                 const projectCode = this.$route.params.projectId
@@ -26,6 +27,7 @@
                 this.fetchAtoms({
                     projectCode
                 })
+                this.fetchStageTagList()
             }
         }
     }

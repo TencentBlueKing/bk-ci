@@ -83,6 +83,14 @@ class PipelineBuildSummaryDao {
         }
     }
 
+    fun getSummaries(dslContext: DSLContext, pipelineIds: Set<String>): Result<TPipelineBuildSummaryRecord> {
+        return with(T_PIPELINE_BUILD_SUMMARY) {
+            dslContext.selectFrom(this)
+                .where(PIPELINE_ID.`in`(pipelineIds))
+                .fetch()
+        }
+    }
+
     fun updateBuildNo(dslContext: DSLContext, pipelineId: String, buildNo: Int) {
 
         with(T_PIPELINE_BUILD_SUMMARY) {

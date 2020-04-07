@@ -49,6 +49,7 @@ import com.tencent.devops.common.pipeline.pojo.element.market.AtomBuildArchiveEl
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.pipeline.pojo.git.GitPullMode
 import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
+import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.service.PipelineBuildService
 import com.tencent.devops.process.engine.service.PipelineService
 import com.tencent.devops.process.pojo.AtomMarketInitPipelineResp
@@ -104,7 +105,7 @@ class AtomMarketInitPipelineService @Autowired constructor(
         )
         containerSeqId++
         val stageFirstContainers = listOf<Container>(stageFirstContainer)
-        val stageFirst = Stage(stageFirstContainers, "stage-1")
+        val stageFirst = Stage(stageFirstContainers, VMUtils.genStageId(1))
         // stage-2
         val stageSecondPullCodeElement = CodeGitElement(
             name = "拉取Git仓库代码",
@@ -144,7 +145,7 @@ class AtomMarketInitPipelineService @Autowired constructor(
             dispatchType = DockerDispatchType(DockerVersion.TLINUX2_2.value)
         )
         val stageSecondContainers = listOf<Container>(stageSecondContainer)
-        val stageSecond = Stage(stageSecondContainers, "stage-2")
+        val stageSecond = Stage(stageSecondContainers, VMUtils.genStageId(2))
         val stages = mutableListOf(stageFirst, stageSecond)
         val atomCode = atomBaseInfo.atomCode
         val pipelineName = "am-$projectCode-$atomCode-${System.currentTimeMillis()}"
