@@ -307,6 +307,8 @@ class BuildStartControl @Autowired constructor(
         if (!find) {
             logger.warn("[$buildId]|[$pipelineId]| Fail to find the startTask $taskId")
         } else {
+            stage.status = BuildStatus.SUCCEED.name
+            stage.elapsed = 0
             container.status = BuildStatus.SUCCEED.name
             container.systemElapsed = 0
             container.elementElapsed = 0
