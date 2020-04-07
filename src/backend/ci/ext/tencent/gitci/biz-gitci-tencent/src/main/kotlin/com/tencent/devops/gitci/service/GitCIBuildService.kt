@@ -421,7 +421,7 @@ class GitCIBuildService @Autowired constructor(
         // 用户自定义变量
         startParams.putAll(yaml.variables ?: mapOf())
 
-        yaml.variables?.forEach {
+        startParams.forEach {
             result.add(BuildFormProperty(
                 it.key,
                 false,
