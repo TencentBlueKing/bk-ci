@@ -576,10 +576,6 @@
             .flex-col-span-1 {
                 flex: 1;
                 overflow: hidden;
-                label.bk-label {
-                    height: 30px;
-                    line-height: 30px;
-                }
             }
         }
         .content .text-link {
