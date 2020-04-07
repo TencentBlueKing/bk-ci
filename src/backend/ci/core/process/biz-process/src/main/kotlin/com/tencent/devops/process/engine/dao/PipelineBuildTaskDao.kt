@@ -35,7 +35,10 @@ import com.tencent.devops.model.process.tables.TPipelineBuildTask
 import com.tencent.devops.model.process.tables.records.TPipelineBuildTaskRecord
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.common.service.utils.CommonUtils
+import com.tencent.devops.process.utils.PIPELINE_MESSAGE_STRING_LENGTH_MAX
 import org.jooq.DSLContext
+import org.jooq.InsertSetMoreStep
 import org.jooq.Result
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -100,68 +103,42 @@ class PipelineBuildTaskDao @Autowired constructor(private val objectMapper: Obje
     }
 
     fun batchSave(dslContext: DSLContext, taskList: Collection<PipelineBuildTask>) {
+        val records =
+            mutableListOf<InsertSetMoreStep<TPipelineBuildTaskRecord>>()
         with(T_PIPELINE_BUILD_TASK) {
-            dslContext.batch(taskList.map { buildTask ->
-                dslContext.insertInto(
-                    this,
-                    PROJECT_ID,
-                    PIPELINE_ID,
-                    BUILD_ID,
-                    STAGE_ID,
-                    CONTAINER_ID,
-                    TASK_NAME,
-                    TASK_ID,
-                    TASK_PARAMS,
-                    TASK_TYPE,
-                    TASK_ATOM,
-                    START_TIME,
-                    END_TIME,
-                    STARTER,
-                    APPROVER,
-                    STATUS,
-                    EXECUTE_COUNT,
-                    TASK_SEQ,
-                    SUB_BUILD_ID,
-                    CONTAINER_TYPE,
-                    ADDITIONAL_OPTIONS,
-                    TOTAL_TIME,
-                    ERROR_TYPE,
-                    ERROR_CODE,
-                    ERROR_MSG,
-                    CONTAINER_HASH_ID
+            taskList.forEach {
+                records.add(
+                    dslContext.insertInto(this)
+                        .set(PROJECT_ID, it.projectId)
+                        .set(PIPELINE_ID, it.pipelineId)
+                        .set(BUILD_ID, it.buildId)
+                        .set(STAGE_ID, it.stageId)
+                        .set(CONTAINER_ID, it.containerId)
+                        .set(TASK_NAME, it.taskName)
+                        .set(TASK_ID, it.taskId)
+                        .set(TASK_PARAMS, objectMapper.writeValueAsString(it.taskParams))
+                        .set(TASK_TYPE, it.taskType)
+                        .set(TASK_ATOM, it.taskAtom)
+                        .set(START_TIME, it.startTime)
+                        .set(END_TIME, it.endTime)
+                        .set(STARTER, it.starter)
+                        .set(APPROVER, it.approver)
+                        .set(STATUS, it.status.ordinal)
+                        .set(EXECUTE_COUNT, it.executeCount)
+                        .set(TASK_SEQ, it.taskSeq)
+                        .set(SUB_BUILD_ID, it.subBuildId)
+                        .set(CONTAINER_TYPE, it.containerType)
+                        .set(ADDITIONAL_OPTIONS, objectMapper.writeValueAsString(it.additionalOptions))
+                        .set(TOTAL_TIME, if (it.endTime != null && it.startTime != null) {
+                            Duration.between(it.startTime, it.endTime).toMillis() / 1000
+                        } else null)
+                        .set(ERROR_TYPE, it.errorType?.ordinal)
+                        .set(ERROR_CODE, it.errorCode)
+                        .set(ERROR_MSG, CommonUtils.interceptStringInLength(it.errorMsg, PIPELINE_MESSAGE_STRING_LENGTH_MAX))
+                        .set(CONTAINER_HASH_ID, it.containerHashId)
                 )
-                    .values(
-                        buildTask.projectId,
-                        buildTask.pipelineId,
-                        buildTask.buildId,
-                        buildTask.stageId,
-                        buildTask.containerId,
-                        buildTask.taskName,
-                        buildTask.taskId,
-                        objectMapper.writeValueAsString(buildTask.taskParams),
-                        buildTask.taskType,
-                        buildTask.taskAtom,
-                        buildTask.startTime,
-                        buildTask.endTime,
-                        buildTask.starter,
-                        buildTask.approver,
-                        buildTask.status.ordinal,
-                        buildTask.executeCount,
-                        buildTask.taskSeq,
-                        buildTask.subBuildId,
-                        buildTask.containerType,
-                        objectMapper.writeValueAsString(buildTask.additionalOptions),
-                        if (buildTask.endTime != null && buildTask.startTime != null) {
-                            Duration.between(buildTask.startTime, buildTask.endTime).toMillis() / 1000
-                        } else {
-                            null
-                        },
-                        buildTask.errorType?.ordinal,
-                        buildTask.errorCode,
-                        buildTask.errorMsg,
-                        buildTask.containerHashId
-                    )
-            }).execute()
+            }
+            dslContext.batch(records).execute()
         }
     }
 
@@ -287,7 +264,7 @@ class PipelineBuildTaskDao @Autowired constructor(private val objectMapper: Obje
             if (errorType != null) {
                 update.set(ERROR_TYPE, errorType.ordinal)
                 update.set(ERROR_CODE, errorCode)
-                update.set(ERROR_MSG, errorMsg)
+                update.set(ERROR_MSG, CommonUtils.interceptStringInLength(errorMsg, PIPELINE_MESSAGE_STRING_LENGTH_MAX))
             }
             update.where(BUILD_ID.eq(buildId)).and(TASK_ID.eq(taskId)).execute()
 
