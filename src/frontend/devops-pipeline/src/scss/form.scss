@@ -70,18 +70,6 @@
 
 .bk-form-item,
 .bk-form-inline-item {
-	&.is-required {
-        .bk-label {
-            position: relative;
-        }
-        .bk-label:after {
-            content: '*';
-            color: $dangerColor;
-            position: absolute;
-            display: inline-block;
-            margin: 2px -7px 0 2px;
-        }
-	}
 
 	&.is-danger,
 	&.is-error {
