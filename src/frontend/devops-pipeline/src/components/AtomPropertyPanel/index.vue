@@ -52,7 +52,7 @@
                 <div class="atom-form-content">
                     <div class="no-atom-tips" v-if="!atom && atomCode">
                         <div class="no-atom-tips-icon">
-                            <i class="devops-icon icon-info-circle-shape" size="14" />
+                            <i class="bk-icon icon-info-circle-shape" size="14" />
                         </div>
                         <p>{{ $t('editPage.noAtomVersion') }}</p>
                     </div>
