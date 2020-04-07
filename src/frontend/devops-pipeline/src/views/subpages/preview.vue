@@ -3,7 +3,7 @@
         <div class="scroll-container">
             <div class="execute-previe-content">
                 <div class="version-option" v-if="isVisibleVersion">
-                    <p class="item-title">{{ $t('preview.introVersion') }}：<i :class="['bk-icon icon-angle-down', { 'icon-flip': isDropdownShowVersion }]" @click="toggleIcon('version')"></i></p>
+                    <p class="item-title">{{ $t('preview.introVersion') }}：<i :class="['devops-icon icon-angle-down', { 'icon-flip': isDropdownShowVersion }]" @click="toggleIcon('version')"></i></p>
                     <pipeline-versions-form ref="versionForm"
                         v-if="isDropdownShowVersion"
                         :build-no="buildNo"
@@ -14,7 +14,7 @@
                     ></pipeline-versions-form>
                 </div>
                 <div class="global-params" v-if="paramList.length">
-                    <p class="item-title">{{ $t('template.pipelineVar') }}：<i :class="['bk-icon icon-angle-down', { 'icon-flip': isDropdownShowParam }]" @click="toggleIcon('params')"></i></p>
+                    <p class="item-title">{{ $t('template.pipelineVar') }}：<i :class="['devops-icon icon-angle-down', { 'icon-flip': isDropdownShowParam }]" @click="toggleIcon('params')"></i></p>
                     <pipeline-params-form ref="paramsForm" v-if="isDropdownShowParam" :param-values="paramValues" :handle-param-change="handleParamChange" :params="paramList"></pipeline-params-form>
                 </div>
                 <div class="execute-detail-option" v-if="pipeline">
@@ -72,6 +72,7 @@
     import PipelineParamsForm from '@/components/pipelineParamsForm.vue'
     import PipelineVersionsForm from '@/components/PipelineVersionsForm.vue'
     import pipelineOperateMixin from '@/mixins/pipeline-operate-mixin'
+    import { allVersionKeyList } from '@/utils/pipelineConst'
 
     export default {
         components: {
@@ -236,8 +237,8 @@
                             this.buildNo = this.curPipelineInfo.buildNo
                             this.isVisibleVersion = this.curPipelineInfo.buildNo.required
                         }
-                        this.paramList = this.curPipelineInfo.properties.filter(p => p.required)
-                        this.versionParamList = this.curPipelineInfo.properties.filter(p => !p.required)
+                        this.paramList = this.curPipelineInfo.properties.filter(p => p.required && !allVersionKeyList.includes(p.id))
+                        this.versionParamList = this.curPipelineInfo.properties.filter(p => allVersionKeyList.includes(p.id))
                         this.paramValues = getParamsValuesMap(this.paramList)
                         this.versionParamValues = getParamsValuesMap(this.versionParamList)
                         this.requestPipeline(this.$route.params)
@@ -324,7 +325,7 @@
             .item-title {
                 line-height: 36px;
                 border-bottom: 1px solid $borderWeightColor;
-                .bk-icon {
+                .devops-icon {
                     display: inline-block;
                     margin-left: 6px;
                     transition: all ease 0.2s;

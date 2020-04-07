@@ -40,7 +40,8 @@ import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
 import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.Gray
-import com.tencent.devops.common.web.mq.alert.AlertLevel
+import com.tencent.devops.common.web.mq.alert.AlertLevel.HIGH
+import com.tencent.devops.common.web.mq.alert.AlertLevel.LOW
 import com.tencent.devops.common.web.mq.alert.AlertUtils
 import com.tencent.devops.dispatch.dao.PipelineDockerBuildDao
 import com.tencent.devops.dispatch.dao.PipelineDockerEnableDao
@@ -78,6 +79,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
+import org.springframework.util.StopWatch
 
 @Service
 class DockerHostBuildService @Autowired constructor(
@@ -98,8 +100,7 @@ class DockerHostBuildService @Autowired constructor(
     @Value("\${dispatch.dockerBuildImagePrefix:#{null}}")
     val dockerBuildImagePrefix: String? = null
 
-    @Value("\${project.gray:#{null}}")
-    private val grayFlag: String? = null
+    private val grayFlag: Boolean = gray.isGray()
 
     fun enable(pipelineId: String, vmSeqId: Int?, enable: Boolean) =
         pipelineDockerEnableDao.enable(dslContext, pipelineId, vmSeqId, enable)
@@ -296,101 +297,108 @@ class DockerHostBuildService @Autowired constructor(
     }
 
     fun startBuild(hostTag: String): Result<DockerHostBuildInfo>? {
-        logger.info("[$hostTag|$grayFlag] Start to build")
+        val stopWatch = StopWatch()
+        stopWatch.start("fetchHostZone")
         val hostZone = pipelineDockerHostZoneDao.getHostZone(dslContext, hostTag)
-
+        stopWatch.stop()
+        var message = ""
         val redisLock = DockerHostLock(redisOperation)
         try {
-            val gray = !grayFlag.isNullOrBlank() && grayFlag!!.toBoolean()
+            stopWatch.start("getGrayProject")
             val grayProjectSet = this.gray.grayProjectSet(redisOperation)
-            redisLock.lock()
-            if (gray) {
+            stopWatch.stop()
+            stopWatch.start("tryLock")
+            val tryLock = redisLock.tryLock(timeout = 4000)
+            stopWatch.stop()
+
+            if (!tryLock) {
+                message = "try lock fail in ${stopWatch.lastTaskTimeMillis}"
+                return Result(status = 1, message = message)
+            }
+
+            val tasks = if (grayFlag) {
+                stopWatch.start("grayQueueTask")
                 // 优先取设置了IP的任务（可能是固定构建机，也可能是上次用的构建机）
                 var task = pipelineDockerTaskDao.getQueueTasksByProj(dslContext, grayProjectSet, hostTag)
                 if (task.isNotEmpty) {
-                    logger.info("Start docker build with hostIp: $hostTag")
+                    logger.info("[$hostTag|$grayFlag] Start docker build with hostIp: $hostTag")
                 } else if (hostZone != null) { // 再按区域取值
                     task = pipelineDockerTaskDao.getQueueTasksByProj(dslContext, grayProjectSet, Zone.valueOf(hostZone.zone))
                     if (task.isNotEmpty) {
-                        logger.info("Start docker build with zone: ${hostZone.zone}")
+                        logger.info("[$hostTag|$grayFlag] Start docker build with zone: ${hostZone.zone}")
                     } else { // 最后随机取
                         task = pipelineDockerTaskDao.getQueueTasksByProj(dslContext, grayProjectSet)
                     }
                 } else { // 客户端的区域为空，则随机取
                     task = pipelineDockerTaskDao.getQueueTasksByProj(dslContext, grayProjectSet)
                 }
-
-                if (task.isEmpty()) {
-                    logger.info("Not task in queue")
-                    return Result(1, "no task in queue")
-                }
-                val build = task[0]
-                logger.info("Start the docker build(${build.buildId}) seq(${build.vmSeqId})hostTag($hostTag)imageName(${build.imageName})")
-                pipelineDockerTaskDao.updateStatusAndTag(dslContext, build.buildId, build.vmSeqId, PipelineTaskStatus.RUNNING, hostTag)
-                redisUtils.setDockerBuildLastHost(build.pipelineId, build.vmSeqId.toString(), hostTag) // 将本次构建使用的主机IP写入redis，以方便下次直接用这台IP
-                return Result(0, "success", DockerHostBuildInfo(
-                    projectId = build.projectId,
-                    agentId = build.agentId,
-                    pipelineId = build.pipelineId,
-                    buildId = build.buildId,
-                    vmSeqId = build.vmSeqId,
-                    secretKey = build.secretKey,
-                    status = PipelineTaskStatus.RUNNING.status,
-                    imageName = build.imageName,
-                    containerId = build.containerId,
-                    wsInHost = false,
-                    registryUser = build.registryUser,
-                    registryPwd = build.registryPwd,
-                    imageType = build.imageType,
-                    imagePublicFlag = build.imagePublicFlag,
-                    imageRDType = ImageRDTypeEnum.getImageRDTypeStr(build.imageRdType?.toInt()),
-                    containerHashId = build.containerHashId
-                ))
+                stopWatch.stop()
+                task
             } else {
+                stopWatch.start("prodQueueTask")
                 // 优先取设置了IP的任务（可能是固定构建机，也可能是上次用的构建机）
                 var task = pipelineDockerTaskDao.getQueueTasksExcludeProj(dslContext, grayProjectSet, hostTag)
                 if (task.isNotEmpty) {
-                    logger.info("Start docker build with hostIp: $hostTag")
+                    logger.info("[$hostTag|$grayFlag] Start docker build with hostIp: $hostTag")
                 } else if (hostZone != null) { // 再按区域取值
                     task = pipelineDockerTaskDao.getQueueTasksExcludeProj(dslContext, grayProjectSet, Zone.valueOf(hostZone.zone))
                     if (task.isNotEmpty) {
-                        logger.info("Start docker build with zone: ${hostZone.zone}")
+                        logger.info("[$hostTag|$grayFlag] Start docker build with zone: ${hostZone.zone}")
                     } else { // 最后随机取
                         task = pipelineDockerTaskDao.getQueueTasksExcludeProj(dslContext, grayProjectSet)
                     }
                 } else { // 客户端的区域为空，则随机取
                     task = pipelineDockerTaskDao.getQueueTasksExcludeProj(dslContext, grayProjectSet)
                 }
-
-                if (task.isEmpty()) {
-                    logger.info("No task in queue")
-                    return Result(1, "no task in queue")
-                }
-                val build = task[0]
-                logger.info("Start the docker build(${build.buildId}) seq(${build.vmSeqId})hostTag($hostTag)imageName(${build.imageName})")
-                pipelineDockerTaskDao.updateStatusAndTag(dslContext, build.buildId, build.vmSeqId, PipelineTaskStatus.RUNNING, hostTag)
-                redisUtils.setDockerBuildLastHost(build.pipelineId, build.vmSeqId.toString(), hostTag) // 将本次构建使用的主机IP写入redis，以方便下次直接用这台IP
-                return Result(0, "success", DockerHostBuildInfo(
-                    projectId = build.projectId,
-                    agentId = build.agentId,
-                    pipelineId = build.pipelineId,
-                    buildId = build.buildId,
-                    vmSeqId = build.vmSeqId,
-                    secretKey = build.secretKey,
-                    status = PipelineTaskStatus.RUNNING.status,
-                    imageName = build.imageName,
-                    containerId = "",
-                    wsInHost = false,
-                    registryUser = build.registryUser,
-                    registryPwd = build.registryPwd,
-                    imageType = build.imageType,
-                    imagePublicFlag = build.imagePublicFlag,
-                    imageRDType = ImageRDTypeEnum.getImageRDTypeStr(build.imageRdType?.toInt()),
-                    containerHashId = build.containerHashId
-                ))
+                stopWatch.stop()
+                task
             }
+
+            if (tasks.isEmpty()) {
+                message = "No task in queue"
+                return Result(status = 1, message = message)
+            }
+            val build = tasks[0]
+            stopWatch.start("updateStatusAndTag")
+            pipelineDockerTaskDao.updateStatusAndTag(
+                dslContext = dslContext,
+                buildId = build.buildId,
+                vmSeqId = build.vmSeqId,
+                status = PipelineTaskStatus.RUNNING,
+                hostTag = hostTag
+            )
+            stopWatch.stop()
+            stopWatch.start("setDockerBuildLastHost")
+            redisUtils.setDockerBuildLastHost(
+                pipelineId = build.pipelineId,
+                vmSeqId = build.vmSeqId.toString(),
+                hostIp = hostTag
+            ) // 将本次构建使用的主机IP写入redis，以方便下次直接用这台IP
+            stopWatch.stop()
+            message = "buildId=${build.buildId}| vmSeqId=${build.vmSeqId}| imageName=${build.imageName}"
+            return Result(0, "success", DockerHostBuildInfo(
+                projectId = build.projectId,
+                agentId = build.agentId,
+                pipelineId = build.pipelineId,
+                buildId = build.buildId,
+                vmSeqId = build.vmSeqId,
+                secretKey = build.secretKey,
+                status = PipelineTaskStatus.RUNNING.status,
+                imageName = build.imageName,
+                containerId = "",
+                wsInHost = false,
+                registryUser = build.registryUser,
+                registryPwd = build.registryPwd,
+                imageType = build.imageType,
+                imagePublicFlag = build.imagePublicFlag,
+                imageRDType = ImageRDTypeEnum.getImageRDTypeStr(build.imageRdType?.toInt()),
+                containerHashId = build.containerHashId
+            ))
         } finally {
+            stopWatch.start("unlock")
             redisLock.unlock()
+            stopWatch.stop()
+            logger.info("[$hostTag|$grayFlag]|Start_Docker_Build| $message| watch=$stopWatch")
         }
     }
 
@@ -403,80 +411,115 @@ class DockerHostBuildService @Autowired constructor(
     }
 
     fun rollbackBuild(buildId: String, vmSeqId: Int, shutdown: Boolean?): Result<Boolean>? {
-        logger.info("Rollback build, buildId:$buildId, vmSeqId:$vmSeqId")
-
+        val stopWatch = StopWatch()
+        var message = "nothing"
         val redisLock = DockerHostLock(redisOperation)
         try {
-            redisLock.lock()
+            stopWatch.start("tryLock")
+            redisLock.tryLock(timeout = 4000)
+            stopWatch.stop()
+            stopWatch.start("fetchHostZone")
             val task = pipelineDockerTaskDao.getTask(dslContext, buildId, vmSeqId)
+            stopWatch.stop()
             if (task == null) {
-                logger.warn("The build task not exists, buildId:$buildId, vmSeqId:$vmSeqId")
-                return Result(1, "Task not exists")
+                message = "The build task not exists, buildId:$buildId, vmSeqId:$vmSeqId"
+                return Result(status = 1, message = message)
             }
             // dockerhost上报失败，则直接失败，不用回滚;
             if (true == shutdown) {
-                logger.info("Shutdown is true, no need to rollback! projectId: ${task.projectId}, " +
-                    "pipelineId: ${task.pipelineId}, buildId: ${task.buildId}, channelCode: ${task.channelCode}")
-                client.get(ServiceBuildResource::class).serviceShutdown(task.projectId, task.pipelineId, task.buildId, ChannelCode.valueOf(task.channelCode))
-
-                AlertUtils.doAlert(AlertLevel.HIGH, "Docker构建机启动任务异常", "构建镜像无法启动，projectId: ${task.projectId}, pipelineId: ${task.pipelineId},buildId: ${task.buildId}")
-                return Result(0, "Shutdown the build")
+                message = "构建镜像无法启动，projectId: ${task.projectId}, pipelineId: ${task.pipelineId},buildId: ${task.buildId}"
+                stopWatch.start("shutdown_pipeline")
+                client.get(ServiceBuildResource::class).serviceShutdown(
+                    projectId = task.projectId,
+                    pipelineId = task.pipelineId,
+                    buildId = task.buildId,
+                    channelCode = ChannelCode.valueOf(task.channelCode)
+                )
+                stopWatch.stop()
+                AlertUtils.doAlert(level = HIGH, title = "Docker构建机启动任务异常", message = message)
+                return Result(status = 0, message = message)
             }
             // 或固定构建机的场景，则直接失败，不用回滚; 其他场景需要回滚，并把hostTag清空，以供其他机器执行
             val dockerHost = pipelineDockerHostDao.getHost(dslContext, task.projectId)
             if (null != dockerHost) {
-                logger.info("DockerHost is not null, rollback failed, shutdown the build! projectId: ${task.projectId}, " +
-                    "pipelineId: ${task.pipelineId}, buildId: ${task.buildId}, channelCode: ${task.channelCode}")
-                client.get(ServiceBuildResource::class).serviceShutdown(task.projectId, task.pipelineId, task.buildId, ChannelCode.valueOf(task.channelCode))
+                message = "固定的Docker构建机启动任务异常，IP：${dockerHost.hostIp}, projectId: ${task.projectId}, pipelineId: ${task.pipelineId},buildId: ${task.buildId}"
+                stopWatch.start("shutdown_pipeline")
+                client.get(ServiceBuildResource::class).serviceShutdown(
+                    projectId = task.projectId,
+                    pipelineId = task.pipelineId,
+                    buildId = task.buildId,
+                    channelCode = ChannelCode.valueOf(task.channelCode)
+                )
+                stopWatch.stop()
 
-                AlertUtils.doAlert(AlertLevel.HIGH, "Docker构建机启动任务异常", "固定的Docker构建机启动任务异常，IP：${dockerHost.hostIp}, " +
-                    "projectId: ${task.projectId}, pipelineId: ${task.pipelineId},buildId: ${task.buildId}")
-                return Result(0, "Rollback task finished")
+                AlertUtils.doAlert(level = HIGH, title = "Docker构建机启动任务异常", message = message)
+                return Result(status = 0, message = message)
             }
 
             if (task.status == PipelineTaskStatus.RUNNING.status) {
+                stopWatch.start("updateStatusAndTag")
                 pipelineDockerTaskDao.updateStatusAndTag(dslContext, buildId, vmSeqId, PipelineTaskStatus.QUEUE, "")
-                AlertUtils.doAlert(AlertLevel.LOW, "Docker构建机启动任务异常", "Docker构建机启动任务异常，任务已重试，异常ip: ${task.hostTag}, " +
-                    "projectId: ${task.projectId}, pipelineId: ${task.pipelineId},buildId: ${task.buildId}")
+                stopWatch.stop()
+                message = "Docker构建机启动任务异常，任务已重试，异常ip: ${task.hostTag}, projectId: ${task.projectId}, pipelineId: ${task.pipelineId},buildId: ${task.buildId}"
+                AlertUtils.doAlert(level = LOW, title = "Docker构建机启动任务异常", message = message)
             }
         } finally {
+            stopWatch.start("unlock")
             redisLock.unlock()
+            stopWatch.stop()
+            logger.info("[$buildId|$vmSeqId]|rollbackBuild| $message| watch=$stopWatch")
         }
 
-        return Result(0, "success", true)
+        return Result(status = 0, message = "success", data = true)
     }
 
     fun endBuild(hostTag: String): Result<DockerHostBuildInfo>? {
+        val stopWatch = StopWatch()
+        var message = "nothing"
         val redisLock = DockerHostLock(redisOperation)
         try {
-            redisLock.lock()
+            stopWatch.start("tryLock")
+            redisLock.tryLock(timeout = 4000)
+            stopWatch.stop()
+            stopWatch.start("getDoneTasks")
             val task = pipelineDockerTaskDao.getDoneTasks(dslContext, hostTag)
+            stopWatch.stop()
             if (task.isEmpty()) {
-                return Result(1, "no task to end")
+                message = "no task to end"
+                return Result(status = 1, message = message)
             }
             val build = task[0]
             logger.info("End the docker build(${build.buildId}) seq(${build.vmSeqId})")
-            pipelineDockerTaskDao.deleteTask(dslContext, build.id)
-            return Result(0, "success", DockerHostBuildInfo(
-                projectId = build.projectId,
-                agentId = build.agentId,
-                pipelineId = build.pipelineId,
-                buildId = build.buildId,
-                vmSeqId = build.vmSeqId,
-                secretKey = build.secretKey,
-                status = build.status,
-                imageName = build.imageName,
-                containerId = build.containerId,
-                wsInHost = false,
-                registryUser = build.registryUser,
-                registryPwd = build.registryPwd,
-                imageType = build.imageType,
-                imagePublicFlag = build.imagePublicFlag,
-                imageRDType = ImageRDTypeEnum.getImageRDTypeStr(build.imageRdType?.toInt()),
-                containerHashId = build.containerHashId
-            ))
+            stopWatch.start("deleteTask")
+            pipelineDockerTaskDao.deleteTask(dslContext = dslContext, id = build.id)
+            stopWatch.stop()
+            return Result(
+                status = 0,
+                message = "success",
+                data = DockerHostBuildInfo(
+                    projectId = build.projectId,
+                    agentId = build.agentId,
+                    pipelineId = build.pipelineId,
+                    buildId = build.buildId,
+                    vmSeqId = build.vmSeqId,
+                    secretKey = build.secretKey,
+                    status = build.status,
+                    imageName = build.imageName,
+                    containerId = build.containerId,
+                    wsInHost = false,
+                    registryUser = build.registryUser,
+                    registryPwd = build.registryPwd,
+                    imageType = build.imageType,
+                    imagePublicFlag = build.imagePublicFlag,
+                    imageRDType = ImageRDTypeEnum.getImageRDTypeStr(build.imageRdType?.toInt()),
+                    containerHashId = build.containerHashId
+                )
+            )
         } finally {
+            stopWatch.start("unlock")
             redisLock.unlock()
+            stopWatch.stop()
+            logger.info("[$hostTag|$grayFlag]|endBuild| $message| watch=$stopWatch")
         }
     }
 
@@ -485,9 +528,14 @@ class DockerHostBuildService @Autowired constructor(
      */
     @Scheduled(initialDelay = 30 * 1000, fixedDelay = 1800 * 1000)
     fun clearTimeoutTask() {
+        val stopWatch = StopWatch()
+        var message = ""
         val redisLock = DockerHostLock(redisOperation)
         try {
+            stopWatch.start("lock")
             redisLock.lock()
+            stopWatch.stop()
+            stopWatch.start("resetTimeOutTask")
             val timeoutTask = pipelineDockerTaskDao.getTimeOutTask(dslContext)
             if (timeoutTask.isNotEmpty) {
                 logger.info("There is ${timeoutTask.size} build task have/has already time out, clear it.")
@@ -495,9 +543,14 @@ class DockerHostBuildService @Autowired constructor(
                     logger.info("clear pipelineId:(${timeoutTask[i].pipelineId}), vmSeqId:(${timeoutTask[i].vmSeqId}), containerId:(${timeoutTask[i].containerId})")
                 }
                 pipelineDockerTaskDao.updateTimeOutTask(dslContext)
+                message = "timeoutTask.size=${timeoutTask.size}"
             }
+            stopWatch.stop()
         } finally {
+            stopWatch.start("unlock")
             redisLock.unlock()
+            stopWatch.stop()
+            logger.info("[$grayFlag]|clearTimeoutTask| $message| watch=$stopWatch")
         }
     }
 
@@ -506,30 +559,46 @@ class DockerHostBuildService @Autowired constructor(
      */
     @Scheduled(initialDelay = 60 * 1000, fixedDelay = 20 * 1000)
     fun resetHostTag() {
+        val stopWatch = StopWatch()
+        var message = "nothing"
         val redisLock = DockerHostLock(redisOperation)
         try {
+            stopWatch.start("lock")
             redisLock.lock()
+            stopWatch.stop()
+            stopWatch.start("getUnclaimedHostTask")
             val unclaimedTask = pipelineDockerTaskDao.getUnclaimedHostTask(dslContext)
+            stopWatch.stop()
             if (unclaimedTask.isNotEmpty) {
-                val dockhostCache = mutableMapOf<String, Set<String>>()
+                stopWatch.start("clearHostTagForUnclaimedHostTask")
+                val dockerhostCache = mutableMapOf<String, Set<String>>()
                 logger.info("There is ${unclaimedTask.size} build task have/has queued for a long time, clear hostTag.")
                 for (i in unclaimedTask.indices) {
-                    val set = dockhostCache.computeIfAbsent(unclaimedTask[i].projectId) {
+                    val set = dockerhostCache.computeIfAbsent(unclaimedTask[i].projectId) {
                         pipelineDockerHostDao.getHostIps(dslContext, unclaimedTask[i].projectId).toSet()
                     }
                     // 在专用构建机列表的不做重置，让其仍然继续等待认领
                     if (!set.contains(unclaimedTask[i].hostTag)) {
                         logger.info("[${unclaimedTask[i].buildId}]|clear hostTag, pipelineId:(${unclaimedTask[i].pipelineId}), vmSeqId:(${unclaimedTask[i].vmSeqId})")
-                        pipelineDockerTaskDao.clearHostTagForUnclaimedHostTask(dslContext, unclaimedTask[i].buildId, unclaimedTask[i].vmSeqId)
+                        pipelineDockerTaskDao.clearHostTagForUnclaimedHostTask(
+                            dslContext = dslContext,
+                            buildId = unclaimedTask[i].buildId,
+                            vmSeqId = unclaimedTask[i].vmSeqId
+                        )
                         redisUtils.deleteDockerBuildLastHost(
                             pipelineId = unclaimedTask[i].pipelineId,
                             vmSeqId = unclaimedTask[i].vmSeqId.toString()
                         )
                     }
                 }
+                stopWatch.stop()
+                message = "unclaimedTask.size=${unclaimedTask.size}"
             }
         } finally {
+            stopWatch.start("unlock")
             redisLock.unlock()
+            stopWatch.stop()
+            logger.info("[$grayFlag]|resetHostTag| $message| watch=$stopWatch")
         }
     }
 
@@ -538,22 +607,36 @@ class DockerHostBuildService @Autowired constructor(
      */
     @Scheduled(initialDelay = 90 * 1000, fixedDelay = 40 * 1000)
     fun resetTaskZone() {
+        val stopWatch = StopWatch()
+        var message = "nothing"
         val redisLock = DockerHostLock(redisOperation)
         try {
+            stopWatch.start("lock")
             redisLock.lock()
+            stopWatch.stop()
+            stopWatch.start("getUnclaimedZoneTask")
             val unclaimedTask = pipelineDockerTaskDao.getUnclaimedZoneTask(dslContext)
+            stopWatch.stop()
             if (unclaimedTask.isNotEmpty) {
+                stopWatch.start("resetZoneForUnclaimedZoneTask")
                 logger.info("There is ${unclaimedTask.size} build task have/has queued for a long time, clear zone.")
                 for (i in unclaimedTask.indices) {
                     logger.info("clear zone, pipelineId:(${unclaimedTask[i].pipelineId}), vmSeqId:(${unclaimedTask[i].vmSeqId}), buildId: ${unclaimedTask[i].buildId} ")
-                    redisUtils.deleteDockerBuildLastHost(unclaimedTask[i].pipelineId, unclaimedTask[i].vmSeqId.toString())
+                    redisUtils.deleteDockerBuildLastHost(
+                        pipelineId = unclaimedTask[i].pipelineId,
+                        vmSeqId = unclaimedTask[i].vmSeqId.toString()
+                    )
                 }
                 pipelineDockerTaskDao.resetZoneForUnclaimedZoneTask(dslContext)
-
-                AlertUtils.doAlert(AlertLevel.HIGH, "Docker构建机异常", "Docker构建机异常，区域(${unclaimedTask[0].zone})下无正常的构建机, 任务已切换至深圳地区。")
+                stopWatch.stop()
+                message = "Docker构建机异常，区域(${unclaimedTask[0].zone})下无正常的构建机, 任务已切换至深圳地区。"
+                AlertUtils.doAlert(HIGH, "Docker构建机异常", message)
             }
         } finally {
+            stopWatch.start("unlock")
             redisLock.unlock()
+            stopWatch.stop()
+            logger.info("[$grayFlag]|resetTaskZone| $message| watch=$stopWatch")
         }
     }
 
@@ -565,8 +648,23 @@ class DockerHostBuildService @Autowired constructor(
             return Result(1, "Container not exists")
         }
 
-        return Result(0, "success", ContainerInfo(task.projectId, task.pipelineId, task.vmSeqId.toString(), task.status,
-            task.imageName, task.containerId, task.hostTag, "", "", task.registryUser, task.registryPwd, task.imageType)
+        return Result(
+            status = 0,
+            message = "success",
+            data = ContainerInfo(
+                projectId = task.projectId,
+                pipelineId = task.pipelineId,
+                vmSeqId = task.vmSeqId.toString(),
+                status = task.status,
+                imageName = task.imageName,
+                containerId = task.containerId,
+                address = task.hostTag,
+                token = "",
+                buildEnv = "",
+                registryUser = task.registryUser,
+                registryPwd = task.registryPwd,
+                imageType = task.imageType
+            )
         )
     }
 
@@ -577,19 +675,20 @@ class DockerHostBuildService @Autowired constructor(
             val context = DSL.using(configuration)
             val secretKey = ApiUtil.randomSecretKey()
             val zone = event.zone ?: Zone.SHENZHEN
-            val id = pipelineDockerBuildDao.startBuild(context,
-                event.projectId,
-                event.pipelineId,
-                event.buildId,
-                event.vmSeqId.toInt(),
-                secretKey,
-                PipelineTaskStatus.RUNNING,
-                zone.name
+            val id = pipelineDockerBuildDao.startBuild(
+                dslContext = context,
+                projectId = event.projectId,
+                pipelineId = event.pipelineId,
+                buildId = event.buildId,
+                vmSeqId = event.vmSeqId.toInt(),
+                secretKey = secretKey,
+                status = PipelineTaskStatus.RUNNING,
+                zone = zone.name
             )
             val agentId = HashUtil.encodeLongId(id)
             redisUtils.setDockerBuild(
-                id, secretKey,
-                RedisBuild(
+                id = id, secretKey = secretKey,
+                redisBuild = RedisBuild(
                     vmName = agentId,
                     projectId = event.projectId,
                     pipelineId = event.pipelineId,
@@ -651,10 +750,10 @@ class DockerHostBuildService @Autowired constructor(
             if (dispatchType.imageType == ImageType.THIRD) {
                 if (!dispatchType.credentialId.isNullOrBlank()) {
                     val ticketsMap = CommonUtils.getCredential(
-                        client,
-                        event.projectId,
-                        dispatchType.credentialId!!,
-                        CredentialType.USERNAME_PASSWORD
+                        client = client,
+                        projectId = event.projectId,
+                        credentialId = dispatchType.credentialId!!,
+                        type = CredentialType.USERNAME_PASSWORD
                     )
                     userName = ticketsMap["v1"] as String
                     password = ticketsMap["v2"] as String
