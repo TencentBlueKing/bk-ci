@@ -24,19 +24,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.engine.common
+package com.tencent.devops.process.pojo.pipeline
 
-/**
- *
- * @version 1.0
- */
-object VMUtils {
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-    fun genStopVMTaskId(seq: Int) = "stopVM-$seq"
-
-    fun genEndPointTaskId(seq: Int) = "end-$seq"
-
-    fun genVMSeq(containerSeq: Int, taskSeq: Int): Int = containerSeq * 1000 + taskSeq
-
-    fun genStartVMTaskId(containerSeq: Int, taskSeq: Int) = "startVM-${genVMSeq(containerSeq, taskSeq)}"
-}
+@ApiModel("构建模型-ID")
+data class ProjectBuildId(
+    @ApiModelProperty("构建ID", required = true)
+    val id: String,
+    @ApiModelProperty("项目ID", required = true)
+    val projectId: String
+)

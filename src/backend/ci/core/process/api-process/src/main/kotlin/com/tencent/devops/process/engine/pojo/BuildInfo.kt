@@ -26,9 +26,9 @@
 
 package com.tencent.devops.process.engine.pojo
 
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
-import com.tencent.devops.common.api.pojo.ErrorType
 
 data class BuildInfo(
     val projectId: String,
@@ -49,4 +49,21 @@ data class BuildInfo(
     var errorType: ErrorType?,
     var errorCode: Int?,
     var errorMsg: String?
-)
+) {
+
+    fun isFinish() = when {
+        status.name == BuildStatus.STAGE_SUCCESS.name && endTime != null && endTime > 0 && startTime != null && endTime > startTime -> true
+        else -> BuildStatus.isFinish(status)
+    }
+
+    fun isSuccess() = when {
+        status.name == BuildStatus.STAGE_SUCCESS.name && endTime != null && endTime > 0 && startTime != null && endTime > startTime -> true
+        else -> BuildStatus.isSuccess(status)
+    }
+
+    fun isFailure() = BuildStatus.isFailure(status)
+
+    fun isCancel() = BuildStatus.isCancel(status)
+
+    fun isStageSuccess() = status == BuildStatus.STAGE_SUCCESS
+}

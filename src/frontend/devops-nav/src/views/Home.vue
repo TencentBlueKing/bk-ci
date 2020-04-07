@@ -284,7 +284,7 @@
                     .service-item {
                         padding: 0;
                         > h4 {
-                            .bk-icon {
+                            .devops-icon {
                                 opacity: 1;
                             }
                         }
@@ -337,7 +337,7 @@
                     left: 0;
                     width: 100%;
                     text-align: center;
-                    .bk-icon {
+                    .devops-icon {
                         font-size: 12px;
                     }
                 }

@@ -32,11 +32,11 @@
                                     'fail-status': entry.status === 'fail'
                                 }">
                                 <div class="card-item">
-                                    <i class="bk-icon icon-check-1" v-if="entry.status === 'success'"></i>
+                                    <i class="devops-icon icon-check-1" v-if="entry.status === 'success'"></i>
                                     <p class="step-label">{{ entry.name }}</p>
                                 </div>
                                 <div class="audit-tips" v-if="entry.code === 'approve' && entry.status === 'doing'">
-                                    <i class="bk-icon icon-info-circle"></i> {{ $t('store.由蓝盾管理员审核') }} </div>
+                                    <i class="devops-icon icon-info-circle"></i> {{ $t('store.由蓝盾管理员审核') }} </div>
                             </div>
                         </div>
                     </div>
@@ -88,7 +88,7 @@
                             </div>
                         </div>
                         <div class="toggle-btn" v-if="isOverflow" @click="toggleShow()">{{ isDropdownShow ? $t('store.收起') : $t('store.展开') }}
-                            <i :class="['bk-icon icon-angle-down', { 'icon-flip': isDropdownShow }]"></i>
+                            <i :class="['devops-icon icon-angle-down', { 'icon-flip': isDropdownShow }]"></i>
                         </div>
                         <div class="detail-form-item">
                             <div class="info-label"> {{ $t('store.发布者：') }} </div>
@@ -101,7 +101,7 @@
                     </div>
                     <div class="template-logo-box">
                         <img :src="templateDetail.logoUrl" v-if="templateDetail.logoUrl">
-                        <i class="bk-icon icon-placeholder template-logo" v-else></i>
+                        <i class="devops-icon icon-placeholder template-logo" v-else></i>
                     </div>
                 </div>
                 <div class="released-tips" v-if="isOver">
@@ -575,7 +575,7 @@
             color: $primaryColor;
             text-align: right;
             cursor: pointer;
-            .bk-icon {
+            .devops-icon {
                 display: inline-block;
                 margin-left: 2px;
                 transition: all ease 0.2s;

@@ -19,7 +19,7 @@
         </bk-option>
         <div slot="extension" v-if="hasAddItem" class="bk-selector-create-item">
             <a :href="itemUrl" target="_blank">
-                <i class="bk-icon icon-plus-circle" />
+                <i class="devops-icon icon-plus-circle" />
                 {{ itemText }}
             </a>
         </div>
