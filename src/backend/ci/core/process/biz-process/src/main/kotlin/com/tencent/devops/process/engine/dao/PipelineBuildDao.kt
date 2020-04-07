@@ -35,7 +35,9 @@ import com.tencent.devops.model.process.tables.records.TPipelineBuildHistoryReco
 import com.tencent.devops.process.engine.pojo.BuildInfo
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.process.pojo.BuildStageStatus
+import com.tencent.devops.process.utils.PIPELINE_MESSAGE_STRING_LENGTH_MAX
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.DatePart
@@ -292,13 +294,9 @@ class PipelineBuildDao {
                 baseQuery = baseQuery.set(REMARK, remark)
             }
             if (errorType != null) {
-//                val maxLength = ERROR_MSG.dataType.length()
-//                val realErrorMsg = if (errorMsg != null && errorMsg.length > maxLength) {
-//                    errorMsg.substring(0, maxLength - 1)
-//                } else errorMsg
                 baseQuery = baseQuery.set(ERROR_TYPE, errorType.ordinal)
                 baseQuery = baseQuery.set(ERROR_CODE, errorCode)
-                baseQuery = baseQuery.set(ERROR_MSG, errorMsg)
+                baseQuery = baseQuery.set(ERROR_MSG, CommonUtils.interceptStringInLength(errorMsg, PIPELINE_MESSAGE_STRING_LENGTH_MAX))
             }
             baseQuery.where(BUILD_ID.eq(buildId))
                 .execute()

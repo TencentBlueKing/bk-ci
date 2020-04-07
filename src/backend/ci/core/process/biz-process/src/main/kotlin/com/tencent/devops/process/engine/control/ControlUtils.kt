@@ -99,6 +99,9 @@ object ControlUtils {
             logger.info("buildId=[$buildId]|PRE_TASK_FAILED_ONLY|containerFinalStatus=$containerFinalStatus|will skip")
             return true
         }
+        if (!isEnable(additionalOptions)) {
+            return true
+        }
         // 自定义变量全部满足时不运行
         if (skipWhenCustomVarMatch(additionalOptions)) {
             for (names in additionalOptions!!.customVariables!!) {
