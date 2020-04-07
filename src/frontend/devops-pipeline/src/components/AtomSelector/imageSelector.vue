@@ -3,12 +3,12 @@
         <section class="selector-popup" v-bk-clickoutside="closeImageSelect" v-show="isShow">
             <main class="selector-main">
                 <header class="selector-header">
-                    <h3>{{ $t('editPage.selectImage') }}<i @click="freshList(searchKey)" :class="[{ 'spin-icon': isLoading }, 'bk-icon', 'icon-refresh', 'fresh']" /></h3>
+                    <h3>{{ $t('editPage.selectImage') }}<i @click="freshList(searchKey)" :class="[{ 'spin-icon': isLoading }, 'devops-icon', 'icon-refresh', 'fresh']" /></h3>
                     <bk-input class="search-input"
                         ref="searchStr"
                         :clearable="true"
                         :placeholder="$t('editPage.enterSearch')"
-                        right-icon="bk-icon icon-search"
+                        right-icon="devops-icon icon-search"
                         :value="searchKey"
                         @input="handleClear"
                         @enter="handleSearch">
@@ -38,7 +38,7 @@
                                 <h3 :class="[{ 'expand': tab.expandObtained }, 'search-title', 'gap-border', 'uninstall']" @click="tab.expandObtained = !tab.expandObtained">
                                     {{ $t('editPage.unRecommend') }}（{{tab.unRecommendData.length}}）
                                     <bk-popover placement="top">
-                                        <i class="bk-icon icon-info-circle "></i>
+                                        <i class="devops-icon icon-info-circle "></i>
                                         <div slot="content">
                                             {{ $t('editPage.unRecomReason') }}
                                         </div>
@@ -91,7 +91,7 @@
                             <h3 :class="[{ 'expand': searchExpandObtained }, 'search-title', 'gap-border', 'uninstall']" @click="searchExpandObtained = !searchExpandObtained">
                                 {{ $t('editPage.unRecommend') }}
                                 <bk-popover placement="top">
-                                    <i class="bk-icon icon-info-circle "></i>
+                                    <i class="devops-icon icon-info-circle "></i>
                                     <div slot="content">
                                         {{ $t('editPage.unRecomReason') }}
                                     </div>

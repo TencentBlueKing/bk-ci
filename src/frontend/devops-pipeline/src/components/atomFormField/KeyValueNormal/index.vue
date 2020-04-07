@@ -16,11 +16,11 @@
                     <div class="bk-form-item">
                         <vuex-input name="value" :disabled="disabled" :placeholder="isMetadataVar ? $t('view.value') : 'Value'" :value="param.value" :handle-change="(name, value) => handleParamChange(name, value, index)" />
                     </div>
-                    <i @click.stop.prevent="editParam(index, false)" class="bk-icon icon-minus hover-click" v-if="!disabled && !editValueOnly" />
+                    <i @click.stop.prevent="editParam(index, false)" class="devops-icon icon-minus hover-click" v-if="!disabled && !editValueOnly" />
                 </li>
             </template>
             <a class="text-link hover-click" v-if="!disabled && !editValueOnly" @click.stop.prevent="editParam(paramList.length, true)">
-                <i class="bk-icon icon-plus-circle" />
+                <i class="devops-icon icon-plus-circle" />
                 <span>{{ addBtnText || defaultAddBtnText }}</span>
             </a>
         </ul>

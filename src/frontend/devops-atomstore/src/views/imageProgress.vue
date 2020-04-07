@@ -22,7 +22,7 @@
                         <div class="step-card" v-for="(entry, index) in progressStatus" :key="index"
                             :class="{ 'processing-status': entry.status === 'doing', 'fail-status': entry.status === 'fail', 'success-status': entry.code === 'end' && entry.status === 'success' }">
                             <div class="card-item">
-                                <i class="bk-icon icon-check-1" v-if="entry.status === 'success'"></i>
+                                <i class="devops-icon icon-check-1" v-if="entry.status === 'success'"></i>
                                 <p class="step-label">{{ entry.name }}</p>
                             </div>
                             <div class="retry-bth">
@@ -46,7 +46,7 @@
                                 :title="permissionMsg"
                             > {{ $t('store.继续') }} </bk-button>
                             <div class="audit-tips" v-if="entry.code === 'approve' && entry.status === 'doing'">
-                                <i class="bk-icon icon-info-circle"></i> {{ $t('store.由蓝盾管理员审核') }} </div>
+                                <i class="devops-icon icon-info-circle"></i> {{ $t('store.由蓝盾管理员审核') }} </div>
                         </div>
                     </div>
                 </div>

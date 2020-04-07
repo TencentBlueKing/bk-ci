@@ -4,7 +4,7 @@
         <p :class="[{ 'not-recommend': atom.recommendFlag === false }, 'card-name', 'text-overflow']">{{ atom.name }}</p>
         <h5 class="card-detail">
             <span class="text-overflow">{{ atom.publisher }}</span>
-            <span>{{ atom.downloads }} <i class="bk-icon icon-heat-2"></i></span>
+            <span>{{ atom.downloads }} <i class="devops-icon icon-heat-2"></i></span>
         </h5>
         <p v-if="hasSummary" class="card-summary">{{atom.summary || $t('store.暂无描述')}}</p>
         <section class="card-rate">
@@ -12,7 +12,7 @@
                 <comment-rate :rate="5" :width="15" :height="16" :style="{ width: starWidth }" class="score-real"></comment-rate>
                 <comment-rate :rate="0" :width="15" :height="16"></comment-rate>
             </p>
-            <i class="bk-icon icon-lock-shape" v-if="!atom.flag"></i>
+            <i class="devops-icon icon-lock-shape" v-if="!atom.flag"></i>
         </section>
     </router-link>
 </template>
@@ -107,7 +107,7 @@
                     display: flex;
                 }
             }
-            .bk-icon {
+            .devops-icon {
                 color: $fontWeightColor;
             }
         }

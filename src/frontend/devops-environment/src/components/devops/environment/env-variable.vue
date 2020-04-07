@@ -18,12 +18,12 @@
                             v-validate="'required'"
                             v-model="param.value"
                             :class="{ 'editable-input': editable, 'is-danger': errors.has(`param-${index}-value`) }" />
-                        <i class="bk-icon text-type-icon" v-if="editable"
+                        <i class="devops-icon text-type-icon" v-if="editable"
                             :class="param.secure ? 'icon-eye' : 'icon-hide'"
                             @click="toggleInputType(index)"
                         ></i>
                         <section v-if="editable">
-                            <i class="bk-icon icon-minus-circle"
+                            <i class="devops-icon icon-minus-circle"
                                 @click="reduceHandle(index, 'reduce')"></i>
                         </section>
                     </li>
@@ -31,7 +31,7 @@
             </ul>
             <p class="add-variable" :class="{ 'is-disabled': !nodeDetails.canEdit }"
                 v-if="editable || !renderList.length" @click="addHandle">
-                <i class="bk-icon icon-plus-circle"></i>{{ $t('environment.envInfo.createVariable') }}
+                <i class="devops-icon icon-plus-circle"></i>{{ $t('environment.envInfo.createVariable') }}
             </p>
             <div class="footer-handle">
                 <bk-button theme="primary" :disabled="!nodeDetails.canEdit" v-if="!editable && renderList.length" @click="edithandle">{{ $t('environment.edit') }}</bk-button>
@@ -193,7 +193,7 @@
         .add-variable {
             color: $primaryColor;
             cursor: pointer;
-            .bk-icon {
+            .devops-icon {
                 margin-right: 4px;
             }
         }
