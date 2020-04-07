@@ -30,7 +30,7 @@
                 <span>
                     {{detail.jobType|atomJobType}}
                     <template v-if="detail.os && detail.os.length">
-                        (<i v-for="item in getJobList(detail.os)" :class="[item.icon, 'bk-icon']" :key="item" :title="item.name"></i>)
+                        (<i v-for="item in getJobList(detail.os)" :class="[item.icon, 'devops-icon']" :key="item" :title="item.name"></i>)
                     </template>
                 </span>
             </h5>

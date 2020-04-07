@@ -19,12 +19,12 @@
                 />
             </template>
             <template v-else>
-                <i class="bk-select-angle bk-icon icon-angle-down" />
                 <i
                     v-if="clearable && !isUnselected && !disabled && !readonly"
-                    class="bk-select-clear bk-icon icon-close"
+                    class="bk-select-clear bk-icon icon-close-circle-shape"
                     @click.prevent.stop="reset"
                 />
+                <i class="bk-select-angle bk-icon icon-angle-down" />
             </template>
         </template>
         <bk-popover

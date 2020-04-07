@@ -24,7 +24,7 @@
             <section class="bk-form bk-form-vertical bk-form-wrapper">
                 <ul class="stage-type-list">
                     <li v-for="os in osList" :key="os.value" @click="insert(os.value)" :class="os.className">
-                        <i :class="`bk-icon icon-${os.value.toLowerCase()} stage-type-icon`" />
+                        <i :class="`devops-icon icon-${os.value.toLowerCase()} stage-type-icon`" />
                         <span class="stage-label">{{ os.label }}</span>
                     </li>
                 </ul>
