@@ -11,7 +11,7 @@
         }">
             <div class="pipeline-list-header">
                 <div class="title">生效流水线</div>
-                <div><i class="bk-icon icon-close" @click="close" style="color: #C3CDD7;"></i></div>
+                <div><i class="devops-icon icon-close" @click="close" style="color: #C3CDD7;"></i></div>
             </div>
             <div class="pipeline-content">
                 <bk-table
@@ -99,7 +99,7 @@
                 line-height: 16px;
                 color: $fontWeightColor;
             }
-            .bk-icon {
+            .devops-icon {
                 cursor: pointer;
             }
         }

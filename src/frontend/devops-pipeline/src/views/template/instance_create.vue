@@ -6,7 +6,7 @@
         }">
         <inner-header>
             <div class="instance-header" slot="left">
-                <span class="inner-header-title" slot="left"><i class="bk-icon icon-angle-left" @click="toInstanceManage()"></i>{{ $t('template.templateInstantiation') }}</span>
+                <span class="inner-header-title" slot="left"><i class="devops-icon icon-angle-left" @click="toInstanceManage()"></i>{{ $t('template.templateInstantiation') }}</span>
             </div>
         </inner-header>
         <div class="sub-view-port" v-if="showContent">
@@ -38,7 +38,7 @@
                                     {{ $t('template.applyTemplateSetting') }}
                                 </bk-checkbox>
                                 <bk-popover placement="top">
-                                    <i class="bk-icon icon-info-circle"></i>
+                                    <i class="devops-icon icon-info-circle"></i>
                                     <div slot="content" style="white-space: pre-wrap; min-width: 200px">
                                         <div>{{ $t('template.applySettingTips') }}</div>
                                     </div>

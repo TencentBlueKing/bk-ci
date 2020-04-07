@@ -15,7 +15,7 @@
                 <span :title="container.name">{{ container.status === 'PREPARE_ENV' ? $t('editPage.prepareEnv') : container.name }}</span>
             </p>
             <container-type :class="showCopyJob ? 'hover-hide' : ''" :container="container" v-if="!showCheckedToatal"></container-type>
-            <span :title="$t('editPage.copyJob')" v-if="showCopyJob && !container.isError" class="bk-icon copyJob" @click.stop="copyContainer">
+            <span :title="$t('editPage.copyJob')" v-if="showCopyJob && !container.isError" class="devops-icon copyJob" @click.stop="copyContainer">
                 <Logo name="copy" size="18"></Logo>
             </span>
             <i v-if="showCopyJob" @click.stop="deleteJob" class="add-plus-icon close" />
