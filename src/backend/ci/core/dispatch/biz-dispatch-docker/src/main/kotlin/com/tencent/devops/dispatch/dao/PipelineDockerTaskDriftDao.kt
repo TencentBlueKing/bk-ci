@@ -27,9 +27,7 @@
 package com.tencent.devops.dispatch.dao
 
 import com.tencent.devops.model.dispatch.tables.TDispatchPipelineDockerTaskDrift
-import com.tencent.devops.model.dispatch.tables.TDispatchPipelineDockerTaskSimple
 import com.tencent.devops.model.dispatch.tables.records.TDispatchPipelineDockerTaskDriftRecord
-import com.tencent.devops.model.dispatch.tables.records.TDispatchPipelineDockerTaskSimpleRecord
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.beans.factory.annotation.Autowired
