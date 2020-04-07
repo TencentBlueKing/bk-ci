@@ -72,6 +72,7 @@
     import PipelineParamsForm from '@/components/pipelineParamsForm.vue'
     import PipelineVersionsForm from '@/components/PipelineVersionsForm.vue'
     import pipelineOperateMixin from '@/mixins/pipeline-operate-mixin'
+    import { allVersionKeyList } from '@/utils/pipelineConst'
 
     export default {
         components: {
@@ -236,8 +237,8 @@
                             this.buildNo = this.curPipelineInfo.buildNo
                             this.isVisibleVersion = this.curPipelineInfo.buildNo.required
                         }
-                        this.paramList = this.curPipelineInfo.properties.filter(p => p.required)
-                        this.versionParamList = this.curPipelineInfo.properties.filter(p => !p.required)
+                        this.paramList = this.curPipelineInfo.properties.filter(p => p.required && !allVersionKeyList.includes(p.id))
+                        this.versionParamList = this.curPipelineInfo.properties.filter(p => allVersionKeyList.includes(p.id))
                         this.paramValues = getParamsValuesMap(this.paramList)
                         this.versionParamValues = getParamsValuesMap(this.versionParamList)
                         this.requestPipeline(this.$route.params)
