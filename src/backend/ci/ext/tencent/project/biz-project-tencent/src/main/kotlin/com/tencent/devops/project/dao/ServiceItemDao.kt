@@ -17,9 +17,10 @@ import java.time.LocalDateTime
 @Repository
 class ServiceItemDao {
 
-    fun add(dslContext: DSLContext, userId: String, info: ItemCreateInfo) {
+    fun add(dslContext: DSLContext, userId: String, info: ItemCreateInfo): String {
+        val id = UUIDUtil.generate()
         with(TServiceItem.T_SERVICE_ITEM) {
-            dslContext.insertInto(
+             dslContext.insertInto(
                 this,
                 ID,
                 ITEM_CODE,
@@ -34,7 +35,7 @@ class ServiceItemDao {
                 CREATE_TIME
             )
                 .values(
-                    UUIDUtil.generate(),
+                    id,
                     info.itemCode,
                     info.itemName,
                     info.serviceId,
@@ -48,6 +49,7 @@ class ServiceItemDao {
                 )
                 .execute()
         }
+        return id
     }
 
     fun update(dslContext: DSLContext, itemId: String, userId: String, info: ItemUpdateInfo) {

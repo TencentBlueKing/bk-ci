@@ -3,6 +3,7 @@ package com.tencent.devops.project.service
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.project.api.pojo.ExtItemDTO
 import com.tencent.devops.project.api.pojo.ItemInfoResponse
 import com.tencent.devops.project.api.pojo.ItemListVO
@@ -28,7 +29,8 @@ class ServiceItemService @Autowired constructor(
     private val dslContext: DSLContext,
     private val client: Client,
     private val serviceItemDao: ServiceItemDao,
-    private val projectServiceDao: ServiceDao
+    private val projectServiceDao: ServiceDao,
+    private val redisOperation: RedisOperation
 ) {
 
     // 用于存放服务信息的Map
@@ -289,10 +291,11 @@ class ServiceItemService @Autowired constructor(
             props = itemInfo.props,
             tooltip = itemInfo.tooltip
         )
-        serviceItemDao.add(dslContext, userId, createInfo)
+        val itemId = serviceItemDao.add(dslContext, userId, createInfo)
         if (projectServiceMap[itemInfo.pid] == null) {
             getProjectService(itemInfo.pid)
         }
+        refreshBkRedisData(itemId, itemInfo.pid)
         return Result(true)
     }
 
@@ -322,6 +325,7 @@ class ServiceItemService @Autowired constructor(
         )
         serviceItemDao.update(dslContext, itemId, userId, updateInfo)
         client.get(ServiceItemRelResource::class).updateItemService(userId, itemId, itemInfo.pid)
+        refreshBkRedisData(itemId, itemInfo.pid)
         return Result(true)
     }
 
@@ -423,6 +427,10 @@ class ServiceItemService @Autowired constructor(
             )
         }
         return itemList
+    }
+
+    private fun refreshBkRedisData(itemId: String, bkServiceId: String) {
+        redisOperation.hset("project:bkService:", itemId, bkServiceId)
     }
 
     companion object {

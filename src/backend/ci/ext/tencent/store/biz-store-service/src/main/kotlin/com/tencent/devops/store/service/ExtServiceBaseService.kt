@@ -2,6 +2,7 @@ package com.tencent.devops.store.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.google.common.cache.CacheBuilder
 import com.tencent.devops.common.api.constant.APPROVE
 import com.tencent.devops.common.api.constant.BEGIN
 import com.tencent.devops.common.api.constant.BUILD
@@ -28,6 +29,7 @@ import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.BSAuthPermissionApi
 import com.tencent.devops.common.auth.code.BSProjectServiceCodec
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.project.api.pojo.ServiceItem
 import com.tencent.devops.project.api.service.ServiceProjectResource
@@ -98,6 +100,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import org.springframework.util.StringUtils
 import java.time.LocalDateTime
+import java.util.concurrent.TimeUnit
 import java.util.regex.Pattern
 
 @Service
@@ -151,8 +154,13 @@ abstract class ExtServiceBaseService @Autowired constructor() {
     lateinit var storeMediaInfoDao: StoreMediaInfoDao
     @Autowired
     lateinit var bsProjectServiceCodec: BSProjectServiceCodec
+    @Autowired
+    lateinit var redisOperation: RedisOperation
 
-    val bkServiceMap = mutableMapOf<String, Long>()
+    private val bkServiceMap = CacheBuilder.newBuilder()
+        .maximumSize(100000)
+        .expireAfterAccess(5, TimeUnit.MINUTES)
+        .build<String/*BuildId*/, Long/*IndexName*/>()
 
     fun addExtService(
         userId: String,
@@ -1350,20 +1358,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
     }
 
     fun getItemBkServiceId(itemId: String): Long {
-        return if (bkServiceMap.containsKey(itemId)) {
-            bkServiceMap[itemId]!!
-        } else {
-            val itemIdList = mutableSetOf<String>()
-            itemIdList.add(itemId)
-            val itemInfo = client.get(ServiceItemResource::class).getItemInfoByIds(itemIdList).data
-            if (itemInfo != null) {
-                val bkService = itemInfo[0].parentId.toLong()
-                bkServiceMap[itemInfo[0].itemId] = bkService
-                bkService
-            } else {
-                0
-            }
-        }
+        return redisOperation.hget("project:bkService:", itemId)?.toLong() ?: 0
     }
 
     fun updateExtInfo(userId: String, serviceId: String, serviceCode: String, infoResp: EditInfoDTO): Result<Boolean> {
