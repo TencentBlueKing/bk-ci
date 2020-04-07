@@ -38,7 +38,7 @@
                                     {{ $t('template.applyTemplateSetting') }}
                                 </bk-checkbox>
                                 <bk-popover placement="top">
-                                    <i class="devops-icon icon-info-circle"></i>
+                                    <i class="bk-icon icon-info-circle"></i>
                                     <div slot="content" style="white-space: pre-wrap; min-width: 200px">
                                         <div>{{ $t('template.applySettingTips') }}</div>
                                     </div>

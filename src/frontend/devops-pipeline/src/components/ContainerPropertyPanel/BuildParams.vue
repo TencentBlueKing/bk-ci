@@ -6,7 +6,7 @@
                     <span>
                         {{ title }}
                         <bk-popover placement="right">
-                            <i style="display:block;" class="devops-icon icon-info-circle"></i>
+                            <i style="display:block;" class="bk-icon icon-info-circle"></i>
                             <div slot="content" style="white-space: pre-wrap;">
                                 <div> {{ $t('editPage.paramsTips') }} </div>
                             </div>
@@ -23,7 +23,7 @@
                                 <header class="param-header" slot="header">
                                     <span>
                                         <bk-popover style="vertical-align: middle" v-if="errors.all(`param-${param.id}`).length" placement="top">
-                                            <i class="devops-icon icon-info-circle-shape"></i>
+                                            <i class="bk-icon icon-info-circle-shape"></i>
                                             <div slot="content">
                                                 <p v-for="error in errors.all(`param-${param.id}`)" :key="error">{{ error }}</p>
                                             </div>
