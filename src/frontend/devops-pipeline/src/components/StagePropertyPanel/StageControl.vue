@@ -6,23 +6,23 @@
         </header>
         <div slot="content" class="bk-form bk-form-vertical">
             <bk-form :label-width="200" form-type="vertical">
-                <bk-form-item>
+                <form-field>
                     <bk-checkbox :disabled="disabled" v-model="stageEnable">
                         {{ $t('enableStage') }}
                     </bk-checkbox>
-                </bk-form-item>
-                <bk-form-item>
+                </form-field>
+                <form-field>
                     <bk-checkbox :disabled="disabled" v-model="stageFastKill">
                         {{ $t('stageFastKill') }}
                     </bk-checkbox>
                     <i v-bk-tooltips="$t('stageFastKillDesc')" class="bk-icon icon-info-circle" />
-                </bk-form-item>
-                <bk-form-item>
+                </form-field>
+                <form-field>
                     <bk-checkbox :disabled="disabled" v-model="manualTrigger">
                         {{ $t('enableStageReview') }}
                     </bk-checkbox>
                     <i v-bk-tooltips="$t('stageReviewDesc')" class="bk-icon icon-info-circle" />
-                </bk-form-item>
+                </form-field>
                 <template v-if="manualTrigger">
 
                     <form-field :required="true" :label="$t('stageUserTriggers')" :is-error="!hasTriggerMember" :desc="$t('stageTriggerDesc')" :error-msg="$t('editPage.stageManualTriggerUserNoEmptyTips')">

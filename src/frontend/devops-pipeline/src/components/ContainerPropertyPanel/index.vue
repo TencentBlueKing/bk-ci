@@ -115,7 +115,7 @@
                 </template>
 
                 <form-field :label="$t('editPage.imageTicket')" v-if="(buildResourceType === 'DOCKER') && buildImageType === 'THIRD'">
-                    <request-selector v-bind="imageCredentialOption" :disabled="!editable" name="credentialId" :value="buildImageCreId" :handle-change="changeBuildResource"></request-selector>
+                    <select-input v-bind="imageCredentialOption" :disabled="!editable" name="credentialId" :value="buildImageCreId" :handle-change="changeBuildResource"></select-input>
                 </form-field>
 
                 <form-field :label="$t('editPage.workspace')" v-if="isThirdParty">
@@ -198,7 +198,6 @@
 <script>
     import { mapGetters, mapActions, mapState } from 'vuex'
     import Vue from 'vue'
-    import RequestSelector from '@/components/atomFormField/RequestSelector'
     import EnumInput from '@/components/atomFormField/EnumInput'
     import VuexInput from '@/components/atomFormField/VuexInput'
     import Selector from '@/components/atomFormField/Selector'
@@ -211,11 +210,11 @@
     import JobMutual from './JobMutual'
     import AtomCheckbox from '@/components/atomFormField/AtomCheckbox'
     import ImageSelector from '@/components/AtomSelector/imageSelector'
+    import SelectInput from '@/components/AtomFormComponent/SelectInput'
 
     export default {
         name: 'container-property-panel',
         components: {
-            RequestSelector,
             EnumInput,
             VuexInput,
             FormField,
@@ -227,7 +226,8 @@
             JobMutual,
             Selector,
             AtomCheckbox,
-            ImageSelector
+            ImageSelector,
+            SelectInput
         },
         props: {
             containerIndex: Number,
@@ -387,12 +387,14 @@
             },
             imageCredentialOption () {
                 return {
-                    paramId: 'credentialId',
-                    paramName: 'credentialId',
-                    url: `/ticket/api/user/credentials/${this.projectId}/hasPermissionList?permission=USE&page=1&pageSize=1000&credentialTypes=USERNAME_PASSWORD`,
-                    hasAddItem: true,
-                    itemText: this.$t('editPage.addCredentials'),
-                    itemTargetUrl: `/ticket/${this.projectId}/createCredential/USERNAME_PASSWORD/true`
+                    optionsConf: {
+                        paramId: 'credentialId',
+                        paramName: 'credentialId',
+                        url: `/ticket/api/user/credentials/${this.projectId}/hasPermissionList?permission=USE&page=1&pageSize=1000&credentialTypes=USERNAME_PASSWORD`,
+                        hasAddItem: true,
+                        itemText: this.$t('editPage.addCredentials'),
+                        itemTargetUrl: `/ticket/${this.projectId}/createCredential/USERNAME_PASSWORD/true`
+                    }
                 }
             }
         },

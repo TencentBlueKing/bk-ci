@@ -8,7 +8,7 @@
                         ref="searchStr"
                         :clearable="true"
                         :placeholder="$t('editPage.enterSearch')"
-                        right-icon="devops-icon icon-search"
+                        right-icon="icon-search"
                         :value="searchKey"
                         @input="handleClear"
                         @enter="handleSearch">
