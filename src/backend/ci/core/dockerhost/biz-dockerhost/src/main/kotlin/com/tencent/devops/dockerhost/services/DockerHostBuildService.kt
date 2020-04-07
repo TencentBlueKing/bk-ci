@@ -169,7 +169,7 @@ class DockerHostBuildService(
         val taskId = if (!containerId.isNullOrBlank()) VMUtils.genStartVMTaskId(containerId!!) else ""
         log(buildId, "开始拉取镜像，镜像名称：$dockerImageName", taskId, containerHashId)
         dockerCli.pullImageCmd(dockerImageName).withAuthConfig(authConfig)
-            .exec(MyPullImageResultCallback(buildId, dockerHostBuildApi)).awaitCompletion()
+            .exec(MyPullImageResultCallback(buildId, dockerHostBuildApi, taskId, containerHashId)).awaitCompletion()
         log(buildId, "拉取镜像成功，准备启动构建环境...", taskId, containerHashId)
         return Result(true)
     }
@@ -219,12 +219,13 @@ class DockerHostBuildService(
     fun createContainer(dockerBuildInfo: DockerHostBuildInfo): String {
         try {
             val imageName = CommonUtils.normalizeImageName(dockerBuildInfo.imageName)
+            val taskId = VMUtils.genStartVMTaskId(dockerBuildInfo.vmSeqId.toString())
             // docker pull
             if (dockerBuildInfo.imagePublicFlag == true && dockerBuildInfo.imageRDType?.toLowerCase() == ImageRDTypeEnum.SELF_DEVELOPED.name.toLowerCase()) {
                 log(
                     buildId = dockerBuildInfo.buildId,
                     message = "自研公共镜像，不从仓库拉取，直接从本地启动...",
-                    tag = VMUtils.genStartVMTaskId(dockerBuildInfo.vmSeqId.toString()),
+                    tag = taskId,
                     containerHashId = dockerBuildInfo.containerHashId
                 )
             } else {
@@ -254,13 +255,13 @@ class DockerHostBuildService(
                     log(
                         buildId = dockerBuildInfo.buildId,
                         message = "拉取镜像失败，错误信息：${t.message}",
-                        tag = VMUtils.genStartVMTaskId(dockerBuildInfo.vmSeqId.toString()),
+                        tag = taskId,
                         containerHashId = dockerBuildInfo.containerHashId
                     )
                     log(
                         buildId = dockerBuildInfo.buildId,
                         message = "尝试使用本地镜像启动...",
-                        tag = VMUtils.genStartVMTaskId(dockerBuildInfo.vmSeqId.toString()),
+                        tag = taskId,
                         containerHashId = dockerBuildInfo.containerHashId
                     )
                 }
@@ -763,7 +764,9 @@ class DockerHostBuildService(
 
     inner class MyPullImageResultCallback internal constructor(
         private val buildId: String,
-        private val dockerHostBuildApi: DockerHostBuildResourceApi
+        private val dockerHostBuildApi: DockerHostBuildResourceApi,
+        private val startTaskId: String?,
+        private val containerHashId: String?
     ) : PullImageResultCallback() {
         private val totalList = mutableListOf<Long>()
         private val step = mutableMapOf<Int, Long>()
@@ -783,9 +786,11 @@ class DockerHostBuildService(
 
                 if (currentProgress >= step[lays]?.plus(25) ?: 5) {
                     dockerHostBuildApi.postLog(
-                        buildId,
-                        false,
-                        "正在拉取镜像,第${lays}层，进度：$currentProgress%"
+                        buildId = buildId,
+                        red = false,
+                        message = "正在拉取镜像,第${lays}层，进度：$currentProgress%",
+                        tag = startTaskId,
+                        jobId = containerHashId
                     )
                     step[lays] = currentProgress
                 }
