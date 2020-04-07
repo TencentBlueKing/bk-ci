@@ -138,16 +138,7 @@ class GitCIBuildService @Autowired constructor(
         logger.info("pipelineId: $pipelineId")
 
         // 启动构建
-        val startParams = mutableMapOf<String, String>()
-        startParams["BK_CI_REPO_GIT_WEBHOOK_BRANCH"] = event.branch
-        startParams["BK_CI_REPO_GIT_WEBHOOK_PUSH_USERNAME"] = event.userId
-        startParams["BK_CI_REPO_GIT_WEBHOOK_MR_AUTHOR"] = event.userId
-        startParams["BK_CI_REPO_GIT_WEBHOOK_TARGET_BRANCH"] = event.targetBranch ?: ""
-        startParams["BK_CI_REPO_GIT_WEBHOOK_SOURCE_BRANCH"] = event.branch
-        startParams["BK_CI_REPO_GIT_WEBHOOK_MR_CREATE_TIMESTAMP"] = event.commitTimeStamp ?: ""
-        startParams["BK_CI_REPO_GIT_WEBHOOK_MR_ID"] = event.mergeRequestId.toString()
-        startParams["BK_CI_REPO_GIT_WEBHOOK_MR_TITLE"] = event.mrTitle ?: ""
-        val buildId = client.get(ServiceBuildResource::class).manualStartup(event.userId, gitProjectConf.projectCode!!, pipelineId, startParams, channelCode).data!!.id
+        val buildId = client.get(ServiceBuildResource::class).manualStartup(event.userId, gitProjectConf.projectCode!!, pipelineId, mapOf(), channelCode).data!!.id
         gitRequestEventBuildDao.update(dslContext, event.id!!, pipelineId, buildId)
         logger.info("buildId: $buildId")
 
@@ -178,7 +169,7 @@ class GitCIBuildService @Autowired constructor(
 
         // 第一个stage，触发类
         val manualTriggerElement = ManualTriggerElement("手动触发", "T-1-1-1")
-        val params: List<BuildFormProperty> = createPipelineParams(gitProjectConf, yaml)
+        val params: List<BuildFormProperty> = createPipelineParams(gitProjectConf, yaml, event)
         val triggerContainer = TriggerContainer("0", "构建触发", listOf(manualTriggerElement), null, null, null, null, params)
         val stage1 = Stage(listOf(triggerContainer), "stage-1")
         stageList.add(stage1)
@@ -395,7 +386,7 @@ class GitCIBuildService @Autowired constructor(
         }
     }
 
-    private fun createPipelineParams(gitProjectConf: GitRepositoryConf, yaml: CIBuildYaml): List<BuildFormProperty> {
+    private fun createPipelineParams(gitProjectConf: GitRepositoryConf, yaml: CIBuildYaml, event: GitRequestEvent): List<BuildFormProperty> {
         val result = mutableListOf<BuildFormProperty>()
         gitProjectConf.env?.forEach {
             val value = gitCIParameterUtils.encrypt(it.value)
@@ -414,22 +405,39 @@ class GitCIBuildService @Autowired constructor(
                     null
                     ))
         }
+
+        val startParams = mutableMapOf<String, String>()
+
+        // 代码库相关固定参数
+        startParams["BK_CI_REPO_GIT_WEBHOOK_BRANCH"] = event.branch
+        startParams["BK_CI_REPO_GIT_WEBHOOK_PUSH_USERNAME"] = event.userId
+        startParams["BK_CI_REPO_GIT_WEBHOOK_MR_AUTHOR"] = event.userId
+        startParams["BK_CI_REPO_GIT_WEBHOOK_TARGET_BRANCH"] = event.targetBranch ?: ""
+        startParams["BK_CI_REPO_GIT_WEBHOOK_SOURCE_BRANCH"] = event.branch
+        startParams["BK_CI_REPO_GIT_WEBHOOK_MR_CREATE_TIMESTAMP"] = event.commitTimeStamp ?: ""
+        startParams["BK_CI_REPO_GIT_WEBHOOK_MR_ID"] = event.mergeRequestId.toString()
+        startParams["BK_CI_REPO_GIT_WEBHOOK_MR_TITLE"] = event.mrTitle ?: ""
+
+        // 用户自定义变量
+        startParams.putAll(yaml.variables ?: mapOf())
+
         yaml.variables?.forEach {
             result.add(BuildFormProperty(
-                    it.key,
-                    false,
-                    BuildFormPropertyType.STRING,
-                    it.value,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null
+                it.key,
+                false,
+                BuildFormPropertyType.STRING,
+                it.value,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
             ))
         }
+
         return result
     }
 
