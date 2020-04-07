@@ -39,6 +39,7 @@ import com.tencent.devops.worker.common.env.BuildEnv
 import com.tencent.devops.worker.common.env.BuildType
 import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.service.utils.CommonUtils
+import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.utils.PIPELINE_MESSAGE_STRING_LENGTH_MAX
 import com.tencent.devops.worker.common.heartbeat.Heartbeat
 import com.tencent.devops.worker.common.logger.LoggerService
@@ -69,6 +70,7 @@ object Runner {
             Heartbeat.start()
             // 开始轮询
             try {
+                LoggerService.elementId = VMUtils.genStartVMTaskId(buildVariables.containerId)
                 showBuildStartupLog(buildVariables.buildId, buildVariables.vmSeqId)
                 showMachineLog(buildVariables.vmName)
                 showSystemLog()
