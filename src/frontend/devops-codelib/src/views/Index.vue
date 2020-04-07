@@ -9,7 +9,7 @@
             <bk-input :placeholder="$t('codelib.aliasNamePlaceholder')"
                 class="codelib-search"
                 :clearable="true"
-                :right-icon="'devops-icon icon-search'"
+                right-icon="icon-search"
                 v-model="aliasName"
                 @enter="refreshCodelibList(projectId, page, pageSize, aliasName)"
                 @change="clearAliasName"

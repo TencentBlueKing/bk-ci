@@ -13,7 +13,7 @@
                 <p v-for="(output, key) in outputProps" :key="key">
                     {{ namespace ? `${namespace}_` : '' }}{{ key }}
                     <bk-popover placement="right">
-                        <i class="devops-icon icon-info-circle" />
+                        <i class="bk-icon icon-info-circle" />
                         <div slot="content">
                             {{ output.description }}
                         </div>
