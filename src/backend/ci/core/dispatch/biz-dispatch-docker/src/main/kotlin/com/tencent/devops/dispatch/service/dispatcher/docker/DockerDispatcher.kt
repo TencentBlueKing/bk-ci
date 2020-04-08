@@ -118,7 +118,8 @@ class DockerDispatcher @Autowired constructor(
                     dslContext,
                     pipelineAgentStartupEvent.pipelineId,
                     pipelineAgentStartupEvent.vmSeqId,
-                    VolumeStatus.RUNNING.status
+                    VolumeStatus.RUNNING.status,
+                    pipelineAgentStartupEvent.buildId
                 )
             } else {
                 dockerIp = dockerHostUtils.getAvailableDockerIp(pipelineAgentStartupEvent)
@@ -190,12 +191,14 @@ class DockerDispatcher @Autowired constructor(
                         taskHistory.dockerIp as String,
                         taskHistory.containerId as String
                     )
-                    pipelineDockerTaskSimpleDao.updateStatus(
-                        dslContext,
-                        pipelineAgentShutdownEvent.pipelineId,
-                        pipelineAgentShutdownEvent.vmSeqId!!,
-                        VolumeStatus.FINISH.status
-                    )
+                    if (taskHistory.status == VolumeStatus.RUNNING.status) {
+                        pipelineDockerTaskSimpleDao.updateStatus(
+                            dslContext,
+                            pipelineAgentShutdownEvent.pipelineId,
+                            pipelineAgentShutdownEvent.vmSeqId!!,
+                            VolumeStatus.FINISH.status
+                        )
+                    }
                 }
             } else {
                 val taskHistoryList = pipelineDockerTaskSimpleDao.getByPipelineIdAndBuildId(
