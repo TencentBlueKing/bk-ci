@@ -37,4 +37,7 @@ class ExtServiceBcsConfig {
 
     @Value("\${store.extService.bcs.token}")
     val token: String = ""
+
+    @Value("\${store.extService.bcs.deployTimeOut}")
+    val deployTimeOut: String = ""
 }

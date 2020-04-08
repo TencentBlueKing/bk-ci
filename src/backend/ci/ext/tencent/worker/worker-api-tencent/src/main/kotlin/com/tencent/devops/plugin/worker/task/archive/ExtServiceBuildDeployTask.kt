@@ -246,6 +246,8 @@ class ExtServiceBuildDeployTask : ITask() {
         deployApp: DeployApp,
         serviceCode: String
     ) {
+        // 睡眠3秒再轮询去查
+        Thread.sleep(3000)
         val startTime = System.currentTimeMillis()
         loop@ while (true) {
             val deployment = bcsResourceApi.getBcsDeploymentInfo(
@@ -266,10 +268,13 @@ class ExtServiceBuildDeployTask : ITask() {
             if (Readiness.isDeploymentReady(deployment)) {
                 break@loop
             } else {
-                if ((System.currentTimeMillis() - startTime) > 5 * 60 * 1000) {
+                val deployTimeOut = deployApp.deployTimeOut
+                // 轮询超时则给出错误提示
+                if ((System.currentTimeMillis() - startTime) > deployTimeOut * 60 * 1000) {
                     val deploymentStatus = deployment.status
+                    val conditions = deploymentStatus.conditions
                     throw TaskExecuteException(
-                        errorMsg = "deployApp fail: availableReplicas(${deploymentStatus.availableReplicas}),unavailableReplicas(${deploymentStatus.unavailableReplicas})",
+                        errorMsg = "deployApp fail: deploy timeout($deployTimeOut minutes),conditions is:${JsonUtil.toJson(conditions)}",
                         errorType = ErrorType.SYSTEM,
                         errorCode = ErrorCode.SYSTEM_SERVICE_ERROR
                     )

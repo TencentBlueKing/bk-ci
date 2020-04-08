@@ -3,15 +3,11 @@ package com.tencent.devops.store.service
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.timestamp
-import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.store.config.ExtServiceBcsNameSpaceConfig
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.dao.ExtServiceDao
 import com.tencent.devops.store.dao.ExtServiceFeatureDao
-import com.tencent.devops.store.dao.ExtServiceItemRelDao
-import com.tencent.devops.store.dao.ExtServiceLableRelDao
-import com.tencent.devops.store.dao.common.StoreMediaInfoDao
 import com.tencent.devops.store.dao.common.StoreProjectRelDao
 import com.tencent.devops.store.dao.common.StoreReleaseDao
 import com.tencent.devops.store.pojo.ExtServiceFeatureUpdateInfo
@@ -25,7 +21,6 @@ import com.tencent.devops.store.pojo.enums.ExtServiceSortTypeEnum
 import com.tencent.devops.store.pojo.enums.ExtServiceStatusEnum
 import com.tencent.devops.store.pojo.vo.ExtServiceInfoResp
 import com.tencent.devops.store.pojo.vo.ExtensionServiceVO
-import com.tencent.devops.store.service.common.StoreMediaService
 import org.jooq.impl.DSL
 import org.jooq.impl.DefaultDSLContext
 import org.slf4j.LoggerFactory
@@ -37,19 +32,13 @@ import java.time.LocalDateTime
 class OpExtServiceService @Autowired constructor(
     private val extServiceDao: ExtServiceDao,
     private val extServiceFeatureDao: ExtServiceFeatureDao,
-    private val extServiceBaseService: ExtServiceBaseService,
     private val storeReleaseDao: StoreReleaseDao,
     private val storeProjectRelDao: StoreProjectRelDao,
     private val storeMemberService: TxExtServiceMemberImpl,
-    private val extServiceItemDao: ExtServiceItemRelDao,
-    private val storeMediaInfoDao: StoreMediaInfoDao,
-    private val storeMediaService: StoreMediaService,
     private val dslContext: DefaultDSLContext,
     private val serviceNotifyService: ExtServiceNotifyService,
     private val extServiceBcsService: ExtServiceBcsService,
-    private val extServiceLabelDao: ExtServiceLableRelDao,
-    private val extServiceBcsNameSpaceConfig: ExtServiceBcsNameSpaceConfig,
-    private val client: Client
+    private val extServiceBcsNameSpaceConfig: ExtServiceBcsNameSpaceConfig
 ) {
 
     fun queryServiceList(
@@ -252,7 +241,7 @@ class OpExtServiceService @Autowired constructor(
             // 正式发布最新的扩展服务版本
             val deployExtServiceResult = extServiceBcsService.deployExtService(
                 userId = userId,
-                namespaceName = extServiceBcsNameSpaceConfig.namespaceName,
+                grayFlag = false,
                 serviceCode = serviceCode,
                 version = serviceRecord.version
             )
@@ -263,7 +252,7 @@ class OpExtServiceService @Autowired constructor(
         }
         val serviceStatus =
             if (releaseFlag) {
-                ExtServiceStatusEnum.RELEASED.status.toByte()
+                ExtServiceStatusEnum.RELEASE_DEPLOYING.status.toByte()
             } else {
                 ExtServiceStatusEnum.AUDIT_REJECT.status.toByte()
             }

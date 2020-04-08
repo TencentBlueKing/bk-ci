@@ -104,9 +104,6 @@ interface ServiceBcsResource {
     @Path("/namespaces/{namespaceName}/deployments/{deploymentName}")
     @GET
     fun getBcsDeploymentInfo(
-        @ApiParam("userId", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
         @ApiParam("命名空间名称")
         @PathParam("namespaceName")
         namespaceName: String,
@@ -120,4 +117,22 @@ interface ServiceBcsResource {
         @QueryParam("token")
         token: String
     ): Result<Deployment>
+
+    @ApiOperation("获取deployment信息集合")
+    @Path("/namespaces/{namespaceName}/deployments")
+    @GET
+    fun getBcsDeploymentInfos(
+        @ApiParam("命名空间名称")
+        @PathParam("namespaceName")
+        namespaceName: String,
+        @ApiParam("deployment名称")
+        @QueryParam("deploymentNames")
+        deploymentNames: String,
+        @ApiParam("bcs请求路径")
+        @QueryParam("bcsUrl")
+        bcsUrl: String,
+        @ApiParam("请求token")
+        @QueryParam("token")
+        token: String
+    ): Result<Map<String, Deployment>>
 }

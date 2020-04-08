@@ -26,8 +26,10 @@
 
 package com.tencent.devops.store.service
 
+import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.dispatch.api.ServiceBcsResource
 import com.tencent.devops.dispatch.pojo.AppDeployment
 import com.tencent.devops.dispatch.pojo.AppIngress
@@ -40,6 +42,10 @@ import com.tencent.devops.store.config.ExtServiceDeploymentConfig
 import com.tencent.devops.store.config.ExtServiceImageSecretConfig
 import com.tencent.devops.store.config.ExtServiceIngressConfig
 import com.tencent.devops.store.config.ExtServiceServiceConfig
+import com.tencent.devops.store.dao.common.StoreMemberDao
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import io.fabric8.kubernetes.api.model.apps.DeploymentStatus
+import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -52,6 +58,9 @@ class ExtServiceBcsService {
 
     @Autowired
     private lateinit var client: Client
+
+    @Autowired
+    private lateinit var dslContext: DSLContext
 
     @Autowired
     private lateinit var extServiceBcsConfig: ExtServiceBcsConfig
@@ -70,6 +79,9 @@ class ExtServiceBcsService {
 
     @Autowired
     private lateinit var extServiceIngressConfig: ExtServiceIngressConfig
+
+    @Autowired
+    private lateinit var storeMemberDao: StoreMemberDao
 
     fun generateDeployApp(
         namespaceName: String,
@@ -100,25 +112,30 @@ class ExtServiceBcsService {
                     "kubernetes.io/ingress.class" to extServiceIngressConfig.annotationClass,
                     "kubernetes.io/ingress.existLbId" to if (grayFlag) extServiceIngressConfig.annotationGrayExistLbId else extServiceIngressConfig.annotationExistLbId
                 )
-            )
+            ),
+            deployTimeOut = extServiceBcsConfig.deployTimeOut.toInt()
         )
     }
 
     /**
      * 部署扩展服务应用
      * @param userId 用户ID
-     * @param namespaceName 命名空间名称
+     * @param grayFlag 是否是灰度标识
      * @param serviceCode 扩展服务代码
      * @param version 扩展服务版本号
      */
     fun deployExtService(
         userId: String,
-        namespaceName: String,
+        grayFlag: Boolean,
         serviceCode: String,
         version: String
     ): Result<Boolean> {
-        logger.info("deployExtService userId is:$userId,namespaceName is:$namespaceName")
+        logger.info("deployExtService userId is:$userId,grayFlag is:$grayFlag")
         logger.info("deployExtService serviceCode is:$serviceCode,version is:$version")
+        if (!storeMemberDao.isStoreMember(dslContext, userId, serviceCode, StoreTypeEnum.SERVICE.type.toByte())) {
+            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED)
+        }
+        val namespaceName = if (!grayFlag) extServiceBcsNameSpaceConfig.namespaceName else extServiceBcsNameSpaceConfig.grayNamespaceName
         val deployApp = generateDeployApp(namespaceName, serviceCode, version)
         val bcsDeployAppResult = client.get(ServiceBcsResource::class).bcsDeployApp(
             userId = userId,
@@ -143,6 +160,9 @@ class ExtServiceBcsService {
     ): Result<Boolean> {
         logger.info("stopExtService userId is:$userId,serviceCode is:$serviceCode")
         logger.info("stopExtService deploymentName is:$deploymentName,serviceName is:$serviceName")
+        if (!storeMemberDao.isStoreAdmin(dslContext, userId, serviceCode, StoreTypeEnum.SERVICE.type.toByte())) {
+            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED)
+        }
         // 停止扩展服务部署（灰度命名空间和正式命名空间的扩展服务应用都需停止）
         val bcsStopAppResult = client.get(ServiceBcsResource::class).bcsStopApp(
             userId = userId,
@@ -159,5 +179,25 @@ class ExtServiceBcsService {
         )
         logger.info("the bcsStopAppResult is :$bcsStopAppResult")
         return bcsStopAppResult
+    }
+
+    fun getExtServiceDeployStatus(
+        userId: String,
+        serviceCode: String,
+        grayFlag: Boolean?
+    ): Result<DeploymentStatus?> {
+        logger.info("getExtServiceDeployStatus userId is:$userId,serviceCode is:$serviceCode,grayFlag is:$grayFlag")
+        // 判断用户是否有权限查询部署状态
+        if (!storeMemberDao.isStoreMember(dslContext, userId, serviceCode, StoreTypeEnum.SERVICE.type.toByte())) {
+            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED)
+        }
+        val deployment = client.get(ServiceBcsResource::class).getBcsDeploymentInfo(
+            namespaceName = if (grayFlag == null || !grayFlag) extServiceBcsNameSpaceConfig.namespaceName else extServiceBcsNameSpaceConfig.grayNamespaceName,
+            deploymentName = serviceCode,
+            bcsUrl = extServiceBcsConfig.masterUrl,
+            token = extServiceBcsConfig.token
+        ).data
+        logger.info("getExtServiceDeployStatus deployment is:$deployment")
+        return Result(deployment?.status)
     }
 }

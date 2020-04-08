@@ -52,4 +52,23 @@ class BcsQueryService @Autowired constructor() {
         logger.info("getBcsDeploymentInfo deployment is: $deployment")
         return Result(deployment)
     }
+
+    fun getBcsDeploymentInfos(
+        userId: String,
+        namespaceName: String,
+        deploymentNames: String,
+        bcsUrl: String,
+        token: String
+    ): Result<Map<String, Deployment>> {
+        logger.info("getBcsDeploymentInfo userId is: $userId,namespaceName is: $namespaceName,deploymentNames is: $deploymentNames")
+        logger.info("getBcsDeploymentInfo bcsUrl is: $bcsUrl,token is: $token")
+        val bcsKubernetesClient = BcsClientUtils.getBcsKubernetesClient(bcsUrl, token)
+        val deploymentNameList = deploymentNames.split(",")
+        val deploymentMap = mutableMapOf<String, Deployment>()
+        deploymentNameList.forEach {
+            val deployment = bcsKubernetesClient.apps().deployments().inNamespace(namespaceName).withName(it).get()
+            deploymentMap[it] = deployment
+        }
+        return Result(deploymentMap)
+    }
 }

@@ -40,10 +40,12 @@ enum class ExtServiceStatusEnum(val status: Int) {
     EDIT(7), // 提交资料
     AUDITING(8), // 审核中
     AUDIT_REJECT(9), // 审核驳回
-    RELEASED(10), // 已发布
-    GROUNDING_SUSPENSION(11), // 上架中止
-    UNDERCARRIAGING(12), // 下架中
-    UNDERCARRIAGED(13); // 已下架
+    RELEASE_DEPLOYING(10), // 正式发布部署中
+    RELEASE_DEPLOY_FAIL(11), // 正式发布部署失败
+    RELEASED(12), // 已发布
+    GROUNDING_SUSPENSION(13), // 上架中止
+    UNDERCARRIAGING(14), // 下架中
+    UNDERCARRIAGED(15); // 已下架
 
     companion object {
 
@@ -68,10 +70,12 @@ enum class ExtServiceStatusEnum(val status: Int) {
                 7 -> EDIT.name
                 8 -> AUDITING.name
                 9 -> AUDIT_REJECT.name
-                10 -> RELEASED.name
-                11 -> GROUNDING_SUSPENSION.name
-                12 -> UNDERCARRIAGING.name
-                13 -> UNDERCARRIAGED.name
+                10 -> RELEASE_DEPLOYING.name
+                11 -> RELEASE_DEPLOY_FAIL.name
+                12 -> RELEASED.name
+                13 -> GROUNDING_SUSPENSION.name
+                14 -> UNDERCARRIAGING.name
+                15 -> UNDERCARRIAGED.name
                 else -> INIT.name
             }
         }

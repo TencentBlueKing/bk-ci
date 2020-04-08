@@ -24,25 +24,39 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.pojo
+package com.tencent.devops.store.resources
 
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.store.api.UserExtServiceDeployResource
+import com.tencent.devops.store.service.ExtServiceBcsService
+import io.fabric8.kubernetes.api.model.apps.DeploymentStatus
+import org.springframework.beans.factory.annotation.Autowired
 
-data class DeployApp(
-    @ApiModelProperty("bcs请求路径", required = true)
-    val bcsUrl: String,
-    @ApiModelProperty("请求token", required = true)
-    val token: String,
-    @ApiModelProperty("k8s命名空间名称", required = true)
-    val namespaceName: String,
-    @ApiModelProperty("应用标识", required = true)
-    val appCode: String,
-    @ApiModelProperty("应用deployment", required = true)
-    val appDeployment: AppDeployment,
-    @ApiModelProperty("应用service", required = true)
-    val appService: AppService,
-    @ApiModelProperty(value = "应用ingress", required = false)
-    val appIngress: AppIngress,
-    @ApiModelProperty("部署超时时间", required = true)
-    val deployTimeOut: Int
-)
+@RestResource
+class UserExtServiceDeployResourceImpl @Autowired constructor(
+    val extServiceBcsService: ExtServiceBcsService
+) : UserExtServiceDeployResource {
+
+    override fun getExtServiceDeployStatus(
+        userId: String,
+        serviceCode: String,
+        grayFlag: Boolean?
+    ): Result<DeploymentStatus?> {
+        return extServiceBcsService.getExtServiceDeployStatus(userId, serviceCode, grayFlag)
+    }
+
+    override fun deployExtService(
+        userId: String,
+        serviceCode: String,
+        version: String,
+        grayFlag: Boolean?
+    ): Result<Boolean> {
+        return extServiceBcsService.deployExtService(
+            userId = userId,
+            grayFlag = grayFlag ?: true,
+            serviceCode = serviceCode,
+            version = version
+        )
+    }
+}

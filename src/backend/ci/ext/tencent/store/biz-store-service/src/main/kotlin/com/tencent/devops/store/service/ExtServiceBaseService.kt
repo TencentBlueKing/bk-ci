@@ -765,8 +765,8 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         return Result(true)
     }
 
-    fun getCompletEditStatus(isNormalUpgrade: Boolean): Byte {
-        return if (isNormalUpgrade) ExtServiceStatusEnum.RELEASED.status.toByte() else ExtServiceStatusEnum.AUDITING.status.toByte()
+    fun getCompleteEditStatus(isNormalUpgrade: Boolean): Byte {
+        return if (isNormalUpgrade) ExtServiceStatusEnum.RELEASE_DEPLOYING.status.toByte() else ExtServiceStatusEnum.AUDITING.status.toByte()
     }
 
     fun createMediaAndVisible(userId: String, serviceId: String, submitInfo: ExtSubmitDTO): Result<Boolean> {
@@ -778,7 +778,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
 
         val oldStatus = serviceInfo.serviceStatus
         val isNormalUpgrade = getNormalUpgradeFlag(serviceCode, oldStatus.toInt())
-        val newStatus = getCompletEditStatus(isNormalUpgrade)
+        val newStatus = getCompleteEditStatus(isNormalUpgrade)
         val (checkResult, code) = checkServiceVersionOptRight(userId, serviceId, newStatus, isNormalUpgrade)
 
         if (!checkResult) {
@@ -808,7 +808,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
             // 正式发布最新的扩展服务版本
             val deployExtServiceResult = extServiceBcsService.deployExtService(
                 userId = userId,
-                namespaceName = extServiceBcsNameSpaceConfig.namespaceName,
+                grayFlag = false,
                 serviceCode = serviceCode,
                 version = serviceInfo.version
             )
@@ -1280,8 +1280,8 @@ abstract class ExtServiceBaseService @Autowired constructor() {
             return Pair(false, CommonMessageCode.PERMISSION_DENIED)
         }
         logger.info("record status=$recordStatus, status=$status")
-        val allowReleaseStatus = if (isNormalUpgrade != null && isNormalUpgrade) ExtServiceStatusEnum.EDIT
-        else ExtServiceStatusEnum.TESTING
+        val allowDeployStatus = if (isNormalUpgrade != null && isNormalUpgrade) ExtServiceStatusEnum.EDIT
+        else ExtServiceStatusEnum.AUDITING
         var validateFlag = true
         if (status == ExtServiceStatusEnum.COMMITTING.status.toByte() &&
             recordStatus != ExtServiceStatusEnum.INIT.status.toByte()
@@ -1326,8 +1326,16 @@ abstract class ExtServiceBaseService @Autowired constructor() {
             recordStatus != ExtServiceStatusEnum.AUDITING.status.toByte()
         ) {
             validateFlag = false
+        } else if (status == ExtServiceStatusEnum.RELEASE_DEPLOYING.status.toByte() &&
+            recordStatus != allowDeployStatus.status.toByte()
+        ) {
+            validateFlag = false
+        } else if (status == ExtServiceStatusEnum.RELEASE_DEPLOY_FAIL.status.toByte() &&
+            recordStatus != ExtServiceStatusEnum.RELEASE_DEPLOYING.status.toByte()
+        ) {
+            validateFlag = false
         } else if (status == ExtServiceStatusEnum.RELEASED.status.toByte() &&
-            recordStatus != allowReleaseStatus.status.toByte()
+            recordStatus != ExtServiceStatusEnum.RELEASE_DEPLOYING.status.toByte()
         ) {
             validateFlag = false
         } else if (status == ExtServiceStatusEnum.GROUNDING_SUSPENSION.status.toByte() &&
@@ -1347,7 +1355,6 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         ) {
             validateFlag = false
         }
-        // TODO: 提示信息
         return if (validateFlag) Pair(true, "") else Pair(false, StoreMessageCode.USER_SERVICE_RELEASE_STEPS_ERROR)
     }
 

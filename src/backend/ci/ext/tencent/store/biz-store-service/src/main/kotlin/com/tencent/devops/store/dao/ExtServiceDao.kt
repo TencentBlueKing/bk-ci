@@ -327,6 +327,28 @@ class ExtServiceDao {
         }
     }
 
+    fun listServiceByStatus(
+        dslContext: DSLContext,
+        serviceStatus: ExtServiceStatusEnum,
+        page: Int?,
+        pageSize: Int?,
+        timeDescFlag: Boolean? = null
+    ): Result<TExtensionServiceRecord>? {
+        return with(TExtensionService.T_EXTENSION_SERVICE) {
+            val baseStep = dslContext.selectFrom(this).where(DELETE_FLAG.eq(false)).and(SERVICE_STATUS.eq(serviceStatus.status.toByte()))
+            if (timeDescFlag != null && timeDescFlag) {
+                baseStep.orderBy(CREATE_TIME.desc())
+            } else {
+                baseStep.orderBy(CREATE_TIME.asc())
+            }
+            return if (null != page && null != pageSize) {
+                baseStep.limit((page - 1) * pageSize, pageSize).fetch()
+            } else {
+                baseStep.fetch()
+            }
+        }
+    }
+
     /**
      * 审核原子时，更新状态、类型等信息
      */
@@ -447,7 +469,7 @@ class ExtServiceDao {
     }
 
     /**
-     * 设置原子状态（单个版本）
+     * 设置扩展服务状态（单个版本）
      */
     fun setServiceStatusById(
         dslContext: DSLContext,
@@ -768,5 +790,13 @@ class ExtServiceDao {
         }
         return Pair(ta, conditions)
     }
+
+    fun batchUpdateService(dslContext: DSLContext, serviceRecords: List<TExtensionServiceRecord>) {
+        if (serviceRecords.isEmpty()) {
+            return
+        }
+        dslContext.batchUpdate(serviceRecords).execute()
+    }
+
     private val logger = LoggerFactory.getLogger(ExtServiceDao::class.java)
 }

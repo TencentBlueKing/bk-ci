@@ -83,12 +83,20 @@ class ServiceBcsResourceImpl @Autowired constructor(
     }
 
     override fun getBcsDeploymentInfo(
-        userId: String,
         namespaceName: String,
         deploymentName: String,
         bcsUrl: String,
         token: String
     ): Result<Deployment> {
-        return bcsQueryService.getBcsDeploymentInfo(userId, namespaceName, deploymentName, bcsUrl, token)
+        return bcsQueryService.getBcsDeploymentInfo("", namespaceName, deploymentName, bcsUrl, token)
+    }
+
+    override fun getBcsDeploymentInfos(
+        namespaceName: String,
+        deploymentNames: String,
+        bcsUrl: String,
+        token: String
+    ): Result<Map<String, Deployment>> {
+        return bcsQueryService.getBcsDeploymentInfos("", namespaceName, deploymentNames, bcsUrl, token)
     }
 }
