@@ -8,6 +8,7 @@ import com.tencent.devops.common.api.constant.BUILD
 import com.tencent.devops.common.api.constant.COMMIT
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.DOING
+import com.tencent.devops.common.api.constant.EDIT
 import com.tencent.devops.common.api.constant.END
 import com.tencent.devops.common.api.constant.FAIL
 import com.tencent.devops.common.api.constant.NUM_FIVE
@@ -773,7 +774,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         val mediaList = submitInfo.mediaInfoList
         val deptList = submitInfo.deptInfoList
 
-        val serviceInfo = extServiceDao.getServiceById(dslContext, serviceId) ?: throw RuntimeException("数据不存在")
+        val serviceInfo = extServiceDao.getServiceById(dslContext, serviceId) ?: throw RuntimeException(StoreMessageCode.USER_SERVICE_NOT_EXIST)
         val serviceCode = serviceInfo.serviceCode
 
         val oldStatus = serviceInfo.serviceStatus
@@ -853,7 +854,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
                 oldStatus,
                 newStatus,
                 userId,
-                "提交资料"
+                "add media file "
             )
         }
         return Result(true)
@@ -1142,13 +1143,13 @@ abstract class ExtServiceBaseService @Autowired constructor() {
     private fun initProcessInfo(isNormalUpgrade: Boolean): List<ReleaseProcessItem> {
         val processInfo = mutableListOf<ReleaseProcessItem>()
         processInfo.add(ReleaseProcessItem(MessageCodeUtil.getCodeLanMessage(BEGIN), BEGIN, NUM_ONE, SUCCESS))
-        processInfo.add(ReleaseProcessItem("构建版本", BUILD, NUM_TWO, UNDO))
-        processInfo.add(ReleaseProcessItem("版本测试", TEST, NUM_THREE, UNDO))
-        processInfo.add(ReleaseProcessItem("填写相关信息", COMMIT, NUM_FOUR, UNDO))
+        processInfo.add(ReleaseProcessItem(MessageCodeUtil.getCodeLanMessage(BUILD), BUILD, NUM_TWO, UNDO))
+        processInfo.add(ReleaseProcessItem(MessageCodeUtil.getCodeLanMessage(TEST), TEST, NUM_THREE, UNDO))
+        processInfo.add(ReleaseProcessItem(MessageCodeUtil.getCodeLanMessage(EDIT), COMMIT, NUM_FOUR, UNDO))
         if (isNormalUpgrade) {
             processInfo.add(ReleaseProcessItem(MessageCodeUtil.getCodeLanMessage(END), END, NUM_FIVE, UNDO))
         } else {
-            processInfo.add(ReleaseProcessItem("版本审核", APPROVE, NUM_FIVE, UNDO))
+            processInfo.add(ReleaseProcessItem(MessageCodeUtil.getCodeLanMessage(APPROVE), APPROVE, NUM_FIVE, UNDO))
             processInfo.add(ReleaseProcessItem(MessageCodeUtil.getCodeLanMessage(END), END, NUM_SIX, UNDO))
         }
         return processInfo
