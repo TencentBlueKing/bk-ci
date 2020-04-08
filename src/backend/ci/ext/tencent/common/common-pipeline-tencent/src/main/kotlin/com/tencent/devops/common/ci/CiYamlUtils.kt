@@ -127,12 +127,12 @@ object CiYamlUtils {
 
             val mrNoneMatches = mrNoneRegex.find(line)
             if (null != mrNoneMatches) {
-                line = "mr:" + "\n" + "  enable: false"
+                line = "mr:" + "\n" + "  disable: true"
             }
 
             val triggerNoneMatches = triggerNoneRegex.find(line)
             if (null != triggerNoneMatches) {
-                line = "trigger:" + "\n" + "  enable: false"
+                line = "trigger:" + "\n" + "  disable: true"
             }
 
             sb.append(line).append("\n")
