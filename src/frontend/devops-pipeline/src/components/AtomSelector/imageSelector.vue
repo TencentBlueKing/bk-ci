@@ -8,7 +8,7 @@
                         ref="searchStr"
                         :clearable="true"
                         :placeholder="$t('editPage.enterSearch')"
-                        right-icon="devops-icon icon-search"
+                        right-icon="icon-search"
                         :value="searchKey"
                         @input="handleClear"
                         @enter="handleSearch">
@@ -38,7 +38,7 @@
                                 <h3 :class="[{ 'expand': tab.expandObtained }, 'search-title', 'gap-border', 'uninstall']" @click="tab.expandObtained = !tab.expandObtained">
                                     {{ $t('editPage.unRecommend') }}（{{tab.unRecommendData.length}}）
                                     <bk-popover placement="top">
-                                        <i class="devops-icon icon-info-circle "></i>
+                                        <i class="bk-icon icon-info-circle "></i>
                                         <div slot="content">
                                             {{ $t('editPage.unRecomReason') }}
                                         </div>
@@ -91,7 +91,7 @@
                             <h3 :class="[{ 'expand': searchExpandObtained }, 'search-title', 'gap-border', 'uninstall']" @click="searchExpandObtained = !searchExpandObtained">
                                 {{ $t('editPage.unRecommend') }}
                                 <bk-popover placement="top">
-                                    <i class="devops-icon icon-info-circle "></i>
+                                    <i class="bk-icon icon-info-circle "></i>
                                     <div slot="content">
                                         {{ $t('editPage.unRecomReason') }}
                                     </div>

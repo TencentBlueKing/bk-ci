@@ -8,7 +8,6 @@ import com.tencent.devops.project.pojo.mq.ProjectBroadCastEvent
 import com.tencent.devops.project.pojo.mq.ProjectCreateBroadCastEvent
 import com.tencent.devops.project.pojo.mq.ProjectUpdateBroadCastEvent
 import com.tencent.devops.project.pojo.mq.ProjectUpdateLogoBroadCastEvent
-import com.tencent.devops.project.service.OpProjectService
 import com.tencent.devops.project.service.ProjectPaasCCService
 import com.tencent.devops.project.service.impl.AbsOpProjectServiceImpl.Companion.logger
 import org.springframework.beans.factory.annotation.Autowired
@@ -20,7 +19,7 @@ import org.springframework.stereotype.Component
  */
 @Component
 class ProjectEventListener @Autowired constructor(
-    val opProjectService: OpProjectService,
+//    val opProjectService: OpProjectService,
     val projectPaasCCService: ProjectPaasCCService,
     val bsAuthTokenApi: BSAuthTokenApi,
     val bsPipelineAuthServiceCode: BSPipelineAuthServiceCode
@@ -47,7 +46,7 @@ class ProjectEventListener @Autowired constructor(
     fun onReceiveProjectCreate(event: ProjectCreateBroadCastEvent) {
         val accessToken = bsAuthTokenApi.getAccessToken(bsPipelineAuthServiceCode)
         // 过渡期间让新建项目直接设置为灰度v2
-        opProjectService.setGrayProject(projectCodeList = listOf(event.projectInfo.englishName), operateFlag = 1)
+//        opProjectService.setGrayProject(projectCodeList = listOf(event.projectInfo.englishName), operateFlag = 1)
         projectPaasCCService.createPaasCCProject(
             userId = event.userId,
             projectId = event.projectId,
