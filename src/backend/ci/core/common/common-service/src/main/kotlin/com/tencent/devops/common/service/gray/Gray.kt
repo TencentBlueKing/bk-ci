@@ -80,7 +80,7 @@ class Gray {
     }
 
     fun isGrayMatchProject(projectId: String, redisOperation: RedisOperation): Boolean {
-        return isGray() && isGrayProject(projectId, redisOperation) // 当前是灰度环境 + 灰度项目
+        return isGray() == isGrayProject(projectId, redisOperation) // 当前是灰度环境 + 灰度项目
 //        return isGrayMatchProject(projectId, grayProjectSet(redisOperation))
     }
 
