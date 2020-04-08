@@ -7,6 +7,7 @@ import com.tencent.devops.common.api.constant.BEGIN
 import com.tencent.devops.common.api.constant.BUILD
 import com.tencent.devops.common.api.constant.COMMIT
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.constant.DEPLOY
 import com.tencent.devops.common.api.constant.DOING
 import com.tencent.devops.common.api.constant.EDIT
 import com.tencent.devops.common.api.constant.END
@@ -14,6 +15,7 @@ import com.tencent.devops.common.api.constant.FAIL
 import com.tencent.devops.common.api.constant.NUM_FIVE
 import com.tencent.devops.common.api.constant.NUM_FOUR
 import com.tencent.devops.common.api.constant.NUM_ONE
+import com.tencent.devops.common.api.constant.NUM_SEVEN
 import com.tencent.devops.common.api.constant.NUM_SIX
 import com.tencent.devops.common.api.constant.NUM_THREE
 import com.tencent.devops.common.api.constant.NUM_TWO
@@ -1108,7 +1110,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
 
     private fun handleProcessInfo(isNormalUpgrade: Boolean, status: Int): List<ReleaseProcessItem> {
         val processInfo = initProcessInfo(isNormalUpgrade)
-        val totalStep = if (isNormalUpgrade) NUM_FIVE else NUM_SIX
+        val totalStep = if (isNormalUpgrade) NUM_SIX else NUM_SEVEN
         when (status) {
             ExtServiceStatusEnum.INIT.status -> {
                 storeCommonService.setProcessInfo(processInfo, totalStep, NUM_ONE, DOING)
@@ -1131,9 +1133,15 @@ abstract class ExtServiceBaseService @Autowired constructor() {
             ExtServiceStatusEnum.AUDIT_REJECT.status -> {
                 storeCommonService.setProcessInfo(processInfo, totalStep, NUM_FIVE, FAIL)
             }
+            ExtServiceStatusEnum.RELEASE_DEPLOYING.status -> {
+                storeCommonService.setProcessInfo(processInfo, totalStep, if (isNormalUpgrade) NUM_FIVE else NUM_SIX, DOING)
+            }
+            ExtServiceStatusEnum.RELEASE_DEPLOY_FAIL.status -> {
+                storeCommonService.setProcessInfo(processInfo, totalStep, if (isNormalUpgrade) NUM_FIVE else NUM_SIX, FAIL)
+            }
 
             ExtServiceStatusEnum.RELEASED.status -> {
-                val currStep = if (isNormalUpgrade) NUM_FIVE else NUM_SIX
+                val currStep = if (isNormalUpgrade) NUM_SIX else NUM_SEVEN
                 storeCommonService.setProcessInfo(processInfo, totalStep, currStep, SUCCESS)
             }
         }
@@ -1147,10 +1155,12 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         processInfo.add(ReleaseProcessItem(MessageCodeUtil.getCodeLanMessage(TEST), TEST, NUM_THREE, UNDO))
         processInfo.add(ReleaseProcessItem(MessageCodeUtil.getCodeLanMessage(EDIT), COMMIT, NUM_FOUR, UNDO))
         if (isNormalUpgrade) {
-            processInfo.add(ReleaseProcessItem(MessageCodeUtil.getCodeLanMessage(END), END, NUM_FIVE, UNDO))
+            processInfo.add(ReleaseProcessItem(MessageCodeUtil.getCodeLanMessage(DEPLOY), DEPLOY, NUM_FIVE, UNDO))
+            processInfo.add(ReleaseProcessItem(MessageCodeUtil.getCodeLanMessage(END), END, NUM_SIX, UNDO))
         } else {
             processInfo.add(ReleaseProcessItem(MessageCodeUtil.getCodeLanMessage(APPROVE), APPROVE, NUM_FIVE, UNDO))
-            processInfo.add(ReleaseProcessItem(MessageCodeUtil.getCodeLanMessage(END), END, NUM_SIX, UNDO))
+            processInfo.add(ReleaseProcessItem(MessageCodeUtil.getCodeLanMessage(DEPLOY), DEPLOY, NUM_SIX, UNDO))
+            processInfo.add(ReleaseProcessItem(MessageCodeUtil.getCodeLanMessage(END), END, NUM_SEVEN, UNDO))
         }
         return processInfo
     }
