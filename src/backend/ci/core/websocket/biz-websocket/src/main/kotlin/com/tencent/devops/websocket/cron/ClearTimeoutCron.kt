@@ -88,9 +88,9 @@ class ClearTimeoutCron(
     private fun longSessionLog() {
         val longSessionList = websocketService.getLongSessionPage()
         longSessionList.forEach {
-            logger.warn("this page[$it] sessionSize more 20")
+            logger.warn("this page[$it] sessionSize more ${websocketService.getMaxSession()}")
         }
-        if (longSessionList.size > 20) {
+        if (longSessionList.size > websocketService.getMaxSession()!!) {
             websocketService.clearLongSessionPage()
         }
     }
@@ -117,7 +117,7 @@ class ClearTimeoutCron(
                                 val sessionPage = RedisUtlis.getPageFromSessionPageBySession(redisOperation, sessionId)
                                 RedisUtlis.cleanSessionPageBySessionId(redisOperation, sessionId)
                                 if (sessionPage != null) {
-                                    RedisUtlis.cleanPageSessionBySessionId(redisOperation, sessionId, sessionPage)
+                                    RedisUtlis.cleanPageSessionBySessionId(redisOperation, sessionPage, sessionId)
                                 }
                                 RedisUtlis.cleanUserSessionBySessionId(redisOperation, userId, sessionId)
                                 websocketService.removeCacheSession(sessionId)
