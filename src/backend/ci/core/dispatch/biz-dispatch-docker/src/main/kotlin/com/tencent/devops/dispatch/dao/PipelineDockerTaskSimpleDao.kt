@@ -78,7 +78,7 @@ class PipelineDockerTaskSimpleDao @Autowired constructor() {
                 .set(STATUS, status)
                 .set(GMT_MODIFIED, LocalDateTime.now())
 
-            if (buildId.isBlank()) {
+            if (buildId.isNotBlank()) {
                 update
                     .set(BUILD_ID, buildId)
             }

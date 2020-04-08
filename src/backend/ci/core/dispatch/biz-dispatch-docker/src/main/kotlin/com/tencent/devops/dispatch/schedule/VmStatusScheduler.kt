@@ -102,11 +102,11 @@ class VmStatusScheduler @Autowired constructor(
             .addHeader("Content-Type", "application/json; charset=utf-8")
             .build()
 
-        logger.info("Docker VM status fresh url: $proxyUrl")
+        // logger.info("Docker VM status fresh url: $proxyUrl")
         try {
             OkhttpUtils.doHttp(request).use { resp ->
                 val responseBody = resp.body()!!.string()
-                logger.info("Docker VM $itDockerIp status fresh responseBody: $responseBody")
+                // logger.info("Docker VM $itDockerIp status fresh responseBody: $responseBody")
                 val response: Map<String, Any> = jacksonObjectMapper().readValue(responseBody)
                 if (response["status"] == 0) {
                     val dockerHostLoad: Map<String, Any> = response["data"] as LinkedHashMap<String, Any>
