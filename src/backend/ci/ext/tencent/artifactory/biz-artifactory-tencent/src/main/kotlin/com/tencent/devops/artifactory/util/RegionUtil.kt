@@ -65,7 +65,7 @@ object RegionUtil {
         return replaceServerHost(url, getRegionUrl(region))
     }
 
-    fun replaceServerHost(originUrl: String, targetHost: String): String {
+    private fun replaceServerHost(originUrl: String, targetHost: String): String {
         val index = originUrl.indexOf("//")
         if (index == -1) {
             return originUrl
