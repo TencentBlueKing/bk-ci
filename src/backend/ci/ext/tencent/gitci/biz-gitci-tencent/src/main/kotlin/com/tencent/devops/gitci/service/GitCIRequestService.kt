@@ -29,7 +29,6 @@ package com.tencent.devops.gitci.service
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.CustomException
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.ci.CiYamlUtils
 import com.tencent.devops.common.ci.OBJECT_KIND_MANUAL
