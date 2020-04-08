@@ -76,7 +76,7 @@ class JFrogApiService @Autowired constructor(private val objectMapper: ObjectMap
             }
 
             val jFrogApiResponse = objectMapper.readValue<JFrogApiResponse<Url>>(responseContent)
-            return RegionUtil.replaceServerHost(jFrogApiResponse.data!!.url, RegionUtil.IDC)
+            return RegionUtil.replaceRegionServer(jFrogApiResponse.data!!.url, RegionUtil.IDC)
         }
     }
 
@@ -120,7 +120,7 @@ class JFrogApiService @Autowired constructor(private val objectMapper: ObjectMap
             }
 
             val jFrogApiResponse = objectMapper.readValue<JFrogApiResponse<Url>>(responseContent)
-            return RegionUtil.replaceServerHost(jFrogApiResponse.data!!.url, RegionUtil.IDC)
+            return RegionUtil.replaceRegionServer(jFrogApiResponse.data!!.url, RegionUtil.IDC)
         }
     }
 
@@ -143,7 +143,7 @@ class JFrogApiService @Autowired constructor(private val objectMapper: ObjectMap
 
             val jFrogApiResponse = objectMapper.readValue<JFrogApiResponse<Url>>(responseContent)
             val url = jFrogApiResponse.data!!.url
-            return RegionUtil.replaceServerHost(url, RegionUtil.IDC)
+            return RegionUtil.replaceRegionServer(url, RegionUtil.IDC)
         }
     }
 
@@ -158,8 +158,6 @@ class JFrogApiService @Autowired constructor(private val objectMapper: ObjectMap
             .get()
             .build()
 
-//        val httpClient = okHttpClient.newBuilder().build()
-//        httpClient.newCall(request).execute().use { response ->
         OkhttpUtils.doHttp(request).use { response ->
             val responseContent = response.body()!!.string()
             if (!response.isSuccessful) {
