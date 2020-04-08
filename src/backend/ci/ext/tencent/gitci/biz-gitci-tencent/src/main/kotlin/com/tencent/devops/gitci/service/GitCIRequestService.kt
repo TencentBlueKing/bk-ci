@@ -195,7 +195,6 @@ class GitCIRequestService @Autowired constructor(
             }
         }
 
-        logger.info("yamlObject: ${JsonUtil.toJson(yamlObject)}")
         return CiYamlUtils.normalizeGitCiYaml(yamlObject)
     }
 
