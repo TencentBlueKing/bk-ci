@@ -112,7 +112,7 @@ object CiYamlUtils {
         val br = BufferedReader(StringReader(yamlStr))
         val taskTypeRegex = Regex("- $TASK_TYPE:\\s+")
         val mrNoneRegex = Regex("^(mr:)\\s*(none)\$")
-        val triggerNoneRegex = Regex("^(mr:)\\s*(none)\$")
+        val triggerNoneRegex = Regex("^(trigger:)\\s*(none)\$")
         var line: String? = br.readLine()
         while (line != null) {
             val taskTypeMatches = taskTypeRegex.find(line)
