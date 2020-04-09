@@ -351,6 +351,9 @@ class GitService @Autowired constructor(
             try {
                 val token = getToken(gitProjectId)
                 val result = OkhttpUtils.doGet(url, mapOf("PRIVATE-TOKEN" to token.accessToken)).body().toString()
+
+                logger.info("Get gongfeng project members response: $result")
+
                 val ownerList: List<OwnerInfo> = JsonUtil.to(result, object : TypeReference<List<OwnerInfo>>() {})
                 if (ownerList.isEmpty()) {
                     break
@@ -362,7 +365,7 @@ class GitService @Autowired constructor(
                 }
                 page++
             } catch (e: Exception) {
-                logger.error("get project member list fail! project id: $gitProjectId")
+                logger.error("get project member list fail! project id: $gitProjectId", e)
                 return false
             }
         } while (dataSize >= 100)
