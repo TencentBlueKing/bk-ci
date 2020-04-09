@@ -53,7 +53,7 @@ interface SerivceGitCiResource {
         gitProjectId: String
     ): Result<GitToken>
 
-    @ApiOperation("获取项目的token")
+    @ApiOperation("校验用户git项目权限")
     @GET
     @Path("/checkUserGitAuth")
     fun checkUserGitAuth(
