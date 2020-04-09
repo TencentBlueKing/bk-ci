@@ -46,8 +46,10 @@ import com.tencent.devops.process.engine.service.PipelineBuildService
 import com.tencent.devops.process.engine.service.PipelineRuntimeExtService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.process.engine.dao.PipelineBuildVarDao
 import com.tencent.devops.process.engine.service.PipelineBuildTaskService
+import com.tencent.devops.process.pojo.task.PipelineBuildTaskInfo
 import com.tencent.devops.process.utils.BK_CI_BUILD_FAIL_TASK
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -134,9 +136,10 @@ class BuildEndControl @Autowired constructor(
         if (BuildStatus.isFailure(status)) {
             val taskRecords = pipelineBuildTaskService.getAllBuildTask(buildId)
             val errorElements = mutableListOf<String>()
+            val model = pipelineBuildDetailService.getBuildModel(buildId)
             taskRecords.forEach {
                 if(it.status == BuildStatus.FAILED || it.status == BuildStatus.QUEUE_TIMEOUT || it.status == BuildStatus.EXEC_TIMEOUT || it.status == BuildStatus.QUALITY_CHECK_FAIL) {
-                    val errorElement = "[${it.stageId}]-[${it.taskName}]"
+                    val errorElement = findElementMsg(model, it)
                     errorElements.add(errorElement)
                 }
             }
@@ -262,5 +265,20 @@ class BuildEndControl @Autowired constructor(
                 actionType = ActionType.START
             )
         )
+    }
+
+    private fun findElementMsg(model: Model?, taskRecord : PipelineBuildTaskInfo): String {
+        var containerName = ""
+        model?.stages?.forEach { stage ->
+            if(stage.id == taskRecord.stageId) {
+                stage.containers.forEach nextContainer@{ container->
+                    if(container.id == taskRecord.containerId) {
+                        containerName = container.name
+                        return@forEach
+                    }
+                }
+            }
+        }
+        return "[${taskRecord.stageId}($containerName)]-${taskRecord.taskName} \n"
     }
 }
