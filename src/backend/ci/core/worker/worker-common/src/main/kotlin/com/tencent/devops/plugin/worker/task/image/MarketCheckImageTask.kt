@@ -42,6 +42,8 @@ import com.tencent.devops.store.pojo.image.request.ImageBaseInfoUpdateRequest
 import com.tencent.devops.worker.common.api.ApiFactory
 import com.tencent.devops.worker.common.api.docker.DockerSDKApi
 import com.tencent.devops.common.api.exception.TaskExecuteException
+import com.tencent.devops.dockerhost.utils.ENV_DOCKER_HOST_IP
+import com.tencent.devops.dockerhost.utils.ENV_DOCKER_HOST_PORT
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.task.ITask
 import com.tencent.devops.worker.common.task.TaskClassType
@@ -68,13 +70,14 @@ class MarketCheckImageTask : ITask() {
         val registryUser = buildVariableMap["registryUser"]
         val registryPwd = buildVariableMap["registryPwd"]
         val checkImageRequest = CheckImageRequest(imageType, imageName!!, registryUser, registryPwd)
-        val dockerHostIp = System.getenv("docker_host_ip")
+        val dockerHostIp = System.getenv(ENV_DOCKER_HOST_IP)
+        val dockerHostPort = System.getenv(ENV_DOCKER_HOST_PORT)
         val path = "/api/docker/build/image/buildIds/${buildTask.buildId}/check?containerHashId=${buildVariables.containerId}"
         val body = RequestBody.create(
             MediaType.parse("application/json; charset=utf-8"),
             JsonUtil.toJson(checkImageRequest)
         )
-        val url = "http://$dockerHostIp$path"
+        val url = "http://$dockerHostIp:$dockerHostPort$path"
         val request = Request.Builder()
             .url(url)
             .post(body)

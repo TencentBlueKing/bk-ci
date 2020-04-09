@@ -109,7 +109,11 @@ object WindowsCommandLineUtils {
             if (print2Logger) {
                 LoggerService.addRedLine("$prefix Fail to execute the command($command)")
             }
-            throw ignored
+            throw TaskExecuteException(
+                errorType = ErrorType.SYSTEM,
+                errorCode = ErrorCode.SYSTEM_INNER_TASK_ERROR,
+                errorMsg = ignored.message ?: ""
+            )
         }
         return result.toString()
     }

@@ -27,6 +27,7 @@
 package com.tencent.devops.process.utils
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotEquals
 import org.junit.Test
 
 class PipelineVarUtilTest {
@@ -58,10 +59,24 @@ class PipelineVarUtilTest {
     }
 
     @Test
+    fun mixOldVarAndNewVar() {
+        val vars = mutableMapOf(
+            "repoName" to "hello/world",
+            PIPELINE_REPO_NAME to "tencent/bk-ci"
+        )
+
+        assertNotEquals(vars[PIPELINE_REPO_NAME], vars["repoName"])
+        val mixOldVarAndNewVar = PipelineVarUtil.mixOldVarAndNewVar(vars)
+        println(mixOldVarAndNewVar)
+        assertEquals(vars[PIPELINE_REPO_NAME], "tencent/bk-ci")
+        assertEquals(vars[PIPELINE_REPO_NAME], mixOldVarAndNewVar["repoName"])
+    }
+
+    @Test
     fun oldVarToNewVar() {
-        assertEquals(MAJORVERSION, PipelineVarUtil.oldVarToNewVar("majorVersion"))
-        assertEquals(MINORVERSION, PipelineVarUtil.oldVarToNewVar("minorVersion"))
-        assertEquals(FIXVERSION, PipelineVarUtil.oldVarToNewVar("fixVersion"))
+        assertEquals(MAJORVERSION, PipelineVarUtil.oldVarToNewVar("MajorVersion"))
+        assertEquals(MINORVERSION, PipelineVarUtil.oldVarToNewVar("MinorVersion"))
+        assertEquals(FIXVERSION, PipelineVarUtil.oldVarToNewVar("FixVersion"))
         assertEquals(BUILD_NO, PipelineVarUtil.oldVarToNewVar("BuildNo"))
         assertEquals(PIPELINE_START_CHANNEL, PipelineVarUtil.oldVarToNewVar("pipeline.start.channel"))
         assertEquals(PIPELINE_BUILD_LAST_UPDATE, PipelineVarUtil.oldVarToNewVar("pipeline.build.last.update"))
@@ -94,9 +109,9 @@ class PipelineVarUtilTest {
 
     @Test
     fun newVarToOldVar() {
-        assertEquals("majorVersion", PipelineVarUtil.newVarToOldVar(MAJORVERSION))
-        assertEquals("minorVersion", PipelineVarUtil.newVarToOldVar(MINORVERSION))
-        assertEquals("fixVersion", PipelineVarUtil.newVarToOldVar(FIXVERSION))
+        assertEquals("MajorVersion", PipelineVarUtil.newVarToOldVar(MAJORVERSION))
+        assertEquals("MinorVersion", PipelineVarUtil.newVarToOldVar(MINORVERSION))
+        assertEquals("FixVersion", PipelineVarUtil.newVarToOldVar(FIXVERSION))
         assertEquals("BuildNo", PipelineVarUtil.newVarToOldVar(BUILD_NO))
         assertEquals("pipeline.start.channel", PipelineVarUtil.newVarToOldVar(PIPELINE_START_CHANNEL))
         assertEquals("pipeline.build.last.update", PipelineVarUtil.newVarToOldVar(PIPELINE_BUILD_LAST_UPDATE))

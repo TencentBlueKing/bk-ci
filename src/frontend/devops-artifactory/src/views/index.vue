@@ -34,8 +34,8 @@
                 },
                 sideMenuNav: {
                     icon: 'artifactory',
-                    title: VERSION_TYPE === 'tencent' ? '版本仓库' : '制品库',
-                    url: `${DOCS_URL_PREFIX}/x/6xYLAQ`
+                    title: '制品库',
+                    url: `${DOCS_URL_PREFIX}`
                 },
                 baseObj: {
                     icon: 'icon-folder',
@@ -86,15 +86,9 @@
                 if (val) {
                     this.initTreeData()
                 }
-            },
-            isExtendTx () {
-                return VERSION_TYPE === 'tencent'
             }
         },
         created () {
-            if (VERSION_TYPE === 'tencent') {
-                this.$store.dispatch('artifactory/requestProjectList')
-            }
             bus.$off('get-item')
             bus.$on('get-item', (data) => {
                 this.getItems(data.roadMap, data.list, data.noLoading)
@@ -218,7 +212,7 @@
                             noPermissionList: [
                                 { resource: '版本仓库', option: '查看' }
                             ],
-                            applyPermissionUrl: this.isExtendTx ? `/backend/api/perm/apply/subsystem/?client_id=artifactory&project_code=${this.projectId}&service_code=artifactory&role_manager=artifactory` : PERM_URL_PREFIX
+                            applyPermissionUrl: `/backend/api/perm/apply/subsystem/?client_id=artifactory&project_code=${this.projectId}&service_code=artifactory&role_manager=artifactory`
                         }
                         this.$showAskPermissionDialog(params)
                     }

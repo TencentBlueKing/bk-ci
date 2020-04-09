@@ -8,8 +8,8 @@
             </div>
             <section :class="[{ 'control-active': isInputFocus }, 'g-input-search', 'list-input']">
                 <input class="g-input-border" type="text" :placeholder="$t('store.请输入关键字搜索')" v-model="searchName" @focus="isInputFocus = true" @blur="isInputFocus = false" @keyup.enter="search" />
-                <i class="bk-icon icon-search" v-if="!searchName"></i>
-                <i class="bk-icon icon-close-circle-shape clear-icon" v-else @click="clearSearch"></i>
+                <i class="devops-icon icon-search" v-if="!searchName"></i>
+                <i class="devops-icon icon-close-circle-shape clear-icon" v-else @click="clearSearch"></i>
             </section>
         </div>
         <bk-table style="margin-top: 15px;" :empty-text="$t('store.暂时没有镜像')"
@@ -58,7 +58,7 @@
                     <span class="atom-status-icon success" v-if="props.row.imageStatus === 'RELEASED'"></span>
                     <span class="atom-status-icon fail" v-if="props.row.imageStatus === 'GROUNDING_SUSPENSION'"></span>
                     <span class="atom-status-icon obtained" v-if="props.row.imageStatus === 'AUDIT_REJECT' || props.row.imageStatus === 'UNDERCARRIAGED'"></span>
-                    <span class="atom-status-icon bk-icon icon-initialize" v-if="props.row.imageStatus === 'INIT'"></span>
+                    <span class="atom-status-icon devops-icon icon-initialize" v-if="props.row.imageStatus === 'INIT'"></span>
                     <span>{{ $t(imageStatusList[props.row.imageStatus]) }}</span>
                 </template>
             </bk-table-column>
@@ -97,7 +97,7 @@
                     <bk-form-item :label="$t('store.镜像名称')" :required="true" property="imageName" :desc="$t('store.镜像在研发商店中的别名')" :rules="[requireRule]">
                         <bk-input v-model="relateImageData.form.imageName" :placeholder="$t('store.请输入镜像名称')"></bk-input>
                     </bk-form-item>
-                    <bk-form-item :label="$t('store.镜像标识')" :required="true" property="imageCode" :desc="$t('store.镜像在研发商店中的唯一标识')" :rules="[requireRule, alpRule]">
+                    <bk-form-item :label="$t('store.镜像标识')" :required="true" property="imageCode" :desc="$t('store.镜像英文名，为当前镜像在研发商店中的唯一标识')" :rules="[requireRule, alpRule]">
                         <bk-input v-model="relateImageData.form.imageCode" :placeholder="$t('store.请输入镜像标识')"></bk-input>
                     </bk-form-item>
                     <bk-form-item :label="$t('store.镜像源')" :required="true" property="imageSourceType" class="h32" :rules="[requireRule]">
@@ -277,7 +277,6 @@
                 this.offlineImageData.show = true
                 this.offlineImageData.form.imageName = row.imageName
                 this.offlineImageData.form.imageCode = row.imageCode
-                this.offlineImageData.form.version = row.version
                 this.offlineImageData.isLoading = true
 
                 const postData = {
@@ -287,7 +286,9 @@
                 }
                 this.offlineImageData.isLoading = true
                 this.$store.dispatch('store/requestImageVersionList', postData).then((res) => {
-                    this.offlineImageData.versionList = res.records || []
+                    this.offlineImageData.versionList = (res.records || []).filter((image) => {
+                        return image.imageStatus === 'RELEASED' || (image.imageStatus === 'GROUNDING_SUSPENSION' && image.releaseFlag)
+                    })
                 }).catch((err) => {
                     this.$bkMessage({ message: err.message || err, theme: 'error' })
                 }).finally(() => (this.offlineImageData.isLoading = false))

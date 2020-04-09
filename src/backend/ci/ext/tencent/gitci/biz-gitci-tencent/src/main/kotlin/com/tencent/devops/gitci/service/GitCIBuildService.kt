@@ -309,7 +309,7 @@ class GitCIBuildService @Autowired constructor(
                         CodePullStrategy.REVERT_UPDATE,
                         GitPullModeType.BRANCH,
                         "",
-                        StartType.MANUAL,
+                        StartType.WEB_HOOK,
                         CodeEventType.MERGE_REQUEST.name,
                         event.branch,
                         event.targetBranch,

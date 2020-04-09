@@ -31,5 +31,6 @@ data class HeartbeatResponse(
     val slaveVersion: String,
     val AgentStatus: String,
     val ParallelTaskCount: Int,
-    val envs: Map<String, String>
+    val envs: Map<String, String>,
+    val gateway: String? = ""
 )

@@ -210,8 +210,8 @@ export const actions = {
     /**
      * 上架/升级流水线插件
      */
-    editAtom ({ commit }, { projectCode, params }) {
-        return vue.$ajax.put(`${prefix}/user/market/desk/atom?projectCode=${projectCode}`, params)
+    editAtom ({ commit }, { projectCode, params, initProject }) {
+        return vue.$ajax.put(`${prefix}/user/market/desk/atom?projectCode=${projectCode}`, params, { headers: { 'X-DEVOPS-PROJECT-ID': initProject } })
     },
 
     /**

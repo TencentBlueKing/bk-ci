@@ -1,5 +1,5 @@
 <template>
-    <div class="bk-tag-selector staff-selector" :class="{ 'disable-status': disabled }">
+    <div class="staff-selector" :class="{ 'disable-status': disabled }">
         <span class="staff-placeholder" v-if="!value.length && !curInsertVal.length">{{ placeholder }}</span>
         <div class="select-tags" @click="toEdit">
             <div class="select-editor" ref="selectEditor">

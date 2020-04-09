@@ -510,6 +510,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                         atomCode,
                         StoreTypeEnum.ATOM
                     ),
+                    initProjectCode = projectCode,
                     labelList = labelList,
                     pkgName = atomEnvInfoRecord?.pkgName,
                     userCommentInfo = userCommentInfo,

@@ -126,15 +126,11 @@ object CodeccInstaller {
     }
 
     fun setUpPython3(coverityConfig: CodeccExecuteConfig) {
-        // 多工具需要安装python3
         // 安装python 3.x
-        if (coverityConfig.tools.minus(listOf("COVERITY", "KLOCWORK")).isNotEmpty()) {
-            // 2.1 安装python 3.x
-            LoggerService.addNormalLine("download python 3.x")
-            helper.getTool(CodeccToolType.PYTHON3, THIRD_PYTHON3_TAR_FILE, Runnable {
-                setupPython3(WorkspaceUtils.getLandun(), THIRD_PYTHON3_TAR_FILE)
-            })
-        }
+        LoggerService.addNormalLine("download python 3.x")
+        helper.getTool(CodeccToolType.PYTHON3, THIRD_PYTHON3_TAR_FILE, Runnable {
+            setupPython3(WorkspaceUtils.getLandun(), THIRD_PYTHON3_TAR_FILE)
+        })
     }
 
     fun donwloadScript() {

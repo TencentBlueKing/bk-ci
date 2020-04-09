@@ -1,5 +1,5 @@
 <template>
-    <bk-sideslider class="sodaci-property-panel" width="640" :is-show.sync="visible" :quick-close="true">
+    <bk-sideslider class="bkci-property-panel" width="640" :is-show.sync="visible" :quick-close="true">
         <header class="container-panel-header" slot="header">
             {{ title }}
             <div v-if="showDebugDockerBtn" :class="!editable ? 'control-bar' : 'debug-btn'">
@@ -35,11 +35,11 @@
                     >
                         <template>
                             <div class="bk-selector-create-item cursor-pointer" @click.stop.prevent="addThridSlave">
-                                <i class="bk-icon icon-plus-circle"></i>
+                                <i class="devops-icon icon-plus-circle"></i>
                                 <span class="text">{{ $t('editPage.addThirdSlave') }}</span>
                             </div>
                             <div v-if="container.baseOS === 'LINUX'" class="bk-selector-create-item cursor-pointer" @click.stop.prevent="addDockerImage">
-                                <i class="bk-icon icon-plus-circle"></i>
+                                <i class="devops-icon icon-plus-circle"></i>
                                 <span class="text">{{ $t('editPage.addImage') }}</span>
                             </div>
                         </template>
@@ -93,7 +93,7 @@
 
                 <template v-if="buildResourceType === 'MACOS'">
                     <form-field :label="$t('editPage.macSystemVersion')" :required="true" :is-error="errors.has('systemVersion')" :error-msg="errors.first(`systemVersion`)">
-                        <bk-select :value="systemVersion" searchable :loading="isLoadingMac" name="systemVersion" v-validate.initial="'required'">
+                        <bk-select :disabled="!editable" :value="systemVersion" searchable :loading="isLoadingMac" name="systemVersion" v-validate.initial="'required'">
                             <bk-option v-for="item in systemVersionList"
                                 :key="item"
                                 :id="item"
@@ -103,7 +103,7 @@
                         </bk-select>
                     </form-field>
                     <form-field :label="$t('editPage.xcodeVersion')" :required="true" :is-error="errors.has('xcodeVersion')" :error-msg="errors.first(`xcodeVersion`)">
-                        <bk-select :value="xcodeVersion" searchable :loading="isLoadingMac" name="xcodeVersion" v-validate.initial="'required'">
+                        <bk-select :disabled="!editable" :value="xcodeVersion" searchable :loading="isLoadingMac" name="xcodeVersion" v-validate.initial="'required'">
                             <bk-option v-for="item in xcodeVersionList"
                                 :key="item"
                                 :id="item"
@@ -115,7 +115,7 @@
                 </template>
 
                 <form-field :label="$t('editPage.imageTicket')" v-if="(buildResourceType === 'DOCKER') && buildImageType === 'THIRD'">
-                    <request-selector v-bind="imageCredentialOption" :disabled="!editable" name="credentialId" :value="buildImageCreId" :handle-change="changeBuildResource"></request-selector>
+                    <select-input v-bind="imageCredentialOption" :disabled="!editable" name="credentialId" :value="buildImageCreId" :handle-change="changeBuildResource"></select-input>
                 </form-field>
 
                 <form-field :label="$t('editPage.workspace')" v-if="isThirdParty">
@@ -198,7 +198,6 @@
 <script>
     import { mapGetters, mapActions, mapState } from 'vuex'
     import Vue from 'vue'
-    import RequestSelector from '@/components/atomFormField/RequestSelector'
     import EnumInput from '@/components/atomFormField/EnumInput'
     import VuexInput from '@/components/atomFormField/VuexInput'
     import Selector from '@/components/atomFormField/Selector'
@@ -211,11 +210,11 @@
     import JobMutual from './JobMutual'
     import AtomCheckbox from '@/components/atomFormField/AtomCheckbox'
     import ImageSelector from '@/components/AtomSelector/imageSelector'
+    import SelectInput from '@/components/AtomFormComponent/SelectInput'
 
     export default {
         name: 'container-property-panel',
         components: {
-            RequestSelector,
             EnumInput,
             VuexInput,
             FormField,
@@ -227,7 +226,8 @@
             JobMutual,
             Selector,
             AtomCheckbox,
-            ImageSelector
+            ImageSelector,
+            SelectInput
         },
         props: {
             containerIndex: Number,
@@ -387,12 +387,14 @@
             },
             imageCredentialOption () {
                 return {
-                    paramId: 'credentialId',
-                    paramName: 'credentialId',
-                    url: `/ticket/api/user/credentials/${this.projectId}/hasPermissionList?permission=USE&page=1&pageSize=1000&credentialTypes=USERNAME_PASSWORD`,
-                    hasAddItem: true,
-                    itemText: this.$t('editPage.addCredentials'),
-                    itemTargetUrl: `/ticket/${this.projectId}/createCredential/USERNAME_PASSWORD/true`
+                    optionsConf: {
+                        paramId: 'credentialId',
+                        paramName: 'credentialId',
+                        url: `/ticket/api/user/credentials/${this.projectId}/hasPermissionList?permission=USE&page=1&pageSize=1000&credentialTypes=USERNAME_PASSWORD`,
+                        hasAddItem: true,
+                        itemText: this.$t('editPage.addCredentials'),
+                        itemTargetUrl: `/ticket/${this.projectId}/createCredential/USERNAME_PASSWORD/true`
+                    }
                 }
             }
         },
@@ -440,6 +442,7 @@
                             ...this.container.dispatchType,
                             imageType: 'BKSTORE'
                         }))
+                        data.historyVersion = data.version
                         if (data.code) this.choose(data)
                     }).catch((err) => this.$showTips({ theme: 'error', message: err.message || err })).finally(() => (this.isLoadingImage = false))
                 }
@@ -454,7 +457,7 @@
             if (this.container.dispatchType && this.container.dispatchType.imageCode) {
                 this.getVersionList(this.container.dispatchType.imageCode)
             }
-            this.getMacOsData()
+            if (this.buildResourceType === 'MACOS') this.getMacOsData()
         },
         methods: {
             ...mapActions('atom', [
@@ -486,6 +489,7 @@
                     imageName: '',
                     [name]: val
                 }))
+                if (val === 'MACOS') this.getMacOsData()
             },
 
             changeThirdImage (val) {
@@ -511,10 +515,11 @@
                     imageName: card.name
                 }))
                 return this.getVersionList(card.code).then(() => {
-                    const firstVersion = this.versionList[0] || {}
+                    let chooseVersion = this.versionList[0] || {}
+                    if (card.historyVersion) chooseVersion = this.versionList.find(x => x.versionValue === card.historyVersion) || {}
                     this.handleContainerChange('dispatchType', Object.assign({
                         ...this.container.dispatchType,
-                        imageVersion: firstVersion.versionValue,
+                        imageVersion: chooseVersion.versionValue,
                         value: card.code
                     }))
                 })
@@ -796,7 +801,7 @@
     .app-selector-item {
         margin: 10px 0;
         &:last-child {
-            .bk-icon.icon-plus {
+            .devops-icon.icon-plus {
                 display: block;
             }
         }

@@ -120,6 +120,7 @@ class PipelineSettingService @Autowired constructor(
                             it.get(SUCCESS_RECEIVER),
                             it.get(SUCCESS_WECHAT_GROUP_FLAG),
                             it.get(SUCCESS_WECHAT_GROUP),
+                            it.get(SUCCESS_WECHAT_GROUP_MARKDOWN_FLAG),
                             it.get(SUCCESS_DETAIL_FLAG),
                             it.get(SUCCESS_CONTENT) ?: ""
                         ),
@@ -129,6 +130,7 @@ class PipelineSettingService @Autowired constructor(
                             it.get(FAIL_RECEIVER),
                             it.get(FAIL_WECHAT_GROUP_FLAG),
                             it.get(FAIL_WECHAT_GROUP),
+                            it.get(FAIL_WECHAT_GROUP_MARKDOWN_FLAG),
                             it.get(FAIL_DETAIL_FLAG),
                             it.get(FAIL_CONTENT) ?: ""
                         ),

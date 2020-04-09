@@ -44,6 +44,7 @@ import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.environment.agent.ThirdPartyAgentHeartbeatUtils
+import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.common.service.utils.ByteUtils
 import com.tencent.devops.dispatch.api.ServiceAgentResource
 import com.tencent.devops.environment.client.InfluxdbClient
@@ -100,7 +101,9 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
     private val objectMapper: ObjectMapper,
     private val influxdbClient: InfluxdbClient,
     private val agentUrlService: AgentUrlService,
-    private val environmentPermissionService: EnvironmentPermissionService
+    private val environmentPermissionService: EnvironmentPermissionService,
+    private val upgradeService: UpgradeService,
+    private val gray: Gray
 ) {
     fun getAgentDetail(userId: String, projectId: String, nodeHashId: String): ThirdPartyAgentDetail? {
         val nodeId = HashUtil.decodeIdToLong(nodeHashId)
@@ -144,7 +147,9 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             nCpus = agentHostInfo.nCpus,
             memTotal = agentHostInfo.memTotal,
             diskTotal = agentHostInfo.diskTotal,
-            canEdit = environmentPermissionService.checkNodePermission(userId, projectId, nodeId, AuthPermission.EDIT)
+            canEdit = environmentPermissionService.checkNodePermission(userId, projectId, nodeId, AuthPermission.EDIT),
+            currentAgentVersion = upgradeService.getAgentVersion(),
+            currentWorkerVersion = upgradeService.getWorkerVersion()
         )
     }
 
@@ -1050,8 +1055,8 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             thirdPartyAgentHeartbeatUtils.heartbeat(projectId, agentHashId)
 
             HeartbeatResponse(
-                masterVersion = newHeartbeatInfo.masterVersion,
-                slaveVersion = newHeartbeatInfo.slaveVersion,
+                masterVersion = upgradeService.getAgentVersion(),
+                slaveVersion = upgradeService.getWorkerVersion(),
                 AgentStatus = agentStatus.name,
                 ParallelTaskCount = agentRecord.parallelTaskCount,
                 envs = if (agentRecord.agentEnvs.isNullOrBlank()) {
@@ -1059,6 +1064,12 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                 } else {
                     val envVar: List<EnvVar> = objectMapper.readValue(agentRecord.agentEnvs)
                     envVar.associate { it.name to it.value }
+                },
+                gateway = if (gray.isGray()) {
+                    val gateWayMapping = upgradeService.getGatewayMapping()
+                    gateWayMapping[agentRecord.gateway] ?: agentRecord.gateway
+                } else {
+                    agentRecord.gateway
                 }
             )
         }

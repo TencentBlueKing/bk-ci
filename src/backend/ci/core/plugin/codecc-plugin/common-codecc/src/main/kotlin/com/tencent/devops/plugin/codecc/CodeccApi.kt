@@ -52,7 +52,7 @@ open class CodeccApi constructor(
     private val existPath: String = "/ms/task/api/service/task/exists",
     private val deletePath: String = "/ms/task/api/service/task",
     private val report: String = "/api",
-    private val getRuleSetsPath: String = "/ms/task/api/service/checker/tasks/0/checkerSets"
+    private val getRuleSetsPath: String = "/ms/defect/api/service/checker/tools/{toolName}/pipelineCheckerSets"
 ) {
 
     companion object {
@@ -141,7 +141,9 @@ open class CodeccApi constructor(
                 "taskId" to codeCCTaskId!!,
                 "devopsToolParams" to devopsToolParams,
                 "toolCheckerSets" to genToolChecker(element),
-                "nameCn" to pipelineName
+                "nameCn" to pipelineName,
+                "projectBuildType" to scriptType.name,
+                "projectBuildCommand" to script
             )
             logger.info("Update the coverity task($body)")
             val header = mapOf(
@@ -179,6 +181,34 @@ open class CodeccApi constructor(
             body = mapOf(),
             path = getRuleSetsPath.replace("{toolName}", toolName),
             headers = headers,
+            method = "GET"
+        )
+        return objectMapper.readValue(result)
+    }
+
+    fun getTaskInfo(taskEnName: String): Result<TaskDetailVO?> {
+        val result = taskExecution(
+            body = mapOf(),
+            path = "/ms/task/api/service/task/taskInfo?nameEn=$taskEnName",
+            method = "GET"
+        )
+        return objectMapper.readValue(result)
+    }
+
+    fun getTransferAuthor(taskId: String): Result<AuthorTransferVO?> {
+        val result = taskExecution(
+            body = mapOf(),
+            headers = mapOf("X-DEVOPS-TASK-ID" to taskId),
+            path = "/ms/defect/api/service/transferAuthor/list",
+            method = "GET"
+        )
+        return objectMapper.readValue(result)
+    }
+
+    fun getFilterPath(taskId: String): Result<FilterPathOutVO?> {
+        val result = taskExecution(
+            body = mapOf(),
+            path = "/ms/task/api/service/task/filter/path/$taskId",
             method = "GET"
         )
         return objectMapper.readValue(result)
@@ -283,6 +313,19 @@ open class CodeccApi constructor(
         }
     }
 
+    fun getLanguageRuleSets(projectId: String, userId: String): Result<Map<String, Any>> {
+        val headers = mapOf(
+                AUTH_HEADER_DEVOPS_PROJECT_ID to projectId
+        )
+        val result = taskExecution(
+                body = mapOf(),
+                path = "/ms/defect/api/service/checkerSet/categoryList",
+                headers = headers,
+                method = "GET"
+        )
+        return objectMapper.readValue(result)
+    }
+
     private fun genToolChecker(element: LinuxCodeCCScriptElement): List<ToolChecker> {
         return genToolRuleSet(element).map {
             ToolChecker(it.key, it.value)
@@ -320,5 +363,47 @@ open class CodeccApi constructor(
     private data class ToolChecker(
         val toolName: String,
         val checkerSetId: String
+    )
+
+    data class TaskDetailVO(
+        val notifyCustomInfo: NotifyCustomVO?,
+        val newDefectJudge: NewDefectJudgeVO?
+    )
+
+    data class NotifyCustomVO(
+        val rtxReceiverType: String?,
+        val rtxReceiverList: Set<String>?,
+        val botWebhookUrl: String?,
+        val botRemindSeverity: Int?,
+        val botRemaindTools: Set<String>?,
+        val botRemindRange: Int?,
+        val emailReceiverType: String?,
+        val emailReceiverList: Set<String>?,
+        val emailCCReceiverList: Set<String>?,
+        val instantReportStatus: String?,
+        val reportDate: Set<Int>?,
+        val reportTime: Int?,
+        val reportMinute: Int?,
+        val reportTools: Set<String>?
+    )
+
+    data class NewDefectJudgeVO(
+        val fromDate: String? = "",
+        val fromDateTime: Long?
+    )
+
+    data class AuthorTransferVO(
+        val taskId: Long?,
+        val transferAuthorList: List<TransferAuthorPair>?
+    )
+
+    data class TransferAuthorPair(
+        val sourceAuthor: String,
+        val targetAuthor: String
+    )
+
+    data class FilterPathOutVO(
+        val taskId: Long?,
+        val filterPaths: List<String>?
     )
 }

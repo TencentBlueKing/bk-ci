@@ -47,16 +47,12 @@ import java.time.ZoneId
 class JFrogAQLService @Autowired constructor(private val objectMapper: ObjectMapper) {
     @Value("\${jfrog.url:#{null}}")
     private val JFROG_BASE_URL: String? = null
+
     @Value("\${jfrog.username:#{null}}")
     private val JFROG_USERNAME: String? = null
+
     @Value("\${jfrog.password:#{null}}")
     private val JFROG_PASSWORD: String? = null
-
-//    private val okHttpClient = okhttp3.OkHttpClient.Builder()
-//        .connectTimeout(5L, TimeUnit.SECONDS)
-//        .readTimeout(60L, TimeUnit.SECONDS)
-//        .writeTimeout(60L, TimeUnit.SECONDS)
-//        .build()
 
     /**
      * 通过JFrog AQL接口查询文件，并根据文件创建时间倒序返回
@@ -578,8 +574,8 @@ class JFrogAQLService @Autowired constructor(private val objectMapper: ObjectMap
      *
      */
     fun searchFileByRegex(
-        parentFolder: String,
-        relativePaths: Set<String>,
+        parentFolder: String, // generic-local/
+        relativePaths: Set<String>, // bk-archive/$projectId/$pipelineId/$buildId/path/
         names: Set<String>
     ): List<JFrogAQLFileInfo> {
         val startTimestamp = System.currentTimeMillis()

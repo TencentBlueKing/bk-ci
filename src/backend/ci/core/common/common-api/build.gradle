@@ -42,6 +42,7 @@ dependencies {
         exclude group: 'javax.mail', module: 'mailapi'
         exclude group: 'com.google.guava', module: 'guava'
     }
+    compile("com.google.guava:guava:${guavaVersion}")
     compile "com.squareup.okhttp3:okhttp"
     compile "commons-codec:commons-codec:1.9"
     compile "org.springframework.boot:spring-boot-starter-data-redis"

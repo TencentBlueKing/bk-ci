@@ -35,15 +35,15 @@ enum class BuildType(
     val clickable: Boolean/*是否可点击*/,
     val visable: Boolean? = true // 是否页面可见
 ) {
-    ESXi("蓝盾公共构建资源", listOf(OS.MACOS), true, true, true),
-    MACOS("蓝盾公共构建资源(NEW)", listOf(OS.MACOS), true, true, true),
-    DOCKER("公共：Docker on Devnet 物理机", listOf(OS.LINUX), true, true, true),
-    IDC("公共：Docker on IDC CVM", listOf(OS.LINUX), true, false, true),
-    PUBLIC_DEVCLOUD("公共：Docker on DevCloud", listOf(OS.LINUX), true, true, true),
-    TSTACK("Windows构建", listOf(), false, true, true), // tstack is deleted
+    ESXi("蓝盾公共构建资源", listOf(OS.MACOS), true, false, false),
+    MACOS("蓝盾公共构建资源(NEW)", listOf(OS.MACOS), true, false, false),
+    DOCKER("Docker公共构建机", listOf(OS.LINUX), true, true, true),
+    IDC("公共：Docker on IDC CVM", listOf(OS.LINUX), true, false, false),
+    PUBLIC_DEVCLOUD("公共：Docker on DevCloud", listOf(OS.LINUX), true, false, false),
+    TSTACK("Windows构建", listOf(OS.WINDOWS), false, false, false), // tstack is deleted
     THIRD_PARTY_AGENT_ID("私有：单构建机", listOf(OS.MACOS, OS.LINUX, OS.WINDOWS), false, true, true),
     THIRD_PARTY_AGENT_ENV("私有：构建集群", listOf(OS.MACOS, OS.LINUX, OS.WINDOWS), false, true, true),
-    THIRD_PARTY_PCG("PCG公共构建资源", listOf(OS.LINUX), false, true, true),
-    THIRD_PARTY_DEVCLOUD("腾讯自研云（云devnet资源）", listOf(OS.LINUX), false, true, true),
+    THIRD_PARTY_PCG("PCG公共构建资源", listOf(OS.LINUX), false, false, false),
+    THIRD_PARTY_DEVCLOUD("腾讯自研云（云devnet资源）", listOf(OS.LINUX), false, false, false),
     GIT_CI("工蜂CI", listOf(OS.LINUX), false, false, false)
 }

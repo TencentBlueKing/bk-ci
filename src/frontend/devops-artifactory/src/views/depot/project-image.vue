@@ -6,7 +6,7 @@
             </div>
             <!-- <bk-guide></bk-guide> -->
             <div class="biz-actions">
-                <a :href="`${DOCS_URL_PREFIX}/x/Lozm`"
+                <a :href="`${DOCS_URL_PREFIX}`"
                     target="_blank" class="bk-text-button">如何推镜像？</a>
             </div>
         </div>
@@ -19,7 +19,7 @@
                     <div class="biz-search-input">
                         <input @keyup.enter="enterHandler" v-model="searchKey" type="text" class="bk-form-input" placeholder="搜索">
                         <a href="javascript:void(0)" class="biz-search-btn" @click="handleClick">
-                            <i class="bk-icon icon-search icon-search-li"></i>
+                            <i class="devops-icon icon-search icon-search-li"></i>
                         </a>
                     </div>
                 </div>
@@ -46,7 +46,7 @@
                                     </div>
                                 </div>
                                 <div class="detail" @click="toImageDetail(item)">
-                                    详情<i class="bk-icon icon-angle-right"></i>
+                                    详情<i class="devops-icon icon-angle-right"></i>
                                 </div>
                             </div>
                         </div>
@@ -471,7 +471,7 @@
         }
     }
     .mc-operate-audit-table {
-        i.bk-icon {
+        i.devops-icon {
             font-size: 16px;
             vertical-align: middle;
             position: relative;

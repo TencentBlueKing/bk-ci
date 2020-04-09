@@ -52,7 +52,7 @@ spring:
       server:
         git:
           uri: file:///data1/work/config/devops-config
-          default-label: master
+          default-label: integration
     consul:
       discovery:
         tags: test

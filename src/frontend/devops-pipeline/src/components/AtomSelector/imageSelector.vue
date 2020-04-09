@@ -3,12 +3,12 @@
         <section class="selector-popup" v-bk-clickoutside="closeImageSelect" v-show="isShow">
             <main class="selector-main">
                 <header class="selector-header">
-                    <h3>{{ $t('editPage.selectImage') }}<i @click="freshList(searchKey)" :class="[{ 'spin-icon': isLoading }, 'bk-icon', 'icon-refresh', 'fresh']" /></h3>
+                    <h3>{{ $t('editPage.selectImage') }}<i @click="freshList(searchKey)" :class="[{ 'spin-icon': isLoading }, 'devops-icon', 'icon-refresh', 'fresh']" /></h3>
                     <bk-input class="search-input"
                         ref="searchStr"
                         :clearable="true"
                         :placeholder="$t('editPage.enterSearch')"
-                        right-icon="bk-icon icon-search"
+                        right-icon="icon-search"
                         :value="searchKey"
                         @input="handleClear"
                         @enter="handleSearch">

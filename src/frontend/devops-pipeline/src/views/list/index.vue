@@ -19,7 +19,7 @@
                 </li>
                 <li>
                     <div class="manage-view-btn" v-show="currentViewId">
-                        <i class="bk-icon icon-plus" @click="toggleShowViewManage()"></i>
+                        <i class="devops-icon icon-plus" @click="toggleShowViewManage()"></i>
                         <view-manage v-if="showViewManage"></view-manage>
                     </div>
                 </li>
@@ -28,7 +28,7 @@
             <div class="default-link-list" slot="right">
                 <div class="dropdown-trigger" @click.stop="toggleIsMoreHandler">
                     <span class="more-handler" id="moreHeaderHandler" :class="{ 'selectde-title': dropdownTitle !== $t('more') }">{{ dropdownTitle }}
-                        <i :class="['bk-icon icon-angle-down', { 'icon-flip': toggleIsMore }, { 'selectde-title': dropdownTitle !== $t('more') }]"
+                        <i :class="['devops-icon icon-angle-down', { 'icon-flip': toggleIsMore }, { 'selectde-title': dropdownTitle !== $t('more') }]"
                             id="toggleHeaderIcon"></i>
                     </span>
                 </div>
@@ -285,7 +285,7 @@
                 font-size: 14px;
                 cursor: pointer;
             }
-            .bk-icon {
+            .devops-icon {
                 display: inline-block;
                 transition: all ease 0.2s;
                 margin-left: 4px;

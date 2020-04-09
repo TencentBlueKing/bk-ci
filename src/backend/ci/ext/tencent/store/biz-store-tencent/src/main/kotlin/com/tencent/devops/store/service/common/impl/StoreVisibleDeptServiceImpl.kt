@@ -35,13 +35,17 @@ import com.tencent.devops.store.pojo.common.enums.DeptStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.project.api.service.ServiceProjectOrganizationResource
+import com.tencent.devops.project.pojo.enums.OrganizationType
 import com.tencent.devops.store.pojo.common.PASS
 import com.tencent.devops.store.service.common.StoreVisibleDeptService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import kotlin.collections.HashMap
 
 /**
  * store组件可见范围逻辑类
@@ -51,7 +55,8 @@ import org.springframework.stereotype.Service
 class StoreVisibleDeptServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
     private val storeDeptRelDao: StoreDeptRelDao,
-    private val storeMemberDao: StoreMemberDao
+    private val storeMemberDao: StoreMemberDao,
+    private val client: Client
 ) : StoreVisibleDeptService {
 
     private val logger = LoggerFactory.getLogger(StoreVisibleDeptServiceImpl::class.java)
@@ -100,17 +105,56 @@ class StoreVisibleDeptServiceImpl @Autowired constructor(
      */
     override fun addVisibleDept(userId: String, storeCode: String, deptInfos: List<DeptInfo>, storeType: StoreTypeEnum): Result<Boolean> {
         logger.info("the userId is :$userId,storeCode is :$storeCode,deptInfos is :$deptInfos,storeType is :$storeType")
+        // 获取公司下各个BG的ID
+        val resourceClient = client.get(ServiceProjectOrganizationResource::class)
+        val result = resourceClient.getOrganizations(userId, OrganizationType.bg, 0)
+        val deptInfoList = result.data
+        val approveList = mutableListOf<Int>()
+        deptInfoList?.forEach {
+            approveList.add(Integer.parseInt(it.id))
+        }
+        approveList.add(0)
+        // 公司以及BG 范围的审核列表
+        val deptIdApprovedList = mutableListOf<DeptInfo>()
+        // 公司以及BG以下 范围的审核列表
+        val deptIdApprovingList = mutableListOf<DeptInfo>()
         // 判断用户是否有权限设置可见范围
         if (!storeMemberDao.isStoreAdmin(dslContext, userId, storeCode, storeType.type.toByte())) {
             return MessageCodeUtil.generateResponseDataObject(messageCode = CommonMessageCode.PERMISSION_DENIED, data = false)
         }
-        deptInfos.forEach {
+
+        deptInfos.forEach forEach@{
             val count = storeDeptRelDao.countByCodeAndDeptId(dslContext, storeCode, it.deptId, storeType.type.toByte())
             if (count>0) {
-                return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_EXIST, arrayOf(it.deptName), false)
+                return@forEach
             }
+            if (!approveList.contains(it.deptId))
+                deptIdApprovedList.add(it)
+            else
+                deptIdApprovingList.add(it)
         }
-        storeDeptRelDao.batchAdd(dslContext, userId, storeCode, deptInfos, storeType.type.toByte())
+
+        logger.info("approving depts: $deptIdApprovingList")
+        // 公司以及BG的范围需要等待审核
+        storeDeptRelDao.batchAdd(
+            dslContext = dslContext,
+            userId = userId,
+            storeCode = storeCode,
+            deptInfoList = deptIdApprovingList,
+            storeType = storeType.type.toByte()
+        )
+        logger.info("approved depts: $deptIdApprovedList")
+        // 公司以及BG一下的范围直接审核通过
+        storeDeptRelDao.batchAdd(
+            dslContext = dslContext,
+            userId = userId,
+            storeCode = storeCode,
+            deptInfoList = deptIdApprovedList,
+            status = DeptStatusEnum.APPROVED.status.toByte(),
+            comment = "AUTO APPROVE",
+            storeType = storeType.type.toByte()
+        )
+
         return Result(true)
     }
 

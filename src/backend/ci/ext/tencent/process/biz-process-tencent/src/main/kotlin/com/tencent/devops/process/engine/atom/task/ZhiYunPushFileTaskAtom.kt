@@ -26,6 +26,9 @@
 
 package com.tencent.devops.process.engine.atom.task
 
+import com.tencent.devops.common.api.exception.TaskExecuteException
+import com.tencent.devops.common.api.pojo.ErrorCode
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.archive.pojo.ArtifactorySearchParam
 import com.tencent.devops.common.client.Client
@@ -117,8 +120,16 @@ class ZhiYunPushFileTaskAtom @Autowired constructor(
             executeCount = task.executeCount ?: 1
         )
         val versions = client.getWithoutRetry(ServiceZhiyunResource::class).pushFile(uploadParams).data
-            ?: throw RuntimeException("0 file send to zhiyun")
-        val ver = versions.lastOrNull() ?: throw RuntimeException("0 file send to zhiyun")
+            ?: throw TaskExecuteException(
+                errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
+                errorType = ErrorType.USER,
+                errorMsg = "0 file send to zhiyun"
+            )
+        val ver = versions.lastOrNull() ?: throw TaskExecuteException(
+            errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
+            errorType = ErrorType.USER,
+            errorMsg = "0 file send to zhiyun"
+        )
         LogUtils.addLine(
             rabbitTemplate = rabbitTemplate,
             buildId = buildId,

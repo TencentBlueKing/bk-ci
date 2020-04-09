@@ -31,8 +31,10 @@ package com.tencent.devops.process.engine.atom.task
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.tencent.devops.common.api.pojo.ErrorCode.USER_INPUT_INVAILD
+import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode.USER_TASK_OPERATE_FAIL
+import com.tencent.devops.common.api.pojo.ErrorCode.USER_INPUT_INVAILD
+import com.tencent.devops.common.api.pojo.ErrorCode.USER_RESOURCE_NOT_FOUND
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
@@ -331,7 +333,11 @@ class BcsContainerOpByNameAtom @Autowired constructor(
                 if (param.command.isNullOrBlank()) {
                     logger.warn("BCS command is not init of build(${task.buildId})")
                     LogUtils.addRedLine(rabbitTemplate, task.buildId, "BCS command is not init", task.taskId, task.containerHashId, task.executeCount ?: 1)
-                    throw RuntimeException("BCS command is not init of build(${task.buildId})")
+                    throw throw TaskExecuteException(
+                        errorCode = USER_TASK_OPERATE_FAIL,
+                        errorType = ErrorType.USER,
+                        errorMsg = "BCS command is not init of build(${task.buildId})"
+                    )
                 }
 
                 val command = parseVariable(param.category, runVariables)
@@ -393,21 +399,33 @@ class BcsContainerOpByNameAtom @Autowired constructor(
             val data = response.body()!!.string()
             logger.info("Get instVersionId, response: $data")
             if (!response.isSuccessful) {
-                throw RuntimeException(data)
+                throw TaskExecuteException(
+                    errorCode = USER_RESOURCE_NOT_FOUND,
+                    errorType = ErrorType.USER,
+                    errorMsg = "Get instVersionId, response: $data"
+                )
             }
             val responseData: Map<String, Any> = jacksonObjectMapper().readValue(data)
             val code = responseData["code"] as Int
             if (code != 0) {
                 val message = responseData["code"] as String
-                logger.error("Get instVersionId failed , message : $message")
-                throw RuntimeException(data)
+                logger.error("Get instVersionId failed, message : $message")
+                throw TaskExecuteException(
+                    errorCode = USER_RESOURCE_NOT_FOUND,
+                    errorType = ErrorType.USER,
+                    errorMsg = "Get instVersionId failed, response: $data"
+                )
             }
 
             val responseDataData: List<Map<String, Any>> = responseData["data"] as List<Map<String, Any>>
             val instVersionObjs = responseDataData.filter { (it["name"] as String).equals(instVersionName, true) }
             if (instVersionObjs.isEmpty()) {
                 logger.error("Get instVersionId failed , instVersionName is mismatching. instVersionName : $instVersionName")
-                throw RuntimeException("Get instVersionId failed , instVersionName is mismatching. instVersionName : $instVersionName")
+                throw TaskExecuteException(
+                    errorCode = USER_RESOURCE_NOT_FOUND,
+                    errorType = ErrorType.USER,
+                    errorMsg = "Get instVersionId failed , instVersionName is mismatching. instVersionName : $instVersionName"
+                )
             }
             val instVersionObj = instVersionObjs[0]
             return instVersionObj["id"] as Int
@@ -456,7 +474,11 @@ class BcsContainerOpByNameAtom @Autowired constructor(
             val data = response.body()!!.string()
             logger.info("Get instance status, response: $data")
             if (!response.isSuccessful) {
-                throw RuntimeException(data)
+                throw TaskExecuteException(
+                    errorCode = USER_RESOURCE_NOT_FOUND,
+                    errorType = ErrorType.USER,
+                    errorMsg = "Get instance status, response: $data"
+                )
             }
 
             val responseData: Map<String, Any> = jacksonObjectMapper().readValue(data)
@@ -566,7 +588,8 @@ class BcsContainerOpByNameAtom @Autowired constructor(
                     errorType = ErrorType.USER,
                     errorCode = USER_TASK_OPERATE_FAIL,
                     errorMsg = "创建实例失败，详情： $data"
-                ) }
+                )
+            }
             val responseData: Map<String, Any> = jacksonObjectMapper().readValue(data)
             val code = responseData["code"] as Int
             if (code != 0) {
@@ -623,7 +646,11 @@ class BcsContainerOpByNameAtom @Autowired constructor(
             val data = response.body()!!.string()
             logger.info("Recreate instance, response: $data")
             if (!response.isSuccessful) {
-                throw RuntimeException(data)
+                throw TaskExecuteException(
+                    errorCode = USER_TASK_OPERATE_FAIL,
+                    errorType = ErrorType.USER,
+                    errorMsg = "Recreate instance, response: $data"
+                )
             }
             val responseData: Map<String, Any> = jacksonObjectMapper().readValue(data)
             val code = responseData["code"] as Int
@@ -654,7 +681,11 @@ class BcsContainerOpByNameAtom @Autowired constructor(
             val data = response.body()!!.string()
             logger.info("delete instance, response: $data")
             if (!response.isSuccessful) {
-                throw RuntimeException(data)
+                throw TaskExecuteException(
+                    errorCode = USER_TASK_OPERATE_FAIL,
+                    errorType = ErrorType.USER,
+                    errorMsg = "delete instance, response: $data"
+                )
             }
             val responseData: Map<String, Any> = jacksonObjectMapper().readValue(data)
             val code = responseData["code"] as Int
@@ -688,7 +719,11 @@ class BcsContainerOpByNameAtom @Autowired constructor(
             logger.info("Get bcsAppInstId by bcsAppInstName, response: $data")
             if (!response.isSuccessful) {
                 logger.error("Get bcsAppInstId by bcsAppInstName($bcsAppInstName) failed, msg:$data")
-                throw RuntimeException("Get bcsAppInstId faild, response: $data")
+                throw TaskExecuteException(
+                    errorCode = USER_RESOURCE_NOT_FOUND,
+                    errorType = ErrorType.USER,
+                    errorMsg = "Get bcsAppInstId faild, response: $data"
+                )
             }
 
             val responseData: Map<String, Any> = jacksonObjectMapper().readValue(data)
@@ -696,13 +731,21 @@ class BcsContainerOpByNameAtom @Autowired constructor(
             if (0 != code) {
                 val message = responseData["message"].toString()
                 logger.error("Get bcsAppInstId by bcsAppInstName($bcsAppInstName) failed, msg:$message")
-                throw RuntimeException("Get bcsAppInstId faild, response: $data")
+                throw TaskExecuteException(
+                    errorCode = USER_RESOURCE_NOT_FOUND,
+                    errorType = ErrorType.USER,
+                    errorMsg = "Get bcsAppInstId faild, response: $data"
+                )
             }
             dataMap = responseData["data"] as Map<String, Any>
             if (dataMap["id"] == null || dataMap["id"] == "") {
                 logger.error("Get bcsAppInstId by bcsAppInstName($bcsAppInstName) failed, msg:$data")
                 LogUtils.addRedLine(rabbitTemplate, task.buildId, "实例名称或命名空间错误", task.taskId, task.containerHashId, task.executeCount ?: 1)
-                throw RuntimeException("Get bcsAppInstId by bcsAppInstName($bcsAppInstName) failed, response:$data")
+                throw TaskExecuteException(
+                    errorCode = USER_RESOURCE_NOT_FOUND,
+                    errorType = ErrorType.USER,
+                    errorMsg = "Get bcsAppInstId by bcsAppInstName($bcsAppInstName) failed, response:$data"
+                )
             }
         }
         return dataMap["id"].toString()
@@ -732,7 +775,11 @@ class BcsContainerOpByNameAtom @Autowired constructor(
             val data = response.body()!!.string()
             logger.info("Send $signalCategory signal, response: $data")
             if (!response.isSuccessful) {
-                throw RuntimeException(data)
+                throw throw TaskExecuteException(
+                    errorCode = USER_TASK_OPERATE_FAIL,
+                    errorType = ErrorType.USER,
+                    errorMsg = "Send $signalCategory signal, response: $data"
+                )
             }
             val responseData: Map<String, Any> = jacksonObjectMapper().readValue(data)
             val code = responseData["code"] as Int
@@ -807,7 +854,11 @@ class BcsContainerOpByNameAtom @Autowired constructor(
             val data = response.body()!!.string()
             logger.info("SendCommand, response: $data")
             if (!response.isSuccessful) {
-                throw RuntimeException(data)
+                throw throw TaskExecuteException(
+                    errorCode = USER_TASK_OPERATE_FAIL,
+                    errorType = ErrorType.USER,
+                    errorMsg = "SendCommand, response: $data"
+                )
             }
             val responseData: Map<String, Any> = jacksonObjectMapper().readValue(data)
 
@@ -815,12 +866,18 @@ class BcsContainerOpByNameAtom @Autowired constructor(
             if (0 != code) {
                 val message = responseData["message"].toString()
                 logger.error("SendCommand($commandVar) failed, msg:$message")
-                throw RuntimeException("SendCommand($commandVar) failed, msg:$message")
+                throw throw TaskExecuteException(
+                    errorCode = USER_TASK_OPERATE_FAIL,
+                    errorType = ErrorType.USER,
+                    errorMsg = "SendCommand($commandVar) failed, msg:$message")
             }
             val dataMap = responseData["data"] as Map<*, *>
             if (null == dataMap["task_id"]) {
                 logger.error("SendCommand($commandVar) failed, response:$data")
-                throw RuntimeException("SendCommand($commandVar) failed, response:$data")
+                throw throw TaskExecuteException(
+                    errorCode = USER_TASK_OPERATE_FAIL,
+                    errorType = ErrorType.USER,
+                    errorMsg = "SendCommand($commandVar) failed, response:$data")
             }
             return dataMap["task_id"].toString()
         }
@@ -847,14 +904,20 @@ class BcsContainerOpByNameAtom @Autowired constructor(
             val data = response.body()!!.string()
             logger.info("Get Command Status, task_id($taskId), response: $data")
             if (!response.isSuccessful) {
-                throw RuntimeException(data)
+                throw throw TaskExecuteException(
+                    errorCode = USER_TASK_OPERATE_FAIL,
+                    errorType = ErrorType.USER,
+                    errorMsg = data)
             }
 
             val responseObj: BcsCommandStatus = jacksonObjectMapper().readValue(data)
             if (0 != responseObj.code) {
                 val message = responseObj.message
                 logger.error("Get Command Status, task_id($taskId) failed, msg:$message")
-                throw RuntimeException("Get Command Status, task_id($taskId) failed, msg:$message")
+                throw throw TaskExecuteException(
+                    errorCode = USER_TASK_OPERATE_FAIL,
+                    errorType = ErrorType.USER,
+                    errorMsg = "Get Command Status, task_id($taskId) failed, msg:$message")
             }
 
             val taskgroups = responseObj.data.status.taskgroups
@@ -968,7 +1031,10 @@ class BcsContainerOpByNameAtom @Autowired constructor(
             val data = response.body()!!.string()
             logger.info("Scale instance, response: $data")
             if (!response.isSuccessful) {
-                throw RuntimeException(data)
+                throw throw TaskExecuteException(
+                    errorCode = USER_TASK_OPERATE_FAIL,
+                    errorType = ErrorType.USER,
+                    errorMsg = data)
             }
             val responseData: Map<String, Any> = jacksonObjectMapper().readValue(data)
             val code = responseData["code"] as Int
@@ -1003,7 +1069,10 @@ class BcsContainerOpByNameAtom @Autowired constructor(
             val data = response.body()!!.string()
             logger.info("Update application instance, response: $data")
             if (!response.isSuccessful) {
-                throw RuntimeException(data)
+                throw throw TaskExecuteException(
+                    errorCode = USER_TASK_OPERATE_FAIL,
+                    errorType = ErrorType.USER,
+                    errorMsg = data)
             }
             val responseData: Map<String, Any> = jacksonObjectMapper().readValue(data)
             val code = responseData["code"] as Int
@@ -1040,7 +1109,11 @@ class BcsContainerOpByNameAtom @Autowired constructor(
             val data = response.body()!!.string()
             logger.info("Update instance, response: $data")
             if (!response.isSuccessful) {
-                throw RuntimeException(data)
+                throw throw TaskExecuteException(
+                    errorCode = USER_TASK_OPERATE_FAIL,
+                    errorType = ErrorType.USER,
+                    errorMsg = "Update instance, response: $data"
+                )
             }
             val responseData: Map<String, Any> = jacksonObjectMapper().readValue(data)
             val code = responseData["code"] as Int
@@ -1062,7 +1135,11 @@ class BcsContainerOpByNameAtom @Autowired constructor(
             val data = response.body()!!.string()
             logger.info("Get project info, response: $data")
             if (!response.isSuccessful) {
-                throw RuntimeException(data)
+                throw throw TaskExecuteException(
+                    errorCode = USER_TASK_OPERATE_FAIL,
+                    errorType = ErrorType.USER,
+                    errorMsg = "Get project info, response: $data"
+                )
             }
             val responseData: Map<String, Any> = jacksonObjectMapper().readValue(data)
             val code = responseData["code"] as Int
@@ -1070,7 +1147,11 @@ class BcsContainerOpByNameAtom @Autowired constructor(
                 val dataMap = responseData["data"] as Map<String, Any>
                 return dataMap["project_id"] as String
             } else {
-                throw RuntimeException(data)
+                throw throw TaskExecuteException(
+                    errorCode = USER_TASK_OPERATE_FAIL,
+                    errorType = ErrorType.USER,
+                    errorMsg = data
+                )
             }
         }
     }

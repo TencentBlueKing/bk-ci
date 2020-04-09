@@ -35,14 +35,12 @@ import com.tencent.devops.artifactory.pojo.Property
 import com.tencent.devops.artifactory.pojo.SearchProps
 import com.tencent.devops.artifactory.pojo.Url
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
-import com.tencent.devops.artifactory.service.bkrepo.BkRepoSearchService
-
 import com.tencent.devops.artifactory.service.artifactory.ArtifactoryAppService
 import com.tencent.devops.artifactory.service.artifactory.ArtifactorySearchService
 import com.tencent.devops.artifactory.service.artifactory.ArtifactoryService
 import com.tencent.devops.artifactory.service.bkrepo.BkRepoAppService
+import com.tencent.devops.artifactory.service.bkrepo.BkRepoSearchService
 import com.tencent.devops.artifactory.service.bkrepo.BkRepoService
-
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.PageUtil
@@ -156,15 +154,16 @@ class AppArtifactoryResourceImpl @Autowired constructor(
 
         var result = if (repoGray.isGray(projectId, redisOperation)) {
             if (path.endsWith(".ipa")) {
-                bkRepoAppService.getExternalPlistDownloadUrl(userId, projectId, artifactoryType, path, 24*3600, false)
+                bkRepoAppService.getExternalPlistDownloadUrl(userId, projectId, artifactoryType, path, 24 * 3600, false)
             } else {
-                bkRepoAppService.getExternalDownloadUrl(userId, projectId, artifactoryType, path, 24*3600, false)
+                // jfrog 对 android app 只有 derected方式
+                bkRepoAppService.getExternalDownloadUrl(userId, projectId, artifactoryType, path, 24 * 3600, true)
             }
         } else {
             if (path.endsWith(".ipa")) {
-                artifactoryAppService.getExternalPlistDownloadUrl(userId, projectId, artifactoryType, path, 24*3600, false)
+                artifactoryAppService.getExternalPlistDownloadUrl(userId, projectId, artifactoryType, path, 24 * 3600, false)
             } else {
-                artifactoryAppService.getExternalDownloadUrl(userId, projectId, artifactoryType, path, 24*3600, false)
+                artifactoryAppService.getExternalDownloadUrl(userId, projectId, artifactoryType, path, 24 * 3600, false)
             }
         }
         return Result(result)
@@ -182,9 +181,9 @@ class AppArtifactoryResourceImpl @Autowired constructor(
             throw BadRequestException("Path must end with ipa.")
         }
         return if (repoGray.isGray(projectId, redisOperation)) {
-            bkRepoAppService.getPlistFile(userId, projectId, artifactoryType, path, 24*3600, false, experienceHashId)
+            bkRepoAppService.getPlistFile(userId, projectId, artifactoryType, path, 24 * 3600, false, experienceHashId)
         } else {
-            artifactoryAppService.getPlistFile(userId, projectId, artifactoryType, path, 24*3600, false, experienceHashId)
+            artifactoryAppService.getPlistFile(userId, projectId, artifactoryType, path, 24 * 3600, false, experienceHashId)
         }
     }
 
@@ -194,9 +193,9 @@ class AppArtifactoryResourceImpl @Autowired constructor(
             throw BadRequestException("Path must end with ipa or apk")
         }
         return if (repoGray.isGray(projectId, redisOperation)) {
-            Result(bkRepoAppService.getExternalDownloadUrl(userId, projectId, artifactoryType, path, 24*3600, true))
+            Result(bkRepoAppService.getExternalDownloadUrl(userId, projectId, artifactoryType, path, 24 * 3600, true))
         } else {
-            Result(artifactoryAppService.getExternalDownloadUrl(userId, projectId, artifactoryType, path, 24*3600, true))
+            Result(artifactoryAppService.getExternalDownloadUrl(userId, projectId, artifactoryType, path, 24 * 3600, true))
         }
     }
 

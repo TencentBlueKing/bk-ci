@@ -9,7 +9,7 @@
             </div>
         </inner-header>
         <div v-if="folderLoading" class="folder-loading">
-            <i class="bk-icon title-icon icon-circle-2-1 spin-icon" />
+            <i class="devops-icon title-icon icon-circle-2-1 spin-icon" />
         </div>
         <template v-else>
             <section class="artifactory-main sub-view-port"
@@ -42,7 +42,7 @@
                                 @click.stop="selectRowHandler($event, index, col)">
                                 <div class="table-sim-item sim-item-name" :title="`${col.name}`">
                                     <img :src="folder" alt="folder" v-if="col.folder">
-                                    <i :class="['bk-icon', `icon-${extForFile(col.name)}`]"
+                                    <i :class="['devops-icon', `icon-${extForFile(col.name)}`]"
                                         v-else></i>
                                     <span class="repo-name">{{ col.name }}</span>
                                 </div>
@@ -63,40 +63,35 @@
                                 <template
                                     v-if="!pipelineMap && lastClickItem.fullPath">
                                     <li @click.stop="renameRes()">
-                                        <i class="bk-icon icon-edit"></i>重命名
+                                        <i class="devops-icon icon-edit"></i>重命名
                                     </li>
                                     <li @click.stop="moveRes()">
-                                        <i class="bk-icon icon-move"></i>移动
+                                        <i class="devops-icon icon-move"></i>移动
                                     </li>
                                     <li @click.stop="copyRes()">
-                                        <i class="bk-icon icon-save"></i>复制
+                                        <i class="devops-icon icon-save"></i>复制
                                     </li>
                                     <li @click.stop="deleteRes()">
-                                        <i class="bk-icon icon-delete"></i>删除
+                                        <i class="devops-icon icon-delete"></i>删除
                                     </li>
                                 </template>
                                 <li v-if="lastClickItem.folder === false" @click.stop="handlerShare()">
-                                    <i class="bk-icon icon-none"></i>共享
+                                    <i class="devops-icon icon-none"></i>共享
                                 </li>
                                 <li
                                     @click.stop="handlerDownload()"
                                     v-if="lastClickItem.fullPath && lastClickItem.folder === false">
-                                    <i class="bk-icon icon-download"></i>下载
-                                </li>
-                                <li
-                                    v-if="isExtendTx && lastClickItem.fullPath && lastClickItem.folder === false && isWindows && isApkOrIpa() && isMof"
-                                    @click.stop="handlerDownload($event, 'MoF')">
-                                    <i class="bk-icon icon-download"></i>魔方有线安装
+                                    <i class="devops-icon icon-download"></i>下载
                                 </li>
                             </template>
                             <template
                                 v-else>
                                 <li v-if="!pipelineMap"
                                     @click.stop="addFolder()">
-                                    <i class="bk-icon icon-folder-plus"></i>新建文件夹
+                                    <i class="devops-icon icon-folder-plus"></i>新建文件夹
                                 </li>
                                 <li @click.stop="refreshFolder()">
-                                    <i class="bk-icon icon-refresh"></i>刷新
+                                    <i class="devops-icon icon-refresh"></i>刷新
                                 </li>
                             </template>
                         </ul>
@@ -182,7 +177,7 @@
             <section class="preview-dialog">
                 <div class="preview-header">
                     <div class="preview-header-left">
-                        <i @click.stop="previewCancel()" class="bk-icon icon-arrows-left"></i>
+                        <i @click.stop="previewCancel()" class="devops-icon icon-arrows-left"></i>
                         {{previewConfig.title}}
                     </div>
                 </div>
@@ -240,7 +235,7 @@
             @cancel="treeCancelHandler">
             <section class="tree-view">
                 <div v-if="treeDialogConfig.isLoading" class="folder-loading" style="padding-top:20px">
-                    <i class="bk-icon title-icon icon-circle-2-1 spin-icon" />
+                    <i class="devops-icon title-icon icon-circle-2-1 spin-icon" />
                 </div>
                 <div v-if="treeDialogConfig.title">
                     <bk-trees
@@ -266,11 +261,8 @@
     import { mapGetters, mapState } from 'vuex'
     import {
         convertTime,
-        convertFileSize,
-        getCheckEnvPrefix
+        convertFileSize
     } from '@/utils/util'
-
-    const DEVNET_URL_PREFIX = getCheckEnvPrefix()
 
     export default {
         components: {
@@ -380,18 +372,6 @@
             }),
             projectId () {
                 return this.$route.params.projectId
-            },
-            isWindows () {
-                return /WINDOWS/.test(window.navigator.userAgent.toUpperCase())
-            },
-            isMof () {
-                const projectId = this.$route.params.projectId
-                return this.projectList.find(item => {
-                    return (item.deptName === '魔方工作室群' && item.projectCode === projectId)
-                })
-            },
-            isExtendTx () {
-                return VERSION_TYPE === 'tencent'
             },
             breadcrumbs () {
                 const breadcrumbs = []
@@ -569,18 +549,6 @@
                 }
             },
             /**
-             * 检测devnet网关的连通性
-             */
-            async getDevnetGateway () {
-                try {
-                    const url = `/artifactory/api/user/artifactories/checkDevnetGateway`
-                    const res = await this.$ajax.get(url, { baseURL: DEVNET_URL_PREFIX })
-                    return res
-                } catch (err) {
-                    return false
-                }
-            },
-            /**
              * 文件下载地址
              */
             async getDownloadUrl (item) {
@@ -589,13 +557,12 @@
                 } = this
                 const type = this.pipelineMap ? 'PIPELINE' : 'CUSTOM_DIR'
                 try {
-                    const isDevnet = await this.getDevnetGateway()
                     const res = await this.$store.dispatch('artifactory/requestDownloadUrl', {
                         projectId,
                         type: type,
                         path: `${item.fullPath}`
                     })
-                    const url = isDevnet ? res.url : res.url2
+                    const url = res.url2
                     return url
                 } catch (err) {
                     if (err.code === 403) { // 没有权限下载
@@ -618,9 +585,9 @@
             /**
              * 下载
              */
-            async handlerDownload (event, type) {
+            async handlerDownload () {
                 const url = await this.getDownloadUrl(this.lastClickItem)
-                url && window.open(type ? `${GW_URL_PREFIX}/pc/download/devops_pc_forward.html?downloadUrl=${url}` : url, '_self')
+                url && window.open(url, '_self')
             },
             /**
              * 共享
@@ -738,7 +705,7 @@
                     noPermissionList: [
                         { resource: resource, option: option }
                     ],
-                    applyPermissionUrl: this.isExtendTx ? `/backend/api/perm/apply/subsystem/?client_id=pipeline&project_code=${this.projectId}&service_code=pipeline&${role}=pipeline:${pipelineId}` : PERM_URL_PREFIX
+                    applyPermissionUrl: `/backend/api/perm/apply/subsystem/?client_id=pipeline&project_code=${this.projectId}&service_code=pipeline&${role}=pipeline:${pipelineId}`
                 }
                 this.$showAskPermissionDialog(params)
             },
@@ -1027,10 +994,6 @@
                         }
                     }
                 }
-            },
-            isApkOrIpa () {
-                const type = this.lastClickItem.name.toUpperCase().substring(this.lastClickItem.name.lastIndexOf('.') + 1)
-                return type === 'APK' || type === 'IPA'
             }
         }
     }

@@ -29,6 +29,8 @@
 package com.tencent.devops.process.engine.atom.task
 
 import com.fasterxml.jackson.annotation.JsonProperty
+import com.tencent.devops.common.api.exception.TaskExecuteException
+import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
@@ -219,7 +221,11 @@ class JobDevOpsFastPushFileTaskAtom @Autowired constructor(
                 }
             }
         }
-        if (count == 0) throw RuntimeException("没有匹配到需要分发的文件")
+        if (count == 0) throw TaskExecuteException(
+            errorCode = ErrorCode.USER_INPUT_INVAILD,
+            errorType = ErrorType.USER,
+            errorMsg = "没有匹配到需要分发的文件"
+        )
         LogUtils.addLine(rabbitTemplate, buildId, "$count 个文件将被分发", taskId, containerId, executeCount)
 
         val fileSource = FastPushFileRequest.FileSource(
@@ -618,13 +624,21 @@ class JobDevOpsFastPushFileTaskAtom @Autowired constructor(
             val responseBody = response.body()!!.string()
             if (!response.isSuccessful) {
                 logger.error("get jfrog files($url) fail:\n $responseBody")
-                throw RuntimeException("构建分发获取文件失败")
+                throw TaskExecuteException(
+                    errorCode = ErrorCode.SYSTEM_SERVICE_ERROR,
+                    errorType = ErrorType.SYSTEM,
+                    errorMsg = "构建分发获取文件失败"
+                )
             }
             try {
                 return JsonUtil.getObjectMapper().readValue(responseBody, JfrogFilesData::class.java)
             } catch (e: Exception) {
                 logger.error("get jfrog files($url) fail\n$responseBody")
-                throw RuntimeException("构建分发获取文件失败")
+                throw TaskExecuteException(
+                    errorCode = ErrorCode.SYSTEM_SERVICE_ERROR,
+                    errorType = ErrorType.SYSTEM,
+                    errorMsg = "构建分发获取文件失败"
+                )
             }
         }
     }
