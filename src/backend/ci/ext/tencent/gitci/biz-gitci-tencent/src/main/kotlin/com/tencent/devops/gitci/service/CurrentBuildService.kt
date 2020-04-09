@@ -139,6 +139,7 @@ class CurrentBuildService @Autowired constructor(
             "项目未开启工蜂CI，无法查询"
         )
 
+        // 校验工蜂项目权限
         val checkAuth = client.getScm(ServiceGitCiResource::class).checkUserGitAuth(userId, gitProjectId.toString())
         if (!checkAuth.data!!) {
             throw CustomException(Response.Status.FORBIDDEN, "用户没有工蜂项目权限，无法获取下载链接")

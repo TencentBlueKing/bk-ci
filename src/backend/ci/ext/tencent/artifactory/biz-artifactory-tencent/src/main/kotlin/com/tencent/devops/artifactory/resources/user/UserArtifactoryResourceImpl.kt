@@ -47,6 +47,7 @@ import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.PageUtil
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.RepoGray
 import com.tencent.devops.common.web.RestResource
@@ -145,12 +146,12 @@ class UserArtifactoryResourceImpl @Autowired constructor(
         }
     }
 
-    override fun downloadUrl(userId: String, projectId: String, artifactoryType: ArtifactoryType, path: String): Result<Url> {
+    override fun downloadUrl(userId: String, projectId: String, artifactoryType: ArtifactoryType, path: String, channelCode: ChannelCode?): Result<Url> {
         checkParameters(userId, projectId, path)
         return if (repoGray.isGray(projectId, redisOperation)) {
             Result(bkRepoDownloadService.getDownloadUrl(userId, projectId, artifactoryType, path))
         } else {
-            Result(artifactoryDownloadService.getDownloadUrl(userId, projectId, artifactoryType, path))
+            Result(artifactoryDownloadService.getDownloadUrl(userId, projectId, artifactoryType, path, channelCode))
         }
     }
 
