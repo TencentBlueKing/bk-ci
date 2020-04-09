@@ -26,6 +26,7 @@
 
 package com.tencent.devops.gitci.service
 
+import com.tencent.devops.artifactory.api.service.ServiceArtifactoryDownLoadResource
 import com.tencent.devops.artifactory.api.service.ServiceArtifactoryResource
 import com.tencent.devops.artifactory.api.user.UserArtifactoryResource
 import com.tencent.devops.artifactory.pojo.FileInfo
@@ -145,10 +146,10 @@ class CurrentBuildService @Autowired constructor(
             throw CustomException(Response.Status.FORBIDDEN, "用户没有工蜂项目权限，无法获取下载链接")
         }
 
-        return client.get(UserArtifactoryResource::class).downloadUrl(
-            userId,
+        return client.get(ServiceArtifactoryDownLoadResource::class).downloadUrl(
             conf.projectCode!!,
             artifactoryType,
+            userId,
             path,
             ChannelCode.GIT
         ).data!!

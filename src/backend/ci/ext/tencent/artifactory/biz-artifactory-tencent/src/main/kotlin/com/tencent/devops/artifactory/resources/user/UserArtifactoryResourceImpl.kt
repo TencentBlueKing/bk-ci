@@ -146,12 +146,12 @@ class UserArtifactoryResourceImpl @Autowired constructor(
         }
     }
 
-    override fun downloadUrl(userId: String, projectId: String, artifactoryType: ArtifactoryType, path: String, channelCode: ChannelCode?): Result<Url> {
+    override fun downloadUrl(userId: String, projectId: String, artifactoryType: ArtifactoryType, path: String): Result<Url> {
         checkParameters(userId, projectId, path)
         return if (repoGray.isGray(projectId, redisOperation)) {
             Result(bkRepoDownloadService.getDownloadUrl(userId, projectId, artifactoryType, path))
         } else {
-            Result(artifactoryDownloadService.getDownloadUrl(userId, projectId, artifactoryType, path, channelCode))
+            Result(artifactoryDownloadService.getDownloadUrl(userId, projectId, artifactoryType, path))
         }
     }
 
