@@ -830,10 +830,10 @@ class PipelineBuildDetailService @Autowired constructor(
         val pipelineBuildInfo = pipelineBuildDao.getBuildInfo(dslContext, buildId) ?: return
         webSocketDispatcher.dispatch(
             pipelineWebsocketService.buildHistoryMessage(
-                pipelineBuildInfo.buildId,
-                pipelineBuildInfo.projectId,
-                pipelineBuildInfo.pipelineId,
-                pipelineBuildInfo.startUser
+                buildId = pipelineBuildInfo.buildId,
+                projectId = pipelineBuildInfo.projectId,
+                pipelineId = pipelineBuildInfo.pipelineId,
+                userId = pipelineBuildInfo.startUser
             )
         )
     }
