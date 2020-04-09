@@ -146,13 +146,17 @@ class CurrentBuildService @Autowired constructor(
             throw CustomException(Response.Status.FORBIDDEN, "用户没有工蜂项目权限，无法获取下载链接")
         }
 
-        return client.get(ServiceArtifactoryDownLoadResource::class).downloadUrl(
-            conf.projectCode!!,
-            artifactoryType,
-            userId,
-            path,
-            ChannelCode.GIT
-        ).data!!
+        try {
+            return client.get(UserArtifactoryResource::class).downloadUrl(
+                userId,
+                conf.projectCode!!,
+                artifactoryType,
+                path
+            ).data!!
+        } catch (e: Exception) {
+            logger.error("Artifactory download url failed. ${e.message}")
+            throw CustomException(Response.Status.BAD_REQUEST, "Artifactory download url failed. ${e.message}")
+        }
     }
 
     fun getReports(userId: String, gitProjectId: Long, pipelineId: String, buildId: String): List<Report> {
