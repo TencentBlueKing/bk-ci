@@ -1207,7 +1207,7 @@ class PipelineRuntimeService @Autowired constructor(
                 logger.info("[${pipelineInfo.pipelineId}]|RETRY| $retryStartTaskId not in container(${container.name}")
                 return
             }
-            val taskId = VMUtils.genStartVMTaskId(containerSeq, taskSeq)
+            val taskId = VMUtils.genStartVMTaskId(container.id!!)
             val taskRecord =
                 retryDetailModelStatus(lastTimeBuildTaskRecords, stage, container, taskId)
             if (taskRecord != null) {
