@@ -26,6 +26,7 @@
 
 package com.tencent.devops.scm.services
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.google.gson.JsonParser
 import com.tencent.devops.common.api.constant.CommonMessageCode
@@ -62,6 +63,7 @@ import com.tencent.devops.scm.config.GitConfig
 import com.tencent.devops.scm.exception.ScmException
 import com.tencent.devops.scm.pojo.CommitCheckRequest
 import com.tencent.devops.scm.pojo.GitRepositoryResp
+import com.tencent.devops.scm.pojo.OwnerInfo
 import okhttp3.MediaType
 import okhttp3.Request
 import okhttp3.RequestBody
@@ -339,6 +341,32 @@ class GitService @Autowired constructor(
         } finally {
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to get the token")
         }
+    }
+
+    fun checkUserGitAuth(userId: String, gitProjectId: String): Boolean {
+        var page = 1
+        var dataSize: Int
+        do {
+            val url = "$gitCIOauthUrl/api/v3/projects/$gitProjectId/members?page=$page&per_page=100"
+            try {
+                val token = getToken(gitProjectId)
+                val result = OkhttpUtils.doGet(url, mapOf("PRIVATE-TOKEN" to token.accessToken)).body().toString()
+                val ownerList: List<OwnerInfo> = JsonUtil.to(result, object : TypeReference<List<OwnerInfo>>() {})
+                if (ownerList.isEmpty()) {
+                    break
+                }
+                dataSize = ownerList.size
+                ownerList.forEach {
+                    if (userId == it.userName && it.accessLevel!! >= 15)
+                        return true
+                }
+                page++
+            } catch (e: Exception) {
+                logger.error("get project member list fail! project id: $gitProjectId")
+                return false
+            }
+        } while (dataSize >= 100)
+        return false
     }
 
     fun getGitCIFileContent(gitProjectId: Long, filePath: String, token: String, ref: String): String {

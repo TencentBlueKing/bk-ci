@@ -44,6 +44,8 @@ import com.tencent.devops.gitci.pojo.GitCIModelDetail
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.user.UserReportResource
 import com.tencent.devops.process.pojo.Report
+import com.tencent.devops.scm.api.SerivceGitCiResource
+import com.tencent.devops.scm.api.ServiceGitResource
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -116,7 +118,7 @@ class CurrentBuildService @Autowired constructor(
         val propMap = HashMap<String, String>()
         propMap["pipelineId"] = pipelineId
         propMap["buildId"] = buildId
-        val searchProps = SearchProps(emptyList(), propMap)
+        // val searchProps = SearchProps(emptyList(), propMap)
 
         val prop = listOf(Property("pipelineId", pipelineId), Property("buildId", buildId))
 
@@ -138,6 +140,11 @@ class CurrentBuildService @Autowired constructor(
             Response.Status.FORBIDDEN,
             "项目未开启工蜂CI，无法查询"
         )
+
+        val checkAuth = client.get(SerivceGitCiResource::class).checkUserGitAuth(userId, gitProjectId.toString())
+        if (!checkAuth.data!!) {
+            throw CustomException(Response.Status.FORBIDDEN, "用户没有工蜂项目权限，无法获取下载链接")
+        }
 
         return client.get(UserArtifactoryResource::class).downloadUrl(
             userId,

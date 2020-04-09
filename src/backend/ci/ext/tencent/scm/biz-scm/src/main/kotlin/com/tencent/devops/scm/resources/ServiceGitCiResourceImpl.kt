@@ -41,4 +41,8 @@ class ServiceGitCiResourceImpl @Autowired constructor(
     override fun getToken(gitProjectId: String): Result<GitToken> {
         return Result(gitService.getToken(gitProjectId))
     }
+
+    override fun checkUserGitAuth(userId: String, gitProjectId: String): Result<Boolean> {
+        return Result(gitService.checkUserGitAuth(userId, gitProjectId))
+    }
 }

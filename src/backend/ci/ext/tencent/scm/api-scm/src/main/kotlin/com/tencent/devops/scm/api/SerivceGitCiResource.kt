@@ -52,4 +52,16 @@ interface SerivceGitCiResource {
         @QueryParam("gitProjectId")
         gitProjectId: String
     ): Result<GitToken>
+
+    @ApiOperation("获取项目的token")
+    @GET
+    @Path("/checkUserGitAuth")
+    fun checkUserGitAuth(
+        @ApiParam("userId", required = true)
+        @QueryParam("userId")
+        userId: String,
+        @ApiParam("gitProjectId", required = true)
+        @QueryParam("gitProjectId")
+        gitProjectId: String
+    ): Result<Boolean>
 }
