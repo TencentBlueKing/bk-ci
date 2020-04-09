@@ -41,7 +41,6 @@ import feign.Request
 import feign.RequestInterceptor
 import feign.RetryableException
 import feign.Retryer
-import feign.jackson.JacksonDecoder
 import feign.jackson.JacksonEncoder
 import feign.jaxrs.JAXRSContract
 import feign.okhttp.OkHttpClient
@@ -99,7 +98,7 @@ class Client @Autowired constructor(
 
     private val feignClient = OkHttpClient(okHttpClient)
     private val jaxRsContract = JAXRSContract()
-    private val jacksonDecoder = JacksonDecoder(objectMapper)
+    private val jacksonDecoder = ClientJacksonDecoder(objectMapper)
     private val jacksonEncoder = JacksonEncoder(objectMapper)
 
     @Value("\${spring.cloud.consul.discovery.tags:#{null}}")
@@ -131,6 +130,7 @@ class Client @Autowired constructor(
             .errorDecoder(clientErrorDecoder)
             .encoder(jacksonEncoder)
             .decoder(jacksonDecoder)
+            .decode404()
             .contract(jaxRsContract)
             .requestInterceptor(requestInterceptor)
             .options(Request.Options(10 * 1000, 30 * 60 * 1000))
@@ -153,6 +153,7 @@ class Client @Autowired constructor(
             .errorDecoder(clientErrorDecoder)
             .encoder(jacksonEncoder)
             .decoder(jacksonDecoder)
+            .decode404()
             .contract(jaxRsContract)
             .requestInterceptor(requestInterceptor)
             .options(Request.Options(10 * 1000, 30 * 60 * 1000))
@@ -180,6 +181,7 @@ class Client @Autowired constructor(
             .errorDecoder(clientErrorDecoder)
             .encoder(jacksonEncoder)
             .decoder(jacksonDecoder)
+            .decode404()
             .contract(jaxRsContract)
             .requestInterceptor(requestInterceptor)
             .target(clz.java, buildGatewayUrl(path = "/$serviceName/api", gatewayType = gatewayType))
@@ -202,6 +204,7 @@ class Client @Autowired constructor(
             .errorDecoder(clientErrorDecoder)
             .encoder(jacksonEncoder)
             .decoder(jacksonDecoder)
+            .decode404()
             .contract(jaxRsContract)
             .requestInterceptor(requestInterceptor)
             .target(MicroServiceTarget(findServiceName(clz), clz.java, consulClient!!, tag))
