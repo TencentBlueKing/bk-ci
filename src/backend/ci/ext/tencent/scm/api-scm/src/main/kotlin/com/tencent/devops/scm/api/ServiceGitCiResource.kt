@@ -42,7 +42,7 @@ import javax.ws.rs.core.MediaType
 @Path("/service/gitci/")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface SerivceGitCiResource {
+interface ServiceGitCiResource {
 
     @ApiOperation("获取项目的token")
     @GET

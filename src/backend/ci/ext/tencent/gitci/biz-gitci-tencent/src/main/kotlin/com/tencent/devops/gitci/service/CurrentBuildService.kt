@@ -31,7 +31,6 @@ import com.tencent.devops.artifactory.api.user.UserArtifactoryResource
 import com.tencent.devops.artifactory.pojo.FileInfo
 import com.tencent.devops.artifactory.pojo.FileInfoPage
 import com.tencent.devops.artifactory.pojo.Property
-import com.tencent.devops.artifactory.pojo.SearchProps
 import com.tencent.devops.artifactory.pojo.Url
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.common.api.exception.CustomException
@@ -44,8 +43,7 @@ import com.tencent.devops.gitci.pojo.GitCIModelDetail
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.user.UserReportResource
 import com.tencent.devops.process.pojo.Report
-import com.tencent.devops.scm.api.SerivceGitCiResource
-import com.tencent.devops.scm.api.ServiceGitResource
+import com.tencent.devops.scm.api.ServiceGitCiResource
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -141,7 +139,7 @@ class CurrentBuildService @Autowired constructor(
             "项目未开启工蜂CI，无法查询"
         )
 
-        val checkAuth = client.getScm(SerivceGitCiResource::class).checkUserGitAuth(userId, gitProjectId.toString())
+        val checkAuth = client.getScm(ServiceGitCiResource::class).checkUserGitAuth(userId, gitProjectId.toString())
         if (!checkAuth.data!!) {
             throw CustomException(Response.Status.FORBIDDEN, "用户没有工蜂项目权限，无法获取下载链接")
         }
