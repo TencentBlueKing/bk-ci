@@ -149,7 +149,8 @@ class CurrentBuildService @Autowired constructor(
             userId,
             conf.projectCode!!,
             artifactoryType,
-            path
+            path,
+            ChannelCode.GIT
         ).data!!
     }
 
