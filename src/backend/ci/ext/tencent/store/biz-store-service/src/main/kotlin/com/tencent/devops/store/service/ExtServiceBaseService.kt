@@ -1270,23 +1270,23 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         status: Byte,
         isNormalUpgrade: Boolean? = null
     ): Pair<Boolean, String> {
-        logger.info("checkAtomVersionOptRight, userId=$userId, serviceId=$serviceId, status=$status, isNormalUpgrade=$isNormalUpgrade")
+        logger.info("checkServiceVersionOptRight, userId=$userId, serviceId=$serviceId, status=$status, isNormalUpgrade=$isNormalUpgrade")
         val record =
             extServiceDao.getServiceById(dslContext, serviceId) ?: return Pair(
                 false,
                 CommonMessageCode.PARAMETER_IS_INVALID
             )
-        val servcieCode = record.serviceCode
-        val creator = record.creator
+        val serviceCode = record.serviceCode
+        val owner = record.owner
         val recordStatus = record.serviceStatus
 
         // 判断用户是否有权限(当前版本的创建者和管理员可以操作)
         if (!(storeMemberDao.isStoreAdmin(
                 dslContext,
                 userId,
-                servcieCode,
+                serviceCode,
                 StoreTypeEnum.SERVICE.type.toByte()
-            ) || creator == userId)
+            ) || owner == userId)
         ) {
             return Pair(false, CommonMessageCode.PERMISSION_DENIED)
         }
