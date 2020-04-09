@@ -135,8 +135,10 @@ class BuildEndControl @Autowired constructor(
             val taskRecords = pipelineBuildTaskService.getAllBuildTask(buildId)
             val errorElements = mutableListOf<String>()
             taskRecords.forEach {
-                val errorElement = "[${it.stageId}]-[${it.taskName}]"
-                errorElements.add(errorElement)
+                if(it.status == BuildStatus.FAILED || it.status == BuildStatus.QUEUE_TIMEOUT || it.status == BuildStatus.EXEC_TIMEOUT || it.status == BuildStatus.QUALITY_CHECK_FAIL) {
+                    val errorElement = "[${it.stageId}]-[${it.taskName}]"
+                    errorElements.add(errorElement)
+                }
             }
             logger.info("pipeline build fail, add $BK_CI_BUILD_FAIL_TASK, value[$errorElements]")
             pipelineBuildVarDao.save(
