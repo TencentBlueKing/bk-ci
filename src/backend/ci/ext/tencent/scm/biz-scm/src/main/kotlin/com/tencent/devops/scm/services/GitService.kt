@@ -350,11 +350,13 @@ class GitService @Autowired constructor(
             val url = "$gitCIOauthUrl/api/v3/projects/$gitProjectId/members?page=$page&per_page=100"
             try {
                 val token = getToken(gitProjectId)
-                val result = OkhttpUtils.doGet(url, mapOf("PRIVATE-TOKEN" to token.accessToken)).body().toString()
+                var ownerList = listOf<OwnerInfo>()
+                OkhttpUtils.doGet(url, mapOf("PRIVATE-TOKEN" to token.accessToken)).use { response ->
+                    val body = response.body()!!.string()
+                    logger.info("Get gongfeng project members response body: $body")
+                    ownerList = JsonUtil.to(body, object : TypeReference<List<OwnerInfo>>() {})
+                }
 
-                logger.info("Get gongfeng project members response: $result")
-
-                val ownerList: List<OwnerInfo> = JsonUtil.to(result, object : TypeReference<List<OwnerInfo>>() {})
                 if (ownerList.isEmpty()) {
                     break
                 }
@@ -369,6 +371,7 @@ class GitService @Autowired constructor(
                 return false
             }
         } while (dataSize >= 100)
+
         return false
     }
 
