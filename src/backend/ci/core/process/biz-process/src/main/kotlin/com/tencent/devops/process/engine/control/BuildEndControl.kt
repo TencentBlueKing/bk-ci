@@ -46,6 +46,10 @@ import com.tencent.devops.process.engine.service.PipelineBuildService
 import com.tencent.devops.process.engine.service.PipelineRuntimeExtService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.process.engine.dao.PipelineBuildVarDao
+import com.tencent.devops.process.engine.service.PipelineBuildTaskService
+import com.tencent.devops.process.utils.BK_CI_BUILD_FAIL_TASK
+import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -61,7 +65,10 @@ class BuildEndControl @Autowired constructor(
     private val pipelineBuildService: PipelineBuildService,
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val pipelineBuildDetailService: PipelineBuildDetailService,
-    private val pipelineRuntimeExtService: PipelineRuntimeExtService
+    private val pipelineBuildTaskService: PipelineBuildTaskService,
+    private val pipelineRuntimeExtService: PipelineRuntimeExtService,
+    private val pipelineBuildVarDao: PipelineBuildVarDao,
+    private val dslContext: DSLContext
 ) {
 
     private val logger = LoggerFactory.getLogger(javaClass)!!
@@ -123,6 +130,24 @@ class BuildEndControl @Autowired constructor(
             errorCode = buildInfo.errorCode,
             errorMsg = buildInfo.errorMsg
         )
+
+        if (BuildStatus.isFailure(status)) {
+            val taskRecords = pipelineBuildTaskService.getAllBuildTask(buildId)
+            val errorElements = mutableListOf<String>()
+            taskRecords.forEach {
+                val errorElement = "[${it.stageId}]-[${it.taskName}]"
+                errorElements.add(errorElement)
+            }
+            logger.info("pipeline build fail, add $BK_CI_BUILD_FAIL_TASK, value[$errorElements]")
+            pipelineBuildVarDao.save(
+                dslContext = dslContext,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                name = BK_CI_BUILD_FAIL_TASK,
+                value = errorElements
+            )
+        }
 
         // 设置状态
         pipelineBuildDetailService.buildEnd(
