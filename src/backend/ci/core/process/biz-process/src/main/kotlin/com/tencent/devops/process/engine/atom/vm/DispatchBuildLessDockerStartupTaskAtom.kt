@@ -160,7 +160,11 @@ class DispatchBuildLessDockerStartupTaskAtom @Autowired constructor(
                 buildId = buildId,
                 taskId = taskId
             )
-        pipelineBuildDetailService.updateStartVMStatus(buildId, task.containerId, BuildStatus.RUNNING)
+        pipelineBuildDetailService.updateStartVMStatus(
+            buildId = buildId,
+            containerId = task.containerId,
+            buildStatus = BuildStatus.RUNNING
+        )
         // 读取原子市场中的原子信息，写入待构建处理
         val atoms = AtomUtils.parseContainerMarketAtom(container, task, client, rabbitTemplate)
 
