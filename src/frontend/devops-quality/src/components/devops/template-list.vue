@@ -10,7 +10,7 @@
         }">
             <div class="template-list-header">
                 <div class="title">选择模板</div>
-                <div><i class="bk-icon icon-close" @click="cancel()" style="color: #C3CDD7;"></i></div>
+                <div><i class="devops-icon icon-close" @click="cancel()" style="color: #C3CDD7;"></i></div>
             </div>
             <div class="query-template-row">
                 <span class="template-prompt">选中后将对该模板当前和后续实例化的流水线生效</span>
@@ -18,7 +18,7 @@
                     <input class="bk-form-input" type="text" placeholder="请输入..."
                         v-model="searchName"
                         @keyup.enter="toSearchPipeline()">
-                    <i class="bk-icon icon-search" @click="toSearchPipeline()"></i>
+                    <i class="devops-icon icon-search" @click="toSearchPipeline()"></i>
                 </div>
             </div>
             <div class="template-content">

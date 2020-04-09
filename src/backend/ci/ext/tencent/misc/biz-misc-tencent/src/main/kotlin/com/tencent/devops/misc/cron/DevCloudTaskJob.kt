@@ -138,10 +138,9 @@ class DevCloudTaskJob @Autowired constructor(
     }
 
     private fun executeTask() {
-        val grayProjectSet = gray.grayProjectSet(redisOperation)
         devCloudTaskDao.getWaitingTask(dslContext)?.forEach { task ->
             logger.info("task: $task")
-            if (!gray.isGrayMatchProject(task.projectId, grayProjectSet)) {
+            if (!gray.isGrayMatchProject(task.projectId, redisOperation)) {
                 logger.info("The project[${task.projectId}] is not match the gray type[${gray.isGray()}], ignore")
                 return@forEach
             }

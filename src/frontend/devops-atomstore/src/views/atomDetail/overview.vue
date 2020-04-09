@@ -299,7 +299,7 @@
                 width: calc(100% - 84px);
                 display: flex;
                 align-items: center;
-                .bk-icon {
+                .devops-icon {
                     vertical-align: middle;
                     margin-left: 4px;
                 }
