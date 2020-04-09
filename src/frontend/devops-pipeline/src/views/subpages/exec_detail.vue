@@ -18,9 +18,9 @@
                         </template>
 
                         <span v-else :class="{ [execDetail.status]: execDetail.status }">{{ getStatusLabel(execDetail.status) }}</span>
-                        <i v-if="showRetryIcon" title="rebuild" class="bk-icon icon-retry" @click.stop="retry(execDetail.id, true)"></i>
+                        <i v-if="showRetryIcon" title="rebuild" class="devops-icon icon-retry" @click.stop="retry(execDetail.id, true)"></i>
                         <logo v-else-if="execDetail.status === 'STAGE_SUCCESS'" :title="$t('details.statusMap.STAGE_SUCCESS')" name="flag" fill="#34d97b" size="16"></logo>
-                        <i v-else :title="$t('history.stopBuild')" class="bk-icon icon-stop-shape" @click.stop="stopExecute(execDetail.id)"></i>
+                        <i v-else :title="$t('history.stopBuild')" class="devops-icon icon-stop-shape" @click.stop="stopExecute(execDetail.id)"></i>
                     </div>
                     <div class="info-item">
                         <span class="item-label">{{ $t('details.executor') }}：</span>

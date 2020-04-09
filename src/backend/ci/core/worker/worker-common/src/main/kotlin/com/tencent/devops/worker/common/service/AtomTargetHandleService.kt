@@ -24,19 +24,22 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.engine.common
+package com.tencent.devops.worker.common.service
 
-/**
- *
- * @version 1.0
- */
-object VMUtils {
+import com.tencent.devops.common.api.enums.OSType
+import com.tencent.devops.store.pojo.app.BuildEnv
+import com.tencent.devops.store.pojo.common.enums.BuildHostTypeEnum
 
-    fun genStopVMTaskId(seq: Int) = "stopVM-$seq"
+interface AtomTargetHandleService {
 
-    fun genEndPointTaskId(seq: Int) = "end-$seq"
-
-    fun genVMSeq(containerSeq: Int, taskSeq: Int): Int = containerSeq * 1000 + taskSeq
-
-    fun genStartVMTaskId(containerSeq: Int, taskSeq: Int) = "startVM-${genVMSeq(containerSeq, taskSeq)}"
+    /**
+     * 处理target入口命令逻辑
+     */
+    fun handleAtomTarget(
+        target: String,
+        osType: OSType,
+        buildHostType: BuildHostTypeEnum,
+        systemEnvVariables: Map<String, String>,
+        buildEnvs: List<BuildEnv>
+    ): String
 }

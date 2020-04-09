@@ -221,7 +221,6 @@ class ContainerControl @Autowired constructor(
                     }
                 }
             }
-
             val finallyTasks = containerTaskList.filter { task ->
                 if (task.taskId == VMUtils.genEndPointTaskId(task.taskSeq) || // end-xxx 结束拦截点
                     task.taskId == VMUtils.genStopVMTaskId(task.taskSeq) // 停止构建机
@@ -380,13 +379,6 @@ class ContainerControl @Autowired constructor(
         containerTaskList.forEach nextOne@{ task ->
             if (!ControlUtils.isEnable(task.additionalOptions)) {
                 logger.info("[$buildId]|container=$containerId|task(${task.taskSeq})=${task.taskId}|${task.taskName}|is not enable, will skip")
-                pipelineRuntimeService.updateTaskStatus(
-                    buildId = buildId, taskId = task.taskId, userId = task.starter, buildStatus = BuildStatus.SKIP
-                )
-                pipelineBuildDetailService.taskEnd(
-                    buildId = buildId, taskId = task.taskId, buildStatus = BuildStatus.SKIP
-                )
-//                containerFinalStatus = BuildStatus.SKIP
 
                 LogUtils.addYellowLine(
                     rabbitTemplate = rabbitTemplate,

@@ -34,8 +34,8 @@ import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildTaskFinishBroadCastEvent
 import com.tencent.devops.common.pipeline.enums.BuildStatus
-import com.tencent.devops.common.pipeline.enums.EnvControlTaskType
 import com.tencent.devops.common.pipeline.utils.SkipElementUtils
+import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.log.utils.LogUtils
 import com.tencent.devops.process.engine.exception.BuildTaskException
@@ -44,6 +44,7 @@ import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.measure.MeasureService
 import com.tencent.devops.process.jmx.elements.JmxElements
+import com.tencent.devops.process.utils.PIPELINE_MESSAGE_STRING_LENGTH_MAX
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
@@ -63,26 +64,13 @@ class TaskAtomService @Autowired(required = false) constructor(
     fun start(task: PipelineBuildTask): AtomResponse {
         val startTime = System.currentTimeMillis()
         val elementType = task.taskType
-        val isEnvControl = elementType == EnvControlTaskType.NORMAL.name || elementType == EnvControlTaskType.VM.name
 
         jmxElements.execute(elementType)
         var atomResponse = AtomResponse(BuildStatus.FAILED)
-        val logTagName = task.taskName + "-[" + task.taskId + "]"
         try {
             // 更新状态
             pipelineRuntimeService.updateTaskStatus(task.buildId, task.taskId, task.starter, BuildStatus.RUNNING)
             pipelineBuildDetailService.taskStart(task.buildId, task.taskId)
-            val executeCount = task.executeCount ?: 1
-            if (!isEnvControl) {
-                LogUtils.addFoldStartLine(
-                    rabbitTemplate = rabbitTemplate,
-                    buildId = task.buildId,
-                    groupName = logTagName,
-                    tag = task.taskId,
-                    jobId = task.containerHashId,
-                    executeCount = executeCount
-                )
-            }
             val runVariables = pipelineRuntimeService.getAllVariable(task.buildId)
 
             atomResponse = if (task.isSkip(runVariables)) { // 跳过
@@ -123,6 +111,8 @@ class TaskAtomService @Autowired(required = false) constructor(
             )
             logger.warn("[${task.buildId}]|Fail to execute the task [${task.taskName}]", t)
         } finally {
+            // 文本长度保护
+            atomResponse.errorMsg = CommonUtils.interceptStringInLength(atomResponse.errorMsg, PIPELINE_MESSAGE_STRING_LENGTH_MAX)
             // 存储变量
             if (atomResponse.outputVars != null && atomResponse.outputVars!!.isNotEmpty()) {
                 pipelineRuntimeService.batchSetVariable(
@@ -139,7 +129,6 @@ class TaskAtomService @Autowired(required = false) constructor(
                     task = task,
                     startTime = startTime,
                     elementType = elementType,
-                    logTagName = logTagName,
                     errorType = atomResponse.errorType,
                     errorCode = atomResponse.errorCode,
                     errorMsg = atomResponse.errorMsg
@@ -154,14 +143,11 @@ class TaskAtomService @Autowired(required = false) constructor(
         task: PipelineBuildTask,
         startTime: Long,
         elementType: String,
-        logTagName: String,
         errorType: ErrorType?,
         errorCode: Int?,
         errorMsg: String?
     ) {
         try {
-            val isEnvControl = elementType == EnvControlTaskType.NORMAL.name || elementType == EnvControlTaskType.VM.name
-
             // 更新状态
             pipelineRuntimeService.updateTaskStatus(
                 buildId = task.buildId,
@@ -174,7 +160,7 @@ class TaskAtomService @Autowired(required = false) constructor(
             )
             pipelineBuildDetailService.pipelineTaskEnd(
                 buildId = task.buildId,
-                elementId = task.taskId,
+                taskId = task.taskId,
                 buildStatus = status,
                 errorType = errorType,
                 errorCode = errorCode,
@@ -195,16 +181,6 @@ class TaskAtomService @Autowired(required = false) constructor(
                 errorCode = errorCode,
                 errorMsg = errorMsg
             )
-            if (!isEnvControl) {
-                LogUtils.addFoldEndLine(
-                    rabbitTemplate = rabbitTemplate,
-                    buildId = task.buildId,
-                    groupName = logTagName,
-                    tag = task.taskId,
-                    jobId = task.containerHashId,
-                    executeCount = task.executeCount ?: 1
-                )
-            }
             if (BuildStatus.isFailure(status)) {
                 jmxElements.fail(elementType)
             }
@@ -245,7 +221,6 @@ class TaskAtomService @Autowired(required = false) constructor(
         val startTime = System.currentTimeMillis()
         val elementType = task.taskType
         var atomResponse = AtomResponse(BuildStatus.FAILED)
-        val logTagName = task.taskName + "-[" + task.taskId + "]"
 
         try {
             val runVariables = pipelineRuntimeService.getAllVariable(task.buildId)
@@ -293,7 +268,6 @@ class TaskAtomService @Autowired(required = false) constructor(
                     task = task,
                     startTime = startTime,
                     elementType = elementType,
-                    logTagName = logTagName,
                     errorType = atomResponse.errorType,
                     errorCode = atomResponse.errorCode,
                     errorMsg = atomResponse.errorMsg

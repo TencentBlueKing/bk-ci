@@ -56,6 +56,7 @@ import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import org.springframework.util.StopWatch
 import java.time.LocalDateTime
 
 @Service
@@ -211,6 +212,7 @@ class PipelineBuildDetailService @Autowired constructor(
                 if (id == containerId) {
                     container.startEpoch = System.currentTimeMillis()
                     container.status = BuildStatus.PREPARE_ENV.name
+                    container.startVMStatus = BuildStatus.RUNNING.name
                     update = true
                     return Traverse.BREAK
                 }
@@ -320,13 +322,13 @@ class PipelineBuildDetailService @Autowired constructor(
 
     fun pipelineTaskEnd(
         buildId: String,
-        elementId: String,
+        taskId: String,
         buildStatus: BuildStatus,
         errorType: ErrorType?,
         errorCode: Int?,
         errorMsg: String?
     ) {
-        taskEnd(buildId, elementId, buildStatus, BuildStatus.isFailure(buildStatus), errorType, errorCode, errorMsg)
+        taskEnd(buildId, taskId, buildStatus, BuildStatus.isFailure(buildStatus), errorType, errorCode, errorMsg)
     }
 
     fun normalContainerSkip(buildId: String, containerId: String) {
@@ -341,6 +343,7 @@ class PipelineBuildDetailService @Autowired constructor(
                     if (container.id == containerId || container.containerId == containerId) {
                         update = true
                         container.status = BuildStatus.SKIP.name
+                        container.startVMStatus = BuildStatus.SKIP.name
                         container.elements.forEach {
                             it.status = BuildStatus.SKIP.name
                         }
@@ -538,10 +541,7 @@ class PipelineBuildDetailService @Autowired constructor(
         }
     }
 
-    private fun takeBuildStatus(
-        record: TPipelineBuildDetailRecord,
-        buildStatus: BuildStatus
-    ): BuildStatus {
+    private fun takeBuildStatus(record: TPipelineBuildDetailRecord, buildStatus: BuildStatus): BuildStatus {
 
         val status = record.status
         val oldStatus = if (status.isNullOrBlank()) {
@@ -787,6 +787,32 @@ class PipelineBuildDetailService @Autowired constructor(
         }, BuildStatus.RUNNING)
     }
 
+    fun updateStartVMStatus(
+        buildId: String,
+        containerId: String,
+        buildStatus: BuildStatus
+    ) {
+        logger.info("[$buildId|$containerId] update container startVMStatus to $buildStatus")
+        update(buildId, object : ModelInterface {
+            var update = false
+            override fun onFindContainer(id: Int, container: Container, stage: Stage): Traverse {
+                if (container !is TriggerContainer) {
+                    // 兼容id字段
+                    if (container.id == containerId || container.containerId == containerId) {
+                        update = true
+                        container.startVMStatus = buildStatus.name
+                        return Traverse.BREAK
+                    }
+                }
+                return Traverse.CONTINUE
+            }
+
+            override fun needUpdate(): Boolean {
+                return update
+            }
+        }, BuildStatus.RUNNING)
+    }
+
     private fun updateHistoryStage(buildId: String, model: Model) {
         // 更新Stage状态至BuildHistory
         val allStageStatus = model.stages.map {
@@ -804,50 +830,69 @@ class PipelineBuildDetailService @Autowired constructor(
         val pipelineBuildInfo = pipelineBuildDao.getBuildInfo(dslContext, buildId) ?: return
         webSocketDispatcher.dispatch(
             pipelineWebsocketService.buildHistoryMessage(
-                pipelineBuildInfo.buildId,
-                pipelineBuildInfo.projectId,
-                pipelineBuildInfo.pipelineId,
-                pipelineBuildInfo.startUser
+                buildId = pipelineBuildInfo.buildId,
+                projectId = pipelineBuildInfo.projectId,
+                pipelineId = pipelineBuildInfo.pipelineId,
+                userId = pipelineBuildInfo.startUser
             )
         )
     }
 
     private fun update(buildId: String, modelInterface: ModelInterface, buildStatus: BuildStatus) {
-
+        val stopWatch = StopWatch()
+        var message = "nothing"
         val lock = RedisLock(redisOperation, "process.build.detail.lock.$buildId", ExpiredTimeInSeconds)
 
         try {
+            stopWatch.start("lock")
             lock.lock()
+            stopWatch.stop()
+            stopWatch.start("getDetail")
             val record = buildDetailDao.get(dslContext, buildId)
+            stopWatch.stop()
             if (record == null) {
-                logger.warn("The build detail of build $buildId is not exist, ignore")
+                message = "WARN: The build detail is not exist, ignore"
                 return
             }
+            stopWatch.start("model")
             val model = JsonUtil.to(record.model, Model::class.java)
+            stopWatch.stop()
             if (model.stages.size <= 1) {
-                logger.warn("It only contains trigger container of build $buildId - $model")
+                message = "Trigger container only"
                 return
             }
 
+            stopWatch.start("updateModel")
             update(model, modelInterface)
+            stopWatch.stop()
 
             if (!modelInterface.needUpdate()) {
-                logger.warn("Will not update the $model")
+                message = "Will not update"
                 return
             }
 
-            val now = System.currentTimeMillis()
-
             val finalStatus = takeBuildStatus(record, buildStatus)
-            logger.info("Update the build detail with status $finalStatus for the build $buildId and time $now")
 
+            stopWatch.start("toJson")
             val modelStr = JsonUtil.toJson(model)
+            stopWatch.stop()
+
+            stopWatch.start("updateModel")
             buildDetailDao.update(dslContext, buildId, modelStr, finalStatus)
+            stopWatch.stop()
+
+            stopWatch.start("dispatchEvent")
             pipelineDetailChangeEvent(buildId)
+            stopWatch.stop()
+            message = "update done"
         } catch (ignored: Throwable) {
-            logger.warn("Fail to update the build detail of build $buildId", ignored)
+            message = "${ignored.message}"
+            logger.warn("[$buildId]| Fail to update the build detail: ${ignored.message}", ignored)
         } finally {
+            stopWatch.start("unlock")
             lock.unlock()
+            stopWatch.stop()
+            logger.info("[$buildId|$buildStatus]|update_detail_model| $message| watch=$stopWatch")
         }
     }
 

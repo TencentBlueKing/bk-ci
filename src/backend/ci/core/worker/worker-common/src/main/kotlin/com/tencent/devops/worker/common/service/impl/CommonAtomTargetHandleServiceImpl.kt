@@ -24,21 +24,27 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.websocket
+package com.tencent.devops.worker.common.service.impl
 
-import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
-import com.tencent.devops.common.event.enums.ActionType
-import com.tencent.devops.common.event.pojo.pipeline.IPipelineEvent
+import com.tencent.devops.common.api.enums.OSType
+import com.tencent.devops.store.pojo.app.BuildEnv
+import com.tencent.devops.store.pojo.common.enums.BuildHostTypeEnum
+import com.tencent.devops.worker.common.service.AtomTargetHandleService
+import org.slf4j.LoggerFactory
 
-@Event(MQ.EXCHANGE_PIPELINE_STATUS_CHANGE_TMP_FANOUT, MQ.ROUTE_PIPELINE_STATUS_CHANGE_TMP_EVENT)
-data class PipelineStatusChangeEvent(
-    override val source: String,
-    override val projectId: String,
-    override val pipelineId: String,
-    override val userId: String,
-    val changeType: ChangeType,
-    val buildId: String,
-    override var actionType: ActionType = ActionType.START,
-    override var delayMills: Int = 0
-) : IPipelineEvent(actionType, source, projectId, pipelineId, userId, delayMills)
+class CommonAtomTargetHandleServiceImpl : AtomTargetHandleService {
+
+    private val logger = LoggerFactory.getLogger(CommonAtomTargetHandleServiceImpl::class.java)
+
+    override fun handleAtomTarget(
+        target: String,
+        osType: OSType,
+        buildHostType: BuildHostTypeEnum,
+        systemEnvVariables: Map<String, String>,
+        buildEnvs: List<BuildEnv>
+    ): String {
+        logger.info("handleAtomTarget target:$target,osType:$osType,buildHostType:$buildHostType")
+        logger.info("handleAtomTarget systemEnvVariables:$systemEnvVariables,buildEnvs:$buildEnvs")
+        return target
+    }
+}
