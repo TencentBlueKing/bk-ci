@@ -24,19 +24,18 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":core:common:common-service")
-    compile project(":core:common:common-web")
-    compile project(":core:common:common-client")
-    compile project(":core:common:common-auth:common-auth-api")
-    compile project(":core:ticket:api-ticket")
-    compile project(":core:process:api-process")
-    compile project(":core:common:common-scm")
-    compile project(":core:common:common-pipeline")
-    compile project(":core:repository:api-repository")
-    compile project(":core:repository:model-repository")
-    compile project(":core:common:common-db")
-    compile "org.eclipse.jgit:org.eclipse.jgit:5.0.2.201807311906-r"
-}
+package com.tencent.devops.common.event.pojo.pipeline
 
-apply from: "$rootDir/task_deploy_to_maven.gradle"
+import com.tencent.devops.common.event.annotation.Event
+import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
+
+/**
+ * 流水线硬删除的广播事件，用于通知关联系统删除关联数据
+ * @version 1.0
+ */
+@Event(exchange = MQ.EXCHANGE_PIPELINE_HARD_DELETE_FANOUT)
+data class PipelineHardDeleteBroadCastEvent(
+    val pipelineBuildBaseInfoList: List<Triple<String, String, List<String>>>,
+    var delayMills: Int = 0,
+    val startTime: Long?
+)

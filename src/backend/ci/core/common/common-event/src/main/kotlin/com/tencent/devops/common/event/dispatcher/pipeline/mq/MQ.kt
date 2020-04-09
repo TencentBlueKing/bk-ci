@@ -88,7 +88,7 @@ object MQ {
 
     // 插件结束后续广播exchange
     const val EXCHANGE_PIPELINE_BUILD_ELEMENT_FINISH_FANOUT = "e.engine.pipeline.build.element.finish"
-//    const val ROUTE_PIPELINE_BUILD_ELEMENT_FINISH = "r.engine.pipeline.build.element.finish"
+    //    const val ROUTE_PIPELINE_BUILD_ELEMENT_FINISH = "r.engine.pipeline.build.element.finish"
     // 接收上述广播的队列
     const val QUEUE_PIPELINE_BUILD_ELEMENT_FINISH_LAMBDA = "q.engine.pipeline.build.element.lambda"
     const val QUEUE_PIPELINE_BUILD_FINISH_EXT = "q.engine.pipeline.build.finish.ext"
@@ -205,4 +205,8 @@ object MQ {
     const val QUEUE_PROJECT_CREATE_EVENT = "q.project.create.project.queue"
     const val QUEUE_PROJECT_UPDATE_EVENT = "q.project.update.project.queue"
     const val QUEUE_PROJECT_UPDATE_LOGO_EVENT = "q.project.update.logo.project.queue"
+
+    // 流水线硬删除清理
+    const val EXCHANGE_PIPELINE_HARD_DELETE_FANOUT = "e.engine.pipeline.hard.delete.exchange.fanout"
+    const val QUEUE_PIPELINE_HARD_DELETE_REPOSITORY = "q.engine.pipeline.hard.delete.repository"
 }
