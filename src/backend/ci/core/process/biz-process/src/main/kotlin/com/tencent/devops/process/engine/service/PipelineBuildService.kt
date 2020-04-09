@@ -1513,14 +1513,6 @@ class PipelineBuildService(
                                     jobId = containerId,
                                     executeCount = 1
                                 )
-                                LogUtils.addFoldEndLine(
-                                    rabbitTemplate = rabbitTemplate,
-                                    buildId = buildId,
-                                    groupName = "${e.name}-[$taskId]",
-                                    tag = taskId,
-                                    jobId = containerId,
-                                    executeCount = 1
-                                )
                             }
                         }
                     }

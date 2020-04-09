@@ -286,10 +286,12 @@ class DockerHostBuildService @Autowired constructor(
             record.vmSeqId,
             if (success) PipelineTaskStatus.DONE else PipelineTaskStatus.FAILURE)
         // 更新dockerTask表
-        pipelineDockerTaskDao.updateStatus(dslContext,
-            record.buildId,
-            record.vmSeqId,
-            if (success) PipelineTaskStatus.DONE else PipelineTaskStatus.FAILURE)
+        pipelineDockerTaskDao.updateStatus(
+            dslContext = dslContext,
+            buildId = record.buildId,
+            vmSeqId = record.vmSeqId,
+            status = if (success) PipelineTaskStatus.DONE else PipelineTaskStatus.FAILURE
+        )
         redisUtils.deleteDockerBuild(record.id, SecurityUtil.decrypt(record.secretKey))
         redisUtils.deleteHeartBeat(record.buildId, record.vmSeqId.toString())
     }
