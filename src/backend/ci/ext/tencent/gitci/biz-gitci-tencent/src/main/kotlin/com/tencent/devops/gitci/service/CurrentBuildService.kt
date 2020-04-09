@@ -147,11 +147,12 @@ class CurrentBuildService @Autowired constructor(
         }
 
         try {
-            return client.get(UserArtifactoryResource::class).downloadUrl(
-                userId,
+            return client.get(ServiceArtifactoryDownLoadResource::class).downloadUrl(
                 conf.projectCode!!,
                 artifactoryType,
-                path
+                userId,
+                path,
+                ChannelCode.GIT
             ).data!!
         } catch (e: Exception) {
             logger.error("Artifactory download url failed. ${e.message}")
