@@ -349,7 +349,7 @@ class GitService @Autowired constructor(
         do {
             try {
                 val token = getToken(gitProjectId)
-                val url = "$gitCIOauthUrl/api/v3/projects/$gitProjectId/members?page=$page&per_page=100&access_token=$token"
+                val url = "$gitCIOauthUrl/api/v3/projects/$gitProjectId/members?page=$page&per_page=100&access_token=${token.accessToken}"
 
                 var ownerList = listOf<OwnerInfo>()
                 val request = Request.Builder()
