@@ -134,24 +134,7 @@ class BuildEndControl @Autowired constructor(
         )
 
         if (BuildStatus.isFailure(status)) {
-            val taskRecords = pipelineBuildTaskService.getAllBuildTask(buildId)
-            val errorElements = mutableListOf<String>()
-            val model = pipelineBuildDetailService.getBuildModel(buildId)
-            taskRecords.forEach {
-                if(it.status == BuildStatus.FAILED || it.status == BuildStatus.QUEUE_TIMEOUT || it.status == BuildStatus.EXEC_TIMEOUT || it.status == BuildStatus.QUALITY_CHECK_FAIL) {
-                    val errorElement = findElementMsg(model, it)
-                    errorElements.add(errorElement)
-                }
-            }
-            logger.info("pipeline build fail, add $BK_CI_BUILD_FAIL_TASK, value[$errorElements]")
-            pipelineBuildVarDao.save(
-                dslContext = dslContext,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                buildId = buildId,
-                name = BK_CI_BUILD_FAIL_TASK,
-                value = errorElements
-            )
+            addFailElementVar(buildId, projectId, pipelineId)
         }
 
         // 设置状态
@@ -267,6 +250,27 @@ class BuildEndControl @Autowired constructor(
         )
     }
 
+    private fun addFailElementVar(buildId: String, projectId:String, pipelineId: String) {
+        val taskRecords = pipelineBuildTaskService.getAllBuildTask(buildId)
+        var errorElements: String? = null
+        val model = pipelineBuildDetailService.getBuildModel(buildId)
+        taskRecords.forEach {
+            if(it.status == BuildStatus.FAILED || it.status == BuildStatus.QUEUE_TIMEOUT || it.status == BuildStatus.EXEC_TIMEOUT || it.status == BuildStatus.QUALITY_CHECK_FAIL) {
+                val errorElement = findElementMsg(model, it)
+                errorElements += errorElement
+            }
+        }
+        logger.info("pipeline build fail, add $BK_CI_BUILD_FAIL_TASK, value[$errorElements]")
+        pipelineBuildVarDao.save(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            name = BK_CI_BUILD_FAIL_TASK,
+            value = errorElements ?: ""
+        )
+    }
+
     private fun findElementMsg(model: Model?, taskRecord : PipelineBuildTaskInfo): String {
         var containerName = ""
         model?.stages?.forEach { stage ->
@@ -279,6 +283,6 @@ class BuildEndControl @Autowired constructor(
                 }
             }
         }
-        return "[${taskRecord.stageId}($containerName)]-${taskRecord.taskName} \n"
+        return "[${taskRecord.stageId}][$containerName]${taskRecord.taskName} \n"
     }
 }
