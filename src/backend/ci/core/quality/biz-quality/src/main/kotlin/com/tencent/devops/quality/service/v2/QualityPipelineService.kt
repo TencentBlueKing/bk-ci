@@ -120,7 +120,12 @@ class QualityPipelineService @Autowired constructor(
         originElementList: List<Pair<String, Map<String, Any>>>
     ): Pair<List<RangeExistElement>, Set<String>> {
         // 1. 查找不存在的插件
-        val lackElements = checkElements.minus(originElementList.map { it.first }).toMutableSet()
+        val lackElements = mutableSetOf<String>()
+        checkElements.forEach { checkElement ->
+            val isExist = originElementList.any { originElement -> checkElement == originElement.first ||
+                CodeccUtils.isCodeccAtom(checkElement) == CodeccUtils.isCodeccAtom(originElement.first) }
+            if (!isExist) lackElements.add(checkElement)
+        }
 
         // 2. 查找存在的插件
         // 找出流水线存在的指标原子，并统计个数
