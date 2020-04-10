@@ -80,9 +80,9 @@ class SampleProjectGitFileService {
         }
         logger.info("handleSampleProjectGitFile type is:$type, fileName is :$fileName")
         return if (type != null && fileName != null) {
-            val extServiceFileHandleService =
-                SpringContextUtil.getBean(ExtServiceFileHandleService::class.java, "${type}_FILE_HANDLE")
-            extServiceFileHandleService.handleFile(repositoryName, fileName, workspace)
+            val fileHandleService =
+                SpringContextUtil.getBean(AbstractFileHandleService::class.java, "${type}_FILE_HANDLE")
+            fileHandleService.handleFile(repositoryName, fileName, workspace)
         } else {
             Result(true)
         }
