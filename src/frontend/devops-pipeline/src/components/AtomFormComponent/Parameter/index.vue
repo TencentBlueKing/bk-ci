@@ -155,7 +155,7 @@
             }
         }
     }
-    .bk-icon {
+    .devops-icon {
         margin-left: 5px;
         cursor: pointer;
     }

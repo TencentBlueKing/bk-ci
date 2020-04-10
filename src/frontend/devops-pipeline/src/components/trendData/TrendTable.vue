@@ -4,7 +4,7 @@
             <bk-input
                 :placeholder="$t('history.fiterPackageTips')"
                 :clearable="true"
-                :right-icon="'bk-icon icon-search'"
+                right-icon="icon-search"
                 @enter="filterData"
                 @change="clearFilter"
                 v-model="searchModel">
