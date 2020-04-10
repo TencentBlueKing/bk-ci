@@ -82,6 +82,8 @@ data class ServiceVO(
     val webSocket: String?,
     @ApiModelProperty("是否可见")
     val hidden: Boolean? = false,
-    @ApiModelProperty("newWindow")
-    val newWindow: Boolean? = false
+    @ApiModelProperty("new_window")
+    val newWindow: Boolean? = false,
+    @ApiModelProperty("new_window_url")
+    val newWindowUrl: String? = null
 )
