@@ -197,12 +197,7 @@ class PipelineClearService @Autowired constructor(
                             pipelineBuildBaseInfoList.add(PipelineBuildBaseInfo(pipelineInfo.projectId, pipelineInfo.pipelineId, buildIds))
                             // 流水线数量/构建数量任意一个达到阈值就开始删除
                             if (pipelinesCount >= PIPELINE_DELETE_BATCH_SIZE || buildIdsCount >= BUILD_ID_DELETE_BATCH_SIZE) {
-                                //通知其他微服务删除数据
-                                pipelineClearDispatcher.dispatch(PipelineHardDeleteBroadCastEvent(
-                                    pipelineBuildBaseInfoList.map { Triple(it.projectId, it.pipelineId, it.buildIdList) }.toList(),
-                                    0,
-                                    System.currentTimeMillis()
-                                ))
+                                logger.info("reach batch size, delete")
                                 deleteRelatedAndBuildData(pipelineBuildBaseInfoList)
                                 pipelinesCount = 0
                                 buildIdsCount = 0
@@ -232,6 +227,12 @@ class PipelineClearService @Autowired constructor(
     }
 
     fun deleteRelatedAndBuildData(pipelineBuildBaseInfoList: List<PipelineBuildBaseInfo>) {
+        //通知其他微服务删除数据
+        pipelineClearDispatcher.dispatch(PipelineHardDeleteBroadCastEvent(
+            pipelineBuildBaseInfoList.map { Triple(it.projectId, it.pipelineId, it.buildIdList) }.toList(),
+            0,
+            System.currentTimeMillis()
+        ))
         // 删关联数据
         pipelineRepositoryService.deletePipelinesRelatedAllDataHardly(pipelineBuildBaseInfoList, ChannelCode.BS)
         // 删主干构建数据
