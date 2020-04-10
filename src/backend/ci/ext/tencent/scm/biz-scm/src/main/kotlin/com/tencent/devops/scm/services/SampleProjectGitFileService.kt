@@ -26,9 +26,7 @@
 
 package com.tencent.devops.scm.services
 
-import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.store.pojo.common.EXTENSION_JSON_NAME
 import com.tencent.devops.store.pojo.common.TASK_JSON_NAME
@@ -36,7 +34,6 @@ import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.io.File
-import java.util.regex.Pattern
 
 @Service
 class SampleProjectGitFileService {
@@ -47,33 +44,20 @@ class SampleProjectGitFileService {
      * 处理示例工程文件
      */
     fun handleSampleProjectGitFile(
+        nameSpaceName: String,
         repositoryName: String,
-        sampleProjectPath: String,
         workspace: File? = null
     ): Result<Boolean> {
-        logger.info("handleSampleProjectGitFile workspace is:${workspace?.absolutePath}, sampleProjectPath is :$sampleProjectPath")
-        // 获取git代码库的groupName
-        val regex = "^.*?://(.*)/(.*)/.*$"
-        val matcher = Pattern.compile(regex).matcher(sampleProjectPath)
-        var groupName: String? = null
-        if (matcher.find()) {
-            groupName = matcher.group(2)
-        }
-        if (null == groupName) {
-            return MessageCodeUtil.generateResponseDataObject(
-                CommonMessageCode.PARAMETER_IS_INVALID,
-                arrayOf(sampleProjectPath),
-                false
-            )
-        }
+        logger.info("handleSampleProjectGitFile workspace is:${workspace?.absolutePath}, nameSpaceName is :$nameSpaceName")
         // 根据groupName推断出要处理的文件
         var type: String? = null
         var fileName: String? = null
-        if (groupName.contains("bkdevops-plugins")) {
+        val name = nameSpaceName.split("/")[0]
+        if (name.contains("bkdevops-plugins")) {
             // 处理插件示例工程的git文件
             type = StoreTypeEnum.ATOM.name
             fileName = TASK_JSON_NAME
-        } else if (groupName.contains("bkdevops-extension-service")) {
+        } else if (name.contains("bkdevops-extension-service")) {
             // 处理扩展服务示例工程的git文件
             type = StoreTypeEnum.SERVICE.name
             fileName = EXTENSION_JSON_NAME
