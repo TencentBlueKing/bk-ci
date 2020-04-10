@@ -26,6 +26,7 @@
 
 package com.tencent.devops.project.api.user
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BK_TOKEN
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.project.pojo.Result
@@ -57,7 +58,10 @@ interface UserProjectServiceResource {
         userId: String,
         @ApiParam("项目ID", required = false)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
-        projectId: String?
+        projectId: String?,
+        @ApiParam("bk TOKEN", required = false)
+        @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
+        bkToken: String?
     ): Result<List<ServiceListVO>>
 
     @PUT
