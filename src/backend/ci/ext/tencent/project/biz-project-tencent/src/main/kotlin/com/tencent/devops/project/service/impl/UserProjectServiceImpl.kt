@@ -60,11 +60,11 @@ class UserProjectServiceImpl @Autowired constructor(
         private val tofService: TOFService
 ) : AbsUserProjectServiceServiceImpl(dslContext, serviceTypeDao, serviceDao, favoriteDao, gray, redisOperation) {
 
-    @Value("\${project.container.domain:}")
-    private lateinit var containerDomain: String?
+    @Value("\${project.container.domain:#{null}}")
+    private var containerDomain: String? = null
 
-    @Value("\${project.container.bgId:}")
-    private lateinit var containerbgId: String?
+    @Value("\${project.container.bgId::#{null}}")
+    private var containerbgId: String? = null
 
     override fun getService(userId: String, serviceId: Long): Result<ServiceVO> {
         val tServiceRecord = serviceDao.select(dslContext, serviceId)
@@ -153,11 +153,11 @@ class UserProjectServiceImpl @Autowired constructor(
                     val favor = favorServices.contains(it.id)
                     var newWindow = false
                     var iframeUrl = genUrl(url = it.iframeUrl, grayUrl = it.grayIframeUrl, projectId = projectId)
-                    if(it.name.contains("容器服务") && it.injectType.toLowerCase().trim().equals("iframe") && bkToken != null && containerDomain.isNullOrBlank() && containerbgId.isNullOrBlank()) {
+                    if(it.name.contains("容器服务") && it.injectType.toLowerCase().trim().equals("iframe") && bkToken != null && !containerDomain.isNullOrBlank() && !containerbgId.isNullOrBlank()) {
                         logger.info("listService interface:enter container.")
 
-                        val containerDomainList = containerDomain.split(",|;".toRegex())
-                        val containerbgIdList = containerbgId.split(",|;".toRegex())
+                        val containerDomainList = containerDomain!!.split(",|;".toRegex())
+                        val containerbgIdList = containerbgId!!.split(",|;".toRegex())
                         logger.info("listService interface containerDomainList:$containerDomainList")
                         logger.info("listService interface containerbgIdList:$containerbgIdList")
                         if(containerbgIdList.isNotEmpty() && containerDomainList.isNotEmpty() && containerDomainList.size == containerbgIdList.size) {
