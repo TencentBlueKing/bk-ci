@@ -137,6 +137,8 @@ class MarketAtomDao : AtomBaseDao() {
         labelCodeList: List<String>?,
         score: Int?,
         rdType: AtomTypeEnum?,
+        yamlFlag: Boolean?,
+        recommendFlag: Boolean?,
         sortType: MarketAtomSortTypeEnum?,
         desc: Boolean?,
         page: Int?,
@@ -159,7 +161,8 @@ class MarketAtomDao : AtomBaseDao() {
             ta.OS,
             ta.BUILD_LESS_RUN_FLAG,
             ta.DOCS_LINK,
-            taf.RECOMMEND_FLAG
+            taf.RECOMMEND_FLAG,
+            taf.YAML_FLAG
         ).from(ta)
             .leftJoin(taf)
             .on(ta.ATOM_CODE.eq(taf.ATOM_CODE))
@@ -186,6 +189,12 @@ class MarketAtomDao : AtomBaseDao() {
             baseStep.leftJoin(t).on(ta.ATOM_CODE.eq(t.field("STORE_CODE", String::class.java)))
             conditions.add(t.field("SCORE_AVERAGE", BigDecimal::class.java).ge(BigDecimal.valueOf(score.toLong())))
             conditions.add(t.field("STORE_TYPE", Byte::class.java).eq(storeType))
+        }
+        if (null != yamlFlag) {
+            conditions.add(taf.YAML_FLAG.eq(yamlFlag))
+        }
+        if (null != recommendFlag) {
+            conditions.add(taf.RECOMMEND_FLAG.eq(recommendFlag))
         }
 
         if (null != sortType) {
