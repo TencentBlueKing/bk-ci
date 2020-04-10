@@ -142,6 +142,8 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         labelCode: String?,
         score: Int?,
         rdType: AtomTypeEnum?,
+        yamlFlag: Boolean?,
+        recommendFlag: Boolean?,
         sortType: MarketAtomSortTypeEnum?,
         desc: Boolean?,
         page: Int?,
@@ -155,16 +157,18 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
             val labelCodeList = if (labelCode.isNullOrEmpty()) listOf() else labelCode?.split(",")
             val count = marketAtomDao.count(dslContext, atomName, classifyCode, labelCodeList, score, rdType)
             val atoms = marketAtomDao.list(
-                dslContext,
-                atomName,
-                classifyCode,
-                labelCodeList,
-                score,
-                rdType,
-                sortType,
-                desc,
-                page,
-                pageSize
+                dslContext = dslContext,
+                atomName = atomName,
+                classifyCode = classifyCode,
+                labelCodeList = labelCodeList,
+                score = score,
+                rdType = rdType,
+                yamlFlag = yamlFlag,
+                recommendFlag = recommendFlag,
+                sortType = sortType,
+                desc = desc,
+                page = page,
+                pageSize = pageSize
             )
                 ?: return@Callable MarketAtomResp(0, page, pageSize, results)
             logger.info("[list]get atoms: $atoms")
@@ -220,7 +224,8 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                         publicFlag = it["DEFAULT_FLAG"] as Boolean,
                         buildLessRunFlag = if (it["BUILD_LESS_RUN_FLAG"] == null) false else it["BUILD_LESS_RUN_FLAG"] as Boolean,
                         docsLink = if (it["DOCS_LINK"] == null) "" else it["DOCS_LINK"] as String,
-                        recommendFlag = it["RECOMMEND_FLAG"] as? Boolean
+                        recommendFlag = it["RECOMMEND_FLAG"] as? Boolean,
+                        yamlFlag = it["YAML_FLAG"] as? Boolean
                     )
                 )
             }
@@ -267,6 +272,8 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                 labelCode = null,
                 score = null,
                 rdType = null,
+                yamlFlag = null,
+                recommendFlag = null,
                 sortType = MarketAtomSortTypeEnum.UPDATE_TIME,
                 desc = true,
                 page = page,
@@ -283,6 +290,8 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                 labelCode = null,
                 score = null,
                 rdType = null,
+                yamlFlag = null,
+                recommendFlag = null,
                 sortType = MarketAtomSortTypeEnum.DOWNLOAD_COUNT,
                 desc = true,
                 page = page,
@@ -309,6 +318,8 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                         labelCode = null,
                         score = null,
                         rdType = null,
+                        yamlFlag = null,
+                        recommendFlag = null,
                         sortType = MarketAtomSortTypeEnum.DOWNLOAD_COUNT,
                         desc = true,
                         page = page,
@@ -340,6 +351,8 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         labelCode: String?,
         score: Int?,
         rdType: AtomTypeEnum?,
+        yamlFlag: Boolean?,
+        recommendFlag: Boolean?,
         sortType: MarketAtomSortTypeEnum?,
         page: Int?,
         pageSize: Int?
@@ -359,6 +372,8 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
             score = score,
             rdType = rdType,
             sortType = sortType,
+            yamlFlag = yamlFlag,
+            recommendFlag = recommendFlag,
             desc = true,
             page = page,
             pageSize = pageSize
@@ -516,7 +531,8 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                     userCommentInfo = userCommentInfo,
                     visibilityLevel = VisibilityLevelEnum.getVisibilityLevel(record["visibilityLevel"] as Int),
                     privateReason = record["privateReason"] as? String,
-                    recommendFlag = feature?.recommendFlag
+                    recommendFlag = feature?.recommendFlag,
+                    yamlFlag = feature?.yamlFlag
                 )
             )
         }
