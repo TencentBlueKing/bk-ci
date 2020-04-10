@@ -152,7 +152,7 @@ class UserProjectServiceImpl @Autowired constructor(
                     val status = it.status
                     val favor = favorServices.contains(it.id)
                     var newWindow = false
-                    var iframeUrl = genUrl(url = it.iframeUrl, grayUrl = it.grayIframeUrl, projectId = projectId)
+                    var newWindowUrl = ""
                     if(it.name.contains("容器服务") && it.injectType.toLowerCase().trim().equals("iframe") && bkToken != null && !containerDomain.isNullOrBlank() && !containerbgId.isNullOrBlank()) {
                         logger.info("listService interface:enter container.")
 
@@ -165,7 +165,7 @@ class UserProjectServiceImpl @Autowired constructor(
                             run breaking@ {
                                 containerbgIdList.forEachIndexed { index, bgId  ->
                                     if(bgId == userDeptDetail.bgId) {
-                                        iframeUrl = containerDomainList[index]
+                                        newWindowUrl = containerDomainList[index]
                                         newWindow = true
                                         return@breaking
                                     }
@@ -182,7 +182,7 @@ class UserProjectServiceImpl @Autowired constructor(
                                     linkNew = it.linkNew ?: "",
                                     status = status,
                                     injectType = it.injectType ?: "",
-                                    iframeUrl = iframeUrl,
+                                    iframeUrl = genUrl(url = it.iframeUrl, grayUrl = it.grayIframeUrl, projectId = projectId),
                                     grayIframeUrl = it.grayIframeUrl ?: "",
                                     cssUrl = genUrl(url = it.cssUrl, grayUrl = it.grayCssUrl, projectId = projectId),
                                     jsUrl = genUrl(url = it.jsUrl, grayUrl = it.grayJsUrl, projectId = projectId),
@@ -195,7 +195,9 @@ class UserProjectServiceImpl @Autowired constructor(
                                     weigHt = it.weight ?: 0,
                                     logoUrl = it.logoUrl,
                                     webSocket = it.webSocket,
-                                    newWindow = newWindow
+                                    newWindow = newWindow,
+                                    newWindowUrl = newWindowUrl
+
 
                             )
                     )
