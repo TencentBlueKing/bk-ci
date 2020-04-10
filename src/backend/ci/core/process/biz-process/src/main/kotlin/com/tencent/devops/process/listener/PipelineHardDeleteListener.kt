@@ -15,4 +15,13 @@ interface PipelineHardDeleteListener {
      * @return 当前删除任务是否成功
      */
     fun onPipelineDeleteHardly(dslContext: DSLContext, pipelineBuildBaseInfoList: List<PipelineBuildBaseInfo>): Boolean
+
+    fun sleep() {
+        Thread.sleep(500)
+    }
+
+    fun getDeleteDataBatchSize():Int{
+        //一次最多删1w条数据
+        return 10000
+    }
 }

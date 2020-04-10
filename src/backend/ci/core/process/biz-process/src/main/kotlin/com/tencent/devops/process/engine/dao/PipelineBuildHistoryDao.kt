@@ -26,7 +26,6 @@
 
 package com.tencent.devops.process.engine.dao
 
-import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
@@ -36,11 +35,8 @@ import com.tencent.devops.model.process.tables.TPipelineBuildHistory
 import com.tencent.devops.model.process.tables.records.TPipelineBuildHistoryRecord
 import com.tencent.devops.process.engine.pojo.BuildInfo
 import com.tencent.devops.common.api.pojo.ErrorType
-import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.process.pojo.BuildStageStatus
 import com.tencent.devops.process.listener.PipelineHardDeleteListener
-import com.tencent.devops.process.utils.PIPELINE_MESSAGE_STRING_LENGTH_MAX
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.DatePart
@@ -49,7 +45,6 @@ import org.jooq.Result
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
 import java.sql.Timestamp
-import java.time.LocalDateTime
 
 @Repository
 class PipelineBuildHistoryDao : PipelineHardDeleteListener {
@@ -59,14 +54,20 @@ class PipelineBuildHistoryDao : PipelineHardDeleteListener {
     }
 
     fun deletePipelinesHardly(dslContext: DSLContext, pipelineBuildBaseInfoList: List<PipelineBuildBaseInfo>): Boolean {
+        val batchSize = getDeleteDataBatchSize()
+        val buildIds = mutableListOf<String>()
+        pipelineBuildBaseInfoList.forEach { pipelineBuildBaseInfo ->
+            buildIds.addAll(pipelineBuildBaseInfo.buildIdList)
+        }
         with(TPipelineBuildHistory.T_PIPELINE_BUILD_HISTORY) {
-            val batchSize = 1000
             var affectedRows: Int
             do {
                 affectedRows = dslContext.deleteFrom(this)
-                    .where(BUILD_ID.`in`(dslContext.select(BUILD_ID).from(this).where(PIPELINE_ID.`in`(pipelineBuildBaseInfoList.map { it.pipelineId })).limit(batchSize)))
+                    .where(BUILD_ID.`in`(buildIds))
+                    .limit(batchSize)
                     .execute()
-            } while (affectedRows > 0)
+                sleep()
+            } while (affectedRows == batchSize)
         }
         return true
     }

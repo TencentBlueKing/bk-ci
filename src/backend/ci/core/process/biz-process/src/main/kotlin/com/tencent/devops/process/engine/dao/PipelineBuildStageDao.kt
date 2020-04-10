@@ -53,9 +53,20 @@ class PipelineBuildStageDao : PipelineHardDeleteListener {
             buildIds.addAll(pipelineBuildBaseInfo.buildIdList)
         }
         with(T_PIPELINE_BUILD_STAGE) {
-            dslContext.deleteFrom(this)
-                .where(BUILD_ID.`in`(buildIds))
-                .execute()
+            //一次最多删1w条数据
+            val batchSize = getDeleteDataBatchSize()
+            val buildIds = mutableListOf<String>()
+            pipelineBuildBaseInfoList.forEach { pipelineBuildBaseInfo ->
+                buildIds.addAll(pipelineBuildBaseInfo.buildIdList)
+            }
+            var affectedRows: Int
+            do {
+                affectedRows = dslContext.deleteFrom(this)
+                    .where(BUILD_ID.`in`(buildIds))
+                    .limit(batchSize)
+                    .execute()
+                sleep()
+            } while (affectedRows == batchSize)
         }
         return true
     }
