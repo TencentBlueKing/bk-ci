@@ -24,33 +24,22 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo
+package com.tencent.devops.worker.common.service
 
-import com.tencent.devops.common.pipeline.pojo.BuildParameters
+import com.tencent.devops.common.api.enums.OSType
 import com.tencent.devops.store.pojo.app.BuildEnv
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.store.pojo.common.enums.BuildHostTypeEnum
 
-@ApiModel("流水线模型-构建参数变量")
-data class BuildVariables(
-    @ApiModelProperty("构建ID", required = true)
-    val buildId: String,
-    @ApiModelProperty("构建环境ID", required = true)
-    val vmSeqId: String,
-    @ApiModelProperty("构建机名称", required = true)
-    val vmName: String,
-    @ApiModelProperty("项目ID", required = true)
-    val projectId: String,
-    @ApiModelProperty("pipeline id", required = true)
-    val pipelineId: String,
-    @ApiModelProperty("参数集合", required = true)
-    val variables: Map<String, String>,
-    @ApiModelProperty("系统环境变量", required = false)
-    val buildEnvs: List<BuildEnv>,
-    @ApiModelProperty("container的编排id", required = false)
-    val containerId: String,
-    @ApiModelProperty("container或者job的id", required = false)
-    val containerHashId: String,
-    @ApiModelProperty("参数类型集合", required = false)
-    val variablesWithType: List<BuildParameters>
-)
+interface AtomTargetHandleService {
+
+    /**
+     * 处理target入口命令逻辑
+     */
+    fun handleAtomTarget(
+        target: String,
+        osType: OSType,
+        buildHostType: BuildHostTypeEnum,
+        systemEnvVariables: Map<String, String>,
+        buildEnvs: List<BuildEnv>
+    ): String
+}
