@@ -32,6 +32,7 @@ import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatch
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.IAtomTask
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
+import com.tencent.devops.process.service.quality.PipelineQualityInterfaceService
 import com.tencent.devops.quality.QualityGateOutElement
 import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
 import org.slf4j.LoggerFactory
@@ -43,7 +44,7 @@ import org.springframework.stereotype.Component
 class QualityGateOutTaskAtom @Autowired constructor(
     private val client: Client,
     private val rabbitTemplate: RabbitTemplate,
-    private val pipelineEventDispatcher: PipelineEventDispatcher
+    private val pipelineQualityInterfaceService: PipelineQualityInterfaceService
 ) : IAtomTask<QualityGateOutElement> {
 
     override fun getParamElement(task: PipelineBuildTask): QualityGateOutElement {
@@ -71,7 +72,8 @@ class QualityGateOutTaskAtom @Autowired constructor(
             runVariables = runVariables,
             client = client,
             rabbitTemplate = rabbitTemplate,
-            position = ControlPointPosition.AFTER_POSITION
+            position = ControlPointPosition.AFTER_POSITION,
+            pipelineQualityInterfaceService = pipelineQualityInterfaceService
         )
 
         return QualityUtils.handleResult(
@@ -80,8 +82,7 @@ class QualityGateOutTaskAtom @Autowired constructor(
             interceptTask = param.interceptTask!!,
             checkResult = checkResult,
             client = client,
-            rabbitTemplate = rabbitTemplate,
-            pipelineEventDispatcher = pipelineEventDispatcher
+            rabbitTemplate = rabbitTemplate
         )
     }
 

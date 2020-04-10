@@ -916,6 +916,19 @@ class TemplateService @Autowired constructor(
         )
     }
 
+    fun getTemplate(pipelineId: String): TemplatePipeline? {
+        val record = templatePipelineDao.get(dslContext, pipelineId) ?: return null
+        return TemplatePipeline(
+            templateId = record.templateId,
+            versionName = record.versionName,
+            version = record.version,
+            pipelineId = record.pipelineId,
+            pipelineName = "",
+            updateTime = record.updatedTime.timestampmilli(),
+            hasPermission = true
+        )
+    }
+
     private fun listTemplateVersions(projectId: String, templateId: String): List<TemplateVersion> {
         val templates = templateDao.listTemplate(dslContext, projectId, templateId)
         if (templates.isEmpty()) {
