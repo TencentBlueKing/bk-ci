@@ -81,5 +81,7 @@ data class ServiceVO(
     @ApiModelProperty("支持webSocket的页面")
     val webSocket: String?,
     @ApiModelProperty("是否可见")
-    val hidden: Boolean? = false
+    val hidden: Boolean? = false,
+    @ApiModelProperty("newWindow")
+    val newWindow: Boolean? = false
 )

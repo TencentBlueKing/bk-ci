@@ -45,7 +45,7 @@ interface UserProjectServiceService {
     /**
      * 拉取用户的服务列表
      */
-    fun listService(userId: String, projectId: String?): Result<List<ServiceListVO>>
+    fun listService(userId: String, projectId: String?, bkToken: String?): Result<List<ServiceListVO>>
 
     /**
      * 收藏服务

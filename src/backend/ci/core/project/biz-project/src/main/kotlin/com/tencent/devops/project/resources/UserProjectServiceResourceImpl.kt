@@ -40,7 +40,7 @@ class UserProjectServiceResourceImpl constructor(private val userProjectServiceS
         return userProjectServiceService.updateCollected(userId, serviceId, collector)
     }
 
-    override fun getServiceList(userId: String, projectId: String?): Result<List<ServiceListVO>> {
-        return userProjectServiceService.listService(userId, projectId)
+    override fun getServiceList(userId: String, projectId: String?, bkToken: String?): Result<List<ServiceListVO>> {
+        return userProjectServiceService.listService(userId, projectId, bkToken)
     }
 }
