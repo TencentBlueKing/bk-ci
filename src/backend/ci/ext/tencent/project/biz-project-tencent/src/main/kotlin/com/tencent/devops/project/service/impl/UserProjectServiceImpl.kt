@@ -60,11 +60,11 @@ class UserProjectServiceImpl @Autowired constructor(
         private val tofService: TOFService
 ) : AbsUserProjectServiceServiceImpl(dslContext, serviceTypeDao, serviceDao, favoriteDao, gray, redisOperation) {
 
-    @Value("\${project.container.domain:")
-    private lateinit var containerDomain: String
+    @Value("\${project.container.domain:}")
+    private lateinit var containerDomain: String?
 
-    @Value("\${project.container.bgId:")
-    private lateinit var containerbgId: String
+    @Value("\${project.container.bgId:}")
+    private lateinit var containerbgId: String?
 
     override fun getService(userId: String, serviceId: Long): Result<ServiceVO> {
         val tServiceRecord = serviceDao.select(dslContext, serviceId)
