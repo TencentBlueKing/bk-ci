@@ -54,6 +54,7 @@ import com.tencent.devops.process.engine.service.code.SvnWebHookMatcher
 import com.tencent.devops.process.pojo.code.ScmWebhookMatcher
 import com.tencent.devops.process.pojo.code.ScmWebhookMatcher.WebHookParams
 import com.tencent.devops.process.pojo.code.WebhookCommit
+import com.tencent.devops.process.pojo.code.git.GitCommit
 import com.tencent.devops.process.pojo.code.git.GitEvent
 import com.tencent.devops.process.pojo.code.git.GitMergeRequestEvent
 import com.tencent.devops.process.pojo.code.git.GitPushEvent
@@ -87,56 +88,7 @@ import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.scm.code.git.api.GITHUB_CHECK_RUNS_STATUS_IN_PROGRESS
 import com.tencent.devops.scm.code.git.api.GIT_COMMIT_CHECK_STATE_PENDING
-import com.tencent.devops.scm.pojo.BK_REPO_GITHUB_WEBHOOK_CREATE_REF_NAME
-import com.tencent.devops.scm.pojo.BK_REPO_GITHUB_WEBHOOK_CREATE_REF_TYPE
-import com.tencent.devops.scm.pojo.BK_REPO_GITHUB_WEBHOOK_CREATE_USERNAME
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_BRANCH
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_COMMIT_ID
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_EVENT_TYPE
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_EXCLUDE_BRANCHS
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_EXCLUDE_PATHS
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_EXCLUDE_USERS
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_FINAL_INCLUDE_BRANCH
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_FINAL_INCLUDE_PATH
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_INCLUDE_BRANCHS
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_INCLUDE_PATHS
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_ASSIGNEE
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_AUTHOR
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_CREATE_TIME
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_CREATE_TIMESTAMP
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_DESCRIPTION
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_ID
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_LABELS
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_LAST_COMMIT
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_LAST_COMMIT_MSG
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_MILESTONE
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_MILESTONE_DUE_DATE
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_NUMBER
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_REVIEWERS
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_SOURCE_BRANCH
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_SOURCE_URL
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_TARGET_BRANCH
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_TARGET_URL
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_TITLE
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_UPDATE_TIME
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_UPDATE_TIMESTAMP
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_URL
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_PUSH_USERNAME
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_TAG_NAME
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_TAG_OPERATION
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_TAG_USERNAME
-import com.tencent.devops.scm.pojo.BK_REPO_SVN_WEBHOOK_COMMIT_TIME
-import com.tencent.devops.scm.pojo.BK_REPO_SVN_WEBHOOK_EXCLUDE_PATHS
-import com.tencent.devops.scm.pojo.BK_REPO_SVN_WEBHOOK_EXCLUDE_USERS
-import com.tencent.devops.scm.pojo.BK_REPO_SVN_WEBHOOK_INCLUDE_USERS
-import com.tencent.devops.scm.pojo.BK_REPO_SVN_WEBHOOK_RELATIVE_PATH
-import com.tencent.devops.scm.pojo.BK_REPO_SVN_WEBHOOK_REVERSION
-import com.tencent.devops.scm.pojo.BK_REPO_SVN_WEBHOOK_USERNAME
-import com.tencent.devops.scm.pojo.BK_REPO_WEBHOOK_HASH_ID
-import com.tencent.devops.scm.pojo.BK_REPO_WEBHOOK_REPO_ALIAS_NAME
-import com.tencent.devops.scm.pojo.BK_REPO_WEBHOOK_REPO_NAME
-import com.tencent.devops.scm.pojo.BK_REPO_WEBHOOK_REPO_TYPE
-import com.tencent.devops.scm.pojo.BK_REPO_WEBHOOK_REPO_URL
+import com.tencent.devops.scm.pojo.*
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -604,12 +556,20 @@ class PipelineBuildWebhookService @Autowired constructor(
                 val gitTagPushEvent = gitMatcher.event as GitTagPushEvent
                 startParams[BK_REPO_GIT_WEBHOOK_TAG_NAME] = matcher.getBranchName()
                 startParams[BK_REPO_GIT_WEBHOOK_TAG_OPERATION] = gitTagPushEvent.operation_kind ?: ""
+                startParams[BK_REPO_GIT_WEBHOOK_TAG_ACTION_KIND] = gitTagPushEvent.action_kind ?: ""
+                startParams[BK_REPO_GIT_WEBHOOK_PUSH_TOTAL_COMMIT] = gitTagPushEvent.total_commits_count
                 startParams[BK_REPO_GIT_WEBHOOK_TAG_USERNAME] = matcher.getUsername()
+                genCommitsParam(startParams, gitTagPushEvent.commits)
             }
 
             if (params.eventType == CodeEventType.PUSH) {
+                val gitPushEvent = gitMatcher.event as GitPushEvent
                 startParams[BK_REPO_GIT_WEBHOOK_PUSH_USERNAME] = matcher.getUsername()
+                startParams[BK_REPO_GIT_WEBHOOK_PUSH_BEFORE_COMMIT] = gitPushEvent.before
+                startParams[BK_REPO_GIT_WEBHOOK_PUSH_AFTER_COMMIT] = gitPushEvent.after
+                startParams[BK_REPO_GIT_WEBHOOK_PUSH_TOTAL_COMMIT] = gitPushEvent.total_commits_count
                 startParams[BK_REPO_GIT_WEBHOOK_BRANCH] = matcher.getBranchName()
+                genCommitsParam(startParams, gitPushEvent.commits)
             }
         }
 
@@ -667,6 +627,29 @@ class PipelineBuildWebhookService @Autowired constructor(
         }
 
         return startParams
+    }
+
+    private fun genCommitsParam(startParams: MutableMap<String, Any>, commits: List<GitCommit>) {
+        commits.forEachIndexed { index, gitCommit ->
+            val curIndex = index + 1
+            startParams[BK_REPO_GIT_WEBHOOK_PUSH_COMMIT_PREFIX + curIndex] = gitCommit.id
+            startParams[BK_REPO_GIT_WEBHOOK_PUSH_COMMIT_MSG_PREFIX + curIndex] = gitCommit.message
+            startParams[BK_REPO_GIT_WEBHOOK_PUSH_COMMIT_TIMESTAMP_PREFIX + curIndex] =
+                DateTimeUtils.zoneDateToTimestamp(gitCommit.timestamp)
+            startParams[BK_REPO_GIT_WEBHOOK_PUSH_COMMIT_AUTHOR_PREFIX + curIndex] = gitCommit.author
+            startParams[BK_REPO_GIT_WEBHOOK_PUSH_ADD_FILE_COUNT] = gitCommit.added?.size ?: 0
+            startParams[BK_REPO_GIT_WEBHOOK_PUSH_MODIFY_FILE_COUNT] = gitCommit.modified?.size ?: 0
+            startParams[BK_REPO_GIT_WEBHOOK_PUSH_DELETE_FILE_COUNT] = gitCommit.removed?.size ?: 0
+            gitCommit.added?.forEachIndexed { innerIndex, file ->
+                startParams[BK_REPO_GIT_WEBHOOK_PUSH_ADD_FILE_PREFIX + curIndex + "_" + (innerIndex + 1)] = file
+            }
+            gitCommit.modified?.forEachIndexed { innerIndex, file ->
+                startParams[BK_REPO_GIT_WEBHOOK_PUSH_MODIFY_FILE_PREFIX + curIndex + "_" + (innerIndex + 1)] = file
+            }
+            gitCommit.removed?.forEachIndexed { innerIndex, file ->
+                startParams[BK_REPO_GIT_WEBHOOK_PUSH_DELETE_FILE_PREFIX + curIndex + "_" + (innerIndex + 1)] = file
+            }
+        }
     }
 
     /**
