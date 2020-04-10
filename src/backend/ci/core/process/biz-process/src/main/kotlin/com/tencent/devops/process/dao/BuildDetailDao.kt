@@ -40,20 +40,14 @@ import java.time.LocalDateTime
 @Repository
 class BuildDetailDao : PipelineHardDeleteListener {
     override fun onPipelineDeleteHardly(dslContext: DSLContext, pipelineBuildBaseInfoList: List<PipelineBuildBaseInfo>): Boolean {
-        val batchSize = getDeleteDataBatchSize()
         val buildIds = mutableListOf<String>()
         pipelineBuildBaseInfoList.forEach { pipelineBuildBaseInfo ->
             buildIds.addAll(pipelineBuildBaseInfo.buildIdList)
         }
         with(TPipelineBuildDetail.T_PIPELINE_BUILD_DETAIL) {
-            var affectedRows: Int
-            do {
-                affectedRows = dslContext.deleteFrom(this)
-                    .where(BUILD_ID.`in`(buildIds))
-                    .limit(batchSize)
-                    .execute()
-                sleep()
-            } while (affectedRows == batchSize)
+            dslContext.deleteFrom(this)
+                .where(BUILD_ID.`in`(buildIds))
+                .execute()
         }
         return true
     }

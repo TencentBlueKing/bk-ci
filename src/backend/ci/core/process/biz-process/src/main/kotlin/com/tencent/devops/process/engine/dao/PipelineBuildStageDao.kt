@@ -43,30 +43,30 @@ import org.jooq.DSLContext
 import org.jooq.InsertOnDuplicateSetMoreStep
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
+import java.lang.Integer.min
 import java.time.LocalDateTime
 
 @Repository
 class PipelineBuildStageDao : PipelineHardDeleteListener {
     override fun onPipelineDeleteHardly(dslContext: DSLContext, pipelineBuildBaseInfoList: List<PipelineBuildBaseInfo>): Boolean {
+        // 表中数据负载因子：平均一次构建在表中产生的数据条数
+        val dataLoadFactor = 3
+        val batchSize = getDeleteDataBatchSize() / dataLoadFactor
         val buildIds = mutableListOf<String>()
         pipelineBuildBaseInfoList.forEach { pipelineBuildBaseInfo ->
             buildIds.addAll(pipelineBuildBaseInfo.buildIdList)
         }
         with(T_PIPELINE_BUILD_STAGE) {
-            //一次最多删1w条数据
-            val batchSize = getDeleteDataBatchSize()
-            val buildIds = mutableListOf<String>()
-            pipelineBuildBaseInfoList.forEach { pipelineBuildBaseInfo ->
-                buildIds.addAll(pipelineBuildBaseInfo.buildIdList)
-            }
-            var affectedRows: Int
+            var offset = 0
             do {
-                affectedRows = dslContext.deleteFrom(this)
-                    .where(BUILD_ID.`in`(buildIds))
-                    .limit(batchSize)
+                val toIndex = min(offset + batchSize, buildIds.size)
+                val subList = buildIds.subList(offset, toIndex)
+                dslContext.deleteFrom(this)
+                    .where(BUILD_ID.`in`(subList))
                     .execute()
                 sleep()
-            } while (affectedRows == batchSize)
+                offset += batchSize
+            } while (offset < buildIds.size)
         }
         return true
     }
