@@ -128,6 +128,7 @@ class UserProjectServiceImpl @Autowired constructor(
     }
 
     override fun listService(userId: String, projectId: String?, bkToken: String?): Result<ArrayList<ServiceListVO>> {
+        logger.info("listService interface:userId[$userId],projectId[$projectId],bkToken[$bkToken]")
 
         val startEpoch = System.currentTimeMillis()
         try {
@@ -139,21 +140,26 @@ class UserProjectServiceImpl @Autowired constructor(
 
             val favorServices = favoriteDao.list(dslContext, userId).map { it.serviceId }.toList()
 
+            logger.info("listService interface containerDomain:$containerDomain")
+            logger.info("listService interface containerbgId:$containerbgId")
             serviceTypeMap.forEach { serviceType ->
                 val typeId = serviceType.id
                 val typeName = MessageCodeUtil.getMessageByLocale(serviceType.title, serviceType.englishTitle)
                 val services = ArrayList<ServiceVO>()
 
                 val s = groupService[typeId]
-
                 s?.forEach { it ->
                     val status = it.status
                     val favor = favorServices.contains(it.id)
                     var newWindow = false
                     var iframeUrl = genUrl(url = it.iframeUrl, grayUrl = it.grayIframeUrl, projectId = projectId)
                     if(it.name.contains("容器服务") && it.injectType.toLowerCase().trim().equals("iframe") && bkToken != null && containerDomain.isNullOrBlank() && containerbgId.isNullOrBlank()) {
+                        logger.info("listService interface:enter container.")
+
                         val containerDomainList = containerDomain.split(",|;".toRegex())
                         val containerbgIdList = containerbgId.split(",|;".toRegex())
+                        logger.info("listService interface containerDomainList:$containerDomainList")
+                        logger.info("listService interface containerbgIdList:$containerbgIdList")
                         if(containerbgIdList.isNotEmpty() && containerDomainList.isNotEmpty() && containerDomainList.size == containerbgIdList.size) {
                             val userDeptDetail = tofService.getUserDeptDetail(userId, bkToken)
                             run breaking@ {
