@@ -119,19 +119,24 @@ class QualityPipelineService @Autowired constructor(
         checkElements: List<String>,
         originElementList: List<Pair<String, Map<String, Any>>>
     ): Pair<List<RangeExistElement>, Set<String>> {
+        val hasCheckCodeccElemenet = checkElements.any { CodeccUtils.isCodeccAtom(it) }
+
         // 1. 查找不存在的插件
         val lackElements = mutableSetOf<String>()
         checkElements.forEach { checkElement ->
-            val isExist = originElementList.any { originElement -> checkElement == originElement.first ||
-                CodeccUtils.isCodeccAtom(checkElement) == CodeccUtils.isCodeccAtom(originElement.first) }
+            val isCheckCodeccElemenet = CodeccUtils.isCodeccAtom(checkElement)
+            val isExist = if (isCheckCodeccElemenet) originElementList.any { originElement -> CodeccUtils.isCodeccAtom(originElement.first) }
+            else originElementList.any { originElement -> checkElement == originElement.first}
             if (!isExist) lackElements.add(checkElement)
         }
 
         // 2. 查找存在的插件
         // 找出流水线存在的指标原子，并统计个数
-        val indicatorExistElement = checkElements.minus(lackElements) // 流水线对应的指标原子
         val existElements = mutableListOf<RangeExistElement>()
-        originElementList.filter { it.first in indicatorExistElement }.groupBy { it.first }
+        originElementList.filter {
+            it.first in checkElements ||
+                (hasCheckCodeccElemenet && CodeccUtils.isCodeccAtom(it.first))
+        }.groupBy { it.first }
             .forEach { (classType, tasks) ->
                 val ele = if (CodeccUtils.isCodeccAtom(classType)) {
                     val asynchronous = tasks.any { t ->
