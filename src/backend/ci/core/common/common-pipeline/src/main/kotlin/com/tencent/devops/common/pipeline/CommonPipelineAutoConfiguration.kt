@@ -27,8 +27,11 @@
 package com.tencent.devops.common.pipeline
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.tencent.devops.common.pipeline.listener.PipelineHardDeleteMQListener
+import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
+import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.Ordered
 import javax.annotation.PostConstruct
@@ -44,5 +47,10 @@ class CommonPipelineAutoConfiguration {
     fun registerSubtypesObjectMapper() {
         ElementSubTypeRegisterLoader.registerElement(objectMapper)
         DispatchSubTypeRegisterLoader.registerElement()
+    }
+
+    @Bean
+    fun pipelineHardDeleteMQListener(@Autowired dslContext: DSLContext): PipelineHardDeleteMQListener {
+        return PipelineHardDeleteMQListener(dslContext)
     }
 }

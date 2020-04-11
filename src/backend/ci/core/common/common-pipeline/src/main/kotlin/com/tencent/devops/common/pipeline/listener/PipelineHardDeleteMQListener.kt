@@ -5,11 +5,8 @@ import com.tencent.devops.common.event.pojo.pipeline.PipelineHardDeleteBroadCast
 import com.tencent.devops.common.pipeline.pojo.PipelineBuildBaseInfo
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Component
 
-@Component
-class PipelineHardDeleteMQListener @Autowired constructor(
+class PipelineHardDeleteMQListener constructor(
     private val dslContext: DSLContext
 ) : Listener<PipelineHardDeleteBroadCastEvent> {
 
@@ -23,7 +20,7 @@ class PipelineHardDeleteMQListener @Autowired constructor(
         }
     }
 
-    fun onReceivePipelineHardDelete(event: PipelineHardDeleteBroadCastEvent) {
+    private fun onReceivePipelineHardDelete(event: PipelineHardDeleteBroadCastEvent) {
         logger.info("receive event:{}", event)
         PipelineListenerUtil.getHardDeleteListeners().forEach { listener ->
             logger.info("invoke $listener")
