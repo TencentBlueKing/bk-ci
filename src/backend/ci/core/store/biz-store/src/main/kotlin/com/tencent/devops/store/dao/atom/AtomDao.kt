@@ -234,9 +234,9 @@ class AtomDao : AtomBaseDao() {
             val baseStep = dslContext.selectFrom(this)
             if (null != sortType) {
                 if (desc != null && desc) {
-                    baseStep.where(conditions).orderBy(DSL.field(sortType).desc())
+                    baseStep.where(conditions).orderBy(CREATE_TIME.desc(), DSL.field(sortType).desc())
                 } else {
-                    baseStep.where(conditions).orderBy(DSL.field(sortType).asc())
+                    baseStep.where(conditions).orderBy(CREATE_TIME.desc(), DSL.field(sortType).asc())
                 }
             } else {
                 baseStep.where(conditions)
