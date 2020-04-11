@@ -26,6 +26,8 @@
 
 package com.tencent.devops.quality.dao
 
+import com.tencent.devops.common.pipeline.listener.PipelineHardDeleteListener
+import com.tencent.devops.common.pipeline.pojo.PipelineBuildBaseInfo
 import com.tencent.devops.model.quality.tables.TCountPipeline
 import com.tencent.devops.model.quality.tables.records.TCountPipelineRecord
 import org.jooq.DSLContext
@@ -38,7 +40,20 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 
 @Repository
-class CountPipelineDao {
+class CountPipelineDao : PipelineHardDeleteListener {
+    override fun onPipelineDeleteHardly(dslContext: DSLContext, pipelineBuildBaseInfoList: List<PipelineBuildBaseInfo>): Boolean {
+        val pipelineIds = mutableSetOf<String>()
+        pipelineBuildBaseInfoList.forEach { pipelineBuildBaseInfo ->
+            pipelineIds.add(pipelineBuildBaseInfo.pipelineId)
+        }
+        with(TCountPipeline.T_COUNT_PIPELINE) {
+            dslContext.deleteFrom(this)
+                .where(PIPELINE_ID.`in`(pipelineIds))
+                .execute()
+        }
+        return true
+    }
+
     fun list(dslContext: DSLContext, projectId: String, pipelineIds: Set<String>): Result<TCountPipelineRecord>? {
         return with(TCountPipeline.T_COUNT_PIPELINE) {
             dslContext.selectFrom(this)

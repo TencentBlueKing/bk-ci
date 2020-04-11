@@ -26,6 +26,8 @@
 
 package com.tencent.devops.quality.dao.v2
 
+import com.tencent.devops.common.pipeline.listener.PipelineHardDeleteListener
+import com.tencent.devops.common.pipeline.pojo.PipelineBuildBaseInfo
 import com.tencent.devops.model.quality.tables.TQualityHisDetailMetadata
 import com.tencent.devops.model.quality.tables.TQualityHisOriginMetadata
 import com.tencent.devops.model.quality.tables.records.TQualityHisDetailMetadataRecord
@@ -35,7 +37,24 @@ import org.jooq.Result
 import org.springframework.stereotype.Repository
 
 @Repository
-class QualityHisMetadataDao {
+class QualityHisMetadataDao : PipelineHardDeleteListener {
+    override fun onPipelineDeleteHardly(dslContext: DSLContext, pipelineBuildBaseInfoList: List<PipelineBuildBaseInfo>): Boolean {
+        val buildIds = mutableListOf<String>()
+        pipelineBuildBaseInfoList.forEach { pipelineBuildBaseInfo ->
+            buildIds.addAll(pipelineBuildBaseInfo.buildIdList)
+        }
+        with(TQualityHisOriginMetadata.T_QUALITY_HIS_ORIGIN_METADATA) {
+            dslContext.deleteFrom(this)
+                .where(BUILD_ID.`in`(buildIds))
+                .execute()
+        }
+        with(TQualityHisDetailMetadata.T_QUALITY_HIS_DETAIL_METADATA) {
+            dslContext.deleteFrom(this)
+                .where(BUILD_ID.`in`(buildIds))
+                .execute()
+        }
+        return true
+    }
 
     fun saveHisOriginMetadata(
         dslContext: DSLContext,

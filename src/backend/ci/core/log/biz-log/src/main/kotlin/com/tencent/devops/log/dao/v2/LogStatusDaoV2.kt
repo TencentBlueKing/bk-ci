@@ -26,6 +26,8 @@
 
 package com.tencent.devops.log.dao.v2
 
+import com.tencent.devops.common.pipeline.listener.PipelineHardDeleteListener
+import com.tencent.devops.common.pipeline.pojo.PipelineBuildBaseInfo
 import com.tencent.devops.model.log.tables.TLogStatusV2
 import com.tencent.devops.model.log.tables.records.TLogStatusV2Record
 import org.jooq.DSLContext
@@ -33,7 +35,30 @@ import org.jooq.Result
 import org.springframework.stereotype.Repository
 
 @Repository
-class LogStatusDaoV2 {
+class LogStatusDaoV2 : PipelineHardDeleteListener {
+
+    override fun onPipelineDeleteHardly(dslContext: DSLContext, pipelineBuildBaseInfoList: List<PipelineBuildBaseInfo>): Boolean {
+        // 表中数据负载因子：平均一次构建在表中产生的数据条数
+        val dataLoadFactor = 5
+        val batchSize = getDeleteDataBatchSize() / dataLoadFactor
+        val buildIds = mutableListOf<String>()
+        pipelineBuildBaseInfoList.forEach { pipelineBuildBaseInfo ->
+            buildIds.addAll(pipelineBuildBaseInfo.buildIdList)
+        }
+        with(TLogStatusV2.T_LOG_STATUS_V2) {
+            var offset = 0
+            do {
+                val toIndex = java.lang.Integer.min(offset + batchSize, buildIds.size)
+                val subList = buildIds.subList(offset, toIndex)
+                dslContext.deleteFrom(this)
+                    .where(BUILD_ID.`in`(subList))
+                    .execute()
+                sleep()
+                offset += batchSize
+            } while (offset < buildIds.size)
+        }
+        return true
+    }
 
     fun finish(
         dslContext: DSLContext,

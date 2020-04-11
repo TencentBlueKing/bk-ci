@@ -26,6 +26,8 @@
 
 package com.tencent.devops.quality.dao
 
+import com.tencent.devops.common.pipeline.listener.PipelineHardDeleteListener
+import com.tencent.devops.common.pipeline.pojo.PipelineBuildBaseInfo
 import com.tencent.devops.model.quality.tables.THistory
 import com.tencent.devops.model.quality.tables.records.THistoryRecord
 import com.tencent.devops.quality.pojo.enum.RuleInterceptResult
@@ -35,7 +37,20 @@ import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
 @Repository
-class HistoryDao {
+class HistoryDao : PipelineHardDeleteListener {
+    override fun onPipelineDeleteHardly(dslContext: DSLContext, pipelineBuildBaseInfoList: List<PipelineBuildBaseInfo>): Boolean {
+        val buildIds = mutableListOf<String>()
+        pipelineBuildBaseInfoList.forEach { pipelineBuildBaseInfo ->
+            buildIds.addAll(pipelineBuildBaseInfo.buildIdList)
+        }
+        with(THistory.T_HISTORY) {
+            dslContext.deleteFrom(this)
+                .where(BUILD_ID.`in`(buildIds))
+                .execute()
+        }
+        return true
+    }
+
     fun create(
         dslContext: DSLContext,
         projectId: String,

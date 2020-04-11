@@ -26,10 +26,10 @@
 
 package com.tencent.devops.process.dao
 
+import com.tencent.devops.common.pipeline.listener.PipelineHardDeleteListener
 import com.tencent.devops.common.pipeline.pojo.PipelineBuildBaseInfo
 import com.tencent.devops.model.process.tables.TPipelineRemoteAuth
 import com.tencent.devops.model.process.tables.records.TPipelineRemoteAuthRecord
-import com.tencent.devops.process.listener.PipelineHardDeleteListener
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime

@@ -1,13 +1,16 @@
-package com.tencent.devops.repository.listener
+package com.tencent.devops.common.pipeline.listener
 
 import com.tencent.devops.common.event.listener.Listener
 import com.tencent.devops.common.event.pojo.pipeline.PipelineHardDeleteBroadCastEvent
+import com.tencent.devops.common.pipeline.pojo.PipelineBuildBaseInfo
+import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
 @Component
 class PipelineHardDeleteMQListener @Autowired constructor(
+    private val dslContext: DSLContext
 ) : Listener<PipelineHardDeleteBroadCastEvent> {
 
     private val logger = LoggerFactory.getLogger(PipelineHardDeleteMQListener::class.java)
@@ -16,15 +19,20 @@ class PipelineHardDeleteMQListener @Autowired constructor(
         try {
             onReceivePipelineHardDelete(event)
         } catch (ex: Exception) {
-            logger.error("project listener execute error", ex)
+            logger.error("pipeline hard delete listener execute error", ex)
         }
     }
 
     fun onReceivePipelineHardDelete(event: PipelineHardDeleteBroadCastEvent) {
         logger.info("receive event:{}", event)
-        //TODO
-        event.pipelineBuildBaseInfoList.forEach {
-
+        PipelineListenerUtil.getHardDeleteListeners().forEach { listener ->
+            logger.info("invoke $listener")
+            var deleteResult = false
+            var retryCount = 0
+            while (!deleteResult && retryCount < 3) {
+                retryCount += 1
+                deleteResult = listener.onPipelineDeleteHardly(dslContext, event.pipelineBuildBaseInfoList.map { PipelineBuildBaseInfo(it.first, it.second, it.third) })
+            }
         }
     }
 }

@@ -26,7 +26,10 @@
 
 package com.tencent.devops.quality.dao.v2
 
+import com.google.common.collect.Sets
 import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.common.pipeline.listener.PipelineHardDeleteListener
+import com.tencent.devops.common.pipeline.pojo.PipelineBuildBaseInfo
 import com.tencent.devops.model.quality.tables.TQualityRule
 import com.tencent.devops.model.quality.tables.TQualityRuleMap
 import com.tencent.devops.model.quality.tables.records.TQualityRuleRecord
@@ -36,10 +39,39 @@ import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
+import java.util.*
 import javax.ws.rs.NotFoundException
 
 @Repository
-class QualityRuleDao {
+class QualityRuleDao : PipelineHardDeleteListener {
+    override fun onPipelineDeleteHardly(dslContext: DSLContext, pipelineBuildBaseInfoList: List<PipelineBuildBaseInfo>): Boolean {
+        val pipelineIds = mutableListOf<String>()
+        pipelineBuildBaseInfoList.forEach { pipelineBuildBaseInfo ->
+            pipelineIds.add(pipelineBuildBaseInfo.pipelineId)
+        }
+        //更新所有数据
+        with(TQualityRule.T_QUALITY_RULE) {
+            val records = dslContext.select(this.ID, this.INDICATOR_RANGE).from(this)
+                .fetch() ?: return true
+            records.forEach { record ->
+                val id = record.get(0) as Long
+                val indicatorRangeStr = record.get(1) as String
+                if (indicatorRangeStr.isBlank()) {
+                    return@forEach
+                }
+                val indicatorList = Arrays.asList(indicatorRangeStr.split(","))
+                val newIndicatorList = indicatorList.subtract(pipelineIds)
+                if (newIndicatorList.size < indicatorList.size) {
+                    dslContext.update(this)
+                        .set(INDICATOR_RANGE, newIndicatorList.joinToString(","))
+                        .where(ID.eq(id))
+                        .execute()
+                }
+            }
+        }
+        return true
+    }
+
     fun create(dslContext: DSLContext, userId: String, projectId: String, ruleRequest: RuleCreateRequest): Long {
         val rule = with(TQualityRule.T_QUALITY_RULE) {
             dslContext.insertInto(

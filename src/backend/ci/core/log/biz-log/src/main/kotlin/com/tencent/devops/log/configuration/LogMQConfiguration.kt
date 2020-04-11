@@ -34,6 +34,8 @@ import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ.QUEUE_LOG_BATCH
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ.QUEUE_LOG_BUILD_EVENT
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ.ROUTE_LOG_BATCH_BUILD_EVENT
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ.ROUTE_LOG_BUILD_EVENT
+import com.tencent.devops.common.event.dispatcher.pipeline.mq.Tools
+import com.tencent.devops.common.pipeline.listener.PipelineHardDeleteMQListener
 import com.tencent.devops.log.mq.LogListener
 import com.tencent.devops.log.service.v2.LogServiceV2
 import org.slf4j.LoggerFactory
@@ -48,6 +50,7 @@ import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer
 import org.springframework.amqp.rabbit.listener.adapter.MessageListenerAdapter
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
 import org.springframework.context.annotation.Bean
@@ -188,6 +191,54 @@ class LogMQConfiguration @Autowired constructor() {
         adapter.setMessageConverter(messageConverter)
         container.messageListener = adapter
         return container
+    }
+
+    @Value("\${queueConcurrency.pipelineHardDelete.log:3}")
+    private val logPipelineHardDeleteConcurrency: Int? = null
+
+    @Bean
+    fun pipelineHardDeleteLogQueue() = Queue(MQ.QUEUE_PIPELINE_HARD_DELETE_LOG)
+
+    /**
+     * 流水线硬删除广播交换机
+     */
+    @Bean
+    fun pipelineHardDeleteFanoutExchange(): FanoutExchange {
+        val fanoutExchange = FanoutExchange(MQ.EXCHANGE_PIPELINE_HARD_DELETE_FANOUT, true, false)
+        fanoutExchange.isDelayed = true
+        return fanoutExchange
+    }
+
+    @Bean
+    fun pipelineHardDeleteLogQueueBind(
+        @Autowired pipelineHardDeleteLogQueue: Queue,
+        @Autowired pipelineHardDeleteFanoutExchange: FanoutExchange
+    ): Binding {
+        return BindingBuilder.bind(pipelineHardDeleteLogQueue)
+            .to(pipelineHardDeleteFanoutExchange)
+    }
+
+
+    @Bean
+    fun pipelineHardDeleteLogListenerContainer(
+        @Autowired connectionFactory: ConnectionFactory,
+        @Autowired pipelineHardDeleteLogQueue: Queue,
+        @Autowired rabbitAdmin: RabbitAdmin,
+        @Autowired listener: PipelineHardDeleteMQListener,
+        @Autowired messageConverter: Jackson2JsonMessageConverter
+    ): SimpleMessageListenerContainer {
+        val adapter = MessageListenerAdapter(listener, listener::execute.name)
+        adapter.setMessageConverter(messageConverter)
+        return Tools.createSimpleMessageListenerContainerByAdapter(
+            connectionFactory = connectionFactory,
+            queue = pipelineHardDeleteLogQueue,
+            rabbitAdmin = rabbitAdmin,
+            adapter = adapter,
+            startConsumerMinInterval = 120000,
+            consecutiveActiveTrigger = 10,
+            concurrency = logPipelineHardDeleteConcurrency!!,
+            maxConcurrency = 10
+        )
     }
 
     companion object {

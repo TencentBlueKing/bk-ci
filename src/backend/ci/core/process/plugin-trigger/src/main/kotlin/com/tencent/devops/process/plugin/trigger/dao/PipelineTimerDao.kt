@@ -27,17 +27,17 @@
 package com.tencent.devops.process.plugin.trigger.dao
 
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.pipeline.listener.PipelineHardDeleteListener
 import com.tencent.devops.common.pipeline.pojo.PipelineBuildBaseInfo
 import com.tencent.devops.model.process.Tables.T_PIPELINE_TIMER
 import com.tencent.devops.model.process.tables.records.TPipelineTimerRecord
-import com.tencent.devops.process.listener.PipelineHardDeleteListener
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
 @Repository
-open class PipelineTimerDao : PipelineHardDeleteListener {
+class PipelineTimerDao : PipelineHardDeleteListener {
     override fun onPipelineDeleteHardly(dslContext: DSLContext, pipelineBuildBaseInfoList: List<PipelineBuildBaseInfo>): Boolean {
         with(T_PIPELINE_TIMER) {
             dslContext.deleteFrom(this)
@@ -47,7 +47,7 @@ open class PipelineTimerDao : PipelineHardDeleteListener {
         return true
     }
 
-    open fun save(
+    fun save(
         dslContext: DSLContext,
         projectId: String,
         pipelineId: String,
@@ -74,19 +74,19 @@ open class PipelineTimerDao : PipelineHardDeleteListener {
         }
     }
 
-    open fun get(dslContext: DSLContext, pipelineId: String): TPipelineTimerRecord? {
+    fun get(dslContext: DSLContext, pipelineId: String): TPipelineTimerRecord? {
         return with(T_PIPELINE_TIMER) {
             dslContext.selectFrom(this).where(PIPELINE_ID.eq(pipelineId)).fetchAny()
         }
     }
 
-    open fun delete(dslContext: DSLContext, pipelineId: String): Int {
+    fun delete(dslContext: DSLContext, pipelineId: String): Int {
         return with(T_PIPELINE_TIMER) {
             dslContext.delete(this).where(PIPELINE_ID.eq(pipelineId)).execute()
         }
     }
 
-    open fun list(dslContext: DSLContext, offset: Int, limit: Int): Result<TPipelineTimerRecord> {
+    fun list(dslContext: DSLContext, offset: Int, limit: Int): Result<TPipelineTimerRecord> {
         return with(T_PIPELINE_TIMER) {
             dslContext.selectFrom(this).limit(offset, limit).fetch()
         }

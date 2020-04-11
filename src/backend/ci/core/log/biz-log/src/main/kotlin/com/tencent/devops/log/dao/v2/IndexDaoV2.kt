@@ -26,6 +26,8 @@
 
 package com.tencent.devops.log.dao.v2
 
+import com.tencent.devops.common.pipeline.listener.PipelineHardDeleteListener
+import com.tencent.devops.common.pipeline.pojo.PipelineBuildBaseInfo
 import com.tencent.devops.model.log.tables.TLogIndicesV2
 import com.tencent.devops.model.log.tables.records.TLogIndicesV2Record
 import org.jooq.DSLContext
@@ -36,7 +38,19 @@ import sun.misc.MessageUtils.where
 import java.time.LocalDateTime
 
 @Repository
-class IndexDaoV2 {
+class IndexDaoV2 : PipelineHardDeleteListener {
+    override fun onPipelineDeleteHardly(dslContext: DSLContext, pipelineBuildBaseInfoList: List<PipelineBuildBaseInfo>): Boolean {
+        val buildIds = mutableListOf<String>()
+        pipelineBuildBaseInfoList.forEach { pipelineBuildBaseInfo ->
+            buildIds.addAll(pipelineBuildBaseInfo.buildIdList)
+        }
+        with(TLogIndicesV2.T_LOG_INDICES_V2) {
+            dslContext.deleteFrom(this)
+                .where(BUILD_ID.`in`(buildIds))
+                .execute()
+        }
+        return true
+    }
 
     fun create(
         dslContext: DSLContext,

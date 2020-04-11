@@ -26,13 +26,27 @@
 
 package com.tencent.devops.dispatch.dao
 
+import com.tencent.devops.common.pipeline.listener.PipelineHardDeleteListener
+import com.tencent.devops.common.pipeline.pojo.PipelineBuildBaseInfo
 import com.tencent.devops.model.dispatch.tables.TDispatchPipelineVm
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
 
 @Repository
-class PipelineVMDao {
+class PipelineVMDao : PipelineHardDeleteListener {
+    override fun onPipelineDeleteHardly(dslContext: DSLContext, pipelineBuildBaseInfoList: List<PipelineBuildBaseInfo>): Boolean {
+        val pipelineIds = mutableSetOf<String>()
+        pipelineBuildBaseInfoList.forEach { pipelineBuildBaseInfo ->
+            pipelineIds.add(pipelineBuildBaseInfo.pipelineId)
+        }
+        with(TDispatchPipelineVm.T_DISPATCH_PIPELINE_VM) {
+            dslContext.deleteFrom(this)
+                .where(PIPELINE_ID.`in`(pipelineIds))
+                .execute()
+        }
+        return true
+    }
 
     fun getVMs(
         dslContext: DSLContext,

@@ -1,4 +1,4 @@
-package com.tencent.devops.process.listener
+package com.tencent.devops.common.pipeline.listener
 
 import com.tencent.devops.common.pipeline.pojo.PipelineBuildBaseInfo
 import org.jooq.DSLContext

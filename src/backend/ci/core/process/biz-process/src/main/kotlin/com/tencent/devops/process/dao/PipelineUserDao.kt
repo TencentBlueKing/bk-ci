@@ -26,10 +26,10 @@
 
 package com.tencent.devops.process.dao
 
+import com.tencent.devops.common.pipeline.listener.PipelineHardDeleteListener
 import com.tencent.devops.common.pipeline.pojo.PipelineBuildBaseInfo
 import com.tencent.devops.model.process.tables.TPipelineUser
 import com.tencent.devops.model.process.tables.records.TPipelineUserRecord
-import com.tencent.devops.process.listener.PipelineHardDeleteListener
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository

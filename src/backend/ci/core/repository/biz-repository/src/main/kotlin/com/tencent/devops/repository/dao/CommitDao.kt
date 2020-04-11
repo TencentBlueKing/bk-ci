@@ -28,6 +28,8 @@ package com.tencent.devops.repository.dao
 
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.PageUtil
+import com.tencent.devops.common.pipeline.listener.PipelineHardDeleteListener
+import com.tencent.devops.common.pipeline.pojo.PipelineBuildBaseInfo
 import com.tencent.devops.model.repository.tables.TRepositoryCommit
 import com.tencent.devops.model.repository.tables.records.TRepositoryCommitRecord
 import com.tencent.devops.repository.pojo.commit.CommitData
@@ -40,7 +42,30 @@ import java.util.Date
 import java.util.concurrent.TimeUnit
 
 @Repository
-class CommitDao {
+class CommitDao:PipelineHardDeleteListener{
+    override fun onPipelineDeleteHardly(dslContext: DSLContext, pipelineBuildBaseInfoList: List<PipelineBuildBaseInfo>): Boolean {
+        // 表中数据负载因子：平均一次构建在表中产生的数据条数
+        val dataLoadFactor = 8
+        val batchSize = getDeleteDataBatchSize() / dataLoadFactor
+        val buildIds = mutableListOf<String>()
+        pipelineBuildBaseInfoList.forEach { pipelineBuildBaseInfo ->
+            buildIds.addAll(pipelineBuildBaseInfo.buildIdList)
+        }
+        with(TRepositoryCommit.T_REPOSITORY_COMMIT) {
+            var offset = 0
+            do {
+                val toIndex = java.lang.Integer.min(offset + batchSize, buildIds.size)
+                val subList = buildIds.subList(offset, toIndex)
+                dslContext.deleteFrom(this)
+                    .where(BUILD_ID.`in`(subList))
+                    .execute()
+                sleep()
+                offset += batchSize
+            } while (offset < buildIds.size)
+        }
+        return true
+    }
+
     fun getBuildCommit(dslContext: DSLContext, buildId: String): Result<TRepositoryCommitRecord>? {
         with(TRepositoryCommit.T_REPOSITORY_COMMIT) {
             return dslContext.selectFrom(this)

@@ -209,4 +209,9 @@ object MQ {
     // 流水线硬删除清理
     const val EXCHANGE_PIPELINE_HARD_DELETE_FANOUT = "e.engine.pipeline.hard.delete.exchange.fanout"
     const val QUEUE_PIPELINE_HARD_DELETE_REPOSITORY = "q.engine.pipeline.hard.delete.repository"
+    const val QUEUE_PIPELINE_HARD_DELETE_PLUGIN = "q.engine.pipeline.hard.delete.plugin"
+    const val QUEUE_PIPELINE_HARD_DELETE_DISPATCH = "q.engine.pipeline.hard.delete.dispatch"
+    const val QUEUE_PIPELINE_HARD_DELETE_ARTIFACTORY = "q.engine.pipeline.hard.delete.artifactory"
+    const val QUEUE_PIPELINE_HARD_DELETE_QUALITY = "q.engine.pipeline.hard.delete.quality"
+    const val QUEUE_PIPELINE_HARD_DELETE_LOG = "q.engine.pipeline.hard.delete.log"
 }

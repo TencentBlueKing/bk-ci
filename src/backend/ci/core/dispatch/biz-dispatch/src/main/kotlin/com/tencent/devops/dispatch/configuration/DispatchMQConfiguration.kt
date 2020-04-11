@@ -24,7 +24,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.repository.configuration
+package com.tencent.devops.dispatch.configuration
 
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQEventDispatcher
@@ -49,18 +49,18 @@ import org.springframework.context.annotation.Configuration
  * 流水线构建扩展配置
  */
 @Configuration
-class RepositoryMQConfiguration {
+class DispatchMQConfiguration {
 
     @Bean
     fun rabbitAdmin(connectionFactory: ConnectionFactory): RabbitAdmin {
         return RabbitAdmin(connectionFactory)
     }
 
-    @Value("\${queueConcurrency.repository:3}")
-    private val repositoryConcurrency: Int? = null
+    @Value("\${queueConcurrency.dispatch:3}")
+    private val dispatchConcurrency: Int? = null
 
     @Bean
-    fun pipelineHardDeleteRepositoryQueue() = Queue(MQ.QUEUE_PIPELINE_HARD_DELETE_REPOSITORY)
+    fun pipelineHardDeleteDispatchQueue() = Queue(MQ.QUEUE_PIPELINE_HARD_DELETE_DISPATCH)
 
     /**
      * 流水线硬删除广播交换机
@@ -73,11 +73,11 @@ class RepositoryMQConfiguration {
     }
 
     @Bean
-    fun pipelineHardDeleteRepositoryQueueBind(
-        @Autowired pipelineHardDeleteRepositoryQueue: Queue,
+    fun pipelineHardDeleteDispatchQueueBind(
+        @Autowired pipelineHardDeleteDispatchQueue: Queue,
         @Autowired pipelineHardDeleteFanoutExchange: FanoutExchange
     ): Binding {
-        return BindingBuilder.bind(pipelineHardDeleteRepositoryQueue)
+        return BindingBuilder.bind(pipelineHardDeleteDispatchQueue)
             .to(pipelineHardDeleteFanoutExchange)
     }
 
@@ -85,9 +85,9 @@ class RepositoryMQConfiguration {
     fun pipelineEventDispatcher(rabbitTemplate: RabbitTemplate) = MQEventDispatcher(rabbitTemplate)
 
     @Bean
-    fun pipelineHardDeleteRepositoryListenerContainer(
+    fun pipelineHardDeleteDispatchListenerContainer(
         @Autowired connectionFactory: ConnectionFactory,
-        @Autowired pipelineHardDeleteRepositoryQueue: Queue,
+        @Autowired pipelineHardDeleteDispatchQueue: Queue,
         @Autowired rabbitAdmin: RabbitAdmin,
         @Autowired listener: PipelineHardDeleteMQListener,
         @Autowired messageConverter: Jackson2JsonMessageConverter
@@ -96,12 +96,12 @@ class RepositoryMQConfiguration {
         adapter.setMessageConverter(messageConverter)
         return Tools.createSimpleMessageListenerContainerByAdapter(
             connectionFactory = connectionFactory,
-            queue = pipelineHardDeleteRepositoryQueue,
+            queue = pipelineHardDeleteDispatchQueue,
             rabbitAdmin = rabbitAdmin,
             adapter = adapter,
             startConsumerMinInterval = 120000,
             consecutiveActiveTrigger = 10,
-            concurrency = repositoryConcurrency!!,
+            concurrency = dispatchConcurrency!!,
             maxConcurrency = 10
         )
     }

@@ -27,6 +27,8 @@
 package com.tencent.devops.dispatch.dao
 
 import com.tencent.devops.common.api.util.timestamp
+import com.tencent.devops.common.pipeline.listener.PipelineHardDeleteListener
+import com.tencent.devops.common.pipeline.pojo.PipelineBuildBaseInfo
 import com.tencent.devops.dispatch.pojo.PipelineBuild
 import com.tencent.devops.dispatch.pojo.PipelineBuildCreate
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
@@ -38,7 +40,19 @@ import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
 @Repository
-class DispatchPipelineBuildDao {
+class DispatchPipelineBuildDao : PipelineHardDeleteListener {
+    override fun onPipelineDeleteHardly(dslContext: DSLContext, pipelineBuildBaseInfoList: List<PipelineBuildBaseInfo>): Boolean {
+        val buildIds = mutableListOf<String>()
+        pipelineBuildBaseInfoList.forEach { pipelineBuildBaseInfo ->
+            buildIds.addAll(pipelineBuildBaseInfo.buildIdList)
+        }
+        with(TDispatchPipelineBuild.T_DISPATCH_PIPELINE_BUILD) {
+            dslContext.deleteFrom(this)
+                .where(BUILD_ID.`in`(buildIds))
+                .execute()
+        }
+        return true
+    }
 
     fun exist(dslContext: DSLContext, buildId: String, vmSeqId: String): Boolean {
         with(TDispatchPipelineBuild.T_DISPATCH_PIPELINE_BUILD) {
