@@ -126,7 +126,7 @@ class QualityPipelineService @Autowired constructor(
         checkElements.forEach { checkElement ->
             val isCheckCodeccElemenet = CodeccUtils.isCodeccAtom(checkElement)
             val isExist = if (isCheckCodeccElemenet) originElementList.any { originElement -> CodeccUtils.isCodeccAtom(originElement.first) }
-            else originElementList.any { originElement -> checkElement == originElement.first}
+            else originElementList.any { originElement -> checkElement == originElement.first }
             if (!isExist) lackElements.add(checkElement)
         }
 
