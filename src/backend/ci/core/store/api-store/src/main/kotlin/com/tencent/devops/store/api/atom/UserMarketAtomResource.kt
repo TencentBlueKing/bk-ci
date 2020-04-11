@@ -41,6 +41,7 @@ import com.tencent.devops.store.pojo.atom.enums.AtomTypeEnum
 import com.tencent.devops.store.pojo.atom.enums.MarketAtomSortTypeEnum
 import com.tencent.devops.store.pojo.common.InstalledProjRespItem
 import io.swagger.annotations.Api
+import io.swagger.annotations.ApiModelProperty
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
@@ -97,6 +98,12 @@ interface UserMarketAtomResource {
         @ApiParam("研发来源", required = false)
         @QueryParam("rdType")
         rdType: AtomTypeEnum?,
+        @ApiParam("yaml是否可用", required = false)
+        @QueryParam("yamlFlag")
+        yamlFlag: Boolean?,
+        @ApiParam("是否推荐标识 true：推荐，false：不推荐", required = false)
+        @QueryParam("recommendFlag")
+        recommendFlag: Boolean?,
         @ApiParam("排序", required = false)
         @QueryParam("sortType")
         sortType: MarketAtomSortTypeEnum? = MarketAtomSortTypeEnum.CREATE_TIME,
