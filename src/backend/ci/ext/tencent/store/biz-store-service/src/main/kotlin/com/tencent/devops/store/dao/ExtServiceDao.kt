@@ -306,9 +306,9 @@ class ExtServiceDao {
         }
     }
 
-    fun getServiceByName(dslContext: DSLContext, serviceName: String): TExtensionServiceRecord? {
+    fun getServiceByName(dslContext: DSLContext, serviceName: String): Result<TExtensionServiceRecord>? {
         return with(TExtensionService.T_EXTENSION_SERVICE) {
-            dslContext.selectFrom(this).where(DELETE_FLAG.eq(false)).and(SERVICE_NAME.eq(serviceName)).fetchOne()
+            dslContext.selectFrom(this).where(SERVICE_NAME.eq(serviceName)).fetch()
         }
     }
 
@@ -613,6 +613,17 @@ class ExtServiceDao {
             }
         }
         return selectFeild.where(conditions).fetchOne(0, Int::class.java)
+    }
+
+    fun getReleasedService(dslContext: DSLContext, serviceCode: String): Boolean {
+        with(TExtensionService.T_EXTENSION_SERVICE){
+            val record = dslContext.selectFrom(this).where(SERVICE_CODE.eq(serviceCode).and(SERVICE_STATUS.eq(ExtServiceStatusEnum.RELEASED.status.toByte())))
+                .fetch()
+            if(record.isNotEmpty){
+                return false
+            }
+        }
+        return true
     }
 
     /**

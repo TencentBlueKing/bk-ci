@@ -33,13 +33,20 @@ import com.tencent.devops.dispatch.api.ServiceBcsResource
 import com.tencent.devops.store.config.ExtServiceBcsConfig
 import com.tencent.devops.store.config.ExtServiceBcsNameSpaceConfig
 import com.tencent.devops.store.dao.ExtServiceDao
+import com.tencent.devops.store.dao.common.StoreReleaseDao
+import com.tencent.devops.store.pojo.ExtServiceUpdateInfo
+import com.tencent.devops.store.pojo.common.StoreReleaseCreateRequest
+import com.tencent.devops.store.pojo.common.enums.AuditTypeEnum
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.enums.ExtServiceStatusEnum
 import io.fabric8.kubernetes.client.internal.readiness.Readiness
 import org.jooq.DSLContext
+import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
 
 @Service
 class ExtServiceCronService @Autowired constructor(
@@ -48,6 +55,8 @@ class ExtServiceCronService @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val extServiceDao: ExtServiceDao,
     private val extServiceBcsConfig: ExtServiceBcsConfig,
+    private val serviceNotifyService: ExtServiceNotifyService,
+    private val storeReleaseDao: StoreReleaseDao,
     private val extServiceBcsNameSpaceConfig: ExtServiceBcsNameSpaceConfig
 ) {
 
@@ -92,7 +101,12 @@ class ExtServiceCronService @Autowired constructor(
                     val bcsDeployRedisKey = "$bcsDeployRedisPrefixKey:$serviceCode"
                     if (Readiness.isDeploymentReady(deployment)) {
                         it.serviceStatus = ExtServiceStatusEnum.RELEASED.status.toByte()
+                        // 发布相关逻辑
+                        deployService(serviceCode, it.modifier)
+                        it.latestFlag = true
                         redisOperation.delete(bcsDeployRedisKey)
+                        // 发送版本发布邮件
+                        serviceNotifyService.sendServiceReleaseAuditNotifyMessage(it.id, AuditTypeEnum.AUDIT_SUCCESS)
                     } else {
                         val bcsFirstDeployTime = redisOperation.get(bcsDeployRedisKey)
                         if (bcsFirstDeployTime != null) {
@@ -100,6 +114,8 @@ class ExtServiceCronService @Autowired constructor(
                             if ((System.currentTimeMillis() - bcsFirstDeployTime.toLong()) > deployTimeOut * 60 * 1000) {
                                 it.serviceStatus = ExtServiceStatusEnum.RELEASE_DEPLOY_FAIL.status.toByte()
                                 redisOperation.delete(bcsDeployRedisKey)
+                                // 发送版本发布邮件
+                                serviceNotifyService.sendServiceReleaseAuditNotifyMessage(it.id, AuditTypeEnum.AUDIT_REJECT)
                             }
                         } else {
                             // 首次部署的时间存入redis
@@ -120,6 +136,26 @@ class ExtServiceCronService @Autowired constructor(
             logger.error("updateReleaseDeployStatus error:", e)
         } finally {
             redisLock.unlock()
+        }
+    }
+
+    private fun deployService(serviceCode: String, userId: String) {
+        dslContext.transaction { t ->
+            val context = DSL.using(t)
+            // 清空旧版本LATEST_FLAG
+            extServiceDao.cleanLatestFlag(context, serviceCode)
+            // 记录发布信息
+            val pubTime = LocalDateTime.now()
+            storeReleaseDao.addStoreReleaseInfo(
+                dslContext = context,
+                userId = userId,
+                storeReleaseCreateRequest = StoreReleaseCreateRequest(
+                    storeCode = serviceCode,
+                    storeType = StoreTypeEnum.SERVICE,
+                    latestUpgrader = userId,
+                    latestUpgradeTime = pubTime
+                )
+            )
         }
     }
 }

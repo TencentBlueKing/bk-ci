@@ -72,9 +72,7 @@ import com.tencent.devops.store.pojo.common.Label
 import com.tencent.devops.store.pojo.common.ReleaseProcessItem
 import com.tencent.devops.store.pojo.common.StoreMediaInfoRequest
 import com.tencent.devops.store.pojo.common.StoreProcessInfo
-import com.tencent.devops.store.pojo.common.StoreReleaseCreateRequest
 import com.tencent.devops.store.pojo.common.UN_RELEASE
-import com.tencent.devops.store.pojo.common.enums.AuditTypeEnum
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreMemberTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
@@ -136,8 +134,6 @@ abstract class ExtServiceBaseService @Autowired constructor() {
     lateinit var client: Client
     @Autowired
     lateinit var storeUserService: StoreUserService
-    @Autowired
-    lateinit var serviceNotifyService: ExtServiceNotifyService
     @Autowired
     lateinit var storeCommentService: StoreCommentService
     @Autowired
@@ -372,6 +368,8 @@ abstract class ExtServiceBaseService @Autowired constructor() {
             } else {
                 // 升级扩展服务
                 val serviceEnvRecord = extServiceEnvDao.getMarketServiceEnvInfoByServiceId(context, serviceRecord.id)
+                // 若无已发布的扩展，则直接将当前的设置为latest
+                val latestFlag = extServiceDao.getReleasedService(context, serviceCode)
                 upgradeMarketExtService(
                     context = context,
                     userId = userId,
@@ -383,6 +381,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
                         creatorUser = userId,
                         version = submitDTO.version,
                         logoUrl = submitDTO.logoUrl,
+                        latestFlag = latestFlag,
                         summary = submitDTO.summary,
                         description = submitDTO.description,
                         publisher = userId,
@@ -819,46 +818,16 @@ abstract class ExtServiceBaseService @Autowired constructor() {
             if (deployExtServiceResult.isNotOk()) {
                 return deployExtServiceResult
             }
-            val creator = serviceInfo.creator
-            dslContext.transaction { t ->
-                val context = DSL.using(t)
-                // 清空旧版本LATEST_FLAG
-                extServiceDao.cleanLatestFlag(context, serviceCode)
-                // 记录发布信息
-                val pubTime = LocalDateTime.now()
-                storeReleaseDao.addStoreReleaseInfo(
-                    dslContext = context,
-                    userId = userId,
-                    storeReleaseCreateRequest = StoreReleaseCreateRequest(
-                        storeCode = serviceCode,
-                        storeType = StoreTypeEnum.SERVICE,
-                        latestUpgrader = creator,
-                        latestUpgradeTime = pubTime
-                    )
-                )
-                extServiceDao.updateExtServiceBaseInfo(
-                    dslContext = dslContext,
-                    userId = userId,
-                    serviceId = serviceId,
-                    extServiceUpdateInfo = ExtServiceUpdateInfo(
-                        status = newStatus.toInt(),
-                        latestFlag = true,
-                        modifierUser = userId
-                    )
-                )
-            }
-            // 发送版本发布邮件
-            serviceNotifyService.sendAtomReleaseAuditNotifyMessage(serviceId, AuditTypeEnum.AUDIT_SUCCESS)
-        } else {
-            extServiceDao.setServiceStatusByCode(
-                dslContext,
-                serviceInfo.serviceCode,
-                oldStatus,
-                newStatus,
-                userId,
-                "add media file "
-            )
         }
+
+        extServiceDao.setServiceStatusByCode(
+            dslContext,
+            serviceInfo.serviceCode,
+            oldStatus,
+            newStatus,
+            userId,
+            "add media file "
+        )
         return Result(true)
     }
 
@@ -1475,6 +1444,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
             }
         }
     }
+
 
     companion object {
         val logger = LoggerFactory.getLogger(ExtServiceBaseService::class.java)

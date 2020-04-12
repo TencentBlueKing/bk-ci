@@ -29,20 +29,20 @@ import java.math.BigDecimal
 
 @Service
 class ExtServiceSearchService @Autowired constructor(
-    val dslContext: DSLContext,
-    val client: Client,
-    val extServiceDao: ExtServiceDao,
-    val extServiceItemRelDao: ExtServiceItemRelDao,
-    val storeUserService: StoreUserService,
-    val storeVisibleDeptService: StoreVisibleDeptService,
-    val storeMemberService: TxExtServiceMemberImpl,
-    val classifyService: ClassifyService,
-    val storeStatisticDao: StoreStatisticDao
+        val dslContext: DSLContext,
+        val client: Client,
+        val extServiceDao: ExtServiceDao,
+        val extServiceItemRelDao: ExtServiceItemRelDao,
+        val storeUserService: StoreUserService,
+        val storeVisibleDeptService: StoreVisibleDeptService,
+        val storeMemberService: TxExtServiceMemberImpl,
+        val classifyService: ClassifyService,
+        val storeStatisticDao: StoreStatisticDao
 ) {
     fun mainPageList(
-        userId: String,
-        page: Int?,
-        pageSize: Int?
+            userId: String,
+            page: Int?,
+            pageSize: Int?
     ): Result<List<ExtServiceMainItemVo>> {
         val result = mutableListOf<ExtServiceMainItemVo>()
         // 获取用户组织架构
@@ -54,37 +54,49 @@ class ExtServiceSearchService @Autowired constructor(
         // 最火标签
         serviceInfoList.add(MarketMainItemService(HOTTEST, MessageCodeUtil.getCodeLanMessage(HOTTEST)))
         val futureList = mutableListOf<SearchExtServiceVO>()
-
-        futureList.add(
-            doList(
-                userId = userId,
-                userDeptList = userDeptList,
-                serviceName = null,
-                classifyCode = null,
-                bkServiceId = null,
-                labelCode = null,
-                score = null,
-                sortType = ExtServiceSortTypeEnum.UPDATE_TIME,
-                desc = true,
-                page = page,
-                pageSize = pageSize
-            )
+        val lastData =
+                doList(
+                        userId = userId,
+                        userDeptList = userDeptList,
+                        serviceName = null,
+                        classifyCode = null,
+                        bkServiceId = null,
+                        labelCode = null,
+                        score = null,
+                        sortType = ExtServiceSortTypeEnum.UPDATE_TIME,
+                        desc = true,
+                        page = page,
+                        pageSize = pageSize
+                )
+        result.add(
+                ExtServiceMainItemVo(
+                        key = LATEST,
+                        label = "",
+                        records = lastData.records
+                )
         )
 
-        futureList.add(
-            doList(
-                userId = userId,
-                userDeptList = userDeptList,
-                serviceName = null,
-                classifyCode = null,
-                labelCode = null,
-                bkServiceId = null,
-                score = null,
-                sortType = ExtServiceSortTypeEnum.DOWNLOAD_COUNT,
-                desc = true,
-                page = page,
-                pageSize = pageSize
-            )
+        val hotData =
+                doList(
+                        userId = userId,
+                        userDeptList = userDeptList,
+                        serviceName = null,
+                        classifyCode = null,
+                        labelCode = null,
+                        bkServiceId = null,
+                        score = null,
+                        sortType = ExtServiceSortTypeEnum.DOWNLOAD_COUNT,
+                        desc = true,
+                        page = page,
+                        pageSize = pageSize
+                )
+
+        result.add(
+                ExtServiceMainItemVo(
+                        key = HOTTEST,
+                        label = "",
+                        records = hotData.records
+                )
         )
 
         val bkServiceRecord = client.get(ServiceInfoResource::class).getServiceList(userId).data
@@ -100,30 +112,30 @@ class ExtServiceSearchService @Autowired constructor(
             val bkServiceName = serviceInfoMap[bkServiceId.toString()] ?: ""
             serviceInfoList.add(MarketMainItemService(bkServiceId.toString(), bkServiceName))
             futureList.add(
-                doList(
-                    userId = userId,
-                    userDeptList = userDeptList,
-                    classifyCode = null,
-                    serviceName = null,
-                    bkServiceId = bkServiceId,
-                    labelCode = null,
-                    score = null,
-                    sortType = ExtServiceSortTypeEnum.UPDATE_TIME,
-                    desc = true,
-                    page = page,
-                    pageSize = pageSize
-                )
+                    doList(
+                            userId = userId,
+                            userDeptList = userDeptList,
+                            classifyCode = null,
+                            serviceName = null,
+                            bkServiceId = bkServiceId,
+                            labelCode = null,
+                            score = null,
+                            sortType = ExtServiceSortTypeEnum.UPDATE_TIME,
+                            desc = true,
+                            page = page,
+                            pageSize = pageSize
+                    )
             )
         }
         for (index in futureList.indices) {
             val serviceInfo = serviceInfoList[index]
             if (!(futureList[index].records == null || futureList[index].records.isEmpty())) {
                 result.add(
-                    ExtServiceMainItemVo(
-                        key = serviceInfo.key,
-                        label = serviceInfo.bkService,
-                        records = futureList[index].records
-                    )
+                        ExtServiceMainItemVo(
+                                key = serviceInfo.key,
+                                label = serviceInfo.bkService,
+                                records = futureList[index].records
+                        )
                 )
             }
         }
@@ -134,51 +146,51 @@ class ExtServiceSearchService @Autowired constructor(
      * 研发商店-扩展服务，查询插件列表
      */
     fun list(
-        userId: String,
-        serviceName: String?,
-        classifyCode: String?,
-        labelCode: String?,
-        bkServiceId: Long?,
-        score: Int?,
-        rdType: ServiceTypeEnum? = null,
-        sortType: ExtServiceSortTypeEnum?,
-        page: Int?,
-        pageSize: Int?
+            userId: String,
+            serviceName: String?,
+            classifyCode: String?,
+            labelCode: String?,
+            bkServiceId: Long?,
+            score: Int?,
+            rdType: ServiceTypeEnum? = null,
+            sortType: ExtServiceSortTypeEnum?,
+            page: Int?,
+            pageSize: Int?
     ): SearchExtServiceVO {
         // 获取用户组织架构
         val userDeptList = storeUserService.getUserDeptList(userId)
         logger.info("[list]get userDeptList:$userDeptList")
 
         return doList(
-            userId = userId,
-            userDeptList = userDeptList,
-            serviceName = serviceName,
-            classifyCode = classifyCode,
-            labelCode = labelCode,
-            bkServiceId = bkServiceId,
-            score = score,
-            rdType = rdType,
-            sortType = sortType,
-            desc = true,
-            page = page,
-            pageSize = pageSize
+                userId = userId,
+                userDeptList = userDeptList,
+                serviceName = serviceName,
+                classifyCode = classifyCode,
+                labelCode = labelCode,
+                bkServiceId = bkServiceId,
+                score = score,
+                rdType = rdType,
+                sortType = sortType,
+                desc = true,
+                page = page,
+                pageSize = pageSize
         )
     }
 
     @Suppress("UNCHECKED_CAST")
     private fun doList(
-        userId: String,
-        userDeptList: List<Int>,
-        serviceName: String?,
-        classifyCode: String?,
-        labelCode: String?,
-        bkServiceId: Long?,
-        score: Int?,
-        rdType: ServiceTypeEnum? = null,
-        sortType: ExtServiceSortTypeEnum?,
-        desc: Boolean?,
-        page: Int?,
-        pageSize: Int?
+            userId: String,
+            userDeptList: List<Int>,
+            serviceName: String?,
+            classifyCode: String?,
+            labelCode: String?,
+            bkServiceId: Long?,
+            score: Int?,
+            rdType: ServiceTypeEnum? = null,
+            sortType: ExtServiceSortTypeEnum?,
+            desc: Boolean?,
+            page: Int?,
+            pageSize: Int?
     ): SearchExtServiceVO {
         val results = mutableListOf<ExtServiceItem>()
         // 获取扩展服务
@@ -186,17 +198,17 @@ class ExtServiceSearchService @Autowired constructor(
         val count = extServiceDao.count(dslContext, serviceName, classifyCode, bkServiceId, rdType, labelCodeList, score)
         logger.info("doList userId[$userId],userDeptList[$userDeptList],serviceName[$serviceName], rdType[$rdType],classifyCode[$classifyCode],labelCode[$labelCode], bkService[$bkServiceId] sortType[$sortType] count[$count]")
         val services = extServiceDao.list(
-            dslContext = dslContext,
-            serviceName = serviceName,
-            classifyCode = classifyCode,
-            bkService = bkServiceId,
-            labelCodeList = labelCodeList,
-            score = score,
-            rdType = rdType,
-            sortType = sortType,
-            desc = desc,
-            page = page,
-            pageSize = pageSize
+                dslContext = dslContext,
+                serviceName = serviceName,
+                classifyCode = classifyCode,
+                bkService = bkServiceId,
+                labelCodeList = labelCodeList,
+                score = score,
+                rdType = rdType,
+                sortType = sortType,
+                desc = desc,
+                page = page,
+                pageSize = pageSize
         ) ?: return SearchExtServiceVO(0, page, pageSize, results)
         logger.info("[list] userId[$userId],userDeptList[$userDeptList],serviceName[$serviceName],rdType[$rdType],bkService[$bkServiceId],labelCode[$labelCode] sortType[$sortType] get services: $services")
 
@@ -205,7 +217,7 @@ class ExtServiceSearchService @Autowired constructor(
         }.toList()
         // 获取可见范围
         val serviceVisibleData =
-            storeVisibleDeptService.batchGetVisibleDept(serviceCodeList, StoreTypeEnum.SERVICE).data
+                storeVisibleDeptService.batchGetVisibleDept(serviceCodeList, StoreTypeEnum.SERVICE).data
         logger.info("[list]get serviceVisibleData:$serviceVisibleData")
         // 获取热度
         val statField = mutableListOf<String>()
@@ -230,20 +242,20 @@ class ExtServiceSearchService @Autowired constructor(
             val flag = generateInstallFlag(publicFlag, members, userId, visibleList, userDeptList)
             val classifyId = it["CLASSIFY_ID"] as String
             results.add(
-                ExtServiceItem(
-                    id = it["SERVICE_ID"] as String,
-                    name = it["SERVICE_NAME"] as String,
-                    code = serviceCode,
-                    classifyCode = if (classifyMap.containsKey(classifyId)) classifyMap[classifyId] else "",
-                    logoUrl = it["LOGO_URL"] as? String,
-                    publisher = it["PUBLISHER"] as String,
-                    downloads = statistic?.downloads ?: 0,
-                    score = statistic?.score ?: 0.toDouble(),
-                    summary = it["SUMMARY"] as? String,
-                    flag = flag,
-                    publicFlag = it["PUBLIC_FLAG"] as Boolean,
-                    recommendFlag = it["RECOMMEND_FLAG"] as? Boolean
-                )
+                    ExtServiceItem(
+                            id = it["SERVICE_ID"] as String,
+                            name = it["SERVICE_NAME"] as String,
+                            code = serviceCode,
+                            classifyCode = if (classifyMap.containsKey(classifyId)) classifyMap[classifyId] else "",
+                            logoUrl = it["LOGO_URL"] as? String,
+                            publisher = it["PUBLISHER"] as String,
+                            downloads = statistic?.downloads ?: 0,
+                            score = statistic?.score ?: 0.toDouble(),
+                            summary = it["SUMMARY"] as? String,
+                            flag = flag,
+                            publicFlag = it["PUBLIC_FLAG"] as Boolean,
+                            recommendFlag = it["RECOMMEND_FLAG"] as? Boolean
+                    )
             )
         }
 
@@ -252,11 +264,11 @@ class ExtServiceSearchService @Autowired constructor(
     }
 
     fun generateInstallFlag(
-        publicFlag: Boolean,
-        members: MutableList<String>?,
-        userId: String,
-        visibleList: MutableList<Int>?,
-        userDeptList: List<Int>
+            publicFlag: Boolean,
+            members: MutableList<String>?,
+            userId: String,
+            visibleList: MutableList<Int>?,
+            userDeptList: List<Int>
     ): Boolean {
         logger.info("generateInstallFlag publicFlag is: $publicFlag visibleList is:$visibleList,userDeptList is:$userDeptList members is:$members,userId is:$userId")
         return if (publicFlag || (members != null && members.contains(userId))) {
@@ -267,13 +279,13 @@ class ExtServiceSearchService @Autowired constructor(
     }
 
     private fun getStatisticByCodeList(
-        serviceCodeList: List<String>,
-        statFiledList: List<String>
+            serviceCodeList: List<String>,
+            statFiledList: List<String>
     ): Result<HashMap<String, ExtServiceStatistic>> {
         val records = storeStatisticDao.batchGetStatisticByStoreCode(
-            dslContext,
-            serviceCodeList,
-            StoreTypeEnum.SERVICE.type.toByte()
+                dslContext,
+                serviceCodeList,
+                StoreTypeEnum.SERVICE.type.toByte()
         )
         val serviceStatistic = hashMapOf<String, ExtServiceStatistic>()
         records.map {
@@ -290,12 +302,12 @@ class ExtServiceSearchService @Autowired constructor(
         val comments = record.value2()?.toInt()
         val score = record.value3()?.toDouble()
         val averageScore: Double =
-            if (score != null && comments != null && score > 0 && comments > 0) score.div(comments) else 0.toDouble()
+                if (score != null && comments != null && score > 0 && comments > 0) score.div(comments) else 0.toDouble()
 
         return ExtServiceStatistic(
-            downloads = downloads ?: 0,
-            commentCnt = comments ?: 0,
-            score = String.format("%.1f", averageScore).toDoubleOrNull()
+                downloads = downloads ?: 0,
+                commentCnt = comments ?: 0,
+                score = String.format("%.1f", averageScore).toDoubleOrNull()
         )
     }
 

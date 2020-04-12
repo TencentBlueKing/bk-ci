@@ -48,7 +48,7 @@ class ExtServiceNotifyService {
      * @param serviceId 插件ID
      * @param auditType 审核类型
      */
-    fun sendAtomReleaseAuditNotifyMessage(serviceId: String, auditType: AuditTypeEnum) {
+    fun sendServiceReleaseAuditNotifyMessage(serviceId: String, auditType: AuditTypeEnum) {
         val serviceRecord = serviceDao.getServiceById(dslContext, serviceId) ?: return
         // 查出版本日志
         val serviceVersionLogRecord = serviceVersionLogDao.getVersionLogByServiceId(dslContext, serviceId)

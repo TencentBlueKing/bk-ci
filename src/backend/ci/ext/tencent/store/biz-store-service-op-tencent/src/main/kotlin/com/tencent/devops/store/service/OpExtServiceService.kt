@@ -261,23 +261,7 @@ class OpExtServiceService @Autowired constructor(
         dslContext.transaction { t ->
             val context = DSL.using(t)
             var pubTime = LocalDateTime.now()
-            if (releaseFlag) {
-//                // 清空旧版本LATEST_FLAG
-//                extServiceDao.cleanLatestFlag(context, approveReq.serviceCode)
-                // 记录发布信息
-                storeReleaseDao.addStoreReleaseInfo(
-                    dslContext = context,
-                    userId = userId,
-                    storeReleaseCreateRequest = StoreReleaseCreateRequest(
-                        storeCode = serviceCode,
-                        storeType = StoreTypeEnum.SERVICE,
-                        latestUpgrader = creator,
-                        latestUpgradeTime = pubTime
-                    )
-                )
-            }
 
-            // 入库信息，并设置当前版本的LATEST_FLAG
             extServiceDao.approveServiceFromOp(
                 dslContext = context,
                 userId = userId,
@@ -299,10 +283,6 @@ class OpExtServiceService @Autowired constructor(
                 )
             )
         }
-//        // 通过websocket推送状态变更消息,推送所有有该插件权限的用户
-//        storeWebsocketService.sendWebsocketMessageByAtomCodeAndAtomId(serviceCode, atomId)
-        // 发送通知消息
-        serviceNotifyService.sendAtomReleaseAuditNotifyMessage(serviceId, type)
         return Result(true)
     }
 
