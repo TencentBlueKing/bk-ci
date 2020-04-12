@@ -113,7 +113,6 @@ object QualityUtils {
             )
         }
 
-
         val buildCheckParams = BuildCheckParams(
             projectId = projectId,
             pipelineId = pipelineId,
