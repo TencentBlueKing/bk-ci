@@ -55,10 +55,8 @@
                         <h3> {{ $t('store.特性') }} <span @click="clearFliterData('features')" v-show="filterData.features.length"> {{ $t('store.清除') }} </span></h3>
                         <ul class="market-check-group">
                             <li v-for="(feature, index) in features.filter(x => !x.hidden)" :key="index" class="market-checkbox-li" @click="chooseFeature(feature)">
-                                <template v-if="!feature.hidden">
-                                    <span :class="[filterData.features.some((x) => (x.key === feature.key && String(x.value) === String(feature.value))) ? 'checked' : '', 'market-checkbox']"></span>
-                                    <span>{{ feature.name }}</span>
-                                </template>
+                                <span :class="[filterData.features.some((x) => (x.key === feature.key && String(x.value) === String(feature.value))) ? 'checked' : '', 'market-checkbox']"></span>
+                                <span>{{ feature.name }}</span>
                             </li>
                         </ul>
 
