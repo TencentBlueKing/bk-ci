@@ -20,8 +20,8 @@ interface PipelineHardDeleteListener {
         Thread.sleep(500)
     }
 
-    fun getDeleteDataBatchSize():Int{
-        //一次最多删1w条数据
+    fun getDeleteDataBatchSize(): Int {
+        // 一次最多删1w条数据
         return 10000
     }
 }

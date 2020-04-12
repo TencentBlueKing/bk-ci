@@ -26,7 +26,6 @@
 
 package com.tencent.devops.quality.dao.v2
 
-import com.google.common.collect.Sets
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.pipeline.listener.PipelineHardDeleteListener
 import com.tencent.devops.common.pipeline.pojo.PipelineBuildBaseInfo
@@ -39,7 +38,7 @@ import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
-import java.util.*
+import java.util.Arrays
 import javax.ws.rs.NotFoundException
 
 @Repository
@@ -49,7 +48,7 @@ class QualityRuleDao : PipelineHardDeleteListener {
         pipelineBuildBaseInfoList.forEach { pipelineBuildBaseInfo ->
             pipelineIds.add(pipelineBuildBaseInfo.pipelineId)
         }
-        //更新所有数据
+        // 更新所有数据
         with(TQualityRule.T_QUALITY_RULE) {
             val records = dslContext.select(this.ID, this.INDICATOR_RANGE).from(this)
                 .fetch() ?: return true

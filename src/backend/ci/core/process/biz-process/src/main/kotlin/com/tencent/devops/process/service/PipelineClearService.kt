@@ -227,7 +227,7 @@ class PipelineClearService @Autowired constructor(
     }
 
     fun deleteRelatedAndBuildData(pipelineBuildBaseInfoList: List<PipelineBuildBaseInfo>) {
-        //通知其他微服务删除数据
+        // 通知其他微服务删除数据
         pipelineClearDispatcher.dispatch(PipelineHardDeleteBroadCastEvent(
             pipelineBuildBaseInfoList.map { Triple(it.projectId, it.pipelineId, it.buildIdList) }.toList(),
             0,

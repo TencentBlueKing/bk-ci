@@ -218,7 +218,6 @@ class LogMQConfiguration @Autowired constructor() {
             .to(pipelineHardDeleteFanoutExchange)
     }
 
-
     @Bean
     fun pipelineHardDeleteLogListenerContainer(
         @Autowired connectionFactory: ConnectionFactory,

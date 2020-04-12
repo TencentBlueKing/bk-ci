@@ -42,7 +42,7 @@ import java.util.Date
 import java.util.concurrent.TimeUnit
 
 @Repository
-class CommitDao:PipelineHardDeleteListener{
+class CommitDao : PipelineHardDeleteListener {
     override fun onPipelineDeleteHardly(dslContext: DSLContext, pipelineBuildBaseInfoList: List<PipelineBuildBaseInfo>): Boolean {
         // 表中数据负载因子：平均一次构建在表中产生的数据条数
         val dataLoadFactor = 8
