@@ -494,11 +494,11 @@ class GitService @Autowired constructor(
             val nameSpaceName = dataMap["name_with_namespace"] as String
             // 把需要创建项目代码库的用户加入为对应项目的owner用户
             executorService.submit<Unit> {
-                // 添加插件的开发成员
+                // 添加开发成员
                 addGitProjectMember(listOf(userId), nameSpaceName, GitAccessLevelEnum.MASTER, token, tokenType)
                 if (!sampleProjectPath.isNullOrBlank()) {
                     // 把样例工程代码添加到用户的仓库
-                    initRepositoryInfo(userId, sampleProjectPath!!, token, tokenType, repositoryName, repositoryUrl as String)
+                    initRepositoryInfo(userId, nameSpaceName, sampleProjectPath!!, token, tokenType, repositoryName, repositoryUrl as String)
                 }
             }
             return Result(GitRepositoryResp(nameSpaceName, repositoryUrl as String))
@@ -507,6 +507,7 @@ class GitService @Autowired constructor(
 
     fun initRepositoryInfo(
         userId: String,
+        nameSpaceName: String,
         sampleProjectPath: String,
         token: String,
         tokenType: TokenTypeEnum,
@@ -514,7 +515,7 @@ class GitService @Autowired constructor(
         repositoryUrl: String
     ): Result<Boolean> {
         logger.info("initRepositoryInfo userId is:$userId,sampleProjectPath is:$sampleProjectPath,repositoryUrl is:$repositoryUrl")
-        logger.info("initRepositoryInfo token is:$token,tokenType is:$tokenType,repositoryName is:$repositoryName")
+        logger.info("initRepositoryInfo nameSpaceName is:$nameSpaceName,token is:$token,tokenType is:$tokenType,repositoryName is:$repositoryName")
         val tmpWorkspace = Files.createTempDirectory(repositoryName).toFile()
         logger.info("initRepositoryInfo tmpWorkspace is:${tmpWorkspace.absolutePath}")
         try {
@@ -534,7 +535,7 @@ class GitService @Autowired constructor(
             }
             // 处理示例工程的文件
             val handleFileResult =
-                sampleProjectGitFileService.handleSampleProjectGitFile(repositoryName, sampleProjectPath, fileDir)
+                sampleProjectGitFileService.handleSampleProjectGitFile(nameSpaceName, repositoryName, fileDir)
             if (handleFileResult.isNotOk()) {
                 return handleFileResult
             }
