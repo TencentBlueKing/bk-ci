@@ -27,6 +27,8 @@
 package com.tencent.devops.dispatch.dao
 
 import com.tencent.devops.common.api.pojo.Zone
+import com.tencent.devops.common.pipeline.listener.PipelineHardDeleteListener
+import com.tencent.devops.common.pipeline.pojo.PipelineBuildBaseInfo
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.model.dispatch.tables.TDispatchPipelineDockerDebug
 import com.tencent.devops.model.dispatch.tables.records.TDispatchPipelineDockerDebugRecord
@@ -41,7 +43,16 @@ import java.sql.Timestamp
 import java.time.LocalDateTime
 
 @Repository
-class PipelineDockerDebugDao {
+class PipelineDockerDebugDao : PipelineHardDeleteListener {
+
+    override fun onPipelineDeleteHardly(dslContext: DSLContext, pipelineBuildBaseInfoList: List<PipelineBuildBaseInfo>): Boolean {
+        with(TDispatchPipelineDockerDebug.T_DISPATCH_PIPELINE_DOCKER_DEBUG) {
+            dslContext.deleteFrom(this)
+                .where(PIPELINE_ID.`in`(pipelineBuildBaseInfoList.map { it.pipelineId }))
+                .execute()
+        }
+        return true
+    }
 
     fun insertDebug(
         dslContext: DSLContext,
