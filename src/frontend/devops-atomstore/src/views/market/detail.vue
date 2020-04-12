@@ -15,7 +15,7 @@
         <main class="store-main" v-if="!isLoading">
             <component :is="`${type}Info`" :detail="detail" class="detail-info"></component>
             <bk-tab type="unborder-card" :active.sync="currentTab" class="detail-tabs">
-                <bk-tab-panel :name="tab.name" :label="tab.label" v-for="(tab, index) in tabList[type]" :key="index">
+                <bk-tab-panel :name="tab.name" :label="tab.label" v-for="(tab, index) in tabList[type].filter(x => !x.hidden)" :key="index">
                     <component :is="tab.componentName" v-bind="tab.bindData"></component>
                 </bk-tab-panel>
             </bk-tab>
@@ -81,7 +81,7 @@
                 return {
                     atom: [
                         { componentName: 'detailScore', label: this.$t('概述'), name: 'des' },
-                        { componentName: 'codeSection', label: 'YAML', name: 'YAML', bindData: { code: this.detail.codeSection, limitHeight: false } }
+                        { componentName: 'codeSection', label: 'YAML', name: 'YAML', bindData: { code: this.detail.codeSection, limitHeight: false }, hidden: !this.detail.yamlFlag }
                     ],
                     template: [
                         { componentName: 'detailScore', label: this.$t('概述'), name: 'des' }

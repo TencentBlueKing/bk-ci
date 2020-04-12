@@ -1,5 +1,7 @@
 {
     "store": "Store",
+    "是否推荐": "Whether to recommend",
+    "YAML可用": "YAML is available",
     "若模版中有未安装的插件，将自动安装": "If there are uninstalled plugins in the template, they will be installed automatically",
     "debugTask": "Debug task.json",
     "手动录入": "Enter manually",
