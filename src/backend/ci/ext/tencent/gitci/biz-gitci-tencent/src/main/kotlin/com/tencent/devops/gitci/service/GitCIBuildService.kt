@@ -169,7 +169,7 @@ class GitCIBuildService @Autowired constructor(
 
         // 第一个stage，触发类
         val manualTriggerElement = ManualTriggerElement("手动触发", "T-1-1-1")
-        val params: List<BuildFormProperty> = createPipelineParams(gitProjectConf, yaml, event)
+        val params = createPipelineParams(gitProjectConf, yaml, event)
         val triggerContainer = TriggerContainer("0", "构建触发", listOf(manualTriggerElement), null, null, null, null, params)
         val stage1 = Stage(listOf(triggerContainer), "stage-1")
         stageList.add(stage1)
@@ -386,7 +386,7 @@ class GitCIBuildService @Autowired constructor(
         }
     }
 
-    private fun createPipelineParams(gitProjectConf: GitRepositoryConf, yaml: CIBuildYaml, event: GitRequestEvent): List<BuildFormProperty> {
+    private fun createPipelineParams(gitProjectConf: GitRepositoryConf, yaml: CIBuildYaml, event: GitRequestEvent): MutableList<BuildFormProperty> {
         val result = mutableListOf<BuildFormProperty>()
         gitProjectConf.env?.forEach {
             val value = gitCIParameterUtils.encrypt(it.value)

@@ -24,32 +24,22 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.scm.api
+package com.tencent.devops.worker.common.service
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.repository.pojo.oauth.GitToken
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
-import javax.ws.rs.Consumes
-import javax.ws.rs.GET
-import javax.ws.rs.Path
-import javax.ws.rs.Produces
-import javax.ws.rs.QueryParam
-import javax.ws.rs.core.MediaType
+import com.tencent.devops.common.api.enums.OSType
+import com.tencent.devops.store.pojo.app.BuildEnv
+import com.tencent.devops.store.pojo.common.enums.BuildHostTypeEnum
 
-@Api(tags = ["SERVICE_SCM_GIT_CI"], description = "Service Code GIT CI resource")
-@Path("/service/gitci/")
-@Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
-interface SerivceGitCiResource {
+interface AtomTargetHandleService {
 
-    @ApiOperation("获取项目的token")
-    @GET
-    @Path("/getToken")
-    fun getToken(
-        @ApiParam("gitProjectId", required = true)
-        @QueryParam("gitProjectId")
-        gitProjectId: String
-    ): Result<GitToken>
+    /**
+     * 处理target入口命令逻辑
+     */
+    fun handleAtomTarget(
+        target: String,
+        osType: OSType,
+        buildHostType: BuildHostTypeEnum,
+        systemEnvVariables: Map<String, String>,
+        buildEnvs: List<BuildEnv>
+    ): String
 }
