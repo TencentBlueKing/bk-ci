@@ -1,49 +1,55 @@
 <template>
-    <section class="scroll-home" @mousewheel.prevent="handleWheel" @DOMMouseScroll.prevent="handleWheel">
-        <ul class="scroll-index scroll" :style="`top: ${-totalScrollHeight}px; width: ${indexWidth}px`">
-            <li class="scroll-item" :style="`height: ${itemHeight}px; top: ${item.top}px`" v-for="(item) in indexList" :key="item">
-                {{item.value}}
-                <span :class="[{ 'show-all': (item.tagData.list || []).length }, 'log-folder']" v-if="item.tagData" @click="foldListData(item.tagData || {})"></span>
-            </li>
-        </ul>
-        <ul class="scroll scroll-main" :style="`top: ${-totalScrollHeight}px;width: ${mainWidth}px; left: ${indexWidth}px`">
-            <li :class="[{ 'pointer': item.tagData }, 'scroll-item']"
-                :style="`height: ${itemHeight}px; top: ${item.top}px; left: ${-bottomScrollDis * (itemWidth - mainWidth) / (mainWidth - bottomScrollWidth) }px; width: ${itemWidth}px`"
-                v-for="item in listData"
-                :key="item.top + item.value"
-                @click="foldListData(item.tagData || {})"
-            ><slot :data="item"></slot>
-            </li>
-        </ul>
-        <span class="min-nav min-map" :style="`height: ${visHeight}px; right: ${visWidth * 11 / 100}px`"></span>
-        <canvas class="min-nav no-scroll" :style="`height: ${visHeight}px; width: ${visWidth / 10}px;right: ${visWidth / 100}px`" ref="minMap" @click="changeMinMap"></canvas>
-        <span class="min-nav-slide no-scroll"
-            v-if="itemHeight * totalNumber > visHeight"
-            :style="`height: ${visHeight / 8}px; width: ${visWidth / 10}px; top: ${minMapTop}px;right: ${visWidth / 100}px`"
-            @mousedown="startNavMove(mapHeight - visHeight / 8)"
-        >
-        </span>
-        <canvas class="min-nav" :style="`height: ${visHeight}px; width: ${visWidth / 100}px`" ref="minNav"></canvas>
-        <span class="min-nav-slide nav-show"
-            :style="`height: ${navHeight}px; width: ${visWidth / 100}px; top: ${minNavTop}px`"
-            v-if="navHeight < visHeight"
-            @mousedown="startNavMove(visHeight - navHeight)"
-        >
-        </span>
-        <span class="min-nav-slide bottom-scroll"
-            :style="`left: ${indexWidth + bottomScrollDis + 20}px; width: ${bottomScrollWidth}px`"
-            v-if="bottomScrollWidth < mainWidth"
-            @mousedown="startBottomMove"
-        >
-        </span>
-        <p class="list-empty" v-if="!$parent.isInit && totalNumber <= 0">{{ language('日志内容为空') }}</p>
+    <section :class="['scroll-home', id, { 'min-height': totalNumber <= 0, 'show-empty': hasCompleteInit }]" :style="`height: ${visHeight}px`" @mousewheel="handleWheel" @DOMMouseScroll="handleWheel">
+        <template v-if="!isLogErr">
+            <ul class="scroll-index scroll" :style="`top: ${-totalScrollHeight}px; width: ${indexWidth}px; height: ${ulHeight}px`">
+                <li class="scroll-item" :style="`height: ${itemHeight}px; top: ${item.top}px`" v-for="(item) in indexList" :key="item">
+                    {{item.isNewLine ? '' : item.value}}
+                    <span :class="[{ 'show-all': item.hasFolded }, 'log-folder']" v-if="item.isFold" @click="foldListData(item.index, item.isFold)"></span>
+                </li>
+            </ul>
+            <ul class="scroll scroll-main" :style="`height: ${ulHeight}px; top: ${-totalScrollHeight}px ;width: ${mainWidth}px; left: ${indexWidth}px`">
+                <li :class="[{ 'pointer': item.isFold, hover: item.showIndex === curHoverIndex }, 'scroll-item']"
+                    @mouseenter="curHoverIndex = item.showIndex"
+                    @mouseleave="curHoverIndex = -1"
+                    :style="`height: ${itemHeight}px; top: ${item.top}px; left: ${-bottomScrollDis * (itemWidth - mainWidth) / (mainWidth - bottomScrollWidth) }px;`"
+                    v-for="item in listData"
+                    :key="item.top + item.value"
+                    @click="foldListData(item.index, item.isFold)"
+                ><slot :data="item"></slot>
+                </li>
+            </ul>
+            <span v-if="itemHeight * totalNumber > visHeight" class="min-nav min-map" :style="`height: ${visHeight}px; right: ${visWidth * 11 / 100}px`"></span>
+            <canvas v-show="itemHeight * totalNumber > visHeight" class="min-nav no-scroll" :style="`height: ${visHeight}px; width: ${visWidth / 10}px;right: ${visWidth / 100}px`" ref="minMap" @click="changeMinMap"></canvas>
+            <span class="min-nav-slide no-scroll"
+                v-if="itemHeight * totalNumber > visHeight"
+                :style="`height: ${visHeight / 8}px; width: ${visWidth / 10}px; top: ${minMapTop}px;right: ${visWidth / 100}px`"
+                @mousedown="startNavMove(mapHeight - visHeight / 8)"
+            >
+            </span>
+            <canvas class="min-nav" :style="`height: ${visHeight}px; width: ${visWidth / 100}px`" ref="minNav"></canvas>
+            <span class="min-nav-slide nav-show"
+                :style="`height: ${navHeight}px; width: ${visWidth / 100}px; top: ${minNavTop}px`"
+                v-if="navHeight < visHeight"
+                @mousedown="startNavMove(visHeight - navHeight)"
+            >
+            </span>
+            <span class="min-nav-slide bottom-scroll"
+                :style="`left: ${indexWidth + bottomScrollDis + 20}px; width: ${bottomScrollWidth}px`"
+                v-if="bottomScrollWidth < mainWidth"
+                @mousedown="startBottomMove"
+            >
+            </span>
+        </template>
+
+        <p class="list-empty" v-if="isLogErr || (hasCompleteInit && totalNumber <= 0)">{{ errMessage }}</p>
+        <section class="log-loading" v-if="!hasCompleteInit">
+            <div class="lds-ring"><div></div><div></div><div></div><div></div></div>
+        </section>
     </section>
 </template>
 
 <script>
     import language from './locale'
-    // eslint-disable-next-line
-    const Worker = require('worker-loader!./worker.js')
 
     export default {
         props: {
@@ -51,20 +57,23 @@
                 type: Number,
                 default: 16
             },
+            maxHeight: {
+                type: Number,
+                default: 0
+            },
             id: {
                 type: String
             },
-            currentExe: {
-                type: Number
+            worker: {
+                type: Object
             }
         },
 
         data () {
             return {
+                ulHeight: 0,
                 indexList: [],
                 listData: [],
-                foldList: [],
-                worker: {},
                 totalHeight: 0,
                 itemNumber: 0,
                 totalNumber: 0,
@@ -83,7 +92,11 @@
                 indexWidth: 0,
                 itemWidth: 0,
                 isScrolling: false,
-                isBottomMove: false
+                isBottomMove: false,
+                curHoverIndex: -1,
+                hasCompleteInit: false,
+                errMessage: language('日志内容为空'),
+                isLogErr: false
             }
         },
 
@@ -94,14 +107,13 @@
         },
 
         mounted () {
-            this.initStatus()
+            this.setVisWidth()
             this.initEvent()
             this.initWorker()
-            this.drawMinNav()
         },
 
         beforeDestroy () {
-            this.worker.terminate()
+            document.removeEventListener('mousedown', this.clearSelection)
             document.removeEventListener('mousemove', this.minNavMove)
             document.removeEventListener('mouseup', this.moveEnd)
             window.removeEventListener('resize', this.resize)
@@ -111,11 +123,27 @@
         methods: {
             language,
 
+            clearSelection () {
+                window.getSelection().removeAllRanges()
+            },
+
+            setVisWidth () {
+                const mainEle = document.querySelector(`.${this.id}`)
+                this.visWidth = mainEle.offsetWidth
+            },
+
+            handleApiErr (errMessage) {
+                this.hasCompleteInit = true
+                this.isLogErr = true
+                this.errMessage = errMessage
+            },
+
             resetData () {
-                this.foldList = []
                 this.totalNumber = 0
-                this.setStatus()
-                this.worker.postMessage({ type: 'resetData' })
+                this.indexList = []
+                this.listData = []
+                this.initStatus()
+                this.worker.postMessage({ type: 'resetData', id: this.id })
             },
 
             changeMinMap () {
@@ -130,23 +158,10 @@
                 this.getListData(this.totalScrollHeight)
             },
 
-            initLink () {
-                const query = this.$route.query || {}
-                const minMapTop = query.minMapTop
-                const id = query.id
-                const currentExe = +query.currentExe
-                if (typeof minMapTop !== 'undefined' && id === this.id && currentExe === +this.currentExe) {
-                    this.minMapTop = +minMapTop
-                    this.totalScrollHeight = this.minMapTop / (this.mapHeight - this.visHeight / 8) * (this.totalHeight - this.visHeight)
-                    this.minNavTop = this.minMapTop * (this.visHeight - this.navHeight) / (this.mapHeight - this.visHeight / 8)
-                    this.getListData(this.totalScrollHeight, false, 'initLink')
-                }
-            },
-
-            foldListData (tagData) {
-                const { startIndex } = tagData
-                if (typeof startIndex !== 'undefined') {
+            foldListData (startIndex, isFold) {
+                if (isFold) {
                     const postData = {
+                        id: this.id,
                         type: 'foldListData',
                         startIndex
                     }
@@ -155,19 +170,31 @@
             },
 
             initStatus () {
-                const mainEle = document.querySelector('.scroll-home')
-                this.visHeight = mainEle.offsetHeight
-                this.visWidth = mainEle.offsetWidth
-                const dpr = window.devicePixelRatio || 1
-                this.$refs.minMap.width = this.visWidth / 10 * dpr
-                this.$refs.minMap.height = this.visHeight * dpr
-                this.$refs.minMap.getContext('2d').setTransform(dpr, 0, 0, dpr, 0, 0)
-                this.$refs.minNav.width = this.visWidth / 100 * dpr
-                this.$refs.minNav.height = this.visHeight * dpr
-                this.$refs.minNav.getContext('2d').setTransform(dpr, 0, 0, dpr, 0, 0)
+                const mainEle = document.querySelector(`.${this.id}`)
+                let visHeight = mainEle.offsetHeight
+                this.totalHeight = this.totalNumber * this.itemHeight
+                if (this.maxHeight) visHeight = this.totalHeight > this.maxHeight ? this.maxHeight : this.totalHeight
+                if (this.visHeight !== visHeight) {
+                    this.visHeight = visHeight
+                    const dpr = window.devicePixelRatio || 1
+                    this.$refs.minMap.width = this.visWidth / 10 * dpr
+                    this.$refs.minMap.height = this.visHeight * dpr
+                    this.$refs.minMap.getContext('2d').setTransform(dpr, 0, 0, dpr, 0, 0)
+                    this.$refs.minNav.width = this.visWidth / 100 * dpr
+                    this.$refs.minNav.height = this.visHeight * dpr
+                    this.$refs.minNav.getContext('2d').setTransform(dpr, 0, 0, dpr, 0, 0)
+                }
+                this.itemNumber = this.totalHeight > this.visHeight ? Math.ceil(this.visHeight / this.itemHeight) : this.totalNumber
+                this.ulHeight = this.totalHeight > 400000 ? 1000000 : this.totalHeight
+                const heightRate = this.visHeight / this.totalHeight
+                const minNavHeight = heightRate * this.visHeight
+                this.navHeight = heightRate > 1 ? this.visHeight : (minNavHeight < 20 ? 20 : minNavHeight)
+                const moveMaxHeight = this.totalNumber * this.itemHeight / 8
+                this.mapHeight = moveMaxHeight < this.visHeight ? moveMaxHeight : this.visHeight
             },
 
             initEvent () {
+                document.addEventListener('mousedown', this.clearSelection)
                 document.addEventListener('mousemove', this.minNavMove)
                 document.addEventListener('mouseup', this.moveEnd)
                 window.addEventListener('resize', this.resize)
@@ -178,7 +205,6 @@
                 this.slowExec(() => {
                     const lastHeight = this.visHeight
                     this.initStatus()
-                    this.setStatus()
                     this.minMapTop = this.visHeight / lastHeight * this.minMapTop
                     this.minNavTop = this.minMapTop * (this.visHeight - this.navHeight) / (this.mapHeight - this.visHeight / 8)
                     
@@ -206,6 +232,7 @@
             },
 
             handleHorizontalScroll (event) {
+                event.preventDefault()
                 if (this.bottomScrollWidth >= this.mainWidth) return
 
                 const deltaX = -Math.max(-1, Math.min(1, (event.wheelDeltaX || -event.detail)))
@@ -216,9 +243,16 @@
             },
 
             handleVerticalScroll (event) {
-                if (this.itemHeight * this.totalNumber <= this.visHeight) return
-
                 const deltaY = Math.max(-1, Math.min(1, (event.wheelDeltaY || -event.detail)))
+                const firstIndex = this.indexList[0] || {}
+                const lastIndex = this.indexList[this.indexList.length - 1] || {}
+                const scrollEle = this.$el.parentElement.parentElement || {}
+                const downPreDefault = lastIndex.listIndex + 1 < this.totalNumber || scrollEle.scrollTop + scrollEle.offsetHeight >= scrollEle.scrollHeight
+                const upPreDefault = firstIndex.listIndex > 0 || scrollEle.scrollTop <= 0
+                const shouldPreDefault = deltaY < 0 ? downPreDefault : upPreDefault
+                if (shouldPreDefault) event.preventDefault()
+
+                if (this.itemHeight * this.totalNumber <= this.visHeight) return
                 let dis = deltaY * -(this.itemHeight * 3)
                 let tickGap = deltaY * -2
                 if (deltaY === 0) {
@@ -251,14 +285,15 @@
                 this.getListData(totalScrollHeight)
                 this.isScrolling = true
             },
-            
+
             scrollPageByIndex (index) {
-                let height = this.itemHeight * (index + 1)
+                let height = this.itemHeight * index
                 if (height <= 0) height = 0
                 else if (height >= this.totalHeight - this.visHeight) height = this.totalHeight - this.visHeight
                 if (this.totalHeight <= this.visHeight) height = 0
-                this.minMapTop = height / (this.totalHeight - this.visHeight) * (this.mapHeight - this.visHeight / 8)
-                this.minNavTop = height / (this.totalHeight - this.visHeight) * (this.visHeight - this.navHeight)
+                const heightDiff = (this.totalHeight - this.visHeight) || 1
+                this.minMapTop = height / heightDiff * (this.mapHeight - this.visHeight / 8)
+                this.minNavTop = height / heightDiff * (this.visHeight - this.navHeight)
                 this.getListData(height)
             },
 
@@ -273,43 +308,55 @@
                     canvasHeight: this.visHeight,
                     canvasWidth: this.visWidth / 10,
                     minMapTop: this.minMapTop,
-                    mapHeight: this.mapHeight
+                    mapHeight: this.mapHeight,
+                    id: this.id
                 }
                 this.worker.postMessage(postData)
             },
 
             initWorker () {
-                this.worker = new Worker()
                 this.worker.addEventListener('message', (event) => {
                     const data = event.data
+                    if (data.id !== this.id) return
                     switch (data.type) {
                         case 'completeInit':
-                            this.totalNumber = data.number
-                            this.foldList = data.foldList
-                            this.setStatus()
-                            this.initLink()
+                            this.freshDataScrollBottom(data)
+                            this.hasCompleteInit = true
+                            break
+                        case 'completeAdd':
+                            const lastIndexData = this.indexList[this.indexList.length - 1] || { listIndex: 0 }
+                            if (this.totalNumber - lastIndexData.listIndex <= 3) {
+                                this.freshDataScrollBottom(data)
+                            } else {
+                                this.freshDataNoScroll(data)
+                            }
                             break
                         case 'wheelGetData':
                             this.drawList(data)
                             break
                         case 'completeFold':
-                            const oldNumber = this.totalNumber
-                            const oldItemNumber = this.itemNumber
-                            const oldMapHeight = this.mapHeight
-                            const oldVisHeight = this.visHeight
-                            this.totalNumber = data.number
-                            this.foldList = data.foldList
-                            this.setStatus()
-                            this.getNumberChangeList({ oldNumber, oldItemNumber, oldMapHeight, oldVisHeight })
-                            break
-                        case 'initLink':
-                            this.drawList(data)
-                            setTimeout(() => {
-                                this.handleInitLink()
-                            }, 0)
+                            this.freshDataNoScroll(data)
                             break
                     }
                 })
+            },
+
+            freshDataScrollBottom (data) {
+                this.totalNumber = data.number
+                this.indexWidth = (Math.log10(this.totalNumber) + 1) * 7
+                this.initStatus()
+                this.scrollPageByIndex(this.totalNumber - this.itemNumber + 1)
+            },
+
+            freshDataNoScroll (data) {
+                const oldNumber = this.totalNumber
+                const oldItemNumber = this.itemNumber
+                const oldMapHeight = this.mapHeight
+                const oldVisHeight = this.visHeight
+                this.totalNumber = data.number
+                this.indexWidth = (Math.log10(this.totalNumber) + 1) * 7
+                this.initStatus()
+                this.getNumberChangeList({ oldNumber, oldItemNumber, oldMapHeight, oldVisHeight })
             },
 
             getNumberChangeList ({ oldNumber, oldItemNumber, oldMapHeight, oldVisHeight }) {
@@ -325,27 +372,6 @@
                 this.minMapTop = minMapTop
                 this.minNavTop = this.minMapTop * (this.visHeight - this.navHeight) / ((this.mapHeight - this.visHeight / 8) || 1)
                 this.getListData(totalScrollHeight)
-            },
-
-            handleInitLink () {
-                const { bottomScrollDis, startShareIndex, endShareIndex, startOffset, endOffset, isStartFirst, isEndFirst } = this.$route.query
-                this.bottomScrollDis = +bottomScrollDis || 0
-                const list = document.querySelectorAll('.item-txt')
-                const selection = window.getSelection()
-                const range = document.createRange()
-                const start = Array.from(list).find((x) => (x.parentNode.offsetTop === +startShareIndex))
-                const end = Array.from(list).find((x) => (x.parentNode.offsetTop === +endShareIndex))
-                if (!start || !end) return
-                const startElement = start.children[+isStartFirst]
-                const endElement = end.children[+isEndFirst]
-                let startRange = +startOffset
-                let endRange = +endOffset
-                if (startRange > startElement.childNodes[0].length) startRange = startElement.childNodes[0].length
-                if (endRange > endElement.childNodes[0].length) endRange = endElement.childNodes[0].length
-                range.setStart(startElement.childNodes[0], startRange)
-                range.setEnd(endElement.childNodes[0], endRange)
-                selection.removeAllRanges()
-                selection.addRange(range)
             },
 
             drawList (data) {
@@ -364,65 +390,10 @@
                 this.isScrolling = false
             },
 
-            addListData (list, type, foldIndexs = []) {
-                const postData = { type, list, foldIndexs }
-                this.totalNumber += list.length
-                this.indexWidth = (Math.log10(this.totalNumber) + 1) * 7
-                list.forEach((item) => {
-                    const width = this.mainWidth / (item.message.length * 6.8) * this.mainWidth
-                    if (width < (this.addListData.tempWidth || Infinity) && width < this.mainWidth) {
-                        const textWidth = this.getTextWidth(item.message)
-                        let bottomScrollWidth = this.mainWidth / textWidth * this.mainWidth
-                        if (bottomScrollWidth < 100) bottomScrollWidth = 100
-                        this.itemWidth = textWidth
-                        this.bottomScrollWidth = bottomScrollWidth
-                        this.addListData.tempWidth = width
-                    }
-                })
-                this.setStatus()
+            addLogData (list) {
+                const type = this.hasCompleteInit ? 'addListData' : 'initLog'
+                const postData = { type, list, mainWidth: this.mainWidth, id: this.id }
                 this.worker.postMessage(postData)
-            },
-
-            getTextWidth (text) {
-                const lDiv = document.createElement('div')
-                document.body.appendChild(lDiv)
-                lDiv.style.fontFamily = "Consolas, 'Courier New', monospace"
-                lDiv.style.fontSize = '12px'
-                lDiv.style.height = '16px'
-                lDiv.style.position = 'fixed'
-                lDiv.style.wordBreak = 'keep-all'
-                lDiv.style.whiteSpace = 'nowrap'
-                lDiv.style.fontWeight = 'normal'
-                lDiv.style.letterSpacing = '0px'
-                lDiv.style.opacity = 0
-                lDiv.innerHTML = text.replace(/\s|<|>/g, (str) => {
-                    let res = '&nbsp;'
-                    switch (str) {
-                        case '<':
-                            res = '&lt;'
-                            break
-                        case '>':
-                            res = '&gt;'
-                            break
-                        default:
-                            res = '&nbsp;'
-                            break
-                    }
-                    return res
-                }).replace(/&lt;a.+?href=["']?([^"']+)["']?.*&gt;(.+)&lt;\/a&gt;/g, "<a href='$1' target='_blank'>$2</a>")
-                const res = lDiv.clientWidth + 200
-                document.body.removeChild(lDiv)
-                return res
-            },
-
-            setStatus () {
-                this.totalHeight = this.totalNumber * this.itemHeight
-                this.itemNumber = this.totalHeight > this.visHeight ? Math.ceil(this.visHeight / this.itemHeight) : this.totalNumber
-                const heightRate = this.visHeight / this.totalHeight
-                const minNavHeight = heightRate * this.visHeight
-                this.navHeight = heightRate > 1 ? this.visHeight : (minNavHeight < 20 ? 20 : minNavHeight)
-                const moveMaxHeight = this.totalNumber * this.itemHeight / 8
-                this.mapHeight = moveMaxHeight < this.visHeight ? moveMaxHeight : this.visHeight
             },
 
             startBottomMove (event) {
@@ -482,30 +453,57 @@
                 event.preventDefault()
                 this.startMinMapMove = false
                 this.isBottomMove = false
-            },
-
-            drawMinNav (searchList = []) {
-                const context = this.$refs.minNav.getContext('2d')
-                const width = this.visWidth / 100
-                context.clearRect(0, 0, width, this.visHeight)
-                context.lineWidth = 1
-                context.fillStyle = 'rgba(255, 255, 255, 0.45)'
-                context.strokeStyle = 'rgba(255, 255, 255, 0.3)'
-                context.beginPath()
-                context.moveTo(0, 0)
-                searchList.forEach((item) => {
-                    const y = item / this.totalNumber * this.visHeight
-                    context.lineTo(0, y)
-                    context.fillRect(0, y, width, 2)
-                })
-                context.lineTo(0, this.visHeight)
-                context.stroke()
             }
         }
     }
 </script>
 
 <style lang="scss" scoped>
+    .log-loading {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 100%;
+        background: #1e1e1e;
+        z-index: 100;
+        .lds-ring {
+            display: inline-block;
+            position: relative;
+            width: 80px;
+            height: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        .lds-ring div {
+            box-sizing: border-box;
+            display: block;
+            position: absolute;
+            width: 37px;
+            height: 37px;
+            border: 3px solid #fff;
+            border-radius: 50%;
+            animation: lds-ring 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+            border-color: #fff transparent transparent transparent;
+        }
+        .lds-ring div:nth-child(1) {
+            animation-delay: -0.45s;
+        }
+        .lds-ring div:nth-child(2) {
+            animation-delay: -0.3s;
+        }
+        .lds-ring div:nth-child(3) {
+            animation-delay: -0.15s;
+        }
+        @keyframes lds-ring {
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    }
+
     ul, li {
         margin: 0;
         padding: 0;
@@ -515,6 +513,12 @@
         position: relative;
         height: 100%;
         overflow-y: hidden;
+        &.min-height {
+            min-height: 20px;
+            &.show-empty {
+                min-height: 100px;
+            }
+        }
         .list-empty {
             position: absolute;
             background: url('./assets/png/empty.png') center no-repeat;
@@ -536,21 +540,6 @@
                 width: 100%;
                 color: rgba(166, 166, 166, 1)
             }
-            .log-folder {
-                background-image: url("./assets/png/down.png");
-                display: inline-block;
-                height: 16px;
-                width: 16px;
-                position: absolute;
-                cursor: pointer;
-                transform: rotate(0deg);
-                transition: transform 200ms;
-                top: 0;
-                right: -20px;
-                &.show-all {
-                    transform: rotate(-90deg);
-                }
-            }
         }
         .scroll-main {
             overflow: hidden;
@@ -560,7 +549,7 @@
             }
             .scroll-item {
                 min-width: 100%;
-                &:hover {
+                &.hover {
                     background: #333030;
                 }
             }
@@ -568,7 +557,6 @@
         .scroll {
             position: absolute;
             will-change: transform;
-            height: 1000000px;
             cursor: default;
             .scroll-item {
                 box-sizing: border-box;

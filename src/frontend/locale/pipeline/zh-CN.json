@@ -352,6 +352,10 @@
         "stopFail": "终止失败"
     },
     "history": {
+        "logEmpty": "日志为空",
+        "logClear": "日志被清除",
+        "logClose": "日志被关闭",
+        "logErr": "其他异常",
         "stageStatus": "Stage",
         "execHistory": "执行历史",
         "trendData": "安装包趋势",
