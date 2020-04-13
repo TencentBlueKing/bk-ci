@@ -188,7 +188,7 @@ class UserProjectServiceImpl @Autowired constructor(
                             }
                         }
 
-                        val originalHost = request.getHeader(AUTH_HEADER_DEVOPS_ORIGINAL_HOST)
+                        val originalHost = request.getHeader("Origin")
 
                         logger.info("listService interface original hots:$originalHost")
                         if(!containerIegUrl.isNullOrBlank() && !originalHost.isNullOrBlank() && originalHost.contains(containerIegUrl!!)) {
