@@ -27,6 +27,7 @@
 package com.tencent.devops.project.service.impl
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BK_TOKEN
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ORIGINAL_HOST
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.common.service.utils.CookieUtil
@@ -187,10 +188,10 @@ class UserProjectServiceImpl @Autowired constructor(
                             }
                         }
 
-                        val originalHost = request.getHeader(AUTH_HEADER_DEVOPS_BK_TOKEN)
+                        val originalHost = request.getHeader(AUTH_HEADER_DEVOPS_ORIGINAL_HOST)
 
                         logger.info("listService interface original hots:$originalHost")
-                        if(!containerIegUrl.isNullOrBlank() && originalHost.contains(containerIegUrl!!)) {
+                        if(!containerIegUrl.isNullOrBlank() && !originalHost.isNullOrBlank() && originalHost.contains(containerIegUrl!!)) {
                             logger.info("listService interface change newWindow to false")
                             newWindow = false
 
