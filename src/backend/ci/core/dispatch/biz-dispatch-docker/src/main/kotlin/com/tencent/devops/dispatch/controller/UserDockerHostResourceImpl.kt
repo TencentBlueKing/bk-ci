@@ -106,8 +106,14 @@ class UserDockerHostResourceImpl @Autowired constructor(
 
             dockerIp = dockerBuildHistory.dockerIp
         } else {
-            dockerIp = dockerHostUtils.getAvailableDockerIp(debugStartParam.projectId, debugStartParam.pipelineId, debugStartParam.vmSeqId)
-            pipelineDockerTaskSimpleDao.create(dslContext, debugStartParam.pipelineId, debugStartParam.vmSeqId, dockerIp)
+            // 没有构建历史的情况下debug，且没有分配构建IP，预先分配构建IP
+            val taskHistory = pipelineDockerTaskSimpleDao.getByPipelineIdAndVMSeq(dslContext, debugStartParam.pipelineId, debugStartParam.vmSeqId)
+            if (taskHistory != null) {
+                dockerIp = taskHistory.dockerIp
+            } else {
+                dockerIp = dockerHostUtils.getAvailableDockerIp(debugStartParam.projectId, debugStartParam.pipelineId, debugStartParam.vmSeqId)
+                pipelineDockerTaskSimpleDao.create(dslContext, debugStartParam.pipelineId, debugStartParam.vmSeqId, dockerIp)
+            }
         }
 
         // 查询是否已经有启动调试容器了，如果有，直接返回成功
