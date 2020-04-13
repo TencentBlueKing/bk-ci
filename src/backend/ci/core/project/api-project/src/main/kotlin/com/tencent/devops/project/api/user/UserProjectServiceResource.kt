@@ -58,10 +58,7 @@ interface UserProjectServiceResource {
         userId: String,
         @ApiParam("项目ID", required = false)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
-        projectId: String?,
-        @ApiParam("bk TOKEN", required = false)
-        @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
-        bkToken: String?
+        projectId: String?
     ): Result<List<ServiceListVO>>
 
     @PUT
