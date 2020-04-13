@@ -49,6 +49,7 @@ import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.jooq.Result
+import org.jooq.SelectOnConditionStep
 import org.jooq.UpdateSetFirstStep
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
@@ -67,36 +68,28 @@ class MarketAtomDao : AtomBaseDao() {
         classifyCode: String?,
         labelCodeList: List<String>?,
         score: Int?,
-        rdType: AtomTypeEnum?
+        rdType: AtomTypeEnum?,
+        yamlFlag: Boolean?,
+        recommendFlag: Boolean?
     ): Int {
         val (ta, conditions) = formatConditions(atomName, rdType, classifyCode, dslContext)
-
-        val baseStep = dslContext.select(ta.ID.countDistinct()).from(ta)
+        val taf = TAtomFeature.T_ATOM_FEATURE.`as`("taf")
+        val baseStep = dslContext.select(ta.ID.countDistinct()).from(ta).leftJoin(taf)
+            .on(ta.ATOM_CODE.eq(taf.ATOM_CODE))
 
         val storeType = StoreTypeEnum.ATOM.type.toByte()
-        if (labelCodeList != null && labelCodeList.isNotEmpty()) {
-            val c = TLabel.T_LABEL.`as`("c")
-            val labelIdList = dslContext.select(c.ID)
-                .from(c)
-                .where(c.LABEL_CODE.`in`(labelCodeList)).and(c.TYPE.eq(storeType))
-                .fetch().map { it["ID"] as String }
-            val talr = TAtomLabelRel.T_ATOM_LABEL_REL.`as`("talr")
-            baseStep.leftJoin(talr).on(ta.ID.eq(talr.ATOM_ID))
-            conditions.add(talr.LABEL_ID.`in`(labelIdList))
-        }
-        if (score != null) {
-            val tas = TStoreStatisticsTotal.T_STORE_STATISTICS_TOTAL.`as`("tas")
-            val t = dslContext.select(
-                tas.STORE_CODE,
-                tas.STORE_TYPE,
-                tas.DOWNLOADS.`as`(MarketAtomSortTypeEnum.DOWNLOAD_COUNT.name),
-                tas.SCORE_AVERAGE
-            ).from(tas).asTable("t")
-            baseStep.leftJoin(t).on(ta.ATOM_CODE.eq(t.field("STORE_CODE", String::class.java)))
-            conditions.add(t.field("SCORE_AVERAGE", BigDecimal::class.java).ge(BigDecimal.valueOf(score.toLong())))
-            conditions.add(t.field("STORE_TYPE", Byte::class.java).eq(storeType))
-        }
-
+        handleMainListBaseStep(
+            dslContext = dslContext,
+            ta = ta,
+            taf = taf,
+            baseStep = baseStep,
+            conditions = conditions,
+            labelCodeList = labelCodeList,
+            storeType = storeType,
+            score = score,
+            yamlFlag = yamlFlag,
+            recommendFlag = recommendFlag
+        )
         return baseStep.where(conditions).fetchOne(0, Int::class.java)
     }
 
@@ -168,6 +161,61 @@ class MarketAtomDao : AtomBaseDao() {
             .on(ta.ATOM_CODE.eq(taf.ATOM_CODE))
 
         val storeType = StoreTypeEnum.ATOM.type.toByte()
+        handleMainListBaseStep(
+            dslContext = dslContext,
+            ta = ta,
+            taf = taf,
+            baseStep = baseStep,
+            conditions = conditions,
+            labelCodeList = labelCodeList,
+            storeType = storeType,
+            score = score,
+            yamlFlag = yamlFlag,
+            recommendFlag = recommendFlag
+        )
+
+        if (null != sortType) {
+            if (sortType == MarketAtomSortTypeEnum.DOWNLOAD_COUNT && score == null) {
+                val tas = TStoreStatisticsTotal.T_STORE_STATISTICS_TOTAL.`as`("tas")
+                val t =
+                    dslContext.select(tas.STORE_CODE, tas.DOWNLOADS.`as`(MarketAtomSortTypeEnum.DOWNLOAD_COUNT.name))
+                        .from(tas).where(tas.STORE_TYPE.eq(storeType)).asTable("t")
+                baseStep.leftJoin(t).on(ta.ATOM_CODE.eq(t.field("STORE_CODE", String::class.java)))
+            }
+
+            val realSortType = if (sortType == MarketAtomSortTypeEnum.DOWNLOAD_COUNT) {
+                DSL.field(sortType.name)
+            } else {
+                ta.field(sortType.name)
+            }
+
+            if (desc != null && desc) {
+                baseStep.where(conditions).orderBy(realSortType.desc())
+            } else {
+                baseStep.where(conditions).orderBy(realSortType.asc())
+            }
+        } else {
+            baseStep.where(conditions)
+        }
+        return if (null != page && null != pageSize) {
+            baseStep.limit((page - 1) * pageSize, pageSize).fetch()
+        } else {
+            baseStep.fetch()
+        }
+    }
+
+    private fun handleMainListBaseStep(
+        dslContext: DSLContext,
+        ta: TAtom,
+        taf: TAtomFeature,
+        baseStep: SelectOnConditionStep<out Record>,
+        conditions: MutableList<Condition>,
+        labelCodeList: List<String>?,
+        storeType: Byte,
+        score: Int?,
+        yamlFlag: Boolean?,
+        recommendFlag: Boolean?
+    ) {
         if (labelCodeList != null && labelCodeList.isNotEmpty()) {
             val c = TLabel.T_LABEL.`as`("c")
             val labelIdList = dslContext.select(c.ID)
@@ -196,38 +244,13 @@ class MarketAtomDao : AtomBaseDao() {
         if (null != recommendFlag) {
             conditions.add(taf.RECOMMEND_FLAG.eq(recommendFlag))
         }
-
-        if (null != sortType) {
-            if (sortType == MarketAtomSortTypeEnum.DOWNLOAD_COUNT && score == null) {
-                val tas = TStoreStatisticsTotal.T_STORE_STATISTICS_TOTAL.`as`("tas")
-                val t = dslContext.select(tas.STORE_CODE, tas.DOWNLOADS.`as`(MarketAtomSortTypeEnum.DOWNLOAD_COUNT.name)).from(tas).where(tas.STORE_TYPE.eq(storeType)).asTable("t")
-                baseStep.leftJoin(t).on(ta.ATOM_CODE.eq(t.field("STORE_CODE", String::class.java)))
-            }
-
-            val realSortType = if (sortType == MarketAtomSortTypeEnum.DOWNLOAD_COUNT) {
-                DSL.field(sortType.name)
-            } else {
-                ta.field(sortType.name)
-            }
-
-            if (desc != null && desc) {
-                baseStep.where(conditions).orderBy(realSortType.desc())
-            } else {
-                baseStep.where(conditions).orderBy(realSortType.asc())
-            }
-        } else {
-            baseStep.where(conditions)
-        }
-        return if (null != page && null != pageSize) {
-            baseStep.limit((page - 1) * pageSize, pageSize).fetch()
-        } else {
-            baseStep.fetch()
-        }
     }
 
     fun countReleaseAtomByCode(dslContext: DSLContext, atomCode: String): Int {
         with(TAtom.T_ATOM) {
-            return dslContext.selectCount().from(this).where(ATOM_CODE.eq(atomCode).and(ATOM_STATUS.eq(AtomStatusEnum.RELEASED.status.toByte()))).fetchOne(0, Int::class.java)
+            return dslContext.selectCount().from(this)
+                .where(ATOM_CODE.eq(atomCode).and(ATOM_STATUS.eq(AtomStatusEnum.RELEASED.status.toByte())))
+                .fetchOne(0, Int::class.java)
         }
     }
 
