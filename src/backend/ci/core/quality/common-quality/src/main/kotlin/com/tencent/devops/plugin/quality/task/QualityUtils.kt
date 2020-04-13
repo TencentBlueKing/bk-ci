@@ -31,7 +31,6 @@ import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ManualReviewAction
 import com.tencent.devops.log.utils.LogUtils
@@ -40,6 +39,7 @@ import com.tencent.devops.process.engine.common.BS_ATOM_STATUS_REFRESH_DELAY_MIL
 import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION
 import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION_USERID
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
+import com.tencent.devops.process.service.quality.PipelineQualityInterfaceService
 import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
 import com.tencent.devops.quality.api.v2.ServiceQualityRuleResource
 import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
@@ -73,16 +73,16 @@ object QualityUtils {
         }
     }
 
-    private fun check(client: Client, buildCheckParams: BuildCheckParams): RuleCheckResult {
+    private fun check(client: Client, buildCheckParams: BuildCheckParams, position: String): RuleCheckResult {
         return try {
-            client.getWithoutRetry(ServiceQualityRuleResource::class).check(buildCheckParams).data!!
+            client.get(ServiceQualityRuleResource::class).check(buildCheckParams).data!!
         } catch (e: Exception) {
-            logger.error("quality get audit user list fail: ${e.message}", e)
-            return RuleCheckResult(
-                success = true,
-                failEnd = true,
-                auditTimeoutSeconds = 15 * 6000,
-                resultList = listOf()
+            logger.error("Quality Gate check in fail", e)
+            val atomDesc = if (position == ControlPointPosition.BEFORE_POSITION) "准入" else "准出"
+            throw TaskExecuteException(
+                errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
+                errorType = ErrorType.USER,
+                errorMsg = "质量红线($atomDesc)检测失败"
             )
         }
     }
@@ -94,14 +94,13 @@ object QualityUtils {
         runVariables: Map<String, String>,
         client: Client,
         rabbitTemplate: RabbitTemplate,
-        position: String
+        position: String,
+        pipelineQualityInterfaceService: PipelineQualityInterfaceService
     ): RuleCheckResult {
-        val atomDesc = if (position == ControlPointPosition.BEFORE_POSITION) "准入" else "准出"
-
         val pipelineId = task.pipelineId
         val projectId = task.projectId
         val buildId = task.buildId
-        val templateId = task.templateId
+        val templateId = pipelineQualityInterfaceService.getPipelineTemplate(pipelineId)?.templateId
         val buildNo = runVariables[PIPELINE_BUILD_NUM].toString()
         val elementId = task.taskId
 
@@ -114,56 +113,47 @@ object QualityUtils {
             )
         }
 
-        val result = try {
-            val buildCheckParams = BuildCheckParams(
-                projectId = projectId,
-                pipelineId = pipelineId,
-                buildId = buildId,
-                buildNo = buildNo,
-                interceptTaskName = interceptTaskName ?: "",
-                startTime = LocalDateTime.now().timestamp(),
-                taskId = interceptTask,
-                position = position,
-                templateId = templateId,
-                runtimeVariable = runVariables
-            )
-            if (QUALITY_CODECC_LAZY_ATOM.contains(interceptTask)) {
-                run loop@{
-                    QUALITY_LAZY_TIME_GAP.forEachIndexed { index, gap ->
-                        val hisMetadata =
-                            client.get(ServiceQualityRuleResource::class).getHisMetadata(buildId).data ?: listOf()
-                        val hasMetadata = hisMetadata.any { it.elementType in QUALITY_CODECC_LAZY_ATOM }
-                        if (hasMetadata) return@loop
-                        LogUtils.addLine(
-                            rabbitTemplate = rabbitTemplate,
-                            buildId = buildId,
-                            message = "第 $index 次轮询等待红线结果",
-                            tag = elementId,
-                            jobId = task.containerHashId,
-                            executeCount = task.executeCount ?: 1
-                        )
-                        Thread.sleep(gap * 1000L)
-                    }
+        val buildCheckParams = BuildCheckParams(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            buildNo = buildNo,
+            interceptTaskName = interceptTaskName ?: "",
+            startTime = LocalDateTime.now().timestamp(),
+            taskId = interceptTask,
+            position = position,
+            templateId = templateId,
+            runtimeVariable = runVariables
+        )
+        val result = if (QUALITY_CODECC_LAZY_ATOM.contains(interceptTask)) {
+            run loop@{
+                QUALITY_LAZY_TIME_GAP.forEachIndexed { index, gap ->
+                    val hisMetadata =
+                        client.get(ServiceQualityRuleResource::class).getHisMetadata(buildId).data ?: listOf()
+                    val hasMetadata = hisMetadata.any { it.elementType in QUALITY_CODECC_LAZY_ATOM }
+                    if (hasMetadata) return@loop
+                    LogUtils.addLine(
+                        rabbitTemplate = rabbitTemplate,
+                        buildId = buildId,
+                        message = "第 $index 次轮询等待红线结果",
+                        tag = elementId,
+                        jobId = task.containerHashId,
+                        executeCount = task.executeCount ?: 1
+                    )
+                    Thread.sleep(gap * 1000L)
                 }
-                check(client, buildCheckParams)
-            } else {
-                LogUtils.addLine(
-                    rabbitTemplate = rabbitTemplate,
-                    buildId = buildId,
-                    message = "检测红线结果",
-                    tag = elementId,
-                    jobId = task.containerHashId,
-                    executeCount = task.executeCount ?: 1
-                )
-                check(client, buildCheckParams)
             }
-        } catch (t: Throwable) {
-            logger.error("Quality Gate check in fail", t)
-            throw TaskExecuteException(
-                errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
-                errorType = ErrorType.USER,
-                errorMsg = "质量红线($atomDesc)检测失败"
+            check(client, buildCheckParams, position)
+        } else {
+            LogUtils.addLine(
+                rabbitTemplate = rabbitTemplate,
+                buildId = buildId,
+                message = "检测红线结果",
+                tag = elementId,
+                jobId = task.containerHashId,
+                executeCount = task.executeCount ?: 1
             )
+            check(client, buildCheckParams, position)
         }
         logger.info("quality gateway $position check result for ${task.buildId}: $result")
         return result
@@ -175,8 +165,7 @@ object QualityUtils {
         interceptTask: String,
         checkResult: RuleCheckResult,
         client: Client,
-        rabbitTemplate: RabbitTemplate,
-        pipelineEventDispatcher: PipelineEventDispatcher
+        rabbitTemplate: RabbitTemplate
     ): AtomResponse {
         with(task) {
             val atomDesc = if (position == ControlPointPosition.BEFORE_POSITION) "准入" else "准出"
