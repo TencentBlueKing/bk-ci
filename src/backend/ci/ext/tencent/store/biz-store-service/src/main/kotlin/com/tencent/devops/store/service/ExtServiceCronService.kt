@@ -34,9 +34,7 @@ import com.tencent.devops.store.config.ExtServiceBcsConfig
 import com.tencent.devops.store.config.ExtServiceBcsNameSpaceConfig
 import com.tencent.devops.store.dao.ExtServiceDao
 import com.tencent.devops.store.dao.common.StoreReleaseDao
-import com.tencent.devops.store.pojo.ExtServiceUpdateInfo
 import com.tencent.devops.store.pojo.common.StoreReleaseCreateRequest
-import com.tencent.devops.store.pojo.common.enums.AuditTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.enums.ExtServiceStatusEnum
 import io.fabric8.kubernetes.client.internal.readiness.Readiness
@@ -61,6 +59,10 @@ class ExtServiceCronService @Autowired constructor(
 ) {
 
     private val logger = LoggerFactory.getLogger(ExtServiceCronService::class.java)
+
+    private val EXTENSION_RELEASE_SUCCESS_TEMPLATE = "EXTENSION_RELEASE_SUCCESS_TEMPLATE" // 扩展服务发布成功消息通知模板
+
+    private val EXTENSION_RELEASE_FAIL_TEMPLATE = "EXTENSION_RELEASE_FAIL_TEMPLATE" // 扩展服务发布失败消息通知模板
 
     private final val bcsDeployRedisPrefixKey = "ext:service:deploy"
 
@@ -105,8 +107,8 @@ class ExtServiceCronService @Autowired constructor(
                         deployService(serviceCode, it.modifier)
                         it.latestFlag = true
                         redisOperation.delete(bcsDeployRedisKey)
-                        // 发送版本发布邮件
-                        serviceNotifyService.sendServiceReleaseAuditNotifyMessage(it.id, AuditTypeEnum.AUDIT_SUCCESS)
+                        // 发送版本发布通知消息
+                        serviceNotifyService.sendServiceReleaseNotifyMessage(it.id, true, EXTENSION_RELEASE_SUCCESS_TEMPLATE)
                     } else {
                         val bcsFirstDeployTime = redisOperation.get(bcsDeployRedisKey)
                         if (bcsFirstDeployTime != null) {
@@ -115,7 +117,7 @@ class ExtServiceCronService @Autowired constructor(
                                 it.serviceStatus = ExtServiceStatusEnum.RELEASE_DEPLOY_FAIL.status.toByte()
                                 redisOperation.delete(bcsDeployRedisKey)
                                 // 发送版本发布邮件
-                                serviceNotifyService.sendServiceReleaseAuditNotifyMessage(it.id, AuditTypeEnum.AUDIT_REJECT)
+                                serviceNotifyService.sendServiceReleaseNotifyMessage(it.id, false, EXTENSION_RELEASE_FAIL_TEMPLATE)
                             }
                         } else {
                             // 首次部署的时间存入redis

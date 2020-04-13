@@ -4,17 +4,14 @@ import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.service.utils.MessageCodeUtil
-import com.tencent.devops.store.config.ExtServiceBcsNameSpaceConfig
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.dao.ExtServiceDao
 import com.tencent.devops.store.dao.ExtServiceFeatureDao
 import com.tencent.devops.store.dao.common.StoreProjectRelDao
-import com.tencent.devops.store.dao.common.StoreReleaseDao
 import com.tencent.devops.store.pojo.ExtServiceFeatureUpdateInfo
+import com.tencent.devops.store.pojo.common.EXTENSION_RELEASE_AUDIT_REFUSE_TEMPLATE
 import com.tencent.devops.store.pojo.common.PASS
 import com.tencent.devops.store.pojo.common.REJECT
-import com.tencent.devops.store.pojo.common.StoreReleaseCreateRequest
-import com.tencent.devops.store.pojo.common.enums.AuditTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.dto.ServiceApproveReq
 import com.tencent.devops.store.pojo.enums.ExtServiceSortTypeEnum
@@ -32,13 +29,11 @@ import java.time.LocalDateTime
 class OpExtServiceService @Autowired constructor(
     private val extServiceDao: ExtServiceDao,
     private val extServiceFeatureDao: ExtServiceFeatureDao,
-    private val storeReleaseDao: StoreReleaseDao,
     private val storeProjectRelDao: StoreProjectRelDao,
     private val storeMemberService: TxExtServiceMemberImpl,
     private val dslContext: DefaultDSLContext,
     private val serviceNotifyService: ExtServiceNotifyService,
-    private val extServiceBcsService: ExtServiceBcsService,
-    private val extServiceBcsNameSpaceConfig: ExtServiceBcsNameSpaceConfig
+    private val extServiceBcsService: ExtServiceBcsService
 ) {
 
     fun queryServiceList(
@@ -234,10 +229,9 @@ class OpExtServiceService @Autowired constructor(
                 arrayOf(approveReq.result)
             )
         }
-        val creator = serviceRecord.creator
         val serviceCode = serviceRecord.serviceCode
-        val releaseFlag = approveReq.result == PASS
-        if (releaseFlag) {
+        val auditFlag = approveReq.result == PASS
+        if (auditFlag) {
             // 正式发布最新的扩展服务版本
             val deployExtServiceResult = extServiceBcsService.deployExtService(
                 userId = userId,
@@ -251,17 +245,14 @@ class OpExtServiceService @Autowired constructor(
             }
         }
         val serviceStatus =
-            if (releaseFlag) {
+            if (auditFlag) {
                 ExtServiceStatusEnum.RELEASE_DEPLOYING.status.toByte()
             } else {
                 ExtServiceStatusEnum.AUDIT_REJECT.status.toByte()
             }
-        val type = if (releaseFlag) AuditTypeEnum.AUDIT_SUCCESS else AuditTypeEnum.AUDIT_REJECT
-
         dslContext.transaction { t ->
             val context = DSL.using(t)
-            var pubTime = LocalDateTime.now()
-
+            val pubTime = LocalDateTime.now()
             extServiceDao.approveServiceFromOp(
                 dslContext = context,
                 userId = userId,
@@ -282,6 +273,10 @@ class OpExtServiceService @Autowired constructor(
                     serviceTypeEnum = approveReq.serviceType
                 )
             )
+        }
+        // 审核失败通知发布者
+        if (!auditFlag) {
+            serviceNotifyService.sendServiceReleaseNotifyMessage(serviceId, false, EXTENSION_RELEASE_AUDIT_REFUSE_TEMPLATE)
         }
         return Result(true)
     }
@@ -319,10 +314,11 @@ class OpExtServiceService @Autowired constructor(
             extServiceDao.deleteExtService(context, userId, serviceId)
             extServiceFeatureDao.deleteExtFeatureService(context, userId, serviceCode)
         }
+
         return Result(true)
     }
 
     companion object {
-        val logger = LoggerFactory.getLogger(this::class.java)
+        private val logger = LoggerFactory.getLogger(this::class.java)
     }
 }

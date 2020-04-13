@@ -29,20 +29,20 @@ import java.math.BigDecimal
 
 @Service
 class ExtServiceSearchService @Autowired constructor(
-        val dslContext: DSLContext,
-        val client: Client,
-        val extServiceDao: ExtServiceDao,
-        val extServiceItemRelDao: ExtServiceItemRelDao,
-        val storeUserService: StoreUserService,
-        val storeVisibleDeptService: StoreVisibleDeptService,
-        val storeMemberService: TxExtServiceMemberImpl,
-        val classifyService: ClassifyService,
-        val storeStatisticDao: StoreStatisticDao
+    val dslContext: DSLContext,
+    val client: Client,
+    val extServiceDao: ExtServiceDao,
+    val extServiceItemRelDao: ExtServiceItemRelDao,
+    val storeUserService: StoreUserService,
+    val storeVisibleDeptService: StoreVisibleDeptService,
+    val storeMemberService: TxExtServiceMemberImpl,
+    val classifyService: ClassifyService,
+    val storeStatisticDao: StoreStatisticDao
 ) {
     fun mainPageList(
-            userId: String,
-            page: Int?,
-            pageSize: Int?
+        userId: String,
+        page: Int?,
+        pageSize: Int?
     ): Result<List<ExtServiceMainItemVo>> {
         val result = mutableListOf<ExtServiceMainItemVo>()
         // 获取用户组织架构
@@ -146,16 +146,16 @@ class ExtServiceSearchService @Autowired constructor(
      * 研发商店-扩展服务，查询插件列表
      */
     fun list(
-            userId: String,
-            serviceName: String?,
-            classifyCode: String?,
-            labelCode: String?,
-            bkServiceId: Long?,
-            score: Int?,
-            rdType: ServiceTypeEnum? = null,
-            sortType: ExtServiceSortTypeEnum?,
-            page: Int?,
-            pageSize: Int?
+        userId: String,
+        serviceName: String?,
+        classifyCode: String?,
+        labelCode: String?,
+        bkServiceId: Long?,
+        score: Int?,
+        rdType: ServiceTypeEnum? = null,
+        sortType: ExtServiceSortTypeEnum?,
+        page: Int?,
+        pageSize: Int?
     ): SearchExtServiceVO {
         // 获取用户组织架构
         val userDeptList = storeUserService.getUserDeptList(userId)
@@ -179,18 +179,18 @@ class ExtServiceSearchService @Autowired constructor(
 
     @Suppress("UNCHECKED_CAST")
     private fun doList(
-            userId: String,
-            userDeptList: List<Int>,
-            serviceName: String?,
-            classifyCode: String?,
-            labelCode: String?,
-            bkServiceId: Long?,
-            score: Int?,
-            rdType: ServiceTypeEnum? = null,
-            sortType: ExtServiceSortTypeEnum?,
-            desc: Boolean?,
-            page: Int?,
-            pageSize: Int?
+        userId: String,
+        userDeptList: List<Int>,
+        serviceName: String?,
+        classifyCode: String?,
+        labelCode: String?,
+        bkServiceId: Long?,
+        score: Int?,
+        rdType: ServiceTypeEnum? = null,
+        sortType: ExtServiceSortTypeEnum?,
+        desc: Boolean?,
+        page: Int?,
+        pageSize: Int?
     ): SearchExtServiceVO {
         val results = mutableListOf<ExtServiceItem>()
         // 获取扩展服务
@@ -264,11 +264,11 @@ class ExtServiceSearchService @Autowired constructor(
     }
 
     fun generateInstallFlag(
-            publicFlag: Boolean,
-            members: MutableList<String>?,
-            userId: String,
-            visibleList: MutableList<Int>?,
-            userDeptList: List<Int>
+        publicFlag: Boolean,
+        members: MutableList<String>?,
+        userId: String,
+        visibleList: MutableList<Int>?,
+        userDeptList: List<Int>
     ): Boolean {
         logger.info("generateInstallFlag publicFlag is: $publicFlag visibleList is:$visibleList,userDeptList is:$userDeptList members is:$members,userId is:$userId")
         return if (publicFlag || (members != null && members.contains(userId))) {
@@ -279,8 +279,8 @@ class ExtServiceSearchService @Autowired constructor(
     }
 
     private fun getStatisticByCodeList(
-            serviceCodeList: List<String>,
-            statFiledList: List<String>
+        serviceCodeList: List<String>,
+        statFiledList: List<String>
     ): Result<HashMap<String, ExtServiceStatistic>> {
         val records = storeStatisticDao.batchGetStatisticByStoreCode(
                 dslContext,

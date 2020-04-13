@@ -616,10 +616,10 @@ class ExtServiceDao {
     }
 
     fun getReleasedService(dslContext: DSLContext, serviceCode: String): Boolean {
-        with(TExtensionService.T_EXTENSION_SERVICE){
+        with(TExtensionService.T_EXTENSION_SERVICE) {
             val record = dslContext.selectFrom(this).where(SERVICE_CODE.eq(serviceCode).and(SERVICE_STATUS.eq(ExtServiceStatusEnum.RELEASED.status.toByte())))
                 .fetch()
-            if(record.isNotEmpty){
+            if (record.isNotEmpty) {
                 return false
             }
         }

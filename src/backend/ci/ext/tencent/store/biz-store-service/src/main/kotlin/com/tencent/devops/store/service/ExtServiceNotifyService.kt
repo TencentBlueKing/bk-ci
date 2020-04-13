@@ -8,9 +8,6 @@ import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.store.dao.ExtServiceDao
 import com.tencent.devops.store.dao.ExtServiceVersionLogDao
 import com.tencent.devops.store.dao.common.StoreMemberDao
-import com.tencent.devops.store.pojo.common.EXTENSION_RELEASE_AUDIT_PASS_TEMPLATE
-import com.tencent.devops.store.pojo.common.EXTENSION_RELEASE_AUDIT_REFUSE_TEMPLATE
-import com.tencent.devops.store.pojo.common.enums.AuditTypeEnum
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreMemberTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
@@ -46,9 +43,10 @@ class ExtServiceNotifyService {
     /**
      * 发送扩展服务发布审核结果通知消息
      * @param serviceId 插件ID
-     * @param auditType 审核类型
+     * @param sendAllAdminFlag 是否发送给所有管理员
+     * @param templateCode 通知模板代码
      */
-    fun sendServiceReleaseAuditNotifyMessage(serviceId: String, auditType: AuditTypeEnum) {
+    fun sendServiceReleaseNotifyMessage(serviceId: String, sendAllAdminFlag: Boolean, templateCode: String) {
         val serviceRecord = serviceDao.getServiceById(dslContext, serviceId) ?: return
         // 查出版本日志
         val serviceVersionLogRecord = serviceVersionLogDao.getVersionLogByServiceId(dslContext, serviceId)
@@ -74,7 +72,7 @@ class ExtServiceNotifyService {
         val creator = serviceRecord.creator
         val receiver: String = creator
         val ccs = mutableSetOf(creator)
-        if (auditType == AuditTypeEnum.AUDIT_SUCCESS) {
+        if (sendAllAdminFlag) {
             val serviceAdminRecords = storeMemberDao.list(
                 dslContext = dslContext,
                 storeCode = serviceCode,
@@ -86,17 +84,6 @@ class ExtServiceNotifyService {
             }
         }
         val receivers = mutableSetOf(receiver)
-        val templateCode = when (auditType) {
-            AuditTypeEnum.AUDIT_SUCCESS -> {
-                EXTENSION_RELEASE_AUDIT_PASS_TEMPLATE
-            }
-            AuditTypeEnum.AUDIT_REJECT -> {
-                EXTENSION_RELEASE_AUDIT_REFUSE_TEMPLATE
-            }
-            else -> {
-                EXTENSION_RELEASE_AUDIT_REFUSE_TEMPLATE
-            }
-        }
         val sendNotifyMessageTemplateRequest = SendNotifyMessageTemplateRequest(
             templateCode = templateCode,
             sender = DEVOPS,
