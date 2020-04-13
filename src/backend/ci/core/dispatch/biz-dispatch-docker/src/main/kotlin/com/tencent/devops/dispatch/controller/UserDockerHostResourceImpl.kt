@@ -37,6 +37,7 @@ import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.dispatch.api.UserDockerHostResource
+import com.tencent.devops.dispatch.dao.PipelineDockerBuildDao
 import com.tencent.devops.dispatch.dao.PipelineDockerDebugDao
 import com.tencent.devops.dispatch.dao.PipelineDockerTaskSimpleDao
 import com.tencent.devops.dispatch.pojo.ContainerInfo
@@ -57,6 +58,7 @@ class UserDockerHostResourceImpl @Autowired constructor(
     private val pipelineAuthServiceCode: PipelineAuthServiceCode,
     private val pipelineDockerTaskSimpleDao: PipelineDockerTaskSimpleDao,
     private val pipelineDockerDebugDao: PipelineDockerDebugDao,
+    private val pipelineDockerBuildDao: PipelineDockerBuildDao,
     private val dslContext: DSLContext
 ) : UserDockerHostResource {
     companion object {
@@ -66,15 +68,20 @@ class UserDockerHostResourceImpl @Autowired constructor(
     override fun startDebug(userId: String, debugStartParam: DebugStartParam): Result<Boolean>? {
         checkPermission(userId, debugStartParam.projectId, debugStartParam.pipelineId, debugStartParam.vmSeqId)
 
-        // 查询是否存在构建机可启动调试，查看当前构建机的状态，如果running则直接复用当前running的containerId
-        val taskHistory =
-            pipelineDockerTaskSimpleDao.getByPipelineIdAndVMSeq(dslContext, debugStartParam.pipelineId, debugStartParam.vmSeqId)
-                ?: throw ErrorCodeException(
-                    errorCode = "2103501",
-                    defaultMessage = "no container is ready to debug",
-                    params = arrayOf(debugStartParam.pipelineId)
-                )
-        if (taskHistory.status == VolumeStatus.RUNNING.status) {
+        // 查询是否存在构建机可启动调试，查看当前构建机的状态，如果running且已经容器，则直接复用当前running的containerId
+        val dockerBuildHistory = pipelineDockerBuildDao.getLastBuild(
+            dslContext,
+            debugStartParam.pipelineId,
+            debugStartParam.vmSeqId.toInt()
+        ) ?: throw ErrorCodeException(
+            errorCode = "2103501",
+            defaultMessage = "no container is ready to debug",
+            params = arrayOf(debugStartParam.pipelineId)
+        )
+
+        if (dockerBuildHistory.status == PipelineTaskStatus.RUNNING.status
+            && dockerBuildHistory.containerId.isNotEmpty()
+        ) {
             pipelineDockerDebugDao.insertDebug(
                 dslContext = dslContext,
                 projectId = debugStartParam.projectId,
@@ -83,8 +90,8 @@ class UserDockerHostResourceImpl @Autowired constructor(
                 status = PipelineTaskStatus.RUNNING,
                 token = "",
                 imageName = "",
-                hostTag = taskHistory.dockerIp,
-                containerId = taskHistory.containerId,
+                hostTag = dockerBuildHistory.dockerIp,
+                containerId = dockerBuildHistory.containerId,
                 buildEnv = "",
                 registryUser = "",
                 registryPwd = "",
@@ -93,11 +100,11 @@ class UserDockerHostResourceImpl @Autowired constructor(
                 imageRDType = null
             )
 
-            logger.info("${debugStartParam.pipelineId}|${debugStartParam.vmSeqId}| start debug. Container already running, ContainerInfo: ${taskHistory.containerId}")
+            logger.info("${debugStartParam.pipelineId}|${debugStartParam.vmSeqId}| start debug. Container already running, ContainerInfo: ${dockerBuildHistory.containerId}")
             return Result(true)
         }
 
-        val dockerIp = taskHistory.dockerIp
+        val dockerIp = dockerBuildHistory.dockerIp
 
         // 查询是否已经有启动调试容器了，如果有，直接返回成功
         val result = dockerHostDebugService.getDebugStatus(debugStartParam.pipelineId, debugStartParam.vmSeqId)
