@@ -79,13 +79,11 @@
                     comment: {
                         atom: (postData) => this.requestAtomComments(postData),
                         template: (postData) => this.requestTemplateComments(postData),
-                        ide: (postData) => this.requestIDEComments(postData),
                         image: (postData) => this.requestImageComments(postData)
                     },
                     scoreDetail: {
                         atom: () => this.requestAtomScoreDetail(this.detailCode),
                         template: () => this.requestTemplateScoreDetail(this.detailCode),
-                        ide: () => this.requestIDEScoreDetail(this.detailCode),
                         image: () => this.requestImageScoreDetail(this.detailCode)
                     }
                 }
@@ -116,8 +114,6 @@
                 'requestAtomScoreDetail',
                 'requestTemplateComments',
                 'requestTemplateScoreDetail',
-                'requestIDEComments',
-                'requestIDEScoreDetail',
                 'requestImageComments',
                 'requestImageScoreDetail'
             ]),
