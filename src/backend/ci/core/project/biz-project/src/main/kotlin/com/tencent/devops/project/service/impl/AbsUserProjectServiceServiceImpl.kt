@@ -191,7 +191,7 @@ abstract class AbsUserProjectServiceServiceImpl @Autowired constructor(
         return Result(false)
     }
 
-    override fun listService(userId: String, projectId: String?, bkToken: String?): Result<ArrayList<ServiceListVO>> {
+    override fun listService(userId: String, projectId: String?): Result<ArrayList<ServiceListVO>> {
 
         val startEpoch = System.currentTimeMillis()
         try {
