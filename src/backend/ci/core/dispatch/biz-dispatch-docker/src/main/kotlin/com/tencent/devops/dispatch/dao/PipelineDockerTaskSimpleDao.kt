@@ -70,18 +70,12 @@ class PipelineDockerTaskSimpleDao @Autowired constructor() {
         dslContext: DSLContext,
         pipelineId: String,
         vmSeq: String,
-        status: Int,
-        buildId: String = ""
+        status: Int
     ) {
         with(TDispatchPipelineDockerTaskSimple.T_DISPATCH_PIPELINE_DOCKER_TASK_SIMPLE) {
             val update = dslContext.update(this)
                 .set(STATUS, status)
                 .set(GMT_MODIFIED, LocalDateTime.now())
-
-            if (buildId.isNotBlank()) {
-                update
-                    .set(BUILD_ID, buildId)
-            }
 
             update
                 .where(PIPELINE_ID.eq(pipelineId))

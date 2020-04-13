@@ -118,8 +118,7 @@ class DockerDispatcher @Autowired constructor(
                     dslContext,
                     pipelineAgentStartupEvent.pipelineId,
                     pipelineAgentStartupEvent.vmSeqId,
-                    VolumeStatus.RUNNING.status,
-                    pipelineAgentStartupEvent.buildId
+                    VolumeStatus.RUNNING.status
                 )
             } else {
                 dockerIp = dockerHostUtils.getAvailableDockerIp(pipelineAgentStartupEvent)

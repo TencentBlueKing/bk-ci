@@ -46,7 +46,8 @@ class PipelineDockerBuildDao {
         vmSeqId: Int,
         secretKey: String,
         status: PipelineTaskStatus,
-        zone: String?
+        zone: String?,
+        dockerIp: String?
     ): Long {
         with(TDispatchPipelineDockerBuild.T_DISPATCH_PIPELINE_DOCKER_BUILD) {
             val now = LocalDateTime.now()
@@ -58,6 +59,7 @@ class PipelineDockerBuildDao {
                     .set(CREATED_TIME, now)
                     .set(UPDATED_TIME, now)
                     .set(ZONE, zone)
+                    .set(DOCKER_IP, dockerIp)
                     .where(ID.eq(preRecord.id)).execute()
                 return preRecord.id
             }
@@ -71,7 +73,8 @@ class PipelineDockerBuildDao {
                 STATUS,
                 CREATED_TIME,
                 UPDATED_TIME,
-                ZONE
+                ZONE,
+                DOCKER_IP
             )
                 .values(
                     projectId,
@@ -82,7 +85,8 @@ class PipelineDockerBuildDao {
                     status.status,
                     now,
                     now,
-                    zone
+                    zone,
+                    dockerIp
                 )
                 .returning(ID)
                 .fetchOne().id
@@ -98,6 +102,22 @@ class PipelineDockerBuildDao {
         with(TDispatchPipelineDockerBuild.T_DISPATCH_PIPELINE_DOCKER_BUILD) {
             return dslContext.update(this)
                 .set(STATUS, status.status)
+                .set(UPDATED_TIME, LocalDateTime.now())
+                .where(BUILD_ID.eq(buildId))
+                .and(VM_SEQ_ID.eq(vmSeqId))
+                .execute() == 1
+        }
+    }
+
+    fun updateContainerId(
+        dslContext: DSLContext,
+        buildId: String,
+        vmSeqId: Int,
+        containerId: String
+    ): Boolean {
+        with(TDispatchPipelineDockerBuild.T_DISPATCH_PIPELINE_DOCKER_BUILD) {
+            return dslContext.update(this)
+                .set(CONTAINER_ID, containerId)
                 .set(UPDATED_TIME, LocalDateTime.now())
                 .where(BUILD_ID.eq(buildId))
                 .and(VM_SEQ_ID.eq(vmSeqId))
@@ -129,3 +149,8 @@ class PipelineDockerBuildDao {
         }
     }
 }
+
+/*
+ALTER TABLE `T_DISPATCH_PIPELINE_DOCKER_BUILD` ADD COLUMN `DOCKER_IP` VARCHAR(64) DEFAULT '' COMMENT '构建机IP';
+ALTER TABLE `T_DISPATCH_PIPELINE_DOCKER_BUILD` ADD COLUMN `CONTAINER_ID` VARCHAR(128) DEFAULT '' COMMENT '构建容器ID';
+ */
