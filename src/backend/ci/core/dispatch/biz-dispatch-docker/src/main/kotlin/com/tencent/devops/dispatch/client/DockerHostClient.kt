@@ -243,13 +243,6 @@ class DockerHostClient @Autowired constructor(
                         val idcIpLocal = dockerHostUtils.getAvailableDockerIp(event, unAvailableIpListLocal)
                         dockerBuildStart(idcIpLocal, requestBody, event, retryTimeLocal, unAvailableIpListLocal)
                     } else {
-                        pipelineDockerTaskSimpleDao.updateStatus(
-                            dslContext,
-                            event.pipelineId,
-                            event.vmSeqId,
-                            VolumeStatus.FAILURE.status
-                        )
-
                         logger.error("[${event.projectId}|${event.pipelineId}|${event.buildId}|$retryTime] Start build Docker VM failed, retry $retryTime times.")
                         throw DockerServiceException("Start build Docker VM failed, retry $retryTime times.")
                     }
@@ -257,12 +250,6 @@ class DockerHostClient @Autowired constructor(
                 else -> {
                     val msg = response["message"] as String
                     logger.error("[${event.projectId}|${event.pipelineId}|${event.buildId}|$retryTime] Start build Docker VM failed, msg: $msg")
-                    pipelineDockerTaskSimpleDao.updateStatus(
-                        dslContext,
-                        event.pipelineId,
-                        event.vmSeqId,
-                        VolumeStatus.FAILURE.status
-                    )
                     throw DockerServiceException("Start build Docker VM failed, msg: $msg")
                 }
             }
