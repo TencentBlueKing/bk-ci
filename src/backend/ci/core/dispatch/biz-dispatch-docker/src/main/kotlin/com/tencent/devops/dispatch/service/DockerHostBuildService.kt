@@ -43,6 +43,7 @@ import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.common.web.mq.alert.AlertLevel.HIGH
 import com.tencent.devops.common.web.mq.alert.AlertLevel.LOW
 import com.tencent.devops.common.web.mq.alert.AlertUtils
+import com.tencent.devops.dispatch.client.DockerHostClient
 import com.tencent.devops.dispatch.dao.PipelineDockerBuildDao
 import com.tencent.devops.dispatch.dao.PipelineDockerEnableDao
 import com.tencent.devops.dispatch.dao.PipelineDockerHostDao
@@ -62,6 +63,7 @@ import com.tencent.devops.log.utils.LogUtils
 import com.tencent.devops.model.dispatch.tables.records.TDispatchPipelineDockerBuildRecord
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.pojo.VmInfo
+import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
 import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
 import com.tencent.devops.process.pojo.mq.PipelineBuildLessDockerShutdownEvent
 import com.tencent.devops.process.pojo.mq.PipelineBuildLessDockerStartupEvent
@@ -84,6 +86,7 @@ import org.springframework.util.StopWatch
 @Service
 class DockerHostBuildService @Autowired constructor(
     private val dslContext: DSLContext,
+    private val dockerHostClient: DockerHostClient,
     private val pipelineDockerEnableDao: PipelineDockerEnableDao,
     private val pipelineDockerBuildDao: PipelineDockerBuildDao,
     private val pipelineDockerTaskDao: PipelineDockerTaskDao,
@@ -262,20 +265,30 @@ class DockerHostBuildService @Autowired constructor(
         )
     }
 
-    fun finishDockerBuild(buildId: String, vmSeqId: String?, success: Boolean) {
-        logger.info("Finish docker build of buildId($buildId) and vmSeqId($vmSeqId) with result($success)")
-        if (vmSeqId.isNullOrBlank()) {
-            val record = pipelineDockerBuildDao.listBuilds(dslContext, buildId)
+    fun finishDockerBuild(event: PipelineAgentShutdownEvent) {
+        logger.info("Finish docker build of buildId(${event.buildId}) and vmSeqId(${event.vmSeqId}) with result(${event.buildResult})")
+        if (event.vmSeqId.isNullOrBlank()) {
+            val record = pipelineDockerBuildDao.listBuilds(dslContext, event.buildId)
             if (record.isEmpty()) {
                 return
             }
             record.forEach {
-                finishBuild(it, success)
+                finishBuild(it, event.buildResult)
+                dockerHostClient.endBuild(
+                    event,
+                    it.dockerIp,
+                    it.containerId
+                )
             }
         } else {
-            val record = pipelineDockerBuildDao.getBuild(dslContext, buildId, vmSeqId!!.toInt())
+            val record = pipelineDockerBuildDao.getBuild(dslContext, event.buildId, event.vmSeqId!!.toInt())
             if (record != null) {
-                finishBuild(record, success)
+                finishBuild(record, event.buildResult)
+                dockerHostClient.endBuild(
+                    event,
+                    record.dockerIp,
+                    record.containerId
+                )
             }
         }
     }
@@ -286,6 +299,7 @@ class DockerHostBuildService @Autowired constructor(
             record.buildId,
             record.vmSeqId,
             if (success) PipelineTaskStatus.DONE else PipelineTaskStatus.FAILURE)
+
         // 更新dockerTask表
         pipelineDockerTaskDao.updateStatus(dslContext,
             record.buildId,
