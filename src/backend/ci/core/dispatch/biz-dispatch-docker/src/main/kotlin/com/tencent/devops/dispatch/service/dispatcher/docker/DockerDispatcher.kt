@@ -26,6 +26,7 @@
 
 package com.tencent.devops.dispatch.service.dispatcher.docker
 
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
 import com.tencent.devops.common.redis.RedisOperation
@@ -108,27 +109,17 @@ class DockerDispatcher @Autowired constructor(
                         pipelineAgentStartupEvent.buildId,
                         pipelineAgentStartupEvent.vmSeqId,
                         taskHistory.dockerIp,
-                        dockerIp
+                        dockerIp,
+                        if (ipInfo != null) JsonUtil.toJson(ipInfo) else ""
                     )
                 }
-
-                // 更新状态running
-                pipelineDockerTaskSimpleDao.updateStatus(
-                    dslContext,
-                    pipelineAgentStartupEvent.pipelineId,
-                    pipelineAgentStartupEvent.vmSeqId,
-                    VolumeStatus.RUNNING.status
-                )
             } else {
                 dockerIp = dockerHostUtils.getAvailableDockerIp(pipelineAgentStartupEvent)
-
                 pipelineDockerTaskSimpleDao.create(
                     dslContext,
                     pipelineAgentStartupEvent.pipelineId,
-                    pipelineAgentStartupEvent.buildId,
                     pipelineAgentStartupEvent.vmSeqId,
-                    dockerIp,
-                    VolumeStatus.RUNNING.status
+                    dockerIp
                 )
             }
 
@@ -149,12 +140,6 @@ class DockerDispatcher @Autowired constructor(
             errorMsg = "Start build Docker VM failed."
         } finally {
             if (errorFlag) {
-                pipelineDockerTaskSimpleDao.updateStatus(
-                    dslContext,
-                    pipelineAgentStartupEvent.pipelineId,
-                    pipelineAgentStartupEvent.vmSeqId,
-                    VolumeStatus.FAILURE.status
-                )
                 onFailBuild(
                     client,
                     rabbitTemplate,

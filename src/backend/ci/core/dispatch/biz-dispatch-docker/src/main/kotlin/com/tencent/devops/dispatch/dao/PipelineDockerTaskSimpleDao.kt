@@ -39,64 +39,24 @@ class PipelineDockerTaskSimpleDao @Autowired constructor() {
     fun create(
         dslContext: DSLContext,
         pipelineId: String,
-        buildId: String,
         vmSeq: String,
-        idcIp: String,
-        status: Int
+        idcIp: String
     ) {
         with(TDispatchPipelineDockerTaskSimple.T_DISPATCH_PIPELINE_DOCKER_TASK_SIMPLE) {
             dslContext.insertInto(
                 this,
                 PIPELINE_ID,
-                BUILD_ID,
                 VM_SEQ,
                 DOCKER_IP,
-                STATUS,
                 GMT_CREATE,
                 GMT_MODIFIED
             ).values(
                 pipelineId,
-                buildId,
                 vmSeq,
                 idcIp,
-                status,
                 LocalDateTime.now(),
                 LocalDateTime.now()
             ).execute()
-        }
-    }
-
-    fun updateStatus(
-        dslContext: DSLContext,
-        pipelineId: String,
-        vmSeq: String,
-        status: Int
-    ) {
-        with(TDispatchPipelineDockerTaskSimple.T_DISPATCH_PIPELINE_DOCKER_TASK_SIMPLE) {
-            val update = dslContext.update(this)
-                .set(STATUS, status)
-                .set(GMT_MODIFIED, LocalDateTime.now())
-
-            update
-                .where(PIPELINE_ID.eq(pipelineId))
-                .and(VM_SEQ.eq(vmSeq))
-                .execute()
-        }
-    }
-
-    fun updateContainerId(
-        dslContext: DSLContext,
-        pipelineId: String,
-        vmSeq: String,
-        containerId: String
-    ) {
-        with(TDispatchPipelineDockerTaskSimple.T_DISPATCH_PIPELINE_DOCKER_TASK_SIMPLE) {
-            dslContext.update(this)
-                .set(CONTAINER_ID, containerId)
-                .set(GMT_MODIFIED, LocalDateTime.now())
-                .where(PIPELINE_ID.eq(pipelineId))
-                .and(VM_SEQ.eq(vmSeq))
-                .execute()
         }
     }
 
@@ -126,19 +86,6 @@ class PipelineDockerTaskSimpleDao @Autowired constructor() {
                 .where(PIPELINE_ID.eq(pipelineId))
                 .and(VM_SEQ.eq(vmSeq))
                 .fetchOne()
-        }
-    }
-
-    fun getByPipelineIdAndBuildId(
-        dslContext: DSLContext,
-        pipelineId: String,
-        buildId: String
-    ): Result<TDispatchPipelineDockerTaskSimpleRecord> {
-        with(TDispatchPipelineDockerTaskSimple.T_DISPATCH_PIPELINE_DOCKER_TASK_SIMPLE) {
-            return dslContext.selectFrom(this)
-                .where(PIPELINE_ID.eq(pipelineId))
-                .and(BUILD_ID.eq(buildId))
-                .fetch()
         }
     }
 }
