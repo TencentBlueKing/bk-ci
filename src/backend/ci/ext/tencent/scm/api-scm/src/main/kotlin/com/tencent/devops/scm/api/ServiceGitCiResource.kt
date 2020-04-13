@@ -42,7 +42,7 @@ import javax.ws.rs.core.MediaType
 @Path("/service/gitci/")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface SerivceGitCiResource {
+interface ServiceGitCiResource {
 
     @ApiOperation("获取项目的token")
     @GET
@@ -52,4 +52,16 @@ interface SerivceGitCiResource {
         @QueryParam("gitProjectId")
         gitProjectId: String
     ): Result<GitToken>
+
+    @ApiOperation("校验用户git项目权限")
+    @GET
+    @Path("/checkUserGitAuth")
+    fun checkUserGitAuth(
+        @ApiParam("userId", required = true)
+        @QueryParam("userId")
+        userId: String,
+        @ApiParam("gitProjectId", required = true)
+        @QueryParam("gitProjectId")
+        gitProjectId: String
+    ): Result<Boolean>
 }
