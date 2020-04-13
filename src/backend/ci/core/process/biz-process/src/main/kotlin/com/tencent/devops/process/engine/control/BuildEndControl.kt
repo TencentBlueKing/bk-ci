@@ -252,7 +252,7 @@ class BuildEndControl @Autowired constructor(
 
     private fun addFailElementVar(buildId: String, projectId:String, pipelineId: String) {
         val taskRecords = pipelineBuildTaskService.getAllBuildTask(buildId)
-        var errorElements: String? = null
+        var errorElements = ""
         val model = pipelineBuildDetailService.getBuildModel(buildId)
         taskRecords.forEach {
             if(it.status == BuildStatus.FAILED || it.status == BuildStatus.QUEUE_TIMEOUT || it.status == BuildStatus.EXEC_TIMEOUT || it.status == BuildStatus.QUALITY_CHECK_FAIL) {
