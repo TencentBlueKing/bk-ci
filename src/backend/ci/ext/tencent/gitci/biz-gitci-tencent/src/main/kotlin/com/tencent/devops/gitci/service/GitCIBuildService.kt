@@ -390,20 +390,22 @@ class GitCIBuildService @Autowired constructor(
         val result = mutableListOf<BuildFormProperty>()
         gitProjectConf.env?.forEach {
             val value = gitCIParameterUtils.encrypt(it.value)
-            result.add(BuildFormProperty(
-                    it.name,
-                    false,
-                    BuildFormPropertyType.PASSWORD,
-                    value,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null
-                    ))
+            result.add(
+                BuildFormProperty(
+                    id = it.name,
+                    required = false,
+                    type = BuildFormPropertyType.PASSWORD,
+                    defaultValue = value,
+                    options = null,
+                    desc = null,
+                    repoHashId = null,
+                    relativePath = null,
+                    scmType = null,
+                    containerType = null,
+                    glob = null,
+                    properties = null
+                )
+            )
         }
 
         val startParams = mutableMapOf<String, String>()
@@ -423,18 +425,18 @@ class GitCIBuildService @Autowired constructor(
 
         startParams.forEach {
             result.add(BuildFormProperty(
-                it.key,
-                false,
-                BuildFormPropertyType.STRING,
-                it.value,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null
+                id = it.key,
+                required = false,
+                type = BuildFormPropertyType.STRING,
+                defaultValue = it.value,
+                options = null,
+                desc = null,
+                repoHashId = null,
+                relativePath = null,
+                scmType = null,
+                containerType = null,
+                glob = null,
+                properties = null
             ))
         }
 
