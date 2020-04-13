@@ -41,8 +41,9 @@ class PipelineDockerTaskDriftDao @Autowired constructor() {
         pipelineId: String,
         buildId: String,
         vmSeq: String,
-        oldIdcIp: String,
-        newIdcIp: String
+        oldIp: String,
+        newIp: String,
+        oldIpInfo: String
     ) {
         with(TDispatchPipelineDockerTaskDrift.T_DISPATCH_PIPELINE_DOCKER_TASK_DRIFT) {
             dslContext.insertInto(
@@ -52,14 +53,16 @@ class PipelineDockerTaskDriftDao @Autowired constructor() {
                 VM_SEQ,
                 OLD_DOCKER_IP,
                 NEW_DOCKER_IP,
+                OLD_DOCKER_IP_INFO,
                 GMT_CREATE,
                 GMT_MODIFIED
             ).values(
                 pipelineId,
                 buildId,
                 vmSeq,
-                oldIdcIp,
-                newIdcIp,
+                oldIp,
+                newIp,
+                oldIpInfo,
                 LocalDateTime.now(),
                 LocalDateTime.now()
             ).execute()
@@ -88,6 +91,7 @@ CREATE TABLE `T_DISPATCH_PIPELINE_DOCKER_TASK_DRIFT` (
   `VM_SEQ` varchar(64) NOT NULL DEFAULT '' COMMENT '构建机序号',
   `OLD_DOCKER_IP` varchar(64) NOT NULL DEFAULT '' COMMENT '旧构建容器IP',
   `NEW_DOCKER_IP` varchar(64) NOT NULL DEFAULT '' COMMENT '新构建容器IP',
+  `OLD_DOCKER_IP_INFO` varchar(1024) NOT NULL DEFAULT '' COMMENT '旧容器IP负载',
   `GMT_CREATE` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   `GMT_MODIFIED` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '修改时间',
   PRIMARY KEY (`ID`),
