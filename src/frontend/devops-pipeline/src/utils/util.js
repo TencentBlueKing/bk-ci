@@ -597,3 +597,16 @@ export function getParamsValuesMap (params = []) {
         return values
     }, {})
 }
+
+/**
+ * 判断两个数组是否有交集
+ * @param {Array} arr1
+ * @param {Array} arr2
+ */
+export function hasIntersection (arr1, arr2) {
+    try {
+        return arr2.some(item => arr1.includes(item))
+    } catch (e) {
+        return false
+    }
+}
