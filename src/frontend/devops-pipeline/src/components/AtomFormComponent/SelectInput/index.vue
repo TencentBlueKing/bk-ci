@@ -305,6 +305,7 @@
                     }
                 } catch (e) {
                     console.error(e)
+                    this.displayName = this.value
                 } finally {
                     this.loading = false
                 }
