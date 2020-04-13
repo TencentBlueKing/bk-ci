@@ -122,6 +122,7 @@ import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_TITLE
 import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_UPDATE_TIME
 import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_UPDATE_TIMESTAMP
 import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_URL
+import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_PUSH_ACTION_KIND
 import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_PUSH_ADD_FILE_COUNT
 import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_PUSH_ADD_FILE_PREFIX
 import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_PUSH_AFTER_COMMIT
@@ -134,9 +135,9 @@ import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_PUSH_DELETE_FILE_COUNT
 import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_PUSH_DELETE_FILE_PREFIX
 import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_PUSH_MODIFY_FILE_COUNT
 import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_PUSH_MODIFY_FILE_PREFIX
+import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_PUSH_OPERATION_KIND
 import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_PUSH_TOTAL_COMMIT
 import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_PUSH_USERNAME
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_TAG_ACTION_KIND
 import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_TAG_NAME
 import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_TAG_OPERATION
 import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_TAG_USERNAME
@@ -619,7 +620,6 @@ class PipelineBuildWebhookService @Autowired constructor(
                 val gitTagPushEvent = gitMatcher.event as GitTagPushEvent
                 startParams[BK_REPO_GIT_WEBHOOK_TAG_NAME] = matcher.getBranchName()
                 startParams[BK_REPO_GIT_WEBHOOK_TAG_OPERATION] = gitTagPushEvent.operation_kind ?: ""
-                startParams[BK_REPO_GIT_WEBHOOK_TAG_ACTION_KIND] = gitTagPushEvent.action_kind ?: ""
                 startParams[BK_REPO_GIT_WEBHOOK_PUSH_TOTAL_COMMIT] = gitTagPushEvent.total_commits_count
                 startParams[BK_REPO_GIT_WEBHOOK_TAG_USERNAME] = matcher.getUsername()
                 genCommitsParam(startParams, gitTagPushEvent.commits)
@@ -631,6 +631,8 @@ class PipelineBuildWebhookService @Autowired constructor(
                 startParams[BK_REPO_GIT_WEBHOOK_PUSH_BEFORE_COMMIT] = gitPushEvent.before
                 startParams[BK_REPO_GIT_WEBHOOK_PUSH_AFTER_COMMIT] = gitPushEvent.after
                 startParams[BK_REPO_GIT_WEBHOOK_PUSH_TOTAL_COMMIT] = gitPushEvent.total_commits_count
+                startParams[BK_REPO_GIT_WEBHOOK_PUSH_ACTION_KIND] = gitPushEvent.action_kind ?: ""
+                startParams[BK_REPO_GIT_WEBHOOK_PUSH_OPERATION_KIND] = gitPushEvent.operation_kind ?: ""
                 startParams[BK_REPO_GIT_WEBHOOK_BRANCH] = matcher.getBranchName()
                 genCommitsParam(startParams, gitPushEvent.commits)
             }
