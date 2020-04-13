@@ -150,8 +150,8 @@
             features () {
                 return [
                     { name: this.$t('store.蓝鲸官方'), key: 'rdType', value: 'SELF_DEVELOPED' },
-                    { name: this.$t('store.是否推荐'), key: 'recommendFlag', value: true },
-                    { name: this.$t('store.YAML可用'), key: 'yamlFlag', value: true, hidden: this.filterData.pipeType !== 'atom' }
+                    { name: this.$t('store.YAML可用'), key: 'yamlFlag', value: true, hidden: this.filterData.pipeType !== 'atom' },
+                    { name: this.$t('store.推荐使用'), key: 'recommendFlag', value: true }
                 ]
             }
         },
