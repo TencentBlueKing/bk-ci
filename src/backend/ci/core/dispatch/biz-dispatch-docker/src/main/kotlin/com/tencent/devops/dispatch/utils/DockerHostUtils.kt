@@ -56,7 +56,7 @@ class DockerHostUtils @Autowired constructor(
         private val logger = LoggerFactory.getLogger(DockerHostUtils::class.java)
     }
 
-    fun getAvailableDockerIp(event: PipelineAgentStartupEvent, unAvailableIpList: Set<String> = setOf()): String {
+    fun getAvailableDockerIp(projectId: String, pipelineId: String, vmSeqId: String, unAvailableIpList: Set<String> = setOf()): String {
         var grayEnv = false
         val gray = System.getProperty("gray.project", "none")
         if (gray == "grayproject") {
@@ -65,7 +65,7 @@ class DockerHostUtils @Autowired constructor(
 
         var dockerIp = ""
         // 先判断是否OP已配置专机，若配置了专机，从列表中选择一个容量最小的
-        val specialIpSet = pipelineDockerHostDao.getHostIps(dslContext, event.projectId).toSet()
+        val specialIpSet = pipelineDockerHostDao.getHostIps(dslContext, projectId).toSet()
         logger.info("getAvailableDockerIp grayEnv: $grayEnv | specialIpSet: $specialIpSet")
 
         // 获取负载配置
@@ -73,7 +73,7 @@ class DockerHostUtils @Autowired constructor(
         logger.info("Docker host load config: ${JsonUtil.toJson(dockerHostLoadConfigTriple)}")
 
         // 判断流水线上次关联的hostTag，如果存在并且构建机容量符合第一档负载则优先分配（降低版本更新时被重新洗牌的概率）
-        val lastHostIp = redisUtils.getDockerBuildLastHost(event.pipelineId, event.vmSeqId)
+        val lastHostIp = redisUtils.getDockerBuildLastHost(pipelineId, vmSeqId)
         if (lastHostIp != null && lastHostIp.isNotEmpty()) {
             val lastHostIpInfo = pipelineDockerIpInfoDao.getDockerIpInfo(dslContext, lastHostIp)
             if (lastHostIpInfo != null &&

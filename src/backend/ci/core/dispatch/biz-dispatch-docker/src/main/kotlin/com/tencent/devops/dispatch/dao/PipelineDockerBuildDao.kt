@@ -149,17 +149,17 @@ class PipelineDockerBuildDao {
         }
     }
 
-    fun getLastBuild(
+    fun getLatestBuild(
         dslContext: DSLContext,
         pipelineId: String,
         vmSeqId: Int
-    ): TDispatchPipelineDockerBuildRecord? {
+    ): Result<TDispatchPipelineDockerBuildRecord> {
         with(TDispatchPipelineDockerBuild.T_DISPATCH_PIPELINE_DOCKER_BUILD) {
             return dslContext.selectFrom(this)
                 .where(PIPELINE_ID.eq(pipelineId))
                 .and(VM_SEQ_ID.eq(vmSeqId))
                 .orderBy(CREATED_TIME.desc())
-                .fetchOne()
+                .fetch()
         }
     }
 }
