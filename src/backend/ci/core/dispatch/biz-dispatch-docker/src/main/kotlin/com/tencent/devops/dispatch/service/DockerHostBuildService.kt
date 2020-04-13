@@ -123,7 +123,8 @@ class DockerHostBuildService @Autowired constructor(
                     Zone.SHENZHEN.name
                 } else {
                     event.zone!!.name
-                })
+                },
+                dockerIp = "")
             val agentId = HashUtil.encodeLongId(id)
             redisUtils.setDockerBuild(
                 id, secretKey,
@@ -684,7 +685,8 @@ class DockerHostBuildService @Autowired constructor(
                 vmSeqId = event.vmSeqId.toInt(),
                 secretKey = secretKey,
                 status = PipelineTaskStatus.RUNNING,
-                zone = zone.name
+                zone = zone.name,
+                dockerIp = ""
             )
             val agentId = HashUtil.encodeLongId(id)
             redisUtils.setDockerBuild(

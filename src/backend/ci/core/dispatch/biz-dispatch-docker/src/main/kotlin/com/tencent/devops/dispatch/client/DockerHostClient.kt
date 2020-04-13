@@ -74,7 +74,8 @@ class DockerHostClient @Autowired constructor(
                 Zone.SHENZHEN.name
             } else {
                 event.zone!!.name
-            }
+            },
+            dockerIp = dockerIp
         )
         val agentId = HashUtil.encodeLongId(id)
         redisUtils.setDockerBuild(
@@ -217,13 +218,20 @@ class DockerHostClient @Autowired constructor(
             val response: Map<String, Any> = jacksonObjectMapper().readValue(responseBody)
             when {
                 response["status"] == 0 -> {
-                    val containId = response["data"] as String
-                    logger.info("[${event.projectId}|${event.pipelineId}|${event.buildId}|$retryTime] update container: $containId")
-                    pipelineDockerTaskSimpleDao.updateContainerId(
+                    val containerId = response["data"] as String
+                    logger.info("[${event.projectId}|${event.pipelineId}|${event.buildId}|$retryTime] update container: $containerId")
+/*                    pipelineDockerTaskSimpleDao.updateContainerId(
                         dslContext,
                         event.pipelineId,
                         event.vmSeqId,
-                        containId
+                        containerId
+                    )*/
+                    // 更新
+                    pipelineDockerBuildDao.updateContainerId(
+                        dslContext,
+                        event.buildId,
+                        Integer.valueOf(event.vmSeqId),
+                        containerId
                     )
                 }
                 response["status"] == 1 -> {
