@@ -150,12 +150,10 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         pageSize: Int?
     ): Future<MarketAtomResp> {
         return executor.submit(Callable<MarketAtomResp> {
-
             val results = mutableListOf<MarketItem>()
-
             // 获取插件
             val labelCodeList = if (labelCode.isNullOrEmpty()) listOf() else labelCode?.split(",")
-            val count = marketAtomDao.count(dslContext, atomName, classifyCode, labelCodeList, score, rdType)
+            val count = marketAtomDao.count(dslContext, atomName, classifyCode, labelCodeList, score, rdType, yamlFlag, recommendFlag)
             val atoms = marketAtomDao.list(
                 dslContext = dslContext,
                 atomName = atomName,
