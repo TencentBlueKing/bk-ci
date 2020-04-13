@@ -28,7 +28,6 @@ package com.tencent.devops.gitci.service
 
 import com.tencent.devops.artifactory.api.service.ServiceArtifactoryDownLoadResource
 import com.tencent.devops.artifactory.api.service.ServiceArtifactoryResource
-import com.tencent.devops.artifactory.api.user.UserArtifactoryResource
 import com.tencent.devops.artifactory.pojo.FileInfo
 import com.tencent.devops.artifactory.pojo.FileInfoPage
 import com.tencent.devops.artifactory.pojo.Property
