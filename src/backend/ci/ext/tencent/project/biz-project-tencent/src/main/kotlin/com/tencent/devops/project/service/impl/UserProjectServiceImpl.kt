@@ -26,6 +26,7 @@
 
 package com.tencent.devops.project.service.impl
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BK_TOKEN
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.common.service.utils.CookieUtil
@@ -134,8 +135,8 @@ class UserProjectServiceImpl @Autowired constructor(
         return super.updateCollected(userId, serviceId, collector)
     }
 
-    override fun listService(userId: String, projectId: String?, bkToken: String?): Result<ArrayList<ServiceListVO>> {
-        logger.info("listService interface:userId[$userId],projectId[$projectId],bkToken[$bkToken]")
+    override fun listService(userId: String, projectId: String?): Result<ArrayList<ServiceListVO>> {
+        logger.info("listService interface:userId[$userId],projectId[$projectId]")
 
         val startEpoch = System.currentTimeMillis()
         try {
@@ -150,6 +151,12 @@ class UserProjectServiceImpl @Autowired constructor(
 
             logger.info("listService interface containerUrl:$containerUrl")
             logger.info("listService interface containerbgId:$containerbgId")
+
+            val attributes = RequestContextHolder.getRequestAttributes() as? ServletRequestAttributes
+            val request = attributes?.request
+            val bkToken = request?.getHeader(AUTH_HEADER_DEVOPS_BK_TOKEN)
+            logger.info("listService interface request :$request")
+            logger.info("listService interface bkToken :$bkToken")
             serviceTypeMap.forEach { serviceType ->
                 val typeId = serviceType.id
                 val typeName = MessageCodeUtil.getMessageByLocale(serviceType.title, serviceType.englishTitle)
@@ -161,15 +168,14 @@ class UserProjectServiceImpl @Autowired constructor(
                     val favor = favorServices.contains(it.id)
                     var newWindow = false
                     var newWindowUrl = ""
-                    if(it.name.contains("容器服务") && it.injectType.toLowerCase().trim().equals("iframe") && bkToken != null && !containerUrl.isNullOrBlank() && !containerbgId.isNullOrBlank()) {
+                    if(it.name.contains("容器服务") && it.injectType.toLowerCase().trim().equals("iframe") && request != null && bkToken != null && !containerUrl.isNullOrBlank() && !containerbgId.isNullOrBlank()) {
                         logger.info("listService interface:enter container.")
-
                         val containerUrlList = containerUrl!!.split(",|;".toRegex())
                         val containerbgIdList = containerbgId!!.split(",|;".toRegex())
                         logger.info("listService interface containerUrlList:$containerUrlList")
                         logger.info("listService interface containerbgIdList:$containerbgIdList")
                         if(containerbgIdList.isNotEmpty() && containerUrlList.isNotEmpty() && containerUrlList.size == containerbgIdList.size) {
-                            val userDeptDetail = tofService.getUserDeptDetail(userId, bkToken)
+                            val userDeptDetail = tofService.getUserDeptDetail(userId)
                             run breaking@ {
                                 containerbgIdList.forEachIndexed { index, bgId  ->
                                     if(bgId == userDeptDetail.bgId) {
@@ -181,17 +187,13 @@ class UserProjectServiceImpl @Autowired constructor(
                             }
                         }
 
-                        // 最后根据域名来判断是否需要从新页面打开
-                        val attributes = RequestContextHolder.getRequestAttributes() as? ServletRequestAttributes
-                        if (null != attributes) {
-                            logger.info("listService interface enter RequestContextHolder")
-                            val request = attributes.request
-                            val host = request.serverName
-                            logger.info("listService interface host:$host")
-                            if(!containerIegUrl.isNullOrBlank() && host.contains(containerIegUrl!!)) {
-                                logger.info("listService interface change newWindow to false")
-                                newWindow = false
-                            }
+                        val originalHost = request.getHeader(AUTH_HEADER_DEVOPS_BK_TOKEN)
+
+                        logger.info("listService interface original hots:$originalHost")
+                        if(!containerIegUrl.isNullOrBlank() && originalHost.contains(containerIegUrl!!)) {
+                            logger.info("listService interface change newWindow to false")
+                            newWindow = false
+
                         }
                     }
                     services.add(
