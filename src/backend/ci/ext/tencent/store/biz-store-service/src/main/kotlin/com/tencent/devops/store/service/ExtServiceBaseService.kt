@@ -22,6 +22,7 @@ import com.tencent.devops.common.api.constant.NUM_TWO
 import com.tencent.devops.common.api.constant.SUCCESS
 import com.tencent.devops.common.api.constant.TEST
 import com.tencent.devops.common.api.constant.UNDO
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
@@ -52,7 +53,6 @@ import com.tencent.devops.store.dao.common.StoreBuildInfoDao
 import com.tencent.devops.store.dao.common.StoreMediaInfoDao
 import com.tencent.devops.store.dao.common.StoreMemberDao
 import com.tencent.devops.store.dao.common.StoreProjectRelDao
-import com.tencent.devops.store.dao.common.StoreReleaseDao
 import com.tencent.devops.store.pojo.EditInfoDTO
 import com.tencent.devops.store.pojo.ExtServiceCreateInfo
 import com.tencent.devops.store.pojo.ExtServiceEnvCreateInfo
@@ -118,8 +118,6 @@ abstract class ExtServiceBaseService @Autowired constructor() {
     lateinit var storeBuildInfoDao: StoreBuildInfoDao
     @Autowired
     lateinit var storeMemberDao: StoreMemberDao
-    @Autowired
-    lateinit var storeReleaseDao: StoreReleaseDao
     @Autowired
     lateinit var extFeatureDao: ExtServiceFeatureDao
     @Autowired
@@ -775,7 +773,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         val mediaList = submitInfo.mediaInfoList
         val deptList = submitInfo.deptInfoList
 
-        val serviceInfo = extServiceDao.getServiceById(dslContext, serviceId) ?: throw RuntimeException(StoreMessageCode.USER_SERVICE_NOT_EXIST)
+        val serviceInfo = extServiceDao.getServiceById(dslContext, serviceId) ?: throw ErrorCodeException(errorCode = StoreMessageCode.USER_SERVICE_NOT_EXIST)
         val serviceCode = serviceInfo.serviceCode
 
         val oldStatus = serviceInfo.serviceStatus
@@ -1179,7 +1177,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         val fileItemList = taskDataMap.itemList
         if (fileServiceCode != serviceCode) {
             logger.warn("getServiceProps input serviceCode[$serviceCode], extension.json serviceCode[$fileServiceCode] ")
-            throw RuntimeException(MessageCodeUtil.getCodeLanMessage(StoreMessageCode.USER_SERVICE_CODE_DIFF))
+            throw ErrorCodeException(errorCode = StoreMessageCode.USER_SERVICE_CODE_DIFF)
         }
 
         if (fileItemList == null) {
@@ -1433,19 +1431,19 @@ abstract class ExtServiceBaseService @Autowired constructor() {
             permission = AuthPermission.CREATE
         )
         if (!permissionCheck) {
-            throw RuntimeException(MessageCodeUtil.getCodeLanMessage(StoreMessageCode.USER_SERVICE_PROJECT_NOT_PERMISSION))
+            throw ErrorCodeException(errorCode = StoreMessageCode.USER_SERVICE_PROJECT_NOT_PERMISSION)
         }
         val projectInfo = client.get(ServiceProjectResource::class).get(projectCode).data
         if (projectInfo == null) {
-            throw RuntimeException(MessageCodeUtil.getCodeLanMessage(StoreMessageCode.USER_SERVICE_PROJECT_UNENABLE))
+            throw ErrorCodeException(errorCode = StoreMessageCode.USER_SERVICE_PROJECT_UNENABLE)
         } else {
             if (projectInfo.enabled == false) {
-                throw RuntimeException(MessageCodeUtil.getCodeLanMessage(StoreMessageCode.USER_SERVICE_PROJECT_UNENABLE))
+                throw ErrorCodeException(errorCode = StoreMessageCode.USER_SERVICE_PROJECT_UNENABLE)
             }
         }
     }
 
     companion object {
-        val logger = LoggerFactory.getLogger(ExtServiceBaseService::class.java)
+        private val logger = LoggerFactory.getLogger(ExtServiceBaseService::class.java)
     }
 }
