@@ -15,7 +15,6 @@ import com.tencent.devops.dispatch.dao.PipelineDockerBuildDao
 import com.tencent.devops.dispatch.dao.PipelineDockerTaskSimpleDao
 import com.tencent.devops.dispatch.exception.DockerServiceException
 import com.tencent.devops.dispatch.pojo.DockerHostBuildInfo
-import com.tencent.devops.dispatch.pojo.VolumeStatus
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.dispatch.pojo.redis.RedisBuild
 import com.tencent.devops.dispatch.utils.CommonUtils
@@ -36,7 +35,6 @@ import java.net.URLEncoder
 
 @Component
 class DockerHostClient @Autowired constructor(
-    private val pipelineDockerTaskSimpleDao: PipelineDockerTaskSimpleDao,
     private val pipelineDockerBuildDao: PipelineDockerBuildDao,
     private val dockerHostUtils: DockerHostUtils,
     private val redisUtils: RedisUtils,
