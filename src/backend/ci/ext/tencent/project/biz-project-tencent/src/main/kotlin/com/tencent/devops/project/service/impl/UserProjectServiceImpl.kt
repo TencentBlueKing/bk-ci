@@ -27,10 +27,8 @@
 package com.tencent.devops.project.service.impl
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BK_TOKEN
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ORIGINAL_HOST
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.Gray
-import com.tencent.devops.common.service.utils.CookieUtil
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.project.dao.FavoriteDao
 import com.tencent.devops.project.dao.GrayTestDao
@@ -49,21 +47,20 @@ import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.context.i18n.LocaleContextHolder
 import org.springframework.stereotype.Service
 import org.springframework.web.context.request.RequestContextHolder
 import org.springframework.web.context.request.ServletRequestAttributes
 
 @Service
 class UserProjectServiceImpl @Autowired constructor(
-        private val dslContext: DSLContext,
-        private val serviceTypeDao: ServiceTypeDao,
-        private val serviceDao: ServiceDao,
-        private val grayTestDao: GrayTestDao,
-        private val favoriteDao: FavoriteDao,
-        private val gray: Gray,
-        private val redisOperation: RedisOperation,
-        private val tofService: TOFService
+    private val dslContext: DSLContext,
+    private val serviceTypeDao: ServiceTypeDao,
+    private val serviceDao: ServiceDao,
+    private val grayTestDao: GrayTestDao,
+    private val favoriteDao: FavoriteDao,
+    private val gray: Gray,
+    private val redisOperation: RedisOperation,
+    private val tofService: TOFService
 ) : AbsUserProjectServiceServiceImpl(dslContext, serviceTypeDao, serviceDao, favoriteDao, gray, redisOperation) {
 
     @Value("\${project.container.url:#{null}}")
@@ -114,8 +111,8 @@ class UserProjectServiceImpl @Autowired constructor(
     }
 
     override fun updateServiceUrls(
-            userId: String,
-            serviceUpdateUrls: List<ServiceUpdateUrls>
+        userId: String,
+        serviceUpdateUrls: List<ServiceUpdateUrls>
     ): Result<Int> {
         return super.updateServiceUrls(userId, serviceUpdateUrls)
     }
@@ -149,7 +146,6 @@ class UserProjectServiceImpl @Autowired constructor(
 
             val favorServices = favoriteDao.list(dslContext, userId).map { it.serviceId }.toList()
 
-
             logger.info("listService interface containerUrl:$containerUrl")
             logger.info("listService interface containerbgId:$containerbgId")
 
@@ -169,17 +165,17 @@ class UserProjectServiceImpl @Autowired constructor(
                     val favor = favorServices.contains(it.id)
                     var newWindow = false
                     var newWindowUrl = ""
-                    if(it.name.contains("容器服务") && it.injectType.toLowerCase().trim().equals("iframe") && request != null && bkToken != null && !containerUrl.isNullOrBlank() && !containerbgId.isNullOrBlank()) {
+                    if (it.name.contains("容器服务") && it.injectType.toLowerCase().trim().equals("iframe") && request != null && bkToken != null && !containerUrl.isNullOrBlank() && !containerbgId.isNullOrBlank()) {
                         logger.info("listService interface:enter container.")
                         val containerUrlList = containerUrl!!.split(",|;".toRegex())
                         val containerbgIdList = containerbgId!!.split(",|;".toRegex())
                         logger.info("listService interface containerUrlList:$containerUrlList")
                         logger.info("listService interface containerbgIdList:$containerbgIdList")
-                        if(containerbgIdList.isNotEmpty() && containerUrlList.isNotEmpty() && containerUrlList.size == containerbgIdList.size) {
+                        if (containerbgIdList.isNotEmpty() && containerUrlList.isNotEmpty() && containerUrlList.size == containerbgIdList.size) {
                             val userDeptDetail = tofService.getUserDeptDetail(userId)
-                            run breaking@ {
-                                containerbgIdList.forEachIndexed { index, bgId  ->
-                                    if(bgId == userDeptDetail.bgId) {
+                            run breaking@{
+                                containerbgIdList.forEachIndexed { index, bgId ->
+                                    if (bgId == userDeptDetail.bgId) {
                                         newWindowUrl = containerUrlList[index]
                                         newWindow = true
                                         return@breaking
@@ -191,10 +187,9 @@ class UserProjectServiceImpl @Autowired constructor(
                         val originalHost = request.getHeader("Origin")
 
                         logger.info("listService interface original hots:$originalHost")
-                        if(!containerIegUrl.isNullOrBlank() && !originalHost.isNullOrBlank() && originalHost.contains(containerIegUrl!!)) {
+                        if (!containerIegUrl.isNullOrBlank() && !originalHost.isNullOrBlank() && originalHost.contains(containerIegUrl!!)) {
                             logger.info("listService interface change newWindow to false")
                             newWindow = false
-
                         }
                     }
                     services.add(
@@ -220,7 +215,6 @@ class UserProjectServiceImpl @Autowired constructor(
                                     webSocket = it.webSocket,
                                     newWindow = newWindow,
                                     newWindowUrl = newWindowUrl
-
 
                             )
                     )
