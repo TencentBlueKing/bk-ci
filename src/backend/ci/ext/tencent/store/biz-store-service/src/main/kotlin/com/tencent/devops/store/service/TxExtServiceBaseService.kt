@@ -28,6 +28,7 @@ import com.tencent.devops.store.pojo.dto.InitExtServiceDTO
 import com.tencent.devops.store.pojo.enums.ExtServicePackageSourceTypeEnum
 import com.tencent.devops.store.pojo.enums.ExtServiceStatusEnum
 import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
@@ -35,6 +36,8 @@ import java.util.concurrent.TimeUnit
 
 @Service
 class TxExtServiceBaseService : ExtServiceBaseService() {
+
+    private val logger = LoggerFactory.getLogger(TxExtServiceBaseService::class.java)
 
     @Value("\${git.service.nameSpaceId}")
     private lateinit var serviceNameSpaceId: String

@@ -239,7 +239,7 @@ class OpExtServiceService @Autowired constructor(
                 serviceCode = serviceCode,
                 version = serviceRecord.version
             )
-            ExtServiceBaseService.logger.info("deployExtServiceResult is:$deployExtServiceResult")
+            logger.info("deployExtServiceResult is:$deployExtServiceResult")
             if (deployExtServiceResult.isNotOk()) {
                 return deployExtServiceResult
             }

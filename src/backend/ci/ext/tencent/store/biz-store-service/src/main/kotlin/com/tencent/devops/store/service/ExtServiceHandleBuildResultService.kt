@@ -26,8 +26,10 @@
 
 package com.tencent.devops.store.service
 
+import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.store.dao.ExtServiceDao
 import com.tencent.devops.store.pojo.common.StoreBuildResultRequest
 import com.tencent.devops.store.pojo.enums.ExtServiceStatusEnum
@@ -48,7 +50,16 @@ class ExtServiceHandleBuildResultService @Autowired constructor(
     override fun handleStoreBuildResult(storeBuildResultRequest: StoreBuildResultRequest): Result<Boolean> {
         logger.info("handleStoreBuildResult storeBuildResultRequest is:$storeBuildResultRequest")
         val serviceId = storeBuildResultRequest.storeId
-        var serviceStatus = ExtServiceStatusEnum.TESTING // 构建成功将扩展服务状态置位测试状态
+        val serviceRecord = extServiceDao.getServiceById(dslContext, serviceId)
+        logger.info("handleStoreBuildResult serviceRecord is:$serviceRecord")
+        if (null == serviceRecord) {
+            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_INVALID, arrayOf(serviceId))
+        }
+        // 防止重复的mq消息造成的状态异常
+        if (serviceRecord.serviceStatus != ExtServiceStatusEnum.BUILDING.status.toByte()) {
+            return Result(true)
+        }
+        var serviceStatus = ExtServiceStatusEnum.TESTING // 构建成功将扩展服务状态置为测试状态
         if (BuildStatus.SUCCEED != storeBuildResultRequest.buildStatus) {
             serviceStatus = ExtServiceStatusEnum.BUILD_FAIL // 构建失败
         }

@@ -184,7 +184,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
                     creatorUser = userId,
                     publisher = userId,
                     publishTime = System.currentTimeMillis(),
-                    status = 0,
+                    status = ExtServiceStatusEnum.INIT.status,
                     version = ""
                 )
             )
@@ -818,13 +818,12 @@ abstract class ExtServiceBaseService @Autowired constructor() {
             }
         }
 
-        extServiceDao.setServiceStatusByCode(
-            dslContext,
-            serviceInfo.serviceCode,
-            oldStatus,
-            newStatus,
-            userId,
-            "add media file "
+        extServiceDao.setServiceStatusById(
+            dslContext = dslContext,
+            serviceId = serviceId,
+            serviceStatus = newStatus,
+            userId = userId,
+            msg = "add media file "
         )
         return Result(true)
     }
