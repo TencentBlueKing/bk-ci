@@ -50,7 +50,7 @@ class CommonPipelineAutoConfiguration {
     }
 
     @Bean
-    fun pipelineHardDeleteMQListener(@Autowired dslContext: DSLContext): PipelineHardDeleteMQListener {
-        return PipelineHardDeleteMQListener(dslContext)
+    fun pipelineHardDeleteMQListener(): PipelineHardDeleteMQListener {
+        return PipelineHardDeleteMQListener()
     }
 }
