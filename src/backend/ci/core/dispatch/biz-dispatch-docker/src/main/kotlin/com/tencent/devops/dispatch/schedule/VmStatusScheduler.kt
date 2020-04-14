@@ -106,7 +106,7 @@ class VmStatusScheduler @Autowired constructor(
         try {
             OkhttpUtils.doHttp(request).use { resp ->
                 val responseBody = resp.body()!!.string()
-                // logger.info("Docker VM $itDockerIp status fresh responseBody: $responseBody")
+                logger.info("Docker VM $itDockerIp status fresh responseBody: $responseBody")
                 val response: Map<String, Any> = jacksonObjectMapper().readValue(responseBody)
                 if (response["status"] == 0) {
                     val dockerHostLoad: Map<String, Any> = response["data"] as LinkedHashMap<String, Any>
