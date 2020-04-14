@@ -67,7 +67,7 @@ class VmStatusScheduler @Autowired constructor(
                     grayEnv = true
                 }
                 logger.info("checkVMStatus gray: $gray")
-                val unableDockerIpList = pipelineDockerIpInfoDao.getEnableDockerIpList(dslContext, false, grayEnv)
+                val unableDockerIpList = pipelineDockerIpInfoDao.getDockerIpList(dslContext, false, grayEnv)
                 unableDockerIpList.stream().forEach {
                     singleTask(it)
                 }
@@ -86,7 +86,7 @@ class VmStatusScheduler @Autowired constructor(
             grayEnv = true
         }
         logger.info("getAvailableDockerIp gray: $gray")
-        val dockerIpList = pipelineDockerIpInfoDao.getEnableDockerIpList(dslContext, true, grayEnv)
+        val dockerIpList = pipelineDockerIpInfoDao.getDockerIpList(dslContext, true, grayEnv)
         dockerIpList.parallelStream().forEach {
             singleTask(it)
         }

@@ -151,7 +151,7 @@ class PipelineDockerIPInfoDao {
         }
     }
 
-    fun getEnableDockerIpList(
+    fun getDockerIpList(
         dslContext: DSLContext,
         enable: Boolean,
         grayEnv: Boolean

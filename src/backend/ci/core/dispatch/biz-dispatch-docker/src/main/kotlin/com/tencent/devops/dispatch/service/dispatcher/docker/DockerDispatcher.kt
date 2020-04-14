@@ -80,8 +80,6 @@ class DockerDispatcher @Autowired constructor(
             pipelineAgentStartupEvent.executeCount ?: 1
         )
 
-        var errorFlag = false
-        var errorMsg = ""
         try {
             val taskHistory = pipelineDockerTaskSimpleDao.getByPipelineIdAndVMSeq(
                 dslContext,
@@ -132,29 +130,18 @@ class DockerDispatcher @Autowired constructor(
             }
 
             dockerHostClient.startBuild(pipelineAgentStartupEvent, dockerIp)
-        } catch (e: DockerServiceException) {
-            logger.error(
-                "[${pipelineAgentStartupEvent.projectId}|${pipelineAgentStartupEvent.pipelineId}|${pipelineAgentStartupEvent.buildId}] Start build Docker VM failed.",
-                e
-            )
-            errorFlag = true
-            errorMsg = e.message!!
         } catch (e: Exception) {
             logger.error(
                 "[${pipelineAgentStartupEvent.projectId}|${pipelineAgentStartupEvent.pipelineId}|${pipelineAgentStartupEvent.buildId}] Start build Docker VM failed.",
                 e
             )
-            errorFlag = true
-            errorMsg = "Start build Docker VM failed."
-        } finally {
-            if (errorFlag) {
-                onFailBuild(
-                    client,
-                    rabbitTemplate,
-                    pipelineAgentStartupEvent,
-                    errorMsg
-                )
+
+            val errMsg = if (e is DockerServiceException) {
+                e.message!!
+            } else {
+                "Start build Docker VM failed."
             }
+            onFailBuild(client, rabbitTemplate, pipelineAgentStartupEvent, errMsg)
         }
     }
 

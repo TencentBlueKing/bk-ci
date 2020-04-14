@@ -220,12 +220,6 @@ class DockerHostClient @Autowired constructor(
                 response["status"] == 0 -> {
                     val containerId = response["data"] as String
                     logger.info("[${event.projectId}|${event.pipelineId}|${event.buildId}|$retryTime] update container: $containerId")
-/*                    pipelineDockerTaskSimpleDao.updateContainerId(
-                        dslContext,
-                        event.pipelineId,
-                        event.vmSeqId,
-                        containerId
-                    )*/
                     // 更新
                     pipelineDockerBuildDao.updateContainerId(
                         dslContext,
