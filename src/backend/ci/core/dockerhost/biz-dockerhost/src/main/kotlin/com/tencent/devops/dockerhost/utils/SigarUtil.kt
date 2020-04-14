@@ -139,7 +139,7 @@ object SigarUtil {
     fun pushDiskIOUtil() {
         try {
             val element = getDiskIORate()
-            logger.info("push disk ioUtil element: $element")
+            // logger.info("push disk ioUtil element: $element")
             if (diskIOQueue.size >= queueMaxSize) {
                 queueDiskIOValueSum -= diskIOQueue.pollLast()
             }
@@ -158,12 +158,12 @@ object SigarUtil {
     private fun getMemUsedPercent(): Int {
         val sigar = Sigar()
         val mem = sigar.mem
-        /*logger.info("usedPercent: " + mem.usedPercent)
+        logger.info("usedPercent: " + mem.usedPercent)
         logger.info("used: " + mem.used)
         logger.info("total: " + mem.total)
         logger.info("actualUsed: " + mem.actualUsed)
         logger.info("actualFree: " + mem.actualFree)
-        logger.info("free: " + mem.free)*/
+        logger.info("free: " + mem.free)
         val element = (mem.usedPercent).roundToInt()
         return if (element in 0..100) {
             element
@@ -193,7 +193,7 @@ object SigarUtil {
 
     private fun getDiskUsedPercent(): Int {
         var element = file()
-        logger.info("getDiskUsedPercent ==========>：$element")
+        // logger.info("getDiskUsedPercent ==========>：$element")
         if (element !in 0..100) {
             element = 0
         }
