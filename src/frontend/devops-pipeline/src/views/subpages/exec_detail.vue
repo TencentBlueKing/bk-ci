@@ -93,6 +93,7 @@
             </log>
         </template>
         <review-dialog :is-show="showReviewDialog"></review-dialog>
+        <mini-map :stages="execDetail.model.stages" scroll-class=".exec-pipeline" v-if="!isLoading && !fetchingAtomList"></mini-map>
     </section>
 </template>
 
@@ -112,6 +113,7 @@
     import pipelineConstMixin from '@/mixins/pipelineConstMixin'
     import { convertMStoStringByRule } from '@/utils/util'
     import Logo from '@/components/Logo'
+    import MiniMap from '@/components/MiniMap'
 
     export default {
         components: {
@@ -124,7 +126,8 @@
             emptyTips,
             log,
             ReviewDialog,
-            Logo
+            Logo,
+            MiniMap
         },
         mixins: [pipelineOperateMixin, pipelineConstMixin],
 
