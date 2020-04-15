@@ -104,10 +104,9 @@ class OpExtServiceService @Autowired constructor(
         val extensionServiceInfoList = mutableListOf<ExtensionServiceVO>()
         serviceRecord?.forEach {
             logger.info("listServiceByCode serviceCode[$serviceCode] record[$it]")
-            val serviceId = it["itemId"] as String
             extensionServiceInfoList.add(
                 ExtensionServiceVO(
-                    serviceId = serviceId,
+                    serviceId = it.id,
                     serviceCode = it.serviceCode,
                     serviceName = it.serviceName,
                     serviceStatus = it.serviceStatus.toInt(),
