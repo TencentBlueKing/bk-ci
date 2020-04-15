@@ -13,60 +13,71 @@ import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.PUT
 import javax.ws.rs.Path
+import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["SERVICE_EXT_ITEM"], description = "服务扩展-项目")
+@Api(tags = ["SERVICE_EXT_ITEM"], description = "服务扩展-扩展点")
 @Path("/service/ext/items")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceItemResource {
+
     @GET
     @Path("/{itemId}")
-    @ApiOperation("获取扩展项目信息")
+    @ApiOperation("获取扩展点信息")
     fun getItemInfo(
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @ApiParam("项目Id", required = true)
-        @QueryParam("itemId")
+        @ApiParam("扩展点Id", required = true)
+        @PathParam("itemId")
         itemId: String
     ): Result<ExtItemDTO?>
 
     @GET
-    @Path("itemCodes/{itemCode}")
-    @ApiOperation("获取扩展项目列表")
+    @Path("/itemIds/{itemId}")
+    @ApiOperation("获取扩展点信息")
+    fun getItemById(
+        @ApiParam("扩展点Id", required = true)
+        @PathParam("itemId")
+        itemId: String
+    ): Result<ServiceItem?>
+
+    @GET
+    @Path("/itemCodes/{itemCode}")
+    @ApiOperation("获取扩展点信息")
     fun getItemByCode(
-        @ApiParam("项目Code", required = true)
-        @QueryParam("itemCode")
+        @ApiParam("扩展点Code", required = true)
+        @PathParam("itemCode")
         itemCode: String
     ): Result<ServiceItem?>
 
     @GET
-    @Path("itemCodes/{itemCodes}/byCodes")
-    @ApiOperation("获取扩展项目列表")
+    @Path("/itemCodes/{itemCodes}/byCodes")
+    @ApiOperation("获取扩展点列表")
     fun getItemByCodes(
-        @ApiParam("项目Code", required = true)
-        @QueryParam("itemCodes")
+        @ApiParam("扩展点Code", required = true)
+        @PathParam("itemCodes")
         itemCodes: Set<String>
     ): Result<List<ServiceItem>?>
 
     @GET
-    @Path("itemIds/{itemIds}/itemInfo")
-    @ApiOperation("获取扩展项目列表")
+    @Path("/itemIds/{itemIds}/itemInfo")
+    @ApiOperation("获取扩展点列表")
     fun getItemInfoByIds(
-        @ApiParam("项目id串", required = true)
-        @QueryParam("itemIds")
+        @ApiParam("扩展点id串", required = true)
+        @PathParam("itemIds")
         itemIds: Set<String>
     ): Result<List<ServiceItem>?>
 
     @GET
     @Path("/{itemIds}/byIds")
-    @ApiOperation("获取扩展项目列表")
+    @ApiOperation("获取扩展点列表")
     fun getItemListsByIds(
-        @ApiParam("项目Id", required = true)
-        @QueryParam("itemIds")
+        @ApiParam("扩展点Id", required = true)
+        @PathParam("itemIds")
         itemIds: Set<String>
     ): Result<List<ExtItemDTO>?>
 
@@ -74,7 +85,7 @@ interface ServiceItemResource {
     @Path("/add/serviceNum")
     @ApiOperation("批量添加扩展点使用数量")
     fun addServiceNum(
-        @ApiParam("项目Id", required = true)
+        @ApiParam("扩展点Id", required = true)
         @QueryParam("itemIds")
         itemIds: Set<String>
     ): Result<Boolean>

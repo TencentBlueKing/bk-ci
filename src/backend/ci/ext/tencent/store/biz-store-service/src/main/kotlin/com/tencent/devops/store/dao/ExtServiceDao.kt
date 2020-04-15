@@ -256,28 +256,12 @@ class ExtServiceDao {
         serviceCode: String,
         page: Int?,
         pageSize: Int?
-    ): Result<out Record>? {
+    ): Result<TExtensionServiceRecord>? {
         val a = TExtensionService.T_EXTENSION_SERVICE.`as`("a")
-        val b = TStoreProjectRel.T_STORE_PROJECT_REL.`as`("b")
         val conditions = mutableListOf<Condition>()
         conditions.add(a.SERVICE_CODE.eq(serviceCode))
         conditions.add(a.DELETE_FLAG.eq(false))
-        conditions.add(b.STORE_TYPE.eq(StoreTypeEnum.SERVICE.type.toByte()))
-        val whereStep = dslContext.select(
-            a.ID.`as`("itemId"),
-            a.SERVICE_STATUS.`as`("serviceStatus"),
-            a.SERVICE_NAME.`as`("serviceName"),
-            a.SERVICE_CODE.`as`("serviceCode"),
-            a.VERSION.`as`("version"),
-            a.PUB_TIME.`as`("pubTime"),
-            a.PUBLISHER.`as`("publisher"),
-            a.UPDATE_TIME.`as`("updateTime"),
-            b.PROJECT_CODE.`as`("projectCode")
-        )
-            .from(a)
-            .leftJoin(b)
-            .on(a.SERVICE_CODE.eq(b.STORE_CODE))
-            .where(conditions)
+        val whereStep = dslContext.selectFrom(a).where(conditions).orderBy(a.CREATE_TIME.desc())
         return if (null != page && null != pageSize) {
             whereStep.limit((page - 1) * pageSize, pageSize).fetch()
         } else {

@@ -1,5 +1,6 @@
 package com.tencent.devops.store.resources
 
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.OpServiceResource
@@ -11,6 +12,7 @@ import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.dto.ServiceApproveReq
 import com.tencent.devops.store.pojo.dto.ServiceOfflineDTO
 import com.tencent.devops.store.pojo.vo.ExtServiceInfoResp
+import com.tencent.devops.store.pojo.vo.ExtensionServiceVO
 import com.tencent.devops.store.pojo.vo.ServiceVersionVO
 import com.tencent.devops.store.service.ExtServiceBaseService
 import com.tencent.devops.store.service.OpExtServiceService
@@ -22,7 +24,6 @@ class OpServiceResourceImpl @Autowired constructor(
     private val opExtServiceService: OpExtServiceService,
     private val extServiceBaseService: ExtServiceBaseService,
     private val storeVisibleDeptService: StoreVisibleDeptService
-
 ) : OpServiceResource {
 
     override fun listAllExtsionServices(
@@ -64,13 +65,13 @@ class OpServiceResourceImpl @Autowired constructor(
         return extServiceBaseService.updateExtInfo(userId, serviceId, serviceCode, updateInfo)
     }
 
-    override fun listServiceByCode(
+    override fun listServiceVersionListByCode(
         userId: String,
         serviceCode: String,
         page: Int?,
         pageSize: Int?
-    ): Result<ExtServiceInfoResp?> {
-        return opExtServiceService.listServiceByCode(serviceCode, page, pageSize)
+    ): Result<Page<ExtensionServiceVO>?> {
+        return opExtServiceService.listServiceVersionListByCode(serviceCode, page, pageSize)
     }
 
     override fun getExtsionServiceByCode(userId: String, serviceCode: String): Result<ServiceVersionVO?> {

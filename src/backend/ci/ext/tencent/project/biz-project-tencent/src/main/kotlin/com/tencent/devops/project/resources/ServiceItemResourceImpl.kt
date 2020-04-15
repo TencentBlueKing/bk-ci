@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired
 class ServiceItemResourceImpl @Autowired constructor(
     private val serviceItemService: ServiceItemService
 ) : ServiceItemResource {
+
     override fun getItemInfo(userId: String, itemId: String): Result<ExtItemDTO?> {
         return Result(serviceItemService.getItemById(itemId))
     }
@@ -20,8 +21,12 @@ class ServiceItemResourceImpl @Autowired constructor(
         return Result(serviceItemService.getItemByIds(itemIds))
     }
 
+    override fun getItemById(itemId: String): Result<ServiceItem?> {
+        return Result(serviceItemService.getItemInfoById(itemId))
+    }
+
     override fun getItemByCode(itemCode: String): Result<ServiceItem?> {
-        return Result(serviceItemService.getItemByCode(itemCode))
+        return Result(serviceItemService.getItemInfoByCode(itemCode))
     }
 
     override fun getItemByCodes(itemCodes: Set<String>): Result<List<ServiceItem>?> {

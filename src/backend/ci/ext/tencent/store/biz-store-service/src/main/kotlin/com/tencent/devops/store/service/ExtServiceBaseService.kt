@@ -1336,7 +1336,17 @@ abstract class ExtServiceBaseService @Autowired constructor() {
     }
 
     fun getItemBkServiceId(itemId: String): Long {
-        return redisOperation.hget(ITEM_BK_SERVICE_REDIS_KEY, itemId)?.toLong() ?: 0
+        var bkServiceId = redisOperation.hget(ITEM_BK_SERVICE_REDIS_KEY, itemId)
+        // redis中没有取到蓝盾服务id，则去数据库中取
+        if (null == bkServiceId) {
+            val serviceItem = client.get(ServiceItemResource::class).getItemById(itemId).data
+            if (null == serviceItem) {
+                throw ErrorCodeException(errorCode = CommonMessageCode.PARAMETER_IS_INVALID, params = arrayOf(itemId))
+            } else {
+                bkServiceId = serviceItem.parentId
+            }
+        }
+        return bkServiceId.toLong()
     }
 
     fun updateExtInfo(userId: String, serviceId: String, serviceCode: String, infoResp: EditInfoDTO): Result<Boolean> {

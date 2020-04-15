@@ -1,7 +1,9 @@
 package com.tencent.devops.store.service
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.store.constant.StoreMessageCode
@@ -92,32 +94,31 @@ class OpExtServiceService @Autowired constructor(
         return Result(ExtServiceInfoResp(count, page, pageSize, extensionServiceInfoList))
     }
 
-    fun listServiceByCode(
+    fun listServiceVersionListByCode(
         serviceCode: String,
         page: Int?,
         pageSize: Int?
-    ): Result<ExtServiceInfoResp?> {
+    ): Result<Page<ExtensionServiceVO>?> {
         val serviceRecord = extServiceDao.getServiceByCode(dslContext, serviceCode, page, pageSize)
         val count = extServiceDao.countByCode(dslContext, serviceCode)
-        val extensionServiceInfoList = mutableSetOf<ExtensionServiceVO>()
+        val extensionServiceInfoList = mutableListOf<ExtensionServiceVO>()
         serviceRecord?.forEach {
             logger.info("listServiceByCode serviceCode[$serviceCode] record[$it]")
             val serviceId = it["itemId"] as String
             extensionServiceInfoList.add(
                 ExtensionServiceVO(
                     serviceId = serviceId,
-                    serviceCode = it["serviceCode"] as String,
-                    serviceName = it["serviceName"] as String,
-                    serviceStatus = (it["serviceStatus"] as Byte).toInt(),
-                    publisher = it["publisher"] as String,
-                    projectCode = it["projectCode"] as String,
-                    modifierTime = (it["updateTime"] as LocalDateTime).timestamp().toString(),
-                    version = it["version"] as String
+                    serviceCode = it.serviceCode,
+                    serviceName = it.serviceName,
+                    serviceStatus = it.serviceStatus.toInt(),
+                    publisher = it.publisher,
+                    modifierTime = it.updateTime.toString(),
+                    version = it.version
                 )
             )
         }
-
-        return Result(ExtServiceInfoResp(count, page, pageSize, extensionServiceInfoList))
+        val totalPages = PageUtil.calTotalPage(pageSize, count.toLong())
+        return Result(Page(count = count.toLong(), page = page ?: 1, pageSize = pageSize ?: -1, totalPages = totalPages, records = extensionServiceInfoList))
     }
 
 //    fun editExtInfo(userId: String, serviceId: String, serviceCode: String, infoResp: EditInfoDTO): Result<Boolean> {

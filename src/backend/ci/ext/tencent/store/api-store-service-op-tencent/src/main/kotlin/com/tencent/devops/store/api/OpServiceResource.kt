@@ -2,6 +2,7 @@ package com.tencent.devops.store.api
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.EditInfoDTO
 import com.tencent.devops.store.pojo.atom.enums.OpSortTypeEnum
@@ -10,6 +11,7 @@ import com.tencent.devops.store.pojo.common.VisibleApproveReq
 import com.tencent.devops.store.pojo.dto.ServiceApproveReq
 import com.tencent.devops.store.pojo.dto.ServiceOfflineDTO
 import com.tencent.devops.store.pojo.vo.ExtServiceInfoResp
+import com.tencent.devops.store.pojo.vo.ExtensionServiceVO
 import com.tencent.devops.store.pojo.vo.ServiceVersionVO
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -83,7 +85,7 @@ interface OpServiceResource {
     @ApiOperation("根据Code获取扩展服务版本列表")
     @GET
     @Path("/serviceCodes/{serviceCode}/version/list")
-    fun listServiceByCode(
+    fun listServiceVersionListByCode(
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
@@ -96,7 +98,7 @@ interface OpServiceResource {
         @ApiParam("每页数量", required = false)
         @QueryParam("pageSize")
         pageSize: Int?
-    ): Result<ExtServiceInfoResp?>
+    ): Result<Page<ExtensionServiceVO>?>
 
     @ApiOperation("编辑扩展服务")
     @POST

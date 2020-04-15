@@ -131,8 +131,23 @@ class ServiceItemService @Autowired constructor(
         return findParent(serviceItem)
     }
 
-    fun getItemByCode(itemCode: String): ServiceItem? {
-        logger.info("getItemByCode: itemCode[$itemCode]")
+    fun getItemInfoById(itemId: String): ServiceItem? {
+        logger.info("getItemInfoById: itemId[$itemId]")
+        val record = serviceItemDao.getItemById(dslContext, itemId) ?: return null
+        return ServiceItem(
+            itemId = record.id,
+            itemCode = record.itemCode,
+            itemName = record.itemName,
+            parentId = record.parentId,
+            itemStatus = record.itemStatus,
+            icon = record.iconUrl,
+            htmlType = record.htmlComponentType,
+            htmlPath = record.htmlPath
+        )
+    }
+
+    fun getItemInfoByCode(itemCode: String): ServiceItem? {
+        logger.info("getItemInfoByCode: itemCode[$itemCode]")
         val record = serviceItemDao.getItemByCode(dslContext, itemCode) ?: return null
         return ServiceItem(
             itemId = record.id,
@@ -301,9 +316,9 @@ class ServiceItemService @Autowired constructor(
     }
 
     fun updateItem(userId: String, itemId: String, itemInfo: ItemInfoResponse): Result<Boolean> {
-        val itemRecordByName = serviceItemDao.getItemByName(dslContext, itemInfo.itemName)
+        val itemRecordByCode = serviceItemDao.getItemByCode(dslContext, itemInfo.itemCode)
 
-        if (itemRecordByName != null && itemId != itemRecordByName.id) {
+        if (itemRecordByCode != null && itemId != itemRecordByCode.id) {
             logger.warn("createItem itemName is exsit, itemName[$itemInfo.itemName]")
             throw RuntimeException("扩展点名称已存在")
         }
@@ -331,9 +346,9 @@ class ServiceItemService @Autowired constructor(
     }
 
     private fun validArgs(itemInfo: ItemInfoResponse) {
-        val itemRecordByName = serviceItemDao.getItemByName(dslContext, itemInfo.itemName)
+        val itemRecordByCode = serviceItemDao.getItemByCode(dslContext, itemInfo.itemCode)
 
-        if (itemRecordByName != null) {
+        if (itemRecordByCode != null) {
             logger.warn("createItem itemName is exsit, itemName[$itemInfo.itemName]")
             throw RuntimeException("扩展点名称已存在")
         }
