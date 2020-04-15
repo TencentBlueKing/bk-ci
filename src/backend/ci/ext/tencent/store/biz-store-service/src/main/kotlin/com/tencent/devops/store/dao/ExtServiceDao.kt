@@ -494,8 +494,14 @@ class ExtServiceDao {
         val b = TExtensionServiceFeature.T_EXTENSION_SERVICE_FEATURE.`as`("b")
         val c = TExtensionServiceItemRel.T_EXTENSION_SERVICE_ITEM_REL.`as`("c")
         val d = TStoreProjectRel.T_STORE_PROJECT_REL.`as`("d")
-
-        var selectFeild = dslContext.select(
+        // 查找每组serviceCode最新的记录
+        val tmp = dslContext.select(
+            a.SERVICE_CODE.`as`("serviceCode"),
+            a.CREATE_TIME.max().`as`("createTime")
+        ).from(a).groupBy(a.SERVICE_CODE)
+        val ta = dslContext.select(a.SERVICE_CODE.`as`("serviceCode"), a.SERVICE_STATUS.`as`("serviceStatus")).from(a).join(tmp)
+            .on(a.SERVICE_CODE.eq(tmp.field("serviceCode", String::class.java)).and(a.CREATE_TIME.eq(tmp.field("createTime", LocalDateTime::class.java))))
+        val selectField = dslContext.select(
             a.ID.`as`("itemId"),
             a.SERVICE_STATUS.`as`("serviceStatus"),
             a.SERVICE_NAME.`as`("serviceName"),
@@ -505,8 +511,13 @@ class ExtServiceDao {
             a.PUBLISHER.`as`("publisher"),
             a.UPDATE_TIME.`as`("updateTime"),
             d.PROJECT_CODE.`as`("projectCode")
-        ).from(a).join(b).on(a.SERVICE_CODE.eq(b.SERVICE_CODE)).join(d).on(a.SERVICE_CODE.eq(d.STORE_CODE))
-
+        ).from(a)
+            .join(b)
+            .on(a.SERVICE_CODE.eq(b.SERVICE_CODE))
+            .join(d)
+            .on(a.SERVICE_CODE.eq(d.STORE_CODE))
+            .join(ta)
+            .on(a.SERVICE_CODE.eq(ta.field("serviceCode", String::class.java)))
         val conditions = mutableListOf<Condition>()
         conditions.add(d.TYPE.eq(StoreProjectTypeEnum.INIT.type.toByte()))
         conditions.add(d.STORE_TYPE.eq(StoreTypeEnum.SERVICE.type.toByte()))
@@ -517,7 +528,7 @@ class ExtServiceDao {
         }
         if (null != itemId) {
             conditions.add(c.ITEM_ID.eq(itemId))
-            selectFeild.join(c).on(a.ID.eq(c.SERVICE_ID))
+            selectField.join(c).on(a.ID.eq(c.SERVICE_ID))
         }
 
         if (null != isPublic) {
@@ -541,7 +552,7 @@ class ExtServiceDao {
         } else {
             realSortType.asc()
         }
-        val t = selectFeild.where(conditions).orderBy(orderByStep)
+        val t = selectField.where(conditions).orderBy(orderByStep)
         val baseStep = dslContext.select().from(t)
         return if (null != page && null != pageSize) {
             baseStep.limit((page - 1) * pageSize, pageSize).fetch()

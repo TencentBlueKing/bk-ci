@@ -55,29 +55,29 @@ interface ServiceItemResource {
     ): Result<ServiceItem?>
 
     @GET
-    @Path("/itemCodes/{itemCodes}/byCodes")
+    @Path("/codes/list")
     @ApiOperation("获取扩展点列表")
     fun getItemByCodes(
         @ApiParam("扩展点Code", required = true)
-        @PathParam("itemCodes")
+        @QueryParam("itemCodes")
         itemCodes: Set<String>
     ): Result<List<ServiceItem>?>
 
     @GET
-    @Path("/itemIds/{itemIds}/itemInfo")
+    @Path("/ids/list")
     @ApiOperation("获取扩展点列表")
     fun getItemInfoByIds(
         @ApiParam("扩展点id串", required = true)
-        @PathParam("itemIds")
+        @QueryParam("itemIds")
         itemIds: Set<String>
     ): Result<List<ServiceItem>?>
 
     @GET
-    @Path("/{itemIds}/byIds")
+    @Path("/list")
     @ApiOperation("获取扩展点列表")
     fun getItemListsByIds(
         @ApiParam("扩展点Id", required = true)
-        @PathParam("itemIds")
+        @QueryParam("itemIds")
         itemIds: Set<String>
     ): Result<List<ExtItemDTO>?>
 
