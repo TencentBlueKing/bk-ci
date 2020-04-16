@@ -1,6 +1,6 @@
 .idea/
 .gradle/
-build/
+build/n
 !com/tencent/devops/common/pipeline/pojo/element/build/
 !/element/build/
 target/
