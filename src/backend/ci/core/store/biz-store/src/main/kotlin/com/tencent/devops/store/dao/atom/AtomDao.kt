@@ -230,7 +230,8 @@ class AtomDao : AtomBaseDao() {
         pageSize: Int?
     ): Result<TAtomRecord> {
         with(TAtom.T_ATOM) {
-            val conditions = queryOpPipelineAtomsConditions(atomName, atomType, serviceScope, os, category, classifyId, atomStatus)
+            val conditions =
+                queryOpPipelineAtomsConditions(atomName, atomType, serviceScope, os, category, classifyId, atomStatus)
             val baseStep = dslContext.selectFrom(this)
             if (null != sortType) {
                 if (desc != null && desc) {
@@ -239,7 +240,7 @@ class AtomDao : AtomBaseDao() {
                     baseStep.where(conditions).orderBy(CREATE_TIME.desc(), DSL.field(sortType).asc())
                 }
             } else {
-                baseStep.where(conditions)
+                baseStep.where(conditions).orderBy(CREATE_TIME.desc())
             }
 
             return if (null != page && null != pageSize) {
