@@ -136,11 +136,11 @@ class ServiceItemDao {
             if (itemQueryInfo.serviceId != null) {
                 whereStep.where(PARENT_ID.eq(itemQueryInfo.serviceId))
             }
-            whereStep.where(ITEM_STATUS.notEqual("DELETE"))
+            whereStep.where(ITEM_STATUS.notEqual(ServiceItemStatusEnum.DELETE.name))
             if (itemQueryInfo.page != null && itemQueryInfo.pageSize != null) {
                 whereStep.limit((itemQueryInfo.page - 1) * itemQueryInfo.pageSize, itemQueryInfo.pageSize).fetch()
             } else {
-                whereStep.orderBy(UPDATE_TIME).fetch()
+                whereStep.orderBy(UPDATE_TIME.desc()).fetch()
             }
         }
     }
@@ -155,7 +155,7 @@ class ServiceItemDao {
             if (itemQueryInfo.serviceId != null) {
                 whereStep.where(PARENT_ID.eq(itemQueryInfo.serviceId))
             }
-            whereStep.where(ITEM_STATUS.notEqual("DELETE"))
+            whereStep.where(ITEM_STATUS.notEqual(ServiceItemStatusEnum.DELETE.name))
 
             whereStep.fetchOne(0, Int::class.java)
         }
