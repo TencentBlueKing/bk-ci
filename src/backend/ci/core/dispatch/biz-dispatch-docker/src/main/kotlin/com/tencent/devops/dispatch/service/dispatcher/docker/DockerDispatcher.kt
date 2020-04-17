@@ -30,6 +30,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
 import com.tencent.devops.dispatch.client.DockerHostClient
+import com.tencent.devops.dispatch.dao.PipelineDockerHostDao
 import com.tencent.devops.dispatch.dao.PipelineDockerIPInfoDao
 import com.tencent.devops.dispatch.dao.PipelineDockerTaskDriftDao
 import com.tencent.devops.dispatch.dao.PipelineDockerTaskSimpleDao
@@ -56,6 +57,7 @@ class DockerDispatcher @Autowired constructor(
     private val pipelineDockerTaskSimpleDao: PipelineDockerTaskSimpleDao,
     private val pipelineDockerTaskDriftDao: PipelineDockerTaskDriftDao,
     private val pipelineDockerIpInfoDao: PipelineDockerIPInfoDao,
+    private val pipelineDockerHostDao: PipelineDockerHostDao,
     private val dslContext: DSLContext
 ) : Dispatcher {
 
@@ -78,45 +80,35 @@ class DockerDispatcher @Autowired constructor(
         )
 
         try {
+            // 先判断是否OP已配置专机，若配置了专机，看当前ip是否在专机列表中，若在 选择当前IP并检查负载，若不在从专机列表中选择一个容量最小的
+            val specialIpSet = pipelineDockerHostDao.getHostIps(dslContext, pipelineAgentStartupEvent.projectId).toSet()
+            logger.info("${pipelineAgentStartupEvent.projectId}| specialIpSet: $specialIpSet")
+
             val taskHistory = pipelineDockerTaskSimpleDao.getByPipelineIdAndVMSeq(
                 dslContext,
                 pipelineAgentStartupEvent.pipelineId,
                 pipelineAgentStartupEvent.vmSeqId
             )
-            var dockerIp: String
-            if (taskHistory != null) {
-                dockerIp = taskHistory.dockerIp
-                // 查看当前IP负载情况，当前IP可用，且负载未超额（内存低于90%且硬盘低于90%），可直接下发，当负载超额，重新选择构建机
-                val ipInfo = pipelineDockerIpInfoDao.getDockerIpInfo(dslContext, dockerIp)
-                if (ipInfo == null || !ipInfo.enable || ipInfo.diskLoad > 90 || ipInfo.memLoad > 90) {
-                    dockerIp = dockerHostUtils.getAvailableDockerIp(
-                        pipelineAgentStartupEvent.projectId,
-                        pipelineAgentStartupEvent.pipelineId,
-                        pipelineAgentStartupEvent.vmSeqId
-                    )
-                    pipelineDockerTaskSimpleDao.updateDockerIp(
-                        dslContext,
-                        pipelineAgentStartupEvent.pipelineId,
-                        pipelineAgentStartupEvent.vmSeqId,
-                        dockerIp
-                    )
 
-                    // 记录漂移日志
-                    pipelineDockerTaskDriftDao.create(
-                        dslContext,
-                        pipelineAgentStartupEvent.pipelineId,
-                        pipelineAgentStartupEvent.buildId,
-                        pipelineAgentStartupEvent.vmSeqId,
-                        taskHistory.dockerIp,
-                        dockerIp,
-                        if (ipInfo != null) JsonUtil.toJson(ipInfo) else ""
-                    )
+            val dockerIp: String
+            if (taskHistory != null) {
+                dockerIp = if (specialIpSet.isNotEmpty()) {
+                    // 在专机列表中
+                    if (specialIpSet.contains(taskHistory.dockerIp)) {
+                        checkAndSetIP(pipelineAgentStartupEvent, specialIpSet, taskHistory.dockerIp)
+                    } else {
+                        // 不在专机列表中，重新依据专机列表去选择
+                        resetDockerIp(pipelineAgentStartupEvent, specialIpSet, taskHistory.dockerIp, "专机漂移")
+                    }
+                } else {
+                    checkAndSetIP(pipelineAgentStartupEvent, specialIpSet, taskHistory.dockerIp)
                 }
             } else {
-                dockerIp = dockerHostUtils.getAvailableDockerIp(
+                dockerIp = dockerHostUtils.getAvailableDockerIpWithSpecialIps(
                     pipelineAgentStartupEvent.projectId,
                     pipelineAgentStartupEvent.pipelineId,
-                    pipelineAgentStartupEvent.vmSeqId
+                    pipelineAgentStartupEvent.vmSeqId,
+                    specialIpSet
                 )
                 pipelineDockerTaskSimpleDao.create(
                     dslContext,
@@ -202,5 +194,44 @@ class DockerDispatcher @Autowired constructor(
         } finally {
             lock.unlock()
         }*/
+    }
+
+    private fun checkAndSetIP(pipelineAgentStartupEvent: PipelineAgentStartupEvent, specialIpSet: Set<String>, oldDockerIp: String): String {
+        var dockerIp = oldDockerIp
+        // 查看当前IP负载情况，当前IP可用，且负载未超额（内存低于90%且硬盘低于90%），可直接下发，当负载超额，重新选择构建机
+        val ipInfo = pipelineDockerIpInfoDao.getDockerIpInfo(dslContext, oldDockerIp)
+        if (ipInfo == null || !ipInfo.enable || ipInfo.diskLoad > 90 || ipInfo.memLoad > 90) {
+            dockerIp = resetDockerIp(pipelineAgentStartupEvent, specialIpSet, oldDockerIp, if (ipInfo != null) JsonUtil.toJson(ipInfo) else "")
+        }
+
+        return dockerIp
+    }
+
+    private fun resetDockerIp(pipelineAgentStartupEvent: PipelineAgentStartupEvent, specialIpSet: Set<String>, sourceIp: String, ipInfo: String): String {
+        val dockerIp = dockerHostUtils.getAvailableDockerIpWithSpecialIps(
+            pipelineAgentStartupEvent.projectId,
+            pipelineAgentStartupEvent.pipelineId,
+            pipelineAgentStartupEvent.vmSeqId,
+            specialIpSet
+        )
+        pipelineDockerTaskSimpleDao.updateDockerIp(
+            dslContext,
+            pipelineAgentStartupEvent.pipelineId,
+            pipelineAgentStartupEvent.vmSeqId,
+            dockerIp
+        )
+
+        // 记录漂移日志
+        pipelineDockerTaskDriftDao.create(
+            dslContext,
+            pipelineAgentStartupEvent.pipelineId,
+            pipelineAgentStartupEvent.buildId,
+            pipelineAgentStartupEvent.vmSeqId,
+            sourceIp,
+            dockerIp,
+            ipInfo
+        )
+
+        return dockerIp
     }
 }
