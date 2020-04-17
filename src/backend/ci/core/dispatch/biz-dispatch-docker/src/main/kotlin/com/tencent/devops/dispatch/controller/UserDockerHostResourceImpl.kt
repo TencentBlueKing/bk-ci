@@ -111,7 +111,7 @@ class UserDockerHostResourceImpl @Autowired constructor(
             if (taskHistory != null) {
                 dockerIp = taskHistory.dockerIp
             } else {
-                dockerIp = dockerHostUtils.getAvailableDockerIp(debugStartParam.projectId, debugStartParam.pipelineId, debugStartParam.vmSeqId)
+                dockerIp = dockerHostUtils.getAvailableDockerIp(debugStartParam.projectId, debugStartParam.pipelineId, debugStartParam.vmSeqId, setOf())
                 pipelineDockerTaskSimpleDao.create(dslContext, debugStartParam.pipelineId, debugStartParam.vmSeqId, dockerIp)
             }
         }
