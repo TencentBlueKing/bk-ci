@@ -115,8 +115,11 @@ class VmStatusScheduler @Autowired constructor(
                     val averageMemLoad = dockerHostLoad["averageMemLoad"] as Int
                     val averageDiskLoad = dockerHostLoad["averageDiskLoad"] as Int
                     val averageDiskIOLoad = dockerHostLoad["averageDiskIOLoad"] as Int
-                    pipelineDockerIpInfoDao.update(dslContext, itDockerIp, usedNum, averageCpuLoad,
-                        averageMemLoad, averageDiskLoad, averageDiskIOLoad, true)
+                    pipelineDockerIpInfoDao.update(
+                        dslContext, itDockerIp, usedNum, averageCpuLoad,
+                        averageMemLoad, averageDiskLoad, averageDiskIOLoad,
+                        true, it.grayEnv, it.specialOn
+                    )
                 } else {
                     // 如果之前可用，更新容器状态
                     if (enable) {

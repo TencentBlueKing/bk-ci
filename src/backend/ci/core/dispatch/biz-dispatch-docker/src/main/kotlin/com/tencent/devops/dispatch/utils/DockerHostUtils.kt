@@ -95,6 +95,7 @@ class DockerHostUtils @Autowired constructor(
                 specialIpSet
             )
         if (firstDockerIpList.isNotEmpty) {
+            logger.info("firstDockerIpList: $firstDockerIpList")
             dockerIp = selectAvailableDockerIp(firstDockerIpList, unAvailableIpList)
         } else {
             // 没有满足1的，优先选择磁盘空间，内存使用率均低于80%的
