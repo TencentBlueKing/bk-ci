@@ -25,8 +25,8 @@ class OPDispatchDockerResourceImpl constructor(
         return Result(dispatchDockerService.create(userId, dockerIpInfoVO))
     }
 
-    override fun updateDispatchDocker(userId: String, dockerIpInfoId: Long, enable: Boolean): Result<Boolean> {
-        return Result(dispatchDockerService.update(userId, dockerIpInfoId, enable))
+    override fun updateDispatchDocker(userId: String, dockerIpInfoId: Long, dockerIpInfoVO: DockerIpInfoVO): Result<Boolean> {
+        return Result(dispatchDockerService.update(userId, dockerIpInfoId, dockerIpInfoVO))
     }
 
     override fun deleteDispatchDocker(userId: String, dockerIpInfoId: Long): Result<Boolean> {
