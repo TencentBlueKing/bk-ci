@@ -24,11 +24,10 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.api
+package com.tencent.devops.process.api.external
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.process.api.external.ExternalPipelineResource
 import com.tencent.devops.process.engine.service.PipelineBadgeService
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.service.PipelineRemoteAuthService
