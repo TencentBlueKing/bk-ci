@@ -148,7 +148,7 @@ class PipelineDockerIPInfoDao {
                     DISK_IO_LOAD.lessOrEqual(diskIOLoad)
                 )
             if (specialIpSet.isNotEmpty()) conditions.add(DOCKER_IP.`in`(specialIpSet))
-            logger.info("getAvailableDockerIpList conditions: ${JsonUtil.toJson(conditions)}")
+            logger.info("getAvailableDockerIpList conditions: $conditions")
 
             return dslContext.selectFrom(this)
                 .where(conditions)
