@@ -59,7 +59,7 @@
                             </bk-input>
                         </devops-form-item>
                         <p class="gateway-id-tips">
-                            <i class="devops-icon icon-info-circle"></i>
+                            <i class="devops-icon icon-info-circle-shape"></i>
                             <span>若输入了ID（例如gate1），红线将只对名称以ID加下划线开头的控制点生效（例如gate1_XX）</span>
                         </p>
                         <bk-form-item label="描述" :property="'desc'">
@@ -1044,6 +1044,7 @@
 
                 const params = {
                     projectId: this.projectId,
+                    gatewayId: this.createRuleForm.gatewayId,
                     pipelineIds: data,
                     controlPointType: this.createRuleForm.controlPoint || '',
                     indicatorIds: []
@@ -1088,6 +1089,7 @@
 
                 const params = {
                     projectId: this.projectId,
+                    gatewayId: this.createRuleForm.gatewayId,
                     templateIds: template,
                     controlPointType: this.createRuleForm.controlPoint || '',
                     indicatorIds: []
@@ -1578,8 +1580,12 @@
             .gateway-id-tips {
                 margin-top: 8px;
                 margin-left: 100px;
-                color:#C3CDD7;
+                color:#313238;
                 font-size: 12px;
+                .icon-info-circle-shape {
+                    font-size: 14px;
+                    color: #ffb848;
+                }
             }
         }
         .rule-metadata-table {
