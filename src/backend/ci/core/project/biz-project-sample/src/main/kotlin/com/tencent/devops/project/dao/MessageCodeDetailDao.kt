@@ -117,7 +117,14 @@ class MessageCodeDetailDao {
 
     fun convert(record: TMessageCodeDetailRecord): MessageCodeDetail {
         with(record) {
-            return MessageCodeDetail(id, messageCode, SystemModuleEnum.getSystemModule(moduleCode), messageDetailZhCn, messageDetailZhTw, messageDetailEn)
+            return MessageCodeDetail(
+                id = id,
+                messageCode = messageCode,
+                moduleCode = SystemModuleEnum.getSystemModule(moduleCode),
+                messageDetailZhCn = messageDetailZhCn,
+                messageDetailZhTw = messageDetailZhTw,
+                messageDetailEn = messageDetailEn
+            )
         }
     }
 }
