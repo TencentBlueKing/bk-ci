@@ -32,7 +32,6 @@ import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
-import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildTaskFinishBroadCastEvent
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.utils.SkipElementUtils
 import com.tencent.devops.common.service.utils.CommonUtils
@@ -179,7 +178,8 @@ class TaskAtomService @Autowired(required = false) constructor(
                 executeCount = task.executeCount,
                 errorType = errorType?.name,
                 errorCode = errorCode,
-                errorMsg = errorMsg
+                errorMsg = errorMsg,
+                userId = task.starter
             )
             if (BuildStatus.isFailure(status)) {
                 jmxElements.fail(elementType)
@@ -188,17 +188,6 @@ class TaskAtomService @Autowired(required = false) constructor(
             logger.error("Fail to post the task($task): ${ignored.message}")
         }
         pipelineEventDispatcher.dispatch(
-            PipelineBuildTaskFinishBroadCastEvent(
-                source = "build-element-${task.taskId}",
-                projectId = task.projectId,
-                pipelineId = task.pipelineId,
-                userId = "",
-                buildId = task.buildId,
-                taskId = task.taskId,
-                errorType = if (task.errorType == null) null else task.errorType!!.name,
-                errorCode = task.errorCode,
-                errorMsg = task.errorMsg
-            ),
             PipelineBuildStatusBroadCastEvent(
                 source = "task-end-${task.taskId}",
                 projectId = task.projectId,
