@@ -46,8 +46,10 @@ class QualityPipelineService @Autowired constructor(
     private val indicatorService: QualityIndicatorService
 ) {
     fun userListPipelineRangeDetail(projectId: String, pipelineIds: Set<String>, indicatorIds: Collection<String>, controlPointType: String?): List<RulePipelineRange> {
-        val pipelineElementsMap = client.get(ServicePipelineTaskResource::class).list(projectId, pipelineIds).data ?: mapOf()
-        val pipelineNameMap = client.get(ServicePipelineResource::class).getPipelineNameByIds(projectId, pipelineIds).data ?: mapOf()
+        val pipelineElementsMap = client.get(ServicePipelineTaskResource::class).list(projectId, pipelineIds).data
+            ?: mapOf()
+        val pipelineNameMap = client.get(ServicePipelineResource::class).getPipelineNameByIds(projectId, pipelineIds).data
+            ?: mapOf()
         val indicatorElements = indicatorService.serviceList(indicatorIds.map { HashUtil.decodeIdToLong(it) }).map { it.elementType }
 
         // 加入控制点的判断
@@ -77,7 +79,7 @@ class QualityPipelineService @Autowired constructor(
 
     fun userListTemplateRangeDetail(projectId: String, templateIds: Set<String>, indicatorIds: Collection<String>, controlPointType: String?): List<RuleTemplateRange> {
         val templateMap = if (templateIds.isNotEmpty()) client.get(ServiceTemplateResource::class)
-                .listTemplateById(templateIds, null).data?.templates ?: mapOf()
+            .listTemplateById(templateIds, null).data?.templates ?: mapOf()
         else mapOf()
         val templateElementsMap = templateMap.map {
             val model = it.value
@@ -117,33 +119,44 @@ class QualityPipelineService @Autowired constructor(
         checkElements: List<String>,
         originElementList: List<Pair<String, Map<String, Any>>>
     ): Pair<List<RangeExistElement>, Set<String>> {
-        val originElements = originElementList.map { it.first }
-        val existElements = mutableListOf<RangeExistElement>()
-        val codeccElement = originElementList.firstOrNull { CodeccUtils.isCodeccAtom(it.first) }
-        if (codeccElement != null) {
-            val asynchronous = codeccElement.second["asynchronous"] as? Boolean
-            val e = RangeExistElement(
-                name = codeccElement.first,
-                cnName = ElementUtils.getElementCnName(codeccElement.first, projectId),
-                count = 1,
-                params = mapOf("asynchronous" to (asynchronous ?: false))
-            )
-            existElements.add(e)
+        val hasCheckCodeccElemenet = checkElements.any { CodeccUtils.isCodeccAtom(it) }
+
+        // 1. 查找不存在的插件
+        val lackElements = mutableSetOf<String>()
+        checkElements.forEach { checkElement ->
+            val isCheckCodeccElemenet = CodeccUtils.isCodeccAtom(checkElement)
+            val isExist = if (isCheckCodeccElemenet) originElementList.any { originElement -> CodeccUtils.isCodeccAtom(originElement.first) }
+            else originElementList.any { originElement -> checkElement == originElement.first }
+            if (!isExist) lackElements.add(checkElement)
         }
 
-        val lackElements = checkElements.minus(originElements).toMutableSet()
-
+        // 2. 查找存在的插件
         // 找出流水线存在的指标原子，并统计个数
-        val indicatorExistElement = checkElements.minus(lackElements) // 流水线对应的指标原子
-        originElements.filter { it in indicatorExistElement }.groupBy { it }
+        val existElements = mutableListOf<RangeExistElement>()
+        originElementList.filter {
+            it.first in checkElements ||
+                (hasCheckCodeccElemenet && CodeccUtils.isCodeccAtom(it.first))
+        }.groupBy { it.first }
             .forEach { (classType, tasks) ->
-                existElements.add(
+                val ele = if (CodeccUtils.isCodeccAtom(classType)) {
+                    val asynchronous = tasks.any { t ->
+                        val asynchronous = t.second["asynchronous"] as? Boolean
+                        asynchronous == true
+                    }
+                    RangeExistElement(
+                        name = classType,
+                        cnName = ElementUtils.getElementCnName(classType, projectId),
+                        count = 1,
+                        params = mapOf("asynchronous" to (asynchronous))
+                    )
+                } else {
                     RangeExistElement(
                         name = classType,
                         cnName = ElementUtils.getElementCnName(classType, projectId),
                         count = tasks.size
                     )
-                )
+                }
+                existElements.add(ele)
             }
         return Pair(existElements, lackElements)
     }
