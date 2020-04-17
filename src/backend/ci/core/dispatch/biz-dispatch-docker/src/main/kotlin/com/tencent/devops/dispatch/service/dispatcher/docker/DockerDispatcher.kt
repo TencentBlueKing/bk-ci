@@ -92,18 +92,15 @@ class DockerDispatcher @Autowired constructor(
 
             val dockerIp: String
             if (taskHistory != null) {
-                dockerIp = if (specialIpSet.isNotEmpty()) {
+                dockerIp = if (specialIpSet.isNotEmpty() && specialIpSet.toString() != "[]") {
                     // 在专机列表中
                     if (specialIpSet.contains(taskHistory.dockerIp)) {
-                        logger.info("condition 1 =====> $specialIpSet")
                         checkAndSetIP(pipelineAgentStartupEvent, specialIpSet, taskHistory.dockerIp)
                     } else {
                         // 不在专机列表中，重新依据专机列表去选择
-                        logger.info("condition 2 =====> $specialIpSet")
                         resetDockerIp(pipelineAgentStartupEvent, specialIpSet, taskHistory.dockerIp, "专机漂移")
                     }
                 } else {
-                    logger.info("condition 3 =====> $specialIpSet")
                     checkAndSetIP(pipelineAgentStartupEvent, specialIpSet, taskHistory.dockerIp)
                 }
             } else {
