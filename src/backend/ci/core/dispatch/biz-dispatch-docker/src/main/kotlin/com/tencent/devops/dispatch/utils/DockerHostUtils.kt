@@ -56,7 +56,7 @@ class DockerHostUtils @Autowired constructor(
         private val logger = LoggerFactory.getLogger(DockerHostUtils::class.java)
     }
 
-    fun getAvailableDockerIp(projectId: String, pipelineId: String, vmSeqId: String, unAvailableIpList: Set<String> = setOf()): String {
+    fun getAvailableDockerIpWithSpecialIps(projectId: String, pipelineId: String, vmSeqId: String, specialIpSet: Set<String>, unAvailableIpList: Set<String> = setOf()): String {
         var grayEnv = false
         val gray = System.getProperty("gray.project", "none")
         if (gray == "grayproject") {
@@ -64,15 +64,11 @@ class DockerHostUtils @Autowired constructor(
         }
 
         var dockerIp = ""
-        // 先判断是否OP已配置专机，若配置了专机，从列表中选择一个容量最小的
-        val specialIpSet = pipelineDockerHostDao.getHostIps(dslContext, projectId).toSet()
-        logger.info("getAvailableDockerIp grayEnv: $grayEnv | specialIpSet: $specialIpSet")
-
         // 获取负载配置
         val dockerHostLoadConfigTriple = getLoadConfig()
         logger.info("Docker host load config: ${JsonUtil.toJson(dockerHostLoadConfigTriple)}")
 
-        // 判断流水线上次关联的hostTag，如果存在并且构建机容量符合第一档负载则优先分配（降低版本更新时被重新洗牌的概率）
+        // 判断流水线上次关联的hostTag，如果存在并且构建机容量符合第一档负载则优先分配（兼容旧版本策略，降低版本更新时被重新洗牌的概率）
         val lastHostIp = redisUtils.getDockerBuildLastHost(pipelineId, vmSeqId)
         if (lastHostIp != null && lastHostIp.isNotEmpty()) {
             val lastHostIpInfo = pipelineDockerIpInfoDao.getDockerIpInfo(dslContext, lastHostIp)
@@ -134,7 +130,18 @@ class DockerHostUtils @Autowired constructor(
             }
         }
 
-        return if (dockerIp.isNotEmpty()) dockerIp else throw DockerServiceException("Start build Docker VM failed, no available Docker VM.")
+        if (dockerIp.isEmpty()) {
+            throw DockerServiceException("Start build Docker VM failed, no available Docker VM.")
+        }
+
+        return dockerIp
+    }
+
+    fun getAvailableDockerIp(projectId: String, pipelineId: String, vmSeqId: String, unAvailableIpList: Set<String>): String {
+        // 先判断是否OP已配置专机，若配置了专机，从列表中选择一个容量最小的
+        val specialIpSet = pipelineDockerHostDao.getHostIps(dslContext, projectId).toSet()
+        logger.info("getAvailableDockerIp projectId: $projectId | specialIpSet: $specialIpSet")
+        return getAvailableDockerIpWithSpecialIps(projectId, pipelineId, vmSeqId, specialIpSet, unAvailableIpList)
     }
 
     fun createLoadConfig(loadConfigMap: Map<String, DockerHostLoadConfig>) {

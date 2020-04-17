@@ -158,12 +158,12 @@ object SigarUtil {
     private fun getMemUsedPercent(): Int {
         val sigar = Sigar()
         val mem = sigar.mem
-        logger.info("usedPercent: " + mem.usedPercent)
+/*        logger.info("usedPercent: " + mem.usedPercent)
         logger.info("used: " + mem.used)
         logger.info("total: " + mem.total)
         logger.info("actualUsed: " + mem.actualUsed)
         logger.info("actualFree: " + mem.actualFree)
-        logger.info("free: " + mem.free)
+        logger.info("free: " + mem.free)*/
         val element = (mem.usedPercent).roundToInt()
         return if (element in 0..100) {
             element

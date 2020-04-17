@@ -130,7 +130,7 @@ class PipelineDockerIPInfoDao {
         memLoad: Int,
         diskLoad: Int,
         diskIOLoad: Int,
-        limitIpSet: Set<String> = setOf()
+        specialIpSet: Set<String> = setOf()
     ): Result<TDispatchPipelineDockerIpInfoRecord> {
         with(TDispatchPipelineDockerIpInfo.T_DISPATCH_PIPELINE_DOCKER_IP_INFO) {
             val conditions =
@@ -142,7 +142,7 @@ class PipelineDockerIPInfoDao {
                     DISK_LOAD.lessOrEqual(diskLoad),
                     DISK_IO_LOAD.lessOrEqual(diskIOLoad)
                 )
-            if (limitIpSet.isNotEmpty()) conditions.add(DOCKER_IP.`in`(limitIpSet))
+            if (specialIpSet.isNotEmpty()) conditions.add(DOCKER_IP.`in`(specialIpSet))
 
             return dslContext.selectFrom(this)
                 .where(conditions)
