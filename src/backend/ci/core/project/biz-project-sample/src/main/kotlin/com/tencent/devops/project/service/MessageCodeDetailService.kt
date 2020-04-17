@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.UUIDUtil
+import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.project.dao.MessageCodeDetailDao
@@ -53,12 +54,31 @@ class MessageCodeDetailService @Autowired constructor(
 ) {
     private val logger = LoggerFactory.getLogger(MessageCodeDetailService::class.java)
 
+    @Suppress("UNUSED")
     @PostConstruct
     fun initMessageCodeDetail() {
         logger.info("begin init messageCodeDetail")
-        val messageCodeDetailList = messageCodeDetailDao.getMessageCodeDetails(dslContext, null, null, null)?.map { messageCodeDetailDao.convert(it) }
-        messageCodeDetailList?.forEach {
-            redisOperation.set(key = BCI_CODE_PREFIX + it.messageCode, value = JsonUtil.getObjectMapper().writeValueAsString(it), expired = false)
+        val redisLock =
+            RedisLock(redisOperation = redisOperation, lockKey = "MESSAGE_CODE_LOCK", expiredTimeInSeconds = 60)
+
+        if (redisLock.tryLock()) {
+            try {
+                val messageCodeDetailList = messageCodeDetailDao.getMessageCodeDetails(
+                    dslContext = dslContext,
+                    messageCode = null,
+                    page = null,
+                    pageSize = null
+                )?.map { messageCodeDetailDao.convert(it) }
+                messageCodeDetailList?.forEach {
+                    redisOperation.set(
+                        key = BCI_CODE_PREFIX + it.messageCode,
+                        value = JsonUtil.getObjectMapper().writeValueAsString(it),
+                        expired = false
+                    )
+                }
+            } finally {
+                redisLock.unlock()
+            }
         }
     }
 
@@ -67,11 +87,23 @@ class MessageCodeDetailService @Autowired constructor(
      */
     fun getMessageCodeDetails(messageCode: String?, page: Int?, pageSize: Int?): Result<MessageCodeResp> {
         logger.info("messageCode is: $messageCode,page is: $page,pageSize is: $pageSize")
-        val messageCodeDetailList = messageCodeDetailDao.getMessageCodeDetails(dslContext, messageCode, page, pageSize)?.map { messageCodeDetailDao.convert(it) }
+        val messageCodeDetailList = messageCodeDetailDao.getMessageCodeDetails(
+            dslContext = dslContext,
+            messageCode = messageCode,
+            page = page,
+            pageSize = pageSize
+        )
+            ?.map { messageCodeDetailDao.convert(it) }
         // 处理分页逻辑
         val totalSize = messageCodeDetailDao.getMessageCodeDetailCount(dslContext, messageCode)
         val totalPage = PageUtil.calTotalPage(pageSize, totalSize)
-        return Result(MessageCodeResp(totalSize, page, pageSize, totalPage, messageCodeDetailList))
+        return Result(MessageCodeResp(
+            count = totalSize,
+            page = page,
+            pageSize = pageSize,
+            totalPages = totalPage,
+            records = messageCodeDetailList
+        ))
     }
 
     /**
@@ -95,7 +127,11 @@ class MessageCodeDetailService @Autowired constructor(
         val messageCodeDetailResult = getMessageCodeDetail(messageCode)
         val messageCodeDetail = messageCodeDetailResult.data
         return if (null != messageCodeDetail) {
-            redisOperation.set(key = BCI_CODE_PREFIX + messageCode, value = JsonUtil.getObjectMapper().writeValueAsString(messageCodeDetailResult.data), expired = false)
+            redisOperation.set(
+                key = BCI_CODE_PREFIX + messageCode,
+                value = JsonUtil.getObjectMapper().writeValueAsString(messageCodeDetailResult.data),
+                expired = false
+            )
             Result(data = true)
         } else {
             MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_INVALID, arrayOf(messageCode))
@@ -110,7 +146,11 @@ class MessageCodeDetailService @Autowired constructor(
         val messageCodeDetailResult = getMessageCodeDetail(addMessageCodeRequest.messageCode)
         // 判断code信息是否存在，存在才添加
         val messageCode = addMessageCodeRequest.messageCode
-        if (null != messageCodeDetailResult.data) return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_EXIST, arrayOf(messageCode), false)
+        if (null != messageCodeDetailResult.data) return MessageCodeUtil.generateResponseDataObject(
+            messageCode = CommonMessageCode.PARAMETER_IS_EXIST,
+            params = arrayOf(messageCode),
+            data = false
+        )
         val id = UUIDUtil.generate()
         messageCodeDetailDao.addMessageCodeDetail(dslContext, id, addMessageCodeRequest)
         val messageCodeDetail = MessageCodeDetail(
@@ -121,23 +161,44 @@ class MessageCodeDetailService @Autowired constructor(
             messageDetailZhTw = addMessageCodeRequest.messageDetailZhTw,
             messageDetailEn = addMessageCodeRequest.messageDetailEn
         )
-        redisOperation.set(key = BCI_CODE_PREFIX + messageCode, value = JsonUtil.getObjectMapper().writeValueAsString(messageCodeDetail), expired = false)
+        redisOperation.set(
+            key = BCI_CODE_PREFIX + messageCode,
+            value = JsonUtil.getObjectMapper().writeValueAsString(messageCodeDetail),
+            expired = false
+        )
         return Result(data = true)
     }
 
     /**
      * 更新code信息信息
      */
-    fun updateMessageCodeDetail(messageCode: String, updateMessageCodeRequest: UpdateMessageCodeRequest): Result<Boolean> {
+    fun updateMessageCodeDetail(
+        messageCode: String,
+        updateMessageCodeRequest: UpdateMessageCodeRequest
+    ): Result<Boolean> {
         logger.info("messageCode is: $messageCode,updateMessageCodeRequest is: $updateMessageCodeRequest")
         val messageCodeDetailResult = getMessageCodeDetail(messageCode)
         // 判断code信息是否存在，存在才更新
-        val messageCodeDetail = messageCodeDetailResult.data ?: return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_INVALID, arrayOf(messageCode), false)
-        messageCodeDetailDao.updateMessageCodeDetail(dslContext, messageCode, updateMessageCodeRequest.messageDetailZhCn, updateMessageCodeRequest.messageDetailZhTw, updateMessageCodeRequest.messageDetailEn)
+        val messageCodeDetail = messageCodeDetailResult.data ?: return MessageCodeUtil.generateResponseDataObject(
+            messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
+            params = arrayOf(messageCode),
+            data = false
+        )
+        messageCodeDetailDao.updateMessageCodeDetail(
+            dslContext = dslContext,
+            messageCode = messageCode,
+            messageDetailZhCn = updateMessageCodeRequest.messageDetailZhCn,
+            messageDetailZhTw = updateMessageCodeRequest.messageDetailZhTw,
+            messageDetailEn = updateMessageCodeRequest.messageDetailEn
+        )
         messageCodeDetail.messageDetailZhCn = updateMessageCodeRequest.messageDetailZhCn
         messageCodeDetail.messageDetailZhTw = updateMessageCodeRequest.messageDetailZhTw
         messageCodeDetail.messageDetailEn = updateMessageCodeRequest.messageDetailEn
-        redisOperation.set(key = BCI_CODE_PREFIX + messageCode, value = JsonUtil.getObjectMapper().writeValueAsString(messageCodeDetail), expired = false)
+        redisOperation.set(
+            key = BCI_CODE_PREFIX + messageCode,
+            value = JsonUtil.getObjectMapper().writeValueAsString(messageCodeDetail),
+            expired = false
+        )
         return Result(data = true)
     }
 }
