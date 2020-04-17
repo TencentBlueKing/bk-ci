@@ -1,15 +1,20 @@
 package com.tencent.devops.dispatch.dao
 
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.model.dispatch.tables.TDispatchPipelineDockerIpInfo
 import com.tencent.devops.model.dispatch.tables.records.TDispatchPipelineDockerIpInfoRecord
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Result
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
 @Repository
 class PipelineDockerIPInfoDao {
+
+    private val logger = LoggerFactory.getLogger(PipelineDockerIPInfoDao::class.java)
+
     fun create(
         dslContext: DSLContext,
         idcIp: String,
@@ -143,6 +148,7 @@ class PipelineDockerIPInfoDao {
                     DISK_IO_LOAD.lessOrEqual(diskIOLoad)
                 )
             if (specialIpSet.isNotEmpty()) conditions.add(DOCKER_IP.`in`(specialIpSet))
+            logger.info("getAvailableDockerIpList conditions: ${JsonUtil.toJson(conditions)}")
 
             return dslContext.selectFrom(this)
                 .where(conditions)
