@@ -43,8 +43,7 @@ interface MeasureService {
         model: Model?,
         errorType: String? = null,
         errorCode: Int? = null,
-        errorMsg: String? = null,
-        userId: String
+        errorMsg: String? = null
     )
 
     fun postCancelData(projectId: String, pipelineId: String, buildId: String, userId: String)
