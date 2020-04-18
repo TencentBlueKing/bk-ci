@@ -69,8 +69,7 @@ class MeasureServiceImpl constructor(
         model: Model?,
         errorType: String?,
         errorCode: Int?,
-        errorMsg: String?,
-        userId: String
+        errorMsg: String?
     ) {
         try {
             if (model == null) {
