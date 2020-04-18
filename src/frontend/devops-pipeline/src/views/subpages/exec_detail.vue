@@ -45,34 +45,10 @@
         </template>
         <template v-if="editingElementPos && execDetail">
             <template v-if="showLog">
-                <log :title="currentElement.name"
-                    :status="currentElement.status"
-                    :execute-count="currentElement.executeCount"
-                    @changeExecute="changeExecute"
-                    :down-load-link="downLoadPluginLink"
-                    :id="currentElement.id"
-                    @closeLog="closeLog"
-                    ref="log"
-                />
+                <plugin @closeLog="closeLog" />
             </template>
             <template v-else-if="showContainerPanel">
-                <job v-if="currentJob['@type'] !== 'trigger'"
-                    :title="currentJob.name"
-                    :status="currentJob.status"
-                    :plugin-list="pluginList"
-                    :down-load-link="downLoadJobLink"
-                    @closeLog="closeLog"
-                    @closePlugin="closePlugin"
-                    @openPlugin="initLog"
-                    ref="log"
-                />
-                <container-property-panel v-else
-                    :title="sidePanelConfig.title"
-                    :container-index="editingElementPos.containerIndex"
-                    :stage-index="editingElementPos.stageIndex"
-                    :stages="execDetail.model.stages"
-                    :editable="false"
-                />
+                <job @closeLog="closeLog" />
             </template>
             <template v-else-if="typeof editingElementPos.stageIndex !== 'undefined'">
                 <stage-property-panel
@@ -105,12 +81,12 @@
     import viewPart from '@/components/viewPart'
     import codeRecord from '@/components/codeRecord'
     import outputOption from '@/components/outputOption'
-    import ContainerPropertyPanel from '@/components/ContainerPropertyPanel/'
     import StagePropertyPanel from '@/components/StagePropertyPanel'
     import emptyTips from '@/components/devops/emptyTips'
     import ReviewDialog from '@/components/ReviewDialog'
     import log from '../../../../devops-log'
-    import job from '../../../../devops-log/src/job'
+    import plugin from '@/components/ExecDetail/plugin'
+    import job from '@/components/ExecDetail/job'
     import pipelineOperateMixin from '@/mixins/pipeline-operate-mixin'
     import pipelineConstMixin from '@/mixins/pipelineConstMixin'
     import { convertMStoStringByRule } from '@/utils/util'
@@ -119,12 +95,12 @@
     export default {
         components: {
             stages,
-            ContainerPropertyPanel,
             StagePropertyPanel,
             viewPart,
             codeRecord,
             outputOption,
             emptyTips,
+            plugin,
             log,
             job,
             ReviewDialog,
@@ -179,23 +155,6 @@
                 return `${AJAX_URL_PIRFIX}/log/api/user/logs/${this.$route.params.projectId}/${this.$route.params.pipelineId}/${this.execDetail.id}/download?executeCount=1&fileName=${fileName}`
             },
 
-            downLoadJobLink () {
-                const editingElementPos = this.editingElementPos
-                const fileName = encodeURI(encodeURI(`${editingElementPos.stageIndex + 1}-${editingElementPos.containerIndex + 1}-${this.currentJob.name}`))
-                const jobId = this.currentJob.containerId
-                const tag = `startVM-${this.currentJob.id}`
-                const curLogPostData = this.logPostData[tag] || {}
-                const currentExe = curLogPostData.currentExe || 1
-                return `${AJAX_URL_PIRFIX}/log/api/user/logs/${this.$route.params.projectId}/${this.$route.params.pipelineId}/${this.execDetail.id}/download?jobId=${jobId}&executeCount=${currentExe}&fileName=${fileName}`
-            },
-            downLoadPluginLink () {
-                const editingElementPos = this.editingElementPos
-                const fileName = encodeURI(encodeURI(`${editingElementPos.stageIndex + 1}-${editingElementPos.containerIndex + 1}-${editingElementPos.elementIndex + 1}-${this.currentElement.name}`))
-                const tag = this.currentElement.id
-                const curLogPostData = this.logPostData[tag] || {}
-                const currentExe = curLogPostData.currentExe || 1
-                return `${AJAX_URL_PIRFIX}/log/api/user/logs/${this.$route.params.projectId}/${this.$route.params.pipelineId}/${this.execDetail.id}/download?tag=${tag}&executeCount=${currentExe}&fileName=${fileName}`
-            },
             panels () {
                 return [{
                     name: 'executeDetail',
@@ -232,7 +191,6 @@
                 get () {
                     const { editingElementPos, $route: { params } } = this
                     const res = typeof editingElementPos.elementIndex !== 'undefined' && params.buildNo
-                    if (res) this.$nextTick(this.initLog)
                     return res
                 },
                 set (value) {
@@ -251,10 +209,6 @@
                 const { editingElementPos } = this
                 const res = typeof editingElementPos.containerIndex !== 'undefined'
                 return res
-            },
-            pluginList () {
-                const startUp = { name: 'Set up job', status: this.currentJob.startVMStatus, id: `startVM-${this.currentJob.id}` }
-                return [startUp, ...this.currentJob.elements]
             },
             currentJob () {
                 const { editingElementPos, execDetail } = this

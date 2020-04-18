@@ -1,36 +1,27 @@
 <template>
-    <log-container v-bind="$props"
-        @closeLog="$emit('closeLog')"
-        @showSearchLog="showSearchLog"
-        :show-time.sync="showTime"
-        :search-str.sync="searchStr"
-        :worker="worker">
-        <ul class="plugin-list" ref="pluginList">
-            <li v-for="plugin in pluginList" :key="plugin.id" class="plugin-item">
-                <p class="item-head" @click="expendLog(plugin)">
-                    <span :class="[{ 'show-all': !!curFoldList[plugin.id] }, 'log-folder']"></span>
-                    <status-icon :status="plugin.status"></status-icon>
-                    {{ plugin.name }}
-                </p>
-                <virtual-scroll class="log-scroll" :ref="plugin.id" v-show="curFoldList[plugin.id]" :max-height="maxHeight" :id="plugin.id" :worker="worker">
-                    <template slot-scope="item">
-                        <span class="item-txt selection-color">
-                            <span class="item-time selection-color" v-if="showTime">{{(item.data.isNewLine ? '' : item.data.timestamp)|timeFilter}}</span>
-                            <span :class="['selection-color', { 'cur-search': curSearchIndex === item.data.index }]" :style="`color: ${item.data.color};font-weight: ${item.data.fontWeight}`" v-html="valuefilter(item.data.value)"></span>
-                        </span>
-                    </template>
-                </virtual-scroll>
-            </li>
-        </ul>
-    </log-container>
+    <ul class="plugin-list" ref="pluginList" v-show="currentTab === 'log'">
+        <li v-for="plugin in pluginList" :key="plugin.id" class="plugin-item">
+            <p class="item-head" @click="expendLog(plugin)">
+                <span :class="[{ 'show-all': !!curFoldList[plugin.id] }, 'log-folder']"></span>
+                <status-icon :status="plugin.status"></status-icon>
+                {{ plugin.name }}
+            </p>
+            <virtual-scroll class="log-scroll" :ref="plugin.id" v-show="curFoldList[plugin.id]" :max-height="maxHeight" :id="plugin.id" :worker="worker">
+                <template slot-scope="item">
+                    <span class="item-txt selection-color">
+                        <span class="item-time selection-color" v-if="showTime">{{(item.data.isNewLine ? '' : item.data.timestamp)|timeFilter}}</span>
+                        <span :class="['selection-color', { 'cur-search': curSearchIndex === item.data.index }]" :style="`color: ${item.data.color};font-weight: ${item.data.fontWeight}`" v-html="valuefilter(item.data.value)"></span>
+                    </span>
+                </template>
+            </virtual-scroll>
+        </li>
+    </ul>
 </template>
 
 <script>
+    import { mapActions } from 'vuex'
     import virtualScroll from './virtualScroll'
-    import logContainer from './logContainer'
     import statusIcon from './status'
-    // eslint-disable-next-line
-    const Worker = require('worker-loader!./worker.js')
 
     function prezero (num) {
         num = Number(num)
@@ -46,11 +37,7 @@
     }
 
     export default {
-        components: {
-            virtualScroll,
-            logContainer,
-            statusIcon
-        },
+        inject: ['worker'],
 
         filters: {
             timeFilter (val) {
@@ -60,33 +47,36 @@
             }
         },
 
+        components: {
+            virtualScroll,
+            statusIcon
+        },
+
         props: {
-            downLoadLink: {
+            currentTab: {
                 type: String
             },
-            executeCount: {
-                type: Number,
-                default: 0
+            showTime: {
+                type: Boolean
             },
-            status: {
-                type: String
-            },
-            title: {
+            buildId: {
                 type: String
             },
             pluginList: {
                 type: Array
+            },
+            searchStr: {
+                type: String
             }
         },
 
         data () {
             return {
-                worker: new Worker(),
                 curFoldList: this.pluginList.map(plugin => ({ [plugin.id]: false })),
-                showTime: false,
-                searchStr: '',
+                maxHeight: 0,
                 curSearchIndex: 0,
-                maxHeight: 0
+                logPostData: {},
+                closeTags: []
             }
         },
 
@@ -97,10 +87,18 @@
         },
 
         beforeDestroy () {
-            this.worker.terminate()
+            Object.keys(this.logPostData).forEach(key => {
+                const postData = this.logPostData[key]
+                this.closeTags.push(postData.tag)
+            })
         },
 
         methods: {
+            ...mapActions('atom', [
+                'getInitLog',
+                'getAfterLog'
+            ]),
+
             showSearchLog ({ index, refId, realIndex }) {
                 this.curSearchIndex = realIndex
                 index -= 5
@@ -116,16 +114,83 @@
                 const id = plugin.id
                 this.$set(this.curFoldList, [id], !this.curFoldList[id])
                 let ref = this.$refs[id]
+                let postData = this.logPostData[id]
+                if (!postData) {
+                    postData = this.logPostData[id] = {
+                        projectId: this.$route.params.projectId,
+                        pipelineId: this.$route.params.pipelineId,
+                        buildId: this.buildId,
+                        tag: id,
+                        currentExe: 1,
+                        lineNo: 0
+                    }
+                }
 
                 if (this.curFoldList[id]) {
                     this.$nextTick(() => {
                         ref = this.$refs[id][0]
                         ref.setVisWidth()
-                        this.$emit('openPlugin', id, ref)
+                        const index = this.closeTags.findIndex(tag => tag === postData.tag)
+                        if (index > -1) this.closeTags.splice(index, 1)
+                        this.getLog(ref, postData)
                     })
                 } else {
-                    this.$emit('closePlugin', id)
+                    this.closeLog(postData)
                 }
+            },
+
+            closeLog (postData) {
+                this.closeTags.push(postData.tag)
+            },
+
+            getLog (ref, postData) {
+                let logMethod = this.getAfterLog
+                if (postData.lineNo <= 0) logMethod = this.getInitLog
+
+                logMethod(postData).then((res) => {
+                    if (this.closeTags.includes(postData.tag)) return
+
+                    res = res.data || {}
+                    if (res.status !== 0) {
+                        let errMessage
+                        switch (res.status) {
+                            case 1:
+                                errMessage = this.$t('history.logEmpty')
+                                break
+                            case 2:
+                                errMessage = this.$t('history.logClear')
+                                break
+                            case 3:
+                                errMessage = this.$t('history.logClose')
+                                break
+                            default:
+                                errMessage = this.$t('history.logErr')
+                                break
+                        }
+                        ref.handleApiErr(errMessage)
+                        return
+                    }
+
+                    const logs = res.logs || []
+                    const lastLog = logs[logs.length - 1] || {}
+                    const lastLogNo = lastLog.lineNo || postData.lineNo - 1 || -1
+                    postData.lineNo = +lastLogNo + 1
+
+                    if (res.finished) {
+                        if (res.hasMore) {
+                            ref.addLogData(logs)
+                            setTimeout(() => this.getLog(ref, postData), 100)
+                        } else {
+                            ref.addLogData(logs)
+                        }
+                    } else {
+                        ref.addLogData(logs)
+                        setTimeout(() => this.getLog(ref, postData), 1000)
+                    }
+                }).catch((err) => {
+                    this.$bkMessage({ theme: 'error', message: err.message || err })
+                    ref.handleApiErr(err.message)
+                })
             },
 
             valuefilter (val) {
