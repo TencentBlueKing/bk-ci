@@ -27,6 +27,7 @@
 package com.tencent.devops.process.config
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.Tools
 import com.tencent.devops.process.engine.dao.PipelineBuildVarDao
@@ -49,6 +50,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
+@Suppress("UNUSED")
 @Configuration
 class TencentMeasureConfig {
 
@@ -59,14 +61,16 @@ class TencentMeasureConfig {
         @Autowired dslContext: DSLContext,
         @Autowired objectMapper: ObjectMapper,
         @Autowired templateService: TemplateService,
-        @Autowired measureEventDispatcher: MeasureEventDispatcher
+        @Autowired measureEventDispatcher: MeasureEventDispatcher,
+        @Autowired pipelineEventDispatcher: PipelineEventDispatcher
     ) = MeasureServiceImpl(
         pipelineRuntimeService = pipelineRuntimeService,
         pipelineBuildVarDao = pipelineBuildVarDao,
         dslContext = dslContext,
         objectMapper = objectMapper,
         measureEventDispatcher = measureEventDispatcher,
-        templateService = templateService
+        templateService = templateService,
+        pipelineEventDispatcher = pipelineEventDispatcher
     )
 
     @Value("\${queueConcurrency.measure:3}")
