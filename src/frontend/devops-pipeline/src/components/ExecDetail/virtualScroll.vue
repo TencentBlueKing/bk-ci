@@ -49,8 +49,6 @@
 </template>
 
 <script>
-    import language from './locale'
-
     export default {
         props: {
             itemHeight: {
@@ -95,7 +93,7 @@
                 isBottomMove: false,
                 curHoverIndex: -1,
                 hasCompleteInit: false,
-                errMessage: language('日志内容为空'),
+                errMessage: '日志内容为空',
                 isLogErr: false
             }
         },
@@ -121,8 +119,6 @@
         },
 
         methods: {
-            language,
-
             clearSelection () {
                 window.getSelection().removeAllRanges()
             },
@@ -521,7 +517,7 @@
         }
         .list-empty {
             position: absolute;
-            background: url('./assets/png/empty.png') center no-repeat;
+            background: url('../../images/empty.png') center no-repeat;
             background-size: contain;
             height: 80px;
             width: 220px;
