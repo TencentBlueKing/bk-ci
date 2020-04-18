@@ -1,0 +1,265 @@
+<template>
+    <virtual-scroll class="log-scroll" ref="scroll" :id="id" :worker="worker">
+        <template slot-scope="item">
+            <span class="item-txt selection-color">
+                <span class="item-time selection-color" v-if="showTime">{{(item.data.isNewLine ? '' : item.data.timestamp)|timeFilter}}</span>
+                <span :class="['selection-color', { 'cur-search': curSearchIndex === item.data.index }]" :style="`color: ${item.data.color};font-weight: ${item.data.fontWeight}`" v-html="valuefilter(item.data.value)"></span>
+            </span>
+        </template>
+    </virtual-scroll>
+</template>
+
+<script>
+    import { mapActions } from 'vuex'
+    import virtualScroll from './virtualScroll'
+
+    function prezero (num) {
+        num = Number(num)
+        if (num < 10) return '0' + num
+        return num
+    }
+
+    function millisecond (num) {
+        num = Number(num)
+        if (num < 10) return '00' + num
+        else if (num < 100) return '0' + num
+        return num
+    }
+
+    export default {
+        inject: ['worker'],
+
+        filters: {
+            timeFilter (val) {
+                if (!val) return ''
+                const time = new Date(val)
+                return `${time.getFullYear()}-${prezero(time.getMonth() + 1)}-${prezero(time.getDate())} ${prezero(time.getHours())}:${prezero(time.getMinutes())}:${prezero(time.getSeconds())}:${millisecond(time.getMilliseconds())}`
+            }
+        },
+
+        components: {
+            virtualScroll
+        },
+
+        props: {
+            id: {
+                type: String
+            },
+            currentTab: {
+                type: String
+            },
+            showTime: {
+                type: Boolean
+            },
+            buildId: {
+                type: String
+            },
+            executeCount: {
+                type: Number
+            },
+            searchStr: {
+                type: String
+            }
+        },
+
+        data () {
+            return {
+                curSearchIndex: 0,
+                postData: {
+                    projectId: this.$route.params.projectId,
+                    pipelineId: this.$route.params.pipelineId,
+                    buildId: this.buildId,
+                    tag: this.id,
+                    currentExe: this.executeCount,
+                    lineNo: 0
+                },
+                isStop: false
+            }
+        },
+
+        watch: {
+            currentTab (val) {
+                if (val === 'log') {
+                    this.isStop = false
+                    this.getLog()
+                } else {
+                    this.closeLog()
+                }
+            }
+        },
+
+        mounted () {
+            this.worker.postMessage({ type: 'initStatus', pluginList: [this.id] })
+            this.getLog()
+        },
+
+        beforeDestroy () {
+            this.closeLog()
+        },
+
+        methods: {
+            ...mapActions('atom', [
+                'getInitLog',
+                'getAfterLog'
+            ]),
+
+            getLog (isChangeExe) {
+                let logMethod = this.getAfterLog
+                if (this.postData.lineNo <= 0) logMethod = this.getInitLog
+
+                logMethod(this.postData).then((res) => {
+                    if (this.isStop && !isChangeExe) return
+                    this.isStop = false
+
+                    const scroll = this.$refs.scroll
+                    res = res.data || {}
+                    if (res.status !== 0) {
+                        let errMessage
+                        switch (res.status) {
+                            case 1:
+                                errMessage = this.$t('history.logEmpty')
+                                break
+                            case 2:
+                                errMessage = this.$t('history.logClear')
+                                break
+                            case 3:
+                                errMessage = this.$t('history.logClose')
+                                break
+                            default:
+                                errMessage = this.$t('history.logErr')
+                                break
+                        }
+                        scroll.handleApiErr(errMessage)
+                        return
+                    }
+
+                    const logs = res.logs || []
+                    const lastLog = logs[logs.length - 1] || {}
+                    const lastLogNo = lastLog.lineNo || this.postData.lineNo - 1 || -1
+                    this.postData.lineNo = +lastLogNo + 1
+
+                    if (res.finished) {
+                        if (res.hasMore) {
+                            scroll.addLogData(logs)
+                            setTimeout(this.getLog, 100)
+                        } else {
+                            scroll.addLogData(logs)
+                        }
+                    } else {
+                        scroll.addLogData(logs)
+                        setTimeout(this.getLog, 1000)
+                    }
+                }).catch((err) => {
+                    this.$bkMessage({ theme: 'error', message: err.message || err })
+                    this.$refs.scroll.handleApiErr(err.message)
+                })
+            },
+
+            changeExecute (execute) {
+                this.$refs.scroll.resetData()
+                this.postData.currentExe = execute
+                this.closeLog()
+                this.getLog(true)
+            },
+
+            closeLog () {
+                this.isStop = true
+            },
+
+            showSearchLog ({ index, realIndex }) {
+                this.curSearchIndex = realIndex
+                index -= 5
+                if (index < 0) index = 0
+                this.$refs.scroll.scrollPageByIndex(index)
+            },
+
+            handleApiErr (err) {
+                const scroll = this.$refs.scroll
+                if (scroll) scroll.handleApiErr(err)
+            },
+
+            valuefilter (val) {
+                const valArr = val.split(/<a[^>]+?href=["']?([^"']+)["']?[^>]*>([^<]+)<\/a>/gi)
+                const transVal = (val = '') => {
+                    let regStr = '\\s|<|>'
+                    if (this.searchStr !== '') regStr += `|${this.searchStr}`
+                    const tranReg = new RegExp(regStr, 'g')
+                    return val.replace(tranReg, (str) => {
+                        if (str === '<') return '&lt;'
+                        else if (str === '>') return '&gt;'
+                        else if (str === this.searchStr) return `<span class="search-str">${str}</span>`
+                        else if (/\t/.test(str)) return '&nbsp;&nbsp;&nbsp;&nbsp;'
+                        else return '&nbsp;'
+                    })
+                }
+                let valRes = ''
+                for (let index = 0; index < valArr.length; index += 3) {
+                    if (typeof valArr[index] === 'undefined') continue
+                    const firstVal = valArr[index]
+                    const secVal = valArr[index + 1]
+                    const thirdVal = valArr[index + 2]
+                    valRes += transVal(firstVal)
+                    if (secVal) valRes += `<a href='${secVal}' target='_blank'>${transVal(thirdVal)}</a>`
+                }
+                return valRes
+            }
+        }
+    }
+</script>
+
+<style lang="scss" scoped>
+    .log-scroll {
+        flex: 1;
+        color: #ffffff;
+        font-family: Consolas, "Courier New", monospace;
+        font-weight: normal;
+        cursor: text;
+        white-space: nowrap;
+        letter-spacing: 0px;
+        font-size: 12px;
+        line-height: 16px;
+        margin-left: 10px;
+        margin-top: 16px;
+        .item-txt {
+            position: relative;
+            padding: 0 5px;
+            .cur-search {
+                /deep/ .search-str {
+                    color: rgb(255, 255, 255);
+                    background: rgb(33, 136, 255);
+                    outline: rgb(121, 184, 255) solid 1px;
+                }
+            }
+            /deep/ .search-str {
+                color: rgb(36, 41, 46);
+                background: rgb(255, 223, 93);
+                outline: rgb(255, 223, 93) solid 1px;
+            }
+        }
+        .item-time {
+            display: inline-block;
+            min-width: 166px;
+            color: #959da5;
+            font-weight: 400;
+            padding-right: 5px;
+        }
+        /deep/ a {
+            color: #3c96ff;
+            text-decoration: underline;
+            &:active, &:visited, &:hover {
+                color: #3c96ff;
+            }
+        }
+        /deep/ a, /deep/ .selection-color {
+            &::selection {
+                background-color: rgba(70, 146, 222, 0.54);
+            }
+            &::-moz-selection {
+                background: rgba(70, 146, 222, 0.54);
+            }
+            &::-webkit-selection {
+                background: rgba(70, 146, 222, 0.54);
+            }
+        }
+    }
+</style>
