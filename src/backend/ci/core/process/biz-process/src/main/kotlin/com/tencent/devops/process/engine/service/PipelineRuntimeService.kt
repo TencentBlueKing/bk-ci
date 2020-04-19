@@ -101,11 +101,13 @@ import com.tencent.devops.process.engine.pojo.PipelineBuildContainerControlOptio
 import com.tencent.devops.process.engine.pojo.PipelineBuildStage
 import com.tencent.devops.process.engine.pojo.PipelineBuildStageControlOption
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
+import com.tencent.devops.process.engine.pojo.PipelineFilterParam
 import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.pojo.BuildBasicInfo
 import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.process.pojo.BuildStageStatus
 import com.tencent.devops.process.pojo.PipelineBuildMaterial
+import com.tencent.devops.process.pojo.PipelineSortType
 import com.tencent.devops.process.pojo.ReviewParam
 import com.tencent.devops.process.pojo.VmInfo
 import com.tencent.devops.process.pojo.mq.PipelineBuildContainerEvent
@@ -256,9 +258,30 @@ class PipelineRuntimeService @Autowired constructor(
     fun getBuildSummaryRecords(
         projectId: String,
         channelCode: ChannelCode,
-        pipelineIds: Collection<String>? = null
+        pipelineIds: Collection<String>? = null,
+        sortType: PipelineSortType? = null,
+        favorPipelines: List<String> = emptyList(),
+        authPipelines: List<String> = emptyList(),
+        viewId: String? = null,
+        pipelineFilterParamList: List<PipelineFilterParam>? = null,
+        permissionFlag: Boolean? = null,
+        page: Int? = null,
+        pageSize: Int? = null
     ): Result<out Record> {
-        return pipelineBuildSummaryDao.listPipelineInfoBuildSummary(dslContext, projectId, channelCode, pipelineIds)
+        return pipelineBuildSummaryDao.listPipelineInfoBuildSummary(
+            dslContext = dslContext,
+            projectId = projectId,
+            channelCode = channelCode,
+            sortType = sortType,
+            pipelineIds = pipelineIds,
+            favorPipelines = favorPipelines,
+            authPipelines = authPipelines,
+            viewId = viewId,
+            pipelineFilterParamList = pipelineFilterParamList,
+            permissionFlag = permissionFlag,
+            page = page,
+            pageSize = pageSize
+        )
     }
 
     fun getBuildSummaryRecords(
@@ -279,7 +302,11 @@ class PipelineRuntimeService @Autowired constructor(
     }
 
     fun getLatestBuild(projectId: String, pipelineIds: List<String>): Map<String, PipelineLatestBuild> {
-        val records = getBuildSummaryRecords(projectId, ChannelCode.BS, pipelineIds)
+        val records = getBuildSummaryRecords(
+            projectId = projectId,
+            channelCode = ChannelCode.BS,
+            pipelineIds = pipelineIds
+        )
         val df = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
         val ret = mutableMapOf<String, PipelineLatestBuild>()
         records.forEach {
