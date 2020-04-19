@@ -28,10 +28,10 @@ package com.tencent.devops.plugin.quality.task
 
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.IAtomTask
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
+import com.tencent.devops.process.service.quality.PipelineQualityInterfaceService
 import com.tencent.devops.quality.QualityGateInElement
 import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
 import org.slf4j.LoggerFactory
@@ -43,7 +43,7 @@ import org.springframework.stereotype.Component
 class QualityGateInTaskAtom @Autowired constructor(
     private val client: Client,
     private val rabbitTemplate: RabbitTemplate,
-    private val pipelineEventDispatcher: PipelineEventDispatcher
+    private val pipelineBuildQualityService: PipelineQualityInterfaceService
 ) : IAtomTask<QualityGateInElement> {
     override fun getParamElement(task: PipelineBuildTask): QualityGateInElement {
         return JsonUtil.mapTo(task.taskParams, QualityGateInElement::class.java)
@@ -70,7 +70,8 @@ class QualityGateInTaskAtom @Autowired constructor(
             runVariables = runVariables,
             client = client,
             rabbitTemplate = rabbitTemplate,
-            position = ControlPointPosition.BEFORE_POSITION
+            position = ControlPointPosition.BEFORE_POSITION,
+            pipelineQualityInterfaceService = pipelineBuildQualityService
         )
 
         return QualityUtils.handleResult(
@@ -79,8 +80,7 @@ class QualityGateInTaskAtom @Autowired constructor(
             interceptTask = param.interceptTask!!,
             checkResult = checkResult,
             client = client,
-            rabbitTemplate = rabbitTemplate,
-            pipelineEventDispatcher = pipelineEventDispatcher
+            rabbitTemplate = rabbitTemplate
         )
     }
 
