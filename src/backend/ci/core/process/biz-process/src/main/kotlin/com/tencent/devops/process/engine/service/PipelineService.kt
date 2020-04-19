@@ -57,6 +57,8 @@ import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.dao.template.TemplateDao
 import com.tencent.devops.process.engine.dao.template.TemplatePipelineDao
+import com.tencent.devops.process.engine.pojo.PipelineFilterByLabelInfo
+import com.tencent.devops.process.engine.pojo.PipelineFilterParam
 import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.jmx.api.ProcessJmxApi
 import com.tencent.devops.process.jmx.pipeline.PipelineBean
@@ -844,7 +846,11 @@ class PipelineService @Autowired constructor(
 
             watch.start("s_r_summary")
             val pipelineBuildSummary =
-                pipelineRuntimeService.getBuildSummaryRecords(projectId, channelCode, hasPermissionList)
+                pipelineRuntimeService.getBuildSummaryRecords(
+                    projectId = projectId,
+                    channelCode = channelCode,
+                    pipelineIds = hasPermissionList
+                )
             watch.stop()
 
             if (pageSizeNotNull != -1) slqLimit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
@@ -968,7 +974,49 @@ class PipelineService @Autowired constructor(
         watch.stop()
 
         watch.start("s_r_summary")
-        val pipelineBuildSummary = pipelineRuntimeService.getBuildSummaryRecords(projectId, channelCode)
+        val favorPipelines = pipelineGroupService.getFavorPipelines(userId, projectId)
+        val (filterByPipelineNames, filterByPipelineCreators, filterByPipelineLabels) = generatePipelineFilterInfo(
+            filterByPipelineName,
+            filterByCreator,
+            filterByLabels
+        )
+        val pipelineFilterParamList = mutableListOf<PipelineFilterParam>()
+        val pipelineFilterParam = PipelineFilterParam(
+            logic = Logic.AND,
+            filterByPipelineNames = filterByPipelineNames,
+            filterByPipelineCreators = filterByPipelineCreators,
+            filterByLabelInfo = PipelineFilterByLabelInfo(
+                filterByLabels = filterByPipelineLabels,
+                labelToPipelineMap = generateLabelToPipelineMap(filterByPipelineLabels)
+            )
+        )
+        pipelineFilterParamList.add(pipelineFilterParam)
+
+        val view = pipelineViewService.getView(userId = userId, projectId = projectId, viewId = viewId)
+        val filters = pipelineViewService.getFilters(view)
+        val pipelineViewFilterParam = PipelineFilterParam(
+            logic = view.logic,
+            filterByPipelineNames = filters.first,
+            filterByPipelineCreators = filters.second,
+            filterByLabelInfo = PipelineFilterByLabelInfo(
+                filterByLabels = filters.third,
+                labelToPipelineMap = generateLabelToPipelineMap(filters.third)
+            )
+        )
+        pipelineFilterParamList.add(pipelineViewFilterParam)
+
+        val pipelineBuildSummary = pipelineRuntimeService.getBuildSummaryRecords(
+            projectId = projectId,
+            channelCode = channelCode,
+            sortType = sortType,
+            favorPipelines = favorPipelines,
+            authPipelines = authPipelines,
+            viewId = viewId,
+            pipelineFilterParamList = pipelineFilterParamList,
+            permissionFlag = true,
+            page = page,
+            pageSize = pageSize
+        )
         watch.stop()
 
         watch.start("s_r_fav")
@@ -1063,6 +1111,18 @@ class PipelineService @Autowired constructor(
         }
     }
 
+    private fun generateLabelToPipelineMap(filterByPipelineLabels: List<PipelineViewFilterByLabel>): Map<String, List<String>>? {
+        var labelToPipelineMap: Map<String, List<String>>? = null
+        if (filterByPipelineLabels.isNotEmpty()) {
+            val labelIds = mutableListOf<String>()
+            filterByPipelineLabels.forEach {
+                labelIds.addAll(it.labelIds)
+            }
+            labelToPipelineMap = pipelineGroupService.getViewLabelToPipelinesMap(labelIds)
+        }
+        return labelToPipelineMap
+    }
+
     fun filterViewPipelines(
         userId: String,
         projectId: String,
@@ -1086,6 +1146,30 @@ class PipelineService @Autowired constructor(
     ): List<Pipeline> {
         logger.info("filter view pipelines $filterByName $filterByCreator $filterByLabels")
 
+        val (filterByPipelineNames, filterByPipelineCreators, filterByPipelineLabels) = generatePipelineFilterInfo(
+            filterByName,
+            filterByCreator,
+            filterByLabels
+        )
+
+        if (filterByPipelineNames.isEmpty() && filterByPipelineCreators.isEmpty() && filterByPipelineLabels.isEmpty()) {
+            return pipelines
+        }
+
+        return filterViewPipelines(
+            pipelines,
+            Logic.AND,
+            filterByPipelineNames,
+            filterByPipelineCreators,
+            filterByPipelineLabels
+        )
+    }
+
+    private fun generatePipelineFilterInfo(
+        filterByName: String?,
+        filterByCreator: String?,
+        filterByLabels: String?
+    ): Triple<List<PipelineViewFilterByName>, List<PipelineViewFilterByCreator>, List<PipelineViewFilterByLabel>> {
         val filterByPipelineNames = if (filterByName.isNullOrEmpty()) {
             emptyList()
         } else {
@@ -1108,18 +1192,7 @@ class PipelineService @Autowired constructor(
                 PipelineViewFilterByLabel(Condition.INCLUDE, it.key, it.value)
             }
         }
-
-        if (filterByPipelineNames.isEmpty() && filterByPipelineCreators.isEmpty() && filterByPipelineLabels.isEmpty()) {
-            return pipelines
-        }
-
-        return filterViewPipelines(
-            pipelines,
-            Logic.AND,
-            filterByPipelineNames,
-            filterByPipelineCreators,
-            filterByPipelineLabels
-        )
+        return Triple(filterByPipelineNames, filterByPipelineCreators, filterByPipelineLabels)
     }
 
     /**
@@ -1336,7 +1409,11 @@ class PipelineService @Autowired constructor(
         val channelCode = ChannelCode.BS
         try {
             watch.start("s_r_summary")
-            val pipelineBuildSummary = pipelineRuntimeService.getBuildSummaryRecords(projectId, channelCode, pipelines)
+            val pipelineBuildSummary = pipelineRuntimeService.getBuildSummaryRecords(
+                projectId = projectId,
+                channelCode = channelCode,
+                pipelineIds = pipelines
+            )
             watch.stop()
 
             watch.start("perm_r_perm")
