@@ -1,10 +1,7 @@
 <template>
     <bk-sideslider class="bkci-property-panel" width="640" :is-show.sync="visible" :quick-close="true">
         <header class="container-panel-header" slot="header">
-            {{ title }}333
-            <div v-if="showDebugDockerBtn" :class="!editable ? 'control-bar' : 'debug-btn'">
-                <bk-button theme="warning" @click="startDebug">{{ $t('editPage.docker.debugConsole') }}</bk-button>
-            </div>
+            {{ title }}
         </header>
         <container-content v-bind="$props" slot="content"></container-content>
     </bk-sideslider>

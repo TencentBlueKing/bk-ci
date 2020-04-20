@@ -517,7 +517,7 @@
         }
         .list-empty {
             position: absolute;
-            background: url('../../images/empty.png') center no-repeat;
+            background: url('../../../images/empty.png') center no-repeat;
             background-size: contain;
             height: 80px;
             width: 220px;
