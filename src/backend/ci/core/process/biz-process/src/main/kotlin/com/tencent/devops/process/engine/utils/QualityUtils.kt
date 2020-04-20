@@ -31,7 +31,6 @@ import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.api.util.timestamp
-import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.NormalContainer
@@ -49,12 +48,12 @@ import com.tencent.devops.process.engine.common.BS_ATOM_STATUS_REFRESH_DELAY_MIL
 import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION
 import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION_USERID
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
-import com.tencent.devops.process.service.quality.PipelineQualityInterfaceService
+import com.tencent.devops.process.engine.service.PipelineBuildDetailService
+import com.tencent.devops.process.engine.service.PipelineBuildQualityService
+import com.tencent.devops.process.engine.service.template.TemplateService
 import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
-import com.tencent.devops.quality.api.v2.ServiceQualityRuleResource
 import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
 import com.tencent.devops.quality.api.v2.pojo.request.BuildCheckParams
-import com.tencent.devops.quality.api.v2.pojo.response.QualityRuleMatchTask
 import com.tencent.devops.quality.pojo.RuleCheckResult
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
@@ -66,48 +65,9 @@ object QualityUtils {
 
     private const val QUALITY_RESULT = "bsQualityResult"
 
-    private val QUALITY_CODECC_LAZY_ATOM = setOf("CodeccCheckAtom", "linuxCodeCCScript", "linuxPaasCodeCCScript")
+    val QUALITY_CODECC_LAZY_ATOM = setOf("CodeccCheckAtom", "linuxCodeCCScript", "linuxPaasCodeCCScript")
 
     private val QUALITY_LAZY_TIME_GAP = listOf(1, 3, 5, 7, 9, 11, 13, 15, 17, 19, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20)
-
-    fun getMatchRuleList(
-        client: Client,
-        projectId: String,
-        pipelineId: String,
-        templateId: String?
-    ): List<QualityRuleMatchTask> {
-        return try {
-            client.get(ServiceQualityRuleResource::class).matchRuleList(
-                projectId,
-                pipelineId,
-                templateId,
-                LocalDateTime.now().timestamp()
-            ).data ?: listOf()
-        } catch (e: Exception) {
-            logger.error("quality get match rule list fail: ${e.message}", e)
-            return listOf()
-        }
-    }
-
-    fun getAuditUserList(
-        client: Client,
-        projectId: String,
-        pipelineId: String,
-        buildId: String,
-        taskId: String
-    ): Set<String> {
-        return try {
-            client.get(ServiceQualityRuleResource::class).getAuditUserList(
-                projectId,
-                pipelineId,
-                buildId,
-                taskId
-            ).data ?: setOf()
-        } catch (e: Exception) {
-            logger.error("quality get audit user list fail: ${e.message}", e)
-            return setOf()
-        }
-    }
 
     /**
      * 动态插入原子
@@ -256,34 +216,20 @@ object QualityUtils {
         }
     }
 
-    private fun check(client: Client, buildCheckParams: BuildCheckParams, position: String): RuleCheckResult {
-        return try {
-            client.get(ServiceQualityRuleResource::class).check(buildCheckParams).data!!
-        } catch (e: Exception) {
-            logger.error("Quality Gate check in fail", e)
-            val atomDesc = if (position == ControlPointPosition.BEFORE_POSITION) "准入" else "准出"
-            throw TaskExecuteException(
-                errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
-                errorType = ErrorType.USER,
-                errorMsg = "质量红线($atomDesc)检测失败"
-            )
-        }
-    }
-
     fun getCheckResult(
         task: PipelineBuildTask,
         interceptTaskName: String?,
         interceptTask: String?,
         runVariables: Map<String, String>,
-        client: Client,
         rabbitTemplate: RabbitTemplate,
         position: String,
-        pipelineQualityInterfaceService: PipelineQualityInterfaceService
+        templateService: TemplateService,
+        pipelineBuildQualityService: PipelineBuildQualityService
     ): RuleCheckResult {
         val pipelineId = task.pipelineId
         val projectId = task.projectId
         val buildId = task.buildId
-        val templateId = pipelineQualityInterfaceService.getPipelineTemplate(pipelineId)?.templateId
+        val templateId = templateService.getTemplate(pipelineId)?.templateId
         val buildNo = runVariables[PIPELINE_BUILD_NUM].toString()
         val elementId = task.taskId
 
@@ -311,9 +257,7 @@ object QualityUtils {
         val result = if (QUALITY_CODECC_LAZY_ATOM.contains(interceptTask)) {
             run loop@{
                 QUALITY_LAZY_TIME_GAP.forEachIndexed { index, gap ->
-                    val hisMetadata =
-                        client.get(ServiceQualityRuleResource::class).getHisMetadata(buildId).data ?: listOf()
-                    val hasMetadata = hisMetadata.any { it.elementType in QUALITY_CODECC_LAZY_ATOM }
+                    val hasMetadata = pipelineBuildQualityService.hasCodeccHisMetadata(buildId)
                     if (hasMetadata) return@loop
                     LogUtils.addLine(
                         rabbitTemplate = rabbitTemplate,
@@ -326,7 +270,7 @@ object QualityUtils {
                     Thread.sleep(gap * 1000L)
                 }
             }
-            check(client, buildCheckParams, position)
+            pipelineBuildQualityService.check(buildCheckParams, position)
         } else {
             LogUtils.addLine(
                 rabbitTemplate = rabbitTemplate,
@@ -336,7 +280,7 @@ object QualityUtils {
                 jobId = task.containerHashId,
                 executeCount = task.executeCount ?: 1
             )
-            check(client, buildCheckParams, position)
+            pipelineBuildQualityService.check(buildCheckParams, position)
         }
         logger.info("quality gateway $position check result for ${task.buildId}: $result")
         return result
@@ -347,8 +291,9 @@ object QualityUtils {
         task: PipelineBuildTask,
         interceptTask: String,
         checkResult: RuleCheckResult,
-        client: Client,
-        rabbitTemplate: RabbitTemplate
+        rabbitTemplate: RabbitTemplate,
+        pipelineBuildDetailService: PipelineBuildDetailService,
+        pipelineBuildQualityService: PipelineBuildQualityService
     ): AtomResponse {
         with(task) {
             val atomDesc = if (position == ControlPointPosition.BEFORE_POSITION) "准入" else "准出"
@@ -429,7 +374,7 @@ object QualityUtils {
 
                 // 产生MQ消息，等待5分钟审核时间
                 logger.info("quality check fail wait reviewing")
-                val auditUsers = getAuditUserList(client, projectId, pipelineId, buildId, interceptTask)
+                val auditUsers = pipelineBuildQualityService.getAuditUserList(projectId, pipelineId, buildId, interceptTask)
                 LogUtils.addLine(
                     rabbitTemplate = rabbitTemplate,
                     buildId = buildId,
@@ -441,6 +386,7 @@ object QualityUtils {
                 task.taskParams[BS_ATOM_STATUS_REFRESH_DELAY_MILLS] = checkResult.auditTimeoutSeconds * 1000 // 15 min
                 task.taskParams[QUALITY_RESULT] = checkResult.success
             }
+            pipelineBuildDetailService.pipelineDetailChangeEvent(buildId)
         }
         return AtomResponse(BuildStatus.RUNNING)
     }

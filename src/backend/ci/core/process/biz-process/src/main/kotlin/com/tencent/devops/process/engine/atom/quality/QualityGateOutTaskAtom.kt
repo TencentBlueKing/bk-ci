@@ -27,12 +27,13 @@
 package com.tencent.devops.process.engine.atom.quality
 
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateOutElement
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.IAtomTask
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
-import com.tencent.devops.process.service.quality.PipelineQualityInterfaceService
-import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateOutElement
+import com.tencent.devops.process.engine.service.PipelineBuildDetailService
+import com.tencent.devops.process.engine.service.PipelineBuildQualityService
+import com.tencent.devops.process.engine.service.template.TemplateService
 import com.tencent.devops.process.engine.utils.QualityUtils
 import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
 import org.slf4j.LoggerFactory
@@ -42,9 +43,10 @@ import org.springframework.stereotype.Component
 
 @Component
 class QualityGateOutTaskAtom @Autowired constructor(
-    private val client: Client,
     private val rabbitTemplate: RabbitTemplate,
-    private val pipelineQualityInterfaceService: PipelineQualityInterfaceService
+    private val pipelineBuildDetailService: PipelineBuildDetailService,
+    private val templateService: TemplateService,
+    private val pipelineBuildQualityService: PipelineBuildQualityService
 ) : IAtomTask<QualityGateOutElement> {
 
     override fun getParamElement(task: PipelineBuildTask): QualityGateOutElement {
@@ -70,10 +72,10 @@ class QualityGateOutTaskAtom @Autowired constructor(
             interceptTaskName = param.interceptTaskName,
             interceptTask = param.interceptTask,
             runVariables = runVariables,
-            client = client,
             rabbitTemplate = rabbitTemplate,
             position = ControlPointPosition.AFTER_POSITION,
-            pipelineQualityInterfaceService = pipelineQualityInterfaceService
+            pipelineBuildQualityService = pipelineBuildQualityService,
+            templateService = templateService
         )
 
         return QualityUtils.handleResult(
@@ -81,8 +83,9 @@ class QualityGateOutTaskAtom @Autowired constructor(
             task = task,
             interceptTask = param.interceptTask!!,
             checkResult = checkResult,
-            client = client,
-            rabbitTemplate = rabbitTemplate
+            rabbitTemplate = rabbitTemplate,
+            pipelineBuildQualityService = pipelineBuildQualityService,
+            pipelineBuildDetailService = pipelineBuildDetailService
         )
     }
 
