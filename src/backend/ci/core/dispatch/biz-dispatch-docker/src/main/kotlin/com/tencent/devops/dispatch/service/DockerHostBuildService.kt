@@ -575,6 +575,7 @@ class DockerHostBuildService @Autowired constructor(
                     logger.info("clear pipelineId:(${timeoutTask[i].pipelineId}), vmSeqId:(${timeoutTask[i].vmSeqId}), containerId:(${timeoutTask[i].containerId})")
                 }
                 pipelineDockerTaskDao.updateTimeOutTask(dslContext)
+                pipelineDockerPoolDao.updateTimeOutTask(dslContext)
                 message = "timeoutTask.size=${timeoutTask.size}"
             }
             stopWatch.stop()
