@@ -2,7 +2,6 @@ package com.tencent.devops.project.listener
 
 import com.tencent.devops.common.auth.api.BSAuthTokenApi
 import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
-import com.tencent.devops.common.event.listener.Listener
 import com.tencent.devops.project.pojo.ProjectUpdateLogoInfo
 import com.tencent.devops.project.pojo.mq.ProjectBroadCastEvent
 import com.tencent.devops.project.pojo.mq.ProjectCreateBroadCastEvent
@@ -11,19 +10,17 @@ import com.tencent.devops.project.pojo.mq.ProjectUpdateLogoBroadCastEvent
 import com.tencent.devops.project.service.ProjectPaasCCService
 import com.tencent.devops.project.service.impl.AbsOpProjectServiceImpl.Companion.logger
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Component
 
 /**
  * deng
  * 2019-12-17
  */
-@Component
-class ProjectEventListener @Autowired constructor(
-//    val opProjectService: OpProjectService,
+@Suppress("UNUSED")
+class TencentProjectEventListener @Autowired constructor(
     val projectPaasCCService: ProjectPaasCCService,
     val bsAuthTokenApi: BSAuthTokenApi,
     val bsPipelineAuthServiceCode: BSPipelineAuthServiceCode
-) : Listener<ProjectBroadCastEvent> {
+) : ProjectEventListener {
 
     override fun execute(event: ProjectBroadCastEvent) {
         try {
@@ -43,7 +40,7 @@ class ProjectEventListener @Autowired constructor(
         }
     }
 
-    fun onReceiveProjectCreate(event: ProjectCreateBroadCastEvent) {
+    override fun onReceiveProjectCreate(event: ProjectCreateBroadCastEvent) {
         val accessToken = bsAuthTokenApi.getAccessToken(bsPipelineAuthServiceCode)
         // 过渡期间让新建项目直接设置为灰度v2
 //        opProjectService.setGrayProject(projectCodeList = listOf(event.projectInfo.englishName), operateFlag = 1)
@@ -55,7 +52,7 @@ class ProjectEventListener @Autowired constructor(
         )
     }
 
-    fun onReceiveProjectUpdate(event: ProjectUpdateBroadCastEvent) {
+    override fun onReceiveProjectUpdate(event: ProjectUpdateBroadCastEvent) {
         val accessToken = bsAuthTokenApi.getAccessToken(bsPipelineAuthServiceCode)
         projectPaasCCService.updatePaasCCProject(
             userId = event.userId,
@@ -65,7 +62,7 @@ class ProjectEventListener @Autowired constructor(
         )
     }
 
-    fun onReceiveProjectUpdateLogo(event: ProjectUpdateLogoBroadCastEvent) {
+    override fun onReceiveProjectUpdateLogo(event: ProjectUpdateLogoBroadCastEvent) {
         val accessToken = bsAuthTokenApi.getAccessToken(bsPipelineAuthServiceCode)
 
         val projectUpdateLogoInfo = ProjectUpdateLogoInfo(
