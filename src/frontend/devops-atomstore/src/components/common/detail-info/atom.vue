@@ -135,9 +135,9 @@
                 const key = `${typeof this.userInfo.type}-${this.detail.approveStatus}`
                 const mapStatus = {
                     'undefined-WAIT': this.$t('store.审批中'),
-                    'undefined-PASS': this.$t('store.协作'),
-                    'undefined-undefined': this.$t('store.协作'),
-                    'undefined-REFUSE': this.$t('store.协作')
+                    'undefined-PASS': this.$t('store.点击申请成为协作者'),
+                    'undefined-undefined': this.$t('store.点击申请成为协作者'),
+                    'undefined-REFUSE': this.$t('store.点击申请成为协作者')
                 }
                 const res = mapStatus[key] || this.$t('store.已协作')
                 return res
@@ -196,7 +196,7 @@
             },
 
             cooperation () {
-                if (this.approveMsg !== this.$t('store.协作')) return
+                if (this.approveMsg !== this.$t('store.点击申请成为协作者')) return
                 this.showCooperDialog = true
                 this.getProjectList()
             },
