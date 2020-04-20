@@ -10,6 +10,10 @@
                         <span class="approve-msg">{{approveMsg}}</span>
                     </h5>
                 </template>
+                <h5 :title="$t('store.支持通过YAML的方式使用')" class="not-public" v-if="detail.yamlFlag">
+                    <icon class="detail-img" name="yaml" size="16" />
+                    <span class="approve-msg">{{$t('store.YAML可用')}}</span>
+                </h5>
             </h3>
             <h5 class="detail-info">
                 <span> {{ $t('store.发布者：') }} </span><span>{{detail.publisher || '-'}}</span>
