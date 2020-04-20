@@ -48,6 +48,7 @@ import com.tencent.devops.dispatch.dao.PipelineDockerBuildDao
 import com.tencent.devops.dispatch.dao.PipelineDockerEnableDao
 import com.tencent.devops.dispatch.dao.PipelineDockerHostDao
 import com.tencent.devops.dispatch.dao.PipelineDockerHostZoneDao
+import com.tencent.devops.dispatch.dao.PipelineDockerPoolDao
 import com.tencent.devops.dispatch.dao.PipelineDockerTaskDao
 import com.tencent.devops.dispatch.pojo.ContainerInfo
 import com.tencent.devops.dispatch.pojo.DockerHostBuildInfo
@@ -57,6 +58,7 @@ import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.dispatch.pojo.redis.RedisBuild
 import com.tencent.devops.dispatch.utils.CommonUtils
 import com.tencent.devops.dispatch.utils.DockerHostLock
+import com.tencent.devops.dispatch.utils.DockerHostUtils
 import com.tencent.devops.dispatch.utils.DockerUtils
 import com.tencent.devops.dispatch.utils.redis.RedisUtils
 import com.tencent.devops.log.utils.LogUtils
@@ -90,6 +92,7 @@ class DockerHostBuildService @Autowired constructor(
     private val pipelineDockerEnableDao: PipelineDockerEnableDao,
     private val pipelineDockerBuildDao: PipelineDockerBuildDao,
     private val pipelineDockerTaskDao: PipelineDockerTaskDao,
+    private val pipelineDockerPoolDao: PipelineDockerPoolDao,
     private val pipelineDockerHostDao: PipelineDockerHostDao,
     private val pipelineDockerHostZoneDao: PipelineDockerHostZoneDao,
     private val redisUtils: RedisUtils,
@@ -97,6 +100,7 @@ class DockerHostBuildService @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val gray: Gray,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
+    private val dockerHostUtils: DockerHostUtils,
     private val rabbitTemplate: RabbitTemplate
 ) {
 
@@ -113,6 +117,7 @@ class DockerHostBuildService @Autowired constructor(
         val dispatchType = event.dispatchType as DockerDispatchType
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
+            val poolNo = dockerHostUtils.getIdlePoolNo(event.pipelineId, event.vmSeqId)
             val secretKey = ApiUtil.randomSecretKey()
             val id = pipelineDockerBuildDao.startBuild(
                 dslContext = context,
@@ -127,7 +132,9 @@ class DockerHostBuildService @Autowired constructor(
                 } else {
                     event.zone!!.name
                 },
-                dockerIp = "")
+                dockerIp = "",
+                poolNo = poolNo
+            )
             val agentId = HashUtil.encodeLongId(id)
             redisUtils.setDockerBuild(
                 id, secretKey,
@@ -273,24 +280,33 @@ class DockerHostBuildService @Autowired constructor(
                 return
             }
             record.forEach {
-                finishBuild(it, event.buildResult)
-                dockerHostClient.endBuild(
-                    event,
-                    it.dockerIp,
-                    it.containerId
-                )
+                finishDockerBuild(it, event)
             }
         } else {
             val record = pipelineDockerBuildDao.getBuild(dslContext, event.buildId, event.vmSeqId!!.toInt())
             if (record != null) {
-                finishBuild(record, event.buildResult)
-                dockerHostClient.endBuild(
-                    event,
-                    record.dockerIp,
-                    record.containerId
-                )
+                finishDockerBuild(record, event)
             }
         }
+    }
+
+    private fun finishDockerBuild(record: TDispatchPipelineDockerBuildRecord, event: PipelineAgentShutdownEvent) {
+        finishBuild(record, event.buildResult)
+
+        //编译环境才会更新pool
+        pipelineDockerPoolDao.updatePoolStatus(
+            dslContext,
+            record.pipelineId,
+            record.vmSeqId.toString(),
+            record.poolNo,
+            if (event.buildResult) PipelineTaskStatus.DONE.status else PipelineTaskStatus.FAILURE.status
+        )
+
+        dockerHostClient.endBuild(
+            event,
+            record.dockerIp,
+            record.containerId
+        )
     }
 
     private fun finishBuild(record: TDispatchPipelineDockerBuildRecord, success: Boolean) {
@@ -300,7 +316,7 @@ class DockerHostBuildService @Autowired constructor(
             record.vmSeqId,
             if (success) PipelineTaskStatus.DONE else PipelineTaskStatus.FAILURE)
 
-        // 更新dockerTask表
+        // 更新dockerTask表(保留之前逻辑)
         pipelineDockerTaskDao.updateStatus(dslContext,
             record.buildId,
             record.vmSeqId,
@@ -400,6 +416,7 @@ class DockerHostBuildService @Autowired constructor(
                 imageName = build.imageName,
                 containerId = "",
                 wsInHost = false,
+                poolNo = 0,
                 registryUser = build.registryUser,
                 registryPwd = build.registryPwd,
                 imageType = build.imageType,
@@ -520,6 +537,7 @@ class DockerHostBuildService @Autowired constructor(
                     imageName = build.imageName,
                     containerId = build.containerId,
                     wsInHost = false,
+                    poolNo = 0,
                     registryUser = build.registryUser,
                     registryPwd = build.registryPwd,
                     imageType = build.imageType,
@@ -700,7 +718,8 @@ class DockerHostBuildService @Autowired constructor(
                 secretKey = secretKey,
                 status = PipelineTaskStatus.RUNNING,
                 zone = zone.name,
-                dockerIp = ""
+                dockerIp = "",
+                poolNo = 0
             )
             val agentId = HashUtil.encodeLongId(id)
             redisUtils.setDockerBuild(

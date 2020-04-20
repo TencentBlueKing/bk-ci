@@ -47,7 +47,8 @@ class PipelineDockerBuildDao {
         secretKey: String,
         status: PipelineTaskStatus,
         zone: String?,
-        dockerIp: String?
+        dockerIp: String,
+        poolNo: Int
     ): Long {
         with(TDispatchPipelineDockerBuild.T_DISPATCH_PIPELINE_DOCKER_BUILD) {
             val now = LocalDateTime.now()
@@ -60,6 +61,7 @@ class PipelineDockerBuildDao {
                     .set(UPDATED_TIME, now)
                     .set(ZONE, zone)
                     .set(DOCKER_IP, dockerIp)
+                    .set(POOL_NO, poolNo)
                     .where(ID.eq(preRecord.id)).execute()
                 return preRecord.id
             }
@@ -74,7 +76,8 @@ class PipelineDockerBuildDao {
                 CREATED_TIME,
                 UPDATED_TIME,
                 ZONE,
-                DOCKER_IP
+                DOCKER_IP,
+                POOL_NO
             )
                 .values(
                     projectId,
@@ -86,7 +89,8 @@ class PipelineDockerBuildDao {
                     now,
                     now,
                     zone,
-                    dockerIp
+                    dockerIp,
+                    poolNo
                 )
                 .returning(ID)
                 .fetchOne().id
@@ -167,4 +171,5 @@ class PipelineDockerBuildDao {
 /*
 ALTER TABLE `T_DISPATCH_PIPELINE_DOCKER_BUILD` ADD COLUMN `DOCKER_IP` VARCHAR(64) DEFAULT '' COMMENT '构建机IP';
 ALTER TABLE `T_DISPATCH_PIPELINE_DOCKER_BUILD` ADD COLUMN `CONTAINER_ID` VARCHAR(128) DEFAULT '' COMMENT '构建容器ID';
+ALTER TABLE `T_DISPATCH_PIPELINE_DOCKER_BUILD` ADD COLUMN `POOL_NO` INT(11) DEFAULT 0 COMMENT '构建容器池序号';
  */
