@@ -24,11 +24,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.project.pojo.mq
+package com.tencent.devops.project.listener
 
-abstract class ProjectBroadCastEvent(
-    open val userId: String,
-    open val projectId: String,
-    open var retryCount: Int,
-    open var delayMills: Int
-)
+import com.tencent.devops.project.pojo.mq.ProjectCreateBroadCastEvent
+import com.tencent.devops.project.pojo.mq.ProjectUpdateBroadCastEvent
+import com.tencent.devops.project.pojo.mq.ProjectUpdateLogoBroadCastEvent
+
+class SampleProjectEventListener : ProjectEventListener {
+
+    override fun onReceiveProjectCreate(event: ProjectCreateBroadCastEvent) {
+    }
+
+    override fun onReceiveProjectUpdate(event: ProjectUpdateBroadCastEvent) {
+    }
+
+    override fun onReceiveProjectUpdateLogo(event: ProjectUpdateLogoBroadCastEvent) {
+    }
+}
