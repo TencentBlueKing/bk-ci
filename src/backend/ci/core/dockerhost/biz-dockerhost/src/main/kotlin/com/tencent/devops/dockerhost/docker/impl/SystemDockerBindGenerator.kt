@@ -82,23 +82,23 @@ class SystemDockerBindGenerator @Autowired constructor(private val dockerHostCon
     }
 
     private fun DockerHostBuildInfo.getCcachePath(): String {
-        return "${dockerHostConfig.hostPathCcache}/$pipelineId/$vmSeqId/" + "_$poolNo/"
+        return "${dockerHostConfig.hostPathCcache}/$pipelineId/$vmSeqId" + "_$poolNo/"
     }
 
     private fun DockerHostBuildInfo.getNpmCachePath(): String {
-        return "${dockerHostConfig.hostPathNpmCache}/$pipelineId/$vmSeqId/" + "_$poolNo/"
+        return "${dockerHostConfig.hostPathNpmCache}/$pipelineId/$vmSeqId" + "_$poolNo/"
     }
 
     private fun DockerHostBuildInfo.getNpmPrefixPath(): String {
-        return "${dockerHostConfig.hostPathNpmPrefix}/$pipelineId/$vmSeqId/" + "_$poolNo/"
+        return "${dockerHostConfig.hostPathNpmPrefix}/$pipelineId/$vmSeqId" + "_$poolNo/"
     }
 
     private fun DockerHostBuildInfo.getMavenRepoPath(): String {
-        return "${dockerHostConfig.hostPathMavenRepo}/$pipelineId/$vmSeqId/" + "_$poolNo/"
+        return "${dockerHostConfig.hostPathMavenRepo}/$pipelineId/$vmSeqId" + "_$poolNo/"
     }
 
     private fun DockerHostBuildInfo.getWorkspace(): String {
-        return "${dockerHostConfig.hostPathWorkspace}/$pipelineId/$vmSeqId/" + "_$poolNo/"
+        return "${dockerHostConfig.hostPathWorkspace}/$pipelineId/$vmSeqId" + "_$poolNo/"
     }
 
     private fun getProjectShareDir(projectCode: String): String {
