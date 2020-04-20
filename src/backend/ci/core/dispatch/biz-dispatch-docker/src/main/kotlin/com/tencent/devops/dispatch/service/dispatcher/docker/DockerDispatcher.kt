@@ -102,14 +102,16 @@ class DockerDispatcher @Autowired constructor(
                         if (specialIpSet.contains(taskHistory.dockerIp)) {
                             checkAndSetIP(pipelineAgentStartupEvent, specialIpSet, taskHistory.dockerIp)
                         } else {
-                            // 不在专机列表中，重新依据专机列表去选择
+                            // 不在专机列表中，重新依据专机列表去选择负载最小的
                             resetDockerIp(pipelineAgentStartupEvent, specialIpSet, taskHistory.dockerIp, "专机漂移")
                         }
                     } else {
+                        // 没有配置专机，根据当前IP负载选择IP
                         checkAndSetIP(pipelineAgentStartupEvent, specialIpSet, taskHistory.dockerIp)
                     }
                 }
             } else {
+                // 第一次构建，根据负载条件选择可用IP
                 dockerIp = dockerHostUtils.getAvailableDockerIpWithSpecialIps(
                     pipelineAgentStartupEvent.projectId,
                     pipelineAgentStartupEvent.pipelineId,
