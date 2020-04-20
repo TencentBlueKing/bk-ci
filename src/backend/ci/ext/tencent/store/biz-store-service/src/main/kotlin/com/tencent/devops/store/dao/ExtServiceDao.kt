@@ -612,7 +612,7 @@ class ExtServiceDao {
 
     fun getLatestFlag(dslContext: DSLContext, serviceCode: String): Boolean {
         with(TExtensionService.T_EXTENSION_SERVICE) {
-            val count = dslContext.selectCount().where(SERVICE_CODE.eq(serviceCode).and(SERVICE_STATUS.eq(ExtServiceStatusEnum.RELEASED.status.toByte())))
+            val count = dslContext.selectCount().from(this).where(SERVICE_CODE.eq(serviceCode).and(SERVICE_STATUS.eq(ExtServiceStatusEnum.RELEASED.status.toByte())))
                 .fetchOne(0, Int::class.java)
             if (count > 0) {
                 return false
