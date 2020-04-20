@@ -2,12 +2,12 @@ package com.tencent.devops.project.service
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.project.api.pojo.ExtItemDTO
+import com.tencent.devops.project.api.pojo.ExtServiceEntity
 import com.tencent.devops.project.api.pojo.ItemInfoResponse
 import com.tencent.devops.project.api.pojo.ItemListVO
 import com.tencent.devops.project.api.pojo.ServiceItem
@@ -21,12 +21,12 @@ import com.tencent.devops.project.pojo.ItemCreateInfo
 import com.tencent.devops.project.pojo.ItemQueryInfo
 import com.tencent.devops.project.pojo.ItemUpdateInfo
 import com.tencent.devops.store.api.ServiceItemRelResource
+import com.tencent.devops.store.constant.StoreMessageCode
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import javax.annotation.PostConstruct
-import com.tencent.devops.project.api.pojo.ExtServiceEntity as ExtServiceEntity
 
 @Service
 class ServiceItemService @Autowired constructor(
@@ -399,16 +399,13 @@ class ServiceItemService @Autowired constructor(
 
     fun delete(userId: String, itemId: String): Result<Boolean> {
         if (!isItemCanDeleteOrDisable(itemId)) {
-            throw InvalidParamException("扩展点已绑定扩展服务，不能操作")
+            throw ErrorCodeException(errorCode = StoreMessageCode.USER_ITEM_SERVICE_USED_IS_NOT_ALLOW_DELETE)
         }
         serviceItemDao.delete(dslContext, userId, itemId)
         return Result(true)
     }
 
     fun disable(userId: String, itemId: String): Result<Boolean> {
-        if (!isItemCanDeleteOrDisable(itemId)) {
-            throw InvalidParamException("扩展点已绑定扩展服务，不能禁用")
-        }
         serviceItemDao.disable(dslContext, userId, itemId)
         return Result(true)
     }

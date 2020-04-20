@@ -610,11 +610,11 @@ class ExtServiceDao {
         return selectFeild.where(conditions).fetchOne(0, Int::class.java)
     }
 
-    fun getReleasedService(dslContext: DSLContext, serviceCode: String): Boolean {
+    fun getLatestFlag(dslContext: DSLContext, serviceCode: String): Boolean {
         with(TExtensionService.T_EXTENSION_SERVICE) {
-            val record = dslContext.selectFrom(this).where(SERVICE_CODE.eq(serviceCode).and(SERVICE_STATUS.eq(ExtServiceStatusEnum.RELEASED.status.toByte())))
-                .fetch()
-            if (record.isNotEmpty) {
+            val count = dslContext.selectCount().where(SERVICE_CODE.eq(serviceCode).and(SERVICE_STATUS.eq(ExtServiceStatusEnum.RELEASED.status.toByte())))
+                .fetchOne(0, Int::class.java)
+            if (count > 0) {
                 return false
             }
         }

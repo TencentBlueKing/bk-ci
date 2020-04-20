@@ -367,7 +367,10 @@ abstract class ExtServiceBaseService @Autowired constructor() {
                 // 升级扩展服务
                 val serviceEnvRecord = extServiceEnvDao.getMarketServiceEnvInfoByServiceId(context, serviceRecord.id)
                 // 若无已发布的扩展，则直接将当前的设置为latest
-                val latestFlag = extServiceDao.getReleasedService(context, serviceCode)
+                val latestFlag = extServiceDao.getLatestFlag(context, serviceCode)
+                if (latestFlag) {
+                    extServiceDao.cleanLatestFlag(context, serviceCode)
+                }
                 upgradeMarketExtService(
                     context = context,
                     userId = userId,
