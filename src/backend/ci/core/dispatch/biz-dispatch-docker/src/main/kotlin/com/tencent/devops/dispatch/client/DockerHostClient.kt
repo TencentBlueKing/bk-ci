@@ -159,7 +159,7 @@ class DockerHostClient @Autowired constructor(
             "",
             event.pipelineId,
             event.buildId,
-            Integer.valueOf(event.vmSeqId!!),
+            event.vmSeqId?.toInt() ?: 0,
             "",
             0,
             "",
