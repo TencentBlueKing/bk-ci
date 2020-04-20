@@ -29,11 +29,15 @@ package com.tencent.devops.dispatch.utils
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.dispatch.client.DockerHostClient
 import com.tencent.devops.dispatch.dao.PipelineDockerHostDao
 import com.tencent.devops.dispatch.dao.PipelineDockerIPInfoDao
+import com.tencent.devops.dispatch.dao.PipelineDockerPoolDao
 import com.tencent.devops.dispatch.exception.DockerServiceException
 import com.tencent.devops.dispatch.pojo.DockerHostLoadConfig
+import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.dispatch.utils.redis.RedisUtils
 import com.tencent.devops.model.dispatch.tables.records.TDispatchPipelineDockerIpInfoRecord
 import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
@@ -49,12 +53,15 @@ class DockerHostUtils @Autowired constructor(
     private val redisUtils: RedisUtils,
     private val pipelineDockerIpInfoDao: PipelineDockerIPInfoDao,
     private val pipelineDockerHostDao: PipelineDockerHostDao,
+    private val pipelineDockerPoolDao: PipelineDockerPoolDao,
     private val dslContext: DSLContext
 ) {
     companion object {
         private const val LOAD_CONFIG_KEY = "dockerhost-load-config"
         private val logger = LoggerFactory.getLogger(DockerHostUtils::class.java)
     }
+
+    private val buildPoolSize = 100 // 单个流水线可同时执行的任务数量
 
     fun getAvailableDockerIpWithSpecialIps(projectId: String, pipelineId: String, vmSeqId: String, specialIpSet: Set<String>, unAvailableIpList: Set<String> = setOf()): String {
         var grayEnv = false
@@ -147,6 +154,43 @@ class DockerHostUtils @Autowired constructor(
 
     fun createLoadConfig(loadConfigMap: Map<String, DockerHostLoadConfig>) {
         redisOperation.set(LOAD_CONFIG_KEY, JsonUtil.toJson(loadConfigMap))
+    }
+
+    fun getIdlePoolNo(
+        pipelineId: String,
+        vmSeq: String
+    ): Int {
+        val lock = RedisLock(redisOperation, "DISPATCH_DEVCLOUD_LOCK_CONTAINER_${pipelineId}_$vmSeq", 30)
+        try {
+            lock.tryLock()
+            for (i in 1..buildPoolSize) {
+                logger.info("poolNo is $i")
+                val poolNo = pipelineDockerPoolDao.getPoolNo(dslContext, pipelineId, vmSeq, i)
+                if (poolNo == null) {
+                    pipelineDockerPoolDao.create(
+                        dslContext,
+                        pipelineId,
+                        vmSeq,
+                        i,
+                        PipelineTaskStatus.RUNNING.status
+                    )
+                    return i
+                } else {
+                    if (poolNo.status == PipelineTaskStatus.RUNNING.status) {
+                        continue
+                    } else {
+                        pipelineDockerPoolDao.updatePoolStatus(dslContext, pipelineId, vmSeq, i, PipelineTaskStatus.RUNNING.status)
+                        return i
+                    }
+                }
+            }
+            throw DockerServiceException("构建机启动失败，没有空闲的构建机了！")
+        } catch (e: Exception) {
+            logger.error("$pipelineId|$vmSeq getIdlePoolNo error.", e)
+            throw DockerServiceException("容器并发池分配异常")
+        } finally {
+            lock.unlock()
+        }
     }
 
     private fun getLoadConfig(): Triple<DockerHostLoadConfig, DockerHostLoadConfig, DockerHostLoadConfig> {

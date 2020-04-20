@@ -91,17 +91,23 @@ class DockerDispatcher @Autowired constructor(
             )
 
             val dockerIp: String
+            val poolNo = dockerHostUtils.getIdlePoolNo(pipelineAgentStartupEvent.pipelineId, pipelineAgentStartupEvent.vmSeqId)
             if (taskHistory != null) {
-                dockerIp = if (specialIpSet.isNotEmpty() && specialIpSet.toString() != "[]") {
-                    // 在专机列表中
-                    if (specialIpSet.contains(taskHistory.dockerIp)) {
-                        checkAndSetIP(pipelineAgentStartupEvent, specialIpSet, taskHistory.dockerIp)
-                    } else {
-                        // 不在专机列表中，重新依据专机列表去选择
-                        resetDockerIp(pipelineAgentStartupEvent, specialIpSet, taskHistory.dockerIp, "专机漂移")
-                    }
+                dockerIp = if (poolNo > 1) {
+                    // 同一条流水线并发构建时，无视负载，直接下发同一个IP（避免同一条流水线并发量太大，影响其他流水线构建）
+                    taskHistory.dockerIp
                 } else {
-                    checkAndSetIP(pipelineAgentStartupEvent, specialIpSet, taskHistory.dockerIp)
+                    if (specialIpSet.isNotEmpty() && specialIpSet.toString() != "[]") {
+                        // 在专机列表中
+                        if (specialIpSet.contains(taskHistory.dockerIp)) {
+                            checkAndSetIP(pipelineAgentStartupEvent, specialIpSet, taskHistory.dockerIp)
+                        } else {
+                            // 不在专机列表中，重新依据专机列表去选择
+                            resetDockerIp(pipelineAgentStartupEvent, specialIpSet, taskHistory.dockerIp, "专机漂移")
+                        }
+                    } else {
+                        checkAndSetIP(pipelineAgentStartupEvent, specialIpSet, taskHistory.dockerIp)
+                    }
                 }
             } else {
                 dockerIp = dockerHostUtils.getAvailableDockerIpWithSpecialIps(
@@ -118,7 +124,7 @@ class DockerDispatcher @Autowired constructor(
                 )
             }
 
-            dockerHostClient.startBuild(pipelineAgentStartupEvent, dockerIp)
+            dockerHostClient.startBuild(pipelineAgentStartupEvent, dockerIp, poolNo)
         } catch (e: Exception) {
             logger.error(
                 "[${pipelineAgentStartupEvent.projectId}|${pipelineAgentStartupEvent.pipelineId}|${pipelineAgentStartupEvent.buildId}] Start build Docker VM failed.",
