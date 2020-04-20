@@ -216,8 +216,7 @@ class PipelineSubscriptionService @Autowired(required = false) constructor(
             model = model,
             errorType = errorType,
             errorCode = errorCode,
-            errorMsg = errorMsg,
-            userId = user
+            errorMsg = errorMsg
         )
 
         logger.info("onPipelineShutdown pipelineNameReal:$pipelineName")
