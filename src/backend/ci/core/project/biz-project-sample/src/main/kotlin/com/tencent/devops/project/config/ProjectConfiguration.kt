@@ -24,11 +24,24 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.project.pojo.mq
+package com.tencent.devops.project.config
 
-abstract class ProjectBroadCastEvent(
-    open val userId: String,
-    open val projectId: String,
-    open var retryCount: Int,
-    open var delayMills: Int
-)
+import com.tencent.devops.project.listener.ProjectEventListener
+import com.tencent.devops.project.listener.SampleProjectEventListener
+import org.springframework.boot.autoconfigure.AutoConfigureOrder
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
+import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
+import org.springframework.core.Ordered
+
+@Suppress("UNUSED")
+@Configuration
+@ConditionalOnWebApplication
+@AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
+class ProjectConfiguration {
+
+    @Bean
+    @ConditionalOnMissingBean(ProjectEventListener::class)
+    fun projectEventListener(): ProjectEventListener = SampleProjectEventListener()
+}
