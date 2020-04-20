@@ -24,10 +24,32 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.plugin.quality.task
+package com.tencent.devops.common.pipeline.pojo.element.quality
 
-const val QUALITY_RESULT = "bsQualityResult"
+import com.tencent.devops.common.pipeline.pojo.element.Element
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-val QUALITY_CODECC_LAZY_ATOM = setOf("CodeccCheckAtom", "linuxCodeCCScript", "linuxPaasCodeCCScript")
+@ApiModel("质量红线(准出)", description = QualityGateOutElement.classType)
+data class QualityGateOutElement(
+    @ApiModelProperty("任务名称", required = true)
+    override val name: String = "质量红线(准出)",
+    @ApiModelProperty("id", required = false)
+    override var id: String? = null,
+    @ApiModelProperty("状态", required = false)
+    override var status: String? = null,
+    @ApiModelProperty("拦截原子", required = false)
+    var interceptTask: String? = null,
+    @ApiModelProperty("拦截原子名称", required = false)
+    var interceptTaskName: String? = null,
+    @ApiModelProperty("审核人", required = false)
+    var reviewUsers: Set<String>? = null
+) : Element(name, id, status) {
+    companion object {
+        const val classType = "qualityGateOutTask"
+    }
 
-val QUALITY_LAZY_TIME_GAP = listOf(1, 3, 5, 7, 9, 11, 13, 15, 17, 19, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20)
+    override fun getTaskAtom() = "qualityGateOutTaskAtom"
+
+    override fun getClassType() = classType
+}
