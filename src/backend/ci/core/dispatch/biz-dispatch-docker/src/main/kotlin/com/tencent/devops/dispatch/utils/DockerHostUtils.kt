@@ -132,6 +132,9 @@ class DockerHostUtils @Autowired constructor(
         }
 
         if (dockerIp.isEmpty()) {
+            if (specialIpSet.isNotEmpty()) {
+                throw DockerServiceException("Start build Docker VM failed, no available Docker VM in $specialIpSet")
+            }
             throw DockerServiceException("Start build Docker VM failed, no available Docker VM.")
         }
 
