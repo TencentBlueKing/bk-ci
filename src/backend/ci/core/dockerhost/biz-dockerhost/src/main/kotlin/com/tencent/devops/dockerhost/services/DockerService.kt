@@ -93,11 +93,11 @@ class DockerService @Autowired constructor(private val dockerHostBuildService: D
         logger.info("projectId: $projectId, pipelineId: $pipelineId, vmSeqId: $vmSeqId, buildId: $buildId, dockerRunParam: $dockerRunParam")
 
         val (containerId, timeStamp) = dockerHostBuildService.dockerRun(
-            projectId,
-            pipelineId,
-            vmSeqId,
-            buildId,
-            dockerRunParam
+            projectId = projectId,
+            pipelineId = pipelineId,
+            vmSeqId = vmSeqId,
+            buildId = buildId,
+            dockerRunParam = dockerRunParam
         )
         return DockerRunResponse(containerId, timeStamp)
     }

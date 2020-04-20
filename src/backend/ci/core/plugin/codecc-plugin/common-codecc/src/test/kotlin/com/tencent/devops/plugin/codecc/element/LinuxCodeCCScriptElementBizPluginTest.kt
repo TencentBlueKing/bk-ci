@@ -56,7 +56,15 @@ class LinuxCodeCCScriptElementBizPluginTest {
 
     @Test
     fun afterCreate() {
-        plugin.afterCreate(element, projectId, pipelineId, pipelineName, userId, ChannelCode.BS)
+        plugin.afterCreate(
+            element = element,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            pipelineName = pipelineName,
+            userId = userId,
+            channelCode = ChannelCode.BS,
+            create = true
+        )
     }
 
     @Test

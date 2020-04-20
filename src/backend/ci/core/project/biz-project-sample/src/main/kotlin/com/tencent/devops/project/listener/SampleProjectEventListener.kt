@@ -24,26 +24,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.api
+package com.tencent.devops.project.listener
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.process.api.external.ExternalPipelineResource
-import com.tencent.devops.process.engine.service.PipelineBadgeService
-import com.tencent.devops.process.pojo.BuildId
-import com.tencent.devops.process.service.PipelineRemoteAuthService
-import org.springframework.beans.factory.annotation.Autowired
+import com.tencent.devops.project.pojo.mq.ProjectCreateBroadCastEvent
+import com.tencent.devops.project.pojo.mq.ProjectUpdateBroadCastEvent
+import com.tencent.devops.project.pojo.mq.ProjectUpdateLogoBroadCastEvent
 
-@RestResource
-class ExternalPipelineResourceImpl @Autowired constructor(
-    private val pipelineRemoteAuthService: PipelineRemoteAuthService,
-    private val pipelineBadgeService: PipelineBadgeService
-) : ExternalPipelineResource {
-    override fun getBadge(projectId: String, pipelineId: String): String {
-        return pipelineBadgeService.get(pipelineId)
+class SampleProjectEventListener : ProjectEventListener {
+
+    override fun onReceiveProjectCreate(event: ProjectCreateBroadCastEvent) {
     }
 
-    override fun remoteBuild(token: String, values: Map<String, String>): Result<BuildId> {
-        return Result(pipelineRemoteAuthService.startPipeline(token, values))
+    override fun onReceiveProjectUpdate(event: ProjectUpdateBroadCastEvent) {
+    }
+
+    override fun onReceiveProjectUpdateLogo(event: ProjectUpdateLogoBroadCastEvent) {
     }
 }

@@ -1,7 +1,7 @@
 USE devops_ci_plugin;
 SET NAMES utf8mb4;
 
-DROP PROCEDURE IF EXISTS ci_log_schema_update;
+DROP PROCEDURE IF EXISTS ci_plugin_schema_update;
 
 DELIMITER <CI_UBF>
 
