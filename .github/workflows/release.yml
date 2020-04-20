@@ -85,14 +85,16 @@ jobs:
           draft: false
           prerelease: false
       - uses: actions/download-artifact@v1
+        name: Download backend
         with:
           name: backend
-          path: ./
+          path: ./backend
       - uses: actions/download-artifact@v1
+        name: Download frontend
         with:
           name: frontend
-          path: ./
-      - run: tree
+          path: ./frontend
+      - run: tar czvf bkci.tar.gz backend frontend
       - name: Upload Release Asset
         uses: actions/upload-release-asset@v1
         env:
@@ -100,5 +102,5 @@ jobs:
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: ./
-          asset_name: bkci.zip
-          asset_content_type: application/zip
+          asset_name: bkci.tar.gz
+          asset_content_type: application/gzip
