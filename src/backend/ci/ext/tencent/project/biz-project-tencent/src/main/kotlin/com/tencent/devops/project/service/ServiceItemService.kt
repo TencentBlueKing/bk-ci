@@ -1,5 +1,7 @@
 package com.tencent.devops.project.service
 
+import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
@@ -60,8 +62,8 @@ class ServiceItemService @Autowired constructor(
                 parentId = it.parentId
             )
             var childList = parentIndexMap[it.parentId]
-            if (childList != null && childList!!.isNotEmpty()) {
-                childList!!.add(it.id)
+            if (childList != null && childList.isNotEmpty()) {
+                childList.add(it.id)
             } else {
                 childList = mutableListOf()
                 childList.add(it.id)
@@ -292,8 +294,8 @@ class ServiceItemService @Autowired constructor(
         val itemCode = itemInfo.itemCode
         val itemRecord = serviceItemDao.getItemByCode(dslContext, itemCode)
         if (itemRecord != null) {
-            logger.warn("createItem itemCode is exsit, itemCode[$itemCode]")
-            throw InvalidParamException("扩展点已存在")
+            logger.warn("createItem itemCode is exist, itemCode[$itemCode]")
+            throw ErrorCodeException(errorCode = CommonMessageCode.PARAMETER_IS_EXIST, params = arrayOf(itemCode))
         }
         validArgs(itemInfo)
 
@@ -317,16 +319,17 @@ class ServiceItemService @Autowired constructor(
     }
 
     fun updateItem(userId: String, itemId: String, itemInfo: ItemInfoResponse): Result<Boolean> {
-        val itemRecordByCode = serviceItemDao.getItemByCode(dslContext, itemInfo.itemCode)
-
+        val itemCode = itemInfo.itemCode
+        val itemRecordByCode = serviceItemDao.getItemByCode(dslContext, itemCode)
         if (itemRecordByCode != null && itemId != itemRecordByCode.id) {
-            logger.warn("createItem itemName is exsit, itemName[$itemInfo.itemName]")
-            throw InvalidParamException("扩展点名称已存在")
+            logger.warn("createItem itemCode is exist, itemCode[$itemCode]")
+            throw ErrorCodeException(errorCode = CommonMessageCode.PARAMETER_IS_EXIST, params = arrayOf(itemCode))
         }
-        val itemRecordByHtmlPath = serviceItemDao.getItemByHtmlPath(dslContext, itemInfo.htmlPath)
+        val htmlPath = itemInfo.htmlPath
+        val itemRecordByHtmlPath = serviceItemDao.getItemByHtmlPath(dslContext, htmlPath)
         if (itemRecordByHtmlPath != null && itemId != itemRecordByHtmlPath.id) {
-            logger.warn("createItem itemName is exsit, itemName[$itemInfo.itemName]")
-            throw InvalidParamException("前端页面路径路径重复")
+            logger.warn("createItem htmlPath is exist, htmlPath[$htmlPath]")
+            throw ErrorCodeException(errorCode = CommonMessageCode.PARAMETER_IS_EXIST, params = arrayOf(htmlPath))
         }
 
         validProps(itemInfo.props)
@@ -347,34 +350,36 @@ class ServiceItemService @Autowired constructor(
     }
 
     private fun validArgs(itemInfo: ItemInfoResponse) {
-        val itemRecordByCode = serviceItemDao.getItemByCode(dslContext, itemInfo.itemCode)
-
+        val itemCode = itemInfo.itemCode
+        val itemRecordByCode = serviceItemDao.getItemByCode(dslContext, itemCode)
         if (itemRecordByCode != null) {
-            logger.warn("createItem itemName is exsit, itemName[$itemInfo.itemName]")
-            throw InvalidParamException("扩展点名称已存在")
+            logger.warn("createItem itemCode is exist, itemCode[$itemCode]")
+            throw ErrorCodeException(errorCode = CommonMessageCode.PARAMETER_IS_EXIST, params = arrayOf(itemCode))
         }
-        val itemRecordByHtmlPath = serviceItemDao.getItemByHtmlPath(dslContext, itemInfo.htmlPath)
+        val htmlPath = itemInfo.htmlPath
+        val itemRecordByHtmlPath = serviceItemDao.getItemByHtmlPath(dslContext, htmlPath)
         if (itemRecordByHtmlPath != null) {
-            logger.warn("createItem itemName is exsit, itemName[$itemInfo.itemName]")
-            throw InvalidParamException("前端页面路径路径重复")
+            logger.warn("createItem htmlPath is exist, htmlPath[$htmlPath]")
+            throw ErrorCodeException(errorCode = CommonMessageCode.PARAMETER_IS_EXIST, params = arrayOf(htmlPath))
         }
         validProps(itemInfo.props)
     }
 
     private fun validProps(props: String?) {
         if (props.isNullOrEmpty()) {
-            throw InvalidParamException("props信息为空")
+            throw ErrorCodeException(errorCode = CommonMessageCode.PARAMETER_IS_NULL, params = arrayOf("props"))
         }
 
         try {
             JsonUtil.toJson(props!!)
         } catch (e: Exception) {
-            throw InvalidParamException("props信息非json结构")
+            throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_INVALID_PARAM_, params = arrayOf("props"))
         }
     }
 
     fun getItem(itemId: String): Result<ServiceItem?> {
-        val itemRecord = serviceItemDao.getItemById(dslContext, itemId) ?: throw InvalidParamException("数据不存在")
+        val itemRecord = serviceItemDao.getItemById(dslContext, itemId)
+            ?: throw ErrorCodeException(errorCode = CommonMessageCode.PARAMETER_IS_INVALID, params = arrayOf(itemId))
         val itemInfo = ServiceItem(
             itemId = itemRecord.id,
             itemName = itemRecord.itemName,
@@ -414,7 +419,8 @@ class ServiceItemService @Autowired constructor(
     }
 
     private fun isItemCanDeleteOrDisable(itemId: String): Boolean {
-        val itemRecord = serviceItemDao.getItemById(dslContext, itemId) ?: throw InvalidParamException("数据不存在")
+        val itemRecord = serviceItemDao.getItemById(dslContext, itemId)
+            ?: throw ErrorCodeException(errorCode = CommonMessageCode.PARAMETER_IS_INVALID, params = arrayOf(itemId))
         val count = itemRecord.serviceNum
         if (count == 0) {
             return true
