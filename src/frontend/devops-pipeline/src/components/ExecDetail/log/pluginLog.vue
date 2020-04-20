@@ -1,17 +1,30 @@
 <template>
-    <virtual-scroll class="log-scroll" ref="scroll" :id="id" :worker="worker">
-        <template slot-scope="item">
-            <span class="item-txt selection-color">
-                <span class="item-time selection-color" v-if="showTime">{{(item.data.isNewLine ? '' : item.data.timestamp)|timeFilter}}</span>
-                <span :class="['selection-color', { 'cur-search': curSearchIndex === item.data.index }]" :style="`color: ${item.data.color};font-weight: ${item.data.fontWeight}`" v-html="valuefilter(item.data.value)"></span>
-            </span>
-        </template>
-    </virtual-scroll>
+    <section class="plugin-log">
+        <search :worker="worker"
+            :execute-count="executeCount"
+            :search-str.sync="searchStr"
+            :show-time.sync="showTime"
+            @showSearchLog="showSearchLog"
+            @changeExecute="changeExecute"
+
+        ></search>
+        <virtual-scroll class="log-scroll" ref="scroll" :id="id" :worker="worker">
+            <template slot-scope="item">
+                <span class="item-txt selection-color">
+                    <span class="item-time selection-color" v-if="showTime">{{(item.data.isNewLine ? '' : item.data.timestamp)|timeFilter}}</span>
+                    <span :class="['selection-color', { 'cur-search': curSearchIndex === item.data.index }]" :style="`color: ${item.data.color};font-weight: ${item.data.fontWeight}`" v-html="valuefilter(item.data.value)"></span>
+                </span>
+            </template>
+        </virtual-scroll>
+    </section>
 </template>
 
 <script>
     import { mapActions } from 'vuex'
     import virtualScroll from './virtualScroll'
+    import search from '../tools/search'
+    // eslint-disable-next-line
+    const Worker = require('worker-loader!./worker.js')
 
     function prezero (num) {
         num = Number(num)
@@ -27,8 +40,6 @@
     }
 
     export default {
-        inject: ['worker'],
-
         filters: {
             timeFilter (val) {
                 if (!val) return ''
@@ -38,7 +49,8 @@
         },
 
         components: {
-            virtualScroll
+            virtualScroll,
+            search
         },
 
         props: {
@@ -48,22 +60,19 @@
             currentTab: {
                 type: String
             },
-            showTime: {
-                type: Boolean
-            },
             buildId: {
                 type: String
             },
             executeCount: {
                 type: Number
-            },
-            searchStr: {
-                type: String
             }
         },
 
         data () {
             return {
+                searchStr: '',
+                showTime: false,
+                worker: new Worker(),
                 curSearchIndex: 0,
                 postData: {
                     projectId: this.$route.params.projectId,
@@ -208,6 +217,12 @@
 </script>
 
 <style lang="scss" scoped>
+    .plugin-log {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+    }
+
     .log-scroll {
         flex: 1;
         color: #ffffff;
@@ -219,7 +234,7 @@
         font-size: 12px;
         line-height: 16px;
         margin-left: 10px;
-        margin-top: 16px;
+        margin-top: 5px;
         .item-txt {
             position: relative;
             padding: 0 5px;

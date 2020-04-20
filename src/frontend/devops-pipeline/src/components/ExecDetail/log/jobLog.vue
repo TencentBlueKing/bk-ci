@@ -1,27 +1,40 @@
 <template>
-    <ul class="plugin-list" ref="pluginList" v-show="currentTab === 'log'">
-        <li v-for="plugin in pluginList" :key="plugin.id" class="plugin-item">
-            <p class="item-head" @click="expendLog(plugin)">
-                <span :class="[{ 'show-all': !!curFoldList[plugin.id] }, 'log-folder']"></span>
-                <status-icon :status="plugin.status"></status-icon>
-                {{ plugin.name }}
-            </p>
-            <virtual-scroll class="log-scroll" :ref="plugin.id" v-show="curFoldList[plugin.id]" :max-height="maxHeight" :id="plugin.id" :worker="worker">
-                <template slot-scope="item">
-                    <span class="item-txt selection-color">
-                        <span class="item-time selection-color" v-if="showTime">{{(item.data.isNewLine ? '' : item.data.timestamp)|timeFilter}}</span>
-                        <span :class="['selection-color', { 'cur-search': curSearchIndex === item.data.index }]" :style="`color: ${item.data.color};font-weight: ${item.data.fontWeight}`" v-html="valuefilter(item.data.value)"></span>
-                    </span>
-                </template>
-            </virtual-scroll>
-        </li>
-    </ul>
+    <section class="job-log">
+        <search :worker="worker"
+            :execute-count="executeCount"
+            :search-str.sync="searchStr"
+            :show-time.sync="showTime"
+            @showSearchLog="showSearchLog"
+            @changeExecute="changeExecute"
+
+        ></search>
+        <ul class="plugin-list" ref="pluginList">
+            <li v-for="plugin in pluginList" :key="plugin.id" class="plugin-item">
+                <p class="item-head" @click="expendLog(plugin)">
+                    <span :class="[{ 'show-all': !!curFoldList[plugin.id] }, 'log-folder']"></span>
+                    <status-icon :status="plugin.status"></status-icon>
+                    {{ plugin.name }}
+                </p>
+                <virtual-scroll class="log-scroll" :ref="plugin.id" v-show="curFoldList[plugin.id]" :max-height="maxHeight" :id="plugin.id" :worker="worker">
+                    <template slot-scope="item">
+                        <span class="item-txt selection-color">
+                            <span class="item-time selection-color" v-if="showTime">{{(item.data.isNewLine ? '' : item.data.timestamp)|timeFilter}}</span>
+                            <span :class="['selection-color', { 'cur-search': curSearchIndex === item.data.index }]" :style="`color: ${item.data.color};font-weight: ${item.data.fontWeight}`" v-html="valuefilter(item.data.value)"></span>
+                        </span>
+                    </template>
+                </virtual-scroll>
+            </li>
+        </ul>
+    </section>
 </template>
 
 <script>
     import { mapActions } from 'vuex'
     import virtualScroll from './virtualScroll'
-    import statusIcon from './status'
+    import statusIcon from '../status'
+    import search from '../tools/search'
+    // eslint-disable-next-line
+    const Worker = require('worker-loader!./worker.js')
 
     function prezero (num) {
         num = Number(num)
@@ -37,8 +50,6 @@
     }
 
     export default {
-        inject: ['worker'],
-
         filters: {
             timeFilter (val) {
                 if (!val) return ''
@@ -49,29 +60,25 @@
 
         components: {
             virtualScroll,
-            statusIcon
+            statusIcon,
+            search
         },
 
         props: {
-            currentTab: {
-                type: String
-            },
-            showTime: {
-                type: Boolean
-            },
             buildId: {
                 type: String
             },
             pluginList: {
                 type: Array
-            },
-            searchStr: {
-                type: String
             }
         },
 
         data () {
             return {
+                executeCount: 1,
+                searchStr: '',
+                showTime: false,
+                worker: new Worker(),
                 curFoldList: this.pluginList.map(plugin => ({ [plugin.id]: false })),
                 maxHeight: 0,
                 curSearchIndex: 0,
@@ -223,8 +230,11 @@
 </script>
 
 <style lang="scss" scoped>
+    .job-log {
+        height: calc(100% - 59px);
+    }
     .plugin-list {
-        height: calc(100% - 52px);
+        height: 100%;
         overflow: auto;
     }
     .plugin-item {
