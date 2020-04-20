@@ -1,22 +1,21 @@
 <template>
-    <log-container @closeLog="$emit('closeLog')"
-        @showSearchLog="showSearchLog"
+    <detail-container @closeLog="$emit('closeLog')"
         :title="currentJob.name"
         :status="currentJob.status"
-        :show-time.sync="showTime"
-        :search-str.sync="searchStr"
-        :down-load-link="downLoadJobLink"
         :current-tab="currentTab"
     >
         <span class="head-tab" slot="tab">
             <span @click="currentTab = 'log'" :class="{ active: currentTab === 'log' }">日志</span><span @click="currentTab = 'setting'" :class="{ active: currentTab === 'setting' }">配置</span>
         </span>
+        <span slot="tool"
+            v-if="currentTab === 'setting'"
+            class="tool-debug"
+            @click="startDebug"
+        >{{ $t('editPage.docker.debugConsole') }}</span>
         <template v-slot:content>
             <job-log v-show="currentTab === 'log'"
-                :show-time="showTime"
                 :plugin-list="pluginList"
                 :build-id="execDetail.id"
-                :search-str="searchStr"
                 ref="jobLog"
             />
             <container-content v-show="currentTab === 'setting'"
@@ -26,18 +25,18 @@
                 :editable="false"
             />
         </template>
-    </log-container>
+    </detail-container>
 </template>
 
 <script>
     import { mapState } from 'vuex'
-    import jobLog from './jobLog'
-    import logContainer from './logContainer'
+    import jobLog from './log/jobLog'
+    import detailContainer from './detailContainer'
     import ContainerContent from '@/components/ContainerPropertyPanel/ContainerContent'
 
     export default {
         components: {
-            logContainer,
+            detailContainer,
             jobLog,
             ContainerContent
         },
@@ -77,19 +76,19 @@
                 const startUp = { name: 'Set up job', status: this.currentJob.startVMStatus, id: `startVM-${this.currentJob.id}` }
                 return [startUp, ...this.currentJob.elements]
             }
-        },
-
-        methods: {
-            showSearchLog (res) {
-                this.$refs.jobLog.showSearchLog(res)
-            }
         }
     }
 </script>
 
 <style lang="scss" scoped>
     /deep/ .container-property-panel {
-        padding: 0 50px;
+        padding: 10px 50px;
         overflow: auto;
+    }
+    .tool-debug {
+        cursor: pointer;
+        font-size: 14px;
+        margin-right: 5px;
+        color: #3c96ff;
     }
 </style>

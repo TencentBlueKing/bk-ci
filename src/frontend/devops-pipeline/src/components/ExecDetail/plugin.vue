@@ -1,5 +1,5 @@
 <template>
-    <log-container
+    <detail-container
         @closeLog="$emit('closeLog')"
         @changeExecute="changeExecute"
         @showSearchLog="showSearchLog"
@@ -34,18 +34,18 @@
             >
             </atom-content>
         </template>
-    </log-container>
+    </detail-container>
 </template>
 
 <script>
     import { mapState } from 'vuex'
-    import logContainer from './logContainer'
+    import detailContainer from './detailContainer'
     import AtomContent from '@/components/AtomPropertyPanel/AtomContent.vue'
-    import pluginLog from './pluginLog'
+    import pluginLog from './log/pluginLog'
 
     export default {
         components: {
-            logContainer,
+            detailContainer,
             AtomContent,
             pluginLog
         },
@@ -96,6 +96,6 @@
 
 <style lang="scss" scoped>
     /deep/ .atom-property-panel {
-        padding: 0 50px;
+        padding: 10px 50px;
     }
 </style>
