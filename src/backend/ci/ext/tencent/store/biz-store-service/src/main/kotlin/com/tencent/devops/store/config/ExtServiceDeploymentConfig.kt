@@ -41,6 +41,9 @@ class ExtServiceDeploymentConfig {
     @Value("\${store.extService.bcs.deployment.replicas}")
     val replicas: String = ""
 
+    @Value("\${store.extService.bcs.deployment.grayReplicas}")
+    val grayReplicas: String = ""
+
     @Value("\${store.extService.bcs.deployment.containerPort}")
     val containerPort: String = ""
 }

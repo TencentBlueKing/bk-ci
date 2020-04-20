@@ -136,7 +136,10 @@ class ServiceItemDao {
             if (itemQueryInfo.serviceId != null) {
                 whereStep.where(PARENT_ID.eq(itemQueryInfo.serviceId))
             }
-            whereStep.where(ITEM_STATUS.notEqual(ServiceItemStatusEnum.DELETE.name))
+            val itemStatusList = itemQueryInfo.itemStatusList
+            if (itemStatusList != null) {
+                whereStep.where(ITEM_STATUS.`in`(itemStatusList))
+            }
             if (itemQueryInfo.page != null && itemQueryInfo.pageSize != null) {
                 whereStep.limit((itemQueryInfo.page - 1) * itemQueryInfo.pageSize, itemQueryInfo.pageSize).fetch()
             } else {
@@ -155,7 +158,10 @@ class ServiceItemDao {
             if (itemQueryInfo.serviceId != null) {
                 whereStep.where(PARENT_ID.eq(itemQueryInfo.serviceId))
             }
-            whereStep.where(ITEM_STATUS.notEqual(ServiceItemStatusEnum.DELETE.name))
+            val itemStatusList = itemQueryInfo.itemStatusList
+            if (itemStatusList != null) {
+                whereStep.where(ITEM_STATUS.`in`(itemStatusList))
+            }
 
             whereStep.fetchOne(0, Int::class.java)
         }

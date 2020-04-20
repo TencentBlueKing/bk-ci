@@ -1,5 +1,6 @@
 package com.tencent.devops.project.service
 
+import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
@@ -260,7 +261,7 @@ class ServiceItemService @Autowired constructor(
     fun queryItem(itemName: String?, serviceId: String?, page: Int?, pageSize: Int?): Result<ItemListVO> {
         val query = ItemQueryInfo(
             itemName = itemName,
-            itemStatus = ServiceItemStatusEnum.ENABLE,
+            itemStatusList = listOf(ServiceItemStatusEnum.ENABLE, ServiceItemStatusEnum.DISABLE),
             serviceId = serviceId,
             pageSize = pageSize,
             page = page
@@ -292,7 +293,7 @@ class ServiceItemService @Autowired constructor(
         val itemRecord = serviceItemDao.getItemByCode(dslContext, itemCode)
         if (itemRecord != null) {
             logger.warn("createItem itemCode is exsit, itemCode[$itemCode]")
-            throw RuntimeException("扩展点已存在")
+            throw InvalidParamException("扩展点已存在")
         }
         validArgs(itemInfo)
 
@@ -320,12 +321,12 @@ class ServiceItemService @Autowired constructor(
 
         if (itemRecordByCode != null && itemId != itemRecordByCode.id) {
             logger.warn("createItem itemName is exsit, itemName[$itemInfo.itemName]")
-            throw RuntimeException("扩展点名称已存在")
+            throw InvalidParamException("扩展点名称已存在")
         }
         val itemRecordByHtmlPath = serviceItemDao.getItemByHtmlPath(dslContext, itemInfo.htmlPath)
         if (itemRecordByHtmlPath != null && itemId != itemRecordByHtmlPath.id) {
             logger.warn("createItem itemName is exsit, itemName[$itemInfo.itemName]")
-            throw RuntimeException("前端页面路径路径重复")
+            throw InvalidParamException("前端页面路径路径重复")
         }
 
         validProps(itemInfo.props)
@@ -350,30 +351,30 @@ class ServiceItemService @Autowired constructor(
 
         if (itemRecordByCode != null) {
             logger.warn("createItem itemName is exsit, itemName[$itemInfo.itemName]")
-            throw RuntimeException("扩展点名称已存在")
+            throw InvalidParamException("扩展点名称已存在")
         }
         val itemRecordByHtmlPath = serviceItemDao.getItemByHtmlPath(dslContext, itemInfo.htmlPath)
         if (itemRecordByHtmlPath != null) {
             logger.warn("createItem itemName is exsit, itemName[$itemInfo.itemName]")
-            throw RuntimeException("前端页面路径路径重复")
+            throw InvalidParamException("前端页面路径路径重复")
         }
         validProps(itemInfo.props)
     }
 
     private fun validProps(props: String?) {
         if (props.isNullOrEmpty()) {
-            throw RuntimeException("props信息为空")
+            throw InvalidParamException("props信息为空")
         }
 
         try {
             JsonUtil.toJson(props!!)
         } catch (e: Exception) {
-            throw RuntimeException("props信息非json结构")
+            throw InvalidParamException("props信息非json结构")
         }
     }
 
     fun getItem(itemId: String): Result<ServiceItem?> {
-        val itemRecord = serviceItemDao.getItemById(dslContext, itemId) ?: throw RuntimeException("数据不存在")
+        val itemRecord = serviceItemDao.getItemById(dslContext, itemId) ?: throw InvalidParamException("数据不存在")
         val itemInfo = ServiceItem(
             itemId = itemRecord.id,
             itemName = itemRecord.itemName,
@@ -393,7 +394,7 @@ class ServiceItemService @Autowired constructor(
 
     fun delete(userId: String, itemId: String): Result<Boolean> {
         if (!isItemCanDeleteOrDisable(itemId)) {
-            throw RuntimeException("扩展点已绑定扩展服务，不能操作")
+            throw InvalidParamException("扩展点已绑定扩展服务，不能操作")
         }
         serviceItemDao.delete(dslContext, userId, itemId)
         return Result(true)
@@ -401,7 +402,7 @@ class ServiceItemService @Autowired constructor(
 
     fun disable(userId: String, itemId: String): Result<Boolean> {
         if (!isItemCanDeleteOrDisable(itemId)) {
-            throw RuntimeException("扩展点已绑定扩展服务，不能禁用")
+            throw InvalidParamException("扩展点已绑定扩展服务，不能禁用")
         }
         serviceItemDao.disable(dslContext, userId, itemId)
         return Result(true)
@@ -413,7 +414,7 @@ class ServiceItemService @Autowired constructor(
     }
 
     private fun isItemCanDeleteOrDisable(itemId: String): Boolean {
-        val itemRecord = serviceItemDao.getItemById(dslContext, itemId) ?: throw RuntimeException("数据不存在")
+        val itemRecord = serviceItemDao.getItemById(dslContext, itemId) ?: throw InvalidParamException("数据不存在")
         val count = itemRecord.serviceNum
         if (count == 0) {
             return true
@@ -425,7 +426,7 @@ class ServiceItemService @Autowired constructor(
         logger.info("getItemsByServiceId serviceId is:$serviceId")
         val itemQueryInfo = ItemQueryInfo(
             serviceId = serviceId,
-            itemStatus = ServiceItemStatusEnum.ENABLE
+            itemStatusList = listOf(ServiceItemStatusEnum.ENABLE)
         )
         val itemList = mutableListOf<ServiceItemInfoVO>()
         serviceItemDao.queryItem(dslContext, itemQueryInfo)?.forEach {
@@ -450,6 +451,6 @@ class ServiceItemService @Autowired constructor(
     }
 
     companion object {
-        val logger = LoggerFactory.getLogger(this::class.java)
+        private val logger = LoggerFactory.getLogger(this::class.java)
     }
 }

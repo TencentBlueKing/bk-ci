@@ -97,7 +97,7 @@ class ExtServiceBcsService {
             namespaceName = namespaceName,
             appCode = serviceCode,
             appDeployment = AppDeployment(
-                replicas = extServiceDeploymentConfig.replicas.toInt(),
+                replicas = if (grayFlag) extServiceDeploymentConfig.grayReplicas.toInt() else extServiceDeploymentConfig.replicas.toInt(),
                 image = "${extServiceImageSecretConfig.repoRegistryUrl}/$imageName:$version",
                 pullImageSecretName = if (grayFlag) extServiceDeploymentConfig.grayPullImageSecretName else extServiceDeploymentConfig.pullImageSecretName,
                 containerPort = extServiceDeploymentConfig.containerPort.toInt()
@@ -123,16 +123,18 @@ class ExtServiceBcsService {
      * @param grayFlag 是否是灰度标识
      * @param serviceCode 扩展服务代码
      * @param version 扩展服务版本号
+     * @param checkPermissionFlag 是否需要校验权限（op系统操作不需要校验）
      */
     fun deployExtService(
         userId: String,
         grayFlag: Boolean,
         serviceCode: String,
-        version: String
+        version: String,
+        checkPermissionFlag: Boolean = true
     ): Result<Boolean> {
         logger.info("deployExtService userId is:$userId,grayFlag is:$grayFlag")
-        logger.info("deployExtService serviceCode is:$serviceCode,version is:$version")
-        if (!storeMemberDao.isStoreMember(dslContext, userId, serviceCode, StoreTypeEnum.SERVICE.type.toByte())) {
+        logger.info("deployExtService serviceCode is:$serviceCode,version is:$version,checkPermissionFlag is:$checkPermissionFlag")
+        if (checkPermissionFlag && !storeMemberDao.isStoreMember(dslContext, userId, serviceCode, StoreTypeEnum.SERVICE.type.toByte())) {
             return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED)
         }
         val namespaceName = if (!grayFlag) extServiceBcsNameSpaceConfig.namespaceName else extServiceBcsNameSpaceConfig.grayNamespaceName
@@ -151,16 +153,18 @@ class ExtServiceBcsService {
      * @param serviceCode 扩展服务代码
      * @param deploymentName deployment名称
      * @param serviceName service名称
+     * @param checkPermissionFlag 是否需要校验权限（op系统操作不需要校验）
      */
     fun stopExtService(
         userId: String,
         serviceCode: String,
         deploymentName: String,
-        serviceName: String
+        serviceName: String,
+        checkPermissionFlag: Boolean = true
     ): Result<Boolean> {
         logger.info("stopExtService userId is:$userId,serviceCode is:$serviceCode")
-        logger.info("stopExtService deploymentName is:$deploymentName,serviceName is:$serviceName")
-        if (!storeMemberDao.isStoreAdmin(dslContext, userId, serviceCode, StoreTypeEnum.SERVICE.type.toByte())) {
+        logger.info("stopExtService deploymentName is:$deploymentName,serviceName is:$serviceName,checkPermissionFlag is:$checkPermissionFlag")
+        if (checkPermissionFlag && !storeMemberDao.isStoreAdmin(dslContext, userId, serviceCode, StoreTypeEnum.SERVICE.type.toByte())) {
             return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED)
         }
         // 停止扩展服务部署（灰度命名空间和正式命名空间的扩展服务应用都需停止）

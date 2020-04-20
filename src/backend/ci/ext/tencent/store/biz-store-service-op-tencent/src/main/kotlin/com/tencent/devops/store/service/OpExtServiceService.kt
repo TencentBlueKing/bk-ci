@@ -237,7 +237,8 @@ class OpExtServiceService @Autowired constructor(
                 userId = userId,
                 grayFlag = false,
                 serviceCode = serviceCode,
-                version = serviceRecord.version
+                version = serviceRecord.version,
+                checkPermissionFlag = false
             )
             logger.info("deployExtServiceResult is:$deployExtServiceResult")
             if (deployExtServiceResult.isNotOk()) {

@@ -11,7 +11,7 @@ data class ItemQueryInfo(
     @ApiModelProperty("扩展点名称", required = false)
     val itemName: String? = null,
     @ApiModelProperty("扩展点状态", required = false)
-    val itemStatus: ServiceItemStatusEnum? = ServiceItemStatusEnum.ENABLE,
+    val itemStatusList: List<ServiceItemStatusEnum>?,
     @ApiModelProperty("页数", required = false)
     val page: Int? = 1,
     @ApiModelProperty("每页条数", required = false)
