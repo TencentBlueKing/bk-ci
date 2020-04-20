@@ -11,8 +11,10 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.DockerVersion
 import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
 import com.tencent.devops.common.pipeline.type.docker.ImageType
+import com.tencent.devops.common.redis.RedisLock
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.dispatch.dao.PipelineDockerBuildDao
-import com.tencent.devops.dispatch.dao.PipelineDockerTaskSimpleDao
+import com.tencent.devops.dispatch.dao.PipelineDockerPoolDao
 import com.tencent.devops.dispatch.exception.DockerServiceException
 import com.tencent.devops.dispatch.pojo.DockerHostBuildInfo
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
@@ -38,6 +40,7 @@ class DockerHostClient @Autowired constructor(
     private val pipelineDockerBuildDao: PipelineDockerBuildDao,
     private val dockerHostUtils: DockerHostUtils,
     private val redisUtils: RedisUtils,
+    private val redisOperation: RedisOperation,
     private val client: Client,
     private val dslContext: DSLContext
 ) {
@@ -57,7 +60,8 @@ class DockerHostClient @Autowired constructor(
 
     fun startBuild(
         event: PipelineAgentStartupEvent,
-        dockerIp: String
+        dockerIp: String,
+        poolNo: Int
     ) {
         val secretKey = ApiUtil.randomSecretKey()
         val id = pipelineDockerBuildDao.startBuild(
@@ -73,7 +77,8 @@ class DockerHostClient @Autowired constructor(
             } else {
                 event.zone!!.name
             },
-            dockerIp = dockerIp
+            dockerIp = dockerIp,
+            poolNo = poolNo
         )
         val agentId = HashUtil.encodeLongId(id)
         redisUtils.setDockerBuild(
@@ -136,6 +141,7 @@ class DockerHostClient @Autowired constructor(
             dockerImage!!,
             "",
             true,
+            poolNo,
             userName ?: "",
             password ?: "",
             dispatchType.imageType?.type,
@@ -159,6 +165,7 @@ class DockerHostClient @Autowired constructor(
             "",
             containerId,
             true,
+            0,
             event.userId,
             "",
             "",
