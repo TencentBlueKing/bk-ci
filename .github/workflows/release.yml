@@ -56,7 +56,7 @@ jobs:
       run: echo "::set-output name=dir::$(yarn cache dir)"
 
     - uses: actions/cache@v1
-      id: yarn-cache # use this to check for `cache-hit` (`steps.yarn-cache.outputs.cache-hit != 'true'`)
+      id: yarn-cache
       with:
         path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
         key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
@@ -87,28 +87,18 @@ jobs:
       - uses: actions/download-artifact@v1
         with:
           name: backend
-          path: ./backend.zip
+          path: ./
       - uses: actions/download-artifact@v1
         with:
           name: frontend
-          path: ./frontend.zip
-      - run: ls --color -lh
-
-      - name: Upload Release Asset - backend
+          path: ./
+      - run: tree
+      - name: Upload Release Asset
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
-          asset_path: ./backend.zip
-          asset_name: backend.zip
-          asset_content_type: application/zip
-      - name: Upload Release Asset - frontend
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
-          asset_path: ./frontend.zip
-          asset_name: frontend.zip
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./
+          asset_name: bkci.zip
           asset_content_type: application/zip
