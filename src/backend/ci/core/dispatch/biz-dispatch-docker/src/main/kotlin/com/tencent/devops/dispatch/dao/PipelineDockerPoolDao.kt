@@ -26,9 +26,13 @@
 
 package com.tencent.devops.dispatch.dao
 
+import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.model.dispatch.tables.TDispatchPipelineDockerPool
+import com.tencent.devops.model.dispatch.tables.TDispatchPipelineDockerTask
 import com.tencent.devops.model.dispatch.tables.records.TDispatchPipelineDockerPoolRecord
 import org.jooq.DSLContext
+import org.jooq.Field
+import org.jooq.impl.DSL
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
@@ -87,11 +91,28 @@ class PipelineDockerPoolDao @Autowired constructor() {
         with(TDispatchPipelineDockerPool.T_DISPATCH_PIPELINE_DOCKER_POOL) {
             return dslContext.update(this)
                 .set(STATUS, status)
+                .set(GMT_MODIFIED, LocalDateTime.now())
                 .where(PIPELINE_ID.eq(pipelineId))
                 .and(VM_SEQ.eq(vmSeq))
                 .and(POOL_NO.eq(poolNo))
                 .execute() == 1
         }
+    }
+
+    fun updateTimeOutTask(dslContext: DSLContext): Boolean {
+        with(TDispatchPipelineDockerPool.T_DISPATCH_PIPELINE_DOCKER_POOL) {
+            return dslContext.update(this)
+                .set(STATUS, PipelineTaskStatus.FAILURE.status)
+//                    .where(timestampDiff(org.jooq.DatePart.DAY, UPDATED_TIME.cast(java.sql.Timestamp::class.java)).greaterOrEqual(2))
+                .set(GMT_MODIFIED, LocalDateTime.now())
+                .where(GMT_MODIFIED.lessOrEqual(timestampSubDay(2)))
+                .execute() == 1
+        }
+    }
+
+    fun timestampSubDay(day: Long): Field<LocalDateTime> {
+        return DSL.field("date_sub(NOW(), interval $day day)",
+            LocalDateTime::class.java)
     }
 }
 
