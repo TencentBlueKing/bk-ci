@@ -677,7 +677,6 @@ class DockerHostBuildService @Autowired constructor(
 
     fun getContainerInfo(buildId: String, vmSeqId: Int): Result<ContainerInfo> {
         logger.info("get containerId, buildId:$buildId, vmSeqId:$vmSeqId")
-        val task = pipelineDockerTaskDao.getTask(dslContext, buildId, vmSeqId)
         val buildHistory = pipelineDockerBuildDao.getBuild(dslContext, buildId, vmSeqId)
         if (buildHistory == null) {
             logger.warn("The build history not exists, buildId:$buildId, vmSeqId:$vmSeqId")
