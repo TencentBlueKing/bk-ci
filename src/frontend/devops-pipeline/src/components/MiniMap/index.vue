@@ -7,8 +7,8 @@
                 @mousedown="startMove"
             ></span>
         </main>
-        <Logo name="mapSee" size="32" class="min-map-logo" v-if="showMap" @click.native="showMap = false"></Logo>
-        <Logo name="mapUnSee" size="32" class="min-map-logo" v-else @click.native="showMap = true"></Logo>
+        <Logo name="mapSee" size="20" class="min-map-logo" v-if="showMap" @click.native="showMap = false"></Logo>
+        <Logo name="mapUnSee" size="20" class="min-map-logo" v-else @click.native="showMap = true"></Logo>
     </section>
 </template>
 
@@ -35,6 +35,26 @@
         fontSize: 25,
         containerLeftWidth: 42,
         lineWidth: 0.5
+    }
+
+    const statusColor = {
+        SUCCEED: '#34d97b',
+        FAILED: '#ff5656',
+        HEARTBEAT_TIMEOUT: '#ff5656',
+        QUEUE_TIMEOUT: '#ff5656',
+        EXEC_TIMEOUT: '#ff5656',
+        REVIEWING: '#ffb400',
+        REVIEW_ABORT: '#ffb400',
+        CANCELED: '#ffb400',
+        TERMINATE: '#ffb400'
+    }
+
+    const stageStatusColor = {
+        SUCCEED: '#f3fff6',
+        FAILED: '#fff9f9',
+        PAUSE: '#f3f3f3',
+        RUNNING: '#eff5ff',
+        SKIP: '#c3cdd7'
     }
 
     export default {
@@ -133,7 +153,7 @@
                     const startX = (index * (pipelineStyle.itemWidth + pipelineStyle.stageMarginRight) - (pipelineStyle.stageWidth - pipelineStyle.itemWidth) / 2) * this.rate
                     const startY = 0
                     if (startX >= 0) {
-                        this.canvasCtx.fillStyle = pipelineStyle.stageColor
+                        this.canvasCtx.fillStyle = stageStatusColor[stage.status] || pipelineStyle.stageColor
                         this.canvasCtx.fillRect(startX, startY, pipelineStyle.stageWidth * this.rate, pipelineStyle.stageHeight * this.rate)
                     }
                     const containers = stage.containers || []
@@ -145,17 +165,18 @@
 
             drawContainer (container) {
                 const elements = container.elements || []
-                this.canvasCtx.fillStyle = pipelineStyle.containerColor
+                this.canvasCtx.fillStyle = statusColor[container.status] || pipelineStyle.containerColor
                 this.canvasCtx.fillRect(this.drawContainer.x, this.drawContainer.y, pipelineStyle.itemWidth * this.rate, pipelineStyle.itemHeight * this.rate)
-                this.canvasCtx.fillStyle = pipelineStyle.containerLeftColor
+                this.canvasCtx.fillStyle = statusColor[container.status] || pipelineStyle.containerLeftColor
                 this.canvasCtx.fillRect(this.drawContainer.x, this.drawContainer.y, pipelineStyle.containerLeftWidth * this.rate, pipelineStyle.containerLeftWidth * this.rate)
                 this.drawContainer.y += (pipelineStyle.containerLeftWidth + pipelineStyle.containerBottomDis) * this.rate
+                if (elements.length <= 0) this.drawElement({})
                 elements.forEach((element) => this.drawElement(element))
                 this.drawContainer.y += (pipelineStyle.containerGap - pipelineStyle.atomBottomDis) * this.rate
             },
 
             drawElement (element) {
-                this.canvasCtx.strokeStyle = pipelineStyle.atomBorderColor
+                this.canvasCtx.strokeStyle = statusColor[element.status] || pipelineStyle.atomBorderColor
                 this.canvasCtx.strokeRect(this.drawContainer.x, this.drawContainer.y, pipelineStyle.itemWidth * this.rate, pipelineStyle.itemHeight * this.rate)
                 this.canvasCtx.fillStyle = pipelineStyle.atomColor
                 this.canvasCtx.fillRect(this.drawContainer.x, this.drawContainer.y, pipelineStyle.itemWidth * this.rate, pipelineStyle.itemHeight * this.rate)
@@ -205,7 +226,7 @@
         position: fixed;
         bottom: 36px;
         right: 36px;
-        z-index: 9000;
+        z-index: 4;
         background: #e6e6e6;
         box-shadow: 0px 0px 6px 0px rgba(49,50,56,0.1);
         border-radius: 2px;
@@ -234,15 +255,9 @@
         }
         .min-map-logo {
             position: absolute;
-            right: -16px;
-            bottom: -16px;
-            z-index: 65;
-            cursor: pointer;
-        }
-        .min-map-fresh {
-            position: absolute;
-            right: 5px;
-            bottom: 5px;
+            right: -10px;
+            bottom: -10px;
+            z-index: 5;
             cursor: pointer;
         }
     }
