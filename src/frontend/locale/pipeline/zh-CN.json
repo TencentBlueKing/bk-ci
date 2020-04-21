@@ -89,6 +89,14 @@
     "stageOptionLabel": "本Stage执行条件",
     "stageTriggerDesc": "多个人员用英文逗号分隔",
     "skipStageDesc": "已跳过",
+    "execDetail": {
+        "log": "日志",
+        "setting": "配置",
+        "execTime": "重试次数",
+        "showTime": "显示时间",
+        "downLoadLog": "下载日志",
+        "emptyLog": "日志内容为空"
+    },
     "timeMap": {
         "days": "天",
         "hours": "小时",

@@ -12,7 +12,7 @@
         :current-tab="currentTab"
     >
         <span class="head-tab" slot="tab">
-            <span @click="currentTab = 'log'" :class="{ active: currentTab === 'log' }">日志</span><span @click="currentTab = 'setting'" :class="{ active: currentTab === 'setting' }">配置</span>
+            <span @click="currentTab = 'log'" :class="{ active: currentTab === 'log' }">{{ $t('execDetail.log') }}</span><span @click="currentTab = 'setting'" :class="{ active: currentTab === 'setting' }">{{ $t('execDetail.setting') }}</span>
         </span>
         <reference-variable slot="tool" class="head-tool" :global-envs="globalEnvs" :stages="stages" :container="container" v-if="currentTab === 'setting'" />
         <template v-slot:content>
@@ -22,6 +22,7 @@
                 :current-tab="currentTab"
                 :execute-count="executeCount"
                 :search-str="searchStr"
+                :down-load-link="downLoadPluginLink"
                 ref="log"
                 v-show="currentTab === 'log'"
             />
@@ -39,7 +40,7 @@
 </template>
 
 <script>
-    import { mapState, mapActions } from 'vuex'
+    import { mapState } from 'vuex'
     import detailContainer from './detailContainer'
     import AtomContent from '@/components/AtomPropertyPanel/AtomContent.vue'
     import ReferenceVariable from '@/components/AtomPropertyPanel/ReferenceVariable'
@@ -97,17 +98,7 @@
             }
         },
 
-        mounted () {
-            if (!this.globalEnvs) {
-                this.requestGlobalEnvs()
-            }
-        },
-
         methods: {
-            ...mapActions('atom', [
-                'requestGlobalEnvs'
-            ]),
-
             showSearchLog (res) {
                 this.$refs.log.showSearchLog(res)
             },

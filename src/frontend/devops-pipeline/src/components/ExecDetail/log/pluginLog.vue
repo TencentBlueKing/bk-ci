@@ -4,6 +4,7 @@
             :execute-count="executeCount"
             :search-str.sync="searchStr"
             :show-time.sync="showTime"
+            :down-load-link="downLoadLink"
             @showSearchLog="showSearchLog"
             @changeExecute="changeExecute"
 
@@ -65,6 +66,9 @@
             },
             executeCount: {
                 type: Number
+            },
+            downLoadLink: {
+                type: String
             }
         },
 
