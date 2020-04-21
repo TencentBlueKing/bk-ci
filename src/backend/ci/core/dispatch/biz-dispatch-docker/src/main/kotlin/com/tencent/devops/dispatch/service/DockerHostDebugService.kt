@@ -92,6 +92,7 @@ class DockerHostDebugService @Autowired constructor(
         projectId: String,
         pipelineId: String,
         vmSeqId: String,
+        poolNo: Int,
         imageCode: String?,
         imageVersion: String?,
         imageName: String?,
@@ -188,7 +189,7 @@ class DockerHostDebugService @Autowired constructor(
         // 根据dockerIp定向调用dockerhost
         val url = "http://$dockerIp/api/docker/debug/start"
         val proxyUrl = "$idcProxy/proxy-devnet?url=${urlEncode(url)}"
-        val requestBody = ContainerInfo(projectId, pipelineId, vmSeqId, PipelineTaskStatus.RUNNING.status, dockerImage,
+        val requestBody = ContainerInfo(projectId, pipelineId, vmSeqId, poolNo, PipelineTaskStatus.RUNNING.status, dockerImage,
             "", "", "", buildEnvStr, userName, password, newImageType)
         val request = Request.Builder().url(proxyUrl)
             .post(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), JsonUtil.toJson(requestBody)))
@@ -209,6 +210,7 @@ class DockerHostDebugService @Autowired constructor(
                         projectId = projectId,
                         pipelineId = pipelineId,
                         vmSeqId = vmSeqId,
+                        poolNo = poolNo,
                         status = PipelineTaskStatus.RUNNING,
                         token = "",
                         imageName = dockerImage.trim(),
@@ -256,6 +258,7 @@ class DockerHostDebugService @Autowired constructor(
             val requestBody = ContainerInfo(projectId,
                 pipelineId,
                 vmSeqId,
+                pipelineDockerDebug.poolNo,
                 pipelineDockerDebug.status,
                 pipelineDockerDebug.imageName,
                 pipelineDockerDebug.containerId,
@@ -316,6 +319,7 @@ class DockerHostDebugService @Autowired constructor(
                 projectId = debugTask.projectId,
                 pipelineId = debugTask.pipelineId,
                 vmSeqId = debugTask.vmSeqId,
+                poolNo = debugTask.poolNo,
                 status = debugTask.status,
                 imageName = debugTask.imageName,
                 containerId = debugTask.containerId ?: "",
@@ -390,6 +394,7 @@ class DockerHostDebugService @Autowired constructor(
                     projectId = debug.projectId,
                     pipelineId = debug.pipelineId,
                     vmSeqId = debug.vmSeqId,
+                    poolNo = 0,
                     status = PipelineTaskStatus.RUNNING.status,
                     imageName = debug.imageName,
                     containerId = "",
@@ -529,6 +534,7 @@ class DockerHostDebugService @Autowired constructor(
                     projectId = debug.projectId,
                     pipelineId = debug.pipelineId,
                     vmSeqId = debug.vmSeqId,
+                    poolNo = 0,
                     status = debug.status,
                     imageName = debug.imageName,
                     containerId = debug.containerId,

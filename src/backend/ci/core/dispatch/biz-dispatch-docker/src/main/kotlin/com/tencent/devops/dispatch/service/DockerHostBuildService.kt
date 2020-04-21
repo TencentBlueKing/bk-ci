@@ -678,8 +678,9 @@ class DockerHostBuildService @Autowired constructor(
     fun getContainerInfo(buildId: String, vmSeqId: Int): Result<ContainerInfo> {
         logger.info("get containerId, buildId:$buildId, vmSeqId:$vmSeqId")
         val task = pipelineDockerTaskDao.getTask(dslContext, buildId, vmSeqId)
-        if (task == null) {
-            logger.warn("The build task not exists, buildId:$buildId, vmSeqId:$vmSeqId")
+        val buildHistory = pipelineDockerBuildDao.getBuild(dslContext, buildId, vmSeqId)
+        if (buildHistory == null) {
+            logger.warn("The build history not exists, buildId:$buildId, vmSeqId:$vmSeqId")
             return Result(1, "Container not exists")
         }
 
@@ -687,18 +688,19 @@ class DockerHostBuildService @Autowired constructor(
             status = 0,
             message = "success",
             data = ContainerInfo(
-                projectId = task.projectId,
-                pipelineId = task.pipelineId,
-                vmSeqId = task.vmSeqId.toString(),
-                status = task.status,
-                imageName = task.imageName,
-                containerId = task.containerId,
-                address = task.hostTag,
+                projectId = buildHistory.projectId,
+                pipelineId = buildHistory.pipelineId,
+                vmSeqId = buildHistory.vmSeqId.toString(),
+                poolNo = buildHistory.poolNo,
+                status = buildHistory.status,
+                imageName = "",
+                containerId = buildHistory.containerId,
+                address = buildHistory.dockerIp,
                 token = "",
                 buildEnv = "",
-                registryUser = task.registryUser,
-                registryPwd = task.registryPwd,
-                imageType = task.imageType
+                registryUser = "",
+                registryPwd = "",
+                imageType = ""
             )
         )
     }
