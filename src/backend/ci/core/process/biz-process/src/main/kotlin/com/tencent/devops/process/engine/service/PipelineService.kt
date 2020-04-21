@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.PipelineAlreadyExistException
 import com.tencent.devops.common.api.model.SQLLimit
 import com.tencent.devops.common.api.model.SQLPage
+import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.auth.api.AuthPermission
@@ -96,6 +97,7 @@ import org.springframework.stereotype.Service
 import org.springframework.util.StopWatch
 import java.time.LocalDateTime
 import java.util.Collections
+import java.util.Date
 import javax.ws.rs.core.Response
 
 @Service
@@ -966,6 +968,7 @@ class PipelineService @Autowired constructor(
 
         val watch = StopWatch()
         watch.start("perm_r_perm")
+        logger.info("getResourceByPermission startTime:${DateTimeUtil.formatDate(Date())}")
         val authPipelines = if (authPipelineIds.isEmpty()) {
             pipelinePermissionService.getResourceByPermission(
                 userId = userId, projectId = projectId, permission = AuthPermission.LIST
@@ -973,6 +976,7 @@ class PipelineService @Autowired constructor(
         } else {
             authPipelineIds
         }
+        logger.info("getResourceByPermission endTime:${DateTimeUtil.formatDate(Date())}")
         watch.stop()
 
         watch.start("s_r_summary")
@@ -1035,7 +1039,7 @@ class PipelineService @Autowired constructor(
         )
         logger.info("getPipelines totalAvailablePipelineSize is :$totalAvailablePipelineSize,totalInvalidPipelineSize is :$totalInvalidPipelineSize")
         val pipelineList = mutableListOf<Pipeline>()
-        val totalSize = totalAvailablePipelineSize + totalAvailablePipelineSize
+        val totalSize = totalAvailablePipelineSize + totalInvalidPipelineSize
         if ((null != page && null != pageSize) && (page != 1 && pageSize != -1)) {
             // 判断可用的流水线是否已到最后一页
             val totalAvailablePipelinePage = PageUtil.calTotalPage(pageSize, totalSize)
@@ -1671,6 +1675,19 @@ class PipelineService @Autowired constructor(
         val pipelines = mutableListOf<Pipeline>()
         val currentTimestamp = System.currentTimeMillis()
         val latestBuildEstimatedExecutionSeconds = 1L
+        val pipelineIds = mutableSetOf<String>()
+        pipelineBuildSummary.forEach {
+            val pipelineId = it["PIPELINE_ID"] as String
+            if (excludePipelineId != null && excludePipelineId == pipelineId) {
+                return@forEach // 跳过这个
+            }
+            pipelineIds.add(pipelineId)
+        }
+        val pipelineRecords = templatePipelineDao.listByPipelines(dslContext, pipelineIds)
+        val pipelineTemplateMap = mutableMapOf<String, String>()
+        pipelineRecords.forEach {
+            pipelineTemplateMap[it.pipelineId] = it.templateId
+        }
         pipelineBuildSummary.forEach {
             val pipelineId = it["PIPELINE_ID"] as String
             if (excludePipelineId != null && excludePipelineId == pipelineId) {
@@ -1733,7 +1750,7 @@ class PipelineService @Autowired constructor(
                     hasPermission = authPipelines.contains(pipelineId),
                     hasCollect = favorPipelines.contains(pipelineId),
                     latestBuildUserId = starter,
-                    instanceFromTemplate = templatePipelineDao.get(dslContext, pipelineId) != null,
+                    instanceFromTemplate = pipelineTemplateMap[pipelineId] != null,
                     creator = creator
                 )
             )
