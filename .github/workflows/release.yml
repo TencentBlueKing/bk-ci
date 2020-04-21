@@ -127,11 +127,10 @@ jobs:
           cp -rf support-files/ bkci/
           cp -rf support-files/agent-package bkci/
           cp -rf scripts/ bkci/
-          # 前端的模板文件需要动态生成
+          
           cp -f bkci/frontend/console/frontend#console#index.html bkci/support-files/templates/frontend#console#index.html
           cp -f bkci/frontend/pipeline/frontend#pipeline#index.html bkci/support-files/templates/frontend#pipeline#index.html
 
-          # BKCI服务列表写入project
           cp -f bkci/frontend/assets_bundle.json bkci/support-files/templates/project#assets_bundle.json
           echo $GITHUB_REF > bkci/VERSION
 
@@ -146,13 +145,9 @@ jobs:
           shopt -u nullglob
           [ -z "$backend_dirs" ] && echo "NOTE: no service_dirs found, will do nothing."
           for service_name in $backend_dirs; do
-              # 生成新的模板文件.
-              # 大写.
               SERVICE_NAME=${service_name^^}
-              # 新文件名
               tpl_name="$service_name#boot-$service_name.sh"
               tpl_file="$tpl_dir/$tpl_name"
-              # 防止覆盖文件, 如果已经提供了启动脚本, 那么不自动生成了.
               [ -s "$tpl_file" ] && { echo "  SKIP: target file exist: $tpl_file"; continue; }
               echo "  generating $tpl_file"
               sed -e "s/bkciservice/$service_name/g" \
