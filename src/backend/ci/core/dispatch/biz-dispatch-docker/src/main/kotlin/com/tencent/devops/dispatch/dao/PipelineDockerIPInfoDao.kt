@@ -1,6 +1,5 @@
 package com.tencent.devops.dispatch.dao
 
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.model.dispatch.tables.TDispatchPipelineDockerIpInfo
 import com.tencent.devops.model.dispatch.tables.records.TDispatchPipelineDockerIpInfoRecord
 import org.jooq.Condition
