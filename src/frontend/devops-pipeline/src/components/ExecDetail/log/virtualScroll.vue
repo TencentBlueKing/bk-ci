@@ -93,7 +93,7 @@
                 isBottomMove: false,
                 curHoverIndex: -1,
                 hasCompleteInit: false,
-                errMessage: '日志内容为空',
+                errMessage: this.$t('execDetail.emptyLog'),
                 isLogErr: false
             }
         },
