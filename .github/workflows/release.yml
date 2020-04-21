@@ -29,6 +29,7 @@ jobs:
         path: src/frontend/frontend/
 
   agent:
+    name: Build agent on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -125,12 +126,12 @@ jobs:
         name: Download backend
         with:
           name: backend
-          path: ./backend
+          path: ./backend/
       - uses: actions/download-artifact@v1
         name: Download frontend
         with:
           name: frontend
-          path: ./frontend
+          path: ./frontend/
       - run: tar czvf bkci.tar.gz backend frontend
       - name: Upload Release Asset
         uses: actions/upload-release-asset@v1
