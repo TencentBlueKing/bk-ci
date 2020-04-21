@@ -12,12 +12,12 @@ md %WORK_DIR%\bin
 del /q %WORK_DIR%\bin\*
 
 cd %WORK_DIR%\src\cmd\daemon
-go build -ov %WORK_DIR%\bin\devopsDaemon.exe
+go build -o %WORK_DIR%\bin\devopsDaemon.exe
 
 cd %WORK_DIR%\src\cmd\agent
-go build -ov %WORK_DIR%\bin\devopsAgent.exe
+go build -o %WORK_DIR%\bin\devopsAgent.exe
 
 cd %WORK_DIR%\src\cmd\upgrader
-go build -ov %WORK_DIR%\bin\upgrader.exe
+go build -o %WORK_DIR%\bin\upgrader.exe
 
 cd /D %WORK_DIR%
