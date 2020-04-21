@@ -223,7 +223,7 @@
                 border: 1px solid #444d56;
                 border-radius: 4px;
                 margin: 5px 0;
-                z-index: 2;
+                z-index: 101;
                 &:before {
                     position: absolute;
                     display: inline-block;

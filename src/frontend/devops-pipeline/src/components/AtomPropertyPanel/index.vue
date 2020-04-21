@@ -13,7 +13,7 @@
 </template>
 
 <script>
-    import { mapActions, mapState } from 'vuex'
+    import { mapActions, mapState, mapGetters } from 'vuex'
     import ReferenceVariable from './ReferenceVariable'
     import AtomContent from './AtomContent.vue'
 
@@ -38,7 +38,14 @@
         },
         computed: {
             ...mapState('atom', [
+                'globalEnvs',
                 'isPropertyPanelVisible'
+            ]),
+            ...mapGetters('atom', [
+                'getElement',
+                'getContainer',
+                'getContainers',
+                'getStage'
             ]),
             visible: {
                 get () {
@@ -50,6 +57,34 @@
                         isShow: value
                     })
                 }
+            },
+            stage () {
+                const { stageIndex, getStage, stages } = this
+                return getStage(stages, stageIndex)
+            },
+            containers () {
+                const { stage, getContainers } = this
+                return getContainers(stage)
+            },
+            container () {
+                const { containerIndex, containers, getContainer } = this
+                return getContainer(containers, containerIndex)
+            },
+            element () {
+                const { container, elementIndex, getElement } = this
+                const element = getElement(container, elementIndex)
+                return element
+            },
+            atomCode () {
+                if (this.element) {
+                    const isThrid = this.element.atomCode && this.element['@type'] !== this.element.atomCode
+                    if (isThrid) {
+                        return this.element.atomCode
+                    } else {
+                        return this.element['@type']
+                    }
+                }
+                return ''
             }
         },
         methods: {
