@@ -142,7 +142,14 @@ class ManualReviewTaskAtom(
         val message = EmailNotifyMessage().apply {
             addAllReceivers(reviewUsers.split(",").toSet())
             format = EnumEmailFormat.HTML
-            body = NotifyTemplateUtils.getReviewEmailBody(reviewUrl, date, projectName, pipelineName, buildNo)
+            body = NotifyTemplateUtils.getReviewEmailBody(
+                reviewDesc = param.desc ?: "",
+                reviewUrl = reviewUrl,
+                dataTime = date,
+                projectName = projectName,
+                pipelineName = pipelineName,
+                buildNo = buildNo
+            )
             title = "【蓝盾流水线审核通知】[BKDevOps Pipeline Review Notice]"
             sender = "DevOps"
         }
@@ -153,9 +160,23 @@ class ManualReviewTaskAtom(
         }
 
         val bodyMessage =
-            NotifyTemplateUtils.getReviewRtxMsgBody(reviewUrl, reviewAppUrl, projectName, pipelineName, buildNo)
+            NotifyTemplateUtils.getReviewRtxMsgBody(
+                reviewDesc = param.desc ?: "",
+                reviewUrl = reviewUrl,
+                reviewAppUrl = reviewAppUrl,
+                projectName = projectName,
+                pipelineName = pipelineName,
+                buildNo = buildNo
+            )
         val bodyMessageWeixin =
-            NotifyTemplateUtils.getRevieWeixinMsgBody(reviewUrl, reviewAppUrl, projectName, pipelineName, buildNo)
+            NotifyTemplateUtils.getRevieWeixinMsgBody(
+                reviewDesc = param.desc ?: "",
+                reviewUrl = reviewUrl,
+                reviewAppUrl = reviewAppUrl,
+                projectName = projectName,
+                pipelineName = pipelineName,
+                buildNo = buildNo
+            )
 
         val rtxMessage = RtxNotifyMessage().apply {
             addAllReceivers(reviewUsers.split(",").toSet())
