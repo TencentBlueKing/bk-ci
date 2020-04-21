@@ -35,5 +35,5 @@ jobs:
         if: matrix.os == 'windows-latest'
       - uses: actions/upload-artifact@v1
         with:
-          name: agent_${{ matrix.os }}
+          name: agent
           path: src/agent/bin/
