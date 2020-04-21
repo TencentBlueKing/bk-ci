@@ -5,7 +5,59 @@ on:
     - 'v*'
 
 jobs:
+  frontend:
+    name: Build frontend
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Get yarn cache directory path
+      id: yarn-cache-dir-path
+      run: echo "::set-output name=dir::$(yarn cache dir)"
+
+    - uses: actions/cache@v1
+      id: yarn-cache
+      with:
+        path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
+        key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-yarn-
+    - run: yarn install && yarn start && yarn public
+      working-directory: src/frontend
+    - uses: actions/upload-artifact@v1
+      with:
+        name: frontend
+        path: src/frontend/frontend/
+
+  agent:
+    name: Build agent on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [macos-latest, windows-latest, ubuntu-latest]
+      fail-fast: true
+      max-parallel: 3
+    steps:
+      - uses: actions/setup-go@v2
+        with:
+          go-version: 1.12
+      - uses: actions/checkout@v2
+      - run: ./build_linux.sh
+        working-directory: src/agent/
+        if: matrix.os == 'ubuntu-latest'
+      - run: ./build_macos.sh
+        working-directory: src/agent/
+        if: matrix.os == 'macos-latest'
+      - run: build_windows.bat
+        shell: cmd
+        working-directory: src/agent/
+        if: matrix.os == 'windows-latest'
+      - uses: actions/upload-artifact@v1
+        with:
+          name: agent
+          path: src/agent/bin/
+
   backend:
+    needs: [agent]
     name: Build backend
     runs-on: ubuntu-latest
     steps:
@@ -32,43 +84,29 @@ jobs:
         with:
           gradle-version: 4.8.1
           build-root-directory: src/backend/ci
-          arguments: -x test clean :core:boot-assembly:build -DmavenRepoUrl="http://maven.aliyun.com/nexus/content/groups/public/"
+          arguments: -x test clean build -DmavenRepoUrl="http://maven.aliyun.com/nexus/content/groups/public/"
+      - uses: actions/download-artifact@v1
+        name: Download agent
+        with:
+          name: agent
+          path: ./support-files/agent-package/upgrade/
       - name: Create artifacts
         run: |
           mkdir result
-          cd src/backend/ci/release/ && tar czvf backend.tar.gz *.jar
-          cd $GITHUB_WORKSPACE && mv src/backend/ci/release/backend.tar.gz result/
+          cd src/backend/ci/release/
+          mv -v worker-agent.jar $GITHUB_WORKSPACE/support-files/agent-package/jar
+          tar czvf backend.tar.gz *.jar
+          cd $GITHUB_WORKSPACE && mv -v src/backend/ci/release/backend.tar.gz result/
           cd src/gateway/ && tar czf gateway.tar.gz ./core/
-          cd $GITHUB_WORKSPACE && mv src/gateway/gateway.tar.gz result/
-          tar czf result/config.tar.gz support-files/ scripts/
+          cd $GITHUB_WORKSPACE && mv -v src/gateway/gateway.tar.gz result/
+          tar czvf result/config.tar.gz --exclude="support-files/agent-package" support-files/ scripts/
+          cd support-files/ && tar czvf ../result/agent.tar.gz agent-package/
       - name: Upload artifacts
         uses: actions/upload-artifact@v1
         with:
           name: backend
           path: result/
-  frontend:
-    name: Build frontend
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v2
-    - name: Get yarn cache directory path
-      id: yarn-cache-dir-path
-      run: echo "::set-output name=dir::$(yarn cache dir)"
-
-    - uses: actions/cache@v1
-      id: yarn-cache
-      with:
-        path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
-        key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
-        restore-keys: |
-          ${{ runner.os }}-yarn-
-    - run: yarn install && yarn start && yarn public
-      working-directory: src/frontend
-    - uses: actions/upload-artifact@v1
-      with:
-        name: frontend
-        path: src/frontend/frontend/
-
+  
   release:
     needs: [frontend,backend]
     name: GitHub Release
@@ -88,12 +126,12 @@ jobs:
         name: Download backend
         with:
           name: backend
-          path: ./backend
+          path: ./backend/
       - uses: actions/download-artifact@v1
         name: Download frontend
         with:
           name: frontend
-          path: ./frontend
+          path: ./frontend/
       - run: tar czvf bkci.tar.gz backend frontend
       - name: Upload Release Asset
         uses: actions/upload-release-asset@v1
