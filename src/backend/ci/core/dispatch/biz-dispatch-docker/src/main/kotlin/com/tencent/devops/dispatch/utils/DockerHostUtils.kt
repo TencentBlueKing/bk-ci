@@ -31,7 +31,6 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.dispatch.client.DockerHostClient
 import com.tencent.devops.dispatch.dao.PipelineDockerHostDao
 import com.tencent.devops.dispatch.dao.PipelineDockerIPInfoDao
 import com.tencent.devops.dispatch.dao.PipelineDockerPoolDao
@@ -40,7 +39,6 @@ import com.tencent.devops.dispatch.pojo.DockerHostLoadConfig
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.dispatch.utils.redis.RedisUtils
 import com.tencent.devops.model.dispatch.tables.records.TDispatchPipelineDockerIpInfoRecord
-import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -168,7 +166,7 @@ class DockerHostUtils @Autowired constructor(
             lock.tryLock()
             for (i in 1..buildPoolSize) {
                 logger.info("poolNo is $i")
-                val poolNo = pipelineDockerPoolDao.getPoolNo(dslContext, pipelineId, vmSeq, i)
+                val poolNo = pipelineDockerPoolDao.getPoolNoStatus(dslContext, pipelineId, vmSeq, i)
                 if (poolNo == null) {
                     pipelineDockerPoolDao.create(
                         dslContext,
