@@ -66,7 +66,7 @@ class PipelineDockerPoolDao @Autowired constructor() {
         }
     }
 
-    fun getPoolNo(
+    fun getPoolNoStatus(
         dslContext: DSLContext,
         pipelineId: String,
         vmSeq: String,
