@@ -22,7 +22,7 @@ jobs:
       - uses: actions/setup-go@v2
         with:
           go-version: 1.12
-      - run: pwd && cd src/agent && ./build_linux.sh
+      - run: pwd && ls -l && cd src/agent && ./build_linux.sh
         if: matrix.os == 'ubuntu-latest'
       - run: pwd && ./build_macos.sh
         working-directory: src/agent/
