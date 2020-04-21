@@ -10,7 +10,7 @@
             <span class="search-num">{{`${searchIndex} / ${searchNum}`}}</span>
             <logo class="icon-click" name="icon-angle-right" @click.native="changeSearchIndex(1)"></logo>
         </section>
-        <bk-select v-if="![0, 1].includes(+executeCount)" :placeholder="'重试次数'" class="log-execute" :value="currentExe" :clearable="false">
+        <bk-select v-if="![0, 1].includes(+executeCount)" :placeholder="$t('execDetail.execTime')" class="log-execute" :value="currentExe" :clearable="false">
             <bk-option v-for="execute in executeCount"
                 :key="execute"
                 :id="execute"
@@ -22,8 +22,8 @@
         <section class="tool-more" v-bk-clickoutside="closeShowMore">
             <logo name="more" class="more-icon" @click.native="showMore = !showMore"></logo>
             <ul class="more-list" v-if="showMore">
-                <li class="more-button" @click="showLogTime">显示时间</li>
-                <a download class="more-button" @click="downLoad" :href="downLoadLink">下载日志</a>
+                <li class="more-button" @click="showLogTime">{{ $t('execDetail.showTime') }}</li>
+                <a download class="more-button" @click="downLoad" :href="downLoadLink">{{ $t('execDetail.downLoadLog') }}</a>
             </ul>
         </section>
     </p>
@@ -49,6 +49,9 @@
             },
             showTime: {
                 type: Boolean
+            },
+            downLoadLink: {
+                type: String
             }
         },
 
