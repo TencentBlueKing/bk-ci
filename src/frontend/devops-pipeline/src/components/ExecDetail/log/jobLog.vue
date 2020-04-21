@@ -9,14 +9,14 @@
             @changeExecute="changeExecute"
 
         ></search>
-        <ul class="plugin-list" ref="pluginList">
+        <ul class="job-plugin-list-log">
             <li v-for="plugin in pluginList" :key="plugin.id" class="plugin-item">
                 <p class="item-head" @click="expendLog(plugin)">
                     <span :class="[{ 'show-all': !!curFoldList[plugin.id] }, 'log-folder']"></span>
                     <status-icon :status="plugin.status"></status-icon>
                     {{ plugin.name }}
                 </p>
-                <virtual-scroll class="log-scroll" :ref="plugin.id" v-show="curFoldList[plugin.id]" :max-height="maxHeight" :id="plugin.id" :worker="worker">
+                <virtual-scroll class="log-scroll" :ref="plugin.id" v-show="curFoldList[plugin.id]" :id="plugin.id" :worker="worker">
                     <template slot-scope="item">
                         <span class="item-txt selection-color">
                             <span class="item-time selection-color" v-if="showTime">{{(item.data.isNewLine ? '' : item.data.timestamp)|timeFilter}}</span>
@@ -84,7 +84,6 @@
                 showTime: false,
                 worker: new Worker(),
                 curFoldList: this.pluginList.map(plugin => ({ [plugin.id]: false })),
-                maxHeight: 0,
                 curSearchIndex: 0,
                 logPostData: {},
                 closeTags: []
@@ -93,11 +92,10 @@
 
         mounted () {
             this.worker.postMessage({ type: 'initStatus', pluginList: this.pluginList.map(x => x.id) })
-            const pluginListEle = this.$refs.pluginList || {}
-            this.maxHeight = (pluginListEle.offsetHeight || 500) - 80
         },
 
         beforeDestroy () {
+            this.worker.terminate()
             Object.keys(this.logPostData).forEach(key => {
                 const postData = this.logPostData[key]
                 this.closeTags.push(postData.tag)
@@ -135,23 +133,13 @@
                         currentExe: 1,
                         lineNo: 0
                     }
-                }
 
-                if (this.curFoldList[id]) {
                     this.$nextTick(() => {
                         ref = this.$refs[id][0]
                         ref.setVisWidth()
-                        const index = this.closeTags.findIndex(tag => tag === postData.tag)
-                        if (index > -1) this.closeTags.splice(index, 1)
                         this.getLog(ref, postData)
                     })
-                } else {
-                    this.closeLog(postData)
                 }
-            },
-
-            closeLog (postData) {
-                this.closeTags.push(postData.tag)
             },
 
             getLog (ref, postData) {
@@ -236,10 +224,10 @@
 <style lang="scss" scoped>
     .job-log {
         height: calc(100% - 59px);
-    }
-    .plugin-list {
-        height: 100%;
-        overflow: auto;
+        .job-plugin-list-log {
+            height: 100%;
+            overflow: auto;
+        }
     }
     .plugin-item {
         color: #ffffff;

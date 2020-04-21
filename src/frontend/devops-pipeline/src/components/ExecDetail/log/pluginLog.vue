@@ -90,23 +90,13 @@
             }
         },
 
-        watch: {
-            currentTab (val) {
-                if (val === 'log') {
-                    this.isStop = false
-                    this.getLog()
-                } else {
-                    this.closeLog()
-                }
-            }
-        },
-
         mounted () {
             this.worker.postMessage({ type: 'initStatus', pluginList: [this.id] })
             this.getLog()
         },
 
         beforeDestroy () {
+            this.worker.terminate()
             this.closeLog()
         },
 
