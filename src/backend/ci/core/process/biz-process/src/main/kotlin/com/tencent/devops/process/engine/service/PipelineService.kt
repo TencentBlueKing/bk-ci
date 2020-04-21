@@ -994,7 +994,7 @@ class PipelineService @Autowired constructor(
         )
         pipelineFilterParamList.add(pipelineFilterParam)
         val viewIdList = listOf(PIPELINE_VIEW_FAVORITE_PIPELINES, PIPELINE_VIEW_MY_PIPELINES, PIPELINE_VIEW_ALL_PIPELINES)
-        if (viewIdList.contains(viewId)) {
+        if (!viewIdList.contains(viewId)) {
             val view = pipelineViewService.getView(userId = userId, projectId = projectId, viewId = viewId)
             val filters = pipelineViewService.getFilters(view)
             val pipelineViewFilterParam = PipelineFilterParam(
@@ -1027,7 +1027,6 @@ class PipelineService @Autowired constructor(
             dslContext = dslContext,
             projectId = projectId,
             channelCode = channelCode,
-            pipelineIds = authPipelines,
             favorPipelines = favorPipelines,
             authPipelines = authPipelines,
             viewId = viewId,
@@ -1047,7 +1046,6 @@ class PipelineService @Autowired constructor(
                     pipelineList = pipelineList,
                     projectId = projectId,
                     channelCode = channelCode,
-                    pipelineIds = authPipelines,
                     favorPipelines = favorPipelines,
                     authPipelines = authPipelines,
                     viewId = viewId,
@@ -1064,7 +1062,6 @@ class PipelineService @Autowired constructor(
                     pipelineList = pipelineList,
                     projectId = projectId,
                     channelCode = channelCode,
-                    pipelineIds = authPipelines,
                     favorPipelines = favorPipelines,
                     authPipelines = authPipelines,
                     viewId = viewId,
@@ -1079,7 +1076,6 @@ class PipelineService @Autowired constructor(
                         pipelineList = pipelineList,
                         projectId = projectId,
                         channelCode = channelCode,
-                        pipelineIds = authPipelines,
                         favorPipelines = favorPipelines,
                         authPipelines = authPipelines,
                         viewId = viewId,
@@ -1097,7 +1093,6 @@ class PipelineService @Autowired constructor(
                     pipelineList = pipelineList,
                     projectId = projectId,
                     channelCode = channelCode,
-                    pipelineIds = authPipelines,
                     favorPipelines = favorPipelines,
                     authPipelines = authPipelines,
                     viewId = viewId,
@@ -1114,7 +1109,6 @@ class PipelineService @Autowired constructor(
                 pipelineList = pipelineList,
                 projectId = projectId,
                 channelCode = channelCode,
-                pipelineIds = authPipelines,
                 favorPipelines = favorPipelines,
                 authPipelines = authPipelines,
                 viewId = viewId,
@@ -1127,7 +1121,6 @@ class PipelineService @Autowired constructor(
                 pipelineList = pipelineList,
                 projectId = projectId,
                 channelCode = channelCode,
-                pipelineIds = authPipelines,
                 favorPipelines = favorPipelines,
                 authPipelines = authPipelines,
                 viewId = viewId,
