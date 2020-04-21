@@ -130,6 +130,31 @@ class PipelineBuildSummaryDao {
         }
     }
 
+    fun listPipelineInfoBuildSummaryCount(
+        dslContext: DSLContext,
+        projectId: String,
+        channelCode: ChannelCode,
+        pipelineIds: Collection<String>?,
+        viewId: String?,
+        favorPipelines: List<String>,
+        authPipelines: List<String>,
+        pipelineFilterParamList: List<PipelineFilterParam>?,
+        permissionFlag: Boolean? = null
+    ): Long {
+        val conditions = generatePipelineFilterCondition(
+            projectId = projectId,
+            channelCode = channelCode,
+            pipelineIds = pipelineIds,
+            viewId = viewId,
+            favorPipelines = favorPipelines,
+            authPipelines = authPipelines,
+            pipelineFilterParamList = pipelineFilterParamList,
+            permissionFlag = permissionFlag
+        )
+        val t = getPipelineInfoBuildSummaryBaseQuery(dslContext, favorPipelines, authPipelines).where(conditions).asTable("t")
+        return dslContext.selectCount().from(t).fetchOne(0, Long::class.java)
+    }
+
     fun listPipelineInfoBuildSummary(
         dslContext: DSLContext,
         projectId: String,
@@ -142,8 +167,40 @@ class PipelineBuildSummaryDao {
         pipelineFilterParamList: List<PipelineFilterParam>? = null,
         permissionFlag: Boolean? = null,
         page: Int? = null,
-        pageSize: Int? = null
+        pageSize: Int? = null,
+        offsetNum: Int? = 0
     ): Result<out Record> {
+        val conditions = generatePipelineFilterCondition(
+            projectId = projectId,
+            channelCode = channelCode,
+            pipelineIds = pipelineIds,
+            viewId = viewId,
+            favorPipelines = favorPipelines,
+            authPipelines = authPipelines,
+            pipelineFilterParamList = pipelineFilterParamList,
+            permissionFlag = permissionFlag
+        )
+        return listPipelineInfoBuildSummaryByConditions(
+            dslContext = dslContext,
+            conditions = conditions,
+            sortType = sortType,
+            favorPipelines = favorPipelines,
+            authPipelines = authPipelines,
+            page = page,
+            pageSize = pageSize
+        )
+    }
+
+    private fun generatePipelineFilterCondition(
+        projectId: String,
+        channelCode: ChannelCode,
+        pipelineIds: Collection<String>?,
+        viewId: String?,
+        favorPipelines: List<String>,
+        authPipelines: List<String>,
+        pipelineFilterParamList: List<PipelineFilterParam>?,
+        permissionFlag: Boolean?
+    ): MutableList<Condition> {
         val conditions = mutableListOf<Condition>()
         conditions.add(T_PIPELINE_INFO.PROJECT_ID.eq(projectId))
         conditions.add(T_PIPELINE_INFO.CHANNEL.eq(channelCode.name))
@@ -151,98 +208,94 @@ class PipelineBuildSummaryDao {
         if (pipelineIds != null && pipelineIds.isNotEmpty()) {
             conditions.add(T_PIPELINE_INFO.PIPELINE_ID.`in`(pipelineIds))
         }
-        if (viewId == PIPELINE_VIEW_FAVORITE_PIPELINES) {
-            conditions.add(T_PIPELINE_INFO.PIPELINE_ID.`in`(favorPipelines))
-        } else if (viewId == PIPELINE_VIEW_MY_PIPELINES) {
-            conditions.add(T_PIPELINE_INFO.PIPELINE_ID.`in`(authPipelines))
-        } else if (viewId == PIPELINE_VIEW_ALL_PIPELINES) {
-            // 查询所有流水线
-        } else {
-            if (null != pipelineFilterParamList) {
-                pipelineFilterParamList.forEach { pipelineFilterParam ->
-                    val logic = pipelineFilterParam.logic
-                    val conditionAndFlag: Boolean = (logic == Logic.AND)
-                    val filterByPipelineNames = pipelineFilterParam.filterByPipelineNames
-                    val filterConditions = DSL.trueCondition()
-                    // 过滤流水线名称
-                    if (filterByPipelineNames.isNotEmpty()) {
-                        val filterByPipelineNameConditions = DSL.trueCondition()
-                        filterByPipelineNames.forEach {
-                            val pipelineName = it.pipelineName
-                            val pipelineNameField = T_PIPELINE_INFO.PIPELINE_NAME
-                            val bkCondition = it.condition
-                            val subCondition = generateSubCondition(bkCondition, pipelineNameField, pipelineName)
-                            if (conditionAndFlag) {
-                                filterByPipelineNameConditions.and(subCondition)
-                            } else {
-                                filterByPipelineNameConditions.or(subCondition)
-                            }
-                        }
-                        if (conditionAndFlag) {
-                            filterConditions.and(filterByPipelineNameConditions)
-                        } else {
-                            filterConditions.or(filterByPipelineNameConditions)
-                        }
-                    }
-                    // 过滤流水线创建人
-                    val filterByPipelineCreators = pipelineFilterParam.filterByPipelineCreators
-                    if (filterByPipelineCreators.isNotEmpty()) {
-                        val filterByPipelineCreatorConditions = DSL.trueCondition()
-                        filterByPipelineCreators.forEach {
-                            val userIds = it.userIds
-                            val pipelineCreatorField = T_PIPELINE_INFO.CREATOR
-                            val subCondition = pipelineCreatorField.`in`(userIds)
-                            if (conditionAndFlag) {
-                                filterByPipelineCreatorConditions.and(subCondition)
-                            } else {
-                                filterByPipelineCreatorConditions.or(subCondition)
-                            }
-                        }
-                        if (conditionAndFlag) {
-                            filterConditions.and(filterByPipelineCreatorConditions)
-                        } else {
-                            filterConditions.or(filterByPipelineCreatorConditions)
-                        }
-                    }
-                    // 过滤流水线标签
-                    val filterByLabelInfo = pipelineFilterParam.filterByLabelInfo
-                    val filterByLabels = filterByLabelInfo.filterByLabels
-                    val labelToPipelineMap = filterByLabelInfo.labelToPipelineMap
-                    if (filterByLabels.isNotEmpty()) {
-                        val filterByLabelConditions = DSL.trueCondition()
-                        filterByLabels.forEach { filterByLabel ->
-                            val labelIds = filterByLabel.labelIds
-                            val pipelineIdField = T_PIPELINE_INFO.PIPELINE_ID
-                            val subCondition = DSL.trueCondition()
-                            labelIds.forEach {
-                                val labelPipelineIds = labelToPipelineMap?.get(it)
-                                subCondition.or(pipelineIdField.`in`(labelPipelineIds))
-                            }
-                            if (conditionAndFlag) {
-                                filterByLabelConditions.and(subCondition)
-                            } else {
-                                filterByLabelConditions.or(subCondition)
-                            }
-                        }
-                        if (conditionAndFlag) {
-                            filterConditions.and(filterByLabelConditions)
-                        } else {
-                            filterConditions.or(filterByLabelConditions)
-                        }
-                    }
-                }
+        if (permissionFlag != null) {
+            if (permissionFlag) {
+                conditions.add(T_PIPELINE_INFO.PIPELINE_ID.`in`(authPipelines))
+            } else {
+                conditions.add(T_PIPELINE_INFO.PIPELINE_ID.notIn(authPipelines))
             }
         }
-        return listPipelineInfoBuildSummaryByConditions(
-            dslContext = dslContext,
-            conditions = conditions,
-            sortType = sortType,
-            favorPipelines = favorPipelines,
-            authPipelines = authPipelines,
-            permissionFlag = permissionFlag,
-            page = page,
-            pageSize = pageSize
-        )
+        when (viewId) {
+            PIPELINE_VIEW_FAVORITE_PIPELINES -> conditions.add(T_PIPELINE_INFO.PIPELINE_ID.`in`(favorPipelines))
+            PIPELINE_VIEW_MY_PIPELINES -> conditions.add(T_PIPELINE_INFO.PIPELINE_ID.`in`(authPipelines))
+            PIPELINE_VIEW_ALL_PIPELINES -> {
+                // 查询所有流水线
+            }
+            else -> pipelineFilterParamList?.forEach { pipelineFilterParam ->
+                val logic = pipelineFilterParam.logic
+                val conditionAndFlag: Boolean = (logic == Logic.AND)
+                val filterByPipelineNames = pipelineFilterParam.filterByPipelineNames
+                val filterConditions = DSL.trueCondition()
+                // 过滤流水线名称
+                if (filterByPipelineNames.isNotEmpty()) {
+                    val filterByPipelineNameConditions = DSL.trueCondition()
+                    filterByPipelineNames.forEach {
+                        val pipelineName = it.pipelineName
+                        val pipelineNameField = T_PIPELINE_INFO.PIPELINE_NAME
+                        val bkCondition = it.condition
+                        val subCondition = generateSubCondition(bkCondition, pipelineNameField, pipelineName)
+                        if (conditionAndFlag) {
+                            filterByPipelineNameConditions.and(subCondition)
+                        } else {
+                            filterByPipelineNameConditions.or(subCondition)
+                        }
+                    }
+                    if (conditionAndFlag) {
+                        filterConditions.and(filterByPipelineNameConditions)
+                    } else {
+                        filterConditions.or(filterByPipelineNameConditions)
+                    }
+                }
+                // 过滤流水线创建人
+                val filterByPipelineCreators = pipelineFilterParam.filterByPipelineCreators
+                if (filterByPipelineCreators.isNotEmpty()) {
+                    val filterByPipelineCreatorConditions = DSL.trueCondition()
+                    filterByPipelineCreators.forEach {
+                        val userIds = it.userIds
+                        val pipelineCreatorField = T_PIPELINE_INFO.CREATOR
+                        val subCondition = pipelineCreatorField.`in`(userIds)
+                        if (conditionAndFlag) {
+                            filterByPipelineCreatorConditions.and(subCondition)
+                        } else {
+                            filterByPipelineCreatorConditions.or(subCondition)
+                        }
+                    }
+                    if (conditionAndFlag) {
+                        filterConditions.and(filterByPipelineCreatorConditions)
+                    } else {
+                        filterConditions.or(filterByPipelineCreatorConditions)
+                    }
+                }
+                // 过滤流水线标签
+                val filterByLabelInfo = pipelineFilterParam.filterByLabelInfo
+                val filterByLabels = filterByLabelInfo.filterByLabels
+                val labelToPipelineMap = filterByLabelInfo.labelToPipelineMap
+                if (filterByLabels.isNotEmpty()) {
+                    val filterByLabelConditions = DSL.trueCondition()
+                    filterByLabels.forEach { filterByLabel ->
+                        val labelIds = filterByLabel.labelIds
+                        val pipelineIdField = T_PIPELINE_INFO.PIPELINE_ID
+                        val subCondition = DSL.trueCondition()
+                        labelIds.forEach {
+                            val labelPipelineIds = labelToPipelineMap?.get(it)
+                            subCondition.or(pipelineIdField.`in`(labelPipelineIds))
+                        }
+                        if (conditionAndFlag) {
+                            filterByLabelConditions.and(subCondition)
+                        } else {
+                            filterByLabelConditions.or(subCondition)
+                        }
+                    }
+                    if (conditionAndFlag) {
+                        filterConditions.and(filterByLabelConditions)
+                    } else {
+                        filterConditions.or(filterByLabelConditions)
+                    }
+                }
+                conditions.add(filterConditions)
+            }
+        }
+        return conditions
     }
 
     private fun generateSubCondition(
@@ -331,16 +384,12 @@ class PipelineBuildSummaryDao {
         sortType: PipelineSortType? = null,
         favorPipelines: List<String> = emptyList(),
         authPipelines: List<String> = emptyList(),
-        permissionFlag: Boolean? = null,
         page: Int? = null,
-        pageSize: Int? = null
+        pageSize: Int? = null,
+        offsetNum: Int? = 0
     ): Result<out Record> {
         val t = getPipelineInfoBuildSummaryBaseQuery(dslContext, favorPipelines, authPipelines).where(conditions).asTable("t")
-        val queryConditions = mutableListOf<Condition>()
-        if (permissionFlag != null) {
-            queryConditions.add(t.field("hasPermission", Boolean::class.java).eq(permissionFlag))
-        }
-        val baseStep = dslContext.select().from(t).where(queryConditions)
+        val baseStep = dslContext.select().from(t)
         if (sortType != null) {
             val sortTypeField = when (sortType) {
                 PipelineSortType.NAME -> {
@@ -355,8 +404,8 @@ class PipelineBuildSummaryDao {
             }
             baseStep.orderBy(sortTypeField.desc())
         }
-        return if (null != page && null != pageSize) {
-            baseStep.limit((page - 1) * pageSize, pageSize).fetch()
+        return if ((null != page && null != pageSize) && (page != 1 && pageSize != -1)) {
+            baseStep.limit((page - 1) * pageSize + (offsetNum ?: 0), pageSize).fetch()
         } else {
             baseStep.fetch()
         }
@@ -395,9 +444,7 @@ class PipelineBuildSummaryDao {
             T_PIPELINE_BUILD_SUMMARY.LATEST_START_TIME,
             T_PIPELINE_BUILD_SUMMARY.LATEST_END_TIME,
             T_PIPELINE_BUILD_SUMMARY.LATEST_TASK_NAME,
-            T_PIPELINE_BUILD_SUMMARY.LATEST_STATUS,
-            JooqUtils.booleanJudgeGenerate(T_PIPELINE_INFO.PIPELINE_ID, authPipelines).`as`("hasPermission"),
-            JooqUtils.booleanJudgeGenerate(T_PIPELINE_INFO.PIPELINE_ID, favorPipelines).`as`("hasCollect")
+            T_PIPELINE_BUILD_SUMMARY.LATEST_STATUS
         )
             .from(T_PIPELINE_INFO)
             .innerJoin(
