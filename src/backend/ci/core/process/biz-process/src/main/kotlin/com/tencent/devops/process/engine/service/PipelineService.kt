@@ -965,7 +965,9 @@ class PipelineService @Autowired constructor(
         authPipelineIds: List<String> = emptyList(),
         skipPipelineIds: List<String> = emptyList()
     ): PipelineViewPipelinePage<Pipeline> {
-
+        logger.info("listViewPipelines userId is :$userId,projectId is :$projectId,page is :$page,pageSize is :$pageSize")
+        logger.info("listViewPipelines sortType is :$sortType,channelCode is :$channelCode,viewId is :$viewId,checkPermission is :$checkPermission")
+        logger.info("listViewPipelines filterByPipelineName is :$filterByPipelineName,filterByCreator is :$filterByCreator,filterByLabels is :$filterByLabels")
         val watch = StopWatch()
         watch.start("perm_r_perm")
         logger.info("getResourceByPermission startTime:${DateTimeUtil.formatDate(Date())}")
