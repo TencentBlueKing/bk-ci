@@ -3,7 +3,7 @@
         <header class="container-panel-header" slot="header">
             {{ title }}
         </header>
-        <container-content v-bind="$props" slot="content"></container-content>
+        <container-content v-bind="$props" slot="content" ref="container"></container-content>
     </bk-sideslider>
 </template>
 
@@ -23,6 +23,7 @@
             editable: Boolean,
             title: String
         },
+
         computed: {
             ...mapState('atom', [
                 'isPropertyPanelVisible'
