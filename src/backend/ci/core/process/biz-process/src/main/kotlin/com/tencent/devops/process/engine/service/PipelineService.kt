@@ -1014,6 +1014,7 @@ class PipelineService @Autowired constructor(
             )
             pipelineFilterParamList.add(pipelineViewFilterParam)
         }
+        pipelineViewService.addUsingView(userId, projectId, viewId)
 
         // 查询有权限查看的流水线总数
         val totalAvailablePipelineSize = pipelineBuildSummaryDao.listPipelineInfoBuildSummaryCount(
