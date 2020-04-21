@@ -54,6 +54,7 @@ import com.tencent.devops.process.dao.PipelineSettingDao
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.compatibility.BuildPropertyCompatibilityTools
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
+import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.dao.template.TemplateDao
 import com.tencent.devops.process.engine.dao.template.TemplatePipelineDao
@@ -114,6 +115,7 @@ class PipelineService @Autowired constructor(
     private val templatePipelineDao: TemplatePipelineDao,
     private val pipelineInfoDao: PipelineInfoDao,
     private val pipelineSettingDao: PipelineSettingDao,
+    private val pipelineBuildSummaryDao: PipelineBuildSummaryDao,
     private val modelCheckPlugin: ModelCheckPlugin,
     private val pipelineBuildDao: PipelineBuildDao,
     private val authPermissionApi: AuthPermissionApi,
@@ -991,21 +993,152 @@ class PipelineService @Autowired constructor(
             )
         )
         pipelineFilterParamList.add(pipelineFilterParam)
-
-        val view = pipelineViewService.getView(userId = userId, projectId = projectId, viewId = viewId)
-        val filters = pipelineViewService.getFilters(view)
-        val pipelineViewFilterParam = PipelineFilterParam(
-            logic = view.logic,
-            filterByPipelineNames = filters.first,
-            filterByPipelineCreators = filters.second,
-            filterByLabelInfo = PipelineFilterByLabelInfo(
-                filterByLabels = filters.third,
-                labelToPipelineMap = generateLabelToPipelineMap(filters.third)
+        val viewIdList = listOf(PIPELINE_VIEW_FAVORITE_PIPELINES, PIPELINE_VIEW_MY_PIPELINES, PIPELINE_VIEW_ALL_PIPELINES)
+        if (viewIdList.contains(viewId)) {
+            val view = pipelineViewService.getView(userId = userId, projectId = projectId, viewId = viewId)
+            val filters = pipelineViewService.getFilters(view)
+            val pipelineViewFilterParam = PipelineFilterParam(
+                logic = view.logic,
+                filterByPipelineNames = filters.first,
+                filterByPipelineCreators = filters.second,
+                filterByLabelInfo = PipelineFilterByLabelInfo(
+                    filterByLabels = filters.third,
+                    labelToPipelineMap = generateLabelToPipelineMap(filters.third)
+                )
             )
-        )
-        pipelineFilterParamList.add(pipelineViewFilterParam)
+            pipelineFilterParamList.add(pipelineViewFilterParam)
+        }
 
-        val pipelineBuildSummary = pipelineRuntimeService.getBuildSummaryRecords(
+        // 查询有权限查看的流水线总数
+        val totalAvailablePipelineSize = pipelineBuildSummaryDao.listPipelineInfoBuildSummaryCount(
+            dslContext = dslContext,
+            projectId = projectId,
+            channelCode = channelCode,
+            pipelineIds = authPipelines,
+            favorPipelines = favorPipelines,
+            authPipelines = authPipelines,
+            viewId = viewId,
+            pipelineFilterParamList = pipelineFilterParamList,
+            permissionFlag = true
+        )
+
+        // 查询无权限查看的流水线总数
+        val totalInvalidPipelineSize = pipelineBuildSummaryDao.listPipelineInfoBuildSummaryCount(
+            dslContext = dslContext,
+            projectId = projectId,
+            channelCode = channelCode,
+            pipelineIds = authPipelines,
+            favorPipelines = favorPipelines,
+            authPipelines = authPipelines,
+            viewId = viewId,
+            pipelineFilterParamList = pipelineFilterParamList,
+            permissionFlag = false
+        )
+        logger.info("getPipelines totalAvailablePipelineSize is :$totalAvailablePipelineSize,totalInvalidPipelineSize is :$totalInvalidPipelineSize")
+        val pipelineList = mutableListOf<Pipeline>()
+        val totalSize = totalAvailablePipelineSize + totalAvailablePipelineSize
+        if ((null != page && null != pageSize) && (page != 1 && pageSize != -1)) {
+            // 判断可用的流水线是否已到最后一页
+            val totalAvailablePipelinePage = PageUtil.calTotalPage(pageSize, totalSize)
+            logger.info("getPipelines totalAvailablePipelinePage is :$totalAvailablePipelinePage")
+            if (page < totalAvailablePipelinePage) {
+                // 当前页未到可用流水线最后一页，不需要处理临界点（最后一页）的情况
+                handlePipelineQueryList(
+                    pipelineList = pipelineList,
+                    projectId = projectId,
+                    channelCode = channelCode,
+                    pipelineIds = authPipelines,
+                    favorPipelines = favorPipelines,
+                    authPipelines = authPipelines,
+                    viewId = viewId,
+                    pipelineFilterParamList = pipelineFilterParamList,
+                    permissionFlag = true,
+                    page = page,
+                    pageSize = pageSize
+                )
+            } else if (page == totalAvailablePipelinePage && totalAvailablePipelineSize > 0) {
+                //  查询可用流水线最后一页不满页的数量
+                val lastPageRemainNum = pageSize - totalAvailablePipelineSize % pageSize
+                logger.info("getPipelines lastPageRemainNum is :$lastPageRemainNum")
+                handlePipelineQueryList(
+                    pipelineList = pipelineList,
+                    projectId = projectId,
+                    channelCode = channelCode,
+                    pipelineIds = authPipelines,
+                    favorPipelines = favorPipelines,
+                    authPipelines = authPipelines,
+                    viewId = viewId,
+                    pipelineFilterParamList = pipelineFilterParamList,
+                    permissionFlag = true,
+                    page = page,
+                    pageSize = pageSize
+                )
+                // 可用流水线最后一页不满页的数量需用不可用的流水线填充
+                if (lastPageRemainNum > 0 && totalInvalidPipelineSize > 0) {
+                    handlePipelineQueryList(
+                        pipelineList = pipelineList,
+                        projectId = projectId,
+                        channelCode = channelCode,
+                        pipelineIds = authPipelines,
+                        favorPipelines = favorPipelines,
+                        authPipelines = authPipelines,
+                        viewId = viewId,
+                        pipelineFilterParamList = pipelineFilterParamList,
+                        permissionFlag = false,
+                        page = 1,
+                        pageSize = lastPageRemainNum.toInt()
+                    )
+                }
+            } else {
+                // 当前页大于可用流水线最后一页，需要排除掉可用流水线最后一页不满页的数量用不可用的流水线填充的情况
+                val lastPageRemainNum = if (totalAvailablePipelineSize > 0) pageSize - totalAvailablePipelineSize % pageSize else 0
+                logger.info("getPipelines lastPageRemainNum is :$lastPageRemainNum")
+                handlePipelineQueryList(
+                    pipelineList = pipelineList,
+                    projectId = projectId,
+                    channelCode = channelCode,
+                    pipelineIds = authPipelines,
+                    favorPipelines = favorPipelines,
+                    authPipelines = authPipelines,
+                    viewId = viewId,
+                    pipelineFilterParamList = pipelineFilterParamList,
+                    permissionFlag = false,
+                    page = page - totalAvailablePipelinePage,
+                    pageSize = pageSize,
+                    offsetNum = lastPageRemainNum.toInt()
+                )
+            }
+        } else {
+            // 不分页查询
+            handlePipelineQueryList(
+                pipelineList = pipelineList,
+                projectId = projectId,
+                channelCode = channelCode,
+                pipelineIds = authPipelines,
+                favorPipelines = favorPipelines,
+                authPipelines = authPipelines,
+                viewId = viewId,
+                pipelineFilterParamList = pipelineFilterParamList,
+                permissionFlag = true,
+                page = page,
+                pageSize = pageSize
+            )
+            handlePipelineQueryList(
+                pipelineList = pipelineList,
+                projectId = projectId,
+                channelCode = channelCode,
+                pipelineIds = authPipelines,
+                favorPipelines = favorPipelines,
+                authPipelines = authPipelines,
+                viewId = viewId,
+                pipelineFilterParamList = pipelineFilterParamList,
+                permissionFlag = false,
+                page = page,
+                pageSize = pageSize
+            )
+        }
+
+/*        val pipelineBuildSummary = pipelineRuntimeService.getBuildSummaryRecords(
             projectId = projectId,
             channelCode = channelCode,
             sortType = sortType,
@@ -1016,10 +1149,10 @@ class PipelineService @Autowired constructor(
             permissionFlag = true,
             page = page,
             pageSize = pageSize
-        )
+        )*/
         watch.stop()
 
-        watch.start("s_r_fav")
+/*        watch.start("s_r_fav")
         val skipPipelineIdsNew = mutableListOf<String>()
         if (pipelineBuildSummary.isNotEmpty) {
             pipelineBuildSummary.forEach {
@@ -1097,18 +1230,51 @@ class PipelineService @Autowired constructor(
             } else {
                 emptyList()
             }
-            watch.stop()
+            watch.stop()*/
 
             return PipelineViewPipelinePage(
-                page = pageNotNull,
-                pageSize = pageSizeNotNull,
-                count = count,
-                records = list
+                page = page ?: 1,
+                pageSize = pageSize ?: totalSize.toInt(),
+                count = totalSize,
+                records = pipelineList
             )
-        } finally {
+/*        } finally {
             logger.info("listViewPipelines|[$projectId]|$userId|watch=$watch")
             processJmxApi.execute(ProcessJmxApi.LIST_NEW_PIPELINES, watch.totalTimeMillis)
-        }
+        }*/
+    }
+
+    private fun handlePipelineQueryList(
+        pipelineList: MutableList<Pipeline>,
+        projectId: String,
+        channelCode: ChannelCode,
+        sortType: PipelineSortType? = null,
+        pipelineIds: Collection<String>? = null,
+        favorPipelines: List<String> = emptyList(),
+        authPipelines: List<String> = emptyList(),
+        viewId: String? = null,
+        pipelineFilterParamList: List<PipelineFilterParam>? = null,
+        permissionFlag: Boolean? = null,
+        page: Int? = null,
+        pageSize: Int? = null,
+        offsetNum: Int? = 0
+    ) {
+        val pipelineRecords = pipelineBuildSummaryDao.listPipelineInfoBuildSummary(
+            dslContext = dslContext,
+            projectId = projectId,
+            channelCode = channelCode,
+            sortType = sortType,
+            pipelineIds = pipelineIds,
+            favorPipelines = favorPipelines,
+            authPipelines = authPipelines,
+            viewId = viewId,
+            pipelineFilterParamList = pipelineFilterParamList,
+            permissionFlag = permissionFlag,
+            page = page,
+            pageSize = pageSize,
+            offsetNum = offsetNum
+        )
+        pipelineList.addAll(buildPipelines(pipelineRecords, favorPipelines, authPipelines))
     }
 
     private fun generateLabelToPipelineMap(filterByPipelineLabels: List<PipelineViewFilterByLabel>): Map<String, List<String>>? {

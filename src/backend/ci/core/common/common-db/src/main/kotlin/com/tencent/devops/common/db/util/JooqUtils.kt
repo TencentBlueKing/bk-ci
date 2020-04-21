@@ -40,18 +40,11 @@ object JooqUtils {
         )
     }
 
-    fun booleanJudgeGenerate(data: Field<String>, paramList: List<String>): Field<Boolean> {
-        return DSL.field(
-            "IF(data in ({0}),true, false)",
-            Boolean::class.java,
-            paramList
-        )
-    }
-
     fun strPosition(data: Field<String>, param: String): Field<Int> {
         return DSL.field(
             "POSITION({0} IN {1})",
             Int::class.java,
+            data,
             param
         )
     }
