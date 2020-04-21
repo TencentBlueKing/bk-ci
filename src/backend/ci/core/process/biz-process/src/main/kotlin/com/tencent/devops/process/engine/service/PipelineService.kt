@@ -1045,7 +1045,7 @@ class PipelineService @Autowired constructor(
         val totalSize = totalAvailablePipelineSize + totalInvalidPipelineSize
         if ((null != page && null != pageSize) && !(page == 1 && pageSize == -1)) {
             // 判断可用的流水线是否已到最后一页
-            val totalAvailablePipelinePage = PageUtil.calTotalPage(pageSize, totalSize)
+            val totalAvailablePipelinePage = PageUtil.calTotalPage(pageSize, totalAvailablePipelineSize)
             logger.info("getPipelines totalAvailablePipelinePage is :$totalAvailablePipelinePage")
             if (page < totalAvailablePipelinePage) {
                 // 当前页未到可用流水线最后一页，不需要处理临界点（最后一页）的情况
