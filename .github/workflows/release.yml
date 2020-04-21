@@ -131,11 +131,6 @@ jobs:
         with:
           name: frontend
           path: ./frontend
-      - uses: actions/download-artifact@v1
-        name: Download agent
-        with:
-          name: agent
-          path: ./agent
       - run: tar czvf bkci.tar.gz backend frontend
       - name: Upload Release Asset
         uses: actions/upload-release-asset@v1
