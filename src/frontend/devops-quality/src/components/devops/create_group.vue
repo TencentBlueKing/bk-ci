@@ -211,7 +211,7 @@
                 background-color: #fafafa;
                 color: #737987;
             }
-            .bk-icon {
+            .devops-icon {
                 display: inline-block;
                 transition: all ease 0.2s;
                 &.icon-flip {

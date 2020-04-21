@@ -3,13 +3,13 @@
         <div class="pipeline-trigger-wrapper" @click="toggleStatus">
             <slot name="exec-bar" :isDisable="disabled">
                 <div class="pipeline-trigger-item pipeline-disable" v-if="!canManualStartup">
-                    <i class="bk-icon icon-displayable trigger-icon" :title="$t('newlist.cannotManual')"></i>
+                    <i class="devops-icon icon-displayable trigger-icon" :title="$t('newlist.cannotManual')"></i>
                 </div>
                 <div class="pipeline-trigger-item pipeline-ready" v-if="canManualStartup && status !== 'running'">
-                    <i class="bk-icon icon-right-shape trigger-icon"></i>
+                    <i class="devops-icon icon-right-shape trigger-icon"></i>
                 </div>
                 <div class="pipeline-trigger-item pipeline-running" v-if="canManualStartup && status === 'running'">
-                    <i alt="running" class="bk-icon icon-circle-2-1 spin-icon"></i>
+                    <i alt="running" class="devops-icon icon-circle-2-1 spin-icon"></i>
                 </div>
             </slot>
         </div>

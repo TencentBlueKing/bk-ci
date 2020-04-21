@@ -42,7 +42,6 @@ import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dao.ProjectLabelRelDao
 import com.tencent.devops.project.dao.ProjectLocalDao
 import com.tencent.devops.project.dispatch.ProjectDispatcher
-import com.tencent.devops.project.pojo.OpGrayProject
 import com.tencent.devops.project.pojo.OpProjectUpdateInfoRequest
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
@@ -50,11 +49,9 @@ import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.mq.ProjectCreateBroadCastEvent
 import com.tencent.devops.project.pojo.mq.ProjectUpdateBroadCastEvent
 import com.tencent.devops.project.service.ProjectPaasCCService
-import com.tencent.devops.project.service.ProjectPermissionService
 import com.tencent.devops.project.service.tof.TOFService
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.dao.DuplicateKeyException
 import org.springframework.stereotype.Service
@@ -66,17 +63,15 @@ class OpProjectServiceImpl @Autowired constructor(
     private val projectDao: ProjectDao,
     private val projectLocalDao: ProjectLocalDao,
     private val projectLabelRelDao: ProjectLabelRelDao,
-    private val rabbitTemplate: RabbitTemplate,
     private val redisOperation: RedisOperation,
-    private val gray: Gray,
+    gray: Gray,
     private val projectDispatcher: ProjectDispatcher,
     private val paasCCService: ProjectPaasCCService,
     private val bkAuthProjectApi: AuthProjectApi,
     private val bsAuthTokenApi: AuthTokenApi,
-    private val repoGray: RepoGray,
-    private val macosGray: MacOSGray,
+    repoGray: RepoGray,
+    macosGray: MacOSGray,
     private val tofService: TOFService,
-    private val projectPermissionService: ProjectPermissionService,
     private val bsPipelineAuthServiceCode: AuthServiceCode
 ) : AbsOpProjectServiceImpl(
     dslContext,
@@ -89,15 +84,7 @@ class OpProjectServiceImpl @Autowired constructor(
     projectDispatcher
 ) {
 
-    private final val REDIS_PROJECT_KEY = "BK:PROJECT:INFO:"
-
-    override fun listGrayProject(): Result<OpGrayProject> {
-        return super.listGrayProject()
-    }
-
-    override fun setGrayProject(projectCodeList: List<String>, operateFlag: Int): Boolean {
-        return super.setGrayProject(projectCodeList, operateFlag)
-    }
+    private final val redisProjectKey = "BK:PROJECT:INFO:"
 
     override fun updateProjectFromOp(
         userId: String,
@@ -171,65 +158,17 @@ class OpProjectServiceImpl @Autowired constructor(
         return if (!flag) {
             0 // 更新操作
         } else {
-            return when {
-                2 == projectInfoRequest.approvalStatus -> 1 // 审批通过
-                3 == projectInfoRequest.approvalStatus -> 2 // 驳回
+            return when (projectInfoRequest.approvalStatus) {
+                2 -> 1 // 审批通过
+                3 -> 2 // 驳回
                 else -> 0
             }
         }
     }
 
-    override fun getProjectList(
-        projectName: String?,
-        englishName: String?,
-        projectType: Int?,
-        isSecrecy: Boolean?,
-        creator: String?,
-        approver: String?,
-        approvalStatus: Int?,
-        offset: Int,
-        limit: Int,
-        grayFlag: Boolean
-    ): Result<Map<String, Any?>?> {
-        return super.getProjectList(
-            projectName,
-            englishName,
-            projectType,
-            isSecrecy,
-            creator,
-            approver,
-            approvalStatus,
-            offset,
-            limit,
-            grayFlag
-        )
-    }
-
-    override fun getProjectCount(
-        projectName: String?,
-        englishName: String?,
-        projectType: Int?,
-        isSecrecy: Boolean?,
-        creator: String?,
-        approver: String?,
-        approvalStatus: Int?,
-        grayFlag: Boolean
-    ): Result<Int> {
-        return super.getProjectCount(
-            projectName,
-            englishName,
-            projectType,
-            isSecrecy,
-            creator,
-            approver,
-            approvalStatus,
-            grayFlag
-        )
-    }
-
     override fun synProject(projectCode: String, isRefresh: Boolean?): Result<Boolean> {
         var isSyn = false
-        if (redisOperation.get(REDIS_PROJECT_KEY + projectCode) != null) {
+        if (redisOperation.get(redisProjectKey + projectCode) != null) {
             return Result(isSyn)
         }
 
@@ -269,7 +208,7 @@ class OpProjectServiceImpl @Autowired constructor(
         val authProjectInfo = bkAuthProjectApi.getProjectInfo(bsPipelineAuthServiceCode, projectCode)
         if (authProjectInfo == null) {
             logger.info("synProject projectCode:$projectCode, authCenter is not exist. start Syn")
-            if (isRefresh!!) {
+//            if (isRefresh!!) {
 //            projectPermissionService.createResources(
 //                userId = projectInfo.creator,
 //                projectList = listOf(
@@ -279,12 +218,12 @@ class OpProjectServiceImpl @Autowired constructor(
 //                    )
 //                )
 //            )
-            }
+//            }
             logger.info("project syn success, projectCode[$projectCode], creator[${projectInfo.creator}]")
             isSyn = true
         }
         if (!isSyn) {
-            redisOperation.set(REDIS_PROJECT_KEY + projectCode, projectCode, null, true)
+            redisOperation.set(redisProjectKey + projectCode, projectCode, null, true)
         }
 
         return Result(isSyn)
@@ -304,12 +243,12 @@ class OpProjectServiceImpl @Autowired constructor(
         val failList = mutableListOf<String>()
 
         while (isContinue) {
-            val SQLLimit = PageUtil.convertPageSizeToSQLLimit(page, limit)
+            val sqlLimit = PageUtil.convertPageSizeToSQLLimit(page, limit)
             logger.info("synProject page: $page")
             val projectInfos = projectLocalDao.getProjectListExclude(
                 dslContext = dslContext,
-                offset = SQLLimit.offset,
-                limit = SQLLimit.limit,
+                offset = sqlLimit.offset,
+                limit = sqlLimit.limit,
                 englishNamesExclude = excludeName
             )
 
@@ -324,11 +263,11 @@ class OpProjectServiceImpl @Autowired constructor(
                 approvalStatus = null,
                 grayFlag = false,
                 englishNames = null,
-                limit = SQLLimit.limit,
-                offset = SQLLimit.offset
+                limit = sqlLimit.limit,
+                offset = sqlLimit.offset
             )
 
-            if (lastPageInfos == null || lastPageInfos.size < limit) {
+            if (lastPageInfos.size < limit) {
                 isContinue = false
             }
             if (page <= 1) {
