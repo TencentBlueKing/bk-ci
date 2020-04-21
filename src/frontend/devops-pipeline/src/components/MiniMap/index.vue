@@ -57,6 +57,14 @@
         SKIP: '#c3cdd7'
     }
 
+    const stageBorderColor = {
+        SUCCEED: '#bbefc9',
+        FAILED: '#ffd4d4',
+        PAUSE: '#d0d8ea',
+        RUNNING: '#d4e8ff',
+        SKIP: '#c3cdd7'
+    }
+
     export default {
         components: {
             Logo
@@ -155,6 +163,8 @@
                     if (startX >= 0) {
                         this.canvasCtx.fillStyle = stageStatusColor[stage.status] || pipelineStyle.stageColor
                         this.canvasCtx.fillRect(startX, startY, pipelineStyle.stageWidth * this.rate, pipelineStyle.stageHeight * this.rate)
+                        this.canvasCtx.strokeStyle = stageBorderColor[stage.status] || pipelineStyle.stageColor
+                        this.canvasCtx.strokeRect(startX, startY, pipelineStyle.stageWidth * this.rate, pipelineStyle.stageHeight * this.rate)
                     }
                     const containers = stage.containers || []
                     this.drawContainer.x = index * (pipelineStyle.itemWidth + pipelineStyle.stageMarginRight) * this.rate
