@@ -134,7 +134,7 @@ class PipelineBuildSummaryDao {
         dslContext: DSLContext,
         projectId: String,
         channelCode: ChannelCode,
-        pipelineIds: Collection<String>?,
+        pipelineIds: Collection<String>? = null,
         viewId: String?,
         favorPipelines: List<String>,
         authPipelines: List<String>,
