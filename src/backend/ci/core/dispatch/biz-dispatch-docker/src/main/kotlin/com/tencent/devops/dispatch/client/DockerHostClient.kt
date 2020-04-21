@@ -15,7 +15,6 @@ import com.tencent.devops.dispatch.dao.PipelineDockerBuildDao
 import com.tencent.devops.dispatch.dao.PipelineDockerTaskSimpleDao
 import com.tencent.devops.dispatch.exception.DockerServiceException
 import com.tencent.devops.dispatch.pojo.DockerHostBuildInfo
-import com.tencent.devops.dispatch.pojo.VolumeStatus
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.dispatch.pojo.redis.RedisBuild
 import com.tencent.devops.dispatch.utils.CommonUtils
@@ -36,7 +35,6 @@ import java.net.URLEncoder
 
 @Component
 class DockerHostClient @Autowired constructor(
-    private val pipelineDockerTaskSimpleDao: PipelineDockerTaskSimpleDao,
     private val pipelineDockerBuildDao: PipelineDockerBuildDao,
     private val dockerHostUtils: DockerHostUtils,
     private val redisUtils: RedisUtils,
@@ -74,7 +72,8 @@ class DockerHostClient @Autowired constructor(
                 Zone.SHENZHEN.name
             } else {
                 event.zone!!.name
-            }
+            },
+            dockerIp = dockerIp
         )
         val agentId = HashUtil.encodeLongId(id)
         redisUtils.setDockerBuild(
@@ -217,13 +216,14 @@ class DockerHostClient @Autowired constructor(
             val response: Map<String, Any> = jacksonObjectMapper().readValue(responseBody)
             when {
                 response["status"] == 0 -> {
-                    val containId = response["data"] as String
-                    logger.info("[${event.projectId}|${event.pipelineId}|${event.buildId}|$retryTime] update container: $containId")
-                    pipelineDockerTaskSimpleDao.updateContainerId(
+                    val containerId = response["data"] as String
+                    logger.info("[${event.projectId}|${event.pipelineId}|${event.buildId}|$retryTime] update container: $containerId")
+                    // 更新
+                    pipelineDockerBuildDao.updateContainerId(
                         dslContext,
-                        event.pipelineId,
-                        event.vmSeqId,
-                        containId
+                        event.buildId,
+                        Integer.valueOf(event.vmSeqId),
+                        containerId
                     )
                 }
                 response["status"] == 1 -> {
@@ -232,16 +232,9 @@ class DockerHostClient @Autowired constructor(
                         val unAvailableIpListLocal: Set<String> = unAvailableIpList?.plus(dockerIp) ?: setOf(dockerIp)
                         val retryTimeLocal = retryTime + 1
                         // 当前IP不可用，重新获取可用ip
-                        val idcIpLocal = dockerHostUtils.getAvailableDockerIp(event, unAvailableIpListLocal)
+                        val idcIpLocal = dockerHostUtils.getAvailableDockerIp(event.projectId, event.pipelineId, event.vmSeqId, unAvailableIpListLocal)
                         dockerBuildStart(idcIpLocal, requestBody, event, retryTimeLocal, unAvailableIpListLocal)
                     } else {
-                        pipelineDockerTaskSimpleDao.updateStatus(
-                            dslContext,
-                            event.pipelineId,
-                            event.vmSeqId,
-                            VolumeStatus.FAILURE.status
-                        )
-
                         logger.error("[${event.projectId}|${event.pipelineId}|${event.buildId}|$retryTime] Start build Docker VM failed, retry $retryTime times.")
                         throw DockerServiceException("Start build Docker VM failed, retry $retryTime times.")
                     }
@@ -249,12 +242,6 @@ class DockerHostClient @Autowired constructor(
                 else -> {
                     val msg = response["message"] as String
                     logger.error("[${event.projectId}|${event.pipelineId}|${event.buildId}|$retryTime] Start build Docker VM failed, msg: $msg")
-                    pipelineDockerTaskSimpleDao.updateStatus(
-                        dslContext,
-                        event.pipelineId,
-                        event.vmSeqId,
-                        VolumeStatus.FAILURE.status
-                    )
                     throw DockerServiceException("Start build Docker VM failed, msg: $msg")
                 }
             }

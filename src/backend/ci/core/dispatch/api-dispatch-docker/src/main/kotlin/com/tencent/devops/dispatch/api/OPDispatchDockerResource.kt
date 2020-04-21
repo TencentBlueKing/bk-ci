@@ -48,7 +48,7 @@ interface OPDispatchDockerResource {
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @ApiParam("创建IDC构建机所需信息", required = true)
+        @ApiParam("IDC构建机信息", required = true)
         dockerIpInfoVO: DockerIpInfoVO
     ): Result<Boolean>
 
@@ -62,8 +62,8 @@ interface OPDispatchDockerResource {
         @ApiParam("IDC构建机ID", required = true)
         @PathParam("dockerIpInfoId")
         dockerIpInfoId: Long,
-        @ApiParam("构建机状态", required = true)
-        enable: Boolean
+        @ApiParam("IDC构建机信息", required = true)
+        dockerIpInfoVO: DockerIpInfoVO
     ): Result<Boolean>
 
     @DELETE

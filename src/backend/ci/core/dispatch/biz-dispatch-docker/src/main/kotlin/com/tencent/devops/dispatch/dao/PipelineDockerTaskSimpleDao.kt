@@ -39,62 +39,24 @@ class PipelineDockerTaskSimpleDao @Autowired constructor() {
     fun create(
         dslContext: DSLContext,
         pipelineId: String,
-        buildId: String,
         vmSeq: String,
-        idcIp: String,
-        status: Int
+        idcIp: String
     ) {
         with(TDispatchPipelineDockerTaskSimple.T_DISPATCH_PIPELINE_DOCKER_TASK_SIMPLE) {
             dslContext.insertInto(
                 this,
                 PIPELINE_ID,
-                BUILD_ID,
                 VM_SEQ,
                 DOCKER_IP,
-                STATUS,
                 GMT_CREATE,
                 GMT_MODIFIED
             ).values(
                 pipelineId,
-                buildId,
                 vmSeq,
                 idcIp,
-                status,
                 LocalDateTime.now(),
                 LocalDateTime.now()
             ).execute()
-        }
-    }
-
-    fun updateStatus(
-        dslContext: DSLContext,
-        pipelineId: String,
-        vmSeq: String,
-        status: Int
-    ) {
-        with(TDispatchPipelineDockerTaskSimple.T_DISPATCH_PIPELINE_DOCKER_TASK_SIMPLE) {
-            dslContext.update(this)
-                .set(STATUS, status)
-                .set(GMT_MODIFIED, LocalDateTime.now())
-                .where(PIPELINE_ID.eq(pipelineId))
-                .and(VM_SEQ.eq(vmSeq))
-                .execute()
-        }
-    }
-
-    fun updateContainerId(
-        dslContext: DSLContext,
-        pipelineId: String,
-        vmSeq: String,
-        containerId: String
-    ) {
-        with(TDispatchPipelineDockerTaskSimple.T_DISPATCH_PIPELINE_DOCKER_TASK_SIMPLE) {
-            dslContext.update(this)
-                .set(CONTAINER_ID, containerId)
-                .set(GMT_MODIFIED, LocalDateTime.now())
-                .where(PIPELINE_ID.eq(pipelineId))
-                .and(VM_SEQ.eq(vmSeq))
-                .execute()
         }
     }
 
@@ -126,33 +88,16 @@ class PipelineDockerTaskSimpleDao @Autowired constructor() {
                 .fetchOne()
         }
     }
-
-    fun getByPipelineIdAndBuildId(
-        dslContext: DSLContext,
-        pipelineId: String,
-        buildId: String
-    ): Result<TDispatchPipelineDockerTaskSimpleRecord> {
-        with(TDispatchPipelineDockerTaskSimple.T_DISPATCH_PIPELINE_DOCKER_TASK_SIMPLE) {
-            return dslContext.selectFrom(this)
-                .where(PIPELINE_ID.eq(pipelineId))
-                .and(BUILD_ID.eq(buildId))
-                .fetch()
-        }
-    }
 }
 
 /*
 CREATE TABLE `T_DISPATCH_PIPELINE_DOCKER_TASK_SIMPLE` (
     `ID` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '主键',
     `PIPELINE_ID` varchar(64) NOT NULL DEFAULT '' COMMENT '流水线ID',
-    `BUILD_ID` varchar(64) NOT NULL DEFAULT '' COMMENT '构建ID',
     `VM_SEQ` varchar(64) NOT NULL DEFAULT '' COMMENT '构建机序号',
-    `CONTAINER_ID` varchar(64) NOT NULL DEFAULT '' COMMENT '构建容器ID',
     `DOCKER_IP` varchar(64) NOT NULL DEFAULT '' COMMENT '构建容器IP',
-    `STATUS` int(11) DEFAULT 0 COMMENT '构建机状态',
     `GMT_CREATE` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `GMT_MODIFIED` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '修改时间',
     PRIMARY KEY (`ID`),
-    UNIQUE KEY `UNI_BUILD_SEQ` (`PIPELINE_ID`,`VM_SEQ`),
-    INDEX `IDX_P_B`(`PIPELINE_ID`, `BUILD_ID`)
+    UNIQUE KEY `UNI_BUILD_SEQ` (`PIPELINE_ID`,`VM_SEQ`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='DOCKER构建任务表';*/

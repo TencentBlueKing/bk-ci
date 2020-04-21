@@ -1,15 +1,20 @@
 package com.tencent.devops.dispatch.dao
 
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.model.dispatch.tables.TDispatchPipelineDockerIpInfo
 import com.tencent.devops.model.dispatch.tables.records.TDispatchPipelineDockerIpInfoRecord
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Result
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
 @Repository
 class PipelineDockerIPInfoDao {
+
+    private val logger = LoggerFactory.getLogger(PipelineDockerIPInfoDao::class.java)
+
     fun create(
         dslContext: DSLContext,
         idcIp: String,
@@ -20,7 +25,8 @@ class PipelineDockerIPInfoDao {
         diskLoad: Int,
         diskIOLoad: Int,
         enable: Boolean,
-        grayEnv: Boolean
+        grayEnv: Boolean,
+        specialOn: Boolean
     ) {
         with(TDispatchPipelineDockerIpInfo.T_DISPATCH_PIPELINE_DOCKER_IP_INFO) {
             dslContext.insertInto(
@@ -34,6 +40,7 @@ class PipelineDockerIPInfoDao {
                 DISK_IO_LOAD,
                 ENABLE,
                 GRAY_ENV,
+                SPECIAL_ON,
                 GMT_CREATE,
                 GMT_MODIFIED
             ).values(
@@ -46,6 +53,7 @@ class PipelineDockerIPInfoDao {
                 diskIOLoad,
                 enable,
                 grayEnv,
+                specialOn,
                 LocalDateTime.now(),
                 LocalDateTime.now()
             ).execute()
@@ -60,7 +68,9 @@ class PipelineDockerIPInfoDao {
         memLoad: Int,
         diskLoad: Int,
         diskIOLoad: Int,
-        enable: Boolean
+        enable: Boolean,
+        grayEnv: Boolean,
+        specialOn: Boolean
     ) {
         with(TDispatchPipelineDockerIpInfo.T_DISPATCH_PIPELINE_DOCKER_IP_INFO) {
             dslContext.update(this)
@@ -70,6 +80,8 @@ class PipelineDockerIPInfoDao {
                 .set(DISK_LOAD, diskLoad)
                 .set(DISK_IO_LOAD, diskIOLoad)
                 .set(ENABLE, enable)
+                .set(GRAY_ENV, grayEnv)
+                .set(SPECIAL_ON, specialOn)
                 .set(GMT_MODIFIED, LocalDateTime.now())
                 .where(DOCKER_IP.eq(idcIp))
                 .execute()
@@ -130,19 +142,29 @@ class PipelineDockerIPInfoDao {
         memLoad: Int,
         diskLoad: Int,
         diskIOLoad: Int,
-        limitIpSet: Set<String> = setOf()
+        specialIpSet: Set<String> = setOf()
     ): Result<TDispatchPipelineDockerIpInfoRecord> {
         with(TDispatchPipelineDockerIpInfo.T_DISPATCH_PIPELINE_DOCKER_IP_INFO) {
             val conditions =
                 mutableListOf<Condition>(
                     ENABLE.eq(true),
-                    GRAY_ENV.eq(grayEnv),
-                    CPU_LOAD.lessOrEqual(cpuLoad),
-                    MEM_LOAD.lessOrEqual(memLoad),
-                    DISK_LOAD.lessOrEqual(diskLoad),
-                    DISK_IO_LOAD.lessOrEqual(diskIOLoad)
+                    GRAY_ENV.eq(grayEnv)
                 )
-            if (limitIpSet.isNotEmpty()) conditions.add(DOCKER_IP.`in`(limitIpSet))
+
+            if (specialIpSet.isEmpty() || specialIpSet.toString() == "[]") {
+                // 没有配置专机，则过滤开启了专机独享的ip
+                conditions.add(SPECIAL_ON.eq(false))
+            }
+
+            conditions.add(CPU_LOAD.lessOrEqual(cpuLoad))
+            conditions.add(MEM_LOAD.lessOrEqual(memLoad))
+            conditions.add(DISK_LOAD.lessOrEqual(diskLoad))
+            conditions.add(DISK_IO_LOAD.lessOrEqual(diskIOLoad))
+
+            if (specialIpSet.isNotEmpty() && specialIpSet.toString() != "[]") {
+                conditions.add(DOCKER_IP.`in`(specialIpSet))
+            }
+            logger.info("getAvailableDockerIpList conditions: $conditions")
 
             return dslContext.selectFrom(this)
                 .where(conditions)
@@ -151,7 +173,7 @@ class PipelineDockerIPInfoDao {
         }
     }
 
-    fun getEnableDockerIpList(
+    fun getDockerIpList(
         dslContext: DSLContext,
         enable: Boolean,
         grayEnv: Boolean
@@ -187,6 +209,7 @@ CREATE TABLE `T_DISPATCH_PIPELINE_DOCKER_IP_INFO` (
     `DISK_LOAD` int(11) NOT NULL DEFAULT 0 COMMENT '节点容器DISK负载',
     `DISK_IO_LOAD` int(11) NOT NULL DEFAULT 0 COMMENT '节点容器DISK IO负载',
     `ENABLE` bit(1) DEFAULT 0 COMMENT '节点是否可用',
+    `SPECIAL_ON` bit(1) DEFAULT 0 COMMENT '节点是否作为专用机',
     `GRAY_ENV` bit(1) DEFAULT 0 COMMENT '是否为灰度节点',
     `GMT_CREATE` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `GMT_MODIFIED` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '修改时间',

@@ -26,7 +26,6 @@
 
 package com.tencent.devops.dispatch.controller
 
-import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.pojo.Result
@@ -37,14 +36,15 @@ import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.dispatch.api.UserDockerHostResource
+import com.tencent.devops.dispatch.dao.PipelineDockerBuildDao
 import com.tencent.devops.dispatch.dao.PipelineDockerDebugDao
 import com.tencent.devops.dispatch.dao.PipelineDockerTaskSimpleDao
 import com.tencent.devops.dispatch.pojo.ContainerInfo
 import com.tencent.devops.dispatch.pojo.DebugStartParam
-import com.tencent.devops.dispatch.pojo.VolumeStatus
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.dispatch.service.DockerHostBuildService
 import com.tencent.devops.dispatch.service.DockerHostDebugService
+import com.tencent.devops.dispatch.utils.DockerHostUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -55,8 +55,10 @@ class UserDockerHostResourceImpl @Autowired constructor(
     private val dockerHostDebugService: DockerHostDebugService,
     private val bkAuthPermissionApi: AuthPermissionApi,
     private val pipelineAuthServiceCode: PipelineAuthServiceCode,
-    private val pipelineDockerTaskSimpleDao: PipelineDockerTaskSimpleDao,
     private val pipelineDockerDebugDao: PipelineDockerDebugDao,
+    private val pipelineDockerBuildDao: PipelineDockerBuildDao,
+    private val pipelineDockerTaskSimpleDao: PipelineDockerTaskSimpleDao,
+    private val dockerHostUtils: DockerHostUtils,
     private val dslContext: DSLContext
 ) : UserDockerHostResource {
     companion object {
@@ -66,38 +68,53 @@ class UserDockerHostResourceImpl @Autowired constructor(
     override fun startDebug(userId: String, debugStartParam: DebugStartParam): Result<Boolean>? {
         checkPermission(userId, debugStartParam.projectId, debugStartParam.pipelineId, debugStartParam.vmSeqId)
 
-        // 查询是否存在构建机可启动调试，查看当前构建机的状态，如果running则直接复用当前running的containerId
-        val taskHistory =
-            pipelineDockerTaskSimpleDao.getByPipelineIdAndVMSeq(dslContext, debugStartParam.pipelineId, debugStartParam.vmSeqId)
-                ?: throw ErrorCodeException(
-                    errorCode = "2103501",
-                    defaultMessage = "no container is ready to debug",
-                    params = arrayOf(debugStartParam.pipelineId)
+        // 查询是否存在构建机可启动调试，查看当前构建机的状态，如果running且已经容器，则直接复用当前running的containerId
+        val dockerBuildHistoryList = pipelineDockerBuildDao.getLatestBuild(
+            dslContext,
+            debugStartParam.pipelineId,
+            debugStartParam.vmSeqId.toInt()
+        )
+
+        val dockerIp: String
+        if (dockerBuildHistoryList.size > 0) {
+            val dockerBuildHistory = dockerBuildHistoryList[0]
+            // running状态且容器已创建，则复用
+            if (dockerBuildHistory.status == PipelineTaskStatus.RUNNING.status
+                && dockerBuildHistory.containerId.isNotEmpty()
+            ) {
+                pipelineDockerDebugDao.insertDebug(
+                    dslContext = dslContext,
+                    projectId = debugStartParam.projectId,
+                    pipelineId = debugStartParam.pipelineId,
+                    vmSeqId = debugStartParam.vmSeqId,
+                    status = PipelineTaskStatus.RUNNING,
+                    token = "",
+                    imageName = "",
+                    hostTag = dockerBuildHistory.dockerIp,
+                    containerId = dockerBuildHistory.containerId,
+                    buildEnv = "",
+                    registryUser = "",
+                    registryPwd = "",
+                    imageType = "",
+                    imagePublicFlag = false,
+                    imageRDType = null
                 )
-        if (taskHistory.status == VolumeStatus.RUNNING.status) {
-            pipelineDockerDebugDao.insertDebug(
-                dslContext = dslContext,
-                projectId = debugStartParam.projectId,
-                pipelineId = debugStartParam.pipelineId,
-                vmSeqId = debugStartParam.vmSeqId,
-                status = PipelineTaskStatus.RUNNING,
-                token = "",
-                imageName = "",
-                hostTag = taskHistory.dockerIp,
-                containerId = taskHistory.containerId,
-                buildEnv = "",
-                registryUser = "",
-                registryPwd = "",
-                imageType = "",
-                imagePublicFlag = false,
-                imageRDType = null
-            )
 
-            logger.info("${debugStartParam.pipelineId}|${debugStartParam.vmSeqId}| start debug. Container already running, ContainerInfo: ${taskHistory.containerId}")
-            return Result(true)
+                logger.info("${debugStartParam.pipelineId}|${debugStartParam.vmSeqId}| start debug. Container already running, ContainerInfo: ${dockerBuildHistory.containerId}")
+                return Result(true)
+            }
+
+            dockerIp = dockerBuildHistory.dockerIp
+        } else {
+            // 没有构建历史的情况下debug，且没有分配构建IP，预先分配构建IP
+            val taskHistory = pipelineDockerTaskSimpleDao.getByPipelineIdAndVMSeq(dslContext, debugStartParam.pipelineId, debugStartParam.vmSeqId)
+            if (taskHistory != null) {
+                dockerIp = taskHistory.dockerIp
+            } else {
+                dockerIp = dockerHostUtils.getAvailableDockerIp(debugStartParam.projectId, debugStartParam.pipelineId, debugStartParam.vmSeqId, setOf())
+                pipelineDockerTaskSimpleDao.create(dslContext, debugStartParam.pipelineId, debugStartParam.vmSeqId, dockerIp)
+            }
         }
-
-        val dockerIp = taskHistory.dockerIp
 
         // 查询是否已经有启动调试容器了，如果有，直接返回成功
         val result = dockerHostDebugService.getDebugStatus(debugStartParam.pipelineId, debugStartParam.vmSeqId)
