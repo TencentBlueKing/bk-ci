@@ -33,3 +33,7 @@ jobs:
         shell: cmd
         working-directory: src/agent/
         if: matrix.os == 'windows-latest'
+      - uses: actions/upload-artifact@v1
+        with:
+          name: agent_${{ matrix.os }}
+          path: src/agent/bin/
