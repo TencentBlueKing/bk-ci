@@ -1042,7 +1042,7 @@ class PipelineService @Autowired constructor(
         logger.info("getPipelines totalAvailablePipelineSize is :$totalAvailablePipelineSize,totalInvalidPipelineSize is :$totalInvalidPipelineSize")
         val pipelineList = mutableListOf<Pipeline>()
         val totalSize = totalAvailablePipelineSize + totalInvalidPipelineSize
-        if ((null != page && null != pageSize) && (page != 1 && pageSize != -1)) {
+        if ((null != page && null != pageSize) && !(page == 1 && pageSize == -1)) {
             // 判断可用的流水线是否已到最后一页
             val totalAvailablePipelinePage = PageUtil.calTotalPage(pageSize, totalSize)
             logger.info("getPipelines totalAvailablePipelinePage is :$totalAvailablePipelinePage")
@@ -1052,6 +1052,7 @@ class PipelineService @Autowired constructor(
                     pipelineList = pipelineList,
                     projectId = projectId,
                     channelCode = channelCode,
+                    sortType = sortType,
                     favorPipelines = favorPipelines,
                     authPipelines = authPipelines,
                     viewId = viewId,
@@ -1068,6 +1069,7 @@ class PipelineService @Autowired constructor(
                     pipelineList = pipelineList,
                     projectId = projectId,
                     channelCode = channelCode,
+                    sortType = sortType,
                     favorPipelines = favorPipelines,
                     authPipelines = authPipelines,
                     viewId = viewId,
@@ -1082,6 +1084,7 @@ class PipelineService @Autowired constructor(
                         pipelineList = pipelineList,
                         projectId = projectId,
                         channelCode = channelCode,
+                        sortType = sortType,
                         favorPipelines = favorPipelines,
                         authPipelines = authPipelines,
                         viewId = viewId,
@@ -1099,6 +1102,7 @@ class PipelineService @Autowired constructor(
                     pipelineList = pipelineList,
                     projectId = projectId,
                     channelCode = channelCode,
+                    sortType = sortType,
                     favorPipelines = favorPipelines,
                     authPipelines = authPipelines,
                     viewId = viewId,
@@ -1115,6 +1119,7 @@ class PipelineService @Autowired constructor(
                 pipelineList = pipelineList,
                 projectId = projectId,
                 channelCode = channelCode,
+                sortType = sortType,
                 favorPipelines = favorPipelines,
                 authPipelines = authPipelines,
                 viewId = viewId,
@@ -1127,6 +1132,7 @@ class PipelineService @Autowired constructor(
                 pipelineList = pipelineList,
                 projectId = projectId,
                 channelCode = channelCode,
+                sortType = sortType,
                 favorPipelines = favorPipelines,
                 authPipelines = authPipelines,
                 viewId = viewId,
