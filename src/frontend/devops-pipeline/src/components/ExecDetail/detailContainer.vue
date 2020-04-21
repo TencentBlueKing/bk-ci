@@ -71,6 +71,13 @@
         }
     }
 
+    /deep/ .head-tool {
+        cursor: pointer;
+        font-size: 14px;
+        margin-right: 15px;
+        color: #3c96ff;
+    }
+
     /deep/ .log-folder {
         background-image: url("../../images/down.png");
         display: inline-block;

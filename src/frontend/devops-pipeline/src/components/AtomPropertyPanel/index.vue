@@ -13,15 +13,15 @@
 </template>
 
 <script>
-    import { mapGetters, mapActions, mapState } from 'vuex'
-    import AtomContent from './AtomContent'
+    import { mapActions, mapState } from 'vuex'
     import ReferenceVariable from './ReferenceVariable'
+    import AtomContent from './AtomContent.vue'
 
     export default {
         name: 'atom-property-panel',
         components: {
-            AtomContent,
-            ReferenceVariable
+            ReferenceVariable,
+            AtomContent
         },
         props: {
             elementIndex: Number,
@@ -38,32 +38,8 @@
         },
         computed: {
             ...mapState('atom', [
-                'globalEnvs',
                 'isPropertyPanelVisible'
             ]),
-            ...mapGetters('atom', [
-                'getElement',
-                'getContainer',
-                'getContainers',
-                'getStage'
-            ]),
-            stage () {
-                const { stageIndex, getStage, stages } = this
-                return getStage(stages, stageIndex)
-            },
-            containers () {
-                const { stage, getContainers } = this
-                return getContainers(stage)
-            },
-            container () {
-                const { containerIndex, containers, getContainer } = this
-                return getContainer(containers, containerIndex)
-            },
-            element () {
-                const { container, elementIndex, getElement } = this
-                const element = getElement(container, elementIndex)
-                return element
-            },
             visible: {
                 get () {
                     return this.isPropertyPanelVisible
@@ -76,16 +52,17 @@
                 }
             }
         },
-
         methods: {
             ...mapActions('atom', [
                 'toggleAtomSelectorPopup',
                 'updateAtom',
                 'togglePropertyPanel'
             ]),
+
             toggleEditName (show) {
                 this.nameEditing = show
             },
+
             handleEditName (e) {
                 const { value } = e.target
                 this.handleUpdateAtom('name', value)

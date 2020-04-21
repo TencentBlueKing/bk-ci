@@ -258,9 +258,6 @@
                 'isPublicResource',
                 'isDockerBuildResource'
             ]),
-            ...mapState('soda', [
-                'tstackWhiteList'
-            ]),
             imageTypeList () {
                 return [
                     { label: this.$t('editPage.fromList'), value: 'BKSTORE' },
