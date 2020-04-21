@@ -120,8 +120,8 @@ jobs:
         with:
           tag_name: ${{ github.ref }}
           release_name: bk-ci ${{ github.ref }}
-          draft: false
-          prerelease: false
+          draft: true
+          prerelease: true
       - uses: actions/download-artifact@v1
         name: Download backend
         with:
