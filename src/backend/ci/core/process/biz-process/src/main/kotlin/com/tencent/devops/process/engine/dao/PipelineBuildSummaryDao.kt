@@ -218,87 +218,95 @@ class PipelineBuildSummaryDao {
                 conditions.add(T_PIPELINE_INFO.PIPELINE_ID.notIn(authPipelines))
             }
         }
+        if (pipelineFilterParamList != null && pipelineFilterParamList.isNotEmpty()) {
+            handleFilterParamCondition(pipelineFilterParamList[0], conditions)
+        }
         when (viewId) {
             PIPELINE_VIEW_FAVORITE_PIPELINES -> conditions.add(T_PIPELINE_INFO.PIPELINE_ID.`in`(favorPipelines))
             PIPELINE_VIEW_MY_PIPELINES -> conditions.add(T_PIPELINE_INFO.PIPELINE_ID.`in`(authPipelines))
             PIPELINE_VIEW_ALL_PIPELINES -> {
                 // 查询所有流水线
             }
-            else -> pipelineFilterParamList?.forEach { pipelineFilterParam ->
-                val logic = pipelineFilterParam.logic
-                val conditionAndFlag: Boolean = (logic == Logic.AND)
-                val filterByPipelineNames = pipelineFilterParam.filterByPipelineNames
-                val filterConditions = DSL.trueCondition()
-                // 过滤流水线名称
-                if (filterByPipelineNames.isNotEmpty()) {
-                    val filterByPipelineNameConditions = DSL.trueCondition()
-                    filterByPipelineNames.forEach {
-                        val pipelineName = it.pipelineName
-                        val pipelineNameField = T_PIPELINE_INFO.PIPELINE_NAME
-                        val bkCondition = it.condition
-                        val subCondition = generateSubCondition(bkCondition, pipelineNameField, pipelineName)
-                        if (conditionAndFlag) {
-                            filterByPipelineNameConditions.and(subCondition)
-                        } else {
-                            filterByPipelineNameConditions.or(subCondition)
-                        }
-                    }
-                    if (conditionAndFlag) {
-                        filterConditions.and(filterByPipelineNameConditions)
-                    } else {
-                        filterConditions.or(filterByPipelineNameConditions)
-                    }
-                }
-                // 过滤流水线创建人
-                val filterByPipelineCreators = pipelineFilterParam.filterByPipelineCreators
-                if (filterByPipelineCreators.isNotEmpty()) {
-                    val filterByPipelineCreatorConditions = DSL.trueCondition()
-                    filterByPipelineCreators.forEach {
-                        val userIds = it.userIds
-                        val pipelineCreatorField = T_PIPELINE_INFO.CREATOR
-                        val subCondition = pipelineCreatorField.`in`(userIds)
-                        if (conditionAndFlag) {
-                            filterByPipelineCreatorConditions.and(subCondition)
-                        } else {
-                            filterByPipelineCreatorConditions.or(subCondition)
-                        }
-                    }
-                    if (conditionAndFlag) {
-                        filterConditions.and(filterByPipelineCreatorConditions)
-                    } else {
-                        filterConditions.or(filterByPipelineCreatorConditions)
-                    }
-                }
-                // 过滤流水线标签
-                val filterByLabelInfo = pipelineFilterParam.filterByLabelInfo
-                val filterByLabels = filterByLabelInfo.filterByLabels
-                val labelToPipelineMap = filterByLabelInfo.labelToPipelineMap
-                if (filterByLabels.isNotEmpty()) {
-                    val filterByLabelConditions = DSL.trueCondition()
-                    filterByLabels.forEach { filterByLabel ->
-                        val labelIds = filterByLabel.labelIds
-                        val pipelineIdField = T_PIPELINE_INFO.PIPELINE_ID
-                        val subCondition = DSL.trueCondition()
-                        labelIds.forEach {
-                            val labelPipelineIds = labelToPipelineMap?.get(it)
-                            subCondition.or(pipelineIdField.`in`(labelPipelineIds))
-                        }
-                        if (conditionAndFlag) {
-                            filterByLabelConditions.and(subCondition)
-                        } else {
-                            filterByLabelConditions.or(subCondition)
-                        }
-                    }
-                    if (conditionAndFlag) {
-                        filterConditions.and(filterByLabelConditions)
-                    } else {
-                        filterConditions.or(filterByLabelConditions)
-                    }
-                }
-                conditions.add(filterConditions)
-            }
+            else -> if (pipelineFilterParamList != null && pipelineFilterParamList.size > 1) handleFilterParamCondition(pipelineFilterParamList[1], conditions)
         }
         return conditions
+    }
+
+    private fun handleFilterParamCondition(
+        pipelineFilterParam: PipelineFilterParam,
+        conditions: MutableList<Condition>
+    ) {
+        val logic = pipelineFilterParam.logic
+        val conditionAndFlag: Boolean = (logic == Logic.AND)
+        val filterByPipelineNames = pipelineFilterParam.filterByPipelineNames
+        var filterConditions = DSL.trueCondition()
+        // 过滤流水线名称
+        if (filterByPipelineNames.isNotEmpty()) {
+            var filterByPipelineNameConditions = DSL.trueCondition()
+            filterByPipelineNames.forEach {
+                val pipelineName = it.pipelineName
+                val pipelineNameField = T_PIPELINE_INFO.PIPELINE_NAME
+                val bkCondition = it.condition
+                val subCondition = generateSubCondition(bkCondition, pipelineNameField, pipelineName)
+                filterByPipelineNameConditions = if (conditionAndFlag) {
+                    filterByPipelineNameConditions.and(subCondition)
+                } else {
+                    filterByPipelineNameConditions.or(subCondition)
+                }
+            }
+            filterConditions = if (conditionAndFlag) {
+                filterConditions.and(filterByPipelineNameConditions)
+            } else {
+                filterConditions.or(filterByPipelineNameConditions)
+            }
+        }
+        // 过滤流水线创建人
+        val filterByPipelineCreators = pipelineFilterParam.filterByPipelineCreators
+        if (filterByPipelineCreators.isNotEmpty()) {
+            var filterByPipelineCreatorConditions = DSL.trueCondition()
+            filterByPipelineCreators.forEach {
+                val userIds = it.userIds
+                val pipelineCreatorField = T_PIPELINE_INFO.CREATOR
+                val subCondition = pipelineCreatorField.`in`(userIds)
+                filterByPipelineCreatorConditions = if (conditionAndFlag) {
+                    filterByPipelineCreatorConditions.and(subCondition)
+                } else {
+                    filterByPipelineCreatorConditions.or(subCondition)
+                }
+            }
+            filterConditions = if (conditionAndFlag) {
+                filterConditions.and(filterByPipelineCreatorConditions)
+            } else {
+                filterConditions.or(filterByPipelineCreatorConditions)
+            }
+        }
+        // 过滤流水线标签
+        val filterByLabelInfo = pipelineFilterParam.filterByLabelInfo
+        val filterByLabels = filterByLabelInfo.filterByLabels
+        val labelToPipelineMap = filterByLabelInfo.labelToPipelineMap
+        if (filterByLabels.isNotEmpty()) {
+            var filterByLabelConditions = DSL.trueCondition()
+            filterByLabels.forEach { filterByLabel ->
+                val labelIds = filterByLabel.labelIds
+                val pipelineIdField = T_PIPELINE_INFO.PIPELINE_ID
+                val subCondition = DSL.trueCondition()
+                labelIds.forEach {
+                    val labelPipelineIds = labelToPipelineMap?.get(it)
+                    subCondition.or(pipelineIdField.`in`(labelPipelineIds))
+                }
+                filterByLabelConditions = if (conditionAndFlag) {
+                    filterByLabelConditions.and(subCondition)
+                } else {
+                    filterByLabelConditions.or(subCondition)
+                }
+            }
+            filterConditions = if (conditionAndFlag) {
+                filterConditions.and(filterByLabelConditions)
+            } else {
+                filterConditions.or(filterByLabelConditions)
+            }
+        }
+        conditions.add(filterConditions)
     }
 
     private fun generateSubCondition(
