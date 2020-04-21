@@ -458,6 +458,7 @@ class DockerHostBuildService(
                 imageName = imageName,
                 containerId = "",
                 wsInHost = true,
+                poolNo = 0,
                 registryUser = dockerRunParam.registryUser,
                 registryPwd = dockerRunParam.registryPwd,
                 imageType = ImageType.THIRD.type,

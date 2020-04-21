@@ -29,10 +29,14 @@ package com.tencent.devops.dockerhost.resources
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.dispatch.pojo.DockerHostBuildInfo
 import com.tencent.devops.dockerhost.api.ServiceDockerHostResource
+import com.tencent.devops.dockerhost.exception.ContainerException
+import com.tencent.devops.dockerhost.exception.NoSuchImageException
 import com.tencent.devops.dockerhost.pojo.CheckImageRequest
 import com.tencent.devops.dockerhost.pojo.CheckImageResponse
 import com.tencent.devops.dockerhost.pojo.DockerBuildParam
+import com.tencent.devops.dockerhost.pojo.DockerHostLoad
 import com.tencent.devops.dockerhost.pojo.DockerLogsResponse
 import com.tencent.devops.dockerhost.pojo.DockerRunParam
 import com.tencent.devops.dockerhost.pojo.DockerRunResponse
@@ -49,6 +53,7 @@ class ServiceDockerHostResourceImpl @Autowired constructor(
     private val dockerService: DockerService,
     private val dockerHostBuildService: DockerHostBuildService
 ) : ServiceDockerHostResource {
+
     override fun dockerBuild(
         projectId: String,
         pipelineId: String,
@@ -128,6 +133,39 @@ class ServiceDockerHostResourceImpl @Autowired constructor(
         logger.info("[$buildId]|Enter ServiceDockerHostResourceImpl.dockerStop...")
         dockerService.dockerStop(projectId, pipelineId, vmSeqId, buildId, containerId)
         return Result(true)
+    }
+
+    override fun startBuild(dockerHostBuildInfo: DockerHostBuildInfo): Result<String> {
+        return try {
+            Result(dockerService.startBuild(dockerHostBuildInfo))
+        } catch (e: NoSuchImageException) {
+            logger.error("Create container container failed, no such image. pipelineId: ${dockerHostBuildInfo.pipelineId}, vmSeqId: ${dockerHostBuildInfo.vmSeqId}, err: ${e.message}")
+            dockerHostBuildService.log(
+                buildId = dockerHostBuildInfo.buildId,
+                message = "构建环境启动失败，镜像不存在, 镜像:${dockerHostBuildInfo.imageName}",
+                containerHashId = dockerHostBuildInfo.containerHashId
+            )
+            Result(2, "构建环境启动失败，镜像不存在, 镜像:${dockerHostBuildInfo.imageName}", "")
+        } catch (e: ContainerException) {
+            logger.error("Create container failed, rollback build. buildId: ${dockerHostBuildInfo.buildId}, vmSeqId: ${dockerHostBuildInfo.vmSeqId}")
+            dockerHostBuildService.log(
+                buildId = dockerHostBuildInfo.buildId,
+                message = "构建环境启动失败，错误信息:${e.message}",
+                containerHashId = dockerHostBuildInfo.containerHashId
+            )
+            Result(2, "构建环境启动失败，错误信息:${e.message}", "")
+        }
+    }
+
+    override fun endBuild(dockerHostBuildInfo: DockerHostBuildInfo): Result<Boolean> {
+        logger.warn("Stop the container, containerId: ${dockerHostBuildInfo.containerId}")
+        dockerHostBuildService.stopContainer(dockerHostBuildInfo)
+
+        return Result(true)
+    }
+
+    override fun getDockerHostLoad(): Result<DockerHostLoad> {
+        return Result(dockerService.getDockerHostLoad())
     }
 
     private fun checkReq(request: HttpServletRequest) {

@@ -24,20 +24,11 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dockerhost.cron
+package com.tencent.devops.dispatch.pojo
 
-import com.tencent.devops.dockerhost.utils.SigarUtil
-import org.springframework.scheduling.annotation.Scheduled
-import org.springframework.stereotype.Component
-
-@Component
-class SystemInfoRunner {
-
-    @Scheduled(cron = "0/10 * * * * ?")
-    fun startCollect() {
-        SigarUtil.pushMem()
-        SigarUtil.pushCpu()
-        SigarUtil.pushDisk()
-        SigarUtil.pushDiskIOUtil()
-    }
-}
+data class DockerHostLoadConfig(
+    val cpuLoadThreshold: Int,
+    val memLoadThreshold: Int,
+    val diskLoadThreshold: Int,
+    val diskIOLoadThreshold: Int
+)
