@@ -408,7 +408,7 @@ class PipelineBuildSummaryDao {
             baseStep.orderBy(sortTypeField.desc())
         }
         logger.info(baseStep.getSQL(true))
-        return if ((null != page && null != pageSize) && (page != 1 && pageSize != -1)) {
+        return if ((null != page && null != pageSize) && !(page == 1 && pageSize == -1)) {
             baseStep.limit((page - 1) * pageSize + (offsetNum ?: 0), pageSize).fetch()
         } else {
             baseStep.fetch()
