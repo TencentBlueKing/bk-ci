@@ -94,13 +94,13 @@ jobs:
         run: |
           mkdir result
           cd src/backend/ci/release/
-          mv worker-agent.jar $GITHUB_WORKSPACE/support-files/agent-package/jar
+          mv -v worker-agent.jar $GITHUB_WORKSPACE/support-files/agent-package/jar
           tar czvf backend.tar.gz *.jar
-          cd $GITHUB_WORKSPACE && mv src/backend/ci/release/backend.tar.gz result/
+          cd $GITHUB_WORKSPACE && mv -v src/backend/ci/release/backend.tar.gz result/
           cd src/gateway/ && tar czf gateway.tar.gz ./core/
-          cd $GITHUB_WORKSPACE && mv src/gateway/gateway.tar.gz result/
-          tar --exclude='./support-files/agent-package' czf result/config.tar.gz support-files/ scripts/
-          tar czvf result/agent.tar.gz support-files/agent-package/
+          cd $GITHUB_WORKSPACE && mv -v src/gateway/gateway.tar.gz result/
+          tar czvf result/config.tar.gz --exclude="support-files/agent-package" support-files/ scripts/
+          cd support-files/ && tar czvf ../result/agent.tar.gz agent-package/
       - name: Upload artifacts
         uses: actions/upload-artifact@v1
         with:
