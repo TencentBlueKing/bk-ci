@@ -26,6 +26,10 @@
 
 rootProject.name = "bk-ci-backend"
 
+// Single CI Service
+include ":boot-assembly"
+
+// CI Core Micro Service
 include ":core"
 include ":core:common"
 include ":core:common:common-event"
@@ -165,8 +169,6 @@ include ":core:worker"
 include ":core:worker:worker-agent"
 include ":core:worker:worker-common"
 include ":core:worker:worker-api-sdk"
-
-include ":core:boot-assembly"
 
 include ":core:notify"
 include ":core:notify:api-notify"
