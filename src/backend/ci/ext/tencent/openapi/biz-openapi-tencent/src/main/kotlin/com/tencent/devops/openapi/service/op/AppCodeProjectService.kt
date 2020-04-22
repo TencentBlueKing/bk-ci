@@ -46,9 +46,12 @@ class AppCodeProjectService(
         val projectIdList = projectId.split(" |;".toRegex())
         var result = false
         projectIdList.forEach {
-            result = appCodeProjectDao.add(dslContext, userName, appCode, it)
-            if (!result) {
-                return result
+            val projectIdTmp = it.trim()
+            if(projectIdTmp.isNotBlank()) {
+                result = appCodeProjectDao.add(dslContext, userName, appCode, it)
+                if (!result) {
+                    return result
+                }
             }
         }
         return result
