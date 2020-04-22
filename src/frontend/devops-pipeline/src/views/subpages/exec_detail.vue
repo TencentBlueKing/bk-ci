@@ -95,6 +95,7 @@
             </log>
         </template>
         <review-dialog :is-show="showReviewDialog"></review-dialog>
+        <mini-map :stages="execDetail.model.stages" scroll-class=".exec-pipeline" v-if="!isLoading && !fetchingAtomList"></mini-map>
     </section>
 </template>
 
@@ -115,6 +116,7 @@
     import pipelineConstMixin from '@/mixins/pipelineConstMixin'
     import { convertMStoStringByRule } from '@/utils/util'
     import Logo from '@/components/Logo'
+    import MiniMap from '@/components/MiniMap'
 
     export default {
         components: {
@@ -128,7 +130,8 @@
             log,
             job,
             ReviewDialog,
-            Logo
+            Logo,
+            MiniMap
         },
         mixins: [pipelineOperateMixin, pipelineConstMixin],
 
@@ -532,19 +535,21 @@
     @import './../../scss/pipelineStatus';
     .pipeline-detail-wrapper {
         height: 100%;
-        padding: 7px 25px 0 25px;
+        padding: 7px 0 0 25px;
 
         .pipeline-detail-tab-card {
             height: 100%;
             .bk-tab-section {
-                height: calc(100% - 60px);
-                padding-bottom: 10px;
+                height: calc(100% - 52px);
             }
         }
         .exec-pipeline {
             position: relative;
             overflow: auto;
             height: 100%;
+            /deep/ .devops-stage-list {
+                padding-bottom: 25px;
+            }
         }
 
         .bk-sideslider-wrapper {
