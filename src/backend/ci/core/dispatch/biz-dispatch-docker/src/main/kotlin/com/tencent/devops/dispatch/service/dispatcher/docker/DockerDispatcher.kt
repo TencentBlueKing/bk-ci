@@ -93,22 +93,18 @@ class DockerDispatcher @Autowired constructor(
             val dockerIp: String
             val poolNo = dockerHostUtils.getIdlePoolNo(pipelineAgentStartupEvent.pipelineId, pipelineAgentStartupEvent.vmSeqId)
             if (taskHistory != null) {
-                dockerIp = if (poolNo > 1) {
-                    // 同一条流水线并发构建时，无视负载，直接下发同一个IP（避免同一条流水线并发量太大，影响其他流水线构建）
-                    taskHistory.dockerIp
-                } else {
-                    if (specialIpSet.isNotEmpty() && specialIpSet.toString() != "[]") {
+                dockerIp = if (specialIpSet.isNotEmpty() && specialIpSet.toString() != "[]") {
+                    // 改工程配置了专机
+                    if (specialIpSet.contains(taskHistory.dockerIp)) {
                         // 在专机列表中
-                        if (specialIpSet.contains(taskHistory.dockerIp)) {
-                            checkAndSetIP(pipelineAgentStartupEvent, specialIpSet, taskHistory.dockerIp)
-                        } else {
-                            // 不在专机列表中，重新依据专机列表去选择负载最小的
-                            resetDockerIp(pipelineAgentStartupEvent, specialIpSet, taskHistory.dockerIp, "专机漂移")
-                        }
+                        checkAndSetIP(pipelineAgentStartupEvent, specialIpSet, taskHistory.dockerIp, poolNo)
                     } else {
-                        // 没有配置专机，根据当前IP负载选择IP
-                        checkAndSetIP(pipelineAgentStartupEvent, specialIpSet, taskHistory.dockerIp)
+                        // 不在专机列表中，重新依据专机列表去选择负载最小的
+                        resetDockerIp(pipelineAgentStartupEvent, specialIpSet, taskHistory.dockerIp, "专机漂移")
                     }
+                } else {
+                    // 没有配置专机，根据当前IP负载选择IP
+                    checkAndSetIP(pipelineAgentStartupEvent, specialIpSet, taskHistory.dockerIp, poolNo)
                 }
             } else {
                 // 第一次构建，根据负载条件选择可用IP
@@ -204,8 +200,19 @@ class DockerDispatcher @Autowired constructor(
         }*/
     }
 
-    private fun checkAndSetIP(pipelineAgentStartupEvent: PipelineAgentStartupEvent, specialIpSet: Set<String>, oldDockerIp: String): String {
+    private fun checkAndSetIP(
+        pipelineAgentStartupEvent: PipelineAgentStartupEvent,
+        specialIpSet: Set<String>,
+        oldDockerIp: String,
+        poolNo: Int
+    ): String {
         var dockerIp = oldDockerIp
+
+        // 同一条流水线并发构建时，无视负载，直接下发同一个IP（避免同一条流水线并发量太大，影响其他流水线构建）
+        if (poolNo > 1) {
+            return dockerIp
+        }
+
         // 查看当前IP负载情况，当前IP可用，且负载未超额（内存低于90%且硬盘低于90%），可直接下发，当负载超额，重新选择构建机
         val ipInfo = pipelineDockerIpInfoDao.getDockerIpInfo(dslContext, oldDockerIp)
         if (ipInfo == null || !ipInfo.enable || ipInfo.diskLoad > 90 || ipInfo.memLoad > 90) {
