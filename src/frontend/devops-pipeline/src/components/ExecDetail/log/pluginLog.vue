@@ -21,9 +21,10 @@
 </template>
 
 <script>
-    import { mapActions } from 'vuex'
+    import { mapActions, mapState } from 'vuex'
     import virtualScroll from './virtualScroll'
     import search from '../tools/search'
+    import { hashID } from '@/utils/util.js'
     // eslint-disable-next-line
     const Worker = require('worker-loader!./worker.js')
 
@@ -66,9 +67,6 @@
             },
             executeCount: {
                 type: Number
-            },
-            downLoadLink: {
-                type: String
             }
         },
 
@@ -86,7 +84,30 @@
                     currentExe: this.executeCount,
                     lineNo: 0
                 },
-                isStop: false
+                timeId: '',
+                clearIds: []
+            }
+        },
+
+        computed: {
+            ...mapState('atom', [
+                'execDetail',
+                'editingElementPos'
+            ]),
+
+            downLoadLink () {
+                const editingElementPos = this.editingElementPos
+                const fileName = encodeURI(encodeURI(`${editingElementPos.stageIndex + 1}-${editingElementPos.containerIndex + 1}-${editingElementPos.elementIndex + 1}-${this.currentElement.name}`))
+                const tag = this.currentElement.id
+                return `${AJAX_URL_PIRFIX}/log/api/user/logs/${this.$route.params.projectId}/${this.$route.params.pipelineId}/${this.execDetail.id}/download?tag=${tag}&executeCount=${this.postData.currentExe}&fileName=${fileName}`
+            },
+
+            currentElement () {
+                const {
+                    editingElementPos: { stageIndex, containerIndex, elementIndex },
+                    execDetail: { model: { stages } }
+                } = this
+                return stages[stageIndex].containers[containerIndex].elements[elementIndex]
             }
         },
 
@@ -106,13 +127,14 @@
                 'getAfterLog'
             ]),
 
-            getLog (isChangeExe) {
+            getLog () {
+                const id = hashID()
+                this.getLog.id = id
                 let logMethod = this.getAfterLog
                 if (this.postData.lineNo <= 0) logMethod = this.getInitLog
 
                 logMethod(this.postData).then((res) => {
-                    if (this.isStop && !isChangeExe) return
-                    this.isStop = false
+                    if (this.clearIds.includes(id)) return
 
                     const scroll = this.$refs.scroll
                     res = res.data || {}
@@ -144,13 +166,13 @@
                     if (res.finished) {
                         if (res.hasMore) {
                             scroll.addLogData(logs)
-                            setTimeout(this.getLog, 100)
+                            this.timeId = setTimeout(this.getLog, 100)
                         } else {
                             scroll.addLogData(logs)
                         }
                     } else {
                         scroll.addLogData(logs)
-                        setTimeout(this.getLog, 1000)
+                        this.timeId = setTimeout(this.getLog, 1000)
                     }
                 }).catch((err) => {
                     this.$bkMessage({ theme: 'error', message: err.message || err })
@@ -161,12 +183,14 @@
             changeExecute (execute) {
                 this.$refs.scroll.resetData()
                 this.postData.currentExe = execute
+                this.postData.lineNo = 0
                 this.closeLog()
-                this.getLog(true)
+                this.getLog()
             },
 
             closeLog () {
-                this.isStop = true
+                clearTimeout(this.timeId)
+                this.clearIds.push(this.getLog.id)
             },
 
             showSearchLog ({ index, realIndex }) {

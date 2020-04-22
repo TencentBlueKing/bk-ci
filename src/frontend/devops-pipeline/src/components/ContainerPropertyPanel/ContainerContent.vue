@@ -10,6 +10,7 @@
                     :text="$t('editPage.showAliasName')"
                     name="showBuildResource"
                     :handle-change="handleContainerChange"
+                    :disabled="!editable"
                 >
                 </atom-checkbox>
             </div>
