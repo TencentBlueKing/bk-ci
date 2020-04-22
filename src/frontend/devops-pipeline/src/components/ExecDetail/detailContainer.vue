@@ -43,7 +43,7 @@
         methods: {
             closeLog (event) {
                 const curTarget = event.target
-                if (curTarget.classList.contains('log-home')) this.$emit('closeLog')
+                if (curTarget.classList.contains('log-home')) this.$emit('close')
             }
         }
     }

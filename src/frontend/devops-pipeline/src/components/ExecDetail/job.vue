@@ -1,5 +1,5 @@
 <template>
-    <detail-container @closeLog="$emit('closeLog')"
+    <detail-container @close="$emit('close')"
         :title="currentJob.name"
         :status="currentJob.status"
         :current-tab="currentTab"
@@ -69,7 +69,7 @@
             },
 
             pluginList () {
-                const startUp = { name: 'Set up job', status: this.currentJob.startVMStatus, id: `startVM-${this.currentJob.id}` }
+                const startUp = { name: 'Set up job', status: this.currentJob.startVMStatus, id: `startVM-${this.currentJob.id}`, executeCount: 1 }
                 return [startUp, ...this.currentJob.elements]
             }
         }

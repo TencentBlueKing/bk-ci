@@ -136,6 +136,7 @@
 
             resetData () {
                 this.totalNumber = 0
+                this.hasCompleteInit = false
                 this.indexList = []
                 this.listData = []
                 this.changeStatus()
