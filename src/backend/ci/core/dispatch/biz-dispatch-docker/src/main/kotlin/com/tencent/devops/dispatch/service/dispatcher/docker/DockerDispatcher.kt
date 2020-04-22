@@ -84,6 +84,7 @@ class DockerDispatcher @Autowired constructor(
             pipelineAgentStartupEvent.executeCount ?: 1
         )
 
+        var poolNo = 0
         try {
             // 先判断是否OP已配置专机，若配置了专机，看当前ip是否在专机列表中，若在 选择当前IP并检查负载，若不在从专机列表中选择一个容量最小的
             val specialIpSet = pipelineDockerHostDao.getHostIps(dslContext, pipelineAgentStartupEvent.projectId).toSet()
@@ -96,7 +97,7 @@ class DockerDispatcher @Autowired constructor(
             )
 
             val dockerIp: String
-            val poolNo = dockerHostUtils.getIdlePoolNo(pipelineAgentStartupEvent.pipelineId, pipelineAgentStartupEvent.vmSeqId)
+            poolNo = dockerHostUtils.getIdlePoolNo(pipelineAgentStartupEvent.pipelineId, pipelineAgentStartupEvent.vmSeqId)
             if (taskHistory != null) {
                 dockerIp = if (specialIpSet.isNotEmpty() && specialIpSet.toString() != "[]") {
                     // 改工程配置了专机
@@ -163,7 +164,7 @@ class DockerDispatcher @Autowired constructor(
                         pipelineAgentStartupEvent.zone!!.name
                     },
                     dockerIp = "",
-                    poolNo = 0
+                    poolNo = poolNo
                 )
             }
 
