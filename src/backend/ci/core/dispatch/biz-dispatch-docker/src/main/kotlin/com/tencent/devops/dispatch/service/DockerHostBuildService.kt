@@ -313,18 +313,22 @@ class DockerHostBuildService @Autowired constructor(
 
     private fun finishBuild(record: TDispatchPipelineDockerBuildRecord, success: Boolean) {
         logger.info("Finish the docker build(${record.buildId}) with result($success)")
-        pipelineDockerBuildDao.updateStatus(dslContext,
-            record.buildId,
-            record.vmSeqId,
-            if (success) PipelineTaskStatus.DONE else PipelineTaskStatus.FAILURE)
+        try {
+            pipelineDockerBuildDao.updateStatus(dslContext,
+                record.buildId,
+                record.vmSeqId,
+                if (success) PipelineTaskStatus.DONE else PipelineTaskStatus.FAILURE)
 
-        // 更新dockerTask表(保留之前逻辑)
-        pipelineDockerTaskDao.updateStatus(dslContext,
-            record.buildId,
-            record.vmSeqId,
-            if (success) PipelineTaskStatus.DONE else PipelineTaskStatus.FAILURE)
-        redisUtils.deleteDockerBuild(record.id, SecurityUtil.decrypt(record.secretKey))
-        redisUtils.deleteHeartBeat(record.buildId, record.vmSeqId.toString())
+            // 更新dockerTask表(保留之前逻辑)
+            pipelineDockerTaskDao.updateStatus(dslContext,
+                record.buildId,
+                record.vmSeqId,
+                if (success) PipelineTaskStatus.DONE else PipelineTaskStatus.FAILURE)
+            redisUtils.deleteDockerBuild(record.id, SecurityUtil.decrypt(record.secretKey))
+            redisUtils.deleteHeartBeat(record.buildId, record.vmSeqId.toString())
+        } catch (e: Exception) {
+            logger.error("Finish the docker build(${record.buildId}) error.", e)
+        }
     }
 
     fun startBuild(hostTag: String): Result<DockerHostBuildInfo>? {
