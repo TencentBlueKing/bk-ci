@@ -35,5 +35,3 @@ dependencies {
     compile project(":core:ticket:model-ticket")
     compile "dom4j:dom4j"
 }
-
-apply from: "$rootDir/task_deploy_to_maven.gradle"

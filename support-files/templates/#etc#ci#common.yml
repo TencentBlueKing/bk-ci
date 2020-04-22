@@ -6,7 +6,7 @@ spring:
 # consul config do not need to change
   cloud:
     consul:
-      port: __CONSUL_HTTP_PORT__
+      port: __BKCI_CONSUL_PORT__
       discovery:
         tags: __BKCI_CONSUL_TAG__
 # redis config
