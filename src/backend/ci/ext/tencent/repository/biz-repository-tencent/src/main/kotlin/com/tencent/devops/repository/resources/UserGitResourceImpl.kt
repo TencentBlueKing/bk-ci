@@ -42,8 +42,8 @@ class UserGitResourceImpl @Autowired constructor(
     private val gitOauthService: IGitOauthService
 ) : UserGitResource {
 
-    override fun isOAuth(userId: String, redirectUrlType: RedirectUrlTypeEnum?, storeCode: String?): Result<AuthorizeResult> {
-        return Result(gitOauthService.isOAuth(userId, redirectUrlType, storeCode))
+    override fun isOAuth(userId: String, redirectUrlType: RedirectUrlTypeEnum?, redirectUrl: String?): Result<AuthorizeResult> {
+        return Result(gitOauthService.isOAuth(userId, redirectUrlType, redirectUrl))
     }
 
     override fun deleteToken(userId: String): Result<Int> {

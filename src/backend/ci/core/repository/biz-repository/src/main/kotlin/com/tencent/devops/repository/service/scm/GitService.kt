@@ -298,7 +298,7 @@ class GitService @Autowired constructor(
 
     override fun getRedirectUrl(redirectUrlType: String?): String {
         return if ("atomMarket" == redirectUrlType) {
-            gitConfig.redirectAtomMarketUrl
+            gitConfig.redirectStoreMarketUrl
         } else {
             gitConfig.redirectUrl
         }

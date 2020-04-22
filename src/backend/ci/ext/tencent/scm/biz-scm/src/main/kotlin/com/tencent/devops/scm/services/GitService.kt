@@ -118,15 +118,9 @@ class GitService @Autowired constructor(
     @Value("\${git.public.secret}")
     private lateinit var gitPublicSecret: String
 
-//    @Value("\${git.redirectAtomMarketUrl}")
-    private val redirectAtomMarketUrl: String = gitConfig.redirectAtomMarketUrl
+    private val redirectStoreMarketUrl: String = gitConfig.redirectStoreMarketUrl
 
-    private val redirectServiceMarketUrl: String = gitConfig.redirectServiceMarketUrl
-
-    //    @Value("\${git.redirectAtomRepositoryUrl}")
-    private val redirectAtomRepositoryUrl: String = gitConfig.redirectAtomRepositoryUrl
-
-    private val redirectServiceRepositoryUrl: String = gitConfig.redirectServiceRepositoryUrl
+    private val redirectAtomRepositoryUrl: String = gitConfig.redirectStoreRepositoryUrl
 
     private val executorService = Executors.newFixedThreadPool(2)
 
@@ -373,19 +367,9 @@ class GitService @Autowired constructor(
         val authParamDecodeJsonStr = URLDecoder.decode(authParamJsonStr, "UTF-8")
         val authParams = JsonUtil.toMap(authParamDecodeJsonStr)
         val type = authParams["redirectUrlType"] as? String
+        val specRedirectUrl = authParams["redirectUrl"] as? String
         return when (RedirectUrlTypeEnum.getRedirectUrlType(type ?: "")) {
-            RedirectUrlTypeEnum.ATOM_MARKET -> redirectAtomMarketUrl
-            RedirectUrlTypeEnum.ATOM_REPOSITORY -> {
-                val mf = MessageFormat(redirectAtomRepositoryUrl)
-                val atomCode = authParams["atomCode"] as? String
-                mf.format(arrayOf(atomCode))
-            }
-            RedirectUrlTypeEnum.EXT_SERVICE_REPOSITORY -> {
-                val mf = MessageFormat(redirectServiceRepositoryUrl)
-                val atomCode = authParams["atomCode"] as? String
-                mf.format(arrayOf(atomCode))
-            }
-            RedirectUrlTypeEnum.EXT_SERVICE_MARKET -> redirectServiceMarketUrl
+            RedirectUrlTypeEnum.SPEC -> specRedirectUrl!!
             RedirectUrlTypeEnum.DEFAULT -> redirectUrl
             else -> {
                 val projectId = authParams["projectId"] as String
