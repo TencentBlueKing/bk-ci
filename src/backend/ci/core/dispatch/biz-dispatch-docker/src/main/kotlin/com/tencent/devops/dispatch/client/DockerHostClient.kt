@@ -129,23 +129,23 @@ class DockerHostClient @Autowired constructor(
         }
 
         val requestBody = DockerHostBuildInfo(
-            event.projectId,
-            agentId,
-            event.pipelineId,
-            event.buildId,
-            Integer.valueOf(event.vmSeqId),
-            secretKey,
-            PipelineTaskStatus.RUNNING.status,
-            dockerImage!!,
-            "",
-            true,
-            poolNo,
-            userName ?: "",
-            password ?: "",
-            dispatchType.imageType?.type,
-            false,
-            null,
-            ""
+            projectId = event.projectId,
+            agentId = agentId,
+            pipelineId = event.pipelineId,
+            buildId = event.buildId,
+            vmSeqId = Integer.valueOf(event.vmSeqId),
+            secretKey = secretKey,
+            status = PipelineTaskStatus.RUNNING.status,
+            imageName = dockerImage!!,
+            containerId = "",
+            wsInHost = true,
+            poolNo = poolNo,
+            registryUser = userName ?: "",
+            registryPwd = password ?: "",
+            imageType = dispatchType.imageType?.type,
+            imagePublicFlag = false,
+            imageRDType = null,
+            containerHashId = ""
         )
 
         dockerBuildStart(dockerIp, requestBody, event)
@@ -153,23 +153,23 @@ class DockerHostClient @Autowired constructor(
 
     fun endBuild(event: PipelineAgentShutdownEvent, dockerIp: String, containerId: String) {
         val requestBody = DockerHostBuildInfo(
-            event.projectId,
-            "",
-            event.pipelineId,
-            event.buildId,
-            event.vmSeqId?.toInt() ?: 0,
-            "",
-            0,
-            "",
-            containerId,
-            true,
-            0,
-            event.userId,
-            "",
-            "",
-            false,
-            null,
-            ""
+            projectId = event.projectId,
+            agentId = "",
+            pipelineId = event.pipelineId,
+            buildId = event.buildId,
+            vmSeqId = event.vmSeqId?.toInt() ?: 0,
+            secretKey = "",
+            status = 0,
+            imageName = "",
+            containerId = containerId,
+            wsInHost = true,
+            poolNo = 0,
+            registryUser = event.userId,
+            registryPwd = "",
+            imageType = "",
+            imagePublicFlag = false,
+            imageRDType = null,
+            containerHashId = ""
         )
 
         val url = "http://$dockerIp/api/docker/build/end"
@@ -237,8 +237,8 @@ class DockerHostClient @Autowired constructor(
                         val unAvailableIpListLocal: Set<String> = unAvailableIpList?.plus(dockerIp) ?: setOf(dockerIp)
                         val retryTimeLocal = retryTime + 1
                         // 当前IP不可用，重新获取可用ip
-                        val idcIpLocal = dockerHostUtils.getAvailableDockerIp(event.projectId, event.pipelineId, event.vmSeqId, unAvailableIpListLocal)
-                        dockerBuildStart(idcIpLocal, requestBody, event, retryTimeLocal, unAvailableIpListLocal)
+                        val dockerIpLocal = dockerHostUtils.getAvailableDockerIp(event.projectId, event.pipelineId, event.vmSeqId, unAvailableIpListLocal)
+                        dockerBuildStart(dockerIpLocal, requestBody, event, retryTimeLocal, unAvailableIpListLocal)
                     } else {
                         logger.error("[${event.projectId}|${event.pipelineId}|${event.buildId}|$retryTime] Start build Docker VM failed, retry $retryTime times.")
                         throw DockerServiceException("Start build Docker VM failed, retry $retryTime times.")

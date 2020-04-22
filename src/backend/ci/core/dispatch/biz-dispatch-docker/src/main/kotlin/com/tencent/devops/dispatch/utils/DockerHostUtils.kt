@@ -73,21 +73,21 @@ class DockerHostUtils @Autowired constructor(
         val dockerHostLoadConfigTriple = getLoadConfig()
         logger.info("Docker host load config: ${JsonUtil.toJson(dockerHostLoadConfigTriple)}")
 
-        // 判断流水线上次关联的hostTag，如果存在并且构建机容量符合第一档负载则优先分配（兼容旧版本策略，降低版本更新时被重新洗牌的概率）
+        // 判断流水线上次关联的hostTag，如果存在并且构建机容量符合第二档负载则优先分配（兼容旧版本策略，降低版本更新时被重新洗牌的概率）
         val lastHostIp = redisUtils.getDockerBuildLastHost(pipelineId, vmSeqId)
         if (lastHostIp != null && lastHostIp.isNotEmpty()) {
             val lastHostIpInfo = pipelineDockerIpInfoDao.getDockerIpInfo(dslContext, lastHostIp)
             if (lastHostIpInfo != null &&
                 lastHostIpInfo.enable &&
-                lastHostIpInfo.diskLoad < dockerHostLoadConfigTriple.first.diskLoadThreshold &&
-                lastHostIpInfo.memLoad < dockerHostLoadConfigTriple.first.memLoadThreshold &&
-                lastHostIpInfo.cpuLoad < dockerHostLoadConfigTriple.first.cpuLoadThreshold
+                lastHostIpInfo.diskLoad < dockerHostLoadConfigTriple.second.diskLoadThreshold &&
+                lastHostIpInfo.memLoad < dockerHostLoadConfigTriple.second.memLoadThreshold &&
+                lastHostIpInfo.cpuLoad < dockerHostLoadConfigTriple.second.cpuLoadThreshold
             ) {
                 return lastHostIp
             }
         }
 
-        // 先取容量负载比较小的，同时满足磁盘空间使用率小于60%并且内存CPU使用率均低于80%(具体负载由OP平台配置)，从满足的节点中选择磁盘空间使用率最小的
+        // 先取容量负载比较小的，同时满足磁盘空间使用率小于60%并且内存CPU使用率均低于80%(负载阈值具体由OP平台配置)，从满足的节点中选择磁盘空间使用率最小的
         val firstLoadConfig = dockerHostLoadConfigTriple.first
         val firstDockerIpList =
             pipelineDockerIpInfoDao.getAvailableDockerIpList(
@@ -147,7 +147,7 @@ class DockerHostUtils @Autowired constructor(
     }
 
     fun getAvailableDockerIp(projectId: String, pipelineId: String, vmSeqId: String, unAvailableIpList: Set<String>): String {
-        // 先判断是否OP已配置专机，若配置了专机，从列表中选择一个容量最小的
+        // 先判断是否OP已配置专机，若配置了专机，从专机列表中选择一个容量最小的
         val specialIpSet = pipelineDockerHostDao.getHostIps(dslContext, projectId).toSet()
         logger.info("getAvailableDockerIp projectId: $projectId | specialIpSet: $specialIpSet")
         return getAvailableDockerIpWithSpecialIps(projectId, pipelineId, vmSeqId, specialIpSet, unAvailableIpList)
