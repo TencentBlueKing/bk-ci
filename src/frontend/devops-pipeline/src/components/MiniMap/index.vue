@@ -46,7 +46,9 @@
         REVIEWING: '#ffb400',
         REVIEW_ABORT: '#ffb400',
         CANCELED: '#ffb400',
-        TERMINATE: '#ffb400'
+        TERMINATE: '#ffb400',
+        RUNNING: '#459fff',
+        PREPARE_ENV: '#459fff'
     }
 
     const stageStatusColor = {
