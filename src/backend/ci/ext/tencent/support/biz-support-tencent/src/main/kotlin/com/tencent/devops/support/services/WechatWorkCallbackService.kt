@@ -155,8 +155,8 @@ class WechatWorkCallbackService @Autowired constructor(
                 val content = (callbackElement.msgElement.elementIterator("Content").next() as Element).text
                 // 针对文本内容的@情况进行处理
 
-                // 当被@到,但没有@到机器人的名字的时候也不做处理。 @DevOpsRobot(蓝盾机器人) @xiaolandebug(小蓝调试)
-                if (receiverType == ReceiverType.group && !content.contains("@DevOpsRobot") && !content.contains("@xiaolandebug")) {
+                // 当被@到,但没有@到机器人的名字的时候也不做处理。 @CI-Notice(蓝盾机器人) @xiaolandebug(小蓝调试)
+                if (receiverType == ReceiverType.group && !content.contains("@CI-Notice") && !content.contains("@xiaolandebug")) {
                     return true
                 }
                 logger.info("content = $content")

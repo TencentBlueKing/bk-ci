@@ -26,6 +26,7 @@
 
 package com.tencent.devops.artifactory.util
 
+import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.service.utils.SpringContextUtil
@@ -39,9 +40,15 @@ object RegionUtil {
     fun getRegionUrl(region: String?): String {
         return when (region) {
             null, "", DEVNET -> devHost()
-            IDC, OSS, EXTERNAL -> idcHost()
-            else -> throw RuntimeException("region not supported")
+            IDC, OSS -> idcHost()
+            EXTERNAL -> externalHost()
+            else -> throw OperationException("region not supported")
         }
+    }
+
+    private fun externalHost(): String {
+        val commonConfig = SpringContextUtil.getBean(CommonConfig::class.java)
+        return HomeHostUtil.getHost(commonConfig.devopsOuterHostGateWay!!)
     }
 
     private fun idcHost(): String {
@@ -55,14 +62,10 @@ object RegionUtil {
     }
 
     fun replaceRegionServer(url: String, region: String?): String {
-        return when (region) {
-            null, "", DEVNET -> replaceServerHost(url, devHost())
-            IDC, OSS, EXTERNAL -> replaceServerHost(url, idcHost())
-            else -> return url
-        }
+        return replaceServerHost(url, getRegionUrl(region))
     }
 
-    fun replaceServerHost(originUrl: String, regionHost: String): String {
+    private fun replaceServerHost(originUrl: String, targetHost: String): String {
         val index = originUrl.indexOf("//")
         if (index == -1) {
             return originUrl
@@ -71,6 +74,6 @@ object RegionUtil {
         if (index2 == -1) {
             return originUrl
         }
-        return "${regionHost.removeSuffix("/")}/${originUrl.substring(index2 + 1)}"
+        return "${targetHost.removeSuffix("/")}/${originUrl.substring(index2 + 1)}"
     }
 }

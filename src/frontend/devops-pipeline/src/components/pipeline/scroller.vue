@@ -3,12 +3,12 @@
         <div class="pipeline-scroller scroller-left fl"
             :class="{disabled: !allowPullLeft}"
             @click="pullLeft">
-            <i class="bk-icon icon-angle-double-left"></i>
+            <i class="devops-icon icon-angle-double-left"></i>
         </div>
         <div class="pipeline-scroller scroller-right fr"
             :class="{disabled: !allowPullRight}"
             @click="pullRight">
-            <i class="bk-icon icon-angle-double-right"></i>
+            <i class="devops-icon icon-angle-double-right"></i>
         </div>
     </section>
 </template>
