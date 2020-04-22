@@ -46,6 +46,7 @@ class DispatchDockerService @Autowired constructor(
                     it.diskIoLoad,
                     it.enable,
                     it.grayEnv,
+                    it.specialOn,
                     it.gmtCreate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
                 ))
             }
@@ -60,9 +61,19 @@ class DispatchDockerService @Autowired constructor(
     fun create(userId: String, dockerIpInfoVO: DockerIpInfoVO): Boolean {
         logger.info("$userId create IDC IP $dockerIpInfoVO")
         try {
-            pipelineDockerIPInfoDao.create(dslContext, dockerIpInfoVO.idcIp, dockerIpInfoVO.capacity, dockerIpInfoVO.usedNum,
-                dockerIpInfoVO.averageCpuLoad, dockerIpInfoVO.averageMemLoad, dockerIpInfoVO.averageDiskLoad, dockerIpInfoVO.averageDiskIOLoad,
-                dockerIpInfoVO.enable, dockerIpInfoVO.grayEnv)
+            pipelineDockerIPInfoDao.create(
+                dslContext,
+                dockerIpInfoVO.dockerIp,
+                dockerIpInfoVO.capacity,
+                dockerIpInfoVO.usedNum,
+                dockerIpInfoVO.averageCpuLoad,
+                dockerIpInfoVO.averageMemLoad,
+                dockerIpInfoVO.averageDiskLoad,
+                dockerIpInfoVO.averageDiskIOLoad,
+                dockerIpInfoVO.enable,
+                dockerIpInfoVO.grayEnv,
+                dockerIpInfoVO.specialOn
+            )
             return true
         } catch (e: Exception) {
             logger.error("OP dispatchDocker create error.", e)
@@ -70,10 +81,21 @@ class DispatchDockerService @Autowired constructor(
         }
     }
 
-    fun update(userId: String, dockerIpInfoId: Long, enable: Boolean): Boolean {
-        logger.info("$userId update Docker IP id: $dockerIpInfoId status: $enable")
+    fun update(userId: String, dockerIpInfoId: Long, dockerIpInfoVO: DockerIpInfoVO): Boolean {
+        logger.info("$userId update Docker IP id: $dockerIpInfoId dockerIpInfoVO: $dockerIpInfoVO")
         try {
-            pipelineDockerIPInfoDao.updateDockerIpStatus(dslContext, dockerIpInfoId, enable)
+            pipelineDockerIPInfoDao.update(
+                dslContext,
+                dockerIpInfoVO.dockerIp,
+                dockerIpInfoVO.usedNum,
+                dockerIpInfoVO.averageCpuLoad,
+                dockerIpInfoVO.averageMemLoad,
+                dockerIpInfoVO.averageDiskLoad,
+                dockerIpInfoVO.averageDiskIOLoad,
+                dockerIpInfoVO.enable,
+                dockerIpInfoVO.grayEnv,
+                dockerIpInfoVO.specialOn
+            )
             return true
         } catch (e: Exception) {
             logger.error("OP dispatchDocker update error.", e)

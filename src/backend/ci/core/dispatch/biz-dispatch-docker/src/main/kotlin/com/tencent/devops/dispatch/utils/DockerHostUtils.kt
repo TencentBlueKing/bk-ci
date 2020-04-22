@@ -29,14 +29,16 @@ package com.tencent.devops.dispatch.utils
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.dispatch.dao.PipelineDockerHostDao
 import com.tencent.devops.dispatch.dao.PipelineDockerIPInfoDao
+import com.tencent.devops.dispatch.dao.PipelineDockerPoolDao
 import com.tencent.devops.dispatch.exception.DockerServiceException
 import com.tencent.devops.dispatch.pojo.DockerHostLoadConfig
+import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.dispatch.utils.redis.RedisUtils
 import com.tencent.devops.model.dispatch.tables.records.TDispatchPipelineDockerIpInfoRecord
-import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -49,6 +51,7 @@ class DockerHostUtils @Autowired constructor(
     private val redisUtils: RedisUtils,
     private val pipelineDockerIpInfoDao: PipelineDockerIPInfoDao,
     private val pipelineDockerHostDao: PipelineDockerHostDao,
+    private val pipelineDockerPoolDao: PipelineDockerPoolDao,
     private val dslContext: DSLContext
 ) {
     companion object {
@@ -56,7 +59,9 @@ class DockerHostUtils @Autowired constructor(
         private val logger = LoggerFactory.getLogger(DockerHostUtils::class.java)
     }
 
-    fun getAvailableDockerIp(event: PipelineAgentStartupEvent, unAvailableIpList: Set<String> = setOf()): String {
+    private val buildPoolSize = 100 // 单个流水线可同时执行的任务数量
+
+    fun getAvailableDockerIpWithSpecialIps(projectId: String, pipelineId: String, vmSeqId: String, specialIpSet: Set<String>, unAvailableIpList: Set<String> = setOf()): String {
         var grayEnv = false
         val gray = System.getProperty("gray.project", "none")
         if (gray == "grayproject") {
@@ -64,16 +69,12 @@ class DockerHostUtils @Autowired constructor(
         }
 
         var dockerIp = ""
-        // 先判断是否OP已配置专机，若配置了专机，从列表中选择一个容量最小的
-        val specialIpSet = pipelineDockerHostDao.getHostIps(dslContext, event.projectId).toSet()
-        logger.info("getAvailableDockerIp grayEnv: $grayEnv | specialIpSet: $specialIpSet")
-
         // 获取负载配置
         val dockerHostLoadConfigTriple = getLoadConfig()
         logger.info("Docker host load config: ${JsonUtil.toJson(dockerHostLoadConfigTriple)}")
 
-        // 判断流水线上次关联的hostTag，如果存在并且构建机容量符合第一档负载则优先分配（降低版本更新时被重新洗牌的概率）
-        val lastHostIp = redisUtils.getDockerBuildLastHost(event.pipelineId, event.vmSeqId)
+        // 判断流水线上次关联的hostTag，如果存在并且构建机容量符合第一档负载则优先分配（兼容旧版本策略，降低版本更新时被重新洗牌的概率）
+        val lastHostIp = redisUtils.getDockerBuildLastHost(pipelineId, vmSeqId)
         if (lastHostIp != null && lastHostIp.isNotEmpty()) {
             val lastHostIpInfo = pipelineDockerIpInfoDao.getDockerIpInfo(dslContext, lastHostIp)
             if (lastHostIpInfo != null &&
@@ -99,6 +100,7 @@ class DockerHostUtils @Autowired constructor(
                 specialIpSet
             )
         if (firstDockerIpList.isNotEmpty) {
+            logger.info("firstDockerIpList: $firstDockerIpList")
             dockerIp = selectAvailableDockerIp(firstDockerIpList, unAvailableIpList)
         } else {
             // 没有满足1的，优先选择磁盘空间，内存使用率均低于80%的
@@ -134,11 +136,62 @@ class DockerHostUtils @Autowired constructor(
             }
         }
 
-        return if (dockerIp.isNotEmpty()) dockerIp else throw DockerServiceException("Start build Docker VM failed, no available Docker VM.")
+        if (dockerIp.isEmpty()) {
+            if (specialIpSet.isNotEmpty()) {
+                throw DockerServiceException("Start build Docker VM failed, no available Docker VM in $specialIpSet")
+            }
+            throw DockerServiceException("Start build Docker VM failed, no available Docker VM.")
+        }
+
+        return dockerIp
+    }
+
+    fun getAvailableDockerIp(projectId: String, pipelineId: String, vmSeqId: String, unAvailableIpList: Set<String>): String {
+        // 先判断是否OP已配置专机，若配置了专机，从列表中选择一个容量最小的
+        val specialIpSet = pipelineDockerHostDao.getHostIps(dslContext, projectId).toSet()
+        logger.info("getAvailableDockerIp projectId: $projectId | specialIpSet: $specialIpSet")
+        return getAvailableDockerIpWithSpecialIps(projectId, pipelineId, vmSeqId, specialIpSet, unAvailableIpList)
     }
 
     fun createLoadConfig(loadConfigMap: Map<String, DockerHostLoadConfig>) {
         redisOperation.set(LOAD_CONFIG_KEY, JsonUtil.toJson(loadConfigMap))
+    }
+
+    fun getIdlePoolNo(
+        pipelineId: String,
+        vmSeq: String
+    ): Int {
+        val lock = RedisLock(redisOperation, "DISPATCH_DEVCLOUD_LOCK_CONTAINER_${pipelineId}_$vmSeq", 30)
+        try {
+            lock.tryLock()
+            for (i in 1..buildPoolSize) {
+                logger.info("poolNo is $i")
+                val poolNo = pipelineDockerPoolDao.getPoolNoStatus(dslContext, pipelineId, vmSeq, i)
+                if (poolNo == null) {
+                    pipelineDockerPoolDao.create(
+                        dslContext,
+                        pipelineId,
+                        vmSeq,
+                        i,
+                        PipelineTaskStatus.RUNNING.status
+                    )
+                    return i
+                } else {
+                    if (poolNo.status == PipelineTaskStatus.RUNNING.status) {
+                        continue
+                    } else {
+                        pipelineDockerPoolDao.updatePoolStatus(dslContext, pipelineId, vmSeq, i, PipelineTaskStatus.RUNNING.status)
+                        return i
+                    }
+                }
+            }
+            throw DockerServiceException("构建机启动失败，没有空闲的构建机了！")
+        } catch (e: Exception) {
+            logger.error("$pipelineId|$vmSeq getIdlePoolNo error.", e)
+            throw DockerServiceException("容器并发池分配异常")
+        } finally {
+            lock.unlock()
+        }
     }
 
     private fun getLoadConfig(): Triple<DockerHostLoadConfig, DockerHostLoadConfig, DockerHostLoadConfig> {

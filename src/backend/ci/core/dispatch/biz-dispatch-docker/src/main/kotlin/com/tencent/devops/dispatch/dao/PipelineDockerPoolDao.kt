@@ -26,60 +26,93 @@
 
 package com.tencent.devops.dispatch.dao
 
-import com.tencent.devops.model.dispatch.tables.TDispatchPipelineDockerTaskDrift
-import com.tencent.devops.model.dispatch.tables.records.TDispatchPipelineDockerTaskDriftRecord
+import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
+import com.tencent.devops.model.dispatch.tables.TDispatchPipelineDockerPool
+import com.tencent.devops.model.dispatch.tables.TDispatchPipelineDockerTask
+import com.tencent.devops.model.dispatch.tables.records.TDispatchPipelineDockerPoolRecord
 import org.jooq.DSLContext
-import org.jooq.Result
+import org.jooq.Field
+import org.jooq.impl.DSL
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
 @Repository
-class PipelineDockerTaskDriftDao @Autowired constructor() {
+class PipelineDockerPoolDao @Autowired constructor() {
     fun create(
         dslContext: DSLContext,
         pipelineId: String,
-        buildId: String,
         vmSeq: String,
-        oldIp: String,
-        newIp: String,
-        oldIpInfo: String
+        poolNo: Int,
+        status: Int
     ) {
-        with(TDispatchPipelineDockerTaskDrift.T_DISPATCH_PIPELINE_DOCKER_TASK_DRIFT) {
+        with(TDispatchPipelineDockerPool.T_DISPATCH_PIPELINE_DOCKER_POOL) {
             dslContext.insertInto(
                 this,
                 PIPELINE_ID,
-                BUILD_ID,
                 VM_SEQ,
-                OLD_DOCKER_IP,
-                NEW_DOCKER_IP,
-                OLD_DOCKER_IP_INFO,
+                POOL_NO,
+                STATUS,
                 GMT_CREATE,
                 GMT_MODIFIED
             ).values(
                 pipelineId,
-                buildId,
                 vmSeq,
-                oldIp,
-                newIp,
-                oldIpInfo,
+                poolNo,
+                status,
                 LocalDateTime.now(),
                 LocalDateTime.now()
             ).execute()
         }
     }
 
-    fun getByPipelineIdAndVMSeq(
+    fun getPoolNoStatus(
         dslContext: DSLContext,
         pipelineId: String,
-        vmSeq: String
-    ): Result<TDispatchPipelineDockerTaskDriftRecord> {
-        with(TDispatchPipelineDockerTaskDrift.T_DISPATCH_PIPELINE_DOCKER_TASK_DRIFT) {
+        vmSeq: String,
+        poolNo: Int
+    ): TDispatchPipelineDockerPoolRecord? {
+        with(TDispatchPipelineDockerPool.T_DISPATCH_PIPELINE_DOCKER_POOL) {
             return dslContext.selectFrom(this)
                 .where(PIPELINE_ID.eq(pipelineId))
                 .and(VM_SEQ.eq(vmSeq))
-                .fetch()
+                .and(POOL_NO.eq(poolNo))
+                .fetchOne()
         }
+    }
+
+    fun updatePoolStatus(
+        dslContext: DSLContext,
+        pipelineId: String,
+        vmSeq: String,
+        poolNo: Int,
+        status: Int
+    ): Boolean {
+        with(TDispatchPipelineDockerPool.T_DISPATCH_PIPELINE_DOCKER_POOL) {
+            return dslContext.update(this)
+                .set(STATUS, status)
+                .set(GMT_MODIFIED, LocalDateTime.now())
+                .where(PIPELINE_ID.eq(pipelineId))
+                .and(VM_SEQ.eq(vmSeq))
+                .and(POOL_NO.eq(poolNo))
+                .execute() == 1
+        }
+    }
+
+    fun updateTimeOutTask(dslContext: DSLContext): Boolean {
+        with(TDispatchPipelineDockerPool.T_DISPATCH_PIPELINE_DOCKER_POOL) {
+            return dslContext.update(this)
+                .set(STATUS, PipelineTaskStatus.FAILURE.status)
+//                    .where(timestampDiff(org.jooq.DatePart.DAY, UPDATED_TIME.cast(java.sql.Timestamp::class.java)).greaterOrEqual(2))
+                .set(GMT_MODIFIED, LocalDateTime.now())
+                .where(GMT_MODIFIED.lessOrEqual(timestampSubDay(2)))
+                .execute() == 1
+        }
+    }
+
+    fun timestampSubDay(day: Long): Field<LocalDateTime> {
+        return DSL.field("date_sub(NOW(), interval $day day)",
+            LocalDateTime::class.java)
     }
 }
 
