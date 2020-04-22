@@ -31,7 +31,6 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
 import com.tencent.devops.dispatch.client.DockerHostClient
-import com.tencent.devops.dispatch.dao.DispatchPipelineBuildDao
 import com.tencent.devops.dispatch.dao.PipelineDockerBuildDao
 import com.tencent.devops.dispatch.dao.PipelineDockerHostDao
 import com.tencent.devops.dispatch.dao.PipelineDockerIPInfoDao
@@ -100,10 +99,10 @@ class DockerDispatcher @Autowired constructor(
             poolNo = dockerHostUtils.getIdlePoolNo(pipelineAgentStartupEvent.pipelineId, pipelineAgentStartupEvent.vmSeqId)
             if (taskHistory != null) {
                 dockerIp = if (specialIpSet.isNotEmpty() && specialIpSet.toString() != "[]") {
-                    // 改工程配置了专机
+                    // 该项目工程配置了专机
                     if (specialIpSet.contains(taskHistory.dockerIp)) {
-                        // 在专机列表中
-                        checkAndSetIP(pipelineAgentStartupEvent, specialIpSet, taskHistory.dockerIp, poolNo)
+                        // 上一次构建IP在专机列表中，直接重用
+                        taskHistory.dockerIp
                     } else {
                         // 不在专机列表中，重新依据专机列表去选择负载最小的
                         resetDockerIp(pipelineAgentStartupEvent, specialIpSet, taskHistory.dockerIp, "专机漂移")
@@ -148,7 +147,7 @@ class DockerDispatcher @Autowired constructor(
                 pipelineAgentStartupEvent.vmSeqId.toInt(),
                 PipelineTaskStatus.FAILURE
             )
-            logger.info("Dispatcher exception update status result: $result")
+
             if (!result) {
                 pipelineDockerBuildDao.startBuild(
                     dslContext = dslContext,
@@ -175,63 +174,6 @@ class DockerDispatcher @Autowired constructor(
     override fun shutdown(pipelineAgentShutdownEvent: PipelineAgentShutdownEvent) {
         logger.info("On shutdown - ($pipelineAgentShutdownEvent|$)")
         dockerHostBuildService.finishDockerBuild(pipelineAgentShutdownEvent)
-
-/*        val lock = DockerHostLock(redisOperation, pipelineAgentShutdownEvent.pipelineId)
-        try {
-            lock.lock()
-            if (pipelineAgentShutdownEvent.vmSeqId != null) {
-                val taskHistory = pipelineDockerTaskSimpleDao
-                    .getByPipelineIdAndVMSeq(
-                        dslContext,
-                        pipelineAgentShutdownEvent.pipelineId,
-                        pipelineAgentShutdownEvent.vmSeqId!!
-                    )
-
-                if (taskHistory != null) {
-                    dockerHostClient.endBuild(
-                        pipelineAgentShutdownEvent,
-                        taskHistory.dockerIp as String,
-                        taskHistory.containerId as String
-                    )
-                    if (taskHistory.status == VolumeStatus.RUNNING.status) {
-                        pipelineDockerTaskSimpleDao.updateStatus(
-                            dslContext,
-                            pipelineAgentShutdownEvent.pipelineId,
-                            pipelineAgentShutdownEvent.vmSeqId!!,
-                            VolumeStatus.FINISH.status
-                        )
-                    }
-                }
-            } else {
-                val taskHistoryList = pipelineDockerTaskSimpleDao.getByPipelineIdAndBuildId(
-                    dslContext,
-                    pipelineAgentShutdownEvent.pipelineId,
-                    pipelineAgentShutdownEvent.buildId
-                )
-                taskHistoryList.forEach {
-                    dockerHostClient.endBuild(
-                        pipelineAgentShutdownEvent,
-                        it.dockerIp as String,
-                        it.containerId as String
-                    )
-                    if (it.status == VolumeStatus.RUNNING.status) {
-                        pipelineDockerTaskSimpleDao.updateStatus(
-                            dslContext,
-                            pipelineAgentShutdownEvent.pipelineId,
-                            it.vmSeq as String,
-                            VolumeStatus.FINISH.status
-                        )
-                    }
-                }
-            }
-        } catch (e: Exception) {
-            logger.error(
-                "[${pipelineAgentShutdownEvent.projectId}|${pipelineAgentShutdownEvent.pipelineId}|${pipelineAgentShutdownEvent.buildId}] Shutdown Docker job failed. ",
-                e
-            )
-        } finally {
-            lock.unlock()
-        }*/
     }
 
     private fun checkAndSetIP(
