@@ -26,15 +26,19 @@
 
 package com.tencent.devops.dispatch.service.dispatcher.docker
 
+import com.tencent.devops.common.api.pojo.Zone
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
 import com.tencent.devops.dispatch.client.DockerHostClient
+import com.tencent.devops.dispatch.dao.DispatchPipelineBuildDao
+import com.tencent.devops.dispatch.dao.PipelineDockerBuildDao
 import com.tencent.devops.dispatch.dao.PipelineDockerHostDao
 import com.tencent.devops.dispatch.dao.PipelineDockerIPInfoDao
 import com.tencent.devops.dispatch.dao.PipelineDockerTaskDriftDao
 import com.tencent.devops.dispatch.dao.PipelineDockerTaskSimpleDao
 import com.tencent.devops.dispatch.exception.DockerServiceException
+import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.dispatch.service.DockerHostBuildService
 import com.tencent.devops.dispatch.service.dispatcher.Dispatcher
 import com.tencent.devops.dispatch.utils.DockerHostUtils
@@ -58,6 +62,7 @@ class DockerDispatcher @Autowired constructor(
     private val pipelineDockerTaskDriftDao: PipelineDockerTaskDriftDao,
     private val pipelineDockerIpInfoDao: PipelineDockerIPInfoDao,
     private val pipelineDockerHostDao: PipelineDockerHostDao,
+    private val pipelineDockerBuildDao: PipelineDockerBuildDao,
     private val dslContext: DSLContext
 ) : Dispatcher {
 
@@ -134,6 +139,34 @@ class DockerDispatcher @Autowired constructor(
                 )
                 "Start build Docker VM failed."
             }
+
+            // 更新构建记录状态
+            val result = pipelineDockerBuildDao.updateStatus(
+                dslContext,
+                pipelineAgentStartupEvent.buildId,
+                pipelineAgentStartupEvent.vmSeqId.toInt(),
+                PipelineTaskStatus.FAILURE
+            )
+            logger.info("Dispatcher exception update status result: $result")
+            if (!result) {
+                pipelineDockerBuildDao.startBuild(
+                    dslContext = dslContext,
+                    projectId = pipelineAgentStartupEvent.projectId,
+                    pipelineId = pipelineAgentStartupEvent.pipelineId,
+                    buildId = pipelineAgentStartupEvent.buildId,
+                    vmSeqId = pipelineAgentStartupEvent.vmSeqId.toInt(),
+                    secretKey = "",
+                    status = PipelineTaskStatus.FAILURE,
+                    zone = if (null == pipelineAgentStartupEvent.zone) {
+                        Zone.SHENZHEN.name
+                    } else {
+                        pipelineAgentStartupEvent.zone!!.name
+                    },
+                    dockerIp = "",
+                    poolNo = 0
+                )
+            }
+
             onFailBuild(client, rabbitTemplate, pipelineAgentStartupEvent, errMsg)
         }
     }
