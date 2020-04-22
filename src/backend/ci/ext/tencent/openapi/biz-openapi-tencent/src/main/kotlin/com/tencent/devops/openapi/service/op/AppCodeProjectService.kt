@@ -44,10 +44,14 @@ class AppCodeProjectService(
 ) {
     fun addProject(userName: String, appCode: String, projectId: String): Boolean {
         val projectIdList = projectId.split(" |;".toRegex())
-        projectIdList.forEach{
-            return appCodeProjectDao.add(dslContext, userName, appCode, it)
+        var result = false
+        projectIdList.forEach {
+            result = appCodeProjectDao.add(dslContext, userName, appCode, it)
+            if (!result) {
+                return result
+            }
         }
-
+        return result
     }
 
     fun deleteProject(userName: String, appCode: String, projectId: String): Boolean {
