@@ -125,8 +125,20 @@ class ManualReviewTaskAtom(
 
         // 开始进入人工审核步骤，需要打印日志，并发送通知给审核人
         LogUtils.addYellowLine(
-            rabbitTemplate, task.buildId, "步骤等待审核，审核人：$reviewUsers\n==============================",
-            taskId, task.containerHashId, task.executeCount ?: 1
+            rabbitTemplate = rabbitTemplate,
+            buildId = task.buildId,
+            message = "步骤等待审核，审核人：$reviewUsers",
+            tag = taskId,
+            jobId = task.containerHashId,
+            executeCount = task.executeCount ?: 1
+        )
+        LogUtils.addYellowLine(
+            rabbitTemplate = rabbitTemplate,
+            buildId = task.buildId,
+            message = "==============================",
+            tag = taskId,
+            jobId = task.containerHashId,
+            executeCount = task.executeCount ?: 1
         )
 
         val pipelineName = runVariables[PIPELINE_NAME].toString()
@@ -143,7 +155,6 @@ class ManualReviewTaskAtom(
             addAllReceivers(reviewUsers.split(",").toSet())
             format = EnumEmailFormat.HTML
             body = NotifyTemplateUtils.getReviewEmailBody(
-                reviewDesc = param.desc ?: "",
                 reviewUrl = reviewUrl,
                 dataTime = date,
                 projectName = projectName,
