@@ -81,7 +81,7 @@
                 return {
                     atom: [
                         { componentName: 'detailScore', label: this.$t('概述'), name: 'des' },
-                        { componentName: 'codeSection', label: 'YAML', name: 'YAML', bindData: { code: this.detail.codeSection, limitHeight: false }, hidden: (!this.detail.yamlFlag || !this.detail.recommendFlag) }
+                        { componentName: 'codeSection', label: this.$t('YAML片段'), name: 'YAML', bindData: { code: this.detail.codeSection, limitHeight: false }, hidden: (!this.detail.yamlFlag || !this.detail.recommendFlag) }
                     ],
                     template: [
                         { componentName: 'detailScore', label: this.$t('概述'), name: 'des' }
