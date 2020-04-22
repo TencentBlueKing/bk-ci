@@ -293,7 +293,7 @@ class DockerHostBuildService @Autowired constructor(
     private fun finishDockerBuild(record: TDispatchPipelineDockerBuildRecord, event: PipelineAgentShutdownEvent) {
         finishBuild(record, event.buildResult)
 
-        //编译环境才会更新pool
+        // 编译环境才会更新pool
         pipelineDockerPoolDao.updatePoolStatus(
             dslContext,
             record.pipelineId,
@@ -330,7 +330,7 @@ class DockerHostBuildService @Autowired constructor(
         stopWatch.start("fetchHostZone")
         val hostZone = pipelineDockerHostZoneDao.getHostZone(dslContext, hostTag)
         stopWatch.stop()
-        var message = ""
+        val message: String
         val redisLock = DockerHostLock(redisOperation)
         try {
             stopWatch.start("getGrayProject")
@@ -428,7 +428,7 @@ class DockerHostBuildService @Autowired constructor(
             stopWatch.start("unlock")
             redisLock.unlock()
             stopWatch.stop()
-            logger.info("[$hostTag|$grayFlag]|Start_Docker_Build| $message| watch=$stopWatch")
+            // logger.info("[$hostTag|$grayFlag]|Start_Docker_Build| $message| watch=$stopWatch")
         }
     }
 
