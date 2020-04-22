@@ -28,7 +28,6 @@ package com.tencent.devops.dispatch.dao
 
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.model.dispatch.tables.TDispatchPipelineDockerPool
-import com.tencent.devops.model.dispatch.tables.TDispatchPipelineDockerTask
 import com.tencent.devops.model.dispatch.tables.records.TDispatchPipelineDockerPoolRecord
 import org.jooq.DSLContext
 import org.jooq.Field

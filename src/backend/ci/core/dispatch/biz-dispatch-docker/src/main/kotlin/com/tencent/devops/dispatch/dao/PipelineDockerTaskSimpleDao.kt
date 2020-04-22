@@ -29,7 +29,6 @@ package com.tencent.devops.dispatch.dao
 import com.tencent.devops.model.dispatch.tables.TDispatchPipelineDockerTaskSimple
 import com.tencent.devops.model.dispatch.tables.records.TDispatchPipelineDockerTaskSimpleRecord
 import org.jooq.DSLContext
-import org.jooq.Result
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
