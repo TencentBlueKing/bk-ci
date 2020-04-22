@@ -27,15 +27,13 @@
 package com.tencent.devops.repository.pojo.enums
 
 enum class RedirectUrlTypeEnum(val type: String) {
-    STORE_MARKET("storeMarket"),
-    STORE_REPOSITORY("storeRepository"),
+    SPEC("spec"),
     DEFAULT("default");
 
     companion object {
         fun getRedirectUrlType(type: String): RedirectUrlTypeEnum {
             return when (type) {
-                "storeMarket" -> STORE_MARKET
-                "storeRepository" -> STORE_REPOSITORY
+                "spec" -> SPEC
                 else -> DEFAULT
             }
         }
