@@ -190,7 +190,8 @@ class PipelineBuildSummaryDao {
             favorPipelines = favorPipelines,
             authPipelines = authPipelines,
             page = page,
-            pageSize = pageSize
+            pageSize = pageSize,
+            offsetNum = offsetNum
         )
     }
 
