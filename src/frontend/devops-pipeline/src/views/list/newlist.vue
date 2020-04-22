@@ -610,7 +610,7 @@
                 const {
                     statusMap
                 } = this
-                const knownErrorList = JSON.parse(localStorage.getItem('pipelineKnowError'))
+                const knownErrorList = JSON.parse(localStorage.getItem('pipelineKnowError')) || {}
                 console.log(data)
                 Object.keys(data).map(pipelineId => {
                     const item = data[pipelineId]
