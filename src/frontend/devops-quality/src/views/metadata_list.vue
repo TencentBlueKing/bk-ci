@@ -21,7 +21,7 @@
                         <input class="bk-form-input" type="text" placeholder="请输入指标名称..."
                             v-model="searchName"
                             @keyup.enter="toSearch()">
-                        <i class="bk-icon icon-search" @click="toSearch()"></i>
+                        <i class="devops-icon icon-search" @click="toSearch()"></i>
                     </div>
                 </div>
                 <div class="metadata-content">
@@ -30,14 +30,14 @@
                             <div class="info-title">
                                 <label>{{ row.label }}
                                     <bk-popover placement="right">
-                                        <i class="bk-icon icon-info-circle" v-if="row.desc"></i>
+                                        <i class="devops-icon icon-info-circle" v-if="row.desc"></i>
                                         <template slot="content">
                                             <p style="width: 196px; text-align: left; white-space: normal;word-break: break-all;font-weight: 400;">{{ row.desc }}</p>
                                         </template>
                                     </bk-popover>
                                 </label>
                                 <div class="create-metadata" v-if="row.key === 'scriptIndicators'" @click="toCreateMeta()">
-                                    <i class="bk-icon icon-plus-circle-shape"></i>自定义指标
+                                    <i class="devops-icon icon-plus-circle-shape"></i>自定义指标
                                 </div>
                             </div>
                             <bk-table

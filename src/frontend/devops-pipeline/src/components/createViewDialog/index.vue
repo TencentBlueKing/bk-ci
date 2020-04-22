@@ -21,7 +21,9 @@
                         <div class="bk-form-content">
                             <bk-radio-group v-model="createViewForm.projected">
                                 <bk-radio :value="false" class="view-radio">{{ $t('view.personalView') }}</bk-radio>
-                                <bk-radio :value="true" class="view-radio" :disabled="!isManagerUser">{{ $t('view.projectView') }}<span v-bk-tooltips="viewTypeTips" class="top-start"><i class="bk-icon icon-info-circle"></i></span></bk-radio>
+                                <bk-radio :value="true" class="view-radio" :disabled="!isManagerUser">{{ $t('view.projectView') }}<span v-bk-tooltips="viewTypeTips" class="top-start">
+                                    <i class="bk-icon icon-info-circle"></i></span>
+                                </bk-radio>
                             </bk-radio-group>
                         </div>
                     </div>
@@ -97,11 +99,11 @@
                                                 <div v-if="groupHacCheckYet && !row.labelIds.length" class="error-tips">{{ $t('view.labelTips') }}</div>
                                             </section>
                                         </td>
-                                        <td class="delete-handler"><i class="bk-icon icon-minus" @click="reduceFilterItem(index)"></i></td>
+                                        <td class="delete-handler"><i class="devops-icon icon-minus" @click="reduceFilterItem(index)"></i></td>
                                     </tr>
                                     <tr>
                                         <td colspan="3" class="add-new-item">
-                                            <span @click="addFilterItem()"><i class="bk-icon icon-plus-circle" />{{ $t('view.addConditions') }}</span>
+                                            <span @click="addFilterItem()"><i class="devops-icon icon-plus-circle" />{{ $t('view.addConditions') }}</span>
                                         </td>
                                     </tr>
                                 </tbody>
@@ -476,7 +478,7 @@
                     color: $primaryColor;
                     cursor: pointer;
                 }
-                .bk-icon {
+                .devops-icon {
                     margin-right: 4px;
                     position: relative;
                     top: 1px;
