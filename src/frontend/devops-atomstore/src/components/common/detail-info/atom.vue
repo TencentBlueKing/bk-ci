@@ -10,9 +10,9 @@
                         <span class="approve-msg">{{approveMsg}}</span>
                     </h5>
                 </template>
-                <h5 :title="$t('store.支持通过YAML的方式使用')" class="nomal-title" v-if="detail.yamlFlag">
+                <h5 :title="$t('store.YAML可用')" v-if="detail.yamlFlag && detail.recommendFlag" @click="showYaml">
                     <icon class="detail-img" name="yaml" size="16" />
-                    <span class="approve-msg">{{$t('store.YAML可用')}}</span>
+                    <span class="approve-msg">YAML</span>
                 </h5>
             </h3>
             <h5 class="detail-info">
@@ -102,7 +102,8 @@
         },
 
         props: {
-            detail: Object
+            detail: Object,
+            currentTab: String
         },
 
         data () {
@@ -169,6 +170,10 @@
         },
 
         methods: {
+            showYaml () {
+                this.$emit('update:currentTab', 'YAML')
+            },
+
             initData () {
                 this.$store.dispatch('store/getMemberInfo', this.$route.params.code).then((res = {}) => {
                     this.userInfo = res
@@ -345,6 +350,9 @@
         .title-with-img {
             display: flex;
             align-items: center;
+            .not-recommend {
+                text-decoration: line-through;
+            }
             >h5 {
                 margin-left: 12px;
                 line-height: 14px;
