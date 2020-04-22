@@ -43,7 +43,11 @@ class AppCodeProjectService(
     private val appCodeProjectDao: AppCodeProjectDao
 ) {
     fun addProject(userName: String, appCode: String, projectId: String): Boolean {
-        return appCodeProjectDao.add(dslContext, userName, appCode, projectId)
+        val projectIdList = projectId.split(" |;".toRegex())
+        projectIdList.forEach{
+            return appCodeProjectDao.add(dslContext, userName, appCode, it)
+        }
+
     }
 
     fun deleteProject(userName: String, appCode: String, projectId: String): Boolean {
