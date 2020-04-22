@@ -28,16 +28,13 @@
         containerLeftColor: '#3c96ff',
         containerColor: '#33333f',
         atomBorderColor: '#c3cdd7',
-        stageFontColor: '#3c96ff',
-        containerFontColor: '#fff',
-        atomFontColor: '#63656e',
         atomColor: '#fff',
         fontSize: 25,
         containerLeftWidth: 42,
         lineWidth: 0.5
     }
 
-    const statusColor = {
+    const containerStatusColor = {
         SUCCEED: '#34d97b',
         FAILED: '#ff5656',
         HEARTBEAT_TIMEOUT: '#ff5656',
@@ -48,7 +45,23 @@
         CANCELED: '#ffb400',
         TERMINATE: '#ffb400',
         RUNNING: '#459fff',
-        PREPARE_ENV: '#459fff'
+        PREPARE_ENV: '#459fff',
+        undefined: '#63656e'
+    }
+
+    const atomBorderStatusColor = {
+        SUCCEED: '#34d97b',
+        FAILED: '#ff5656',
+        HEARTBEAT_TIMEOUT: '#ff5656',
+        QUEUE_TIMEOUT: '#ff5656',
+        EXEC_TIMEOUT: '#ff5656',
+        REVIEWING: '#ffb400',
+        REVIEW_ABORT: '#ffb400',
+        CANCELED: '#ffb400',
+        TERMINATE: '#ffb400',
+        RUNNING: '#459fff',
+        PREPARE_ENV: '#459fff',
+        undefined: '#c3cdd7'
     }
 
     const stageStatusColor = {
@@ -56,7 +69,8 @@
         FAILED: '#fff9f9',
         PAUSE: '#f3f3f3',
         RUNNING: '#eff5ff',
-        SKIP: '#c3cdd7'
+        SKIP: '#c3cdd7',
+        undefined: '#f3f3f3'
     }
 
     const stageBorderColor = {
@@ -64,7 +78,8 @@
         FAILED: '#ffd4d4',
         PAUSE: '#d0d8ea',
         RUNNING: '#d4e8ff',
-        SKIP: '#c3cdd7'
+        SKIP: '#c3cdd7',
+        undefined: '#d0d8ea'
     }
 
     export default {
@@ -122,6 +137,7 @@
         methods: {
             initStatus () {
                 setTimeout(() => {
+                    console.log(this.$route.name)
                     this.scrollEle = document.querySelector(this.scrollClass)
                     document.addEventListener('mousemove', this.mapMove)
                     document.addEventListener('mouseup', this.moveEnd)
@@ -163,9 +179,9 @@
                     const startX = (index * (pipelineStyle.itemWidth + pipelineStyle.stageMarginRight) - (pipelineStyle.stageWidth - pipelineStyle.itemWidth) / 2) * this.rate
                     const startY = 0
                     if (startX >= 0) {
-                        this.canvasCtx.fillStyle = stageStatusColor[stage.status] || pipelineStyle.stageColor
+                        this.canvasCtx.fillStyle = this.$route.name === 'pipelinesDetail' ? stageStatusColor[stage.status] : pipelineStyle.stageColor
                         this.canvasCtx.fillRect(startX, startY, pipelineStyle.stageWidth * this.rate, pipelineStyle.stageHeight * this.rate)
-                        this.canvasCtx.strokeStyle = stageBorderColor[stage.status] || pipelineStyle.stageColor
+                        this.canvasCtx.strokeStyle = this.$route.name === 'pipelinesDetail' ? stageBorderColor[stage.status] : pipelineStyle.stageColor
                         this.canvasCtx.strokeRect(startX, startY, pipelineStyle.stageWidth * this.rate, pipelineStyle.stageHeight * this.rate)
                     }
                     const containers = stage.containers || []
@@ -177,9 +193,9 @@
 
             drawContainer (container) {
                 const elements = container.elements || []
-                this.canvasCtx.fillStyle = statusColor[container.status] || pipelineStyle.containerColor
+                this.canvasCtx.fillStyle = this.$route.name === 'pipelinesDetail' ? containerStatusColor[container.status] : pipelineStyle.containerColor
                 this.canvasCtx.fillRect(this.drawContainer.x, this.drawContainer.y, pipelineStyle.itemWidth * this.rate, pipelineStyle.itemHeight * this.rate)
-                this.canvasCtx.fillStyle = statusColor[container.status] || pipelineStyle.containerLeftColor
+                this.canvasCtx.fillStyle = this.$route.name === 'pipelinesDetail' ? containerStatusColor[container.status] : pipelineStyle.containerLeftColor
                 this.canvasCtx.fillRect(this.drawContainer.x, this.drawContainer.y, pipelineStyle.containerLeftWidth * this.rate, pipelineStyle.containerLeftWidth * this.rate)
                 this.drawContainer.y += (pipelineStyle.containerLeftWidth + pipelineStyle.containerBottomDis) * this.rate
                 if (elements.length <= 0) this.drawElement({})
@@ -188,7 +204,7 @@
             },
 
             drawElement (element) {
-                this.canvasCtx.strokeStyle = statusColor[element.status] || pipelineStyle.atomBorderColor
+                this.canvasCtx.strokeStyle = this.$route.name === 'pipelinesDetail' ? atomBorderStatusColor[element.status] : pipelineStyle.atomBorderColor
                 this.canvasCtx.strokeRect(this.drawContainer.x, this.drawContainer.y, pipelineStyle.itemWidth * this.rate, pipelineStyle.itemHeight * this.rate)
                 this.canvasCtx.fillStyle = pipelineStyle.atomColor
                 this.canvasCtx.fillRect(this.drawContainer.x, this.drawContainer.y, pipelineStyle.itemWidth * this.rate, pipelineStyle.itemHeight * this.rate)
