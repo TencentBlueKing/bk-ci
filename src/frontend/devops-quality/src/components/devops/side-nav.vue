@@ -15,7 +15,7 @@
             v-else>
             <logo :name="nav.icon" size="32" class="nav-icon" />
             <span class="side-menu-title">{{ nav.title }}</span>
-            <i v-if="nav.url" class="bk-icon icon-question-circle" @click="goToDoc(nav.url)"></i>
+            <i v-if="nav.url" class="devops-icon icon-question-circle" @click="goToDoc(nav.url)"></i>
         </div>
         <section class="side-menu-list">
             <div class="side-menu-item"

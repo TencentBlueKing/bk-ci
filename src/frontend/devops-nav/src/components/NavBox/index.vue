@@ -22,7 +22,7 @@
                     >
                         <i
                             v-if="serviceIcon(child.logoUrl) === &quot;logo-bcs&quot;"
-                            class="bk-icon service-icon icon-logo-bcs"
+                            class="devops-icon service-icon icon-logo-bcs"
                         >
                             <span
                                 v-for="key in [1,2,3,4]"
@@ -32,7 +32,7 @@
                         </i>
                         <icon
                             v-else
-                            class="bk-icon service-icon"
+                            class="devops-icon service-icon"
                             :size="20"
                             :name="serviceIcon(child.logoUrl)"
                         />
@@ -47,13 +47,13 @@
                         <i
                             v-if="child.collected"
                             :title="$t('collected')"
-                            class="bk-icon collect-icon icon-star-shape"
+                            class="devops-icon collect-icon icon-star-shape"
                             @click.stop="toggleCollect(child, false)"
                         />
                         <i
                             v-else
                             :title="$t('toCollect')"
-                            class="bk-icon collect-icon icon-star"
+                            class="devops-icon collect-icon icon-star"
                             @click.stop="toggleCollect(child, true)"
                         />
                     </template>
@@ -179,7 +179,7 @@
                         align-items: center;
                         padding: 7px 32px 7px 5px;
                     }
-                    .bk-icon.service-icon {
+                    .devops-icon.service-icon {
                         font-size: 20px;
                         margin-right: 12px;
                         color: #6b798e;
@@ -204,7 +204,7 @@
                     &:hover {
                         color: $primaryColor;
                         > a,
-                        .bk-icon.service-icon {
+                        .devops-icon.service-icon {
                             color: $primaryColor;
                         }
                     }
@@ -215,7 +215,7 @@
                         cursor: default;
 
                         > a,
-                        .bk-icon.service-icon {
+                        .devops-icon.service-icon {
                             color: $fontLigtherColor;
                         }
                     }

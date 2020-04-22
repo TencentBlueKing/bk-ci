@@ -16,12 +16,14 @@
             :desc="noPermissionTipsConfig.desc"
             :btns="noPermissionTipsConfig.btns">
         </empty-tips>
+        <mini-map :stages="pipeline.stages" scroll-class=".bk-tab-section" v-if="!isLoading && currentTab === 'pipeline'"></mini-map>
     </section>
 </template>
 
 <script>
     import { mapActions, mapState } from 'vuex'
     import emptyTips from '@/components/devops/emptyTips'
+    import MiniMap from '@/components/MiniMap'
     import { navConfirm } from '@/utils/util'
     import { PipelineEditTab, BaseSettingTab, NotifyTab } from '@/components/PipelineEditTabs/'
     import pipelineOperateMixin from '@/mixins/pipeline-operate-mixin'
@@ -31,7 +33,8 @@
             emptyTips,
             PipelineEditTab,
             BaseSettingTab,
-            NotifyTab
+            NotifyTab,
+            MiniMap
         },
         mixins: [pipelineOperateMixin],
         data () {

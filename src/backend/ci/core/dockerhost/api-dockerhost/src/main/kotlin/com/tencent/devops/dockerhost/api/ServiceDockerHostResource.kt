@@ -103,6 +103,9 @@ interface ServiceDockerHostResource {
         buildId: String,
         @ApiParam("验证镜像合法性请求报文体", required = true)
         checkImageRequest: CheckImageRequest,
+        @ApiParam("containerId", required = false)
+        @QueryParam("containerId")
+        containerId: String?,
         @ApiParam("containerHashId", required = false)
         @QueryParam("containerHashId")
         containerHashId: String?
