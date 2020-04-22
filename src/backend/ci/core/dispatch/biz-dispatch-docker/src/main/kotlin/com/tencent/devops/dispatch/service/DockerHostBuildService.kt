@@ -302,11 +302,13 @@ class DockerHostBuildService @Autowired constructor(
             if (event.buildResult) PipelineTaskStatus.DONE.status else PipelineTaskStatus.FAILURE.status
         )
 
-        dockerHostClient.endBuild(
-            event,
-            record.dockerIp,
-            record.containerId
-        )
+        if (record.dockerIp.isNotEmpty()) {
+            dockerHostClient.endBuild(
+                event,
+                record.dockerIp,
+                record.containerId
+            )
+        }
     }
 
     private fun finishBuild(record: TDispatchPipelineDockerBuildRecord, success: Boolean) {
