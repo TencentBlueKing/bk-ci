@@ -34,21 +34,41 @@ import com.tencent.devops.process.utils.PROJECT_NAME_CHINESE
 
 object NotifyTemplateUtils {
 
-    fun getReviewRtxMsgBody(reviewDesc: String, reviewUrl: String, reviewAppUrl: String, projectName: String, pipelineName: String, buildNo: String): String {
+    fun getReviewRtxMsgBody(
+        reviewDesc: String,
+        reviewUrl: String,
+        reviewAppUrl: String,
+        projectName: String,
+        pipelineName: String,
+        buildNo: String
+    ): String {
         return "项目【$projectName】下的流水线【$pipelineName】#$buildNo 构建处于待审核状态\n" +
             "审核说明：$reviewDesc\n" +
             "电脑端：<a href=\"$reviewUrl\">去审核</a>\n" +
             "手机端：<a href=\"$reviewAppUrl\">去审核</a>"
     }
 
-    fun getRevieWeixinMsgBody(reviewDesc: String, reviewUrl: String, reviewAppUrl: String, projectName: String, pipelineName: String, buildNo: String): String {
+    fun getRevieWeixinMsgBody(
+        reviewDesc: String,
+        reviewUrl: String,
+        reviewAppUrl: String,
+        projectName: String,
+        pipelineName: String,
+        buildNo: String
+    ): String {
         return "项目【$projectName】下的流水线【$pipelineName】#$buildNo 构建处于待审核状态\n" +
             "审核说明：$reviewDesc\n" +
             "电脑端：$reviewUrl\n" +
             "手机端：$reviewAppUrl"
     }
 
-    fun getReviewEmailBody(reviewUrl: String, dataTime: String, projectName: String, pipelineName: String, buildNo: String): String {
+    fun getReviewEmailBody(
+        reviewUrl: String,
+        dataTime: String,
+        projectName: String,
+        pipelineName: String,
+        buildNo: String
+    ): String {
         return "<table class=\"template-table\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"font-size: 14px; min-width: auto; mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #fff; background: #fff;\">\n" +
             "\t<tbody>\n" +
             "\t\t<tr>\n" +
