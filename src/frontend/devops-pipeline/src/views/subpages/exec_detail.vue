@@ -45,22 +45,28 @@
         </template>
         <template v-if="editingElementPos && execDetail">
             <template v-if="showLog">
-                <log :is-init="isInitLog"
-                    :title="currentElement.name"
+                <log :title="currentElement.name"
                     :status="currentElement.status"
-                    :id="currentElement.id"
                     :execute-count="currentElement.executeCount"
-                    :down-load-name="`${editingElementPos.stageIndex + 1}-${editingElementPos.containerIndex + 1}-${editingElementPos.elementIndex + 1}-${currentElement.name}`"
                     @changeExecute="changeExecute"
-                    :link-url="linkUrl"
                     :down-load-link="downLoadPluginLink"
+                    :id="currentElement.id"
                     @closeLog="closeLog"
-                    log-type="plugin"
                     ref="log"
                 />
             </template>
             <template v-else-if="showContainerPanel">
-                <container-property-panel
+                <job v-if="currentJob['@type'] !== 'trigger'"
+                    :title="currentJob.name"
+                    :status="currentJob.status"
+                    :plugin-list="pluginList"
+                    :down-load-link="downLoadJobLink"
+                    @closeLog="closeLog"
+                    @closePlugin="closePlugin"
+                    @openPlugin="initLog"
+                    ref="log"
+                />
+                <container-property-panel v-else
                     :title="sidePanelConfig.title"
                     :container-index="editingElementPos.containerIndex"
                     :stage-index="editingElementPos.stageIndex"
@@ -76,23 +82,20 @@
                 />
             </template>
         </template>
-
         <template v-if="execDetail">
             <log v-if="showCompleteLog"
-                :is-init="isInitLog"
                 :title="execDetail.pipelineName"
                 :status="execDetail.status"
                 :id="execDetail.id"
-                :link-url="linkUrl"
                 :down-load-name="execDetail.pipelineName"
                 :down-load-link="downLoadAllLink"
                 @closeLog="closeLog"
-                log-type="all"
                 ref="log"
             >
             </log>
         </template>
         <review-dialog :is-show="showReviewDialog"></review-dialog>
+        <mini-map :stages="execDetail.model.stages" scroll-class=".exec-pipeline" v-if="!isLoading && !fetchingAtomList"></mini-map>
     </section>
 </template>
 
@@ -108,10 +111,12 @@
     import emptyTips from '@/components/devops/emptyTips'
     import ReviewDialog from '@/components/ReviewDialog'
     import log from '../../../../devops-log'
+    import job from '../../../../devops-log/src/job'
     import pipelineOperateMixin from '@/mixins/pipeline-operate-mixin'
     import pipelineConstMixin from '@/mixins/pipelineConstMixin'
     import { convertMStoStringByRule } from '@/utils/util'
     import Logo from '@/components/Logo'
+    import MiniMap from '@/components/MiniMap'
 
     export default {
         components: {
@@ -123,8 +128,10 @@
             outputOption,
             emptyTips,
             log,
+            job,
             ReviewDialog,
-            Logo
+            Logo,
+            MiniMap
         },
         mixins: [pipelineOperateMixin, pipelineConstMixin],
 
@@ -132,7 +139,6 @@
             return {
                 isLoading: true,
                 hasNoPermission: false,
-                isInitLog: false,
                 logPostData: {},
                 linkUrl: WEB_URL_PIRFIX + location.pathname,
                 noPermissionTipsConfig: {
@@ -170,11 +176,28 @@
             ...mapState([
                 'fetchError'
             ]),
+
             downLoadAllLink () {
-                return `${AJAX_URL_PIRFIX}/log/api/user/logs/${this.$route.params.projectId}/${this.$route.params.pipelineId}/${this.execDetail.id}/download`
+                const fileName = encodeURI(encodeURI(this.execDetail.pipelineName))
+                return `${AJAX_URL_PIRFIX}/log/api/user/logs/${this.$route.params.projectId}/${this.$route.params.pipelineId}/${this.execDetail.id}/download?executeCount=1&fileName=${fileName}`
+            },
+
+            downLoadJobLink () {
+                const editingElementPos = this.editingElementPos
+                const fileName = encodeURI(encodeURI(`${editingElementPos.stageIndex + 1}-${editingElementPos.containerIndex + 1}-${this.currentJob.name}`))
+                const jobId = this.currentJob.containerId
+                const tag = `startVM-${this.currentJob.id}`
+                const curLogPostData = this.logPostData[tag] || {}
+                const currentExe = curLogPostData.currentExe || 1
+                return `${AJAX_URL_PIRFIX}/log/api/user/logs/${this.$route.params.projectId}/${this.$route.params.pipelineId}/${this.execDetail.id}/download?jobId=${jobId}&executeCount=${currentExe}&fileName=${fileName}`
             },
             downLoadPluginLink () {
-                return `${AJAX_URL_PIRFIX}/log/api/user/logs/${this.$route.params.projectId}/${this.$route.params.pipelineId}/${this.execDetail.id}/download?tag=${this.currentElement.id}&executeCount=${this.logPostData.currentExe}`
+                const editingElementPos = this.editingElementPos
+                const fileName = encodeURI(encodeURI(`${editingElementPos.stageIndex + 1}-${editingElementPos.containerIndex + 1}-${editingElementPos.elementIndex + 1}-${this.currentElement.name}`))
+                const tag = this.currentElement.id
+                const curLogPostData = this.logPostData[tag] || {}
+                const currentExe = curLogPostData.currentExe || 1
+                return `${AJAX_URL_PIRFIX}/log/api/user/logs/${this.$route.params.projectId}/${this.$route.params.pipelineId}/${this.execDetail.id}/download?tag=${tag}&executeCount=${currentExe}&fileName=${fileName}`
             },
             panels () {
                 return [{
@@ -212,7 +235,7 @@
                 get () {
                     const { editingElementPos, $route: { params } } = this
                     const res = typeof editingElementPos.elementIndex !== 'undefined' && params.buildNo
-                    if (res) this.initLog()
+                    if (res) this.$nextTick(this.initLog)
                     return res
                 },
                 set (value) {
@@ -224,13 +247,17 @@
             showCompleteLog () {
                 const { isShowCompleteLog, $route: { params } } = this
                 const res = isShowCompleteLog && params.buildNo
-                if (res) this.initAllLog()
+                if (res) this.$nextTick(this.initAllLog)
                 return res
             },
             showContainerPanel () {
                 const { editingElementPos } = this
                 const res = typeof editingElementPos.containerIndex !== 'undefined'
                 return res
+            },
+            pluginList () {
+                const startUp = { name: 'Set up job', status: this.currentJob.startVMStatus, id: `startVM-${this.currentJob.id}` }
+                return [startUp, ...this.currentJob.elements]
             },
             currentJob () {
                 const { editingElementPos, execDetail } = this
@@ -315,11 +342,6 @@
         watch: {
             execDetail (val) {
                 this.isLoading = val === null
-                const query = this.$route.query || {}
-                const logType = query.logType
-                const id = query.id
-                if (logType === 'plugin') this.showElementLog(id)
-                if (logType === 'all') this.showAllLog(id)
             },
             'routerParams.buildNo': {
                 handler (val, oldVal) {
@@ -375,124 +397,134 @@
                     }
                 })
             },
-            showElementLog (elementId) {
-                let eleIndex, conIndex
-                const staIndex = this.execDetail.model.stages.findIndex(stage => {
-                    conIndex = stage.containers.findIndex(container => {
-                        eleIndex = container.elements.findIndex(element => element.id === elementId)
-                        return eleIndex > -1
-                    })
-                    return conIndex > -1
-                })
-                if (staIndex > -1) {
-                    this.togglePropertyPanel({
-                        isShow: true,
-                        editingElementPos: {
-                            stageIndex: staIndex,
-                            containerIndex: conIndex,
-                            elementIndex: eleIndex
-                        }
-                    })
-                }
+
+            changeExecute (tag, currentExe) {
+                const curLogPostData = this.logPostData[tag]
+                curLogPostData.currentExe = currentExe
+                curLogPostData.lineNo = 0
+                clearTimeout(curLogPostData.id)
+                curLogPostData.clearIds.push(curLogPostData.id)
+                curLogPostData.id = undefined
+                this.openLogApi(curLogPostData)
             },
 
-            changeExecute (currentExe) {
-                this.logPostData.currentExe = currentExe
-                this.openLogApi.hasOpen = false
-                clearTimeout(this.getAfterLogApi.id)
-                this.openLogApi()
-            },
-
-            showAllLog () {
-                this.togglePropertyPanel({
-                    isShow: true,
-                    isComplete: true
-                })
+            closePlugin (tag) {
+                const curLogPostData = this.logPostData[tag]
+                clearTimeout(curLogPostData.id)
+                curLogPostData.clearIds.push(curLogPostData.id)
+                curLogPostData.id = undefined
             },
 
             initAllLog () {
-                if (this.openLogApi.hasOpen) return
                 const route = this.$route.params || {}
-                const query = this.$route.query || {}
-                const currentExe = query.id === this.execDetail.id ? +query.currentExe : 1
-                this.logPostData = {
+                const tag = this.execDetail.id
+                this.logPostData[tag] = {
                     projectId: route.projectId,
                     pipelineId: route.pipelineId,
                     buildId: this.execDetail.id,
-                    currentExe
+                    lineNo: 0,
+                    id: undefined,
+                    clearIds: [],
+                    ref: this.$refs.log,
+                    currentExe: 1
                 }
-                this.openLogApi()
+                this.openLogApi(this.logPostData[tag])
             },
 
-            initLog () {
-                if (this.openLogApi.hasOpen) return
+            initLog (tag = this.currentElement.id, ref = this.$refs.log) {
                 const route = this.$route.params || {}
-                const query = this.$route.query || {}
-                const currentExe = query.id === this.currentElement.id ? +query.currentExe : (this.currentElement.executeCount || 1)
-                this.logPostData = {
-                    projectId: route.projectId,
-                    pipelineId: route.pipelineId,
-                    buildId: this.execDetail.id,
-                    tag: this.currentElement.id,
-                    currentExe
+                let currentLogPost = this.logPostData[tag]
+                if (!currentLogPost) {
+                    const curEle = this.pluginList.find(x => x.id === tag) || {}
+                    currentLogPost = {
+                        projectId: route.projectId,
+                        pipelineId: route.pipelineId,
+                        buildId: this.execDetail.id,
+                        tag,
+                        currentExe: curEle.executeCount || 1,
+                        ref,
+                        lineNo: 0,
+                        id: undefined,
+                        clearIds: []
+                    }
+                    this.logPostData[tag] = currentLogPost
+                    this.openLogApi(currentLogPost)
+                } else {
+                    this.getAfterLogApi(100, currentLogPost)
                 }
-                this.openLogApi()
             },
 
-            openLogApi () {
-                if (this.openLogApi.hasOpen) return
-                this.openLogApi.hasOpen = true
-                this.isInitLog = true
-                this.getInitLog(this.logPostData).then((res) => {
-                    this.handleLogRes(res)
-                    if (!res.finished || res.hasMore) this.$refs.log && this.$refs.log.scrollPageToBottom()
+            openLogApi (currentLogPost) {
+                this.getInitLog(currentLogPost).then((res) => {
+                    this.handleLogRes(res, currentLogPost)
                 }).catch((err) => {
                     this.$bkMessage({ theme: 'error', message: err.message || err })
-                    this.isInitLog = false
+                    if (currentLogPost.ref) currentLogPost.ref.handleApiErr(err.message)
                 })
             },
 
-            handleLogRes (res) {
+            handleLogRes (res, currentLogPost, curId = currentLogPost.id) {
+                if (currentLogPost.clearIds.includes(curId) || currentLogPost.ref === undefined) return
                 res = res.data || {}
+                if (res.status !== 0) {
+                    let errMessage
+                    switch (res.status) {
+                        case 1:
+                            errMessage = this.$t('history.logEmpty')
+                            break
+                        case 2:
+                            errMessage = this.$t('history.logClear')
+                            break
+                        case 3:
+                            errMessage = this.$t('history.logClose')
+                            break
+                        default:
+                            errMessage = this.$t('history.logErr')
+                            break
+                    }
+                    currentLogPost.ref.handleApiErr(errMessage)
+                    return
+                }
+
                 const logs = res.logs || []
                 const lastLog = logs[logs.length - 1] || {}
-                const lastLogNo = lastLog.lineNo || this.handleLogRes.lineNo || -1
-                this.handleLogRes.lineNo = lastLogNo
-                this.logPostData.lineNo = +lastLogNo + 1
-                const logEle = this.$refs.log
-                if (!logEle) return
-
+                const lastLogNo = lastLog.lineNo || currentLogPost.lineNo - 1 || -1
+                currentLogPost.lineNo = +lastLogNo + 1
                 if (res.finished) {
                     if (res.hasMore) {
-                        this.isInitLog = false
-                        logEle.addLogData(logs)
-                        this.getAfterLogApi(100)
+                        currentLogPost.ref.addLogData(logs)
+                        this.getAfterLogApi(100, currentLogPost)
                     } else {
-                        logEle.addLogData(logs, true)
-                        this.isInitLog = false
+                        currentLogPost.ref.addLogData(logs)
                     }
                 } else {
-                    logEle.addLogData(logs)
-                    this.isInitLog = false
-                    this.getAfterLogApi(1000)
+                    currentLogPost.ref.addLogData(logs)
+                    this.getAfterLogApi(1000, currentLogPost)
                 }
             },
 
-            getAfterLogApi (mis) {
-                this.getAfterLogApi.id = setTimeout(() => {
-                    this.getAfterLog(this.logPostData).then((res) => {
-                        this.handleLogRes(res)
+            getAfterLogApi (mis, currentLogPost) {
+                const curId = currentLogPost.id = setTimeout(() => {
+                    if (currentLogPost.clearIds.includes(curId) || currentLogPost.ref === undefined) return
+                    this.getAfterLog(currentLogPost).then((res) => {
+                        this.handleLogRes(res, currentLogPost, curId)
                     }).catch((err) => {
                         this.$bkMessage({ theme: 'error', message: err.message || err })
+                        currentLogPost.ref.handleApiErr(err.message)
                     })
                 }, mis)
             },
 
             closeLog () {
                 this.showLog = false
-                this.openLogApi.hasOpen = false
-                this.handleLogRes.lineNo = -1
-                clearTimeout(this.getAfterLogApi.id)
+                Object.keys(this.logPostData).forEach((key) => {
+                    const currentPostData = this.logPostData[key] || {}
+                    const currentId = currentPostData.id || ''
+                    clearTimeout(currentId)
+                    currentPostData.clearIds.push(currentId)
+                    currentPostData.id = undefined
+                })
+                this.logPostData = {}
             }
         }
     }
@@ -503,19 +535,21 @@
     @import './../../scss/pipelineStatus';
     .pipeline-detail-wrapper {
         height: 100%;
-        padding: 7px 25px 0 25px;
+        padding: 7px 0 0 25px;
 
         .pipeline-detail-tab-card {
             height: 100%;
             .bk-tab-section {
-                height: calc(100% - 60px);
-                padding-bottom: 10px;
+                height: calc(100% - 52px);
             }
         }
         .exec-pipeline {
             position: relative;
             overflow: auto;
             height: 100%;
+            /deep/ .devops-stage-list {
+                padding-bottom: 25px;
+            }
         }
 
         .bk-sideslider-wrapper {

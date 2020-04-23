@@ -59,7 +59,7 @@
                             </bk-input>
                         </devops-form-item>
                         <p class="gateway-id-tips">
-                            <i class="devops-icon icon-info-circle"></i>
+                            <i class="devops-icon icon-info-circle-shape"></i>
                             <span>若输入了ID（例如gate1），红线将只对名称以ID加下划线开头的控制点生效（例如gate1_XX）</span>
                         </p>
                         <bk-form-item label="描述" :property="'desc'">
@@ -225,8 +225,8 @@
                                     </bk-table-column>
                                     <bk-table-column label="相关插件" min-width="260">
                                         <template slot-scope="props">
-                                            <p v-if="props.row.lackPointElement.length" class="atom-tips" :title="`缺少${getPipelineStatus(props.row.lackPointElement)}插件`">
-                                                <span class="mark-circle"></span>缺少{{ getPipelineStatus(props.row.lackPointElement) }}插件
+                                            <p v-if="props.row.lackPointElement.length" class="atom-tips" :title="`缺少指标所需的${getPipelineStatus(props.row.lackPointElement)}插件`">
+                                                <span class="mark-circle"></span>缺少指标所需的{{ getPipelineStatus(props.row.lackPointElement) }}插件
                                             </p>
                                             <p v-if="checkAtomAsync(props.row.existElement)" class="atom-tips" :title="`${getAsyncAtom(props.row.existElement)}插件不是同步，无法及时获取产出结果`">
                                                 <span class="mark-circle"></span>{{ getAsyncAtom(props.row.existElement) }}插件不是同步，无法及时获取产出结果</p>
@@ -346,9 +346,17 @@
         <bk-sideslider
             class="metadata-side-slider"
             :is-show.sync="sideSliderConfig.show"
-            :title="sideSliderConfig.title"
             :quick-close="sideSliderConfig.quickClose"
             :width="sideSliderConfig.width">
+            <header class="metadata-panel-header" slot="header">
+                <span>{{ sideSliderConfig.title }}</span>
+                <div class="search-input-row" :class="{ 'crtl-point-panel': isCtrPointPanel }">
+                    <input class="bk-form-input" type="text" placeholder="请输入..."
+                        v-model="searchKey"
+                        @keyup.enter="handleSearch()">
+                    <i class="bk-icon icon-search" @click="handleSearch()"></i>
+                </div>
+            </header>
             <template slot="content">
                 <div style="width: 100%; height: 100%"
                     v-bkloading="{
@@ -356,8 +364,10 @@
                         title: sideSliderConfig.loading.title
                     }">
                     <metadata-panel
+                        ref="metadataPanel"
                         :is-panel-show="sideSliderConfig.show"
                         :panel-type="panelType"
+                        :search-key="searchKey"
                         :selected-atom="createRuleForm.controlPoint"
                         :selected-meta="createRuleForm.indicators"
                         @comfireHandle="handleMetadata"
@@ -433,6 +443,7 @@
                 tableLoading: false,
                 isDropdownShow: false,
                 isInit: false,
+                searchKey: '',
                 panelType: '',
                 curFastType: '',
                 lastClickCount: '',
@@ -728,6 +739,7 @@
             selectMetadata (index) {
                 this.lastClickCount = index
                 this.sideSliderConfig.show = true
+                this.searchKey = ''
                 this.sideSliderConfig.title = '指标选择'
                 this.panelType = 'index'
             },
@@ -754,6 +766,7 @@
             },
             selectControlPoint () {
                 this.sideSliderConfig.show = true
+                this.searchKey = ''
                 this.sideSliderConfig.title = '控制点选择'
                 this.panelType = 'controlPoint'
             },
@@ -1031,6 +1044,7 @@
 
                 const params = {
                     projectId: this.projectId,
+                    gatewayId: this.createRuleForm.gatewayId,
                     pipelineIds: data,
                     controlPointType: this.createRuleForm.controlPoint || '',
                     indicatorIds: []
@@ -1075,6 +1089,7 @@
 
                 const params = {
                     projectId: this.projectId,
+                    gatewayId: this.createRuleForm.gatewayId,
                     templateIds: template,
                     controlPointType: this.createRuleForm.controlPoint || '',
                     indicatorIds: []
@@ -1215,6 +1230,9 @@
                 this.checkPipelineAtom(this.selectedPipelines)
                 this.checkTemplateAtom(this.selectedTemplates)
             },
+            handleSearch () {
+                this.$refs.metadataPanel.toSearch()
+            },
             getAsyncAtom (element) {
                 const target = []
                 element.forEach(item => {
@@ -1230,6 +1248,7 @@
                     this.createRuleForm.controlPointName = params.data.name
                     this.createRuleForm.availablePosition = params.data.availablePos
                     this.createRuleForm.controlPointPosition = params.data.defaultPos.name
+                    this.sideSliderConfig.show = false
                 } else {
                     const tempArr = []
                     const tplData = JSON.parse(JSON.stringify(params.data))
@@ -1250,7 +1269,7 @@
                     const target = this.createRuleForm.indicators
                     this.createRuleForm.indicators = [...target.slice(0, this.lastClickCount + 1), ...tempArr, ...target.slice(this.lastClickCount + 1, target.length)]
                 }
-                this.sideSliderConfig.show = false
+                // this.sideSliderConfig.show = false
             },
             submitValidate () {
                 let errMsg = ''
@@ -1561,8 +1580,12 @@
             .gateway-id-tips {
                 margin-top: 8px;
                 margin-left: 100px;
-                color:#C3CDD7;
+                color:#313238;
                 font-size: 12px;
+                .icon-info-circle-shape {
+                    font-size: 14px;
+                    color: #ffb848;
+                }
             }
         }
         .rule-metadata-table {
@@ -1869,6 +1892,36 @@
         .control-point-name {
             background-color: #FAFBFD;
             color: #737987;
+        }
+        .metadata-panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            .search-input-row {
+                display: flex;
+                align-items: center;
+                margin-right: 20px;
+                padding: 0 10px;
+                width: 279px;
+                height: 36px;
+                border: 1px solid #dde4eb;
+                background-color: #fff;
+                .bk-form-input {
+                    padding: 0;
+                    border: 0;
+                    -webkit-box-shadow: border-box;
+                    box-shadow: border-box;
+                    outline: none;
+                    width: 239px;
+                    height: 32px;
+                    margin-left: 0;
+                }
+                .icon-search {
+                    float: right;
+                    color: #c3cdd7;
+                    cursor: pointer;
+                }
+            }
         }
     }
 </style>

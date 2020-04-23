@@ -1,5 +1,6 @@
 package com.tencent.devops.artifactory.api.service
 
+import com.tencent.devops.artifactory.pojo.Url
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.common.api.auth.AUTH_HEADER_BUILD_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_PIPELINE_ID
@@ -8,13 +9,16 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_REGION
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
+import javax.ws.rs.POST
 import javax.ws.rs.Path
+import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
@@ -63,4 +67,26 @@ interface ServiceArtifactoryDownLoadResource {
         @HeaderParam(AUTH_HEADER_REGION)
         region: String?
     ): Result<List<String>>
+
+    @ApiOperation("创建下载链接")
+    // @Path("/projects/{projectId}/artifactoryTypes/{artifactoryType}/downloadUrl")
+    @Path("/{projectId}/{artifactoryType}/downloadUrl")
+    @POST
+    fun downloadUrl(
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("版本仓库类型", required = true)
+        @PathParam("artifactoryType")
+        artifactoryType: ArtifactoryType,
+        @ApiParam("用户ID", required = true)
+        @QueryParam("userId")
+        userId: String,
+        @ApiParam("路径", required = true)
+        @QueryParam("path")
+        path: String,
+        @ApiParam("渠道", required = false)
+        @QueryParam("channelCode")
+        channelCode: ChannelCode?
+    ): Result<Url>
 }

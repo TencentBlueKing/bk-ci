@@ -118,7 +118,8 @@ class BkRepoDownloadService @Autowired constructor(
         userId: String,
         projectId: String,
         artifactoryType: ArtifactoryType,
-        argPath: String
+        argPath: String,
+        channelCode: ChannelCode?
     ): Url {
         logger.info("getDownloadUrl, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType, argPath: $argPath")
         // 校验用户流水线权限？
