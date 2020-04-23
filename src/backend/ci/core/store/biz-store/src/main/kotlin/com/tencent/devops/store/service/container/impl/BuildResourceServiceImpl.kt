@@ -51,6 +51,7 @@ class BuildResourceServiceImpl @Autowired constructor(
     private val buildResourceDao: BuildResourceDao
 ) : BuildResourceService {
     override fun getDefaultBuildResource(buildType: BuildType): Any? {
+        logger.info("Input(${buildType.name})")
         return null
     }
 
