@@ -13,7 +13,6 @@
                 :build-id="execDetail.id"
                 :current-tab="currentTab"
                 :execute-count="currentElement.executeCount"
-                :down-load-link="downLoadPluginLink"
                 ref="log"
                 v-show="currentTab === 'log'"
             />
