@@ -255,19 +255,20 @@ class DockerHostDebugService @Autowired constructor(
             // 根据dockerIp定向调用dockerhost
             val url = "http://$dockerIp/api/docker/debug/end"
             val proxyUrl = "$idcProxy/proxy-devnet?url=${urlEncode(url)}"
-            val requestBody = ContainerInfo(projectId,
-                pipelineId,
-                vmSeqId,
-                pipelineDockerDebug.poolNo,
-                pipelineDockerDebug.status,
-                pipelineDockerDebug.imageName,
-                pipelineDockerDebug.containerId,
-                pipelineDockerDebug.hostTag,
-                pipelineDockerDebug.token,
-                pipelineDockerDebug.buildEnv,
-                pipelineDockerDebug.registryUser,
-                pipelineDockerDebug.registryPwd,
-                pipelineDockerDebug.imageType
+            val requestBody = ContainerInfo(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                vmSeqId = vmSeqId,
+                poolNo = pipelineDockerDebug.poolNo,
+                status = pipelineDockerDebug.status,
+                imageName = pipelineDockerDebug.imageName,
+                containerId = pipelineDockerDebug.containerId,
+                address = pipelineDockerDebug.hostTag,
+                token = pipelineDockerDebug.token,
+                buildEnv = pipelineDockerDebug.buildEnv,
+                registryUser = pipelineDockerDebug.registryUser,
+                registryPwd = pipelineDockerDebug.registryPwd,
+                imageType = pipelineDockerDebug.imageType
                 )
             val request = Request.Builder().url(proxyUrl)
                 .post(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), JsonUtil.toJson(requestBody)))

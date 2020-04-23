@@ -11,7 +11,6 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.DockerVersion
 import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
 import com.tencent.devops.common.pipeline.type.docker.ImageType
-import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.dispatch.dao.PipelineDockerBuildDao
 import com.tencent.devops.dispatch.exception.DockerServiceException
 import com.tencent.devops.dispatch.pojo.DockerHostBuildInfo
@@ -38,7 +37,6 @@ class DockerHostClient @Autowired constructor(
     private val pipelineDockerBuildDao: PipelineDockerBuildDao,
     private val dockerHostUtils: DockerHostUtils,
     private val redisUtils: RedisUtils,
-    private val redisOperation: RedisOperation,
     private val client: Client,
     private val dslContext: DSLContext
 ) {
@@ -59,6 +57,7 @@ class DockerHostClient @Autowired constructor(
     fun startBuild(
         event: PipelineAgentStartupEvent,
         dockerIp: String,
+        dockerHostPort: Int,
         poolNo: Int
     ) {
         val secretKey = ApiUtil.randomSecretKey()
@@ -148,7 +147,7 @@ class DockerHostClient @Autowired constructor(
             containerHashId = ""
         )
 
-        dockerBuildStart(dockerIp, requestBody, event)
+        dockerBuildStart(dockerIp, dockerHostPort, requestBody, event)
     }
 
     fun endBuild(event: PipelineAgentShutdownEvent, dockerIp: String, containerId: String) {
@@ -201,12 +200,13 @@ class DockerHostClient @Autowired constructor(
 
     private fun dockerBuildStart(
         dockerIp: String,
+        dockerHostPort: Int,
         requestBody: DockerHostBuildInfo,
         event: PipelineAgentStartupEvent,
         retryTime: Int = 0,
         unAvailableIpList: Set<String>? = null
     ) {
-        val url = "http://$dockerIp/api/docker/build/start"
+        val url = "http://$dockerIp:$dockerHostPort/api/docker/build/start"
         val proxyUrl = "$idcProxy/proxy-devnet?url=${urlEncode(url)}"
         val request = Request.Builder().url(proxyUrl)
             .post(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), JsonUtil.toJson(requestBody)))
@@ -237,8 +237,8 @@ class DockerHostClient @Autowired constructor(
                         val unAvailableIpListLocal: Set<String> = unAvailableIpList?.plus(dockerIp) ?: setOf(dockerIp)
                         val retryTimeLocal = retryTime + 1
                         // 当前IP不可用，重新获取可用ip
-                        val dockerIpLocal = dockerHostUtils.getAvailableDockerIp(event.projectId, event.pipelineId, event.vmSeqId, unAvailableIpListLocal)
-                        dockerBuildStart(dockerIpLocal, requestBody, event, retryTimeLocal, unAvailableIpListLocal)
+                        val dockerIpLocalPair = dockerHostUtils.getAvailableDockerIp(event.projectId, event.pipelineId, event.vmSeqId, unAvailableIpListLocal)
+                        dockerBuildStart(dockerIpLocalPair.first, dockerIpLocalPair.second, requestBody, event, retryTimeLocal, unAvailableIpListLocal)
                     } else {
                         logger.error("[${event.projectId}|${event.pipelineId}|${event.buildId}|$retryTime] Start build Docker VM failed, retry $retryTime times.")
                         throw DockerServiceException("Start build Docker VM failed, retry $retryTime times.")

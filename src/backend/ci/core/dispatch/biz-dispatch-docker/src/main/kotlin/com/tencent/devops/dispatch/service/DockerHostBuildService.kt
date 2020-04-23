@@ -336,7 +336,7 @@ class DockerHostBuildService @Autowired constructor(
         stopWatch.start("fetchHostZone")
         val hostZone = pipelineDockerHostZoneDao.getHostZone(dslContext, hostTag)
         stopWatch.stop()
-        val message: String
+        var message = ""
         val redisLock = DockerHostLock(redisOperation)
         try {
             stopWatch.start("getGrayProject")
@@ -434,7 +434,7 @@ class DockerHostBuildService @Autowired constructor(
             stopWatch.start("unlock")
             redisLock.unlock()
             stopWatch.stop()
-            // logger.info("[$hostTag|$grayFlag]|Start_Docker_Build| $message| watch=$stopWatch")
+            logger.info("[$hostTag|$grayFlag]|Start_Docker_Build| $message| watch=$stopWatch")
         }
     }
 
