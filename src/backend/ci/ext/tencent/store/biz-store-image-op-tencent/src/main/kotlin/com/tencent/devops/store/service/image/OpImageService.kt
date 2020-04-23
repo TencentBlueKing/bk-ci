@@ -210,11 +210,6 @@ class OpImageService @Autowired constructor(
                 weight = imageUpdateRequest.weight,
                 modifier = userId
             )
-            // 更新调试项目
-            val projectCode = imageUpdateRequest.projectCode
-            if (projectCode != null) {
-                storeProjectRelDao.updateUserStoreTestProject(dslContext, userId, projectCode, StoreProjectTypeEnum.TEST, imageRecord.imageCode, StoreTypeEnum.IMAGE)
-            }
             // 若更新已发布、下架中、已下架版本，需要更新最终agentType
             if (imageRecord.imageStatus in setOf(ImageStatusEnum.RELEASED, ImageStatusEnum.UNDERCARRIAGING, ImageStatusEnum.UNDERCARRIAGED).map { it.status.toByte() }) {
                 imageReleaseService.saveImageAgentTypeToFeature(dslContext, imageRecord.imageCode, imageUpdateRequest.agentTypeScope)
