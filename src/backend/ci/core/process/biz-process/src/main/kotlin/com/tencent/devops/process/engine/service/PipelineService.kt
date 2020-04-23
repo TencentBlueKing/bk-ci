@@ -682,6 +682,12 @@ class PipelineService @Autowired constructor(
                 if (it.tag == null) it.tag = defaultTagIds
             }
 
+            // 部分老的模板实例没有templateId，需要手动加上
+            if (model.instanceFromTemplate == true && model.templateId.isNullOrBlank()) {
+                val record = templatePipelineDao.get(dslContext, pipelineId)
+                model.templateId = record?.templateId
+            }
+
             return model
         } catch (e: Exception) {
             logger.warn("Fail to get the pipeline($pipelineId) definition of project($projectId)", e)

@@ -129,8 +129,20 @@ class TencentManualReviewTaskAtom(
 
         // 开始进入人工审核步骤，需要打印日志，并发送通知给审核人
         LogUtils.addYellowLine(
-            rabbitTemplate, task.buildId, "步骤等待审核，审核人：$reviewUsers\n==============================",
-            taskId, task.containerHashId, task.executeCount ?: 1
+            rabbitTemplate = rabbitTemplate,
+            buildId = task.buildId,
+            message = "步骤等待审核，审核人：$reviewUsers",
+            tag = taskId,
+            jobId = task.containerHashId,
+            executeCount = task.executeCount ?: 1
+        )
+        LogUtils.addYellowLine(
+            rabbitTemplate = rabbitTemplate,
+            buildId = task.buildId,
+            message = "==============================",
+            tag = taskId,
+            jobId = task.containerHashId,
+            executeCount = task.executeCount ?: 1
         )
 
         val pipelineName = runVariables[PIPELINE_NAME].toString()
@@ -153,7 +165,14 @@ class TencentManualReviewTaskAtom(
         val message = EmailNotifyMessage().apply {
             addAllReceivers(reviewUsers.split(",").toSet())
             format = EnumEmailFormat.HTML
-            body = NotifyTemplateUtils.getReviewEmailBody(reviewUrl, date, projectName, pipelineName, buildNo)
+            body = NotifyTemplateUtils.getReviewEmailBody(
+                reviewDesc = param.desc ?: "",
+                reviewUrl = reviewUrl,
+                dataTime = date,
+                projectName = projectName,
+                pipelineName = pipelineName,
+                buildNo = buildNo
+            )
             title = "【蓝盾流水线审核通知】"
             sender = "蓝鲸助手"
         }
@@ -163,10 +182,22 @@ class TencentManualReviewTaskAtom(
             logger.warn("[$buildId]|taskId=$taskId|Fail to send the email message($message) because of ${result.message}")
         }
 
-        val bodyMessage =
-            NotifyTemplateUtils.getReviewRtxMsgBody(reviewUrl, reviewAppUrl, projectName, pipelineName, buildNo)
-        val bodyMessageWeixin =
-            NotifyTemplateUtils.getRevieWeixinMsgBody(reviewUrl, reviewAppUrl, projectName, pipelineName, buildNo)
+        val bodyMessage = NotifyTemplateUtils.getReviewRtxMsgBody(
+                reviewDesc = param.desc ?: "",
+                reviewUrl = reviewUrl,
+                reviewAppUrl = reviewAppUrl,
+                projectName = projectName,
+                pipelineName = pipelineName,
+                buildNo = buildNo
+            )
+        val bodyMessageWeixin = NotifyTemplateUtils.getRevieWeixinMsgBody(
+                reviewDesc = param.desc ?: "",
+                reviewUrl = reviewUrl,
+                reviewAppUrl = reviewAppUrl,
+                projectName = projectName,
+                pipelineName = pipelineName,
+                buildNo = buildNo
+            )
 
         val rtxMessage = RtxNotifyMessage().apply {
             addAllReceivers(reviewUsers.split(",").toSet())
