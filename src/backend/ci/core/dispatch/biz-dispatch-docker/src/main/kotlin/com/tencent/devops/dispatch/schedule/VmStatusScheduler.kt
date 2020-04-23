@@ -6,21 +6,21 @@ import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.dispatch.dao.PipelineDockerIPInfoDao
+import com.tencent.devops.dispatch.utils.DockerHostUtils
 import com.tencent.devops.model.dispatch.tables.records.TDispatchPipelineDockerIpInfoRecord
 import okhttp3.Request
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 import java.lang.Exception
-import java.net.URLEncoder
 
 @Component
 class VmStatusScheduler @Autowired constructor(
     private val dslContext: DSLContext,
     private val pipelineDockerIpInfoDao: PipelineDockerIPInfoDao,
+    private val dockerHostUtils: DockerHostUtils,
     private val redisOperation: RedisOperation
 ) {
     companion object {
@@ -28,9 +28,6 @@ class VmStatusScheduler @Autowired constructor(
         private const val jobLockKey = "dispatch_docker_cron_volume_fresh_job"
         private const val failJobLockKey = "dispatch_docker_cron_volume_fresh_fail_job"
     }
-
-    @Value("\${devopsGateway.idcProxy}")
-    val idcProxy: String? = null
 
     /**
      * 定时刷新check母机状态
@@ -95,8 +92,7 @@ class VmStatusScheduler @Autowired constructor(
     private fun singleTask(it: TDispatchPipelineDockerIpInfoRecord) {
         val itDockerIp = it.dockerIp as String
         val enable = it.enable as Boolean
-        val url = "http://$itDockerIp:${it.dockerHostPort}/api/docker/host/load"
-        val proxyUrl = "$idcProxy/proxy-devnet?url=${urlEncode(url)}"
+        val proxyUrl = dockerHostUtils.getIdc2DevnetProxyUrl("/api/docker/host/load", itDockerIp, it.dockerHostPort)
         val request = Request.Builder().url(proxyUrl)
             .addHeader("Accept", "application/json; charset=utf-8")
             .addHeader("Content-Type", "application/json; charset=utf-8")
@@ -138,6 +134,4 @@ class VmStatusScheduler @Autowired constructor(
             logger.error("Get Docker VM: $itDockerIp container failed.", e)
         }
     }
-
-    private fun urlEncode(s: String) = URLEncoder.encode(s, "UTF-8")
 }
