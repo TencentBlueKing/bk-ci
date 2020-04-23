@@ -42,6 +42,7 @@ import com.tencent.devops.dispatch.service.DockerHostBuildService
 import com.tencent.devops.dispatch.service.dispatcher.Dispatcher
 import com.tencent.devops.dispatch.utils.DockerHostUtils
 import com.tencent.devops.log.utils.LogUtils
+import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
 import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
 import org.jooq.DSLContext
@@ -78,7 +79,7 @@ class DockerDispatcher @Autowired constructor(
             rabbitTemplate,
             pipelineAgentStartupEvent.buildId,
             "Start docker ${dockerDispatch.dockerBuildVersion} for the build",
-            "startVM-${pipelineAgentStartupEvent.containerId}",
+            VMUtils.genStartVMTaskId(pipelineAgentStartupEvent.vmSeqId),
             pipelineAgentStartupEvent.containerHashId,
             pipelineAgentStartupEvent.executeCount ?: 1
         )
