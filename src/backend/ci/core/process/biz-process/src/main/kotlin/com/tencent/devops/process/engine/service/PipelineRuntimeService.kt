@@ -1488,7 +1488,7 @@ class PipelineRuntimeService @Autowired constructor(
                         LogUtils.addLine(
                             rabbitTemplate = rabbitTemplate,
                             buildId = buildId,
-                            message = "审核参数：${pipelineBuildParameters}",
+                            message = "审核参数：${params.params.map { it.key to it.value }}",
                             tag = taskId,
                             jobId = containerHashId,
                             executeCount = executeCount ?: 1
@@ -1498,7 +1498,9 @@ class PipelineRuntimeService @Autowired constructor(
                             projectId = projectId,
                             pipelineId = pipelineId,
                             buildId = buildId,
-                            variables = pipelineBuildParameters
+                            variables = params.params.map {
+                                BuildParameters(it.key.toString(), it.value.toString())
+                            }
                         )
 
                         pipelineEventDispatcher.dispatch(
