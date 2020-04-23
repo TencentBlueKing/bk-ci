@@ -1470,35 +1470,27 @@ class PipelineRuntimeService @Autowired constructor(
                         LogUtils.addLine(
                             rabbitTemplate = rabbitTemplate,
                             buildId = buildId,
-                            message = "审核参数：${params.params}",
+                            message = "审核意见：${params.suggest}",
                             tag = taskId,
                             jobId = containerHashId,
                             executeCount = executeCount ?: 1
                         )
-
-                        val pipelineBuildParameters = mutableListOf<BuildParameters>()
-                        params.params.forEach {
-                            pipelineBuildParameters.add(
-                                BuildParameters(
-                                    it.key.toString(),
-                                    it.value.toString()
-                                )
-                            )
-                            LogUtils.addLine(
-                                rabbitTemplate = rabbitTemplate,
-                                buildId = buildId,
-                                message = "${it.key}=${it.value}",
-                                tag = taskId,
-                                jobId = containerHashId,
-                                executeCount = executeCount ?: 1
-                            )
-                        }
+                        LogUtils.addLine(
+                            rabbitTemplate = rabbitTemplate,
+                            buildId = buildId,
+                            message = "审核参数：${params.params.map { it.key to it.value }}",
+                            tag = taskId,
+                            jobId = containerHashId,
+                            executeCount = executeCount ?: 1
+                        )
                         pipelineBuildVarDao.batchSave(
                             dslContext = dslContext,
                             projectId = projectId,
                             pipelineId = pipelineId,
                             buildId = buildId,
-                            variables = pipelineBuildParameters
+                            variables = params.params.map {
+                                BuildParameters(it.key.toString(), it.value.toString())
+                            }
                         )
 
                         pipelineEventDispatcher.dispatch(

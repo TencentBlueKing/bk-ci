@@ -78,6 +78,14 @@ class ManualReviewTaskAtom(
         logger.info("[$buildId]|TRY_FINISH|${task.taskName}|taskId=$taskId|action=$manualAction")
         if (manualAction.isNotEmpty()) {
             val manualActionUserId = task.getTaskParam(BS_MANUAL_ACTION_USERID)
+            LogUtils.addYellowLine(
+                rabbitTemplate = rabbitTemplate,
+                buildId = task.buildId,
+                message = "==============================",
+                tag = taskId,
+                jobId = task.containerHashId,
+                executeCount = task.executeCount ?: 1
+            )
             return when (ManualReviewAction.valueOf(manualAction)) {
                 ManualReviewAction.PROCESS -> {
                     LogUtils.addYellowLine(
