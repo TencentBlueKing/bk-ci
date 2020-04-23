@@ -164,7 +164,7 @@ class WebhookMQConfiguration @Autowired constructor() {
             startConsumerMinInterval = 1,
             consecutiveActiveTrigger = 1,
             concurrency = 10,
-            maxConcurrency = 10
+            maxConcurrency = 20
         )
     }
 

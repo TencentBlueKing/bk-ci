@@ -24,40 +24,44 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.api.external
+package com.tencent.devops.scm.api
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.repository.pojo.oauth.GitToken
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
-import javax.ws.rs.HeaderParam
-import javax.ws.rs.POST
+import javax.ws.rs.GET
 import javax.ws.rs.Path
 import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["EXTERNAL_CODE_SVN"], description = "外部-CODE-SVN-资源")
-@Path("/external/scm")
+@Api(tags = ["SERVICE_SCM_GIT_CI"], description = "Service Code GIT CI resource")
+@Path("/service/gitci/")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface ExternalScmResource {
+interface ServiceGitCiResource {
 
-    @ApiOperation("Code平台SVN仓库提交")
-    @POST
-    @Path("/codesvn/commit")
-    fun webHookCodeSvnCommit(event: String): Result<Boolean>
+    @ApiOperation("获取项目的token")
+    @GET
+    @Path("/getToken")
+    fun getToken(
+        @ApiParam("gitProjectId", required = true)
+        @QueryParam("gitProjectId")
+        gitProjectId: String
+    ): Result<GitToken>
 
-    @ApiOperation("Code平台Git仓库提交")
-    @POST
-    @Path("/codegit/commit")
-    fun webHookCodeGitCommit(
-        @HeaderParam("X-Token")
-        token: String,
-        event: String
+    @ApiOperation("校验用户git项目权限")
+    @GET
+    @Path("/checkUserGitAuth")
+    fun checkUserGitAuth(
+        @ApiParam("userId", required = true)
+        @QueryParam("userId")
+        userId: String,
+        @ApiParam("gitProjectId", required = true)
+        @QueryParam("gitProjectId")
+        gitProjectId: String
     ): Result<Boolean>
-
-    @ApiOperation("Gitlab仓库提交")
-    @POST
-    @Path("/gitlab/commit")
-    fun webHookGitlabCommit(event: String): Result<Boolean>
 }
