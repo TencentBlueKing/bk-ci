@@ -26,27 +26,19 @@
 
 package com.tencent.devops.store.resources.image.user
 
-import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.image.user.UserImagePipelineResource
-import com.tencent.devops.store.api.image.user.UserImageResource
-import com.tencent.devops.store.pojo.common.VersionInfo
 import com.tencent.devops.store.pojo.image.enums.ImageAgentTypeEnum
-import com.tencent.devops.store.pojo.image.enums.ImageRDTypeEnum
-import com.tencent.devops.store.pojo.image.enums.MarketImageSortTypeEnum
-import com.tencent.devops.store.pojo.image.request.ImageBaseInfoUpdateRequest
 import com.tencent.devops.store.pojo.image.response.*
 import com.tencent.devops.store.service.image.ImagePipelineService
-import com.tencent.devops.store.service.image.ImageService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class UserImagePipelineResourceImpl @Autowired constructor(
     private val imagePipelineService: ImagePipelineService
 ) : UserImagePipelineResource {
-    override fun defaultStoreImage(userId: String, agentType: ImageAgentTypeEnum): Result<SimpleImageInfo> {
+    override fun defaultStoreImage(userId: String, agentType: ImageAgentTypeEnum): Result<BaseImageInfo> {
         return Result(imagePipelineService.getDefaultStoreImage(userId, agentType))
     }
 
