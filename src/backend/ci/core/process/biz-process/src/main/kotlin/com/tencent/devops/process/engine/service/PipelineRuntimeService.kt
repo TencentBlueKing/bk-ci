@@ -1470,7 +1470,7 @@ class PipelineRuntimeService @Autowired constructor(
                         LogUtils.addLine(
                             rabbitTemplate = rabbitTemplate,
                             buildId = buildId,
-                            message = "审核参数：${params.params}",
+                            message = "审核意见：${params.suggest}",
                             tag = taskId,
                             jobId = containerHashId,
                             executeCount = executeCount ?: 1
@@ -1484,15 +1484,15 @@ class PipelineRuntimeService @Autowired constructor(
                                     it.value.toString()
                                 )
                             )
-                            LogUtils.addLine(
-                                rabbitTemplate = rabbitTemplate,
-                                buildId = buildId,
-                                message = "${it.key}=${it.value}",
-                                tag = taskId,
-                                jobId = containerHashId,
-                                executeCount = executeCount ?: 1
-                            )
                         }
+                        LogUtils.addLine(
+                            rabbitTemplate = rabbitTemplate,
+                            buildId = buildId,
+                            message = "审核参数：${pipelineBuildParameters}",
+                            tag = taskId,
+                            jobId = containerHashId,
+                            executeCount = executeCount ?: 1
+                        )
                         pipelineBuildVarDao.batchSave(
                             dslContext = dslContext,
                             projectId = projectId,
