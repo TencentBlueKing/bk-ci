@@ -23,45 +23,25 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.openapi.resources.apigw
+package com.tencent.devops.openapi.utils
 
-import com.tencent.devops.common.api.pojo.Page
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.openapi.api.apigw.ApigwCredentialResource
-import com.tencent.devops.ticket.api.ServiceCredentialResource
-import com.tencent.devops.ticket.pojo.Credential
-import com.tencent.devops.ticket.pojo.enums.Permission
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.cloud.context.config.annotation.RefreshScope
+import org.springframework.stereotype.Component
 
-@RestResource
-class ApigwCredentialResourceImpl @Autowired constructor(private val client: Client) :
-    ApigwCredentialResource {
-    override fun hasPermissionList(
-        appCode: String?,
-        apigwType: String?,
-        userId: String,
-        projectId: String,
-        credentialTypesString: String?,
-        permission: Permission,
-        page: Int?,
-        pageSize: Int?
-    ): Result<Page<Credential>> {
-        logger.info("get credential of project($projectId) by user($userId)")
-        return client.get(ServiceCredentialResource::class).hasPermissionList(
-            userId = userId,
-            projectId = projectId,
-            credentialTypesString = credentialTypesString,
-            permission = permission,
-            page = page,
-            pageSize = pageSize,
-            keyword = null
-        )
-    }
+@Component
+@RefreshScope
+class ApiGatewayUtil {
 
     companion object {
-        private val logger = LoggerFactory.getLogger(ApigwCredentialResourceImpl::class.java)
+        private val logger = LoggerFactory.getLogger(ApiGatewayUtil::class.java)
+    }
+
+    @Value("\${api.gateway.auth:#{false}}")
+    private val apiGatewayAuth: Boolean = false
+
+    fun isAuth(): Boolean {
+        return apiGatewayAuth
     }
 }
