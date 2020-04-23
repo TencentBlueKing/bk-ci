@@ -35,6 +35,7 @@ import com.tencent.devops.dockerhost.pojo.DockerRunParam
 import com.tencent.devops.dockerhost.pojo.DockerRunResponse
 import com.tencent.devops.dockerhost.pojo.Status
 import com.tencent.devops.dockerhost.utils.SigarUtil
+import com.tencent.devops.process.engine.common.VMUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -153,6 +154,7 @@ class DockerService @Autowired constructor(private val dockerHostBuildService: D
         dockerHostBuildService.log(
             buildId = dockerHostBuildInfo.buildId,
             message = "构建环境启动成功，等待Agent启动...",
+            tag = VMUtils.genStartVMTaskId(dockerHostBuildInfo.vmSeqId.toString()),
             containerHashId = dockerHostBuildInfo.containerHashId
         )
         return containerId
@@ -160,11 +162,11 @@ class DockerService @Autowired constructor(private val dockerHostBuildService: D
 
     fun getDockerHostLoad(): DockerHostLoad {
         return DockerHostLoad(
-            dockerHostBuildService.getContainerNum(),
-            SigarUtil.getAverageCpuLoad(),
-            SigarUtil.getAverageMemLoad(),
-            SigarUtil.getAverageDiskLoad(),
-            SigarUtil.getAverageDiskIOLoad()
+            usedContainerNum = dockerHostBuildService.getContainerNum(),
+            averageCpuLoad = SigarUtil.getAverageCpuLoad(),
+            averageMemLoad = SigarUtil.getAverageMemLoad(),
+            averageDiskLoad = SigarUtil.getAverageDiskLoad(),
+            averageDiskIOLoad = SigarUtil.getAverageDiskIOLoad()
             )
     }
 

@@ -95,14 +95,14 @@ class DockerDispatcher @Autowired constructor(
                 pipelineAgentStartupEvent.vmSeqId
             )
 
-            val dockerIp: String
+            val dockerPair: Pair<String, Int>
             poolNo = dockerHostUtils.getIdlePoolNo(pipelineAgentStartupEvent.pipelineId, pipelineAgentStartupEvent.vmSeqId)
             if (taskHistory != null) {
-                dockerIp = if (specialIpSet.isNotEmpty() && specialIpSet.toString() != "[]") {
+                dockerPair = if (specialIpSet.isNotEmpty() && specialIpSet.toString() != "[]") {
                     // 该项目工程配置了专机
                     if (specialIpSet.contains(taskHistory.dockerIp)) {
                         // 上一次构建IP在专机列表中，直接重用
-                        taskHistory.dockerIp
+                        Pair(taskHistory.dockerIp, 0)
                     } else {
                         // 不在专机列表中，重新依据专机列表去选择负载最小的
                         resetDockerIp(pipelineAgentStartupEvent, specialIpSet, taskHistory.dockerIp, "专机漂移")
@@ -113,7 +113,7 @@ class DockerDispatcher @Autowired constructor(
                 }
             } else {
                 // 第一次构建，根据负载条件选择可用IP
-                dockerIp = dockerHostUtils.getAvailableDockerIpWithSpecialIps(
+                dockerPair = dockerHostUtils.getAvailableDockerIpWithSpecialIps(
                     pipelineAgentStartupEvent.projectId,
                     pipelineAgentStartupEvent.pipelineId,
                     pipelineAgentStartupEvent.vmSeqId,
@@ -123,11 +123,11 @@ class DockerDispatcher @Autowired constructor(
                     dslContext,
                     pipelineAgentStartupEvent.pipelineId,
                     pipelineAgentStartupEvent.vmSeqId,
-                    dockerIp
+                    dockerPair.first
                 )
             }
 
-            dockerHostClient.startBuild(pipelineAgentStartupEvent, dockerIp, poolNo)
+            dockerHostClient.startBuild(pipelineAgentStartupEvent, dockerPair.first, dockerPair.second, poolNo)
         } catch (e: Exception) {
             val errMsg = if (e is DockerServiceException) {
                 logger.warn("[${pipelineAgentStartupEvent.projectId}|${pipelineAgentStartupEvent.pipelineId}|${pipelineAgentStartupEvent.buildId}] Start build Docker VM failed. ${e.message}")
@@ -181,25 +181,24 @@ class DockerDispatcher @Autowired constructor(
         specialIpSet: Set<String>,
         oldDockerIp: String,
         poolNo: Int
-    ): String {
-        var dockerIp = oldDockerIp
+    ): Pair<String, Int> {
+        val ipInfo = pipelineDockerIpInfoDao.getDockerIpInfo(dslContext, oldDockerIp)
 
         // 同一条流水线并发构建时，无视负载，直接下发同一个IP（避免同一条流水线并发量太大，影响其他流水线构建）
         if (poolNo > 1) {
-            return dockerIp
+            return Pair(oldDockerIp, ipInfo!!.dockerHostPort)
         }
 
         // 查看当前IP负载情况，当前IP可用，且负载未超额（内存低于90%且硬盘低于90%），可直接下发，当负载超额，重新选择构建机
-        val ipInfo = pipelineDockerIpInfoDao.getDockerIpInfo(dslContext, oldDockerIp)
         if (ipInfo == null || !ipInfo.enable || ipInfo.diskLoad > 90 || ipInfo.memLoad > 90) {
-            dockerIp = resetDockerIp(pipelineAgentStartupEvent, specialIpSet, oldDockerIp, if (ipInfo != null) JsonUtil.toJson(ipInfo) else "")
+            return resetDockerIp(pipelineAgentStartupEvent, specialIpSet, oldDockerIp, if (ipInfo != null) JsonUtil.toJson(ipInfo) else "")
         }
 
-        return dockerIp
+        return Pair(oldDockerIp, ipInfo.dockerHostPort)
     }
 
-    private fun resetDockerIp(pipelineAgentStartupEvent: PipelineAgentStartupEvent, specialIpSet: Set<String>, sourceIp: String, ipInfo: String): String {
-        val dockerIp = dockerHostUtils.getAvailableDockerIpWithSpecialIps(
+    private fun resetDockerIp(pipelineAgentStartupEvent: PipelineAgentStartupEvent, specialIpSet: Set<String>, sourceIp: String, ipInfo: String): Pair<String, Int> {
+        val dockerPair = dockerHostUtils.getAvailableDockerIpWithSpecialIps(
             pipelineAgentStartupEvent.projectId,
             pipelineAgentStartupEvent.pipelineId,
             pipelineAgentStartupEvent.vmSeqId,
@@ -209,7 +208,7 @@ class DockerDispatcher @Autowired constructor(
             dslContext,
             pipelineAgentStartupEvent.pipelineId,
             pipelineAgentStartupEvent.vmSeqId,
-            dockerIp
+            dockerPair.first
         )
 
         // 记录漂移日志
@@ -219,10 +218,10 @@ class DockerDispatcher @Autowired constructor(
             pipelineAgentStartupEvent.buildId,
             pipelineAgentStartupEvent.vmSeqId,
             sourceIp,
-            dockerIp,
+            dockerPair.first,
             ipInfo
         )
 
-        return dockerIp
+        return dockerPair
     }
 }

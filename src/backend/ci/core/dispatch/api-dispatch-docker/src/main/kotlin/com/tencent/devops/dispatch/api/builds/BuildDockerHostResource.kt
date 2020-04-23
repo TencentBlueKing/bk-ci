@@ -24,7 +24,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.api
+package com.tencent.devops.dispatch.api.builds
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.mq.alert.AlertLevel
