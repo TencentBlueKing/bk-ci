@@ -40,8 +40,6 @@ import com.tencent.devops.store.pojo.common.KEY_PUB_TIME
 import com.tencent.devops.store.pojo.common.KEY_UPDATE_TIME
 import com.tencent.devops.store.pojo.common.KEY_VERSION_LOG_CONTENT
 import com.tencent.devops.store.pojo.common.PASS
-import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
-import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.image.enums.CategoryTypeEnum
 import com.tencent.devops.store.pojo.image.enums.ImageAgentTypeEnum
 import com.tencent.devops.store.pojo.image.enums.ImageRDTypeEnum
@@ -210,11 +208,6 @@ class OpImageService @Autowired constructor(
                 weight = imageUpdateRequest.weight,
                 modifier = userId
             )
-            // 更新调试项目
-            val projectCode = imageUpdateRequest.projectCode
-            if (projectCode != null) {
-                storeProjectRelDao.updateUserStoreTestProject(dslContext, userId, projectCode, StoreProjectTypeEnum.TEST, imageRecord.imageCode, StoreTypeEnum.IMAGE)
-            }
             // 若更新已发布、下架中、已下架版本，需要更新最终agentType
             if (imageRecord.imageStatus in setOf(ImageStatusEnum.RELEASED, ImageStatusEnum.UNDERCARRIAGING, ImageStatusEnum.UNDERCARRIAGED).map { it.status.toByte() }) {
                 imageReleaseService.saveImageAgentTypeToFeature(dslContext, imageRecord.imageCode, imageUpdateRequest.agentTypeScope)
