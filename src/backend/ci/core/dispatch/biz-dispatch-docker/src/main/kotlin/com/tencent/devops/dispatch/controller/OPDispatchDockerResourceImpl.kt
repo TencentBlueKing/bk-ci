@@ -2,7 +2,7 @@ package com.tencent.devops.dispatch.controller
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.dispatch.api.OPDispatchDockerResource
+import com.tencent.devops.dispatch.api.op.OPDispatchDockerResource
 import com.tencent.devops.dispatch.pojo.DockerHostLoadConfig
 import com.tencent.devops.dispatch.pojo.DockerIpInfoVO
 import com.tencent.devops.dispatch.pojo.DockerIpListPage
