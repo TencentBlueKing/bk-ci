@@ -26,5 +26,4 @@
 
 dependencies {
     compile project(":core:ticket:biz-ticket")
-    compile project(":core:common:common-auth:common-auth-sample")
 }
