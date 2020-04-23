@@ -55,7 +55,7 @@ import org.springframework.stereotype.Service
 
 @RefreshScope
 @Service
-abstract class ImagePipelineService @Autowired constructor() {
+class ImagePipelineService @Autowired constructor() {
     @Autowired
     lateinit var dslContext: DSLContext
     @Autowired
