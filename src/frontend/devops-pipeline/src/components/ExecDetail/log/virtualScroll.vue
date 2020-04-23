@@ -1,5 +1,5 @@
 <template>
-    <section :class="['scroll-home', id, { 'min-height': totalNumber <= 0, 'show-empty': hasCompleteInit }]" :style="`height: ${visHeight}px`" @mousewheel.prevent="handleWheel" @DOMMouseScroll.prevent="handleWheel">
+    <section :class="['scroll-home', `id-${id}`, { 'min-height': totalNumber <= 0, 'show-empty': hasCompleteInit }]" :style="`height: ${visHeight}px`" @mousewheel.prevent="handleWheel" @DOMMouseScroll.prevent="handleWheel">
         <template v-if="!isLogErr">
             <ul class="scroll-index scroll" :style="`top: ${-totalScrollHeight}px; width: ${indexWidth}px; height: ${ulHeight}px`">
                 <li class="scroll-item" :style="`height: ${itemHeight}px; top: ${item.top}px`" v-for="(item) in indexList" :key="item">
@@ -120,7 +120,7 @@
             },
 
             setVisWidth () {
-                const mainEle = document.querySelector(`.${this.id}`)
+                const mainEle = document.querySelector(`.id-${this.id}`)
                 this.visWidth = mainEle.offsetWidth
                 let visHeight = mainEle.offsetHeight
                 const pluListEle = document.querySelector('.job-plugin-list-log')
