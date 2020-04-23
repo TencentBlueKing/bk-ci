@@ -106,7 +106,7 @@ class BkAuthProjectApi constructor(
         projectCode: String,
         role: String
     ): Boolean {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        TODO("not implemented") // To change body of created functions use File | Settings | File Templates.
     }
 
     override fun getProjectRoles(
@@ -114,11 +114,11 @@ class BkAuthProjectApi constructor(
         projectCode: String,
         projectId: String
     ): List<BKAuthProjectRolesResources> {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        TODO("not implemented") // To change body of created functions use File | Settings | File Templates.
     }
 
     override fun getProjectInfo(serviceCode: AuthServiceCode, projectId: String): BkAuthProjectInfoResources? {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        TODO("not implemented") // To change body of created functions use File | Settings | File Templates.
     }
 
     override fun getProjectGroupAndUserList(

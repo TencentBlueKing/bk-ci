@@ -45,7 +45,6 @@ class AuthProperties {
     val appCode: String? = null
     @Value("\${auth.appSecret:#{null}}")
     val appSecret: String? = null
-
     @Value("\${auth.bkloginUrl:#{null}}")
     val bkloginUrl: String? = null
 }

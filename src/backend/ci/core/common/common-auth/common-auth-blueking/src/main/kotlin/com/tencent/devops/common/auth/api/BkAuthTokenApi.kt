@@ -79,7 +79,7 @@ class BkAuthTokenApi constructor(
                     return@use
                 }
 
-                val accessToken = createAccessToken(appCode, appSecret)
+                val accessToken = createAccessToken(appCode = appCode, appSecret = appSecret)
                 redisOperation.set(key, accessToken, AccessTokenExpiredInSecond)
                 redisLock.unlock()
                 return accessToken

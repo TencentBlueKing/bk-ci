@@ -26,7 +26,7 @@
 
 package com.tencent.devops.common.auth.code
 
-const val BK_DEVOPS_SCOPE = "bk_devops"
+const val BK_DEVOPS_SCOPE = "bk_ci"
 
 const val ADMIN = "admin"
 

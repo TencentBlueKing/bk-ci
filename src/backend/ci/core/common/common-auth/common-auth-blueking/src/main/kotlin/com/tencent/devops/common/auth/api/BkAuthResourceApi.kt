@@ -27,7 +27,6 @@
 package com.tencent.devops.common.auth.api
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
@@ -60,8 +59,11 @@ class BkAuthResourceApi constructor(
         authGroupList: List<BkAuthGroup>?
     ) {
         batchCreateResource(
-            serviceCode, resourceType, projectCode, user,
-            listOf(ResourceRegisterInfo(resourceCode, resourceName))
+            serviceCode = serviceCode,
+            resourceType = resourceType,
+            projectCode = projectCode,
+            user = user,
+            resourceList = listOf(ResourceRegisterInfo(resourceCode = resourceCode, resourceName = resourceName))
         )
     }
 
@@ -74,8 +76,11 @@ class BkAuthResourceApi constructor(
         resourceName: String
     ) {
         batchCreateResource(
-            serviceCode, resourceType, projectCode, user,
-            listOf(ResourceRegisterInfo(resourceCode, resourceName))
+            serviceCode = serviceCode,
+            resourceType = resourceType,
+            projectCode = projectCode,
+            user = user,
+            resourceList = listOf(ResourceRegisterInfo(resourceCode = resourceCode, resourceName = resourceName))
         )
     }
 
@@ -93,7 +98,7 @@ class BkAuthResourceApi constructor(
             scopeType = scopeType,
             scopeId = projectCode,
             resourceType = resourceType,
-            resourceList = listOf(ResourceRegisterInfo(resourceCode, resourceName)),
+            resourceList = listOf(ResourceRegisterInfo(resourceCode = resourceCode, resourceName = resourceName)),
             systemId = serviceCode
         )
     }
@@ -116,27 +121,34 @@ class BkAuthResourceApi constructor(
         try {
             val resourceIds = resourceList.map {
                 BkRegisterResourcesRequest.Resource(
-                    setOf(BkRegisterResourcesRequest.ResourceId(it.resourceCode, resourceType.value)),
-                    it.resourceName, resourceType.value, scopeId, scopeType
+                    resourceId = setOf(
+                        BkRegisterResourcesRequest.ResourceId(
+                            resourceId = it.resourceCode,
+                            resourceType = resourceType.value
+                        )
+                    ),
+                    resourceName = it.resourceName,
+                    resourceType = resourceType.value,
+                    scopeId = scopeId,
+                    scopeType = scopeType
                 )
             }.toSet()
 
             val requestBean = BkRegisterResourcesRequest(
-                principalId,
-                principalType,
-                resourceIds
+                creatorId = principalId,
+                creatorType = principalType,
+                resources = resourceIds
             )
             val requestBeanString = objectMapper.writeValueAsString(requestBean)
             // 发送请求
             val responseBody =
                 authUtils.doAuthPostRequest(
-                    uri,
-                    JSONObject(requestBeanString),
-                    bkAuthProperties.appCode!!,
-                    bkAuthProperties.appSecret!!
+                    uri = uri,
+                    jsonbody = JSONObject(requestBeanString),
+                    bkAppCode = bkAuthProperties.appCode!!,
+                    bkAppSecret = bkAuthProperties.appSecret!!
                 )
-            val responseBean =
-                jacksonObjectMapper().readValue<BkRegisterResourcesResponse>(responseBody.toString())
+            val responseBean = objectMapper.readValue<BkRegisterResourcesResponse>(responseBody.toString())
 
             if (!responseBean.result) {
                 logger.error("bkiam create resources failed, msg: ${responseBean.message}")
@@ -158,8 +170,10 @@ class BkAuthResourceApi constructor(
     ) {
         modifyResource(
             scopeType = PROJECT_SCOPE_TYPE,
-            projectCode = projectCode, resourceType = resourceType,
-            resourceCode = resourceCode, resourceName = resourceName,
+            projectCode = projectCode,
+            resourceType = resourceType,
+            resourceCode = resourceCode,
+            resourceName = resourceName,
             serviceCode = serviceCode
         )
     }
@@ -173,9 +187,12 @@ class BkAuthResourceApi constructor(
         resourceName: String
     ) {
         modifyResource(
-            scopeType,
-            projectCode, resourceType, resourceCode, resourceName,
-            serviceCode
+            scopeType = scopeType,
+            scopeId = projectCode,
+            resourceType = resourceType,
+            resourceId = resourceCode,
+            resourceName = resourceName,
+            systemId = serviceCode
         )
     }
 
@@ -193,25 +210,27 @@ class BkAuthResourceApi constructor(
 
         try {
             val requestBean = BkUpdateResourceRequest(
-                setOf(
+                resourceId = setOf(
                     BkUpdateResourceRequest.ResourceId(
-                        resourceId,
-                        resourceType.value
+                        resourceId = resourceId,
+                        resourceType = resourceType.value
                     )
                 ),
-                resourceName, resourceType.value, scopeId, scopeType
+                resourceName = resourceName,
+                resourceType = resourceType.value,
+                scopeId = scopeId,
+                scopeType = scopeType
             )
             val requestBeanString = objectMapper.writeValueAsString(requestBean)
             // 发送请求
             val responseBody =
                 authUtils.doAuthPutRequest(
-                    uri,
-                    JSONObject(requestBeanString),
-                    bkAuthProperties.appCode!!,
-                    bkAuthProperties.appSecret!!
+                    uri = uri,
+                    jsonbody = JSONObject(requestBeanString),
+                    xBkAppCode = bkAuthProperties.appCode!!,
+                    xBkAppSecret = bkAuthProperties.appSecret!!
                 )
-            val responseBean =
-                jacksonObjectMapper().readValue<BkUpdateResourceResponse>(responseBody.toString())
+            val responseBean = objectMapper.readValue<BkUpdateResourceResponse>(responseBody.toString())
 
             if (!responseBean.result) {
                 logger.error("bkiam update resources failed, msg: ${responseBean.message}")
@@ -248,7 +267,12 @@ class BkAuthResourceApi constructor(
         batchDeleteResource(
             scopeType = scopeType,
             scopeId = projectCode,
-            resources = setOf(BkDeleteResourceAuthRequest.ResourceId(resourceCode, resourceType.value)),
+            resources = setOf(
+                BkDeleteResourceAuthRequest.ResourceId(
+                    resourceId = resourceCode,
+                    resourceType = resourceType.value
+                )
+            ),
             systemId = serviceCode
         )
     }
@@ -265,31 +289,27 @@ class BkAuthResourceApi constructor(
 //        logger.info("开始调用权限中心删除资源权限接口，uri:$uri , systemId= ${systemId.id()}")
 
         try {
-            val requestBean = BkDeleteResourceAuthRequest(
-                resources.map {
-                    BkDeleteResourceAuthRequest.Resource(
-                        setOf(
-                            BkDeleteResourceAuthRequest.ResourceId(
-                                it.resourceId,
-                                it.resourceType
-                            )
-                        ),
-                        it.resourceType, scopeId, scopeType
-                    )
-                }
-            )
+            val requestBean = BkDeleteResourceAuthRequest(resources = resources.map {
+                BkDeleteResourceAuthRequest.Resource(
+                    resourceId = setOf(
+                        BkDeleteResourceAuthRequest.ResourceId(
+                            resourceId = it.resourceId,
+                            resourceType = it.resourceType
+                        )
+                    ), resourceType = it.resourceType, scopeId = scopeId, scopeType = scopeType
+                )
+            })
 
             val requestBeanString = objectMapper.writeValueAsString(requestBean)
             // 发送请求
             val responseBody =
                 authUtils.doAuthDeleteRequest(
-                    uri,
-                    JSONObject(requestBeanString),
-                    bkAuthProperties.appCode!!,
-                    bkAuthProperties.appSecret!!
+                    uri = uri,
+                    jsonbody = JSONObject(requestBeanString),
+                    xBkAppCode = bkAuthProperties.appCode!!,
+                    xBkAppSecret = bkAuthProperties.appSecret!!
                 )
-            val responseBean =
-                jacksonObjectMapper().readValue<BkDeleteResourceAuthResponse>(responseBody.toString())
+            val responseBean = objectMapper.readValue<BkDeleteResourceAuthResponse>(responseBody.toString())
 
             if (!responseBean.result) {
                 logger.error("bkiam delete resources failed, msg: ${responseBean.message}")
