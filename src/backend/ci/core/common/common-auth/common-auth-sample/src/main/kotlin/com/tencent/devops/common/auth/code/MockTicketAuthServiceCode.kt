@@ -27,8 +27,8 @@
 package com.tencent.devops.common.auth.code
 
 /**
- * BCS ServiceCode
+ * ServiceCode
  */
-class BkBcsAuthServiceCode : BcsAuthServiceCode {
-    override fun id() = BkAuthServiceCode.BCS.value
+class MockTicketAuthServiceCode : TicketAuthServiceCode {
+    override fun id() = MockAuthServiceCode.TICKET.value
 }

@@ -30,15 +30,15 @@ import com.tencent.devops.common.auth.api.MockAuthPermissionApi
 import com.tencent.devops.common.auth.api.MockAuthProjectApi
 import com.tencent.devops.common.auth.api.MockAuthResourceApi
 import com.tencent.devops.common.auth.api.MockAuthTokenApi
-import com.tencent.devops.common.auth.code.BkArtifactoryAuthServiceCode
-import com.tencent.devops.common.auth.code.BkBcsAuthServiceCode
-import com.tencent.devops.common.auth.code.BkCodeAuthServiceCode
-import com.tencent.devops.common.auth.code.BkEnvironmentAuthServiceCode
-import com.tencent.devops.common.auth.code.BkPipelineAuthServiceCode
-import com.tencent.devops.common.auth.code.BkProjectAuthServiceCode
-import com.tencent.devops.common.auth.code.BkQualityAuthServiceCode
-import com.tencent.devops.common.auth.code.BkRepoAuthServiceCode
-import com.tencent.devops.common.auth.code.BkTicketAuthServiceCode
+import com.tencent.devops.common.auth.code.MockArtifactoryAuthServiceCode
+import com.tencent.devops.common.auth.code.MockBcsAuthServiceCode
+import com.tencent.devops.common.auth.code.MockCodeAuthServiceCode
+import com.tencent.devops.common.auth.code.MockEnvironmentAuthServiceCode
+import com.tencent.devops.common.auth.code.MockPipelineAuthServiceCode
+import com.tencent.devops.common.auth.code.MockProjectAuthServiceCode
+import com.tencent.devops.common.auth.code.MockQualityAuthServiceCode
+import com.tencent.devops.common.auth.code.MockRepoAuthServiceCode
+import com.tencent.devops.common.auth.code.MockTicketAuthServiceCode
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
@@ -48,10 +48,10 @@ import org.springframework.context.annotation.Primary
 import org.springframework.core.Ordered
 
 @Configuration
-@ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "sample", matchIfMissing = true)
+@ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "sample")
 @ConditionalOnWebApplication
 @AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
-class AuthAutoConfiguration {
+class MockAuthAutoConfiguration {
 
     @Bean
     @Primary
@@ -70,29 +70,29 @@ class AuthAutoConfiguration {
     fun authProjectApi(bkAuthPermissionApi: MockAuthPermissionApi) = MockAuthProjectApi(bkAuthPermissionApi)
 
     @Bean
-    fun bcsAuthServiceCode() = BkBcsAuthServiceCode()
+    fun bcsAuthServiceCode() = MockBcsAuthServiceCode()
 
     @Bean
-    fun pipelineAuthServiceCode() = BkPipelineAuthServiceCode()
+    fun pipelineAuthServiceCode() = MockPipelineAuthServiceCode()
 
     @Bean
-    fun codeAuthServiceCode() = BkCodeAuthServiceCode()
+    fun codeAuthServiceCode() = MockCodeAuthServiceCode()
 
     @Bean
-    fun projectAuthServiceCode() = BkProjectAuthServiceCode()
+    fun projectAuthServiceCode() = MockProjectAuthServiceCode()
 
     @Bean
-    fun environmentAuthServiceCode() = BkEnvironmentAuthServiceCode()
+    fun environmentAuthServiceCode() = MockEnvironmentAuthServiceCode()
 
     @Bean
-    fun repoAuthServiceCode() = BkRepoAuthServiceCode()
+    fun repoAuthServiceCode() = MockRepoAuthServiceCode()
 
     @Bean
-    fun ticketAuthServiceCode() = BkTicketAuthServiceCode()
+    fun ticketAuthServiceCode() = MockTicketAuthServiceCode()
 
     @Bean
-    fun qualityAuthServiceCode() = BkQualityAuthServiceCode()
+    fun qualityAuthServiceCode() = MockQualityAuthServiceCode()
 
     @Bean
-    fun artifactoryAuthServiceCode() = BkArtifactoryAuthServiceCode()
+    fun artifactoryAuthServiceCode() = MockArtifactoryAuthServiceCode()
 }

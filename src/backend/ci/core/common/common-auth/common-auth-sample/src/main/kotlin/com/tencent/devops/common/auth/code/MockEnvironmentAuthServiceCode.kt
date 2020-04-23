@@ -27,8 +27,8 @@
 package com.tencent.devops.common.auth.code
 
 /**
- * Artifactory ServiceCode
+ * ServiceCode
  */
-class BkArtifactoryAuthServiceCode : ArtifactoryAuthServiceCode {
-    override fun id() = BkAuthServiceCode.ARTIFACTORY.value
+class MockEnvironmentAuthServiceCode : EnvironmentAuthServiceCode {
+    override fun id() = MockAuthServiceCode.ENVIRONMENT.value
 }
