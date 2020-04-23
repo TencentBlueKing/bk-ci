@@ -27,7 +27,6 @@
 package com.tencent.devops.common.auth.api
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.auth.api.pojo.BkUserAuthVerifyRequest
@@ -45,8 +44,17 @@ class BkAuthPermissionApi constructor(
     private val objectMapper: ObjectMapper,
     private val authUtils: AuthUtils
 ) : AuthPermissionApi {
-    override fun addResourcePermissionForUsers(userId: String, projectCode: String, serviceCode: AuthServiceCode, permission: AuthPermission, resourceType: AuthResourceType, resourceCode: String, userIdList: List<String>, supplier: (() -> List<String>)?): Boolean {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    override fun addResourcePermissionForUsers(
+        userId: String,
+        projectCode: String,
+        serviceCode: AuthServiceCode,
+        permission: AuthPermission,
+        resourceType: AuthResourceType,
+        resourceCode: String,
+        userIdList: List<String>,
+        supplier: (() -> List<String>)?
+    ): Boolean {
+        TODO("not implemented") // To change body of created functions use File | Settings | File Templates.
     }
 
     override fun validateUserResourcePermission(
@@ -56,7 +64,14 @@ class BkAuthPermissionApi constructor(
         projectCode: String,
         permission: AuthPermission
     ): Boolean {
-        return validateUserResourcePermission(user, serviceCode, resourceType, projectCode, "*", permission)
+        return validateUserResourcePermission(
+            user = user,
+            serviceCode = serviceCode,
+            resourceType = resourceType,
+            projectCode = projectCode,
+            resourceCode = "*",
+            permission = permission
+        )
     }
 
     override fun validateUserResourcePermission(
@@ -68,8 +83,16 @@ class BkAuthPermissionApi constructor(
         permission: AuthPermission
     ): Boolean {
         return validateUserResourcePermission(
-            bkAuthProperties.principalType!!, user, "project", projectCode, resourceType,
-            resourceCode, permission, serviceCode, bkAuthProperties.appCode!!, bkAuthProperties.appSecret!!
+            principalType = bkAuthProperties.principalType!!,
+            principalId = user,
+            scopeType = "project",
+            scopeId = projectCode,
+            resourceType = resourceType,
+            resourceId = resourceCode,
+            actionId = permission,
+            systemId = serviceCode,
+            appCode = bkAuthProperties.appCode!!,
+            appSecret = bkAuthProperties.appSecret!!
         )
     }
 
@@ -92,28 +115,31 @@ class BkAuthPermissionApi constructor(
 //        logger.info("开始调用权限中心校验权限，uri:$uri , systemId= ${systemId.id()}")
 
         val requestBean = BkUserAuthVerifyRequest(
-            principalId, principalType,
-            listOf(
+            principalId = principalId, principalType = principalType,
+            resourcesActions = listOf(
                 BkUserAuthVerifyRequest.ResourcesAction(
-                    actionId.value,
-                    listOf(
+                    actionId = actionId.value,
+                    resourceId = listOf(
                         BkUserAuthVerifyRequest.ResourceId(
-                            resourceId,
-                            resourceType.value
+                            resourceId = resourceId,
+                            resourceType = resourceType.value
                         )
                     ),
-                    resourceType.value
+                    resourceType = resourceType.value
                 )
             ),
-            scopeId, scopeType
+            scopeId = scopeId, scopeType = scopeType
         )
 
         val requestBeanString = objectMapper.writeValueAsString(requestBean)
         // 发送请求
-        val responseBody =
-            authUtils.doAuthPostRequest(uri, JSONObject(requestBeanString), appCode, appSecret)
-        val responseBean =
-            jacksonObjectMapper().readValue<BkUserAuthVerifyResponse>(responseBody.toString())
+        val responseBody = authUtils.doAuthPostRequest(
+            uri = uri,
+            jsonbody = JSONObject(requestBeanString),
+            bkAppCode = appCode,
+            bkAppSecret = appSecret
+        )
+        val responseBean = objectMapper.readValue<BkUserAuthVerifyResponse>(responseBody.toString())
 
         return try {
             responseBean.data!![0]!!.pass
@@ -132,12 +158,12 @@ class BkAuthPermissionApi constructor(
         supplier: (() -> List<String>)?
     ): List<String> {
         return getUserResourcesByPermissions(
-            user,
-            serviceCode,
-            resourceType,
-            projectCode,
-            setOf(permission),
-            supplier
+            user = user,
+            serviceCode = serviceCode,
+            resourceType = resourceType,
+            projectCode = projectCode,
+            permissions = setOf(permission),
+            supplier = supplier
         )[permission] ?: emptyList()
     }
 
@@ -151,8 +177,12 @@ class BkAuthPermissionApi constructor(
     ): Map<AuthPermission, List<String>> {
 
         return getUserResourcesByPermissions(
-            userId = user, scopeType = PROJECT_SCOPE_TYPE, scopeId = projectCode,
-            resourceType = resourceType, permissions = permissions, systemId = serviceCode
+            userId = user,
+            scopeType = PROJECT_SCOPE_TYPE,
+            scopeId = projectCode,
+            resourceType = resourceType,
+            permissions = permissions,
+            systemId = serviceCode
         )
     }
 
@@ -177,8 +207,8 @@ class BkAuthPermissionApi constructor(
             scopeId = scopeId,
             resourceTypesActions = permissions.map {
                 BkUserResourcesAuthRequest.ResourceTypesAction(
-                    it.value,
-                    resourceType.value
+                    actionId = it.value,
+                    resourceType = resourceType.value
                 )
             },
             resourceDataType = "array",
@@ -189,13 +219,12 @@ class BkAuthPermissionApi constructor(
         // 发送请求
         val responseBody =
             authUtils.doAuthPostRequest(
-                uri,
-                JSONObject(requestBeanString),
-                bkAuthProperties.appCode!!,
-                bkAuthProperties.appSecret!!
+                uri = uri,
+                jsonbody = JSONObject(requestBeanString),
+                bkAppCode = bkAuthProperties.appCode!!,
+                bkAppSecret = bkAuthProperties.appSecret!!
             )
-        val responseBean =
-            jacksonObjectMapper().readValue<BkUserResourcesAuthResponse>(responseBody.toString())
+        val responseBean = objectMapper.readValue<BkUserResourcesAuthResponse>(responseBody.toString())
 
         try {
             responseBean.data!!.forEach { reqData ->
