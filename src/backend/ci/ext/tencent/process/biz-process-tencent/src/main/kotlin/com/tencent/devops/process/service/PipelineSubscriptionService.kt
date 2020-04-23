@@ -58,6 +58,7 @@ import com.tencent.devops.process.engine.service.measure.MeasureService
 import com.tencent.devops.process.pojo.SubscriptionType
 import com.tencent.devops.process.pojo.pipeline.PipelineSubscription
 import com.tencent.devops.process.pojo.pipeline.PipelineSubscriptionType
+import com.tencent.devops.process.util.NotifyTemplateUtils
 import com.tencent.devops.process.util.NotifyUtils
 import com.tencent.devops.process.util.NotifyUtils.parseMessageTemplate
 import com.tencent.devops.process.util.ServiceHomeUrlUtils.server
