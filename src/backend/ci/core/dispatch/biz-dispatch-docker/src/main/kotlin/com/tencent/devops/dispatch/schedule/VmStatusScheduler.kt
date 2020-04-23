@@ -95,7 +95,7 @@ class VmStatusScheduler @Autowired constructor(
     private fun singleTask(it: TDispatchPipelineDockerIpInfoRecord) {
         val itDockerIp = it.dockerIp as String
         val enable = it.enable as Boolean
-        val url = "http://$itDockerIp/api/docker/host/load"
+        val url = "http://$itDockerIp:${it.dockerHostPort}/api/docker/host/load"
         val proxyUrl = "$idcProxy/proxy-devnet?url=${urlEncode(url)}"
         val request = Request.Builder().url(proxyUrl)
             .addHeader("Accept", "application/json; charset=utf-8")

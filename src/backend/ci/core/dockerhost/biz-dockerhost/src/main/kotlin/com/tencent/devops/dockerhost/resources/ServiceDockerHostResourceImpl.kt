@@ -44,6 +44,7 @@ import com.tencent.devops.dockerhost.pojo.Status
 import com.tencent.devops.dockerhost.services.DockerHostBuildService
 import com.tencent.devops.dockerhost.services.DockerService
 import com.tencent.devops.dockerhost.utils.CommonUtils
+import com.tencent.devops.process.engine.common.VMUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import javax.servlet.http.HttpServletRequest
@@ -142,7 +143,9 @@ class ServiceDockerHostResourceImpl @Autowired constructor(
             logger.error("Create container container failed, no such image. pipelineId: ${dockerHostBuildInfo.pipelineId}, vmSeqId: ${dockerHostBuildInfo.vmSeqId}, err: ${e.message}")
             dockerHostBuildService.log(
                 buildId = dockerHostBuildInfo.buildId,
+                red = true,
                 message = "构建环境启动失败，镜像不存在, 镜像:${dockerHostBuildInfo.imageName}",
+                tag = VMUtils.genStartVMTaskId(dockerHostBuildInfo.vmSeqId.toString()),
                 containerHashId = dockerHostBuildInfo.containerHashId
             )
             Result(2, "构建环境启动失败，镜像不存在, 镜像:${dockerHostBuildInfo.imageName}", "")
@@ -150,7 +153,9 @@ class ServiceDockerHostResourceImpl @Autowired constructor(
             logger.error("Create container failed, rollback build. buildId: ${dockerHostBuildInfo.buildId}, vmSeqId: ${dockerHostBuildInfo.vmSeqId}")
             dockerHostBuildService.log(
                 buildId = dockerHostBuildInfo.buildId,
+                red = true,
                 message = "构建环境启动失败，错误信息:${e.message}",
+                tag = VMUtils.genStartVMTaskId(dockerHostBuildInfo.vmSeqId.toString()),
                 containerHashId = dockerHostBuildInfo.containerHashId
             )
             Result(2, "构建环境启动失败，错误信息:${e.message}", "")

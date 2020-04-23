@@ -321,42 +321,6 @@ BEGIN
         END IF;
     END IF;
 
-    IF NOT EXISTS(SELECT 1
-                  FROM information_schema.COLUMNS
-                  WHERE TABLE_SCHEMA = db
-                    AND TABLE_NAME = 'T_DISPATCH_PIPELINE_DOCKER_DEBUG'
-                    AND COLUMN_NAME = 'POOL_NO') THEN
-        ALTER TABLE T_DISPATCH_PIPELINE_DOCKER_DEBUG
-            ADD COLUMN `POOL_NO` int(11) DEFAULT 0;
-    END IF;
-
-    IF NOT EXISTS(SELECT 1
-                  FROM information_schema.COLUMNS
-                  WHERE TABLE_SCHEMA = db
-                    AND TABLE_NAME = 'T_DISPATCH_PIPELINE_DOCKER_BUILD'
-                    AND COLUMN_NAME = 'DOCKER_IP') THEN
-        ALTER TABLE T_DISPATCH_PIPELINE_DOCKER_BUILD
-            ADD COLUMN `DOCKER_IP` VARCHAR(64) DEFAULT '' COMMENT '构建机IP';
-    END IF;
-
-    IF NOT EXISTS(SELECT 1
-                  FROM information_schema.COLUMNS
-                  WHERE TABLE_SCHEMA = db
-                    AND TABLE_NAME = 'T_DISPATCH_PIPELINE_DOCKER_BUILD'
-                    AND COLUMN_NAME = 'CONTAINER_ID') THEN
-        ALTER TABLE T_DISPATCH_PIPELINE_DOCKER_BUILD
-            ADD COLUMN `CONTAINER_ID` VARCHAR(128) DEFAULT '' COMMENT '构建容器ID';
-    END IF;
-
-    IF NOT EXISTS(SELECT 1
-                  FROM information_schema.COLUMNS
-                  WHERE TABLE_SCHEMA = db
-                    AND TABLE_NAME = 'T_DISPATCH_PIPELINE_DOCKER_BUILD'
-                    AND COLUMN_NAME = 'POOL_NO') THEN
-        ALTER TABLE T_DISPATCH_PIPELINE_DOCKER_BUILD
-            ADD COLUMN `POOL_NO` INT(11) DEFAULT 0 COMMENT '构建容器池序号';
-    END IF;
-
     COMMIT;
 
 END <CI_UBF>

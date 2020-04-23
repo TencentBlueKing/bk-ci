@@ -26,6 +26,8 @@
 
 package com.tencent.devops.dispatch.controller
 
+import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.pojo.Result
@@ -34,8 +36,9 @@ import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.pipeline.type.docker.ImageType
+import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.dispatch.api.UserDockerHostResource
+import com.tencent.devops.dispatch.api.user.UserDockerHostResource
 import com.tencent.devops.dispatch.dao.PipelineDockerBuildDao
 import com.tencent.devops.dispatch.dao.PipelineDockerDebugDao
 import com.tencent.devops.dispatch.dao.PipelineDockerPoolDao
@@ -46,9 +49,11 @@ import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.dispatch.service.DockerHostBuildService
 import com.tencent.devops.dispatch.service.DockerHostDebugService
 import com.tencent.devops.dispatch.utils.DockerHostUtils
+import com.tencent.devops.process.constant.ProcessMessageCode
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import javax.ws.rs.core.Response
 
 @RestResource
 class UserDockerHostResourceImpl @Autowired constructor(
@@ -123,7 +128,7 @@ class UserDockerHostResourceImpl @Autowired constructor(
             if (taskHistory != null) {
                 dockerIp = taskHistory.dockerIp
             } else {
-                dockerIp = dockerHostUtils.getAvailableDockerIp(debugStartParam.projectId, debugStartParam.pipelineId, debugStartParam.vmSeqId, setOf())
+                dockerIp = dockerHostUtils.getAvailableDockerIp(debugStartParam.projectId, debugStartParam.pipelineId, debugStartParam.vmSeqId, setOf()).first
                 pipelineDockerTaskSimpleDao.create(dslContext, debugStartParam.pipelineId, debugStartParam.vmSeqId, dockerIp)
             }
             // 首次构建poolNo=1
@@ -201,9 +206,43 @@ class UserDockerHostResourceImpl @Autowired constructor(
     private fun checkPermission(userId: String, projectId: String, pipelineId: String, vmSeqId: String) {
         checkParam(userId, projectId, pipelineId, vmSeqId)
 
-        if (!bkAuthPermissionApi.validateUserResourcePermission(userId, pipelineAuthServiceCode, AuthResourceType.PIPELINE_DEFAULT, projectId, pipelineId, AuthPermission.EDIT)) {
-            logger.info("用户($userId)无权限在工程($projectId)下编辑流水线($pipelineId)")
-            throw PermissionForbiddenException("用户($userId)无权限在工程($projectId)下编辑流水线($pipelineId)")
+        validPipelinePermission(
+            userId,
+            AuthResourceType.PIPELINE_DEFAULT,
+            projectId,
+            pipelineId,
+            AuthPermission.EDIT,
+            "用户($userId)无权限在工程($projectId)下编辑流水线($pipelineId)"
+        )
+    }
+
+    private fun validPipelinePermission(
+        userId: String,
+        authResourceType: AuthResourceType,
+        projectId: String,
+        pipelineId: String,
+        permission: AuthPermission,
+        message: String?
+    ) {
+        if (!bkAuthPermissionApi.validateUserResourcePermission(
+                user = userId,
+                serviceCode = pipelineAuthServiceCode,
+                resourceType = authResourceType,
+                projectCode = projectId,
+                resourceCode = pipelineId,
+                permission = permission
+            )
+        ) {
+            val permissionMsg = MessageCodeUtil.getCodeLanMessage(
+                messageCode = "${CommonMessageCode.MSG_CODE_PERMISSION_PREFIX}${permission.value}",
+                defaultMessage = permission.alias
+            )
+            throw ErrorCodeException(
+                statusCode = Response.Status.FORBIDDEN.statusCode,
+                errorCode = ProcessMessageCode.USER_NEED_PIPELINE_X_PERMISSION,
+                defaultMessage = message,
+                params = arrayOf(permissionMsg)
+            )
         }
     }
 }

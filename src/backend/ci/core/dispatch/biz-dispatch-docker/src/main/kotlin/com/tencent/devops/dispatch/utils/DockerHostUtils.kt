@@ -61,14 +61,14 @@ class DockerHostUtils @Autowired constructor(
 
     private val buildPoolSize = 100 // 单个流水线可同时执行的任务数量
 
-    fun getAvailableDockerIpWithSpecialIps(projectId: String, pipelineId: String, vmSeqId: String, specialIpSet: Set<String>, unAvailableIpList: Set<String> = setOf()): String {
+    fun getAvailableDockerIpWithSpecialIps(projectId: String, pipelineId: String, vmSeqId: String, specialIpSet: Set<String>, unAvailableIpList: Set<String> = setOf()): Pair<String, Int> {
         var grayEnv = false
         val gray = System.getProperty("gray.project", "none")
         if (gray == "grayproject") {
             grayEnv = true
         }
 
-        var dockerIp = ""
+        var dockerPair = Pair("", 0)
         // 获取负载配置
         val dockerHostLoadConfigTriple = getLoadConfig()
         logger.info("Docker host load config: ${JsonUtil.toJson(dockerHostLoadConfigTriple)}")
@@ -83,7 +83,7 @@ class DockerHostUtils @Autowired constructor(
                 lastHostIpInfo.memLoad < dockerHostLoadConfigTriple.second.memLoadThreshold &&
                 lastHostIpInfo.cpuLoad < dockerHostLoadConfigTriple.second.cpuLoadThreshold
             ) {
-                return lastHostIp
+                return Pair(lastHostIp, lastHostIpInfo.dockerHostPort)
             }
         }
 
@@ -91,62 +91,62 @@ class DockerHostUtils @Autowired constructor(
         val firstLoadConfig = dockerHostLoadConfigTriple.first
         val firstDockerIpList =
             pipelineDockerIpInfoDao.getAvailableDockerIpList(
-                dslContext,
-                grayEnv,
-                firstLoadConfig.cpuLoadThreshold,
-                firstLoadConfig.memLoadThreshold,
-                firstLoadConfig.diskLoadThreshold,
-                firstLoadConfig.diskIOLoadThreshold,
-                specialIpSet
+                dslContext = dslContext,
+                grayEnv = grayEnv,
+                cpuLoad = firstLoadConfig.cpuLoadThreshold,
+                memLoad = firstLoadConfig.memLoadThreshold,
+                diskLoad = firstLoadConfig.diskLoadThreshold,
+                diskIOLoad = firstLoadConfig.diskIOLoadThreshold,
+                specialIpSet = specialIpSet
             )
         if (firstDockerIpList.isNotEmpty) {
             logger.info("firstDockerIpList: $firstDockerIpList")
-            dockerIp = selectAvailableDockerIp(firstDockerIpList, unAvailableIpList)
+            dockerPair = selectAvailableDockerIp(firstDockerIpList, unAvailableIpList)
         } else {
             // 没有满足1的，优先选择磁盘空间，内存使用率均低于80%的
             val secondLoadConfig = dockerHostLoadConfigTriple.second
             val secondDockerIpList =
                 pipelineDockerIpInfoDao.getAvailableDockerIpList(
-                    dslContext,
-                    grayEnv,
-                    secondLoadConfig.cpuLoadThreshold,
-                    secondLoadConfig.memLoadThreshold,
-                    secondLoadConfig.diskLoadThreshold,
-                    secondLoadConfig.diskIOLoadThreshold,
-                    specialIpSet
+                    dslContext = dslContext,
+                    grayEnv = grayEnv,
+                    cpuLoad = secondLoadConfig.cpuLoadThreshold,
+                    memLoad = secondLoadConfig.memLoadThreshold,
+                    diskLoad = secondLoadConfig.diskLoadThreshold,
+                    diskIOLoad = secondLoadConfig.diskIOLoadThreshold,
+                    specialIpSet = specialIpSet
                 )
             if (secondDockerIpList.isNotEmpty) {
-                dockerIp = selectAvailableDockerIp(secondDockerIpList, unAvailableIpList)
+                dockerPair = selectAvailableDockerIp(secondDockerIpList, unAvailableIpList)
             } else {
                 // 通过2依旧没有找到满足的构建机，选择内存使用率小于80%的
                 val thirdLoadConfig = dockerHostLoadConfigTriple.third
                 val thirdDockerIpList =
                     pipelineDockerIpInfoDao.getAvailableDockerIpList(
-                        dslContext,
-                        grayEnv,
-                        thirdLoadConfig.cpuLoadThreshold,
-                        thirdLoadConfig.memLoadThreshold,
-                        thirdLoadConfig.diskLoadThreshold,
-                        thirdLoadConfig.diskIOLoadThreshold,
-                        specialIpSet
+                        dslContext = dslContext,
+                        grayEnv = grayEnv,
+                        cpuLoad = thirdLoadConfig.cpuLoadThreshold,
+                        memLoad = thirdLoadConfig.memLoadThreshold,
+                        diskLoad = thirdLoadConfig.diskLoadThreshold,
+                        diskIOLoad = thirdLoadConfig.diskIOLoadThreshold,
+                        specialIpSet = specialIpSet
                     )
                 if (thirdDockerIpList.isNotEmpty) {
-                    dockerIp = selectAvailableDockerIp(thirdDockerIpList, unAvailableIpList)
+                    dockerPair = selectAvailableDockerIp(thirdDockerIpList, unAvailableIpList)
                 }
             }
         }
 
-        if (dockerIp.isEmpty()) {
+        if (dockerPair.first.isEmpty()) {
             if (specialIpSet.isNotEmpty()) {
                 throw DockerServiceException("Start build Docker VM failed, no available Docker VM in $specialIpSet")
             }
             throw DockerServiceException("Start build Docker VM failed, no available Docker VM.")
         }
 
-        return dockerIp
+        return dockerPair
     }
 
-    fun getAvailableDockerIp(projectId: String, pipelineId: String, vmSeqId: String, unAvailableIpList: Set<String>): String {
+    fun getAvailableDockerIp(projectId: String, pipelineId: String, vmSeqId: String, unAvailableIpList: Set<String>): Pair<String, Int> {
         // 先判断是否OP已配置专机，若配置了专机，从专机列表中选择一个容量最小的
         val specialIpSet = pipelineDockerHostDao.getHostIps(dslContext, projectId).toSet()
         logger.info("getAvailableDockerIp projectId: $projectId | specialIpSet: $specialIpSet")
@@ -169,11 +169,11 @@ class DockerHostUtils @Autowired constructor(
                 val poolNo = pipelineDockerPoolDao.getPoolNoStatus(dslContext, pipelineId, vmSeq, i)
                 if (poolNo == null) {
                     pipelineDockerPoolDao.create(
-                        dslContext,
-                        pipelineId,
-                        vmSeq,
-                        i,
-                        PipelineTaskStatus.RUNNING.status
+                        dslContext = dslContext,
+                        pipelineId = pipelineId,
+                        vmSeq = vmSeq,
+                        poolNo = i,
+                        status = PipelineTaskStatus.RUNNING.status
                     )
                     return i
                 } else {
@@ -201,22 +201,22 @@ class DockerHostUtils @Autowired constructor(
                 val dockerHostLoadConfig = objectMapper.readValue<Map<String, DockerHostLoadConfig>>(loadConfig)
                 return Triple(
                     dockerHostLoadConfig["first"] ?: DockerHostLoadConfig(
-                        80,
-                        80,
-                        60,
-                        80
+                        cpuLoadThreshold = 80,
+                        memLoadThreshold = 80,
+                        diskLoadThreshold = 60,
+                        diskIOLoadThreshold = 80
                     ),
                     dockerHostLoadConfig["second"] ?: DockerHostLoadConfig(
-                        90,
-                        80,
-                        80,
-                        90
+                        cpuLoadThreshold = 90,
+                        memLoadThreshold = 80,
+                        diskLoadThreshold = 80,
+                        diskIOLoadThreshold = 90
                     ),
                     dockerHostLoadConfig["third"] ?: DockerHostLoadConfig(
-                        100,
-                        80,
-                        100,
-                        100
+                        cpuLoadThreshold = 100,
+                        memLoadThreshold = 80,
+                        diskLoadThreshold = 100,
+                        diskIOLoadThreshold = 100
                     )
                 )
             } catch (e: Exception) {
@@ -225,28 +225,28 @@ class DockerHostUtils @Autowired constructor(
         }
 
         return Triple(
-            DockerHostLoadConfig(80, 80, 80, 80),
-            DockerHostLoadConfig(90, 80, 80, 90),
-            DockerHostLoadConfig(100, 80, 100, 100)
+            first = DockerHostLoadConfig(80, 80, 80, 80),
+            second = DockerHostLoadConfig(90, 80, 80, 90),
+            third = DockerHostLoadConfig(100, 80, 100, 100)
         )
     }
 
     private fun selectAvailableDockerIp(
         dockerIpList: List<TDispatchPipelineDockerIpInfoRecord>,
         unAvailableIpList: Set<String> = setOf()
-    ): String {
+    ): Pair<String, Int> {
         if (unAvailableIpList.isEmpty()) {
-            return dockerIpList[0].dockerIp
+            return Pair(dockerIpList[0].dockerIp, dockerIpList[0].dockerHostPort)
         } else {
             dockerIpList.forEach {
                 if (unAvailableIpList.contains(it.dockerIp)) {
                     return@forEach
                 } else {
-                    return it.dockerIp
+                    return Pair(it.dockerIp, it.dockerHostPort)
                 }
             }
         }
 
-        return ""
+        return Pair("", 0)
     }
 }

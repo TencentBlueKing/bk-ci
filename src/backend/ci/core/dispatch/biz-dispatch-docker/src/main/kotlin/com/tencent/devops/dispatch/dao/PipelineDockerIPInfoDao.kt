@@ -16,7 +16,8 @@ class PipelineDockerIPInfoDao {
 
     fun create(
         dslContext: DSLContext,
-        idcIp: String,
+        dockerIp: String,
+        dockerHostPort: Int,
         capacity: Int,
         used: Int,
         cpuLoad: Int,
@@ -31,6 +32,7 @@ class PipelineDockerIPInfoDao {
             dslContext.insertInto(
                 this,
                 DOCKER_IP,
+                DOCKER_HOST_PORT,
                 CAPACITY,
                 USED_NUM,
                 CPU_LOAD,
@@ -43,7 +45,8 @@ class PipelineDockerIPInfoDao {
                 GMT_CREATE,
                 GMT_MODIFIED
             ).values(
-                idcIp,
+                dockerIp,
+                dockerHostPort,
                 capacity,
                 used,
                 cpuLoad,
@@ -201,6 +204,7 @@ class PipelineDockerIPInfoDao {
 CREATE TABLE `T_DISPATCH_PIPELINE_DOCKER_IP_INFO` (
     `ID` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '主键',
     `DOCKER_IP` varchar(64) NOT NULL DEFAULT '' COMMENT 'DOCKER IP',
+    `DOCKER_HOST_PORT` int(11) NOT NULL DEFAULT 80 COMMENT 'DOCKER PORT',
     `CAPACITY` int(11) NOT NULL DEFAULT 0 COMMENT '节点容器总容量',
     `USED_NUM` int(11) NOT NULL DEFAULT 0 COMMENT '节点容器已使用容量',
     `CPU_LOAD` int(11) NOT NULL DEFAULT 0 COMMENT '节点容器CPU负载',
