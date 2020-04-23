@@ -38,6 +38,7 @@ class DispatchDockerService @Autowired constructor(
                 dockerIpInfoVOList.add(DockerIpInfoVO(
                     it.id,
                     it.dockerIp,
+                    it.dockerHostPort,
                     it.capacity,
                     it.usedNum,
                     it.cpuLoad,
@@ -64,6 +65,7 @@ class DispatchDockerService @Autowired constructor(
             pipelineDockerIPInfoDao.create(
                 dslContext,
                 dockerIpInfoVO.dockerIp,
+                dockerIpInfoVO.dockerHostPort,
                 dockerIpInfoVO.capacity,
                 dockerIpInfoVO.usedNum,
                 dockerIpInfoVO.averageCpuLoad,
