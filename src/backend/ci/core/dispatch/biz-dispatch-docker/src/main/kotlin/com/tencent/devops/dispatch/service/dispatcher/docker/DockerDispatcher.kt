@@ -42,6 +42,7 @@ import com.tencent.devops.dispatch.service.DockerHostBuildService
 import com.tencent.devops.dispatch.service.dispatcher.Dispatcher
 import com.tencent.devops.dispatch.utils.DockerHostUtils
 import com.tencent.devops.log.utils.LogUtils
+import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
 import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
 import org.jooq.DSLContext
@@ -78,7 +79,7 @@ class DockerDispatcher @Autowired constructor(
             rabbitTemplate,
             pipelineAgentStartupEvent.buildId,
             "Start docker ${dockerDispatch.dockerBuildVersion} for the build",
-            "startVM-${pipelineAgentStartupEvent.containerId}",
+            VMUtils.genStartVMTaskId(pipelineAgentStartupEvent.vmSeqId),
             pipelineAgentStartupEvent.containerHashId,
             pipelineAgentStartupEvent.executeCount ?: 1
         )
@@ -102,7 +103,8 @@ class DockerDispatcher @Autowired constructor(
                     // 该项目工程配置了专机
                     if (specialIpSet.contains(taskHistory.dockerIp)) {
                         // 上一次构建IP在专机列表中，直接重用
-                        Pair(taskHistory.dockerIp, 0)
+                        val dockerIpInfo = pipelineDockerIpInfoDao.getDockerIpInfo(dslContext, taskHistory.dockerIp) ?: throw DockerServiceException("Docker IP: ${taskHistory.dockerIp} is not available.")
+                        Pair(taskHistory.dockerIp, dockerIpInfo.dockerHostPort)
                     } else {
                         // 不在专机列表中，重新依据专机列表去选择负载最小的
                         resetDockerIp(pipelineAgentStartupEvent, specialIpSet, taskHistory.dockerIp, "专机漂移")

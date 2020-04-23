@@ -32,3 +32,5 @@ src/backend/ci/.settings
 
 .vscode
 scripts/ci_env.properties
+
+/src/backend/ci/.settings/
