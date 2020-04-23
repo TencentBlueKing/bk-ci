@@ -20,7 +20,7 @@ import javax.ws.rs.core.MediaType
 @Path("/{apigwType:apigw-user|apigw-app|apigw}/v3")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface LogResourceV3 {
+interface ApigwLogResourceV3 {
     @ApiOperation("根据构建ID获取初始化所有日志")
     @GET
     @Path("/projectIds/{projectId}/pipelineIds/{pipelineId}/buildIds/{buildId}/logs")

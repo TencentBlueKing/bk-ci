@@ -26,7 +26,7 @@ import javax.ws.rs.core.MediaType
 @Path("/{apigwType:apigw-user|apigw-app|apigw}/v3/")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface ArtifactoryResourceV3 {
+interface ApigwArtifactoryResourceV3 {
     @ApiOperation("获取文件第三方下载链接")
     @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/artifactories/thirdPartyDownloadUrl")
     @GET
