@@ -9,6 +9,8 @@ data class DockerIpInfoVO(
     val id: Long,
     @ApiModelProperty("构建机IP")
     val dockerIp: String,
+    @ApiModelProperty("构建机PORT")
+    val dockerHostPort: Int,
     @ApiModelProperty("构建机容量")
     val capacity: Int,
     @ApiModelProperty("构建机已使用量")
