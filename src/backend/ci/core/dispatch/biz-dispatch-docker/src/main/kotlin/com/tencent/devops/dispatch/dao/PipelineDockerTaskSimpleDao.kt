@@ -29,7 +29,6 @@ package com.tencent.devops.dispatch.dao
 import com.tencent.devops.model.dispatch.tables.TDispatchPipelineDockerTaskSimple
 import com.tencent.devops.model.dispatch.tables.records.TDispatchPipelineDockerTaskSimpleRecord
 import org.jooq.DSLContext
-import org.jooq.Result
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
@@ -100,4 +99,4 @@ CREATE TABLE `T_DISPATCH_PIPELINE_DOCKER_TASK_SIMPLE` (
     `GMT_MODIFIED` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '修改时间',
     PRIMARY KEY (`ID`),
     UNIQUE KEY `UNI_BUILD_SEQ` (`PIPELINE_ID`,`VM_SEQ`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='DOCKER构建任务表';*/
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='DOCKER构建任务表';*/

@@ -29,7 +29,6 @@ package com.tencent.devops.dockerhost.docker.impl
 import com.github.dockerjava.api.model.AccessMode
 import com.github.dockerjava.api.model.Bind
 import com.github.dockerjava.api.model.Volume
-import com.tencent.devops.dispatch.pojo.ContainerInfo
 import com.tencent.devops.dispatch.pojo.DockerHostBuildInfo
 import com.tencent.devops.dockerhost.config.DockerHostConfig
 import com.tencent.devops.dockerhost.docker.DockerBindGenerator
@@ -129,7 +128,7 @@ class SystemDockerBindGenerator @Autowired constructor(private val dockerHostCon
 
     private fun getTailPath(vmSeqId: Int, poolNo: Int): String {
         return if (poolNo > 1) {
-            "${vmSeqId}_${poolNo}"
+            "$vmSeqId" + "_$poolNo"
         } else {
             vmSeqId.toString()
         }

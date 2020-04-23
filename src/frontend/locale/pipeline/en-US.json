@@ -352,6 +352,10 @@
         "stopFail": "cancel failed"
     },
     "history": {
+        "logEmpty": "Log is empty",
+        "logClear": "Log is cleared",
+        "logClose": "Log is closed",
+        "logErr": "Other exceptions",
         "stageStatus": "Stage",
         "execHistory": "Builds",
         "trendData": "Artifacts size trending",

@@ -293,7 +293,7 @@ class DockerHostBuildService @Autowired constructor(
     private fun finishDockerBuild(record: TDispatchPipelineDockerBuildRecord, event: PipelineAgentShutdownEvent) {
         finishBuild(record, event.buildResult)
 
-        //编译环境才会更新pool
+        // 编译环境才会更新pool
         pipelineDockerPoolDao.updatePoolStatus(
             dslContext,
             record.pipelineId,
@@ -302,27 +302,33 @@ class DockerHostBuildService @Autowired constructor(
             if (event.buildResult) PipelineTaskStatus.DONE.status else PipelineTaskStatus.FAILURE.status
         )
 
-        dockerHostClient.endBuild(
-            event,
-            record.dockerIp,
-            record.containerId
-        )
+        if (record.dockerIp.isNotEmpty()) {
+            dockerHostClient.endBuild(
+                event,
+                record.dockerIp,
+                record.containerId
+            )
+        }
     }
 
     private fun finishBuild(record: TDispatchPipelineDockerBuildRecord, success: Boolean) {
         logger.info("Finish the docker build(${record.buildId}) with result($success)")
-        pipelineDockerBuildDao.updateStatus(dslContext,
-            record.buildId,
-            record.vmSeqId,
-            if (success) PipelineTaskStatus.DONE else PipelineTaskStatus.FAILURE)
+        try {
+            pipelineDockerBuildDao.updateStatus(dslContext,
+                record.buildId,
+                record.vmSeqId,
+                if (success) PipelineTaskStatus.DONE else PipelineTaskStatus.FAILURE)
 
-        // 更新dockerTask表(保留之前逻辑)
-        pipelineDockerTaskDao.updateStatus(dslContext,
-            record.buildId,
-            record.vmSeqId,
-            if (success) PipelineTaskStatus.DONE else PipelineTaskStatus.FAILURE)
-        redisUtils.deleteDockerBuild(record.id, SecurityUtil.decrypt(record.secretKey))
-        redisUtils.deleteHeartBeat(record.buildId, record.vmSeqId.toString())
+            // 更新dockerTask表(保留之前逻辑)
+            pipelineDockerTaskDao.updateStatus(dslContext,
+                record.buildId,
+                record.vmSeqId,
+                if (success) PipelineTaskStatus.DONE else PipelineTaskStatus.FAILURE)
+            redisUtils.deleteDockerBuild(record.id, SecurityUtil.decrypt(record.secretKey))
+            redisUtils.deleteHeartBeat(record.buildId, record.vmSeqId.toString())
+        } catch (e: Exception) {
+            logger.error("Finish the docker build(${record.buildId}) error.", e)
+        }
     }
 
     fun startBuild(hostTag: String): Result<DockerHostBuildInfo>? {
@@ -330,7 +336,7 @@ class DockerHostBuildService @Autowired constructor(
         stopWatch.start("fetchHostZone")
         val hostZone = pipelineDockerHostZoneDao.getHostZone(dslContext, hostTag)
         stopWatch.stop()
-        var message = ""
+        val message: String
         val redisLock = DockerHostLock(redisOperation)
         try {
             stopWatch.start("getGrayProject")
@@ -428,7 +434,7 @@ class DockerHostBuildService @Autowired constructor(
             stopWatch.start("unlock")
             redisLock.unlock()
             stopWatch.stop()
-            logger.info("[$hostTag|$grayFlag]|Start_Docker_Build| $message| watch=$stopWatch")
+            // logger.info("[$hostTag|$grayFlag]|Start_Docker_Build| $message| watch=$stopWatch")
         }
     }
 

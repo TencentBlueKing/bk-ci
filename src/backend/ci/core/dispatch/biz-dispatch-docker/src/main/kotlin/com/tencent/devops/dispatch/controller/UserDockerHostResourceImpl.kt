@@ -89,8 +89,8 @@ class UserDockerHostResourceImpl @Autowired constructor(
         if (dockerBuildHistoryList.size > 0) {
             val dockerBuildHistory = dockerBuildHistoryList[0]
             // running状态且容器已创建，则复用
-            if (dockerBuildHistory.status == PipelineTaskStatus.RUNNING.status
-                && dockerBuildHistory.containerId.isNotEmpty()
+            if (dockerBuildHistory.status == PipelineTaskStatus.RUNNING.status &&
+                dockerBuildHistory.containerId.isNotEmpty()
             ) {
                 pipelineDockerDebugDao.insertDebug(
                     dslContext = dslContext,
