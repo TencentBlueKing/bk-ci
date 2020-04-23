@@ -24,15 +24,17 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.plugin.quality.task
+package com.tencent.devops.process.engine.atom.quality
 
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
+import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateOutElement
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.IAtomTask
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
-import com.tencent.devops.quality.QualityGateInElement
+import com.tencent.devops.process.engine.service.PipelineBuildDetailService
+import com.tencent.devops.process.engine.service.PipelineBuildQualityService
+import com.tencent.devops.process.engine.service.template.TemplateService
+import com.tencent.devops.process.engine.utils.QualityUtils
 import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
@@ -40,18 +42,20 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
 @Component
-class QualityGateInTaskAtom @Autowired constructor(
-    private val client: Client,
+class QualityGateOutTaskAtom @Autowired constructor(
     private val rabbitTemplate: RabbitTemplate,
-    private val pipelineEventDispatcher: PipelineEventDispatcher
-) : IAtomTask<QualityGateInElement> {
-    override fun getParamElement(task: PipelineBuildTask): QualityGateInElement {
-        return JsonUtil.mapTo(task.taskParams, QualityGateInElement::class.java)
+    private val pipelineBuildDetailService: PipelineBuildDetailService,
+    private val templateService: TemplateService,
+    private val pipelineBuildQualityService: PipelineBuildQualityService
+) : IAtomTask<QualityGateOutElement> {
+
+    override fun getParamElement(task: PipelineBuildTask): QualityGateOutElement {
+        return JsonUtil.mapTo(task.taskParams, QualityGateOutElement::class.java)
     }
 
     override fun tryFinish(
         task: PipelineBuildTask,
-        param: QualityGateInElement,
+        param: QualityGateOutElement,
         runVariables: Map<String, String>,
         force: Boolean
     ): AtomResponse {
@@ -60,7 +64,7 @@ class QualityGateInTaskAtom @Autowired constructor(
 
     override fun execute(
         task: PipelineBuildTask,
-        param: QualityGateInElement,
+        param: QualityGateOutElement,
         runVariables: Map<String, String>
     ): AtomResponse {
         val checkResult = QualityUtils.getCheckResult(
@@ -68,23 +72,24 @@ class QualityGateInTaskAtom @Autowired constructor(
             interceptTaskName = param.interceptTaskName,
             interceptTask = param.interceptTask,
             runVariables = runVariables,
-            client = client,
             rabbitTemplate = rabbitTemplate,
-            position = ControlPointPosition.BEFORE_POSITION
+            position = ControlPointPosition.AFTER_POSITION,
+            pipelineBuildQualityService = pipelineBuildQualityService,
+            templateService = templateService
         )
 
         return QualityUtils.handleResult(
-            position = ControlPointPosition.BEFORE_POSITION,
+            position = ControlPointPosition.AFTER_POSITION,
             task = task,
             interceptTask = param.interceptTask!!,
             checkResult = checkResult,
-            client = client,
             rabbitTemplate = rabbitTemplate,
-            pipelineEventDispatcher = pipelineEventDispatcher
+            pipelineBuildQualityService = pipelineBuildQualityService,
+            pipelineBuildDetailService = pipelineBuildDetailService
         )
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(QualityGateInTaskAtom::class.java)
+        private val logger = LoggerFactory.getLogger(QualityGateOutTaskAtom::class.java)
     }
 }
