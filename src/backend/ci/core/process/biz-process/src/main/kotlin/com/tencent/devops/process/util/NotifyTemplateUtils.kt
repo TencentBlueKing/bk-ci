@@ -63,6 +63,7 @@ object NotifyTemplateUtils {
     }
 
     fun getReviewEmailBody(
+        reviewDesc: String,
         reviewUrl: String,
         dataTime: String,
         projectName: String,
@@ -81,9 +82,10 @@ object NotifyTemplateUtils {
             "\t\t\t\t\t\t\t\t\t<tbody>\n" +
             "\t\t\t\t\t\t\t\t\t\t<tr style=\"height: 64px; background: #555;\">\n" +
             "\t\t\t\t\t\t\t\t\t\t\t<td style=\"padding-left: 24px;\" width=\"60\" align=\"center\">\n" +
-            "\t\t\t\t\t\t\t\t\t\t\t\t<img src=\"https://github.com/Tencent/bk-ci/blob/master/docs/resource/img/logo.png\" width=\"52\" style=\"display: block\">\n" +
+            "\t\t\t\t\t\t\t\t\t\t\t\t<img src=\"https://github.com/Tencent/bk-ci/blob/master/docs/resource/img/logo_icon.png\" width=\"52\" style=\"display: block\">\n" +
             "\t\t\t\t\t\t\t\t\t\t\t</td>\n" +
             "\t\t\t\t\t\t\t\t\t\t\t<td style=\"padding-left: 6px;\">\n" +
+            "\t\t\t\t\t\t\t\t\t\t\t\t<img src=\"https://github.com/Tencent/bk-ci/blob/master/docs/resource/img/logo_text.png\" width=\"176\" style=\"display: block\">\n" +
             "\t\t\t\t\t\t\t\t\t\t\t</td>\n" +
             "\t\t\t\t\t\t\t\t\t\t</tr>\n" +
             "\t\t\t\t\t\t\t\t\t</tbody>\n" +
@@ -116,6 +118,7 @@ object NotifyTemplateUtils {
             "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<th width=\"30%\" style=\" padding: 16px; border: 1px solid #e6e6e6;text-align: left; font-weight: normal;\">所属项目</th>\n" +
             "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<th width=\"30%\" style=\" padding: 16px; border: 1px solid #e6e6e6;text-align: left; font-weight: normal;\">流水线</th>\n" +
             "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<th width=\"20%\" style=\" padding: 16px; border: 1px solid #e6e6e6;text-align: left; font-weight: normal;\">构建号</th>\n" +
+            "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<th width=\"20%\" style=\" padding: 16px; border: 1px solid #e6e6e6;text-align: left; font-weight: normal;\">审核说明</th>\n" +
             "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<th width=\"20%\" style=\" padding: 16px; border: 1px solid #e6e6e6;text-align: center; font-weight: normal;\">操作</th>\n" +
             "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t</tr>\n" +
             "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t</thead>\n" +
@@ -124,6 +127,7 @@ object NotifyTemplateUtils {
             "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<td style=\" padding: 16px; border: 1px solid #e6e6e6;text-align: left; font-weight: normal;\">$projectName</td>\n" +
             "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<td style=\" padding: 16px; border: 1px solid #e6e6e6;text-align: left; font-weight: normal;\">$pipelineName</td>\n" +
             "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<td style=\" padding: 16px; border: 1px solid #e6e6e6;text-align: left; font-weight: normal;\">#$buildNo</td>\n" +
+            "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<td style=\" padding: 16px; border: 1px solid #e6e6e6;text-align: left; font-weight: normal;\">#$reviewDesc</td>\n" +
             "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<td style=\" padding: 16px; border: 1px solid #e6e6e6;text-align: center; font-weight: normal;\"><a href=\"$reviewUrl\" style=\"color: #3c96ff\">去审核</a></td>\n" +
             "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t</tr>\n" +
             "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t</tbody>\n" +
