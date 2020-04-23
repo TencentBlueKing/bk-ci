@@ -155,6 +155,7 @@ class ManualReviewTaskAtom(
             addAllReceivers(reviewUsers.split(",").toSet())
             format = EnumEmailFormat.HTML
             body = NotifyTemplateUtils.getReviewEmailBody(
+                reviewDesc = param.desc ?: "",
                 reviewUrl = reviewUrl,
                 dataTime = date,
                 projectName = projectName,
