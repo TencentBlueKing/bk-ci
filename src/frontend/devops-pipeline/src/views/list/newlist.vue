@@ -1145,7 +1145,6 @@
         .loading-wrapper {
             min-height: calc(100% - 60px);
             height: 100%;
-            overflow: auto;
         }
         .toggle-layout {
             display: inline-block;
