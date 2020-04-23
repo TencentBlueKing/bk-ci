@@ -1475,16 +1475,6 @@ class PipelineRuntimeService @Autowired constructor(
                             jobId = containerHashId,
                             executeCount = executeCount ?: 1
                         )
-
-                        val pipelineBuildParameters = mutableListOf<BuildParameters>()
-                        params.params.forEach {
-                            pipelineBuildParameters.add(
-                                BuildParameters(
-                                    it.key.toString(),
-                                    it.value.toString()
-                                )
-                            )
-                        }
                         LogUtils.addLine(
                             rabbitTemplate = rabbitTemplate,
                             buildId = buildId,
