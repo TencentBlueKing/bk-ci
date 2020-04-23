@@ -42,7 +42,9 @@ import com.tencent.devops.model.dispatch.tables.records.TDispatchPipelineDockerI
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
+import java.net.URLEncoder
 
 @Component
 class DockerHostUtils @Autowired constructor(
@@ -60,6 +62,9 @@ class DockerHostUtils @Autowired constructor(
     }
 
     private val buildPoolSize = 100 // 单个流水线可同时执行的任务数量
+
+    @Value("\${devopsGateway.idcProxy}")
+    val idcProxy: String? = null
 
     fun getAvailableDockerIpWithSpecialIps(projectId: String, pipelineId: String, vmSeqId: String, specialIpSet: Set<String>, unAvailableIpList: Set<String> = setOf()): Pair<String, Int> {
         var grayEnv = false
@@ -193,6 +198,23 @@ class DockerHostUtils @Autowired constructor(
             lock.unlock()
         }
     }
+
+    fun getIdc2DevnetProxyUrl(
+        devnetUri: String,
+        dockerIp: String,
+        dockerHostPort: Int = 0
+    ): String {
+        val url = if (dockerHostPort == 0) {
+            val dockerIpInfo = pipelineDockerIpInfoDao.getDockerIpInfo(dslContext, dockerIp) ?: throw DockerServiceException("Docker IP: $dockerIp is not available.")
+            "http://$dockerIp:${dockerIpInfo.dockerHostPort}$devnetUri"
+        } else {
+            "http://$dockerIp:$dockerHostPort$devnetUri"
+        }
+
+        return "$idcProxy/proxy-devnet?url=${urlEncode(url)}"
+    }
+
+    private fun urlEncode(s: String) = URLEncoder.encode(s, "UTF-8")
 
     private fun getLoadConfig(): Triple<DockerHostLoadConfig, DockerHostLoadConfig, DockerHostLoadConfig> {
         val loadConfig = redisOperation.get(LOAD_CONFIG_KEY)
