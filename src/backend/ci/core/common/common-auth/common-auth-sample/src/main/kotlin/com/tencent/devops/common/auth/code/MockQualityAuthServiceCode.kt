@@ -27,8 +27,8 @@
 package com.tencent.devops.common.auth.code
 
 /**
- * 流水线ServiceCode
+ * ServiceCode
  */
-class BkPipelineAuthServiceCode : PipelineAuthServiceCode {
-    override fun id() = BkAuthServiceCode.PIPELINE.value
+class MockQualityAuthServiceCode : QualityAuthServiceCode {
+    override fun id() = MockAuthServiceCode.QUALITY.value
 }

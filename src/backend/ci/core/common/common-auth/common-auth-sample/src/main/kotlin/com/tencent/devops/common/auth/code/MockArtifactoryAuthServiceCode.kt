@@ -26,27 +26,9 @@
 
 package com.tencent.devops.common.auth.code
 
-const val BK_DEVOPS_SCOPE = "bk_devops"
-
-const val ADMIN = "admin"
-
-enum class BkAuthServiceCode(val value: String) {
-    BCS("bk_bcs"),
-    REPO("bk_repo"),
-    ARTIFACTORY(BK_DEVOPS_SCOPE),
-    CODE(BK_DEVOPS_SCOPE),
-    PIPELINE(BK_DEVOPS_SCOPE),
-    TICKET(BK_DEVOPS_SCOPE),
-    ENVIRONMENT(BK_DEVOPS_SCOPE),
-    PROJECT(BK_DEVOPS_SCOPE),
-    QUALITY(BK_DEVOPS_SCOPE);
-
-    companion object {
-        fun get(value: String): BkAuthServiceCode {
-            values().forEach {
-                if (value == it.value) return it
-            }
-            throw IllegalArgumentException("No enum for constant $value")
-        }
-    }
+/**
+ * Artifactory ServiceCode
+ */
+class MockArtifactoryAuthServiceCode : ArtifactoryAuthServiceCode {
+    override fun id() = MockAuthServiceCode.ARTIFACTORY.value
 }
