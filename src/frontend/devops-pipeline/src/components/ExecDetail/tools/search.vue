@@ -1,73 +1,57 @@
 <template>
-    <article class="log-home">
-        <section class="log-main">
-            <header class="log-head">
-                <span class="log-title"><status-icon :status="status"></status-icon>{{ title }}</span>
-                <p class="log-tools">
-                    <section class="tool-search">
-                        <section class="searct-input">
-                            <input type="text" @input="startSearch" @keyup.enter="startSearch" placeholder="Search">
-                            <img src="./assets/svg/spinner.svg" v-if="isSearching">
-                        </section>
-                        <img src="./assets/svg/icon-angle-left.svg" @click="changeSearchIndex(-1)">
-                        <span class="search-num">{{`${searchIndex} / ${searchNum}`}}</span>
-                        <img src="./assets/svg/icon-angle-right.svg" @click="changeSearchIndex(1)">
-                    </section>
-                    <bk-select v-if="![0, 1].includes(+executeCount)" :placeholder="language('重试次数')" class="log-execute" :value="currentExe" :clearable="false">
-                        <bk-option v-for="execute in executeCount"
-                            :key="execute"
-                            :id="execute"
-                            :name="execute"
-                            @click.native="changeExecute(execute)"
-                        >
-                        </bk-option>
-                    </bk-select>
-                    <section class="tool-more" v-bk-clickoutside="closeShowMore">
-                        <img src="./assets/svg/more.svg" class="more-icon" @click="showMore = !showMore">
-                        <ul class="more-list" v-if="showMore">
-                            <li class="more-button" @click="showLogTime">{{ language('显示时间') }}</li>
-                            <a download class="more-button" @click="downLoad" :href="downLoadLink">{{ language('下载日志') }}</a>
-                        </ul>
-                    </section>
-                </p>
-            </header>
-
-            <slot></slot>
+    <p class="log-tools">
+        <section class="tool-search">
+            <section class="searct-input">
+                <input type="text" @input="startSearch" @keyup.enter="startSearch" placeholder="Search">
+                <i class="bk-icon icon-search search-icon" v-if="!isSearching"></i>
+                <logo class="search-icon" name="spinner" v-if="isSearching"></logo>
+            </section>
+            <logo class="icon-click" name="icon-angle-left" @click.native="changeSearchIndex(-1)"></logo>
+            <span class="search-num">{{`${searchIndex} / ${searchNum}`}}</span>
+            <logo class="icon-click" name="icon-angle-right" @click.native="changeSearchIndex(1)"></logo>
         </section>
-    </article>
+        <bk-select v-if="![0, 1].includes(+executeCount)" :placeholder="$t('execDetail.execTime')" class="log-execute" :value="currentExe" :clearable="false">
+            <bk-option v-for="execute in executeCount"
+                :key="execute"
+                :id="execute"
+                :name="execute"
+                @click.native="changeExecute(execute)"
+            >
+            </bk-option>
+        </bk-select>
+        <section class="tool-more" v-bk-clickoutside="closeShowMore">
+            <logo name="more" class="more-icon" @click.native="showMore = !showMore"></logo>
+            <ul class="more-list" v-if="showMore">
+                <li class="more-button" @click="showLogTime">{{ $t('execDetail.showTime') }}</li>
+                <a download class="more-button" @click="downLoad" :href="downLoadLink">{{ $t('execDetail.downLoadLog') }}</a>
+            </ul>
+        </section>
+    </p>
 </template>
 
 <script>
-    import statusIcon from './status'
-    import language from './locale'
+    import Logo from '@/components/Logo'
 
     export default {
         components: {
-            statusIcon
+            Logo
         },
 
         props: {
-            downLoadLink: {
-                type: String
+            worker: {
+                type: Worker
             },
             executeCount: {
-                type: Number,
-                default: 0
+                type: Number
             },
-            status: {
-                type: String
-            },
-            title: {
+            searchStr: {
                 type: String
             },
             showTime: {
                 type: Boolean
             },
-            searchStr: {
+            downLoadLink: {
                 type: String
-            },
-            worker: {
-                type: Object
             }
         },
 
@@ -84,7 +68,6 @@
         },
 
         mounted () {
-            document.addEventListener('mousedown', this.closeLog)
             this.worker.addEventListener('message', (event) => {
                 const data = event.data
                 switch (data.type) {
@@ -98,13 +81,7 @@
             })
         },
 
-        beforeDestroy () {
-            document.removeEventListener('mousedown', this.closeLog)
-        },
-
         methods: {
-            language,
-
             changeSearchIndex (dis) {
                 if (this.searchRes.length <= 0) return
                 // 展示的index
@@ -154,12 +131,7 @@
             closeShowMore () {
                 this.showMore = false
             },
-
-            closeLog (event) {
-                const curTarget = event.target
-                if (curTarget.classList.contains('log-home')) this.$emit('closeLog')
-            },
-
+            
             downLoad () {
                 this.closeShowMore()
             },
@@ -175,9 +147,13 @@
 
 <style lang="scss" scoped>
     .log-tools {
+        position: absolute;
+        right: 20px;
+        top: 13px;
         display: flex;
         align-items: center;
         line-height: 30px;
+        user-select: none;
         .tool-search {
             font-size: 12px;
             display: flex;
@@ -200,7 +176,11 @@
                     color: #f6f8fa;
                     background-color: hsla(0,0%,100%,.125);
                 }
-                img {
+                .icon-search.search-icon {
+                    font-size: 14px;
+                    top: 7px;
+                }
+                .search-icon {
                     position: absolute;
                     height: 20px;
                     width: 20px;
@@ -208,7 +188,10 @@
                     right: 5px;
                 }
             }
-            >img {
+            .search-num {
+                color: #fff;
+            }
+            .icon-click {
                 cursor: pointer;
                 width: 25px;
                 height: 25px;
@@ -219,17 +202,18 @@
         }
         .tool-more {
             position: relative;
-            height: 24px;
-            width: 32px;
+            height: 32px;
+            width: 15px;
             .more-icon {
-                height: 24px;
-                width: 32px;
+                height: 32px;
+                width: 24px;
                 cursor: pointer;
+                transform: rotate(90deg);
             }
             .more-list {
                 position: absolute;
                 top: 100%;
-                right: 0;
+                right: -6px;
                 left: auto;
                 width: 180px;
                 color: #fff;
@@ -246,7 +230,7 @@
                     content: "";
                     border: 8px solid transparent;
                     top: -16px;
-                    right: 9px;
+                    right: 0;
                     left: auto;
                     border-bottom-color: #444d56;
                 }
@@ -281,66 +265,6 @@
             &:hover {
                 color: #fff;
                 background: #292c2d;
-            }
-        }
-    }
-
-    /deep/ .log-folder {
-        background-image: url("./assets/png/down.png");
-        display: inline-block;
-        height: 16px;
-        width: 16px;
-        position: absolute;
-        cursor: pointer;
-        transform: rotate(0deg);
-        transition: transform 200ms;
-        top: 0;
-        right: -20px;
-        &.show-all {
-            transform: rotate(-90deg);
-        }
-    }
-    .log-home {
-        position: fixed;
-        top: 0;
-        left: 0;
-        bottom: 0;
-        right: 0;
-        background-color: rgba(0, 0, 0, .2);
-        z-index: 1000;
-        .scroll-loading {
-            position: absolute;
-            bottom: 0;
-            width: 100%;
-            height: 16px;
-        }
-        .log-main {
-            position: relative;
-            width: 80%;
-            height: calc(100% - 32px);
-            float: right;
-            display: flex;
-            flex-direction: column;
-            margin: 16px;
-            border-radius: 6px;
-            overflow: hidden;
-            transition-property: transform, opacity;
-            transition: transform 200ms cubic-bezier(.165,.84,.44,1), opacity 100ms cubic-bezier(.215,.61,.355,1);
-            background: #1e1e1e;
-            .log-head {
-                line-height: 48px;
-                padding: 5px 20px;
-                background-color: #252935;
-                border-bottom: 1px solid;
-                border-bottom-color: #2b2b2b;
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                color: #d4d4d4;
-                .log-title {
-                    display: flex;
-                    align-items: center;
-                }
             }
         }
     }
