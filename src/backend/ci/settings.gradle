@@ -50,6 +50,7 @@ include ":core:common:common-test"
 include ":core:common:common-auth"
 include ":core:common:common-auth:common-auth-api"
 include ":core:common:common-auth:common-auth-sample"
+include ":core:common:common-auth:common-auth-blueking"
 
 include ":core:common:common-notify"
 include ":core:common:common-websocket"
