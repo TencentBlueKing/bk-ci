@@ -171,8 +171,7 @@ class ManualReviewTaskAtom(
             logger.warn("[$buildId]|taskId=$taskId|Fail to send the email message($message) because of ${result.message}")
         }
 
-        val bodyMessage =
-            NotifyTemplateUtils.getReviewRtxMsgBody(
+        val bodyMessage = NotifyTemplateUtils.getReviewRtxMsgBody(
                 reviewDesc = param.desc ?: "",
                 reviewUrl = reviewUrl,
                 reviewAppUrl = reviewAppUrl,
@@ -180,8 +179,7 @@ class ManualReviewTaskAtom(
                 pipelineName = pipelineName,
                 buildNo = buildNo
             )
-        val bodyMessageWeixin =
-            NotifyTemplateUtils.getRevieWeixinMsgBody(
+        val bodyMessageWeixin = NotifyTemplateUtils.getRevieWeixinMsgBody(
                 reviewDesc = param.desc ?: "",
                 reviewUrl = reviewUrl,
                 reviewAppUrl = reviewAppUrl,
