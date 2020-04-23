@@ -43,10 +43,12 @@ import com.tencent.devops.common.web.mq.alert.AlertUtils
 import com.tencent.devops.dispatch.dao.PipelineDockerDebugDao
 import com.tencent.devops.dispatch.dao.PipelineDockerEnableDao
 import com.tencent.devops.dispatch.dao.PipelineDockerHostDao
+import com.tencent.devops.dispatch.dao.PipelineDockerIPInfoDao
 import com.tencent.devops.dispatch.pojo.ContainerInfo
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.dispatch.utils.CommonUtils
 import com.tencent.devops.dispatch.utils.DockerHostDebugLock
+import com.tencent.devops.dispatch.utils.DockerHostUtils
 import com.tencent.devops.dispatch.utils.redis.RedisUtils
 import com.tencent.devops.store.api.container.ServiceContainerAppResource
 import com.tencent.devops.store.pojo.app.BuildEnv
@@ -62,7 +64,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
-import java.net.URLEncoder
 import org.springframework.util.StopWatch
 
 @Service
@@ -71,6 +72,8 @@ class DockerHostDebugService @Autowired constructor(
     private val pipelineDockerDebugDao: PipelineDockerDebugDao,
     private val pipelineDockerHostDao: PipelineDockerHostDao,
     private val pipelineDockerEnableDao: PipelineDockerEnableDao,
+    private val pipelineDockerIpInfoDao: PipelineDockerIPInfoDao,
+    private val dockerHostUtils: DockerHostUtils,
     private val redisUtils: RedisUtils,
     private val redisOperation: RedisOperation,
     private val client: Client,
@@ -187,8 +190,7 @@ class DockerHostDebugService @Autowired constructor(
         logger.info("$pipelineId|$vmSeqId| start debug. Container ready to start, buildEnvStr: $buildEnvStr")
 
         // 根据dockerIp定向调用dockerhost
-        val url = "http://$dockerIp/api/docker/debug/start"
-        val proxyUrl = "$idcProxy/proxy-devnet?url=${urlEncode(url)}"
+        val proxyUrl = dockerHostUtils.getIdc2DevnetProxyUrl("/api/docker/debug/start", dockerIp)
         val requestBody = ContainerInfo(projectId, pipelineId, vmSeqId, poolNo, PipelineTaskStatus.RUNNING.status, dockerImage,
             "", "", "", buildEnvStr, userName, password, newImageType)
         val request = Request.Builder().url(proxyUrl)
@@ -253,8 +255,7 @@ class DockerHostDebugService @Autowired constructor(
             val dockerIp = pipelineDockerDebug.hostTag
 
             // 根据dockerIp定向调用dockerhost
-            val url = "http://$dockerIp/api/docker/debug/end"
-            val proxyUrl = "$idcProxy/proxy-devnet?url=${urlEncode(url)}"
+            val proxyUrl = dockerHostUtils.getIdc2DevnetProxyUrl("/api/docker/debug/end", dockerIp)
             val requestBody = ContainerInfo(
                 projectId = projectId,
                 pipelineId = pipelineId,
@@ -672,8 +673,6 @@ class DockerHostDebugService @Autowired constructor(
         }
         return result
     }
-
-    private fun urlEncode(s: String) = URLEncoder.encode(s, "UTF-8")
 
     companion object {
         private val logger = LoggerFactory.getLogger(DockerHostDebugService::class.java)

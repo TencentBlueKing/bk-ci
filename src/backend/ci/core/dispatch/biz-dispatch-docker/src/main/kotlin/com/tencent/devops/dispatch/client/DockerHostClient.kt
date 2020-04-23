@@ -12,7 +12,6 @@ import com.tencent.devops.common.pipeline.enums.DockerVersion
 import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
 import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.dispatch.dao.PipelineDockerBuildDao
-import com.tencent.devops.dispatch.dao.PipelineDockerIPInfoDao
 import com.tencent.devops.dispatch.exception.DockerServiceException
 import com.tencent.devops.dispatch.pojo.DockerHostBuildInfo
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
@@ -31,12 +30,10 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
-import java.net.URLEncoder
 
 @Component
 class DockerHostClient @Autowired constructor(
     private val pipelineDockerBuildDao: PipelineDockerBuildDao,
-    private val pipelineDockerIPInfoDao: PipelineDockerIPInfoDao,
     private val dockerHostUtils: DockerHostUtils,
     private val redisUtils: RedisUtils,
     private val client: Client,
@@ -52,9 +49,6 @@ class DockerHostClient @Autowired constructor(
 
     @Value("\${dispatch.dockerBuildImagePrefix:#{null}}")
     val dockerBuildImagePrefix: String? = null
-
-    @Value("\${devopsGateway.idcProxy}")
-    val idcProxy: String? = null
 
     fun startBuild(
         event: PipelineAgentStartupEvent,
@@ -153,7 +147,6 @@ class DockerHostClient @Autowired constructor(
     }
 
     fun endBuild(event: PipelineAgentShutdownEvent, dockerIp: String, containerId: String) {
-        val dockerIpInfo = pipelineDockerIPInfoDao.getDockerIpInfo(dslContext, dockerIp) ?: throw DockerServiceException("Docker IP: $dockerIp is not available.")
         val requestBody = DockerHostBuildInfo(
             projectId = event.projectId,
             agentId = "",
@@ -174,8 +167,7 @@ class DockerHostClient @Autowired constructor(
             containerHashId = ""
         )
 
-        val url = "http://$dockerIp:${dockerIpInfo.dockerHostPort}/api/docker/build/end"
-        val proxyUrl = "$idcProxy/proxy-devnet?url=${urlEncode(url)}"
+        val proxyUrl = dockerHostUtils.getIdc2DevnetProxyUrl("/api/docker/build/end", dockerIp)
         val request = Request.Builder().url(proxyUrl)
             .delete(
                 RequestBody.create(
@@ -209,8 +201,7 @@ class DockerHostClient @Autowired constructor(
         retryTime: Int = 0,
         unAvailableIpList: Set<String>? = null
     ) {
-        val url = "http://$dockerIp:$dockerHostPort/api/docker/build/start"
-        val proxyUrl = "$idcProxy/proxy-devnet?url=${urlEncode(url)}"
+        val proxyUrl = dockerHostUtils.getIdc2DevnetProxyUrl("/api/docker/build/start", dockerIp, dockerHostPort)
         val request = Request.Builder().url(proxyUrl)
             .post(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), JsonUtil.toJson(requestBody)))
             .addHeader("Accept", "application/json; charset=utf-8")
@@ -255,6 +246,4 @@ class DockerHostClient @Autowired constructor(
             }
         }
     }
-
-    private fun urlEncode(s: String) = URLEncoder.encode(s, "UTF-8")
 }
