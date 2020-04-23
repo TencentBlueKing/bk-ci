@@ -26,6 +26,7 @@
 package com.tencent.devops.openapi.filter
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_SECRET
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.service.utils.SpringContextUtil
@@ -53,127 +54,44 @@ import javax.ws.rs.ext.Provider
 @RequestFilter
 class ApiFilter : ContainerRequestFilter {
 
-    private val excludeVeritfyPath = listOf("swagger.json", "external/service/versionInfo")
+    private val excludeVeritfyPath =
+        listOf("/api/apigw/", "/api/apigw-user/", "/api/apigw-app/")
 
     override fun filter(requestContext: ContainerRequestContext) {
+
         // path为为空的时候，直接退出
         val path = requestContext.uriInfo.requestUri.path
         logger.info("uriInfo uriInfo[$path]")
-        // 目录不是apigw的不做过滤
-        if (!path.startsWith("/api/apigw/") && !path.startsWith("/api/apigw-user/") && !path.startsWith("/api/apigw-app/")) {
-            return
-        }
-        if (!path.isNullOrBlank()) {
-            if (excludeVeritfyPath.contains(path)) {
-                logger.info("The path($path) already exclude")
-                return
+        // 判断是否需要处理apigw
+        var pass = true
+        excludeVeritfyPath.forEach {
+            if (path.startsWith(it)) {
+                pass = false
             }
         }
-        val valid = verifyJWT(requestContext)
-        // 验证通过
-        if (!valid) {
-            requestContext.abortWith(
-                Response.status(Response.Status.BAD_REQUEST)
-                    .entity("Devops OpenAPI Auth fail：user or app auth fail.")
-                    .build()
-            )
+        if (pass) {
             return
         }
-    }
 
-    fun verifyJWT(requestContext: ContainerRequestContext): Boolean {
-        val bkApiJwt = requestContext.getHeaderString("X-Bkapi-JWT")
-        val apigwtType = requestContext.getHeaderString("X-DEVOPS-APIGW-TYPE")
-        if (bkApiJwt.isNullOrBlank()) {
-            logger.error("Request bk api jwt is empty for ${requestContext.request}")
-            requestContext.abortWith(Response.status(Response.Status.BAD_REQUEST)
-                .entity("Request bkapi jwt is empty.")
-                .build())
-            return false
-        }
-
-        val uriPath = requestContext.uriInfo.requestUri.path
-        val apiType = if (uriPath.startsWith("/api/apigw-app")) "apigw-app" else "apigw-user"
-
-        logger.info("Get the bkApiJwt header, X-Bkapi-JWT：$bkApiJwt")
-        val jwt = parseJwt(bkApiJwt, apigwtType)
-        logger.info("Get the parse bkApiJwt($jwt)")
-
-        // 验证应用身份信息
-        if (jwt.has("app")) {
-            val app = jwt.getJSONObject("app")
-            // 应用身份登录
-            if (app.has("app_code")) {
-                val appCode = app.getString("app_code")
-                val verified = app.get("verified") as Boolean
-                if (apigwtType == "apigw-app" && (appCode.isNullOrEmpty() || !verified)) {
-                    return false
+        // 将query中的app_code和app_secret设置成头部
+        val pathparam = requestContext.getUriInfo().pathParameters
+        pathparam.forEach {
+            if(it.key == "app_code" && it.value.isNotEmpty()) {
+                requestContext.headers[AUTH_HEADER_DEVOPS_APP_CODE]?.set(0, null)
+                if (requestContext.headers[AUTH_HEADER_DEVOPS_APP_CODE] != null) {
+                    requestContext.headers[AUTH_HEADER_DEVOPS_APP_CODE]?.set(0, it.value[0])
                 } else {
-                    if (!appCode.isNullOrBlank()) {
-                        // 将appCode头部置空
-                        requestContext.headers[AUTH_HEADER_DEVOPS_APP_CODE]?.set(0, null)
-                        if (requestContext.headers[AUTH_HEADER_DEVOPS_APP_CODE] != null) {
-                            requestContext.headers[AUTH_HEADER_DEVOPS_APP_CODE]?.set(0, appCode)
-                        } else {
-                            requestContext.headers.add(AUTH_HEADER_DEVOPS_APP_CODE, appCode)
-                        }
-                    }
+                    requestContext.headers.add(AUTH_HEADER_DEVOPS_APP_CODE, it.value[0])
                 }
             }
-        }
-        // 在验证应用身份信息
-        if (jwt.has("user")) {
-            // 先做app的验证再做
-            val user = jwt.getJSONObject("user")
-            // 用户身份登录
-            if (user.has("username")) {
-                val username = user.getString("username")
-                val verified = user.get("verified") as Boolean
-                // 名字为空或者没有通过认证的时候，直接失败
-                if (username.isNotBlank() && verified) {
-                    // 将user头部置空
-                    requestContext.headers[AUTH_HEADER_DEVOPS_USER_ID]?.set(0, null)
-                    if (requestContext.headers[AUTH_HEADER_DEVOPS_USER_ID] != null) {
-                        requestContext.headers[AUTH_HEADER_DEVOPS_USER_ID]?.set(0, username)
-                    } else {
-                        requestContext.headers.add(AUTH_HEADER_DEVOPS_USER_ID, username)
-                    }
-                } else if (apiType == "apigw-user") {
-                    requestContext.abortWith(Response.status(Response.Status.BAD_REQUEST)
-                        .entity("Request don't has user's access_token.")
-                        .build())
-                    return false
+            if(it.key == "app_secret" && it.value.isNotEmpty()) {
+                requestContext.headers[AUTH_HEADER_DEVOPS_APP_SECRET]?.set(0, null)
+                if (requestContext.headers[AUTH_HEADER_DEVOPS_APP_SECRET] != null) {
+                    requestContext.headers[AUTH_HEADER_DEVOPS_APP_SECRET]?.set(0, it.value[0])
+                } else {
+                    requestContext.headers.add(AUTH_HEADER_DEVOPS_APP_CODE, it.value[0])
                 }
             }
-        }
-        return true
-    }
-
-    private fun parseJwt(bkApiJwt: String, apigwtType: String?): JSONObject {
-        var reader: PEMReader? = null
-        try {
-            val key = if (!apigwtType.isNullOrEmpty() && apigwtType == "outer") {
-                SpringContextUtil.getBean(ApiGatewayPubFile::class.java).getPubOuter().toByteArray()
-            } else {
-                SpringContextUtil.getBean(ApiGatewayPubFile::class.java).getPubInner().toByteArray()
-            }
-            Security.addProvider(BouncyCastleProvider())
-            val bais = ByteArrayInputStream(key)
-            reader = PEMReader(InputStreamReader(bais), PasswordFinder { "".toCharArray() })
-            val keyPair = reader.readObject() as JCERSAPublicKey
-            val jwtParser = Jwts.parser().setSigningKey(keyPair)
-            val parse = jwtParser.parse(bkApiJwt)
-            logger.info("Get the parse body(${parse.body}) and header(${parse.header})")
-            return JSONObject.fromObject(parse.body)
-        } catch (e: Exception) {
-            logger.error("Parse jwt failed.", e)
-            throw ErrorCodeException(
-                errorCode = ERROR_OPENAPI_JWT_PARSE_FAIL,
-                defaultMessage = "Parse jwt failed",
-                params = arrayOf(bkApiJwt)
-            )
-        } finally {
-            reader?.close()
         }
     }
 

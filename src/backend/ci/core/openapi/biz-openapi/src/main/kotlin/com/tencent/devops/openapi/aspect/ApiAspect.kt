@@ -1,8 +1,34 @@
+/*
+ * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ *
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ *
+ * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
+ *
+ * A copy of the MIT License is included in this file.
+ *
+ *
+ * Terms of the MIT License:
+ * ---------------------------------------------------
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
+ * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+ * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+ * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
 package com.tencent.devops.openapi.aspect
 
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.openapi.filter.ApiFilter
 import com.tencent.devops.openapi.service.op.AppCodeService
+import com.tencent.devops.openapi.utils.ApiGatewayUtil
 import org.aspectj.lang.JoinPoint
 import org.aspectj.lang.annotation.Aspect
 import org.aspectj.lang.annotation.Before
@@ -14,7 +40,8 @@ import org.springframework.stereotype.Component
 @Aspect
 @Component
 class ApiAspect(
-    private val appCodeService: AppCodeService
+    private val appCodeService: AppCodeService,
+    private val apiGatewayUtil: ApiGatewayUtil
 ) {
 
     companion object {
@@ -26,13 +53,13 @@ class ApiAspect(
      *
      * @param jp
      */
-    @Before(
-        "execution(* com.tencent.devops.openapi.resources.apigw.*.*(..))" +
-            "||execution(* com.tencent.devops.openapi.resources.apigw.v2.*.*(..))" +
-            "||execution(* com.tencent.devops.openapi.resources.apigw.v2.app.*.*(..))" +
-            "||execution(* com.tencent.devops.openapi.resources.apigw.v2.user.*.*(..))"
+    @Before("execution(* com.tencent.devops.openapi.resources.apigw.v3.*.*(..))"
     ) // 所有controller包下面的所有方法的所有参数
     fun beforeMethod(jp: JoinPoint) {
+        if(!apiGatewayUtil.isAuth()) {
+            logger.info("Openapi不需要鉴权。")
+            return
+        }
 
         val methodName: String = jp.signature.name
         logger.info("【前置增强】the method 【$methodName】")
@@ -77,59 +104,4 @@ class ApiAspect(
             }
         }
     }
-//
-//    /**
-//     * 后置增强：目标方法执行之后执行以下方法体的内容，不管是否发生异常。
-//     *
-//     * @param jp
-//     */
-//    @After("execution(* com.tencent.devops.openapi.resources.*.*(..))")
-//    fun afterMethod(jp: JoinPoint?) {
-//        logger.info("【后置增强】this is a afterMethod advice...")
-//    }
-//
-//    /**
-//     * 返回增强：目标方法正常执行完毕时执行
-//     *
-//     * @param jp
-//     * @param result
-//     */
-//    @AfterReturning(value = "execution(* com.tencent.devops.openapi.resources.*.*(..)))", returning = "result")
-//    fun afterReturningMethod(jp: JoinPoint, result: Any) {
-//        val methodName: String = jp.signature.name
-//        logger.info("【返回增强】the method 【$methodName】 ends with 【$result】")
-//    }
-//
-//    /**
-//     * 异常增强：目标方法发生异常的时候执行，第二个参数表示补货异常的类型
-//     *
-//     * @param jp
-//     * @param e
-//     */
-//    @AfterThrowing(value = "execution(* com.tencent.devops.openapi.resources.*.*(..))", throwing = "e")
-//    fun afterThorwingMethod(jp: JoinPoint, e: Exception?) {
-//        val methodName: String = jp.signature.name
-//        logger.error("【异常增强】the method 【$methodName】 occurs exception: ", e)
-//    }
-//    /**
-//     * 环绕增强：目标方法执行前后分别执行一些代码，发生异常的时候执行另外一些代码
-//     *
-//     * @return
-//     */
-/*    @Around(value = "execution(* com.wuychn.springbootaspect.controller.*.*(..))")
-    public Object aroundMethod(ProceedingJoinPoint jp) {
-        String methodName = jp.getSignature().getName();
-        Object result = null;
-        try {
-            logger.info("【环绕增强中的--->前置增强】：the method 【" + methodName + "】 begins with " + Arrays.asList(jp.getArgs()));
-            //执行目标方法
-            result = jp.proceed();
-            logger.info("【环绕增强中的--->返回增强】：the method 【" + methodName + "】 ends with " + result);
-        } catch (Throwable e) {
-            result = "error";
-            logger.info("【环绕增强中的--->异常增强】：the method 【" + methodName + "】 occurs exception " + e);
-        }
-        logger.info("【环绕增强中的--->后置增强】：-----------------end.----------------------");
-        return result;
-    }*/
 }

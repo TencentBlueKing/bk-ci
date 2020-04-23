@@ -1,12 +1,11 @@
 package com.tencent.devops.openapi.resources.apigw.v3
 
-import com.tencent.devops.artifactory.api.service.ServiceArtifactoryDownLoadResource
-import com.tencent.devops.artifactory.api.user.UserArtifactoryResource
+import com.tencent.devops.artifactory.api.UserPipelineFileResource
 import com.tencent.devops.artifactory.pojo.FileInfo
-import com.tencent.devops.artifactory.pojo.FileInfoPage
 import com.tencent.devops.artifactory.pojo.SearchProps
 import com.tencent.devops.artifactory.pojo.Url
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
@@ -22,50 +21,6 @@ class ApigwArtifactoryResourceV3Impl @Autowired constructor(
         private val logger = LoggerFactory.getLogger(ApigwArtifactoryResourceV3Impl::class.java)
     }
 
-    override fun getThirdPartyDownloadUrl(
-        appCode: String?,
-        apigwType: String?,
-        userId: String,
-        region: String?,
-        projectId: String,
-        artifactoryType: ArtifactoryType,
-        path: String,
-        ttl: Int?
-    ): Result<List<String>> {
-        var pipelineId = ""
-        var buildId = ""
-        var subPath = path
-        if (artifactoryType == ArtifactoryType.PIPELINE) {
-            val pathList = path.split("/")
-            logger.info("getThirdPartyDownloadUrl pathList:$pathList")
-            if (pathList[0].isBlank()) {
-                pipelineId = pathList[1]
-                buildId = pathList[2]
-            } else {
-                pipelineId = pathList[0]
-                buildId = pathList[1]
-            }
-            subPath = path.replace("/$pipelineId/$buildId", "")
-        }
-
-        logger.info("getThirdPartyDownloadUrl pipelineId:$pipelineId")
-        logger.info("getThirdPartyDownloadUrl buildId:$buildId")
-        logger.info("getThirdPartyDownloadUrl subPath:$subPath")
-        return client.get(ServiceArtifactoryDownLoadResource::class).getThirdPartyDownloadUrl(
-            projectId = projectId,
-            pipelineId = pipelineId,
-            buildId = buildId,
-            artifactoryType = artifactoryType,
-            path = subPath,
-            ttl = ttl,
-            crossPipineId = null,
-            crossProjectId = null,
-            crossBuildNo = null,
-            region = region,
-            userId = userId
-        )
-    }
-
     override fun getUserDownloadUrl(
         appCode: String?,
         apigwType: String?,
@@ -74,7 +29,7 @@ class ApigwArtifactoryResourceV3Impl @Autowired constructor(
         artifactoryType: ArtifactoryType,
         path: String
     ): Result<Url> {
-        return client.get(UserArtifactoryResource::class).downloadUrl(
+        return client.get(UserPipelineFileResource::class).downloadUrl(
             userId = userId,
             projectId = projectId,
             artifactoryType = artifactoryType,
@@ -91,7 +46,7 @@ class ApigwArtifactoryResourceV3Impl @Autowired constructor(
         buildId: String,
         page: Int?,
         pageSize: Int?
-    ): Result<FileInfoPage<FileInfo>> {
+    ): Result<Page<FileInfo>> {
         val map = mutableMapOf<String, String>()
         map["pipelineId"] = pipelineId
         map["buildId"] = buildId
@@ -99,9 +54,9 @@ class ApigwArtifactoryResourceV3Impl @Autowired constructor(
             fileNames = null,
             props = map
         )
-        return client.get(UserArtifactoryResource::class).search(
+        return client.get(UserPipelineFileResource::class).searchFile(
             userId = userId,
-            projectId = projectId,
+            projectCode = projectId,
             page = page,
             pageSize = pageSize,
             searchProps = searchProps

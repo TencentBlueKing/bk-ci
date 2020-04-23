@@ -28,12 +28,14 @@ package com.tencent.devops.openapi.resources.apigw.v3
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.v3.ApigwAtomResourceV3
 import com.tencent.devops.store.api.atom.ServiceMarketAtomResource
 import com.tencent.devops.store.pojo.atom.AtomPipeline
 import com.tencent.devops.store.pojo.atom.AtomStatistic
 import com.tencent.devops.store.pojo.atom.AtomVersion
+import com.tencent.devops.store.pojo.atom.InstallAtomReq
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -75,6 +77,17 @@ class ApigwAtomResourceV3Impl @Autowired constructor(private val client: Client)
             page = page,
             pageSize = pageSize
         )
+    }
+
+    override fun installAtom(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        channelCode: ChannelCode?,
+        installAtomReq: InstallAtomReq
+    ): Result<Boolean> {
+        logger.info("install Atom: userId[$userId] channelCode[$channelCode] installAtomReq[$installAtomReq]")
+        return client.get(ServiceMarketAtomResource::class).installAtom(userId, channelCode, installAtomReq)
     }
 
     companion object {

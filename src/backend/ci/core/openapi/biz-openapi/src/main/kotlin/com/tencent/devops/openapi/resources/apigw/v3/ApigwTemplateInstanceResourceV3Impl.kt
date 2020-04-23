@@ -27,7 +27,7 @@ package com.tencent.devops.openapi.resources.apigw.v3
 
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.openapi.api.apigw.ApigwTemplateInstanceResource
+import com.tencent.devops.openapi.api.apigw.v3.ApigwTemplateInstanceResourceV3
 import com.tencent.devops.process.api.template.ServiceTemplateInstanceResource
 import com.tencent.devops.process.pojo.template.TemplateInstanceCreate
 import com.tencent.devops.process.pojo.template.TemplateOperationRet
@@ -36,7 +36,7 @@ import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ApigwTemplateInstanceResourceV3Impl @Autowired constructor(private val client: Client) :
-    ApigwTemplateInstanceResource {
+    ApigwTemplateInstanceResourceV3 {
     override fun createTemplateInstances(
         appCode: String?,
         apigwType: String?,
