@@ -1,18 +1,22 @@
 <template>
-    <log-container v-bind="$props"
-        @closeLog="$emit('closeLog')"
-        @showSearchLog="showSearchLog"
-        :show-time.sync="showTime"
-        :search-str.sync="searchStr"
-        :worker="worker">
-        <ul class="plugin-list" ref="pluginList">
+    <section class="job-log">
+        <search :worker="worker"
+            :execute-count="executeCount"
+            :search-str.sync="searchStr"
+            :show-time.sync="showTime"
+            :down-load-link="downLoadLink"
+            @showSearchLog="showSearchLog"
+            @changeExecute="changeExecute"
+
+        ></search>
+        <ul class="job-plugin-list-log">
             <li v-for="plugin in pluginList" :key="plugin.id" class="plugin-item">
                 <p class="item-head" @click="expendLog(plugin)">
                     <span :class="[{ 'show-all': !!curFoldList[plugin.id] }, 'log-folder']"></span>
                     <status-icon :status="plugin.status"></status-icon>
                     {{ plugin.name }}
                 </p>
-                <virtual-scroll class="log-scroll" :ref="plugin.id" v-show="curFoldList[plugin.id]" :max-height="maxHeight" :id="plugin.id" :worker="worker">
+                <virtual-scroll class="log-scroll" :ref="plugin.id" v-show="curFoldList[plugin.id]" :id="plugin.id" :worker="worker">
                     <template slot-scope="item">
                         <span class="item-txt selection-color">
                             <span class="item-time selection-color" v-if="showTime">{{(item.data.isNewLine ? '' : item.data.timestamp)|timeFilter}}</span>
@@ -22,13 +26,14 @@
                 </virtual-scroll>
             </li>
         </ul>
-    </log-container>
+    </section>
 </template>
 
 <script>
+    import { mapActions } from 'vuex'
     import virtualScroll from './virtualScroll'
-    import logContainer from './logContainer'
-    import statusIcon from './status'
+    import statusIcon from '../status'
+    import search from '../tools/search'
     // eslint-disable-next-line
     const Worker = require('worker-loader!./worker.js')
 
@@ -46,12 +51,6 @@
     }
 
     export default {
-        components: {
-            virtualScroll,
-            logContainer,
-            statusIcon
-        },
-
         filters: {
             timeFilter (val) {
                 if (!val) return ''
@@ -60,47 +59,55 @@
             }
         },
 
+        components: {
+            virtualScroll,
+            statusIcon,
+            search
+        },
+
         props: {
-            downLoadLink: {
-                type: String
-            },
-            executeCount: {
-                type: Number,
-                default: 0
-            },
-            status: {
-                type: String
-            },
-            title: {
+            buildId: {
                 type: String
             },
             pluginList: {
                 type: Array
+            },
+            downLoadLink: {
+                type: String
             }
         },
 
         data () {
             return {
+                executeCount: 1,
+                searchStr: '',
+                showTime: false,
                 worker: new Worker(),
                 curFoldList: this.pluginList.map(plugin => ({ [plugin.id]: false })),
-                showTime: false,
-                searchStr: '',
                 curSearchIndex: 0,
-                maxHeight: 0
+                logPostData: {},
+                closeTags: []
             }
         },
 
         mounted () {
             this.worker.postMessage({ type: 'initStatus', pluginList: this.pluginList.map(x => x.id) })
-            const pluginListEle = this.$refs.pluginList || {}
-            this.maxHeight = (pluginListEle.offsetHeight || 500) - 80
         },
 
         beforeDestroy () {
             this.worker.terminate()
+            Object.keys(this.logPostData).forEach(key => {
+                const postData = this.logPostData[key]
+                this.closeTags.push(postData.tag)
+            })
         },
 
         methods: {
+            ...mapActions('atom', [
+                'getInitLog',
+                'getAfterLog'
+            ]),
+
             showSearchLog ({ index, refId, realIndex }) {
                 this.curSearchIndex = realIndex
                 index -= 5
@@ -116,16 +123,74 @@
                 const id = plugin.id
                 this.$set(this.curFoldList, [id], !this.curFoldList[id])
                 let ref = this.$refs[id]
+                let postData = this.logPostData[id]
+                console.log(plugin)
+                if (!postData) {
+                    postData = this.logPostData[id] = {
+                        projectId: this.$route.params.projectId,
+                        pipelineId: this.$route.params.pipelineId,
+                        buildId: this.buildId,
+                        tag: id,
+                        currentExe: plugin.executeCount,
+                        lineNo: 0
+                    }
 
-                if (this.curFoldList[id]) {
                     this.$nextTick(() => {
                         ref = this.$refs[id][0]
                         ref.setVisWidth()
-                        this.$emit('openPlugin', id, ref)
+                        this.getLog(ref, postData)
                     })
-                } else {
-                    this.$emit('closePlugin', id)
                 }
+            },
+
+            getLog (ref, postData) {
+                let logMethod = this.getAfterLog
+                if (postData.lineNo <= 0) logMethod = this.getInitLog
+
+                logMethod(postData).then((res) => {
+                    if (this.closeTags.includes(postData.tag)) return
+
+                    res = res.data || {}
+                    if (res.status !== 0) {
+                        let errMessage
+                        switch (res.status) {
+                            case 1:
+                                errMessage = this.$t('history.logEmpty')
+                                break
+                            case 2:
+                                errMessage = this.$t('history.logClear')
+                                break
+                            case 3:
+                                errMessage = this.$t('history.logClose')
+                                break
+                            default:
+                                errMessage = this.$t('history.logErr')
+                                break
+                        }
+                        ref.handleApiErr(errMessage)
+                        return
+                    }
+
+                    const logs = res.logs || []
+                    const lastLog = logs[logs.length - 1] || {}
+                    const lastLogNo = lastLog.lineNo || postData.lineNo - 1 || -1
+                    postData.lineNo = +lastLogNo + 1
+
+                    if (res.finished) {
+                        if (res.hasMore) {
+                            ref.addLogData(logs)
+                            setTimeout(() => this.getLog(ref, postData), 100)
+                        } else {
+                            ref.addLogData(logs)
+                        }
+                    } else {
+                        ref.addLogData(logs)
+                        setTimeout(() => this.getLog(ref, postData), 1000)
+                    }
+                }).catch((err) => {
+                    this.$bkMessage({ theme: 'error', message: err.message || err })
+                    ref.handleApiErr(err.message)
+                })
             },
 
             valuefilter (val) {
@@ -158,9 +223,12 @@
 </script>
 
 <style lang="scss" scoped>
-    .plugin-list {
-        height: calc(100% - 52px);
-        overflow: auto;
+    .job-log {
+        height: calc(100% - 59px);
+        .job-plugin-list-log {
+            height: 100%;
+            overflow: auto;
+        }
     }
     .plugin-item {
         color: #ffffff;

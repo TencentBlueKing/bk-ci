@@ -1,5 +1,5 @@
 <template>
-    <section :class="['scroll-home', `id-${id}`, { 'min-height': totalNumber <= 0, 'show-empty': hasCompleteInit }]" :style="`height: ${visHeight}px`" @mousewheel="handleWheel" @DOMMouseScroll="handleWheel">
+    <section :class="['scroll-home', `id-${id}`, { 'min-height': totalNumber <= 0, 'show-empty': hasCompleteInit }]" :style="`height: ${visHeight}px`" @mousewheel.prevent="handleWheel" @DOMMouseScroll.prevent="handleWheel">
         <template v-if="!isLogErr">
             <ul class="scroll-index scroll" :style="`top: ${-totalScrollHeight}px; width: ${indexWidth}px; height: ${ulHeight}px`">
                 <li class="scroll-item" :style="`height: ${itemHeight}px; top: ${item.top}px`" v-for="(item) in indexList" :key="item">
@@ -49,17 +49,11 @@
 </template>
 
 <script>
-    import language from './locale'
-
     export default {
         props: {
             itemHeight: {
                 type: Number,
                 default: 16
-            },
-            maxHeight: {
-                type: Number,
-                default: 0
             },
             id: {
                 type: String
@@ -95,7 +89,7 @@
                 isBottomMove: false,
                 curHoverIndex: -1,
                 hasCompleteInit: false,
-                errMessage: language('日志内容为空'),
+                errMessage: this.$t('execDetail.emptyLog'),
                 isLogErr: false
             }
         },
@@ -121,15 +115,17 @@
         },
 
         methods: {
-            language,
-
             clearSelection () {
                 window.getSelection().removeAllRanges()
             },
 
             setVisWidth () {
-                const mainEle = document.querySelector(`.${this.id}`)
+                const mainEle = document.querySelector(`.id-${this.id}`)
                 this.visWidth = mainEle.offsetWidth
+                let visHeight = mainEle.offsetHeight
+                const pluListEle = document.querySelector('.job-plugin-list-log')
+                if (pluListEle) visHeight = (pluListEle.offsetHeight || 500) - 80
+                this.maxVisHeight = visHeight
             },
 
             handleApiErr (errMessage) {
@@ -140,9 +136,10 @@
 
             resetData () {
                 this.totalNumber = 0
+                this.hasCompleteInit = false
                 this.indexList = []
                 this.listData = []
-                this.initStatus()
+                this.changeStatus()
                 this.worker.postMessage({ type: 'resetData', id: this.id })
             },
 
@@ -169,11 +166,9 @@
                 }
             },
 
-            initStatus () {
-                const mainEle = document.querySelector(`.id-${this.id}`)
-                let visHeight = mainEle.offsetHeight
+            changeStatus () {
                 this.totalHeight = this.totalNumber * this.itemHeight
-                if (this.maxHeight) visHeight = this.totalHeight > this.maxHeight ? this.maxHeight : this.totalHeight
+                const visHeight = this.totalHeight > this.maxVisHeight ? this.maxVisHeight : this.totalHeight
                 if (this.visHeight !== visHeight) {
                     this.visHeight = visHeight
                     const dpr = window.devicePixelRatio || 1
@@ -204,10 +199,11 @@
             resize (event) {
                 this.slowExec(() => {
                     const lastHeight = this.visHeight
-                    this.initStatus()
+                    this.setVisWidth()
+                    this.changeStatus()
                     this.minMapTop = this.visHeight / lastHeight * this.minMapTop
                     this.minNavTop = this.minMapTop * (this.visHeight - this.navHeight) / (this.mapHeight - this.visHeight / 8)
-                    
+
                     this.totalScrollHeight = this.minMapTop / (this.mapHeight - this.visHeight / 8) * (this.totalHeight - this.visHeight)
                     this.getListData()
                 })
@@ -250,7 +246,7 @@
                 const downPreDefault = lastIndex.listIndex + 1 < this.totalNumber || scrollEle.scrollTop + scrollEle.offsetHeight >= scrollEle.scrollHeight
                 const upPreDefault = firstIndex.listIndex > 0 || scrollEle.scrollTop <= 0
                 const shouldPreDefault = deltaY < 0 ? downPreDefault : upPreDefault
-                if (shouldPreDefault) event.preventDefault()
+                if (!shouldPreDefault) scrollEle.scrollTop += deltaY * -80
 
                 if (this.itemHeight * this.totalNumber <= this.visHeight) return
                 let dis = deltaY * -(this.itemHeight * 3)
@@ -344,7 +340,7 @@
             freshDataScrollBottom (data) {
                 this.totalNumber = data.number
                 this.indexWidth = (Math.log10(this.totalNumber) + 1) * 7
-                this.initStatus()
+                this.changeStatus()
                 this.scrollPageByIndex(this.totalNumber - this.itemNumber + 1)
             },
 
@@ -355,7 +351,7 @@
                 const oldVisHeight = this.visHeight
                 this.totalNumber = data.number
                 this.indexWidth = (Math.log10(this.totalNumber) + 1) * 7
-                this.initStatus()
+                this.changeStatus()
                 this.getNumberChangeList({ oldNumber, oldItemNumber, oldMapHeight, oldVisHeight })
             },
 
@@ -521,7 +517,7 @@
         }
         .list-empty {
             position: absolute;
-            background: url('./assets/png/empty.png') center no-repeat;
+            background: url('../../../images/empty.png') center no-repeat;
             background-size: contain;
             height: 80px;
             width: 220px;
