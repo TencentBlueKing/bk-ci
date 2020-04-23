@@ -40,8 +40,6 @@ import com.tencent.devops.store.pojo.common.KEY_PUB_TIME
 import com.tencent.devops.store.pojo.common.KEY_UPDATE_TIME
 import com.tencent.devops.store.pojo.common.KEY_VERSION_LOG_CONTENT
 import com.tencent.devops.store.pojo.common.PASS
-import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
-import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.image.enums.CategoryTypeEnum
 import com.tencent.devops.store.pojo.image.enums.ImageAgentTypeEnum
 import com.tencent.devops.store.pojo.image.enums.ImageRDTypeEnum
