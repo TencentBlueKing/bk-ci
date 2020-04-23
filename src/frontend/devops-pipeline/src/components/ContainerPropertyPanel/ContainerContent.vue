@@ -347,6 +347,7 @@
                 return getContainerApps(baseOS)
             },
             showDependencies () {
+                if (this.buildResourceType === 'MACOS') return false
                 const buildType = this.buildResourceTypeList.find(bt => bt.type === this.buildResourceType)
                 return this.apps && buildType && buildType.enableApp
             },
