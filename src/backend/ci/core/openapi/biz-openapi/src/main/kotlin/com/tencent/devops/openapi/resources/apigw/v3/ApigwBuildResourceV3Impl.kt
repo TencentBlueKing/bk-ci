@@ -36,6 +36,7 @@ import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.process.pojo.BuildHistoryWithVars
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.BuildManualStartupInfo
+import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -59,6 +60,24 @@ class ApigwBuildResourceV3Impl @Autowired constructor(
         )
     }
 
+    override fun detail(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String
+    ): Result<ModelDetail> {
+        logger.info("get build detail: the build($buildId) of pipeline($pipelineId) of project($projectId) by user($userId)")
+        return client.get(ServiceBuildResource::class).getBuildDetail(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            channelCode = ChannelCode.BS
+        )
+    }
+
     override fun getHistoryBuild(
         appCode: String?,
         apigwType: String?,
@@ -78,6 +97,7 @@ class ApigwBuildResourceV3Impl @Autowired constructor(
             channelCode = ChannelCode.BS
         )
     }
+
 
     override fun start(
         appCode: String?,

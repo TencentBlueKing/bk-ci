@@ -23,33 +23,15 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.openapi.resources.apigw.v2
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.openapi.api.apigw.v2.ApigwMarketTemplateResourceV2
-import com.tencent.devops.store.api.template.ServiceTemplateResource
-import com.tencent.devops.store.pojo.template.InstallTemplateReq
-import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
+package com.tencent.devops.openapi
 
-@RestResource
-class ApigwMarketTemplateResourceV2Impl @Autowired constructor(
-    private val client: Client
-) : ApigwMarketTemplateResourceV2 {
+import com.tencent.devops.common.service.MicroService
+import com.tencent.devops.common.service.MicroServiceApplication
 
-    override fun installTemplateFromStore(
-        appCode: String?,
-        apigwType: String?,
-        userId: String,
-        installTemplateReq: InstallTemplateReq
-    ): Result<Boolean> {
-        // 可见与可安装鉴权在store服务marketTemplateService中已实现
-        return client.get(ServiceTemplateResource::class).installTemplate(userId, installTemplateReq)
-    }
+@MicroService
+class Application
 
-    companion object {
-        private val logger = LoggerFactory.getLogger(ApigwMarketTemplateResourceV2Impl::class.java)
-    }
+fun main(args: Array<String>) {
+    MicroServiceApplication.run(Application::class, args)
 }
