@@ -62,6 +62,7 @@ class ImageBuildResourceServiceImpl @Autowired constructor(
     private val logger = LoggerFactory.getLogger(ImageBuildResourceServiceImpl::class.java)
 
     override fun getDefaultBuildResource(buildType: BuildType): Any? {
+        logger.info("Input(${buildType.name})")
         return if (buildType == BuildType.DOCKER || buildType == BuildType.IDC || buildType == BuildType.PUBLIC_DEVCLOUD) {
             val record = businessConfigDao.get(dslContext, BusinessEnum.BUILD_TYPE.name, "defaultBuildResource", buildType.name)
             if (record == null) {
