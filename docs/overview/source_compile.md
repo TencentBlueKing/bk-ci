@@ -2,28 +2,26 @@
 
 ## Frontend前端代码编译
 
-### 系统要求
+蓝鲸ci前端（frontend目录下）, common-lib和svg-sprites为项目依赖的静态资源，其余目录均为vue的spa工程，其中devops-nav为主入口，其它子服务以Iframe 或 UMD 的方式接入
+
+## 系统要求
 
 nodejs版本 8.0.0及以上
 
-### 编译
+## 安装说明
 
-- 打包并部署相应的vue工程
-  依次进入到devops-nav、devops-pipeline、devops-codelib、devops-environment、devops-atomstore、devops-ticket目录，在每个目录下均
-
+- 1、打包并部署相应的vue工程
+进入到src/frontend目录下
 ```
-# 先执行
-npm install --user=root && npm rebuild node-sass
-# 再执行
-npm run public:external
+# 先全局安装yarn
+npm install -g yarn
+# 然后执行install
+yarn install
+# 然后安装每个子服务的依赖
+yarn start
+# 最后执行打包命令
+yarn public
 ```
-
-(如果在install时遇到无法安装node-sass和phantomjs依赖，可选择配置国内镜像源)
-(如果在执行npm run public:external过程中有遇到 Cannot read property 'range' of null 的报错，可尝试将对应工程package.json中的babel-eslint依赖的版本设置成 "babel-eslint": "^8.0.1")
-
-执行完这两条命令后，每个目录下均会生成一个dist文件夹，把相应的dist文件夹重命名后放置到相应的部署目录即可
-
-
 
 ## 网关代码
 
