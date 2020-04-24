@@ -24,20 +24,11 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.controller
+package com.tencent.devops.dispatch.pojo
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.dispatch.api.op.OpDockerBuildResource
-import com.tencent.devops.dispatch.service.DockerHostBuildService
-import org.springframework.beans.factory.annotation.Autowired
-
-@RestResource
-class OpDockerBuildResourceImpl @Autowired constructor(private val dockerHostBuildService: DockerHostBuildService)
-    : OpDockerBuildResource {
-
-    override fun enable(pipelineId: String, vmSeqId: Int?, enable: Boolean): Result<Boolean> {
-        dockerHostBuildService.enable(pipelineId, vmSeqId, enable)
-        return Result(true)
-    }
-}
+data class DockerHostLoadConfig(
+    val cpuLoadThreshold: Int,
+    val memLoadThreshold: Int,
+    val diskLoadThreshold: Int,
+    val diskIOLoadThreshold: Int
+)
