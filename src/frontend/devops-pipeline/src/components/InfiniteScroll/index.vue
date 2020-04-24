@@ -1,5 +1,5 @@
 <template>
-    <div>
+    <div style="height: 100%;">
         <slot v-bind="{ list, isLoading, isLoadingMore, queryList, setScrollTop, animateScroll, totals }"></slot>
         <div v-if="isLoadingMore" class="loading-more" slot="append"><i class="devops-icon icon-circle-2-1 spin-icon"></i><span>{{ $t('loadingTips') }}</span></div>
     </div>
