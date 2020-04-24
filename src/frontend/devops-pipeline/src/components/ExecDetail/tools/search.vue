@@ -22,7 +22,7 @@
         <section class="tool-more" v-bk-clickoutside="closeShowMore">
             <logo name="more" class="more-icon" @click.native="showMore = !showMore"></logo>
             <ul class="more-list" v-if="showMore">
-                <li class="more-button" @click="showLogTime">{{ $t('execDetail.showTime') }}</li>
+                <li class="more-button" @click="showLogTime">{{ showTime ? $t('execDetail.hideTime') : $t('execDetail.showTime') }}</li>
                 <a download class="more-button" @click="downLoad" :href="downLoadLink">{{ $t('execDetail.downLoadLog') }}</a>
             </ul>
         </section>
