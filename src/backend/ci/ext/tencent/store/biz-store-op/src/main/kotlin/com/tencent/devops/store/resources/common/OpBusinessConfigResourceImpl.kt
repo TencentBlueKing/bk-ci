@@ -43,7 +43,7 @@ class OpBusinessConfigResourceImpl @Autowired constructor(
         return Result(businessConfigService.add(businessConfigRequest))
     }
 
-    override fun update(id: String, businessConfigRequest: BusinessConfigRequest): Result<Int> {
+    override fun update(id: Int, businessConfigRequest: BusinessConfigRequest): Result<Int> {
         return Result(businessConfigService.update(id, businessConfigRequest))
     }
 

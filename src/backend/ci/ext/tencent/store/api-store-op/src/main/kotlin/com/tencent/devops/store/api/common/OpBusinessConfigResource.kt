@@ -63,7 +63,7 @@ interface OpBusinessConfigResource {
     fun update(
         @ApiParam("业务配置ID", required = true)
         @PathParam("id")
-        id: String,
+        id: Int,
         @ApiParam(value = "业务配置信息请求报文体", required = true)
         businessConfigRequest: BusinessConfigRequest
     ): Result<Int>
