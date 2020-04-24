@@ -75,6 +75,7 @@ class SystemDockerEnvGenerator @Autowired constructor(
             Env(key = ENV_KEY_AGENT_SECRET_KEY, value = dockerHostBuildInfo.secretKey),
             Env(key = ENV_KEY_GATEWAY, value = gateway),
             Env(key = "TERM", value = "xterm-256color"),
+            Env(key = "pool_no", value = dockerHostBuildInfo.poolNo.toString()),
             Env(key = "landun_env", value = dockerHostConfig.landunEnv ?: "prod"),
             Env(key = ENV_DOCKER_HOST_IP, value = hostIp),
             Env(key = ENV_DOCKER_HOST_PORT, value = commonConfig.serverPort.toString()),

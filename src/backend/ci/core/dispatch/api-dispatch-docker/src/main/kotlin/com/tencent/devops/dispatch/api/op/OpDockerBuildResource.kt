@@ -24,7 +24,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.api
+package com.tencent.devops.dispatch.api.op
 
 import com.tencent.devops.common.api.pojo.Result
 import io.swagger.annotations.Api

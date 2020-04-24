@@ -24,20 +24,37 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.controller
+package com.tencent.devops.dispatch.api.builds
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.dispatch.api.op.OpDockerBuildResource
-import com.tencent.devops.dispatch.service.DockerHostBuildService
-import org.springframework.beans.factory.annotation.Autowired
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import io.swagger.annotations.ApiResponse
+import io.swagger.annotations.ApiResponses
+import javax.ws.rs.Consumes
+import javax.ws.rs.GET
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
+import javax.ws.rs.core.MediaType
+import javax.ws.rs.core.Response
 
-@RestResource
-class OpDockerBuildResourceImpl @Autowired constructor(private val dockerHostBuildService: DockerHostBuildService)
-    : OpDockerBuildResource {
+@Api(tags = ["BUILD_DOCKER"], description = "构建-构建执行DOCKER资源")
+@Path("/build/dockers")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface BuildDockerResource {
 
-    override fun enable(pipelineId: String, vmSeqId: Int?, enable: Boolean): Result<Boolean> {
-        dockerHostBuildService.enable(pipelineId, vmSeqId, enable)
-        return Result(true)
-    }
+    @ApiOperation("下载构建执行器")
+    @GET
+    @Path("/")
+    @Produces(MediaType.APPLICATION_OCTET_STREAM)
+    @ApiResponses(
+            ApiResponse(code = 304, message = "本地的构建执行器已是最新，无需下载")
+    )
+    fun download(
+        @ApiParam("本地eTag标签", required = false)
+        @QueryParam("eTag")
+        eTag: String?
+    ): Response
 }
