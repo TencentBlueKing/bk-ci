@@ -80,9 +80,16 @@ class DockerHostUtils @Autowired constructor(
 
         // 判断流水线上次关联的hostTag，如果存在并且构建机容量符合第二档负载则优先分配（兼容旧版本策略，降低版本更新时被重新洗牌的概率）
         val lastHostIp = redisUtils.getDockerBuildLastHost(pipelineId, vmSeqId)
+        // 清除旧关系
+        redisUtils.deleteDockerBuildLastHost(pipelineId, vmSeqId)
         if (lastHostIp != null && lastHostIp.isNotEmpty()) {
             val lastHostIpInfo = pipelineDockerIpInfoDao.getDockerIpInfo(dslContext, lastHostIp)
+            if (lastHostIpInfo != null && specialIpSet.isNotEmpty() && specialIpSet.contains(lastHostIp)) {
+                return Pair(lastHostIp, lastHostIpInfo.dockerHostPort)
+            }
+
             if (lastHostIpInfo != null &&
+                specialIpSet.isEmpty() &&
                 lastHostIpInfo.enable &&
                 lastHostIpInfo.diskLoad < dockerHostLoadConfigTriple.second.diskLoadThreshold &&
                 lastHostIpInfo.memLoad < dockerHostLoadConfigTriple.second.memLoadThreshold &&
