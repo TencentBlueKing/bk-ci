@@ -63,6 +63,19 @@ class BusinessConfigDao {
         }
     }
 
+    fun updateById(dslContext: DSLContext, id: Int, request: BusinessConfigRequest): Int {
+        with(TBusinessConfig.T_BUSINESS_CONFIG) {
+            return dslContext.update(this)
+                .set(BUSINESS, request.business.name)
+                .set(FEATURE, request.feature)
+                .set(BUSINESS_VALUE, request.businessValue)
+                .set(CONFIG_VALUE, request.configValue)
+                .set(DESCRIPTION, request.description)
+                .where(ID.eq(id))
+                .execute()
+        }
+    }
+
     fun update(dslContext: DSLContext, request: BusinessConfigRequest): Int {
         with(TBusinessConfig.T_BUSINESS_CONFIG) {
             return dslContext.update(this)
