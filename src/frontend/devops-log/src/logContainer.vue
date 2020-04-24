@@ -25,7 +25,7 @@
                     <section class="tool-more" v-bk-clickoutside="closeShowMore">
                         <img src="./assets/svg/more.svg" class="more-icon" @click="showMore = !showMore">
                         <ul class="more-list" v-if="showMore">
-                            <li class="more-button" @click="showLogTime">{{ language('显示时间') }}</li>
+                            <li class="more-button" @click="showLogTime">{{ showTime ? language('隐藏时间戳') : language('显示时间戳') }}</li>
                             <a download class="more-button" @click="downLoad" :href="downLoadLink">{{ language('下载日志') }}</a>
                         </ul>
                     </section>

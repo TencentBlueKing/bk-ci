@@ -124,7 +124,6 @@
                 this.$set(this.curFoldList, [id], !this.curFoldList[id])
                 let ref = this.$refs[id]
                 let postData = this.logPostData[id]
-                console.log(plugin)
                 if (!postData) {
                     postData = this.logPostData[id] = {
                         projectId: this.$route.params.projectId,
