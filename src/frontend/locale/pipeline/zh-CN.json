@@ -93,7 +93,8 @@
         "log": "日志",
         "setting": "配置",
         "execTime": "重试次数",
-        "showTime": "显示时间",
+        "showTime": "显示时间戳",
+        "hideTime": "隐藏时间戳",
         "downLoadLog": "下载日志",
         "emptyLog": "日志内容为空"
     },
