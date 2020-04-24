@@ -16,7 +16,7 @@ class BlueShieldWebSocket {
         this.connectErrTime = 1
         this.sendErrTime = 1
         this.hasConnect = false
-        this.userName = /bk_uid=([^;]+);/.exec(document.cookie)[1]
+        this.userName = window.userInfo && window.userInfo.username ? window.userInfo.username : 'bkDevops'
         this.uuid = uuid()
         this.stompClient = {}
 
