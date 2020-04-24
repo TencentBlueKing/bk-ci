@@ -78,7 +78,7 @@ interface OpBusinessConfigResource {
     @Path("/{id}")
     fun getBusinessConfigById(
         @ApiParam("业务配置ID", required = true)
-        @QueryParam("id")
+        @PathParam("id")
         id: Int
     ): Result<BusinessConfigResponse?>
 
