@@ -53,11 +53,16 @@ class ApiAspect(
      *
      * @param jp
      */
-    @Before("execution(* com.tencent.devops.openapi.resources.apigw.v3.*.*(..))"
+    @Before(
+        "execution(* com.tencent.devops.openapi.resources.apigw.*.*(..))" +
+            "||execution(* com.tencent.devops.openapi.resources.apigw.v2.*.*(..))" +
+            "||execution(* com.tencent.devops.openapi.resources.apigw.v3.*.*(..))" +
+            "||execution(* com.tencent.devops.openapi.resources.apigw.v2.app.*.*(..))" +
+            "||execution(* com.tencent.devops.openapi.resources.apigw.v2.user.*.*(..))"
     ) // 所有controller包下面的所有方法的所有参数
     fun beforeMethod(jp: JoinPoint) {
         if(!apiGatewayUtil.isAuth()) {
-            logger.info("Openapi不需要鉴权。")
+            logger.info("Openapi非apigw接口，不需要鉴权。")
             return
         }
 
