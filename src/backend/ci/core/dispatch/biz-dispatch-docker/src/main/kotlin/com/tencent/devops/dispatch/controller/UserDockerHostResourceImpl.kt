@@ -41,7 +41,6 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.dispatch.api.user.UserDockerHostResource
 import com.tencent.devops.dispatch.dao.PipelineDockerBuildDao
 import com.tencent.devops.dispatch.dao.PipelineDockerDebugDao
-import com.tencent.devops.dispatch.dao.PipelineDockerPoolDao
 import com.tencent.devops.dispatch.dao.PipelineDockerTaskSimpleDao
 import com.tencent.devops.dispatch.pojo.ContainerInfo
 import com.tencent.devops.dispatch.pojo.DebugStartParam
@@ -64,7 +63,6 @@ class UserDockerHostResourceImpl @Autowired constructor(
     private val pipelineDockerDebugDao: PipelineDockerDebugDao,
     private val pipelineDockerBuildDao: PipelineDockerBuildDao,
     private val pipelineDockerTaskSimpleDao: PipelineDockerTaskSimpleDao,
-    private val pipelineDockerPoolDao: PipelineDockerPoolDao,
     private val dockerHostUtils: DockerHostUtils,
     private val dslContext: DSLContext
 ) : UserDockerHostResource {
@@ -207,12 +205,12 @@ class UserDockerHostResourceImpl @Autowired constructor(
         checkParam(userId, projectId, pipelineId, vmSeqId)
 
         validPipelinePermission(
-            userId,
-            AuthResourceType.PIPELINE_DEFAULT,
-            projectId,
-            pipelineId,
-            AuthPermission.EDIT,
-            "用户($userId)无权限在工程($projectId)下编辑流水线($pipelineId)"
+            userId = userId,
+            authResourceType = AuthResourceType.PIPELINE_DEFAULT,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            permission = AuthPermission.EDIT,
+            message = "用户($userId)无权限在工程($projectId)下编辑流水线($pipelineId)"
         )
     }
 

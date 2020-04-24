@@ -76,12 +76,12 @@ class DockerDispatcher @Autowired constructor(
     override fun startUp(pipelineAgentStartupEvent: PipelineAgentStartupEvent) {
         val dockerDispatch = pipelineAgentStartupEvent.dispatchType as DockerDispatchType
         LogUtils.addLine(
-            rabbitTemplate,
-            pipelineAgentStartupEvent.buildId,
-            "Start docker ${dockerDispatch.dockerBuildVersion} for the build",
-            VMUtils.genStartVMTaskId(pipelineAgentStartupEvent.vmSeqId),
-            pipelineAgentStartupEvent.containerHashId,
-            pipelineAgentStartupEvent.executeCount ?: 1
+            rabbitTemplate = rabbitTemplate,
+            buildId = pipelineAgentStartupEvent.buildId,
+            message = "Start docker ${dockerDispatch.dockerBuildVersion} for the build",
+            tag = VMUtils.genStartVMTaskId(pipelineAgentStartupEvent.vmSeqId),
+            jobId = pipelineAgentStartupEvent.containerHashId,
+            executeCount = pipelineAgentStartupEvent.executeCount ?: 1
         )
 
         var poolNo = 0
@@ -91,9 +91,9 @@ class DockerDispatcher @Autowired constructor(
             logger.info("${pipelineAgentStartupEvent.projectId}| specialIpSet: $specialIpSet")
 
             val taskHistory = pipelineDockerTaskSimpleDao.getByPipelineIdAndVMSeq(
-                dslContext,
-                pipelineAgentStartupEvent.pipelineId,
-                pipelineAgentStartupEvent.vmSeqId
+                dslContext = dslContext,
+                pipelineId = pipelineAgentStartupEvent.pipelineId,
+                vmSeq = pipelineAgentStartupEvent.vmSeqId
             )
 
             val dockerPair: Pair<String, Int>
@@ -116,16 +116,16 @@ class DockerDispatcher @Autowired constructor(
             } else {
                 // 第一次构建，根据负载条件选择可用IP
                 dockerPair = dockerHostUtils.getAvailableDockerIpWithSpecialIps(
-                    pipelineAgentStartupEvent.projectId,
-                    pipelineAgentStartupEvent.pipelineId,
-                    pipelineAgentStartupEvent.vmSeqId,
-                    specialIpSet
+                    projectId = pipelineAgentStartupEvent.projectId,
+                    pipelineId = pipelineAgentStartupEvent.pipelineId,
+                    vmSeqId = pipelineAgentStartupEvent.vmSeqId,
+                    specialIpSet = specialIpSet
                 )
                 pipelineDockerTaskSimpleDao.create(
-                    dslContext,
-                    pipelineAgentStartupEvent.pipelineId,
-                    pipelineAgentStartupEvent.vmSeqId,
-                    dockerPair.first
+                    dslContext = dslContext,
+                    pipelineId = pipelineAgentStartupEvent.pipelineId,
+                    vmSeq = pipelineAgentStartupEvent.vmSeqId,
+                    idcIp = dockerPair.first
                 )
             }
 
