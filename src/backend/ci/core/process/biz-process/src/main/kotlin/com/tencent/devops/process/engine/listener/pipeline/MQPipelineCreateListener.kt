@@ -46,7 +46,6 @@ import com.tencent.devops.common.websocket.pojo.WebSocketType
 import com.tencent.devops.process.engine.control.CallBackControl
 import com.tencent.devops.process.engine.pojo.PipelineWebhook
 import com.tencent.devops.process.engine.pojo.event.PipelineCreateEvent
-import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineWebhookService
 import com.tencent.devops.process.websocket.page.EditPageBuild
 import com.tencent.devops.process.websocket.push.WebHookWebsocketPush
@@ -60,7 +59,6 @@ import org.springframework.stereotype.Component
  */
 @Component
 class MQPipelineCreateListener @Autowired constructor(
-    private val pipelineRuntimeService: PipelineRuntimeService,
     private val pipelineWebhookService: PipelineWebhookService,
     private val webSocketDispatcher: WebSocketDispatcher,
     private val redisOperation: RedisOperation,
@@ -71,7 +69,6 @@ class MQPipelineCreateListener @Autowired constructor(
 
     override fun run(event: PipelineCreateEvent) {
         if (event.source == ("create_pipeline")) {
-            pipelineRuntimeService.createPipelineBuildSummary(event.projectId, event.pipelineId, event.buildNo)
             logger.info("[${event.pipelineId}] createPipelineBuildSummary!")
             callBackControl.pipelineCreateEvent(projectId = event.projectId, pipelineId = event.pipelineId)
         }
