@@ -219,10 +219,10 @@ class DockerHostClient @Autowired constructor(
                     logger.info("[${event.projectId}|${event.pipelineId}|${event.buildId}|$retryTime] update container: $containerId")
                     // 更新
                     pipelineDockerBuildDao.updateContainerId(
-                        dslContext,
-                        event.buildId,
-                        Integer.valueOf(event.vmSeqId),
-                        containerId
+                        dslContext = dslContext,
+                        buildId = event.buildId,
+                        vmSeqId = Integer.valueOf(event.vmSeqId),
+                        containerId = containerId
                     )
                 }
                 response["status"] == 1 -> {
