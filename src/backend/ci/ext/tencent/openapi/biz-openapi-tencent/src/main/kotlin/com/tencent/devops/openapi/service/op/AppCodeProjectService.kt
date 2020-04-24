@@ -47,7 +47,7 @@ class AppCodeProjectService(
         var result = false
         projectIdList.forEach {
             val projectIdTmp = it.trim()
-            if(projectIdTmp.isNotBlank()) {
+            if (projectIdTmp.isNotBlank()) {
                 result = appCodeProjectDao.add(dslContext, userName, appCode, it)
                 if (!result) {
                     return result
