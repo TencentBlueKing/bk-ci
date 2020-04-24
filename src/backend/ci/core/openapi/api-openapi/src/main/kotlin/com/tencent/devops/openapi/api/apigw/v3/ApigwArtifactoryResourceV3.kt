@@ -22,7 +22,7 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["OPENAPI_ARTIFACTORY_V2"], description = "OPENAPI-构建产物资源")
+@Api(tags = ["OPENAPI_ARTIFACTORY_V3"], description = "OPENAPI-构建产物资源")
 @Path("/{apigwType:apigw-user|apigw-app|apigw}/v3/")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
