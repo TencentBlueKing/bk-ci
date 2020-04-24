@@ -63,7 +63,7 @@ class ImageBuildResourceServiceImpl @Autowired constructor(
 
     override fun getDefaultBuildResource(buildType: BuildType): Any? {
         logger.info("Input(${buildType.name})")
-        if (buildType == BuildType.DOCKER || buildType == BuildType.IDC || buildType == BuildType.PUBLIC_DEVCLOUD) {
+        if (buildType.name == BuildType.DOCKER.name || buildType.name == BuildType.IDC.name || buildType.name == BuildType.PUBLIC_DEVCLOUD.name) {
             val record = businessConfigDao.get(dslContext, BusinessEnum.BUILD_TYPE.name, "defaultBuildResource", buildType.name)
             if (record == null) {
                 logger.warn("defaultBuildResource of ${buildType.name} not configed, plz config in op")
