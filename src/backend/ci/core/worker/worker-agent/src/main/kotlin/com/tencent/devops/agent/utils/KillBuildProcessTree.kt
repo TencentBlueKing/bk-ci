@@ -27,6 +27,7 @@
 package com.tencent.devops.agent.utils
 
 import com.tencent.devops.common.api.enums.OSType
+import com.tencent.devops.dispatch.pojo.thirdPartyAgent.AgentBuildBaseInfo
 import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.process.ProcessTree
 import org.slf4j.LoggerFactory
@@ -58,6 +59,20 @@ object KillBuildProcessTree {
             -1
         } finally {
             reader?.close()
+        }
+    }
+
+    fun addKillProcessTreeHook(projectId: String, buildId: String, vmSeqId: String) {
+        try {
+            Runtime.getRuntime().addShutdownHook(object : Thread() {
+                override fun run() {
+                    logger.info("start kill process tree")
+                    val killedProcessIds = killProcessTree(projectId, buildId, vmSeqId)
+                    logger.info("kill process tree done, ${killedProcessIds.size} process(s) killed, pid(s): $killedProcessIds")
+                }
+            })
+        } catch (t: Throwable) {
+            logger.warn("Fail to add shutdown hook", t)
         }
     }
 
