@@ -442,6 +442,7 @@ class PipelineRepositoryService constructor(
                     )
                 }
             }
+            pipelineBuildSummaryDao.create(dslContext, projectId, pipelineId, buildNo)
             pipelineModelTaskDao.batchSave(transactionContext, modelTasks)
         }
 
