@@ -36,19 +36,19 @@ class DispatchDockerService @Autowired constructor(
             val dockerIpInfoVOList = mutableListOf<DockerIpInfoVO>()
             dockerIpList.forEach {
                 dockerIpInfoVOList.add(DockerIpInfoVO(
-                    it.id,
-                    it.dockerIp,
-                    it.dockerHostPort,
-                    it.capacity,
-                    it.usedNum,
-                    it.cpuLoad,
-                    it.memLoad,
-                    it.diskLoad,
-                    it.diskIoLoad,
-                    it.enable,
-                    it.grayEnv,
-                    it.specialOn,
-                    it.gmtCreate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
+                    id = it.id,
+                    dockerIp = it.dockerIp,
+                    dockerHostPort = it.dockerHostPort,
+                    capacity = it.capacity,
+                    usedNum = it.usedNum,
+                    averageCpuLoad = it.cpuLoad,
+                    averageMemLoad = it.memLoad,
+                    averageDiskLoad = it.diskLoad,
+                    averageDiskIOLoad = it.diskIoLoad,
+                    enable = it.enable,
+                    grayEnv = it.grayEnv,
+                    specialOn = it.specialOn,
+                    createTime = it.gmtCreate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
                 ))
             }
 
@@ -63,18 +63,18 @@ class DispatchDockerService @Autowired constructor(
         logger.info("$userId create IDC IP $dockerIpInfoVO")
         try {
             pipelineDockerIPInfoDao.create(
-                dslContext,
-                dockerIpInfoVO.dockerIp,
-                dockerIpInfoVO.dockerHostPort,
-                dockerIpInfoVO.capacity,
-                dockerIpInfoVO.usedNum,
-                dockerIpInfoVO.averageCpuLoad,
-                dockerIpInfoVO.averageMemLoad,
-                dockerIpInfoVO.averageDiskLoad,
-                dockerIpInfoVO.averageDiskIOLoad,
-                dockerIpInfoVO.enable,
-                dockerIpInfoVO.grayEnv,
-                dockerIpInfoVO.specialOn
+                dslContext = dslContext,
+                dockerIp = dockerIpInfoVO.dockerIp,
+                dockerHostPort = dockerIpInfoVO.dockerHostPort,
+                capacity = dockerIpInfoVO.capacity,
+                used = dockerIpInfoVO.usedNum,
+                cpuLoad = dockerIpInfoVO.averageCpuLoad,
+                memLoad = dockerIpInfoVO.averageMemLoad,
+                diskLoad = dockerIpInfoVO.averageDiskLoad,
+                diskIOLoad = dockerIpInfoVO.averageDiskIOLoad,
+                enable = dockerIpInfoVO.enable,
+                grayEnv = dockerIpInfoVO.grayEnv,
+                specialOn = dockerIpInfoVO.specialOn
             )
             return true
         } catch (e: Exception) {
@@ -87,16 +87,16 @@ class DispatchDockerService @Autowired constructor(
         logger.info("$userId update Docker IP id: $dockerIpInfoId dockerIpInfoVO: $dockerIpInfoVO")
         try {
             pipelineDockerIPInfoDao.update(
-                dslContext,
-                dockerIpInfoVO.dockerIp,
-                dockerIpInfoVO.usedNum,
-                dockerIpInfoVO.averageCpuLoad,
-                dockerIpInfoVO.averageMemLoad,
-                dockerIpInfoVO.averageDiskLoad,
-                dockerIpInfoVO.averageDiskIOLoad,
-                dockerIpInfoVO.enable,
-                dockerIpInfoVO.grayEnv,
-                dockerIpInfoVO.specialOn
+                dslContext = dslContext,
+                idcIp = dockerIpInfoVO.dockerIp,
+                used = dockerIpInfoVO.usedNum,
+                cpuLoad = dockerIpInfoVO.averageCpuLoad,
+                memLoad = dockerIpInfoVO.averageMemLoad,
+                diskLoad = dockerIpInfoVO.averageDiskLoad,
+                diskIOLoad = dockerIpInfoVO.averageDiskIOLoad,
+                enable = dockerIpInfoVO.enable,
+                grayEnv = dockerIpInfoVO.grayEnv,
+                specialOn = dockerIpInfoVO.specialOn
             )
             return true
         } catch (e: Exception) {
