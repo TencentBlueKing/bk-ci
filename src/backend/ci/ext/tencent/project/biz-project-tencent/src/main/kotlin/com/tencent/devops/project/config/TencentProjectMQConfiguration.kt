@@ -26,16 +26,11 @@
 
 package com.tencent.devops.project.config
 
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
+import com.tencent.devops.common.auth.api.BSAuthTokenApi
+import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
 import com.tencent.devops.project.listener.ProjectEventListener
-import org.springframework.amqp.core.BindingBuilder
-import org.springframework.amqp.core.FanoutExchange
-import org.springframework.amqp.core.Queue
-import org.springframework.amqp.rabbit.connection.ConnectionFactory
-import org.springframework.amqp.rabbit.core.RabbitAdmin
-import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer
-import org.springframework.amqp.rabbit.listener.adapter.MessageListenerAdapter
-import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter
+import com.tencent.devops.project.listener.TencentProjectEventListener
+import com.tencent.devops.project.service.ProjectPaasCCService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
@@ -43,124 +38,20 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.Ordered
 
+@Suppress("UNUSED")
 @Configuration
 @ConditionalOnWebApplication
 @AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
 class TencentProjectMQConfiguration {
 
     @Bean
-    fun rabbitAdmin(connectionFactory: ConnectionFactory): RabbitAdmin {
-        return RabbitAdmin(connectionFactory)
-    }
-
-    @Bean
-    fun projectCreateQueue() = Queue(MQ.QUEUE_PROJECT_CREATE_EVENT)
-
-    @Bean
-    fun projectUpdateQueue() = Queue(MQ.QUEUE_PROJECT_UPDATE_EVENT)
-
-    @Bean
-    fun projectUpdateLogoQueue() = Queue(MQ.QUEUE_PROJECT_UPDATE_LOGO_EVENT)
-
-    @Bean
-    fun projectCreateExchange(): FanoutExchange {
-        val fanoutExchange = FanoutExchange(MQ.EXCHANGE_PROJECT_CREATE_FANOUT, true, false)
-        fanoutExchange.isDelayed = true
-        return fanoutExchange
-    }
-
-    @Bean
-    fun projectUpdateExchange(): FanoutExchange {
-        val fanoutExchange = FanoutExchange(MQ.EXCHANGE_PROJECT_UPDATE_FANOUT, true, false)
-        fanoutExchange.isDelayed = true
-        return fanoutExchange
-    }
-
-    @Bean
-    fun projectUpdateLogoExchange(): FanoutExchange {
-        val fanoutExchange = FanoutExchange(MQ.EXCHANGE_PROJECT_UPDATE_LOGO_FANOUT, true, false)
-        fanoutExchange.isDelayed = true
-        return fanoutExchange
-    }
-
-    @Bean
-    fun projectCreateQueueBind(
-        @Autowired projectCreateQueue: Queue,
-        @Autowired projectCreateExchange: FanoutExchange
-    ) = BindingBuilder.bind(projectCreateQueue)
-            .to(projectCreateExchange)
-
-    @Bean
-    fun projectUpdateQueueBind(
-        @Autowired projectUpdateQueue: Queue,
-        @Autowired projectUpdateExchange: FanoutExchange
-    ) = BindingBuilder.bind(projectUpdateQueue)
-            .to(projectUpdateExchange)
-
-    @Bean
-    fun projectUpdateLogoQueueBind(
-        @Autowired projectUpdateLogoQueue: Queue,
-        @Autowired projectUpdateLogoExchange: FanoutExchange
-    ) = BindingBuilder.bind(projectUpdateLogoQueue)
-            .to(projectUpdateLogoExchange)
-
-    @Bean
-    fun projectCreateListenerContainer(
-        @Autowired connectionFactory: ConnectionFactory,
-        @Autowired projectCreateQueue: Queue,
-        @Autowired rabbitAdmin: RabbitAdmin,
-        @Autowired listener: ProjectEventListener,
-        @Autowired messageConverter: Jackson2JsonMessageConverter
-    ): SimpleMessageListenerContainer {
-        val container = SimpleMessageListenerContainer(connectionFactory)
-        container.setQueueNames(projectCreateQueue.name)
-        val concurrency = 10
-        container.setConcurrentConsumers(concurrency)
-        container.setMaxConcurrentConsumers(Math.max(5, concurrency))
-        container.setRabbitAdmin(rabbitAdmin)
-        val adapter = MessageListenerAdapter(listener, listener::execute.name)
-        adapter.setMessageConverter(messageConverter)
-        container.messageListener = adapter
-        return container
-    }
-
-    @Bean
-    fun projectUpdateListenerContainer(
-        @Autowired connectionFactory: ConnectionFactory,
-        @Autowired projectUpdateQueue: Queue,
-        @Autowired rabbitAdmin: RabbitAdmin,
-        @Autowired listener: ProjectEventListener,
-        @Autowired messageConverter: Jackson2JsonMessageConverter
-    ): SimpleMessageListenerContainer {
-        val container = SimpleMessageListenerContainer(connectionFactory)
-        container.setQueueNames(projectUpdateQueue.name)
-        val concurrency = 10
-        container.setConcurrentConsumers(concurrency)
-        container.setMaxConcurrentConsumers(Math.max(5, concurrency))
-        container.setRabbitAdmin(rabbitAdmin)
-        val adapter = MessageListenerAdapter(listener, listener::execute.name)
-        adapter.setMessageConverter(messageConverter)
-        container.messageListener = adapter
-        return container
-    }
-
-    @Bean
-    fun projectUpdateLogoListenerContainer(
-        @Autowired connectionFactory: ConnectionFactory,
-        @Autowired projectUpdateLogoQueue: Queue,
-        @Autowired rabbitAdmin: RabbitAdmin,
-        @Autowired listener: ProjectEventListener,
-        @Autowired messageConverter: Jackson2JsonMessageConverter
-    ): SimpleMessageListenerContainer {
-        val container = SimpleMessageListenerContainer(connectionFactory)
-        container.setQueueNames(projectUpdateLogoQueue.name)
-        val concurrency = 10
-        container.setConcurrentConsumers(concurrency)
-        container.setMaxConcurrentConsumers(Math.max(5, concurrency))
-        container.setRabbitAdmin(rabbitAdmin)
-        val adapter = MessageListenerAdapter(listener, listener::execute.name)
-        adapter.setMessageConverter(messageConverter)
-        container.messageListener = adapter
-        return container
-    }
+    fun projectEventListener(
+        @Autowired projectPaasCCService: ProjectPaasCCService,
+        @Autowired bsAuthTokenApi: BSAuthTokenApi,
+        @Autowired bsPipelineAuthServiceCode: BSPipelineAuthServiceCode
+    ): ProjectEventListener = TencentProjectEventListener(
+        projectPaasCCService = projectPaasCCService,
+        bsAuthTokenApi = bsAuthTokenApi,
+        bsPipelineAuthServiceCode = bsPipelineAuthServiceCode
+    )
 }

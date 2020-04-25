@@ -26,6 +26,7 @@
 
 package com.tencent.devops.scm.services
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.google.gson.JsonParser
 import com.tencent.devops.common.api.constant.CommonMessageCode
@@ -37,7 +38,6 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.script.CommonScriptUtils
 import com.tencent.devops.common.service.utils.MessageCodeUtil
-import com.tencent.devops.scm.pojo.Project
 import com.tencent.devops.repository.pojo.enums.GitAccessLevelEnum
 import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
@@ -53,15 +53,17 @@ import com.tencent.devops.repository.pojo.gitlab.GitlabFileInfo
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.scm.code.git.CodeGitOauthCredentialSetter
 import com.tencent.devops.scm.code.git.CodeGitUsernameCredentialSetter
-import com.tencent.devops.scm.code.git.api.GitOauthApi
 import com.tencent.devops.scm.code.git.api.GitBranch
 import com.tencent.devops.scm.code.git.api.GitBranchCommit
+import com.tencent.devops.scm.code.git.api.GitOauthApi
 import com.tencent.devops.scm.code.git.api.GitTag
 import com.tencent.devops.scm.code.git.api.GitTagCommit
 import com.tencent.devops.scm.config.GitConfig
 import com.tencent.devops.scm.exception.ScmException
 import com.tencent.devops.scm.pojo.CommitCheckRequest
 import com.tencent.devops.scm.pojo.GitRepositoryResp
+import com.tencent.devops.scm.pojo.OwnerInfo
+import com.tencent.devops.scm.pojo.Project
 import okhttp3.MediaType
 import okhttp3.Request
 import okhttp3.RequestBody
@@ -339,6 +341,43 @@ class GitService @Autowired constructor(
         } finally {
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to get the token")
         }
+    }
+
+    fun checkUserGitAuth(userId: String, gitProjectId: String): Boolean {
+        var page = 1
+        var dataSize: Int
+        do {
+            try {
+                val token = getToken(gitProjectId)
+                val url = "$gitCIOauthUrl/api/v3/projects/$gitProjectId/members?page=$page&per_page=100&access_token=${token.accessToken}"
+
+                var ownerList = listOf<OwnerInfo>()
+                val request = Request.Builder()
+                    .url(url)
+                    .get()
+                    .build()
+                OkhttpUtils.doHttp(request).use { response ->
+                    val body = response.body()!!.string()
+                    logger.info("Get gongfeng project members response body: $body")
+                    ownerList = JsonUtil.to(body, object : TypeReference<List<OwnerInfo>>() {})
+                }
+
+                if (ownerList.isEmpty()) {
+                    break
+                }
+                dataSize = ownerList.size
+                ownerList.forEach {
+                    if (userId == it.userName && it.accessLevel!! >= 15)
+                        return true
+                }
+                page++
+            } catch (e: Exception) {
+                logger.error("get project member list fail! project id: $gitProjectId", e)
+                return false
+            }
+        } while (dataSize >= 100)
+
+        return false
     }
 
     fun getGitCIFileContent(gitProjectId: Long, filePath: String, token: String, ref: String): String {

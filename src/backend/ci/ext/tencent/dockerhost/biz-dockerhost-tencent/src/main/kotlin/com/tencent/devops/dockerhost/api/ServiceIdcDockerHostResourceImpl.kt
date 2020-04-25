@@ -60,6 +60,7 @@ class ServiceIdcDockerHostResourceImpl @Autowired constructor(private val docker
             dockerHostBuildService.log(
                 buildId = dockerHostBuildInfo.buildId,
                 message = "构建环境启动成功，等待Agent启动...",
+                tag = dockerHostBuildInfo.containerId,
                 containerHashId = dockerHostBuildInfo.containerHashId
             )
             return Result(containerId)
@@ -68,6 +69,7 @@ class ServiceIdcDockerHostResourceImpl @Autowired constructor(private val docker
             dockerHostBuildService.log(
                 buildId = dockerHostBuildInfo.buildId,
                 message = "构建环境启动失败，镜像不存在, 镜像:${dockerHostBuildInfo.imageName}",
+                tag = dockerHostBuildInfo.containerId,
                 containerHashId = dockerHostBuildInfo.containerHashId
             )
             return Result(2, e.message, "")
@@ -76,6 +78,7 @@ class ServiceIdcDockerHostResourceImpl @Autowired constructor(private val docker
             dockerHostBuildService.log(
                 buildId = dockerHostBuildInfo.buildId,
                 message = "构建环境启动失败，错误信息:${e.message}",
+                tag = dockerHostBuildInfo.containerId,
                 containerHashId = dockerHostBuildInfo.containerHashId
             )
             return Result(1, e.message, "")

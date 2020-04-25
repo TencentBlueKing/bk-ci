@@ -1,11 +1,13 @@
 package com.tencent.devops.artifactory.resources.service
 
 import com.tencent.devops.artifactory.api.service.ServiceArtifactoryDownLoadResource
+import com.tencent.devops.artifactory.pojo.Url
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.artifactory.service.artifactory.ArtifactoryDownloadService
 import com.tencent.devops.artifactory.service.bkrepo.BkRepoDownloadService
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.RepoGray
 import com.tencent.devops.common.web.RestResource
@@ -65,6 +67,21 @@ class ServiceArtifactoryDownLoadResourceImpl @Autowired constructor(
                     userId
                 )
             )
+        }
+    }
+
+    override fun downloadUrl(
+        projectId: String,
+        artifactoryType: ArtifactoryType,
+        userId: String,
+        path: String,
+        channelCode: ChannelCode?
+    ): Result<Url> {
+        checkParam(projectId, path)
+        return if (repoGray.isGray(projectId, redisOperation)) {
+            Result(bkRepoDownloadService.getDownloadUrl(userId, projectId, artifactoryType, path))
+        } else {
+            Result(artifactoryDownloadService.getDownloadUrl(userId, projectId, artifactoryType, path, channelCode))
         }
     }
 
