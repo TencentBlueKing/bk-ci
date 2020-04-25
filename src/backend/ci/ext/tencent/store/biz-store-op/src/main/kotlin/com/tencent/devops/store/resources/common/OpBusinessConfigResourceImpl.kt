@@ -55,7 +55,7 @@ class OpBusinessConfigResourceImpl @Autowired constructor(
         return Result(businessConfigService.getBusinessConfigById(id))
     }
 
-    override fun deleteBusinessConfigById(id: Int): Result<Boolean> {
+    override fun deleteBusinessConfigById(id: Int): Result<Int> {
         return Result(businessConfigService.deleteBusinessConfigById(id))
     }
 }
