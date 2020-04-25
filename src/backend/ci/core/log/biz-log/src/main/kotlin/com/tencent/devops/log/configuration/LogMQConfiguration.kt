@@ -193,8 +193,8 @@ class LogMQConfiguration @Autowired constructor() {
         return container
     }
 
-    @Value("\${queueConcurrency.pipelineHardDelete.log:3}")
-    private val logPipelineHardDeleteConcurrency: Int? = null
+    @Value("\${spring.rabbitmq.listener.clearPipeline.concurrency:3}")
+    private val clearPipelineConcurrency: Int? = null
 
     @Bean
     fun pipelineHardDeleteLogQueue() = Queue(MQ.QUEUE_PIPELINE_HARD_DELETE_LOG)
@@ -226,6 +226,7 @@ class LogMQConfiguration @Autowired constructor() {
         @Autowired listener: PipelineHardDeleteMQListener,
         @Autowired messageConverter: Jackson2JsonMessageConverter
     ): SimpleMessageListenerContainer {
+        logger.info("clearPipelineConcurrency=$clearPipelineConcurrency")
         val adapter = MessageListenerAdapter(listener, listener::execute.name)
         adapter.setMessageConverter(messageConverter)
         return Tools.createSimpleMessageListenerContainerByAdapter(
@@ -235,7 +236,7 @@ class LogMQConfiguration @Autowired constructor() {
             adapter = adapter,
             startConsumerMinInterval = 120000,
             consecutiveActiveTrigger = 10,
-            concurrency = logPipelineHardDeleteConcurrency!!,
+            concurrency = clearPipelineConcurrency!!,
             maxConcurrency = 10
         )
     }

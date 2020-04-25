@@ -30,6 +30,7 @@ import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQEventDispatcher
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.Tools
 import com.tencent.devops.common.pipeline.listener.PipelineHardDeleteMQListener
+import org.slf4j.LoggerFactory
 import org.springframework.amqp.core.Binding
 import org.springframework.amqp.core.BindingBuilder
 import org.springframework.amqp.core.FanoutExchange
@@ -56,8 +57,12 @@ class PluginMQConfiguration {
         return RabbitAdmin(connectionFactory)
     }
 
-    @Value("\${queueConcurrency.plugin:3}")
-    private val pluginConcurrency: Int? = null
+    companion object {
+        private val logger = LoggerFactory.getLogger(PluginMQConfiguration::class.java)
+    }
+
+    @Value("\${spring.rabbitmq.listener.clearPipeline.concurrency:3}")
+    private val clearPipelineConcurrency: Int? = null
 
     @Bean
     fun pipelineHardDeletePluginQueue() = Queue(MQ.QUEUE_PIPELINE_HARD_DELETE_PLUGIN)
@@ -92,6 +97,7 @@ class PluginMQConfiguration {
         @Autowired listener: PipelineHardDeleteMQListener,
         @Autowired messageConverter: Jackson2JsonMessageConverter
     ): SimpleMessageListenerContainer {
+        logger.info("clearPipelineConcurrency=$clearPipelineConcurrency")
         val adapter = MessageListenerAdapter(listener, listener::execute.name)
         adapter.setMessageConverter(messageConverter)
         return Tools.createSimpleMessageListenerContainerByAdapter(
@@ -101,7 +107,7 @@ class PluginMQConfiguration {
             adapter = adapter,
             startConsumerMinInterval = 120000,
             consecutiveActiveTrigger = 10,
-            concurrency = pluginConcurrency!!,
+            concurrency = clearPipelineConcurrency!!,
             maxConcurrency = 10
         )
     }

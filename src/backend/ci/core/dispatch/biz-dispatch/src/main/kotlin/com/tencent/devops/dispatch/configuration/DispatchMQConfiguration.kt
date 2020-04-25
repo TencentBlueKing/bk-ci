@@ -30,6 +30,7 @@ import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQEventDispatcher
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.Tools
 import com.tencent.devops.common.pipeline.listener.PipelineHardDeleteMQListener
+import org.slf4j.LoggerFactory
 import org.springframework.amqp.core.Binding
 import org.springframework.amqp.core.BindingBuilder
 import org.springframework.amqp.core.FanoutExchange
@@ -51,13 +52,17 @@ import org.springframework.context.annotation.Configuration
 @Configuration
 class DispatchMQConfiguration {
 
+    companion object {
+        private val logger = LoggerFactory.getLogger(DispatchMQConfiguration::class.java)
+    }
+
     @Bean
     fun rabbitAdmin(connectionFactory: ConnectionFactory): RabbitAdmin {
         return RabbitAdmin(connectionFactory)
     }
 
-    @Value("\${queueConcurrency.dispatch:3}")
-    private val dispatchConcurrency: Int? = null
+    @Value("\${spring.rabbitmq.listener.clearPipeline.concurrency:3}")
+    private val clearPipelineConcurrency: Int? = null
 
     @Bean
     fun pipelineHardDeleteDispatchQueue() = Queue(MQ.QUEUE_PIPELINE_HARD_DELETE_DISPATCH)
@@ -92,6 +97,7 @@ class DispatchMQConfiguration {
         @Autowired listener: PipelineHardDeleteMQListener,
         @Autowired messageConverter: Jackson2JsonMessageConverter
     ): SimpleMessageListenerContainer {
+        logger.info("clearPipelineConcurrency=$clearPipelineConcurrency")
         val adapter = MessageListenerAdapter(listener, listener::execute.name)
         adapter.setMessageConverter(messageConverter)
         return Tools.createSimpleMessageListenerContainerByAdapter(
@@ -101,7 +107,7 @@ class DispatchMQConfiguration {
             adapter = adapter,
             startConsumerMinInterval = 120000,
             consecutiveActiveTrigger = 10,
-            concurrency = dispatchConcurrency!!,
+            concurrency = clearPipelineConcurrency!!,
             maxConcurrency = 10
         )
     }
