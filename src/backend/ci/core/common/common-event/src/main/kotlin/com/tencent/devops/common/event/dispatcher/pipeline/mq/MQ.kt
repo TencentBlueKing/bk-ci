@@ -214,4 +214,5 @@ object MQ {
     const val QUEUE_PIPELINE_HARD_DELETE_ARTIFACTORY = "q.engine.pipeline.hard.delete.artifactory"
     const val QUEUE_PIPELINE_HARD_DELETE_QUALITY = "q.engine.pipeline.hard.delete.quality"
     const val QUEUE_PIPELINE_HARD_DELETE_LOG = "q.engine.pipeline.hard.delete.log"
+    const val QUEUE_PIPELINE_HARD_DELETE_LAMBDA = "q.engine.pipeline.hard.delete.lambda"
 }
