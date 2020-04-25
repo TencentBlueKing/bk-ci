@@ -35,8 +35,8 @@ enum class BuildType(
     val clickable: Boolean/*是否可点击*/,
     val visable: Boolean? = true // 是否页面可见
 ) {
-    ESXi("蓝盾公共构建资源", listOf(OS.MACOS), true, false, false),
-    MACOS("蓝盾公共构建资源(NEW)", listOf(OS.MACOS), true, false, false),
+    ESXi("蓝盾公共构建资源", listOf(OS.MACOS), false, false, false),
+    MACOS("蓝盾公共构建资源(NEW)", listOf(OS.MACOS), false, false, false),
     DOCKER("Docker公共构建机", listOf(OS.LINUX), true, true, true),
     IDC("公共：Docker on IDC CVM", listOf(OS.LINUX), true, false, false),
     PUBLIC_DEVCLOUD("公共：Docker on DevCloud", listOf(OS.LINUX), true, false, false),

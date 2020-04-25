@@ -94,7 +94,7 @@ else
   -- ngx.log(ngx.ERR, "ns_config_gray" )
 end 
 
-local query_subdomain = config.ns.tag .. "." .. service_name .. ".service." .. ns_config.domain
+local query_subdomain = config.ns.tag .. "." .. service_name .. config.ns.suffix .. ".service." .. ns_config.domain
 
 
 

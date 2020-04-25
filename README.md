@@ -1,6 +1,6 @@
 ![LOGO](docs/resource/img/bkci_cn.png)
 ---
-[![license](https://img.shields.io/badge/license-mit-brightgreen.svg?style=flat)](https://github.com/Tencent/bk-ci/blob/master/LICENSE) [![Release Version](https://img.shields.io/badge/release-0.0.1-brightgreen.svg)](https://github.com/Tencent/bk-ci/releases) [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/Tencent/bk-ci/pulls)
+[![license](https://img.shields.io/badge/license-mit-brightgreen.svg?style=flat)](https://github.com/Tencent/bk-ci/blob/master/LICENSE) [![Release Version](https://img.shields.io/badge/release-0.0.1-brightgreen.svg)](https://github.com/Tencent/bk-ci/releases) [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/Tencent/bk-ci/pulls) ![Backend CI](https://github.com/Tencent/bk-ci/workflows/Backend%20CI/badge.svg?branch=master)
 
 > **重要提示**: `master` 分支在开发过程中可能处于 *不稳定或者不可用状态* 。
 请通过[releases](https://github.com/tencent/bk-ci/releases) 而非 `master` 去获取稳定的二进制文件。
