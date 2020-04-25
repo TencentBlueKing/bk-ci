@@ -6,7 +6,7 @@
                 <p class="log-tools">
                     <section class="tool-search">
                         <section class="searct-input">
-                            <input type="text" @input="startSearch" placeholder="Search">
+                            <input type="text" @input="startSearch" @keyup.enter="startSearch" placeholder="Search">
                             <img src="./assets/svg/spinner.svg" v-if="isSearching">
                         </section>
                         <img src="./assets/svg/icon-angle-left.svg" @click="changeSearchIndex(-1)">
@@ -25,7 +25,7 @@
                     <section class="tool-more" v-bk-clickoutside="closeShowMore">
                         <img src="./assets/svg/more.svg" class="more-icon" @click="showMore = !showMore">
                         <ul class="more-list" v-if="showMore">
-                            <li class="more-button" @click="showLogTime">{{ language('显示时间') }}</li>
+                            <li class="more-button" @click="showLogTime">{{ showTime ? language('隐藏时间戳') : language('显示时间戳') }}</li>
                             <a download class="more-button" @click="downLoad" :href="downLoadLink">{{ language('下载日志') }}</a>
                         </ul>
                     </section>
@@ -231,7 +231,7 @@
                 top: 100%;
                 right: 0;
                 left: auto;
-                width: 210px;
+                width: 180px;
                 color: #fff;
                 background: #2f363d;
                 border-color: #444d56;
@@ -239,7 +239,7 @@
                 border: 1px solid #444d56;
                 border-radius: 4px;
                 margin: 5px 0;
-                z-index: 2;
+                z-index: 101;
                 &:before {
                     position: absolute;
                     display: inline-block;
@@ -256,10 +256,12 @@
                     width: 100%;
                     text-align: left;
                     display: block;
-                    padding: 4px 8px 4px 32px;
+                    padding: 4px 8px 4px 22px;
                     overflow: hidden;
                     text-overflow: ellipsis;
                     white-space: nowrap;
+                    font-size: 12px;
+                    line-height: 26px;
                     &:hover {
                         background: #0366d6;
                     }
@@ -326,8 +328,9 @@
             transition: transform 200ms cubic-bezier(.165,.84,.44,1), opacity 100ms cubic-bezier(.215,.61,.355,1);
             background: #1e1e1e;
             .log-head {
-                line-height: 52px;
-                padding: 10px 20px 8px;
+                line-height: 48px;
+                padding: 5px 20px;
+                background-color: #252935;
                 border-bottom: 1px solid;
                 border-bottom-color: #2b2b2b;
                 display: flex;

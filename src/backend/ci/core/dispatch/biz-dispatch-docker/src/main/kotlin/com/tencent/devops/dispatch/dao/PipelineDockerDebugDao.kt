@@ -59,10 +59,12 @@ class PipelineDockerDebugDao : PipelineHardDeleteListener {
         projectId: String,
         pipelineId: String,
         vmSeqId: String,
+        poolNo: Int,
         status: PipelineTaskStatus,
         token: String,
         imageName: String,
         hostTag: String,
+        containerId: String,
         buildEnv: String,
         registryUser: String?,
         registryPwd: String?,
@@ -76,10 +78,12 @@ class PipelineDockerDebugDao : PipelineHardDeleteListener {
                 PROJECT_ID,
                 PIPELINE_ID,
                 VM_SEQ_ID,
+                POOL_NO,
                 STATUS,
                 TOKEN,
                 IMAGE_NAME,
                 HOST_TAG,
+                CONTAINER_ID,
                 CREATED_TIME,
                 UPDATED_TIME,
                 BUILD_ENV,
@@ -93,10 +97,12 @@ class PipelineDockerDebugDao : PipelineHardDeleteListener {
                     projectId,
                     pipelineId,
                     vmSeqId,
+                    poolNo,
                     status.status,
                     token,
                     imageName,
                     hostTag,
+                    containerId,
                     now,
                     now,
                     buildEnv,
@@ -296,7 +302,7 @@ class PipelineDockerDebugDao : PipelineHardDeleteListener {
     fun getUnclaimedHostDebug(dslContext: DSLContext): Result<TDispatchPipelineDockerDebugRecord> {
         with(TDispatchPipelineDockerDebug.T_DISPATCH_PIPELINE_DOCKER_DEBUG) {
             return dslContext.selectFrom(this)
-                .where(timestampDiff(org.jooq.DatePart.SECOND, UPDATED_TIME.cast(java.sql.Timestamp::class.java)).greaterOrEqual(60))
+                .where(timestampDiff(DatePart.SECOND, UPDATED_TIME.cast(java.sql.Timestamp::class.java)).greaterOrEqual(60))
                 .and(STATUS.eq(PipelineTaskStatus.QUEUE.status))
                 .and(HOST_TAG.isNotNull).and(HOST_TAG.notEqual(""))
                 .fetch()
@@ -307,7 +313,7 @@ class PipelineDockerDebugDao : PipelineHardDeleteListener {
         with(TDispatchPipelineDockerDebug.T_DISPATCH_PIPELINE_DOCKER_DEBUG) {
             return dslContext.update(this)
                 .set(HOST_TAG, "")
-                .where(timestampDiff(org.jooq.DatePart.SECOND, UPDATED_TIME.cast(java.sql.Timestamp::class.java)).greaterOrEqual(60))
+                .where(timestampDiff(DatePart.SECOND, UPDATED_TIME.cast(java.sql.Timestamp::class.java)).greaterOrEqual(60))
                 .and(STATUS.eq(PipelineTaskStatus.QUEUE.status))
                 .and(HOST_TAG.isNotNull).and(HOST_TAG.notEqual(""))
                 .execute() == 1
@@ -317,7 +323,7 @@ class PipelineDockerDebugDao : PipelineHardDeleteListener {
     fun getUnclaimedZoneDebug(dslContext: DSLContext): Result<TDispatchPipelineDockerDebugRecord> {
         with(TDispatchPipelineDockerDebug.T_DISPATCH_PIPELINE_DOCKER_DEBUG) {
             return dslContext.selectFrom(this)
-                .where(timestampDiff(org.jooq.DatePart.SECOND, UPDATED_TIME.cast(java.sql.Timestamp::class.java)).greaterOrEqual(100))
+                .where(timestampDiff(DatePart.SECOND, UPDATED_TIME.cast(java.sql.Timestamp::class.java)).greaterOrEqual(100))
                 .and(STATUS.eq(PipelineTaskStatus.QUEUE.status))
                 .and(ZONE.isNotNull).and(ZONE.notEqual(""))
                 .fetch()
@@ -328,7 +334,7 @@ class PipelineDockerDebugDao : PipelineHardDeleteListener {
         with(TDispatchPipelineDockerDebug.T_DISPATCH_PIPELINE_DOCKER_DEBUG) {
             return dslContext.update(this)
                 .set(ZONE, Zone.SHENZHEN.name)
-                .where(timestampDiff(org.jooq.DatePart.SECOND, UPDATED_TIME.cast(java.sql.Timestamp::class.java)).greaterOrEqual(100))
+                .where(timestampDiff(DatePart.SECOND, UPDATED_TIME.cast(java.sql.Timestamp::class.java)).greaterOrEqual(100))
                 .and(STATUS.eq(PipelineTaskStatus.QUEUE.status))
                 .and(ZONE.isNotNull).and(ZONE.notEqual("")).and(ZONE.notEqual(Zone.SHENZHEN.name))
                 .execute() == 1
@@ -357,6 +363,9 @@ CREATE TABLE `T_DISPATCH_PIPELINE_DOCKER_DEBUG` (
 `CREATED_TIME` datetime NOT NULL,
 `UPDATED_TIME` datetime NOT NULL,
 `BUILD_ENV` varchar(4096) NULL,
+`REGISTRY_USER` varchar(128) NULL,
+`REGISTRY_PWD` varchar(128) NULL,
+COLUMN `IMAGE_TYPE` varchar(128) NULL,
 PRIMARY KEY (`ID`),
 UNIQUE KEY `PIPELINE_ID` (`PIPELINE_ID`,`VM_SEQ_ID`)
 ) ENGINE=InnoDB AUTO_INCREMENT=93 DEFAULT CHARSET=utf8;
@@ -366,5 +375,7 @@ ALTER TABLE T_DISPATCH_PIPELINE_DOCKER_DEBUG ADD COLUMN `BUILD_ENV` varchar(4096
 ALTER TABLE T_DISPATCH_PIPELINE_DOCKER_DEBUG ADD COLUMN `REGISTRY_USER` varchar(128) NULL;
 ALTER TABLE T_DISPATCH_PIPELINE_DOCKER_DEBUG ADD COLUMN `REGISTRY_PWD` varchar(128) NULL;
 ALTER TABLE T_DISPATCH_PIPELINE_DOCKER_DEBUG ADD COLUMN `IMAGE_TYPE` varchar(128) NULL;
+
+ALTER TABLE T_DISPATCH_PIPELINE_DOCKER_DEBUG ADD COLUMN `POOL_NO` int(11) DEFAULT 0;
 
  * */

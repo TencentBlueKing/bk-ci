@@ -32,5 +32,3 @@ dependencies {
     compile project(":core:common:common-event")
     compile project(":core:common:common-service")
 }
-
-apply from: "$rootDir/task_deploy_to_maven.gradle"
