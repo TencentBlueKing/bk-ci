@@ -89,6 +89,15 @@
     "stageOptionLabel": "Run this Stage",
     "stageTriggerDesc": "Multiple people separated by commas",
     "skipStageDesc": "SKIPED",
+    "execDetail": {
+        "log": "Log",
+        "setting": "Configuration",
+        "execTime": "Number of retries",
+        "showTime": "Show timestamp",
+        "hideTime": "Hide timestamp",
+        "downLoadLog": "Download log",
+        "emptyLog": "The log content is empty"
+    },
     "timeMap": {
         "days": "days ",
         "hours": "h ",

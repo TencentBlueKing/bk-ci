@@ -46,7 +46,7 @@ interface MeasureService {
         errorMsg: String? = null
     )
 
-    fun postCancelData(projectId: String, pipelineId: String, buildId: String)
+    fun postCancelData(projectId: String, pipelineId: String, buildId: String, userId: String)
 
     fun postTaskData(
         projectId: String,
@@ -62,6 +62,7 @@ interface MeasureService {
         extraInfo: Map<String, Any>? = null,
         errorType: String? = null,
         errorCode: Int? = null,
-        errorMsg: String? = null
+        errorMsg: String? = null,
+        userId: String
     )
 }
