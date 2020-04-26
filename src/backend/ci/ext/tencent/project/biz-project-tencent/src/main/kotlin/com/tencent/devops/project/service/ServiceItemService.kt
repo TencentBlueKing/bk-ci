@@ -74,7 +74,7 @@ class ServiceItemService @Autowired constructor(
     }
 
     fun getServiceList(itemStatusList: List<ServiceItemStatusEnum>? = null): List<ExtItemDTO> {
-        val allItemData = serviceItemDao.getAllServiceItem(dslContext, listOf(ServiceItemStatusEnum.ENABLE)) ?: return emptyList()
+        val allItemData = serviceItemDao.getAllServiceItem(dslContext, itemStatusList) ?: return emptyList()
         // 用于放所有数据
         val allItemMap = mutableMapOf<String, ServiceItem>()
         val itemList = mutableListOf<ExtItemDTO>()
