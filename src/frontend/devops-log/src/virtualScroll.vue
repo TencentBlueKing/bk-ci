@@ -1,5 +1,5 @@
 <template>
-    <section :class="['scroll-home', id, { 'min-height': totalNumber <= 0, 'show-empty': hasCompleteInit }]" :style="`height: ${visHeight}px`" @mousewheel="handleWheel" @DOMMouseScroll="handleWheel">
+    <section :class="['scroll-home', `id-${id}`, { 'min-height': totalNumber <= 0, 'show-empty': hasCompleteInit }]" :style="`height: ${visHeight}px`" @mousewheel="handleWheel" @DOMMouseScroll="handleWheel">
         <template v-if="!isLogErr">
             <ul class="scroll-index scroll" :style="`top: ${-totalScrollHeight}px; width: ${indexWidth}px; height: ${ulHeight}px`">
                 <li class="scroll-item" :style="`height: ${itemHeight}px; top: ${item.top}px`" v-for="(item) in indexList" :key="item">
@@ -170,7 +170,7 @@
             },
 
             initStatus () {
-                const mainEle = document.querySelector(`.${this.id}`)
+                const mainEle = document.querySelector(`.id-${this.id}`)
                 let visHeight = mainEle.offsetHeight
                 this.totalHeight = this.totalNumber * this.itemHeight
                 if (this.maxHeight) visHeight = this.totalHeight > this.maxHeight ? this.maxHeight : this.totalHeight
@@ -516,7 +516,7 @@
         &.min-height {
             min-height: 20px;
             &.show-empty {
-                min-height: 100px;
+                min-height: 110px;
             }
         }
         .list-empty {
