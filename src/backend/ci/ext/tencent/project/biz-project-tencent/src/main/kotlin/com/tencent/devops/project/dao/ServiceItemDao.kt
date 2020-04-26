@@ -1,29 +1,27 @@
 /*
+ * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- *  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
- *  *
- *  * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
- *  *
- *  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
- *  *
- *  * A copy of the MIT License is included in this file.
- *  *
- *  *
- *  * Terms of the MIT License:
- *  * ---------------------------------------------------
- *  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- *  * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- *  * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- *  * Software is furnished to do so, subject to the following conditions:
- *  *
- *  * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
- *  *
- *  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
- *  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
- *  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
- *  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
- *  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
  *
+ * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
+ *
+ * A copy of the MIT License is included in this file.
+ *
+ *
+ * Terms of the MIT License:
+ * ---------------------------------------------------
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
+ * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+ * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+ * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
 package com.tencent.devops.project.dao
@@ -195,6 +193,18 @@ class ServiceItemDao {
         }
     }
 
+    fun countByName(dslContext: DSLContext, name: String): Int {
+        with(TServiceItem.T_SERVICE_ITEM) {
+            return dslContext.selectCount().from(this).where(ITEM_NAME.eq(name)).fetchOne(0, Int::class.java)
+        }
+    }
+
+    fun countByHtmlPath(dslContext: DSLContext, htmlPath: String): Int {
+        with(TServiceItem.T_SERVICE_ITEM) {
+            return dslContext.selectCount().from(this).where(HTML_PATH.eq(htmlPath)).fetchOne(0, Int::class.java)
+        }
+    }
+
     fun getItemById(dslContext: DSLContext, itemId: String): TServiceItemRecord? {
         return with(TServiceItem.T_SERVICE_ITEM) {
             dslContext.selectFrom(this).where(
@@ -243,10 +253,13 @@ class ServiceItemDao {
         }
     }
 
-    fun getAllServiceItem(dslContext: DSLContext): Result<TServiceItemRecord>? {
+    fun getAllServiceItem(dslContext: DSLContext, itemStatusList: List<ServiceItemStatusEnum>? = null): Result<TServiceItemRecord>? {
         return with(TServiceItem.T_SERVICE_ITEM) {
-            dslContext.selectFrom(this).where(ITEM_STATUS.notEqual(ServiceItemStatusEnum.DELETE.name))
-                .orderBy(CREATE_TIME.desc())
+            val baseStep = dslContext.selectFrom(this)
+            if (itemStatusList != null) {
+                baseStep.where(ITEM_STATUS.`in`(itemStatusList))
+            }
+            baseStep.orderBy(CREATE_TIME.desc())
                 .fetch()
         }
     }
