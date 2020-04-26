@@ -42,6 +42,7 @@ import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.IAtomTask
 import com.tencent.devops.process.engine.bean.PipelineUrlBean
 import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION
+import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION_SUGGEST
 import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION_USERID
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.util.NotifyTemplateUtils
@@ -51,6 +52,7 @@ import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import java.util.Date
+import kotlin.math.log
 
 /**
  * 人工审核插件
@@ -96,6 +98,7 @@ class ManualReviewTaskAtom(
                         jobId = task.containerHashId,
                         executeCount = task.executeCount ?: 1
                     )
+                    logSuggest(task)
                     AtomResponse(BuildStatus.SUCCEED)
                 }
                 ManualReviewAction.ABORT -> {
@@ -107,6 +110,7 @@ class ManualReviewTaskAtom(
                         jobId = task.containerHashId,
                         executeCount = task.executeCount ?: 1
                     )
+                    logSuggest(task)
                     AtomResponse(BuildStatus.REVIEW_ABORT)
                 }
             }
@@ -218,6 +222,33 @@ class ManualReviewTaskAtom(
         }
 
         return AtomResponse(BuildStatus.REVIEWING)
+    }
+
+    private fun logSuggest(
+        task: PipelineBuildTask
+    ) {
+        val suggest = task.getTaskParam(BS_MANUAL_ACTION_SUGGEST)
+        if (suggest.isEmpty()) {
+            return
+        }
+        val buildId = task.buildId
+        val taskId = task.taskId
+        LogUtils.addLine(
+            rabbitTemplate = rabbitTemplate,
+            buildId = buildId,
+            message = "审核意见：",
+            tag = taskId,
+            jobId = task.containerHashId,
+            executeCount = task.executeCount ?: 1
+        )
+        LogUtils.addLine(
+            rabbitTemplate = rabbitTemplate,
+            buildId = buildId,
+            message = suggest,
+            tag = taskId,
+            jobId = task.containerHashId,
+            executeCount = task.executeCount ?: 1
+        )
     }
 
     companion object {
