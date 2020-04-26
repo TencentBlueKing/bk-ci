@@ -267,6 +267,7 @@
         "previewDiff": "编排预览",
         "templateInstantiation": "模板实例化",
         "templateVersion": "模板版本",
+        "templateVersionErrTips": "请先选择模板版本",
         "applyTemplateSetting": "同时应用模板设置",
         "applySettingTips": "勾选则表示把模板的设置应用到实例化的流水线",
         "newPipelineName": "实例化流水线名称",
