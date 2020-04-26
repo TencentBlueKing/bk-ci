@@ -339,7 +339,7 @@ class QualityRuleCheckService @Autowired constructor(
                     }
 
                     // 全为null，不通过
-                    if (!ThresholdOperationUtil.valid(result?.toString() ?: "", indicator.threshold, indicator.operation)) {
+                    if (!ThresholdOperationUtil.validBoolean(result?.toString() ?: "", indicator.threshold, indicator.operation)) {
                         checkResult = false
                         allCheckResult = false
                     }
