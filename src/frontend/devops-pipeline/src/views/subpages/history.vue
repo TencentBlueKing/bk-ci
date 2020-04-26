@@ -5,8 +5,8 @@
                 <bk-date-picker :placeholder="$t('history.chooseDateRange')" :value="dateRange" :type="'daterange'" @change="changeDateRange" :shortcuts="shortcuts" :options="dateOptions"></bk-date-picker>
             </div>
             <div class="bkdevops-pipeline-tab-card-setting" slot="setting" v-else>
-                <i @click.stop="toggleFilterBar" class="bk-icon icon-filter-shape" :class="{ 'active': showFilterBar }"></i>
-                <i @click.stop="toggleColumnsSelectPopup(true)" class="setting-icon bk-icon icon-cog-shape" :class="{ 'active': isColumnsSelectPopupVisible }"></i>
+                <i @click.stop="toggleFilterBar" class="devops-icon icon-filter-shape" :class="{ 'active': showFilterBar }"></i>
+                <i @click.stop="toggleColumnsSelectPopup(true)" class="setting-icon devops-icon icon-cog-shape" :class="{ 'active': isColumnsSelectPopupVisible }"></i>
             </div>
             <bk-tab-panel
                 v-for="panel in panels"

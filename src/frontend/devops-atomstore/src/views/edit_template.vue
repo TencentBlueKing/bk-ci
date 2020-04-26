@@ -30,7 +30,7 @@
                             <p :class="errors.has('templateName') ? 'error-tips' : 'normal-tips'">{{ errors.first("templateName") }}</p>
                         </div>
                         <bk-popover placement="right">
-                            <i class="bk-icon icon-info-circle"></i>
+                            <i class="devops-icon icon-info-circle"></i>
                             <template slot="content">
                                 <p> {{ $t('store.模板名称不超过20个字符') }} </p>
                             </template>
@@ -92,7 +92,7 @@
                             }"
                             :class="{ 'is-danger': errors.has('introduction') }">
                         <bk-popover placement="left">
-                            <i class="bk-icon icon-info-circle"></i>
+                            <i class="devops-icon icon-info-circle"></i>
                             <template slot="content">
                                 <p> {{ $t('store.模版一句话简介，不超过70个字符，展示在模版市场上') }} </p>
                             </template>
@@ -115,7 +115,7 @@
                             @imgDel="delImage"
                             @change="changeData" />
                         <bk-popover placement="left">
-                            <i class="bk-icon icon-info-circle"></i>
+                            <i class="devops-icon icon-info-circle"></i>
                             <template slot="content">
                                 <p> {{ $t('store.展示在模版市场查看模版详情页面，帮助用户快速了解模版功能和使用场景') }} </p>
                             </template>
@@ -636,7 +636,7 @@
                 border-bottom: 1px dashed #c3cdd7;
             }
             .env-checkbox {
-                .bk-icon {
+                .devops-icon {
                     position: relative;
                     top: 3px;
                     font-size: 18px;

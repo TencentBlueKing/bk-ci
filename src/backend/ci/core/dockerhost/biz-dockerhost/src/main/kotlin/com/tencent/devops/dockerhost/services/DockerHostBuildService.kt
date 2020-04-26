@@ -63,6 +63,7 @@ import com.tencent.devops.dockerhost.pojo.DockerBuildParam
 import com.tencent.devops.dockerhost.pojo.DockerRunParam
 import com.tencent.devops.dockerhost.utils.CommonUtils
 import com.tencent.devops.dockerhost.utils.ENTRY_POINT_CMD
+import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.store.pojo.image.enums.ImageRDTypeEnum
 import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
@@ -127,12 +128,14 @@ class DockerHostBuildService(
         buildId: String,
         vmSeqId: Int,
         shutdown: Boolean,
+        containerId: String,
         containerHashId: String?
     ): Boolean {
         log(
             buildId = buildId,
             red = true,
             message = if (shutdown) "构建环境启动后即退出，请检查镜像是否合法或联系【蓝盾助手】查看，构建任务将失败退出" else "启动构建环境失败，构建任务将重试",
+            tag = VMUtils.genStartVMTaskId(containerId),
             containerHashId = containerHashId
         )
 
@@ -152,6 +155,7 @@ class DockerHostBuildService(
         registryUser: String?,
         registryPwd: String?,
         buildId: String,
+        containerId: String?,
         containerHashId: String?
     ): Result<Boolean> {
         val authConfig = CommonUtils.getAuthConfig(
@@ -162,16 +166,18 @@ class DockerHostBuildService(
             registryPwd = registryPwd
         )
         val dockerImageName = CommonUtils.normalizeImageName(imageName)
-        log(buildId, "开始拉取镜像，镜像名称：$dockerImageName", containerHashId)
+        val taskId = if (!containerId.isNullOrBlank()) VMUtils.genStartVMTaskId(containerId!!) else ""
+        log(buildId, "开始拉取镜像，镜像名称：$dockerImageName", taskId, containerHashId)
         dockerCli.pullImageCmd(dockerImageName).withAuthConfig(authConfig)
-            .exec(MyPullImageResultCallback(buildId, dockerHostBuildApi)).awaitCompletion()
-        log(buildId, "拉取镜像成功，准备启动构建环境...", containerHashId)
+            .exec(MyPullImageResultCallback(buildId, dockerHostBuildApi, taskId, containerHashId)).awaitCompletion()
+        log(buildId, "拉取镜像成功，准备启动构建环境...", taskId, containerHashId)
         return Result(true)
     }
 
     fun checkImage(
         buildId: String,
         checkImageRequest: CheckImageRequest,
+        containerId: String?,
         containerHashId: String?
     ): Result<CheckImageResponse?> {
         logger.info("checkImage buildId: $buildId, checkImageRequest: $checkImageRequest")
@@ -184,6 +190,7 @@ class DockerHostBuildService(
                 registryUser = checkImageRequest.registryUser,
                 registryPwd = checkImageRequest.registryPwd,
                 buildId = buildId,
+                containerId = containerId,
                 containerHashId = containerHashId
             )
             logger.info("pullImageResult: $pullImageResult")
@@ -192,7 +199,7 @@ class DockerHostBuildService(
             }
         } catch (t: Throwable) {
             logger.warn("Fail to pull the image $imageName of build $buildId", t)
-            log(buildId, "pull image fail，error is：${t.message}", containerHashId)
+            log(buildId, "pull image fail，error is：${t.message}", containerId, containerHashId)
             return Result(CommonMessageCode.SYSTEM_ERROR.toInt(), t.message, null)
         }
         val dockerImageName = CommonUtils.normalizeImageName(checkImageRequest.imageName)
@@ -212,9 +219,15 @@ class DockerHostBuildService(
     fun createContainer(dockerBuildInfo: DockerHostBuildInfo): String {
         try {
             val imageName = CommonUtils.normalizeImageName(dockerBuildInfo.imageName)
+            val taskId = VMUtils.genStartVMTaskId(dockerBuildInfo.vmSeqId.toString())
             // docker pull
             if (dockerBuildInfo.imagePublicFlag == true && dockerBuildInfo.imageRDType?.toLowerCase() == ImageRDTypeEnum.SELF_DEVELOPED.name.toLowerCase()) {
-                log(dockerBuildInfo.buildId, "自研公共镜像，不从仓库拉取，直接从本地启动...", dockerBuildInfo.containerHashId)
+                log(
+                    buildId = dockerBuildInfo.buildId,
+                    message = "自研公共镜像，不从仓库拉取，直接从本地启动...",
+                    tag = taskId,
+                    containerHashId = dockerBuildInfo.containerHashId
+                )
             } else {
                 try {
                     LocalImageCache.saveOrUpdate(imageName)
@@ -224,6 +237,7 @@ class DockerHostBuildService(
                         registryUser = dockerBuildInfo.registryUser,
                         registryPwd = dockerBuildInfo.registryPwd,
                         buildId = dockerBuildInfo.buildId,
+                        containerId = dockerBuildInfo.vmSeqId.toString(),
                         containerHashId = dockerBuildInfo.containerHashId
                     )
                 } catch (t: UnauthorizedException) {
@@ -238,8 +252,18 @@ class DockerHostBuildService(
                     throw NotFoundException(errorMessage)
                 } catch (t: Throwable) {
                     logger.warn("Fail to pull the image $imageName of build ${dockerBuildInfo.buildId}", t)
-                    log(dockerBuildInfo.buildId, "拉取镜像失败，错误信息：${t.message}", dockerBuildInfo.containerHashId)
-                    log(dockerBuildInfo.buildId, "尝试使用本地镜像启动...", dockerBuildInfo.containerHashId)
+                    log(
+                        buildId = dockerBuildInfo.buildId,
+                        message = "拉取镜像失败，错误信息：${t.message}",
+                        tag = taskId,
+                        containerHashId = dockerBuildInfo.containerHashId
+                    )
+                    log(
+                        buildId = dockerBuildInfo.buildId,
+                        message = "尝试使用本地镜像启动...",
+                        tag = taskId,
+                        containerHashId = dockerBuildInfo.containerHashId
+                    )
                 }
             }
             // docker run
@@ -260,7 +284,13 @@ class DockerHostBuildService(
             logger.error(er.toString())
             logger.error(er.cause.toString())
             logger.error(er.message)
-            log(dockerBuildInfo.buildId, true, "启动构建环境失败，错误信息:${er.message}", dockerBuildInfo.containerHashId)
+            log(
+                buildId = dockerBuildInfo.buildId,
+                red = true,
+                message = "启动构建环境失败，错误信息:${er.message}",
+                tag = VMUtils.genStartVMTaskId(dockerBuildInfo.vmSeqId.toString()),
+                containerHashId = dockerBuildInfo.containerHashId
+            )
             if (er is NotFoundException) {
                 throw NoSuchImageException("Create container failed: ${er.message}")
             } else {
@@ -429,6 +459,7 @@ class DockerHostBuildService(
                     registryUser = dockerRunParam.registryUser,
                     registryPwd = dockerRunParam.registryPwd,
                     buildId = buildId,
+                    containerId = vmSeqId,
                     containerHashId = ""
                 )
             } catch (t: UnauthorizedException) {
@@ -443,8 +474,18 @@ class DockerHostBuildService(
                 throw NotFoundException(errorMessage)
             } catch (t: Throwable) {
                 logger.warn("Fail to pull the image $imageName of build $buildId", t, "")
-                log(buildId, "拉取镜像失败，错误信息：${t.message}", "")
-                log(buildId, "尝试使用本地镜像执行命令...", "")
+                log(
+                    buildId = buildId,
+                    message = "拉取镜像失败，错误信息：${t.message}",
+                    tag = VMUtils.genStartVMTaskId(vmSeqId),
+                    containerHashId = ""
+                )
+                log(
+                    buildId = buildId,
+                    message = "尝试使用本地镜像执行命令...",
+                    tag = VMUtils.genStartVMTaskId(vmSeqId),
+                    containerHashId = ""
+                )
             }
 
             val dockerBuildInfo = DockerHostBuildInfo(
@@ -458,6 +499,7 @@ class DockerHostBuildService(
                 imageName = imageName,
                 containerId = "",
                 wsInHost = true,
+                poolNo = 0,
                 registryUser = dockerRunParam.registryUser,
                 registryPwd = dockerRunParam.registryPwd,
                 imageType = ImageType.THIRD.type,
@@ -490,7 +532,7 @@ class DockerHostBuildService(
         } catch (er: Throwable) {
             val errorLog = "[$buildId]|启动容器失败，错误信息:${er.message}"
             logger.error(errorLog, er)
-            log(buildId, true, errorLog, "")
+            log(buildId, true, errorLog, VMUtils.genStartVMTaskId(vmSeqId), "")
             alertApi.alert(
                 level = AlertLevel.HIGH.name, title = "Docker构建机创建容器失败",
                 message = "Docker构建机创建容器失败, 母机IP:${CommonUtils.getInnerIP()}， 失败信息：${er.message}"
@@ -622,18 +664,18 @@ class DockerHostBuildService(
         return inspectContainerResponse.state.running ?: false
     }
 
-    fun log(buildId: String, message: String, containerHashId: String?) {
-        return log(buildId, false, message, containerHashId)
+    fun log(buildId: String, message: String, tag: String?, containerHashId: String?) {
+        return log(buildId, false, message, tag, containerHashId)
     }
 
-    fun log(buildId: String, red: Boolean, message: String, containerHashId: String?) {
+    fun log(buildId: String, red: Boolean, message: String, tag: String?, containerHashId: String?) {
         logger.info("write log to dispatch, buildId: $buildId, message: $message")
         try {
             dockerHostBuildApi.postLog(
                 buildId = buildId,
                 red = red,
                 message = message,
-                tag = "",
+                tag = tag,
                 jobId = containerHashId
             )
         } catch (e: Exception) {
@@ -723,7 +765,9 @@ class DockerHostBuildService(
 
     inner class MyPullImageResultCallback internal constructor(
         private val buildId: String,
-        private val dockerHostBuildApi: DockerHostBuildResourceApi
+        private val dockerHostBuildApi: DockerHostBuildResourceApi,
+        private val startTaskId: String?,
+        private val containerHashId: String?
     ) : PullImageResultCallback() {
         private val totalList = mutableListOf<Long>()
         private val step = mutableMapOf<Int, Long>()
@@ -743,9 +787,11 @@ class DockerHostBuildService(
 
                 if (currentProgress >= step[lays]?.plus(25) ?: 5) {
                     dockerHostBuildApi.postLog(
-                        buildId,
-                        false,
-                        "正在拉取镜像,第${lays}层，进度：$currentProgress%"
+                        buildId = buildId,
+                        red = false,
+                        message = "正在拉取镜像,第${lays}层，进度：$currentProgress%",
+                        tag = startTaskId,
+                        jobId = containerHashId
                     )
                     step[lays] = currentProgress
                 }
