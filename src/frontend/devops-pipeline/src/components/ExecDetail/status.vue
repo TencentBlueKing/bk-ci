@@ -4,13 +4,13 @@
         <svg aria-hidden="true" v-if="status === 'WAITING'">
             <use xlink:href="#icon-build-waiting"></use>
         </svg>
-        <svg fill="#fff" aria-hidden="true" v-if="['SKIP', 'CANCELED'].includes(status) || !status">
+        <svg fill="#fff" aria-hidden="true" v-if="['SKIP', 'CANCELED', 'TERMINATE'].includes(status) || !status">
             <use xlink:href="#icon-build-canceled"></use>
         </svg>
-        <svg aria-hidden="true" v-if="status === 'REVIEWING'">
+        <svg aria-hidden="true" v-if="['REVIEW_ABORT', 'REVIEWING'].includes(status)">
             <use xlink:href="#icon-build-warning"></use>
         </svg>
-        <svg aria-hidden="true" v-if="status === 'FAILED'">
+        <svg aria-hidden="true" v-if="['FAILED', 'HEARTBEAT_TIMEOUT', 'QUEUE_TIMEOUT', 'EXEC_TIMEOUT'].includes(status)">
             <use xlink:href="#icon-build-failed"></use>
         </svg>
         <svg aria-hidden="true" v-if="status === 'SUCCEED'">

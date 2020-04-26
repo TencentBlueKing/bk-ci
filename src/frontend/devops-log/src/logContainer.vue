@@ -6,8 +6,12 @@
                 <p class="log-tools">
                     <section class="tool-search">
                         <section class="searct-input">
-                            <input type="text" @input="startSearch" @keyup.enter="startSearch" placeholder="Search">
-                            <img src="./assets/svg/spinner.svg" v-if="isSearching">
+                            <input ref="inputMain" type="text" @input="startSearch" @keyup.enter="startSearch" placeholder="Search">
+                            <img class="input-tool" src="./assets/svg/spinner.svg" v-if="isSearching">
+                            <template v-if="!isSearching">
+                                <i class="bk-icon icon-close-circle-shape input-tool" v-if="inputStr" @click="clearSearch"></i>
+                                <i class="bk-icon icon-search input-tool" v-else></i>
+                            </template>
                         </section>
                         <img src="./assets/svg/icon-angle-left.svg" @click="changeSearchIndex(-1)">
                         <span class="search-num">{{`${searchIndex} / ${searchNum}`}}</span>
@@ -79,6 +83,7 @@
                 searchIndex: 0,
                 realSearchIndex: 0,
                 searchNum: 0,
+                inputStr: '',
                 searchRes: []
             }
         },
@@ -89,7 +94,7 @@
                 const data = event.data
                 switch (data.type) {
                     case 'completeSearch':
-                        this.handleSearch(data.num, data.curSearchRes)
+                        this.handleSearch(data.num, data.curSearchRes, data.noScroll, data.index)
                         break
                     case 'completeGetSearchRes':
                         this.handleSearchRes(data.searchRes)
@@ -112,22 +117,47 @@
                 if (curIndex <= 0) curIndex = this.searchNum
                 if (curIndex > this.searchNum) curIndex = 1
                 this.searchIndex = curIndex
+                this.worker.postMessage({ type: 'changeSearchIndex', index: this.searchIndex - 1 })
                 // 真实的index
                 curIndex = this.realSearchIndex + dis
                 if (curIndex < 0) curIndex = this.searchRes.length - 1
                 if (curIndex >= this.searchRes.length) curIndex = 0
                 if (curIndex >= 480 && curIndex <= 520) this.worker.postMessage({ type: 'getSearchRes', index: this.searchIndex - 1 })
-                const curSearch = this.searchRes[curIndex]
                 this.realSearchIndex = curIndex
-                this.$emit('showSearchLog', curSearch)
+                this.showSearchLog()
+            },
+
+            showSearchLog () {
+                const curSearch = this.searchRes[this.realSearchIndex]
+                if (curSearch.isInFold) {
+                    this.worker.postMessage({
+                        type: 'foldListData',
+                        index: this.searchIndex - 1,
+                        startIndex: curSearch.startIndex,
+                        id: curSearch.refId
+                    })
+                } else {
+                    this.$emit('showSearchLog', curSearch)
+                }
+            },
+
+            clearSearch (event) {
+                const inputEle = this.$refs.inputMain || {}
+                inputEle.value = ''
+                this.inputStr = ''
+                this.$emit('update:searchStr', '')
+                this.worker.postMessage({ type: 'search', val: '' })
             },
 
             startSearch (event) {
                 this.isSearching = true
                 window.clearTimeout(this.startSearch.timeId)
                 this.startSearch.timeId = window.setTimeout(() => {
+                    this.searchIndex = 1
+                    this.realSearchIndex = 0
                     const target = event.target || {}
                     const val = target.value
+                    this.inputStr = val
                     this.$emit('update:searchStr', val)
                     this.worker.postMessage({ type: 'search', val })
                 }, 300)
@@ -138,12 +168,13 @@
                 this.realSearchIndex = 0
             },
 
-            handleSearch (num = 0, searchRes) {
-                this.handleSearchRes(searchRes)
+            handleSearch (num = 0, searchRes, noScroll) {
+                this.searchRes = searchRes
                 this.isSearching = false
                 this.searchNum = num
-                this.searchIndex = num > 0 ? 1 : 0
-                if (num > 0) this.$emit('showSearchLog', searchRes[0])
+                if (num <= 0) this.searchIndex = 0
+                if (num <= 0 || noScroll) return
+                this.showSearchLog()
             },
 
             showLogTime () {
@@ -200,12 +231,24 @@
                     color: #f6f8fa;
                     background-color: hsla(0,0%,100%,.125);
                 }
-                img {
+                .input-tool {
                     position: absolute;
                     height: 20px;
                     width: 20px;
                     top: 4px;
                     right: 5px;
+                    &.icon-search {
+                        font-size: 16px;
+                        top: 6px;
+                    }
+                    &.icon-close-circle-shape {
+                        cursor: pointer;
+                        font-size: 14px;
+                        top: 7px;
+                        &:hover {
+                            color: #979ba5;
+                        }
+                    }
                 }
             }
             >img {
