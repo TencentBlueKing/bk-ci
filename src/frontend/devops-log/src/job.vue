@@ -183,7 +183,7 @@
         }
         /deep/ .log-status {
             width: 14px;
-            height: 14px;
+            height: 15px;
             margin: 0 9px;
             padding: 1px 0;
             svg {
@@ -208,8 +208,8 @@
         line-height: 16px;
         margin: 0 20px;
         /deep/ .log-loading .lds-ring {
-            height: 16px;
-            width: 16px;
+            height: 15px;
+            width: 15px;
             div {
                 height: 16px;
                 width: 16px;
