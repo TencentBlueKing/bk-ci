@@ -55,7 +55,9 @@ data class TriggerContainer(
     val buildNo: BuildNo? = null,
     @ApiModelProperty("是否可重试", required = false, hidden = true)
     override var canRetry: Boolean? = false,
-    override var containerId: String? = null
+    override var containerId: String? = null,
+    @ApiModelProperty("构建环境启动状态", required = false, hidden = true)
+    override var startVMStatus: String? = null
 ) : Container {
     companion object {
         const val classType = "trigger"

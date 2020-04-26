@@ -57,7 +57,7 @@
                                 :title="props.row.displayName"
                                 @click="toNodeDetail(props.row)"
                             >{{ props.row.displayName || '-' }}</span>
-                            <i class="bk-icon icon-edit" v-if="!isEditNodeStatus && props.row.canEdit" @click="editNodeName(props.row)"></i>
+                            <i class="devops-icon icon-edit" v-if="!isEditNodeStatus && props.row.canEdit" @click="editNodeName(props.row)"></i>
                         </div>
                     </template>
                 </bk-table-column>
@@ -944,7 +944,7 @@
             padding-right: 10px;
             color: #ffbf00;
 
-            .bk-icon {
+            .devops-icon {
                 margin-right: 6px;
             }
         }

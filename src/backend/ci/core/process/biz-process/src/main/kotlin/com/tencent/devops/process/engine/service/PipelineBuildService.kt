@@ -1513,14 +1513,6 @@ class PipelineBuildService(
                                     jobId = containerId,
                                     executeCount = 1
                                 )
-                                LogUtils.addFoldEndLine(
-                                    rabbitTemplate = rabbitTemplate,
-                                    buildId = buildId,
-                                    groupName = "${e.name}-[$taskId]",
-                                    tag = taskId,
-                                    jobId = containerId,
-                                    executeCount = 1
-                                )
                             }
                         }
                     }
@@ -1621,11 +1613,12 @@ class PipelineBuildService(
 
             val buildId = pipelineRuntimeService.startBuild(readyToBuildPipelineInfo, fullModel, paramsWithType)
             if (startParams.isNotEmpty()) {
+                val realStartParamKeys = (model.stages[0].containers[0] as TriggerContainer).params.map { it.id }
                 buildStartupParamService.addParam(
                     projectId = readyToBuildPipelineInfo.projectId,
                     pipelineId = pipelineId,
                     buildId = buildId,
-                    param = JsonUtil.toJson(startParams)
+                    param = JsonUtil.toJson(startParams.filter { realStartParamKeys.contains(it.key) })
                 )
             }
 

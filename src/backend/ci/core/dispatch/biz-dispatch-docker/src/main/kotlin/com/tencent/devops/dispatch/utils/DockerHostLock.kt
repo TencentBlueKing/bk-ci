@@ -30,9 +30,9 @@ import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import kotlin.math.min
 
-class DockerHostLock(redisOperation: RedisOperation) {
+class DockerHostLock(redisOperation: RedisOperation, pipelineId: String? = "") {
 
-    private val redisLock = RedisLock(redisOperation, "DISPATCH_REDIS_LOCK_DOCKER_HOST_KEY", 60L)
+    private val redisLock = RedisLock(redisOperation, "DISPATCH_REDIS_LOCK_DOCKER_HOST_KEY_$pipelineId", 60L)
 
 //    fun tryLock() = tryLockElapse(timeout = 0, interval = 0)
 
