@@ -23,21 +23,21 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.store.resources.atom
+package com.tencent.devops.store.service.common
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.log.model.pojo.QueryLogs
-import com.tencent.devops.store.api.atom.UserMarketAtomLogResource
-import com.tencent.devops.store.service.atom.MarketAtomLogService
-import org.springframework.beans.factory.annotation.Autowired
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 
-@RestResource
-class UserMarketAtomLogResourceImpl @Autowired constructor(private val marketAtomLogService: MarketAtomLogService) :
-    UserMarketAtomLogResource {
+/**
+ * 研发商店-日志业务逻辑类
+ * since: 2019-08-15
+ */
+interface StoreLogService {
 
-    override fun getInitLogs(
+    fun getInitLogs(
         userId: String,
+        storeType: StoreTypeEnum,
         projectCode: String,
         pipelineId: String,
         buildId: String,
@@ -45,12 +45,11 @@ class UserMarketAtomLogResourceImpl @Autowired constructor(private val marketAto
         queryKeywords: String?,
         tag: String?,
         executeCount: Int?
-    ): Result<QueryLogs?> {
-        return marketAtomLogService.getInitLogs(userId, projectCode, pipelineId, buildId, isAnalysis, queryKeywords, tag, executeCount)
-    }
+    ): Result<QueryLogs?>
 
-    override fun getAfterLogs(
+    fun getAfterLogs(
         userId: String,
+        storeType: StoreTypeEnum,
         projectCode: String,
         pipelineId: String,
         buildId: String,
@@ -59,12 +58,11 @@ class UserMarketAtomLogResourceImpl @Autowired constructor(private val marketAto
         queryKeywords: String?,
         tag: String?,
         executeCount: Int?
-    ): Result<QueryLogs?> {
-        return marketAtomLogService.getAfterLogs(userId, projectCode, pipelineId, buildId, start, isAnalysis, queryKeywords, tag, executeCount)
-    }
+    ): Result<QueryLogs?>
 
-    override fun getMoreLogs(
+    fun getMoreLogs(
         userId: String,
+        storeType: StoreTypeEnum,
         projectCode: String,
         pipelineId: String,
         buildId: String,
@@ -74,7 +72,5 @@ class UserMarketAtomLogResourceImpl @Autowired constructor(private val marketAto
         end: Long,
         tag: String?,
         executeCount: Int?
-    ): Result<QueryLogs?> {
-        return marketAtomLogService.getMoreLogs(userId, projectCode, pipelineId, buildId, num, fromStart, start, end, tag, executeCount)
-    }
+    ): Result<QueryLogs?>
 }

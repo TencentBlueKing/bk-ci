@@ -23,19 +23,23 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.store.service.atom
+package com.tencent.devops.store.resources.common
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.log.model.pojo.QueryLogs
+import com.tencent.devops.store.api.common.UserStoreLogResource
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.service.common.StoreLogService
+import org.springframework.beans.factory.annotation.Autowired
 
-/**
- * 插件市场-插件日志业务逻辑类
- * since: 2019-08-15
- */
-interface MarketAtomLogService {
+@RestResource
+class UserStoreLogResourceImpl @Autowired constructor(private val storeLogService: StoreLogService) :
+    UserStoreLogResource {
 
-    fun getInitLogs(
+    override fun getInitLogs(
         userId: String,
+        storeType: StoreTypeEnum,
         projectCode: String,
         pipelineId: String,
         buildId: String,
@@ -43,10 +47,23 @@ interface MarketAtomLogService {
         queryKeywords: String?,
         tag: String?,
         executeCount: Int?
-    ): Result<QueryLogs?>
+    ): Result<QueryLogs?> {
+        return storeLogService.getInitLogs(
+            userId = userId,
+            storeType = storeType,
+            projectCode = projectCode,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            isAnalysis = isAnalysis,
+            queryKeywords = queryKeywords,
+            tag = tag,
+            executeCount = executeCount
+        )
+    }
 
-    fun getAfterLogs(
+    override fun getAfterLogs(
         userId: String,
+        storeType: StoreTypeEnum,
         projectCode: String,
         pipelineId: String,
         buildId: String,
@@ -55,10 +72,24 @@ interface MarketAtomLogService {
         queryKeywords: String?,
         tag: String?,
         executeCount: Int?
-    ): Result<QueryLogs?>
+    ): Result<QueryLogs?> {
+        return storeLogService.getAfterLogs(
+            userId = userId,
+            storeType = storeType,
+            projectCode = projectCode,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            start = start,
+            isAnalysis = isAnalysis,
+            queryKeywords = queryKeywords,
+            tag = tag,
+            executeCount = executeCount
+        )
+    }
 
-    fun getMoreLogs(
+    override fun getMoreLogs(
         userId: String,
+        storeType: StoreTypeEnum,
         projectCode: String,
         pipelineId: String,
         buildId: String,
@@ -68,5 +99,19 @@ interface MarketAtomLogService {
         end: Long,
         tag: String?,
         executeCount: Int?
-    ): Result<QueryLogs?>
+    ): Result<QueryLogs?> {
+        return storeLogService.getMoreLogs(
+            userId = userId,
+            storeType = storeType,
+            projectCode = projectCode,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            num = num,
+            fromStart = fromStart,
+            start = start,
+            end = end,
+            tag = tag,
+            executeCount = executeCount
+        )
+    }
 }
