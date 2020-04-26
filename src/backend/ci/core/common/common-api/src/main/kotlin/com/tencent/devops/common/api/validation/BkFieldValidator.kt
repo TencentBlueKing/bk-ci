@@ -5,7 +5,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import javax.validation.ConstraintValidator
 import javax.validation.ConstraintValidatorContext
 
-class NotEmptyValidator : ConstraintValidator<BkField?, Any?> {
+class BkFieldValidator : ConstraintValidator<BkField?, Any?> {
 
     override fun initialize(parameters: BkField?) {}
 
