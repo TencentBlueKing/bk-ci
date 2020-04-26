@@ -40,4 +40,7 @@ class ExtServiceBcsConfig {
 
     @Value("\${store.extService.bcs.deployTimeOut}")
     val deployTimeOut: String = ""
+
+    @Value("\${store.extService.bcs.killGrayAppIntervalTime}")
+    val killGrayAppIntervalTime: String = ""
 }

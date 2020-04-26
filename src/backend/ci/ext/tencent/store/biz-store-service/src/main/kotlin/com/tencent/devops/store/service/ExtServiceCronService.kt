@@ -33,7 +33,9 @@ import com.tencent.devops.dispatch.api.ServiceBcsResource
 import com.tencent.devops.store.config.ExtServiceBcsConfig
 import com.tencent.devops.store.config.ExtServiceBcsNameSpaceConfig
 import com.tencent.devops.store.dao.ExtServiceDao
+import com.tencent.devops.store.dao.ExtServiceFeatureDao
 import com.tencent.devops.store.dao.common.StoreReleaseDao
+import com.tencent.devops.store.pojo.QueryServiceFeatureParam
 import com.tencent.devops.store.pojo.common.StoreReleaseCreateRequest
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.enums.ExtServiceStatusEnum
@@ -52,8 +54,10 @@ class ExtServiceCronService @Autowired constructor(
     private val dslContext: DSLContext,
     private val redisOperation: RedisOperation,
     private val extServiceDao: ExtServiceDao,
+    private val extServiceFeatureDao: ExtServiceFeatureDao,
     private val extServiceBcsConfig: ExtServiceBcsConfig,
     private val serviceNotifyService: ExtServiceNotifyService,
+    private val extServiceBcsService: ExtServiceBcsService,
     private val storeReleaseDao: StoreReleaseDao,
     private val extServiceBcsNameSpaceConfig: ExtServiceBcsNameSpaceConfig
 ) {
@@ -68,7 +72,7 @@ class ExtServiceCronService @Autowired constructor(
 
     @Scheduled(cron = "0 */1 * * * ?")
     fun updateReleaseDeployStatus() {
-        // 一次查20条处于“正式发布部署中”的扩展服务数据
+        // 一次查20条处于“正式发布部署中”状态的扩展服务数据
         val redisLock = RedisLock(redisOperation, "updateReleaseDeployStatus", 60L)
         try {
             val lockSuccess = redisLock.tryLock()
@@ -158,6 +162,56 @@ class ExtServiceCronService @Autowired constructor(
                     latestUpgradeTime = pubTime
                 )
             )
+        }
+    }
+
+    @Scheduled(cron = "0 */10 * * * ?")
+    fun killGrayApp() {
+        // 一次查20条处于“停止灰度环境标识为true且停止部署标记时间超过指定时间”状态的扩展服务数据
+        val redisLock = RedisLock(redisOperation, "killGrayApp", 60L)
+        try {
+            val lockSuccess = redisLock.tryLock()
+            if (lockSuccess) {
+                logger.info("killGrayApp start")
+                val serviceFeatureRecords = extServiceFeatureDao.getExtFeatureServices(
+                    dslContext = dslContext,
+                    queryServiceFeatureParam = QueryServiceFeatureParam(
+                        deleteFlag = false,
+                        killGrayAppFlag = true,
+                        killGrayAppIntervalTime = extServiceBcsConfig.killGrayAppIntervalTime.toLong(),
+                        page = 1,
+                        pageSize = 20
+                    )
+                )
+                if (serviceFeatureRecords == null || serviceFeatureRecords.isEmpty()) {
+                    return
+                }
+                serviceFeatureRecords.forEach {
+                    val serviceCode = it.serviceCode
+                    // 停止bcs灰度命名空间和正式命名空间的应用
+                    val bcsStopAppResult = extServiceBcsService.stopExtService(
+                        userId = it.modifier,
+                        serviceCode = serviceCode,
+                        deploymentName = serviceCode,
+                        serviceName = "$serviceCode-service",
+                        checkPermissionFlag = false,
+                        grayFlag = true
+                    )
+                    logger.info("$serviceCode bcsStopAppResult is :$bcsStopAppResult")
+                    if (bcsStopAppResult.isOk()) {
+                        // 灰度环境应用停止部署成功，则把灰度环境停止部署标志更新为null
+                        it.killGrayAppFlag = null
+                        it.killGrayAppMarkTime = null
+                    }
+                }
+                extServiceFeatureDao.batchUpdateServiceFeature(dslContext, serviceFeatureRecords)
+            } else {
+                logger.info("killGrayApp is running")
+            }
+        } catch (e: Throwable) {
+            logger.error("killGrayApp error:", e)
+        } finally {
+            redisLock.unlock()
         }
     }
 }

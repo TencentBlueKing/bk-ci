@@ -1,27 +1,29 @@
 /*
- * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ *  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ *  *
+ *  * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ *  *
+ *  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
+ *  *
+ *  * A copy of the MIT License is included in this file.
+ *  *
+ *  *
+ *  * Terms of the MIT License:
+ *  * ---------------------------------------------------
+ *  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
+ *  * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
+ *  * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
+ *  * Software is furnished to do so, subject to the following conditions:
+ *  *
+ *  * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ *  *
+ *  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+ *  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+ *  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ *  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ *  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
- * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
- *
- * A copy of the MIT License is included in this file.
- *
- *
- * Terms of the MIT License:
- * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
- * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
- * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
- * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
- * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
 package com.tencent.devops.store.service
@@ -42,7 +44,9 @@ import com.tencent.devops.store.config.ExtServiceDeploymentConfig
 import com.tencent.devops.store.config.ExtServiceImageSecretConfig
 import com.tencent.devops.store.config.ExtServiceIngressConfig
 import com.tencent.devops.store.config.ExtServiceServiceConfig
+import com.tencent.devops.store.dao.ExtServiceFeatureDao
 import com.tencent.devops.store.dao.common.StoreMemberDao
+import com.tencent.devops.store.pojo.ExtServiceFeatureUpdateInfo
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import io.fabric8.kubernetes.api.model.apps.DeploymentStatus
 import org.jooq.DSLContext
@@ -50,6 +54,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.text.MessageFormat
+import java.time.LocalDateTime
 
 @Service
 class ExtServiceBcsService {
@@ -82,6 +87,9 @@ class ExtServiceBcsService {
 
     @Autowired
     private lateinit var storeMemberDao: StoreMemberDao
+
+    @Autowired
+    private lateinit var extServiceFeatureDao: ExtServiceFeatureDao
 
     fun generateDeployApp(
         namespaceName: String,
@@ -144,6 +152,18 @@ class ExtServiceBcsService {
             deployApp = deployApp
         )
         logger.info("bcsDeployAppResult is :$bcsDeployAppResult")
+        if (bcsDeployAppResult.isOk()) {
+            // 当扩展服务正式发布后，需针对灰度环境部署的扩展应用标记停止部署，如果一段时间内还没有处于测试或审核中的版本则停掉灰度环境的应用
+            extServiceFeatureDao.updateExtServiceFeatureBaseInfo(
+                dslContext = dslContext,
+                serviceCode = serviceCode,
+                userId = userId,
+                extServiceFeatureUpdateInfo = ExtServiceFeatureUpdateInfo(
+                    killGrayAppFlag = true,
+                    killGrayAppMarkTime = LocalDateTime.now()
+                )
+            )
+        }
         return bcsDeployAppResult
     }
 
@@ -154,29 +174,51 @@ class ExtServiceBcsService {
      * @param deploymentName deployment名称
      * @param serviceName service名称
      * @param checkPermissionFlag 是否需要校验权限（op系统操作不需要校验）
+     * @param grayFlag 是否是灰度标识
      */
     fun stopExtService(
         userId: String,
         serviceCode: String,
         deploymentName: String,
         serviceName: String,
-        checkPermissionFlag: Boolean = true
+        checkPermissionFlag: Boolean = true,
+        grayFlag: Boolean? = null
     ): Result<Boolean> {
-        logger.info("stopExtService userId is:$userId,serviceCode is:$serviceCode")
+        logger.info("stopExtService userId is:$userId,serviceCode is:$serviceCode,grayFlag is:$grayFlag")
         logger.info("stopExtService deploymentName is:$deploymentName,serviceName is:$serviceName,checkPermissionFlag is:$checkPermissionFlag")
         if (checkPermissionFlag && !storeMemberDao.isStoreAdmin(dslContext, userId, serviceCode, StoreTypeEnum.SERVICE.type.toByte())) {
             return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED)
         }
-        // 停止扩展服务部署（灰度命名空间和正式命名空间的扩展服务应用都需停止）
+        var grayNamespaceName = ""
+        var grayHost = ""
+        var namespaceName = ""
+        var host = ""
+        when {
+            grayFlag == null -> {
+                grayNamespaceName = extServiceBcsNameSpaceConfig.grayNamespaceName
+                grayHost = extServiceIngressConfig.grayHost
+                namespaceName = extServiceBcsNameSpaceConfig.namespaceName
+                host = extServiceIngressConfig.host
+            }
+            grayFlag -> {
+                grayNamespaceName = extServiceBcsNameSpaceConfig.grayNamespaceName
+                grayHost = extServiceIngressConfig.grayHost
+            }
+            else -> {
+                namespaceName = extServiceBcsNameSpaceConfig.namespaceName
+                host = extServiceIngressConfig.host
+            }
+        }
+        // 停止扩展服务部署
         val bcsStopAppResult = client.get(ServiceBcsResource::class).bcsStopApp(
             userId = userId,
             stopApp = StopApp(
                 bcsUrl = extServiceBcsConfig.masterUrl,
                 token = extServiceBcsConfig.token,
-                grayNamespaceName = extServiceBcsNameSpaceConfig.grayNamespaceName,
-                grayHost = extServiceIngressConfig.grayHost,
-                namespaceName = extServiceBcsNameSpaceConfig.namespaceName,
-                host = extServiceIngressConfig.host,
+                grayNamespaceName = grayNamespaceName,
+                grayHost = grayHost,
+                namespaceName = namespaceName,
+                host = host,
                 deploymentName = serviceCode,
                 serviceName = "$serviceCode-service"
             )

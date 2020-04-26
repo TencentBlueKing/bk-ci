@@ -1,3 +1,31 @@
+/*
+ *
+ *  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ *  *
+ *  * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ *  *
+ *  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
+ *  *
+ *  * A copy of the MIT License is included in this file.
+ *  *
+ *  *
+ *  * Terms of the MIT License:
+ *  * ---------------------------------------------------
+ *  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
+ *  * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
+ *  * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
+ *  * Software is furnished to do so, subject to the following conditions:
+ *  *
+ *  * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ *  *
+ *  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+ *  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+ *  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ *  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ *  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
+ */
+
 package com.tencent.devops.store.dao
 
 import com.tencent.devops.common.api.util.UUIDUtil
@@ -5,7 +33,12 @@ import com.tencent.devops.model.store.tables.TExtensionServiceFeature
 import com.tencent.devops.model.store.tables.records.TExtensionServiceFeatureRecord
 import com.tencent.devops.store.pojo.ExtServiceFeatureCreateInfo
 import com.tencent.devops.store.pojo.ExtServiceFeatureUpdateInfo
+import com.tencent.devops.store.pojo.QueryServiceFeatureParam
+import org.jooq.Condition
 import org.jooq.DSLContext
+import org.jooq.Field
+import org.jooq.Result
+import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
@@ -94,6 +127,10 @@ class ExtServiceFeatureDao {
             if (null != visibilityLevel) {
                 baseStep.set(VISIBILITY_LEVEL, visibilityLevel)
             }
+            val killGrayAppFlag = extServiceFeatureUpdateInfo.killGrayAppFlag
+            baseStep.set(KILL_GRAY_APP_FLAG, killGrayAppFlag)
+            val killGrayAppMarkTime = extServiceFeatureUpdateInfo.killGrayAppMarkTime
+            baseStep.set(KILL_GRAY_APP_MARK_TIME, killGrayAppMarkTime)
             baseStep.set(MODIFIER, userId).set(UPDATE_TIME, LocalDateTime.now())
                 .where(SERVICE_CODE.eq(serviceCode))
                 .execute()
@@ -123,5 +160,56 @@ class ExtServiceFeatureDao {
                 .where(SERVICE_CODE.eq(serviceCode))
                 .fetchOne()
         }
+    }
+
+    fun getExtFeatureServices(
+        dslContext: DSLContext,
+        queryServiceFeatureParam: QueryServiceFeatureParam
+    ): Result<TExtensionServiceFeatureRecord>? {
+        with(TExtensionServiceFeature.T_EXTENSION_SERVICE_FEATURE) {
+            val conditions = mutableListOf<Condition>()
+            val serviceCode = queryServiceFeatureParam.serviceCode
+            if (serviceCode != null) {
+                conditions.add(SERVICE_CODE.eq(serviceCode))
+            }
+            val deleteFlag = queryServiceFeatureParam.deleteFlag
+            if (deleteFlag != null) {
+                conditions.add(DELETE_FLAG.eq(deleteFlag))
+            }
+            val killGrayAppFlag = queryServiceFeatureParam.killGrayAppFlag
+            if (killGrayAppFlag != null) {
+                conditions.add(KILL_GRAY_APP_FLAG.eq(killGrayAppFlag))
+            }
+            val killGrayAppIntervalTime = queryServiceFeatureParam.killGrayAppIntervalTime
+            if (killGrayAppIntervalTime != null) {
+                conditions.add(KILL_GRAY_APP_MARK_TIME.lt(timestampSubHour(killGrayAppIntervalTime)))
+            }
+            val baseStep = dslContext.selectFrom(this)
+                .where(conditions)
+            if (queryServiceFeatureParam.descFlag) {
+                baseStep.orderBy(CREATE_TIME.desc())
+            } else {
+                baseStep.orderBy(CREATE_TIME.asc())
+            }
+            val page = queryServiceFeatureParam.page
+            val pageSize = queryServiceFeatureParam.pageSize
+            return if (null != page && null != pageSize) {
+                baseStep.limit((page - 1) * pageSize, pageSize).fetch()
+            } else {
+                baseStep.fetch()
+            }
+        }
+    }
+
+    fun batchUpdateServiceFeature(dslContext: DSLContext, serviceFeatureRecords: List<TExtensionServiceFeatureRecord>) {
+        if (serviceFeatureRecords.isEmpty()) {
+            return
+        }
+        dslContext.batchUpdate(serviceFeatureRecords).execute()
+    }
+
+    fun timestampSubHour(hour: Long): Field<LocalDateTime> {
+        return DSL.field("date_sub(NOW(), INTERVAL $hour HOUR)",
+            LocalDateTime::class.java)
     }
 }
