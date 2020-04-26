@@ -89,6 +89,15 @@
     "stageOptionLabel": "本Stage执行条件",
     "stageTriggerDesc": "多个人员用英文逗号分隔",
     "skipStageDesc": "已跳过",
+    "execDetail": {
+        "log": "日志",
+        "setting": "配置",
+        "execTime": "重试次数",
+        "showTime": "显示时间戳",
+        "hideTime": "隐藏时间戳",
+        "downLoadLog": "下载日志",
+        "emptyLog": "日志内容为空"
+    },
     "timeMap": {
         "days": "天",
         "hours": "小时",
@@ -258,6 +267,7 @@
         "previewDiff": "编排预览",
         "templateInstantiation": "模板实例化",
         "templateVersion": "模板版本",
+        "templateVersionErrTips": "请先选择模板版本",
         "applyTemplateSetting": "同时应用模板设置",
         "applySettingTips": "勾选则表示把模板的设置应用到实例化的流水线",
         "newPipelineName": "实例化流水线名称",
@@ -352,6 +362,10 @@
         "stopFail": "终止失败"
     },
     "history": {
+        "logEmpty": "日志为空",
+        "logClear": "日志被清除",
+        "logClose": "日志被关闭",
+        "logErr": "其他异常",
         "stageStatus": "Stage",
         "execHistory": "执行历史",
         "trendData": "安装包趋势",
@@ -499,7 +513,7 @@
         "image": "镜像",
         "provideInfo": "{0} 提供，{1} 修改于 {2}",
         "officialCertification": "官方认证",
-        "thirdImageHolder": "请输入镜像，如Java：11.0.5",
+        "thirdImageHolder": "请输入完整镜像路径，如 csighub.tencentyun.com/tceforqci_arm/python3_frame_base",
         "by": "由",
         "devnet": "Devnet 物理机",
         "onlySupport": "仅支持",

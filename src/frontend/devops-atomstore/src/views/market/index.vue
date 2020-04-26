@@ -15,8 +15,8 @@
                 <nav class="home-nav">
                     <section :class="[{ 'control-active': isInputFocus }, 'g-input-search']">
                         <input class="g-input-border" type="text" :placeholder="$t('store.请输入名称')" v-model="inputValue" @focus="isInputFocus = true" @blur="isInputFocus = false" @keyup.enter="filterData.searchStr = inputValue" />
-                        <i class="bk-icon icon-search" v-if="!inputValue"></i>
-                        <i class="bk-icon icon-close-circle-shape clear-icon" v-else @click="(inputValue = '', filterData.searchStr = '')"></i>
+                        <i class="devops-icon icon-search" v-if="!inputValue"></i>
+                        <i class="devops-icon icon-close-circle-shape clear-icon" v-else @click="(inputValue = '', filterData.searchStr = '')"></i>
                     </section>
 
                     <section class="nav-pipetype">
@@ -52,10 +52,10 @@
                             </bk-option-group>
                         </bk-select>
 
-                        <h3> {{ $t('store.特性') }} <span @click="clearFliterData('features')" v-show="showFeatureClear"> {{ $t('store.清除') }} </span></h3>
+                        <h3> {{ $t('store.特性') }} <span @click="clearFliterData('features')" v-show="filterData.features.length"> {{ $t('store.清除') }} </span></h3>
                         <ul class="market-check-group">
-                            <li v-for="(feature, index) in features" :key="index" class="market-checkbox-li" @click="chooseFeature(feature)">
-                                <span :class="[feature.checked ? 'checked' : '', 'market-checkbox']"></span>
+                            <li v-for="(feature, index) in features.filter(x => !x.hidden)" :key="index" class="market-checkbox-li" @click="chooseFeature(feature)">
+                                <span :class="[filterData.features.some((x) => (x.key === feature.key && String(x.value) === String(feature.value))) ? 'checked' : '', 'market-checkbox']"></span>
                                 <span>{{ feature.name }}</span>
                             </li>
                         </ul>
@@ -90,7 +90,7 @@
         components: {
             commentRate
         },
-        
+
         filters: {
             pipeTypeFilter (val) {
                 const bkLocale = window.devops || {}
@@ -116,7 +116,7 @@
                     searchStr: undefined,
                     classifyKey: undefined,
                     classifyValue: 'all',
-                    rdType: undefined,
+                    features: [],
                     score: undefined,
                     sortType: undefined,
                     pipeType: undefined
@@ -124,9 +124,6 @@
                 inputValue: '',
                 isInputFocus: false,
                 categories: [{ name: this.$t('store.所有'), children: [{ name: this.$t('store.所有'), id: 'all', classifyValue: 'all' }] }],
-                features: [
-                    { name: this.$t('store.蓝鲸官方'), value: 'SELF_DEVELOPED', checked: false }
-                ],
                 rates: [
                     { value: 5, checked: false },
                     { value: 4, checked: false },
@@ -144,16 +141,18 @@
         },
 
         computed: {
-            showFeatureClear () {
-                const features = this.features || []
-                const index = features.findIndex((feature) => (feature.checked === true))
-                return index > -1
-            },
-
             showRateClear () {
                 const rates = this.rates || []
                 const index = rates.findIndex((rate) => (rate.checked === true))
                 return index > -1
+            },
+
+            features () {
+                return [
+                    { name: this.$t('store.蓝鲸官方'), key: 'rdType', value: 'SELF_DEVELOPED' },
+                    { name: this.$t('store.YAML可用'), key: 'yamlFlag', value: true, hidden: this.filterData.pipeType !== 'atom' },
+                    { name: this.$t('store.推荐使用'), key: 'recommendFlag', value: true }
+                ]
             }
         },
 
@@ -196,13 +195,16 @@
             ]),
 
             initData () {
-                const { searchStr, classifyKey, classifyValue = 'all', rdType, score, sortType, pipeType = 'atom' } = this.$route.query
-                Object.assign(this.filterData, { searchStr, classifyKey, classifyValue, rdType, score, sortType, pipeType })
-
-                this.features.forEach((item) => {
-                    if (item.value === this.filterData.rdType) item.checked = true
-                    else item.checked = false
-                })
+                const { searchStr, classifyKey, classifyValue = 'all', features, score, sortType, pipeType = 'atom' } = this.$route.query
+                Object.assign(this.filterData, { searchStr, classifyKey, classifyValue, score, sortType, pipeType })
+                if (features) {
+                    this.filterData.features = []
+                    const featuresArray = features.split(',')
+                    featuresArray.forEach((feature) => {
+                        feature = feature.split('-')
+                        this.filterData.features.push({ key: feature[0], value: feature[1] })
+                    })
+                }
 
                 this.rates.forEach((item) => {
                     if (+item.value === +this.filterData.score) item.checked = true
@@ -214,8 +216,7 @@
                 keys.forEach((key) => {
                     switch (key) {
                         case 'features':
-                            (this[key] || []).forEach((data) => (data.checked = false))
-                            this.filterData.rdType = undefined
+                            this.filterData.features = []
                             break
                         case 'rates':
                             (this[key] || []).forEach((data) => (data.checked = false))
@@ -241,8 +242,9 @@
             },
 
             chooseFeature (feature) {
-                feature.checked = !feature.checked
-                this.filterData.rdType = feature.checked ? feature.value : undefined
+                const index = this.filterData.features.findIndex((item) => (feature.key === item.key && String(feature.value) === String(item.value)))
+                if (index > -1) this.filterData.features.splice(index, 1)
+                else this.filterData.features.push(feature)
             },
 
             chooseRate (rate) {
@@ -271,13 +273,15 @@
             },
 
             changeRoute () {
-                const { searchStr, classifyValue, rdType, score, sortType, pipeType } = this.filterData
-                const hasFilter = searchStr || classifyValue !== 'all' || rdType || score || sortType
+                const { searchStr, classifyValue, features, score, sortType, pipeType } = this.filterData
+                const hasFilter = searchStr || classifyValue !== 'all' || features.length || score || sortType
 
                 const query = JSON.parse(JSON.stringify(this.filterData), (key, value) => {
                     const validate = ((key === '' || key !== 'classifyValue') && key !== 'classifyKey') || classifyValue !== 'all'
+                    if (key === 'features') value = value.map(x => `${x.key}-${x.value}`).join(';')
                     if (validate) return value
                 })
+
                 this.setMarketQuery(query)
 
                 if (hasFilter) this.$router.push({ name: 'list', query })

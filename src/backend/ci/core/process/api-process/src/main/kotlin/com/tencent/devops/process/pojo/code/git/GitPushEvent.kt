@@ -38,7 +38,9 @@ data class GitPushEvent(
     val project_id: Long,
     val repository: GitCommitRepository,
     val commits: List<GitCommit>,
-    val total_commits_count: Int
+    val total_commits_count: Int,
+    val operation_kind: String?,
+    val action_kind: String?
 ) : GitEvent() {
     companion object {
         const val classType = "push"
