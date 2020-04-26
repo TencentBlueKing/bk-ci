@@ -28,6 +28,7 @@ package com.tencent.devops.common.web
 
 import com.tencent.devops.common.web.handler.AllExceptionMapper
 import com.tencent.devops.common.web.handler.BadRequestExceptionMapper
+import com.tencent.devops.common.web.handler.BkFieldExceptionMapper
 import com.tencent.devops.common.web.handler.ClientExceptionMapper
 import com.tencent.devops.common.web.handler.CodeccReportExceptionMapper
 import com.tencent.devops.common.web.handler.CustomExceptionMapper
@@ -53,10 +54,16 @@ import org.springframework.context.ApplicationContext
 import org.springframework.context.ApplicationContextAware
 import javax.ws.rs.ApplicationPath
 
+@Suppress("LeakingThis")
 @ApplicationPath("/api")
-open class JerseyConfig : ResourceConfig(), ApplicationContextAware, InitializingBean {
+open class JerseyConfig() : ResourceConfig(), ApplicationContextAware, InitializingBean {
     private lateinit var applicationContext: ApplicationContext
     private val logger = LoggerFactory.getLogger(JerseyConfig::class.java)
+
+    init {
+        register(ValidationConfigurationContextResolver::class.java)
+    }
+
     override fun setApplicationContext(applicationContext: ApplicationContext) {
         this.applicationContext = applicationContext
     }
@@ -83,6 +90,7 @@ open class JerseyConfig : ResourceConfig(), ApplicationContextAware, Initializin
         register(PermissionForbiddenExceptionMapper::class.java)
         register(CodeccReportExceptionMapper::class.java)
         register(ErrorCodeExceptionMapper::class.java)
+        register(BkFieldExceptionMapper::class.java)
         logger.info("JerseyConfig-RestResource-find-start")
         val restResources = applicationContext.getBeansWithAnnotation(RestResource::class.java)
         logger.info("JerseyConfig-RestResource-register-start")
