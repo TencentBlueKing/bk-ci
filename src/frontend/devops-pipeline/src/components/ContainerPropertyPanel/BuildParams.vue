@@ -30,9 +30,9 @@
                                         </bk-popover>
                                         {{ param.id }}
                                     </span>
-                                    <i v-if="!disabled && settingKey !== &quot;templateParams&quot;" @click.stop.prevent="editParamShow(index)" class="bk-icon" :class="[`${param.required ? 'icon-eye' : 'icon-eye-slash'}`]" />
-                                    <i v-if="!disabled" class="bk-icon icon-move" />
-                                    <i v-if="!disabled" @click.stop.prevent="editParam(index, false)" class="bk-icon icon-minus" />
+                                    <i v-if="!disabled && settingKey !== &quot;templateParams&quot;" @click.stop.prevent="editParamShow(index)" class="devops-icon" :class="[`${param.required ? 'icon-eye' : 'icon-eye-slash'}`]" />
+                                    <i v-if="!disabled" class="devops-icon icon-move" />
+                                    <i v-if="!disabled" @click.stop.prevent="editParam(index, false)" class="devops-icon icon-minus" />
                                 </header>
                                 <bk-form slot="content">
                                     <div class="params-flex-col">
@@ -130,7 +130,7 @@
                             </accordion>
                         </draggable>
                         <a class="text-link" v-if="!disabled" @click.stop.prevent="editParam(globalParams.length, true)">
-                            <i class="bk-icon icon-plus-circle" />
+                            <i class="devops-icon icon-plus-circle" />
                             <span>{{ $t('editPage.addParams') }}</span>
                         </a>
                     </template>
@@ -576,10 +576,6 @@
             .flex-col-span-1 {
                 flex: 1;
                 overflow: hidden;
-                label.bk-label {
-                    height: 30px;
-                    line-height: 30px;
-                }
             }
         }
         .content .text-link {
@@ -604,7 +600,7 @@
                 margin-right: 10px;
             }
         }
-        .bk-icon {
+        .devops-icon {
             font-size: 14px;
             padding: 10px  0 0 10px;
             cursor: pointer;
@@ -624,7 +620,7 @@
         > span {
             flex: 1;
         }
-        >.bk-icon {
+        >.devops-icon {
             width: 24px;
             text-align: center;
             &.icon-plus {

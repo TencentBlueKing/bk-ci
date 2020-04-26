@@ -9,7 +9,7 @@
                     @click.stop="itemClickHandler(item)">
                     {{ item.text }}
                 </span>
-                <i class="bk-icon icon-angle-right bk-breadcrumbs-icon"
+                <i class="devops-icon icon-angle-right bk-breadcrumbs-icon"
                     v-if="index < list.length - 1">
                 </i>
             </li>
