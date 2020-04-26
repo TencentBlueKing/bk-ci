@@ -121,8 +121,12 @@ jobs:
         with:
           name: frontend
           path: bkci/frontend/
-      
-      - name: Create artifact - Step5:support-files
+
+      - name: Create artifact - Step5:generate boot-microservice.sh
+        run: ./generate_boot.sh
+        working-directory: scripts/
+
+      - name: Create artifact - Step6:support-files
         id: create-artifact
         run: |
           cp -rf support-files/ bkci/
@@ -136,9 +140,6 @@ jobs:
           echo "::set-output name=version::$(basename $GITHUB_REF)"
           basename $GITHUB_REF > bkci/VERSION
 
-      - name: Create artifact - Step6:generate boot-microservice.sh
-        run: ./generate_boot.sh
-        working-directory: scripts/
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
