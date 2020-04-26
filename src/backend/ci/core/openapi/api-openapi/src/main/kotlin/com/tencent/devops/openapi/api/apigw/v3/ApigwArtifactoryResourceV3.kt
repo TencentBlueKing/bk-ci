@@ -29,7 +29,7 @@ import javax.ws.rs.core.MediaType
 interface ApigwArtifactoryResourceV3 {
 
     @ApiOperation("获取用户下载链接")
-    @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/artifactories/userDownloadUrl")
+    @Path("/projects/{projectId}/artifactories/userDownloadUrl")
     @GET
     fun getUserDownloadUrl(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
