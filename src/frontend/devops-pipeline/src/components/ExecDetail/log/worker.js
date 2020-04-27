@@ -42,7 +42,7 @@ const allMainWidth = {}
 const allMainWordNum = {}
 const allFoldLineNum = {}
 const allRepeatLineNum = {}
-const currentSearch = {
+let currentSearch = {
     index: 0,
     val: ''
 }
@@ -115,10 +115,13 @@ onmessage = function (e) {
                 { data: allMainWidth, default: 0 },
                 { data: allMainWordNum, default: 0 },
                 { data: allRepeatLineNum, default: -1 },
-                { data: allFoldLineNum, default: 0 },
-                { data: currentSearch, default: { index: 0, val: '' } }
+                { data: allFoldLineNum, default: 0 }
             ]
             resetData(resetList)
+            currentSearch = {
+                index: 0,
+                val: ''
+            }
             break
     }
 }
