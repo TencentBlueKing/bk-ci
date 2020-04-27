@@ -13,8 +13,7 @@ if [ ! -f "$tpl_tpl" ];then
   exit 1
 fi
 
-for dir in `find ../src/backend/ci/core/ -mindepth 1 -maxdepth 1 -type d -print0 | xargs -0`;do
-  service_name=`basename $dir`
+for service_name in `awk -F':boot-' '/:boot-/ && !/assembly"/ {print $2}' ../src/backend/ci/settings.gradle | tr -d '"'`;do
   # convert lower to upper
   SERVICE_NAME=${service_name^^}
   
