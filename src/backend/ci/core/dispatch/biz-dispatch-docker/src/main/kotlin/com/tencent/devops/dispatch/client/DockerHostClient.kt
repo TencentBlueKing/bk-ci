@@ -21,6 +21,7 @@ import com.tencent.devops.dispatch.utils.DockerHostUtils
 import com.tencent.devops.dispatch.utils.redis.RedisUtils
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
 import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
+import com.tencent.devops.store.pojo.image.enums.ImageRDTypeEnum
 import com.tencent.devops.ticket.pojo.enums.CredentialType
 import okhttp3.MediaType
 import okhttp3.Request
@@ -138,9 +139,13 @@ class DockerHostClient @Autowired constructor(
             registryUser = userName ?: "",
             registryPwd = password ?: "",
             imageType = dispatchType.imageType?.type,
-            imagePublicFlag = false,
-            imageRDType = null,
-            containerHashId = ""
+            imagePublicFlag = dispatchType.imagePublicFlag,
+            imageRDType = if (dispatchType.imageRDType == null) {
+                null
+            } else {
+                ImageRDTypeEnum.getImageRDTypeByName(dispatchType.imageRDType!!).name
+            },
+            containerHashId = event.containerHashId
         )
 
         dockerBuildStart(dockerIp, dockerHostPort, requestBody, event)
