@@ -199,6 +199,7 @@
                 if (this.currentExe === execute) return
                 this.currentExe = execute
                 this.$emit('changeExecute', execute)
+                this.clearSearch()
             }
         }
     }

@@ -76,7 +76,7 @@
                 const data = event.data
                 switch (data.type) {
                     case 'completeSearch':
-                        this.handleSearch(data.num, data.curSearchRes, data.noScroll, data.index)
+                        this.handleSearch(data.num, data.curSearchRes, data.noScroll)
                         break
                     case 'completeGetSearchRes':
                         this.handleSearchRes(data.searchRes)
@@ -170,6 +170,7 @@
                 if (this.currentExe === execute) return
                 this.currentExe = execute
                 this.$emit('changeExecute', execute)
+                this.clearSearch()
             }
         }
     }
