@@ -31,10 +31,13 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.store.dao.ExtServiceDao
+import com.tencent.devops.store.dao.ExtServiceFeatureDao
+import com.tencent.devops.store.pojo.ExtServiceFeatureUpdateInfo
 import com.tencent.devops.store.pojo.common.StoreBuildResultRequest
 import com.tencent.devops.store.pojo.enums.ExtServiceStatusEnum
 import com.tencent.devops.store.service.common.AbstractStoreHandleBuildResultService
 import org.jooq.DSLContext
+import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -43,6 +46,7 @@ import org.springframework.stereotype.Service
 class ExtServiceHandleBuildResultService @Autowired constructor(
     private val dslContext: DSLContext,
     private val extServiceDao: ExtServiceDao,
+    private val extServiceFeatureDao: ExtServiceFeatureDao,
     private val extServiceBcsService: ExtServiceBcsService
 ) : AbstractStoreHandleBuildResultService() {
 
@@ -78,13 +82,28 @@ class ExtServiceHandleBuildResultService @Autowired constructor(
         if (BuildStatus.SUCCEED != storeBuildResultRequest.buildStatus) {
             serviceStatus = ExtServiceStatusEnum.BUILD_FAIL // 构建失败
         }
-        extServiceDao.setServiceStatusById(
-            dslContext = dslContext,
-            serviceId = serviceId,
-            serviceStatus = serviceStatus.status.toByte(),
-            userId = storeBuildResultRequest.userId,
-            msg = null
-        )
+        dslContext.transaction { t ->
+            val context = DSL.using(t)
+            extServiceDao.setServiceStatusById(
+                dslContext = context,
+                serviceId = serviceId,
+                serviceStatus = serviceStatus.status.toByte(),
+                userId = storeBuildResultRequest.userId,
+                msg = null
+            )
+            if (serviceStatus == ExtServiceStatusEnum.TESTING) {
+                // 如果扩展服务处于测试中，需要对灰度环境部署的扩展应用不标记停止部署
+                extServiceFeatureDao.updateExtServiceFeatureBaseInfo(
+                    dslContext = dslContext,
+                    serviceCode = serviceRecord.serviceCode,
+                    userId = serviceRecord.modifier,
+                    extServiceFeatureUpdateInfo = ExtServiceFeatureUpdateInfo(
+                        killGrayAppFlag = false,
+                        killGrayAppMarkTime = null
+                    )
+                )
+            }
+        }
         return Result(true)
     }
 }
