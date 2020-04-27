@@ -42,7 +42,7 @@ const allMainWidth = {}
 const allMainWordNum = {}
 const allFoldLineNum = {}
 const allRepeatLineNum = {}
-let currentSearch = {
+const currentSearch = {
     index: 0,
     val: ''
 }
@@ -92,13 +92,12 @@ onmessage = function (e) {
                 type: 'completeSearch',
                 num: searchRes.length,
                 curSearchRes: getSearchRes(data.index || currentSearch.index),
-                index: data.index,
                 noScroll
             })
             break
         case 'search':
             handleSearch(data.val)
-            postMessage({ type: 'completeSearch', num: searchRes.length, curSearchRes: getSearchRes(0), index: 0 })
+            postMessage({ type: 'completeSearch', num: searchRes.length, curSearchRes: getSearchRes(0) })
             currentSearch.index = 0
             currentSearch.val = data.val
             break
@@ -118,10 +117,6 @@ onmessage = function (e) {
                 { data: allFoldLineNum, default: 0 }
             ]
             resetData(resetList)
-            currentSearch = {
-                index: 0,
-                val: ''
-            }
             break
     }
 }

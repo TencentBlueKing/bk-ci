@@ -94,7 +94,6 @@ onmessage = function (e) {
                 curSearchRes: getSearchRes(data.index || currentSearch.index),
                 noScroll
             })
-            if (!noScroll) postMessage({ type: 'showSearchLog', curSearch: searchRes[data.index] })
             break
         case 'search':
             handleSearch(data.val)
@@ -115,8 +114,7 @@ onmessage = function (e) {
                 { data: allMainWidth, default: 0 },
                 { data: allMainWordNum, default: 0 },
                 { data: allRepeatLineNum, default: -1 },
-                { data: allFoldLineNum, default: 0 },
-                { data: currentSearch, default: { index: 0, val: '' } }
+                { data: allFoldLineNum, default: 0 }
             ]
             resetData(resetList)
             break
