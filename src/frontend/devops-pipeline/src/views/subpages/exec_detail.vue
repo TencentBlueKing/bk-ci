@@ -45,41 +45,13 @@
         </template>
         <template v-if="editingElementPos && execDetail">
             <template v-if="showLog">
-                <log :title="currentElement.name"
-                    :status="currentElement.status"
-                    :execute-count="currentElement.executeCount"
-                    @changeExecute="changeExecute"
-                    :down-load-link="downLoadPluginLink"
-                    :id="currentElement.id"
-                    @closeLog="closeLog"
-                    ref="log"
-                />
+                <plugin @close="showLog = false" />
             </template>
             <template v-else-if="showContainerPanel">
-                <job v-if="currentJob['@type'] !== 'trigger'"
-                    :title="currentJob.name"
-                    :status="currentJob.status"
-                    :plugin-list="pluginList"
-                    :down-load-link="downLoadJobLink"
-                    @closeLog="closeLog"
-                    @closePlugin="closePlugin"
-                    @openPlugin="initLog"
-                    ref="log"
-                />
-                <container-property-panel v-else
-                    :title="sidePanelConfig.title"
-                    :container-index="editingElementPos.containerIndex"
-                    :stage-index="editingElementPos.stageIndex"
-                    :stages="execDetail.model.stages"
-                    :editable="false"
-                />
+                <job @close="showLog = false" />
             </template>
             <template v-else-if="typeof editingElementPos.stageIndex !== 'undefined'">
-                <stage-property-panel
-                    :stage="stage"
-                    :stage-index="editingElementPos.stageIndex"
-                    :editable="false"
-                />
+                <stage @close="showLog = false" />
             </template>
         </template>
         <template v-if="execDetail">
@@ -106,12 +78,13 @@
     import viewPart from '@/components/viewPart'
     import codeRecord from '@/components/codeRecord'
     import outputOption from '@/components/outputOption'
-    import ContainerPropertyPanel from '@/components/ContainerPropertyPanel/'
     import StagePropertyPanel from '@/components/StagePropertyPanel'
     import emptyTips from '@/components/devops/emptyTips'
     import ReviewDialog from '@/components/ReviewDialog'
     import log from '../../../../devops-log'
-    import job from '../../../../devops-log/src/job'
+    import plugin from '@/components/ExecDetail/plugin'
+    import job from '@/components/ExecDetail/job'
+    import stage from '@/components/ExecDetail/stage'
     import pipelineOperateMixin from '@/mixins/pipeline-operate-mixin'
     import pipelineConstMixin from '@/mixins/pipelineConstMixin'
     import { convertMStoStringByRule } from '@/utils/util'
@@ -121,14 +94,15 @@
     export default {
         components: {
             stages,
-            ContainerPropertyPanel,
             StagePropertyPanel,
             viewPart,
             codeRecord,
             outputOption,
             emptyTips,
+            plugin,
             log,
             job,
+            stage,
             ReviewDialog,
             Logo,
             MiniMap
@@ -182,23 +156,6 @@
                 return `${AJAX_URL_PIRFIX}/log/api/user/logs/${this.$route.params.projectId}/${this.$route.params.pipelineId}/${this.execDetail.id}/download?executeCount=1&fileName=${fileName}`
             },
 
-            downLoadJobLink () {
-                const editingElementPos = this.editingElementPos
-                const fileName = encodeURI(encodeURI(`${editingElementPos.stageIndex + 1}-${editingElementPos.containerIndex + 1}-${this.currentJob.name}`))
-                const jobId = this.currentJob.containerId
-                const tag = `startVM-${this.currentJob.id}`
-                const curLogPostData = this.logPostData[tag] || {}
-                const currentExe = curLogPostData.currentExe || 1
-                return `${AJAX_URL_PIRFIX}/log/api/user/logs/${this.$route.params.projectId}/${this.$route.params.pipelineId}/${this.execDetail.id}/download?jobId=${jobId}&executeCount=${currentExe}&fileName=${fileName}`
-            },
-            downLoadPluginLink () {
-                const editingElementPos = this.editingElementPos
-                const fileName = encodeURI(encodeURI(`${editingElementPos.stageIndex + 1}-${editingElementPos.containerIndex + 1}-${editingElementPos.elementIndex + 1}-${this.currentElement.name}`))
-                const tag = this.currentElement.id
-                const curLogPostData = this.logPostData[tag] || {}
-                const currentExe = curLogPostData.currentExe || 1
-                return `${AJAX_URL_PIRFIX}/log/api/user/logs/${this.$route.params.projectId}/${this.$route.params.pipelineId}/${this.execDetail.id}/download?tag=${tag}&executeCount=${currentExe}&fileName=${fileName}`
-            },
             panels () {
                 return [{
                     name: 'executeDetail',
@@ -235,7 +192,6 @@
                 get () {
                     const { editingElementPos, $route: { params } } = this
                     const res = typeof editingElementPos.elementIndex !== 'undefined' && params.buildNo
-                    if (res) this.$nextTick(this.initLog)
                     return res
                 },
                 set (value) {
@@ -254,10 +210,6 @@
                 const { editingElementPos } = this
                 const res = typeof editingElementPos.containerIndex !== 'undefined'
                 return res
-            },
-            pluginList () {
-                const startUp = { name: 'Set up job', status: this.currentJob.startVMStatus, id: `startVM-${this.currentJob.id}` }
-                return [startUp, ...this.currentJob.elements]
             },
             currentJob () {
                 const { editingElementPos, execDetail } = this
@@ -398,73 +350,31 @@
                 })
             },
 
-            changeExecute (tag, currentExe) {
-                const curLogPostData = this.logPostData[tag]
-                curLogPostData.currentExe = currentExe
-                curLogPostData.lineNo = 0
-                clearTimeout(curLogPostData.id)
-                curLogPostData.clearIds.push(curLogPostData.id)
-                curLogPostData.id = undefined
-                this.openLogApi(curLogPostData)
-            },
-
-            closePlugin (tag) {
-                const curLogPostData = this.logPostData[tag]
-                clearTimeout(curLogPostData.id)
-                curLogPostData.clearIds.push(curLogPostData.id)
-                curLogPostData.id = undefined
-            },
-
             initAllLog () {
                 const route = this.$route.params || {}
-                const tag = this.execDetail.id
-                this.logPostData[tag] = {
+                this.logPostData = {
                     projectId: route.projectId,
                     pipelineId: route.pipelineId,
                     buildId: this.execDetail.id,
                     lineNo: 0,
+                    hasStop: false,
                     id: undefined,
-                    clearIds: [],
-                    ref: this.$refs.log,
                     currentExe: 1
                 }
-                this.openLogApi(this.logPostData[tag])
+                this.openLogApi()
             },
 
-            initLog (tag = this.currentElement.id, ref = this.$refs.log) {
-                const route = this.$route.params || {}
-                let currentLogPost = this.logPostData[tag]
-                if (!currentLogPost) {
-                    const curEle = this.pluginList.find(x => x.id === tag) || {}
-                    currentLogPost = {
-                        projectId: route.projectId,
-                        pipelineId: route.pipelineId,
-                        buildId: this.execDetail.id,
-                        tag,
-                        currentExe: curEle.executeCount || 1,
-                        ref,
-                        lineNo: 0,
-                        id: undefined,
-                        clearIds: []
-                    }
-                    this.logPostData[tag] = currentLogPost
-                    this.openLogApi(currentLogPost)
-                } else {
-                    this.getAfterLogApi(100, currentLogPost)
-                }
-            },
-
-            openLogApi (currentLogPost) {
-                this.getInitLog(currentLogPost).then((res) => {
-                    this.handleLogRes(res, currentLogPost)
+            openLogApi () {
+                this.getInitLog(this.logPostData).then((res) => {
+                    this.handleLogRes(res)
                 }).catch((err) => {
                     this.$bkMessage({ theme: 'error', message: err.message || err })
-                    if (currentLogPost.ref) currentLogPost.ref.handleApiErr(err.message)
+                    if (this.$refs.log) this.$refs.log.handleApiErr(err.message)
                 })
             },
 
-            handleLogRes (res, currentLogPost, curId = currentLogPost.id) {
-                if (currentLogPost.clearIds.includes(curId) || currentLogPost.ref === undefined) return
+            handleLogRes (res) {
+                if (this.logPostData.hasStop || this.$refs.log === undefined) return
                 res = res.data || {}
                 if (res.status !== 0) {
                     let errMessage
@@ -482,48 +392,43 @@
                             errMessage = this.$t('history.logErr')
                             break
                     }
-                    currentLogPost.ref.handleApiErr(errMessage)
+                    this.$refs.log.handleApiErr(errMessage)
                     return
                 }
 
                 const logs = res.logs || []
                 const lastLog = logs[logs.length - 1] || {}
-                const lastLogNo = lastLog.lineNo || currentLogPost.lineNo - 1 || -1
-                currentLogPost.lineNo = +lastLogNo + 1
+                const lastLogNo = lastLog.lineNo || this.logPostData.lineNo - 1 || -1
+                this.logPostData.lineNo = +lastLogNo + 1
                 if (res.finished) {
                     if (res.hasMore) {
-                        currentLogPost.ref.addLogData(logs)
-                        this.getAfterLogApi(100, currentLogPost)
+                        this.$refs.log.addLogData(logs)
+                        this.getAfterLogApi(100)
                     } else {
-                        currentLogPost.ref.addLogData(logs)
+                        this.$refs.log.addLogData(logs)
                     }
                 } else {
-                    currentLogPost.ref.addLogData(logs)
-                    this.getAfterLogApi(1000, currentLogPost)
+                    this.$refs.log.addLogData(logs)
+                    this.getAfterLogApi(1000)
                 }
             },
 
-            getAfterLogApi (mis, currentLogPost) {
-                const curId = currentLogPost.id = setTimeout(() => {
-                    if (currentLogPost.clearIds.includes(curId) || currentLogPost.ref === undefined) return
-                    this.getAfterLog(currentLogPost).then((res) => {
-                        this.handleLogRes(res, currentLogPost, curId)
+            getAfterLogApi (mis) {
+                this.logPostData.id = setTimeout(() => {
+                    if (this.logPostData.hasStop || this.$refs.log === undefined) return
+                    this.getAfterLog(this.logPostData).then((res) => {
+                        this.handleLogRes(res)
                     }).catch((err) => {
                         this.$bkMessage({ theme: 'error', message: err.message || err })
-                        currentLogPost.ref.handleApiErr(err.message)
+                        this.$refs.log.handleApiErr(err.message)
                     })
                 }, mis)
             },
 
             closeLog () {
                 this.showLog = false
-                Object.keys(this.logPostData).forEach((key) => {
-                    const currentPostData = this.logPostData[key] || {}
-                    const currentId = currentPostData.id || ''
-                    clearTimeout(currentId)
-                    currentPostData.clearIds.push(currentId)
-                    currentPostData.id = undefined
-                })
+                clearTimeout(this.logPostData.id)
+                this.logPostData.hasStop = true
                 this.logPostData = {}
             }
         }
