@@ -579,7 +579,8 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
             rabbitTemplate = rabbitTemplate,
             buildId = buildId,
             tag = result.elementId,
-            jobId = result.containerId ?: ""
+            jobId = result.containerId ?: "",
+            executeCount = result.executeCount
         )
     }
 
