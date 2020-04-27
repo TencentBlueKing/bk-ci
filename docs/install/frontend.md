@@ -1,11 +1,10 @@
 # bk-ci 前端部署文档
 
-蓝鲸ci前端（frontend目录下）, 共有8个子目录，其中common-lib和svg-sprites为项目依赖的静态资源，其余6个目录均为vue的spa工程，其中devops-nav为主入口，其它子服务以iframe或amd的方式接入
+蓝鲸ci前端（frontend目录下）, common-lib和svg-sprites为项目依赖的静态资源，其余目录均为vue的spa工程，其中devops-nav为主入口，其它子服务以Iframe 或 UMD 的方式接入
 
 ## 系统要求
 
 nodejs版本 8.0.0及以上
-
 
 ## 安装说明
 
