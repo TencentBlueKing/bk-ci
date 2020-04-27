@@ -310,23 +310,33 @@ class OpExtServiceService @Autowired constructor(
         return Result(true)
     }
 
-    fun deleteService(userId: String, serviceId: String): Result<Boolean> {
-        logger.info("deleteService userId: $userId , serviceId: $serviceId")
-        val serviceRecord = extServiceDao.getServiceById(dslContext, serviceId) ?: throw RuntimeException(
-            MessageCodeUtil.getCodeMessage(CommonMessageCode.PARAMETER_IS_INVALID, arrayOf(serviceId))
-        )
+    fun deleteService(
+        userId: String,
+        serviceId: String,
+        checkPermissionFlag: Boolean = true
+    ): Result<Boolean> {
+        logger.info("deleteService userId: $userId , serviceId: $serviceId , checkPermissionFlag: $checkPermissionFlag")
+        val serviceRecord =
+            extServiceDao.getServiceById(dslContext, serviceId) ?: return MessageCodeUtil.generateResponseDataObject(
+                CommonMessageCode.PARAMETER_IS_INVALID,
+                arrayOf(serviceId)
+            )
         val serviceCode = serviceRecord.serviceCode
         val type = StoreTypeEnum.SERVICE.type.toByte()
-        val isOwner = storeMemberService.isStoreAdmin(userId, serviceCode, StoreTypeEnum.SERVICE.type.toByte())
-        if (!isOwner) {
-            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED, arrayOf())
+        if (checkPermissionFlag && !storeMemberService.isStoreAdmin(
+                userId,
+                serviceCode,
+                StoreTypeEnum.SERVICE.type.toByte()
+            )
+        ) {
+            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED)
         }
         val releasedCount = extServiceDao.countReleaseServiceByCode(dslContext, serviceCode)
         logger.info("releasedCount: $releasedCount")
         if (releasedCount > 0) {
             return MessageCodeUtil.generateResponseDataObject(
                 StoreMessageCode.USER_SERVICE_RELEASED_IS_NOT_ALLOW_DELETE,
-                arrayOf()
+                arrayOf(serviceCode)
             )
         }
         // 如果已经被安装到其他项目下使用，不能删除
@@ -335,7 +345,7 @@ class OpExtServiceService @Autowired constructor(
         if (installedCount > 0) {
             return MessageCodeUtil.generateResponseDataObject(
                 StoreMessageCode.USER_SERVICE_USED_IS_NOT_ALLOW_DELETE,
-                arrayOf()
+                arrayOf(serviceCode)
             )
         }
         dslContext.transaction { t ->
