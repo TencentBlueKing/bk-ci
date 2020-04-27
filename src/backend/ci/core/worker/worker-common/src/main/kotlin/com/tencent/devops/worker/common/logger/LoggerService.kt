@@ -144,6 +144,8 @@ object LoggerService {
             logger.info("Finish stopping the log service")
         } catch (e: Exception) {
             logger.error("Fail to stop log service for build", e)
+        } finally {
+            finishLog(elementId, jobId, executeCount)
         }
     }
 
@@ -229,6 +231,18 @@ object LoggerService {
             }
         } catch (e: Exception) {
             logger.warn("Fail to send the logs(${logMessages.size})", e)
+        }
+    }
+
+    private fun finishLog(tag: String?, jobId: String?, executeCount: Int?) {
+        try {
+            logger.info("Start to finish the log")
+            val result = logResourceApi.finishLog(tag, jobId, executeCount)
+            if (result.isNotOk()) {
+                logger.error("上报日志状态日志失败：${result.message}")
+            }
+        } catch (e: Exception) {
+            logger.warn("Fail to finish the logs", e)
         }
     }
 }
