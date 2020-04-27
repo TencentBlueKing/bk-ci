@@ -79,6 +79,7 @@ import com.tencent.devops.process.pojo.mq.PipelineBuildContainerEvent
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import com.tencent.devops.process.pojo.pipeline.PipelineLatestBuild
 import com.tencent.devops.process.service.BuildStartupParamService
+import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.ParamService
 import com.tencent.devops.process.utils.PIPELINE_NAME
 import com.tencent.devops.process.utils.PIPELINE_RETRY_BUILD_ID
@@ -112,6 +113,7 @@ class PipelineBuildService(
     private val pipelineInterceptorChain: PipelineInterceptorChain,
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val pipelineRuntimeService: PipelineRuntimeService,
+    private val buildVariableService: BuildVariableService,
     private val pipelineStageService: PipelineStageService,
     private val redisOperation: RedisOperation,
     private val buildDetailService: PipelineBuildDetailService,
@@ -320,7 +322,7 @@ class PipelineBuildService(
                     errorCode = ProcessMessageCode.DENY_START_BY_MANUAL)
             }
             val params = mutableMapOf<String, Any>()
-            val originVars = pipelineRuntimeService.getAllVariable(buildId)
+            val originVars = buildVariableService.getAllVariable(buildId)
             if (!taskId.isNullOrBlank()) {
                 // job/task级重试，获取buildVariable构建参数，恢复环境变量
                 params.putAll(originVars)
@@ -707,7 +709,7 @@ class PipelineBuildService(
             errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS,
             defaultMessage = "流水线编排不存在")
 
-        val runtimeVars = pipelineRuntimeService.getAllVariable(buildId)
+        val runtimeVars = buildVariableService.getAllVariable(buildId)
         model.stages.forEachIndexed { index, s ->
             if (index == 0) {
                 return@forEachIndexed
@@ -830,7 +832,7 @@ class PipelineBuildService(
             errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS,
             defaultMessage = "流水线编排不存在")
 
-        val runtimeVars = pipelineRuntimeService.getAllVariable(buildId)
+        val runtimeVars = buildVariableService.getAllVariable(buildId)
         model.stages.forEachIndexed { index, s ->
             if (index == 0) {
                 return@forEachIndexed
@@ -1038,7 +1040,7 @@ class PipelineBuildService(
                 params = arrayOf(buildId))
         }
         val buildHistory = buildHistories[0]
-        val variables = pipelineRuntimeService.getAllVariable(buildId)
+        val variables = buildVariableService.getAllVariable(buildId)
         return BuildHistoryWithVars(
             id = buildHistory.id,
             userId = buildHistory.userId,
@@ -1094,7 +1096,7 @@ class PipelineBuildService(
                 arrayOf(buildId)
             )
 
-        val allVariable = pipelineRuntimeService.getAllVariable(buildId)
+        val allVariable = buildVariableService.getAllVariable(buildId)
 
         return Result(
             BuildHistoryVariables(

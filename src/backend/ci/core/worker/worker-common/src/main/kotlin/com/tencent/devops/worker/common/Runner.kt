@@ -64,19 +64,19 @@ object Runner {
             LoggerService.start()
             val variables = buildVariables.variablesWithType
             val retryCount = ParameterUtils.getListValueByKey(variables, PIPELINE_RETRY_COUNT) ?: "0"
-            val startCount = retryCount.toInt() + 1
-            LoggerService.executeCount = startCount
+            LoggerService.executeCount = retryCount.toInt() + 1
             LoggerService.jobId = buildVariables.containerHashId
-            logger.info("Has been started for $startCount times...")
 
             Heartbeat.start()
             // 开始轮询
             try {
                 LoggerService.elementId = VMUtils.genStartVMTaskId(buildVariables.containerId)
+
                 showBuildStartupLog(buildVariables.buildId, buildVariables.vmSeqId)
                 showMachineLog(buildVariables.vmName)
                 showSystemLog()
                 showRuntimeEnvs(buildVariables.variablesWithType)
+
                 val variablesMap = buildVariables.variablesWithType.map { it.key to it.value.toString() }.toMap()
                 workspacePathFile = workspaceInterface.getWorkspace(variablesMap, buildVariables.pipelineId)
 

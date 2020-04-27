@@ -48,7 +48,5 @@ data class BuildTaskResult(
     @ApiModelProperty("错误类型", required = false)
     val errorType: String? = null,
     @ApiModelProperty("错误码标识", required = false)
-    val errorCode: Int? = null,
-    @ApiModelProperty("执行次数", required = false)
-    val executeCount: Int? = null
+    val errorCode: Int? = null
 )
