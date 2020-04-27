@@ -94,7 +94,7 @@ class ExtServiceHandleBuildResultService @Autowired constructor(
             if (serviceStatus == ExtServiceStatusEnum.TESTING) {
                 // 如果扩展服务处于测试中，需要对灰度环境部署的扩展应用不标记停止部署
                 extServiceFeatureDao.updateExtServiceFeatureBaseInfo(
-                    dslContext = dslContext,
+                    dslContext = context,
                     serviceCode = serviceRecord.serviceCode,
                     userId = serviceRecord.modifier,
                     extServiceFeatureUpdateInfo = ExtServiceFeatureUpdateInfo(
