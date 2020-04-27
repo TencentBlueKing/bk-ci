@@ -64,8 +64,10 @@ object Runner {
             LoggerService.start()
             val variables = buildVariables.variablesWithType
             val retryCount = ParameterUtils.getListValueByKey(variables, PIPELINE_RETRY_COUNT) ?: "0"
-            LoggerService.executeCount = retryCount.toInt() + 1
+            val startCount = retryCount.toInt() + 1
+            LoggerService.executeCount = startCount
             LoggerService.jobId = buildVariables.containerHashId
+            logger.info("Has been started for $startCount times...")
 
             Heartbeat.start()
             // 开始轮询
@@ -84,7 +86,6 @@ object Runner {
                 loop@ while (true) {
                     logger.info("Start to claim the task")
                     val buildTask = ProcessService.claimTask()
-                    val taskName = buildTask.elementName ?: "Task"
                     logger.info("Start to execute the task($buildTask)")
                     when (buildTask.status) {
                         BuildTaskStatus.DO -> {
