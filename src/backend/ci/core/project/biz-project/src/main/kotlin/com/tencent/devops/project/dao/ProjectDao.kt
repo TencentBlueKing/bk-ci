@@ -70,7 +70,7 @@ class ProjectDao {
             val step = dslContext.selectFrom(this)
                 .where(PROJECT_NAME.eq(projectName))
             if (!projectId.isNullOrBlank()) {
-                step.and(PROJECT_ID.ne(projectId))
+                step.and(ENGLISH_NAME.ne(projectId))
             }
             return step.fetchOne() != null
         }
