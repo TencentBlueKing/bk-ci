@@ -42,7 +42,7 @@ config = {
   },
   ns_gray = {
     ip = {
-      "127.0.0.1"
+      "__BKCI_CONSUL_GRAY_IP__"
     },
     port = __BKCI_CONSUL_DNS_PORT__,
     http_port = __BKCI_CONSUL_PORT__,
