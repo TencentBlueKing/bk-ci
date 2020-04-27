@@ -699,21 +699,19 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         if (!checkResult) {
             return MessageCodeUtil.generateResponseDataObject(code)
         }
-        if (serviceRecord.serviceStatus >= ExtServiceStatusEnum.TESTING.status.toByte()) {
-            // 如果该版本的状态已处于测试中及其后面的状态，取消发布则需要停掉灰度命名空间的应用
-            val serviceCode = serviceRecord.serviceCode
-            val bcsStopAppResult = extServiceBcsService.stopExtService(
-                userId = userId,
-                serviceCode = serviceCode,
-                deploymentName = serviceCode,
-                serviceName = "$serviceCode-service",
-                checkPermissionFlag = false,
-                grayFlag = true
-            )
-            logger.info("$serviceCode bcsStopAppResult is :$bcsStopAppResult")
-            if (bcsStopAppResult.isNotOk()) {
-                return bcsStopAppResult
-            }
+        // 如果该版本的状态已处于测试中及其后面的状态，取消发布则需要停掉灰度命名空间的应用
+        val serviceCode = serviceRecord.serviceCode
+        val bcsStopAppResult = extServiceBcsService.stopExtService(
+            userId = userId,
+            serviceCode = serviceCode,
+            deploymentName = serviceCode,
+            serviceName = "$serviceCode-service",
+            checkPermissionFlag = false,
+            grayFlag = true
+        )
+        logger.info("$serviceCode bcsStopAppResult is :$bcsStopAppResult")
+        if (bcsStopAppResult.isNotOk()) {
+            return bcsStopAppResult
         }
         extServiceDao.setServiceStatusById(
             dslContext,
