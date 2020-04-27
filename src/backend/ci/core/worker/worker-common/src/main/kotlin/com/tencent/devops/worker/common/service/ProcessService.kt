@@ -67,6 +67,7 @@ object ProcessService {
         isSuccess: Boolean,
         buildResult: Map<String, String>,
         type: String?,
+        executeCount: Int? = 1,
         message: String? = null,
         errorType: String? = null,
         errorCode: Int? = null
@@ -89,7 +90,8 @@ object ProcessService {
             message = message,
             type = type,
             errorType = errorType,
-            errorCode = errorCode
+            errorCode = errorCode,
+            executeCount = executeCount
         )
         val result = buildApi.completeTask(taskResult)
         if (result.isNotOk()) {
