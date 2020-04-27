@@ -42,7 +42,8 @@ import org.springframework.stereotype.Service
 @Service("SERVICE_HANDLE_BUILD_RESULT")
 class ExtServiceHandleBuildResultService @Autowired constructor(
     private val dslContext: DSLContext,
-    private val extServiceDao: ExtServiceDao
+    private val extServiceDao: ExtServiceDao,
+    private val extServiceBcsService: ExtServiceBcsService
 ) : AbstractStoreHandleBuildResultService() {
 
     private val logger = LoggerFactory.getLogger(ExtServiceHandleBuildResultService::class.java)
@@ -57,6 +58,20 @@ class ExtServiceHandleBuildResultService @Autowired constructor(
         }
         // 防止重复的mq消息造成的状态异常
         if (serviceRecord.serviceStatus != ExtServiceStatusEnum.BUILDING.status.toByte()) {
+            // 如果在构建中就取消发布，异步启动的构建流水线可能会成功部署应用至灰度环境，需停掉灰度空间的应用
+            if (serviceRecord.serviceStatus == ExtServiceStatusEnum.GROUNDING_SUSPENSION.status.toByte()) {
+                // 停止bcs灰度命名空间的应用
+                val serviceCode = serviceRecord.serviceCode
+                val bcsStopAppResult = extServiceBcsService.stopExtService(
+                    userId = serviceRecord.modifier,
+                    serviceCode = serviceCode,
+                    deploymentName = serviceCode,
+                    serviceName = "$serviceCode-service",
+                    checkPermissionFlag = false,
+                    grayFlag = true
+                )
+                logger.info("$serviceCode bcsStopAppResult is :$bcsStopAppResult")
+            }
             return Result(true)
         }
         var serviceStatus = ExtServiceStatusEnum.TESTING // 构建成功将扩展服务状态置为测试状态

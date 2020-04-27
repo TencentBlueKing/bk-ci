@@ -188,7 +188,7 @@ class ExtServiceCronService @Autowired constructor(
                 }
                 serviceFeatureRecords.forEach {
                     val serviceCode = it.serviceCode
-                    // 停止bcs灰度命名空间和正式命名空间的应用
+                    // 停止bcs灰度命名空间的应用
                     val bcsStopAppResult = extServiceBcsService.stopExtService(
                         userId = it.modifier,
                         serviceCode = serviceCode,

@@ -150,7 +150,7 @@ class ExtServiceBcsService {
             deployApp = deployApp
         )
         logger.info("bcsDeployAppResult is :$bcsDeployAppResult")
-        if (bcsDeployAppResult.isOk()) {
+        if (bcsDeployAppResult.isOk() && !grayFlag) {
             // 当扩展服务正式发布后，需针对灰度环境部署的扩展应用标记停止部署，如果一段时间内还没有处于测试或审核中的版本则停掉灰度环境的应用
             extServiceFeatureDao.updateExtServiceFeatureBaseInfo(
                 dslContext = dslContext,
