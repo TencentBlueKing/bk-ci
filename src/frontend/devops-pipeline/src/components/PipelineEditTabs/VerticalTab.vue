@@ -18,7 +18,6 @@
 </template>
 
 <script>
-    import NotifySetting from '@/components/pipelineSetting/NotifySetting'
     import BaseInfo from '@/components/pipelineSetting/BaseInfo'
     import RunningLock from '@/components/pipelineSetting/RunningLock'
     import CleanPolicy from '@/components/pipelineSetting/CleanPolicy'
@@ -33,7 +32,6 @@
     export default {
         name: 'vertical-tab',
         components: {
-            NotifySetting,
             BaseInfo,
             RunningLock,
             CleanPolicy,
