@@ -128,6 +128,7 @@ class TaskAtomService @Autowired(required = false) constructor(
                     task = task,
                     startTime = startTime,
                     elementType = elementType,
+                    executeCount = task.executeCount ?: 1,
                     errorType = atomResponse.errorType,
                     errorCode = atomResponse.errorCode,
                     errorMsg = atomResponse.errorMsg
@@ -142,6 +143,7 @@ class TaskAtomService @Autowired(required = false) constructor(
         task: PipelineBuildTask,
         startTime: Long,
         elementType: String,
+        executeCount: Int,
         errorType: ErrorType?,
         errorCode: Int?,
         errorMsg: String?
@@ -202,7 +204,8 @@ class TaskAtomService @Autowired(required = false) constructor(
             rabbitTemplate = rabbitTemplate,
             buildId = task.buildId,
             tag = task.taskId,
-            jobId = task.containerHashId
+            jobId = task.containerHashId,
+            executeCount = executeCount
         )
     }
 
@@ -257,6 +260,7 @@ class TaskAtomService @Autowired(required = false) constructor(
                     task = task,
                     startTime = startTime,
                     elementType = elementType,
+                    executeCount = task.executeCount ?: 1,
                     errorType = atomResponse.errorType,
                     errorCode = atomResponse.errorCode,
                     errorMsg = atomResponse.errorMsg
