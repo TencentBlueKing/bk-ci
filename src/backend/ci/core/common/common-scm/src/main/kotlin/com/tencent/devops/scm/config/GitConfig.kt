@@ -62,14 +62,9 @@ class GitConfig {
     @Value("\${scm.git.clientSecret:}")
     val clientSecret: String = ""
 
+    /* oauth认证成功重定向路径 */
     @Value("\${scm.git.redirectUrl:}")
     val redirectUrl: String = ""
-
-    @Value("\${scm.git.redirectStoreMarketUrl:}")
-    val redirectStoreMarketUrl: String = ""
-
-    @Value("\${scm.git.redirectStoreRepositoryUrl:}")
-    val redirectStoreRepositoryUrl: String = ""
 
     @Value("\${scm.git.gitHookUrl:}")
     val gitHookUrl: String = ""
