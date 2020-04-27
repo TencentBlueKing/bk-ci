@@ -128,7 +128,6 @@ class TaskAtomService @Autowired(required = false) constructor(
                     task = task,
                     startTime = startTime,
                     elementType = elementType,
-                    executeCount = task.executeCount ?: 1,
                     errorType = atomResponse.errorType,
                     errorCode = atomResponse.errorCode,
                     errorMsg = atomResponse.errorMsg
@@ -143,7 +142,6 @@ class TaskAtomService @Autowired(required = false) constructor(
         task: PipelineBuildTask,
         startTime: Long,
         elementType: String,
-        executeCount: Int,
         errorType: ErrorType?,
         errorCode: Int?,
         errorMsg: String?
@@ -200,13 +198,6 @@ class TaskAtomService @Autowired(required = false) constructor(
                 actionType = ActionType.END
             )
         )
-        LogUtils.stopLog(
-            rabbitTemplate = rabbitTemplate,
-            buildId = task.buildId,
-            tag = task.taskId,
-            jobId = task.containerHashId,
-            executeCount = executeCount
-        )
     }
 
     fun tryFinish(task: PipelineBuildTask, force: Boolean): AtomResponse {
@@ -260,10 +251,16 @@ class TaskAtomService @Autowired(required = false) constructor(
                     task = task,
                     startTime = startTime,
                     elementType = elementType,
-                    executeCount = task.executeCount ?: 1,
                     errorType = atomResponse.errorType,
                     errorCode = atomResponse.errorCode,
                     errorMsg = atomResponse.errorMsg
+                )
+                LogUtils.stopLog(
+                    rabbitTemplate = rabbitTemplate,
+                    buildId = task.buildId,
+                    tag = task.taskId,
+                    jobId = task.containerHashId,
+                    executeCount = task.executeCount
                 )
             }
             return atomResponse
@@ -296,13 +293,6 @@ class TaskAtomService @Autowired(required = false) constructor(
                 )
             }
         }
-        LogUtils.stopLog(
-            rabbitTemplate = rabbitTemplate,
-            buildId = task.buildId,
-            tag = task.taskId,
-            jobId = task.containerHashId,
-            executeCount = task.executeCount ?: 1
-        )
     }
 
     private fun PipelineBuildTask.isSkip(variables: Map<String, String>): Boolean {
