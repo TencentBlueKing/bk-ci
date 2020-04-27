@@ -320,9 +320,10 @@ class PipelineBuildService(
                     errorCode = ProcessMessageCode.DENY_START_BY_MANUAL)
             }
             val params = mutableMapOf<String, Any>()
+            val originVars = pipelineRuntimeService.getAllVariable(buildId)
             if (!taskId.isNullOrBlank()) {
                 // job/task级重试，获取buildVariable构建参数，恢复环境变量
-                params.putAll(pipelineRuntimeService.getAllVariable(buildId))
+                params.putAll(originVars)
                 // job/task级重试
                 run {
                     model.stages.forEach { s ->
@@ -342,7 +343,7 @@ class PipelineBuildService(
                     }
                 }
             } else {
-                // 完整构建重试，去掉启动参数中的重试插件ID保证不冲突
+                // 完整构建重试，去掉启动参数中的重试插件ID保证不冲突，同时保留重试次数
                 try {
                     val startupParam = buildStartupParamService.getParam(buildId)
                     if (startupParam != null && startupParam.isNotEmpty()) {
@@ -354,8 +355,9 @@ class PipelineBuildService(
             }
             logger.info("[$pipelineId]|RETRY_PIPELINE_ORIGIN|taskId=$taskId|buildId=$buildId|originRetryCount=${params[PIPELINE_RETRY_COUNT]}|startParams=$params")
 
-            params[PIPELINE_RETRY_COUNT] = if (params[PIPELINE_RETRY_COUNT] != null) {
-                params[PIPELINE_RETRY_COUNT].toString().toInt() + 1
+            // rebuild重试计数
+            params[PIPELINE_RETRY_COUNT] = if (originVars[PIPELINE_RETRY_COUNT] != null) {
+                originVars[PIPELINE_RETRY_COUNT].toString().toInt() + 1
             } else {
                 1
             }
