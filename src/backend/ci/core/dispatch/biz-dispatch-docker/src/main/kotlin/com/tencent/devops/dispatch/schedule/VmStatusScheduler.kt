@@ -5,6 +5,7 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.dispatch.common.Constants
 import com.tencent.devops.dispatch.dao.PipelineDockerIPInfoDao
 import com.tencent.devops.dispatch.utils.DockerHostUtils
 import com.tencent.devops.model.dispatch.tables.records.TDispatchPipelineDockerIpInfoRecord
@@ -27,6 +28,7 @@ class VmStatusScheduler @Autowired constructor(
         private val logger = LoggerFactory.getLogger(VmStatusScheduler::class.java)
         private const val jobLockKey = "dispatch_docker_cron_volume_fresh_job"
         private const val failJobLockKey = "dispatch_docker_cron_volume_fresh_fail_job"
+        private const val dockerIpKeyPrefix = "dispatch_docker_ip_count_"
     }
 
     /**
@@ -102,7 +104,7 @@ class VmStatusScheduler @Autowired constructor(
         try {
             OkhttpUtils.doHttp(request).use { resp ->
                 val responseBody = resp.body()!!.string()
-                logger.info("Docker VM $itDockerIp status fresh responseBody: $responseBody")
+                // logger.info("Docker VM $itDockerIp status fresh responseBody: $responseBody")
                 val response: Map<String, Any> = jacksonObjectMapper().readValue(responseBody)
                 if (response["status"] == 0) {
                     val dockerHostLoad: Map<String, Any> = response["data"] as LinkedHashMap<String, Any>
@@ -123,6 +125,8 @@ class VmStatusScheduler @Autowired constructor(
                         grayEnv = it.grayEnv,
                         specialOn = it.specialOn
                     )
+
+                    redisOperation.set("${Constants.DOCKER_IP_KEY_PREFIX}$itDockerIp", "0", 180)
                 } else {
                     // 如果之前可用，更新容器状态
                     if (enable) {
