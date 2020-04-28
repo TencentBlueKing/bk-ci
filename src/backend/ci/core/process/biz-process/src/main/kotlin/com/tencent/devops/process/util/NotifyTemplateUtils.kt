@@ -71,101 +71,115 @@ object NotifyTemplateUtils {
         buildNo: String
     ): String {
         return "<table class=\"template-table\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"font-size: 14px; min-width: auto; mso-table-lspace: 0pt; mso-table-rspace: 0pt; background-color: #fff; background: #fff;\">\n" +
-            "\t<tbody>\n" +
-            "\t\t<tr>\n" +
-            "\t\t\t<td align=\"center\" valign=\"top\" width=\"100%\" style=\"padding: 16px;\">\n" +
-            "\t\t\t   <table class=\"template-table\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"956\" style=\"font-size: 14px; min-width: auto; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n" +
-            "\t\t\t\t\t<tbody>\n" +
-            "\t\t\t\t\t\t<tr>\n" +
-            "\t\t\t\t\t\t\t<td valign=\"top\" align=\"center\">\n" +
-            "\t\t\t\t\t\t\t\t<table cellpadding=\"0\" cellspacing=\"0\" border=\"0\" bgcolor=\"#f9f8f6\" class=\"layout layout-table root-table\" width=\"100%\" style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n" +
-            "\t\t\t\t\t\t\t\t\t<tbody>\n" +
-            "\t\t\t\t\t\t\t\t\t\t<tr style=\"height: 64px; background: #555;\">\n" +
-            "\t\t\t\t\t\t\t\t\t\t\t<td style=\"padding-left: 24px;\" width=\"60\" align=\"center\">\n" +
-            "\t\t\t\t\t\t\t\t\t\t\t\t<img src=\"https://github.com/Tencent/bk-ci/blob/master/docs/resource/img/logo_icon.png?raw=true\" width=\"52\" style=\"display: block\">\n" +
-            "\t\t\t\t\t\t\t\t\t\t\t</td>\n" +
-            "\t\t\t\t\t\t\t\t\t\t\t<td style=\"padding-left: 6px;\">\n" +
-            "\t\t\t\t\t\t\t\t\t\t\t\t<img src=\"https://github.com/Tencent/bk-ci/blob/master/docs/resource/img/logo_text.png?raw=true\" width=\"176\" style=\"display: block\">\n" +
-            "\t\t\t\t\t\t\t\t\t\t\t</td>\n" +
-            "\t\t\t\t\t\t\t\t\t\t</tr>\n" +
-            "\t\t\t\t\t\t\t\t\t</tbody>\n" +
-            "\t\t\t\t\t\t\t\t</table>\n" +
-            "\t\t\t\t\t\t\t</td>\n" +
-            "\t\t\t\t\t\t</tr>\n" +
-            "\t\t\t\t\t\t<tr>\n" +
-            "\t\t\t\t\t\t\t<td valign=\"top\" align=\"center\" style=\"padding: 24px;\" bgcolor=\"#f9f8f6\">\n" +
-            "\t\t\t\t\t\t\t\t<table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt; border: 1px solid #e6e6e6;\">\n" +
-            "\t\t\t\t\t\t\t\t\t<tr>\n" +
-            "\t\t\t\t\t\t\t\t\t\t<td class=\"email-title\" style=\"padding: 20px 36px; line-height: 1.5; border-bottom: 1px solid #e6e6e6; background: #fff; font-size: 22px;\">【流水线审核通知】你有一个流水线需要审核</td>\n" +
-            "\t\t\t\t\t\t\t\t\t</tr>\n" +
-            "\t\t\t\t\t\t\t\t\t<tr>\n" +
-            "\t\t\t\t\t\t\t\t\t\t<td class=\"email-content\" style=\"padding: 0 36px; background: #fff;\">\n" +
-            "\t\t\t\t\t\t\t\t\t\t\t<table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n" +
-            "\t\t\t\t\t\t\t\t\t\t\t\t<tr>\n" +
-            "\t\t\t\t\t\t\t\t\t\t\t\t\t<td class=\"email-source\" style=\"padding: 14px 0; color: #bebebe;\">来自BKDevOps/蓝盾DevOps平台的通知推送</td>\n" +
-            "\t\t\t\t\t\t\t\t\t\t\t\t</tr>\n" +
-            "\t\t\t\t\t\t\t\t\t\t\t\t<tr class=\"email-information\">\n" +
-            "\t\t\t\t\t\t\t\t\t\t\t\t\t<td class=\"table-info\">\n" +
-            "\t\t\t\t\t\t\t\t\t\t\t\t\t\t<table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n" +
-            "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<tr class=\"table-title\">\n" +
-            "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<td style=\"padding-top: 36px; padding-bottom: 14px; color: #707070;\"></td>\n" +
-            "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t</tr>\n" +
-            "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<tr>\n" +
-            "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<td>\n" +
-            "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt; border: 1px solid #e6e6e6; border-collapse: collapse;\">\n" +
-            "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<thead style=\"background: #f6f8f8;\">\n" +
-            "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<tr style=\"color: #333C48;\">\n" +
-            "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<th width=\"20%\" style=\" padding: 16px; border: 1px solid #e6e6e6;text-align: left; font-weight: normal;\">所属项目</th>\n" +
-            "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<th width=\"20%\" style=\" padding: 16px; border: 1px solid #e6e6e6;text-align: left; font-weight: normal;\">流水线</th>\n" +
-            "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<th width=\"10%\" style=\" padding: 16px; border: 1px solid #e6e6e6;text-align: left; font-weight: normal;\">构建号</th>\n" +
-            "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<th width=\"30%\" style=\" padding: 16px; border: 1px solid #e6e6e6;text-align: left; font-weight: normal;\">审核说明</th>\n" +
-            "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<th width=\"20%\" style=\" padding: 16px; border: 1px solid #e6e6e6;text-align: center; font-weight: normal;\">操作</th>\n" +
-            "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t</tr>\n" +
-            "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t</thead>\n" +
-            "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<tbody style=\"color: #707070;\">\n" +
-            "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<tr>\n" +
-            "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<td style=\" padding: 16px; border: 1px solid #e6e6e6;text-align: left; font-weight: normal;\">$projectName</td>\n" +
-            "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<td style=\" padding: 16px; border: 1px solid #e6e6e6;text-align: left; font-weight: normal;\">$pipelineName</td>\n" +
-            "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<td style=\" padding: 16px; border: 1px solid #e6e6e6;text-align: left; font-weight: normal;\">#$buildNo</td>\n" +
-            "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<td style=\" padding: 16px; border: 1px solid #e6e6e6;text-align: left; font-weight: normal;\">#$reviewDesc</td>\n" +
-            "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<td style=\" padding: 16px; border: 1px solid #e6e6e6;text-align: center; font-weight: normal;\"><a href=\"$reviewUrl\" style=\"color: #3c96ff\">去审核</a></td>\n" +
-            "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t</tr>\n" +
-            "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t</tbody>\n" +
-            "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t</table>\n" +
-            "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t</td>\n" +
-            "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t</tr>\n" +
-            "\t\t\t\t\t\t\t\t\t\t\t\t\t\t</table>\n" +
-            "\t\t\t\t\t\t\t\t\t\t\t\t\t</td>\n" +
-            "\t\t\t\t\t\t\t\t\t\t\t\t</tr>\n" +
+            "<tbody>\n" +
+            "<tr>\n" +
+            "<td align=\"center\" valign=\"top\" width=\"100%\" style=\"padding: 16px;\">\n" +
+            "   <table class=\"template-table\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"956\" style=\"font-size: 14px; min-width: auto; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n" +
+            "<tbody>\n" +
+            "<tr>\n" +
+            "<td valign=\"top\" align=\"center\">\n" +
+            "<table cellpadding=\"0\" cellspacing=\"0\" border=\"0\" bgcolor=\"#f9f8f6\" class=\"layout layout-table root-table\" width=\"100%\" style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n" +
+            "<tbody>\n" +
+            "<tr style=\"height: 64px; background: #555;\">\n" +
+            "<td style=\"padding-left: 24px;\" width=\"60\" align=\"center\">\n" +
+            "<img src=\"https://github.com/Tencent/bk-ci/blob/master/docs/resource/img/logo_icon.png?raw=true\" width=\"52\" style=\"display: block\">\n" +
+            "</td>\n" +
+            "<td style=\"padding-left: 6px;\">\n" +
+            "<img src=\"https://github.com/Tencent/bk-ci/blob/master/docs/resource/img/logo_text.png?raw=true\" width=\"176\" style=\"display: block\">\n" +
+            "</td>\n" +
+            "</tr>\n" +
+            "</tbody>\n" +
+            "</table>\n" +
+            "</td>\n" +
+            "</tr>\n" +
+            "<tr>\n" +
+            "<td valign=\"top\" align=\"center\" style=\"padding: 24px;\" bgcolor=\"#f9f8f6\">\n" +
+            "<table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt; border: 1px solid #e6e6e6;\">\n" +
+            "<tr>\n" +
+            "<td class=\"email-title\" style=\"padding: 20px 36px; line-height: 1.5; border-bottom: 1px solid #e6e6e6; background: #fff; font-size: 22px;\">【流水线审核通知】你有一个流水线需要审核</td>\n" +
+            "</tr>\n" +
+            "<tr>\n" +
+            "<td class=\"email-content\" style=\"padding: 0 36px; background: #fff;\">\n" +
+            "<table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n" +
+            "<tr>\n" +
+            "<td class=\"email-source\" style=\"padding: 14px 0; color: #bebebe;\">来自BKDevOps/蓝盾DevOps平台的通知推送</td>\n" +
+            "</tr>\n" +
+            "<tr class=\"email-information\">\n" +
+            "<td class=\"table-info\">\n" +
+            "<table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n" +
+            "<tr class=\"table-title\">\n" +
+            "<td style=\"padding-top: 36px; padding-bottom: 14px; color: #707070;\"></td>\n" +
+            "</tr>\n" +
+            "<tr>\n" +
+            "<td>\n" +
+            "<table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt; border: 1px solid #e6e6e6; border-collapse: collapse;\">\n" +
+            "<!-- <thead style=\"background: #f6f8f8;\"> -->\n" +
+            "<tr style=\"color: #707070;\">\n" +
+            "<th width=\"20%\" style=\"color: #333C48; background: #f6f8f8; padding: 16px; border: 1px solid #e6e6e6;text-align: center; font-weight: normal;\">审核项目</th>\n" +
+            "<th width=\"80%\" style=\" padding: 16px; border: 1px solid #e6e6e6;text-align: left; font-weight: normal;\">${projectName}</th>\n" +
+            "</tr>\n" +
+            "<!-- </thead> -->\n" +
+            "<tbody style=\"color: #707070;\">\n" +
+            "<tr>\n" +
+            "<td style=\"color: #333C48; background: #f6f8f8; padding: 16px; border: 1px solid #e6e6e6;text-align: center; font-weight: normal;\">流水线</td>\n" +
+            "<td style=\" padding: 16px; border: 1px solid #e6e6e6;text-align: left; font-weight: normal;\">${pipelineName}</td>\n" +
+            "</tr>\n" +
+            "</tbody>\n" +
+            "<tbody style=\"color: #707070;\">\n" +
+            "<tr>\n" +
+            "<td style=\"color: #333C48; background: #f6f8f8; padding: 16px; border: 1px solid #e6e6e6;text-align: center; font-weight: normal;\">构建号</td>\n" +
+            "<td style=\" padding: 16px; border: 1px solid #e6e6e6;text-align: left; font-weight: normal;\">#${buildNo}</td>\n" +
+            "</tr>\n" +
+            "</tbody>\n" +
+            "</tbody>\n" +
+            "<tbody style=\"color: #707070;\">\n" +
+            "<tr>\n" +
+            "<td style=\"color: #333C48; background: #f6f8f8; padding: 16px; border: 1px solid #e6e6e6;text-align: center; font-weight: normal;\">审核说明</td>\n" +
+            "<td style=\" padding: 16px; border: 1px solid #e6e6e6;text-align: left; font-weight: normal;\">${reviewDesc}</td>\n" +
+            "</tr>\n" +
+            "</tbody>\n" +
+            "</tbody>\n" +
+            "<tbody style=\"color: #707070;\">\n" +
+            "<tr>\n" +
+            "<td style=\"color: #333C48; background: #f6f8f8; padding: 16px; border: 1px solid #e6e6e6;text-align: center; font-weight: normal;\">操作</td>\n" +
+            "<td style=\" padding: 16px; border: 1px solid #e6e6e6;text-align: left; font-weight: normal;\"><a href=\"$reviewUrl\" style=\"color: #3c96ff\">去审核</a></td> \n" +
+            "</tr>\n" +
+            "</tbody>\n" +
+            "</table>\n" +
+            "</td>\n" +
+            "</tr>\n" +
+            "</table>\n" +
+            "</td>\n" +
+            "</tr>\n" +
             "\n" +
-            "\t\t\t\t\t\t\t\t\t\t\t\t<!-- 空数据 -->\n" +
-            "\t\t\t\t\t\t\t\t\t\t\t\t<!-- <tr class=\"no-data\">\n" +
-            "\t\t\t\t\t\t\t\t\t\t\t\t\t<td style=\"padding-top: 40px; color: #707070;\">敬请期待！</td>\n" +
-            "\t\t\t\t\t\t\t\t\t\t\t\t</tr> -->\n" +
+            "<!-- 空数据 -->\n" +
+            "<!-- <tr class=\"no-data\">\n" +
+            "<td style=\"padding-top: 40px; color: #707070;\">敬请期待！</td>\n" +
+            "</tr> -->\n" +
             "\n" +
-            "\t\t\t\t\t\t\t\t\t\t\t\t<tr class=\"prompt-tips\">\n" +
-            "\t\t\t\t\t\t\t\t\t\t\t\t\t<td style=\"padding-top: 32px; padding-bottom: 10px; color: #707070;\">如有任何问题，可随时联系蓝盾助手。</td>\n" +
-            "\t\t\t\t\t\t\t\t\t\t\t\t</tr>\n" +
-            "\t\t\t\t\t\t\t\t\t\t\t\t<tr class=\"info-remark\">\n" +
-            "\t\t\t\t\t\t\t\t\t\t\t\t\t<td style=\"padding: 20px 0; text-align: right; line-height: 24px; color: #707070;\">\n" +
-            "\t\t\t\t\t\t\t\t\t\t\t\t\t\t<div>$dataTime</div>\n" +
-            "\t\t\t\t\t\t\t\t\t\t\t\t\t</td>\n" +
-            "\t\t\t\t\t\t\t\t\t\t\t\t</tr>\n" +
-            "\t\t\t\t\t\t\t\t\t\t\t</table>\n" +
-            "\t\t\t\t\t\t\t\t\t\t</td>\n" +
-            "\t\t\t\t\t\t\t\t\t</tr>\n" +
-            "\t\t\t\t\t\t\t\t\t<tr class=\"email-footer\">\n" +
-            "\t\t\t\t\t\t\t\t\t\t<td style=\" padding: 20px 0 20px 36px; border-top: 1px solid #e6e6e6; background: #fff; color: #c7c7c7;\">你收到此邮件，是因为你关注了 $projectName 项目，或其他人@了你</td>\n" +
-            "\t\t\t\t\t\t\t\t\t</tr>\n" +
-            "\t\t\t\t\t\t\t\t</table>\n" +
-            "\t\t\t\t\t\t\t</td>\n" +
-            "\t\t\t\t\t\t</tr>\n" +
-            "\t\t\t\t\t</tbody>\n" +
-            "\t\t\t   </table>\n" +
-            "\t\t\t</td>\n" +
-            "\t\t</tr>\n" +
-            "\t</tbody>\n" +
-            "</table>\n"
+            "<tr class=\"prompt-tips\">\n" +
+            "<td style=\"padding-top: 32px; padding-bottom: 10px; color: #707070;\">如有任何问题，可随时联系蓝盾助手。</td>\n" +
+            "</tr>\n" +
+            "<tr class=\"info-remark\">\n" +
+            "<td style=\"padding: 20px 0; text-align: right; line-height: 24px; color: #707070;\">\n" +
+            "<div>${dataTime}</div>\n" +
+            "</td>\n" +
+            "</tr>\n" +
+            "</table>\n" +
+            "</td>\n" +
+            "</tr>\n" +
+            "<tr class=\"email-footer\">\n" +
+            "<td style=\" padding: 20px 0 20px 36px; border-top: 1px solid #e6e6e6; background: #fff; color: #c7c7c7;\">你收到此邮件，是因为你关注了 $projectName 项目，或其他人@了你</td>\n" +
+            "</tr>\n" +
+            "</table>\n" +
+            "</td>\n" +
+            "</tr>\n" +
+            "</tbody>\n" +
+            "   </table>\n" +
+            "</td>\n" +
+            "</tr>\n" +
+            "</tbody>\n" +
+            "</table>"
     }
 
     const val EMAIL_STARTUP_TITLE = "蓝盾流水线【#{pipelineName}】##{buildNum} 开始构建"

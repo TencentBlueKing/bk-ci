@@ -34,9 +34,11 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ManualReviewAction
 import com.tencent.devops.common.pipeline.pojo.element.agent.ManualReviewUserTaskElement
 import com.tencent.devops.log.utils.LogUtils
+import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
 import com.tencent.devops.notify.api.service.ServiceNotifyResource
 import com.tencent.devops.notify.pojo.EmailNotifyMessage
 import com.tencent.devops.notify.pojo.RtxNotifyMessage
+import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.notify.pojo.WechatNotifyMessage
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.IAtomTask
@@ -186,6 +188,16 @@ class ManualReviewTaskAtom(
             logger.warn("[$buildId]|START|taskId=$taskId|Fail to send the wechatResult message($message) because of ${wechatResult.message}")
         }
 
+        sendReviewNotify(
+            receivers = reviewUsers.split(",").toMutableSet(),
+            reviewDesc = param.desc ?: "",
+            reviewUrl = reviewUrl,
+            projectName = projectName,
+            pipelineName = pipelineName,
+            dataTime = date,
+            buildNo = buildNo
+        )
+
         return AtomResponse(BuildStatus.REVIEWING)
     }
 
@@ -262,6 +274,39 @@ class ManualReviewTaskAtom(
             }
         }
         return AtomResponse(BuildStatus.REVIEWING)
+    }
+
+    private fun sendReviewNotify(
+        receivers: MutableSet<String>,
+        reviewDesc: String,
+        reviewUrl: String,
+        dataTime: String,
+        projectName: String,
+        pipelineName: String,
+        buildNo: String
+    ) {
+        val sendNotifyMessageTemplateRequest = SendNotifyMessageTemplateRequest(
+            templateCode = "MANUAL_REVIEW_ATOM_NOTIFY_TEMPLATE",
+            sender = "DevOps",
+            receivers = receivers,
+            cc = receivers,
+            titleParams = mapOf(
+                "projectName" to projectName,
+                "pipelineName" to pipelineName,
+                "buildNo" to buildNo
+            ),
+            bodyParams = mapOf(
+                "projectName" to projectName,
+                "pipelineName" to pipelineName,
+                "buildNo" to buildNo,
+                "reviewDesc" to reviewDesc,
+                "reviewUrl" to reviewUrl,
+                "dataTime" to dataTime
+            )
+        )
+        val sendNotifyResult = client.get(ServiceNotifyMessageTemplateResource::class)
+            .sendNotifyMessageByTemplate(sendNotifyMessageTemplateRequest)
+        logger.info("[$buildNo]|sendReviewNotify|ManualReviewTaskAtom|result=$sendNotifyResult")
     }
 
     companion object {
