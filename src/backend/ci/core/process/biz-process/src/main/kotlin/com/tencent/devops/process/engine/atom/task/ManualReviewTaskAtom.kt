@@ -65,55 +65,6 @@ class ManualReviewTaskAtom(
         return JsonUtil.mapTo((task.taskParams), ManualReviewUserTaskElement::class.java)
     }
 
-    override fun tryFinish(
-        task: PipelineBuildTask,
-        param: ManualReviewUserTaskElement,
-        runVariables: Map<String, String>,
-        force: Boolean
-    ): AtomResponse {
-
-        val taskId = task.taskId
-        val buildId = task.buildId
-        val manualAction = task.getTaskParam(BS_MANUAL_ACTION)
-        logger.info("[$buildId]|TRY_FINISH|${task.taskName}|taskId=$taskId|action=$manualAction")
-        if (manualAction.isNotEmpty()) {
-            val manualActionUserId = task.getTaskParam(BS_MANUAL_ACTION_USERID)
-            LogUtils.addYellowLine(
-                rabbitTemplate = rabbitTemplate,
-                buildId = task.buildId,
-                message = "==============================",
-                tag = taskId,
-                jobId = task.containerHashId,
-                executeCount = task.executeCount ?: 1
-            )
-            return when (ManualReviewAction.valueOf(manualAction)) {
-                ManualReviewAction.PROCESS -> {
-                    LogUtils.addYellowLine(
-                        rabbitTemplate = rabbitTemplate,
-                        buildId = buildId,
-                        message = "步骤审核结束，审核结果：[继续]，审核人：$manualActionUserId",
-                        tag = taskId,
-                        jobId = task.containerHashId,
-                        executeCount = task.executeCount ?: 1
-                    )
-                    AtomResponse(BuildStatus.SUCCEED)
-                }
-                ManualReviewAction.ABORT -> {
-                    LogUtils.addYellowLine(
-                        rabbitTemplate = rabbitTemplate,
-                        buildId = buildId,
-                        message = "步骤审核结束，审核结果：[驳回]，审核人：$manualActionUserId",
-                        tag = taskId,
-                        jobId = task.containerHashId,
-                        executeCount = task.executeCount ?: 1
-                    )
-                    AtomResponse(BuildStatus.REVIEW_ABORT)
-                }
-            }
-        }
-        return AtomResponse(BuildStatus.REVIEWING)
-    }
-
     override fun execute(
         task: PipelineBuildTask,
         param: ManualReviewUserTaskElement,
@@ -135,7 +86,7 @@ class ManualReviewTaskAtom(
         LogUtils.addYellowLine(
             rabbitTemplate = rabbitTemplate,
             buildId = task.buildId,
-            message = "步骤等待审核，审核人：$reviewUsers",
+            message = "============步骤等待审核============",
             tag = taskId,
             jobId = task.containerHashId,
             executeCount = task.executeCount ?: 1
@@ -143,7 +94,23 @@ class ManualReviewTaskAtom(
         LogUtils.addYellowLine(
             rabbitTemplate = rabbitTemplate,
             buildId = task.buildId,
-            message = "==============================",
+            message = "待审核人：$reviewUsers",
+            tag = taskId,
+            jobId = task.containerHashId,
+            executeCount = task.executeCount ?: 1
+        )
+        LogUtils.addYellowLine(
+            rabbitTemplate = rabbitTemplate,
+            buildId = task.buildId,
+            message = "审核说明：${param.desc}",
+            tag = taskId,
+            jobId = task.containerHashId,
+            executeCount = task.executeCount ?: 1
+        )
+        LogUtils.addLine(
+            rabbitTemplate = rabbitTemplate,
+            buildId = buildId,
+            message = "审核参数：${param.params.map { it.key to it.value }}",
             tag = taskId,
             jobId = task.containerHashId,
             executeCount = task.executeCount ?: 1
@@ -217,6 +184,95 @@ class ManualReviewTaskAtom(
             logger.warn("[$buildId]|START|taskId=$taskId|Fail to send the wechatResult message($message) because of ${wechatResult.message}")
         }
 
+        return AtomResponse(BuildStatus.REVIEWING)
+    }
+
+    override fun tryFinish(
+        task: PipelineBuildTask,
+        param: ManualReviewUserTaskElement,
+        runVariables: Map<String, String>,
+        force: Boolean
+    ): AtomResponse {
+
+        val taskId = task.taskId
+        val buildId = task.buildId
+        val manualAction = task.getTaskParam(BS_MANUAL_ACTION)
+        logger.info("[$buildId]|TRY_FINISH|${task.taskName}|taskId=$taskId|action=$manualAction")
+        if (manualAction.isNotEmpty()) {
+            val manualActionUserId = task.getTaskParam(BS_MANUAL_ACTION_USERID)
+            LogUtils.addYellowLine(
+                rabbitTemplate = rabbitTemplate,
+                buildId = task.buildId,
+                message = "============步骤审核结束============",
+                tag = taskId,
+                jobId = task.containerHashId,
+                executeCount = task.executeCount ?: 1
+            )
+            return when (ManualReviewAction.valueOf(manualAction)) {
+                ManualReviewAction.PROCESS -> {
+                    LogUtils.addYellowLine(
+                        rabbitTemplate = rabbitTemplate,
+                        buildId = buildId,
+                        message = "审核人：$manualActionUserId",
+                        tag = taskId,
+                        jobId = task.containerHashId,
+                        executeCount = task.executeCount ?: 1
+                    )
+                    LogUtils.addYellowLine(
+                        rabbitTemplate = rabbitTemplate,
+                        buildId = buildId,
+                        message = "审核结果：继续",
+                        tag = taskId,
+                        jobId = task.containerHashId,
+                        executeCount = task.executeCount ?: 1
+                    )
+                    LogUtils.addYellowLine(
+                        rabbitTemplate = rabbitTemplate,
+                        buildId = buildId,
+                        message = "审核意见：${param.suggest}",
+                        tag = taskId,
+                        jobId = task.containerHashId,
+                        executeCount = task.executeCount ?: 1
+                    )
+                    LogUtils.addLine(
+                        rabbitTemplate = rabbitTemplate,
+                        buildId = buildId,
+                        message = "审核参数：${param.params.map { it.key to it.value }}",
+                        tag = taskId,
+                        jobId = task.containerHashId,
+                        executeCount = task.executeCount ?: 1
+                    )
+                    AtomResponse(BuildStatus.SUCCEED)
+                }
+                ManualReviewAction.ABORT -> {
+                    LogUtils.addYellowLine(
+                        rabbitTemplate = rabbitTemplate,
+                        buildId = buildId,
+                        message = "审核人：$manualActionUserId",
+                        tag = taskId,
+                        jobId = task.containerHashId,
+                        executeCount = task.executeCount ?: 1
+                    )
+                    LogUtils.addYellowLine(
+                        rabbitTemplate = rabbitTemplate,
+                        buildId = buildId,
+                        message = "审核结果：驳回",
+                        tag = taskId,
+                        jobId = task.containerHashId,
+                        executeCount = task.executeCount ?: 1
+                    )
+                    LogUtils.addYellowLine(
+                        rabbitTemplate = rabbitTemplate,
+                        buildId = buildId,
+                        message = "审核意见：${param.suggest}",
+                        tag = taskId,
+                        jobId = task.containerHashId,
+                        executeCount = task.executeCount ?: 1
+                    )
+                    AtomResponse(BuildStatus.REVIEW_ABORT)
+                }
+            }
+        }
         return AtomResponse(BuildStatus.REVIEWING)
     }
 
