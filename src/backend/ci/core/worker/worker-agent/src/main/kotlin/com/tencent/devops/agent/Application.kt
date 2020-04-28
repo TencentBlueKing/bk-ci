@@ -27,27 +27,22 @@
 package com.tencent.devops.agent
 
 import com.tencent.devops.agent.runner.WorkRunner
-import com.tencent.devops.agent.utils.KillBuildProcessTree
 import com.tencent.devops.common.api.enums.EnumLoader
 import com.tencent.devops.common.pipeline.ElementSubTypeRegisterLoader
 import com.tencent.devops.worker.common.BUILD_TYPE
 import com.tencent.devops.worker.common.Runner
 import com.tencent.devops.worker.common.WorkspaceInterface
 import com.tencent.devops.worker.common.api.ApiFactory
-import com.tencent.devops.worker.common.api.utils.AgentBuildBaseInfoUtils
 import com.tencent.devops.worker.common.env.BuildType
 import com.tencent.devops.worker.common.task.TaskFactory
 import java.io.File
+import java.lang.RuntimeException
 
 fun main(args: Array<String>) {
     EnumLoader.enumModified()
     ElementSubTypeRegisterLoader.registerElementForJsonUtil()
     ApiFactory.init()
     TaskFactory.init()
-    val buildInfo = AgentBuildBaseInfoUtils.getBuildInfo(args) ?: throw RuntimeException("generate buildInfo fail")
-    // 加上addKillProcessTreeHook事件
-    KillBuildProcessTree.addKillProcessTreeHook(buildInfo.projectId, buildInfo.buildId, buildInfo.vmSeqId)
-    AgentBuildBaseInfoUtils.setBuildInfo(buildInfo)
     val buildType = System.getProperty(BUILD_TYPE)
     when (buildType) {
         BuildType.DOCKER.name ->
@@ -80,7 +75,7 @@ fun main(args: Array<String>) {
             })
         }
         BuildType.AGENT.name -> {
-            WorkRunner.execute(buildInfo)
+            WorkRunner.execute(args)
         }
         else -> {
             if (buildType.isNullOrBlank()) {

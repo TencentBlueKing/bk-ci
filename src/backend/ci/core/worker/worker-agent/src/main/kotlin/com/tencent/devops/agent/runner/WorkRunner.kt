@@ -26,24 +26,35 @@
 
 package com.tencent.devops.agent.runner
 
+import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.agent.utils.KillBuildProcessTree
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.ReplacementUtils
 import com.tencent.devops.common.log.Ansi
-import com.tencent.devops.dispatch.pojo.thirdPartyAgent.AgentBuildBaseInfo
+import com.tencent.devops.dispatch.pojo.thirdPartyAgent.ThirdPartyBuildInfo
 import com.tencent.devops.worker.common.Runner
 import com.tencent.devops.worker.common.SLAVE_AGENT_START_FILE
 import com.tencent.devops.worker.common.WorkspaceInterface
+import com.tencent.devops.worker.common.api.utils.ThirdPartyAgentBuildInfoUtils
 import com.tencent.devops.worker.common.exception.PropertyNotExistException
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.utils.WorkspaceUtils
 import org.slf4j.LoggerFactory
 import java.io.File
+import java.util.Base64
 import kotlin.system.exitProcess
 
 object WorkRunner {
     private val logger = LoggerFactory.getLogger(WorkRunner::class.java)
 
-    fun execute(buildInfo: AgentBuildBaseInfo) {
+    fun execute(args: Array<String>) {
         try {
+            val buildInfo = getBuildInfo(args)!!
+
+            logger.info("[${buildInfo.buildId}]|Start worker for build| projectId=${buildInfo.projectId}")
+
+            addKillProcessTreeHook(buildInfo)
+
             val startFile = getStartFile()
             if (!startFile.isNullOrBlank()) {
                 val file = File(startFile!!)
@@ -56,6 +67,8 @@ object WorkRunner {
             } else {
                 logger.info("The start file is not exist in start file")
             }
+
+            ThirdPartyAgentBuildInfoUtils.setBuildInfo(buildInfo)
 
             LoggerService.start()
 
@@ -86,6 +99,36 @@ object WorkRunner {
             logger.error("Encounter unknown exception", t)
             LoggerService.addNormalLine(Ansi().fgRed().a("Other unknown error has occurred: " + t.message).reset().toString())
             exitProcess(-1)
+        }
+    }
+
+    private fun addKillProcessTreeHook(buildInfo: ThirdPartyBuildInfo) {
+        try {
+            Runtime.getRuntime().addShutdownHook(object : Thread() {
+                override fun run() {
+                    logger.info("start kill process tree")
+                    val killedProcessIds =
+                        KillBuildProcessTree.killProcessTree(buildInfo.projectId, buildInfo.buildId, buildInfo.vmSeqId)
+                    logger.info("kill process tree done, ${killedProcessIds.size} process(s) killed, pid(s): $killedProcessIds")
+                }
+            })
+        } catch (t: Throwable) {
+            logger.warn("Fail to add shutdown hook", t)
+        }
+    }
+
+    private fun getBuildInfo(args: Array<String>): ThirdPartyBuildInfo? {
+        if (args.isEmpty()) {
+            logger.error("Empty argument")
+            exitProcess(1)
+        }
+        val buildInfoStr = String(Base64.getDecoder().decode(args[0]))
+        try {
+            logger.info("Start read the build info ($buildInfoStr)")
+            return JsonUtil.getObjectMapper().readValue(buildInfoStr)
+        } catch (t: Throwable) {
+            logger.warn("Fail to read the build Info", t)
+            exitProcess(1)
         }
     }
 

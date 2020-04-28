@@ -39,7 +39,7 @@ import com.tencent.devops.plugin.worker.task.codecc.LinuxCodeccConstants
 import com.tencent.devops.plugin.worker.task.codecc.WindowsCodeccConstants
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.worker.common.CommonEnv
-import com.tencent.devops.worker.common.api.utils.AgentBuildBaseInfoUtils
+import com.tencent.devops.worker.common.api.utils.ThirdPartyAgentBuildInfoUtils
 import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.env.BuildEnv
 import com.tencent.devops.worker.common.env.BuildType
@@ -80,7 +80,7 @@ object CodeccParamsHelper {
             list.add("-DDEVOPS_BUILD_TYPE=${BuildType.AGENT.name}")
             list.add("-DDEVOPS_AGENT_ID=${AgentEnv.getAgentId()}")
             list.add("-DDEVOPS_AGENT_SECRET_KEY=${AgentEnv.getAgentSecretKey()}")
-            list.add("-DDEVOPS_AGENT_VM_SID=${AgentBuildBaseInfoUtils.getBuildInfo()!!.vmSeqId}")
+            list.add("-DDEVOPS_AGENT_VM_SID=${ThirdPartyAgentBuildInfoUtils.getBuildInfo()!!.vmSeqId}")
         } else if (BuildEnv.getBuildType() == BuildType.DOCKER) {
             LoggerService.addNormalLine("检测到这是docker公共构建机")
             list.add("-DDEVOPS_PROJECT_ID=${AgentEnv.getProjectId()}")
