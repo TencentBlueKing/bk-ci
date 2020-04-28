@@ -65,8 +65,8 @@ class BuildVariableService @Autowired constructor(
         )
     }
 
-    fun batchSetVariable(projectId: String, pipelineId: String, buildId: String, variables: Map<String, Any>)
-        = batchSetVariable(commonDslContext, projectId, pipelineId, buildId, variables)
+    fun batchSetVariable(projectId: String, pipelineId: String, buildId: String, variables: Map<String, Any>) =
+        batchSetVariable(commonDslContext, projectId, pipelineId, buildId, variables)
 
     fun deletePipelineBuildVar(projectId: String, pipelineId: String) {
         pipelineBuildVarDao.deletePipelineBuildVar(
