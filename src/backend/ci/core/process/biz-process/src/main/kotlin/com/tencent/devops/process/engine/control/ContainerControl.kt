@@ -223,6 +223,7 @@ class ContainerControl @Autowired constructor(
                     }
                 }
             }
+            pipelineBuildDetailService.updateStartVMStatus(buildId, containerId, containerFinalStatus)
             val finallyTasks = containerTaskList.filter { task ->
                 if (task.taskId == VMUtils.genEndPointTaskId(task.taskSeq) || // end-xxx 结束拦截点
                     task.taskId == VMUtils.genStopVMTaskId(task.taskSeq) // 停止构建机
