@@ -85,6 +85,7 @@ class DockerHostUtils @Autowired constructor(
         if (lastHostIp != null && lastHostIp.isNotEmpty()) {
             val lastHostIpInfo = pipelineDockerIpInfoDao.getDockerIpInfo(dslContext, lastHostIp)
             if (lastHostIpInfo != null && specialIpSet.isNotEmpty() && specialIpSet.contains(lastHostIp)) {
+                logger.info("$projectId|$pipelineId|$vmSeqId lastHostIp: $lastHostIp in specialIpSet: $specialIpSet, choose the lastHostIpInfo as availableDockerIp.")
                 return Pair(lastHostIp, lastHostIpInfo.dockerHostPort)
             }
 
@@ -95,6 +96,7 @@ class DockerHostUtils @Autowired constructor(
                 lastHostIpInfo.memLoad < dockerHostLoadConfigTriple.second.memLoadThreshold &&
                 lastHostIpInfo.cpuLoad < dockerHostLoadConfigTriple.second.cpuLoadThreshold
             ) {
+                logger.info("$projectId|$pipelineId|$vmSeqId lastHostIp: $lastHostIp load enable, lastHostIpInfo:$lastHostIpInfo. specialIpSet is empty, choose the lastHostIpInfo as availableDockerIp.")
                 return Pair(lastHostIp, lastHostIpInfo.dockerHostPort)
             }
         }
