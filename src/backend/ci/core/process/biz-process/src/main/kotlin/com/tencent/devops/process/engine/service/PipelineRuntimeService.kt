@@ -1459,13 +1459,13 @@ class PipelineRuntimeService @Autowired constructor(
                             jobId = containerHashId,
                             executeCount = executeCount ?: 1
                         )
-                        buildVariableService.batchSaveVar(
+                        buildVariableService.batchSetVariable(
                             projectId = projectId,
                             pipelineId = pipelineId,
                             buildId = buildId,
                             variables = params.params.map {
-                                BuildParameters(it.key.toString(), it.value.toString())
-                            }
+                                it.key.toString() to it.value.toString()
+                            }.toMap()
                         )
 
                         pipelineEventDispatcher.dispatch(
