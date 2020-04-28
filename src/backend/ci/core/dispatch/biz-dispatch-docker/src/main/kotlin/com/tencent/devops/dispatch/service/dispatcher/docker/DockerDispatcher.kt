@@ -197,10 +197,20 @@ class DockerDispatcher @Autowired constructor(
             return Pair(oldDockerIp, ipInfo!!.dockerHostPort)
         }
 
-        // 查看当前IP负载情况，当前IP可用，且负载未超额（内存低于90%且硬盘低于90%），可直接下发，当负载超额或者设置为专机独享，重新选择构建机
-        if (ipInfo == null || !ipInfo.enable || ipInfo.diskLoad > 90 || ipInfo.memLoad > 90 || ipInfo.specialOn) {
+        // 查看当前IP负载情况，当前IP不可用或者负载超额或者设置为专机独享，重新选择构建机
+        if (ipInfo == null || !ipInfo.enable || ipInfo.diskLoad > 90 || ipInfo.memLoad > 95 || ipInfo.specialOn) {
             return resetDockerIp(pipelineAgentStartupEvent, specialIpSet, oldDockerIp, if (ipInfo != null) JsonUtil.toJson(ipInfo.intoMap()) else "")
         }
+
+        // 查看当前IP限流是否已达上限
+        dockerHostUtils.checkDockerIpCountLimiting(
+            dockerPair = Pair(oldDockerIp, ipInfo.dockerHostPort),
+            projectId = pipelineAgentStartupEvent.projectId,
+            pipelineId = pipelineAgentStartupEvent.pipelineId,
+            vmSeqId = pipelineAgentStartupEvent.vmSeqId,
+            specialIpSet = specialIpSet,
+            unAvailableIpList = setOf()
+        )
 
         return Pair(oldDockerIp, ipInfo.dockerHostPort)
     }

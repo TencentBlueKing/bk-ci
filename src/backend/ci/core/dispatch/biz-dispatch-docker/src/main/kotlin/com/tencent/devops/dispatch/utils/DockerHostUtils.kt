@@ -158,15 +158,7 @@ class DockerHostUtils @Autowired constructor(
             throw DockerServiceException("Start build Docker VM failed, no available Docker VM.")
         }
 
-        val dockerIpCount = redisOperation.get("${Constants.DOCKER_IP_KEY_PREFIX}${dockerPair.first}")
-        logger.info("$projectId|$pipelineId|$vmSeqId dockerIpCount: $dockerIpCount")
-        if (dockerIpCount != null && dockerIpCount.toInt() > 6) {
-            unAvailableIpList.plus(dockerPair.first)
-            logger.info("$projectId|$pipelineId|$vmSeqId dockerIpCount: $dockerIpCount exceeded limiting. unAvailableIpList: $unAvailableIpList")
-            return getAvailableDockerIpWithSpecialIps(projectId, pipelineId, vmSeqId, specialIpSet, unAvailableIpList)
-        }
-
-        return dockerPair
+        return checkDockerIpCountLimiting(dockerPair, projectId, pipelineId, vmSeqId, specialIpSet, unAvailableIpList)
     }
 
     fun getAvailableDockerIp(projectId: String, pipelineId: String, vmSeqId: String, unAvailableIpList: Set<String>): Pair<String, Int> {
@@ -290,5 +282,24 @@ class DockerHostUtils @Autowired constructor(
         }
 
         return Pair("", 0)
+    }
+
+    fun checkDockerIpCountLimiting(
+        dockerPair: Pair<String, Int>,
+        projectId: String,
+        pipelineId: String,
+        vmSeqId: String,
+        specialIpSet: Set<String>,
+        unAvailableIpList: Set<String>
+        ): Pair<String, Int> {
+        val dockerIpCount = redisOperation.get("${Constants.DOCKER_IP_KEY_PREFIX}${dockerPair.first}")
+        logger.info("$projectId|$pipelineId|$vmSeqId dockerIpCount: $dockerIpCount")
+        return if (dockerIpCount != null && dockerIpCount.toInt() > 7) {
+            unAvailableIpList.plus(dockerPair.first)
+            logger.info("$projectId|$pipelineId|$vmSeqId dockerIpCount: $dockerIpCount exceeded limiting. unAvailableIpList: $unAvailableIpList")
+            getAvailableDockerIpWithSpecialIps(projectId, pipelineId, vmSeqId, specialIpSet, unAvailableIpList)
+        } else {
+            dockerPair
+        }
     }
 }
