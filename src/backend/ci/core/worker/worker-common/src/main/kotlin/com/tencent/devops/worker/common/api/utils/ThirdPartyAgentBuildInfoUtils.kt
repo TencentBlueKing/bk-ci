@@ -24,11 +24,22 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.pojo.thirdPartyAgent
+package com.tencent.devops.worker.common.api.utils
 
-data class AgentBuildBaseInfo(
-    val projectId: String,
-    val buildId: String,
-    val vmSeqId: String,
-    val workspace: String
-)
+import com.tencent.devops.dispatch.pojo.thirdPartyAgent.ThirdPartyBuildInfo
+import org.slf4j.LoggerFactory
+
+object ThirdPartyAgentBuildInfoUtils {
+    private var buildInfo: ThirdPartyBuildInfo? = null
+
+    fun setBuildInfo(info: ThirdPartyBuildInfo) {
+        if (buildInfo != null) {
+            logger.info("Last build info is not null - $buildInfo")
+        }
+        buildInfo = info
+    }
+
+    fun getBuildInfo() = buildInfo
+
+    private val logger = LoggerFactory.getLogger(ThirdPartyAgentBuildInfoUtils::class.java)
+}
