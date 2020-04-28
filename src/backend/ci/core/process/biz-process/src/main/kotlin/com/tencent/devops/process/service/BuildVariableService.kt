@@ -35,11 +35,50 @@ import org.springframework.stereotype.Service
 
 @Service
 class BuildVariableService @Autowired constructor(
-    private val dslContext: DSLContext,
+    private val commonDslContext: DSLContext,
     private val pipelineBuildVarDao: PipelineBuildVarDao
 ) {
 
-    fun saveVariable(buildId: String, projectId: String, pipelineId: String, name: String, value: Any) =
+    // 获取方法不需要做事务保护
+    fun getVariable(buildId: String, varName: String): String? {
+        val vars = getAllVariable(buildId)
+        return if (vars.isNotEmpty()) vars[varName] else null
+    }
+
+    fun getAllVariable(buildId: String): Map<String, String> {
+        return PipelineVarUtil.mixOldVarAndNewVar(pipelineBuildVarDao.getVars(commonDslContext, buildId))
+    }
+
+    fun getAllVariableWithType(buildId: String): List<BuildParameters> {
+        return pipelineBuildVarDao.getVarsWithType(commonDslContext, buildId)
+    }
+
+    fun setVariable(projectId: String, pipelineId: String, buildId: String, varName: String, varValue: Any) {
+        val realVarName = PipelineVarUtil.oldVarToNewVar(varName) ?: varName
+        pipelineBuildVarDao.save(
+            dslContext = commonDslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            name = realVarName,
+            value = varValue
+        )
+    }
+
+    fun batchSetVariable(projectId: String, pipelineId: String, buildId: String, variables: Map<String, Any>)
+        = batchSetVariable(commonDslContext, projectId, pipelineId, buildId, variables)
+
+    fun deletePipelineBuildVar(projectId: String, pipelineId: String) {
+        pipelineBuildVarDao.deletePipelineBuildVar(
+            dslContext = commonDslContext,
+            projectId = projectId,
+            pipelineId = pipelineId
+        )
+    }
+
+    // 保存方法需要提供事务保护的实现，传入特定dslContext
+
+    fun saveVariable(dslContext: DSLContext, buildId: String, projectId: String, pipelineId: String, name: String, value: Any) =
         pipelineBuildVarDao.save(
             dslContext = dslContext,
             projectId = projectId,
@@ -49,32 +88,7 @@ class BuildVariableService @Autowired constructor(
             value = value
         )
 
-    fun getVariable(buildId: String, varName: String): String? {
-        val vars = getAllVariable(buildId)
-        return if (vars.isNotEmpty()) vars[varName] else null
-    }
-
-    fun getAllVariable(buildId: String): Map<String, String> {
-        return PipelineVarUtil.mixOldVarAndNewVar(pipelineBuildVarDao.getVars(dslContext, buildId))
-    }
-
-    fun getAllVariableWithType(buildId: String): List<BuildParameters> {
-        return pipelineBuildVarDao.getVarsWithType(dslContext, buildId)
-    }
-
-    fun setVariable(projectId: String, pipelineId: String, buildId: String, varName: String, varValue: Any) {
-        val realVarName = PipelineVarUtil.oldVarToNewVar(varName) ?: varName
-        pipelineBuildVarDao.save(
-            dslContext = dslContext,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            buildId = buildId,
-            name = realVarName,
-            value = varValue
-        )
-    }
-
-    fun batchSetVariable(projectId: String, pipelineId: String, buildId: String, variables: Map<String, Any>) {
+    fun batchSetVariable(dslContext: DSLContext, projectId: String, pipelineId: String, buildId: String, variables: Map<String, Any>) {
         val vars = variables.map { it.key to it.value.toString() }.toMap().toMutableMap()
         PipelineVarUtil.replaceOldByNewVar(vars)
 
@@ -87,14 +101,6 @@ class BuildVariableService @Autowired constructor(
             pipelineId = pipelineId,
             buildId = buildId,
             variables = pipelineBuildParameters
-        )
-    }
-
-    fun deletePipelineBuildVar(projectId: String, pipelineId: String) {
-        pipelineBuildVarDao.deletePipelineBuildVar(
-            dslContext = dslContext,
-            projectId = projectId,
-            pipelineId = pipelineId
         )
     }
 }
