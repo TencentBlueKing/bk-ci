@@ -38,10 +38,11 @@
         SUCCEED: '#34d97b',
         FAILED: '#ff5656',
         HEARTBEAT_TIMEOUT: '#ff5656',
-        QUEUE_TIMEOUT: '#ff5656',
-        EXEC_TIMEOUT: '#ff5656',
+        QUEUE_TIMEOUT: '#63656e',
+        EXEC_TIMEOUT: '#63656e',
         REVIEWING: '#ffb400',
         REVIEW_ABORT: '#ffb400',
+        SKIP: '#63656e',
         CANCELED: '#ffb400',
         TERMINATE: '#ffb400',
         RUNNING: '#459fff',
@@ -57,6 +58,7 @@
         EXEC_TIMEOUT: '#ff5656',
         REVIEWING: '#ffb400',
         REVIEW_ABORT: '#ffb400',
+        SKIP: '#c3cdd7',
         CANCELED: '#ffb400',
         TERMINATE: '#ffb400',
         RUNNING: '#459fff',
@@ -70,6 +72,7 @@
         PAUSE: '#f3f3f3',
         RUNNING: '#eff5ff',
         SKIP: '#c3cdd7',
+        CANCELED: '#f3f3f3',
         undefined: '#f3f3f3'
     }
 
@@ -79,6 +82,7 @@
         PAUSE: '#d0d8ea',
         RUNNING: '#d4e8ff',
         SKIP: '#c3cdd7',
+        CANCELED: '#d0d8ea',
         undefined: '#d0d8ea'
     }
 
