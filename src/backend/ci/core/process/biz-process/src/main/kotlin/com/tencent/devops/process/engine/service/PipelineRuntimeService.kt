@@ -86,7 +86,6 @@ import com.tencent.devops.process.engine.pojo.event.PipelineBuildCancelEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildMonitorEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildStartEvent
 import com.tencent.devops.common.service.utils.SpringContextUtil
-import com.tencent.devops.log.utils.LogUtils
 import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION
 import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION_DESC
 import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION_PARAMS
@@ -136,7 +135,6 @@ import org.jooq.Record
 import org.jooq.Result
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.time.Duration
@@ -164,7 +162,6 @@ class PipelineRuntimeService @Autowired constructor(
     private val pipelineBuildVarDao: PipelineBuildVarDao,
     private val buildDetailDao: BuildDetailDao,
     private val buildStartupParamService: BuildStartupParamService,
-    private val rabbitTemplate: RabbitTemplate,
     private val redisOperation: RedisOperation
 ) {
     companion object {
@@ -1377,6 +1374,7 @@ class PipelineRuntimeService @Autowired constructor(
                 atomElement.executeCount++
                 atomElement.elapsed = null
                 atomElement.startEpoch = null
+                atomElement.canRetry = false
                 target.taskParams = JsonUtil.toJson(atomElement.genTaskParams()) // 更新参数
             }
         }
@@ -1459,30 +1457,6 @@ class PipelineRuntimeService @Autowired constructor(
                         if (result != 1) {
                             logger.info("[{}]|taskId={}| update task param failed|result:{}", buildId, taskId, result)
                         }
-                        LogUtils.addLine(
-                            rabbitTemplate = rabbitTemplate,
-                            buildId = buildId,
-                            message = "审核说明：${params.desc}",
-                            tag = taskId,
-                            jobId = containerHashId,
-                            executeCount = executeCount ?: 1
-                        )
-                        LogUtils.addLine(
-                            rabbitTemplate = rabbitTemplate,
-                            buildId = buildId,
-                            message = "审核意见：${params.suggest}",
-                            tag = taskId,
-                            jobId = containerHashId,
-                            executeCount = executeCount ?: 1
-                        )
-                        LogUtils.addLine(
-                            rabbitTemplate = rabbitTemplate,
-                            buildId = buildId,
-                            message = "审核参数：${params.params.map { it.key to it.value }}",
-                            tag = taskId,
-                            jobId = containerHashId,
-                            executeCount = executeCount ?: 1
-                        )
                         pipelineBuildVarDao.batchSave(
                             dslContext = dslContext,
                             projectId = projectId,
@@ -1492,7 +1466,6 @@ class PipelineRuntimeService @Autowired constructor(
                                 BuildParameters(it.key.toString(), it.value.toString())
                             }
                         )
-
                         pipelineEventDispatcher.dispatch(
                             PipelineBuildAtomTaskEvent(
                                 javaClass.simpleName,
