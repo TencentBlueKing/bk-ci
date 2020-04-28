@@ -39,15 +39,6 @@ class BuildVariableService @Autowired constructor(
     private val pipelineBuildVarDao: PipelineBuildVarDao
 ) {
 
-    fun batchSaveVar(projectId: String, pipelineId: String, buildId: String, variables: List<BuildParameters>) =
-        pipelineBuildVarDao.batchSave(
-            dslContext = dslContext,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            buildId = buildId,
-            variables = variables
-        )
-
     fun saveVariable(buildId: String, projectId: String, pipelineId: String, name: String, value: Any) =
         pipelineBuildVarDao.save(
             dslContext = dslContext,
