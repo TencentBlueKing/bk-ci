@@ -32,7 +32,7 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ContainerMutexStatus
 import com.tencent.devops.common.pipeline.enums.EnvControlTaskType
 import com.tencent.devops.common.pipeline.enums.JobRunCondition
-import com.tencent.devops.common.pipeline.pojo.element.TaskRunCondition
+import com.tencent.devops.common.pipeline.pojo.element.RunCondition
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.log.utils.LogUtils
 import com.tencent.devops.process.engine.common.VMUtils
@@ -120,6 +120,16 @@ class ContainerControl @Autowired constructor(
                     startTime = LocalDateTime.now(),
                     endTime = LocalDateTime.now()
                 )
+
+                containerTaskList.forEach {
+                    pipelineRuntimeService.updateTaskStatus(
+                        buildId = buildId,
+                        taskId = it.taskId,
+                        userId = it.starter,
+                        buildStatus = BuildStatus.SKIP
+                    )
+                }
+
                 logger.info("[$buildId]|CONTAINER_SKIP|stage=$stageId|container=$containerId|action=$actionType")
                 pipelineBuildDetailService.normalContainerSkip(buildId, container.containerId)
                 // 返回stage的时候，需要解锁
@@ -211,7 +221,6 @@ class ContainerControl @Autowired constructor(
                     }
                 }
             }
-
             val finallyTasks = containerTaskList.filter { task ->
                 if (task.taskId == VMUtils.genEndPointTaskId(task.taskSeq) || // end-xxx 结束拦截点
                     task.taskId == VMUtils.genStopVMTaskId(task.taskSeq) // 停止构建机
@@ -292,11 +301,11 @@ class ContainerControl @Autowired constructor(
             return false
         }
 
-        val runCondition = task.additionalOptions?.taskRunCondition
+        val runCondition = task.additionalOptions?.runCondition
         return if (runCondition == null)
             false
-        else runCondition == TaskRunCondition.PRE_TASK_FAILED_BUT_CANCEL ||
-            runCondition == TaskRunCondition.PRE_TASK_FAILED_ONLY
+        else runCondition == RunCondition.PRE_TASK_FAILED_BUT_CANCEL ||
+            runCondition == RunCondition.PRE_TASK_FAILED_ONLY
     }
 
     private fun checkTerminateAction(containerTaskList: Collection<PipelineBuildTask>, message: String?): Triple<Nothing?, BuildStatus, Boolean> {
@@ -370,13 +379,6 @@ class ContainerControl @Autowired constructor(
         containerTaskList.forEach nextOne@{ task ->
             if (!ControlUtils.isEnable(task.additionalOptions)) {
                 logger.info("[$buildId]|container=$containerId|task(${task.taskSeq})=${task.taskId}|${task.taskName}|is not enable, will skip")
-                pipelineRuntimeService.updateTaskStatus(
-                    buildId = buildId, taskId = task.taskId, userId = task.starter, buildStatus = BuildStatus.SKIP
-                )
-                pipelineBuildDetailService.taskEnd(
-                    buildId = buildId, taskId = task.taskId, buildStatus = BuildStatus.SKIP
-                )
-//                containerFinalStatus = BuildStatus.SKIP
 
                 LogUtils.addYellowLine(
                     rabbitTemplate = rabbitTemplate,

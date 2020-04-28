@@ -3,7 +3,7 @@
         <header class="devops-codelib-header">
             <logo size="32" :name="logo" />
             <span>{{title}}</span>
-            <i class="bk-icon icon-question-circle" @click="gotoDoc()"></i>
+            <i class="devops-icon icon-question-circle" @click="gotoDoc()"></i>
         </header>
         <main>
             <router-view></router-view>

@@ -1,8 +1,8 @@
 <template>
     <div class="select-input" v-bk-clickoutside="handleBlur">
         <input class="bk-form-input" v-bind="restProps" v-model="displayName" :disabled="disabled || loading" ref="inputArea" :title="value" autocomplete="off" @input="handleInput" @focus="handleFocus" @keypress.enter.prevent="handleEnterOption" @keydown.up.prevent="handleKeyup" @keydown.down.prevent="handleKeydown" @keydown.tab.prevent="handleBlur" />
-        <i v-if="loading" class="bk-icon icon-circle-2-1 option-fetching-icon spin-icon" />
-        <i v-else-if="!disabled && value" class="bk-icon icon-close-circle-shape option-fetching-icon" @click.stop="clearValue" />
+        <i v-if="loading" class="devops-icon icon-circle-2-1 option-fetching-icon spin-icon" />
+        <i v-else-if="!disabled && value" class="devops-icon icon-close-circle-shape option-fetching-icon" @click.stop="clearValue" />
         <div class="dropbox-container" v-show="hasOption && optionListVisible && !loading" ref="dropMenu">
             <ul>
                 <template v-if="hasGroup">
@@ -25,6 +25,14 @@
                     <li class="option-item" v-for="(item, index) in filteredList" :key="item.id" :class="{ active: item.id === value, selected: selectedPointer === index }" :disabled="item.disabled" @click.stop="selectOption(item)" @mouseover="setSelectPointer(index)" :title="item.name">
                         {{ item.name }}
                     </li>
+                </template>
+                <template v-if="mergedOptionsConf.hasAddItem">
+                    <div class="bk-select-extension">
+                        <a :href="webUrl + mergedOptionsConf.itemTargetUrl" target="_blank">
+                            <i class="bk-icon icon-plus-circle" />
+                            {{ mergedOptionsConf.itemText }}
+                        </a>
+                    </div>
                 </template>
             </ul>
         </div>
@@ -62,7 +70,8 @@
                 loading: this.isLoading,
                 selectedPointer: 0,
                 selectedGroupPointer: 0,
-                displayName: ''
+                displayName: '',
+                webUrl: WEB_URL_PIRFIX
             }
         },
         computed: {
@@ -296,6 +305,7 @@
                     }
                 } catch (e) {
                     console.error(e)
+                    this.displayName = this.value
                 } finally {
                     this.loading = false
                 }
@@ -378,6 +388,9 @@
                     &[disabled] {
                         color: $fontLigtherColor;
                     }
+                }
+                .bk-select-extension a {
+                    color: #63656e;
                 }
             }
         }
