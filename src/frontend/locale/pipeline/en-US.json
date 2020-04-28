@@ -89,6 +89,15 @@
     "stageOptionLabel": "Run this Stage",
     "stageTriggerDesc": "Multiple people separated by commas",
     "skipStageDesc": "SKIPED",
+    "execDetail": {
+        "log": "Log",
+        "setting": "Configuration",
+        "execTime": "Number of retries",
+        "showTime": "Show timestamp",
+        "hideTime": "Hide timestamp",
+        "downLoadLog": "Download log",
+        "emptyLog": "The log content is empty"
+    },
     "timeMap": {
         "days": "days ",
         "hours": "h ",
@@ -352,6 +361,10 @@
         "stopFail": "cancel failed"
     },
     "history": {
+        "logEmpty": "Log is empty",
+        "logClear": "Log is cleared",
+        "logClose": "Log is closed",
+        "logErr": "Other exceptions",
         "stageStatus": "Stage",
         "execHistory": "Builds",
         "trendData": "Artifacts size trending",
@@ -499,7 +512,7 @@
         "image": "image",
         "provideInfo": "Provided by {0}, modified {1} on {2}",
         "officialCertification": "Official Certification",
-        "thirdImageHolder": "Please Input Image, eg: Java:11.0.5",
+        "thirdImageHolder": "Please enter the full image path, such as csighub.tencentyun.com/tceforqci_arm/python3_frame_base",
         "by": "by",
         "devnet": "Devnet VM",
         "onlySupport": "Only supported",

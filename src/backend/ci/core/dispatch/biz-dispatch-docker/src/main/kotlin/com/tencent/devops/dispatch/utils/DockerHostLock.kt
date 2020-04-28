@@ -28,16 +28,26 @@ package com.tencent.devops.dispatch.utils
 
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
+import kotlin.math.min
 
-class DockerHostLock(redisOperation: RedisOperation) {
+class DockerHostLock(redisOperation: RedisOperation, pipelineId: String? = "") {
 
-    private val redisLock = RedisLock(redisOperation, "DISPATCH_REDIS_LOCK_DOCKER_HOST_KEY", 60L)
+    private val redisLock = RedisLock(redisOperation, "DISPATCH_REDIS_LOCK_DOCKER_HOST_KEY_$pipelineId", 60L)
 
-    fun tryLock() =
-            redisLock.tryLock()
+//    fun tryLock() = tryLockElapse(timeout = 0, interval = 0)
+
+    fun tryLock(timeout: Long = 0, interval: Long = 40): Boolean {
+        val sleep = min(interval, timeout) // 不允许sleep过长时间，最大1000ms
+        val start = System.currentTimeMillis()
+        var tryLock = redisLock.tryLock()
+        while (timeout > 0 && !tryLock && timeout > (System.currentTimeMillis() - start)) {
+            Thread.sleep(sleep)
+            tryLock = redisLock.tryLock()
+        }
+        return tryLock
+    }
 
     fun lock() = redisLock.lock()
 
-    fun unlock() =
-            redisLock.unlock()
+    fun unlock() = redisLock.unlock()
 }

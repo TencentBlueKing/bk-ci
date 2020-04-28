@@ -2,7 +2,7 @@
     <div class="biz-content" v-bkloading="{ isLoading: showLoading }">
         <div class="biz-top-bar">
             <div class="biz-image-detail-title">
-                <span class="bk-icon icon-arrows-left" style="color: #3c96ff; cursor: pointer; font-weight: 600;" @click="backImageLibrary"></span>
+                <span class="devops-icon icon-arrows-left" style="color: #3c96ff; cursor: pointer; font-weight: 600;" @click="backImageLibrary"></span>
                 {{imageName}}
             </div>
         </div>
@@ -54,12 +54,6 @@
                             <td style="text-align: left;padding-left: 30px;">
                                 <div class="tag-name-item">
                                     <span>{{item.tag || '--'}}</span>
-                                    <span title="复制镜像" class="copy-btn"
-                                        :data-clipboard-text="item.image"
-                                        v-show="index === lastOverImage"
-                                        @click="copyImage">
-                                        <icon :name="'copy'" size="18" />
-                                    </span>
                                 </div>
                             </td>
                             <td>{{item.size || '--'}}</td>
@@ -101,7 +95,6 @@
 </template>
 
 <script>
-    import Clipboard from 'clipboard'
     import { getScrollHeight, getScrollTop, getWindowHeight } from './../../utils/util'
     import { mapGetters } from 'vuex'
 
@@ -275,16 +268,6 @@
                         theme
                     })
                 }
-            },
-            copyImage (image) {
-                this.clipboardInstance = new Clipboard('.copy-btn')
-                this.clipboardInstance.on('success', e => {
-                    this.$bkMessage({
-                        theme: 'success',
-                        message: '复制成功',
-                        limit: 1
-                    })
-                })
             }
         }
     }

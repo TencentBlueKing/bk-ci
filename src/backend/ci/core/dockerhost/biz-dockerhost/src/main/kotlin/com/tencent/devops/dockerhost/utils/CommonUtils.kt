@@ -102,6 +102,11 @@ object CommonUtils {
     }
 
     private fun parseImage(imageNameInput: String): Triple<String, String, String> {
+        val (url, name, tag) = parseImageWithoutTrim(imageNameInput)
+        return Triple(url.trim(), name.trim(), tag.trim())
+    }
+
+    private fun parseImageWithoutTrim(imageNameInput: String): Triple<String, String, String> {
         val imageNameStr = imageNameInput.removePrefix("http://").removePrefix("https://")
         val arry = imageNameStr.split(":")
         if (arry.size == 1) {

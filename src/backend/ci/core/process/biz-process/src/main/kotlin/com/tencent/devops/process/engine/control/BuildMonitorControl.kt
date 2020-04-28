@@ -75,7 +75,7 @@ class BuildMonitorControl @Autowired constructor(
 
         val buildId = event.buildId
         val buildInfo = pipelineRuntimeService.getBuildInfo(buildId) ?: return false
-        if (BuildStatus.isFinish(buildInfo.status) && buildInfo.status != BuildStatus.STAGE_SUCCESS) {
+        if (BuildStatus.isFinish(buildInfo.status)) {
             logger.info("[$buildId]|monitor| is ${buildInfo.status}")
             return true
         }
@@ -148,7 +148,7 @@ class BuildMonitorControl @Autowired constructor(
             val interval = stage.checkNextStageMonitorIntervals(event.userId)
             // 根据最小的超时时间来决定下一次监控执行的时间
             if (interval in 1 until minInterval) {
-                minInterval = interval.toLong()
+                minInterval = interval
             }
         }
 
