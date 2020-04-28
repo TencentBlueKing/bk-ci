@@ -116,26 +116,26 @@ object NotifyTemplateUtils {
             "<!-- <thead style=\"background: #f6f8f8;\"> -->\n" +
             "<tr style=\"color: #707070;\">\n" +
             "<th width=\"20%\" style=\"color: #333C48; background: #f6f8f8; padding: 16px; border: 1px solid #e6e6e6;text-align: center; font-weight: normal;\">审核项目</th>\n" +
-            "<th width=\"80%\" style=\" padding: 16px; border: 1px solid #e6e6e6;text-align: left; font-weight: normal;\">${projectName}</th>\n" +
+            "<th width=\"80%\" style=\" padding: 16px; border: 1px solid #e6e6e6;text-align: left; font-weight: normal;\">$projectName</th>\n" +
             "</tr>\n" +
             "<!-- </thead> -->\n" +
             "<tbody style=\"color: #707070;\">\n" +
             "<tr>\n" +
             "<td style=\"color: #333C48; background: #f6f8f8; padding: 16px; border: 1px solid #e6e6e6;text-align: center; font-weight: normal;\">流水线</td>\n" +
-            "<td style=\" padding: 16px; border: 1px solid #e6e6e6;text-align: left; font-weight: normal;\">${pipelineName}</td>\n" +
+            "<td style=\" padding: 16px; border: 1px solid #e6e6e6;text-align: left; font-weight: normal;\">$pipelineName</td>\n" +
             "</tr>\n" +
             "</tbody>\n" +
             "<tbody style=\"color: #707070;\">\n" +
             "<tr>\n" +
             "<td style=\"color: #333C48; background: #f6f8f8; padding: 16px; border: 1px solid #e6e6e6;text-align: center; font-weight: normal;\">构建号</td>\n" +
-            "<td style=\" padding: 16px; border: 1px solid #e6e6e6;text-align: left; font-weight: normal;\">#${buildNo}</td>\n" +
+            "<td style=\" padding: 16px; border: 1px solid #e6e6e6;text-align: left; font-weight: normal;\">#$buildNo</td>\n" +
             "</tr>\n" +
             "</tbody>\n" +
             "</tbody>\n" +
             "<tbody style=\"color: #707070;\">\n" +
             "<tr>\n" +
             "<td style=\"color: #333C48; background: #f6f8f8; padding: 16px; border: 1px solid #e6e6e6;text-align: center; font-weight: normal;\">审核说明</td>\n" +
-            "<td style=\" padding: 16px; border: 1px solid #e6e6e6;text-align: left; font-weight: normal;\">${reviewDesc}</td>\n" +
+            "<td style=\" padding: 16px; border: 1px solid #e6e6e6;text-align: left; font-weight: normal;\">$reviewDesc</td>\n" +
             "</tr>\n" +
             "</tbody>\n" +
             "</tbody>\n" +
@@ -162,7 +162,7 @@ object NotifyTemplateUtils {
             "</tr>\n" +
             "<tr class=\"info-remark\">\n" +
             "<td style=\"padding: 20px 0; text-align: right; line-height: 24px; color: #707070;\">\n" +
-            "<div>${dataTime}</div>\n" +
+            "<div>$dataTime</div>\n" +
             "</td>\n" +
             "</tr>\n" +
             "</table>\n" +
