@@ -91,7 +91,7 @@ class ManualReviewTaskAtom(
             jobId = task.containerHashId,
             executeCount = task.executeCount ?: 1
         )
-        LogUtils.addYellowLine(
+        LogUtils.addLine(
             rabbitTemplate = rabbitTemplate,
             buildId = task.buildId,
             message = "待审核人：$reviewUsers",
@@ -99,7 +99,7 @@ class ManualReviewTaskAtom(
             jobId = task.containerHashId,
             executeCount = task.executeCount ?: 1
         )
-        LogUtils.addYellowLine(
+        LogUtils.addLine(
             rabbitTemplate = rabbitTemplate,
             buildId = task.buildId,
             message = "审核说明：${param.desc}",
@@ -210,15 +210,7 @@ class ManualReviewTaskAtom(
             )
             return when (ManualReviewAction.valueOf(manualAction)) {
                 ManualReviewAction.PROCESS -> {
-                    LogUtils.addYellowLine(
-                        rabbitTemplate = rabbitTemplate,
-                        buildId = buildId,
-                        message = "审核人：$manualActionUserId",
-                        tag = taskId,
-                        jobId = task.containerHashId,
-                        executeCount = task.executeCount ?: 1
-                    )
-                    LogUtils.addYellowLine(
+                    LogUtils.addLine(
                         rabbitTemplate = rabbitTemplate,
                         buildId = buildId,
                         message = "审核结果：继续",
@@ -226,7 +218,7 @@ class ManualReviewTaskAtom(
                         jobId = task.containerHashId,
                         executeCount = task.executeCount ?: 1
                     )
-                    LogUtils.addYellowLine(
+                    LogUtils.addLine(
                         rabbitTemplate = rabbitTemplate,
                         buildId = buildId,
                         message = "审核意见：${param.suggest}",
@@ -245,7 +237,7 @@ class ManualReviewTaskAtom(
                     AtomResponse(BuildStatus.SUCCEED)
                 }
                 ManualReviewAction.ABORT -> {
-                    LogUtils.addYellowLine(
+                    LogUtils.addLine(
                         rabbitTemplate = rabbitTemplate,
                         buildId = buildId,
                         message = "审核人：$manualActionUserId",
@@ -253,7 +245,7 @@ class ManualReviewTaskAtom(
                         jobId = task.containerHashId,
                         executeCount = task.executeCount ?: 1
                     )
-                    LogUtils.addYellowLine(
+                    LogUtils.addRedLine(
                         rabbitTemplate = rabbitTemplate,
                         buildId = buildId,
                         message = "审核结果：驳回",
@@ -261,7 +253,7 @@ class ManualReviewTaskAtom(
                         jobId = task.containerHashId,
                         executeCount = task.executeCount ?: 1
                     )
-                    LogUtils.addYellowLine(
+                    LogUtils.addLine(
                         rabbitTemplate = rabbitTemplate,
                         buildId = buildId,
                         message = "审核意见：${param.suggest}",
