@@ -59,23 +59,26 @@ class DispatchDockerService @Autowired constructor(
         }
     }
 
-    fun create(userId: String, dockerIpInfoVO: DockerIpInfoVO): Boolean {
-        logger.info("$userId create IDC IP $dockerIpInfoVO")
+    fun create(userId: String, dockerIpInfoVOs: List<DockerIpInfoVO>): Boolean {
+        logger.info("$userId create docker IP $dockerIpInfoVOs")
         try {
-            pipelineDockerIPInfoDao.create(
-                dslContext = dslContext,
-                dockerIp = dockerIpInfoVO.dockerIp,
-                dockerHostPort = dockerIpInfoVO.dockerHostPort,
-                capacity = dockerIpInfoVO.capacity,
-                used = dockerIpInfoVO.usedNum,
-                cpuLoad = dockerIpInfoVO.averageCpuLoad,
-                memLoad = dockerIpInfoVO.averageMemLoad,
-                diskLoad = dockerIpInfoVO.averageDiskLoad,
-                diskIOLoad = dockerIpInfoVO.averageDiskIOLoad,
-                enable = dockerIpInfoVO.enable,
-                grayEnv = dockerIpInfoVO.grayEnv,
-                specialOn = dockerIpInfoVO.specialOn
-            )
+            dockerIpInfoVOs.forEach {
+                pipelineDockerIPInfoDao.create(
+                    dslContext = dslContext,
+                    dockerIp = it.dockerIp.trim(),
+                    dockerHostPort = it.dockerHostPort,
+                    capacity = it.capacity,
+                    used = it.usedNum,
+                    cpuLoad = it.averageCpuLoad,
+                    memLoad = it.averageMemLoad,
+                    diskLoad = it.averageDiskLoad,
+                    diskIOLoad = it.averageDiskIOLoad,
+                    enable = it.enable,
+                    grayEnv = it.grayEnv,
+                    specialOn = it.specialOn
+                )
+            }
+
             return true
         } catch (e: Exception) {
             logger.error("OP dispatchDocker create error.", e)
