@@ -1,5 +1,10 @@
 {
     "store": "Store",
+    "点击查看YAML片段": "Click to view YAML fragment",
+    "YAML片段": "YAML fragment",
+    "点击申请成为协作者": "Click Apply to become a collaborator",
+    "推荐使用": "Recommended Use",
+    "YAML可用": "YAML is available",
     "若模版中有未安装的插件，将自动安装": "If there are uninstalled plugins in the template, they will be installed automatically",
     "debugTask": "Debug task.json",
     "手动录入": "Enter manually",
