@@ -316,27 +316,19 @@ class SubPipelineStartUpService(
         return Result(parameter)
     }
 
-    fun getPipelineByName(userId: String, projectId: String, pipelineName: String): Result<List<PipelineId?>> {
-        val pipelines = pipelineService.listViewPipelines(
-            userId = userId,
-            page = null,
-            pageSize = null,
-            projectId = projectId,
-            sortType = PipelineSortType.CREATE_TIME,
-            channelCode = ChannelCode.BS,
-            viewId = "myPipeline",
-            checkPermission = true,
-            filterByPipelineName = pipelineName
-        )
+    fun getPipelineByName(projectId: String, pipelineName: String): Result<List<PipelineId?>> {
+        val pipelines = pipelineService.getPipelineIdByNames(projectId, setOf(pipelineName), true)
 
         val data: MutableList<PipelineId?> = mutableListOf()
-        if (pipelines.count > 0) {
-            pipelines.records.forEach {
-                data.add(
-                    PipelineId(
-                        id = it.pipelineId
+        if (pipelines.isNotEmpty()) {
+            pipelines.forEach { (k, v) ->
+                if (k == pipelineName) {
+                    data.add(
+                        PipelineId(
+                            id = v
+                        )
                     )
-                )
+                }
             }
         }
 
