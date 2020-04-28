@@ -39,7 +39,6 @@ class BuildVariableService @Autowired constructor(
     private val pipelineBuildVarDao: PipelineBuildVarDao
 ) {
 
-    // 获取方法不需要做事务保护
     fun getVariable(buildId: String, varName: String): String? {
         val vars = getAllVariable(buildId)
         return if (vars.isNotEmpty()) vars[varName] else null
@@ -65,8 +64,8 @@ class BuildVariableService @Autowired constructor(
         )
     }
 
-    fun batchSetVariable(projectId: String, pipelineId: String, buildId: String, variables: Map<String, Any>)
-        = batchSetVariable(commonDslContext, projectId, pipelineId, buildId, variables)
+    fun batchSetVariable(projectId: String, pipelineId: String, buildId: String, variables: Map<String, Any>) =
+        batchSetVariable(commonDslContext, projectId, pipelineId, buildId, variables)
 
     fun deletePipelineBuildVar(projectId: String, pipelineId: String) {
         pipelineBuildVarDao.deletePipelineBuildVar(
@@ -77,7 +76,6 @@ class BuildVariableService @Autowired constructor(
     }
 
     // 保存方法需要提供事务保护的实现，传入特定dslContext
-
     fun saveVariable(dslContext: DSLContext, buildId: String, projectId: String, pipelineId: String, name: String, value: Any) =
         pipelineBuildVarDao.save(
             dslContext = dslContext,
