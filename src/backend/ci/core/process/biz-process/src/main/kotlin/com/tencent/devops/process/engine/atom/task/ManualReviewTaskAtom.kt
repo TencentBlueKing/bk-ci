@@ -33,6 +33,7 @@ import com.tencent.devops.common.notify.enums.EnumEmailFormat
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ManualReviewAction
 import com.tencent.devops.common.pipeline.pojo.element.agent.ManualReviewUserTaskElement
+import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParamPair
 import com.tencent.devops.log.utils.LogUtils
 import com.tencent.devops.notify.api.service.ServiceNotifyResource
 import com.tencent.devops.notify.pojo.EmailNotifyMessage
@@ -42,6 +43,8 @@ import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.IAtomTask
 import com.tencent.devops.process.engine.bean.PipelineUrlBean
 import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION
+import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION_PARAMS
+import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION_SUGGEST
 import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION_USERID
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.util.NotifyTemplateUtils
@@ -197,6 +200,7 @@ class ManualReviewTaskAtom(
         val taskId = task.taskId
         val buildId = task.buildId
         val manualAction = task.getTaskParam(BS_MANUAL_ACTION)
+        val taskParam = JsonUtil.toMutableMapSkipEmpty(task.taskParams)
         logger.info("[$buildId]|TRY_FINISH|${task.taskName}|taskId=$taskId|action=$manualAction")
         if (manualAction.isNotEmpty()) {
             val manualActionUserId = task.getTaskParam(BS_MANUAL_ACTION_USERID)
@@ -204,6 +208,22 @@ class ManualReviewTaskAtom(
                 rabbitTemplate = rabbitTemplate,
                 buildId = task.buildId,
                 message = "============步骤审核结束============",
+                tag = taskId,
+                jobId = task.containerHashId,
+                executeCount = task.executeCount ?: 1
+            )
+            LogUtils.addLine(
+                rabbitTemplate = rabbitTemplate,
+                buildId = buildId,
+                message = "审核人：$manualActionUserId",
+                tag = taskId,
+                jobId = task.containerHashId,
+                executeCount = task.executeCount ?: 1
+            )
+            LogUtils.addLine(
+                rabbitTemplate = rabbitTemplate,
+                buildId = buildId,
+                message = "审核意见：${taskParam[BS_MANUAL_ACTION_SUGGEST]}",
                 tag = taskId,
                 jobId = task.containerHashId,
                 executeCount = task.executeCount ?: 1
@@ -221,15 +241,7 @@ class ManualReviewTaskAtom(
                     LogUtils.addLine(
                         rabbitTemplate = rabbitTemplate,
                         buildId = buildId,
-                        message = "审核意见：${param.suggest}",
-                        tag = taskId,
-                        jobId = task.containerHashId,
-                        executeCount = task.executeCount ?: 1
-                    )
-                    LogUtils.addLine(
-                        rabbitTemplate = rabbitTemplate,
-                        buildId = buildId,
-                        message = "审核参数：${param.params.map { it.key to it.value }}",
+                        message = "审核参数：${JsonUtil.getObjectMapper().readValue(taskParam[BS_MANUAL_ACTION_PARAMS].toString(), List::class.java)}",
                         tag = taskId,
                         jobId = task.containerHashId,
                         executeCount = task.executeCount ?: 1
@@ -237,14 +249,6 @@ class ManualReviewTaskAtom(
                     AtomResponse(BuildStatus.SUCCEED)
                 }
                 ManualReviewAction.ABORT -> {
-                    LogUtils.addLine(
-                        rabbitTemplate = rabbitTemplate,
-                        buildId = buildId,
-                        message = "审核人：$manualActionUserId",
-                        tag = taskId,
-                        jobId = task.containerHashId,
-                        executeCount = task.executeCount ?: 1
-                    )
                     LogUtils.addRedLine(
                         rabbitTemplate = rabbitTemplate,
                         buildId = buildId,
@@ -253,14 +257,7 @@ class ManualReviewTaskAtom(
                         jobId = task.containerHashId,
                         executeCount = task.executeCount ?: 1
                     )
-                    LogUtils.addLine(
-                        rabbitTemplate = rabbitTemplate,
-                        buildId = buildId,
-                        message = "审核意见：${param.suggest}",
-                        tag = taskId,
-                        jobId = task.containerHashId,
-                        executeCount = task.executeCount ?: 1
-                    )
+
                     AtomResponse(BuildStatus.REVIEW_ABORT)
                 }
             }
