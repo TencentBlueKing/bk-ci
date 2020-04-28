@@ -164,6 +164,7 @@ object Runner {
                                     errorCode = errorCode
                                 )
                             } finally {
+                                LoggerService.finishTask()
                                 LoggerService.elementId = ""
                             }
                         }

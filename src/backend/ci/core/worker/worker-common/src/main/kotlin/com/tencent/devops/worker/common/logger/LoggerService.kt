@@ -144,10 +144,10 @@ object LoggerService {
             logger.info("Finish stopping the log service")
         } catch (e: Exception) {
             logger.error("Fail to stop log service for build", e)
-        } finally {
-            finishLog(elementId, jobId, executeCount)
         }
     }
+
+    fun finishTask() = finishLog(elementId, jobId , executeCount)
 
     fun addNormalLine(message: String) {
         val logMessage = LogMessage(
