@@ -135,7 +135,6 @@ import org.jooq.Record
 import org.jooq.Result
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.time.Duration
@@ -163,7 +162,6 @@ class PipelineRuntimeService @Autowired constructor(
     private val pipelineBuildVarDao: PipelineBuildVarDao,
     private val buildDetailDao: BuildDetailDao,
     private val buildStartupParamService: BuildStartupParamService,
-    private val rabbitTemplate: RabbitTemplate,
     private val redisOperation: RedisOperation
 ) {
     companion object {
@@ -1459,6 +1457,15 @@ class PipelineRuntimeService @Autowired constructor(
                         if (result != 1) {
                             logger.info("[{}]|taskId={}| update task param failed|result:{}", buildId, taskId, result)
                         }
+                        pipelineBuildVarDao.batchSave(
+                            dslContext = dslContext,
+                            projectId = projectId,
+                            pipelineId = pipelineId,
+                            buildId = buildId,
+                            variables = params.params.map {
+                                BuildParameters(it.key.toString(), it.value.toString())
+                            }
+                        )
                         pipelineEventDispatcher.dispatch(
                             PipelineBuildAtomTaskEvent(
                                 javaClass.simpleName,
