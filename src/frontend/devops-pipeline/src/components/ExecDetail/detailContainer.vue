@@ -147,6 +147,7 @@
             }
             &.white-theme {
                 background: #fff;
+                overflow: auto;
                 &.log-main .log-head {
                     border-top-left-radius: 6px;
                     border-top-right-radius: 6px;
