@@ -54,6 +54,7 @@ import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildTaskResult
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.pojo.mq.PipelineBuildContainerEvent
+import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.PipelineTaskService
 import com.tencent.devops.process.utils.PIPELINE_ELEMENT_ID
 import com.tencent.devops.process.utils.PIPELINE_TURBO_TASK_ID
@@ -74,6 +75,7 @@ import javax.ws.rs.NotFoundException
 class PipelineVMBuildService @Autowired(required = false) constructor(
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val pipelineBuildDetailService: PipelineBuildDetailService,
+    private val buildVariableService: BuildVariableService,
     @Autowired(required = false)
     private val measureService: MeasureService?,
     private val rabbitTemplate: RabbitTemplate,
@@ -115,8 +117,8 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
         logger.info("[$buildId]|Start the build vmSeqId($vmSeqId) and vmName($vmName)")
         redisOperation.delete(ContainerUtils.getContainerStartupKey(buildInfo.pipelineId, buildId, vmSeqId))
 
-        val variables = pipelineRuntimeService.getAllVariable(buildId)
-        val variablesWithType = pipelineRuntimeService.getAllVariableWithType(buildId)
+        val variables = buildVariableService.getAllVariable(buildId)
+        val variablesWithType = buildVariableService.getAllVariableWithType(buildId)
         val model = (pipelineBuildDetailService.getBuildModel(buildId)
             ?: throw NotFoundException("Does not exist resource in the pipeline"))
         var vmId = 1
@@ -314,7 +316,7 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
         var isContainerFailed = false
         var hasFailedTaskInInSuccessContainer = false
         var continueWhenPreTaskFailed = false
-        val allVariable = pipelineRuntimeService.getAllVariable(buildId)
+        val allVariable = buildVariableService.getAllVariable(buildId)
         allTasks.forEachIndexed { index, task ->
             val additionalOptions = task.additionalOptions
             when {
@@ -505,7 +507,7 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
         if (result.buildResult.isNotEmpty()) {
             logger.info("[$buildId]| Add the build result(${result.buildResult}) to var")
             try {
-                pipelineRuntimeService.batchSetVariable(
+                buildVariableService.batchSetVariable(
                     projectId = buildInfo.projectId,
                     pipelineId = buildInfo.pipelineId,
                     buildId = buildId,
