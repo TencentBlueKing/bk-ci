@@ -41,6 +41,9 @@ import com.tencent.devops.process.engine.dao.PipelineBuildTaskDao
 import com.tencent.devops.process.engine.service.PipelineBuildService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
+import com.tencent.devops.process.engine.service.PipelineService
+import com.tencent.devops.process.pojo.PipelineId
+import com.tencent.devops.process.pojo.PipelineSortType
 import com.tencent.devops.process.pojo.pipeline.ProjectBuildId
 import com.tencent.devops.process.pojo.pipeline.StartUpInfo
 import com.tencent.devops.process.pojo.pipeline.SubPipelineStartUpInfo
@@ -56,6 +59,7 @@ import org.springframework.stereotype.Service
 class SubPipelineStartUpService(
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val pipelineRuntimeService: PipelineRuntimeService,
+    private val pipelineService: PipelineService,
     private val buildService: PipelineBuildService,
     private val pipelineBuildTaskDao: PipelineBuildTaskDao,
     private val dslContext: DSLContext
@@ -310,5 +314,32 @@ class SubPipelineStartUpService(
             }
         }
         return Result(parameter)
+    }
+
+    fun getPipelineByName(userId: String, projectId: String, pipelineName: String): Result<List<PipelineId?>> {
+        val pipelines = pipelineService.listViewPipelines(
+            userId = userId,
+            page = null,
+            pageSize = null,
+            projectId = projectId,
+            sortType = PipelineSortType.CREATE_TIME,
+            channelCode = ChannelCode.BS,
+            viewId = "myPipeline",
+            checkPermission = true,
+            filterByPipelineName = pipelineName
+        )
+
+        val data: MutableList<PipelineId?> = mutableListOf()
+        if (pipelines.count > 0) {
+            pipelines.records.forEach {
+                data.add(
+                    PipelineId(
+                        id = it.pipelineId
+                    )
+                )
+            }
+        }
+
+        return Result(data)
     }
 }
