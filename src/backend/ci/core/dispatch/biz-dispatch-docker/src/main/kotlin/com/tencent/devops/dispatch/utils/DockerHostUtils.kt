@@ -31,6 +31,7 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.dispatch.common.Constants
 import com.tencent.devops.dispatch.dao.PipelineDockerHostDao
 import com.tencent.devops.dispatch.dao.PipelineDockerIPInfoDao
 import com.tencent.devops.dispatch.dao.PipelineDockerPoolDao
@@ -157,6 +158,14 @@ class DockerHostUtils @Autowired constructor(
             throw DockerServiceException("Start build Docker VM failed, no available Docker VM.")
         }
 
+        val dockerIpCount = redisOperation.get("${Constants.DOCKER_IP_KEY_PREFIX}${dockerPair.first}")
+        logger.info("$projectId|$pipelineId|$vmSeqId dockerIpCount: $dockerIpCount")
+        if (dockerIpCount != null && dockerIpCount.toInt() > 6) {
+            unAvailableIpList.plus(dockerPair.first)
+            logger.info("$projectId|$pipelineId|$vmSeqId dockerIpCount: $dockerIpCount exceeded limiting. unAvailableIpList: $unAvailableIpList")
+            return getAvailableDockerIpWithSpecialIps(projectId, pipelineId, vmSeqId, specialIpSet, unAvailableIpList)
+        }
+
         return dockerPair
     }
 
@@ -266,6 +275,7 @@ class DockerHostUtils @Autowired constructor(
         dockerIpList: List<TDispatchPipelineDockerIpInfoRecord>,
         unAvailableIpList: Set<String> = setOf()
     ): Pair<String, Int> {
+        logger.info("selectAvailableDockerIp ====> $dockerIpList")
         if (unAvailableIpList.isEmpty()) {
             return Pair(dockerIpList[0].dockerIp, dockerIpList[0].dockerHostPort)
         } else {

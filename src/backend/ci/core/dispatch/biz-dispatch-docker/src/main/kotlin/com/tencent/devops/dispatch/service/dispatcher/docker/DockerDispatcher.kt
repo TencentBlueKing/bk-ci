@@ -30,7 +30,9 @@ import com.tencent.devops.common.api.pojo.Zone
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.dispatch.client.DockerHostClient
+import com.tencent.devops.dispatch.common.Constants
 import com.tencent.devops.dispatch.dao.PipelineDockerBuildDao
 import com.tencent.devops.dispatch.dao.PipelineDockerHostDao
 import com.tencent.devops.dispatch.dao.PipelineDockerIPInfoDao
@@ -55,6 +57,7 @@ import org.springframework.stereotype.Component
 class DockerDispatcher @Autowired constructor(
     private val client: Client,
     private val rabbitTemplate: RabbitTemplate,
+    private val redisOperation: RedisOperation,
     private val dockerHostBuildService: DockerHostBuildService,
     private val dockerHostClient: DockerHostClient,
     private val dockerHostUtils: DockerHostUtils,
@@ -128,6 +131,9 @@ class DockerDispatcher @Autowired constructor(
                     idcIp = dockerPair.first
                 )
             }
+
+            // 选择IP后，增加缓存计数
+            redisOperation.increment("${Constants.DOCKER_IP_KEY_PREFIX}${dockerPair.first}", 1)
 
             dockerHostClient.startBuild(pipelineAgentStartupEvent, dockerPair.first, dockerPair.second, poolNo)
         } catch (e: Exception) {
