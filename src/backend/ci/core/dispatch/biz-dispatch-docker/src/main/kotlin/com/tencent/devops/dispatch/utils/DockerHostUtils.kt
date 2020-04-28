@@ -275,8 +275,9 @@ class DockerHostUtils @Autowired constructor(
         dockerIpList: List<TDispatchPipelineDockerIpInfoRecord>,
         unAvailableIpList: Set<String> = setOf()
     ): Pair<String, Int> {
-        logger.info("selectAvailableDockerIp ====> $dockerIpList")
+        logger.info("selectAvailableDockerIp ====> $dockerIpList |||| ${dockerIpList.last()}")
         if (unAvailableIpList.isEmpty()) {
+            logger.info("docker[0] ====> ${dockerIpList[0]}")
             return Pair(dockerIpList[0].dockerIp, dockerIpList[0].dockerHostPort)
         } else {
             dockerIpList.forEach {
