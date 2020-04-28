@@ -184,7 +184,7 @@ class PipelineSubscriptionService @Autowired(required = false) constructor(
             else -> TYPE_SHUTDOWN_SUCCESS
         }
 
-        val vars = pipelineRuntimeService.getAllVariable(buildId).toMutableMap()
+        val vars = buildVariableService.getAllVariable(buildId).toMutableMap()
         if (!vars[PIPELINE_TIME_DURATION].isNullOrBlank()) {
             val timeDuration = vars[PIPELINE_TIME_DURATION]!!.toLongOrNull() ?: 0L
             vars[PIPELINE_TIME_DURATION] = DateTimeUtil.formatMillSecond(timeDuration * 1000)
