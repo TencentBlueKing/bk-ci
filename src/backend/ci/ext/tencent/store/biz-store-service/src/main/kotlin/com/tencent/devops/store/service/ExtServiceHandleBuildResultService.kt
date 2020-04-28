@@ -75,6 +75,18 @@ class ExtServiceHandleBuildResultService @Autowired constructor(
                     grayFlag = true
                 )
                 logger.info("$serviceCode bcsStopAppResult is :$bcsStopAppResult")
+                if (bcsStopAppResult.isNotOk()) {
+                    return bcsStopAppResult
+                }
+                extServiceFeatureDao.updateExtServiceFeatureBaseInfo(
+                    dslContext = dslContext,
+                    serviceCode = serviceRecord.serviceCode,
+                    userId = serviceRecord.modifier,
+                    extServiceFeatureUpdateInfo = ExtServiceFeatureUpdateInfo(
+                        killGrayAppFlag = null,
+                        killGrayAppMarkTime = null
+                    )
+                )
             }
             return Result(true)
         }

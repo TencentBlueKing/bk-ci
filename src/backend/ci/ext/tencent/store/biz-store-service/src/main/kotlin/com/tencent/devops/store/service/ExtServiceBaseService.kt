@@ -706,20 +706,32 @@ abstract class ExtServiceBaseService @Autowired constructor() {
             serviceCode = serviceCode,
             deploymentName = serviceCode,
             serviceName = "$serviceCode-service",
-            checkPermissionFlag = false,
+            checkPermissionFlag = true,
             grayFlag = true
         )
         logger.info("$serviceCode bcsStopAppResult is :$bcsStopAppResult")
         if (bcsStopAppResult.isNotOk()) {
             return bcsStopAppResult
         }
-        extServiceDao.setServiceStatusById(
-            dslContext,
-            serviceId,
-            status,
-            userId,
-            MessageCodeUtil.getCodeLanMessage(UN_RELEASE)
-        )
+        dslContext.transaction { t ->
+            val context = DSL.using(t)
+            extFeatureDao.updateExtServiceFeatureBaseInfo(
+                dslContext = context,
+                serviceCode = serviceCode,
+                userId = userId,
+                extServiceFeatureUpdateInfo = ExtServiceFeatureUpdateInfo(
+                    killGrayAppFlag = null,
+                    killGrayAppMarkTime = null
+                )
+            )
+            extServiceDao.setServiceStatusById(
+                context,
+                serviceId,
+                status,
+                userId,
+                MessageCodeUtil.getCodeLanMessage(UN_RELEASE)
+            )
+        }
         return Result(true)
     }
 
