@@ -251,13 +251,13 @@ class BuildEndControl @Autowired constructor(
         )
     }
 
-    private fun addFailElementVar(buildId: String, projectId:String, pipelineId: String) {
+    private fun addFailElementVar(buildId: String, projectId: String, pipelineId: String) {
         val taskRecords = pipelineBuildTaskService.getAllBuildTask(buildId)
         var errorElements = ""
         var errorElementsName = ""
         val model = pipelineBuildDetailService.getBuildModel(buildId)
         taskRecords.forEach {
-            if(it.status == BuildStatus.FAILED || it.status == BuildStatus.QUEUE_TIMEOUT || it.status == BuildStatus.EXEC_TIMEOUT || it.status == BuildStatus.QUALITY_CHECK_FAIL) {
+            if (it.status == BuildStatus.FAILED || it.status == BuildStatus.QUEUE_TIMEOUT || it.status == BuildStatus.EXEC_TIMEOUT || it.status == BuildStatus.QUALITY_CHECK_FAIL) {
                 val errorElement = findElementMsg(model, it)
                 errorElements += errorElement.first
                 errorElementsName += errorElement.second
@@ -282,12 +282,12 @@ class BuildEndControl @Autowired constructor(
         )
     }
 
-    private fun findElementMsg(model: Model?, taskRecord : PipelineBuildTaskInfo): Pair<String, String> {
+    private fun findElementMsg(model: Model?, taskRecord: PipelineBuildTaskInfo): Pair<String, String> {
         var containerName = ""
         model?.stages?.forEach { stage ->
-            if(stage.id == taskRecord.stageId) {
-                stage.containers.forEach nextContainer@{ container->
-                    if(container.id == taskRecord.containerId) {
+            if (stage.id == taskRecord.stageId) {
+                stage.containers.forEach nextContainer@{ container ->
+                    if (container.id == taskRecord.containerId) {
                         containerName = container.name
                         return@forEach
                     }
