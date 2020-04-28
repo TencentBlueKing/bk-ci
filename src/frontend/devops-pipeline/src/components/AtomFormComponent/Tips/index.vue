@@ -130,7 +130,7 @@
             min-width: 44px;
             background-color: #ffb400;
             position: relative;
-            .bk-icon {
+            .devops-icon {
                 font-size: 18px;
                 color: #fff;
                 display: inline-block;

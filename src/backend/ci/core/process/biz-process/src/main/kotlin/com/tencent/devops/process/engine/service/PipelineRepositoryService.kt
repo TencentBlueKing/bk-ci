@@ -52,6 +52,7 @@ import com.tencent.devops.process.dao.PipelineSettingDao
 import com.tencent.devops.process.engine.cfg.ModelContainerIdGenerator
 import com.tencent.devops.process.engine.cfg.ModelTaskIdGenerator
 import com.tencent.devops.process.engine.cfg.PipelineIdGenerator
+import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.dao.PipelineModelTaskDao
@@ -180,7 +181,7 @@ class PipelineRepositoryService constructor(
         // 初始化ID 该构建环境下的ID,旧流水引擎数据无法转换为String，仍然是序号的方式
         val containerSeqId = AtomicInteger(0)
         model.stages.forEachIndexed { index, s ->
-            s.id = "stage-${index + 1}"
+            s.id = VMUtils.genStageId(index + 1)
             if (index == 0) { // 在流程模型中初始化触发类容器
                 initTriggerContainer(
                     stage = s,
@@ -441,6 +442,8 @@ class PipelineRepositoryService constructor(
                     )
                 }
             }
+            // 初始化流水线构建统计表
+            pipelineBuildSummaryDao.create(dslContext, projectId, pipelineId, buildNo)
             pipelineModelTaskDao.batchSave(transactionContext, modelTasks)
         }
 

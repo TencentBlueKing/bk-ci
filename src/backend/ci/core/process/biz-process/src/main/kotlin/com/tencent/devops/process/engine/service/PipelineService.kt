@@ -51,6 +51,7 @@ import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildNo
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.dao.PipelineSettingDao
+import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.compatibility.BuildPropertyCompatibilityTools
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
@@ -228,7 +229,7 @@ class PipelineService @Autowired constructor(
                 pipelineUserService.create(pipelineId, userId)
                 logger.info("instanceType: $instanceType")
                 if (model.templateId != null) {
-                    var templateId = model.templateId as String
+                    val templateId = model.templateId as String
                     logger.info("templateId: $templateId")
                     createRelationBtwTemplate(userId, templateId, pipelineId, instanceType!!, buildNo, param)
                 }
@@ -337,17 +338,13 @@ class PipelineService @Autowired constructor(
             containerId = templateTrigger.containerId
         )
 
-        val stages = ArrayList<Stage>()
-
-        templateModel.stages.forEachIndexed { index, stage ->
-            if (index == 0) {
-                stages.add(Stage(listOf(triggerContainer), null))
-            } else {
-                stages.add(stage)
-            }
-        }
-
-        return Model(pipelineName, "", stages, labels ?: templateModel.labels, instanceFromTemplate)
+        return Model(
+            name = pipelineName,
+            desc = "",
+            stages = getFixedStages(templateModel, triggerContainer),
+            labels = labels ?: templateModel.labels,
+            instanceFromTemplate = instanceFromTemplate
+        )
     }
 
     /**
@@ -678,9 +675,17 @@ class PipelineService @Autowired constructor(
             model.name = pipelineInfo.pipelineName
             model.desc = pipelineInfo.pipelineDesc
             model.pipelineCreator = pipelineInfo.creator
+
+            val defaultTagIds = listOf(pipelineStageService.getDefaultStageTagId())
             model.stages.forEach {
                 if (it.name.isNullOrBlank()) it.name = it.id
-                if (it.tag == null) it.tag = listOf(pipelineStageService.getDefaultStageTagId())
+                if (it.tag == null) it.tag = defaultTagIds
+            }
+
+            // 部分老的模板实例没有templateId，需要手动加上
+            if (model.instanceFromTemplate == true && model.templateId.isNullOrBlank()) {
+                val record = templatePipelineDao.get(dslContext, pipelineId)
+                model.templateId = record?.templateId
             }
 
             return model
@@ -960,6 +965,7 @@ class PipelineService @Autowired constructor(
         } else {
             authPipelineIds
         }
+        logger.info("listViewPipelines user:$userId,projectId:$projectId,authPipelines:$authPipelines")
         watch.stop()
 
         watch.start("s_r_summary")
@@ -1638,6 +1644,24 @@ class PipelineService @Autowired constructor(
 
         logger.info("listPermissionPipelineCount|[$projectId]|$userId|$count|watch=$watch")
         return count
+    }
+
+    fun getFixedStages(model: Model, fixedTriggerContainer: TriggerContainer): List<Stage> {
+        val stages = ArrayList<Stage>()
+        val defaultTagIds = listOf(pipelineStageService.getDefaultStageTagId())
+        model.stages.forEachIndexed { index, stage ->
+            stage.id = stage.id ?: VMUtils.genStageId(index + 1)
+            if (index == 0) {
+                stages.add(Stage(listOf(fixedTriggerContainer), stage.id))
+            } else {
+                model.stages.forEach {
+                    if (it.name.isNullOrBlank()) it.name = it.id
+                    if (it.tag == null) it.tag = defaultTagIds
+                }
+                stages.add(stage)
+            }
+        }
+        return stages
     }
 
     fun getPipelineIdByNames(projectId: String, pipelineNames: Set<String>, filterDelete: Boolean): Map<String, String> {

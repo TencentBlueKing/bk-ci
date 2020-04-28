@@ -82,7 +82,7 @@
                 <bk-form-item :label="$t('store.源镜像名称')" property="imageRepoName" :required="true" :rules="[requireRule]" ref="imageRepoName">
                     <bk-input v-model="form.imageRepoName" :placeholder="$t('store.请输入源镜像名称，如 XXX/XXXX')"></bk-input>
                 </bk-form-item>
-                <bk-form-item :label="$t('store.源镜像Tag')" property="imageTag" :desc="$t('store.请不要使用可变功能的Tag（如latest），避免镜像变更导致关联流水线不能正常执行')" :required="true" :rules="[requireRule, latestRule]" ref="imageTag">
+                <bk-form-item :label="$t('store.源镜像Tag')" property="imageTag" :desc="$t('store.不建议使用可变功能的Tag（如latest），避免镜像变更导致关联流水线不能正常执行')" :required="true" :rules="[requireRule]" ref="imageTag">
                     <bk-input v-model="form.imageTag" :placeholder="$t('store.imageTag')"></bk-input>
                 </bk-form-item>
                 <bk-form-item :label="$t('store.凭证')" property="ticketId" :desc="$t('store.若为私有镜像，请提供凭证，用于流水线执行时拉取镜像')">
@@ -101,7 +101,7 @@
                     </bk-radio-group>
                 </bk-form-item>
                 <bk-form-item label="Dockerfile" property="dockerFileContent" ref="dockerFileContent">
-                    <section class="dockerfile" @click="freshCodeMirror"></section>
+                    <code-section :code="form.dockerFileContent" :cursor-blink-rate="530" :read-only="false" ref="codeEditor" />
                 </bk-form-item>
                 <div class="version-msg">
                     <p class="form-title"> {{ $t('store.版本信息') }} </p>
@@ -141,15 +141,12 @@
     import { mapActions } from 'vuex'
     import { toolbars } from '@/utils/editor-options'
     import selectLogo from '@/components/common/selectLogo'
-
-    import CodeMirror from 'codemirror'
-    import 'codemirror/mode/yaml/yaml'
-    import 'codemirror/lib/codemirror.css'
-    import 'codemirror/theme/3024-night.css'
+    import codeSection from '@/components/common/detailTab/codeSection'
 
     export default {
         components: {
-            selectLogo
+            selectLogo,
+            codeSection
         },
 
         data () {
@@ -198,25 +195,7 @@
                     message: this.$t('store.必填项'),
                     trigger: 'blur'
                 },
-                latestRule: {
-                    validator (val) {
-                        return val !== 'latest'
-                    },
-                    message: this.$t('store.镜像tag不能是latest'),
-                    trigger: 'blur'
-                },
                 logoErr: false,
-                codeMirrorCon: {
-                    lineNumbers: true,
-                    height: '400px',
-                    tabMode: 'indent',
-                    mode: 'yaml',
-                    theme: '3024-night',
-                    cursorHeight: 0.85,
-                    autoRefresh: true,
-                    autofocus: true
-                },
-                codeEditor: {},
                 toolbars
             }
         },
@@ -261,18 +240,13 @@
                 'requestReleaseImage'
             ]),
 
-            freshCodeMirror () {
-                this.codeEditor.refresh()
-                this.codeEditor.focus()
-            },
-
             changeShowAgentType (option) {
                 const settings = option.settings || {}
                 this.needAgentType = settings.needAgentType === 'NEED_AGENT_TYPE_TRUE'
             },
 
             submitImage () {
-                if (this.form.dockerFileType === 'INPUT') this.form.dockerFileContent = this.codeEditor.getValue()
+                if (this.form.dockerFileType === 'INPUT') this.form.dockerFileContent = this.$refs.codeEditor.getValue()
                 this.$refs.imageForm.validate().then(() => {
                     if (!this.form.logoUrl) {
                         this.logoErr = true
@@ -363,12 +337,6 @@
                         })
                 }).catch((err) => this.$bkMessage({ message: err.message || err, theme: 'error' })).finally(() => {
                     this.isLoading = false
-                    this.$nextTick(() => {
-                        const ele = document.querySelector('.dockerfile')
-                        this.codeEditor = CodeMirror(ele, this.codeMirrorCon)
-                        this.codeEditor.setValue(this.form.dockerFileContent || '')
-                    })
-                    setTimeout(() => this.codeEditor.refresh(), 300)
                 })
             },
 

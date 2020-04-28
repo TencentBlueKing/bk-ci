@@ -165,10 +165,8 @@ class QualityRuleCheckService @Autowired constructor(
 
             // 遍历项目下所有拦截规则
             val ruleList = ruleService.serviceListRuleByPosition(projectId, buildCheckParams.position)
-            val metadataList = lazyGetHisMetadata(buildId)
-            logger.info("Rule metadata serviceList for build(${buildCheckParams.buildId}):\n metadataList=$metadataList")
 
-            ruleList.filter { rule ->
+            val filterRuleList = ruleList.filter { rule ->
                 logger.info("validate whether to check rule(${rule.name}) with gatewayId(${rule.gatewayId})")
                 if (rule.controlPoint.name != buildCheckParams.taskId) return@filter false
                 val gatewayId = rule.gatewayId ?: ""
@@ -177,7 +175,12 @@ class QualityRuleCheckService @Autowired constructor(
                 val containsInPipeline = rule.range.contains(pipelineId)
                 val containsInTemplate = rule.templateRange.contains(buildCheckParams.templateId)
                 return@filter (containsInPipeline || containsInTemplate)
-            }.forEach { rule ->
+            }
+
+            // start to check
+            val metadataList = qualityHisMetadataService.serviceGetHisMetadata(buildId)
+            logger.info("Rule metadata serviceList for build(${buildCheckParams.buildId}):\n metadataList=$metadataList")
+            filterRuleList.forEach { rule ->
                 logger.info("start to check rule(${rule.name})")
 
                 val result = checkIndicator(rule, buildCheckParams, metadataList)
@@ -185,6 +188,7 @@ class QualityRuleCheckService @Autowired constructor(
                 val interceptResult = result.first
                 val params = mapOf("projectId" to buildCheckParams.projectId,
                     "pipelineId" to buildCheckParams.pipelineId,
+                    "buildId" to buildId,
                     CodeccUtils.BK_CI_CODECC_TASK_ID to (buildCheckParams.runtimeVariable?.get(CodeccUtils.BK_CI_CODECC_TASK_ID) ?: "")
                 )
 
@@ -205,16 +209,6 @@ class QualityRuleCheckService @Autowired constructor(
             logger.info("end check pipeline($pipelineId) build($buildId) task(${buildCheckParams.taskId})")
             return RuleCheckResult(allPass, allEnd, auditTimeOutMinutes * 60, resultList)
         }
-    }
-
-    // codecc回调数据是异步的，为空加个等待
-    private fun lazyGetHisMetadata(buildId: String): List<QualityHisMetadata> {
-        for (i in setOf(1, 5, 3, 7)) {
-            val result = qualityHisMetadataService.serviceGetHisMetadata(buildId)
-            if (result.isNotEmpty()) return result
-            Thread.sleep(i * 1000L)
-        }
-        return listOf()
     }
 
     private fun checkPostHandle(
@@ -345,7 +339,7 @@ class QualityRuleCheckService @Autowired constructor(
                     }
 
                     // 全为null，不通过
-                    if (!ThresholdOperationUtil.valid(result?.toString() ?: "", indicator.threshold, indicator.operation)) {
+                    if (!ThresholdOperationUtil.validBoolean(result?.toString() ?: "", indicator.threshold, indicator.operation)) {
                         checkResult = false
                         allCheckResult = false
                     }
@@ -390,6 +384,7 @@ class QualityRuleCheckService @Autowired constructor(
         return if (CodeccUtils.isCodeccAtom(record.indicatorType)) {
             val projectId = params["projectId"] ?: ""
             val pipelineId = params["pipelineId"] ?: ""
+            val buildId = params["buildId"] ?: ""
             val paramTaskId = params[CodeccUtils.BK_CI_CODECC_TASK_ID]
             val taskId = if (paramTaskId.isNullOrBlank()) client.get(ServiceCodeccElementResource::class).get(projectId, pipelineId).data?.taskId
             else paramTaskId
@@ -401,7 +396,8 @@ class QualityRuleCheckService @Autowired constructor(
                 "<a target='_blank' href='${HomeHostUtil.innerServerHost()}/console/codecc/$projectId/task/$taskId/detail'>查看详情</a>"
             } else {
                 val detail = codeccToolUrlPathMap[record.detail!!] ?: "defect/lint"
-                "<a target='_blank' href='${HomeHostUtil.innerServerHost()}/console/codecc/$projectId/task/$taskId/$detail/${record.detail}/list'>查看详情</a>"
+                "<a target='_blank' href='${HomeHostUtil.innerServerHost()}/console/codecc/$projectId/task/$taskId/$detail/${record.detail}/list" +
+                    "?buildId=$buildId&status=7&sortField=createBuildNumber'>查看详情</a>"
             }
         } else {
             record.logPrompt ?: ""
@@ -472,7 +468,7 @@ class QualityRuleCheckService @Autowired constructor(
 
         // 获取通知用户集合
         val notifyUserSet = mutableSetOf<String>()
-        val groupUsers = groupService.serviceGetUsers(endNotifyGroupList)
+        val groupUsers = groupService.serviceGetUsers(endNotifyGroupList.map { it.toLong() })
         notifyUserSet.addAll(groupUsers.innerUsers)
         notifyUserSet.addAll(endNotifyUserList)
 
