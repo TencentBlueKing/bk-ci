@@ -273,7 +273,7 @@ export default {
                         value: defaultBuildResource.code || defaultPublicBuildResource || '',
                         imageCode: defaultBuildResource.code || '',
                         imageName: defaultBuildResource.name || '',
-                        recommendFlag: defaultBuildResource.recommendFlag || '',
+                        recommendFlag: defaultBuildResource.recommendFlag,
                         imageType: 'BKSTORE'
                     },
                     elements: [],
