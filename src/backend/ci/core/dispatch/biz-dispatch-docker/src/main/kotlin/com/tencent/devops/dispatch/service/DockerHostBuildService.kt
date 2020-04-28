@@ -581,8 +581,17 @@ class DockerHostBuildService @Autowired constructor(
                     logger.info("clear pipelineId:(${timeoutTask[i].pipelineId}), vmSeqId:(${timeoutTask[i].vmSeqId}), containerId:(${timeoutTask[i].containerId})")
                 }
                 pipelineDockerTaskDao.updateTimeOutTask(dslContext)
-                pipelineDockerPoolDao.updateTimeOutTask(dslContext)
                 message = "timeoutTask.size=${timeoutTask.size}"
+            }
+
+            val timeoutPoolTask = pipelineDockerPoolDao.getTimeOutTask(dslContext)
+            if (timeoutPoolTask.isNotEmpty) {
+                logger.info("There is ${timeoutPoolTask.size} build pool task have/has already time out, clear it.")
+                for (i in timeoutPoolTask.indices) {
+                    logger.info("clear pipelineId:(${timeoutPoolTask[i].pipelineId}), vmSeqId:(${timeoutPoolTask[i].vmSeq}), poolNo:(${timeoutPoolTask[i].poolNo})")
+                }
+                pipelineDockerPoolDao.updateTimeOutTask(dslContext)
+                message = "timeoutPoolTask.size=${timeoutTask.size}"
             }
             stopWatch.stop()
         } finally {
