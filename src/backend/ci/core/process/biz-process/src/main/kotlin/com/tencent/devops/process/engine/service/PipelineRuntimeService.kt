@@ -80,6 +80,7 @@ import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.dao.PipelineBuildStageDao
 import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
 import com.tencent.devops.process.engine.dao.PipelineBuildTaskDao
+import com.tencent.devops.process.engine.dao.PipelineBuildVarDao
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildAtomTaskEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildCancelEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildMonitorEvent
@@ -160,6 +161,7 @@ class PipelineRuntimeService @Autowired constructor(
     private val pipelineBuildTaskDao: PipelineBuildTaskDao,
     private val pipelineBuildContainerDao: PipelineBuildContainerDao,
     private val pipelineBuildStageDao: PipelineBuildStageDao,
+    private val pipelineBuildVarDao: PipelineBuildVarDao,
     private val buildDetailDao: BuildDetailDao,
     private val buildStartupParamService: BuildStartupParamService,
     private val buildVariableService: BuildVariableService,
@@ -1064,7 +1066,8 @@ class PipelineRuntimeService @Autowired constructor(
                     buildStatus = BuildStatus.QUEUE
                 )
                 // 写入版本号
-                buildVariableService.saveVariable(
+                pipelineBuildVarDao.save(
+                    dslContext = transactionContext,
                     projectId = pipelineInfo.projectId,
                     pipelineId = pipelineInfo.pipelineId,
                     buildId = buildId,
@@ -1074,11 +1077,12 @@ class PipelineRuntimeService @Autowired constructor(
             }
 
             // 保存参数
-            buildVariableService.batchSetVariable(
+            pipelineBuildVarDao.batchSave(
+                dslContext = transactionContext,
                 projectId = pipelineInfo.projectId,
                 pipelineId = pipelineInfo.pipelineId,
                 buildId = buildId,
-                variables = startParamsWithType.map { it.key to it.value }.toMap()
+                variables = startParamsWithType
             )
 
             // 上一次存在的需要重试的任务直接Update，否则就插入
@@ -1908,8 +1912,6 @@ class PipelineRuntimeService @Autowired constructor(
             buildId = buildId
         ) == 1
     }
-
-    fun getAllVariable(buildId: String) = buildVariableService.getAllVariable(buildId)
 
     fun writeStartParam(projectId: String, pipelineId: String, buildId: String, model: Model) {
         val allVariable = buildVariableService.getAllVariable(buildId)
