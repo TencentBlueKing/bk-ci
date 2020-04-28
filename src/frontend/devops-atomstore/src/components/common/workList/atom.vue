@@ -534,7 +534,7 @@
                     query: {
                         code,
                         type: 'atom',
-                        from: 'atomList'
+                        from: 'workList'
                     }
                 })
             },
