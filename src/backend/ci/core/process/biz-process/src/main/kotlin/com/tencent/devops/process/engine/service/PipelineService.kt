@@ -965,6 +965,7 @@ class PipelineService @Autowired constructor(
         } else {
             authPipelineIds
         }
+        logger.info("listViewPipelines user:$userId,projectId:$projectId,authPipelines:$authPipelines")
         watch.stop()
 
         watch.start("s_r_summary")

@@ -442,6 +442,8 @@ class PipelineRepositoryService constructor(
                     )
                 }
             }
+            // 初始化流水线构建统计表
+            pipelineBuildSummaryDao.create(dslContext, projectId, pipelineId, buildNo)
             pipelineModelTaskDao.batchSave(transactionContext, modelTasks)
         }
 
