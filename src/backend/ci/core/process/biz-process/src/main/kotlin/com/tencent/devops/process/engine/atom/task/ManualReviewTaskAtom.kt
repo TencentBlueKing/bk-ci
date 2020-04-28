@@ -264,6 +264,39 @@ class ManualReviewTaskAtom(
         return AtomResponse(BuildStatus.REVIEWING)
     }
 
+    private fun sendReviewNotify(
+        receivers: MutableSet<String>,
+        reviewDesc: String,
+        reviewUrl: String,
+        dataTime: String,
+        projectName: String,
+        pipelineName: String,
+        buildNo: String
+    ) {
+        val sendNotifyMessageTemplateRequest = SendNotifyMessageTemplateRequest(
+            templateCode = "MANUAL_REVIEW_ATOM_NOTIFY_TEMPLATE",
+            sender = "DevOps",
+            receivers = receivers,
+            cc = receivers,
+            titleParams = mapOf(
+                "projectName" to projectName,
+                "pipelineName" to pipelineName,
+                "buildNo" to buildNo
+            ),
+            bodyParams = mapOf(
+                "projectName" to projectName,
+                "pipelineName" to pipelineName,
+                "buildNo" to buildNo,
+                "reviewDesc" to reviewDesc,
+                "reviewUrl" to reviewUrl,
+                "dataTime" to dataTime
+            )
+        )
+        val sendNotifyResult = client.get(ServiceNotifyMessageTemplateResource::class)
+            .sendNotifyMessageByTemplate(sendNotifyMessageTemplateRequest)
+        logger.info("[$buildNo]|sendReviewNotify|ManualReviewTaskAtom|result=$sendNotifyResult")
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(ManualReviewTaskAtom::class.java)
     }
