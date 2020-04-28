@@ -90,7 +90,7 @@
                 stages.map((stage, sIndex) => {
                     stage.containers.map((container, cIndex) => {
                         container.elements.map((ele, eIndex) => {
-                            if (ele['@type'] === atomName) {
+                            if (ele['@type'] === atomName || ele.atomCode === atomName) {
                                 index = {
                                     stageIndex: sIndex,
                                     containerIndex: cIndex,

@@ -35,6 +35,8 @@ import com.tencent.devops.process.api.service.ServicePipelineTaskResource
 import com.tencent.devops.process.api.template.ServiceTemplateResource
 import com.tencent.devops.quality.api.v2.pojo.RulePipelineRange
 import com.tencent.devops.quality.api.v2.pojo.RuleTemplateRange
+import com.tencent.devops.quality.api.v2.pojo.request.PipelineRangeDetailRequest
+import com.tencent.devops.quality.api.v2.pojo.request.TemplateRangeDetailRequest
 import com.tencent.devops.quality.api.v2.pojo.response.RangeExistElement
 import com.tencent.devops.quality.util.ElementUtils
 import org.springframework.beans.factory.annotation.Autowired
@@ -45,106 +47,130 @@ class QualityPipelineService @Autowired constructor(
     private val client: Client,
     private val indicatorService: QualityIndicatorService
 ) {
-    fun userListPipelineRangeDetail(projectId: String, pipelineIds: Set<String>, indicatorIds: Collection<String>, controlPointType: String?): List<RulePipelineRange> {
-        val pipelineElementsMap = client.get(ServicePipelineTaskResource::class).list(projectId, pipelineIds).data ?: mapOf()
-        val pipelineNameMap = client.get(ServicePipelineResource::class).getPipelineNameByIds(projectId, pipelineIds).data ?: mapOf()
-        val indicatorElements = indicatorService.serviceList(indicatorIds.map { HashUtil.decodeIdToLong(it) }).map { it.elementType }
+    fun userListPipelineRangeDetail(request: PipelineRangeDetailRequest): List<RulePipelineRange> {
+        with(request) {
+            val pipelineElementsMap = client.get(ServicePipelineTaskResource::class).list(projectId, pipelineIds).data
+                ?: mapOf()
+            val pipelineNameMap = client.get(ServicePipelineResource::class).getPipelineNameByIds(projectId, pipelineIds).data
+                ?: mapOf()
+            val indicatorElements = indicatorService.serviceList(indicatorIds.map { HashUtil.decodeIdToLong(it) }).map { it.elementType }
 
-        // 加入控制点的判断
-        val checkElements = if (!controlPointType.isNullOrBlank()) {
-            indicatorElements.plus(controlPointType!!)
-        } else {
-            indicatorElements
-        }
+            // 加入控制点的判断
+            val checkElements = if (!controlPointType.isNullOrBlank()) {
+                indicatorElements.plus(controlPointType!!)
+            } else {
+                indicatorElements
+            }
 
-        // 剔除已删除的流水线
-        return pipelineElementsMap.entries.filter { pipelineNameMap.containsKey(it.key) }.map {
-            val pipelineElement = it.value.map { it.atomCode to it.taskParams }
-            // 获取原子信息
-            val elementResult = getExistAndLackElements(projectId, checkElements, pipelineElement)
-            val existElements = elementResult.first
-            val lackElements = elementResult.second
+            // 剔除已删除的流水线
+            return pipelineElementsMap.entries.filter { pipelineNameMap.containsKey(it.key) }.map {
+                val pipelineElement = it.value.map { CheckElement(it.atomCode, it.taskParams, it.taskName) }
+                // 获取原子信息
+                val elementResult = getExistAndLackElements(projectId, checkElements, pipelineElement, gatewayId ?: "")
+                val existElements = elementResult.first
+                val lackElements = elementResult.second
 
-            RulePipelineRange(
-                pipelineId = it.key,
-                pipelineName = pipelineNameMap[it.key] ?: "",
-                elementCount = pipelineElement.size,
-                lackPointElement = lackElements.map { ElementUtils.getElementCnName(it, projectId) },
-                existElement = existElements
-            )
+                RulePipelineRange(
+                    pipelineId = it.key,
+                    pipelineName = pipelineNameMap[it.key] ?: "",
+                    elementCount = it.value.size,
+                    lackPointElement = lackElements.map { ElementUtils.getElementCnName(it, projectId) },
+                    existElement = existElements
+                )
+            }
         }
     }
 
-    fun userListTemplateRangeDetail(projectId: String, templateIds: Set<String>, indicatorIds: Collection<String>, controlPointType: String?): List<RuleTemplateRange> {
-        val templateMap = if (templateIds.isNotEmpty()) client.get(ServiceTemplateResource::class)
+    fun userListTemplateRangeDetail(request: TemplateRangeDetailRequest): List<RuleTemplateRange> {
+        with(request) {
+            val templateMap = if (templateIds.isNotEmpty()) client.get(ServiceTemplateResource::class)
                 .listTemplateById(templateIds, null).data?.templates ?: mapOf()
-        else mapOf()
-        val templateElementsMap = templateMap.map {
-            val model = it.value
-            val elements = mutableListOf<Element>()
-            model.stages.map { it.containers.map { elements.addAll(it.elements) } }
-            it.value.templateId to elements
-        }.toMap()
-        val templateNameMap = templateMap.map { it.value.templateId to it.value.name }.toMap()
+            else mapOf()
+            val templateElementsMap = templateMap.map {
+                val model = it.value
+                val elements = mutableListOf<Element>()
+                model.stages.map { it.containers.map { elements.addAll(it.elements) } }
+                it.value.templateId to elements
+            }.toMap()
+            val templateNameMap = templateMap.map { it.value.templateId to it.value.name }.toMap()
 
-        val indicatorElements = indicatorService.serviceList(indicatorIds.map { HashUtil.decodeIdToLong(it) }).map { it.elementType }
-        val checkElements = if (!controlPointType.isNullOrBlank()) {
-            indicatorElements.plus(controlPointType!!)
-        } else {
-            indicatorElements
-        }
+            val indicatorElements = indicatorService.serviceList(indicatorIds.map { HashUtil.decodeIdToLong(it) }).map { it.elementType }
+            val checkElements = if (!controlPointType.isNullOrBlank()) {
+                indicatorElements.plus(controlPointType!!)
+            } else {
+                indicatorElements
+            }
 
-        // 剔除已删除的流水线
-        return templateElementsMap.entries.filter { templateNameMap.containsKey(it.key) }.filter { it.key in templateIds }.map { entry ->
-            val templateId = entry.key
-            val templateElements = entry.value.map { it.getAtomCode() to it.genTaskParams() }
-            // 获取原子信息
-            val elementResult = getExistAndLackElements(projectId, checkElements, templateElements)
-            val existElements = elementResult.first
-            val lackElements = elementResult.second
-            RuleTemplateRange(
-                templateId = templateId,
-                templateName = templateNameMap[templateId] ?: "",
-                elementCount = templateElements.size,
-                lackPointElement = lackElements.map { ElementUtils.getElementCnName(it, projectId) },
-                existElement = existElements
-            )
+            // 剔除已删除的流水线
+            return templateElementsMap.entries.filter { templateNameMap.containsKey(it.key) }.filter { it.key in templateIds }.map { entry ->
+                val templateId = entry.key
+                val templateElements = entry.value.map { CheckElement(it.getAtomCode(), it.genTaskParams(), it.name) }
+                // 获取原子信息
+                val elementResult = getExistAndLackElements(projectId, checkElements, templateElements, gatewayId ?: "")
+                val existElements = elementResult.first
+                val lackElements = elementResult.second
+                RuleTemplateRange(
+                    templateId = templateId,
+                    templateName = templateNameMap[templateId] ?: "",
+                    elementCount = templateElements.size,
+                    lackPointElement = lackElements.map { ElementUtils.getElementCnName(it, projectId) },
+                    existElement = existElements
+                )
+            }
         }
     }
 
     private fun getExistAndLackElements(
         projectId: String,
         checkElements: List<String>,
-        originElementList: List<Pair<String, Map<String, Any>>>
+        originElementList: List<CheckElement>,
+        gatewayId: String
     ): Pair<List<RangeExistElement>, Set<String>> {
-        val originElements = originElementList.map { it.first }
-        val existElements = mutableListOf<RangeExistElement>()
-        val codeccElement = originElementList.firstOrNull { CodeccUtils.isCodeccAtom(it.first) }
-        if (codeccElement != null) {
-            val asynchronous = codeccElement.second["asynchronous"] as? Boolean
-            val e = RangeExistElement(
-                name = codeccElement.first,
-                cnName = ElementUtils.getElementCnName(codeccElement.first, projectId),
-                count = 1,
-                params = mapOf("asynchronous" to (asynchronous ?: false))
-            )
-            existElements.add(e)
+        // 1. 查找不存在的插件
+        val lackElements = mutableSetOf<String>()
+        checkElements.forEach { checkElement ->
+            val isCheckCodeccElemenet = CodeccUtils.isCodeccAtom(checkElement)
+            val isExist = if (isCheckCodeccElemenet)
+                originElementList.any { originElement -> CodeccUtils.isCodeccAtom(originElement.atomCode) }
+            else
+                originElementList.any { originElement -> checkElement == originElement.atomCode }
+            if (!isExist) lackElements.add(checkElement)
+
+            if (!gatewayId.isBlank() && !originElementList.any { originElement -> originElement.atomName.contains(gatewayId) })
+                lackElements.add(checkElement)
         }
 
-        val lackElements = checkElements.minus(originElements).toMutableSet()
-
+        // 2. 查找存在的插件
         // 找出流水线存在的指标原子，并统计个数
-        val indicatorExistElement = checkElements.minus(lackElements) // 流水线对应的指标原子
-        originElements.filter { it in indicatorExistElement }.groupBy { it }
+        val existElements = mutableListOf<RangeExistElement>()
+        originElementList.filter { it.atomCode !in lackElements }.groupBy { it.atomCode }
             .forEach { (classType, tasks) ->
-                existElements.add(
+                val ele = if (CodeccUtils.isCodeccAtom(classType)) {
+                    val asynchronous = tasks.any { t ->
+                        val asynchronous = t.taskParams["asynchronous"] as? Boolean
+                        asynchronous == true
+                    }
+                    RangeExistElement(
+                        name = classType,
+                        cnName = ElementUtils.getElementCnName(classType, projectId),
+                        count = 1,
+                        params = mapOf("asynchronous" to (asynchronous))
+                    )
+                } else {
                     RangeExistElement(
                         name = classType,
                         cnName = ElementUtils.getElementCnName(classType, projectId),
                         count = tasks.size
                     )
-                )
+                }
+                existElements.add(ele)
             }
         return Pair(existElements, lackElements)
     }
+
+    data class CheckElement(
+        val atomCode: String,
+        val taskParams: Map<String, Any>,
+        val atomName: String
+    )
 }

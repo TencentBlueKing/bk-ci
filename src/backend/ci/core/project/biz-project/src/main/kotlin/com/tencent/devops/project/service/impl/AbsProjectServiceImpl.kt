@@ -193,6 +193,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
     }
 
     override fun update(userId: String, projectId: String, projectUpdateInfo: ProjectUpdateInfo): Boolean {
+        validate(ProjectValidateType.project_name, projectUpdateInfo.projectName, projectUpdateInfo.englishName)
         val startEpoch = System.currentTimeMillis()
         var success = false
         try {
