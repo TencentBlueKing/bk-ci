@@ -451,7 +451,7 @@
                     value: defaultBuildResource.code || '',
                     imageCode: defaultBuildResource.code || '',
                     imageName: defaultBuildResource.name || '',
-                    recommendFlag: defaultBuildResource.recommendFlag || '',
+                    recommendFlag: defaultBuildResource.recommendFlag,
                     [name]: val
                 }))
                 if (val === 'MACOS') this.getMacOsData()
