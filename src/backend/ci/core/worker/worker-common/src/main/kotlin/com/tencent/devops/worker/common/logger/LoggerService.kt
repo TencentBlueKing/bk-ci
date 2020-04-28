@@ -147,7 +147,7 @@ object LoggerService {
         }
     }
 
-    fun finishTask() = finishLog(elementId, jobId , executeCount)
+    fun finishTask() = finishLog(elementId, jobId, executeCount)
 
     fun addNormalLine(message: String) {
         val logMessage = LogMessage(
