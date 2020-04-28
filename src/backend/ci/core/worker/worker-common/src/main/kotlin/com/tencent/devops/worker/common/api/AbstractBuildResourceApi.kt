@@ -34,7 +34,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_VM_SEQ_ID
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.worker.common.api.utils.AgentBuildBaseInfoUtils
+import com.tencent.devops.worker.common.api.utils.ThirdPartyAgentBuildInfoUtils
 import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.env.BuildEnv
 import com.tencent.devops.worker.common.env.BuildType
@@ -278,7 +278,7 @@ abstract class AbstractBuildResourceApi : WorkerRestApiSDK {
     private fun getAllHeaders(headers: Map<String, String>): Map<String, String> {
         val args = buildArgs.plus(headers)
         return if (BuildEnv.getBuildType() == BuildType.AGENT) {
-            val buildInfo = AgentBuildBaseInfoUtils.getBuildInfo()
+            val buildInfo = ThirdPartyAgentBuildInfoUtils.getBuildInfo()
             if (buildInfo == null) {
                 args
             } else {
