@@ -188,6 +188,16 @@ class ManualReviewTaskAtom(
             logger.warn("[$buildId]|START|taskId=$taskId|Fail to send the wechatResult message($message) because of ${wechatResult.message}")
         }
 
+        sendReviewNotify(
+            receivers = reviewUsers.split(",").toMutableSet(),
+            reviewDesc = param.desc ?: "",
+            reviewUrl = reviewUrl,
+            projectName = projectName,
+            pipelineName = pipelineName,
+            dataTime = date,
+            buildNo = buildNo
+        )
+
         return AtomResponse(BuildStatus.REVIEWING)
     }
 
