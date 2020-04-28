@@ -86,7 +86,6 @@ import com.tencent.devops.process.engine.pojo.event.PipelineBuildCancelEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildMonitorEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildStartEvent
 import com.tencent.devops.common.service.utils.SpringContextUtil
-import com.tencent.devops.log.utils.LogUtils
 import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION
 import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION_DESC
 import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION_PARAMS
@@ -1377,6 +1376,7 @@ class PipelineRuntimeService @Autowired constructor(
                 atomElement.executeCount++
                 atomElement.elapsed = null
                 atomElement.startEpoch = null
+                atomElement.canRetry = false
                 target.taskParams = JsonUtil.toJson(atomElement.genTaskParams()) // 更新参数
             }
         }
@@ -1459,40 +1459,6 @@ class PipelineRuntimeService @Autowired constructor(
                         if (result != 1) {
                             logger.info("[{}]|taskId={}| update task param failed|result:{}", buildId, taskId, result)
                         }
-                        LogUtils.addLine(
-                            rabbitTemplate = rabbitTemplate,
-                            buildId = buildId,
-                            message = "审核说明：${params.desc}",
-                            tag = taskId,
-                            jobId = containerHashId,
-                            executeCount = executeCount ?: 1
-                        )
-                        LogUtils.addLine(
-                            rabbitTemplate = rabbitTemplate,
-                            buildId = buildId,
-                            message = "审核意见：${params.suggest}",
-                            tag = taskId,
-                            jobId = containerHashId,
-                            executeCount = executeCount ?: 1
-                        )
-                        LogUtils.addLine(
-                            rabbitTemplate = rabbitTemplate,
-                            buildId = buildId,
-                            message = "审核参数：${params.params.map { it.key to it.value }}",
-                            tag = taskId,
-                            jobId = containerHashId,
-                            executeCount = executeCount ?: 1
-                        )
-                        pipelineBuildVarDao.batchSave(
-                            dslContext = dslContext,
-                            projectId = projectId,
-                            pipelineId = pipelineId,
-                            buildId = buildId,
-                            variables = params.params.map {
-                                BuildParameters(it.key.toString(), it.value.toString())
-                            }
-                        )
-
                         pipelineEventDispatcher.dispatch(
                             PipelineBuildAtomTaskEvent(
                                 javaClass.simpleName,
