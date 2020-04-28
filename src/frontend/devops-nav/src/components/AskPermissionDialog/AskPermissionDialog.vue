@@ -10,6 +10,7 @@
     >
         <main class="ask-permission-table">
             <bk-table
+                v-if="showDialog"
                 :max-height="300"
                 :data="noPermissionList"
                 :empty-text="$t('emptyData')"
@@ -81,8 +82,6 @@
 
 <style lang="scss">
     .ask-permission-table {
-        .devops-table {
-            width: 100%;
-        }
+        width: 100%;
     }
 </style>

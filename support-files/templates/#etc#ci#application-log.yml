@@ -12,4 +12,5 @@ server:
 elasticsearch:
   ip: __BKCI_ES_IP__
   port: __BKCI_ES_PORT__
-  cluster: bkee-es
+  cluster: __BKCI_ES_CLUSTER__
+  name: DEVOPS
