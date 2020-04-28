@@ -80,7 +80,6 @@ import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.dao.PipelineBuildStageDao
 import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
 import com.tencent.devops.process.engine.dao.PipelineBuildTaskDao
-import com.tencent.devops.process.engine.dao.PipelineBuildVarDao
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildAtomTaskEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildCancelEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildMonitorEvent
@@ -161,7 +160,6 @@ class PipelineRuntimeService @Autowired constructor(
     private val pipelineBuildTaskDao: PipelineBuildTaskDao,
     private val pipelineBuildContainerDao: PipelineBuildContainerDao,
     private val pipelineBuildStageDao: PipelineBuildStageDao,
-    private val pipelineBuildVarDao: PipelineBuildVarDao,
     private val buildDetailDao: BuildDetailDao,
     private val buildStartupParamService: BuildStartupParamService,
     private val buildVariableService: BuildVariableService,
@@ -1066,7 +1064,7 @@ class PipelineRuntimeService @Autowired constructor(
                     buildStatus = BuildStatus.QUEUE
                 )
                 // 写入版本号
-                pipelineBuildVarDao.save(
+                buildVariableService.saveVariable(
                     dslContext = transactionContext,
                     projectId = pipelineInfo.projectId,
                     pipelineId = pipelineInfo.pipelineId,
@@ -1077,12 +1075,12 @@ class PipelineRuntimeService @Autowired constructor(
             }
 
             // 保存参数
-            pipelineBuildVarDao.batchSave(
+            buildVariableService.batchSetVariable(
                 dslContext = transactionContext,
                 projectId = pipelineInfo.projectId,
                 pipelineId = pipelineInfo.pipelineId,
                 buildId = buildId,
-                variables = startParamsWithType
+                variables = startParamsWithType.map { it.key to it.value }.toMap()
             )
 
             // 上一次存在的需要重试的任务直接Update，否则就插入
