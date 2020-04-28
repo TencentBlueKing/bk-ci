@@ -32,7 +32,6 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.engine.service.PipelineBuildService
-import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineService
 import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.process.pojo.Pipeline
