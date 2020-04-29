@@ -64,7 +64,7 @@ class DockerHostUtils @Autowired constructor(
 ) {
     companion object {
         private const val LOAD_CONFIG_KEY = "dockerhost-load-config"
-        private const val DOCKER_IP_COUNT_MAX = 8
+        private const val DOCKER_IP_COUNT_MAX = 12
         private const val BUILD_POOL_SIZE = 100 // 单个流水线可同时执行的任务数量
 
         private val logger = LoggerFactory.getLogger(DockerHostUtils::class.java)
@@ -244,31 +244,33 @@ class DockerHostUtils @Autowired constructor(
         specialIpSet: Set<String>,
         dockerIpInfo: TDispatchPipelineDockerIpInfoRecord,
         poolNo: Int
-    ): Pair<String, Int> {
+    ): Triple<String, Int, String> {
         val dockerIp = dockerIpInfo.dockerIp
 
         // 同一条流水线并发构建时，无视负载，直接下发同一个IP（避免同一条流水线并发量太大，影响其他流水线构建）
         if (poolNo > 1) {
-            return Pair(dockerIp, dockerIpInfo.dockerHostPort)
+            return Triple(dockerIp, dockerIpInfo.dockerHostPort, "")
         }
 
         // 查看当前IP负载情况，当前IP不可用或者负载超额或者设置为专机独享，重新选择构建机
         if (!dockerIpInfo.enable || dockerIpInfo.diskLoad > 90 || dockerIpInfo.memLoad > 95 || dockerIpInfo.specialOn) {
-            return getAvailableDockerIpWithSpecialIps(
+            val pair = getAvailableDockerIpWithSpecialIps(
                 event.projectId,
                 event.pipelineId,
                 event.vmSeqId,
                 specialIpSet
             )
+            return Triple(pair.first, pair.second, "")
         }
 
         // IP当前可用，还要检测当前IP限流是否已达上限
         val dockerIpCount = redisOperation.get("${Constants.DOCKER_IP_KEY_PREFIX}$dockerIp")
         logger.info("${event.projectId}|${event.pipelineId}|${event.vmSeqId} $dockerIp dockerIpCount: $dockerIpCount")
         return if (dockerIpCount != null && dockerIpCount.toInt() > DOCKER_IP_COUNT_MAX) {
-            getAvailableDockerIpWithSpecialIps(event.projectId, event.pipelineId, event.vmSeqId, specialIpSet, setOf(dockerIp))
+            val pair = getAvailableDockerIpWithSpecialIps(event.projectId, event.pipelineId, event.vmSeqId, specialIpSet, setOf(dockerIp))
+            Triple(pair.first, pair.second, "IP限流漂移")
         } else {
-            Pair(dockerIp, dockerIpInfo.dockerHostPort)
+            Triple(dockerIp, dockerIpInfo.dockerHostPort, "")
         }
     }
 
