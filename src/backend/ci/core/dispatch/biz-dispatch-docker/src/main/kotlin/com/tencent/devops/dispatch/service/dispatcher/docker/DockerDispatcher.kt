@@ -202,8 +202,8 @@ class DockerDispatcher @Autowired constructor(
             return resetDockerIp(pipelineAgentStartupEvent, specialIpSet, oldDockerIp, if (ipInfo != null) JsonUtil.toJson(ipInfo.intoMap()) else "")
         }
 
-        // 查看当前IP限流是否已达上限
-        dockerHostUtils.checkDockerIpCountLimiting(
+        // IP当前可用，还要检测当前IP限流是否已达上限
+        return dockerHostUtils.checkDockerIpCountLimiting(
             dockerPair = Pair(oldDockerIp, ipInfo.dockerHostPort),
             projectId = pipelineAgentStartupEvent.projectId,
             pipelineId = pipelineAgentStartupEvent.pipelineId,
@@ -211,8 +211,6 @@ class DockerDispatcher @Autowired constructor(
             specialIpSet = specialIpSet,
             unAvailableIpList = setOf()
         )
-
-        return Pair(oldDockerIp, ipInfo.dockerHostPort)
     }
 
     private fun resetDockerIp(pipelineAgentStartupEvent: PipelineAgentStartupEvent, specialIpSet: Set<String>, sourceIp: String, ipInfo: String): Pair<String, Int> {
