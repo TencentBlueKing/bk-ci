@@ -24,35 +24,37 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.web.handler
+package com.tencent.devops.common.web.validation
 
-import com.tencent.devops.common.service.utils.MessageCodeUtil
-import org.slf4j.LoggerFactory
-import javax.validation.ConstraintViolationException
-import javax.ws.rs.core.MediaType
-import javax.ws.rs.core.Response
-import javax.ws.rs.ext.ExceptionMapper
-import javax.ws.rs.ext.Provider
+import com.tencent.devops.common.web.annotation.BkField
+import com.tencent.devops.common.web.constant.BkStyleEnum
+import org.hibernate.validator.internal.engine.constraintvalidation.ConstraintValidatorContextImpl
+import java.util.regex.Pattern
+import javax.validation.ConstraintValidator
+import javax.validation.ConstraintValidatorContext
 
-@Provider
-class BkFieldExceptionMapper : ExceptionMapper<ConstraintViolationException> {
-    companion object {
-        val logger = LoggerFactory.getLogger(BkFieldExceptionMapper::class.java)!!
-    }
+class BkFieldValidator : ConstraintValidator<BkField?, Any?> {
 
-    override fun toResponse(exception: ConstraintViolationException): Response {
-        //logger.error("Failed with errorCode client exception:${JsonUtil.toJson(exception)}")
-        val constraintViolations = exception.constraintViolations
-        if (constraintViolations.isNotEmpty()){
+    override fun initialize(parameters: BkField?) {}
 
+    override fun isValid(
+        paramValue: Any?,
+        constraintValidatorContext: ConstraintValidatorContext
+    ): Boolean {
+        val constraintDescriptor = (constraintValidatorContext as ConstraintValidatorContextImpl).constraintDescriptor
+        val attributes = constraintDescriptor.attributes
+        val require = attributes["require"] as Boolean
+        // 判断参数是否可以为空
+        if (require && paramValue == null) {
+            return false
         }
-        val errorResult = MessageCodeUtil.generateResponseDataObject(
-            messageCode = "567890",
-            params = arrayOf(),
-            data = null,
-            defaultMessage = exception.message
-        )
-        return Response.status(Response.Status.BAD_REQUEST).type(MediaType.APPLICATION_JSON_TYPE)
-            .entity(errorResult).build()
+        val patternStyle = attributes["patternStyle"] as BkStyleEnum
+        // 判断参数值是否满足配置的正则表达式规范
+        if (paramValue != null) {
+            if (!Pattern.matches(patternStyle.style, paramValue.toString())) {
+                return false
+            }
+        }
+        return false
     }
 }
