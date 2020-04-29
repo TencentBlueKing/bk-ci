@@ -26,21 +26,14 @@
 
 package com.tencent.devops.store.service.image
 
-import com.tencent.devops.common.api.constant.CommonMessageCode
-import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.pipeline.type.BuildType
-import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.store.dao.common.BusinessConfigDao
 import com.tencent.devops.store.dao.container.BuildResourceDao
 import com.tencent.devops.store.pojo.common.enums.BusinessEnum
-import com.tencent.devops.store.pojo.container.BuildResource
 import com.tencent.devops.store.pojo.image.response.BaseImageInfo
-import com.tencent.devops.store.service.container.BuildResourceService
 import com.tencent.devops.store.service.container.impl.BuildResourceServiceImpl
 import org.jooq.DSLContext
-import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Primary
