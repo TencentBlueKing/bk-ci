@@ -51,6 +51,7 @@ import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION_USERID
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.util.NotifyTemplateUtils
 import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
+import com.tencent.devops.process.utils.PIPELINE_MANUAL_REVIEW_ATOM_NOTIFY_TEMPLATE
 import com.tencent.devops.process.utils.PIPELINE_NAME
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.slf4j.LoggerFactory
@@ -115,7 +116,7 @@ class ManualReviewTaskAtom(
         LogUtils.addLine(
             rabbitTemplate = rabbitTemplate,
             buildId = buildId,
-            message = "审核参数：${param.params.map { it.key to it.value }}",
+            message = "审核参数：${param.params}",
             tag = taskId,
             jobId = task.containerHashId,
             executeCount = task.executeCount ?: 1
@@ -190,12 +191,10 @@ class ManualReviewTaskAtom(
                         jobId = task.containerHashId,
                         executeCount = task.executeCount ?: 1
                     )
-                    val paramPair =
-                        JsonUtil.getObjectMapper().readValue(taskParam[BS_MANUAL_ACTION_PARAMS].toString(), List::class.java) as List<ManualReviewParamPair>
                     LogUtils.addLine(
                         rabbitTemplate = rabbitTemplate,
                         buildId = buildId,
-                        message = "审核参数：${paramPair.map { it.key to it.value }}",
+                        message = "审核参数：${JsonUtil.getObjectMapper().readValue(taskParam[BS_MANUAL_ACTION_PARAMS].toString(), List::class.java)}",
                         tag = taskId,
                         jobId = task.containerHashId,
                         executeCount = task.executeCount ?: 1
@@ -230,7 +229,7 @@ class ManualReviewTaskAtom(
         buildNo: String
     ) {
         val sendNotifyMessageTemplateRequest = SendNotifyMessageTemplateRequest(
-            templateCode = "MANUAL_REVIEW_ATOM_NOTIFY_TEMPLATE",
+            templateCode = PIPELINE_MANUAL_REVIEW_ATOM_NOTIFY_TEMPLATE,
             sender = "DevOps",
             receivers = receivers,
             cc = receivers,
