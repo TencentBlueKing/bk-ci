@@ -43,8 +43,8 @@ class OpBusinessConfigResourceImpl @Autowired constructor(
         return Result(businessConfigService.add(businessConfigRequest))
     }
 
-    override fun update(id: String, businessConfigRequest: BusinessConfigRequest): Result<Int> {
-        return Result(businessConfigService.update(id, businessConfigRequest))
+    override fun update(id: Int, businessConfigRequest: BusinessConfigRequest): Result<Int> {
+        return Result(0, null, businessConfigService.update(id, businessConfigRequest))
     }
 
     override fun listAllBusinessConfigs(): Result<List<BusinessConfigResponse>?> {
@@ -55,7 +55,7 @@ class OpBusinessConfigResourceImpl @Autowired constructor(
         return Result(businessConfigService.getBusinessConfigById(id))
     }
 
-    override fun deleteBusinessConfigById(id: Int): Result<Boolean> {
-        return Result(businessConfigService.deleteBusinessConfigById(id))
+    override fun deleteBusinessConfigById(id: Int): Result<Int> {
+        return Result(0, null, businessConfigService.deleteBusinessConfigById(id))
     }
 }
