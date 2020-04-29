@@ -24,35 +24,8 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.web.handler
+package com.tencent.devops.common.web.constant
 
-import com.tencent.devops.common.service.utils.MessageCodeUtil
-import org.slf4j.LoggerFactory
-import javax.validation.ConstraintViolationException
-import javax.ws.rs.core.MediaType
-import javax.ws.rs.core.Response
-import javax.ws.rs.ext.ExceptionMapper
-import javax.ws.rs.ext.Provider
-
-@Provider
-class BkFieldExceptionMapper : ExceptionMapper<ConstraintViolationException> {
-    companion object {
-        val logger = LoggerFactory.getLogger(BkFieldExceptionMapper::class.java)!!
-    }
-
-    override fun toResponse(exception: ConstraintViolationException): Response {
-        //logger.error("Failed with errorCode client exception:${JsonUtil.toJson(exception)}")
-        val constraintViolations = exception.constraintViolations
-        if (constraintViolations.isNotEmpty()){
-
-        }
-        val errorResult = MessageCodeUtil.generateResponseDataObject(
-            messageCode = "567890",
-            params = arrayOf(),
-            data = null,
-            defaultMessage = exception.message
-        )
-        return Response.status(Response.Status.BAD_REQUEST).type(MediaType.APPLICATION_JSON_TYPE)
-            .entity(errorResult).build()
-    }
+enum class BkStyleEnum(val style: String)  {
+    COMMON_STYLE("^.*\$")
 }
