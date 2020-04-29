@@ -295,9 +295,11 @@ class DockerHostUtils @Autowired constructor(
         val dockerIpCount = redisOperation.get("${Constants.DOCKER_IP_KEY_PREFIX}${dockerPair.first}")
         logger.info("$projectId|$pipelineId|$vmSeqId dockerIpCount: $dockerIpCount")
         return if (dockerIpCount != null && dockerIpCount.toInt() > 7) {
-            unAvailableIpList.plus(dockerPair.first)
-            logger.info("$projectId|$pipelineId|$vmSeqId dockerIpCount: $dockerIpCount exceeded limiting. unAvailableIpList: $unAvailableIpList")
-            getAvailableDockerIpWithSpecialIps(projectId, pipelineId, vmSeqId, specialIpSet, unAvailableIpList)
+            val localUnAvailableIpList = mutableSetOf<String>()
+            localUnAvailableIpList.addAll(unAvailableIpList)
+            localUnAvailableIpList.add(dockerPair.first)
+            logger.info("$projectId|$pipelineId|$vmSeqId dockerIpCount: $dockerIpCount exceeded limiting. unAvailableIpList: $localUnAvailableIpList")
+            getAvailableDockerIpWithSpecialIps(projectId, pipelineId, vmSeqId, specialIpSet, localUnAvailableIpList)
         } else {
             dockerPair
         }
