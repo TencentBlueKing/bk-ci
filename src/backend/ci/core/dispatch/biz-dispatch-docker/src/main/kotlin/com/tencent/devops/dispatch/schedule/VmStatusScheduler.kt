@@ -28,7 +28,6 @@ class VmStatusScheduler @Autowired constructor(
         private val logger = LoggerFactory.getLogger(VmStatusScheduler::class.java)
         private const val jobLockKey = "dispatch_docker_cron_volume_fresh_job"
         private const val failJobLockKey = "dispatch_docker_cron_volume_fresh_fail_job"
-        private const val dockerIpKeyPrefix = "dispatch_docker_ip_count_"
     }
 
     /**
@@ -59,13 +58,12 @@ class VmStatusScheduler @Autowired constructor(
         try {
             val lockSuccess = redisLock.tryLock()
             if (lockSuccess) {
-                logger.info("Start check docker VM status.")
                 var grayEnv = false
                 val gray = System.getProperty("gray.project", "none")
                 if (gray == "grayproject") {
                     grayEnv = true
                 }
-                logger.info("checkVMStatus gray: $gray")
+                logger.info("VMStatusScheduler checkVMStatus ===> gray: $gray")
                 val unableDockerIpList = pipelineDockerIpInfoDao.getDockerIpList(dslContext, false, grayEnv)
                 unableDockerIpList.stream().forEach {
                     singleTask(it)
@@ -84,7 +82,7 @@ class VmStatusScheduler @Autowired constructor(
         if (gray == "grayproject") {
             grayEnv = true
         }
-        logger.info("getAvailableDockerIp gray: $gray")
+        logger.info("VMStatusScheduler executeTask ====> gray: $gray")
         val dockerIpList = pipelineDockerIpInfoDao.getDockerIpList(dslContext, true, grayEnv)
         dockerIpList.parallelStream().forEach {
             singleTask(it)
@@ -100,7 +98,7 @@ class VmStatusScheduler @Autowired constructor(
             .addHeader("Content-Type", "application/json; charset=utf-8")
             .build()
 
-        // logger.info("Docker VM status fresh url: $proxyUrl")
+        logger.info("Docker VM status fresh url: $proxyUrl")
         try {
             OkhttpUtils.doHttp(request).use { resp ->
                 val responseBody = resp.body()!!.string()
@@ -126,7 +124,7 @@ class VmStatusScheduler @Autowired constructor(
                         specialOn = it.specialOn
                     )
 
-                    redisOperation.set("${Constants.DOCKER_IP_KEY_PREFIX}$itDockerIp", "0", 180)
+                    redisOperation.set("${Constants.DOCKER_IP_KEY_PREFIX}$itDockerIp", "1", 180)
                 } else {
                     // 如果之前可用，更新容器状态
                     if (enable) {
