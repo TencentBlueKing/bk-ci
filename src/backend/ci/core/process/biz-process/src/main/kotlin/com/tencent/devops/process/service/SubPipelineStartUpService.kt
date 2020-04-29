@@ -43,7 +43,6 @@ import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineService
 import com.tencent.devops.process.pojo.PipelineId
-import com.tencent.devops.process.pojo.PipelineSortType
 import com.tencent.devops.process.pojo.pipeline.ProjectBuildId
 import com.tencent.devops.process.pojo.pipeline.StartUpInfo
 import com.tencent.devops.process.pojo.pipeline.SubPipelineStartUpInfo
