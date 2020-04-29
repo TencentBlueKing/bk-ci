@@ -598,7 +598,7 @@
         "defaultValueDesc": "若value为版本号,则不能包含“”\"\"等符号；\n如果参数类型为复选框，选择多个值时将以a,b的方式传递给流水线",
         "defaultValueTips": "请输入默认值",
         "selectOptions": "下拉选项",
-        "optionsDesc": "用换行符分隔选项，选项不能包含英文逗号，重复的选项将只会显示一个",
+        "optionsDesc": "用换行符分隔选项，选项不能包含英文逗号，重复的选项将只会显示一个, 选项支持【{id}={name} | {id}】两种格式",
         "optionTips": "多行记录请换行输入",
         "svnParams": "请选择svn代码库",
         "relativePath": "代码库相对目录",
