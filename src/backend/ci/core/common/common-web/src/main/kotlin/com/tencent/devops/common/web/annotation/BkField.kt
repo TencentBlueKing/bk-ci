@@ -36,9 +36,9 @@ import kotlin.reflect.KClass
 @kotlin.annotation.Retention(AnnotationRetention.RUNTIME)
 @Constraint(validatedBy = [BkFieldValidator::class])
 annotation class BkField(
-    val patternStyle: BkStyleEnum = BkStyleEnum.COMMON_STYLE, //字段对应的正则表达式
+    val patternStyle: BkStyleEnum = BkStyleEnum.COMMON_STYLE, // 字段对应的正则表达式
     val require: Boolean = true, // 是否必须
-    val message: String = "parameter error", // 错误提示信息
+    val message: String = "{0} parameter error", // 错误提示信息
     val groups: Array<KClass<*>> = [],
     val payload: Array<KClass<out Payload>> = []
 )

@@ -26,7 +26,10 @@
 
 package com.tencent.devops.common.web.handler
 
+import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.constant.BkStyleEnum
 import org.slf4j.LoggerFactory
 import javax.validation.ConstraintViolationException
 import javax.ws.rs.core.MediaType
@@ -36,22 +39,32 @@ import javax.ws.rs.ext.Provider
 
 @Provider
 class BkFieldExceptionMapper : ExceptionMapper<ConstraintViolationException> {
+
     companion object {
-        val logger = LoggerFactory.getLogger(BkFieldExceptionMapper::class.java)!!
+        private val logger = LoggerFactory.getLogger(BkFieldExceptionMapper::class.java)
     }
 
     override fun toResponse(exception: ConstraintViolationException): Response {
-        //logger.error("Failed with errorCode client exception:${JsonUtil.toJson(exception)}")
         val constraintViolations = exception.constraintViolations
-        if (constraintViolations.isNotEmpty()){
-
+        var errorResult: Result<Any> = MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
+        if (constraintViolations.isNotEmpty()) {
+            constraintViolations.forEach { constraintViolation ->
+                val constraintDescriptor = constraintViolation.constraintDescriptor
+                val attributes = constraintDescriptor.attributes
+                val patternStyle = attributes["patternStyle"] as BkStyleEnum // 获取字段校验的正则表达式
+                val defaultMessage = attributes["message"] as String // 获取字段校验的默认错误描述
+                // 获取字段正则表达式对应的错误描述信息
+                val patternStyleMessage = MessageCodeUtil.getCodeLanMessage(patternStyle.name, defaultMessage)
+                val propertyPath = constraintViolation.propertyPath.toString()
+                // 生成错误信息
+                errorResult = MessageCodeUtil.generateResponseDataObject(
+                    messageCode = CommonMessageCode.PARAMETER_VALIDATE_ERROR,
+                    params = arrayOf(propertyPath, patternStyleMessage)
+                )
+                logger.info("field:$propertyPath errorResult is；$errorResult")
+                return@forEach
+            }
         }
-        val errorResult = MessageCodeUtil.generateResponseDataObject(
-            messageCode = "567890",
-            params = arrayOf(),
-            data = null,
-            defaultMessage = exception.message
-        )
         return Response.status(Response.Status.BAD_REQUEST).type(MediaType.APPLICATION_JSON_TYPE)
             .entity(errorResult).build()
     }

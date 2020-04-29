@@ -26,6 +26,8 @@
 
 package com.tencent.devops.store.pojo.atom
 
+import com.tencent.devops.common.web.annotation.BkField
+import com.tencent.devops.common.web.constant.BkStyleEnum
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
@@ -35,8 +37,10 @@ data class MarketAtomCreateRequest(
     @ApiModelProperty("项目编码", required = true)
     var projectCode: String,
     @ApiModelProperty("插件代码", required = true)
+    @field:BkField(patternStyle = BkStyleEnum.STORE_CODE_STYLE)
     var atomCode: String,
     @ApiModelProperty("插件名称", required = true)
+    @field:BkField(patternStyle = BkStyleEnum.STORE_NAME_STYLE)
     var name: String,
     @ApiModelProperty("开发语言", required = true)
     var language: String,

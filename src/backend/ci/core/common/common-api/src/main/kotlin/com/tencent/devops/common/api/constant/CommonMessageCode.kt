@@ -60,4 +60,5 @@ object CommonMessageCode {
     const val ERROR_PROJECT_FEATURE_NOT_ACTIVED = "2100012" // 项目[{0}]未开通该功能
     const val ERROR_INVALID_PARAM_ = "2100013" // 无效参数: {0}
     const val ERROR_NEED_PARAM_ = "2100014" // 缺少参数: {0}
+    const val PARAMETER_VALIDATE_ERROR = "2100015" // {0}参数校验错误: {1}
 }
