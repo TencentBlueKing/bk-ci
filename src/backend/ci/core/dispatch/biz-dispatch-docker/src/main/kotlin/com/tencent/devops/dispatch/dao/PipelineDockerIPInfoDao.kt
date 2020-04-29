@@ -170,7 +170,7 @@ class PipelineDockerIPInfoDao {
 
             return dslContext.selectFrom(this)
                 .where(conditions)
-                .orderBy(DISK_LOAD.asc())
+                .orderBy(MEM_LOAD.asc())
                 .fetch()
         }
     }
