@@ -24,35 +24,21 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.web.handler
+package com.tencent.devops.common.web.annotation
 
-import com.tencent.devops.common.service.utils.MessageCodeUtil
-import org.slf4j.LoggerFactory
-import javax.validation.ConstraintViolationException
-import javax.ws.rs.core.MediaType
-import javax.ws.rs.core.Response
-import javax.ws.rs.ext.ExceptionMapper
-import javax.ws.rs.ext.Provider
+import com.tencent.devops.common.web.constant.BkStyleEnum
+import com.tencent.devops.common.web.validation.BkFieldValidator
+import javax.validation.Constraint
+import javax.validation.Payload
+import kotlin.reflect.KClass
 
-@Provider
-class BkFieldExceptionMapper : ExceptionMapper<ConstraintViolationException> {
-    companion object {
-        val logger = LoggerFactory.getLogger(BkFieldExceptionMapper::class.java)!!
-    }
-
-    override fun toResponse(exception: ConstraintViolationException): Response {
-        //logger.error("Failed with errorCode client exception:${JsonUtil.toJson(exception)}")
-        val constraintViolations = exception.constraintViolations
-        if (constraintViolations.isNotEmpty()){
-
-        }
-        val errorResult = MessageCodeUtil.generateResponseDataObject(
-            messageCode = "567890",
-            params = arrayOf(),
-            data = null,
-            defaultMessage = exception.message
-        )
-        return Response.status(Response.Status.BAD_REQUEST).type(MediaType.APPLICATION_JSON_TYPE)
-            .entity(errorResult).build()
-    }
-}
+@Target(AnnotationTarget.FIELD, AnnotationTarget.VALUE_PARAMETER)
+@kotlin.annotation.Retention(AnnotationRetention.RUNTIME)
+@Constraint(validatedBy = [BkFieldValidator::class])
+annotation class BkField(
+    val patternStyle: BkStyleEnum = BkStyleEnum.COMMON_STYLE, //字段对应的正则表达式
+    val require: Boolean = true, // 是否必须
+    val message: String = "parameter error", // 错误提示信息
+    val groups: Array<KClass<*>> = [],
+    val payload: Array<KClass<out Payload>> = []
+)
