@@ -174,7 +174,7 @@ include ":core:worker:worker-api-sdk"
 include ":core:notify"
 include ":core:notify:api-notify"
 include ":core:notify:biz-notify"
-include ":core:notify:biz-notify-sample"
+include ":core:notify:biz-notify-blueking"
 include ":core:notify:model-notify"
 include ":core:notify:boot-notify"
 
