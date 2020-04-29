@@ -122,7 +122,11 @@ class DockerDispatcher @Autowired constructor(
                     }
                 } else {
                     // 没有配置专机，根据当前IP负载选择IP
-                    dockerHostUtils.checkAndSetIP(pipelineAgentStartupEvent, specialIpSet, dockerIpInfo, poolNo)
+                    val triple = dockerHostUtils.checkAndSetIP(pipelineAgentStartupEvent, specialIpSet, dockerIpInfo, poolNo)
+                    if (triple.third.isNotEmpty()) {
+                        ipInfo = triple.third
+                    }
+                    Pair(triple.first, triple.second)
                 }
 
                 // IP变动，更新数据表并记录漂移日志
