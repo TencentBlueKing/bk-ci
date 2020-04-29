@@ -256,8 +256,10 @@ export default {
         const newContainer = getters.getContainerModalByType(type)
         if (newContainer) {
             const { name, required, typeList, type, baseOS, defaultBuildType, defaultPublicBuildResource = '', ...restProps } = newContainer
+            const defaultType = (typeList || []).find(type => type.type === defaultBuildType) || {}
+            const defaultBuildResource = defaultType.defaultBuildResource || {}
             const baseOSObject = baseOS !== 'NONE' ? { baseOS } : {}
-            const isError = ['WINDOWS', 'LINUX'].includes(baseOS)
+            const isError = ['WINDOWS'].includes(baseOS)
             commit(ADD_CONTAINER, {
                 ...restPayload,
                 newContainer: {
@@ -267,7 +269,12 @@ export default {
                     ...baseOSObject,
                     dispatchType: {
                         buildType: defaultBuildType,
-                        value: defaultPublicBuildResource
+                        imageVersion: defaultBuildResource.version || '',
+                        value: defaultBuildResource.code || defaultPublicBuildResource || '',
+                        imageCode: defaultBuildResource.code || '',
+                        imageName: defaultBuildResource.name || '',
+                        recommendFlag: defaultBuildResource.recommendFlag,
+                        imageType: 'BKSTORE'
                     },
                     elements: [],
                     isError

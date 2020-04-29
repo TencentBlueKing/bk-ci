@@ -48,6 +48,7 @@ import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.process.engine.common.BS_CONTAINER_END_SOURCE_PREIX
 import com.tencent.devops.process.pojo.mq.PipelineBuildContainerEvent
+import com.tencent.devops.process.service.BuildVariableService
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
@@ -65,6 +66,7 @@ class ContainerControl @Autowired constructor(
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val pipelineBuildDetailService: PipelineBuildDetailService,
+    private val buildVariableService: BuildVariableService,
     private val mutexControl: MutexControl
 ) {
 
@@ -95,7 +97,7 @@ class ContainerControl @Autowired constructor(
 
         // Container互斥组的判断
         // 并初始化互斥组的值
-        val variables = pipelineRuntimeService.getAllVariable(buildId)
+        val variables = buildVariableService.getAllVariable(buildId)
         val mutexGroup = mutexControl.initMutexGroup(
             mutexGroup = container.controlOption?.mutexGroup,
             variables = variables
@@ -221,6 +223,7 @@ class ContainerControl @Autowired constructor(
                     }
                 }
             }
+            pipelineBuildDetailService.updateStartVMStatus(buildId, containerId, containerFinalStatus)
             val finallyTasks = containerTaskList.filter { task ->
                 if (task.taskId == VMUtils.genEndPointTaskId(task.taskSeq) || // end-xxx 结束拦截点
                     task.taskId == VMUtils.genStopVMTaskId(task.taskSeq) // 停止构建机
@@ -404,7 +407,7 @@ class ContainerControl @Autowired constructor(
             } else if (waitToDoTask == null && BuildStatus.isReadyToRun(task.status)) {
                 // 拿到按序号排列的第一个待执行的插件
                 waitToDoTask = task
-                val variables = pipelineRuntimeService.getAllVariable(buildId)
+                val variables = buildVariableService.getAllVariable(buildId)
                 if (ControlUtils.checkAdditionalSkip(
                         task.buildId,
                         task.additionalOptions,
