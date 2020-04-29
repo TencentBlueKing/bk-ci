@@ -44,6 +44,7 @@ import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.measure.MeasureService
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
 import com.tencent.devops.process.pojo.mq.PipelineBuildLessShutdownDispatchEvent
+import com.tencent.devops.process.service.BuildVariableService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 import java.time.LocalDateTime
@@ -60,6 +61,7 @@ class PipelineBuildCancelListener @Autowired(required = false) constructor(
     private val buildDetailService: PipelineBuildDetailService,
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val pipelineBuildDetailService: PipelineBuildDetailService,
+    private val buildVariableService: BuildVariableService,
     pipelineEventDispatcher: PipelineEventDispatcher,
     @Autowired(required = false)
     private val measureService: MeasureService?
@@ -203,7 +205,7 @@ class PipelineBuildCancelListener @Autowired(required = false) constructor(
         val mutexGroupName = if (mutexGroup.mutexGroupName.isNullOrBlank()) {
             ""
         } else {
-            val variables = pipelineRuntimeService.getAllVariable(buildId)
+            val variables = buildVariableService.getAllVariable(buildId)
             EnvUtils.parseEnv(mutexGroup.mutexGroupName!!, variables)
         }
         val mutexEnable = mutexGroup.enable

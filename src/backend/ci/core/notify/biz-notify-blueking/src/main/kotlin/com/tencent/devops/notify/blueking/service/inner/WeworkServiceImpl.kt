@@ -23,24 +23,24 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.store.pojo.image.response
+package com.tencent.devops.notify.blueking.service.inner
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.notify.pojo.WeworkNotifyMediaMessage
+import com.tencent.devops.notify.pojo.WeworkNotifyTextMessage
+import com.tencent.devops.notify.service.WeworkService
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
 
-/**
- * @Description
- * @Date 2019/9/17
- * @Version 1.0
- */
-@ApiModel("镜像详情")
-data class SimpleImageInfo(
-    @ApiModelProperty("镜像代码", required = true)
-    val code: String,
+@Service
+class WeworkServiceImpl @Autowired constructor() : WeworkService {
 
-    @ApiModelProperty("镜像名称", required = true)
-    val name: String,
+    private val logger = LoggerFactory.getLogger(WeworkServiceImpl::class.java)
+    override fun sendMediaMessage(weworkNotifyMediaMessage: WeworkNotifyMediaMessage) {
+        TODO("Not yet implemented")
+    }
 
-    @ApiModelProperty("镜像版本", required = true)
-    val version: String
-)
+    override fun sendTextMessage(weworkNotifyTextMessage: WeworkNotifyTextMessage) {
+        TODO("Not yet implemented")
+    }
+}
