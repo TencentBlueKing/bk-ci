@@ -121,8 +121,13 @@ jobs:
         with:
           name: frontend
           path: bkci/frontend/
-      
-      - name: Create artifact - Step5:support-files
+
+      - name: Create artifact - Step5:generate boot-microservice.sh
+        run: ./generate_boot.sh
+        working-directory: scripts/
+
+      - name: Create artifact - Step6:support-files
+        id: create-artifact
         run: |
           cp -rf support-files/ bkci/
           cp -rf support-files/agent-package bkci/
@@ -132,11 +137,9 @@ jobs:
           cp -f bkci/frontend/pipeline/frontend#pipeline#index.html bkci/support-files/templates/frontend#pipeline#index.html
 
           cp -f bkci/frontend/assets_bundle.json bkci/support-files/templates/project#assets_bundle.json
-          echo $GITHUB_REF > bkci/VERSION
+          echo "::set-output name=version::$(basename $GITHUB_REF)"
+          basename $GITHUB_REF > bkci/VERSION
 
-      - name: Create artifact - Step6:generate boot-microservice.sh
-        run: ./generate_boot.sh
-        working-directory: scripts/
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
@@ -158,3 +161,13 @@ jobs:
           asset_path: ./bkci.tar.gz
           asset_name: bkci.tar.gz
           asset_content_type: application/gzip
+      - name: Upload to Tencent Cloud COS
+        uses: TencentCloud/cos-action@v1
+        with:
+          secret_id: ${{ secrets.TENCENT_CLOUD_SECRET_ID }}
+          secret_key: ${{ secrets.TENCENT_CLOUD_SECRET_KEY }}
+          cos_bucket: ${{ secrets.COS_BUCKET }}
+          cos_region: ${{ secrets.COS_REGION }}
+          local_path: ./bkci.tar.gz
+          remote_path: release/bkci_${{ steps.create-artifact.outputs.version }}.tar.gz
+          clean: true

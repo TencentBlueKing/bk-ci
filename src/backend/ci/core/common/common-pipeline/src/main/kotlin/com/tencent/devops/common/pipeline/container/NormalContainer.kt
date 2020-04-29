@@ -65,7 +65,9 @@ data class NormalContainer(
     @ApiModelProperty("互斥组", required = false)
     var mutexGroup: MutexGroup? = null, // 为了兼容旧数据，所以定义为可空以及var
     @ApiModelProperty("构建环境启动状态", required = false, hidden = true)
-    override var startVMStatus: String? = null
+    override var startVMStatus: String? = null,
+    @ApiModelProperty("容器运行次数", required = false, hidden = true)
+    override var executeCount: Int? = 0
 ) : Container {
     companion object {
         const val classType = "normal"
