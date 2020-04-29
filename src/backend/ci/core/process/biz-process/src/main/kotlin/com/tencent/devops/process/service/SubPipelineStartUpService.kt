@@ -60,6 +60,7 @@ class SubPipelineStartUpService(
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val pipelineService: PipelineService,
+    private val buildVariableService: BuildVariableService,
     private val buildService: PipelineBuildService,
     private val pipelineBuildTaskDao: PipelineBuildTaskDao,
     private val dslContext: DSLContext
@@ -96,7 +97,7 @@ class SubPipelineStartUpService(
         }
 
         // 通过 runVariables获取 userId 和 channelCode
-        val runVariables = pipelineRuntimeService.getAllVariable(buildId)
+        val runVariables = buildVariableService.getAllVariable(buildId)
         val userId =
             runVariables[PIPELINE_START_USER_ID] ?: runVariables[PipelineVarUtil.newVarToOldVar(PIPELINE_START_USER_ID)]
             ?: "null"

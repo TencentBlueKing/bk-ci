@@ -31,15 +31,14 @@ import com.tencent.devops.common.auth.api.AuthResourceApi
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
 import com.tencent.devops.common.auth.code.BK_DEVOPS_SCOPE
+import com.tencent.devops.common.auth.code.GLOBAL_SCOPE_TYPE
 import com.tencent.devops.common.auth.code.ProjectAuthServiceCode
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.service.ProjectPermissionService
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 
-class ProjectPermissionServiceImpl @Autowired constructor(
-    private val dslContext: DSLContext,
-    private val projectDao: ProjectDao,
+class BluekingProjectPermissionServiceImpl @Autowired constructor(
     private val authProjectApi: AuthProjectApi,
     private val authResourceApi: AuthResourceApi,
     private val projectAuthServiceCode: ProjectAuthServiceCode
@@ -49,24 +48,16 @@ class ProjectPermissionServiceImpl @Autowired constructor(
         val projectCodes = authProjectApi.getUserProjects(
             serviceCode = projectAuthServiceCode,
             userId = userId,
-            supplier = supplierForPermission
+            supplier = null
         )
         return projectCodes.contains(projectCode)
-    }
-
-    private val supplierForPermission = {
-        val fakeList = mutableListOf<String>()
-        projectDao.listProjectCodes(dslContext).forEach {
-            fakeList.add(it)
-        }
-        fakeList
     }
 
     override fun getUserProjectsAvailable(userId: String): Map<String, String> {
         return authProjectApi.getUserProjectsAvailable(
             serviceCode = projectAuthServiceCode,
             userId = userId,
-            supplier = supplierForPermission
+            supplier = null
         )
     }
 
@@ -74,12 +65,13 @@ class ProjectPermissionServiceImpl @Autowired constructor(
         return authProjectApi.getUserProjects(
             serviceCode = projectAuthServiceCode,
             userId = userId,
-            supplier = supplierForPermission
+            supplier = null
         )
     }
 
     override fun modifyResource(projectCode: String, projectName: String) {
         authResourceApi.modifyResource(
+            scopeType = GLOBAL_SCOPE_TYPE,
             serviceCode = projectAuthServiceCode,
             resourceType = AuthResourceType.PROJECT,
             projectCode = BK_DEVOPS_SCOPE,
@@ -89,8 +81,8 @@ class ProjectPermissionServiceImpl @Autowired constructor(
     }
 
     override fun deleteResource(projectCode: String) {
-
         authResourceApi.deleteResource(
+            scopeType = GLOBAL_SCOPE_TYPE,
             serviceCode = projectAuthServiceCode,
             resourceType = AuthResourceType.PROJECT,
             projectCode = BK_DEVOPS_SCOPE,
@@ -106,11 +98,12 @@ class ProjectPermissionServiceImpl @Autowired constructor(
         val projectList = mutableListOf<ResourceRegisterInfo>()
         projectList.add(resourceRegisterInfo)
         authResourceApi.batchCreateResource(
-            serviceCode = projectAuthServiceCode,
+            scopeType = GLOBAL_SCOPE_TYPE,
+            scopeId = BK_DEVOPS_SCOPE,
+            systemId = projectAuthServiceCode,
             resourceType = AuthResourceType.PROJECT,
             resourceList = projectList,
-            projectCode = BK_DEVOPS_SCOPE,
-            user = userId
+            principalId = userId
         )
         return ""
     }
