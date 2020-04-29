@@ -29,18 +29,12 @@ package com.tencent.devops.process.engine.atom.task
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.notify.enums.EnumEmailFormat
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ManualReviewAction
 import com.tencent.devops.common.pipeline.pojo.element.agent.ManualReviewUserTaskElement
-import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParamPair
 import com.tencent.devops.log.utils.LogUtils
 import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
-import com.tencent.devops.notify.api.service.ServiceNotifyResource
-import com.tencent.devops.notify.pojo.EmailNotifyMessage
-import com.tencent.devops.notify.pojo.RtxNotifyMessage
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
-import com.tencent.devops.notify.pojo.WechatNotifyMessage
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.IAtomTask
 import com.tencent.devops.process.engine.bean.PipelineUrlBean
@@ -49,7 +43,6 @@ import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION_PARAMS
 import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION_SUGGEST
 import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION_USERID
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
-import com.tencent.devops.process.util.NotifyTemplateUtils
 import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
 import com.tencent.devops.process.utils.PIPELINE_MANUAL_REVIEW_ATOM_NOTIFY_TEMPLATE
 import com.tencent.devops.process.utils.PIPELINE_NAME
@@ -116,7 +109,7 @@ class ManualReviewTaskAtom(
         LogUtils.addLine(
             rabbitTemplate = rabbitTemplate,
             buildId = buildId,
-            message = "审核参数：${param.params}",
+            message = "审核参数：${param.params.map { "{key=${it.key}, value=${it.value}" }}",
             tag = taskId,
             jobId = task.containerHashId,
             executeCount = task.executeCount ?: 1
