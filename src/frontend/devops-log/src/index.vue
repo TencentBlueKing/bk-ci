@@ -101,14 +101,16 @@
 
             valuefilter (val) {
                 const valArr = val.split(/<a[^>]+?href=["']?([^"']+)["']?[^>]*>([^<]+)<\/a>/gi)
+                const transSearch = this.searchStr.replace(/\*|\.|\?|\+|\$|\^|\[|\]|\(|\)|\{|\}|\||\\|\//g, (str) => `\\${str}`)
+                const searchReg = new RegExp(`^${transSearch}$`, 'i')
                 const transVal = (val = '') => {
                     let regStr = '\\s|<|>'
-                    if (this.searchStr !== '') regStr += `|${this.searchStr}`
-                    const tranReg = new RegExp(regStr, 'g')
+                    if (transSearch !== '') regStr += `|${transSearch}`
+                    const tranReg = new RegExp(regStr, 'gi')
                     return val.replace(tranReg, (str) => {
                         if (str === '<') return '&lt;'
                         else if (str === '>') return '&gt;'
-                        else if (str === this.searchStr) return `<span class="search-str">${str}</span>`
+                        else if (searchReg.test(str)) return `<span class="search-str">${str}</span>`
                         else if (/\t/.test(str)) return '&nbsp;&nbsp;&nbsp;&nbsp;'
                         else return '&nbsp;'
                     })

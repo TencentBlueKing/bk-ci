@@ -93,7 +93,8 @@
         "log": "日志",
         "setting": "配置",
         "execTime": "重试次数",
-        "showTime": "显示时间",
+        "showTime": "显示时间戳",
+        "hideTime": "隐藏时间戳",
         "downLoadLog": "下载日志",
         "emptyLog": "日志内容为空"
     },
@@ -266,6 +267,7 @@
         "previewDiff": "编排预览",
         "templateInstantiation": "模板实例化",
         "templateVersion": "模板版本",
+        "templateVersionErrTips": "请先选择模板版本",
         "applyTemplateSetting": "同时应用模板设置",
         "applySettingTips": "勾选则表示把模板的设置应用到实例化的流水线",
         "newPipelineName": "实例化流水线名称",
