@@ -93,7 +93,8 @@
         "log": "Log",
         "setting": "Configuration",
         "execTime": "Number of retries",
-        "showTime": "Display time",
+        "showTime": "Show timestamp",
+        "hideTime": "Hide timestamp",
         "downLoadLog": "Download log",
         "emptyLog": "The log content is empty"
     },
