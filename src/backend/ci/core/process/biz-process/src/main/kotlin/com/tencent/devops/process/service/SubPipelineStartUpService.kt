@@ -40,7 +40,6 @@ import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.dao.PipelineBuildTaskDao
 import com.tencent.devops.process.engine.service.PipelineBuildService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
-import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.pojo.pipeline.ProjectBuildId
 import com.tencent.devops.process.pojo.pipeline.StartUpInfo
 import com.tencent.devops.process.pojo.pipeline.SubPipelineStartUpInfo
@@ -55,7 +54,7 @@ import org.springframework.stereotype.Service
 @Service
 class SubPipelineStartUpService(
     private val pipelineRepositoryService: PipelineRepositoryService,
-    private val pipelineRuntimeService: PipelineRuntimeService,
+    private val buildVariableService: BuildVariableService,
     private val buildService: PipelineBuildService,
     private val pipelineBuildTaskDao: PipelineBuildTaskDao,
     private val dslContext: DSLContext
@@ -92,7 +91,7 @@ class SubPipelineStartUpService(
         }
 
         // 通过 runVariables获取 userId 和 channelCode
-        val runVariables = pipelineRuntimeService.getAllVariable(buildId)
+        val runVariables = buildVariableService.getAllVariable(buildId)
         val userId =
             runVariables[PIPELINE_START_USER_ID] ?: runVariables[PipelineVarUtil.newVarToOldVar(PIPELINE_START_USER_ID)]
             ?: "null"

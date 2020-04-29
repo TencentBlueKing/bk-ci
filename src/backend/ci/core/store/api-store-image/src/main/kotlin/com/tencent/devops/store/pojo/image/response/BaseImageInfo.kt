@@ -23,61 +23,27 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.store.pojo.image.response
 
-package com.tencent.devops.store.service.container
-
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.pipeline.type.BuildType
-import com.tencent.devops.store.pojo.container.BuildResource
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
 /**
- * 构建资源逻辑类
- *
- * since: 2018-12-20
+ * @Description
+ * @Date 2019/9/17
+ * @Version 1.0
  */
-interface BuildResourceService {
+@ApiModel("镜像详情")
+data class BaseImageInfo(
+    @ApiModelProperty("镜像代码", required = true)
+    val code: String,
 
-    /**
-     * 获取默认构建资源信息
-     */
-    fun getDefaultBuildResource(buildType: BuildType): Any?
+    @ApiModelProperty("镜像名称", required = true)
+    val name: String,
 
-    /**
-     * 获取所有构建资源信息
-     */
-    fun getAllPipelineBuildResource(): Result<List<BuildResource>>
+    @ApiModelProperty("镜像版本", required = true)
+    val version: String,
 
-    /**
-     * 根据id获取构建资源信息
-     */
-    fun getPipelineBuildResource(id: String): Result<BuildResource?>
-
-    /**
-     * 根据构建资源编码查询数据库记录数
-     */
-    fun getCountByCode(buildResourceCode: String): Int
-
-    /**
-     * 保存构建资源信息
-     */
-    fun savePipelineBuildResource(
-        defaultFlag: Boolean,
-        buildResourceCode: String,
-        buildResourceName: String
-    ): Result<Boolean>
-
-    /**
-     * 更新构建资源信息
-     */
-    fun updatePipelineBuildResource(
-        id: String,
-        defaultFlag: Boolean,
-        buildResourceCode: String,
-        buildResourceName: String
-    ): Result<Boolean>
-
-    /**
-     * 删除构建资源信息
-     */
-    fun deletePipelineBuildResource(id: String): Result<Boolean>
-}
+    @ApiModelProperty("是否推荐", required = true)
+    val recommendFlag: Boolean
+)
