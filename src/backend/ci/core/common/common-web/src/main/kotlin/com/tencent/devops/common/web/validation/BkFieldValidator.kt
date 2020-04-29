@@ -55,6 +55,6 @@ class BkFieldValidator : ConstraintValidator<BkField?, Any?> {
                 return false
             }
         }
-        return false
+        return true
     }
 }
