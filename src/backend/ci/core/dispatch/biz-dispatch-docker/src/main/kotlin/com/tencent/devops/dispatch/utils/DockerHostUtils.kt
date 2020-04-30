@@ -247,8 +247,8 @@ class DockerHostUtils @Autowired constructor(
     ): Triple<String, Int, String> {
         val dockerIp = dockerIpInfo.dockerIp
 
-        // 同一条流水线并发构建时，无视负载，直接下发同一个IP（避免同一条流水线并发量太大，影响其他流水线构建）
-        if (poolNo > 1) {
+        // 同一条流水线并发构建时，当并发数超过3，无视负载，直接下发同一个IP（避免同一条流水线并发量太大，影响其他流水线构建）
+        if (poolNo > 3) {
             return Triple(dockerIp, dockerIpInfo.dockerHostPort, "")
         }
 
