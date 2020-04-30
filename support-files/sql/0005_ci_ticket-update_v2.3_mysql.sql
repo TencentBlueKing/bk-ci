@@ -1,4 +1,4 @@
-USE devops_ticket;
+USE devops_ci_ticket;
 SET NAMES utf8mb4;
 
 DROP PROCEDURE IF EXISTS ci_ticket_schema_update;
@@ -33,4 +33,4 @@ END <CI_UBF>
 DELIMITER ;
 COMMIT;
 
-CALL ci_repository_schema_update();
+CALL ci_ticket_schema_update();
