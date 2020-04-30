@@ -33,9 +33,7 @@ import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
 import com.tencent.devops.common.auth.code.BK_DEVOPS_SCOPE
 import com.tencent.devops.common.auth.code.GLOBAL_SCOPE_TYPE
 import com.tencent.devops.common.auth.code.ProjectAuthServiceCode
-import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.service.ProjectPermissionService
-import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 
 class BluekingProjectPermissionServiceImpl @Autowired constructor(
