@@ -334,7 +334,7 @@ class DockerHostUtils @Autowired constructor(
         dockerIpList: List<TDispatchPipelineDockerIpInfoRecord>,
         unAvailableIpList: Set<String> = setOf()
     ): Pair<String, Int> {
-        if (unAvailableIpList.isEmpty()) {
+        if (unAvailableIpList.isEmpty() && !checkIpLimiting(dockerIpList[0].dockerIp)) {
             return Pair(dockerIpList[0].dockerIp, dockerIpList[0].dockerHostPort)
         } else {
             dockerIpList.forEach {
@@ -342,9 +342,7 @@ class DockerHostUtils @Autowired constructor(
                     return@forEach
                 } else {
                     // 查看当前IP是否已达限流
-                    val dockerIpCount = redisOperation.get("${Constants.DOCKER_IP_KEY_PREFIX}${it.dockerIp}")
-                    logger.info("${it.dockerIp} dockerIpCount: $dockerIpCount")
-                    if (dockerIpCount != null && dockerIpCount.toInt() > DOCKER_IP_COUNT_MAX) {
+                    if (checkIpLimiting(it.dockerIp)) {
                         return@forEach
                     }
 
@@ -354,6 +352,17 @@ class DockerHostUtils @Autowired constructor(
         }
 
         return Pair("", 0)
+    }
+
+    private fun checkIpLimiting(dockerIp: String): Boolean {
+        // 查看当前IP是否已达限流
+        val dockerIpCount = redisOperation.get("${Constants.DOCKER_IP_KEY_PREFIX}$dockerIp")
+        logger.info("$dockerIp dockerIpCount: $dockerIpCount")
+        if (dockerIpCount != null && dockerIpCount.toInt() > DOCKER_IP_COUNT_MAX) {
+            return true
+        }
+
+        return false
     }
 
     private fun urlEncode(s: String) = URLEncoder.encode(s, "UTF-8")
