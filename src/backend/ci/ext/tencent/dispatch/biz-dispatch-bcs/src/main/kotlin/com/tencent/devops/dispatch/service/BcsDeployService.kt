@@ -35,6 +35,8 @@ import com.tencent.devops.dispatch.util.BcsClientUtils
 import io.fabric8.kubernetes.api.model.IntOrString
 import io.fabric8.kubernetes.api.model.ServiceBuilder
 import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder
+import io.fabric8.kubernetes.api.model.apps.DeploymentStrategy
+import io.fabric8.kubernetes.api.model.apps.RollingUpdateDeployment
 import io.fabric8.kubernetes.api.model.extensions.HTTPIngressPathBuilder
 import io.fabric8.kubernetes.api.model.extensions.HTTPIngressRuleValue
 import io.fabric8.kubernetes.api.model.extensions.Ingress
@@ -75,6 +77,10 @@ class BcsDeployService @Autowired constructor(private val redisOperation: RedisO
         val appService = deployApp.appService
         val appIngress = deployApp.appIngress
         val containerPort = appDeployment.containerPort
+        // 创建deployment的pod部署策略为滚动更新，maxUnavailable 为0，maxSurge为1
+        val deploymentStrategy = DeploymentStrategy(
+            RollingUpdateDeployment(IntOrString(1), IntOrString(1)), "rollingUpdate"
+        )
         // 创建deployment无状态部署
         val deployment = DeploymentBuilder()
             .withNewMetadata()
@@ -82,6 +88,7 @@ class BcsDeployService @Autowired constructor(private val redisOperation: RedisO
             .endMetadata()
             .withNewSpec()
             .withReplicas(appDeployment.replicas)
+            .withStrategy(deploymentStrategy)
             .withNewTemplate()
             .withNewMetadata()
             .addToLabels(defaultLabelKey, serviceCode)
@@ -121,7 +128,7 @@ class BcsDeployService @Autowired constructor(private val redisOperation: RedisO
         val servicePort = appService.servicePort
         val service = ServiceBuilder()
             .withNewMetadata()
-            .withName("$serviceCode-service")
+            .withName(getServiceName(serviceCode))
             .endMetadata()
             .withNewSpec()
             .withSelector(Collections.singletonMap(defaultLabelKey, serviceCode))
@@ -139,7 +146,7 @@ class BcsDeployService @Autowired constructor(private val redisOperation: RedisO
         // 创建ingress
         // generate ingress backend
         val ingressBackend: IngressBackend = IngressBackendBuilder()
-            .withServiceName("$serviceCode-service")
+            .withServiceName(getServiceName(serviceCode))
             .withNewServicePort(servicePort)
             .build()
         // generate ingress path
@@ -196,6 +203,8 @@ class BcsDeployService @Autowired constructor(private val redisOperation: RedisO
         return Result(true)
     }
 
+    private fun getServiceName(serviceCode: String) = "$serviceCode-service"
+
     private fun createIngress(
         bcsUrl: String,
         token: String,
@@ -207,7 +216,7 @@ class BcsDeployService @Autowired constructor(private val redisOperation: RedisO
     ): Ingress {
         val ingress = IngressBuilder()
             .withNewMetadata()
-            .withName("$namespaceName-ingress")
+            .withName(getIngressName(namespaceName))
             .addToLabels(defaultLabelKey, serviceCode)
             .addToAnnotations(appIngress.ingressAnnotationMap)
             .endMetadata()
@@ -218,12 +227,14 @@ class BcsDeployService @Autowired constructor(private val redisOperation: RedisO
         BcsClientUtils.createIngress(bcsUrl, token, namespaceName, ingress)
         redisOperation.set(
             key = ingressRedisKey,
-            value = "$namespaceName-ingress",
+            value = getIngressName(namespaceName),
             expiredInSecond = null,
             expired = false
         )
         return ingress
     }
+
+    private fun getIngressName(namespaceName: String) = "$namespaceName-ingress"
 
     fun stopApp(
         userId: String,
@@ -236,7 +247,8 @@ class BcsDeployService @Autowired constructor(private val redisOperation: RedisO
         val deploymentName = stopApp.deploymentName
         // 停止灰度命名空间的应用
         val grayNamespaceName = stopApp.grayNamespaceName
-        var deployment = bcsKubernetesClient.apps().deployments().inNamespace(grayNamespaceName).withName(deploymentName).get()
+        var deployment =
+            bcsKubernetesClient.apps().deployments().inNamespace(grayNamespaceName).withName(deploymentName).get()
         if (deployment != null) {
             // 删除deployment
             bcsKubernetesClient.apps().deployments().inNamespace(grayNamespaceName).withName(deploymentName).delete()

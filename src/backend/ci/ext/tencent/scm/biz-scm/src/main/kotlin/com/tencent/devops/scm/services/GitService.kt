@@ -75,7 +75,6 @@ import java.io.File
 import java.net.URLDecoder
 import java.net.URLEncoder
 import java.nio.file.Files
-import java.text.MessageFormat
 import java.time.LocalDateTime
 import java.util.Base64
 import java.util.concurrent.Executors
@@ -117,10 +116,6 @@ class GitService @Autowired constructor(
 
     @Value("\${git.public.secret}")
     private lateinit var gitPublicSecret: String
-
-    private val redirectStoreMarketUrl: String = gitConfig.redirectStoreMarketUrl
-
-    private val redirectAtomRepositoryUrl: String = gitConfig.redirectStoreRepositoryUrl
 
     private val executorService = Executors.newFixedThreadPool(2)
 

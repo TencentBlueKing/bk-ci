@@ -32,6 +32,7 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.artifactory.api.service.ServiceArtifactoryResource
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.auth.api.BSAuthProjectApi
 import com.tencent.devops.common.auth.code.BSExperienceAuthServiceCode
 import com.tencent.devops.common.client.Client
