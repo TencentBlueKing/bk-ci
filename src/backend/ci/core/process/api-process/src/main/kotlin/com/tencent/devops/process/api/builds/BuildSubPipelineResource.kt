@@ -30,6 +30,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BUILD_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PIPELINE_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.process.pojo.PipelineId
 import com.tencent.devops.process.pojo.pipeline.SubPipelineStatus
 import com.tencent.devops.process.pojo.pipeline.ProjectBuildId
 import com.tencent.devops.process.pojo.pipeline.SubPipelineStartUpInfo
@@ -144,4 +145,16 @@ interface BuildSubPipelineResource {
         @PathParam("pipelineId")
         pipelineId: String
     ): Result<List<SubPipelineStartUpInfo>>
+
+    @ApiOperation("根据流水线名称获取流水线ID")
+    @GET
+    @Path("/projects/{projectId}/pipelines/getPipelineIdByName")
+    fun getPipelineByName(
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("流水线名称", required = false, defaultValue = "")
+        @QueryParam("pipelineName")
+        pipelineName: String
+    ): Result<List<PipelineId?>>
 }
