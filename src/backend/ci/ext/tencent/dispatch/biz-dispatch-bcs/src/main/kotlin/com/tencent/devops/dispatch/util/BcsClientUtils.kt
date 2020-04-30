@@ -51,9 +51,9 @@ object BcsClientUtils {
 
     private val logger = LoggerFactory.getLogger(BcsClientUtils::class.java)
 
-    private val cpu = "cpu"
+    private const val cpu = "cpu"
 
-    private val memory = "memory"
+    private const val memory = "memory"
 
     private val bcsKubernetesClientMap = ConcurrentHashMap<String, KubernetesClient>()
 

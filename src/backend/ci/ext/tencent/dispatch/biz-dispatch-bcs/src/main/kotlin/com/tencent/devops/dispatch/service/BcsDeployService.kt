@@ -34,6 +34,7 @@ import com.tencent.devops.dispatch.pojo.StopApp
 import com.tencent.devops.dispatch.util.BcsClientUtils
 import io.fabric8.kubernetes.api.model.IntOrString
 import io.fabric8.kubernetes.api.model.ServiceBuilder
+import io.fabric8.kubernetes.api.model.apps.Deployment
 import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder
 import io.fabric8.kubernetes.api.model.apps.DeploymentStrategy
 import io.fabric8.kubernetes.api.model.apps.RollingUpdateDeployment
@@ -79,7 +80,7 @@ class BcsDeployService @Autowired constructor(private val redisOperation: RedisO
         val containerPort = appDeployment.containerPort
         // 创建deployment的pod部署策略为滚动更新，maxUnavailable 为0，maxSurge为1
         val deploymentStrategy = DeploymentStrategy(
-            RollingUpdateDeployment(IntOrString(1), IntOrString(1)), "rollingUpdate"
+            RollingUpdateDeployment(IntOrString(1), IntOrString(0)), "rollingUpdate"
         )
         // 创建deployment无状态部署
         val deployment = DeploymentBuilder()
@@ -247,26 +248,30 @@ class BcsDeployService @Autowired constructor(private val redisOperation: RedisO
         val deploymentName = stopApp.deploymentName
         // 停止灰度命名空间的应用
         val grayNamespaceName = stopApp.grayNamespaceName
-        var deployment =
-            bcsKubernetesClient.apps().deployments().inNamespace(grayNamespaceName).withName(deploymentName).get()
-        if (deployment != null) {
-            // 删除deployment
-            bcsKubernetesClient.apps().deployments().inNamespace(grayNamespaceName).withName(deploymentName).delete()
-            // 删除service
-            bcsKubernetesClient.services().inNamespace(grayNamespaceName).withName(stopApp.serviceName).delete()
-            // 更新ingress规则
-            deleteIngressRule(bcsKubernetesClient, grayNamespaceName, stopApp.grayHost, deploymentName, bcsUrl, token)
+        var deployment: Deployment?
+        if (grayNamespaceName.isNotEmpty()) {
+            deployment = bcsKubernetesClient.apps().deployments().inNamespace(grayNamespaceName).withName(deploymentName).get()
+            if (deployment != null) {
+                // 删除deployment
+                bcsKubernetesClient.apps().deployments().inNamespace(grayNamespaceName).withName(deploymentName).delete()
+                // 删除service
+                bcsKubernetesClient.services().inNamespace(grayNamespaceName).withName(stopApp.serviceName).delete()
+                // 更新ingress规则
+                deleteIngressRule(bcsKubernetesClient, grayNamespaceName, stopApp.grayHost, deploymentName, bcsUrl, token)
+            }
         }
         // 停止正式命名空间的应用
         val namespaceName = stopApp.namespaceName
-        deployment = bcsKubernetesClient.apps().deployments().inNamespace(namespaceName).withName(deploymentName).get()
-        if (deployment != null) {
-            // 删除deployment
-            bcsKubernetesClient.apps().deployments().inNamespace(namespaceName).withName(deploymentName).delete()
-            // 删除service
-            bcsKubernetesClient.services().inNamespace(namespaceName).withName(stopApp.serviceName).delete()
-            // 更新ingress规则
-            deleteIngressRule(bcsKubernetesClient, namespaceName, stopApp.host, deploymentName, bcsUrl, token)
+        if (namespaceName.isNotEmpty()) {
+            deployment = bcsKubernetesClient.apps().deployments().inNamespace(namespaceName).withName(deploymentName).get()
+            if (deployment != null) {
+                // 删除deployment
+                bcsKubernetesClient.apps().deployments().inNamespace(namespaceName).withName(deploymentName).delete()
+                // 删除service
+                bcsKubernetesClient.services().inNamespace(namespaceName).withName(stopApp.serviceName).delete()
+                // 更新ingress规则
+                deleteIngressRule(bcsKubernetesClient, namespaceName, stopApp.host, deploymentName, bcsUrl, token)
+            }
         }
         return Result(true)
     }
