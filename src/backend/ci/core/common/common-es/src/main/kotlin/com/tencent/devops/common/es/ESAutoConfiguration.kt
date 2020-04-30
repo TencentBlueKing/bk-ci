@@ -31,7 +31,6 @@ import com.floragunn.searchguard.ssl.util.SSLConfigConstants
 import com.tencent.devops.common.web.WebAutoConfiguration
 import org.elasticsearch.common.settings.Settings
 import org.elasticsearch.common.transport.InetSocketTransportAddress
-import org.elasticsearch.plugins.Plugin
 import org.elasticsearch.transport.client.PreBuiltTransportClient
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.AutoConfigureBefore
@@ -111,8 +110,7 @@ class ESAutoConfiguration {
                 .put(SSLConfigConstants.SEARCHGUARD_SSL_TRANSPORT_TRUSTSTORE_PASSWORD, truststorePassword)
 
             PreBuiltTransportClient(builder.build(), SearchGuardSSLPlugin::class.java)
-        }
-        else {
+        } else {
             PreBuiltTransportClient(builder.build())
         }
 
