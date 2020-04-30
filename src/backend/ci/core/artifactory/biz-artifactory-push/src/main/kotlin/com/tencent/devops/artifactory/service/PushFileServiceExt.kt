@@ -75,7 +75,6 @@ class PushFileServiceExt @Autowired constructor(
                 account = pushResourceInfo.account
             )
 
-
             val fastPushFileRequest = FastPushFileRequest(
                 userId = userId,
                 envSet = envSet,
@@ -130,7 +129,7 @@ class PushFileServiceExt @Autowired constructor(
     fun clearTmpFile(jobId: Long) {
         val fileList = jobInstanceMap[jobId.toString()]
         if (fileList != null) {
-            if(fileList.isNotEmpty()) {
+            if (fileList.isNotEmpty()) {
                 clearTmpFile(fileList)
             }
         }
@@ -140,7 +139,7 @@ class PushFileServiceExt @Autowired constructor(
         logger.info("start clear TmpFile, tmpFile count:${files.size}")
         val startTime = System.currentTimeMillis()
         files.forEach { file ->
-            val tmpFile  = File(file)
+            val tmpFile = File(file)
             if (tmpFile.exists()) {
                 if (tmpFile.isDirectory) {
                     logger.info("[ delete temp dir $file : ${tmpFile.deleteRecursively()}")
@@ -151,8 +150,6 @@ class PushFileServiceExt @Autowired constructor(
         }
         logger.info("delete temp file time：${System.currentTimeMillis() - startTime}")
     }
-
-
 
     private fun cachePushMsg(jobId: Long, files: List<File>) {
         val pathList = mutableListOf<String>()
