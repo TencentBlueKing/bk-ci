@@ -35,6 +35,9 @@ data class ElementAdditionalOptions(
     val retryCount: Int,
     val timeout: Long?,
     val runCondition: RunCondition?,
+    val pauseBeforeExec: Boolean?,
+    val subscriptionPauseUser: List<String>?,
+    val atomTimeout: Long?,
 
     val otherTask: String?,
     val customVariables: List<NameAndValue>?,

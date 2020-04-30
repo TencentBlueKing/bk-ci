@@ -88,7 +88,9 @@ class ControlUtilsTest {
                             customVariables = nullObject,
                             runCondition = RunCondition.PRE_TASK_FAILED_ONLY,
                             retryCount = 0,
-                            retryWhenFailed = false
+                            retryWhenFailed = false,
+                            pauseBeforeExec = false,
+                            subscriptionPauseUser = null
                         ), status
                     )
                 )
@@ -104,7 +106,9 @@ class ControlUtilsTest {
                             customVariables = nullObject,
                             runCondition = RunCondition.PRE_TASK_FAILED_ONLY,
                             retryCount = 0,
-                            retryWhenFailed = false
+                            retryWhenFailed = false,
+                            pauseBeforeExec = false,
+                            subscriptionPauseUser = null
                         ), status
                     )
                 )
@@ -126,7 +130,9 @@ class ControlUtilsTest {
                     customCondition = null,
                     customVariables = null,
                     retryCount = 0,
-                    retryWhenFailed = false
+                    retryWhenFailed = false,
+                    pauseBeforeExec = false,
+                    subscriptionPauseUser = null
                 )
             )
         )
@@ -141,7 +147,9 @@ class ControlUtilsTest {
                     customCondition = null,
                     customVariables = null,
                     retryCount = 0,
-                    retryWhenFailed = false
+                    retryWhenFailed = false,
+                    pauseBeforeExec = false,
+                    subscriptionPauseUser = null
                 )
             )
         )
@@ -163,7 +171,9 @@ class ControlUtilsTest {
                     customCondition = null,
                     customVariables = null,
                     retryCount = 0,
-                    retryWhenFailed = false
+                    retryWhenFailed = false,
+                    pauseBeforeExec = false,
+                    subscriptionPauseUser = null
                 )
             )
         )
@@ -178,7 +188,9 @@ class ControlUtilsTest {
                     customCondition = null,
                     customVariables = null,
                     retryCount = 0,
-                    retryWhenFailed = false
+                    retryWhenFailed = false,
+                    pauseBeforeExec = false,
+                    subscriptionPauseUser = null
                 )
             )
         )
