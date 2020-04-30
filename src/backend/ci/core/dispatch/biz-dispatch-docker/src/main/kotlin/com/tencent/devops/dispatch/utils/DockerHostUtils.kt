@@ -49,6 +49,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import java.net.URLEncoder
+import java.util.Random
 
 @Component
 class DockerHostUtils @Autowired constructor(
@@ -334,7 +335,7 @@ class DockerHostUtils @Autowired constructor(
         dockerIpList: List<TDispatchPipelineDockerIpInfoRecord>,
         unAvailableIpList: Set<String> = setOf()
     ): Pair<String, Int> {
-        if (unAvailableIpList.isEmpty() && !checkIpLimiting(dockerIpList[0].dockerIp)) {
+/*        if (unAvailableIpList.isEmpty() && !checkIpLimiting(dockerIpList[0].dockerIp)) {
             return Pair(dockerIpList[0].dockerIp, dockerIpList[0].dockerHostPort)
         } else {
             dockerIpList.forEach {
@@ -349,12 +350,20 @@ class DockerHostUtils @Autowired constructor(
                     return Pair(it.dockerIp, it.dockerHostPort)
                 }
             }
+        }*/
+
+        val random = Random()
+        for (i in 1..100) {
+            val dockerInfo = dockerIpList[random.nextInt(dockerIpList.size)]
+            if (!unAvailableIpList.contains(dockerInfo.dockerIp) && !exceedIpLimiting(dockerInfo.dockerIp)) {
+                return Pair(dockerInfo.dockerIp, dockerInfo.dockerHostPort)
+            }
         }
 
         return Pair("", 0)
     }
 
-    private fun checkIpLimiting(dockerIp: String): Boolean {
+    private fun exceedIpLimiting(dockerIp: String): Boolean {
         // 查看当前IP是否已达限流
         val dockerIpCount = redisOperation.get("${Constants.DOCKER_IP_KEY_PREFIX}$dockerIp")
         logger.info("$dockerIp dockerIpCount: $dockerIpCount")
