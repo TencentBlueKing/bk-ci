@@ -59,7 +59,7 @@ class BkFieldExceptionMapper : ExceptionMapper<ConstraintViolationException> {
                 // 生成错误信息
                 errorResult = MessageCodeUtil.generateResponseDataObject(
                     messageCode = CommonMessageCode.PARAMETER_VALIDATE_ERROR,
-                    params = arrayOf(propertyPath, patternStyleMessage)
+                    params = arrayOf(propertyPath.split(".").last(), patternStyleMessage)
                 )
                 logger.info("field:$propertyPath errorResult is；$errorResult")
                 return@forEach

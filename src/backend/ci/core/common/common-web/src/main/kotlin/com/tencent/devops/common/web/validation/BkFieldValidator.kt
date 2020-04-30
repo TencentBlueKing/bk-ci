@@ -43,7 +43,7 @@ class BkFieldValidator : ConstraintValidator<BkField?, Any?> {
     ): Boolean {
         val constraintDescriptor = (constraintValidatorContext as ConstraintValidatorContextImpl).constraintDescriptor
         val attributes = constraintDescriptor.attributes
-        val require = attributes["require"] as Boolean
+        val require = attributes["required"] as Boolean
         // 判断参数是否可以为空
         if (require && paramValue == null) {
             return false
