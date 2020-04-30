@@ -51,6 +51,4 @@ object PushMessageCode {
     const val FILE_NOT_EXITS = "2103006" // 未匹配到文件{0}
     const val GET_FILE_FAIL = "2103007" // 构建分发获取文件失败
     const val JOB_EXECUTE_FAIL = "2103008" // JOB执行失败,msg{0}
-
-
 }

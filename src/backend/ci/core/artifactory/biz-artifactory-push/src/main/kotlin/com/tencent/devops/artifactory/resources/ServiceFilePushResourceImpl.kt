@@ -19,5 +19,4 @@ class ServiceFilePushResourceImpl @Autowired constructor(
     override fun checkPushStatus(userId: String, projectId: String, jobInstanceId: Long): Result<PushResultVO?> {
         return pushFileService.checkStatus(userId, projectId, jobInstanceId)
     }
-
 }
