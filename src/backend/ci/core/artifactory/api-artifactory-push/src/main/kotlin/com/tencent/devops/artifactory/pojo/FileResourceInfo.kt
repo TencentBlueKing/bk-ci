@@ -4,9 +4,9 @@ import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("待分发文件资源信息")
-class FileResourceInfo (
+class FileResourceInfo(
     @ApiModelProperty("项目Id", required = true)
-    val projectId : String,
+    val projectId: String,
     @ApiModelProperty("流水线Id", required = true)
     val pipelineId: String,
     @ApiModelProperty("构件Id", required = true)
