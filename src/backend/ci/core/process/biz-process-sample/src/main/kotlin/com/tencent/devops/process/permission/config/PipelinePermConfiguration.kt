@@ -64,7 +64,7 @@ class PipelinePermConfiguration {
 
     @Bean
     @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "sample")
-    fun pipelinePermissionService(
+    fun mockPipelinePermissionService(
         dslContext: DSLContext,
         pipelineInfoDao: PipelineInfoDao,
         authProjectApi: AuthProjectApi,
