@@ -61,7 +61,7 @@ class RepositoryPermConfiguration {
 
     @Bean
     @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "sample")
-    fun repositoryPermissionService(
+    fun mockRepositoryPermissionService(
         dslContext: DSLContext,
         repositoryDao: RepositoryDao,
         authResourceApi: AuthResourceApi,
