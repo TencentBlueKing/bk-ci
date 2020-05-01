@@ -310,12 +310,24 @@ function splitByChar (message) {
     return [tempMes, message]
 }
 
-const canvas = new OffscreenCanvas(100, 1)
-const context = canvas.getContext('2d')
-context.font = 'normal 12px Consolas, "Courier New", monospace'
-function getTextWidth (text) {
-    const metrics = context.measureText(text)
-    return metrics.width
+let getTextWidth
+if (OffscreenCanvas) {
+    const canvas = new OffscreenCanvas(100, 1)
+    const context = canvas.getContext('2d')
+    context.font = 'normal 12px Consolas, "Courier New", monospace'
+    getTextWidth = (text) => {
+        const metrics = context.measureText(text)
+        return metrics.width
+    }
+} else {
+    getTextWidth = (text) => {
+        let res = 0
+        for (let i = 0, len = text.length; i < len; i++) {
+            if (/[\u4e00-\u9fa5]/.test(text[i])) res += 12
+            else res += 6.61
+        }
+        return res
+    }
 }
 
 function getListData ({ totalScrollHeight, itemHeight, itemNumber, canvasHeight, minMapTop, totalHeight, mapHeight, type }) {
