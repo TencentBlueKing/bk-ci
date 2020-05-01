@@ -57,7 +57,7 @@ config = {
     domain = "__BKCI_JOB_FQDN__"
   },
   redis = {
-    host = "__REDIS_IP0__",
+    host = "__REDIS_IP__",
     port = __REDIS_PORT__,
     pass = "__REDIS_PASS__",  -- redis 密码，没有密码的话，把这行注释掉
     database = __REDIS_DB__,         -- 默认选择db0
