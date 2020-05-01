@@ -85,7 +85,7 @@ class ESAutoConfiguration {
             .put("client.transport.sniff", true)
         val searchGuard =
             !keystoreFilePath.isNullOrBlank() || !truststoreFilePath.isNullOrBlank() ||
-                !keystorePassword.isNullOrBlank() || truststorePassword.isNullOrBlank()
+                !keystorePassword.isNullOrBlank() || !truststorePassword.isNullOrBlank()
 
         val client = if (searchGuard) {
             if (keystoreFilePath.isNullOrBlank()) {
