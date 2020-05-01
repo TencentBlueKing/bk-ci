@@ -24,7 +24,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.permission.impl
+package com.tencent.devops.process.permission.service.impl
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
@@ -37,20 +37,13 @@ import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
-import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.permission.PipelinePermissionService
-import org.jooq.DSLContext
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
 import javax.ws.rs.core.Response
 
 /**
  * Pipeline专用权限校验接口
  */
-@Service
-class PipelinePermissionServiceImpl @Autowired constructor(
-    private val dslContext: DSLContext,
-    private val pipelineInfoDao: PipelineInfoDao,
+abstract class AbstractPipelinePermissionService constructor(
     private val authProjectApi: AuthProjectApi,
     private val authResourceApi: AuthResourceApi,
     private val authPermissionApi: AuthPermissionApi,
@@ -122,7 +115,7 @@ class PipelinePermissionServiceImpl @Autowired constructor(
             )
             throw ErrorCodeException(
                 statusCode = Response.Status.FORBIDDEN.statusCode,
-                errorCode = ProcessMessageCode.USER_NEED_PIPELINE_X_PERMISSION.toString(),
+                errorCode = ProcessMessageCode.USER_NEED_PIPELINE_X_PERMISSION,
                 defaultMessage = message,
                 params = arrayOf(permissionMsg)
             )
@@ -146,10 +139,14 @@ class PipelinePermissionServiceImpl @Autowired constructor(
             serviceCode = pipelineAuthServiceCode,
             resourceType = resourceType,
             projectCode = projectId,
-            permission = permission
-        ) {
-            pipelineInfoDao.listPipelineIdByProject(dslContext, projectId)
-        }
+            permission = permission,
+            supplier = supplierForFakePermission(projectId)
+        )
+
+    /**
+     * 当权限为空时提供数据的接口
+     */
+    abstract fun supplierForFakePermission(projectId: String): () -> MutableList<String>
 
     /**
      * 注册流水线到权限中心与权限关联
