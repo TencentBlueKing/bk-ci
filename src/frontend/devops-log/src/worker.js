@@ -311,7 +311,7 @@ function splitByChar (message) {
 }
 
 let getTextWidth
-if (OffscreenCanvas) {
+if (self.OffscreenCanvas) {
     const canvas = new OffscreenCanvas(100, 1)
     const context = canvas.getContext('2d')
     context.font = 'normal 12px Consolas, "Courier New", monospace'
