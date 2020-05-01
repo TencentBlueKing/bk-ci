@@ -61,7 +61,7 @@ class EnvironmentPermConfiguration {
 
     @Bean
     @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "sample")
-    fun environmentPermissionService(
+    fun mockEnvironmentPermissionService(
         dslContext: DSLContext,
         envDao: EnvDao,
         authResourceApi: AuthResourceApi,
