@@ -24,6 +24,23 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":core:environment:biz-environment")
+package com.tencent.devops.repository.service.impl
+
+import com.tencent.devops.common.auth.api.AuthPermissionApi
+import com.tencent.devops.common.auth.api.AuthResourceApi
+import com.tencent.devops.common.auth.code.CodeAuthServiceCode
+
+class BluekingRepositoryPermissionService constructor(
+    authResourceApi: AuthResourceApi,
+    authPermissionApi: AuthPermissionApi,
+    codeAuthServiceCode: CodeAuthServiceCode
+) : AbstractRepositoryPermissionService(
+    authResourceApi = authResourceApi,
+    authPermissionApi = authPermissionApi,
+    codeAuthServiceCode = codeAuthServiceCode
+) {
+
+    override fun supplierForFakePermission(projectId: String): () -> MutableList<String> {
+        return { mutableListOf() }
+    }
 }

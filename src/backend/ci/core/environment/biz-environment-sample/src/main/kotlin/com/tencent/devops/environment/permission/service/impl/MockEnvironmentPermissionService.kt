@@ -24,6 +24,41 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":core:environment:biz-environment")
+package com.tencent.devops.environment.permission.service.impl
+
+import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.common.auth.api.AuthPermissionApi
+import com.tencent.devops.common.auth.api.AuthResourceApi
+import com.tencent.devops.common.auth.code.EnvironmentAuthServiceCode
+import com.tencent.devops.environment.dao.EnvDao
+import com.tencent.devops.environment.permission.AbstractEnvironmentPermissionService
+import org.jooq.DSLContext
+
+/**
+ * 权限校验接口
+ */
+class MockEnvironmentPermissionService constructor(
+    private val dslContext: DSLContext,
+    private val envDao: EnvDao,
+    authResourceApi: AuthResourceApi,
+    authPermissionApi: AuthPermissionApi,
+    environmentAuthServiceCode: EnvironmentAuthServiceCode
+) : AbstractEnvironmentPermissionService(
+    authResourceApi = authResourceApi,
+    authPermissionApi = authPermissionApi,
+    environmentAuthServiceCode = environmentAuthServiceCode
+) {
+
+    override fun supplierForFakePermission(projectId: String): () -> MutableList<String> {
+        return {
+            val fakeList = mutableListOf<String>()
+            envDao.list(
+                dslContext = dslContext,
+                projectId = projectId
+            ).forEach {
+                fakeList.add(HashUtil.encodeLongId(it.envId))
+            }
+            fakeList
+        }
+    }
 }

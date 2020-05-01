@@ -24,6 +24,39 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":core:environment:biz-environment")
+package com.tencent.devops.process.permission.service.impl
+
+import com.tencent.devops.common.auth.api.AuthPermissionApi
+import com.tencent.devops.common.auth.api.AuthProjectApi
+import com.tencent.devops.common.auth.api.AuthResourceApi
+import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
+import com.tencent.devops.process.engine.dao.PipelineInfoDao
+import org.jooq.DSLContext
+
+/**
+ * Pipeline专用权限校验接口
+ */
+class MockPipelinePermissionService constructor(
+    private val dslContext: DSLContext,
+    private val pipelineInfoDao: PipelineInfoDao,
+    private val authProjectApi: AuthProjectApi,
+    private val authResourceApi: AuthResourceApi,
+    private val authPermissionApi: AuthPermissionApi,
+    private val pipelineAuthServiceCode: PipelineAuthServiceCode
+) : AbstractPipelinePermissionService(
+    authProjectApi = authProjectApi,
+    authResourceApi = authResourceApi,
+    authPermissionApi = authPermissionApi,
+    pipelineAuthServiceCode = pipelineAuthServiceCode
+) {
+
+    override fun supplierForFakePermission(projectId: String): () -> MutableList<String> {
+        return {
+            val fakeList = mutableListOf<String>()
+            pipelineInfoDao.listPipelineIdByProject(dslContext, projectId).forEach {
+                fakeList.add(it)
+            }
+            fakeList
+        }
+    }
 }

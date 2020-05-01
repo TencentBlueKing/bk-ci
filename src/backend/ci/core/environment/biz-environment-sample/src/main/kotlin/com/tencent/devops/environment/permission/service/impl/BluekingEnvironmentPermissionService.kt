@@ -24,6 +24,27 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":core:environment:biz-environment")
+package com.tencent.devops.environment.permission.service.impl
+
+import com.tencent.devops.common.auth.api.AuthPermissionApi
+import com.tencent.devops.common.auth.api.AuthResourceApi
+import com.tencent.devops.common.auth.code.EnvironmentAuthServiceCode
+import com.tencent.devops.environment.permission.AbstractEnvironmentPermissionService
+
+/**
+ * 蓝鲸权限 心权限校验接口
+ */
+class BluekingEnvironmentPermissionService constructor(
+    authResourceApi: AuthResourceApi,
+    authPermissionApi: AuthPermissionApi,
+    environmentAuthServiceCode: EnvironmentAuthServiceCode
+) : AbstractEnvironmentPermissionService(
+    authResourceApi = authResourceApi,
+    authPermissionApi = authPermissionApi,
+    environmentAuthServiceCode = environmentAuthServiceCode
+) {
+
+    override fun supplierForFakePermission(projectId: String): () -> MutableList<String> {
+        return { mutableListOf() }
+    }
 }

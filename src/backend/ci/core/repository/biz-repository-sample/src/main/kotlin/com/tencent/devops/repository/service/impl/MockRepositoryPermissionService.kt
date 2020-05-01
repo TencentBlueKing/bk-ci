@@ -24,6 +24,37 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":core:environment:biz-environment")
+package com.tencent.devops.repository.service.impl
+
+import com.tencent.devops.common.auth.api.AuthPermissionApi
+import com.tencent.devops.common.auth.api.AuthResourceApi
+import com.tencent.devops.common.auth.code.CodeAuthServiceCode
+import com.tencent.devops.repository.dao.RepositoryDao
+import org.jooq.DSLContext
+
+class MockRepositoryPermissionService constructor(
+    private val dslContext: DSLContext,
+    private val repositoryDao: RepositoryDao,
+    private val authResourceApi: AuthResourceApi,
+    private val authPermissionApi: AuthPermissionApi,
+    private val codeAuthServiceCode: CodeAuthServiceCode
+) : AbstractRepositoryPermissionService(
+    authResourceApi = authResourceApi,
+    authPermissionApi = authPermissionApi,
+    codeAuthServiceCode = codeAuthServiceCode
+) {
+
+    override fun supplierForFakePermission(projectId: String): () -> MutableList<String> {
+        return {
+            val fakeList = mutableListOf<String>()
+            repositoryDao.listByProject(
+                dslContext = dslContext,
+                projectId = projectId,
+                repositoryType = null
+            ).forEach {
+                fakeList.add(it.repositoryId.toString())
+            }
+            fakeList
+        }
+    }
 }
