@@ -24,29 +24,41 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
+package com.tencent.devops.environment.permission.service.impl
 
-    compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
-    compile "org.jetbrains.kotlin:kotlin-reflect"
-    testCompile "junit:junit"
-    testCompile "org.springframework.boot:spring-boot-starter-test"
+import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.common.auth.api.AuthPermissionApi
+import com.tencent.devops.common.auth.api.AuthResourceApi
+import com.tencent.devops.common.auth.code.EnvironmentAuthServiceCode
+import com.tencent.devops.environment.dao.EnvDao
+import com.tencent.devops.environment.permission.AbstractEnvironmentPermissionService
+import org.jooq.DSLContext
 
-    compile project(":core:artifactory:biz-artifactory-store")
-    compile project(":core:artifactory:biz-artifactory-sample")
-    compile project(":core:dispatch:biz-dispatch-docker")
-    compile project(":core:environment:biz-environment-sample")
-    compile project(":core:image:biz-image")
-    compile project(":core:log:biz-log")
-    compile project(":core:misc:biz-misc")
-    compile project(":core:notify:biz-notify-blueking")
-    compile project(":core:plugin:biz-plugin")
-    compile project(":core:process:biz-process-sample")
-    compile project(":core:project:biz-project-sample")
-    compile project(":core:quality:biz-quality")
-    compile project(":core:repository:biz-repository-sample")
-    compile project(":core:store:biz-store-sample")
-    compile project(":core:ticket:biz-ticket-sample")
-    compile project(":core:websocket:biz-websocket")
+/**
+ * 权限校验接口
+ */
+class MockEnvironmentPermissionService constructor(
+    private val dslContext: DSLContext,
+    private val envDao: EnvDao,
+    authResourceApi: AuthResourceApi,
+    authPermissionApi: AuthPermissionApi,
+    environmentAuthServiceCode: EnvironmentAuthServiceCode
+) : AbstractEnvironmentPermissionService(
+    authResourceApi = authResourceApi,
+    authPermissionApi = authPermissionApi,
+    environmentAuthServiceCode = environmentAuthServiceCode
+) {
+
+    override fun supplierForFakePermission(projectId: String): () -> MutableList<String> {
+        return {
+            val fakeList = mutableListOf<String>()
+            envDao.list(
+                dslContext = dslContext,
+                projectId = projectId
+            ).forEach {
+                fakeList.add(HashUtil.encodeLongId(it.envId))
+            }
+            fakeList
+        }
+    }
 }
-
-apply from: "$rootDir/task_spring_boot_package.gradle"

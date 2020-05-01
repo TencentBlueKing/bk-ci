@@ -32,16 +32,9 @@ import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceApi
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.code.CodeAuthServiceCode
-import com.tencent.devops.repository.dao.RepositoryDao
 import com.tencent.devops.repository.service.RepositoryPermissionService
-import org.jooq.DSLContext
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
 
-@Service
-class RepositoryPermissionServiceImpl @Autowired constructor(
-    private val dslContext: DSLContext,
-    private val repositoryDao: RepositoryDao,
+abstract class AbstractRepositoryPermissionService constructor(
     private val authResourceApi: AuthResourceApi,
     private val authPermissionApi: AuthPermissionApi,
     private val codeAuthServiceCode: CodeAuthServiceCode
@@ -89,19 +82,7 @@ class RepositoryPermissionServiceImpl @Autowired constructor(
         }
     }
 
-    private fun supplierForFakePermission(projectId: String): () -> MutableList<String> {
-        return {
-            val fakeList = mutableListOf<String>()
-            repositoryDao.listByProject(
-                dslContext = dslContext,
-                projectId = projectId,
-                repositoryType = null
-            ).forEach {
-                fakeList.add(it.repositoryId.toString())
-            }
-            fakeList
-        }
-    }
+    abstract fun supplierForFakePermission(projectId: String): () -> MutableList<String>
 
     override fun hasPermission(
         userId: String,
