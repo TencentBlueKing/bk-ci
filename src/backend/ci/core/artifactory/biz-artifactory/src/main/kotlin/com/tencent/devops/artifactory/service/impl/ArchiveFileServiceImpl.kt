@@ -192,7 +192,7 @@ abstract class ArchiveFileServiceImpl : ArchiveFileService {
         val shaContent = ShaUtils.sha1(file.readBytes())
         var fileProps: Map<String, String?> = props ?: mapOf()
         fileProps = fileProps.plus("shaContent" to shaContent)
-        val path = destPath.substring(getBasePath().length + 1)
+        val path = destPath.substring(getBasePath().length)
         val fileId = UUIDUtil.generate()
         dslContext.transaction { t ->
             val context = DSL.using(t)
@@ -237,7 +237,7 @@ abstract class ArchiveFileServiceImpl : ArchiveFileService {
             response.writer.println(JsonUtil.toJson(result))
             return
         }
-        val destPath = result.data!!.substring(getBasePath().length + 1)
+        val destPath = result.data!!.substring(getBasePath().length)
         downloadFile(destPath, response)
     }
 
@@ -379,7 +379,7 @@ abstract class ArchiveFileServiceImpl : ArchiveFileService {
             flag = true
         }
         if (flag) {
-            val destPath = filePath.substring(getBasePath().length + 1)
+            val destPath = filePath.substring(getBasePath().length)
             return generateFileDownloadPath(
                 fileChannelType = fileChannelType,
                 commonConfig = commonConfig,
