@@ -77,7 +77,7 @@ class TicketPermConfiguration {
 
     @Bean
     @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "sample")
-    fun certPermissionService(
+    fun mockCertPermissionService(
         dslContext: DSLContext,
         certDao: CertDao,
         authResourceApi: AuthResourceApi,
@@ -93,7 +93,7 @@ class TicketPermConfiguration {
 
     @Bean
     @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "sample")
-    fun credentialPermissionService(
+    fun mockCredentialPermissionService(
         dslContext: DSLContext,
         credentialDao: CredentialDao,
         authResourceApi: AuthResourceApi,
