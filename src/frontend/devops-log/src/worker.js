@@ -323,16 +323,10 @@ if (self.OffscreenCanvas) {
     // 兼容safari
     getTextWidth = (text) => {
         let res = 0
-        let disNum = 0
         for (let i = 0, len = text.length; i < len; i++) {
-            if (/[\u4e00-\u9fa5]/.test(text[i])) {
-                res += 12
-            } else {
-                res += 8
-                disNum++
-            }
+            if (/[\u4e00-\u9fa5]/.test(text[i])) res += 12
+            else res += 8
         }
-        res -= (disNum - 1)
         return res
     }
 }
