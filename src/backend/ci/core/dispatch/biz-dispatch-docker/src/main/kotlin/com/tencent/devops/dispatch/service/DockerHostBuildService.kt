@@ -44,6 +44,7 @@ import com.tencent.devops.common.web.mq.alert.AlertLevel.HIGH
 import com.tencent.devops.common.web.mq.alert.AlertLevel.LOW
 import com.tencent.devops.common.web.mq.alert.AlertUtils
 import com.tencent.devops.dispatch.client.DockerHostClient
+import com.tencent.devops.dispatch.config.DefaultImageConfig
 import com.tencent.devops.dispatch.dao.PipelineDockerBuildDao
 import com.tencent.devops.dispatch.dao.PipelineDockerEnableDao
 import com.tencent.devops.dispatch.dao.PipelineDockerHostDao
@@ -80,7 +81,6 @@ import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import org.springframework.util.StopWatch
@@ -101,11 +101,9 @@ class DockerHostBuildService @Autowired constructor(
     private val gray: Gray,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val dockerHostUtils: DockerHostUtils,
-    private val rabbitTemplate: RabbitTemplate
+    private val rabbitTemplate: RabbitTemplate,
+    private val defaultImageConfig: DefaultImageConfig
 ) {
-
-    @Value("\${dispatch.dockerBuildImagePrefix:#{null}}")
-    val dockerBuildImagePrefix: String? = null
 
     private val grayFlag: Boolean = gray.isGray()
 
@@ -158,9 +156,9 @@ class DockerHostBuildService @Autowired constructor(
                 dispatchType.dockerBuildVersion
             } else {
                 when (dispatchType.dockerBuildVersion) {
-                    DockerVersion.TLINUX1_2.value -> dockerBuildImagePrefix + TLINUX1_2_IMAGE
-                    DockerVersion.TLINUX2_2.value -> dockerBuildImagePrefix + TLINUX2_2_IMAGE
-                    else -> "$dockerBuildImagePrefix/${dispatchType.dockerBuildVersion}"
+                    DockerVersion.TLINUX1_2.value -> defaultImageConfig.dockerBuildImagePrefix + defaultImageConfig.imageTLinux1_2
+                    DockerVersion.TLINUX2_2.value -> defaultImageConfig.dockerBuildImagePrefix + defaultImageConfig.imageTLinux2_2
+                    else -> "${defaultImageConfig.dockerBuildImagePrefix}/${dispatchType.dockerBuildVersion}"
                 }
             }
             logger.info("Docker images is: $dockerImage")
@@ -754,10 +752,13 @@ class DockerHostBuildService @Autowired constructor(
             )
             logger.info("[${event.buildId}]|BUILD_LESS| secretKey: $secretKey agentId: $agentId")
 
+            if (defaultImageConfig.dockerBuildLessImagePrefix == null) {
+                defaultImageConfig.dockerBuildLessImagePrefix = defaultImageConfig.dockerBuildImagePrefix + "/bkdevops"
+            }
             val dockerImage = when (dispatchType.dockerBuildVersion) {
-                DockerVersion.TLINUX1_2.value -> dockerBuildImagePrefix + BL_TLINUX1_2_IMAGE
-                DockerVersion.TLINUX2_2.value -> dockerBuildImagePrefix + BL_TLINUX2_2_IMAGE
-                else -> "$dockerBuildImagePrefix/bkdevops/${dispatchType.dockerBuildVersion}"
+                DockerVersion.TLINUX1_2.value -> defaultImageConfig.dockerBuildLessImagePrefix + defaultImageConfig.imageBuildLessTLinux1_2
+                DockerVersion.TLINUX2_2.value -> defaultImageConfig.dockerBuildLessImagePrefix + defaultImageConfig.imageBuildLessTLinux2_2
+                else -> "${defaultImageConfig.dockerBuildLessImagePrefix}/${dispatchType.dockerBuildVersion}"
             }
             logger.info("[${event.buildId}]|BUILD_LESS| Docker images is: $dockerImage")
 
@@ -917,11 +918,5 @@ class DockerHostBuildService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(DockerHostBuildService::class.java)
-
-        private const val TLINUX1_2_IMAGE = "/bkdevops/docker-builder1.2:v1"
-        private const val TLINUX2_2_IMAGE = "/bkdevops/docker-builder2.2:v1"
-
-        private const val BL_TLINUX1_2_IMAGE = "/bkdevops/docker-build-less1.2:v1"
-        private const val BL_TLINUX2_2_IMAGE = "/bkdevops/docker-build-less2.2:v1"
     }
 }
