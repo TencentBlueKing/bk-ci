@@ -72,5 +72,4 @@ class DefaultImageConfig {
             "$dockerBuildImagePrefix/$imageName"
         } ?: ""
     }
-
 }
