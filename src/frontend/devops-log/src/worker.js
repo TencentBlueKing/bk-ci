@@ -42,7 +42,12 @@ const allMainWidth = {}
 const allMainWordNum = {}
 const allFoldLineNum = {}
 const allRepeatLineNum = {}
+const currentSearch = {
+    index: 0,
+    val: ''
+}
 let curId
+let searchRes
 
 onmessage = function (e) {
     const data = e.data
@@ -81,13 +86,26 @@ onmessage = function (e) {
         case 'foldListData':
             foldListData(data)
             postMessage({ type: 'completeFold', number: curListData.length, id: curId })
+            handleSearch(currentSearch.val)
+            const noScroll = typeof data.index === 'undefined'
+            postMessage({
+                type: 'completeSearch',
+                num: searchRes.length,
+                curSearchRes: getSearchRes(data.index || currentSearch.index),
+                noScroll
+            })
             break
         case 'search':
             handleSearch(data.val)
+            postMessage({ type: 'completeSearch', num: searchRes.length, curSearchRes: getSearchRes(0) })
+            currentSearch.index = 0
+            currentSearch.val = data.val
             break
         case 'getSearchRes':
-            const searchRes = getSearchRes(data.index)
-            postMessage({ type: 'completeGetSearchRes', searchRes })
+            postMessage({ type: 'completeGetSearchRes', searchRes: getSearchRes(data.index) })
+            break
+        case 'changeSearchIndex':
+            currentSearch.index = data.index
             break
         case 'resetData':
             const resetList = [
@@ -113,25 +131,39 @@ function resetData (resetList) {
     })
 }
 
-let searchRes
 function handleSearch (val) {
     searchRes = []
     if (val !== '') {
         const keys = Object.keys(allListData) || []
+        val = val.replace(/\*|\.|\?|\+|\$|\^|\[|\]|\(|\)|\{|\}|\||\\|\//g, (str) => `\\${str}`)
+        const valReg = new RegExp(val, 'i')
         keys.forEach((key) => {
             const curList = allListData[key] || []
-            curList.forEach(({ message, realIndex }, index) => {
+            curList.forEach(({ message, realIndex, children }, index) => {
                 const searchData = {
                     index,
                     realIndex,
                     refId: key
                 }
-                if (message.includes(val)) searchRes.push(searchData)
+                if (valReg.test(message)) searchRes.push(searchData)
+    
+                if (children && children.length > 0) {
+                    children.forEach(({ message, realIndex: searchRealIndex }) => {
+                        if (valReg.test(message)) {
+                            const foldSearchData = {
+                                index,
+                                startIndex: realIndex,
+                                realIndex: searchRealIndex,
+                                refId: key,
+                                isInFold: true
+                            }
+                            searchRes.push(foldSearchData)
+                        }
+                    })
+                }
             })
         })
     }
-    const curSearchRes = getSearchRes(0)
-    postMessage({ type: 'completeSearch', num: searchRes.length, curSearchRes })
 }
 
 // 分页获取搜索结果
@@ -278,12 +310,31 @@ function splitByChar (message) {
     return [tempMes, message]
 }
 
-const canvas = new OffscreenCanvas(100, 1)
-const context = canvas.getContext('2d')
-context.font = 'normal 12px Consolas, "Courier New", monospace'
-function getTextWidth (text) {
-    const metrics = context.measureText(text)
-    return metrics.width
+let getTextWidth
+if (self.OffscreenCanvas) {
+    const canvas = new OffscreenCanvas(100, 1)
+    const context = canvas.getContext('2d')
+    context.font = 'normal 12px Consolas, "Courier New", monospace'
+    getTextWidth = (text) => {
+        const metrics = context.measureText(text)
+        return metrics.width
+    }
+} else {
+    // 兼容safari
+    getTextWidth = (text) => {
+        let res = 0
+        let disNum = 0
+        for (let i = 0, len = text.length; i < len; i++) {
+            if (/[\u4e00-\u9fa5]/.test(text[i])) {
+                res += 12
+            } else {
+                res += 8
+                disNum++
+            }
+        }
+        res -= (disNum - 1)
+        return res + 20
+    }
 }
 
 function getListData ({ totalScrollHeight, itemHeight, itemNumber, canvasHeight, minMapTop, totalHeight, mapHeight, type }) {
