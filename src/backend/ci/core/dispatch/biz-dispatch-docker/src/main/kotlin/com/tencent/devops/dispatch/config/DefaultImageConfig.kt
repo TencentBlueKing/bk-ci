@@ -19,10 +19,10 @@ class DefaultImageConfig {
     @Value("\${dispatch.dockerBuildLessImagePrefix:#{null}}")
     var dockerBuildLessImagePrefix: String? = null
 
-    @Value("\${dispatch.imageBuildLessTLinux1_2:bkci/ci:bl.latest}")
+    @Value("\${dispatch.imageBuildLessTLinux1_2:bkci/ci:alpine}")
     val imageBuildLessTLinux1_2: String? = null
 
-    @Value("\${dispatch.imageBuildLessTLinux2_2:bkci/ci:bl.latest}")
+    @Value("\${dispatch.imageBuildLessTLinux2_2:bkci/ci:alpine}")
     val imageBuildLessTLinux2_2: String? = null
 
     fun getBuildLessTLinux1_2CompleteUri(): String {
