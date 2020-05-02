@@ -30,6 +30,7 @@ import com.google.common.cache.CacheLoader
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.openapi.pojo.AppCodeGroup
 import com.tencent.devops.project.api.service.ServiceProjectResource
+import com.tencent.devops.project.pojo.ProjectVO
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.util.concurrent.TimeUnit
@@ -85,6 +86,24 @@ class AppCodeService(
             }
         )
 
+    private val projectInfoCache = CacheBuilder.newBuilder()
+        .maximumSize(10000)
+        .expireAfterWrite(5, TimeUnit.MINUTES)
+        .build<String/*appCode*/, Pair<String, ProjectVO?>/*Map<projectId,projectId>*/>(
+            object : CacheLoader<String, Pair<String, ProjectVO?>>() {
+                override fun load(projectId: String): Pair<String, ProjectVO?> {
+                    return try {
+                        val projectInfo = client.get(ServiceProjectResource::class).get(projectId).data
+                        logger.info("projectId[$projectId] openapi projectInfo:$projectInfo.")
+                        return Pair(projectId, projectInfo)
+                    } catch (t: Throwable) {
+                        logger.info("projectId[projectIdappCode] failed to get projectInfo.")
+                        return Pair(projectId, null)
+                    }
+                }
+            }
+        )
+
     private fun getAppCodeProject(appCode: String): Map<String, String> {
         val projectList = appCodeProjectService.listProjectByAppCode(appCode)
         val result = mutableMapOf<String, String>()
@@ -124,7 +143,7 @@ class AppCodeService(
         val appCodeGroup = appCodeGroupCache.get(appCode).second
         logger.info("appCode[$appCode] projectId[$projectId] openapi appCodeGroupCache:$appCodeGroup.")
         if (appCodeGroup != null) {
-            val projectInfo = client.get(ServiceProjectResource::class).get(projectId).data
+            val projectInfo = projectInfoCache.get(projectId).second
             logger.info("appCode[$appCode] projectId[$projectId] openapi appCodeGroupCache projectInfo:$projectInfo.")
             if (projectInfo != null) {
                 if (appCodeGroup.centerId != null && projectInfo.centerId != null && appCodeGroup.centerId.toString() == projectInfo.centerId) {
