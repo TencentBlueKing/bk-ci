@@ -25,4 +25,52 @@ class DefaultImageConfig {
     @Value("\${dispatch.imageBuildLessTLinux2_2:/docker-build-less2.2:v1}")
     val imageBuildLessTLinux2_2: String? = null
 
+    fun getBuildLessTLinux1_2CompleteUri(): String {
+        return if (dockerBuildLessImagePrefix.isNullOrBlank()) {
+            imageBuildLessTLinux1_2?.trim()
+        } else {
+            dockerBuildLessImagePrefix + imageBuildLessTLinux1_2?.trim()
+        } ?: ""
+    }
+
+    fun getBuildLessTLinux2_2CompleteUri(): String {
+        return if (dockerBuildLessImagePrefix.isNullOrBlank()) {
+            imageBuildLessTLinux2_2?.trim()
+        } else {
+            dockerBuildLessImagePrefix + imageBuildLessTLinux2_2?.trim()
+        } ?: ""
+    }
+
+    fun getBuildLessCompleteUriByImageName(imageName: String?): String {
+        return if (dockerBuildLessImagePrefix.isNullOrBlank()) {
+            imageName?.trim()
+        } else {
+            "$dockerBuildLessImagePrefix/${imageName?.trim()}"
+        } ?: ""
+    }
+
+    fun getTLinux1_2CompleteUri(): String {
+        return if (dockerBuildImagePrefix.isNullOrBlank()) {
+            imageTLinux1_2?.trim()
+        } else {
+            dockerBuildImagePrefix + imageTLinux1_2
+        } ?: ""
+    }
+
+    fun getTLinux2_2CompleteUri(): String {
+        return if (dockerBuildImagePrefix.isNullOrBlank()) {
+            imageTLinux2_2?.trim()
+        } else {
+            dockerBuildImagePrefix + imageTLinux2_2
+        } ?: ""
+    }
+
+    fun getCompleteUriByImageName(imageName: String?): String {
+        return if (dockerBuildImagePrefix.isNullOrBlank()) {
+            imageName?.trim()
+        } else {
+            "$dockerBuildImagePrefix/$imageName"
+        } ?: ""
+    }
+
 }

@@ -156,9 +156,15 @@ class DockerHostBuildService @Autowired constructor(
                 dispatchType.dockerBuildVersion
             } else {
                 when (dispatchType.dockerBuildVersion) {
-                    DockerVersion.TLINUX1_2.value -> defaultImageConfig.dockerBuildImagePrefix + defaultImageConfig.imageTLinux1_2
-                    DockerVersion.TLINUX2_2.value -> defaultImageConfig.dockerBuildImagePrefix + defaultImageConfig.imageTLinux2_2
-                    else -> "${defaultImageConfig.dockerBuildImagePrefix}/${dispatchType.dockerBuildVersion}"
+                    DockerVersion.TLINUX1_2.value -> {
+                        defaultImageConfig.getTLinux1_2CompleteUri()
+                    }
+                    DockerVersion.TLINUX2_2.value -> {
+                        defaultImageConfig.getTLinux2_2CompleteUri()
+                    }
+                    else -> {
+                        defaultImageConfig.getCompleteUriByImageName(dispatchType.dockerBuildVersion)
+                    }
                 }
             }
             logger.info("Docker images is: $dockerImage")
@@ -752,13 +758,16 @@ class DockerHostBuildService @Autowired constructor(
             )
             logger.info("[${event.buildId}]|BUILD_LESS| secretKey: $secretKey agentId: $agentId")
 
-            if (defaultImageConfig.dockerBuildLessImagePrefix == null) {
-                defaultImageConfig.dockerBuildLessImagePrefix = defaultImageConfig.dockerBuildImagePrefix + "/bkdevops"
-            }
             val dockerImage = when (dispatchType.dockerBuildVersion) {
-                DockerVersion.TLINUX1_2.value -> defaultImageConfig.dockerBuildLessImagePrefix + defaultImageConfig.imageBuildLessTLinux1_2
-                DockerVersion.TLINUX2_2.value -> defaultImageConfig.dockerBuildLessImagePrefix + defaultImageConfig.imageBuildLessTLinux2_2
-                else -> "${defaultImageConfig.dockerBuildLessImagePrefix}/${dispatchType.dockerBuildVersion}"
+                DockerVersion.TLINUX1_2.value -> {
+                    defaultImageConfig.getBuildLessTLinux1_2CompleteUri()
+                }
+                DockerVersion.TLINUX2_2.value -> {
+                    defaultImageConfig.getBuildLessTLinux2_2CompleteUri()
+                }
+                else -> {
+                    defaultImageConfig.getBuildLessCompleteUriByImageName(dispatchType.dockerBuildVersion)
+                }
             }
             logger.info("[${event.buildId}]|BUILD_LESS| Docker images is: $dockerImage")
 
