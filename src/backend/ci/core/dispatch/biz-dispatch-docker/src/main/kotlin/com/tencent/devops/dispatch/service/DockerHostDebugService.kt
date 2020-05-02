@@ -124,9 +124,6 @@ class DockerHostDebugService @Autowired constructor(
                 logger.warn("insertDebug:credentialProject is blank,pipelineId=$pipelineId, imageCode=$imageCode,imageVersion=$imageVersion,credentialId=$credentialId")
             }
         }
-        if (defaultImageConfig.dockerBuildLessImagePrefix == null) {
-            defaultImageConfig.dockerBuildLessImagePrefix = defaultImageConfig.dockerBuildImagePrefix + "/bkdevops"
-        }
         val dockerImage = when (imageType) {
             ImageType.THIRD -> imageName!!
             ImageType.BKSTORE -> {
@@ -140,9 +137,15 @@ class DockerHostDebugService @Autowired constructor(
                 }
             }
             else -> when (imageName) {
-                DockerVersion.TLINUX1_2.value -> defaultImageConfig.dockerBuildLessImagePrefix + defaultImageConfig.imageTLinux1_2
-                DockerVersion.TLINUX2_2.value -> defaultImageConfig.dockerBuildLessImagePrefix + defaultImageConfig.imageTLinux2_2
-                else -> "${defaultImageConfig.dockerBuildLessImagePrefix}/$imageName"
+                DockerVersion.TLINUX1_2.value -> {
+                    defaultImageConfig.getTLinux1_2CompleteUri()
+                }
+                DockerVersion.TLINUX2_2.value -> {
+                    defaultImageConfig.getTLinux2_2CompleteUri()
+                }
+                else -> {
+                    defaultImageConfig.getCompleteUriByImageName(imageName)
+                }
             }
         }
         logger.info("insertDebug:Docker images is: $dockerImage")

@@ -92,9 +92,15 @@ class DockerHostClient @Autowired constructor(
             dispatchType.dockerBuildVersion
         } else {
             when (dispatchType.dockerBuildVersion) {
-                DockerVersion.TLINUX1_2.value -> defaultImageConfig.dockerBuildImagePrefix + defaultImageConfig.imageTLinux1_2
-                DockerVersion.TLINUX2_2.value -> defaultImageConfig.dockerBuildImagePrefix + defaultImageConfig.imageTLinux2_2
-                else -> "${defaultImageConfig.dockerBuildImagePrefix}/${dispatchType.dockerBuildVersion}"
+                DockerVersion.TLINUX1_2.value -> {
+                    defaultImageConfig.getTLinux1_2CompleteUri()
+                }
+                DockerVersion.TLINUX2_2.value -> {
+                    defaultImageConfig.getTLinux2_2CompleteUri()
+                }
+                else -> {
+                    defaultImageConfig.getCompleteUriByImageName(dispatchType.dockerBuildVersion)
+                }
             }
         }
         logger.info("Docker images is: $dockerImage")
