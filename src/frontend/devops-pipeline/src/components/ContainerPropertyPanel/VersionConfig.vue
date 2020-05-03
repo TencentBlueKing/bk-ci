@@ -191,7 +191,6 @@
                         defaultValue: value
                     })
                 }
-                console.log(value, name, version)
                 this.handleChange([
                     ...this.versions,
                     ...this.globalParams
@@ -310,7 +309,7 @@
                 margin-right: 10px;
             }
         }
-        .bk-icon {
+        .devops-icon {
             font-size: 14px;
             padding: 10px  0 0 10px;
             cursor: pointer;
@@ -330,7 +329,7 @@
         > span {
             flex: 1;
         }
-        >.bk-icon {
+        >.devops-icon {
             width: 24px;
             text-align: center;
             &.icon-plus {

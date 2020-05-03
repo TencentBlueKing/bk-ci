@@ -33,5 +33,6 @@ data class PipelineRangeDetailRequest(
     val projectId: String,
     val pipelineIds: Set<String>,
     val indicatorIds: Collection<String>,
-    val controlPointType: String?
+    val controlPointType: String?,
+    val gatewayId: String?
 )

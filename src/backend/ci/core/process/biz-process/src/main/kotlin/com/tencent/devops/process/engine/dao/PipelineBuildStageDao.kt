@@ -26,11 +26,19 @@
 
 package com.tencent.devops.process.engine.dao
 
+import com.fasterxml.jackson.core.type.TypeReference
+import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.pipeline.NameAndValue
+import com.tencent.devops.common.pipeline.option.StageControlOption
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.pipeline.enums.StageRunCondition
 import com.tencent.devops.model.process.Tables.T_PIPELINE_BUILD_STAGE
 import com.tencent.devops.model.process.tables.records.TPipelineBuildStageRecord
+import com.tencent.devops.process.engine.common.Timeout
 import com.tencent.devops.process.engine.pojo.PipelineBuildStage
+import com.tencent.devops.process.engine.pojo.PipelineBuildStageControlOption
 import org.jooq.DSLContext
+import org.jooq.InsertOnDuplicateSetMoreStep
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
@@ -56,7 +64,8 @@ class PipelineBuildStageDao {
                     START_TIME,
                     END_TIME,
                     COST,
-                    EXECUTE_COUNT
+                    EXECUTE_COUNT,
+                    CONDITIONS
                 )
                     .values(
                         buildStage.projectId,
@@ -68,7 +77,10 @@ class PipelineBuildStageDao {
                         buildStage.startTime,
                         buildStage.endTime,
                         buildStage.cost,
-                        buildStage.executeCount
+                        buildStage.executeCount,
+                        if (buildStage.controlOption != null)
+                            JsonUtil.toJson(buildStage.controlOption!!)
+                        else null
                     )
                     .execute()
             }
@@ -76,18 +88,33 @@ class PipelineBuildStageDao {
     }
 
     fun batchSave(dslContext: DSLContext, taskList: Collection<PipelineBuildStage>) {
-        val records = mutableListOf<TPipelineBuildStageRecord>()
-        taskList.forEach {
-            with(it) {
+        val records =
+            mutableListOf<InsertOnDuplicateSetMoreStep<TPipelineBuildStageRecord>>()
+        with(T_PIPELINE_BUILD_STAGE) {
+            taskList.forEach {
                 records.add(
-                    TPipelineBuildStageRecord(
-                        projectId, pipelineId, buildId, stageId, seq,
-                        status.ordinal, startTime, endTime, cost, executeCount
-                    )
+                    dslContext.insertInto(this)
+                        .set(PROJECT_ID, it.projectId)
+                        .set(PIPELINE_ID, it.pipelineId)
+                        .set(BUILD_ID, it.buildId)
+                        .set(STAGE_ID, it.stageId)
+                        .set(SEQ, it.seq)
+                        .set(STATUS, it.status.ordinal)
+                        .set(START_TIME, it.startTime)
+                        .set(END_TIME, it.endTime)
+                        .set(COST, it.cost)
+                        .set(EXECUTE_COUNT, it.executeCount)
+                        .set(CONDITIONS, if (it.controlOption != null) JsonUtil.toJson(it.controlOption!!) else null)
+                        .onDuplicateKeyUpdate()
+                        .set(STATUS, it.status.ordinal)
+                        .set(START_TIME, it.startTime)
+                        .set(END_TIME, it.endTime)
+                        .set(COST, it.cost)
+                        .set(EXECUTE_COUNT, it.executeCount)
                 )
             }
         }
-        dslContext.batchStore(records).execute()
+        dslContext.batch(records).execute()
     }
 
     fun get(
@@ -123,9 +150,49 @@ class PipelineBuildStageDao {
 
     fun convert(tTPipelineBuildStageRecord: TPipelineBuildStageRecord): PipelineBuildStage? {
         return with(tTPipelineBuildStageRecord) {
+            val controlOption = if (!conditions.isNullOrBlank()) {
+                try {
+                    JsonUtil.to(conditions, PipelineBuildStageControlOption::class.java)
+                } catch (ignored: Throwable) { // TODO 旧数据兼容 ，后续删除掉
+                    val conditions = JsonUtil.to(conditions, object : TypeReference<List<NameAndValue>>() {})
+                    PipelineBuildStageControlOption(
+                        stageControlOption = StageControlOption(
+                            enable = true,
+                            customVariables = conditions,
+                            runCondition = StageRunCondition.AFTER_LAST_FINISHED,
+                            timeout = Timeout.DEFAULT_STAGE_TIMEOUT_HOURS,
+                            manualTrigger = false,
+                            triggerUsers = null
+                        ),
+                        fastKill = false
+                    )
+                }
+            } else {
+                PipelineBuildStageControlOption(
+                    stageControlOption = StageControlOption(
+                        enable = true,
+                        customVariables = emptyList(),
+                        runCondition = StageRunCondition.AFTER_LAST_FINISHED,
+                        timeout = Timeout.DEFAULT_STAGE_TIMEOUT_HOURS,
+                        manualTrigger = false,
+                        triggerUsers = null
+                    ),
+                    fastKill = false
+                )
+            }
+
             PipelineBuildStage(
-                projectId, pipelineId, buildId, stageId, seq, BuildStatus.values()[status],
-                startTime, endTime, cost ?: 0, executeCount ?: 1
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                stageId = stageId,
+                seq = seq,
+                status = BuildStatus.values()[status],
+                startTime = startTime,
+                endTime = endTime,
+                cost = cost ?: 0,
+                executeCount = executeCount ?: 1,
+                controlOption = controlOption
             )
         }
     }
@@ -139,7 +206,7 @@ class PipelineBuildStageDao {
         return with(T_PIPELINE_BUILD_STAGE) {
             val update = dslContext.update(this).set(STATUS, buildStatus.ordinal)
             // 根据状态来设置字段
-            if (BuildStatus.isFinish(buildStatus)) {
+            if (BuildStatus.isFinish(buildStatus) || buildStatus == BuildStatus.STAGE_SUCCESS) {
                 update.set(END_TIME, LocalDateTime.now())
                 update.set(COST, COST + END_TIME - START_TIME)
             } else if (BuildStatus.isRunning(buildStatus)) {

@@ -35,7 +35,7 @@
                                           'fail-status': entry.status === 'fail',
                                           'success-status': entry.code === 'end' && entry.status === 'success' }">
                                 <div class="card-item">
-                                    <i class="bk-icon icon-check-1" v-if="entry.status === 'success'"></i>
+                                    <i class="devops-icon icon-check-1" v-if="entry.status === 'success'"></i>
                                     <p class="step-label">{{ entry.name }}</p>
                                 </div>
                                 <div class="retry-bth">
@@ -92,9 +92,9 @@
                                 <div class="info-label"> {{ $t('store.操作系统：') }} </div>
                                 <div class="info-value" v-if="versionDetail.os">
                                     <span v-if="versionDetail.jobType === 'AGENT'">
-                                        <i class="bk-icon icon-linux-view" v-if="versionDetail.os.indexOf('LINUX') !== -1"></i>
-                                        <i class="bk-icon icon-windows" v-if="versionDetail.os.indexOf('WINDOWS') !== -1"></i>
-                                        <i class="bk-icon icon-macos" v-if="versionDetail.os.indexOf('MACOS') !== -1"></i>
+                                        <i class="devops-icon icon-linux-view" v-if="versionDetail.os.indexOf('LINUX') !== -1"></i>
+                                        <i class="devops-icon icon-windows" v-if="versionDetail.os.indexOf('WINDOWS') !== -1"></i>
+                                        <i class="devops-icon icon-macos" v-if="versionDetail.os.indexOf('MACOS') !== -1"></i>
                                     </span>
                                 </div>
                             </div>
@@ -126,7 +126,7 @@
                             </div>
                         </div>
                         <div class="toggle-btn" v-if="isOverflow" @click="toggleShow()">{{ isDropdownShow ? $t('store.收起') : $t('store.展开') }}
-                            <i :class="['bk-icon icon-angle-down', { 'icon-flip': isDropdownShow }]"></i>
+                            <i :class="['devops-icon icon-angle-down', { 'icon-flip': isDropdownShow }]"></i>
                         </div>
                         <div class="detail-form-item">
                             <div class="info-label"> {{ $t('store.发布者：') }} </div>
@@ -151,7 +151,7 @@
                     </div>
                     <div class="atom-logo-box">
                         <img :src="versionDetail.logoUrl" v-if="versionDetail.logoUrl">
-                        <i class="bk-icon icon-placeholder atom-logo" v-else></i>
+                        <i class="devops-icon icon-placeholder atom-logo" v-else></i>
                     </div>
                 </div>
             </div>
@@ -167,10 +167,10 @@
 </template>
 
 <script>
-    import cookie from 'cookie'
+    import * as cookie from 'js-cookie'
     import webSocketMessage from '@/utils/webSocketMessage'
 
-    const CSRFToken = cookie.parse(document.cookie).backend_csrftoken
+    const CSRFToken = cookie.get('backend_csrftoken')
 
     export default {
         data () {
@@ -785,7 +785,7 @@
             color: $primaryColor;
             text-align: right;
             cursor: pointer;
-            .bk-icon {
+            .devops-icon {
                 display: inline-block;
                 margin-left: 2px;
                 transition: all ease 0.2s;

@@ -52,7 +52,7 @@
                             v-if="row.feConfig && row.feConfig.status === 'error'"
                             @click.stop.prevent="emitEventHandler('error-noticed', row.pipelineId)">
                             {{ $t('newlist.known') }}
-                            <i class="bk-icon icon-check-1"></i>
+                            <i class="devops-icon icon-check-1"></i>
                         </a>
                     </td>
                     <td v-else></td>

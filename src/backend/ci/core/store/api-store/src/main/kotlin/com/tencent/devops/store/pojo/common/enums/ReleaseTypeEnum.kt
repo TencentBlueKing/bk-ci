@@ -33,8 +33,6 @@ enum class ReleaseTypeEnum(val releaseType: Int) {
     COMPATIBILITY_FIX(3), // 兼容性问题修正
     CANCEL_RE_RELEASE(4); // 取消发布后重新发布
 
-    override fun toString() = releaseType.toString()
-
     companion object {
 
         fun getReleaseTypeObj(releaseType: Int): ReleaseTypeEnum? {
