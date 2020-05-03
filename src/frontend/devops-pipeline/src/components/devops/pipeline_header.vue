@@ -11,7 +11,7 @@
                     v-if="title">
                     {{ title }}
                 </span>
-                <i v-if="links.length" class="bk-icon icon-question-circle" @click="links[0].handler"></i>
+                <i v-if="links.length" class="devops-icon icon-question-circle" @click="links[0].handler"></i>
             </slot>
         </div>
         <div class="sub-header-center">

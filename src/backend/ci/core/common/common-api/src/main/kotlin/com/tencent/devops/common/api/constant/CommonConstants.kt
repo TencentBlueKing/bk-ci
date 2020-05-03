@@ -59,3 +59,7 @@ const val EXCEPTION = "exception" // 异常
 const val NUM_UNIT = "numUnit" // 数量单位：个
 const val REQUIRED = "required" // 必选
 const val DEFAULT = "default" // 默认
+const val JAVA = "java" // java
+const val PYTHON = "python" // python
+const val NODEJS = "nodejs" // nodejs
+const val GOLANG = "golang" // golang

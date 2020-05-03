@@ -161,6 +161,10 @@ export default {
             let timerTriggerCount = 0
             let remoteTriggerCount = 0
 
+            if (stages.some(stage => stage.isError)) {
+                throw new Error(window.pipelineVue.$i18n && window.pipelineVue.$i18n.t('storeMap.correctPipeline'))
+            }
+
             const allContainers = getters.getAllContainers(stages)
 
             if (allContainers.some(container => container.isError)) {
@@ -217,7 +221,8 @@ export default {
         return allContainers
     },
     getStage: state => (stages, stageIndex) => {
-        return Array.isArray(stages) ? stages[stageIndex] : null
+        const stage = Array.isArray(stages) ? stages[stageIndex] : null
+        return stage
     },
     getContainers: state => stage => {
         return stage && Array.isArray(stage.containers) ? stage.containers : []

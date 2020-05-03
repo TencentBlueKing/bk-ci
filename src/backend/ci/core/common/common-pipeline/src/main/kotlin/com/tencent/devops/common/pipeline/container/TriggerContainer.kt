@@ -39,7 +39,7 @@ data class TriggerContainer(
     @ApiModelProperty("容器名称", required = true)
     override var name: String = "",
     @ApiModelProperty("任务集合", required = true)
-    override val elements: List<Element> = listOf(),
+    override var elements: List<Element> = listOf(),
     @ApiModelProperty("状态", required = true, hidden = true)
     override var status: String? = null,
     override var startEpoch: Long? = null,
@@ -55,7 +55,11 @@ data class TriggerContainer(
     val buildNo: BuildNo? = null,
     @ApiModelProperty("是否可重试", required = false, hidden = true)
     override var canRetry: Boolean? = false,
-    override var containerId: String? = null
+    override var containerId: String? = null,
+    @ApiModelProperty("构建环境启动状态", required = false, hidden = true)
+    override var startVMStatus: String? = null,
+    @ApiModelProperty("容器运行次数", required = false, hidden = true)
+    override var executeCount: Int? = 0
 ) : Container {
     companion object {
         const val classType = "trigger"

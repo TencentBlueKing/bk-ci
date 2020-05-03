@@ -74,7 +74,7 @@ class SystemDockerBindGenerator @Autowired constructor(private val dockerHostCon
     }
 
     private fun DockerHostBuildInfo.getGradlePath(): String {
-        return "${dockerHostConfig.hostPathGradleCache}/$pipelineId/$vmSeqId/"
+        return "${dockerHostConfig.hostPathGradleCache}/$pipelineId/${getTailPath(vmSeqId, poolNo)}/"
     }
 
     private fun DockerHostBuildInfo.getLogsPath(): String {
@@ -82,23 +82,23 @@ class SystemDockerBindGenerator @Autowired constructor(private val dockerHostCon
     }
 
     private fun DockerHostBuildInfo.getCcachePath(): String {
-        return "${dockerHostConfig.hostPathCcache}/$pipelineId/$vmSeqId/"
+        return "${dockerHostConfig.hostPathCcache}/$pipelineId/${getTailPath(vmSeqId, poolNo)}/"
     }
 
     private fun DockerHostBuildInfo.getNpmCachePath(): String {
-        return "${dockerHostConfig.hostPathNpmCache}/$pipelineId/$vmSeqId/"
+        return "${dockerHostConfig.hostPathNpmCache}/$pipelineId/${getTailPath(vmSeqId, poolNo)}/"
     }
 
     private fun DockerHostBuildInfo.getNpmPrefixPath(): String {
-        return "${dockerHostConfig.hostPathNpmPrefix}/$pipelineId/$vmSeqId/"
+        return "${dockerHostConfig.hostPathNpmPrefix}/$pipelineId/${getTailPath(vmSeqId, poolNo)}/"
     }
 
     private fun DockerHostBuildInfo.getMavenRepoPath(): String {
-        return "${dockerHostConfig.hostPathMavenRepo}/$pipelineId/$vmSeqId/"
+        return "${dockerHostConfig.hostPathMavenRepo}/$pipelineId/${getTailPath(vmSeqId, poolNo)}/"
     }
 
     private fun DockerHostBuildInfo.getWorkspace(): String {
-        return "${dockerHostConfig.hostPathWorkspace}/$pipelineId/$vmSeqId/"
+        return "${dockerHostConfig.hostPathWorkspace}/$pipelineId/${getTailPath(vmSeqId, poolNo)}/"
     }
 
     private fun getProjectShareDir(projectCode: String): String {
@@ -124,5 +124,13 @@ class SystemDockerBindGenerator @Autowired constructor(private val dockerHostCon
         }
 
         return whiteList.contains(projectCode)
+    }
+
+    private fun getTailPath(vmSeqId: Int, poolNo: Int): String {
+        return if (poolNo > 1) {
+            "$vmSeqId" + "_$poolNo"
+        } else {
+            vmSeqId.toString()
+        }
     }
 }

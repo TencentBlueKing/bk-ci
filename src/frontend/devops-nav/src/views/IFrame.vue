@@ -29,6 +29,7 @@
     import eventBus from '../utils/eventBus'
     import { urlJoin, queryStringify, getServiceAliasByPath } from '../utils/util'
     import { State } from 'vuex-class'
+    import * as cookie from 'js-cookie'
 
     Component.registerHooks([
         'beforeRouteEnter',
@@ -135,7 +136,7 @@
                 const reg = /^\/?\w+\/(\S*)\/?$/
                 const initPath = path.match(reg) ? path.replace(reg, '$1') : ''
                 const query = Object.assign({
-                    project_code: localStorage.getItem('projectId')
+                    project_code: cookie.get(X_DEVOPS_PROJECT_ID)
                 }, this.$route.query)
 
                 this.src = urlJoin(this.currentPage.iframe_url, initPath) + '?' + queryStringify(query) + hash
