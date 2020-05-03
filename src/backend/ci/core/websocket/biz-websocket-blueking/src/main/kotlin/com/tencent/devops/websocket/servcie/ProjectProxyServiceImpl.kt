@@ -26,55 +26,13 @@
 
 package com.tencent.devops.websocket.servcie
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.project.api.service.ServiceProjectResource
-import com.tencent.devops.websocket.keys.WebsocketKeys
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
 class ProjectProxyServiceImpl @Autowired constructor(
-    private val client: Client,
-    private val redisOperation: RedisOperation,
-    private val objectMapper: ObjectMapper
 ) : ProjectProxyService {
     override fun checkProject(projectId: String, userId: String): Boolean {
-        try {
-            val redisData = redisOperation.get(WebsocketKeys.PROJECT_USER_REDIS_KEY + userId)
-            if (redisData != null) {
-                val redisProjectList = redisData.split(",")
-                if (redisProjectList.contains(projectId)) {
-                    return true
-                }
-            }
-
-            val projectList = client.get(ServiceProjectResource::class).list(userId).data
-            val privilegeProjectCodeList = mutableListOf<String>()
-            projectList?.map {
-                privilegeProjectCodeList.add(it.projectCode)
-            }
-            redisOperation.set(
-                WebsocketKeys.PROJECT_USER_REDIS_KEY + userId,
-                objectMapper.writeValueAsString(privilegeProjectCodeList)
-            )
-
-            return if (privilegeProjectCodeList.contains(projectId)) {
-                true
-            } else {
-                logger.warn("changePage checkProject fail, user:$userId,projectId:$projectId,projectList:$privilegeProjectCodeList")
-                false
-            }
-        } catch (e: Exception) {
-            logger.error("checkProject fail,message:{}", e)
-            // 此处为了解耦，假设调用超时，默认还是做changePage的操作
-            return true
-        }
-    }
-
-    companion object {
-        val logger = LoggerFactory.getLogger(this::class.java)
+        return true
     }
 }
