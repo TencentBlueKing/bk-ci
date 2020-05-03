@@ -791,6 +791,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 } else {
                     val atomEnvRequest = getAtomConfResult.atomEnvRequest!!
                     atomEnvRequest.pkgPath = "$projectCode/$atomCode/$version/$packagePath"
+                    atomEnvRequest.shaContent = redisOperation.get("$projectCode:$atomCode:$version:packageShaContent")
                 }
             }
             getAtomConfResult
