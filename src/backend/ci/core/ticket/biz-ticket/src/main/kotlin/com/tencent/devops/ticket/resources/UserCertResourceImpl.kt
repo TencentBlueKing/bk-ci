@@ -26,13 +26,16 @@
 
 package com.tencent.devops.ticket.resources
 
+import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.ticket.api.UserCertResource
+import com.tencent.devops.ticket.constant.TicketMessageCode
 import com.tencent.devops.ticket.pojo.Cert
 import com.tencent.devops.ticket.pojo.CertAndroidInfo
 import com.tencent.devops.ticket.pojo.CertEnterpriseInfo
@@ -323,6 +326,9 @@ class UserCertResourceImpl @Autowired constructor(
         }
         if (certId != null && certId.isBlank()) {
             throw ParamBlankException("无效的证书ID")
+        }
+        if (certId != null && certId!!.length > 128) {
+            throw OperationException(MessageCodeUtil.getCodeLanMessage(TicketMessageCode.CERT_ID_TOO_LONG))
         }
     }
 

@@ -28,7 +28,7 @@
                             class="search-input-row"
                             name="searchInput"
                             :placeholder="$t('searchTips')"
-                            right-icon="bk-icon icon-search"
+                            right-icon="icon-search"
                             @keyup="filterProjectList(isFilterByOffline)"
                         />
                     </div>
@@ -195,7 +195,7 @@
                 :desc="$t('notFindProjectTips')"
             >
                 <bk-button
-                    icon-left="bk-icon icon-plus"
+                    icon-left="icon-plus"
                     theme="primary"
                     @click="togglePMDialog(true)"
                 >

@@ -51,7 +51,9 @@ module.exports = {
         'PROXY_URL_PREFIX': true,
         'GW_URL_PREFIX': true,
         'WS_URL_PREFIX': true,
-        'BADGE_URL_PREFIX': true
+        'BADGE_URL_PREFIX': true,
+        'PERM_URL_PREFIX': false,
+        "X_DEVOPS_PROJECT_ID": false
     },
     // add your custom rules hered
     rules: {

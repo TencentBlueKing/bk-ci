@@ -187,7 +187,7 @@
             .active-item {
                 border-color: $primaryColor;
                 color: $fontBoldColor;
-                .bk-icon {
+                .devops-icon {
                     color: $primaryColor;
                 }
             }

@@ -44,7 +44,7 @@ import FormField from './FormField'
 import GroupIdSelector from '@/components/atomFormField/groupIdSelector'
 import RemoteCurlUrl from '@/components/atomFormField/RemoteCurlUrl'
 import AutoComplete from '@/components/atomFormField/AutoComplete'
-import { urlJoin } from '../../utils/util'
+import { urlJoin, hasIntersection } from '../../utils/util'
 
 const atomMixin = {
     props: {
@@ -199,12 +199,15 @@ const atomMixin = {
                 const cb = item => {
                     const { key, value, regex } = item
                     if (Array.isArray(value)) {
+                        if (Array.isArray(element[key])) {
+                            return hasIntersection(value, element[key])
+                        }
                         return typeof element[key] !== 'undefined' && value.includes(element[key])
                     } else if (regex) {
                         const reg = new RegExp(regex, 'i')
-                        return reg.test(element[key])
+                        return Array.isArray(element[key]) ? element[key].some(item => reg.test(item)) : reg.test(element[key])
                     } else {
-                        return element[key] === value
+                        return Array.isArray(element[key]) ? element[key].some(item => item === value) : element[key] === value
                     }
                 }
                 switch (operation) {

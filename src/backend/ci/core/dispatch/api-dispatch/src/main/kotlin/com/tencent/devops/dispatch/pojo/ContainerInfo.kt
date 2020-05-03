@@ -30,6 +30,7 @@ data class ContainerInfo(
     val projectId: String,
     val pipelineId: String,
     val vmSeqId: String,
+    val poolNo: Int,
     val status: Int,
     val imageName: String,
     val containerId: String,

@@ -9,15 +9,15 @@
                                 <template v-if="execDetail">
                                     <span>#{{ execDetail.buildNum }}</span>
                                     <p>
-                                        <i class="bk-icon icon-angle-up" :disabled="execDetail.latestBuildNum === execDetail.buildNum || isLoading" @click="switchBuildNum(1)" />
-                                        <i class="bk-icon icon-angle-down" :disabled="1 === execDetail.buildNum || isLoading" @click="switchBuildNum(-1)" />
+                                        <i class="devops-icon icon-angle-up" :disabled="execDetail.latestBuildNum === execDetail.buildNum || isLoading" @click="switchBuildNum(1)" />
+                                        <i class="devops-icon icon-angle-down" :disabled="1 === execDetail.buildNum || isLoading" @click="switchBuildNum(-1)" />
                                     </p>
-                                    <i class="bk-icon icon-txt" :title="$t('history.completedLog')" @click="showLog"></i>
+                                    <i class="devops-icon icon-txt" :title="$t('history.completedLog')" @click="showLog"></i>
                                 </template>
                             </div>
                         </bread-crumb-item>
                     </template>
-                    <i v-else class="bk-icon icon-circle-2-1 spin-icon" />
+                    <i v-else class="devops-icon icon-circle-2-1 spin-icon" />
                 </bread-crumb>
             </div>
             <template v-if="$route.name === 'pipelinesPreview'" slot="right">
@@ -507,7 +507,7 @@
                 > p {
                     display: flex;
                     flex-direction: column;
-                    > i.bk-icon {
+                    > i.devops-icon {
                         color: $primaryColor;
                         cursor: pointer;
                         font-size: 10px;
@@ -552,7 +552,7 @@
             align-items: center;
             height: 100%;
 
-            .bk-icon {
+            .devops-icon {
                 color: $fontLigtherColor;
                 padding-left: 16px;
                 cursor: pointer;

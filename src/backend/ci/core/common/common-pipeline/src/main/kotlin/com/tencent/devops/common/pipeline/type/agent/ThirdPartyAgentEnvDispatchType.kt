@@ -38,6 +38,11 @@ data class ThirdPartyAgentEnvDispatchType(
 ) : DispatchType(
     envName
 ) {
+    override fun cleanDataBeforeSave() {
+        this.envName = this.envName.trim()
+        this.workspace = this.workspace?.trim()
+    }
+
     override fun replaceField(variables: Map<String, String>) {
         envName = EnvUtils.parseEnv(envName, variables)
         if (!workspace.isNullOrBlank()) {

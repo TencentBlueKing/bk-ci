@@ -33,7 +33,8 @@
     import atomList from '@/components/common/workList/atom'
     import templateList from '@/components/common/workList/template'
     import imageList from '@/components/common/workList/image'
-    let currentProjectCode = localStorage.getItem('projectId')
+    import * as cookie from 'js-cookie'
+    let currentProjectCode = cookie.get(X_DEVOPS_PROJECT_ID)
     if (!currentProjectCode) currentProjectCode = (window.projectList[0] || {}).projectCode
 
     export default {

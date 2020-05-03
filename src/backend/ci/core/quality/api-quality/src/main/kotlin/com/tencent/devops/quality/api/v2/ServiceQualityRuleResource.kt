@@ -27,6 +27,7 @@
 package com.tencent.devops.quality.api.v2
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.quality.api.v2.pojo.QualityHisMetadata
 import com.tencent.devops.quality.api.v2.pojo.request.BuildCheckParams
 import com.tencent.devops.quality.api.v2.pojo.request.CopyRuleRequest
 import com.tencent.devops.quality.api.v2.pojo.response.QualityRuleMatchTask
@@ -98,4 +99,13 @@ interface ServiceQualityRuleResource {
     fun copyRule(
         request: CopyRuleRequest
     ): Result<List<String>>
+
+    @ApiOperation("获取历史元数据")
+    @Path("/builds/{buildId}/getHisMetadata")
+    @GET
+    fun getHisMetadata(
+        @ApiParam("构建ID", required = true)
+        @PathParam("buildId")
+        buildId: String
+    ): Result<List<QualityHisMetadata>>
 }
