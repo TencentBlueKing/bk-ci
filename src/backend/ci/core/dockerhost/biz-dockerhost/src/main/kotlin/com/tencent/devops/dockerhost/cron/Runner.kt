@@ -165,4 +165,12 @@ class Runner @Autowired constructor(private val dockerHostBuildService: DockerHo
             logger.error("clear local images encounter unknown exception", t)
         }
     }
+
+    fun refreshDockerIpStatus() {
+        try {
+            dockerHostBuildService.refreshDockerIpStatus()
+        } catch (e: Exception) {
+            logger.error("")
+        }
+    }
 }
