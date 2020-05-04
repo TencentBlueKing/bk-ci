@@ -63,7 +63,7 @@ class DispatchDockerService @Autowired constructor(
         logger.info("$userId create docker IP $dockerIpInfoVOs")
         try {
             dockerIpInfoVOs.forEach {
-                pipelineDockerIPInfoDao.create(
+                pipelineDockerIPInfoDao.createOrUpdate(
                     dslContext = dslContext,
                     dockerIp = it.dockerIp.trim(),
                     dockerHostPort = it.dockerHostPort,
@@ -91,7 +91,8 @@ class DispatchDockerService @Autowired constructor(
         try {
             pipelineDockerIPInfoDao.update(
                 dslContext = dslContext,
-                idcIp = dockerIpInfoVO.dockerIp,
+                dockerIp = dockerIpInfoVO.dockerIp,
+                dockerHostPort = dockerIpInfoVO.dockerHostPort,
                 used = dockerIpInfoVO.usedNum,
                 cpuLoad = dockerIpInfoVO.averageCpuLoad,
                 memLoad = dockerIpInfoVO.averageMemLoad,
@@ -105,6 +106,17 @@ class DispatchDockerService @Autowired constructor(
         } catch (e: Exception) {
             logger.error("OP dispatchDocker update error.", e)
             throw RuntimeException("OP dispatchDocker update error.")
+        }
+    }
+
+    fun updateDockerIpEnable(userId: String, dockerIp: String): Boolean {
+        logger.info("$userId update Docker IP status enable: $dockerIp")
+        try {
+            pipelineDockerIPInfoDao.updateDockerIpStatus(dslContext, dockerIp, true)
+            return true
+        } catch (e: Exception) {
+            logger.error("OP dispatchDocker updateDockerIpEnable error.", e)
+            throw RuntimeException("OP dispatchDocker updateDockerIpEnable error.")
         }
     }
 
