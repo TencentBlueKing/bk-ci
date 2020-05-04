@@ -628,17 +628,20 @@ class DockerHostBuildService @Autowired constructor(
                     logger.info("There is ${timeoutBuildList.size} build history have/has already time out, clear it.")
                     for (i in timeoutBuildList.indices) {
                         try {
-                            dockerHostClient.endBuild(
-                                projectId = timeoutBuildList[i].projectId,
-                                pipelineId = timeoutBuildList[i].pipelineId,
-                                buildId = timeoutBuildList[i].buildId,
-                                vmSeqId = timeoutBuildList[i].vmSeqId,
-                                containerId = timeoutBuildList[i].containerId,
-                                dockerIp = timeoutBuildList[i].dockerIp
-                            )
+                            if (timeoutBuildList[i].dockerIp .isNotEmpty()) {
+                                dockerHostClient.endBuild(
+                                    projectId = timeoutBuildList[i].projectId,
+                                    pipelineId = timeoutBuildList[i].pipelineId,
+                                    buildId = timeoutBuildList[i].buildId,
+                                    vmSeqId = timeoutBuildList[i].vmSeqId,
+                                    containerId = timeoutBuildList[i].containerId,
+                                    dockerIp = timeoutBuildList[i].dockerIp
+                                )
 
-                            pipelineDockerBuildDao.updateTimeOutBuild(dslContext, timeoutBuildList[i].buildId)
-                            logger.info("updateTimeoutBuild pipelineId:(${timeoutBuildList[i].pipelineId}), buildId:(${timeoutBuildList[i].buildId}), poolNo:(${timeoutBuildList[i].poolNo})")
+                                pipelineDockerBuildDao.updateTimeOutBuild(dslContext, timeoutBuildList[i].buildId)
+                                logger.info("updateTimeoutBuild pipelineId:(${timeoutBuildList[i].pipelineId}), buildId:(${timeoutBuildList[i].buildId}), poolNo:(${timeoutBuildList[i].poolNo})")
+
+                            }
                         } catch (e: Exception) {
                             logger.error("updateTimeoutBuild buildId: ${timeoutBuildList[i].buildId} failed", e)
                         }
