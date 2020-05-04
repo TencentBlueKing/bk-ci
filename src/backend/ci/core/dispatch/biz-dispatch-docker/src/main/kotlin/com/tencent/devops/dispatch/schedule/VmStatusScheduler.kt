@@ -113,7 +113,8 @@ class VmStatusScheduler @Autowired constructor(
                     val averageDiskIOLoad = dockerHostLoad["averageDiskIOLoad"] as Int
                     pipelineDockerIpInfoDao.update(
                         dslContext = dslContext,
-                        idcIp = itDockerIp,
+                        dockerIp = itDockerIp,
+                        dockerHostPort = it.dockerHostPort,
                         used = usedNum,
                         cpuLoad = averageCpuLoad,
                         memLoad = averageMemLoad,
@@ -128,7 +129,7 @@ class VmStatusScheduler @Autowired constructor(
                 } else {
                     // 如果之前可用，更新容器状态
                     if (enable) {
-                        pipelineDockerIpInfoDao.updateDockerIpStatus(dslContext, it.id, false)
+                        pipelineDockerIpInfoDao.updateDockerIpStatus(dslContext, it.dockerIp, false)
                     }
 
                     val msg = response["message"] as String
@@ -138,7 +139,7 @@ class VmStatusScheduler @Autowired constructor(
         } catch (e: Exception) {
             // 如果之前可用，更新容器状态
             if (enable) {
-                pipelineDockerIpInfoDao.updateDockerIpStatus(dslContext, it.id, false)
+                pipelineDockerIpInfoDao.updateDockerIpStatus(dslContext, it.dockerIp, false)
             }
             logger.error("Get Docker VM: $itDockerIp container failed.", e)
         }

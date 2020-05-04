@@ -30,5 +30,5 @@ data class DockerIpInfoVO(
     @ApiModelProperty("是否为专用机独占")
     val specialOn: Boolean,
     @ApiModelProperty("创建时间")
-    val createTime: String
+    val createTime: String?
 )

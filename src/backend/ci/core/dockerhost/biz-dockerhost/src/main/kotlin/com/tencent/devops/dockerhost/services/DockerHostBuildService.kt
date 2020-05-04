@@ -67,6 +67,7 @@ import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.store.pojo.image.enums.ImageRDTypeEnum
 import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
+import org.springframework.core.env.Environment
 import org.springframework.stereotype.Component
 import java.io.File
 import java.io.IOException
@@ -76,7 +77,8 @@ import javax.annotation.PostConstruct
 
 @Component
 class DockerHostBuildService(
-    private val dockerHostConfig: DockerHostConfig
+    private val dockerHostConfig: DockerHostConfig,
+    private val environment: Environment
 ) {
 
     private val logger = LoggerFactory.getLogger(DockerHostBuildService::class.java)
@@ -681,6 +683,12 @@ class DockerHostBuildService(
         } catch (e: Exception) {
             logger.info("write log to dispatch failed")
         }
+    }
+
+    fun refreshDockerIpStatus(): Boolean? {
+        val port = environment.getProperty("local.server.port")
+        logger.info("refreshDockerIpStatus =========> port: $port")
+        return dockerHostBuildApi.refreshDockerIpStatus()!!.data
     }
 
     private fun getPublicImages(): List<String> {
