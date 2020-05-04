@@ -640,7 +640,6 @@ class DockerHostBuildService @Autowired constructor(
 
                                 pipelineDockerBuildDao.updateTimeOutBuild(dslContext, timeoutBuildList[i].buildId)
                                 logger.info("updateTimeoutBuild pipelineId:(${timeoutBuildList[i].pipelineId}), buildId:(${timeoutBuildList[i].buildId}), poolNo:(${timeoutBuildList[i].poolNo})")
-
                             }
                         } catch (e: Exception) {
                             logger.error("updateTimeoutBuild buildId: ${timeoutBuildList[i].buildId} failed", e)

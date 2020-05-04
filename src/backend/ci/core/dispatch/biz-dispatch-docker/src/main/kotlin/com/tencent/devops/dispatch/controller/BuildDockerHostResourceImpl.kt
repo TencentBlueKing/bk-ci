@@ -34,7 +34,6 @@ import com.tencent.devops.dispatch.api.builds.BuildDockerHostResource
 import com.tencent.devops.dispatch.pojo.ContainerInfo
 import com.tencent.devops.dispatch.pojo.DockerHostBuildInfo
 import com.tencent.devops.dispatch.pojo.DockerHostInfo
-import com.tencent.devops.dispatch.pojo.DockerIpInfoVO
 import com.tencent.devops.dispatch.service.DispatchDockerService
 import com.tencent.devops.dispatch.service.DockerHostBuildService
 import com.tencent.devops.dispatch.service.DockerHostDebugService
