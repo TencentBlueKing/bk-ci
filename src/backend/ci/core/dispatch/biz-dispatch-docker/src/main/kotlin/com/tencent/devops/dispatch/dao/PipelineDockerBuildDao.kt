@@ -173,6 +173,7 @@ class PipelineDockerBuildDao {
         with(TDispatchPipelineDockerBuild.T_DISPATCH_PIPELINE_DOCKER_BUILD) {
             return dslContext.selectFrom(this)
                 .where(STATUS.eq(2))
+                .and(DOCKER_IP.notEqual(""))
                 .and(UPDATED_TIME.lessOrEqual(timestampSubDay(2)))
                 .fetch()
         }
