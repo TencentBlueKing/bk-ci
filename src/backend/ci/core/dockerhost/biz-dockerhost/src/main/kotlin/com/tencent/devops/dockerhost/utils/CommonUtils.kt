@@ -36,7 +36,6 @@ import java.net.Inet4Address
 import java.net.InetAddress
 import java.net.NetworkInterface
 
-
 object CommonUtils {
 
     private val logger = LoggerFactory.getLogger(CommonUtils::class.java)

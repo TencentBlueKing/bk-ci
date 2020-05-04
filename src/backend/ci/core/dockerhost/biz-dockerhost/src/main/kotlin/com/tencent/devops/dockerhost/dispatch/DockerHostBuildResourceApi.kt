@@ -31,11 +31,9 @@ import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.dispatch.pojo.DockerHostBuildInfo
 import com.tencent.devops.dispatch.pojo.DockerHostInfo
-import com.tencent.devops.dispatch.pojo.DockerIpInfoVO
 import com.tencent.devops.dockerhost.utils.CommonUtils
 import com.tencent.devops.store.pojo.image.response.ImageRepoInfo
 import okhttp3.MediaType
