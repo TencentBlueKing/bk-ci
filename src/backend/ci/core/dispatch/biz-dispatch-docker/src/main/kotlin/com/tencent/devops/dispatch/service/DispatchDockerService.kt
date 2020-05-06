@@ -4,6 +4,7 @@ import com.tencent.devops.dispatch.dao.PipelineDockerIPInfoDao
 import com.tencent.devops.dispatch.pojo.DockerHostLoadConfig
 import com.tencent.devops.dispatch.pojo.DockerIpInfoVO
 import com.tencent.devops.dispatch.pojo.DockerIpListPage
+import com.tencent.devops.dispatch.utils.CommonUtils
 import com.tencent.devops.dispatch.utils.DockerHostUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -63,6 +64,12 @@ class DispatchDockerService @Autowired constructor(
         logger.info("$userId create docker IP $dockerIpInfoVOs")
         try {
             dockerIpInfoVOs.forEach {
+                if (!CommonUtils.verifyIp(it.dockerIp.trim())) {
+                    logger.warn("Dispatch create dockerIp error, invalid IP format: ${it.dockerIp}")
+                }
+            }
+
+            dockerIpInfoVOs.forEach {
                 pipelineDockerIPInfoDao.createOrUpdate(
                     dslContext = dslContext,
                     dockerIp = it.dockerIp.trim(),
@@ -109,10 +116,10 @@ class DispatchDockerService @Autowired constructor(
         }
     }
 
-    fun updateDockerIpEnable(userId: String, dockerIp: String): Boolean {
-        logger.info("$userId update Docker IP status enable: $dockerIp")
+    fun updateDockerIpEnable(userId: String, dockerIp: String, dockerHostPort: String): Boolean {
+        logger.info("$userId update Docker IP status enable: $dockerIp, dockerHostPort: $dockerHostPort")
         try {
-            pipelineDockerIPInfoDao.updateDockerIpStatus(dslContext, dockerIp, true)
+            pipelineDockerIPInfoDao.updateDockerHostPort(dslContext, dockerIp, true, dockerHostPort.toInt())
             return true
         } catch (e: Exception) {
             logger.error("OP dispatchDocker updateDockerIpEnable error.", e)

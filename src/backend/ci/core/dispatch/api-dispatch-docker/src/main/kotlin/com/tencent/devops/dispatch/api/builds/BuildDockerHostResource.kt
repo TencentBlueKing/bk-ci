@@ -39,6 +39,7 @@ import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.POST
 import javax.ws.rs.Path
+import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
@@ -221,10 +222,13 @@ interface BuildDockerHostResource {
     fun getPublicImages(): Result<List<ImageRepoInfo>>
 
     @POST
-    @Path("/dockerIp/refresh")
+    @Path("/dockerIp/{dockerIp}/refresh")
     @ApiOperation("刷新Docker构建机状态")
     fun refresh(
         @ApiParam("构建机信息", required = true)
-        dockerIp: String
+        @PathParam("dockerIp")
+        dockerIp: String,
+        @ApiParam("构建机信息", required = true)
+        dockerHostPort: String
     ): Result<Boolean>
 }
