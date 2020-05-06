@@ -25,7 +25,11 @@
  */
 package com.tencent.devops.openapi.api.apigw.v3
 
-import com.tencent.devops.common.api.auth.*
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.enums.ChannelCode
@@ -36,7 +40,14 @@ import com.tencent.devops.store.pojo.atom.InstallAtomReq
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
-import javax.ws.rs.*
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.Consumes
+import javax.ws.rs.GET
+import javax.ws.rs.HeaderParam
+import javax.ws.rs.PathParam
+import javax.ws.rs.QueryParam
+import javax.ws.rs.POST
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["OPENAPI_ATOM_V3"], description = "OPENAPI-插件资源")
@@ -108,19 +119,19 @@ interface ApigwAtomResourceV3 {
     @POST
     @Path("/{atomCode}/install")
     fun installAtom(
-            @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
-            @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
-            appCode: String?,
-            @ApiParam(value = "apigw Type", required = true)
-            @PathParam("apigwType")
-            apigwType: String?,
-            @ApiParam("userId", required = true)
-            @HeaderParam(AUTH_HEADER_USER_ID)
-            userId: String,
-            @ApiParam("渠道类型", required = false)
-            @QueryParam("channelCode")
-            channelCode: ChannelCode? = ChannelCode.BS,
-            @ApiParam("安装插件到项目请求报文体", required = true)
-            installAtomReq: InstallAtomReq
+        @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @ApiParam(value = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("渠道类型", required = false)
+        @QueryParam("channelCode")
+        channelCode: ChannelCode? = ChannelCode.BS,
+        @ApiParam("安装插件到项目请求报文体", required = true)
+        installAtomReq: InstallAtomReq
     ): Result<Boolean>
 }
