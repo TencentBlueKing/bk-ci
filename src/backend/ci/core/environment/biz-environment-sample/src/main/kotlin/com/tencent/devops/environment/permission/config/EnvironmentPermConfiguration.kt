@@ -30,6 +30,7 @@ import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceApi
 import com.tencent.devops.common.auth.code.EnvironmentAuthServiceCode
 import com.tencent.devops.environment.dao.EnvDao
+import com.tencent.devops.environment.dao.NodeDao
 import com.tencent.devops.environment.permission.EnvironmentPermissionService
 import com.tencent.devops.environment.permission.service.impl.BluekingEnvironmentPermissionService
 import com.tencent.devops.environment.permission.service.impl.MockEnvironmentPermissionService
@@ -64,12 +65,14 @@ class EnvironmentPermConfiguration {
     fun mockEnvironmentPermissionService(
         dslContext: DSLContext,
         envDao: EnvDao,
+        nodeDao: NodeDao,
         authResourceApi: AuthResourceApi,
         authPermissionApi: AuthPermissionApi,
         environmentAuthServiceCode: EnvironmentAuthServiceCode
     ): EnvironmentPermissionService = MockEnvironmentPermissionService(
         dslContext = dslContext,
         envDao = envDao,
+        nodeDao = nodeDao,
         authResourceApi = authResourceApi,
         authPermissionApi = authPermissionApi,
         environmentAuthServiceCode = environmentAuthServiceCode
