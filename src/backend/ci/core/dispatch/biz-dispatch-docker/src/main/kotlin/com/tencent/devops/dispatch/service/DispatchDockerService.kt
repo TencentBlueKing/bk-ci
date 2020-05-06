@@ -66,6 +66,7 @@ class DispatchDockerService @Autowired constructor(
             dockerIpInfoVOs.forEach {
                 if (!CommonUtils.verifyIp(it.dockerIp.trim())) {
                     logger.warn("Dispatch create dockerIp error, invalid IP format: ${it.dockerIp}")
+                    throw RuntimeException("Dispatch create dockerIp error, invalid IP format: ${it.dockerIp}")
                 }
             }
 
