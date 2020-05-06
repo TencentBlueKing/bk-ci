@@ -39,15 +39,15 @@
 
     @Component
     export default class IframeView extends Vue {
-        isLoading: boolean = true
-        initPath: string = ''
-        src: string = ''
-        leaving: boolean = false
-        showExplorerTips: string = localStorage.getItem('showExplorerTips')
+    isLoading: boolean = true
+    initPath: string = ''
+    src: string = ''
+    leaving: boolean = false
+    showExplorerTips: string = localStorage.getItem('showExplorerTips')
 
-        $refs: {
-            iframeEle: HTMLIFrameElement
-        }
+    $refs: {
+        iframeEle: HTMLIFrameElement
+    }
 
         @State projectList
         @State currentPage
@@ -97,7 +97,7 @@
             return this.$route.name === 'job'
         }
 
-        get chromeExplorer () :boolean {
+        get chromeExplorer (): boolean {
             const explorer = window.navigator.userAgent
             return explorer.indexOf('Chrome') >= 0 && explorer.indexOf('QQ') === -1
         }
