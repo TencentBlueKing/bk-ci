@@ -49,6 +49,7 @@ import com.tencent.devops.dispatch.dao.PipelineDockerBuildDao
 import com.tencent.devops.dispatch.dao.PipelineDockerEnableDao
 import com.tencent.devops.dispatch.dao.PipelineDockerHostDao
 import com.tencent.devops.dispatch.dao.PipelineDockerHostZoneDao
+import com.tencent.devops.dispatch.dao.PipelineDockerIPInfoDao
 import com.tencent.devops.dispatch.dao.PipelineDockerPoolDao
 import com.tencent.devops.dispatch.dao.PipelineDockerTaskDao
 import com.tencent.devops.dispatch.pojo.ContainerInfo
@@ -96,6 +97,7 @@ class DockerHostBuildService @Autowired constructor(
     private val pipelineDockerPoolDao: PipelineDockerPoolDao,
     private val pipelineDockerHostDao: PipelineDockerHostDao,
     private val pipelineDockerHostZoneDao: PipelineDockerHostZoneDao,
+    private val pipelineDockerIPInfoDao: PipelineDockerIPInfoDao,
     private val redisUtils: RedisUtils,
     private val client: Client,
     private val redisOperation: RedisOperation,
@@ -628,18 +630,22 @@ class DockerHostBuildService @Autowired constructor(
                     logger.info("There is ${timeoutBuildList.size} build history have/has already time out, clear it.")
                     for (i in timeoutBuildList.indices) {
                         try {
-                            if (timeoutBuildList[i].dockerIp .isNotEmpty()) {
-                                dockerHostClient.endBuild(
-                                    projectId = timeoutBuildList[i].projectId,
-                                    pipelineId = timeoutBuildList[i].pipelineId,
-                                    buildId = timeoutBuildList[i].buildId,
-                                    vmSeqId = timeoutBuildList[i].vmSeqId,
-                                    containerId = timeoutBuildList[i].containerId,
-                                    dockerIp = timeoutBuildList[i].dockerIp
-                                )
+                            val dockerIp = timeoutBuildList[i].dockerIp
+                            if (dockerIp.isNotEmpty()) {
+                                val dockerIpInfo = pipelineDockerIPInfoDao.getDockerIpInfo(dslContext, dockerIp)
+                                if (dockerIpInfo != null && dockerIpInfo.enable) {
+                                    dockerHostClient.endBuild(
+                                        projectId = timeoutBuildList[i].projectId,
+                                        pipelineId = timeoutBuildList[i].pipelineId,
+                                        buildId = timeoutBuildList[i].buildId,
+                                        vmSeqId = timeoutBuildList[i].vmSeqId,
+                                        containerId = timeoutBuildList[i].containerId,
+                                        dockerIp = timeoutBuildList[i].dockerIp
+                                    )
 
-                                pipelineDockerBuildDao.updateTimeOutBuild(dslContext, timeoutBuildList[i].buildId)
-                                logger.info("updateTimeoutBuild pipelineId:(${timeoutBuildList[i].pipelineId}), buildId:(${timeoutBuildList[i].buildId}), poolNo:(${timeoutBuildList[i].poolNo})")
+                                    pipelineDockerBuildDao.updateTimeOutBuild(dslContext, timeoutBuildList[i].buildId)
+                                    logger.info("updateTimeoutBuild pipelineId:(${timeoutBuildList[i].pipelineId}), buildId:(${timeoutBuildList[i].buildId}), poolNo:(${timeoutBuildList[i].poolNo})")
+                                }
                             }
                         } catch (e: Exception) {
                             logger.error("updateTimeoutBuild buildId: ${timeoutBuildList[i].buildId} failed", e)
