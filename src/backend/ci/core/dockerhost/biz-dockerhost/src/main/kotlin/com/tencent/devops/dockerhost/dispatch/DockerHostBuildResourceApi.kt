@@ -148,12 +148,12 @@ class DockerHostBuildResourceApi constructor(
         }
     }
 
-    fun refreshDockerIpStatus(): Result<Boolean>? {
-        val path = "/$urlPrefix/api/dockerhost/dockerIp/refresh"
+    fun refreshDockerIpStatus(port: String): Result<Boolean>? {
         val dockerIp = CommonUtils.getInnerIP()
+        val path = "/$urlPrefix/api/dockerhost/dockerIp/$dockerIp/refresh"
         val request = buildPost(
             path,
-            RequestBody.create(MediaType.parse("application/json; charset=utf-8"), dockerIp)
+            RequestBody.create(MediaType.parse("application/json; charset=utf-8"), port)
         )
 
         OkhttpUtils.doHttp(request).use { response ->
