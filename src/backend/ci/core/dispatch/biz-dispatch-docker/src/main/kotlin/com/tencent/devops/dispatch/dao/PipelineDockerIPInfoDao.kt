@@ -34,6 +34,7 @@ class PipelineDockerIPInfoDao {
                 .fetchAny()
             if (preRecord != null) {
                 dslContext.update(this)
+                    .set(DOCKER_HOST_PORT, dockerHostPort)
                     .set(USED_NUM, used)
                     .set(CPU_LOAD, cpuLoad)
                     .set(MEM_LOAD, memLoad)
