@@ -2,7 +2,7 @@
     "compilerOptions": {
         "outDir": "./dist/",
         "sourceMap": true,
-        "strict": true,
+        "strict": false,
         "jsx": "preserve",
         "noImplicitReturns": true,
         "experimentalDecorators": true,
@@ -13,7 +13,13 @@
         "module": "esnext",
         "moduleResolution": "node",
         "target": "es5",
-        "lib": [ "es2015", "dom" ]
+        "lib": [ "es2015", "dom" ],
+        "baseUrl": ".",
+        "paths": {
+            "@/*": [
+              "src/*"
+            ]
+        }
     },
     "include": [
         "./src/**/*"
