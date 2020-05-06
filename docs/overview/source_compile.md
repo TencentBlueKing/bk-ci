@@ -1,5 +1,4 @@
 # bk-ci 编译说明
-
 ## Frontend前端代码编译
 
 蓝鲸ci前端（frontend目录下）, common-lib和svg-sprites为项目依赖的静态资源，其余目录均为vue的spa工程，其中devops-nav为主入口，其它子服务以Iframe 或 UMD 的方式接入
@@ -67,11 +66,10 @@ yarn public
 
 #### 数据库初始化
 
-- 编译PO时用了JOOQ做DB表与PO生成映射，需要依赖于数据库表，所以数据库需要先初始化，初始化脚本在工程bk-ci/support-files/sql目录下，登录到数据库中按顺序执行即可。 
+编译PO时用了JOOQ做DB表与PO生成映射，需要依赖于数据库表，所以数据库需要先初始化，初始化脚本在工程bk-ci/support-files/sql目录下，登录到数据库中按顺序执行即可。 
 
 #### gradle编译前配置
-
-- gradle.properties 配置修改如下配置项:
+gradle.properties 配置修改如下配置项:
 
   ```
   MAVEN_REPO_URL=修改为你的maven私库，如果有的话,没有可用公共的源
@@ -86,18 +84,22 @@ yarn public
 
 #### 编译
 
-- cd bk-ci/src/backend & gradle clean build
-- 构建出来的产物都放在backend/release目录下，主要包含以下产物:
-  - worker-agent.jar  构建机中负责运行任务的进程，用kotlin编写所以与后台放一起编译,最后会在与GoAgent安装包时一并合并部署。
-  - boot-assembly.jar   
-    - 该包为整个单体服务Springboot包，整合10个微服务而成的单体服务，如果要采用单体包安装，则在gateway的init.lua中的service_name 配置项要设置为 "bk-ci", 如果是单体服务则该配置项置空串。默认是各个微服务分析部署。
-  - boot-artifactory.jar       构件归档微服务Springboot.jar
-  - boot-dispatch.jar          构建调度微服务Springboot.jar
-  - boot-environment.jar  环境管理微服务Springboot.jar
-  - boot-log.jar                   日志微服务Springboot.jar
-  - boot-plugin.jar              扩展微服务Springboot.jar
-  - boot-process.jar           流水线微服务Springboot.jar
-  - boot-project.jar            项目管理微服务Springboot.jar
-  - boot-repository.jar      代码库微服务Springboot.jar
-  - boot-store.jar               研发商店微服务Springboot.jar
-  - boot-ticket.jar              凭证微服务Springboot.jar
+```shell
+cd bk-ci/src/backend/ci & gradle clean build
+```
+
+构建出来的产物都放在backend/release目录下，主要包含以下产物:
+包名称 | 描述
+:--- | :---
+worker-agent.jar |  构建机中负责运行任务的进程，用kotlin编写所以与后台放一起编译,最后会在与GoAgent安装包时一并合并部署。
+boot-assembly.jar | 该包为整个单体服务Springboot包，整合10个微服务而成的单体服务，如果要采用单体包安装，则在gateway的init.lua中的service_name 配置项要设置为 "bk-ci", 如果是单体服务则该配置项置空串。默认是各个微服务分析部署。
+boot-artifactory.jar  | 构件归档微服务Springboot.jar
+boot-dispatch.jar     | 构建调度微服务Springboot.jar
+boot-environment.jar  | 环境管理微服务Springboot.jar
+boot-log.jar          | 日志微服务Springboot.jar
+boot-plugin.jar       | 扩展微服务Springboot.jar
+boot-process.jar      | 流水线微服务Springboot.jar
+boot-project.jar      | 项目管理微服务Springboot.jar
+boot-repository.jar   | 代码库微服务Springboot.jar
+boot-store.jar        | 研发商店微服务Springboot.jar
+boot-ticket.jar       | 凭证微服务Springboot.jar
