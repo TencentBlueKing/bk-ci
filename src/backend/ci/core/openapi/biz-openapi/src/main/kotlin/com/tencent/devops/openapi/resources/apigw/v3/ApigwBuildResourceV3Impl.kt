@@ -98,7 +98,6 @@ class ApigwBuildResourceV3Impl @Autowired constructor(
         )
     }
 
-
     override fun start(
         appCode: String?,
         apigwType: String?,

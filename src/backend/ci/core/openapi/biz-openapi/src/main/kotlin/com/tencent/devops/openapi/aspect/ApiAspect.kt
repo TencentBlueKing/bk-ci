@@ -61,7 +61,7 @@ class ApiAspect(
             "||execution(* com.tencent.devops.openapi.resources.apigw.v2.user.*.*(..))"
     ) // 所有controller包下面的所有方法的所有参数
     fun beforeMethod(jp: JoinPoint) {
-        if(!apiGatewayUtil.isAuth()) {
+        if (!apiGatewayUtil.isAuth()) {
             logger.info("Openapi非apigw接口，不需要鉴权。")
             return
         }

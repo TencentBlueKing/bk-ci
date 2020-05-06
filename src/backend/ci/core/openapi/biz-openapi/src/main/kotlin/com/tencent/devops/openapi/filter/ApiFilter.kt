@@ -31,9 +31,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.RequestFilter
-import com.tencent.devops.openapi.aspect.ApiAspect
 import com.tencent.devops.openapi.constant.OpenAPIMessageCode.ERROR_OPENAPI_JWT_PARSE_FAIL
-import com.tencent.devops.openapi.service.op.AppCodeService
 import com.tencent.devops.openapi.utils.ApiGatewayPubFile
 import com.tencent.devops.openapi.utils.ApiGatewayUtil
 import io.jsonwebtoken.Jwts
@@ -62,7 +60,6 @@ class ApiFilter(
     private val excludeVeritfyPath =
         listOf("/api/apigw/", "/api/apigw-user/", "/api/apigw-app/")
 
-
     companion object {
         private val logger = LoggerFactory.getLogger(ApiFilter::class.java)
     }
@@ -82,7 +79,7 @@ class ApiFilter(
         if (pass) {
             return
         }
-        if(!apiGatewayUtil.isAuth()) {
+        if (!apiGatewayUtil.isAuth()) {
             // 将query中的app_code和app_secret设置成头部
             val pathparam = requestContext.getUriInfo().pathParameters
             pathparam.forEach {
@@ -103,7 +100,7 @@ class ApiFilter(
                     }
                 }
             }
-        }else {
+        } else {
             val valid = verifyJWT(requestContext)
             // 验证通过
             if (!valid) {
@@ -115,8 +112,6 @@ class ApiFilter(
                 return
             }
         }
-
-
     }
 
     fun verifyJWT(requestContext: ContainerRequestContext): Boolean {
@@ -214,5 +209,4 @@ class ApiFilter(
             reader?.close()
         }
     }
-
 }
