@@ -62,14 +62,14 @@ class DispatchDockerService @Autowired constructor(
 
     fun create(userId: String, dockerIpInfoVOs: List<DockerIpInfoVO>): Boolean {
         logger.info("$userId create docker IP $dockerIpInfoVOs")
-        try {
-            dockerIpInfoVOs.forEach {
-                if (!CommonUtils.verifyIp(it.dockerIp.trim())) {
-                    logger.warn("Dispatch create dockerIp error, invalid IP format: ${it.dockerIp}")
-                    throw RuntimeException("Dispatch create dockerIp error, invalid IP format: ${it.dockerIp}")
-                }
+        dockerIpInfoVOs.forEach {
+            if (!CommonUtils.verifyIp(it.dockerIp.trim())) {
+                logger.warn("Dispatch create dockerIp error, invalid IP format: ${it.dockerIp}")
+                throw RuntimeException("Dispatch create dockerIp error, invalid IP format: ${it.dockerIp}")
             }
+        }
 
+        try {
             dockerIpInfoVOs.forEach {
                 pipelineDockerIPInfoDao.createOrUpdate(
                     dslContext = dslContext,

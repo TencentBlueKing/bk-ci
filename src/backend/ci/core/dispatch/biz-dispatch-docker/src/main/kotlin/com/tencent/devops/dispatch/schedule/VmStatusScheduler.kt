@@ -82,8 +82,9 @@ class VmStatusScheduler @Autowired constructor(
         if (gray == "grayproject") {
             grayEnv = true
         }
-        logger.info("VMStatusScheduler executeTask ====> gray: $gray")
+
         val dockerIpList = pipelineDockerIpInfoDao.getDockerIpList(dslContext, true, grayEnv)
+        logger.info("getAvailableDockerIp gray: $gray, dockerIpList size: ${dockerIpList.size}")
         dockerIpList.parallelStream().forEach {
             singleTask(it)
         }
@@ -98,7 +99,7 @@ class VmStatusScheduler @Autowired constructor(
             .addHeader("Content-Type", "application/json; charset=utf-8")
             .build()
 
-        logger.info("Docker VM status fresh url: $proxyUrl")
+        // logger.info("Docker VM status fresh url: $proxyUrl")
         try {
             OkhttpUtils.doHttp(request).use { resp ->
                 val responseBody = resp.body()!!.string()
