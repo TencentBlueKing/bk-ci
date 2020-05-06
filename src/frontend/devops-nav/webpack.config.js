@@ -41,6 +41,7 @@ const AssetPlugin = require('../webpackPlugin/assets-webpack-plugin')
 const AddAssetHtmlPlugin = require('add-asset-html-webpack-plugin')
 const SpriteLoaderPlugin = require('svg-sprite-loader/plugin')
 const CopyWebpackPlugin = require('copy-webpack-plugin')
+const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin')
 const path = require('path')
 const webpackBaseConfig = require('../webpack.base')
 const webpack = require('webpack')
@@ -72,6 +73,7 @@ module.exports = (env = {}, argv) => {
         {
           loader: 'ts-loader',
           options: {
+            transpileOnly: true,
             appendTsSuffixTo: [/\.vue$/]
           }
         }
@@ -81,6 +83,10 @@ module.exports = (env = {}, argv) => {
   config.plugins.pop()
   config.plugins = [
     ...config.plugins,
+    new ForkTsCheckerWebpackPlugin({
+      eslint: true,
+      vue: true
+    }),
     new HtmlWebpackPlugin({
       template: './src/index.html',
       filename: isDev ? 'index.html' : `${dist}/frontend#console#index.html`,
