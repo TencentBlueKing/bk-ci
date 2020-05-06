@@ -102,7 +102,7 @@ class BuildDockerHostResourceImpl @Autowired constructor(
         return dockerHostBuildService.getPublicImage()
     }
 
-    override fun refresh(dockerIp: String, dockerHostPost: String): Result<Boolean> {
-        return Result(dispatchDockerService.updateDockerIpEnable("dockerhost", dockerIp, dockerHostPost))
+    override fun refresh(dockerIp: String, dockerHostPort: String): Result<Boolean> {
+        return Result(dispatchDockerService.updateDockerIpEnable("dockerhost", dockerIp, dockerHostPort))
     }
 }
