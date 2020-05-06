@@ -24,14 +24,37 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.websocket.servcie
+package com.tencent.devops.scm.utils.code.svn
 
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
+import org.tmatesoft.svn.core.auth.BasicAuthenticationManager
+import org.tmatesoft.svn.core.auth.SVNAuthentication
+import org.tmatesoft.svn.core.io.SVNRepository
+import kotlin.math.min
 
-@Service
-class ProjectProxyServiceImpl @Autowired constructor() : ProjectProxyService {
-    override fun checkProject(projectId: String, userId: String): Boolean {
-        return true
+class TmatesoftBasicAuthenticationManager2(authentications: Array<out SVNAuthentication>?) :
+    BasicAuthenticationManager(authentications) {
+
+    /**
+     * max timeout for connect: 30 seconds
+     */
+    override fun getConnectTimeout(repository: SVNRepository?): Int {
+        var connectTimeout = super.getConnectTimeout(repository)
+        connectTimeout = min(connectTimeout, 30 * 1000)
+        if (connectTimeout <= 0) {
+            connectTimeout = 30 * 1000
+        }
+        return connectTimeout
+    }
+
+    /**
+     * max timeout for read data: 1800 second
+     */
+    override fun getReadTimeout(repository: SVNRepository?): Int {
+        var readTimeout = super.getReadTimeout(repository)
+        readTimeout = min(readTimeout, 1800 * 1000)
+        if (readTimeout <= 0) {
+            readTimeout = 1800 * 1000
+        }
+        return readTimeout
     }
 }

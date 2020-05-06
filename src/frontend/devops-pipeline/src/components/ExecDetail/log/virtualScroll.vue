@@ -49,6 +49,9 @@
 </template>
 
 <script>
+    // eslint-disable-next-line
+    const DataWorker = require('worker-loader!./dataWorker.js')
+
     export default {
         props: {
             itemHeight: {
@@ -90,7 +93,8 @@
                 curHoverIndex: -1,
                 hasCompleteInit: false,
                 errMessage: this.$t('execDetail.emptyLog'),
-                isLogErr: false
+                isLogErr: false,
+                dataWorker: {}
             }
         },
 
@@ -104,6 +108,7 @@
             this.setVisWidth()
             this.initEvent()
             this.initWorker()
+            this.initAssistWorker()
         },
 
         beforeDestroy () {
@@ -112,9 +117,17 @@
             document.removeEventListener('mouseup', this.moveEnd)
             window.removeEventListener('resize', this.resize)
             window.removeEventListener('keydown', this.quickHorizontalMove)
+            this.dataWorker.terminate()
         },
 
         methods: {
+            initAssistWorker () {
+                this.dataWorker = new DataWorker()
+                const dataChannel = new MessageChannel()
+                this.dataWorker.postMessage({ type: 'init', dataPort: dataChannel.port1 }, [dataChannel.port1])
+                this.worker.postMessage({ type: 'initAssistWorker', dataPort: dataChannel.port2 }, [dataChannel.port2])
+            },
+
             clearSelection () {
                 window.getSelection().removeAllRanges()
             },
@@ -315,11 +328,8 @@
                     const data = event.data
                     if (data.id !== this.id) return
                     switch (data.type) {
-                        case 'completeInit':
-                            this.freshDataScrollBottom(data)
-                            this.hasCompleteInit = true
-                            break
                         case 'completeAdd':
+                            this.hasCompleteInit = true
                             const lastIndexData = this.indexList[this.indexList.length - 1] || { listIndex: 0 }
                             if (this.totalNumber - lastIndexData.listIndex <= 3) {
                                 this.freshDataScrollBottom(data)
@@ -387,8 +397,7 @@
             },
 
             addLogData (list) {
-                const type = this.hasCompleteInit ? 'addListData' : 'initLog'
-                const postData = { type, list, mainWidth: this.mainWidth, id: this.id }
+                const postData = { type: 'addListData', list, mainWidth: this.mainWidth, id: this.id }
                 this.worker.postMessage(postData)
             },
 

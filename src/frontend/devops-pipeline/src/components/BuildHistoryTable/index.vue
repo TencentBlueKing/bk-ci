@@ -13,7 +13,6 @@
                     <span class="build-num-status">
                         <router-link :class="{ [props.row.status]: true }" style="line-height: 42px;" :to="getArchiveUrl(props.row)">#{{ props.row.buildNum }}</router-link>
                         <logo v-if="props.row.status === 'STAGE_SUCCESS'" v-bk-tooltips="$t('details.statusMap.STAGE_SUCCESS')" name="flag" class="devops-icon" size="12" fill="#34d97b" />
-                        <i v-else-if="retryable(props.row)" title="rebuild" class="devops-icon icon-retry" @click.stop="retry(props.row.id)" />
                         <i v-else-if="props.row.status === 'QUEUE' || props.row.status === 'RUNNING' || !props.row.endTime"
                             :class="{
                                 'devops-icon': true,
@@ -168,7 +167,6 @@
                 activeRemarkIndex: -1,
                 visibleIndex: -1,
                 isShowAll: false,
-                retryingMap: {},
                 stoping: {}
             }
         },
@@ -290,9 +288,6 @@
             },
             getRemarkPopupInstance (activeRemarkIndex) {
                 return this.$refs.remarkPopup && this.$refs.remarkPopup[activeRemarkIndex] && this.$refs.remarkPopup[activeRemarkIndex].instance
-            },
-            retryable (row) {
-                return ['QUEUE', 'RUNNING'].indexOf(row.status) < 0
             },
             async handleRemarkChange (row) {
                 try {
@@ -444,46 +439,6 @@
                     theme = 'error'
                 } finally {
                     this.$showTips({
-                        message,
-                        theme
-                    })
-                }
-            },
-            /**
-             * 重试流水线
-             */
-            async retry (buildId) {
-                if (this.retryingMap[buildId]) return
-                let message, theme
-                const { $store } = this
-                try {
-                    this.retryingMap[buildId] = true
-                    // 请求执行构建
-                    const res = await $store.dispatch('pipelines/requestRetryPipeline', {
-                        ...this.$route.params,
-                        buildId
-                    })
-
-                    if (res.id) {
-                        message = this.$t('subpage.rebuildSuc')
-                        theme = 'success'
-
-                        this.$emit('update-table')
-                    } else {
-                        message = this.$t('subpage.rebuildFail')
-                        theme = 'error'
-                    }
-                } catch (err) {
-                    if (err.code === 403) { // 没有权限执行
-                        // this.setPermissionConfig(`流水线：${this.curPipeline.pipelineName}`, '执行')
-                        return
-                    } else {
-                        message = err.message || err
-                        theme = 'error'
-                    }
-                } finally {
-                    delete this.retryingMap[buildId]
-                    message && this.$showTips({
                         message,
                         theme
                     })
