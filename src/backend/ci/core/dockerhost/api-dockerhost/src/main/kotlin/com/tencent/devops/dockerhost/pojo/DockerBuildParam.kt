@@ -53,5 +53,4 @@ data class DockerBuildParam(
     val host: List<String> = emptyList(),
     @ApiModelProperty("并发构建池序号", required = false)
     val poolNo: String? = "0"
-
 )
