@@ -75,7 +75,7 @@ class UpgradeService @Autowired constructor(
                 return value!!
             }
             logger.info("refresh $redisKey from redis")
-            value = redisOperation.get(redisKey)
+            value = redisOperation.get(redisKey) ?: ""
             stringCache.put(redisKey, value ?: "")
         }
         return value!!
