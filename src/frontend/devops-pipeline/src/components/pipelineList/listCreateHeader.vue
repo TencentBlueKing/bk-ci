@@ -114,12 +114,12 @@
     }
     .feedback-menu {
         z-index: 3;
-        position: absolute;
+        position: fixed;
         background-color: white;
         border: 1px solid $borderWeightColor;
         border-radius: 2px;
-        top: 40px;
-        right: -15px;
+        top: 120px;
+        right: 40px;
         box-shadow: 0 3px 6px rgba(51, 60, 72, 0.12);
         &:before {
             position: absolute;

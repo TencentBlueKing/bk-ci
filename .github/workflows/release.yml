@@ -131,6 +131,7 @@ jobs:
         run: |
           cp -rf support-files/ bkci/
           cp -rf support-files/agent-package bkci/
+          rm -vf scripts/generate_boot.sh
           cp -rf scripts/ bkci/
           rm -rf bkci/support-files/agent-package
           cp -f bkci/frontend/console/frontend#console#index.html bkci/support-files/templates/frontend#console#index.html
@@ -161,13 +162,3 @@ jobs:
           asset_path: ./bkci.tar.gz
           asset_name: bkci.tar.gz
           asset_content_type: application/gzip
-      - name: Upload to Tencent Cloud COS
-        uses: TencentCloud/cos-action@v1
-        with:
-          secret_id: ${{ secrets.TENCENT_CLOUD_SECRET_ID }}
-          secret_key: ${{ secrets.TENCENT_CLOUD_SECRET_KEY }}
-          cos_bucket: ${{ secrets.COS_BUCKET }}
-          cos_region: ${{ secrets.COS_REGION }}
-          local_path: ./bkci.tar.gz
-          remote_path: release/bkci_${{ steps.create-artifact.outputs.version }}.tar.gz
-          clean: true
