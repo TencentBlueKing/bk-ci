@@ -10,6 +10,7 @@
         "strictNullChecks": false,
         "allowJs": true,
         "noImplicitAny": false,
+        "skipLibCheck": true,
         "module": "esnext",
         "moduleResolution": "node",
         "target": "es5",
