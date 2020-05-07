@@ -23,21 +23,8 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.dispatch.common
 
-package com.tencent.devops.dockerhost.cron
-
-import com.tencent.devops.dockerhost.utils.SigarUtil
-import org.springframework.scheduling.annotation.Scheduled
-import org.springframework.stereotype.Component
-
-@Component
-class SystemInfoRunner {
-
-    @Scheduled(cron = "0/5 * * * * ?")
-    fun startCollect() {
-        SigarUtil.pushMem()
-        SigarUtil.pushCpu()
-        SigarUtil.pushDisk()
-        SigarUtil.pushDiskIOUtil()
-    }
+object Constants {
+    const val DOCKER_IP_KEY_PREFIX = "dispatch_docker_ip_count_"
 }
