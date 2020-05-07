@@ -27,6 +27,8 @@
     import { hashID } from '@/utils/util.js'
     // eslint-disable-next-line
     const Worker = require('worker-loader!./worker.js')
+    // eslint-disable-next-line
+    const DataWorker = require('worker-loader!./dataWorker.js')
 
     function prezero (num) {
         num = Number(num)
@@ -75,6 +77,7 @@
                 searchStr: '',
                 showTime: false,
                 worker: new Worker(),
+                dataWorker: new DataWorker(),
                 curSearchIndex: 0,
                 postData: {
                     projectId: this.$route.params.projectId,
@@ -112,12 +115,14 @@
         },
 
         mounted () {
+            this.initAssistWorker()
             this.worker.postMessage({ type: 'initStatus', pluginList: [this.id] })
             this.getLog()
         },
 
         beforeDestroy () {
             this.worker.terminate()
+            this.dataWorker.terminate()
             this.closeLog()
         },
 
@@ -126,6 +131,12 @@
                 'getInitLog',
                 'getAfterLog'
             ]),
+
+            initAssistWorker () {
+                const dataChannel = new MessageChannel()
+                this.dataWorker.postMessage({ type: 'init', dataPort: dataChannel.port1 }, [dataChannel.port1])
+                this.worker.postMessage({ type: 'initAssistWorker', dataPort: dataChannel.port2 }, [dataChannel.port2])
+            },
 
             getLog () {
                 const id = hashID()
@@ -207,14 +218,16 @@
 
             valuefilter (val) {
                 const valArr = val.split(/<a[^>]+?href=["']?([^"']+)["']?[^>]*>([^<]+)<\/a>/gi)
+                const transSearch = this.searchStr.replace(/\*|\.|\?|\+|\$|\^|\[|\]|\(|\)|\{|\}|\||\\|\//g, (str) => `\\${str}`)
+                const searchReg = new RegExp(`^${transSearch}$`, 'i')
                 const transVal = (val = '') => {
                     let regStr = '\\s|<|>'
-                    if (this.searchStr !== '') regStr += `|${this.searchStr}`
-                    const tranReg = new RegExp(regStr, 'g')
+                    if (transSearch !== '') regStr += `|${transSearch}`
+                    const tranReg = new RegExp(regStr, 'gi')
                     return val.replace(tranReg, (str) => {
                         if (str === '<') return '&lt;'
                         else if (str === '>') return '&gt;'
-                        else if (str === this.searchStr) return `<span class="search-str">${str}</span>`
+                        else if (searchReg.test(str)) return `<span class="search-str">${str}</span>`
                         else if (/\t/.test(str)) return '&nbsp;&nbsp;&nbsp;&nbsp;'
                         else return '&nbsp;'
                     })
