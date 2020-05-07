@@ -14,14 +14,13 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.io.File
 import java.nio.file.FileSystems
-import java.nio.file.Files
 import java.nio.file.Paths
 
 @Service
 class FileServiceExt @Autowired constructor(
     private val repoGray: RepoGray,
     private val redisOperation: RedisOperation
-): FileService {
+) : FileService {
     @Value("\${gateway.url:#{null}}")
     private val gatewayUrl: String? = null
 
