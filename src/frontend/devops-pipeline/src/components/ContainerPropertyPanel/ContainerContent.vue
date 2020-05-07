@@ -16,7 +16,7 @@
             </div>
         </form-field>
 
-        <form v-if="isVmContainer(container)" v-bkloading="{ isLoading: !apps || !containerModalId || isLoadingImage }">
+        <form v-if="isVmContainer(container)" v-bkloading="{ isLoading: !apps || !containerModalId }">
             <form-field :label="$t('editPage.resourceType')">
                 <selector
                     :disabled="!editable"
@@ -41,7 +41,7 @@
                 <span class="bk-form-help" v-if="isPublicResourceType">{{ $t('editPage.publicResTips') }}</span>
             </form-field>
 
-            <form-field :label="$t('editPage.image')" v-if="['DOCKER', 'IDC', 'PUBLIC_DEVCLOUD'].includes(buildResourceType) && !isLoadingImage" :required="true" :is-error="errors.has(&quot;buildImageVersion&quot;) || errors.has(&quot;buildResource&quot;)" :error-msg="$t('editPage.imageErrMgs')">
+            <form-field :label="$t('editPage.image')" v-if="['DOCKER', 'IDC', 'PUBLIC_DEVCLOUD'].includes(buildResourceType)" :required="true" :is-error="errors.has(&quot;buildImageVersion&quot;) || errors.has(&quot;buildResource&quot;)" :error-msg="$t('editPage.imageErrMgs')">
                 <enum-input
                     name="imageType"
                     :list="imageTypeList"
@@ -52,7 +52,7 @@
 
                 <section v-if="buildImageType === 'BKSTORE'" class="bk-image">
                     <section class="image-name">
-                        <span :class="[{ disable: !editable }, { 'not-recommend': imageRecommend === false }, 'image-named']" :title="imageRecommend === false ? $t('editPage.notRecomendImage') : buildImageName">{{buildImageName || $t('editPage.chooseImage')}}</span>
+                        <span :class="[{ disable: !editable }, { 'not-recommend': buildImageRecommendFlag === false }, 'image-named']" :title="buildImageRecommendFlag === false ? $t('editPage.notRecomendImage') : buildImageName">{{buildImageName || $t('editPage.chooseImage')}}</span>
                         <bk-button theme="primary" @click.stop="chooseImage" :disabled="!editable">{{buildImageCode ? $t('editPage.reElection') : $t('editPage.select')}}</bk-button>
                     </section>
                     <bk-select @change="changeImageVersion" :value="buildImageVersion" searchable class="image-tag" :loading="isVersionLoading" :disabled="!editable" v-validate.initial="&quot;required&quot;" name="buildImageVersion">
@@ -180,7 +180,7 @@
         </div>
 
         <image-selector :is-show.sync="showImageSelector"
-            v-if="['DOCKER', 'IDC', 'PUBLIC_DEVCLOUD'].includes(buildResourceType) && !isLoadingImage"
+            v-if="['DOCKER', 'IDC', 'PUBLIC_DEVCLOUD'].includes(buildResourceType)"
             :code="buildImageCode"
             :build-resource-type="buildResourceType"
             @choose="choose"
@@ -233,8 +233,6 @@
             return {
                 showImageSelector: false,
                 isVersionLoading: false,
-                isLoadingImage: false,
-                imageRecommend: true,
                 isLoadingMac: false,
                 xcodeVersionList: [],
                 systemVersionList: []
@@ -336,6 +334,9 @@
             buildImageName () {
                 return this.container.dispatchType && this.container.dispatchType.imageName
             },
+            buildImageRecommendFlag () {
+                return this.container.dispatchType && this.container.dispatchType.recommendFlag
+            },
             buildImageCreId () {
                 return this.container.dispatchType.credentialId || ''
             },
@@ -403,32 +404,6 @@
                     agentType: 'ID'
                 }))
             }
-            if (['DOCKER', 'IDC', 'PUBLIC_DEVCLOUD'].includes(this.buildResourceType) && !this.buildImageCode && this.buildImageType !== 'THIRD') {
-                if (/\$\{/.test(this.buildResource)) {
-                    this.handleContainerChange('dispatchType', Object.assign({
-                        ...this.container.dispatchType,
-                        imageType: 'THIRD'
-                    }))
-                } else {
-                    this.isLoadingImage = true
-                    this.requestImageHistory({ agentType: this.buildResourceType, value: this.buildResource }).then((res) => {
-                        const data = res.data || {}
-                        this.handleContainerChange('dispatchType', Object.assign({
-                            ...this.container.dispatchType,
-                            imageType: 'BKSTORE'
-                        }))
-                        data.historyVersion = data.version
-                        if (data.code) this.choose(data)
-                    }).catch((err) => this.$showTips({ theme: 'error', message: err.message || err })).finally(() => (this.isLoadingImage = false))
-                }
-            }
-            if (['DOCKER', 'IDC', 'PUBLIC_DEVCLOUD'].includes(this.buildResourceType) && this.buildImageCode) {
-                this.isLoadingImage = true
-                this.requestImageDetail({ code: this.buildImageCode }).then((res) => {
-                    const data = res.data || {}
-                    this.imageRecommend = data.recommendFlag
-                }).catch((err) => this.$showTips({ theme: 'error', message: err.message || err })).finally(() => (this.isLoadingImage = false))
-            }
             if (this.container.dispatchType && this.container.dispatchType.imageCode) {
                 this.getVersionList(this.container.dispatchType.imageCode)
             }
@@ -441,21 +416,21 @@
                 'getMacXcodeVersion'
             ]),
             ...mapActions('pipelines', [
-                'requestImageVersionlist',
-                'requestImageHistory',
-                'requestImageDetail'
+                'requestImageVersionlist'
             ]),
 
             changeResourceType (name, val) {
-                this.imageRecommend = true
+                const currentType = this.buildResourceTypeList.find(buildType => buildType.type === val) || {}
+                const defaultBuildResource = currentType.defaultBuildResource || {}
                 const defaultAgentType = (name === 'buildType' && ['THIRD_PARTY_AGENT_ID', 'THIRD_PARTY_AGENT_ENV'].includes(val) && !this.agentType) ? { agentType: 'ID' } : {}
                 this.handleContainerChange('dispatchType', Object.assign({
                     ...this.container.dispatchType,
                     ...defaultAgentType,
-                    imageVersion: '',
-                    value: '',
-                    imageCode: '',
-                    imageName: '',
+                    imageVersion: defaultBuildResource.version || '',
+                    value: defaultBuildResource.code || '',
+                    imageCode: defaultBuildResource.code || '',
+                    imageName: defaultBuildResource.name || '',
+                    recommendFlag: defaultBuildResource.recommendFlag,
                     [name]: val
                 }))
                 if (val === 'MACOS') this.getMacOsData()
@@ -477,11 +452,11 @@
             },
 
             choose (card) {
-                this.imageRecommend = card.recommendFlag
                 this.handleContainerChange('dispatchType', Object.assign({
                     ...this.container.dispatchType,
                     imageCode: card.code,
-                    imageName: card.name
+                    imageName: card.name,
+                    recommendFlag: card.recommendFlag
                 }))
                 return this.getVersionList(card.code).then(() => {
                     let chooseVersion = this.versionList[0] || {}

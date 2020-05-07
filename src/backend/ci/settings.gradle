@@ -180,4 +180,5 @@ include ":core:notify:boot-notify"
 
 include ":core:websocket"
 include ":core:websocket:biz-websocket"
+include ":core:websocket:biz-websocket-blueking"
 include ":core:websocket:boot-websocket"

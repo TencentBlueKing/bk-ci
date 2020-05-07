@@ -123,6 +123,13 @@ elasticsearch:
   ip: __BKCI_ES_IP__
   port: __BKCI_ES_PORT__
   cluster: bkee-es
+#  ES集群如果要求证书验证的场景，需要需要打开以下4个配置项， 设置keystore文件和truststore文件以及密码
+#  keystore:
+#    filePath:
+#    password:
+#  truststore:
+#    filePath:
+#    password:
 
 #### plugin
 
@@ -154,7 +161,7 @@ scm:
     apiKey: __SVN_API_KEY__
     apiUrl: __SVN_URL__/rest
     webhookApiUrl: __SVN_URL__/rest/webhooks
-    svnHookUrl: __HTTP_SCHEMA__://__BKCI_FQDN__:__BKCI_HTTPS_PORT__/ms/process/api/external/scm/codesvn/commit
+    svnHookUrl: __HTTP_SCHEMA__://__BKCI_FQDN__/ms/process/api/external/scm/codesvn/commit
   # git 仓库配置，如果不需要则放着即可
   git:
     url: __GIT_URL__
@@ -172,7 +179,7 @@ scm:
     #gitlab typo repository
     gitlab:
       apiUrl: __GITLAB_URL__/api/v4
-      gitlabHookUrl: __HTTP_SCHEMA__://__BKCI_FQDN__:__BKCI_HTTPS_PORT__/ms/process/api/external/scm/gitlab/commit
+      gitlabHookUrl: __HTTP_SCHEMA__://__BKCI_FQDN__/ms/process/api/external/scm/gitlab/commit
     github:
       clientId: __GITHUB_CLIENT_ID__
       clientSecret: __GITHUB_CLIENT_SECRET__

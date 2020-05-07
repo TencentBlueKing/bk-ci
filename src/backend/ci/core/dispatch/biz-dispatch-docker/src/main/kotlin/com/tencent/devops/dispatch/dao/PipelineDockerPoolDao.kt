@@ -31,6 +31,7 @@ import com.tencent.devops.model.dispatch.tables.TDispatchPipelineDockerPool
 import com.tencent.devops.model.dispatch.tables.records.TDispatchPipelineDockerPoolRecord
 import org.jooq.DSLContext
 import org.jooq.Field
+import org.jooq.Result
 import org.jooq.impl.DSL
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Repository
@@ -98,13 +99,22 @@ class PipelineDockerPoolDao @Autowired constructor() {
         }
     }
 
-    fun updateTimeOutTask(dslContext: DSLContext): Boolean {
+    fun getTimeOutPool(dslContext: DSLContext): Result<TDispatchPipelineDockerPoolRecord> {
+        with(TDispatchPipelineDockerPool.T_DISPATCH_PIPELINE_DOCKER_POOL) {
+            return dslContext.selectFrom(this)
+                .where(STATUS.eq(2))
+                .and(GMT_MODIFIED.lessOrEqual(timestampSubDay(2)))
+                .fetch()
+        }
+    }
+
+    fun updateTimeOutPool(dslContext: DSLContext): Boolean {
         with(TDispatchPipelineDockerPool.T_DISPATCH_PIPELINE_DOCKER_POOL) {
             return dslContext.update(this)
-                .set(STATUS, PipelineTaskStatus.FAILURE.status)
-//                    .where(timestampDiff(org.jooq.DatePart.DAY, UPDATED_TIME.cast(java.sql.Timestamp::class.java)).greaterOrEqual(2))
+                .set(STATUS, PipelineTaskStatus.DONE.status)
                 .set(GMT_MODIFIED, LocalDateTime.now())
-                .where(GMT_MODIFIED.lessOrEqual(timestampSubDay(2)))
+                .where(STATUS.eq(2))
+                .and(GMT_MODIFIED.lessOrEqual(timestampSubDay(2)))
                 .execute() == 1
         }
     }

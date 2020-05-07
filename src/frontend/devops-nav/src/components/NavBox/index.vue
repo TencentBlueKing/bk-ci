@@ -1,5 +1,5 @@
 <template>
-    <div :class="{ &quot;nav-box&quot;: true, &quot;with-hover&quot;: withHover }">
+    <div :class="{ 'nav-box': true, 'with-hover': withHover }">
         <div
             v-for="(service, index) in services"
             :key="index"
@@ -14,14 +14,14 @@
                     v-for="child in service.children"
                     :key="child.id"
                     class="menu-item"
-                    :disabled="child.status !== &quot;ok&quot; && child.status !== &quot;new&quot; && child.status !== &quot;hot&quot;"
+                    :disabled="child.status !== 'ok' && child.status !== 'new' && child.status !== 'hot'"
                 >
                     <a
                         :href="addConsole(child.link_new)"
                         @click.prevent="gotoPage(child)"
                     >
                         <i
-                            v-if="serviceIcon(child.logoUrl) === &quot;logo-bcs&quot;"
+                            v-if="serviceIcon(child.logoUrl) === 'logo-bcs'"
                             class="devops-icon service-icon icon-logo-bcs"
                         >
                             <span
@@ -39,7 +39,7 @@
                         <span class="service-name">{{ serviceName(child.name) }}</span>
                         <!-- <span class="service-id">{{ serviceId(child.name) }}</span> -->
                         <span
-                            v-if="child.status === &quot;new&quot;"
+                            v-if="child.status === 'new'"
                             class="new-service-icon"
                         >new</span>
                     </a>

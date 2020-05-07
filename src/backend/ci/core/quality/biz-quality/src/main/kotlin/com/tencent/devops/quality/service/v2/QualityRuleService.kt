@@ -178,8 +178,8 @@ class QualityRuleService @Autowired constructor(
             userId = userId,
             projectId = projectId,
             ruleId = ruleId,
-            authPermission = AuthPermission.ENABLE,
-            message = "用户没拦截规则的停用/启用权限"
+            authPermission = AuthPermission.DELETE,
+            message = "用户没拦截规则的删除权限"
         )
         qualityRuleDao.delete(dslContext, ruleId)
         deleteResource(projectId, ruleId)
