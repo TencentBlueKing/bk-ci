@@ -65,7 +65,7 @@ class DockerHostUtils @Autowired constructor(
 ) {
     companion object {
         private const val LOAD_CONFIG_KEY = "dockerhost-load-config"
-        private const val DOCKER_IP_COUNT_MAX = 12
+        private const val DOCKER_IP_COUNT_MAX = 8
         private const val BUILD_POOL_SIZE = 100 // 单个流水线可同时执行的任务数量
 
         private val logger = LoggerFactory.getLogger(DockerHostUtils::class.java)
@@ -248,8 +248,8 @@ class DockerHostUtils @Autowired constructor(
     ): Triple<String, Int, String> {
         val dockerIp = dockerIpInfo.dockerIp
 
-        // 同一条流水线并发构建时，当并发数超过3，无视负载，直接下发同一个IP（避免同一条流水线并发量太大，影响其他流水线构建）
-        if (poolNo > 3) {
+        // 同一条流水线并发构建时，当并发数超过5，无视负载，直接下发同一个IP（避免同一条流水线并发量太大，影响其他流水线构建）
+        if (poolNo > 5 && dockerIpInfo.enable) {
             return Triple(dockerIp, dockerIpInfo.dockerHostPort, "")
         }
 

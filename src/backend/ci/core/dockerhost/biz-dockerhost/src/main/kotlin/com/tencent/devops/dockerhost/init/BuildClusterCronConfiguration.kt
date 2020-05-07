@@ -78,7 +78,7 @@ class BuildClusterCronConfiguration : SchedulingConfigurer {
 
         scheduledTaskRegistrar.addFixedRateTask(
             IntervalTask(
-                Runnable { runner.refreshDockerIpStatus() }, 600 * 1000, 1000
+                Runnable { runner.refreshDockerIpStatus() }, 10 * 1000, 1000
             )
         )
     }
