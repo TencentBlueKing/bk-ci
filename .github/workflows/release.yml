@@ -121,22 +121,26 @@ jobs:
         with:
           name: frontend
           path: bkci/frontend/
-      
-      - name: Create artifact - Step5:support-files
+
+      - name: Create artifact - Step5:generate boot-microservice.sh
+        run: ./generate_boot.sh
+        working-directory: scripts/
+
+      - name: Create artifact - Step6:support-files
+        id: create-artifact
         run: |
           cp -rf support-files/ bkci/
           cp -rf support-files/agent-package bkci/
+          rm -vf scripts/generate_boot.sh
           cp -rf scripts/ bkci/
           rm -rf bkci/support-files/agent-package
           cp -f bkci/frontend/console/frontend#console#index.html bkci/support-files/templates/frontend#console#index.html
           cp -f bkci/frontend/pipeline/frontend#pipeline#index.html bkci/support-files/templates/frontend#pipeline#index.html
 
           cp -f bkci/frontend/assets_bundle.json bkci/support-files/templates/project#assets_bundle.json
-          echo $GITHUB_REF > bkci/VERSION
+          echo "::set-output name=version::$(basename $GITHUB_REF)"
+          basename $GITHUB_REF > bkci/VERSION
 
-      - name: Create artifact - Step6:generate boot-microservice.sh
-        run: ./generate_boot.sh
-        working-directory: scripts/
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1

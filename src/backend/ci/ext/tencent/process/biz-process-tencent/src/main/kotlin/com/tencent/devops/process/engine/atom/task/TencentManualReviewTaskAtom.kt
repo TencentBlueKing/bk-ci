@@ -29,24 +29,21 @@ package com.tencent.devops.process.engine.atom.task
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.archive.shorturl.ShortUrlApi
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.notify.enums.EnumEmailFormat
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ManualReviewAction
 import com.tencent.devops.common.pipeline.pojo.element.agent.ManualReviewUserTaskElement
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.log.utils.LogUtils
-import com.tencent.devops.notify.api.service.ServiceNotifyResource
-import com.tencent.devops.notify.pojo.EmailNotifyMessage
-import com.tencent.devops.notify.pojo.RtxNotifyMessage
-import com.tencent.devops.notify.pojo.WechatNotifyMessage
+import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
+import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.IAtomTask
 import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION
 import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION_USERID
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
-import com.tencent.devops.process.util.NotifyTemplateUtils
 import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
+import com.tencent.devops.process.utils.PIPELINE_MANUAL_REVIEW_ATOM_NOTIFY_TEMPLATE
 import com.tencent.devops.process.utils.PIPELINE_NAME
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.slf4j.LoggerFactory
@@ -129,8 +126,20 @@ class TencentManualReviewTaskAtom(
 
         // 开始进入人工审核步骤，需要打印日志，并发送通知给审核人
         LogUtils.addYellowLine(
-            rabbitTemplate, task.buildId, "步骤等待审核，审核人：$reviewUsers\n==============================",
-            taskId, task.containerHashId, task.executeCount ?: 1
+            rabbitTemplate = rabbitTemplate,
+            buildId = task.buildId,
+            message = "步骤等待审核，审核人：$reviewUsers",
+            tag = taskId,
+            jobId = task.containerHashId,
+            executeCount = task.executeCount ?: 1
+        )
+        LogUtils.addYellowLine(
+            rabbitTemplate = rabbitTemplate,
+            buildId = task.buildId,
+            message = "==============================",
+            tag = taskId,
+            jobId = task.containerHashId,
+            executeCount = task.executeCount ?: 1
         )
 
         val pipelineName = runVariables[PIPELINE_NAME].toString()
@@ -146,50 +155,56 @@ class TencentManualReviewTaskAtom(
 
         val simpleDateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
         val date = simpleDateFormat.format(Date())
-
         val projectName = client.get(ServiceProjectResource::class).get(projectCode).data!!.projectName
-
         val buildNo = runVariables[PIPELINE_BUILD_NUM] ?: "1"
-        val message = EmailNotifyMessage().apply {
-            addAllReceivers(reviewUsers.split(",").toSet())
-            format = EnumEmailFormat.HTML
-            body = NotifyTemplateUtils.getReviewEmailBody(reviewUrl, date, projectName, pipelineName, buildNo)
-            title = "【蓝盾流水线审核通知】"
-            sender = "蓝鲸助手"
-        }
-        logger.info("[$buildId]|START|taskId=$taskId|Start to send the email message to $reviewUsers")
-        val result = client.get(ServiceNotifyResource::class).sendEmailNotify(message)
-        if (result.isNotOk() || result.data == null) {
-            logger.warn("[$buildId]|taskId=$taskId|Fail to send the email message($message) because of ${result.message}")
-        }
 
-        val bodyMessage =
-            NotifyTemplateUtils.getReviewRtxMsgBody(reviewUrl, reviewAppUrl, projectName, pipelineName, buildNo)
-        val bodyMessageWeixin =
-            NotifyTemplateUtils.getRevieWeixinMsgBody(reviewUrl, reviewAppUrl, projectName, pipelineName, buildNo)
-
-        val rtxMessage = RtxNotifyMessage().apply {
-            addAllReceivers(reviewUsers.split(",").toSet())
-            body = bodyMessage
-            title = "【蓝盾流水线审核通知】"
-            sender = "DevOps"
-        }
-
-        val rtxResult = client.get(ServiceNotifyResource::class).sendRtxNotify(rtxMessage)
-        if (rtxResult.isNotOk() || rtxResult.data == null) {
-            logger.warn("[$buildId]|START|taskId=$taskId|Fail to send the rtx message($message) because of ${result.message}")
-        }
-
-        val wechatMessage = WechatNotifyMessage().apply {
-            addAllReceivers(reviewUsers.split(",").toSet())
-            body = bodyMessageWeixin
-        }
-        val wechatResult = client.get(ServiceNotifyResource::class).sendWechatNotify(wechatMessage)
-        if (wechatResult.isNotOk() || wechatResult.data == null) {
-            logger.warn("[$buildId]|START|taskId=$taskId|Fail to send the wechatResult message($message) because of ${wechatResult.message}")
-        }
+        sendReviewNotify(
+            receivers = reviewUsers.split(",").toMutableSet(),
+            reviewDesc = param.desc ?: "",
+            reviewUrl = reviewUrl,
+            reviewAppUrl = reviewAppUrl,
+            projectName = projectName,
+            pipelineName = pipelineName,
+            dataTime = date,
+            buildNo = buildNo
+        )
 
         return AtomResponse(BuildStatus.REVIEWING)
+    }
+
+    private fun sendReviewNotify(
+        receivers: MutableSet<String>,
+        reviewDesc: String,
+        reviewUrl: String,
+        reviewAppUrl: String,
+        dataTime: String,
+        projectName: String,
+        pipelineName: String,
+        buildNo: String
+    ) {
+        val sendNotifyMessageTemplateRequest = SendNotifyMessageTemplateRequest(
+            templateCode = PIPELINE_MANUAL_REVIEW_ATOM_NOTIFY_TEMPLATE,
+            sender = "DevOps",
+            receivers = receivers,
+            cc = receivers,
+            titleParams = mapOf(
+                "projectName" to projectName,
+                "pipelineName" to pipelineName,
+                "buildNo" to buildNo
+            ),
+            bodyParams = mapOf(
+                "projectName" to projectName,
+                "pipelineName" to pipelineName,
+                "buildNo" to buildNo,
+                "reviewDesc" to reviewDesc,
+                "reviewUrl" to reviewUrl,
+                "reviewAppUrl" to reviewAppUrl,
+                "dataTime" to dataTime
+            )
+        )
+        val sendNotifyResult = client.get(ServiceNotifyMessageTemplateResource::class)
+            .sendNotifyMessageByTemplate(sendNotifyMessageTemplateRequest)
+        logger.info("[$buildNo]|sendReviewNotify|ManualReviewTaskAtom|result=$sendNotifyResult")
     }
 
     companion object {

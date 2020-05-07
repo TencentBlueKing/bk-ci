@@ -41,6 +41,8 @@ import com.tencent.devops.process.engine.dao.PipelineBuildTaskDao
 import com.tencent.devops.process.engine.service.PipelineBuildService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
+import com.tencent.devops.process.engine.service.PipelineService
+import com.tencent.devops.process.pojo.PipelineId
 import com.tencent.devops.process.pojo.pipeline.ProjectBuildId
 import com.tencent.devops.process.pojo.pipeline.StartUpInfo
 import com.tencent.devops.process.pojo.pipeline.SubPipelineStartUpInfo
@@ -56,6 +58,8 @@ import org.springframework.stereotype.Service
 class SubPipelineStartUpService(
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val pipelineRuntimeService: PipelineRuntimeService,
+    private val pipelineService: PipelineService,
+    private val buildVariableService: BuildVariableService,
     private val buildService: PipelineBuildService,
     private val pipelineBuildTaskDao: PipelineBuildTaskDao,
     private val dslContext: DSLContext
@@ -92,7 +96,7 @@ class SubPipelineStartUpService(
         }
 
         // 通过 runVariables获取 userId 和 channelCode
-        val runVariables = pipelineRuntimeService.getAllVariable(buildId)
+        val runVariables = buildVariableService.getAllVariable(buildId)
         val userId =
             runVariables[PIPELINE_START_USER_ID] ?: runVariables[PipelineVarUtil.newVarToOldVar(PIPELINE_START_USER_ID)]
             ?: "null"
@@ -310,5 +314,24 @@ class SubPipelineStartUpService(
             }
         }
         return Result(parameter)
+    }
+
+    fun getPipelineByName(projectId: String, pipelineName: String): Result<List<PipelineId?>> {
+        val pipelines = pipelineService.getPipelineIdByNames(projectId, setOf(pipelineName), true)
+
+        val data: MutableList<PipelineId?> = mutableListOf()
+        if (pipelines.isNotEmpty()) {
+            pipelines.forEach { (k, v) ->
+                if (k == pipelineName) {
+                    data.add(
+                        PipelineId(
+                            id = v
+                        )
+                    )
+                }
+            }
+        }
+
+        return Result(data)
     }
 }
