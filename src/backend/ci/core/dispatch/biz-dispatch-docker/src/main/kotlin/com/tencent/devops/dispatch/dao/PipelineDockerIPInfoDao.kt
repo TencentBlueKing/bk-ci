@@ -141,22 +141,6 @@ class PipelineDockerIPInfoDao {
         }
     }
 
-    fun updateDockerHostPort(
-        dslContext: DSLContext,
-        dockerIp: String,
-        enable: Boolean,
-        dockerHostPort: Int
-    ) {
-        with(TDispatchPipelineDockerIpInfo.T_DISPATCH_PIPELINE_DOCKER_IP_INFO) {
-            dslContext.update(this)
-                .set(ENABLE, enable)
-                .set(DOCKER_HOST_PORT, dockerHostPort)
-                .set(GMT_MODIFIED, LocalDateTime.now())
-                .where(DOCKER_IP.eq(dockerIp))
-                .execute()
-        }
-    }
-
     fun getDockerIpList(
         dslContext: DSLContext,
         page: Int,
