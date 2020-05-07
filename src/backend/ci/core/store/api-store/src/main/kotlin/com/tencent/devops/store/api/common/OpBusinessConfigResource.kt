@@ -40,7 +40,6 @@ import javax.ws.rs.PUT
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
-import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["OP_STORE_BUSINESS_CONFIG"], description = "OP-STORE-业务配置")
@@ -49,7 +48,7 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface OpBusinessConfigResource {
 
-    @ApiOperation("添加业务配置")
+    @ApiOperation("添加业务配置（返回是否添加成功）")
     @POST
     @Path("/")
     fun add(
@@ -57,13 +56,13 @@ interface OpBusinessConfigResource {
         businessConfigRequest: BusinessConfigRequest
     ): Result<Boolean>
 
-    @ApiOperation("更新业务配置信息")
+    @ApiOperation("更新业务配置信息（返回受影响的数据条数）")
     @PUT
     @Path("/ids/{id}")
     fun update(
         @ApiParam("业务配置ID", required = true)
         @PathParam("id")
-        id: String,
+        id: Int,
         @ApiParam(value = "业务配置信息请求报文体", required = true)
         businessConfigRequest: BusinessConfigRequest
     ): Result<Int>
@@ -78,16 +77,16 @@ interface OpBusinessConfigResource {
     @Path("/{id}")
     fun getBusinessConfigById(
         @ApiParam("业务配置ID", required = true)
-        @QueryParam("id")
+        @PathParam("id")
         id: Int
     ): Result<BusinessConfigResponse?>
 
-    @ApiOperation("根据ID删除业务配置信息")
+    @ApiOperation("根据ID删除业务配置信息（返回受影响的数据条数）")
     @DELETE
     @Path("/{id}")
     fun deleteBusinessConfigById(
         @ApiParam("业务配置ID", required = true)
         @PathParam("id")
         id: Int
-    ): Result<Boolean>
+    ): Result<Int>
 }
