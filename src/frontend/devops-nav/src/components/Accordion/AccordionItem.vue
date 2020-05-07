@@ -28,7 +28,7 @@
     @Component
     export default class AccordionItem extends Vue {
         @Prop({ default: false })
-        initContentShow
+    initContentShow
 
         isContentShow: boolean = this.initContentShow
         
