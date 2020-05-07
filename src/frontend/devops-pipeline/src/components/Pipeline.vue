@@ -15,7 +15,7 @@
         </div>
 
         <bk-dialog v-model="isStageShow"
-            width="720"
+            :width="stageTypeDialogWidth"
             :title="$t('editPage.selectJob')"
             :show-footer="false"
             :esc-close="true"
@@ -126,6 +126,9 @@
                         isStagePopupShow: value
                     })
                 }
+            },
+            stageTypeDialogWidth () {
+                return Array.isArray(this.osList) ? this.osList.length * 130 + 208 : 480
             },
             stage () {
                 if (isObject(this.editingElementPos)) {

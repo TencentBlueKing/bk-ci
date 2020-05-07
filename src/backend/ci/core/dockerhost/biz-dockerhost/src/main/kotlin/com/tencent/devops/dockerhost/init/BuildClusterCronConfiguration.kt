@@ -40,12 +40,12 @@ import org.springframework.scheduling.config.ScheduledTaskRegistrar
 import java.util.concurrent.Executors
 
 /**
- * 有构建环境的docker集群下才会生效
+ * 有构建环境的docker集群下才会生效, 默认生效
  * @version 1.0
  */
 
 @Configuration
-@ConditionalOnProperty(prefix = "run", name = ["mode"], havingValue = "docker_build")
+@ConditionalOnProperty(prefix = "run", name = ["mode"], havingValue = "docker_build", matchIfMissing = true)
 @EnableScheduling
 class BuildClusterCronConfiguration : SchedulingConfigurer {
 
