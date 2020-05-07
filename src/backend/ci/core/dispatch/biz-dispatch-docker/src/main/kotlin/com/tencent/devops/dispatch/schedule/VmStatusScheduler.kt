@@ -5,6 +5,7 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.dispatch.common.Constants
 import com.tencent.devops.dispatch.dao.PipelineDockerIPInfoDao
 import com.tencent.devops.dispatch.utils.DockerHostUtils
 import com.tencent.devops.model.dispatch.tables.records.TDispatchPipelineDockerIpInfoRecord
@@ -57,13 +58,12 @@ class VmStatusScheduler @Autowired constructor(
         try {
             val lockSuccess = redisLock.tryLock()
             if (lockSuccess) {
-                logger.info("Start check docker VM status.")
                 var grayEnv = false
                 val gray = System.getProperty("gray.project", "none")
                 if (gray == "grayproject") {
                     grayEnv = true
                 }
-                logger.info("checkVMStatus gray: $gray")
+                logger.info("VMStatusScheduler checkVMStatus ===> gray: $gray")
                 val unableDockerIpList = pipelineDockerIpInfoDao.getDockerIpList(dslContext, false, grayEnv)
                 unableDockerIpList.stream().forEach {
                     singleTask(it)
@@ -82,8 +82,9 @@ class VmStatusScheduler @Autowired constructor(
         if (gray == "grayproject") {
             grayEnv = true
         }
-        logger.info("getAvailableDockerIp gray: $gray")
+
         val dockerIpList = pipelineDockerIpInfoDao.getDockerIpList(dslContext, true, grayEnv)
+        logger.info("getAvailableDockerIp gray: $gray, dockerIpList size: ${dockerIpList.size}")
         dockerIpList.parallelStream().forEach {
             singleTask(it)
         }
@@ -102,7 +103,7 @@ class VmStatusScheduler @Autowired constructor(
         try {
             OkhttpUtils.doHttp(request).use { resp ->
                 val responseBody = resp.body()!!.string()
-                logger.info("Docker VM $itDockerIp status fresh responseBody: $responseBody")
+                // logger.info("Docker VM $itDockerIp status fresh responseBody: $responseBody")
                 val response: Map<String, Any> = jacksonObjectMapper().readValue(responseBody)
                 if (response["status"] == 0) {
                     val dockerHostLoad: Map<String, Any> = response["data"] as LinkedHashMap<String, Any>
@@ -113,7 +114,8 @@ class VmStatusScheduler @Autowired constructor(
                     val averageDiskIOLoad = dockerHostLoad["averageDiskIOLoad"] as Int
                     pipelineDockerIpInfoDao.update(
                         dslContext = dslContext,
-                        idcIp = itDockerIp,
+                        dockerIp = itDockerIp,
+                        dockerHostPort = it.dockerHostPort,
                         used = usedNum,
                         cpuLoad = averageCpuLoad,
                         memLoad = averageMemLoad,
@@ -123,10 +125,12 @@ class VmStatusScheduler @Autowired constructor(
                         grayEnv = it.grayEnv,
                         specialOn = it.specialOn
                     )
+
+                    redisOperation.set("${Constants.DOCKER_IP_KEY_PREFIX}$itDockerIp", "1", 180)
                 } else {
                     // 如果之前可用，更新容器状态
                     if (enable) {
-                        pipelineDockerIpInfoDao.updateDockerIpStatus(dslContext, it.id, false)
+                        pipelineDockerIpInfoDao.updateDockerIpStatus(dslContext, it.dockerIp, false)
                     }
 
                     val msg = response["message"] as String
@@ -136,7 +140,7 @@ class VmStatusScheduler @Autowired constructor(
         } catch (e: Exception) {
             // 如果之前可用，更新容器状态
             if (enable) {
-                pipelineDockerIpInfoDao.updateDockerIpStatus(dslContext, it.id, false)
+                pipelineDockerIpInfoDao.updateDockerIpStatus(dslContext, it.dockerIp, false)
             }
             logger.error("Get Docker VM: $itDockerIp container failed.", e)
         }

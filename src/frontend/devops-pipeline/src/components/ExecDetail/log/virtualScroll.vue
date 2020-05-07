@@ -1,47 +1,44 @@
 <template>
     <section :class="['scroll-home', `id-${id}`, { 'min-height': totalNumber <= 0, 'show-empty': hasCompleteInit }]" :style="`height: ${visHeight}px`" @mousewheel.prevent="handleWheel" @DOMMouseScroll.prevent="handleWheel">
-        <template v-if="!isLogErr">
-            <ul class="scroll-index scroll" :style="`top: ${-totalScrollHeight}px; width: ${indexWidth}px; height: ${ulHeight}px`">
-                <li class="scroll-item" :style="`height: ${itemHeight}px; top: ${item.top}px`" v-for="(item) in indexList" :key="item">
-                    {{item.isNewLine ? '' : item.value}}
-                    <span :class="[{ 'show-all': item.hasFolded }, 'log-folder']" v-if="item.isFold" @click="foldListData(item.index, item.isFold)"></span>
-                </li>
-            </ul>
-            <ul class="scroll scroll-main" :style="`height: ${ulHeight}px; top: ${-totalScrollHeight}px ;width: ${mainWidth}px; left: ${indexWidth}px`">
-                <li :class="[{ 'pointer': item.isFold, hover: item.showIndex === curHoverIndex }, 'scroll-item']"
-                    @mouseenter="curHoverIndex = item.showIndex"
-                    @mouseleave="curHoverIndex = -1"
-                    :style="`height: ${itemHeight}px; top: ${item.top}px; left: ${-bottomScrollDis * (itemWidth - mainWidth) / (mainWidth - bottomScrollWidth) }px;`"
-                    v-for="item in listData"
-                    :key="item.top + item.value"
-                    @click="foldListData(item.index, item.isFold)"
-                ><slot :data="item"></slot>
-                </li>
-            </ul>
-            <span v-if="itemHeight * totalNumber > visHeight" class="min-nav min-map" :style="`height: ${visHeight}px; right: ${visWidth * 11 / 100}px`"></span>
-            <canvas v-show="itemHeight * totalNumber > visHeight" class="min-nav no-scroll" :style="`height: ${visHeight}px; width: ${visWidth / 10}px;right: ${visWidth / 100}px`" ref="minMap" @click="changeMinMap"></canvas>
-            <span class="min-nav-slide no-scroll"
-                v-if="itemHeight * totalNumber > visHeight"
-                :style="`height: ${visHeight / 8}px; width: ${visWidth / 10}px; top: ${minMapTop}px;right: ${visWidth / 100}px`"
-                @mousedown="startNavMove(mapHeight - visHeight / 8)"
-            >
-            </span>
-            <canvas class="min-nav" :style="`height: ${visHeight}px; width: ${visWidth / 100}px`" ref="minNav"></canvas>
-            <span class="min-nav-slide nav-show"
-                :style="`height: ${navHeight}px; width: ${visWidth / 100}px; top: ${minNavTop}px`"
-                v-if="navHeight < visHeight"
-                @mousedown="startNavMove(visHeight - navHeight)"
-            >
-            </span>
-            <span class="min-nav-slide bottom-scroll"
-                :style="`left: ${indexWidth + bottomScrollDis + 20}px; width: ${bottomScrollWidth}px`"
-                v-if="bottomScrollWidth < mainWidth"
-                @mousedown="startBottomMove"
-            >
-            </span>
-        </template>
-
-        <p class="list-empty" v-if="isLogErr || (hasCompleteInit && totalNumber <= 0)">{{ errMessage }}</p>
+        <ul class="scroll-index scroll" :style="`top: ${-totalScrollHeight}px; width: ${indexWidth}px; height: ${ulHeight}px`">
+            <li class="scroll-item" :style="`height: ${itemHeight}px; top: ${item.top}px`" v-for="(item) in indexList" :key="item">
+                {{item.isNewLine ? '' : item.value}}
+                <span :class="[{ 'show-all': item.hasFolded }, 'log-folder']" v-if="item.isFold" @click="foldListData(item.index, item.isFold)"></span>
+            </li>
+        </ul>
+        <ul class="scroll scroll-main" :style="`height: ${ulHeight}px; top: ${-totalScrollHeight}px ;width: ${mainWidth}px; left: ${indexWidth}px`">
+            <li :class="[{ 'pointer': item.isFold, hover: item.showIndex === curHoverIndex }, 'scroll-item']"
+                @mouseenter="curHoverIndex = item.showIndex"
+                @mouseleave="curHoverIndex = -1"
+                :style="`height: ${itemHeight}px; top: ${item.top}px; left: ${-bottomScrollDis * (itemWidth - mainWidth) / (mainWidth - bottomScrollWidth) }px;`"
+                v-for="item in listData"
+                :key="item.top + item.value"
+                @click="foldListData(item.index, item.isFold)"
+            ><slot :data="item"></slot>
+            </li>
+        </ul>
+        <span v-if="itemHeight * totalNumber > visHeight" class="min-nav min-map" :style="`height: ${visHeight}px; right: ${visWidth * 11 / 100}px`"></span>
+        <canvas v-show="itemHeight * totalNumber > visHeight" class="min-nav no-scroll" :style="`height: ${visHeight}px; width: ${visWidth / 10}px;right: ${visWidth / 100}px`" ref="minMap" @click="changeMinMap"></canvas>
+        <span class="min-nav-slide no-scroll"
+            v-if="itemHeight * totalNumber > visHeight"
+            :style="`height: ${visHeight / 8}px; width: ${visWidth / 10}px; top: ${minMapTop}px;right: ${visWidth / 100}px`"
+            @mousedown="startNavMove(mapHeight - visHeight / 8)"
+        >
+        </span>
+        <canvas class="min-nav" :style="`height: ${visHeight}px; width: ${visWidth / 100}px`" ref="minNav"></canvas>
+        <span class="min-nav-slide nav-show"
+            :style="`height: ${navHeight}px; width: ${visWidth / 100}px; top: ${minNavTop}px`"
+            v-if="navHeight < visHeight"
+            @mousedown="startNavMove(visHeight - navHeight)"
+        >
+        </span>
+        <span class="min-nav-slide bottom-scroll"
+            :style="`left: ${indexWidth + bottomScrollDis + 20}px; width: ${bottomScrollWidth}px`"
+            v-if="bottomScrollWidth < mainWidth"
+            @mousedown="startBottomMove"
+        >
+        </span>
+        <p class="list-empty" v-if="hasCompleteInit && totalNumber <= 0">{{ errMessage }}</p>
         <section class="log-loading" v-if="!hasCompleteInit">
             <div class="lds-ring"><div></div><div></div><div></div><div></div></div>
         </section>
@@ -89,8 +86,7 @@
                 isBottomMove: false,
                 curHoverIndex: -1,
                 hasCompleteInit: false,
-                errMessage: this.$t('execDetail.emptyLog'),
-                isLogErr: false
+                errMessage: this.$t('execDetail.emptyLog')
             }
         },
 
@@ -128,10 +124,9 @@
                 this.maxVisHeight = visHeight
             },
 
-            handleApiErr (errMessage) {
+            handleApiErr (message) {
                 this.hasCompleteInit = true
-                this.isLogErr = true
-                this.errMessage = errMessage
+                this.$bkMessage({ theme: 'error', message })
             },
 
             resetData () {
@@ -315,11 +310,8 @@
                     const data = event.data
                     if (data.id !== this.id) return
                     switch (data.type) {
-                        case 'completeInit':
-                            this.freshDataScrollBottom(data)
-                            this.hasCompleteInit = true
-                            break
                         case 'completeAdd':
+                            this.hasCompleteInit = true
                             const lastIndexData = this.indexList[this.indexList.length - 1] || { listIndex: 0 }
                             if (this.totalNumber - lastIndexData.listIndex <= 3) {
                                 this.freshDataScrollBottom(data)
@@ -387,8 +379,7 @@
             },
 
             addLogData (list) {
-                const type = this.hasCompleteInit ? 'addListData' : 'initLog'
-                const postData = { type, list, mainWidth: this.mainWidth, id: this.id }
+                const postData = { type: 'addListData', list, mainWidth: this.mainWidth, id: this.id }
                 this.worker.postMessage(postData)
             },
 
