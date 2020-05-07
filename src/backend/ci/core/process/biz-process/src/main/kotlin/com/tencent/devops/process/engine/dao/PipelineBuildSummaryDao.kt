@@ -240,10 +240,10 @@ class PipelineBuildSummaryDao {
         val logic = pipelineFilterParam.logic
         val conditionAndFlag: Boolean = (logic == Logic.AND)
         val filterByPipelineNames = pipelineFilterParam.filterByPipelineNames
-        var filterConditions = DSL.trueCondition()
+        var filterConditions = generateInitCondition(conditionAndFlag)
         // 过滤流水线名称
         if (filterByPipelineNames.isNotEmpty()) {
-            var filterByPipelineNameConditions = DSL.trueCondition()
+            var filterByPipelineNameConditions = generateInitCondition(conditionAndFlag)
             filterByPipelineNames.forEach {
                 val pipelineName = it.pipelineName
                 val pipelineNameField = T_PIPELINE_INFO.PIPELINE_NAME
@@ -264,7 +264,7 @@ class PipelineBuildSummaryDao {
         // 过滤流水线创建人
         val filterByPipelineCreators = pipelineFilterParam.filterByPipelineCreators
         if (filterByPipelineCreators.isNotEmpty()) {
-            var filterByPipelineCreatorConditions = DSL.trueCondition()
+            var filterByPipelineCreatorConditions = generateInitCondition(conditionAndFlag)
             filterByPipelineCreators.forEach {
                 val userIds = it.userIds
                 val pipelineCreatorField = T_PIPELINE_INFO.CREATOR
@@ -286,7 +286,7 @@ class PipelineBuildSummaryDao {
         val filterByLabels = filterByLabelInfo.filterByLabels
         val labelToPipelineMap = filterByLabelInfo.labelToPipelineMap
         if (filterByLabels.isNotEmpty()) {
-            var filterByLabelConditions = DSL.trueCondition()
+            var filterByLabelConditions = generateInitCondition(conditionAndFlag)
             filterByLabels.forEach { filterByLabel ->
                 val labelIds = filterByLabel.labelIds
                 val pipelineIdField = T_PIPELINE_INFO.PIPELINE_ID
@@ -309,6 +309,9 @@ class PipelineBuildSummaryDao {
         }
         conditions.add(filterConditions)
     }
+
+    private fun generateInitCondition(conditionAndFlag: Boolean) =
+        if (conditionAndFlag) DSL.trueCondition() else DSL.falseCondition()
 
     private fun generateSubCondition(
         bkCondition: com.tencent.devops.process.pojo.classify.enums.Condition,
