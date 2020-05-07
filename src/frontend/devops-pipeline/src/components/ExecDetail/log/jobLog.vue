@@ -36,6 +36,8 @@
     import search from '../tools/search'
     // eslint-disable-next-line
     const Worker = require('worker-loader!./worker.js')
+    // eslint-disable-next-line
+    const DataWorker = require('worker-loader!./dataWorker.js')
 
     function prezero (num) {
         num = Number(num)
@@ -83,6 +85,7 @@
                 searchStr: '',
                 showTime: false,
                 worker: new Worker(),
+                dataWorker: new DataWorker(),
                 curFoldList: this.pluginList.map(plugin => ({ [plugin.id]: false })),
                 curSearchIndex: 0,
                 logPostData: {},
@@ -91,11 +94,13 @@
         },
 
         mounted () {
+            this.initAssistWorker()
             this.worker.postMessage({ type: 'initStatus', pluginList: this.pluginList.map(x => x.id) })
         },
 
         beforeDestroy () {
             this.worker.terminate()
+            this.dataWorker.terminate()
             Object.keys(this.logPostData).forEach(key => {
                 const postData = this.logPostData[key]
                 this.closeTags.push(postData.tag)
@@ -107,6 +112,12 @@
                 'getInitLog',
                 'getAfterLog'
             ]),
+
+            initAssistWorker () {
+                const dataChannel = new MessageChannel()
+                this.dataWorker.postMessage({ type: 'init', dataPort: dataChannel.port1 }, [dataChannel.port1])
+                this.worker.postMessage({ type: 'initAssistWorker', dataPort: dataChannel.port2 }, [dataChannel.port2])
+            },
 
             showSearchLog ({ index, refId, realIndex }) {
                 this.curSearchIndex = realIndex
