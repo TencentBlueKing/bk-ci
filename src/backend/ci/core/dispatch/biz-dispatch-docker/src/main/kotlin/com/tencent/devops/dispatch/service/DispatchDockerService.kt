@@ -4,6 +4,7 @@ import com.tencent.devops.dispatch.dao.PipelineDockerIPInfoDao
 import com.tencent.devops.dispatch.pojo.DockerHostLoadConfig
 import com.tencent.devops.dispatch.pojo.DockerIpInfoVO
 import com.tencent.devops.dispatch.pojo.DockerIpListPage
+import com.tencent.devops.dispatch.utils.CommonUtils
 import com.tencent.devops.dispatch.utils.DockerHostUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -61,9 +62,16 @@ class DispatchDockerService @Autowired constructor(
 
     fun create(userId: String, dockerIpInfoVOs: List<DockerIpInfoVO>): Boolean {
         logger.info("$userId create docker IP $dockerIpInfoVOs")
+        dockerIpInfoVOs.forEach {
+            if (!CommonUtils.verifyIp(it.dockerIp.trim())) {
+                logger.warn("Dispatch create dockerIp error, invalid IP format: ${it.dockerIp}")
+                throw RuntimeException("Dispatch create dockerIp error, invalid IP format: ${it.dockerIp}")
+            }
+        }
+
         try {
             dockerIpInfoVOs.forEach {
-                pipelineDockerIPInfoDao.create(
+                pipelineDockerIPInfoDao.createOrUpdate(
                     dslContext = dslContext,
                     dockerIp = it.dockerIp.trim(),
                     dockerHostPort = it.dockerHostPort,
@@ -91,7 +99,8 @@ class DispatchDockerService @Autowired constructor(
         try {
             pipelineDockerIPInfoDao.update(
                 dslContext = dslContext,
-                idcIp = dockerIpInfoVO.dockerIp,
+                dockerIp = dockerIpInfoVO.dockerIp,
+                dockerHostPort = dockerIpInfoVO.dockerHostPort,
                 used = dockerIpInfoVO.usedNum,
                 cpuLoad = dockerIpInfoVO.averageCpuLoad,
                 memLoad = dockerIpInfoVO.averageMemLoad,
@@ -105,6 +114,17 @@ class DispatchDockerService @Autowired constructor(
         } catch (e: Exception) {
             logger.error("OP dispatchDocker update error.", e)
             throw RuntimeException("OP dispatchDocker update error.")
+        }
+    }
+
+    fun updateDockerIpEnable(userId: String, dockerIp: String, dockerHostPort: String): Boolean {
+        logger.info("$userId update Docker IP status enable: $dockerIp, dockerHostPort: $dockerHostPort")
+        try {
+            pipelineDockerIPInfoDao.updateDockerHostPort(dslContext, dockerIp, true, dockerHostPort.toInt())
+            return true
+        } catch (e: Exception) {
+            logger.error("OP dispatchDocker updateDockerIpEnable error.", e)
+            throw RuntimeException("OP dispatchDocker updateDockerIpEnable error.")
         }
     }
 
