@@ -458,6 +458,22 @@ BEGIN
                     AND COLUMN_NAME = 'DOCKER_FILE_CONTENT') THEN
         ALTER TABLE T_IMAGE ADD COLUMN `DOCKER_FILE_CONTENT` text COMMENT 'dockerFile内容';
     END IF;
+	
+	IF EXISTS(SELECT 1
+                  FROM information_schema.statistics
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_ATOM_VERSION_LOG'
+                    AND INDEX_NAME = 'inx_tpavl_atom_id') THEN
+        ALTER TABLE T_ATOM_VERSION_LOG DROP INDEX inx_tpavl_atom_id;
+    END IF;
+	
+	IF NOT EXISTS(SELECT 1
+                  FROM information_schema.statistics
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_ATOM_VERSION_LOG'
+                    AND INDEX_NAME = 'uni_inx_tavl_atom_id') THEN
+        ALTER TABLE T_ATOM_VERSION_LOG ADD UNIQUE INDEX uni_inx_tavl_atom_id (ATOM_ID); 
+    END IF;
 
     COMMIT;
 END <CI_UBF>

@@ -20,7 +20,6 @@ import com.tencent.devops.dispatch.pojo.redis.RedisBuild
 import com.tencent.devops.dispatch.utils.CommonUtils
 import com.tencent.devops.dispatch.utils.DockerHostUtils
 import com.tencent.devops.dispatch.utils.redis.RedisUtils
-import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
 import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
 import com.tencent.devops.store.pojo.image.enums.ImageRDTypeEnum
 import com.tencent.devops.ticket.pojo.enums.CredentialType
@@ -152,20 +151,27 @@ class DockerHostClient @Autowired constructor(
         dockerBuildStart(dockerIp, dockerHostPort, requestBody, event)
     }
 
-    fun endBuild(event: PipelineAgentShutdownEvent, dockerIp: String, containerId: String) {
+    fun endBuild(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        vmSeqId: Int,
+        containerId: String,
+        dockerIp: String
+    ) {
         val requestBody = DockerHostBuildInfo(
-            projectId = event.projectId,
+            projectId = projectId,
             agentId = "",
-            pipelineId = event.pipelineId,
-            buildId = event.buildId,
-            vmSeqId = event.vmSeqId?.toInt() ?: 0,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            vmSeqId = vmSeqId,
             secretKey = "",
             status = 0,
             imageName = "",
             containerId = containerId,
             wsInHost = true,
             poolNo = 0,
-            registryUser = event.userId,
+            registryUser = "",
             registryPwd = "",
             imageType = "",
             imagePublicFlag = false,
@@ -187,13 +193,13 @@ class DockerHostClient @Autowired constructor(
 
         OkhttpUtils.doHttp(request).use { resp ->
             val responseBody = resp.body()!!.string()
-            logger.info("[${event.projectId}|${event.pipelineId}|${event.buildId}] End build Docker VM $dockerIp responseBody: $responseBody")
+            logger.info("[$projectId|$pipelineId|$buildId] End build Docker VM $dockerIp responseBody: $responseBody")
             val response: Map<String, Any> = jacksonObjectMapper().readValue(responseBody)
             if (response["status"] == 0) {
                 response["data"] as Boolean
             } else {
                 val msg = response["message"] as String
-                logger.error("[${event.projectId}|${event.pipelineId}|${event.buildId}] End build Docker VM failed, msg: $msg")
+                logger.error("[$projectId|$pipelineId|$buildId] End build Docker VM failed, msg: $msg")
                 throw DockerServiceException("End build Docker VM failed, msg: $msg")
             }
         }
