@@ -276,7 +276,7 @@ CREATE TABLE IF NOT EXISTS `T_ATOM_VERSION_LOG` (
   `CREATE_TIME` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `UPDATE_TIME` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`ID`),
-  KEY `inx_tpavl_atom_id` (`ATOM_ID`)
+  UNIQUE KEY `uni_inx_tavl_atom_id` (ATOM_ID)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='流水线原子版本日志表';
 
 -- ----------------------------

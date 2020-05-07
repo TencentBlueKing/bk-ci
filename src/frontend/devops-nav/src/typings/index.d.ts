@@ -66,6 +66,5 @@ declare var DOCS_URL_PREFIX: string
 declare var DEVOPS_LS_VERSION: string
 declare var ENTERPRISE_VERSION: string
 declare module '*.png'
-declare const require: any
-declare const X_DEVOPS_PROJECT_ID: string
 
+declare const X_DEVOPS_PROJECT_ID: string
