@@ -25,4 +25,5 @@
  */
 
 dependencies {
+    compile project(":core:environment:biz-environment")
 }

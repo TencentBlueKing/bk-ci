@@ -71,10 +71,12 @@ object Runner {
             // 开始轮询
             try {
                 LoggerService.elementId = VMUtils.genStartVMTaskId(buildVariables.containerId)
+
                 showBuildStartupLog(buildVariables.buildId, buildVariables.vmSeqId)
                 showMachineLog(buildVariables.vmName)
                 showSystemLog()
                 showRuntimeEnvs(buildVariables.variablesWithType)
+
                 val variablesMap = buildVariables.variablesWithType.map { it.key to it.value.toString() }.toMap()
                 workspacePathFile = workspaceInterface.getWorkspace(variablesMap, buildVariables.pipelineId)
 
@@ -84,7 +86,6 @@ object Runner {
                 loop@ while (true) {
                     logger.info("Start to claim the task")
                     val buildTask = ProcessService.claimTask()
-                    val taskName = buildTask.elementName ?: "Task"
                     logger.info("Start to execute the task($buildTask)")
                     when (buildTask.status) {
                         BuildTaskStatus.DO -> {
@@ -163,6 +164,7 @@ object Runner {
                                     errorCode = errorCode
                                 )
                             } finally {
+                                LoggerService.finishTask()
                                 LoggerService.elementId = ""
                             }
                         }
