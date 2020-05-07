@@ -41,7 +41,7 @@ class VmStatusScheduler @Autowired constructor(
             val lockSuccess = redisLock.tryLock()
             if (lockSuccess) {
                 logger.info("Docker VM status fresh start")
-                executeTask()
+                // executeTask()
             }
         } catch (e: Throwable) {
             logger.error(" Docker status fresh exception", e)
@@ -79,6 +79,8 @@ class VmStatusScheduler @Autowired constructor(
 
     private fun singleDockerIpCheck(dockerIpInfoRecord: TDispatchPipelineDockerIpInfoRecord) {
         try {
+            redisOperation.set("${Constants.DOCKER_IP_COUNT_KEY_PREFIX}${dockerIpInfoRecord.dockerIp}", "1", 120)
+
             val nowTimestamp = System.currentTimeMillis()
             val lastUpdateTimestamp = dockerIpInfoRecord.gmtModified.timestamp()
             if ((nowTimestamp - lastUpdateTimestamp) >= 60 * 1000) {
