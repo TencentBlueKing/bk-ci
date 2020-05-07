@@ -2,7 +2,7 @@
     "compilerOptions": {
         "outDir": "./dist/",
         "sourceMap": true,
-        "strict": false,
+        "strict": true,
         "jsx": "preserve",
         "noImplicitReturns": true,
         "experimentalDecorators": true,
