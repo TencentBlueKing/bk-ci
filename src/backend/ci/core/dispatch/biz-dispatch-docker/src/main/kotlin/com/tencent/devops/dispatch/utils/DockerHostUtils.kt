@@ -265,7 +265,7 @@ class DockerHostUtils @Autowired constructor(
         }
 
         // IP当前可用，还要检测当前IP限流是否已达上限
-        val dockerIpCount = redisOperation.get("${Constants.DOCKER_IP_KEY_PREFIX}$dockerIp")
+        val dockerIpCount = redisOperation.get("${Constants.DOCKER_IP_COUNT_KEY_PREFIX}$dockerIp")
         logger.info("${event.projectId}|${event.pipelineId}|${event.vmSeqId} $dockerIp dockerIpCount: $dockerIpCount")
         return if (dockerIpCount != null && dockerIpCount.toInt() > DOCKER_IP_COUNT_MAX) {
             val pair = getAvailableDockerIpWithSpecialIps(event.projectId, event.pipelineId, event.vmSeqId, specialIpSet, setOf(dockerIp))
@@ -365,7 +365,7 @@ class DockerHostUtils @Autowired constructor(
 
     private fun exceedIpLimiting(dockerIp: String): Boolean {
         // 查看当前IP是否已达限流
-        val dockerIpCount = redisOperation.get("${Constants.DOCKER_IP_KEY_PREFIX}$dockerIp")
+        val dockerIpCount = redisOperation.get("${Constants.DOCKER_IP_COUNT_KEY_PREFIX}$dockerIp")
         logger.info("$dockerIp dockerIpCount: $dockerIpCount")
         if (dockerIpCount != null && dockerIpCount.toInt() > DOCKER_IP_COUNT_MAX) {
             return true

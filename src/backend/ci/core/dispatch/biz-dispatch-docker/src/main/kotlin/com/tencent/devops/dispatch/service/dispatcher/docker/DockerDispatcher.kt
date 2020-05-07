@@ -156,7 +156,7 @@ class DockerDispatcher @Autowired constructor(
             }
 
             // 选择IP后，增加缓存计数，限流用
-            redisOperation.increment("${Constants.DOCKER_IP_KEY_PREFIX}${dockerPair.first}", 1)
+            redisOperation.increment("${Constants.DOCKER_IP_COUNT_KEY_PREFIX}${dockerPair.first}", 1)
 
             dockerHostClient.startBuild(pipelineAgentStartupEvent, dockerPair.first, dockerPair.second, poolNo)
         } catch (e: Exception) {
