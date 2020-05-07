@@ -4,7 +4,7 @@
 
 > **Note**: The `master` branch may be in an unstable or even broken state during development. Please use [releases](https://github.com/tencent/bk-ci/releases) instead of  `master` branch in order to get stable binaries.
 
-a free & open source CI server, bk-ci helps you automate your build-test-release workflows, continuous delivery of your product faster, easier, with fewer bugs.
+a free & open source CI server, bk-ci(BlueKing Continuous Integration) helps you automate your build-test-release workflows, continuous delivery of your product faster, easier, with fewer bugs.
 
 TODO
 使用蓝盾屏蔽掉所有研发流程中的繁琐环节，让你聚焦于编码。蓝盾通常被用于：
