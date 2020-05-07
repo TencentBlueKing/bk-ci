@@ -39,15 +39,15 @@
 
     @Component
     export default class IframeView extends Vue {
-    isLoading: boolean = true
-    initPath: string = ''
-    src: string = ''
-    leaving: boolean = false
-    showExplorerTips: string = localStorage.getItem('showExplorerTips')
+        isLoading: boolean = true
+        initPath: string = ''
+        src: string = ''
+        leaving: boolean = false
+        showExplorerTips: string = localStorage.getItem('showExplorerTips')
 
-    $refs: {
-        iframeEle: HTMLIFrameElement
-    }
+        $refs: {
+            iframeEle: HTMLIFrameElement
+        }
 
         @State projectList
         @State currentPage

@@ -60,7 +60,7 @@
     })
     export default class User extends Vue {
         @Prop()
-    username: string
+        username: string
         @Prop()
         avatarUrl: string
         @Prop()
