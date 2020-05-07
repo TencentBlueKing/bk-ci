@@ -19,12 +19,24 @@ class BusinessConfigService @Autowired constructor(
 ) {
 
     fun add(businessConfigRequest: BusinessConfigRequest): Boolean {
-        businessConfigDao.add(dslContext, businessConfigRequest)
+        if (businessConfigDao.existFeatureConfig(dslContext, businessConfigRequest.business, businessConfigRequest.feature, businessConfigRequest.businessValue)) {
+            return false
+        } else {
+            businessConfigDao.add(dslContext, businessConfigRequest)
+        }
         return true
     }
 
-    fun update(id: String, businessConfigRequest: BusinessConfigRequest): Int {
-        return businessConfigDao.update(dslContext, businessConfigRequest)
+    fun update(id: Int, businessConfigRequest: BusinessConfigRequest): Int {
+        if (id < 0) {
+            return -1
+        }
+        val record = businessConfigDao.get(dslContext, businessConfigRequest.business.name, businessConfigRequest.feature, businessConfigRequest.businessValue)
+        if (record != null && record.id != id) {
+            return -1
+        } else {
+            return businessConfigDao.updateById(dslContext, id, businessConfigRequest)
+        }
     }
 
     fun listAllBusinessConfigs(): List<BusinessConfigResponse>? {
