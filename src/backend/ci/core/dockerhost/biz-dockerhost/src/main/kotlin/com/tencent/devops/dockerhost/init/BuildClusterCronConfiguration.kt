@@ -54,7 +54,7 @@ class BuildClusterCronConfiguration : SchedulingConfigurer {
 
     override fun configureTasks(scheduledTaskRegistrar: ScheduledTaskRegistrar) {
         scheduledTaskRegistrar.setScheduler(Executors.newScheduledThreadPool(100))
-        scheduledTaskRegistrar.addFixedRateTask(
+/*        scheduledTaskRegistrar.addFixedRateTask(
             IntervalTask(
                 Runnable { runner.startBuild() }, 5000, 60 * 1000
             )
@@ -64,7 +64,7 @@ class BuildClusterCronConfiguration : SchedulingConfigurer {
             IntervalTask(
                 Runnable { runner.endBuild() }, 20 * 1000, 120 * 1000
             )
-        )
+        )*/
 
         scheduledTaskRegistrar.addFixedRateTask(
             IntervalTask(
@@ -78,7 +78,7 @@ class BuildClusterCronConfiguration : SchedulingConfigurer {
 
         scheduledTaskRegistrar.addFixedRateTask(
             IntervalTask(
-                Runnable { runner.refreshDockerIpStatus() }, 10 * 1000, 1000
+                Runnable { runner.refreshDockerIpStatus() }, 5 * 1000, 1000
             )
         )
     }

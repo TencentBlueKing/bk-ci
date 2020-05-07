@@ -3,6 +3,7 @@ package com.tencent.devops.dispatch.schedule
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.dispatch.common.Constants
@@ -50,9 +51,9 @@ class VmStatusScheduler @Autowired constructor(
     }
 
     /**
-     * 每隔一小时定时重新check异常母机状态
+     * 每隔2分钟check母机状态
      */
-    @Scheduled(cron = "0 0 0/1 * * ?")
+    @Scheduled(cron = "0 0/2 * * * ?")
     fun checkVMStatus() {
         val redisLock = RedisLock(redisOperation, failJobLockKey, 3600L)
         try {
@@ -64,15 +65,30 @@ class VmStatusScheduler @Autowired constructor(
                     grayEnv = true
                 }
                 logger.info("VMStatusScheduler checkVMStatus ===> gray: $gray")
-                val unableDockerIpList = pipelineDockerIpInfoDao.getDockerIpList(dslContext, false, grayEnv)
-                unableDockerIpList.stream().forEach {
-                    singleTask(it)
+                val dockerIpList = pipelineDockerIpInfoDao.getDockerIpList(dslContext, true, grayEnv)
+                dockerIpList.stream().forEach {
+                    singleDockerIpCheck(it)
                 }
             }
         } catch (e: Throwable) {
-            logger.error("Start check docker VM status fail.", e)
+            logger.error("Check docker VM status failed.", e)
         } finally {
             redisLock.unlock()
+        }
+    }
+
+    private fun singleDockerIpCheck(dockerIpInfoRecord: TDispatchPipelineDockerIpInfoRecord) {
+        try {
+            val nowTimestamp = System.currentTimeMillis()
+            val lastUpdateTimestamp = dockerIpInfoRecord.gmtModified.timestamp()
+            if ((nowTimestamp - lastUpdateTimestamp) >= 60 * 1000) {
+                // 如果之前可用，更新容器状态为不可用
+                if (dockerIpInfoRecord.enable) {
+                    pipelineDockerIpInfoDao.updateDockerIpStatus(dslContext, dockerIpInfoRecord.dockerIp, false)
+                }
+            }
+        } catch (e: Exception) {
+            logger.error("singleDockerIpCheck updateDockerIpStatus fail.", e)
         }
     }
 
@@ -112,7 +128,7 @@ class VmStatusScheduler @Autowired constructor(
                     val averageMemLoad = dockerHostLoad["averageMemLoad"] as Int
                     val averageDiskLoad = dockerHostLoad["averageDiskLoad"] as Int
                     val averageDiskIOLoad = dockerHostLoad["averageDiskIOLoad"] as Int
-                    pipelineDockerIpInfoDao.update(
+                    pipelineDockerIpInfoDao.updateDockerIpLoad(
                         dslContext = dslContext,
                         dockerIp = itDockerIp,
                         dockerHostPort = it.dockerHostPort,
@@ -121,12 +137,10 @@ class VmStatusScheduler @Autowired constructor(
                         memLoad = averageMemLoad,
                         diskLoad = averageDiskLoad,
                         diskIOLoad = averageDiskIOLoad,
-                        enable = true,
-                        grayEnv = it.grayEnv,
-                        specialOn = it.specialOn
+                        enable = true
                     )
 
-                    redisOperation.set("${Constants.DOCKER_IP_KEY_PREFIX}$itDockerIp", "1", 180)
+                    redisOperation.set("${Constants.DOCKER_IP_COUNT_KEY_PREFIX}$itDockerIp", "1", 180)
                 } else {
                     // 如果之前可用，更新容器状态
                     if (enable) {
