@@ -27,6 +27,7 @@
 package com.tencent.devops.store.service.container
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.store.pojo.container.BuildResource
 
 /**
@@ -35,6 +36,11 @@ import com.tencent.devops.store.pojo.container.BuildResource
  * since: 2018-12-20
  */
 interface BuildResourceService {
+
+    /**
+     * 获取默认构建资源信息
+     */
+    fun getDefaultBuildResource(buildType: BuildType): Any?
 
     /**
      * 获取所有构建资源信息

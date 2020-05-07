@@ -109,19 +109,28 @@ abstract class ArchiveAtomServiceImpl : ArchiveAtomService {
         dslContext.transaction { t ->
             val context = DSL.using(t)
             fileDao.addFileInfo(
-                context,
-                userId,
-                fileId,
-                projectCode,
-                BK_CI_ATOM_DIR,
-                "$BK_CI_ATOM_DIR/${atomEnvRequest.pkgPath}",
-                packageFileName,
-                packageFileSize
+                dslContext = context,
+                userId = userId,
+                fileId = fileId,
+                projectId = projectCode,
+                fileType = BK_CI_ATOM_DIR,
+                filePath = "$BK_CI_ATOM_DIR/${atomEnvRequest.pkgPath}",
+                fileName = packageFileName,
+                fileSize = packageFileSize
             )
-            fileDao.batchAddFileProps(context, userId, fileId, mapOf("shaContent" to shaContent))
+            fileDao.batchAddFileProps(
+                dslContext = context,
+                userId = userId,
+                fileId = fileId,
+                props = mapOf("shaContent" to shaContent)
+            )
         }
         // 可执行文件摘要内容放入redis供插件升级校验
-        redisOperation.set("$projectCode:$atomCode:$version:packageShaContent", shaContent, TimeUnit.DAYS.toSeconds(1))
+        redisOperation.set(
+            key = "$projectCode:$atomCode:$version:packageShaContent",
+            value = shaContent,
+            expiredInSecond = TimeUnit.DAYS.toSeconds(1)
+        )
         atomEnvRequest.shaContent = shaContent
         atomEnvRequest.pkgName = disposition.fileName
         return Result(ArchiveAtomResponse(atomEnvRequest))

@@ -43,10 +43,13 @@ import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.common.web.mq.alert.AlertLevel.HIGH
 import com.tencent.devops.common.web.mq.alert.AlertLevel.LOW
 import com.tencent.devops.common.web.mq.alert.AlertUtils
+import com.tencent.devops.dispatch.client.DockerHostClient
+import com.tencent.devops.dispatch.config.DefaultImageConfig
 import com.tencent.devops.dispatch.dao.PipelineDockerBuildDao
 import com.tencent.devops.dispatch.dao.PipelineDockerEnableDao
 import com.tencent.devops.dispatch.dao.PipelineDockerHostDao
 import com.tencent.devops.dispatch.dao.PipelineDockerHostZoneDao
+import com.tencent.devops.dispatch.dao.PipelineDockerPoolDao
 import com.tencent.devops.dispatch.dao.PipelineDockerTaskDao
 import com.tencent.devops.dispatch.pojo.ContainerInfo
 import com.tencent.devops.dispatch.pojo.DockerHostBuildInfo
@@ -56,12 +59,14 @@ import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.dispatch.pojo.redis.RedisBuild
 import com.tencent.devops.dispatch.utils.CommonUtils
 import com.tencent.devops.dispatch.utils.DockerHostLock
+import com.tencent.devops.dispatch.utils.DockerHostUtils
 import com.tencent.devops.dispatch.utils.DockerUtils
 import com.tencent.devops.dispatch.utils.redis.RedisUtils
 import com.tencent.devops.log.utils.LogUtils
 import com.tencent.devops.model.dispatch.tables.records.TDispatchPipelineDockerBuildRecord
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.pojo.VmInfo
+import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
 import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
 import com.tencent.devops.process.pojo.mq.PipelineBuildLessDockerShutdownEvent
 import com.tencent.devops.process.pojo.mq.PipelineBuildLessDockerStartupEvent
@@ -76,7 +81,6 @@ import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import org.springframework.util.StopWatch
@@ -84,9 +88,11 @@ import org.springframework.util.StopWatch
 @Service
 class DockerHostBuildService @Autowired constructor(
     private val dslContext: DSLContext,
+    private val dockerHostClient: DockerHostClient,
     private val pipelineDockerEnableDao: PipelineDockerEnableDao,
     private val pipelineDockerBuildDao: PipelineDockerBuildDao,
     private val pipelineDockerTaskDao: PipelineDockerTaskDao,
+    private val pipelineDockerPoolDao: PipelineDockerPoolDao,
     private val pipelineDockerHostDao: PipelineDockerHostDao,
     private val pipelineDockerHostZoneDao: PipelineDockerHostZoneDao,
     private val redisUtils: RedisUtils,
@@ -94,11 +100,10 @@ class DockerHostBuildService @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val gray: Gray,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
-    private val rabbitTemplate: RabbitTemplate
+    private val dockerHostUtils: DockerHostUtils,
+    private val rabbitTemplate: RabbitTemplate,
+    private val defaultImageConfig: DefaultImageConfig
 ) {
-
-    @Value("\${dispatch.dockerBuildImagePrefix:#{null}}")
-    val dockerBuildImagePrefix: String? = null
 
     private val grayFlag: Boolean = gray.isGray()
 
@@ -110,6 +115,7 @@ class DockerHostBuildService @Autowired constructor(
         val dispatchType = event.dispatchType as DockerDispatchType
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
+            val poolNo = dockerHostUtils.getIdlePoolNo(event.pipelineId, event.vmSeqId)
             val secretKey = ApiUtil.randomSecretKey()
             val id = pipelineDockerBuildDao.startBuild(
                 dslContext = context,
@@ -123,7 +129,10 @@ class DockerHostBuildService @Autowired constructor(
                     Zone.SHENZHEN.name
                 } else {
                     event.zone!!.name
-                })
+                },
+                dockerIp = "",
+                poolNo = poolNo
+            )
             val agentId = HashUtil.encodeLongId(id)
             redisUtils.setDockerBuild(
                 id, secretKey,
@@ -147,9 +156,15 @@ class DockerHostBuildService @Autowired constructor(
                 dispatchType.dockerBuildVersion
             } else {
                 when (dispatchType.dockerBuildVersion) {
-                    DockerVersion.TLINUX1_2.value -> dockerBuildImagePrefix + TLINUX1_2_IMAGE
-                    DockerVersion.TLINUX2_2.value -> dockerBuildImagePrefix + TLINUX2_2_IMAGE
-                    else -> "$dockerBuildImagePrefix/${dispatchType.dockerBuildVersion}"
+                    DockerVersion.TLINUX1_2.value -> {
+                        defaultImageConfig.getTLinux1_2CompleteUri()
+                    }
+                    DockerVersion.TLINUX2_2.value -> {
+                        defaultImageConfig.getTLinux2_2CompleteUri()
+                    }
+                    else -> {
+                        defaultImageConfig.getCompleteUriByImageName(dispatchType.dockerBuildVersion)
+                    }
                 }
             }
             logger.info("Docker images is: $dockerImage")
@@ -261,39 +276,63 @@ class DockerHostBuildService @Autowired constructor(
         )
     }
 
-    fun finishDockerBuild(buildId: String, vmSeqId: String?, success: Boolean) {
-        logger.info("Finish docker build of buildId($buildId) and vmSeqId($vmSeqId) with result($success)")
-        if (vmSeqId.isNullOrBlank()) {
-            val record = pipelineDockerBuildDao.listBuilds(dslContext, buildId)
+    fun finishDockerBuild(event: PipelineAgentShutdownEvent) {
+        logger.info("Finish docker build of buildId(${event.buildId}) and vmSeqId(${event.vmSeqId}) with result(${event.buildResult})")
+        if (event.vmSeqId.isNullOrBlank()) {
+            val record = pipelineDockerBuildDao.listBuilds(dslContext, event.buildId)
             if (record.isEmpty()) {
                 return
             }
             record.forEach {
-                finishBuild(it, success)
+                finishDockerBuild(it, event)
             }
         } else {
-            val record = pipelineDockerBuildDao.getBuild(dslContext, buildId, vmSeqId!!.toInt())
+            val record = pipelineDockerBuildDao.getBuild(dslContext, event.buildId, event.vmSeqId!!.toInt())
             if (record != null) {
-                finishBuild(record, success)
+                finishDockerBuild(record, event)
             }
+        }
+    }
+
+    private fun finishDockerBuild(record: TDispatchPipelineDockerBuildRecord, event: PipelineAgentShutdownEvent) {
+        finishBuild(record, event.buildResult)
+
+        // 编译环境才会更新pool
+        pipelineDockerPoolDao.updatePoolStatus(
+            dslContext,
+            record.pipelineId,
+            record.vmSeqId.toString(),
+            record.poolNo,
+            if (event.buildResult) PipelineTaskStatus.DONE.status else PipelineTaskStatus.FAILURE.status
+        )
+
+        if (record.dockerIp.isNotEmpty()) {
+            dockerHostClient.endBuild(
+                event,
+                record.dockerIp,
+                record.containerId
+            )
         }
     }
 
     private fun finishBuild(record: TDispatchPipelineDockerBuildRecord, success: Boolean) {
         logger.info("Finish the docker build(${record.buildId}) with result($success)")
-        pipelineDockerBuildDao.updateStatus(dslContext,
-            record.buildId,
-            record.vmSeqId,
-            if (success) PipelineTaskStatus.DONE else PipelineTaskStatus.FAILURE)
-        // 更新dockerTask表
-        pipelineDockerTaskDao.updateStatus(
-            dslContext = dslContext,
-            buildId = record.buildId,
-            vmSeqId = record.vmSeqId,
-            status = if (success) PipelineTaskStatus.DONE else PipelineTaskStatus.FAILURE
-        )
-        redisUtils.deleteDockerBuild(record.id, SecurityUtil.decrypt(record.secretKey))
-        redisUtils.deleteHeartBeat(record.buildId, record.vmSeqId.toString())
+        try {
+            pipelineDockerBuildDao.updateStatus(dslContext,
+                record.buildId,
+                record.vmSeqId,
+                if (success) PipelineTaskStatus.DONE else PipelineTaskStatus.FAILURE)
+
+            // 更新dockerTask表(保留之前逻辑)
+            pipelineDockerTaskDao.updateStatus(dslContext,
+                record.buildId,
+                record.vmSeqId,
+                if (success) PipelineTaskStatus.DONE else PipelineTaskStatus.FAILURE)
+            redisUtils.deleteDockerBuild(record.id, SecurityUtil.decrypt(record.secretKey))
+            redisUtils.deleteHeartBeat(record.buildId, record.vmSeqId.toString())
+        } catch (e: Exception) {
+            logger.error("Finish the docker build(${record.buildId}) error.", e)
+        }
     }
 
     fun startBuild(hostTag: String): Result<DockerHostBuildInfo>? {
@@ -387,6 +426,7 @@ class DockerHostBuildService @Autowired constructor(
                 imageName = build.imageName,
                 containerId = "",
                 wsInHost = false,
+                poolNo = 0,
                 registryUser = build.registryUser,
                 registryPwd = build.registryPwd,
                 imageType = build.imageType,
@@ -507,6 +547,7 @@ class DockerHostBuildService @Autowired constructor(
                     imageName = build.imageName,
                     containerId = build.containerId,
                     wsInHost = false,
+                    poolNo = 0,
                     registryUser = build.registryUser,
                     registryPwd = build.registryPwd,
                     imageType = build.imageType,
@@ -527,6 +568,7 @@ class DockerHostBuildService @Autowired constructor(
      * 每30分钟执行一次，清理大于两天的任务
      */
     @Scheduled(initialDelay = 30 * 1000, fixedDelay = 1800 * 1000)
+    @Deprecated("this function is deprecated!")
     fun clearTimeoutTask() {
         val stopWatch = StopWatch()
         var message = ""
@@ -545,6 +587,16 @@ class DockerHostBuildService @Autowired constructor(
                 pipelineDockerTaskDao.updateTimeOutTask(dslContext)
                 message = "timeoutTask.size=${timeoutTask.size}"
             }
+
+            val timeoutPoolTask = pipelineDockerPoolDao.getTimeOutTask(dslContext)
+            if (timeoutPoolTask.isNotEmpty) {
+                logger.info("There is ${timeoutPoolTask.size} build pool task have/has already time out, clear it.")
+                for (i in timeoutPoolTask.indices) {
+                    logger.info("clear pipelineId:(${timeoutPoolTask[i].pipelineId}), vmSeqId:(${timeoutPoolTask[i].vmSeq}), poolNo:(${timeoutPoolTask[i].poolNo})")
+                }
+                pipelineDockerPoolDao.updateTimeOutTask(dslContext)
+                message = "timeoutPoolTask.size=${timeoutTask.size}"
+            }
             stopWatch.stop()
         } finally {
             stopWatch.start("unlock")
@@ -558,6 +610,7 @@ class DockerHostBuildService @Autowired constructor(
      * 每20秒执行一次，清理固定构建机的任务IP，以让其他构建机可以认领
      */
     @Scheduled(initialDelay = 60 * 1000, fixedDelay = 20 * 1000)
+    @Deprecated("this function is deprecated!")
     fun resetHostTag() {
         val stopWatch = StopWatch()
         var message = "nothing"
@@ -606,6 +659,7 @@ class DockerHostBuildService @Autowired constructor(
      * 每40秒执行一次，重置长时间未认领的固定区域的任务，重置为深圳区域
      */
     @Scheduled(initialDelay = 90 * 1000, fixedDelay = 40 * 1000)
+    @Deprecated("this function is deprecated!")
     fun resetTaskZone() {
         val stopWatch = StopWatch()
         var message = "nothing"
@@ -642,9 +696,9 @@ class DockerHostBuildService @Autowired constructor(
 
     fun getContainerInfo(buildId: String, vmSeqId: Int): Result<ContainerInfo> {
         logger.info("get containerId, buildId:$buildId, vmSeqId:$vmSeqId")
-        val task = pipelineDockerTaskDao.getTask(dslContext, buildId, vmSeqId)
-        if (task == null) {
-            logger.warn("The build task not exists, buildId:$buildId, vmSeqId:$vmSeqId")
+        val buildHistory = pipelineDockerBuildDao.getBuild(dslContext, buildId, vmSeqId)
+        if (buildHistory == null) {
+            logger.warn("The build history not exists, buildId:$buildId, vmSeqId:$vmSeqId")
             return Result(1, "Container not exists")
         }
 
@@ -652,18 +706,19 @@ class DockerHostBuildService @Autowired constructor(
             status = 0,
             message = "success",
             data = ContainerInfo(
-                projectId = task.projectId,
-                pipelineId = task.pipelineId,
-                vmSeqId = task.vmSeqId.toString(),
-                status = task.status,
-                imageName = task.imageName,
-                containerId = task.containerId,
-                address = task.hostTag,
+                projectId = buildHistory.projectId,
+                pipelineId = buildHistory.pipelineId,
+                vmSeqId = buildHistory.vmSeqId.toString(),
+                poolNo = buildHistory.poolNo,
+                status = buildHistory.status,
+                imageName = "",
+                containerId = buildHistory.containerId,
+                address = buildHistory.dockerIp,
                 token = "",
                 buildEnv = "",
-                registryUser = task.registryUser,
-                registryPwd = task.registryPwd,
-                imageType = task.imageType
+                registryUser = "",
+                registryPwd = "",
+                imageType = ""
             )
         )
     }
@@ -683,7 +738,9 @@ class DockerHostBuildService @Autowired constructor(
                 vmSeqId = event.vmSeqId.toInt(),
                 secretKey = secretKey,
                 status = PipelineTaskStatus.RUNNING,
-                zone = zone.name
+                zone = zone.name,
+                dockerIp = "",
+                poolNo = 0
             )
             val agentId = HashUtil.encodeLongId(id)
             redisUtils.setDockerBuild(
@@ -702,9 +759,15 @@ class DockerHostBuildService @Autowired constructor(
             logger.info("[${event.buildId}]|BUILD_LESS| secretKey: $secretKey agentId: $agentId")
 
             val dockerImage = when (dispatchType.dockerBuildVersion) {
-                DockerVersion.TLINUX1_2.value -> dockerBuildImagePrefix + BL_TLINUX1_2_IMAGE
-                DockerVersion.TLINUX2_2.value -> dockerBuildImagePrefix + BL_TLINUX2_2_IMAGE
-                else -> "$dockerBuildImagePrefix/bkdevops/${dispatchType.dockerBuildVersion}"
+                DockerVersion.TLINUX1_2.value -> {
+                    defaultImageConfig.getBuildLessTLinux1_2CompleteUri()
+                }
+                DockerVersion.TLINUX2_2.value -> {
+                    defaultImageConfig.getBuildLessTLinux2_2CompleteUri()
+                }
+                else -> {
+                    defaultImageConfig.getBuildLessCompleteUriByImageName(dispatchType.dockerBuildVersion)
+                }
             }
             logger.info("[${event.buildId}]|BUILD_LESS| Docker images is: $dockerImage")
 
@@ -864,11 +927,5 @@ class DockerHostBuildService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(DockerHostBuildService::class.java)
-
-        private const val TLINUX1_2_IMAGE = "/bkdevops/docker-builder1.2:v1"
-        private const val TLINUX2_2_IMAGE = "/bkdevops/docker-builder2.2:v1"
-
-        private const val BL_TLINUX1_2_IMAGE = "/bkdevops/docker-build-less1.2:v1"
-        private const val BL_TLINUX2_2_IMAGE = "/bkdevops/docker-build-less2.2:v1"
     }
 }
