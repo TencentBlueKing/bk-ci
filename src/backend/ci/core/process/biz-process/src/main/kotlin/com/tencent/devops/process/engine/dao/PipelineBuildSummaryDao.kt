@@ -293,7 +293,9 @@ class PipelineBuildSummaryDao {
                 val subCondition = DSL.trueCondition()
                 labelIds.forEach {
                     val labelPipelineIds = labelToPipelineMap?.get(it)
-                    subCondition.or(pipelineIdField.`in`(labelPipelineIds))
+                    if (labelPipelineIds != null && labelPipelineIds.isNotEmpty()) {
+                        subCondition.or(pipelineIdField.`in`(labelPipelineIds))
+                    }
                 }
                 filterByLabelConditions = if (conditionAndFlag) {
                     filterByLabelConditions.and(subCondition)
