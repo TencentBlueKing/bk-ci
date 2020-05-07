@@ -106,7 +106,7 @@ class DockerDispatcher @Autowired constructor(
 
                 dockerPair = if (specialIpSet.isNotEmpty() && specialIpSet.toString() != "[]") {
                     // 该项目工程配置了专机
-                    if (specialIpSet.contains(taskHistory.dockerIp)) {
+                    if (specialIpSet.contains(taskHistory.dockerIp) && dockerIpInfo.enable) {
                         // 上一次构建IP在专机列表中，直接重用
                         Pair(taskHistory.dockerIp, dockerIpInfo.dockerHostPort)
                     } else {
