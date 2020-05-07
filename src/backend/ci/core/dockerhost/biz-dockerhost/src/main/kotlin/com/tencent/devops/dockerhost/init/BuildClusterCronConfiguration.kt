@@ -65,13 +65,21 @@ class BuildClusterCronConfiguration : SchedulingConfigurer {
                 Runnable { runner.endBuild() }, 20 * 1000, 120 * 1000
             )
         )
+
         scheduledTaskRegistrar.addFixedRateTask(
             IntervalTask(
                 Runnable { runner.clearExitedContainer() }, 3600 * 1000, 3600 * 1000
             )
         )
+
         scheduledTaskRegistrar.addCronTask(
                 { runner.clearLocalImages() }, clearLocalImageCron!!
+        )
+
+        scheduledTaskRegistrar.addFixedRateTask(
+            IntervalTask(
+                Runnable { runner.refreshDockerIpStatus() }, 10 * 1000, 1000
+            )
         )
     }
 
