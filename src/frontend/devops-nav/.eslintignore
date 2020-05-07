@@ -1,3 +1,4 @@
 src/assets/*
 src/utils/*.js
 src/directives/*.js
+node_modules/
