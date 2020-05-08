@@ -3,7 +3,7 @@
         <create-header
             :create-text="$t('newlist.addPipeline')"
             @createPipeline="toggleTemplatePopup(true)">
-            <div slot="addon" class="create-header-right">
+            <div slot="addon">
                 <span class="pipeline-num">（{{ $t('newlist.sumPipelinesTips', [num]) }}）</span>
                 <i @click.stop="showSlide" class="layout-icon devops-icon icon-filter-shape" :class="{ 'active-icon': hasFilter }" :title="$t('newlist.filter')"></i>
                 <span class="seperate-line">|</span>
