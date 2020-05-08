@@ -70,7 +70,7 @@
 
             sideMenuNav () {
                 return {
-                    backUrl: 'atomList',
+                    backUrl: 'workList',
                     backType: 'image',
                     icon: 'atom-story',
                     title: this.currentImage.imageName,
@@ -94,7 +94,7 @@
         methods: {
             goBack () {
                 this.$router.push({
-                    name: 'atomList',
+                    name: 'workList',
                     params: {
                         type: 'image'
                     }
