@@ -57,7 +57,7 @@ module.exports = ({ entry, publicPath, dist, port = 8080, argv, env }) => {
                     test: /\.(js|vue)$/,
                     loader: 'eslint-loader',
                     enforce: 'pre',
-                    include: [path.resolve('src')],
+                    include: [path.resolve('src'), path.resolve(__dirname, 'devops-log')],
                     exclude: /node_modules/,
                     options: {
                         fix: true,

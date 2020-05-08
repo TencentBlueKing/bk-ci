@@ -188,6 +188,7 @@ class QualityRuleCheckService @Autowired constructor(
                 val interceptResult = result.first
                 val params = mapOf("projectId" to buildCheckParams.projectId,
                     "pipelineId" to buildCheckParams.pipelineId,
+                    "buildId" to buildId,
                     CodeccUtils.BK_CI_CODECC_TASK_ID to (buildCheckParams.runtimeVariable?.get(CodeccUtils.BK_CI_CODECC_TASK_ID) ?: "")
                 )
 
@@ -338,7 +339,7 @@ class QualityRuleCheckService @Autowired constructor(
                     }
 
                     // 全为null，不通过
-                    if (!ThresholdOperationUtil.valid(result?.toString() ?: "", indicator.threshold, indicator.operation)) {
+                    if (!ThresholdOperationUtil.validBoolean(result?.toString() ?: "", indicator.threshold, indicator.operation)) {
                         checkResult = false
                         allCheckResult = false
                     }
@@ -383,6 +384,7 @@ class QualityRuleCheckService @Autowired constructor(
         return if (CodeccUtils.isCodeccAtom(record.indicatorType)) {
             val projectId = params["projectId"] ?: ""
             val pipelineId = params["pipelineId"] ?: ""
+            val buildId = params["buildId"] ?: ""
             val paramTaskId = params[CodeccUtils.BK_CI_CODECC_TASK_ID]
             val taskId = if (paramTaskId.isNullOrBlank()) client.get(ServiceCodeccElementResource::class).get(projectId, pipelineId).data?.taskId
             else paramTaskId
@@ -394,7 +396,8 @@ class QualityRuleCheckService @Autowired constructor(
                 "<a target='_blank' href='${HomeHostUtil.innerServerHost()}/console/codecc/$projectId/task/$taskId/detail'>查看详情</a>"
             } else {
                 val detail = codeccToolUrlPathMap[record.detail!!] ?: "defect/lint"
-                "<a target='_blank' href='${HomeHostUtil.innerServerHost()}/console/codecc/$projectId/task/$taskId/$detail/${record.detail}/list'>查看详情</a>"
+                "<a target='_blank' href='${HomeHostUtil.innerServerHost()}/console/codecc/$projectId/task/$taskId/$detail/${record.detail}/list" +
+                    "?buildId=$buildId&status=7&sortField=createBuildNumber'>查看详情</a>"
             }
         } else {
             record.logPrompt ?: ""
