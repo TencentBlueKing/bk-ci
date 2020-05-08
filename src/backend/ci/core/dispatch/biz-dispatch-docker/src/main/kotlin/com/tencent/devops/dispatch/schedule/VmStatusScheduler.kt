@@ -83,6 +83,7 @@ class VmStatusScheduler @Autowired constructor(
 
             val nowTimestamp = System.currentTimeMillis()
             val lastUpdateTimestamp = dockerIpInfoRecord.gmtModified.timestamp()
+            logger.info("nowTimestamp: $nowTimestamp, lastUpdateTimestamp: $lastUpdateTimestamp")
             if ((nowTimestamp - lastUpdateTimestamp) >= 60 * 1000) {
                 // 刷新时间间隔超时，更新容器状态为不可用
                 logger.info("Docker ${dockerIpInfoRecord.dockerIp} check timeout, update enable false.")
