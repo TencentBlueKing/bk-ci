@@ -307,7 +307,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             )
         logger.info("validateAtomVersionResult is :$validateAtomVersionResult")
         if (validateAtomVersionResult.isNotOk()) {
-            return Result(validateAtomVersionResult.status, validateAtomVersionResult.message)
+            return Result(status = validateAtomVersionResult.status, message = validateAtomVersionResult.message ?: "")
         }
         var atomId = UUIDUtil.generate()
         val getAtomConfResult = getAtomConfig(
