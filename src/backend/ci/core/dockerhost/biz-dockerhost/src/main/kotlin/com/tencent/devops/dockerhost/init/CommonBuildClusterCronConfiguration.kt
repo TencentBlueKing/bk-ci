@@ -46,7 +46,7 @@ import java.util.concurrent.Executors
  */
 
 @Configuration
-@ConditionalOnExpression("#{'docker_build'.equals(\${'run.model'}) || 'codecc_build'.equals(\${'run.model')}")
+//@ConditionalOnExpression("#{'docker_build'.equals('run.model'}) || 'codecc_build'.equals(\${'run.model')}")
 @EnableScheduling
 class CommonBuildClusterCronConfiguration : SchedulingConfigurer {
 
