@@ -47,6 +47,7 @@ import com.tencent.devops.store.pojo.container.ContainerResource
 import com.tencent.devops.store.pojo.container.ContainerResourceValue
 import com.tencent.devops.store.pojo.container.ContainerResp
 import com.tencent.devops.store.pojo.container.enums.ContainerRequiredEnum
+import com.tencent.devops.store.service.container.BuildResourceService
 import com.tencent.devops.store.service.container.ContainerAppService
 import com.tencent.devops.store.service.container.ContainerService
 import org.jooq.DSLContext
@@ -75,6 +76,8 @@ abstract class ContainerServiceImpl @Autowired constructor() : ContainerService 
     lateinit var containerAppService: ContainerAppService
     @Autowired
     lateinit var client: Client
+    @Autowired
+    lateinit var buildResourceService: BuildResourceService
 
     private val logger = LoggerFactory.getLogger(ContainerServiceImpl::class.java)
 
@@ -146,7 +149,8 @@ abstract class ContainerServiceImpl @Autowired constructor() : ContainerService 
                         type = type.name,
                         name = i18nTypeName,
                         enableApp = type.enableApp,
-                        disabled = !clickable(buildType = type, projectCode = projectCode)
+                        disabled = !clickable(buildType = type, projectCode = projectCode),
+                        defaultBuildResource = buildResourceService.getDefaultBuildResource(type)
                     ))
                 }
                 if (!queryAllFlag && containerOS != null) {
