@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BUILD_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BUILD_TYPE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_VM_SEQ_ID
+import com.tencent.devops.common.api.exception.ClientException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.worker.common.api.utils.ThirdPartyAgentBuildInfoUtils
@@ -79,7 +80,12 @@ abstract class AbstractBuildResourceApi : WorkerRestApiSDK {
             builder.writeTimeout(writeTimeoutInSec, TimeUnit.SECONDS)
         }
         val httpClient = builder.build()
-        val response = httpClient.newCall(request).execute()
+        val response = try {
+            httpClient.newCall(request).execute()
+        } catch (e: Exception) {
+            logger.error("Fail to request($request),error is :$e", e)
+            throw ClientException("Fail to request($request),error is:${e.message}")
+        }
 
         if (retryCodes.contains(response.code()) && retryCount > 0) {
             logger.warn(
