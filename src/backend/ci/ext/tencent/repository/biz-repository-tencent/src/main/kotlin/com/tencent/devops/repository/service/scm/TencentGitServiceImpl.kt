@@ -80,8 +80,8 @@ class TencentGitServiceImpl @Autowired constructor(val client: Client) : IGitSer
         return client.getScm(ServiceGitResource::class).getToken(userId = userId, code = code).data!!
     }
 
-    override fun getRedirectUrl(redirectUrlType: String?): String {
-        return client.getScm(ServiceGitResource::class).getRedirectUrl(authParamJsonStr = redirectUrlType!!).data!!
+    override fun getRedirectUrl(authParamJsonStr: String): String {
+        return client.getScm(ServiceGitResource::class).getRedirectUrl(authParamJsonStr = authParamJsonStr).data!!
     }
 
     override fun getGitFileContent(
