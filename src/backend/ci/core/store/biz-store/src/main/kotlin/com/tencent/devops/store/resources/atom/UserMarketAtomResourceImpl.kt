@@ -62,11 +62,27 @@ class UserMarketAtomResourceImpl @Autowired constructor(
         labelCode: String?,
         score: Int?,
         rdType: AtomTypeEnum?,
+        yamlFlag: Boolean?,
+        recommendFlag: Boolean?,
         sortType: MarketAtomSortTypeEnum?,
         page: Int?,
         pageSize: Int?
     ): Result<MarketAtomResp> {
-        return Result(marketAtomService.list(userId.trim(), atomName?.trim(), classifyCode?.trim(), labelCode?.trim(), score, rdType, sortType, page, pageSize))
+        return Result(
+            marketAtomService.list(
+                userId = userId.trim(),
+                atomName = atomName?.trim(),
+                classifyCode = classifyCode?.trim(),
+                labelCode = labelCode?.trim(),
+                score = score,
+                rdType = rdType,
+                yamlFlag = yamlFlag,
+                recommendFlag = recommendFlag,
+                sortType = sortType,
+                page = page,
+                pageSize = pageSize
+            )
+        )
     }
 
     override fun listMyAtoms(
