@@ -27,6 +27,7 @@
 dependencies {
     compile project(":core:store:biz-store")
     compile project(":ext:tencent:store:api-store-op")
+    compile project(":ext:tencent:store:biz-store-service")
     compile project(":core:repository:api-repository")
 }
 

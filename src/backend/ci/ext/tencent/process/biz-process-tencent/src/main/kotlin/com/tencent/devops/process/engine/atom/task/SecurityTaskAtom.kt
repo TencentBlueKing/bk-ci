@@ -27,6 +27,7 @@
 package com.tencent.devops.process.engine.atom.task
 
 import com.google.gson.JsonParser
+
 import com.tencent.devops.artifactory.api.service.ServiceArtifactoryResource
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.common.api.pojo.ErrorCode
