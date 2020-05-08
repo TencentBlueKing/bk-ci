@@ -62,6 +62,7 @@ import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
+import com.tencent.devops.process.service.BuildVariableService
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
@@ -81,6 +82,7 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
     private val client: Client,
     private val pipelineBuildDetailService: PipelineBuildDetailService,
     private val pipelineRuntimeService: PipelineRuntimeService,
+    private val buildVariableService: BuildVariableService,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val rabbitTemplate: RabbitTemplate,
     private val dispatchTypeParser: DispatchTypeParser
@@ -181,7 +183,7 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
             dispatchType = dispatchType
         )
 
-        dispatchType.replaceVariable(pipelineRuntimeService.getAllVariable(buildId))
+        dispatchType.replaceVariable(buildVariableService.getAllVariable(buildId))
 
         pipelineEventDispatcher.dispatch(
             PipelineAgentStartupEvent(

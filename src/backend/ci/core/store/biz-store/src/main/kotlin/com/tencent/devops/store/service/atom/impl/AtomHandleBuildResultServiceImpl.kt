@@ -57,6 +57,10 @@ class AtomHandleBuildResultServiceImpl @Autowired constructor(
         if (null == atomRecord) {
             return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_INVALID, arrayOf(atomId))
         }
+        // 防止重复的mq消息造成的状态异常
+        if (atomRecord.atomStatus != AtomStatusEnum.BUILDING.status.toByte()) {
+            return Result(true)
+        }
         var atomStatus = AtomStatusEnum.TESTING // 构建成功将插件状态置位测试状态
         if (BuildStatus.SUCCEED != storeBuildResultRequest.buildStatus) {
             atomStatus = AtomStatusEnum.BUILD_FAIL // 构建失败

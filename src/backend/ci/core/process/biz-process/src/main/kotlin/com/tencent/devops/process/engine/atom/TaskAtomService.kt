@@ -32,7 +32,6 @@ import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
-import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildTaskFinishBroadCastEvent
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.utils.SkipElementUtils
 import com.tencent.devops.common.service.utils.CommonUtils
@@ -44,6 +43,7 @@ import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.measure.MeasureService
 import com.tencent.devops.process.jmx.elements.JmxElements
+import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.utils.PIPELINE_MESSAGE_STRING_LENGTH_MAX
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
@@ -55,6 +55,7 @@ class TaskAtomService @Autowired(required = false) constructor(
     private val rabbitTemplate: RabbitTemplate,
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val pipelineBuildDetailService: PipelineBuildDetailService,
+    private val buildVariableService: BuildVariableService,
     private val jmxElements: JmxElements,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     @Autowired(required = false)
@@ -71,7 +72,7 @@ class TaskAtomService @Autowired(required = false) constructor(
             // 更新状态
             pipelineRuntimeService.updateTaskStatus(task.buildId, task.taskId, task.starter, BuildStatus.RUNNING)
             pipelineBuildDetailService.taskStart(task.buildId, task.taskId)
-            val runVariables = pipelineRuntimeService.getAllVariable(task.buildId)
+            val runVariables = buildVariableService.getAllVariable(task.buildId)
 
             atomResponse = if (task.isSkip(runVariables)) { // 跳过
                 AtomResponse(BuildStatus.SKIP)
@@ -115,7 +116,7 @@ class TaskAtomService @Autowired(required = false) constructor(
             atomResponse.errorMsg = CommonUtils.interceptStringInLength(atomResponse.errorMsg, PIPELINE_MESSAGE_STRING_LENGTH_MAX)
             // 存储变量
             if (atomResponse.outputVars != null && atomResponse.outputVars!!.isNotEmpty()) {
-                pipelineRuntimeService.batchSetVariable(
+                buildVariableService.batchSetVariable(
                     projectId = task.projectId,
                     pipelineId = task.pipelineId,
                     buildId = task.buildId,
@@ -179,7 +180,8 @@ class TaskAtomService @Autowired(required = false) constructor(
                 executeCount = task.executeCount,
                 errorType = errorType?.name,
                 errorCode = errorCode,
-                errorMsg = errorMsg
+                errorMsg = errorMsg,
+                userId = task.starter
             )
             if (BuildStatus.isFailure(status)) {
                 jmxElements.fail(elementType)
@@ -188,17 +190,6 @@ class TaskAtomService @Autowired(required = false) constructor(
             logger.error("Fail to post the task($task): ${ignored.message}")
         }
         pipelineEventDispatcher.dispatch(
-            PipelineBuildTaskFinishBroadCastEvent(
-                source = "build-element-${task.taskId}",
-                projectId = task.projectId,
-                pipelineId = task.pipelineId,
-                userId = "",
-                buildId = task.buildId,
-                taskId = task.taskId,
-                errorType = if (task.errorType == null) null else task.errorType!!.name,
-                errorCode = task.errorCode,
-                errorMsg = task.errorMsg
-            ),
             PipelineBuildStatusBroadCastEvent(
                 source = "task-end-${task.taskId}",
                 projectId = task.projectId,
@@ -213,7 +204,8 @@ class TaskAtomService @Autowired(required = false) constructor(
             rabbitTemplate = rabbitTemplate,
             buildId = task.buildId,
             tag = task.taskId,
-            jobId = task.containerHashId
+            jobId = task.containerHashId,
+            executeCount = task.executeCount
         )
     }
 
@@ -223,7 +215,7 @@ class TaskAtomService @Autowired(required = false) constructor(
         var atomResponse = AtomResponse(BuildStatus.FAILED)
 
         try {
-            val runVariables = pipelineRuntimeService.getAllVariable(task.buildId)
+            val runVariables = buildVariableService.getAllVariable(task.buildId)
             val iAtomTask = SpringContextUtil.getBean(IAtomTask::class.java, task.taskAtom)
             atomResponse = iAtomTask.tryFinish(task, runVariables, force)
 
@@ -255,7 +247,7 @@ class TaskAtomService @Autowired(required = false) constructor(
         } finally {
             // 存储变量
             if (atomResponse.outputVars != null && atomResponse.outputVars!!.isNotEmpty()) {
-                pipelineRuntimeService.batchSetVariable(
+                buildVariableService.batchSetVariable(
                     projectId = task.projectId,
                     pipelineId = task.pipelineId,
                     buildId = task.buildId,
@@ -303,13 +295,6 @@ class TaskAtomService @Autowired(required = false) constructor(
                 )
             }
         }
-        LogUtils.stopLog(
-            rabbitTemplate = rabbitTemplate,
-            buildId = task.buildId,
-            tag = task.taskId,
-            jobId = task.containerHashId,
-            executeCount = task.executeCount ?: 1
-        )
     }
 
     private fun PipelineBuildTask.isSkip(variables: Map<String, String>): Boolean {

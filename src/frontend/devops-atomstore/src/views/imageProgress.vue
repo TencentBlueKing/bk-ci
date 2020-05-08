@@ -32,6 +32,7 @@
                                     @click.stop="reCheck"
                                 > {{ $t('store.重新验证') }} <i class="col-line"></i>
                                 </span>
+                                <span class="log-btn" v-if="entry.code === 'check' && entry.status !== 'undo'" @click.stop="readLog"> {{ $t('store.日志') }} </span>
                                 <span class="test-btn" v-if="entry.code === 'test' && entry.status === 'doing'">
                                     <a target="_blank" :href="`/console/pipeline/${imageDetail.projectCode}/list`"> {{ $t('store.测试') }} </a>
                                 </span>
@@ -63,16 +64,38 @@
                 </div>
             </div>
         </main>
+
+        <bk-sideslider
+            class="build-side-slider"
+            :is-show.sync="sideSliderConfig.show"
+            :title="sideSliderConfig.title"
+            :quick-close="sideSliderConfig.quickClose"
+            :width="sideSliderConfig.width">
+            <template slot="content">
+                <div style="width: 100%; height: 100%"
+                    v-bkloading="{
+                        isLoading: sideSliderConfig.loading.isLoading,
+                        title: sideSliderConfig.loading.title
+                    }">
+                    <build-log v-if="currentBuildNo"
+                        :build-no="currentBuildNo"
+                        :log-url="`store/api/user/store/logs/types/IMAGE/projects/${currentProjectCode}/pipelines/${currentPipelineId}/builds`"
+                    />
+                </div>
+            </template>
+        </bk-sideslider>
     </article>
 </template>
 
 <script>
     import { mapActions } from 'vuex'
+    import BuildLog from '@/components/Log'
     import detailInfo from '../components/detailInfo'
 
     export default {
         components: {
-            detailInfo
+            detailInfo,
+            BuildLog
         },
 
         data () {
@@ -85,7 +108,18 @@
                 permission: true,
                 currentProjectId: '',
                 currentBuildNo: '',
-                currentPipelineId: ''
+                currentPipelineId: '',
+                sideSliderConfig: {
+                    show: false,
+                    title: this.$t('store.查看日志'),
+                    quickClose: true,
+                    width: 820,
+                    value: '',
+                    loading: {
+                        isLoading: false,
+                        title: ''
+                    }
+                }
             }
         },
 
@@ -99,6 +133,16 @@
             isOver () {
                 const lastProgress = this.progressStatus[this.progressStatus.length - 1] || {}
                 return lastProgress.status === 'success'
+            }
+        },
+
+        watch: {
+            'sideSliderConfig.show' (val) {
+                if (!val) {
+                    this.currentProjectCode = ''
+                    this.currentBuildNo = ''
+                    this.currentPipelineId = ''
+                }
             }
         },
 
@@ -119,6 +163,13 @@
                 'requestImagePassTest',
                 'requestRecheckImage'
             ]),
+
+            readLog () {
+                this.sideSliderConfig.show = true
+                this.currentProjectCode = this.storeBuildInfo.projectCode
+                this.currentBuildNo = this.storeBuildInfo.buildId
+                this.currentPipelineId = this.storeBuildInfo.pipelineId
+            },
 
             initData () {
                 Promise.all([this.getImageDetail(), this.getImageProcess()]).catch((err) => {
@@ -200,7 +251,7 @@
 
             toImageList () {
                 this.$router.push({
-                    name: 'atomList',
+                    name: 'workList',
                     params: {
                         type: 'image'
                     }
