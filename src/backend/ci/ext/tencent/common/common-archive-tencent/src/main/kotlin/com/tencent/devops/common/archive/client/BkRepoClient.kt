@@ -44,6 +44,8 @@ import com.tencent.bkrepo.repository.pojo.node.user.UserNodeMoveRequest
 import com.tencent.bkrepo.repository.pojo.node.user.UserNodeRenameRequest
 import com.tencent.bkrepo.repository.pojo.share.ShareRecordCreateRequest
 import com.tencent.bkrepo.repository.pojo.share.ShareRecordInfo
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.archive.config.BkRepoConfig
@@ -83,6 +85,7 @@ class BkRepoClient constructor(
             .url(url)
             // .header("Authorization", makeCredential())
             .header(AUTH_HEADER_UID, userId)
+            .header(AUTH_HEADER_DEVOPS_PROJECT_ID, projectId)
             .get()
             .build()
         OkhttpUtils.doHttp(request).use { response ->
@@ -114,6 +117,7 @@ class BkRepoClient constructor(
             .url(url)
             // .header("Authorization", makeCredential())
             .header(AUTH_HEADER_UID, userId)
+            .header(AUTH_HEADER_DEVOPS_PROJECT_ID, projectId)
             .post(
                 RequestBody.create(
                     MediaType.parse("application/json; charset=utf-8"),
@@ -135,6 +139,7 @@ class BkRepoClient constructor(
             .url(url)
             // .header("Authorization", makeCredential())
             .header(AUTH_HEADER_UID, userId)
+            .header(AUTH_HEADER_DEVOPS_PROJECT_ID, projectId)
             .get()
             .build()
         OkhttpUtils.doHttp(request).use { response ->
@@ -170,6 +175,7 @@ class BkRepoClient constructor(
             .url(url)
             // .header("Authorization", makeCredential())
             .header(AUTH_HEADER_UID, userId)
+            .header(AUTH_HEADER_DEVOPS_PROJECT_ID, projectId)
             .get()
             .build()
         OkhttpUtils.doHttp(request).use { response ->
@@ -208,6 +214,7 @@ class BkRepoClient constructor(
             .url(url)
             // .header("Authorization", makeCredential())
             .header(AUTH_HEADER_UID, userId)
+            .header(AUTH_HEADER_DEVOPS_PROJECT_ID, projectId)
             .put(requestBody).build()
         OkhttpUtils.doHttp(request).use { response ->
             if (!response.isSuccessful) {
@@ -249,6 +256,7 @@ class BkRepoClient constructor(
             requestBuilder.header("Authorization", Credentials.basic(userName, password))
         }
         requestBuilder.header(AUTH_HEADER_UID, userId)
+            .header(AUTH_HEADER_DEVOPS_PROJECT_ID, projectId)
             .header(BK_REPO_OVERRIDE, "true")
             .put(RequestBody.create(MediaType.parse("application/octet-stream"), file))
         val request = requestBuilder.build()
@@ -267,6 +275,7 @@ class BkRepoClient constructor(
             .url(url)
             // .header("Authorization", makeCredential())
             .header(AUTH_HEADER_UID, userId)
+            .header(AUTH_HEADER_DEVOPS_PROJECT_ID, projectId)
             .delete()
             .build()
         OkhttpUtils.doHttp(request).use { response ->
@@ -295,6 +304,7 @@ class BkRepoClient constructor(
             .url(url)
             // .header("Authorization", makeCredential())
             .header(AUTH_HEADER_UID, userId)
+            .header(AUTH_HEADER_DEVOPS_PROJECT_ID, projectId)
             .post(
                 RequestBody.create(
                     MediaType.parse("application/json; charset=utf-8"),
@@ -335,6 +345,7 @@ class BkRepoClient constructor(
             .url(url)
             // .header("Authorization", makeCredential())
             .header(AUTH_HEADER_UID, userId)
+            .header(AUTH_HEADER_DEVOPS_PROJECT_ID, fromProject)
             .post(
                 RequestBody.create(
                     MediaType.parse("application/json; charset=utf-8"),
@@ -358,6 +369,7 @@ class BkRepoClient constructor(
             .url(url)
             // .header("Authorization", makeCredential())
             .header(AUTH_HEADER_UID, userId)
+            .header(AUTH_HEADER_DEVOPS_PROJECT_ID, projectId)
             .post(
                 RequestBody.create(
                     MediaType.parse("application/json; charset=utf-8"),
@@ -379,6 +391,7 @@ class BkRepoClient constructor(
             .url(url)
             // .header("Authorization", makeCredential())
             .header(AUTH_HEADER_UID, userId)
+            .header(AUTH_HEADER_DEVOPS_PROJECT_ID, projectId)
             .post(RequestBody.create(null, ""))
             .build()
         OkhttpUtils.doHttp(request).use { response ->
@@ -396,6 +409,7 @@ class BkRepoClient constructor(
             .url(url)
             // .header("Authorization", makeCredential())
             .header(AUTH_HEADER_UID, userId)
+            .header(AUTH_HEADER_DEVOPS_PROJECT_ID, projectId)
             .get()
             .build()
         OkhttpUtils.doHttp(request).use { response ->
@@ -422,8 +436,9 @@ class BkRepoClient constructor(
         val url = "${getGatewaytUrl()}/bkrepo/api/service/generic/$projectId/$repoName/$path"
         val request = Request.Builder()
             .url(url)
-            .header(AUTH_HEADER_UID, userId)
             // .header("Authorization", makeCredential())
+            .header(AUTH_HEADER_UID, userId)
+            .header(AUTH_HEADER_DEVOPS_PROJECT_ID, projectId)
             .get()
             .build()
         OkhttpUtils.doHttp(request).use { response ->
@@ -490,7 +505,8 @@ class BkRepoClient constructor(
         }
         val request = Request.Builder()
             .url(url)
-            .header("X-BKREPO-UID", userId)
+            .header(AUTH_HEADER_UID, userId)
+            .header(AUTH_HEADER_DEVOPS_PROJECT_ID, projectId)
             .get()
             .build()
 
@@ -512,7 +528,14 @@ class BkRepoClient constructor(
 
     fun downloadFile(userId: String, projectId: String, repoName: String, fullPath: String, destFile: File) {
         val url = "${getGatewaytUrl()}/bkrepo/api/service/generic/$projectId/$repoName/${fullPath.removePrefix("/")}"
-        OkhttpUtils.downloadFile(url, destFile, mapOf("X-BKREPO-UID" to userId))
+        OkhttpUtils.downloadFile(
+            url,
+            destFile,
+            mapOf(
+                AUTH_HEADER_UID to userId,
+                AUTH_HEADER_DEVOPS_PROJECT_ID to projectId
+            )
+        )
     }
 
     fun listFileByRegex(
@@ -621,6 +644,7 @@ class BkRepoClient constructor(
             .url(url)
             // .header("Authorization", makeCredential())
             .header(AUTH_HEADER_UID, userId)
+            .header(AUTH_HEADER_DEVOPS_PROJECT_ID, projectId)
             .post(
                 RequestBody.create(
                     MediaType.parse("application/json; charset=utf-8"),
@@ -656,7 +680,7 @@ class BkRepoClient constructor(
 
         val projectRule = Rule.QueryRule("projectId", projectId, OperationType.EQ)
         val repoRule = Rule.QueryRule("repoName", repoNames, OperationType.IN)
-        var ruleList = mutableListOf<Rule>(projectRule, repoRule)
+        var ruleList = mutableListOf<Rule>(projectRule, repoRule, Rule.QueryRule("folder", false, OperationType.EQ))
         if (fileNames.isNotEmpty()) {
             val fileNameRule = Rule.NestedRule(fileNames.map { Rule.QueryRule("name", it, OperationType.MATCH) }.toMutableList(), Rule.NestedRule.RelationType.OR)
             ruleList.add(fileNameRule)
@@ -667,7 +691,7 @@ class BkRepoClient constructor(
         }
         var rule = Rule.NestedRule(ruleList, Rule.NestedRule.RelationType.AND)
 
-        return query(userId, rule, page, pageSize)
+        return query(userId, projectId, rule, page, pageSize)
     }
 
     fun queryByPathEqOrNameMatchOrMetadataEqAnd(
@@ -684,7 +708,7 @@ class BkRepoClient constructor(
 
         val projectRule = Rule.QueryRule("projectId", projectId, OperationType.EQ)
         val repoRule = Rule.QueryRule("repoName", repoNames, OperationType.IN)
-        var ruleList = mutableListOf<Rule>(projectRule, repoRule)
+        var ruleList = mutableListOf<Rule>(projectRule, repoRule, Rule.QueryRule("folder", false, OperationType.EQ))
         if (filePaths.isNotEmpty()) {
             val filePathRule = Rule.NestedRule(filePaths.map { Rule.QueryRule("path", it, OperationType.EQ) }.toMutableList(), Rule.NestedRule.RelationType.OR)
             ruleList.add(filePathRule)
@@ -699,7 +723,47 @@ class BkRepoClient constructor(
         }
         var rule = Rule.NestedRule(ruleList, Rule.NestedRule.RelationType.AND)
 
-        return query(userId, rule, page, pageSize)
+        return query(userId, projectId, rule, page, pageSize)
+    }
+
+    private fun getPathNameAndRule(path: String, name: String): Rule.NestedRule {
+        val pathRule = Rule.QueryRule("path", path, OperationType.EQ)
+        val nameRule = Rule.QueryRule("name", name, if (name.contains('*')) OperationType.MATCH else OperationType.EQ)
+        return Rule.NestedRule(mutableListOf(pathRule, nameRule), Rule.NestedRule.RelationType.AND)
+    }
+
+    fun queryByPathNamePairOrMetadataEqAnd(
+        userId: String,
+        projectId: String, // eq
+        repoNames: List<String>, // eq or
+        pathNamePairs: List<Pair<String, String>>, // (path eq and name match) or
+        metadata: Map<String, String>, // eq and
+        page: Int,
+        pageSize: Int
+    ): List<QueryNodeInfo> {
+        logger.info("queryByPathNamePairOrMetadataEqAnd, userId: $userId, projectId: $projectId, repoNames: $repoNames, pathNamePairs: $pathNamePairs, metadata: $metadata, page: $page, pageSize: $pageSize")
+
+        val projectRule = Rule.QueryRule("projectId", projectId, OperationType.EQ)
+        val repoRule = Rule.QueryRule("repoName", repoNames, OperationType.IN)
+        var ruleList = mutableListOf<Rule>(projectRule, repoRule, Rule.QueryRule("folder", false, OperationType.EQ))
+
+        if (pathNamePairs.size == 1) {
+            ruleList.add(getPathNameAndRule(pathNamePairs[0].first, pathNamePairs[0].second))
+        } else if (pathNamePairs.size > 1) {
+            val pathNameRules = mutableListOf<Rule>()
+            pathNamePairs.forEach {
+                pathNameRules.add(getPathNameAndRule(it.first, it.second))
+            }
+            ruleList.add(Rule.NestedRule(pathNameRules, Rule.NestedRule.RelationType.OR))
+        }
+
+        if (metadata.isNotEmpty()) {
+            val metadataRule = Rule.NestedRule(metadata.map { Rule.QueryRule("metadata.${it.key}", it.value, OperationType.EQ) }.toMutableList(), Rule.NestedRule.RelationType.AND)
+            ruleList.add(metadataRule)
+        }
+        var rule = Rule.NestedRule(ruleList, Rule.NestedRule.RelationType.AND)
+
+        return query(userId, projectId, rule, page, pageSize)
     }
 
     fun queryByPattern(
@@ -713,7 +777,7 @@ class BkRepoClient constructor(
 
         val projectRule = Rule.QueryRule("projectId", projectId, OperationType.EQ)
         val repoRule = Rule.QueryRule("repoName", repoNames, OperationType.IN)
-        var ruleList = mutableListOf<Rule>(projectRule, repoRule)
+        var ruleList = mutableListOf<Rule>(projectRule, repoRule, Rule.QueryRule("folder", false, OperationType.EQ))
         if (fullPathPatterns.isNotEmpty()) {
             val fullPathRule = Rule.NestedRule(fullPathPatterns.map { Rule.QueryRule("fullPath", it, OperationType.MATCH) }.toMutableList(), Rule.NestedRule.RelationType.OR)
             ruleList.add(fullPathRule)
@@ -724,14 +788,14 @@ class BkRepoClient constructor(
         }
         var rule = Rule.NestedRule(ruleList, Rule.NestedRule.RelationType.AND)
 
-        return query(userId, rule, 0, 10000)
+        return query(userId, projectId, rule, 0, 10000)
     }
 
-    private fun query(userId: String, rule: Rule, page: Int, pageSize: Int): List<QueryNodeInfo> {
+    private fun query(userId: String, projectId: String, rule: Rule, page: Int, pageSize: Int): List<QueryNodeInfo> {
         logger.info("query, userId: $userId, rule: $rule, page: $page, pageSize: $pageSize")
         val url = "${getGatewaytUrl()}/bkrepo/api/service/repository/api/node/query"
         val queryModel = QueryModel(
-            page = PageLimit(0, 10000),
+            page = PageLimit(page, pageSize),
             sort = Sort(listOf("fullPath"), Sort.Direction.ASC),
             select = mutableListOf(),
             rule = rule
@@ -743,6 +807,7 @@ class BkRepoClient constructor(
             .url(url)
             // .header("Authorization", makeCredential())
             .header(AUTH_HEADER_UID, userId)
+            .header(AUTH_HEADER_DEVOPS_PROJECT_ID, projectId)
             .post(
                 RequestBody.create(
                     MediaType.parse("application/json; charset=utf-8"),
@@ -768,6 +833,7 @@ class BkRepoClient constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(this::class.java)
         private const val METADATA_PREFIX = "X-BKREPO-META-"
+
         // private const val BK_REPO_UID = "X-BKREPO-UID"
         private const val BK_REPO_OVERRIDE = "X-BKREPO-OVERWRITE"
     }
