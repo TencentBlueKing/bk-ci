@@ -31,6 +31,7 @@ import com.tencent.devops.model.store.tables.TApps
 import com.tencent.devops.model.store.tables.TAtomEnvInfo
 import com.tencent.devops.model.store.tables.TStoreBuildAppRel
 import com.tencent.devops.model.store.tables.TStoreBuildInfo
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.jooq.Result
@@ -60,7 +61,7 @@ class MarketAtomBuildAppRelDao {
             .on(c.APP_ID.eq(d.ID))
             .join(e)
             .on(a.LANGUAGE.eq(e.LANGUAGE))
-            .where(e.ATOM_ID.eq(atomId))
+            .where(e.ATOM_ID.eq(atomId).and(a.STORE_TYPE.eq(StoreTypeEnum.ATOM.type.toByte())))
             .fetch()
     }
 }
