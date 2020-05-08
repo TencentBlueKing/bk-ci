@@ -170,9 +170,11 @@ CREATE TABLE IF NOT EXISTS `T_ATOM_FEATURE` (
   `RECOMMEND_FLAG` bit(1) DEFAULT b'1',
   `PRIVATE_REASON` varchar(256) DEFAULT NULL,
   `DELETE_FLAG` bit(1) DEFAULT b'0',
+  `YAML_FLAG` bit(1) DEFAULT b'0',
   PRIMARY KEY (`ID`),
   UNIQUE KEY `uni_inx_taf_code` (`ATOM_CODE`),
-  KEY `inx_taf_delete_flag` (`DELETE_FLAG`)
+  KEY `inx_taf_delete_flag` (`DELETE_FLAG`),
+  KEY `inx_taf_yml_flag` (`YAML_FLAG`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='原子插件特性信息表';
 
 -- ----------------------------
