@@ -1,3 +1,4 @@
+
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
@@ -26,8 +27,4 @@
 
 dependencies {
     compile project(":core:websocket:biz-websocket")
-    compile project(":ext:tencent:websocket:biz-websocket-tencent")
 }
-
-
-apply from: "$rootDir/task_spring_boot_package.gradle"

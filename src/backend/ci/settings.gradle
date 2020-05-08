@@ -358,6 +358,7 @@ include ":ext:tencent:scm:boot-scm"
 include ":ext:tencent:scm:boot-scm-tencent"
 
 include ":ext:tencent:websocket"
+include ":ext:tencent:websocket:biz-websocket-tencent"
 include ":ext:tencent:websocket:boot-websocket-tencent"
 
 include ":ext:tencent:lambda"
