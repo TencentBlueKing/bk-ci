@@ -30,6 +30,10 @@ class OPDispatchDockerResourceImpl constructor(
         return Result(dispatchDockerService.update(userId, dockerIp, dockerIpUpdateVO))
     }
 
+    override fun updateAllDispatchDockerEnable(userId: String): Result<Boolean> {
+        return Result(dispatchDockerService.updateAllDispatchDockerEnable(userId))
+    }
+
     override fun deleteDispatchDocker(userId: String, dockerIp: String): Result<Boolean> {
         return Result(dispatchDockerService.delete(userId, dockerIp))
     }
