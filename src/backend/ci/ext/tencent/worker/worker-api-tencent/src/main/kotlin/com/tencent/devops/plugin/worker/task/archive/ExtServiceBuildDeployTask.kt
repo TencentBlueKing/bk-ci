@@ -180,7 +180,7 @@ class ExtServiceBuildDeployTask : ITask() {
             })
         LoggerService.addNormalLine("dockerBuildAndPushImageResult: $dockerBuildAndPushImageResult")
         val pushFlag = dockerBuildAndPushImageResult.data
-        if (dockerBuildAndPushImageResult.isNotOk() || (pushFlag != null && !pushFlag) ) {
+        if (dockerBuildAndPushImageResult.isNotOk() || (pushFlag != null && !pushFlag)) {
             LoggerService.addRedLine(JsonUtil.toJson(dockerBuildAndPushImageResult))
             throw TaskExecuteException(
                 errorMsg = "dockerBuildAndPushImage fail: ${dockerBuildAndPushImageResult.message}",

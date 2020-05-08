@@ -40,7 +40,7 @@ data class ExtensionServiceVO(
     @ApiModelProperty("版本")
     val version: String,
     @ApiModelProperty("调试项目Code")
-    val projectCode: String ?= null,
+    val projectCode: String? = null,
     @ApiModelProperty("状态")
     val serviceStatus: Int,
     @ApiModelProperty("扩展服务发布者")
