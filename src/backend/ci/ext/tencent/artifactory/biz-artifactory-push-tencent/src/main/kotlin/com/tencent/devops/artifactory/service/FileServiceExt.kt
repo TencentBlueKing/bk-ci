@@ -154,7 +154,7 @@ class FileServiceExt @Autowired constructor(
     }
 
     private fun buildTmpFile(projectId: String, buildId: String, pipelineId: String): String {
-        return "/jobPush/$projectId/$pipelineId/$buildId"
+        return Files.createTempDirectory("/tmp/jobPush/$projectId/$pipelineId/$buildId").toFile().absolutePath
     }
 
     // 获取所有的文件和文件夹
