@@ -4,7 +4,7 @@ import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("分发目标资源信息")
-class RemoteResourceInfo (
+class RemoteResourceInfo(
     @ApiModelProperty("账号", required = true)
     val account: String,
     @ApiModelProperty("目标路径", required = true)

@@ -66,6 +66,9 @@ interface BuildDockerHostResource {
         @ApiParam(value = "elementId", required = true)
         @QueryParam("elementId")
         elementId: String,
+        @ApiParam(value = "是否同步构建", required = false)
+        @QueryParam("syncFlag")
+        syncFlag: Boolean?,
         @ApiParam("镜像名称", required = true)
         dockerBuildParam: DockerBuildParam
     ): Result<Boolean>
