@@ -46,7 +46,7 @@ import java.util.concurrent.Executors
  */
 
 @Configuration
-@ConditionalOnExpression("#{'docker_build'.equals(environment.getProperty('run.model')) || 'codecc_build'.equals(environment.getProperty('run.model'))}")
+@ConditionalOnExpression("#{'docker_build'.equals(\${'run.model'}) || 'codecc_build'.equals(\${'run.model')}")
 @EnableScheduling
 class CommonBuildClusterCronConfiguration : SchedulingConfigurer {
 
@@ -58,17 +58,7 @@ class CommonBuildClusterCronConfiguration : SchedulingConfigurer {
 
         scheduledTaskRegistrar.addFixedRateTask(
             IntervalTask(
-                Runnable { runner.clearExitedContainer() }, 3600 * 1000, 3600 * 1000
-            )
-        )
-
-        scheduledTaskRegistrar.addCronTask(
-                { runner.clearLocalImages() }, clearLocalImageCron!!
-        )
-
-        scheduledTaskRegistrar.addFixedRateTask(
-            IntervalTask(
-                Runnable { runner.refreshDockerIpStatus() }, 5 * 1000, 1000
+                Runnable { runner.test() }, 5 * 1000, 1000
             )
         )
     }
