@@ -48,17 +48,41 @@ cd /usr/local/openresty/nginx && ./sbin/nginx -v
 ### 部署并启动bk-ci网关
 
 网关主要是配置文件和lua脚本，所以只需要将网关gateway的外链到nginx的conf目录
+
+- 先配置{{code}}/scripts/bkenv.properties相关参数
+- 执行render命令生成网关的模板文件
+
 ```shell
-1. 拷贝nginx代码到部署目录 - cp -r {{code}}/gateway __INSTALL_PATH__/__MODULE__/
-2. 外链部署目录到nginx的config - rm -rf /usr/local/openresty/nginx/conf && ln -s __INSTALL_PATH__/__MODULE__//gateway /usr/local/openresty/nginx/conf
+    cd {{code}}/scripts
+    sh ./render_tpl -m ci ../support-files/templates/gateway*
 ```
 
-#### 命令
+- 拷贝渲染后的模板文件到nginx代码目录
+
+```shell
+cp -rf {{code}}/ci/gateway/core/* {{code}}/src/gateway/core/
+```
+
+- 将nginx配置文件复制到项目目录下
+  
+```shell
+cp -rf {{code}}/src/gateway/core/* __INSTALL_PATH__/gateway
+```
+
+- 将`__INSTALL_PATH__/gateway`的nginx配置目录软连到nginx的conf目录下
+
+```shell
+rm -rf /usr/local/openresty/nginx/conf
+ln -s  __INSTALL_PATH__/gateway /usr/local/openresty/nginx/conf
+```
+
+
+#### 启动命令
 
 ```shell
 mkdir -p /usr/local/openresty/nginx/run/ # 创建PID目录
 cd /usr/local/openresty/nginx # 进入nginx安装目录
-./sbin/nginx  # 启动nginx
 ./sbin/nginx -t  # 验证nginx的配置是否正确
+./sbin/nginx     # 启动nginx
 ./sbin/nginx -s reload # 重启nginx
 ```

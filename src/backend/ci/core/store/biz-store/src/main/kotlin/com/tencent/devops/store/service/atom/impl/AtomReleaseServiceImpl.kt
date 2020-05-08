@@ -555,9 +555,13 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
 
                 GetAtomQualityConfigResult("0", arrayOf(""))
             } else {
-                client.get(ServiceQualityIndicatorMarketResource::class).deleteTestIndicator(atomCode)
-                client.get(ServiceQualityMetadataMarketResource::class).deleteTestMetadata(atomCode)
-                client.get(ServiceQualityControlPointMarketResource::class).deleteTestControlPoint(atomCode)
+                try {
+                    client.get(ServiceQualityIndicatorMarketResource::class).deleteTestIndicator(atomCode)
+                    client.get(ServiceQualityMetadataMarketResource::class).deleteTestMetadata(atomCode)
+                    client.get(ServiceQualityControlPointMarketResource::class).deleteTestControlPoint(atomCode)
+                } catch (e: Exception) {
+                    logger.error("clear atom:$atomCode test quality data error", e)
+                }
 
                 GetAtomQualityConfigResult(
                     StoreMessageCode.USER_REPOSITORY_PULL_QUALITY_JSON_FILE_FAIL,
@@ -791,6 +795,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 } else {
                     val atomEnvRequest = getAtomConfResult.atomEnvRequest!!
                     atomEnvRequest.pkgPath = "$projectCode/$atomCode/$version/$packagePath"
+                    atomEnvRequest.shaContent = redisOperation.get("$projectCode:$atomCode:$version:packageShaContent")
                 }
             }
             getAtomConfResult

@@ -98,8 +98,8 @@ class ServiceGitResourceImpl @Autowired constructor(
         return Result(gitService.getToken(userId, code))
     }
 
-    override fun getRedirectUrl(redirectUrlType: String?): Result<String> {
-        return Result(gitService.getRedirectUrl(redirectUrlType))
+    override fun getRedirectUrl(authParamJsonStr: String): Result<String> {
+        return Result(gitService.getRedirectUrl(authParamJsonStr))
     }
 
     override fun getGitFileContent(

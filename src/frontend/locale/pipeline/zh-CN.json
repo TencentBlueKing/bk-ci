@@ -89,6 +89,15 @@
     "stageOptionLabel": "本Stage执行条件",
     "stageTriggerDesc": "多个人员用英文逗号分隔",
     "skipStageDesc": "已跳过",
+    "execDetail": {
+        "log": "日志",
+        "setting": "配置",
+        "execTime": "重试次数",
+        "showTime": "显示时间戳",
+        "hideTime": "隐藏时间戳",
+        "downLoadLog": "下载日志",
+        "emptyLog": "日志内容为空"
+    },
     "timeMap": {
         "days": "天",
         "hours": "小时",
@@ -258,6 +267,7 @@
         "previewDiff": "编排预览",
         "templateInstantiation": "模板实例化",
         "templateVersion": "模板版本",
+        "templateVersionErrTips": "请先选择模板版本",
         "applyTemplateSetting": "同时应用模板设置",
         "applySettingTips": "勾选则表示把模板的设置应用到实例化的流水线",
         "newPipelineName": "实例化流水线名称",
@@ -588,7 +598,7 @@
         "defaultValueDesc": "若value为版本号,则不能包含“”\"\"等符号；\n如果参数类型为复选框，选择多个值时将以a,b的方式传递给流水线",
         "defaultValueTips": "请输入默认值",
         "selectOptions": "下拉选项",
-        "optionsDesc": "用换行符分隔选项，选项不能包含英文逗号，重复的选项将只会显示一个",
+        "optionsDesc": "用换行符分隔选项，选项不能包含英文逗号，重复的选项将只会显示一个, 选项支持【{id}={name} | {id}】两种格式",
         "optionTips": "多行记录请换行输入",
         "svnParams": "请选择svn代码库",
         "relativePath": "代码库相对目录",
