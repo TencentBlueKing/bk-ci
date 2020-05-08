@@ -18,7 +18,6 @@
 </template>
 
 <script>
-    import NotifySetting from '@/components/pipelineSetting/NotifySetting'
     import BaseInfo from '@/components/pipelineSetting/BaseInfo'
     import RunningLock from '@/components/pipelineSetting/RunningLock'
     import CodeRecordTable from '@/components/codeRecord/CodeRecordTable'
@@ -29,7 +28,6 @@
     export default {
         name: 'vertical-tab',
         components: {
-            NotifySetting,
             BaseInfo,
             RunningLock,
             CodeRecordTable,

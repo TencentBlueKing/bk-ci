@@ -54,19 +54,19 @@ rabbitmq: 3.7.15 [rabbitmq部署](rabbitmq.md)
 
 ### 2.2 微服务部署
 
-在部署服务器上的示例/data/bkee/的主目录下，创建一个bkci目录。
+在部署服务器上的示例/data/bkee/的主目录下，创建一个ci目录。
 
-- 根据微服务名称，在bkci创建对应微服务的目录, 将上述编译后的boot-xxx.jar放入，
+- 根据微服务名称，在ci创建对应微服务的目录, 将上述编译后的boot-xxx.jar放入，
 - 将 /bk-ci/support-files/templates/目录下的各个服务名脚本，比如#project#project.sh 项目管理微服务改名为project.sh放到对应目录，
 - 配置文件中双_下划线定义的变量需要替换，见[support-files占位符声明](../../support-files/README.MD)来替换相应的占位符号
 
 ```
 |- /data/bkee
   |- etc
-    |- bkci
+    |- ci
       |- common.yml                # 通用配置文件
       |- application-project.yml   # 微服务配置文件
-  |- bkci                  # 程序主目录
+  |- ci                  # 程序主目录
     |- project             # 微服务目录，一共有10个，不一一列举了
       |- project.sh        # project微服务启动脚本
       |- boot-project.jar  # Project微服务的SpringBoot.jar
