@@ -32,7 +32,6 @@ import com.tencent.devops.common.websocket.dispatch.message.SendMessage
 import com.tencent.devops.websocket.servcie.WebsocketService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.messaging.simp.SimpMessagingTemplate
 import org.springframework.stereotype.Component
 import org.springframework.util.StopWatch
