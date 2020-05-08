@@ -41,7 +41,6 @@ import com.tencent.devops.store.pojo.atom.enums.AtomTypeEnum
 import com.tencent.devops.store.pojo.atom.enums.MarketAtomSortTypeEnum
 import com.tencent.devops.store.pojo.common.InstalledProjRespItem
 import io.swagger.annotations.Api
-import io.swagger.annotations.ApiModelProperty
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
