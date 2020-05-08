@@ -63,6 +63,8 @@ module.exports = {
         "CODEGIT_URL_PREFIX": true,
         "GITLAB_URL_PREFIX": true,
         "VERSION_TYPE": false
+        'PERM_URL_PREFIX': false,
+        "X_DEVOPS_PROJECT_ID": false
     },
     // add your custom rules hered
     rules: {
