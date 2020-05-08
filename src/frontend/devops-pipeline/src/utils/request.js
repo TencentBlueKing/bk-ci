@@ -20,7 +20,6 @@
 import axios from 'axios'
 import Vue from 'vue'
 import { bus } from './bus'
-import * as cookie from 'js-cookie'
 
 const request = axios.create({
     baseURL: `${AJAX_URL_PIRFIX}`,
@@ -30,64 +29,16 @@ const request = axios.create({
         }
         return status >= 200 && status <= 503
     },
-    withCredentials: true
+    withCredentials: true,
+    xsrfCookieName: 'backend_csrftoken', // 注入csrfToken
+    xsrfHeaderName: 'X-CSRFToken' // 注入csrfToken
 })
 
 function errorHandler (error) {
     return Promise.reject(error)
 }
 
-function isAbsoluteURL (url = '') {
-    return /^https?:\/\//i.test(url)
-}
-
-request.interceptors.request.use(config => {
-    const url = isAbsoluteURL(config.url) ? new window.URL(config.url) : {
-        host: config.baseURL,
-        pathname: config.url
-    }
-    if (/(devops|gw\.open)\.oa\.com(\/ms)?$/i.test(url.host) && !/(\/?ms\/backend|\/?backend)\//i.test(url.pathname)) {
-        const routePid = getCurrentPid()
-        return {
-            ...config,
-            headers: routePid ? {
-                ...(config.headers || {}),
-                'X-DEVOPS-PROJECT-ID': routePid
-            } : config.headers
-        }
-    }
-    return config
-}, function (error) {
-    return Promise.reject(error)
-})
-
-// request.interceptors.response.use(response => {
-//     injectCSRFTokenToHeaders() // 注入csrfToken
-//     const { data: { status, message, code, result } } = response
-//     const httpStatus = response.status
-//     if (httpStatus === 401) {
-//         bus.$toggleLoginDialog(true)
-//     } else if (httpStatus === 503) {
-//         const errMsg = {
-//             status: httpStatus,
-//             message: '服务正在部署中，请稍候...'
-//         }
-//         return Promise.reject(errMsg)
-//     } else if ((typeof code !== 'undefined' && code !== 0) || (typeof status !== 'undefined' && status !== 0)) {
-//         let msg = message
-//         if (Object.prototype.toString.call(message) === '[object Object]') {
-//             msg = Object.keys(message).map(key => message[key].join(';')).join(';')
-//         } else if (Object.prototype.toString.call(message) === '[object Array]') {
-//             msg = message.join(';')
-//         }
-//         const errorMsg = { httpStatus, message: msg, code: code || status }
-//         return Promise.reject(errorMsg)
-//     }
-//     return response.data
-// }, errorHandler)
-
 request.interceptors.response.use(response => {
-    injectCSRFTokenToHeaders() // 注入csrfToken
     const { data: { status, message, code, result } } = response
     const httpStatus = response.status
     if (httpStatus === 401) {
@@ -108,25 +59,6 @@ request.interceptors.response.use(response => {
 
     return response.data
 }, errorHandler)
-
-const injectCSRFTokenToHeaders = () => {
-    const CSRFToken = cookie.get('backend_csrftoken')
-    if (CSRFToken !== undefined) {
-        request.defaults.headers.post['X-CSRFToken'] = CSRFToken
-    } else {
-        console.warn('Can not find backend_csrftoken in document.cookie')
-    }
-}
-
-const getCurrentPid = () => {
-    try {
-        const pathPid = window.pipelineVue && window.pipelineVue.$route && window.pipelineVue.$route.params && window.pipelineVue.$route.params.projectId
-        const lsPid = localStorage.getItem('projectId')
-        return pathPid || lsPid
-    } catch (e) {
-        return undefined
-    }
-}
 
 Vue.prototype.$ajax = request
 

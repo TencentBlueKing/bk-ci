@@ -3,9 +3,7 @@ import Router from 'vue-router'
 import { updateRecentVisitServiceList, urlJoin, getServiceAliasByPath, importScript, importStyle } from '../utils/util'
 
 import compilePath from '../utils/pathExp'
-import request from '../utils/request'
 import * as cookie from 'js-cookie'
-
 
 // 404
 // const None = () => import('../views/None.vue')
@@ -18,11 +16,7 @@ const Home = () => import('../views/Home.vue')
 
 const IFrame = () => import('../views/IFrame.vue')
 
-const QuickStart = () => import('../views/QuickStart.vue')
-
 const ProjectManage = () => import('../views/ProjectManage.vue')
-
-// const Docs = () => import('../views/Docs.vue')
 
 const Maintaining = () => import('../views/503.vue')
 
@@ -53,15 +47,6 @@ const routes = [
                 path: '',
                 name: 'home',
                 component: Home,
-                meta: {
-                    showProjectList: false,
-                    showNav: true
-                }
-            },
-            {
-                path: 'quickstart',
-                name: 'quickstart',
-                component: QuickStart,
                 meta: {
                     showProjectList: false,
                     showNav: true
@@ -138,17 +123,16 @@ const createRouter = (store: any, dynamicLoadModule: any, i18n: any) => {
                 setTimeout(() => {
                     store.dispatch('toggleModuleLoading', false)
                 }, 100)
-                goNext(to, store, next)
+                goNext(to, next)
             })
-            goNext(to, store, next)
+            goNext(to, next)
         } else if (isAmdModule(currentPage) && loadedModule[serviceAlias]) {
             dynamicLoadModule(serviceAlias, i18n.locale).then(() => {
-                goNext(to, store, next)    
+                goNext(to, next)
             })
         } else {
-            goNext(to, store, next)
+            goNext(to, next)
         }
-            
     })
 
     router.afterEach(route => {
@@ -166,53 +150,7 @@ function updateHeaderConfig ({ showProjectList, showNav }) {
     }
 }
 
-/**
- * 上报用户信息
- */
-function counterUser (): void {
-    const userId = window.userInfo.username
-    const os = parseOS()
-    
-    request.post('/project/api/user/count/login', {
-        os,
-        userId
-    })
-}
-
-function uploadBKCounter (count: number = 1): void {
-    try {
-        const date: Date = new Date()
-        const appMsg = {
-            bkdevops: {
-                [`${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`]: count
-            }
-        }
-        window.JSONP('http://open.oa.com/app_statistics/liveness/save_jsonp?app_msg=' + JSON.stringify(appMsg), function () {
-            // jsonp callback with data
-        })
-    } catch (e) {
-        console.warn('upload bk error', e)
-    }
-}
-
-function parseOS (): string {
-    const { userAgent } = window.navigator
-    switch (true) {
-        case userAgent.indexOf('Linux') > -1:
-            return /android/i.test(userAgent) ? 'ANDROID' : 'LINUX'
-        case userAgent.indexOf('iPhone') > -1:
-            return 'IOS'
-        case userAgent.indexOf('iPad') > -1:
-            return 'iPad'
-        case userAgent.indexOf('Mac') > -1:
-            return 'MACOS'
-        case userAgent.indexOf('Win') > -1:
-            return 'WINDOWS'
-    }
-    return 'WINDOWS'
-}
-
-function getProjectId (store, params): string {
+function getProjectId (params): string {
     try {
         const cookiePid = cookie.get(X_DEVOPS_PROJECT_ID)
         const projectId = window.GLOBAL_PID || cookiePid
@@ -222,10 +160,10 @@ function getProjectId (store, params): string {
     }
 }
 
-function initProjectId (to, store): string {
+function initProjectId (to): string {
     try {
         const { matched, params } = to
-        const projectId: string = getProjectId(store, params)
+        const projectId: string = getProjectId(params)
         const lastMatched = matched[matched.length - 1]
         
         const options = projectId ? {
@@ -239,11 +177,11 @@ function initProjectId (to, store): string {
     }
 }
 
-function goNext(to, store, next) {
-    const newPath = initProjectId(to, store)
+function goNext (to, next) {
+    const newPath = initProjectId(to)
 
     // @ts-ignore
-    window.setProjectIdCookie(getProjectId(store, to.params))
+    window.setProjectIdCookie(getProjectId(to.params))
     if (to.path !== newPath) {
         next({
             path: newPath,

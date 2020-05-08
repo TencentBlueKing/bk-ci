@@ -30,5 +30,6 @@ enum class LogoTypeEnum {
     ATOM,      // 插件logo
     TEMPLATE,  // 模版logo
     IMAGE,  // 镜像logo
-    BANNER; // banner
+    BANNER, // banner
+    SERVICE; // 扩展服务
 }
