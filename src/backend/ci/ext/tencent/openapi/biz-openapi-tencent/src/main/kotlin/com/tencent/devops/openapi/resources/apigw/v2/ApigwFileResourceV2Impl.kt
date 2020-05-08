@@ -1,4 +1,4 @@
-package com.tencent.devops.openapi.resources.v2
+package com.tencent.devops.openapi.resources.apigw.v2
 
 import com.tencent.devops.artifactory.api.ServiceFilePushResource
 import com.tencent.devops.artifactory.pojo.dto.PushFileDTO
