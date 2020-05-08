@@ -64,7 +64,6 @@ class VmStatusScheduler @Autowired constructor(
                 if (gray == "grayproject") {
                     grayEnv = true
                 }
-                logger.info("VMStatusScheduler checkVMStatus ===> gray: $gray")
                 val dockerIpList = pipelineDockerIpInfoDao.getDockerIpList(dslContext, true, grayEnv)
                 dockerIpList.stream().forEach {
                     singleDockerIpCheck(it)
@@ -79,15 +78,16 @@ class VmStatusScheduler @Autowired constructor(
 
     private fun singleDockerIpCheck(dockerIpInfoRecord: TDispatchPipelineDockerIpInfoRecord) {
         try {
+            // 重置限流设置
             redisOperation.set("${Constants.DOCKER_IP_COUNT_KEY_PREFIX}${dockerIpInfoRecord.dockerIp}", "1", 120)
 
             val nowTimestamp = System.currentTimeMillis()
             val lastUpdateTimestamp = dockerIpInfoRecord.gmtModified.timestamp()
             if ((nowTimestamp - lastUpdateTimestamp) >= 60 * 1000) {
-                // 如果之前可用，更新容器状态为不可用
-                if (dockerIpInfoRecord.enable) {
-                    pipelineDockerIpInfoDao.updateDockerIpStatus(dslContext, dockerIpInfoRecord.dockerIp, false)
-                }
+                // 刷新时间间隔超时，更新容器状态为不可用
+                logger.info("Docker ${dockerIpInfoRecord.dockerIp} check timeout, update enable false.")
+                pipelineDockerIpInfoDao.updateDockerIpStatus(dslContext, dockerIpInfoRecord.dockerIp, false)
+
             }
         } catch (e: Exception) {
             logger.error("singleDockerIpCheck updateDockerIpStatus fail.", e)
