@@ -23,37 +23,54 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.store.service.common
 
-package com.tencent.devops.store.pojo.common.enums
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.log.model.pojo.QueryLogs
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 
-enum class StoreTypeEnum(val type: Int) {
-    ATOM(0), // 插件
-    TEMPLATE(1), // 模板
-    IMAGE(2), // 镜像
-    IDE_ATOM(3), // IDE插件
-    SERVICE(4); // 扩展服务
+/**
+ * 研发商店-日志业务逻辑类
+ * since: 2019-08-15
+ */
+interface StoreLogService {
 
-    companion object {
-        fun getStoreType(type: Int): String {
-            return when (type) {
-                0 -> StoreTypeEnum.ATOM.name
-                1 -> StoreTypeEnum.TEMPLATE.name
-                2 -> StoreTypeEnum.IMAGE.name
-                3 -> StoreTypeEnum.IDE_ATOM.name
-                4 -> StoreTypeEnum.SERVICE.name
-                else -> StoreTypeEnum.ATOM.name
-            }
-        }
+    fun getInitLogs(
+        userId: String,
+        storeType: StoreTypeEnum,
+        projectCode: String,
+        pipelineId: String,
+        buildId: String,
+        isAnalysis: Boolean?,
+        queryKeywords: String?,
+        tag: String?,
+        executeCount: Int?
+    ): Result<QueryLogs?>
 
-        fun getStoreTypeObj(type: Int): StoreTypeEnum? {
-            return when (type) {
-                0 -> ATOM
-                1 -> TEMPLATE
-                2 -> IMAGE
-                3 -> IDE_ATOM
-                4 -> SERVICE
-                else -> null
-            }
-        }
-    }
+    fun getAfterLogs(
+        userId: String,
+        storeType: StoreTypeEnum,
+        projectCode: String,
+        pipelineId: String,
+        buildId: String,
+        start: Long,
+        isAnalysis: Boolean?,
+        queryKeywords: String?,
+        tag: String?,
+        executeCount: Int?
+    ): Result<QueryLogs?>
+
+    fun getMoreLogs(
+        userId: String,
+        storeType: StoreTypeEnum,
+        projectCode: String,
+        pipelineId: String,
+        buildId: String,
+        num: Int?,
+        fromStart: Boolean?,
+        start: Long,
+        end: Long,
+        tag: String?,
+        executeCount: Int?
+    ): Result<QueryLogs?>
 }
