@@ -77,7 +77,7 @@ class UserPipelineFileResourceImpl @Autowired constructor(
         return if (result.isNotOk() || result.data == null || result.data!!.fileUrlList!!.isEmpty()) {
             Result(result.status, result.message ?: "")
         } else {
-            Result(Url(result.data!!.fileUrlList!![0]))
+            Result(Url(url = result.data!!.fileUrlList!![0], url2 = result.data!!.fileUrlList!![0]))
         }
     }
 

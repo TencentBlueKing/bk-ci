@@ -28,9 +28,10 @@ package com.tencent.devops.store.dao.atom
 
 import com.tencent.devops.model.store.tables.TAppVersion
 import com.tencent.devops.model.store.tables.TApps
-import com.tencent.devops.model.store.tables.TAtomBuildAppRel
-import com.tencent.devops.model.store.tables.TAtomBuildInfo
 import com.tencent.devops.model.store.tables.TAtomEnvInfo
+import com.tencent.devops.model.store.tables.TStoreBuildAppRel
+import com.tencent.devops.model.store.tables.TStoreBuildInfo
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.jooq.Result
@@ -39,9 +40,12 @@ import org.springframework.stereotype.Repository
 @Repository
 class MarketAtomBuildAppRelDao {
 
+    /**
+     * 查询插件构建信息
+     */
     fun getMarketAtomBuildAppInfo(dslContext: DSLContext, atomId: String): Result<out Record>? {
-        val a = TAtomBuildInfo.T_ATOM_BUILD_INFO.`as`("a")
-        val b = TAtomBuildAppRel.T_ATOM_BUILD_APP_REL.`as`("b")
+        val a = TStoreBuildInfo.T_STORE_BUILD_INFO.`as`("a")
+        val b = TStoreBuildAppRel.T_STORE_BUILD_APP_REL.`as`("b")
         val c = TAppVersion.T_APP_VERSION.`as`("c")
         val d = TApps.T_APPS.`as`("d")
         val e = TAtomEnvInfo.T_ATOM_ENV_INFO.`as`("e")
@@ -57,7 +61,7 @@ class MarketAtomBuildAppRelDao {
             .on(c.APP_ID.eq(d.ID))
             .join(e)
             .on(a.LANGUAGE.eq(e.LANGUAGE))
-            .where(e.ATOM_ID.eq(atomId))
+            .where(e.ATOM_ID.eq(atomId).and(a.STORE_TYPE.eq(StoreTypeEnum.ATOM.type.toByte())))
             .fetch()
     }
 }

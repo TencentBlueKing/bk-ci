@@ -6,22 +6,22 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
-import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.permission.PipelinePermissionService
+import com.tencent.devops.process.service.BuildVariableService
 
 import org.apache.commons.lang.StringUtils
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class BuildVarResourceImpl @Autowired constructor(
-    private val pipelineRuntimeService: PipelineRuntimeService,
+    private val buildVariableService: BuildVariableService,
     private val pipelinePermissionService: PipelinePermissionService,
     private val pipelineRepositoryService: PipelineRepositoryService
 ) : BuildVarResource {
     override fun getBuildVar(buildId: String, projectId: String, pipelineId: String): Result<Map<String, String>> {
         checkParam(buildId = buildId, projectId = projectId, pipelineId = pipelineId)
         checkPermission(projectId = projectId, pipelineId = pipelineId)
-        return Result(pipelineRuntimeService.getAllVariable(buildId))
+        return Result(buildVariableService.getAllVariable(buildId))
     }
 
     fun checkPermission(projectId: String, pipelineId: String) {

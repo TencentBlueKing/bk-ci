@@ -45,7 +45,6 @@ dependencies {
     compile project(":core:artifactory:api-artifactory")
     compile project(":core:process:api-process")
     compile project(":core:quality:api-quality")
-    compile project(":core:quality:common-quality")
     compile project(":core:plugin:api-plugin")
     compile project(":core:plugin:codecc-plugin:common-codecc")
     compile project(":core:notify:api-notify")
@@ -59,5 +58,3 @@ dependencies {
     compile "io.undertow:undertow-websockets-jsr"
     testCompile project(":core:common:common-test")
 }
-
-apply from: "$rootDir/task_deploy_to_maven.gradle"

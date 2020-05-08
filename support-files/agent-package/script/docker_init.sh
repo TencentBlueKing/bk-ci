@@ -3,7 +3,7 @@
 export LANG="zh_CN.UTF-8"
 
 URL=${devops_gateway}/ms/dispatch/api/build/dockers
-cd /data/devops/workspace
+cd /data/devops
 echo "start to download the docker.jar..." > /data/devops/logs/docker.log
 
 curl -k -s -H "X-DEVOPS-BUILD-TYPE: DOCKER" -H "X-DEVOPS-PROJECT-ID: ${devops_project_id}" -H "X-DEVOPS-AGENT-ID: ${devops_agent_id}" -H "X-DEVOPS-AGENT-SECRET-KEY: ${devops_agent_secret_key}"  -o docker.jar ${URL}
