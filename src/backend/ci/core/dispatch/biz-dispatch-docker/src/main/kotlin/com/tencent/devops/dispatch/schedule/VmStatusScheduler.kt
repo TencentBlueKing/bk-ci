@@ -81,10 +81,10 @@ class VmStatusScheduler @Autowired constructor(
             // 重置限流设置
             redisOperation.set("${Constants.DOCKER_IP_COUNT_KEY_PREFIX}${dockerIpInfoRecord.dockerIp}", "1", 120)
 
-            val nowTimestamp = System.currentTimeMillis()
+            val nowTimestamp = System.currentTimeMillis() / 1000
             val lastUpdateTimestamp = dockerIpInfoRecord.gmtModified.timestamp()
             logger.info("nowTimestamp: $nowTimestamp, lastUpdateTimestamp: $lastUpdateTimestamp")
-            if ((nowTimestamp - lastUpdateTimestamp) >= 60 * 1000) {
+            if ((nowTimestamp - lastUpdateTimestamp) >= 60) {
                 // 刷新时间间隔超时，更新容器状态为不可用
                 logger.info("Docker ${dockerIpInfoRecord.dockerIp} check timeout, update enable false.")
                 pipelineDockerIpInfoDao.updateDockerIpStatus(dslContext, dockerIpInfoRecord.dockerIp, false)
