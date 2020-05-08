@@ -19,7 +19,6 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-
 @Api(tags = ["OPEN_API_V2_FILE"], description = "OPEN-API-V2-文件资源")
 @Path("/{apigwType:apigw-user|apigw-app|apigw}/v2/file")
 @Produces(MediaType.APPLICATION_JSON)
