@@ -86,32 +86,30 @@ class StoreMediaServiceImpl : StoreMediaService {
             dslContext = dslContext,
             id = id
         )
-        return Result(if (storeMediaRecord == null) {
-            null
-        } else {
-            storeMediaInfoDao.convert(storeMediaRecord)
-        })
+        return Result(
+            if (storeMediaRecord == null) {
+                null
+            } else {
+                storeMediaInfoDao.convert(storeMediaRecord)
+            }
+        )
     }
 
     override fun getByCode(storeCode: String, storeType: StoreTypeEnum): Result<List<StoreMediaInfo>?> {
         logger.info("getMedia input: storeCode[$storeCode] storeType[$storeType] ")
-        var storeMediaInfoList = mutableListOf<StoreMediaInfo>()
+        val storeMediaInfoList = mutableListOf<StoreMediaInfo>()
         val storeMediaRecord = storeMediaInfoDao.getMediaInfoByStoreCode(
             dslContext = dslContext,
             storeCode = storeCode,
             type = storeType.type.toByte()
         )
-        return if (storeMediaInfoList == null) {
-            Result(emptyList<StoreMediaInfo>())
-        } else {
-            storeMediaRecord!!.forEach {
-                storeMediaInfoList.add(storeMediaInfoDao.convert(it))
-            }
-            Result(storeMediaInfoList)
+        storeMediaRecord?.forEach {
+            storeMediaInfoList.add(storeMediaInfoDao.convert(it))
         }
+        return Result(storeMediaInfoList)
     }
 
     companion object {
-        val logger = LoggerFactory.getLogger(this::class.java)
+        private val logger = LoggerFactory.getLogger(this::class.java)
     }
 }

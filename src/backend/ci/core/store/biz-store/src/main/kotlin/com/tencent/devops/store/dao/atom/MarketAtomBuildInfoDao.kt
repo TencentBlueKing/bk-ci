@@ -28,6 +28,7 @@ package com.tencent.devops.store.dao.atom
 
 import com.tencent.devops.model.store.tables.TStoreBuildInfo
 import com.tencent.devops.model.store.tables.TAtomEnvInfo
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.jooq.DSLContext
 import org.jooq.Record2
 import org.springframework.stereotype.Repository
@@ -44,7 +45,7 @@ class MarketAtomBuildInfoDao {
         ).from(a)
             .join(b)
             .on(a.LANGUAGE.eq(b.LANGUAGE))
-            .where(a.ATOM_ID.eq(atomId))
+            .where(a.ATOM_ID.eq(atomId)).and(b.STORE_TYPE.eq(StoreTypeEnum.ATOM.type.toByte()))
             .fetchOne()
     }
 }
