@@ -16,14 +16,6 @@
     export default {
         name: 'pipeline-log',
         props: {
-            projectId: {
-                type: String,
-                required: true
-            },
-            pipelineId: {
-                type: String,
-                required: true
-            },
             buildNo: {
                 type: String,
                 required: true

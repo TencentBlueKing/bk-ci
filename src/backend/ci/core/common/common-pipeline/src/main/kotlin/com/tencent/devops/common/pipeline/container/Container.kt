@@ -50,6 +50,7 @@ interface Container {
     var canRetry: Boolean? // 当前job是否能重试
     var containerId: String? // container 唯一ID
     var startVMStatus: String?
+    var executeCount: Int?
 
     /**
      * 只存储Container相关的配置，elements不会存储。

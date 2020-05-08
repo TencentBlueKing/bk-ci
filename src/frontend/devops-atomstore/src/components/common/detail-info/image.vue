@@ -39,12 +39,12 @@
         </hgroup>
         <template v-if="detail.needInstallToProject === 'NEED_INSTALL_TO_PROJECT_TRUE'">
             <bk-popover placement="top" v-if="buttonInfo.disable">
-                <button class="bk-button bk-primary" type="button" disabled> {{ $t('安装') }} </button>
+                <button class="bk-button bk-primary" type="button" disabled> {{ $t('store.安装') }} </button>
                 <template slot="content">
                     <p>{{buttonInfo.des}}</p>
                 </template>
             </bk-popover>
-            <button class="detail-install" @click="goToInstall" v-else> {{ $t('安装') }} </button>
+            <button class="detail-install" @click="goToInstall" v-else> {{ $t('store.安装') }} </button>
         </template>
     </section>
 </template>
@@ -122,8 +122,11 @@
     .detail-title {
         display: flex;
         align-items: center;
-        margin: 47px auto 30px;
-        width: 1200px;
+        margin: 26px auto 0;
+        width: 95vw;
+        background: $white;
+        box-shadow: 1px 2px 3px 0px rgba(0,0,0,0.05);
+        padding: 32px;
         .detail-pic {
             width: 130px;
         }
@@ -131,15 +134,17 @@
             height: 160px;
             width: 160px;
         }
+        button {
+            border-radius: 4px;
+            width: 120px;
+            height: 40px;
+        }
         .detail-install {
-            width: 89px;
-            height: 36px;
             background: $primaryColor;
-            border-radius: 2px;
             border: none;
             font-size: 14px;
             color: $white;
-            line-height: 36px;
+            line-height: 40px;
             text-align: center;
             &.opicity-hidden {
                 opacity: 0;
@@ -149,13 +154,10 @@
                 transform: scale(.97)
             }
         }
-        .bk-tooltip button {
-            width: 89px;
-        }
     }
     .detail-info-group {
-        width: 829px;
-        margin: 0 76px;
+        width: 996px;
+        margin: 0 32px;
         
         h3 {
             font-size: 22px;
@@ -167,6 +169,7 @@
             align-items: center;
             .score-group {
                 position: relative;
+                margin-top: -2px;
                 .score-real {
                     position: absolute;
                     overflow: hidden;
@@ -180,7 +183,6 @@
                 }
             }
             .rate-num {
-                margin-top: 2px;
                 margin-left: 6px;
                 color: $fontWeightColor;
             }
@@ -192,7 +194,7 @@
             width: 33.33%;
             font-size: 14px;
             font-weight: normal;
-            line-height: 19px;
+            line-height: 20px;
             color: $fontBlack;
             span:nth-child(1) {
                 color: $fontWeightColor;
@@ -234,7 +236,7 @@
             }
         }
         .detail-info.detail-label {
-            width: 829px;
+            width: 994px;
             padding-left: 90px;
             display: inline-block;
             position: relative;

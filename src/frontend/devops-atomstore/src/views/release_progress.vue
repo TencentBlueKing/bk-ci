@@ -42,8 +42,9 @@
                                 <div class="retry-bth" v-if="isEnterprise">
                                     <span class="test-btn"
                                         v-if="entry.code === 'commit' && ['doing','success'].includes(entry.status) && !isOver">
-                                        <span> {{ $t('store.重新传包') }} </span>
-                                        <input type="file" title="" class="upload-input" @change="selectFile" accept="application/zip">
+                                        <span @click="$refs.upload[0].click()">{{ $t('store.重新传包') }}</span>
+                                        <span class="retry-pkgName">{{ versionDetail.pkgName }}</span>
+                                        <input ref="upload" type="file" title="" class="upload-input" @change="selectFile" accept="application/zip">
                                     </span>
                                 </div>
                                 <div class="retry-bth" v-else>
@@ -338,7 +339,7 @@
         methods: {
             toAtomList () {
                 this.$router.push({
-                    name: 'atomList',
+                    name: 'workList',
                     params: {
                         type: 'atom'
                     }
@@ -786,7 +787,15 @@
                 a,
                 a:hover {
                     color: $primaryColor;
-
+                }
+                .upload-input {
+                    display: none;
+                }
+                .retry-pkgName {
+                    display: inline-block;
+                    margin-left: 3px;
+                    cursor: default;
+                    color: #7b7d8a;
                 }
             }
             .audit-tips {
