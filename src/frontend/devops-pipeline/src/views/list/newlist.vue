@@ -22,7 +22,7 @@
                     </list-create-header>
 
                     <section class="pipeline-list-content">
-                        <div class="pipeline-list-cards clearfix" v-if="layout === 'card'">
+                        <div class="pipeline-list-cards" v-if="layout === 'card'">
                             <task-card
                                 v-for="(card, index) of slotProps.list"
                                 :has-permission="card.hasPermission"
@@ -1131,8 +1131,9 @@
             padding-top: 20px;
         }
         &-cards {
+            display: flex;
+            flex-wrap: wrap;
             .task-card {
-                float: left;
                 width: 311px;
                 margin: 0 20px 20px 0;
             }
