@@ -1,7 +1,6 @@
 package com.tencent.devops.dispatch.service
 
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.dispatch.common.Constants
 import com.tencent.devops.dispatch.dao.PipelineDockerIPInfoDao
 import com.tencent.devops.dispatch.pojo.DockerHostLoadConfig
 import com.tencent.devops.dispatch.pojo.DockerIpInfoVO
@@ -13,7 +12,6 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
 @Service
@@ -114,6 +112,26 @@ class DispatchDockerService @Autowired constructor(
         } catch (e: Exception) {
             logger.error("OP dispatchDocker update error.", e)
             throw RuntimeException("OP dispatchDocker update error.")
+        }
+    }
+
+    fun updateAllDispatchDockerEnable(userId: String): Boolean {
+        logger.info("$userId update all docker enable.")
+        try {
+            val dockerUnavailableList = pipelineDockerIPInfoDao.getDockerIpList(
+                dslContext = dslContext,
+                enable = false,
+                grayEnv = CommonUtils.isGray()
+            )
+
+            dockerUnavailableList.forEach {
+                pipelineDockerIPInfoDao.updateDockerIpStatus(dslContext, it.dockerIp, true)
+            }
+
+            return true
+        } catch (e: Exception) {
+            logger.error("OP updateAllDispatchDockerEnable error.", e)
+            throw RuntimeException("OP updateAllDispatchDockerEnable error.")
         }
     }
 
