@@ -27,6 +27,7 @@
 package com.tencent.devops.plugin.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.google.gson.JsonParser
 
 import com.tencent.devops.artifactory.api.service.ServiceArtifactoryResource
@@ -35,6 +36,7 @@ import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.archive.client.BkRepoClient
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_BUNDLE_IDENTIFIER
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_VERSION
@@ -65,6 +67,7 @@ import com.tencent.devops.plugin.pojo.JinGangAppResultReponse
 import com.tencent.devops.plugin.pojo.JinGangBugCount
 import com.tencent.devops.process.api.service.ServiceJfrogResource
 import com.tencent.devops.process.api.service.ServiceMetadataResource
+import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.pojo.Property
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import okhttp3.MediaType
