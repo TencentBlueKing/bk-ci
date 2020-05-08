@@ -335,6 +335,43 @@ class GitService @Autowired constructor(
         }
     }
 
+    fun checkUserGitAuth(userId: String, gitProjectId: String): Boolean {
+        var page = 1
+        var dataSize: Int
+        do {
+            try {
+                val token = getToken(gitProjectId)
+                val url = "$gitCIOauthUrl/api/v3/projects/$gitProjectId/members?page=$page&per_page=100&access_token=${token.accessToken}"
+
+                var ownerList = listOf<OwnerInfo>()
+                val request = Request.Builder()
+                    .url(url)
+                    .get()
+                    .build()
+                OkhttpUtils.doHttp(request).use { response ->
+                    val body = response.body()!!.string()
+                    logger.info("Get gongfeng project members response body: $body")
+                    ownerList = JsonUtil.to(body, object : TypeReference<List<OwnerInfo>>() {})
+                }
+
+                if (ownerList.isEmpty()) {
+                    break
+                }
+                dataSize = ownerList.size
+                ownerList.forEach {
+                    if (userId == it.userName && it.accessLevel!! >= 15)
+                        return true
+                }
+                page++
+            } catch (e: Exception) {
+                logger.error("get project member list fail! project id: $gitProjectId", e)
+                return false
+            }
+        } while (dataSize >= 100)
+
+        return false
+    }
+
     fun getGitCIFileContent(gitProjectId: Long, filePath: String, token: String, ref: String): String {
         logger.info("[$gitProjectId|$filePath|$token|$ref] Start to get the git file content")
         val startEpoch = System.currentTimeMillis()
