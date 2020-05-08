@@ -36,6 +36,7 @@ interface Window {
     setProjectIdCookie: Function
     JSONP: Function
     GLOBAL_PID: string
+    getLoginUrl: Function
     attachEvent(event: string, listener: EventListener): boolean
     detachEvent(event: string, listener: EventListener): void
 }
