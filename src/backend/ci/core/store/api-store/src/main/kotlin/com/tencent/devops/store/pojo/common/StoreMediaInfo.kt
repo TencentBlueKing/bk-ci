@@ -24,36 +24,25 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.pojo.common.enums
+package com.tencent.devops.store.pojo.common
 
-enum class StoreTypeEnum(val type: Int) {
-    ATOM(0), // 插件
-    TEMPLATE(1), // 模板
-    IMAGE(2), // 镜像
-    IDE_ATOM(3), // IDE插件
-    SERVICE(4); // 扩展服务
+import io.swagger.annotations.ApiModelProperty
 
-    companion object {
-        fun getStoreType(type: Int): String {
-            return when (type) {
-                0 -> StoreTypeEnum.ATOM.name
-                1 -> StoreTypeEnum.TEMPLATE.name
-                2 -> StoreTypeEnum.IMAGE.name
-                3 -> StoreTypeEnum.IDE_ATOM.name
-                4 -> StoreTypeEnum.SERVICE.name
-                else -> StoreTypeEnum.ATOM.name
-            }
-        }
-
-        fun getStoreTypeObj(type: Int): StoreTypeEnum? {
-            return when (type) {
-                0 -> ATOM
-                1 -> TEMPLATE
-                2 -> IMAGE
-                3 -> IDE_ATOM
-                4 -> SERVICE
-                else -> null
-            }
-        }
-    }
-}
+data class StoreMediaInfo(
+    @ApiModelProperty("媒体id")
+    val id: String,
+    @ApiModelProperty("研发商店类型", required = true)
+    val storeCode: String,
+    @ApiModelProperty("媒体url", required = true)
+    val mediaUrl: String,
+    @ApiModelProperty("媒体类型", required = true)
+    val mediaType: String,
+    @ApiModelProperty("添加用户", required = true)
+    val create: String,
+    @ApiModelProperty("修改用户", required = true)
+    val modifier: String,
+    @ApiModelProperty("添加时间", required = true)
+    val createTime: String,
+    @ApiModelProperty("修改时间", required = true)
+    val updateTime: String
+)
