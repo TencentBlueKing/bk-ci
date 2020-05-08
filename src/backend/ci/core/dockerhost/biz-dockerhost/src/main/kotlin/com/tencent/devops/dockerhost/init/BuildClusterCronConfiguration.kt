@@ -66,7 +66,7 @@ class BuildClusterCronConfiguration : SchedulingConfigurer {
             )
         )
 
-/*        scheduledTaskRegistrar.addFixedRateTask(
+        scheduledTaskRegistrar.addFixedRateTask(
             IntervalTask(
                 Runnable { runner.clearExitedContainer() }, 3600 * 1000, 3600 * 1000
             )
@@ -80,7 +80,7 @@ class BuildClusterCronConfiguration : SchedulingConfigurer {
             IntervalTask(
                 Runnable { runner.refreshDockerIpStatus() }, 5 * 1000, 1000
             )
-        )*/
+        )
     }
 
     @Autowired
