@@ -74,8 +74,7 @@ const devopsUtil = {};
     function communicateOuter (data) {
         if (window.postMessage) {
             try {
-                let curIframe = window['iframe-box'] ? window : window.parent
-                curIframe.postMessage(data, '*')
+                window.parent.postMessage(data, '*')
             } catch (e) {
                 console.warn('communicate fail', e)
             }
