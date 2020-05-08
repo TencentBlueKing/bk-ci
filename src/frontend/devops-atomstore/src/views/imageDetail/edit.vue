@@ -57,6 +57,9 @@
                         @imgAdd="uploadimg"
                     />
                 </bk-form-item>
+                <bk-form-item label="Dockerfile" property="dockerFileContent" ref="dockerFileContent">
+                    <code-section :code="form.dockerFileContent" :cursor-blink-rate="530" :read-only="false" ref="codeEditor" />
+                </bk-form-item>
                 <div class="version-msg">
                     <p class="form-title"> {{ $t('store.版本信息') }} </p>
                     <hr class="cut-line">
@@ -77,10 +80,12 @@
     import { mapActions } from 'vuex'
     import { toolbars } from '@/utils/editor-options'
     import selectLogo from '@/components/common/selectLogo'
+    import codeSection from '@/components/common/detailTab/codeSection'
 
     export default {
         components: {
-            selectLogo
+            selectLogo,
+            codeSection
         },
 
         data () {
@@ -149,6 +154,7 @@
                         throw err
                     }
                     this.isLoading = true
+                    this.form.dockerFileContent = this.$refs.codeEditor.getValue()
                     const postData = {
                         imageCode: this.form.imageCode,
                         data: this.form
@@ -201,6 +207,18 @@
 
 <style lang="scss" scoped>
     @import './../../assets/scss/conf';
+    .dockerfile {
+        height: 400px;
+        overflow: auto;
+        background: black;
+        /deep/ .CodeMirror {
+            font-family: Consolas, "Courier New", monospace;
+            line-height: 1.5;
+            padding: 10px;
+            height: auto;
+        }
+    }
+
     .edit-atom-wrapper {
         height: 100%;
         overflow: auto;

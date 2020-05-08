@@ -101,7 +101,7 @@
                     </bk-radio-group>
                 </bk-form-item>
                 <bk-form-item label="Dockerfile" property="dockerFileContent" ref="dockerFileContent">
-                    <section class="dockerfile" @click="freshCodeMirror"></section>
+                    <code-section :code="form.dockerFileContent" :cursor-blink-rate="530" :read-only="false" ref="codeEditor" />
                 </bk-form-item>
                 <div class="version-msg">
                     <p class="form-title"> {{ $t('store.版本信息') }} </p>
@@ -141,15 +141,12 @@
     import { mapActions } from 'vuex'
     import { toolbars } from '@/utils/editor-options'
     import selectLogo from '@/components/common/selectLogo'
-
-    import CodeMirror from 'codemirror'
-    import 'codemirror/mode/yaml/yaml'
-    import 'codemirror/lib/codemirror.css'
-    import 'codemirror/theme/3024-night.css'
+    import codeSection from '@/components/common/detailTab/codeSection'
 
     export default {
         components: {
-            selectLogo
+            selectLogo,
+            codeSection
         },
 
         data () {
@@ -199,17 +196,6 @@
                     trigger: 'blur'
                 },
                 logoErr: false,
-                codeMirrorCon: {
-                    lineNumbers: true,
-                    height: '400px',
-                    tabMode: 'indent',
-                    mode: 'yaml',
-                    theme: '3024-night',
-                    cursorHeight: 0.85,
-                    autoRefresh: true,
-                    autofocus: true
-                },
-                codeEditor: {},
                 toolbars
             }
         },
@@ -254,18 +240,13 @@
                 'requestReleaseImage'
             ]),
 
-            freshCodeMirror () {
-                this.codeEditor.refresh()
-                this.codeEditor.focus()
-            },
-
             changeShowAgentType (option) {
                 const settings = option.settings || {}
                 this.needAgentType = settings.needAgentType === 'NEED_AGENT_TYPE_TRUE'
             },
 
             submitImage () {
-                if (this.form.dockerFileType === 'INPUT') this.form.dockerFileContent = this.codeEditor.getValue()
+                if (this.form.dockerFileType === 'INPUT') this.form.dockerFileContent = this.$refs.codeEditor.getValue()
                 this.$refs.imageForm.validate().then(() => {
                     if (!this.form.logoUrl) {
                         this.logoErr = true
@@ -356,12 +337,6 @@
                         })
                 }).catch((err) => this.$bkMessage({ message: err.message || err, theme: 'error' })).finally(() => {
                     this.isLoading = false
-                    this.$nextTick(() => {
-                        const ele = document.querySelector('.dockerfile')
-                        this.codeEditor = CodeMirror(ele, this.codeMirrorCon)
-                        this.codeEditor.setValue(this.form.dockerFileContent || '')
-                    })
-                    setTimeout(() => this.codeEditor.refresh(), 300)
                 })
             },
 
@@ -404,7 +379,7 @@
 
             toImageList () {
                 this.$router.push({
-                    name: 'atomList',
+                    name: 'workList',
                     params: {
                         type: 'image'
                     }
