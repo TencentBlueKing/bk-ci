@@ -149,7 +149,7 @@ class GitCIRequestService @Autowired constructor(
         val yaml = try {
             createCIBuildYaml(yamlStr!!, gitRequestEvent.gitProjectId)
         } catch (e: Throwable) {
-            logger.error("git ci yaml is invalid")
+            logger.error("git ci yaml is invalid", e)
             gitRequestEventNotBuildDao.save(dslContext, gitRequestEvent.id!!, yamlStr, null, TriggerReason.GIT_CI_YAML_INVALID.name, gitRequestEvent.gitProjectId)
             return false
         }

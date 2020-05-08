@@ -169,7 +169,7 @@ class GitCIBuildService @Autowired constructor(
 
         // 第一个stage，触发类
         val manualTriggerElement = ManualTriggerElement("手动触发", "T-1-1-1")
-        val params: List<BuildFormProperty> = createPipelineParams(gitProjectConf, yaml)
+        val params = createPipelineParams(gitProjectConf, yaml, event)
         val triggerContainer = TriggerContainer("0", "构建触发", listOf(manualTriggerElement), null, null, null, null, params)
         val stage1 = Stage(listOf(triggerContainer), "stage-1")
         stageList.add(stage1)
@@ -386,41 +386,60 @@ class GitCIBuildService @Autowired constructor(
         }
     }
 
-    private fun createPipelineParams(gitProjectConf: GitRepositoryConf, yaml: CIBuildYaml): List<BuildFormProperty> {
+    private fun createPipelineParams(gitProjectConf: GitRepositoryConf, yaml: CIBuildYaml, event: GitRequestEvent): MutableList<BuildFormProperty> {
         val result = mutableListOf<BuildFormProperty>()
         gitProjectConf.env?.forEach {
             val value = gitCIParameterUtils.encrypt(it.value)
-            result.add(BuildFormProperty(
-                    it.name,
-                    false,
-                    BuildFormPropertyType.PASSWORD,
-                    value,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null
-                    ))
+            result.add(
+                BuildFormProperty(
+                    id = it.name,
+                    required = false,
+                    type = BuildFormPropertyType.PASSWORD,
+                    defaultValue = value,
+                    options = null,
+                    desc = null,
+                    repoHashId = null,
+                    relativePath = null,
+                    scmType = null,
+                    containerType = null,
+                    glob = null,
+                    properties = null
+                )
+            )
         }
-        yaml.variables?.forEach {
+
+        val startParams = mutableMapOf<String, String>()
+
+        // 代码库相关固定参数
+        startParams["BK_CI_REPO_GIT_WEBHOOK_BRANCH"] = event.branch
+        startParams["BK_CI_REPO_GIT_WEBHOOK_PUSH_USERNAME"] = event.userId
+        startParams["BK_CI_REPO_GIT_WEBHOOK_MR_AUTHOR"] = event.userId
+        startParams["BK_CI_REPO_GIT_WEBHOOK_TARGET_BRANCH"] = event.targetBranch ?: ""
+        startParams["BK_CI_REPO_GIT_WEBHOOK_SOURCE_BRANCH"] = event.branch
+        startParams["BK_CI_REPO_GIT_WEBHOOK_MR_CREATE_TIMESTAMP"] = event.commitTimeStamp ?: ""
+        startParams["BK_CI_REPO_GIT_WEBHOOK_MR_ID"] = event.mergeRequestId.toString()
+        startParams["BK_CI_REPO_GIT_WEBHOOK_MR_TITLE"] = event.mrTitle ?: ""
+
+        // 用户自定义变量
+        startParams.putAll(yaml.variables ?: mapOf())
+
+        startParams.forEach {
             result.add(BuildFormProperty(
-                    it.key,
-                    false,
-                    BuildFormPropertyType.STRING,
-                    it.value,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null
+                id = it.key,
+                required = false,
+                type = BuildFormPropertyType.STRING,
+                defaultValue = it.value,
+                options = null,
+                desc = null,
+                repoHashId = null,
+                relativePath = null,
+                scmType = null,
+                containerType = null,
+                glob = null,
+                properties = null
             ))
         }
+
         return result
     }
 
