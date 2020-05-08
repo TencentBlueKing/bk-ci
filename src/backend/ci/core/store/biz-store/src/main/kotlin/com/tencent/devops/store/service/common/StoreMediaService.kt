@@ -24,36 +24,55 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.pojo.common.enums
+package com.tencent.devops.store.service.common
 
-enum class StoreTypeEnum(val type: Int) {
-    ATOM(0), // 插件
-    TEMPLATE(1), // 模板
-    IMAGE(2), // 镜像
-    IDE_ATOM(3), // IDE插件
-    SERVICE(4); // 扩展服务
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.store.pojo.common.StoreMediaInfo
+import com.tencent.devops.store.pojo.common.StoreMediaInfoRequest
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 
-    companion object {
-        fun getStoreType(type: Int): String {
-            return when (type) {
-                0 -> StoreTypeEnum.ATOM.name
-                1 -> StoreTypeEnum.TEMPLATE.name
-                2 -> StoreTypeEnum.IMAGE.name
-                3 -> StoreTypeEnum.IDE_ATOM.name
-                4 -> StoreTypeEnum.SERVICE.name
-                else -> StoreTypeEnum.ATOM.name
-            }
-        }
+interface StoreMediaService {
 
-        fun getStoreTypeObj(type: Int): StoreTypeEnum? {
-            return when (type) {
-                0 -> ATOM
-                1 -> TEMPLATE
-                2 -> IMAGE
-                3 -> IDE_ATOM
-                4 -> SERVICE
-                else -> null
-            }
-        }
-    }
+    /**
+     * 新增媒体文件
+     */
+    fun add(
+        userId: String,
+        type: StoreTypeEnum,
+        storeMediaInfo: StoreMediaInfoRequest
+    ): Result<Boolean>
+
+    /**
+     * 更新媒体文件
+     */
+    fun update(
+        userId: String,
+        id: String,
+        storeMediaInfo: StoreMediaInfoRequest
+    ): Result<Boolean>
+
+    /**
+     * 删除媒体文件
+     */
+    fun deleteByStoreCode(
+        userId: String,
+        storeCode: String,
+        storeType: StoreTypeEnum
+    ): Result<Boolean>
+
+    /**
+     * 获取单条媒体信息
+     */
+    fun get(
+        userId: String,
+        id: String
+    ): Result<StoreMediaInfo?>
+
+    /**
+     * 获取媒体信息
+     */
+    fun getByCode(
+        storeCode: String,
+        storeType: StoreTypeEnum
+    ): Result<List<StoreMediaInfo>?>
 }
