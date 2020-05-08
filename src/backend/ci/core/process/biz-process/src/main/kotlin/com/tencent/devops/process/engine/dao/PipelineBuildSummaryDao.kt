@@ -49,14 +49,11 @@ import org.jooq.Result
 import org.jooq.SelectOnConditionStep
 import org.jooq.TableField
 import org.jooq.impl.DSL
-import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
 @Repository
 class PipelineBuildSummaryDao {
-
-    private val logger = LoggerFactory.getLogger(PipelineBuildSummaryDao::class.java)
 
     fun create(
         dslContext: DSLContext,
@@ -421,7 +418,6 @@ class PipelineBuildSummaryDao {
             }
             baseStep.orderBy(sortTypeField.desc())
         }
-        logger.info(baseStep.getSQL(true))
         return if ((null != page && null != pageSize) && !(page == 1 && pageSize == -1)) {
             baseStep.limit((page - 1) * pageSize + (offsetNum ?: 0), pageSize).fetch()
         } else {
