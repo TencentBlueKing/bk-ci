@@ -1,6 +1,5 @@
 package com.tencent.devops.dispatch.service
 
-import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.dispatch.dao.PipelineDockerIPInfoDao
 import com.tencent.devops.dispatch.pojo.DockerHostLoadConfig
 import com.tencent.devops.dispatch.pojo.DockerIpInfoVO
@@ -18,8 +17,7 @@ import java.time.format.DateTimeFormatter
 class DispatchDockerService @Autowired constructor(
     private val dslContext: DSLContext,
     private val pipelineDockerIPInfoDao: PipelineDockerIPInfoDao,
-    private val dockerHostUtils: DockerHostUtils,
-    private val redisOperation: RedisOperation
+    private val dockerHostUtils: DockerHostUtils
 ) {
 
     companion object {
