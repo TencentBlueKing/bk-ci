@@ -24,16 +24,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.artifactory.pojo
+package com.tencent.devops.store.pojo.atom
 
-import com.tencent.devops.store.pojo.atom.AtomEnvRequest
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("插件市场-归档插件包响应报文体")
-data class ArchiveAtomResponse(
-    @ApiModelProperty("插件环境信息", required = true)
+@ApiModel("流水线-插件执行包相关信息修改请求报文体")
+data class AtomPkgInfoUpdateRequest(
+    @ApiModelProperty("插件环境信息", required = false)
     val atomEnvRequest: AtomEnvRequest,
-    @ApiModelProperty("task.json参数", required = true)
+    @ApiModelProperty("task.json参数", required = false)
     val taskDataMap: Map<String, Any>
 )
