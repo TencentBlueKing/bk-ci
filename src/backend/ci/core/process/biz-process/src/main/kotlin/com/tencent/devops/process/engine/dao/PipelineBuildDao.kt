@@ -335,6 +335,36 @@ class PipelineBuildDao {
         }
     }
 
+    /**
+     * 取最近一次成功的构建
+     */
+    fun getLatestFailedBuild(dslContext: DSLContext, pipelineId: String): TPipelineBuildHistoryRecord? {
+        return with(T_PIPELINE_BUILD_HISTORY) {
+            val select = dslContext.selectFrom(this)
+                    .where(
+                            PIPELINE_ID.eq(pipelineId),
+                            STATUS.eq(1)
+                    )
+                    .orderBy(BUILD_NUM.desc()).limit(1)
+            select.fetchAny()
+        }
+    }
+
+    /**
+     * 取最近一次失败的构建
+     */
+    fun getLatestSuccessedBuild(dslContext: DSLContext, pipelineId: String): TPipelineBuildHistoryRecord? {
+        return with(T_PIPELINE_BUILD_HISTORY) {
+            val select = dslContext.selectFrom(this)
+                    .where(
+                            PIPELINE_ID.eq(pipelineId),
+                            STATUS.eq(0)
+                    )
+                    .orderBy(BUILD_NUM.desc()).limit(1)
+            select.fetchAny()
+        }
+    }
+
     fun updateStatus(
         dslContext: DSLContext,
         buildId: String,
