@@ -28,7 +28,6 @@ interface ApigwFileResourceV2 {
     @ApiOperation("分发文件")
     @POST
     @Path("/push/byJob")
-    @Consumes(MediaType.MULTIPART_FORM_DATA)
     fun pushFile(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
