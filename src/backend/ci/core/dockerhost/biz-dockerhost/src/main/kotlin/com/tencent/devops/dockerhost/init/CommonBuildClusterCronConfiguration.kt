@@ -26,10 +26,11 @@
 
 package com.tencent.devops.dockerhost.init
 
-import com.tencent.devops.dockerhost.cron.DockerTaskRunner
+import com.tencent.devops.dockerhost.config.DockerHostConfig
+import com.tencent.devops.dockerhost.cron.Runner
 import com.tencent.devops.dockerhost.services.DockerHostBuildService
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.scheduling.annotation.EnableScheduling
@@ -39,35 +40,49 @@ import org.springframework.scheduling.config.ScheduledTaskRegistrar
 import java.util.concurrent.Executors
 
 /**
- * 有构建环境的docker集群下才会生效, 默认生效
+ * 有构建环境的docker集群下才会生效, 默认生效（包含自有构建集群 docker集群）
  * @version 1.0
  */
 
 @Configuration
-@ConditionalOnProperty(prefix = "run", name = ["mode"], havingValue = "docker_build", matchIfMissing = true)
 @EnableScheduling
-class BuildClusterCronConfiguration : SchedulingConfigurer {
+class CommonBuildClusterCronConfiguration @Autowired constructor(
+    val dockerHostConfig: DockerHostConfig
+) : SchedulingConfigurer {
+
+    @Value("\${dockerCli.clearLocalImageCron:0 0 2 * * ?}")
+    var clearLocalImageCron: String? = null
 
     override fun configureTasks(scheduledTaskRegistrar: ScheduledTaskRegistrar) {
-        scheduledTaskRegistrar.setScheduler(Executors.newScheduledThreadPool(100))
-        scheduledTaskRegistrar.addFixedRateTask(
-            IntervalTask(
-                Runnable { dockerTaskRunner.startBuild() }, 5000, 60 * 1000
-            )
-        )
+        scheduledTaskRegistrar.setScheduler(Executors.newScheduledThreadPool(10))
 
-        scheduledTaskRegistrar.addFixedRateTask(
-            IntervalTask(
-                Runnable { dockerTaskRunner.endBuild() }, 20 * 1000, 120 * 1000
+        if (dockerHostConfig.runMode != null && (dockerHostConfig.runMode.equals("docker_build") || dockerHostConfig.runMode.equals(
+                "codecc_build"
+            ))
+        ) {
+            scheduledTaskRegistrar.addFixedRateTask(
+                IntervalTask(
+                    Runnable { runner.clearExitedContainer() }, 3600 * 1000, 3600 * 1000
+                )
             )
-        )
+
+            scheduledTaskRegistrar.addCronTask(
+                { runner.clearLocalImages() }, clearLocalImageCron!!
+            )
+
+            scheduledTaskRegistrar.addFixedRateTask(
+                IntervalTask(
+                    Runnable { runner.refreshDockerIpStatus() }, 5 * 1000, 1000
+                )
+            )
+        }
     }
 
     @Autowired
-    private lateinit var dockerTaskRunner: DockerTaskRunner
+    private lateinit var runner: Runner
 
     @Bean
-    fun dockerTaskRunner(dockerHostBuildService: DockerHostBuildService): DockerTaskRunner {
-        return DockerTaskRunner(dockerHostBuildService)
+    fun runner(dockerHostBuildService: DockerHostBuildService): Runner {
+        return Runner(dockerHostBuildService)
     }
 }
