@@ -122,7 +122,6 @@ class DockerHostUtils @Autowired constructor(
                 specialIpSet = specialIpSet
             )
         if (firstDockerIpList.isNotEmpty) {
-            logger.info("$projectId|$pipelineId|$vmSeqId first docker[0] ====> ${firstDockerIpList[0]}")
             dockerPair = selectAvailableDockerIp(firstDockerIpList, unAvailableIpList)
         } else {
             // 没有满足1的，优先选择磁盘空间，内存使用率均低于80%的
@@ -138,7 +137,6 @@ class DockerHostUtils @Autowired constructor(
                     specialIpSet = specialIpSet
                 )
             if (secondDockerIpList.isNotEmpty) {
-                logger.info("$projectId|$pipelineId|$vmSeqId second docker[0] ====> ${secondDockerIpList[0]}")
                 dockerPair = selectAvailableDockerIp(secondDockerIpList, unAvailableIpList)
             } else {
                 // 通过2依旧没有找到满足的构建机，选择内存使用率小于80%的
@@ -154,7 +152,6 @@ class DockerHostUtils @Autowired constructor(
                         specialIpSet = specialIpSet
                     )
                 if (thirdDockerIpList.isNotEmpty) {
-                    logger.info("$projectId|$pipelineId|$vmSeqId third docker[0] ====> ${thirdDockerIpList[0]}")
                     dockerPair = selectAvailableDockerIp(thirdDockerIpList, unAvailableIpList)
                 }
             }
