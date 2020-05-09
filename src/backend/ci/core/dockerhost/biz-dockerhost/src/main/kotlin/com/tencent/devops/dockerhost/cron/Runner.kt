@@ -173,8 +173,4 @@ class Runner @Autowired constructor(private val dockerHostBuildService: DockerHo
             logger.error("")
         }
     }
-
-    fun test() {
-        logger.info("test ===============>>>>.")
-    }
 }
