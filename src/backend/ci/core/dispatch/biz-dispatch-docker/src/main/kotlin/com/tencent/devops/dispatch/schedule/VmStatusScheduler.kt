@@ -3,6 +3,7 @@ package com.tencent.devops.dispatch.schedule
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.dispatch.common.Constants
 import com.tencent.devops.dispatch.dao.PipelineDockerIPInfoDao
 import com.tencent.devops.model.dispatch.tables.records.TDispatchPipelineDockerIpInfoRecord
@@ -15,6 +16,7 @@ import org.springframework.stereotype.Component
 @Component
 class VmStatusScheduler @Autowired constructor(
     private val dslContext: DSLContext,
+    private val gray: Gray,
     private val pipelineDockerIpInfoDao: PipelineDockerIPInfoDao,
     private val redisOperation: RedisOperation
 ) {
@@ -32,12 +34,8 @@ class VmStatusScheduler @Autowired constructor(
         try {
             val lockSuccess = redisLock.tryLock()
             if (lockSuccess) {
-                var grayEnv = false
-                val gray = System.getProperty("gray.project", "none")
-                if (gray == "grayproject") {
-                    grayEnv = true
-                }
-                val dockerIpList = pipelineDockerIpInfoDao.getDockerIpList(dslContext, true, grayEnv)
+                logger.info("Start check VM status gray: ${gray.isGray()}")
+                val dockerIpList = pipelineDockerIpInfoDao.getDockerIpList(dslContext, true, gray.isGray())
                 dockerIpList.stream().forEach {
                     singleDockerIpCheck(it)
                 }
