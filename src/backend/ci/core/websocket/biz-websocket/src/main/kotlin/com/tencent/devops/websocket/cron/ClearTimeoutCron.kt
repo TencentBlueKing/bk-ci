@@ -29,6 +29,7 @@ package com.tencent.devops.websocket.cron
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.websocket.utils.RedisUtlis
+import com.tencent.devops.common.websocket.utils.RedisUtlis.cleanPageSessionByPage
 import com.tencent.devops.websocket.keys.WebsocketKeys
 import com.tencent.devops.websocket.servcie.WebsocketService
 import org.slf4j.LoggerFactory
@@ -57,12 +58,12 @@ class ClearTimeoutCron(
 
     private fun longSessionLog() {
         val longSessionList = websocketService.getLongSessionPage()
+        logger.warn("this page sessionSize more ${websocketService.getMaxSession()}, $longSessionList")
         longSessionList.forEach {
-            logger.warn("this page[$it] sessionSize more ${websocketService.getMaxSession()}")
+            cleanPageSessionByPage(redisOperation, it)
+            logger.warn("this page[$it] outSize, delete page session")
         }
-        if (longSessionList.size > websocketService.getMaxSession()!!) {
-            websocketService.clearLongSessionPage()
-        }
+        websocketService.clearLongSessionPage()
     }
 
     private fun clearTimeoutSession() {
