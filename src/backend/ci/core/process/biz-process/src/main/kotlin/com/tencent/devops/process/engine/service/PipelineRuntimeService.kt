@@ -1857,8 +1857,23 @@ class PipelineRuntimeService @Autowired constructor(
     }
 
     // 获取流水线最后的构建号
+    fun getLatestBuildId(pipelineId: String): String? {
+        return pipelineBuildDao.getLatestBuild(dslContext, pipelineId)?.buildId
+    }
+
+    // 获取流水线最后完成的构建号
     fun getLatestFinishedBuildId(pipelineId: String): String? {
         return pipelineBuildDao.getLatestFinishedBuild(dslContext, pipelineId)?.buildId
+    }
+
+    // 获取流水线最后成功的构建号
+    fun getLatestSucceededBuildId(pipelineId: String): String? {
+        return pipelineBuildDao.getLatestSuccessedBuild(dslContext, pipelineId)?.buildId
+    }
+
+    // 获取流水线最后失败的构建号
+    fun getLatestFailedBuildId(pipelineId: String): String? {
+        return pipelineBuildDao.getLatestFailedBuild(dslContext, pipelineId)?.buildId
     }
 
     fun getBuildIdbyBuildNo(projectId: String, pipelineId: String, buildNo: Int): String? {
