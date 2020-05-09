@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.dispatch.common.Constants
+import com.tencent.devops.dispatch.dao.PipelineDockerBuildDao
 import com.tencent.devops.dispatch.dao.PipelineDockerHostDao
 import com.tencent.devops.dispatch.dao.PipelineDockerIPInfoDao
 import com.tencent.devops.dispatch.dao.PipelineDockerPoolDao
@@ -61,6 +62,7 @@ class DockerHostUtils @Autowired constructor(
     private val pipelineDockerPoolDao: PipelineDockerPoolDao,
     private val pipelineDockerTaskDriftDao: PipelineDockerTaskDriftDao,
     private val pipelineDockerTaskSimpleDao: PipelineDockerTaskSimpleDao,
+    private val pipelineDockerBuildDao: PipelineDockerBuildDao,
     private val dslContext: DSLContext
 ) {
     companion object {
@@ -122,7 +124,6 @@ class DockerHostUtils @Autowired constructor(
                 specialIpSet = specialIpSet
             )
         if (firstDockerIpList.isNotEmpty) {
-            logger.info("$projectId|$pipelineId|$vmSeqId first docker[0] ====> ${firstDockerIpList[0]}")
             dockerPair = selectAvailableDockerIp(firstDockerIpList, unAvailableIpList)
         } else {
             // 没有满足1的，优先选择磁盘空间，内存使用率均低于80%的
@@ -138,7 +139,6 @@ class DockerHostUtils @Autowired constructor(
                     specialIpSet = specialIpSet
                 )
             if (secondDockerIpList.isNotEmpty) {
-                logger.info("$projectId|$pipelineId|$vmSeqId second docker[0] ====> ${secondDockerIpList[0]}")
                 dockerPair = selectAvailableDockerIp(secondDockerIpList, unAvailableIpList)
             } else {
                 // 通过2依旧没有找到满足的构建机，选择内存使用率小于80%的
@@ -154,7 +154,6 @@ class DockerHostUtils @Autowired constructor(
                         specialIpSet = specialIpSet
                     )
                 if (thirdDockerIpList.isNotEmpty) {
-                    logger.info("$projectId|$pipelineId|$vmSeqId third docker[0] ====> ${thirdDockerIpList[0]}")
                     dockerPair = selectAvailableDockerIp(thirdDockerIpList, unAvailableIpList)
                 }
             }
@@ -216,11 +215,29 @@ class DockerHostUtils @Autowired constructor(
 
     fun updateTaskSimpleAndRecordDriftLog(
         pipelineAgentStartupEvent: PipelineAgentStartupEvent,
-        specialIpSet: Set<String>,
-        oldIp: String,
+        containerId: String,
         newIp: String,
-        ipInfo: String
+        driftIpInfo: String
     ) {
+        val taskHistory = pipelineDockerTaskSimpleDao.getByPipelineIdAndVMSeq(
+            dslContext = dslContext,
+            pipelineId = pipelineAgentStartupEvent.pipelineId,
+            vmSeq = pipelineAgentStartupEvent.vmSeqId
+        )
+
+        if (taskHistory != null && taskHistory.dockerIp != newIp) {
+            // 记录漂移日志
+            pipelineDockerTaskDriftDao.create(
+                dslContext,
+                pipelineAgentStartupEvent.pipelineId,
+                pipelineAgentStartupEvent.buildId,
+                pipelineAgentStartupEvent.vmSeqId,
+                taskHistory.dockerIp,
+                newIp,
+                driftIpInfo
+            )
+        }
+
         pipelineDockerTaskSimpleDao.updateDockerIp(
             dslContext,
             pipelineAgentStartupEvent.pipelineId,
@@ -228,15 +245,11 @@ class DockerHostUtils @Autowired constructor(
             newIp
         )
 
-        // 记录漂移日志
-        pipelineDockerTaskDriftDao.create(
-            dslContext,
-            pipelineAgentStartupEvent.pipelineId,
-            pipelineAgentStartupEvent.buildId,
-            pipelineAgentStartupEvent.vmSeqId,
-            oldIp,
-            newIp,
-            ipInfo
+        pipelineDockerBuildDao.updateContainerId(
+            dslContext = dslContext,
+            buildId = pipelineAgentStartupEvent.buildId,
+            vmSeqId = Integer.valueOf(pipelineAgentStartupEvent.vmSeqId),
+            containerId = containerId
         )
     }
 
@@ -265,7 +278,7 @@ class DockerHostUtils @Autowired constructor(
         }
 
         // IP当前可用，还要检测当前IP限流是否已达上限
-        val dockerIpCount = redisOperation.get("${Constants.DOCKER_IP_KEY_PREFIX}$dockerIp")
+        val dockerIpCount = redisOperation.get("${Constants.DOCKER_IP_COUNT_KEY_PREFIX}$dockerIp")
         logger.info("${event.projectId}|${event.pipelineId}|${event.vmSeqId} $dockerIp dockerIpCount: $dockerIpCount")
         return if (dockerIpCount != null && dockerIpCount.toInt() > DOCKER_IP_COUNT_MAX) {
             val pair = getAvailableDockerIpWithSpecialIps(event.projectId, event.pipelineId, event.vmSeqId, specialIpSet, setOf(dockerIp))
@@ -365,7 +378,7 @@ class DockerHostUtils @Autowired constructor(
 
     private fun exceedIpLimiting(dockerIp: String): Boolean {
         // 查看当前IP是否已达限流
-        val dockerIpCount = redisOperation.get("${Constants.DOCKER_IP_KEY_PREFIX}$dockerIp")
+        val dockerIpCount = redisOperation.get("${Constants.DOCKER_IP_COUNT_KEY_PREFIX}$dockerIp")
         logger.info("$dockerIp dockerIpCount: $dockerIpCount")
         if (dockerIpCount != null && dockerIpCount.toInt() > DOCKER_IP_COUNT_MAX) {
             return true

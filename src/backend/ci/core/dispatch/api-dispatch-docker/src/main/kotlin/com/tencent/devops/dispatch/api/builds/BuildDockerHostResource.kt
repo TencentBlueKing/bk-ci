@@ -31,6 +31,7 @@ import com.tencent.devops.common.web.mq.alert.AlertLevel
 import com.tencent.devops.dispatch.pojo.ContainerInfo
 import com.tencent.devops.dispatch.pojo.DockerHostBuildInfo
 import com.tencent.devops.dispatch.pojo.DockerHostInfo
+import com.tencent.devops.dispatch.pojo.DockerIpInfoVO
 import com.tencent.devops.store.pojo.image.response.ImageRepoInfo
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -229,6 +230,6 @@ interface BuildDockerHostResource {
         @PathParam("dockerIp")
         dockerIp: String,
         @ApiParam("构建机信息", required = true)
-        dockerHostPort: String
+        dockerIpInfoVO: DockerIpInfoVO
     ): Result<Boolean>
 }
