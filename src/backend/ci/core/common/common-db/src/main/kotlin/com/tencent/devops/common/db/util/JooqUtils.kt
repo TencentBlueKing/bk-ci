@@ -24,44 +24,28 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.dao.atom
+package com.tencent.devops.common.db.util
 
-import com.tencent.devops.model.store.tables.TAppVersion
-import com.tencent.devops.model.store.tables.TApps
-import com.tencent.devops.model.store.tables.TAtomEnvInfo
-import com.tencent.devops.model.store.tables.TStoreBuildAppRel
-import com.tencent.devops.model.store.tables.TStoreBuildInfo
-import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import org.jooq.DSLContext
-import org.jooq.Record
-import org.jooq.Result
-import org.springframework.stereotype.Repository
+import org.jooq.DatePart
+import org.jooq.Field
+import org.jooq.impl.DSL
+import java.sql.Timestamp
 
-@Repository
-class MarketAtomBuildAppRelDao {
+object JooqUtils {
 
-    /**
-     * 查询插件构建信息
-     */
-    fun getMarketAtomBuildAppInfo(dslContext: DSLContext, atomId: String): Result<out Record>? {
-        val a = TStoreBuildInfo.T_STORE_BUILD_INFO.`as`("a")
-        val b = TStoreBuildAppRel.T_STORE_BUILD_APP_REL.`as`("b")
-        val c = TAppVersion.T_APP_VERSION.`as`("c")
-        val d = TApps.T_APPS.`as`("d")
-        val e = TAtomEnvInfo.T_ATOM_ENV_INFO.`as`("e")
-        return dslContext.select(
-            d.NAME.`as`("appName"),
-            c.VERSION.`as`("appVersion")
-        ).from(a)
-            .join(b)
-            .on(a.ID.eq(b.BUILD_INFO_ID))
-            .join(c)
-            .on(b.APP_VERSION_ID.eq(c.ID))
-            .join(d)
-            .on(c.APP_ID.eq(d.ID))
-            .join(e)
-            .on(a.LANGUAGE.eq(e.LANGUAGE))
-            .where(e.ATOM_ID.eq(atomId).and(a.STORE_TYPE.eq(StoreTypeEnum.ATOM.type.toByte())))
-            .fetch()
+    fun timestampDiff(part: DatePart, t1: Field<Timestamp>, t2: Field<Timestamp>): Field<Long> {
+        return DSL.field(
+            "timestampdiff({0}, {1}, {2})",
+            Long::class.java, DSL.keyword(part.toSQL()), t1, t2
+        )
+    }
+
+    fun strPosition(data: Field<String>, param: String): Field<Int> {
+        return DSL.field(
+            "POSITION({0} IN {1})",
+            Int::class.java,
+            data,
+            param
+        )
     }
 }
