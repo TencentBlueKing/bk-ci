@@ -441,6 +441,8 @@ class PipelineService @Autowired constructor(
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_NAME_EXISTS,
                 defaultMessage = "流水线名称已被使用"
             )
+        } catch (e: ErrorCodeException) {
+            throw e
         } catch (e: Exception) {
             logger.warn("Fail to get the pipeline($pipelineId) definition of project($projectId)", e)
             throw ErrorCodeException(
