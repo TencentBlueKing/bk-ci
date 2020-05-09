@@ -79,6 +79,22 @@ class StoreProjectRelDao {
         }
     }
 
+    fun getTestProjectCodesByStoreCode(
+        dslContext: DSLContext,
+        projectCode: String,
+        storeType: StoreTypeEnum
+    ): Result<Record1<String>>? {
+        with(TStoreProjectRel.T_STORE_PROJECT_REL) {
+            return dslContext.select(PROJECT_CODE).from(this)
+                .where(
+                    PROJECT_CODE.eq(projectCode)
+                        .and(STORE_TYPE.eq(storeType.type.toByte()))
+                        .and(TYPE.eq(StoreProjectTypeEnum.TEST.type.toByte()))
+                )
+                .fetch()
+        }
+    }
+
     fun countInstalledProject(dslContext: DSLContext, projectCode: String, storeCode: String, storeType: Byte): Int {
         with(TStoreProjectRel.T_STORE_PROJECT_REL) {
             return dslContext.selectCount().from(this)
@@ -308,7 +324,7 @@ class StoreProjectRelDao {
     /**
      * 获取项目的调试组件
      */
-    fun getTestImageCodes(
+    fun getTestStoreCodes(
         dslContext: DSLContext,
         projectCode: String,
         storeType: StoreTypeEnum
@@ -317,7 +333,7 @@ class StoreProjectRelDao {
         return dslContext.select(tStoreProjectRel.STORE_CODE)
             .from(tStoreProjectRel)
             .where(tStoreProjectRel.PROJECT_CODE.eq(projectCode))
-            .and(tStoreProjectRel.STORE_TYPE.eq(StoreTypeEnum.IMAGE.type.toByte()))
+            .and(tStoreProjectRel.STORE_TYPE.eq(storeType.type.toByte()))
             .and(tStoreProjectRel.TYPE.eq(StoreProjectTypeEnum.TEST.type.toByte()))
             .fetch()
     }
