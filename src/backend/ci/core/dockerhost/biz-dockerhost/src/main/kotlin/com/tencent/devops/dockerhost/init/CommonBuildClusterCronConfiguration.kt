@@ -26,12 +26,12 @@
 
 package com.tencent.devops.dockerhost.init
 
+import com.tencent.devops.dockerhost.config.DockerHostConfig
 import com.tencent.devops.dockerhost.cron.Runner
 import com.tencent.devops.dockerhost.services.DockerHostBuildService
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.scheduling.annotation.EnableScheduling
@@ -41,26 +41,43 @@ import org.springframework.scheduling.config.ScheduledTaskRegistrar
 import java.util.concurrent.Executors
 
 /**
- * 有构建环境的docker集群下才会生效, 默认生效
+ * 有构建环境的docker集群下才会生效, 默认生效（包含自有构建集群 docker集群）
  * @version 1.0
  */
 
 @Configuration
-@ConditionalOnExpression("#{'docker_build'.equals(systemProperties['run.model']) || 'codecc_build'.equals(systemProperties['run.model'])}")
 @EnableScheduling
-class CommonBuildClusterCronConfiguration : SchedulingConfigurer {
+class CommonBuildClusterCronConfiguration @Autowired constructor(
+    val dockerHostConfig: DockerHostConfig
+) : SchedulingConfigurer {
 
     @Value("\${dockerCli.clearLocalImageCron:0 0 2 * * ?}")
     var clearLocalImageCron: String? = null
 
+
     override fun configureTasks(scheduledTaskRegistrar: ScheduledTaskRegistrar) {
         scheduledTaskRegistrar.setScheduler(Executors.newScheduledThreadPool(10))
 
-        scheduledTaskRegistrar.addFixedRateTask(
-            IntervalTask(
-                Runnable { runner.test() }, 5 * 1000, 1000
+        if (dockerHostConfig.runMode != null && (dockerHostConfig.runMode.equals("docker_build") || dockerHostConfig.runMode.equals(
+                "codecc_build"
+            ))
+        ) {
+            scheduledTaskRegistrar.addFixedRateTask(
+                IntervalTask(
+                    Runnable { runner.clearExitedContainer() }, 3600 * 1000, 3600 * 1000
+                )
             )
-        )
+
+            scheduledTaskRegistrar.addCronTask(
+                { runner.clearLocalImages() }, clearLocalImageCron!!
+            )
+
+            scheduledTaskRegistrar.addFixedRateTask(
+                IntervalTask(
+                    Runnable { runner.refreshDockerIpStatus() }, 5 * 1000, 1000
+                )
+            )
+        }
     }
 
     @Autowired
