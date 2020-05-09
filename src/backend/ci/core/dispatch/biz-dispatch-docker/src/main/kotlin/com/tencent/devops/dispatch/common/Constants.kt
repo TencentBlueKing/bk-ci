@@ -26,5 +26,5 @@
 package com.tencent.devops.dispatch.common
 
 object Constants {
-    const val DOCKER_IP_KEY_PREFIX = "dispatch_docker_ip_count_"
+    const val DOCKER_IP_COUNT_KEY_PREFIX = "dispatch_docker_ip_count_"
 }
