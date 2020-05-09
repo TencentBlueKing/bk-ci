@@ -40,6 +40,7 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.ZipUtil
 import com.tencent.devops.store.api.atom.ServiceMarketAtomArchiveResource
 import com.tencent.devops.store.pojo.atom.AtomEnvRequest
+import com.tencent.devops.store.pojo.atom.AtomPkgInfoUpdateRequest
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -87,6 +88,7 @@ abstract class ArchiveAtomServiceImpl : ArchiveAtomService {
         val packageFileName: String
         val packageFileSize: Long
         val shaContent: String
+        val taskDataMap: Map<String, Any>
         try { // 校验taskJson配置是否正确
             val verifyAtomTaskJsonResult =
                 client.get(ServiceMarketAtomArchiveResource::class).verifyAtomTaskJson(userId, projectCode, atomCode, version)
@@ -96,6 +98,7 @@ abstract class ArchiveAtomServiceImpl : ArchiveAtomService {
             }
             val atomConfigResult = verifyAtomTaskJsonResult.data
             atomEnvRequest = atomConfigResult!!.atomEnvRequest!!
+            taskDataMap = atomConfigResult.taskDataMap!!
             val packageFile = File("${getAtomArchiveBasePath()}/$BK_CI_ATOM_DIR/${atomEnvRequest.pkgPath}")
             packageFileName = packageFile.name
             packageFileSize = packageFile.length()
@@ -133,7 +136,7 @@ abstract class ArchiveAtomServiceImpl : ArchiveAtomService {
         )
         atomEnvRequest.shaContent = shaContent
         atomEnvRequest.pkgName = disposition.fileName
-        return Result(ArchiveAtomResponse(atomEnvRequest))
+        return Result(ArchiveAtomResponse(atomEnvRequest, taskDataMap))
     }
 
     override fun reArchiveAtom(
@@ -155,12 +158,14 @@ abstract class ArchiveAtomServiceImpl : ArchiveAtomService {
         if (archiveAtomResult.isNotOk()) {
             return archiveAtomResult
         }
-        val atomEnvRequest = archiveAtomResult.data!!.atomEnvRequest
-        val updateAtomEnvResult = client.get(ServiceMarketAtomArchiveResource::class)
-            .updateAtomEnv(userId, reArchiveAtomRequest.atomId, atomEnvRequest)
-        logger.info("updateAtomEnvResult is:$updateAtomEnvResult")
-        if (updateAtomEnvResult.isNotOk()) {
-            return Result(updateAtomEnvResult.status, updateAtomEnvResult.message, null)
+        val archiveAtomResultData = archiveAtomResult.data!!
+        val atomEnvRequest = archiveAtomResultData.atomEnvRequest
+        val taskDataMap = archiveAtomResultData.taskDataMap
+        val updateAtomInfoResult = client.get(ServiceMarketAtomArchiveResource::class)
+            .updateAtomPkgInfo(userId, reArchiveAtomRequest.atomId, AtomPkgInfoUpdateRequest(atomEnvRequest, taskDataMap))
+        logger.info("updateAtomInfoResult is:$updateAtomInfoResult")
+        if (updateAtomInfoResult.isNotOk()) {
+            return Result(updateAtomInfoResult.status, updateAtomInfoResult.message, null)
         }
         return archiveAtomResult
     }
