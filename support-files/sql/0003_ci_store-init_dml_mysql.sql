@@ -67,6 +67,7 @@ REPLACE INTO `T_CONTAINER` (`ID`, `NAME`, `TYPE`, `OS`, `REQUIRED`, `MAX_QUEUE_M
   ('c024824008c011e99792fa163e50f2b5', 'macOS', 'vmBuild', 'MACOS', 0, 60, 900, '{}', 'system', 'system', '2018-12-26 12:16:21', '2018-12-26 12:16:21'),
   ('c029e57d08c011e99792fa163e50f2b5', 'Linux', 'vmBuild', 'LINUX', 0, 60, 900, '{}', 'system', 'system', '2018-12-26 12:16:21', '2018-12-26 12:16:21');
 
+REPLACE INTO `T_LOGO`(`ID`, `TYPE`, `LOGO_URL`, `LINK`, `CREATOR`, `MODIFIER`, `CREATE_TIME`, `UPDATE_TIME`, `ORDER`) VALUES ('ef3e60ba6ef44b92b0fec0b940af8fa1', 'BANNER', '/ms/artifactory/api/user/artifactories/file/download?filePath=%2Ffile%2Fpng%2FBANNER.png', '', 'system', 'system', '2019-10-21 17:23:40', '2019-10-21 17:23:40', 2);
 
 REPLACE INTO `T_ATOM_BUILD_INFO`(`ID`, `LANGUAGE`, `SCRIPT`, `CREATOR`, `MODIFIER`, `CREATE_TIME`, `UPDATE_TIME`, `REPOSITORY_PATH`, `SAMPLE_PROJECT_PATH`, `ENABLE`) VALUES ('0951a1e44a2f479bb9505e5554fa42a6', 'Python', '', 'system', 'system', '2019-03-05 19:59:42', '2019-03-05 19:59:42', NULL, '', b'1');
 REPLACE INTO `T_ATOM_BUILD_INFO`(`ID`, `LANGUAGE`, `SCRIPT`, `CREATOR`, `MODIFIER`, `CREATE_TIME`, `UPDATE_TIME`, `REPOSITORY_PATH`, `SAMPLE_PROJECT_PATH`, `ENABLE`) VALUES ('8732f1d5b35c11e9aa7c84a9c49dad92', 'Node', '', 'system', 'system', '2019-03-04 20:37:50', '2019-03-04 20:37:50', NULL, '', b'1');

@@ -24,16 +24,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.artifactory.pojo
+package com.tencent.devops.process.engine.pojo
 
-import com.tencent.devops.store.pojo.atom.AtomEnvRequest
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.process.pojo.classify.PipelineViewFilterByCreator
+import com.tencent.devops.process.pojo.classify.PipelineViewFilterByName
+import com.tencent.devops.process.pojo.classify.enums.Logic
 
-@ApiModel("插件市场-归档插件包响应报文体")
-data class ArchiveAtomResponse(
-    @ApiModelProperty("插件环境信息", required = true)
-    val atomEnvRequest: AtomEnvRequest,
-    @ApiModelProperty("task.json参数", required = true)
-    val taskDataMap: Map<String, Any>
+data class PipelineFilterParam(
+    val logic: Logic,
+    val filterByPipelineNames: List<PipelineViewFilterByName>,
+    val filterByPipelineCreators: List<PipelineViewFilterByCreator>,
+    val filterByLabelInfo: PipelineFilterByLabelInfo
 )

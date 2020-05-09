@@ -24,44 +24,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo.classify
+package com.tencent.devops.store.pojo.atom
 
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
-import kotlin.math.ceil
 
-@ApiModel("Pipeline分页数据包装模型")
-data class PipelineViewPipelinePage<out T>(
-    @ApiModelProperty("总记录行数", required = true)
-    val count: Long,
-    @ApiModelProperty("第几页", required = true)
-    val page: Int,
-    @ApiModelProperty("每页多少条", required = true)
-    val pageSize: Int,
-    @ApiModelProperty("总共多少页", required = true)
-    val totalPages: Int,
-    @ApiModelProperty("数据", required = true)
-    val records: List<T> // ,
-//        @ApiModelProperty("是否拥有创建权限", required = true)
-//        val hasCreatePermission: Boolean,
-//        @ApiModelProperty("总pipeline是否为空（不管有没有权限的）", required = true)
-//        val hasPipelines: Boolean,
-//        @ApiModelProperty("是否有收藏的流水线", required = true)
-//        val hasFavorPipelines: Boolean,
-//        @ApiModelProperty("是否有用户权限的流水线", required = true)
-//        val hasPermissionPipelines: Boolean
-) {
-    constructor(
-        page: Int,
-        pageSize: Int,
-        count: Long,
-        records: List<T>/*, hasCreatePermission: Boolean, hasPipelines: Boolean, hasFavorPipelines: Boolean, hasPermissionPipelines: Boolean*/
-    ) :
-        this(
-            count,
-            page,
-            pageSize,
-            if (pageSize == -1) 1 else ceil(count * 1.0 / pageSize).toInt(),
-            records/*, hasCreatePermission, hasPipelines, hasFavorPipelines, hasPermissionPipelines*/
-        )
-}
+@ApiModel("流水线-插件执行包相关信息修改请求报文体")
+data class AtomPkgInfoUpdateRequest(
+    @ApiModelProperty("插件环境信息", required = false)
+    val atomEnvRequest: AtomEnvRequest,
+    @ApiModelProperty("task.json参数", required = false)
+    val taskDataMap: Map<String, Any>
+)
