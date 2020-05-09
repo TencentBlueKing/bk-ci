@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.dispatch.common.Constants
+import com.tencent.devops.dispatch.dao.PipelineDockerBuildDao
 import com.tencent.devops.dispatch.dao.PipelineDockerHostDao
 import com.tencent.devops.dispatch.dao.PipelineDockerIPInfoDao
 import com.tencent.devops.dispatch.dao.PipelineDockerPoolDao
@@ -61,6 +62,7 @@ class DockerHostUtils @Autowired constructor(
     private val pipelineDockerPoolDao: PipelineDockerPoolDao,
     private val pipelineDockerTaskDriftDao: PipelineDockerTaskDriftDao,
     private val pipelineDockerTaskSimpleDao: PipelineDockerTaskSimpleDao,
+    private val pipelineDockerBuildDao: PipelineDockerBuildDao,
     private val dslContext: DSLContext
 ) {
     companion object {
@@ -213,11 +215,29 @@ class DockerHostUtils @Autowired constructor(
 
     fun updateTaskSimpleAndRecordDriftLog(
         pipelineAgentStartupEvent: PipelineAgentStartupEvent,
-        specialIpSet: Set<String>,
-        oldIp: String,
+        containerId: String,
         newIp: String,
-        ipInfo: String
+        driftIpInfo: String
     ) {
+        val taskHistory = pipelineDockerTaskSimpleDao.getByPipelineIdAndVMSeq(
+            dslContext = dslContext,
+            pipelineId = pipelineAgentStartupEvent.pipelineId,
+            vmSeq = pipelineAgentStartupEvent.vmSeqId
+        )
+
+        if (taskHistory != null && taskHistory.dockerIp != newIp) {
+            // 记录漂移日志
+            pipelineDockerTaskDriftDao.create(
+                dslContext,
+                pipelineAgentStartupEvent.pipelineId,
+                pipelineAgentStartupEvent.buildId,
+                pipelineAgentStartupEvent.vmSeqId,
+                taskHistory.dockerIp,
+                newIp,
+                driftIpInfo
+            )
+        }
+
         pipelineDockerTaskSimpleDao.updateDockerIp(
             dslContext,
             pipelineAgentStartupEvent.pipelineId,
@@ -225,15 +245,11 @@ class DockerHostUtils @Autowired constructor(
             newIp
         )
 
-        // 记录漂移日志
-        pipelineDockerTaskDriftDao.create(
-            dslContext,
-            pipelineAgentStartupEvent.pipelineId,
-            pipelineAgentStartupEvent.buildId,
-            pipelineAgentStartupEvent.vmSeqId,
-            oldIp,
-            newIp,
-            ipInfo
+        pipelineDockerBuildDao.updateContainerId(
+            dslContext = dslContext,
+            buildId = pipelineAgentStartupEvent.buildId,
+            vmSeqId = Integer.valueOf(pipelineAgentStartupEvent.vmSeqId),
+            containerId = containerId
         )
     }
 
