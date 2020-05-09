@@ -34,6 +34,7 @@ class VmStatusScheduler @Autowired constructor(
         try {
             val lockSuccess = redisLock.tryLock()
             if (lockSuccess) {
+                logger.info("Start check VM status gray: ${gray.isGray()}")
                 val dockerIpList = pipelineDockerIpInfoDao.getDockerIpList(dslContext, true, gray.isGray())
                 dockerIpList.stream().forEach {
                     singleDockerIpCheck(it)
