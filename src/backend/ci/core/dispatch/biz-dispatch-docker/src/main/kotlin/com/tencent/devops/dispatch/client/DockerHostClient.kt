@@ -11,6 +11,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.DockerVersion
 import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
 import com.tencent.devops.common.pipeline.type.docker.ImageType
+import com.tencent.devops.dispatch.config.DefaultImageConfig
 import com.tencent.devops.dispatch.dao.PipelineDockerBuildDao
 import com.tencent.devops.dispatch.exception.DockerServiceException
 import com.tencent.devops.dispatch.pojo.DockerHostBuildInfo
@@ -19,7 +20,6 @@ import com.tencent.devops.dispatch.pojo.redis.RedisBuild
 import com.tencent.devops.dispatch.utils.CommonUtils
 import com.tencent.devops.dispatch.utils.DockerHostUtils
 import com.tencent.devops.dispatch.utils.redis.RedisUtils
-import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
 import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
 import com.tencent.devops.store.pojo.image.enums.ImageRDTypeEnum
 import com.tencent.devops.ticket.pojo.enums.CredentialType
@@ -29,7 +29,6 @@ import okhttp3.RequestBody
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 
 @Component
@@ -38,18 +37,13 @@ class DockerHostClient @Autowired constructor(
     private val dockerHostUtils: DockerHostUtils,
     private val redisUtils: RedisUtils,
     private val client: Client,
-    private val dslContext: DSLContext
+    private val dslContext: DSLContext,
+    private val defaultImageConfig: DefaultImageConfig
 ) {
 
     companion object {
         private val logger = LoggerFactory.getLogger(DockerHostClient::class.java)
-
-        private const val TLINUX1_2_IMAGE = "/bkdevops/docker-builder1.2:v1"
-        private const val TLINUX2_2_IMAGE = "/bkdevops/docker-builder2.2:v1"
     }
-
-    @Value("\${dispatch.dockerBuildImagePrefix:#{null}}")
-    val dockerBuildImagePrefix: String? = null
 
     fun startBuild(
         event: PipelineAgentStartupEvent,
@@ -97,9 +91,15 @@ class DockerHostClient @Autowired constructor(
             dispatchType.dockerBuildVersion
         } else {
             when (dispatchType.dockerBuildVersion) {
-                DockerVersion.TLINUX1_2.value -> dockerBuildImagePrefix + TLINUX1_2_IMAGE
-                DockerVersion.TLINUX2_2.value -> dockerBuildImagePrefix + TLINUX2_2_IMAGE
-                else -> "$dockerBuildImagePrefix/${dispatchType.dockerBuildVersion}"
+                DockerVersion.TLINUX1_2.value -> {
+                    defaultImageConfig.getTLinux1_2CompleteUri()
+                }
+                DockerVersion.TLINUX2_2.value -> {
+                    defaultImageConfig.getTLinux2_2CompleteUri()
+                }
+                else -> {
+                    defaultImageConfig.getCompleteUriByImageName(dispatchType.dockerBuildVersion)
+                }
             }
         }
         logger.info("Docker images is: $dockerImage")
@@ -151,20 +151,27 @@ class DockerHostClient @Autowired constructor(
         dockerBuildStart(dockerIp, dockerHostPort, requestBody, event)
     }
 
-    fun endBuild(event: PipelineAgentShutdownEvent, dockerIp: String, containerId: String) {
+    fun endBuild(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        vmSeqId: Int,
+        containerId: String,
+        dockerIp: String
+    ) {
         val requestBody = DockerHostBuildInfo(
-            projectId = event.projectId,
+            projectId = projectId,
             agentId = "",
-            pipelineId = event.pipelineId,
-            buildId = event.buildId,
-            vmSeqId = event.vmSeqId?.toInt() ?: 0,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            vmSeqId = vmSeqId,
             secretKey = "",
             status = 0,
             imageName = "",
             containerId = containerId,
             wsInHost = true,
             poolNo = 0,
-            registryUser = event.userId,
+            registryUser = "",
             registryPwd = "",
             imageType = "",
             imagePublicFlag = false,
@@ -186,13 +193,13 @@ class DockerHostClient @Autowired constructor(
 
         OkhttpUtils.doHttp(request).use { resp ->
             val responseBody = resp.body()!!.string()
-            logger.info("[${event.projectId}|${event.pipelineId}|${event.buildId}] End build Docker VM $dockerIp responseBody: $responseBody")
+            logger.info("[$projectId|$pipelineId|$buildId] End build Docker VM $dockerIp responseBody: $responseBody")
             val response: Map<String, Any> = jacksonObjectMapper().readValue(responseBody)
             if (response["status"] == 0) {
                 response["data"] as Boolean
             } else {
                 val msg = response["message"] as String
-                logger.error("[${event.projectId}|${event.pipelineId}|${event.buildId}] End build Docker VM failed, msg: $msg")
+                logger.error("[$projectId|$pipelineId|$buildId] End build Docker VM failed, msg: $msg")
                 throw DockerServiceException("End build Docker VM failed, msg: $msg")
             }
         }

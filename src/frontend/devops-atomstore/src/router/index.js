@@ -24,7 +24,7 @@ const marketHome = () => import(/* webpackChunkName: 'atomHome' */ '@/views/mark
 const marketList = () => import(/* webpackChunkName: 'atomStore' */ '@/views/market/list.vue') // 流水线插件市场列表
 const marketDetail = () => import(/* webpackChunkName: 'atomDetails' */ '@/views/market/detail.vue') // 流水线插件信息
 
-const atomList = () => import(/* webpackChunkName: 'atomList' */ '@/views/atom_list.vue') // 工作台
+const workList = () => import(/* webpackChunkName: 'workList' */ '@/views/atom_list.vue') // 工作台
 
 const install = () => import(/* webpackChunkName: 'install' */ '@/views/install.vue') // 研发商店安装页面
 
@@ -115,11 +115,11 @@ const routes = [
                 }
             },
             {
-                path: 'atomList/:type',
-                name: 'atomList',
-                component: atomList,
+                path: 'workList/:type',
+                name: 'workList',
+                component: workList,
                 meta: {
-                    title: 'atomList',
+                    title: 'workList',
                     logo: 'store',
                     header: 'store',
                     to: 'atomHome'
