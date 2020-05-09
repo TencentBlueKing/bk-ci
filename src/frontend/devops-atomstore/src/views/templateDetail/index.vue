@@ -30,7 +30,7 @@
                     title: ''
                 },
                 sideMenuNav: {
-                    backUrl: 'atomList',
+                    backUrl: 'workList',
                     backType: 'template',
                     icon: 'atom-story',
                     title: '',
@@ -99,7 +99,7 @@
         methods: {
             goBack () {
                 this.$router.push({
-                    name: 'atomList',
+                    name: 'workList',
                     params: {
                         type: 'template'
                     }

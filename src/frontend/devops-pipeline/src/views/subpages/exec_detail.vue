@@ -67,7 +67,7 @@
             </log>
         </template>
         <review-dialog :is-show="showReviewDialog"></review-dialog>
-        <mini-map :stages="execDetail.model.stages" scroll-class=".exec-pipeline" v-if="!isLoading && !fetchingAtomList"></mini-map>
+        <mini-map :stages="execDetail.model.stages" scroll-class=".exec-pipeline" v-if="!isLoading && !fetchingAtomList && curItemTab === 'executeDetail'"></mini-map>
     </section>
 </template>
 
