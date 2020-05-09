@@ -260,12 +260,12 @@ class DockerHostUtils @Autowired constructor(
         val dockerIp = dockerIpInfo.dockerIp
 
         // 同一条流水线并发构建时，当并发数超过5，无视负载，直接下发同一个IP（避免同一条流水线并发量太大，影响其他流水线构建）
-        if (poolNo > 5 && dockerIpInfo.enable) {
+        if (poolNo > 5 && dockerIpInfo.enable && (dockerIpInfo.grayEnv == gray.isGray())) {
             return Triple(dockerIp, dockerIpInfo.dockerHostPort, "")
         }
 
-        // 查看当前IP负载情况，当前IP不可用或者负载超额或者设置为专机独享，重新选择构建机
-        if (!dockerIpInfo.enable || dockerIpInfo.diskLoad > 90 || dockerIpInfo.memLoad > 95 || dockerIpInfo.specialOn) {
+        // 查看当前IP负载情况，当前IP不可用或者负载超额或者设置为专机独享或者是否灰度已被切换，重新选择构建机
+        if (!dockerIpInfo.enable || dockerIpInfo.diskLoad > 90 || dockerIpInfo.memLoad > 95 || dockerIpInfo.specialOn || (dockerIpInfo.grayEnv != gray.isGray())) {
             val pair = getAvailableDockerIpWithSpecialIps(
                 event.projectId,
                 event.pipelineId,
