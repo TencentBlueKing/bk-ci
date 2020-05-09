@@ -80,7 +80,7 @@ class BcsDeployService @Autowired constructor(private val redisOperation: RedisO
         val containerPort = appDeployment.containerPort
         // 创建deployment的pod部署策略为滚动更新，maxUnavailable 为0，maxSurge为1
         val deploymentStrategy = DeploymentStrategy(
-            RollingUpdateDeployment(IntOrString(1), IntOrString(0)), "rollingUpdate"
+            RollingUpdateDeployment(IntOrString(1), IntOrString(0)), "RollingUpdate"
         )
         // 创建deployment无状态部署
         val deployment = DeploymentBuilder()
