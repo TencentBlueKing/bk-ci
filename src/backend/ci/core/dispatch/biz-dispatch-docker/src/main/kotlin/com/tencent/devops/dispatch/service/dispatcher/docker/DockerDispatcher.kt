@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.dispatch.client.DockerHostClient
 import com.tencent.devops.dispatch.common.Constants
 import com.tencent.devops.dispatch.dao.PipelineDockerBuildDao
@@ -55,6 +56,7 @@ import org.springframework.stereotype.Component
 @Component
 class DockerDispatcher @Autowired constructor(
     private val client: Client,
+    private val gray: Gray,
     private val rabbitTemplate: RabbitTemplate,
     private val redisOperation: RedisOperation,
     private val dockerHostBuildService: DockerHostBuildService,
@@ -107,7 +109,7 @@ class DockerDispatcher @Autowired constructor(
 
                 dockerPair = if (specialIpSet.isNotEmpty() && specialIpSet.toString() != "[]") {
                     // 该项目工程配置了专机
-                    if (specialIpSet.contains(taskHistory.dockerIp) && dockerIpInfo.enable) {
+                    if (specialIpSet.contains(taskHistory.dockerIp) && dockerIpInfo.enable && (dockerIpInfo.grayEnv == gray.isGray())) {
                         // 上一次构建IP在专机列表中，直接重用
                         Pair(taskHistory.dockerIp, dockerIpInfo.dockerHostPort)
                     } else {
