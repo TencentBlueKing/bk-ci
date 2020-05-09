@@ -88,6 +88,10 @@ class MarketAtomFeatureDao {
                 if (null != deleteFlag) {
                     baseStep.set(DELETE_FLAG, deleteFlag)
                 }
+                val yamlFlag = atomFeatureRequest.yamlFlag
+                if (null != yamlFlag) {
+                    baseStep.set(YAML_FLAG, yamlFlag)
+                }
                 baseStep.set(MODIFIER, userId)
                     .set(UPDATE_TIME, LocalDateTime.now())
                     .where(ATOM_CODE.eq(atomFeatureRequest.atomCode))

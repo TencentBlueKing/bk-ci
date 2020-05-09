@@ -28,6 +28,7 @@ package com.tencent.devops.store.service.atom.impl
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.INIT_VERSION
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.service.utils.MessageCodeUtil
@@ -36,8 +37,10 @@ import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.pojo.atom.AtomEnvRequest
 import com.tencent.devops.store.pojo.atom.GetAtomConfigResult
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
+import com.tencent.devops.store.pojo.common.TASK_JSON_NAME
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.service.atom.MarketAtomCommonService
+import com.tencent.devops.store.service.common.StoreCommonService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -49,6 +52,9 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
 
     @Autowired
     lateinit var dslContext: DSLContext
+
+    @Autowired
+    lateinit var storeCommonService: StoreCommonService
 
     private val logger = LoggerFactory.getLogger(MarketAtomCommonServiceImpl::class.java)
 
@@ -70,7 +76,13 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
         // 支持的操作系统减少必须采用大版本升级方案
         val requireReleaseType =
             if (null != dbOsList && !osList.containsAll(dbOsList)) ReleaseTypeEnum.INCOMPATIBILITY_UPGRADE else releaseType
-        val requireVersion = getRequireVersion(dbVersion, requireReleaseType)
+        // 最近的版本处于上架中止状态，重新升级版本号不变
+        val cancelFlag = atomRecord.atomStatus == AtomStatusEnum.GROUNDING_SUSPENSION.status.toByte()
+        val requireVersion =
+            if (cancelFlag && releaseType == ReleaseTypeEnum.CANCEL_RE_RELEASE) dbVersion else storeCommonService.getRequireVersion(
+                dbVersion,
+                requireReleaseType
+            )
         if (version != requireVersion) {
             return MessageCodeUtil.generateResponseDataObject(
                 StoreMessageCode.USER_ATOM_VERSION_IS_INVALID,
@@ -101,7 +113,14 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
         atomCode: String,
         userId: String
     ): GetAtomConfigResult {
-        val taskDataMap = JsonUtil.toMap(taskJsonStr)
+        val taskDataMap = try {
+            JsonUtil.toMap(taskJsonStr)
+        } catch (e: Exception) {
+            throw ErrorCodeException(
+                errorCode = StoreMessageCode.USER_ATOM_CONF_INVALID,
+                params = arrayOf(TASK_JSON_NAME)
+            )
+        }
         val taskAtomCode = taskDataMap["atomCode"] as? String
         if (atomCode != taskAtomCode) {
             // 如果用户输入的插件代码和其代码库配置文件的不一致，则抛出错误提示给用户
@@ -138,29 +157,5 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
             preCmd = JsonUtil.toJson(executionInfoMap["demands"] ?: "")
         )
         return GetAtomConfigResult("0", arrayOf(""), taskDataMap, atomEnvRequest)
-    }
-
-    private fun getRequireVersion(
-        dbVersion: String,
-        releaseType: ReleaseTypeEnum
-    ): String {
-        logger.info("dbVersion is: $dbVersion,releaseType is: $releaseType")
-        var requireVersion = INIT_VERSION
-        val dbVersionParts = dbVersion.split(".")
-        when (releaseType) {
-            ReleaseTypeEnum.INCOMPATIBILITY_UPGRADE -> {
-                requireVersion = "${dbVersionParts[0].toInt() + 1}.0.0"
-            }
-            ReleaseTypeEnum.COMPATIBILITY_UPGRADE -> {
-                requireVersion = "${dbVersionParts[0]}.${dbVersionParts[1].toInt() + 1}.0"
-            }
-            ReleaseTypeEnum.COMPATIBILITY_FIX -> {
-                requireVersion = "${dbVersionParts[0]}.${dbVersionParts[1]}.${dbVersionParts[2].toInt() + 1}"
-            }
-            else -> {
-            }
-        }
-        logger.info("dbVersion is: $dbVersion,requireVersion is: $requireVersion")
-        return requireVersion
     }
 }

@@ -452,9 +452,21 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                     // 为了兼容老插件特性表没有记录的情况，如果没有记录就新增
                     val atomFeatureRecord = atomFeatureDao.getAtomFeature(context, atomRecord.atomCode)
                     if (null != atomFeatureRecord) {
-                        atomFeatureDao.updateAtomFeature(context, userId, AtomFeatureRequest(atomCode = atomRecord.atomCode, recommendFlag = recommendFlag))
+                        atomFeatureDao.updateAtomFeature(
+                            context, userId, AtomFeatureRequest(
+                                atomCode = atomRecord.atomCode,
+                                recommendFlag = recommendFlag,
+                                yamlFlag = atomUpdateRequest.yamlFlag
+                            )
+                        )
                     } else {
-                        atomFeatureDao.addAtomFeature(context, userId, AtomFeatureRequest(atomCode = atomRecord.atomCode, recommendFlag = recommendFlag))
+                        atomFeatureDao.addAtomFeature(
+                            context, userId, AtomFeatureRequest(
+                                atomCode = atomRecord.atomCode,
+                                recommendFlag = recommendFlag,
+                                yamlFlag = atomUpdateRequest.yamlFlag
+                            )
+                        )
                     }
                 }
             }
