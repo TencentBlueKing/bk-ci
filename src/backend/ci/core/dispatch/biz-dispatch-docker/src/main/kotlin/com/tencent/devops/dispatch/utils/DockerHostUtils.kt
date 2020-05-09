@@ -31,6 +31,7 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.dispatch.common.Constants
 import com.tencent.devops.dispatch.dao.PipelineDockerBuildDao
 import com.tencent.devops.dispatch.dao.PipelineDockerHostDao
@@ -57,6 +58,7 @@ class DockerHostUtils @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val objectMapper: ObjectMapper,
     private val redisUtils: RedisUtils,
+    private val gray: Gray,
     private val pipelineDockerIpInfoDao: PipelineDockerIPInfoDao,
     private val pipelineDockerHostDao: PipelineDockerHostDao,
     private val pipelineDockerPoolDao: PipelineDockerPoolDao,
@@ -77,11 +79,7 @@ class DockerHostUtils @Autowired constructor(
     val idcProxy: String? = null
 
     fun getAvailableDockerIpWithSpecialIps(projectId: String, pipelineId: String, vmSeqId: String, specialIpSet: Set<String>, unAvailableIpList: Set<String> = setOf()): Pair<String, Int> {
-        var grayEnv = false
-        val gray = System.getProperty("gray.project", "none")
-        if (gray == "grayproject") {
-            grayEnv = true
-        }
+        val grayEnv = gray.isGray()
 
         var dockerPair = Pair("", 0)
         // 获取负载配置

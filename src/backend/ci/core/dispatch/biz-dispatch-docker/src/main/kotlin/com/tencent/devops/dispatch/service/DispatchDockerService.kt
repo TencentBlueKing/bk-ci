@@ -1,5 +1,6 @@
 package com.tencent.devops.dispatch.service
 
+import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.dispatch.dao.PipelineDockerIPInfoDao
 import com.tencent.devops.dispatch.pojo.DockerHostLoadConfig
 import com.tencent.devops.dispatch.pojo.DockerIpInfoVO
@@ -16,6 +17,7 @@ import java.time.format.DateTimeFormatter
 @Service
 class DispatchDockerService @Autowired constructor(
     private val dslContext: DSLContext,
+    private val gray: Gray,
     private val pipelineDockerIPInfoDao: PipelineDockerIPInfoDao,
     private val dockerHostUtils: DockerHostUtils
 ) {
@@ -119,7 +121,7 @@ class DispatchDockerService @Autowired constructor(
             val dockerUnavailableList = pipelineDockerIPInfoDao.getDockerIpList(
                 dslContext = dslContext,
                 enable = false,
-                grayEnv = CommonUtils.isGray()
+                grayEnv = gray.isGray()
             )
 
             dockerUnavailableList.forEach {
