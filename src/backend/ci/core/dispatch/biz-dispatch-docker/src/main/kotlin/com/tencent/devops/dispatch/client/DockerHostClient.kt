@@ -51,7 +51,8 @@ class DockerHostClient @Autowired constructor(
         event: PipelineAgentStartupEvent,
         dockerIp: String,
         dockerHostPort: Int,
-        poolNo: Int
+        poolNo: Int,
+        driftIpInfo: String
     ) {
         val secretKey = ApiUtil.randomSecretKey()
         val id = pipelineDockerBuildDao.startBuild(
@@ -150,7 +151,7 @@ class DockerHostClient @Autowired constructor(
             containerHashId = event.containerHashId
         )
 
-        dockerBuildStart(dockerIp, dockerHostPort, requestBody, event)
+        dockerBuildStart(dockerIp, dockerHostPort, requestBody, event, driftIpInfo)
     }
 
     fun endBuild(
@@ -212,6 +213,7 @@ class DockerHostClient @Autowired constructor(
         dockerHostPort: Int,
         requestBody: DockerHostBuildInfo,
         event: PipelineAgentStartupEvent,
+        driftIpInfo: String,
         retryTime: Int = 0,
         unAvailableIpList: Set<String>? = null
     ) {
@@ -232,12 +234,12 @@ class DockerHostClient @Autowired constructor(
                     response["status"] == 0 -> {
                         val containerId = response["data"] as String
                         logger.info("[${event.projectId}|${event.pipelineId}|${event.buildId}|$retryTime] update container: $containerId")
-                        // 更新
-                        pipelineDockerBuildDao.updateContainerId(
-                            dslContext = dslContext,
-                            buildId = event.buildId,
-                            vmSeqId = Integer.valueOf(event.vmSeqId),
-                            containerId = containerId
+                        // 更新task状态以及构建历史记录，并记录漂移日志
+                        dockerHostUtils.updateTaskSimpleAndRecordDriftLog(
+                            pipelineAgentStartupEvent = event,
+                            containerId = containerId,
+                            newIp = dockerIp,
+                            driftIpInfo = driftIpInfo
                         )
                     }
                     else -> {
@@ -255,7 +257,7 @@ class DockerHostClient @Autowired constructor(
                     // 当前IP不可用，保险起见将当前ip可用性置为false，并重新获取可用ip
                     pipelineDockerIPInfoDao.updateDockerIpStatus(dslContext, dockerIp, false)
                     val dockerIpLocalPair = dockerHostUtils.getAvailableDockerIp(event.projectId, event.pipelineId, event.vmSeqId, unAvailableIpListLocal)
-                    dockerBuildStart(dockerIpLocalPair.first, dockerIpLocalPair.second, requestBody, event, retryTimeLocal, unAvailableIpListLocal)
+                    dockerBuildStart(dockerIpLocalPair.first, dockerIpLocalPair.second, requestBody, event, driftIpInfo, retryTimeLocal, unAvailableIpListLocal)
                 } else {
                     logger.error("[${event.projectId}|${event.pipelineId}|${event.buildId}|$retryTime] Start build Docker VM failed, retry $retryTime times. message: ${resp.message()}")
                     throw DockerServiceException("Start build Docker VM failed, retry $retryTime times.")
