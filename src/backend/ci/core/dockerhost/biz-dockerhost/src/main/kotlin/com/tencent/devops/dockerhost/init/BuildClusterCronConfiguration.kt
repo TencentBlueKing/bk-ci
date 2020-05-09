@@ -27,7 +27,6 @@
 package com.tencent.devops.dockerhost.init
 
 import com.tencent.devops.dockerhost.cron.DockerTaskRunner
-import com.tencent.devops.dockerhost.cron.Runner
 import com.tencent.devops.dockerhost.services.DockerHostBuildService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty

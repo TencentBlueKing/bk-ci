@@ -88,7 +88,6 @@ class VmStatusScheduler @Autowired constructor(
                 // 刷新时间间隔超时，更新容器状态为不可用
                 logger.info("Docker ${dockerIpInfoRecord.dockerIp} check timeout, update enable false.")
                 pipelineDockerIpInfoDao.updateDockerIpStatus(dslContext, dockerIpInfoRecord.dockerIp, false)
-
             }
         } catch (e: Exception) {
             logger.error("singleDockerIpCheck updateDockerIpStatus fail.", e)

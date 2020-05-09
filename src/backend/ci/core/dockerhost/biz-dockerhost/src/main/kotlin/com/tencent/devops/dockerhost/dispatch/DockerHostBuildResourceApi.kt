@@ -36,7 +36,6 @@ import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.dispatch.pojo.DockerHostBuildInfo
 import com.tencent.devops.dispatch.pojo.DockerHostInfo
 import com.tencent.devops.dispatch.pojo.DockerIpInfoVO
-import com.tencent.devops.dockerhost.services.DockerHostBuildService
 import com.tencent.devops.dockerhost.utils.CommonUtils
 import com.tencent.devops.dockerhost.utils.SigarUtil
 import com.tencent.devops.store.pojo.image.response.ImageRepoInfo
