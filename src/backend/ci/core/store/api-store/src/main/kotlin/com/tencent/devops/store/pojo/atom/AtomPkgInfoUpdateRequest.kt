@@ -23,8 +23,16 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.dispatch.common
 
-object Constants {
-    const val DOCKER_IP_COUNT_KEY_PREFIX = "dispatch_docker_ip_count_"
-}
+package com.tencent.devops.store.pojo.atom
+
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+
+@ApiModel("流水线-插件执行包相关信息修改请求报文体")
+data class AtomPkgInfoUpdateRequest(
+    @ApiModelProperty("插件环境信息", required = false)
+    val atomEnvRequest: AtomEnvRequest,
+    @ApiModelProperty("task.json参数", required = false)
+    val taskDataMap: Map<String, Any>
+)
