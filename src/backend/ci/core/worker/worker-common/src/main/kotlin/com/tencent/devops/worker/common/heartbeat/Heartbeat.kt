@@ -78,7 +78,7 @@ object Heartbeat {
                         val responseMap = JsonUtil.toMap(responseContent)
                         val errorCode = responseMap["errorCode"]
                         // 流水线构建结束则正常结束进程，不再重试
-                        if (errorCode == "2101182") {
+                        if (errorCode == 2101182) {
                             logger.error("build end, worker exit")
                             exitProcess(0)
                         }
