@@ -14,7 +14,7 @@ class PipelineDockerIPInfoDao {
 
     private val logger = LoggerFactory.getLogger(PipelineDockerIPInfoDao::class.java)
 
-    fun create(
+    fun createOrUpdate(
         dslContext: DSLContext,
         dockerIp: String,
         dockerHostPort: Int,
@@ -29,77 +29,114 @@ class PipelineDockerIPInfoDao {
         specialOn: Boolean
     ) {
         with(TDispatchPipelineDockerIpInfo.T_DISPATCH_PIPELINE_DOCKER_IP_INFO) {
-            dslContext.insertInto(
-                this,
-                DOCKER_IP,
-                DOCKER_HOST_PORT,
-                CAPACITY,
-                USED_NUM,
-                CPU_LOAD,
-                MEM_LOAD,
-                DISK_LOAD,
-                DISK_IO_LOAD,
-                ENABLE,
-                GRAY_ENV,
-                SPECIAL_ON,
-                GMT_CREATE,
-                GMT_MODIFIED
-            ).values(
-                dockerIp,
-                dockerHostPort,
-                capacity,
-                used,
-                cpuLoad,
-                memLoad,
-                diskLoad,
-                diskIOLoad,
-                enable,
-                grayEnv,
-                specialOn,
-                LocalDateTime.now(),
-                LocalDateTime.now()
-            ).execute()
+            val preRecord = dslContext.selectFrom(this)
+                .where(DOCKER_IP.eq(dockerIp))
+                .fetchAny()
+            if (preRecord != null) {
+                dslContext.update(this)
+                    .set(DOCKER_HOST_PORT, dockerHostPort)
+                    .set(USED_NUM, used)
+                    .set(CPU_LOAD, cpuLoad)
+                    .set(MEM_LOAD, memLoad)
+                    .set(DISK_LOAD, diskLoad)
+                    .set(DISK_IO_LOAD, diskIOLoad)
+                    .set(ENABLE, enable)
+                    .set(GRAY_ENV, grayEnv)
+                    .set(SPECIAL_ON, specialOn)
+                    .set(GMT_MODIFIED, LocalDateTime.now())
+                    .where(DOCKER_IP.eq(dockerIp))
+                    .execute()
+            } else {
+                dslContext.insertInto(
+                    this,
+                    DOCKER_IP,
+                    DOCKER_HOST_PORT,
+                    CAPACITY,
+                    USED_NUM,
+                    CPU_LOAD,
+                    MEM_LOAD,
+                    DISK_LOAD,
+                    DISK_IO_LOAD,
+                    ENABLE,
+                    GRAY_ENV,
+                    SPECIAL_ON,
+                    GMT_CREATE,
+                    GMT_MODIFIED
+                ).values(
+                    dockerIp,
+                    dockerHostPort,
+                    capacity,
+                    used,
+                    cpuLoad,
+                    memLoad,
+                    diskLoad,
+                    diskIOLoad,
+                    enable,
+                    grayEnv,
+                    specialOn,
+                    LocalDateTime.now(),
+                    LocalDateTime.now()
+                ).execute()
+            }
         }
     }
 
     fun update(
         dslContext: DSLContext,
-        idcIp: String,
-        used: Int,
-        cpuLoad: Int,
-        memLoad: Int,
-        diskLoad: Int,
-        diskIOLoad: Int,
+        dockerIp: String,
+        dockerHostPort: Int,
         enable: Boolean,
         grayEnv: Boolean,
         specialOn: Boolean
     ) {
         with(TDispatchPipelineDockerIpInfo.T_DISPATCH_PIPELINE_DOCKER_IP_INFO) {
             dslContext.update(this)
+                .set(DOCKER_HOST_PORT, dockerHostPort)
+                .set(ENABLE, enable)
+                .set(GRAY_ENV, grayEnv)
+                .set(SPECIAL_ON, specialOn)
+                .set(GMT_MODIFIED, LocalDateTime.now())
+                .where(DOCKER_IP.eq(dockerIp))
+                .execute()
+        }
+    }
+
+    fun updateDockerIpLoad(
+        dslContext: DSLContext,
+        dockerIp: String,
+        dockerHostPort: Int,
+        used: Int,
+        cpuLoad: Int,
+        memLoad: Int,
+        diskLoad: Int,
+        diskIOLoad: Int,
+        enable: Boolean
+    ) {
+        with(TDispatchPipelineDockerIpInfo.T_DISPATCH_PIPELINE_DOCKER_IP_INFO) {
+            dslContext.update(this)
+                .set(DOCKER_HOST_PORT, dockerHostPort)
                 .set(USED_NUM, used)
                 .set(CPU_LOAD, cpuLoad)
                 .set(MEM_LOAD, memLoad)
                 .set(DISK_LOAD, diskLoad)
                 .set(DISK_IO_LOAD, diskIOLoad)
                 .set(ENABLE, enable)
-                .set(GRAY_ENV, grayEnv)
-                .set(SPECIAL_ON, specialOn)
                 .set(GMT_MODIFIED, LocalDateTime.now())
-                .where(DOCKER_IP.eq(idcIp))
+                .where(DOCKER_IP.eq(dockerIp))
                 .execute()
         }
     }
 
     fun updateDockerIpStatus(
         dslContext: DSLContext,
-        id: Long,
+        dockerIp: String,
         enable: Boolean
     ) {
         with(TDispatchPipelineDockerIpInfo.T_DISPATCH_PIPELINE_DOCKER_IP_INFO) {
             dslContext.update(this)
                 .set(ENABLE, enable)
                 .set(GMT_MODIFIED, LocalDateTime.now())
-                .where(ID.eq(id))
+                .where(DOCKER_IP.eq(dockerIp))
                 .execute()
         }
     }
@@ -190,11 +227,11 @@ class PipelineDockerIPInfoDao {
 
     fun delete(
         dslContext: DSLContext,
-        ipInfoId: Long
+        dockerIp: String
     ): Int {
         return with(TDispatchPipelineDockerIpInfo.T_DISPATCH_PIPELINE_DOCKER_IP_INFO) {
             dslContext.delete(this)
-                .where(ID.eq(ipInfoId))
+                .where(DOCKER_IP.eq(dockerIp))
                 .execute()
         }
     }

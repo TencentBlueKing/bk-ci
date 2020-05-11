@@ -27,8 +27,6 @@
     <link rel='preload' as='script' href="<%=htmlWebpackPlugin.options.urlPrefix %>/console/static/vue.min.js" />
     <link rel='preload' as='script' href="<%=htmlWebpackPlugin.options.urlPrefix %>/console/static/vuex.min.js" />
     <link rel='preload' as='script' href="<%=htmlWebpackPlugin.options.urlPrefix %>/console/static/vue-router.min.js" />
-    <link rel="preload" href="http://imgcache.qq.com/ptlogin/ac/v9/js/ptloginout.js" as="script" />
-    <link rel="preload" as='script' href="//pingjs.qq.com/h5/stats.js?v2.0.4">
     
     <!-- devops:preload -->
     <% for (key in htmlWebpackPlugin.files.js) { %>
@@ -80,6 +78,7 @@
         var WS_URL_PREFIX = '__HTTP_SCHEMA__://__BKCI_FQDN__/'
         var PERM_URL_PREFIX = '__HTTP_SCHEMA__://__PAAS_FQDN__:__PAAS_HTTPS_PORT__/o/bk_iam_app' // EE PERM URL PREFIX
         var DOCS_URL_PREFIX = '__HTTP_SCHEMA__://__BKCI_IWIKI_FQDN__'  // 文档中心域名
+        var LOGIN_SERVICE_URL = '__LOGIN_SERVICE_URL__'
         var DEVOPS_LS_VERSION = '<%- htmlWebpackPlugin.options.DEVOPS_LS_VERSION%>'
         var ENTERPRISE_VERSION = false
     </script>
@@ -197,6 +196,18 @@
     </script>
     <script>
         
+        window.getLoginUrl = function () {
+            var c_url = location.origin + location.pathname + encodeURIComponent(location.search)
+            if (/=%s/.test(LOGIN_SERVICE_URL)) { 
+                return LOGIN_SERVICE_URL.replace(/%s/, c_url)
+            } else if (/\?/.test(LOGIN_SERVICE_URL)) { 
+                LOGIN_SERVICE_URL =  LOGIN_SERVICE_URL + '&c_url=' + c_url
+            } else {
+                return LOGIN_SERVICE_URL =  LOGIN_SERVICE_URL + '?c_url=' + c_url
+            }
+            return LOGIN_SERVICE_URL
+        }
+
         function asyncGet (url, pid) {
             return new Promise(function (resolve, reject) {
                 var xhr = new XMLHttpRequest()
@@ -205,7 +216,7 @@
                         resolve(JSON.parse(xhr.responseText).data)
                     }  else if (this.status == 401) {
                         // 无登录，这里处理跳转逻辑
-                        
+                        window.location.href = window.getLoginUrl()
                     } else if (this.readyState == 4 && this.status > 400) {
                         reject({
                             status: this.status,
