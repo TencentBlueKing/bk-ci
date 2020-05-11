@@ -38,14 +38,19 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
+import com.tencent.devops.process.dao.BuildDetailDao
 import com.tencent.devops.process.dao.PipelineTaskDao
 import com.tencent.devops.process.engine.control.ControlUtils
+import com.tencent.devops.process.engine.dao.PipelineBuildDao
+import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.dao.PipelineModelTaskDao
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
+import com.tencent.devops.process.engine.pojo.LatestRunningBuild
 import com.tencent.devops.process.engine.pojo.PipelineModelTask
 import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
+import com.tencent.devops.process.engine.service.PipelineStageService
 import com.tencent.devops.process.pojo.PipelineProjectRel
 import com.tencent.devops.process.utils.BK_CI_BUILD_FAIL_TASKNAMES
 import com.tencent.devops.process.utils.BK_CI_BUILD_FAIL_TASKS
@@ -62,10 +67,14 @@ class PipelineTaskService @Autowired constructor(
     val redisOperation: RedisOperation,
     val objectMapper: ObjectMapper,
     val pipelineTaskDao: PipelineTaskDao,
+    val pipelineBuildDao: PipelineBuildDao,
+    val buildDetailDao: BuildDetailDao,
+    val pipelineStageService: PipelineStageService,
     val pipelineModelTaskDao: PipelineModelTaskDao,
     private val buildLogPrinter: BuildLogPrinter,
     private val pipelineVariableService: BuildVariableService,
     private val pipelineBuildDetailService: PipelineBuildDetailService,
+    val pipelineBuildSummaryDao: PipelineBuildSummaryDao,
     val pipelineInfoDao: PipelineInfoDao,
     val client: Client,
     private val rabbitTemplate: RabbitTemplate,
@@ -176,23 +185,28 @@ class PipelineTaskService @Autowired constructor(
                 jobId = taskRecord.containerId,
                 executeCount = 1
             )
-
-            // 修改当前任务状态为"暂停"状态
-            pipelineRuntimeService.updateTaskStatus(
+            pauseBuild(
                 buildId = buildId,
-                taskId = taskId,
-                userId = "",
-                buildStatus = BuildStatus.PAUSE
+                pipelineId = taskRecord.pipelineId,
+                stageId = taskRecord.stageId,
+                taskId = taskRecord.taskId,
+                containerId = taskRecord.containerId
             )
 
             // 发送消息给相关关注人
             val sendUser = taskRecord.additionalOptions!!.subscriptionPauseUser
-            if(sendUser != null ) {
-                sendPauseNotify(buildId, taskRecord.taskName, taskId, sendUser)
+            if (sendUser != null) {
+                sendPauseNotify(buildId, taskRecord.taskName, taskId, taskRecord.pipelineId, sendUser)
             } else {
                 val pipelineInfo = pipelineInfoDao.getPipelineInfo(dslContext, taskRecord.pipelineId)
                 val lastUpdateUser = pipelineInfo?.lastModifyUser
-                sendPauseNotify(buildId, taskRecord.taskName, taskId, setOf(lastUpdateUser) as Set<String>)
+                sendPauseNotify(
+                    buildId = buildId,
+                    taskName = taskRecord.taskName,
+                    taskId = taskId,
+                    pipelineId = taskRecord.pipelineId,
+                    receivers = setOf(lastUpdateUser) as Set<String>
+                )
             }
         }
         return isPause
@@ -314,13 +328,85 @@ class PipelineTaskService @Autowired constructor(
         return "$retryCountRedisKey$buildId:$taskId"
     }
 
-    private fun sendPauseNotify(buildId: String, taskName: String, taskId: String, receivers: Set<String>) {
+    private fun pauseBuild(pipelineId: String, buildId: String, taskId: String, stageId: String, containerId: String) {
+        logger.info("pauseBuild pipelineId[$pipelineId], buildId[$buildId] stageId[$stageId] containerId[$containerId] taskId[$taskId]")
+        // 修改任务状态位暂停
+        pipelineRuntimeService.updateTaskStatus(
+            buildId = buildId,
+            taskId = taskId,
+            userId = "",
+            buildStatus = BuildStatus.PAUSE
+        )
+
+        // 修改容器状态位暂停
+        pipelineRuntimeService.updateContainerStatus(
+            buildId = buildId,
+            stageId = stageId,
+            containerId = containerId,
+            startTime = null,
+            endTime = null,
+            buildStatus = BuildStatus.PAUSE
+        )
+
+        // 修改stage状位位
+        pipelineStageService.updateStageStatus(
+            buildId = buildId,
+            stageId = stageId,
+            buildStatus = BuildStatus.PAUSE
+        )
+
+        // 修改构建记录为暂停
+        pipelineBuildDao.updateStatus(
+            dslContext = dslContext,
+            buildId = buildId,
+            oldBuildStatus = BuildStatus.RUNNING,
+            newBuildStatus = BuildStatus.PAUSE
+        )
+
+        buildDetailDao.updateStatus(
+            dslContext = dslContext,
+            buildId = buildId,
+            buildStatus = BuildStatus.PAUSE,
+            startTime = null,
+            endTime = null
+        )
+
+        pipelineBuildSummaryDao.finishLatestRunningBuild(
+            dslContext = dslContext,
+            latestRunningBuild = LatestRunningBuild(
+                pipelineId = pipelineId,
+                buildId = buildId,
+                status = BuildStatus.PAUSE,
+                buildNum = 0,
+                userId = ""
+            )
+        )
+    }
+
+    private fun sendPauseNotify(
+        buildId: String,
+        taskName: String,
+        taskId: String,
+        pipelineId: String,
+        receivers: Set<String>
+    ) {
+        val pipelineRecord = pipelineInfoDao.getPipelineInfo(dslContext, pipelineId)
+        val pipelineName = (pipelineRecord?.pipelineName ?: "")
         // TODO: 配置推送模版
         val msg = SendNotifyMessageTemplateRequest(
             templateCode = "",
             sender = "DevOps",
-            titleParams = mutableMapOf(),
-            bodyParams = mutableMapOf(),
+            titleParams = mapOf(
+                "pipelineName" to pipelineName,
+                "buildId" to buildId
+            ),
+            bodyParams = mapOf(
+                "projectName" to "",
+                "pipelineName" to pipelineName,
+                "buildId" to buildId,
+                "taskId" to taskId,
+                "taskName" to taskName
+            ),
             receivers = receivers as MutableSet<String>
         )
         client.get(ServiceNotifyMessageTemplateResource::class)

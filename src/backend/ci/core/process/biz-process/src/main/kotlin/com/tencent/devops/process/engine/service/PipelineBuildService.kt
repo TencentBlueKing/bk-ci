@@ -82,6 +82,7 @@ import com.tencent.devops.process.service.BuildStartupParamService
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.ParamService
 import com.tencent.devops.process.utils.BUILD_NO
+import com.tencent.devops.process.service.PipelineTaskService
 import com.tencent.devops.process.utils.PIPELINE_NAME
 import com.tencent.devops.process.utils.PIPELINE_RETRY_BUILD_ID
 import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
@@ -1794,6 +1795,8 @@ class PipelineBuildService(
         buildId: String,
         projectId: String,
         taskId: String,
+        stageId: String,
+        containerId: String,
         isContinue: Boolean,
         inputParams: Map<String, Any>,
         checkPermission: Boolean? = true
@@ -1821,7 +1824,6 @@ class PipelineBuildService(
                     params = arrayOf(buildId)
                 )
 
-            // TODO: 需同步调整暂停端的逻辑
             if (buildInfo.status != BuildStatus.PAUSE) {
                 throw ErrorCodeException(
                     errorCode = ProcessMessageCode.ERROR_PARUS_PIEPLINE_IS_RUNNINT,
@@ -1831,6 +1833,7 @@ class PipelineBuildService(
 
             // 不再继续则直接关闭流水线
             if (!isContinue) {
+                // TODO: 此处需调整为用户取消
                 buildManualShutdown(
                     userId = userId,
                     pipelineId = pipelineId,
@@ -1841,51 +1844,101 @@ class PipelineBuildService(
                 return true
             }
 
-            val model = getModel(projectId = projectId, pipelineId = pipelineId, version = buildInfo.version)
-
+            executePauseBuild(
+                pipelineId = pipelineId,
+                buildId = buildId,
+                projectId = projectId,
+                taskId = taskId,
+                stageId = stageId,
+                containerId = containerId
+            )
             val params = mutableMapOf<String, Any>()
             val originVars = buildVariableService.getAllVariable(buildId)
             params.putAll(originVars)
             params.putAll(inputParams)
-            logger.info("[$pipelineId]|RETRY_PIPELINE_ORIGIN|taskId=$taskId|buildId=$buildId|originRetryCount=${params[PIPELINE_RETRY_COUNT]}|startParams=$newStartParams")
+            buildVariableService.batchSetVariable(projectId, pipelineId, buildId, params)
+            // 替换detail内的model和 task内的taskParams
 
-            // rebuild重试计数
-            params[PIPELINE_RETRY_COUNT] = if (originVars[PIPELINE_RETRY_COUNT] != null) {
-                originVars[PIPELINE_RETRY_COUNT].toString().toInt() + 1
-            } else {
-                1
-            }
-
-            params[PIPELINE_START_USER_ID] = userId
-            params[PIPELINE_RETRY_BUILD_ID] = buildId
-
-            val readyToBuildPipelineInfo =
-                pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)
-                    ?: throw ErrorCodeException(
-                        statusCode = Response.Status.NOT_FOUND.statusCode,
-                        errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS,
-                        defaultMessage = "流水线不存在",
-                        params = arrayOf(buildId)
-                    )
-
-            val startParamsWithType = mutableListOf<BuildParameters>()
-            params.forEach { (t, u) -> startParamsWithType.add(BuildParameters(key = t, value = u)) }
-
-            startPipeline(
-                userId = userId,
-                readyToBuildPipelineInfo = readyToBuildPipelineInfo,
-                startType = StartType.toStartType(params[PIPELINE_START_TYPE]?.toString() ?: ""),
-                startParamsWithType = startParamsWithType,
-                channelCode = ChannelCode.BS,
-                isMobile = false,
-                model = model,
-                signPipelineVersion = buildInfo.version,
-                frequencyLimit = true
+            // 触发引擎container事件，继续后续流程
+            pipelineEventDispatcher.dispatch(
+                PipelineBuildContainerEvent(
+                    source = "pauseContinue",
+                    containerId = containerId,
+                    stageId = stageId,
+                    pipelineId = pipelineId,
+                    buildId = buildId,
+                    userId = userId,
+                    projectId = projectId,
+                    actionType = ActionType.REFRESH,
+                    containerType = ""
+                )
             )
         } finally {
             redisLock.unlock()
         }
         return true
+    }
+
+    private fun executePauseBuild(
+        pipelineId: String,
+        buildId: String,
+        projectId: String,
+        taskId: String,
+        stageId: String,
+        containerId: String
+    ) {
+        PipelineTaskService.logger.info("executePauseBuild pipelineId[$pipelineId], buildId[$buildId] stageId[$stageId] containerId[$containerId] taskId[$taskId]")
+        // 修改任务状态位运行
+        pipelineRuntimeService.updateTaskStatus(
+            buildId = buildId,
+            taskId = taskId,
+            userId = "",
+            buildStatus = BuildStatus.QUEUE
+        )
+        // 将启动和结束任务置为排队。用于启动构建机
+        val taskRecords = pipelineRuntimeService.getAllBuildTask(buildId)
+        val startAndEndTask= taskRecords.filter { it.containerId == containerId; it.stageId == stageId}
+        startAndEndTask.forEach {
+            pipelineRuntimeService.updateTaskStatus(
+                buildId = buildId,
+                taskId = it.taskId,
+                userId = "",
+                buildStatus = BuildStatus.QUEUE
+            )
+        }
+
+        // 修改容器状态位运行
+        pipelineRuntimeService.updateContainerStatus(
+            buildId = buildId,
+            stageId = stageId,
+            containerId = containerId,
+            startTime = null,
+            endTime = null,
+            buildStatus = BuildStatus.QUEUE
+        )
+
+        // 修改stage状位位
+        pipelineStageService.updateStageStatus(
+            buildId = buildId,
+            stageId = stageId,
+            buildStatus = BuildStatus.QUEUE
+        )
+
+        // 修改构建记录为暂停
+        pipeline.updateStatus(
+            dslContext = dslContext,
+            buildId = buildId,
+            oldBuildStatus = BuildStatus.PAUSE,
+            newBuildStatus = BuildStatus.QUEUE
+        )
+
+        buildDetailService.updateStatus(
+            dslContext = dslContext,
+            buildId = buildId,
+            buildStatus = BuildStatus.QUEUE,
+            startTime = null,
+            endTime = null
+        )
     }
 
     fun getBuildDetailStatus(
