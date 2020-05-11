@@ -30,7 +30,12 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VA
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.process.pojo.template.*
+import com.tencent.devops.process.pojo.template.OptionalTemplateList
+import com.tencent.devops.process.pojo.template.TemplateModelDetail
+import com.tencent.devops.process.pojo.template.TemplateType
+import com.tencent.devops.process.pojo.template.TemplateListModel
+import com.tencent.devops.process.pojo.template.TemplateInstanceCreate
+import com.tencent.devops.process.pojo.template.TemplateOperationRet
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -120,28 +125,28 @@ interface ApigwProjectTemplateResourceV3 {
     @POST
     @Path("/projects/{projectId}/projectTemplates/{templateId}/templateInstances")
     fun createTemplateInstances(
-            @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
-            @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
-            appCode: String?,
-            @ApiParam(value = "apigw Type", required = true)
-            @PathParam("apigwType")
-            apigwType: String?,
-            @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
-            @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-            userId: String,
-            @ApiParam("项目ID", required = true)
-            @PathParam("projectId")
-            projectId: String,
-            @ApiParam("模板ID", required = true)
-            @PathParam("templateId")
-            templateId: String,
-            @ApiParam("模板版本", required = true)
-            @QueryParam("version")
-            version: Long,
-            @ApiParam("是否应用模板设置")
-            @QueryParam("useTemplateSettings")
-            useTemplateSettings: Boolean,
-            @ApiParam("创建实例", required = true)
-            instances: List<TemplateInstanceCreate>
+        @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @ApiParam(value = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("模板ID", required = true)
+        @PathParam("templateId")
+        templateId: String,
+        @ApiParam("模板版本", required = true)
+        @QueryParam("version")
+        version: Long,
+        @ApiParam("是否应用模板设置")
+        @QueryParam("useTemplateSettings")
+        useTemplateSettings: Boolean,
+        @ApiParam("创建实例", required = true)
+        instances: List<TemplateInstanceCreate>
     ): TemplateOperationRet
 }
