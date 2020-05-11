@@ -25,7 +25,7 @@
     import emptyTips from '@/components/devops/emptyTips'
     import MiniMap from '@/components/MiniMap'
     import { navConfirm } from '@/utils/util'
-    import { PipelineEditTab, BaseSettingTab, NotifyTab } from '@/components/PipelineEditTabs/'
+    import { PipelineEditTab, BaseSettingTab } from '@/components/PipelineEditTabs/'
     import pipelineOperateMixin from '@/mixins/pipeline-operate-mixin'
 
     export default {
@@ -33,7 +33,6 @@
             emptyTips,
             PipelineEditTab,
             BaseSettingTab,
-            NotifyTab,
             MiniMap
         },
         mixins: [pipelineOperateMixin],
@@ -67,9 +66,6 @@
             }
         },
         computed: {
-            ...mapState('pipelines', [
-                'projectGroupAndUsers'
-            ]),
             ...mapState([
                 'fetchError'
             ]),
@@ -91,25 +87,6 @@
                                 isEditing: this.isEditing,
                                 pipeline: this.pipeline,
                                 isLoading: !this.pipeline
-                            }
-                        },
-                        {
-                            name: 'notify',
-                            label: this.$t('settings.notify'),
-                            component: 'NotifyTab',
-                            bindData: {
-                                failSubscription: this.pipelineSetting ? this.pipelineSetting.failSubscription : null,
-                                successSubscription: this.pipelineSetting ? this.pipelineSetting.successSubscription : null,
-                                projectGroupAndUsers: this.projectGroupAndUsers,
-                                updateSubscription: (container, name, value) => {
-                                    this.setPipelineEditing(true)
-                                    this.updatePipelineSetting({
-                                        container,
-                                        param: {
-                                            [name]: value
-                                        }
-                                    })
-                                }
                             }
                         },
                         {
@@ -175,8 +152,7 @@
             ]),
             ...mapActions('pipelines', [
                 'requestPipelineSetting',
-                'updatePipelineSetting',
-                'requestProjectGroupAndUsers'
+                'updatePipelineSetting'
             ]),
             ...mapActions('soda', [
                 'requestQualityAtom',
@@ -186,7 +162,6 @@
                 this.isLoading = true
                 this.requestPipeline(this.$route.params)
                 this.requestPipelineSetting(this.$route.params)
-                this.requestProjectGroupAndUsers(this.$route.params)
             },
             switchTab (tab) {
                 this.$router.push({

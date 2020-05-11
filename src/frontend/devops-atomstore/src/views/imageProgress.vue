@@ -152,6 +152,16 @@
             }
         },
 
+        watch: {
+            'sideSliderConfig.show' (val) {
+                if (!val) {
+                    this.currentProjectCode = ''
+                    this.currentBuildNo = ''
+                    this.currentPipelineId = ''
+                }
+            }
+        },
+
         created () {
             this.initData()
             this.loopProgress()
@@ -257,7 +267,7 @@
 
             toImageList () {
                 this.$router.push({
-                    name: 'atomList',
+                    name: 'workList',
                     params: {
                         type: 'image'
                     }

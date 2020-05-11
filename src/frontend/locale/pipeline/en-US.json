@@ -89,6 +89,15 @@
     "stageOptionLabel": "Run this Stage",
     "stageTriggerDesc": "Multiple people separated by commas",
     "skipStageDesc": "SKIPED",
+    "execDetail": {
+        "log": "Log",
+        "setting": "Configuration",
+        "execTime": "Number of retries",
+        "showTime": "Show timestamp",
+        "hideTime": "Hide timestamp",
+        "downLoadLog": "Download log",
+        "emptyLog": "The log content is empty"
+    },
     "timeMap": {
         "days": "days ",
         "hours": "h ",
@@ -588,7 +597,7 @@
         "defaultValueDesc": "If value is the version number, then it should not contain symbols, such as \"\" ; \n if the type of parameters can be selected in the check box, when selecting serval values, they will be sent to pipelines in a (a,b) way.",
         "defaultValueTips": " Please enter default values",
         "selectOptions": "Drop-down options",
-        "optionsDesc": "Separate options with line breaks and there should not be an English comma contained in the options. Only one option will be shown if there are serval same options at the same time ",
+        "optionsDesc": "Separate options with line breaks and there should not be an English comma contained in the options. Only one option will be shown if there are serval same options at the same time, format \"{id}={name} | {id} \"",
         "optionTips": " Please break your lines if there are serval things to be recorded",
         "svnParams": " Please select svn code repository",
         "relativePath": "Relative path to code repository",

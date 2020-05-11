@@ -9,7 +9,7 @@
                 <i class="right-arrow banner-arrow"></i>
                 <span class="banner-des">{{detail.name}}</span>
             </p>
-            <router-link :to="{ name: 'atomList' }" class="title-work" v-if="type !== 'ide'"> {{ $t('store.工作台') }} </router-link>
+            <router-link :to="{ name: 'workList' }" class="title-work"> {{ $t('store.工作台') }} </router-link>
         </h3>
 
         <main class="store-main" v-show="!isLoading">
@@ -62,9 +62,6 @@
                     <section class="plugin-yaml"></section>
                 </bk-tab-panel>
             </bk-tab>
-            <transition name="atom-fade">
-                <commentDialog v-if="showComment" @freshComment="freshComment" @closeDialog="showComment = false" :name="detail.name" :code="detailCode" :id="detailId" :comment-id="commentInfo.commentId"></commentDialog>
-            </transition>
         </main>
     </article>
 </template>
@@ -79,18 +76,11 @@
     import atomInfo from '../../components/common/detail-info/atom'
     import templateInfo from '../../components/common/detail-info/template'
     import imageInfo from '../../components/common/detail-info/image'
-
-    import CodeMirror from 'codemirror'
-    import 'codemirror/mode/yaml/yaml'
-    import 'codemirror/lib/codemirror.css'
-    import 'codemirror/theme/3024-night.css'
+    import detailScore from '../../components/common/detailTab/detailScore'
+    import codeSection from '../../components/common/detailTab/codeSection'
 
     export default {
         components: {
-            comment,
-            commentRate,
-            commentDialog,
-            animatedInteger,
             atomInfo,
             templateInfo,
             ideInfo,
@@ -104,9 +94,6 @@
                 switch (val) {
                     case 'template':
                         res = bkLocale.$t('store.流水线模板')
-                        break
-                    case 'ide':
-                        res = bkLocale.$t('store.IDE插件')
                         break
                     case 'image':
                         res = bkLocale.$t('store.容器镜像')
@@ -159,7 +146,7 @@
         },
 
         computed: {
-            ...mapGetters('store', { 'commentList': 'getCommentList', 'markerQuey': 'getMarketQuery' }),
+            ...mapGetters('store', { 'markerQuey': 'getMarketQuery', 'detail': 'getDetail' }),
 
             detailCode () {
                 return this.$route.params.code
@@ -167,15 +154,21 @@
 
             type () {
                 return this.$route.params.type
-            }
-        },
+            },
 
-        watch: {
-            currentTab (val) {
-                if (val === 'yaml') {
-                    setTimeout(() => {
-                        this.codeEditor.refresh()
-                    }, 0)
+            tabList () {
+                return {
+                    atom: [
+                        { componentName: 'detailScore', label: this.$t('概述'), name: 'des' },
+                        { componentName: 'codeSection', label: this.$t('YAML片段'), name: 'YAML', bindData: { code: this.detail.codeSection, limitHeight: false }, hidden: (!this.detail.yamlFlag || !this.detail.recommendFlag) }
+                    ],
+                    template: [
+                        { componentName: 'detailScore', label: this.$t('概述'), name: 'des' }
+                    ],
+                    image: [
+                        { componentName: 'detailScore', label: this.$t('概述'), name: 'des' },
+                        { componentName: 'codeSection', label: 'Dockerfile', name: 'Dockerfile', bindData: { code: this.detail.codeSection, limitHeight: false } }
+                    ]
                 }
             }
         },
@@ -183,10 +176,15 @@
         mounted () {
             this.getDetail()
         },
+
+        beforeDestroy () {
+            this.clearDetail()
+        },
         
         methods: {
             ...mapActions('store', [
-                'setCommentList',
+                'clearDetail',
+                'setDetail',
                 'requestAtom',
                 'requestAtomStatistic',
                 'requestTemplateDetail',
@@ -198,36 +196,12 @@
                 'requestIDEComments',
                 'requestIDEScoreDetail',
                 'requestImage',
-                'requestImageComments',
-                'requestImageScoreDetail',
                 'getUserApprovalInfo',
                 'requestImageCategorys',
                 'getAtomYaml'
             ]),
 
-            freshComment (comment) {
-                const commentList = this.commentList
-                if (this.commentInfo.commentFlag) {
-                    // 修改
-                    const cur = commentList.find(item => item.data.commentId === comment.commentId) || {}
-                    const curData = cur.data || {}
-                    Object.assign(curData, comment)
-                } else {
-                    // 新增
-                    commentList.unshift({ data: comment, children: [] })
-                }
-                this.commentInfo.commentFlag = true
-                this.commentInfo.commentId = comment.commentId
-                this.setCommentList(commentList)
-                this.getScoreDetail()
-            },
-
-            getAtomIcon (atomCode) {
-                return document.getElementById(atomCode) ? atomCode : 'placeholder'
-            },
-
             getDetail () {
-                this.isLoading = true
                 const type = this.$route.params.type
                 const funObj = {
                     atom: () => this.getAtomDetail(),
@@ -237,10 +211,7 @@
                 }
                 const getDetailMethod = funObj[type]
 
-                getDetailMethod().then(() => {
-                    this.getComments()
-                    this.getScoreDetail()
-                }).catch((err) => {
+                getDetailMethod().catch((err) => {
                     this.$bkMessage({ message: (err.message || err), theme: 'error' })
                 }).finally(() => (this.isLoading = false))
             },
@@ -254,24 +225,22 @@
                     this.getUserApprovalInfo(atomCode),
                     this.getAtomYaml({ atomCode })
                 ]).then(([atomDetail, atomStatic, userAppInfo, yaml]) => {
-                    this.detail = atomDetail || {}
-                    this.detailId = atomDetail.atomId
-                    this.detail.downloads = atomStatic.downloads || 0
-                    this.commentInfo = atomDetail.userCommentInfo || {}
-                    this.$set(this.detail, 'approveStatus', (userAppInfo || {}).approveStatus)
-                    const ele = document.querySelector('.plugin-yaml')
-                    this.codeEditor = CodeMirror(ele, this.codeMirrorCon)
-                    this.codeEditor.setValue(yaml || '')
+                    const detail = atomDetail || {}
+                    detail.detailId = atomDetail.atomId
+                    detail.downloads = atomStatic.downloads || 0
+                    detail.approveStatus = (userAppInfo || {}).approveStatus
+                    detail.codeSection = yaml
+                    this.setDetail(detail)
                 })
             },
 
             getTemplateDetail () {
                 const templateCode = this.detailCode
                 return this.requestTemplateDetail(templateCode).then((templateDetail) => {
-                    this.detail = templateDetail || {}
-                    this.detailId = templateDetail.templateId
-                    this.detail.name = templateDetail.templateName
-                    this.commentInfo = templateDetail.userCommentInfo || {}
+                    const detail = templateDetail || {}
+                    detail.detailId = templateDetail.templateId
+                    detail.name = templateDetail.templateName
+                    this.setDetail(detail)
                 })
             },
 
@@ -300,52 +269,8 @@
 
                     const currentCategory = categorys.find((x) => (x.categoryCode === res.category))
                     const setting = currentCategory.settings || {}
-                    this.detail.needInstallToProject = setting.needInstallToProject
-                })
-            },
-
-            getComments (isAdd = false) {
-                const postData = {
-                    code: this.detailCode,
-                    page: this.pageIndex,
-                    pageSize: this.pageSize
-                }
-
-                const getCommentsMethod = this.methodsGenerator.comment[this.type]
-                getCommentsMethod(postData).then((res) => {
-                    const count = res.count || 0
-                    const apiList = res.records || []
-                    const commentList = isAdd ? this.commentList : []
-
-                    apiList.forEach((comment) => {
-                        commentList.push({ data: comment, children: [] })
-                    })
-                    this.isLoadEnd = commentList.length >= count
-                    this.pageIndex++
-                    this.setCommentList(commentList)
-                })
-            },
-
-            getScoreDetail () {
-                const getScoreDetailMethod = this.methodsGenerator.scoreDetail[this.type]
-                getScoreDetailMethod().then((res) => {
-                    const itemList = [
-                        { score: 5, num: 0 },
-                        { score: 4, num: 0 },
-                        { score: 3, num: 0 },
-                        { score: 2, num: 0 },
-                        { score: 1, num: 0 }
-                    ]
-                    const apiList = res.scoreItemList || []
-                    apiList.forEach((item) => {
-                        const cur = itemList.find((x) => x.score === item.score)
-                        if (cur) cur.num = item.num
-                    })
-
-                    this.$set(this.detail, 'score', res.avgScore)
-                    this.$set(this.detail, 'avgScore', res.avgScore)
-                    this.$set(this.detail, 'totalNum', res.totalNum)
-                    this.$set(this.detail, 'scoreItemList', itemList)
+                    detail.needInstallToProject = setting.needInstallToProject
+                    this.setDetail(detail)
                 })
             },
 
@@ -369,8 +294,8 @@
 
     .store-main {
         height: calc(100vh - 93px);
-        margin-left: calc(100vw - 100%);
         overflow-y: scroll;
+        background: $grayBackGroundColor;
     }
 
     .detail-home {
@@ -414,85 +339,12 @@
         min-height: 360px;
     }
 
-    .comments-more {
-        margin: 42px auto 0;
-        font-size: 14px;
-        color: $primaryColor;
-        line-height: 19px;
-        text-align: center;
-        cursor: pointer;
-    }
-
-    .rate-group {
-        margin-top: 13px;
-        height: 74px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        .add-common {
-            width: 84px;
-            height: 32px;
-            background: $primaryColor;
-            border-radius: 2px;
-            border: none;
-            font-size: 14px;
-            color: #ffffff;
-            line-height: 32px;
-            &:active {
-                transform: scale(.97)
-            }
-        }
-        .rate-title {
-            margin-right: 18px;
-            width: 87px;
-            font-weight: normal;
-            span:nth-child(1) {
-                display: block;
-                text-align: center;
-                height: 69px;
-                font-size: 52px;
-                color: $fontWeightColor;
-                line-height: 69px;
-            }
-            span:nth-child(2) {
-                height: 16px;
-                font-size: 12px;
-                color: $fontWeightColor;
-                line-height: 16px;
-                text-align: center;
-                display: inline-block;
-                width: 100%;
-            }
-        }
-        .rate-card {
-            flex: 1;
-            .rate-info {
-                display: flex;
-                align-items: center;
-                justify-content: flex-start;
-                .rate-sum {
-                    height: 15px;
-                    font-size: 11px;
-                    font-weight: normal;
-                    color: $fontWeightColor;
-                    line-height: 15px;
-                }
-            }
-            .rate-bar {
-                margin: 0 6px 0 11px;
-                width: 121px;
-                height: 10px;
-                display: flex;
-                span {
-                    transition: flex 200ms
-                }
-                .dark-gray {
-                    background: $fontGray;
-                }
-                .gray {
-                    background: $lighterGray;
-                }
-            }
-        }
+    .detail-tabs {
+        margin: 20px auto 30px;
+        width: 95vw;
+        max-width: 1400px;
+        background: #fff;
+        padding: 10px 32px 40px;
+        box-shadow: 1px 2px 3px 0px rgba(0,0,0,0.05);
     }
 </style>

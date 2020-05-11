@@ -143,6 +143,10 @@
             }))
         }
 
+        get isInIframe () {
+            return top !== window
+        }
+
         $refs: {
             projectDropdown: any
         }

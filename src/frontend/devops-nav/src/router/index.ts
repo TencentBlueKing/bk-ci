@@ -6,7 +6,6 @@ import compilePath from '../utils/pathExp'
 import request from '../utils/request'
 import * as cookie from 'js-cookie'
 
-
 // 404
 // const None = () => import('../views/None.vue')
 // const App = () => import('../views/App.vue')
@@ -138,17 +137,16 @@ const createRouter = (store: any, dynamicLoadModule: any, i18n: any) => {
                 setTimeout(() => {
                     store.dispatch('toggleModuleLoading', false)
                 }, 100)
-                goNext(to, store, next)
+                goNext(to, next)
             })
-            goNext(to, store, next)
+            goNext(to, next)
         } else if (isAmdModule(currentPage) && loadedModule[serviceAlias]) {
             dynamicLoadModule(serviceAlias, i18n.locale).then(() => {
-                goNext(to, store, next)    
+                goNext(to, next)
             })
         } else {
-            goNext(to, store, next)
+            goNext(to, next)
         }
-            
     })
 
     router.afterEach(route => {
@@ -222,10 +220,10 @@ function getProjectId (store, params): string {
     }
 }
 
-function initProjectId (to, store): string {
+function initProjectId (to): string {
     try {
         const { matched, params } = to
-        const projectId: string = getProjectId(store, params)
+        const projectId: string = getProjectId(params)
         const lastMatched = matched[matched.length - 1]
         
         const options = projectId ? {
@@ -239,11 +237,11 @@ function initProjectId (to, store): string {
     }
 }
 
-function goNext(to, store, next) {
-    const newPath = initProjectId(to, store)
+function goNext (to, next) {
+    const newPath = initProjectId(to)
 
     // @ts-ignore
-    window.setProjectIdCookie(getProjectId(store, to.params))
+    window.setProjectIdCookie(getProjectId(to.params))
     if (to.path !== newPath) {
         next({
             path: newPath,

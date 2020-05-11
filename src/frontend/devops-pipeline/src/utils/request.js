@@ -20,7 +20,6 @@
 import axios from 'axios'
 import Vue from 'vue'
 import { bus } from './bus'
-import * as cookie from 'js-cookie'
 
 const request = axios.create({
     baseURL: `${AJAX_URL_PIRFIX}`,
@@ -30,7 +29,9 @@ const request = axios.create({
         }
         return status >= 200 && status <= 503
     },
-    withCredentials: true
+    withCredentials: true,
+    xsrfCookieName: 'backend_csrftoken', // 注入csrfToken
+    xsrfHeaderName: 'X-CSRFToken' // 注入csrfToken
 })
 
 function errorHandler (error) {
@@ -87,7 +88,6 @@ request.interceptors.request.use(config => {
 // }, errorHandler)
 
 request.interceptors.response.use(response => {
-    injectCSRFTokenToHeaders() // 注入csrfToken
     const { data: { status, message, code, result } } = response
     const httpStatus = response.status
     if (httpStatus === 401) {

@@ -6,228 +6,18 @@
                 <bk-button theme="warning" @click="startDebug('docker')">{{ $t('editPage.docker.debugConsole') }}</bk-button>
             </div>
         </header>
-        <section v-if="container" slot="content" :class="{ &quot;readonly&quot;: !editable }" class="container-property-panel bk-form bk-form-vertical">
-            <form-field :required="true" :label="$t('name')" :is-error="errors.has(&quot;name&quot;)" :error-msg="errors.first(&quot;name&quot;)">
-                <div class="container-resource-name">
-                    <vuex-input :disabled="!editable" input-type="text" :placeholder="$t('nameInputTips')" name="name" v-validate.initial="&quot;required&quot;" :value="container.name" :handle-change="handleContainerChange" />
-                    <atom-checkbox
-                        v-if="isVmContainer(container)"
-                        class="show-build-resource"
-                        :value="container.showBuildResource"
-                        :text="$t('editPage.showAliasName')"
-                        name="showBuildResource"
-                        :handle-change="handleContainerChange"
-                    >
-                    </atom-checkbox>
-                </div>
-            </form-field>
-
-            <form v-if="isVmContainer(container)" v-bkloading="{ isLoading: !apps || !containerModalId || isLoadingImage }">
-                <form-field :label="$t('editPage.resourceType')">
-                    <selector
-                        :disabled="!editable"
-                        :handle-change="changeResourceType"
-                        :list="buildResourceTypeList"
-                        :value="buildResourceType"
-                        :clearable="false"
-                        setting-key="type"
-                        name="buildType"
-                    >
-                        <template>
-                            <div class="bk-selector-create-item cursor-pointer" @click.stop.prevent="addThridSlave">
-                                <i class="devops-icon icon-plus-circle"></i>
-                                <span class="text">{{ $t('editPage.addThirdSlave') }}</span>
-                            </div>
-                            <div v-if="container.baseOS === 'LINUX'" class="bk-selector-create-item cursor-pointer" @click.stop.prevent="addDockerImage">
-                                <i class="devops-icon icon-plus-circle"></i>
-                                <span class="text">{{ $t('editPage.addImage') }}</span>
-                            </div>
-                        </template>
-                    </selector>
-                    <span class="bk-form-help" v-if="isPublicResourceType">{{ $t('editPage.publicResTips') }}</span>
-                </form-field>
-
-                <form-field :label="$t('editPage.image')" v-if="['DOCKER', 'IDC', 'PUBLIC_DEVCLOUD'].includes(buildResourceType) && !isLoadingImage" :required="true" :is-error="errors.has(&quot;buildImageVersion&quot;) || errors.has(&quot;buildResource&quot;)" :error-msg="$t('editPage.imageErrMgs')">
-                    <enum-input
-                        name="imageType"
-                        :list="imageTypeList"
-                        :disabled="!editable"
-                        :handle-change="changeBuildResource"
-                        :value="buildImageType">
-                    </enum-input>
-
-                    <section v-if="buildImageType === 'BKSTORE'" class="bk-image">
-                        <section class="image-name">
-                            <span :class="[{ disable: !editable }, { 'not-recommend': imageRecommend === false }, 'image-named']" :title="imageRecommend === false ? $t('editPage.notRecomendImage') : buildImageName">{{buildImageName || $t('editPage.chooseImage')}}</span>
-                            <bk-button theme="primary" @click.stop="chooseImage" :disabled="!editable">{{buildImageCode ? $t('editPage.reElection') : $t('editPage.select')}}</bk-button>
-                        </section>
-                        <bk-select @change="changeImageVersion" :value="buildImageVersion" searchable class="image-tag" :loading="isVersionLoading" :disabled="!editable" v-validate.initial="&quot;required&quot;" name="buildImageVersion">
-                            <bk-option v-for="option in versionList"
-                                :key="option.versionValue"
-                                :id="option.versionValue"
-                                :name="option.versionName"
-                            >
-                            </bk-option>
-                        </bk-select>
-                    </section>
-
-                    <bk-input v-else @change="changeThirdImage" :value="buildResource" :disabled="!editable" class="bk-image" :placeholder="$t('editPage.thirdImageHolder')" v-validate.initial="&quot;required&quot;" name="buildResource"></bk-input>
-                </form-field>
-
-                <form-field :label="$t('editPage.assignResource')" v-if="buildResourceType !== 'MACOS' && !isPublicResourceType && containerModalId && !['DOCKER', 'IDC', 'PUBLIC_DEVCLOUD'].includes(buildResourceType)" :required="true" :is-error="errors.has(&quot;buildResource&quot;)" :error-msg="errors.first(&quot;buildResource&quot;)" :desc="buildResourceType === &quot;THIRD_PARTY_AGENT_ENV&quot; ? this.$t('editPage.thirdSlaveTips') : &quot;&quot;">
-                    <container-env-node :disabled="!editable"
-                        :os="container.baseOS"
-                        :container-id="containerModalId"
-                        :build-resource-type="buildResourceType"
-                        :build-image-type="buildImageType"
-                        :agent-type="buildAgentType"
-                        :toggle-visible="toggleVisible"
-                        :handle-change="changeBuildResource"
-                        :add-thrid-slave="addThridSlave"
-                        :value="buildResource"
-                        :has-error="errors.has(&quot;buildResource&quot;)"
-                        v-validate.initial="&quot;required&quot;"
-                        name="buildResource"
-                    />
-                </form-field>
-
-                <template v-if="buildResourceType === 'MACOS'">
-                    <form-field :label="$t('editPage.macSystemVersion')" :required="true" :is-error="errors.has('systemVersion')" :error-msg="errors.first(`systemVersion`)">
-                        <bk-select :disabled="!editable" :value="systemVersion" searchable :loading="isLoadingMac" name="systemVersion" v-validate.initial="'required'">
-                            <bk-option v-for="item in systemVersionList"
-                                :key="item"
-                                :id="item"
-                                :name="item"
-                                @click.native="chooseMacSystem(item)">
-                            </bk-option>
-                        </bk-select>
-                    </form-field>
-                    <form-field :label="$t('editPage.xcodeVersion')" :required="true" :is-error="errors.has('xcodeVersion')" :error-msg="errors.first(`xcodeVersion`)">
-                        <bk-select :disabled="!editable" :value="xcodeVersion" searchable :loading="isLoadingMac" name="xcodeVersion" v-validate.initial="'required'">
-                            <bk-option v-for="item in xcodeVersionList"
-                                :key="item"
-                                :id="item"
-                                :name="item"
-                                @click.native="chooseXcode(item)">
-                            </bk-option>
-                        </bk-select>
-                    </form-field>
-                </template>
-
-                <form-field :label="$t('editPage.imageTicket')" v-if="(buildResourceType === 'DOCKER') && buildImageType === 'THIRD'">
-                    <select-input v-bind="imageCredentialOption" :disabled="!editable" name="credentialId" :value="buildImageCreId" :handle-change="changeBuildResource"></select-input>
-                </form-field>
-
-                <form-field :label="$t('editPage.workspace')" v-if="isThirdParty">
-                    <vuex-input :disabled="!editable" name="workspace" :value="container.dispatchType.workspace" :handle-change="changeBuildResource" :placeholder="$t('editPage.workspaceTips')" />
-                </form-field>
-                <form-field class="container-app-field" v-if="showDependencies" :label="$t('editPage.envDependency')">
-                    <container-app-selector :disabled="!editable" class="app-selector-item" v-if="!hasBuildEnv" app="" version=""
-                        :handle-change="handleContainerAppChange"
-                        :apps="apps"
-                        :remove-container-app="removeContainerApp"
-                        :add-container-app="containerAppList.length > 0 ? addContainerApp : null"
-                    ></container-app-selector>
-                    <container-app-selector :disabled="!editable" v-else class="app-selector-item" v-for="(version, app) in container.buildEnv"
-                        :key="app"
-                        :app="app"
-                        :version="version"
-                        :handle-change="handleContainerAppChange"
-                        :envs="container.buildEnv"
-                        :apps="apps"
-                        :remove-container-app="removeContainerApp"
-                        :add-container-app="containerAppList.length > 0 ? addContainerApp : null"
-                    ></container-app-selector>
-                </form-field>
-
-                <div class="build-path-tips" v-if="hasBuildEnv">
-                    <div class="tips-icon"><i class="bk-icon icon-info-circle-shape"></i></div>
-                    <div class="tips-content">
-                        <p class="tips-title">{{ $t('editPage.envDependencyTips') }}：</p>
-                        <template v-for="(value, keys) in container.buildEnv">
-                            <div class="tips-list" v-if="value" :key="keys">
-                                <p class="tips-item">{{ appBinPath(value, keys) }}</p>
-                                <p class="tips-item"
-                                    v-for="(env, envIndex) in appEnvs[keys]" :key="envIndex">{{ appEnvPath(value, keys, env) }}</p>
-                            </div>
-                        </template>
-                    </div>
-                </div>
-            </form>
-
-            <section v-if="isTriggerContainer(container)">
-                <version-config :disabled="!editable" :params="container.params" :build-no="container.buildNo" :set-parent-validate="setContainerValidate" :update-container-params="handleContainerChange"></version-config>
-                <build-params key="params" :disabled="!editable" :params="container.params" :addition-params="container.templateParams" setting-key="params" :title="$t('template.pipelineVar')" :build-no="container.buildNo" :set-parent-validate="setContainerValidate" :update-container-params="handleContainerChange"></build-params>
-                <build-params v-if="routeName === 'templateEdit'" key="templateParams" :disabled="!editable" :params="container.templateParams" :addition-params="container.params" setting-key="templateParams" :title="$t('template.templateConst')" :set-parent-validate="setContainerValidate" :update-container-params="handleContainerChange"></build-params>
-            </section>
-
-            <div>
-                <div class="job-option">
-                    <job-option
-                        v-if="!isTriggerContainer(container)"
-                        :job-option="container.jobControlOption"
-                        :update-container-params="handleContainerChange"
-                        :set-parent-validate="setContainerValidate"
-                        @setKeyValueValidate="setContainerValidate"
-                        :disabled="!editable"
-                    >
-                    </job-option>
-                </div>
-                <div class="job-mutual">
-                    <job-mutual
-                        v-if="!isTriggerContainer(container)"
-                        :mutex-group="container.mutexGroup"
-                        :update-container-params="handleContainerChange"
-                        :set-parent-validate="setContainerValidate"
-                        :disabled="!editable"
-                    >
-                    </job-mutual>
-                </div>
-            </div>
-
-            <image-selector :is-show.sync="showImageSelector"
-                v-if="['DOCKER', 'IDC', 'PUBLIC_DEVCLOUD'].includes(buildResourceType) && !isLoadingImage"
-                :code="buildImageCode"
-                :build-resource-type="buildResourceType"
-                @choose="choose"
-            ></image-selector>
-        </section>
+        <container-content v-bind="$props" slot="content" ref="container"></container-content>
     </bk-sideslider>
 </template>
 
 <script>
-    import { mapGetters, mapActions, mapState } from 'vuex'
-    import Vue from 'vue'
-    import EnumInput from '@/components/atomFormField/EnumInput'
-    import VuexInput from '@/components/atomFormField/VuexInput'
-    import Selector from '@/components/atomFormField/Selector'
-    import FormField from '@/components/AtomPropertyPanel/FormField'
-    import ContainerAppSelector from './ContainerAppSelector'
-    import ContainerEnvNode from './ContainerEnvNode'
-    import BuildParams from './BuildParams'
-    import VersionConfig from './VersionConfig'
-    import JobOption from './JobOption'
-    import JobMutual from './JobMutual'
-    import AtomCheckbox from '@/components/atomFormField/AtomCheckbox'
-    import ImageSelector from '@/components/AtomSelector/imageSelector'
-    import SelectInput from '@/components/AtomFormComponent/SelectInput'
+    import { mapActions, mapState } from 'vuex'
+    import ContainerContent from './ContainerContent'
 
     export default {
         name: 'container-property-panel',
         components: {
-            EnumInput,
-            VuexInput,
-            FormField,
-            ContainerAppSelector,
-            BuildParams,
-            VersionConfig,
-            ContainerEnvNode,
-            JobOption,
-            JobMutual,
-            Selector,
-            AtomCheckbox,
-            ImageSelector,
-            SelectInput
+            ContainerContent
         },
         props: {
             containerIndex: Number,
@@ -236,41 +26,10 @@
             editable: Boolean,
             title: String
         },
-        data () {
-            return {
-                showImageSelector: false,
-                isVersionLoading: false,
-                isLoadingImage: false,
-                imageRecommend: true,
-                isLoadingMac: false,
-                xcodeVersionList: [],
-                systemVersionList: []
-            }
-        },
+
         computed: {
             ...mapState('atom', [
-                'execDetail'
-            ]),
-            ...mapGetters('atom', [
-                'getAppEnvs',
-                'getContainerApps',
-                'getContainer',
-                'getContainers',
-                'getStage',
-                'isVmContainer',
-                'isTriggerContainer',
-                'isNormalContainer',
-                'getBuildResourceTypeList',
-                'getContainerModalId',
-                'isThirdPartyContainer',
-                'isPublicResource',
-                'isDockerBuildResource'
-            ]),
-            ...mapState('atom', [
                 'isPropertyPanelVisible'
-            ]),
-            ...mapState('soda', [
-                'tstackWhiteList'
             ]),
             visible: {
                 get () {
@@ -398,67 +157,7 @@
                 }
             }
         },
-        watch: {
-            errors: {
-                deep: true,
-                handler: function (errors, old) {
-                    // this.setContainerValidate()
-                    const isError = errors.any()
-                    this.handleContainerChange('isError', isError)
-                }
-            }
-        },
-        created () {
-            const { container } = this
-            if (this.isTriggerContainer(container) && this.container.templateParams === undefined) {
-                Vue.set(container, 'templateParams', [])
-            }
-            if (this.isTriggerContainer(container) && this.container.buildNo === undefined) {
-                Vue.set(container, 'buildNo', null)
-            }
-            if (!this.isTriggerContainer(container) && this.container.jobControlOption === undefined) {
-                Vue.set(container, 'jobControlOption', {})
-            }
-            if (!this.isTriggerContainer(container) && this.container.mutexGroup === undefined) {
-                Vue.set(container, 'mutexGroup', {})
-            }
-            if (this.buildResourceType === 'THIRD_PARTY_AGENT_ID' && !this.container.dispatchType.agentType) {
-                this.handleContainerChange('dispatchType', Object.assign({
-                    ...this.container.dispatchType,
-                    agentType: 'ID'
-                }))
-            }
-            if (['DOCKER', 'IDC', 'PUBLIC_DEVCLOUD'].includes(this.buildResourceType) && !this.buildImageCode && this.buildImageType !== 'THIRD') {
-                if (/\$\{/.test(this.buildResource)) {
-                    this.handleContainerChange('dispatchType', Object.assign({
-                        ...this.container.dispatchType,
-                        imageType: 'THIRD'
-                    }))
-                } else {
-                    this.isLoadingImage = true
-                    this.requestImageHistory({ agentType: this.buildResourceType, value: this.buildResource }).then((res) => {
-                        const data = res.data || {}
-                        this.handleContainerChange('dispatchType', Object.assign({
-                            ...this.container.dispatchType,
-                            imageType: 'BKSTORE'
-                        }))
-                        data.historyVersion = data.version
-                        if (data.code) this.choose(data)
-                    }).catch((err) => this.$showTips({ theme: 'error', message: err.message || err })).finally(() => (this.isLoadingImage = false))
-                }
-            }
-            if (['DOCKER', 'IDC', 'PUBLIC_DEVCLOUD'].includes(this.buildResourceType) && this.buildImageCode) {
-                this.isLoadingImage = true
-                this.requestImageDetail({ code: this.buildImageCode }).then((res) => {
-                    const data = res.data || {}
-                    this.imageRecommend = data.recommendFlag
-                }).catch((err) => this.$showTips({ theme: 'error', message: err.message || err })).finally(() => (this.isLoadingImage = false))
-            }
-            if (this.container.dispatchType && this.container.dispatchType.imageCode) {
-                this.getVersionList(this.container.dispatchType.imageCode)
-            }
-            if (this.buildResourceType === 'MACOS') this.getMacOsData()
-        },
+
         methods: {
             ...mapActions('atom', [
                 'updateContainer',
