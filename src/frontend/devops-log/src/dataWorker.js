@@ -111,7 +111,7 @@ function addListData ({ list, mainWidth }) {
             })
         })
     })
-    if (tempListData.length > 0) dataPort.postMessage({ type: 'complateHandleData', list: tempListData, curId })
+    dataPort.postMessage({ type: 'complateHandleData', list: tempListData, curId })
 }
 
 function splitText (message) {
