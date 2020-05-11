@@ -43,9 +43,11 @@ abstract class AbstractEnvironmentPermissionService constructor(
 ) : EnvironmentPermissionService {
 
     private val envResourceType = AuthResourceType.ENVIRONMENT_ENVIRONMENT
-    private val nodeResourceType = AuthResourceType.ENVIRONMENT_ENVIRONMENT
+    private val nodeResourceType = AuthResourceType.ENVIRONMENT_ENV_NODE
 
-    abstract fun supplierForFakePermission(projectId: String): () -> MutableList<String>
+    abstract fun supplierForEnvFakePermission(projectId: String): () -> MutableList<String>
+
+    abstract fun supplierForNodeFakePermission(projectId: String): () -> MutableList<String>
 
     override fun listEnvByPermission(userId: String, projectId: String, permission: AuthPermission): Set<Long> {
         return authPermissionApi.getUserResourceByPermission(
@@ -54,7 +56,7 @@ abstract class AbstractEnvironmentPermissionService constructor(
             resourceType = envResourceType,
             projectCode = projectId,
             permission = permission,
-            supplier = supplierForFakePermission(projectId)
+            supplier = supplierForEnvFakePermission(projectId)
         ).map { HashUtil.decodeIdToLong(it) }.toSet()
     }
 
@@ -69,7 +71,7 @@ abstract class AbstractEnvironmentPermissionService constructor(
             resourceType = envResourceType,
             projectCode = projectId,
             permissions = permissions,
-            supplier = supplierForFakePermission(projectId)
+            supplier = supplierForEnvFakePermission(projectId)
         )
     }
 
@@ -137,7 +139,7 @@ abstract class AbstractEnvironmentPermissionService constructor(
             resourceType = nodeResourceType,
             projectCode = projectId,
             permission = permission,
-            supplier = supplierForFakePermission(projectId)
+            supplier = supplierForNodeFakePermission(projectId)
         ).map { HashUtil.decodeIdToLong(it) }.toSet()
     }
 
@@ -152,7 +154,7 @@ abstract class AbstractEnvironmentPermissionService constructor(
             resourceType = nodeResourceType,
             projectCode = projectId,
             permissions = permissions,
-            supplier = supplierForFakePermission(projectId)
+            supplier = supplierForNodeFakePermission(projectId)
         )
     }
 
