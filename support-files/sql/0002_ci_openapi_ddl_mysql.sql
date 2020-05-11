@@ -1,3 +1,4 @@
+CREATE DATABASE IF NOT EXISTS `devops_ci_openapi` DEFAULT CHARACTER SET utf8mb4;
 USE devops_ci_openapi;
 
 SET NAMES utf8mb4;
