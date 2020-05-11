@@ -85,14 +85,32 @@ class PipelineDockerIPInfoDao {
         dslContext: DSLContext,
         dockerIp: String,
         dockerHostPort: Int,
+        enable: Boolean,
+        grayEnv: Boolean,
+        specialOn: Boolean
+    ) {
+        with(TDispatchPipelineDockerIpInfo.T_DISPATCH_PIPELINE_DOCKER_IP_INFO) {
+            dslContext.update(this)
+                .set(DOCKER_HOST_PORT, dockerHostPort)
+                .set(ENABLE, enable)
+                .set(GRAY_ENV, grayEnv)
+                .set(SPECIAL_ON, specialOn)
+                .set(GMT_MODIFIED, LocalDateTime.now())
+                .where(DOCKER_IP.eq(dockerIp))
+                .execute()
+        }
+    }
+
+    fun updateDockerIpLoad(
+        dslContext: DSLContext,
+        dockerIp: String,
+        dockerHostPort: Int,
         used: Int,
         cpuLoad: Int,
         memLoad: Int,
         diskLoad: Int,
         diskIOLoad: Int,
-        enable: Boolean,
-        grayEnv: Boolean,
-        specialOn: Boolean
+        enable: Boolean
     ) {
         with(TDispatchPipelineDockerIpInfo.T_DISPATCH_PIPELINE_DOCKER_IP_INFO) {
             dslContext.update(this)
@@ -103,8 +121,6 @@ class PipelineDockerIPInfoDao {
                 .set(DISK_LOAD, diskLoad)
                 .set(DISK_IO_LOAD, diskIOLoad)
                 .set(ENABLE, enable)
-                .set(GRAY_ENV, grayEnv)
-                .set(SPECIAL_ON, specialOn)
                 .set(GMT_MODIFIED, LocalDateTime.now())
                 .where(DOCKER_IP.eq(dockerIp))
                 .execute()
@@ -119,22 +135,6 @@ class PipelineDockerIPInfoDao {
         with(TDispatchPipelineDockerIpInfo.T_DISPATCH_PIPELINE_DOCKER_IP_INFO) {
             dslContext.update(this)
                 .set(ENABLE, enable)
-                .set(GMT_MODIFIED, LocalDateTime.now())
-                .where(DOCKER_IP.eq(dockerIp))
-                .execute()
-        }
-    }
-
-    fun updateDockerHostPort(
-        dslContext: DSLContext,
-        dockerIp: String,
-        enable: Boolean,
-        dockerHostPort: Int
-    ) {
-        with(TDispatchPipelineDockerIpInfo.T_DISPATCH_PIPELINE_DOCKER_IP_INFO) {
-            dslContext.update(this)
-                .set(ENABLE, enable)
-                .set(DOCKER_HOST_PORT, dockerHostPort)
                 .set(GMT_MODIFIED, LocalDateTime.now())
                 .where(DOCKER_IP.eq(dockerIp))
                 .execute()
@@ -227,11 +227,11 @@ class PipelineDockerIPInfoDao {
 
     fun delete(
         dslContext: DSLContext,
-        ipInfoId: Long
+        dockerIp: String
     ): Int {
         return with(TDispatchPipelineDockerIpInfo.T_DISPATCH_PIPELINE_DOCKER_IP_INFO) {
             dslContext.delete(this)
-                .where(ID.eq(ipInfoId))
+                .where(DOCKER_IP.eq(dockerIp))
                 .execute()
         }
     }
