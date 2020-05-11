@@ -84,14 +84,24 @@ end
 -- 获取灰度设置
 local devops_gray = grayUtil:get_gray()
 
--- ngx.log(ngx.ERR, "devops_gray:", devops_gray )
+ngx.log(ngx.ERR, "devops_gray:", devops_gray )
 local ns_config = nil
 if devops_gray ~= true then
-  ns_config = config.ns
-  -- ngx.log(ngx.ERR, "ns_config" )
+  if ngx.var.devops_region == "DEVNET" then
+    ns_config = config.ns
+    ngx.log(ngx.ERR, "ns")
+  else
+    ns_config = config.ns_devnet
+    ngx.log(ngx.ERR, "ns_devnet")
+  end
 else
-  ns_config = config.ns_gray
-  -- ngx.log(ngx.ERR, "ns_config_gray" )
+  if ngx.var.devops_region == "DEVNET" then
+    ns_config = config.ns_gray
+    ngx.log(ngx.ERR, "ns_gray")
+  else
+    ns_config = config.ns_devnet_gray
+    ngx.log(ngx.ERR, "ns_devnet_gray")
+  end
 end 
 
 local query_subdomain = config.ns.tag .. "." .. service_name .. config.ns.suffix .. ".service." .. ns_config.domain
