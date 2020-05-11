@@ -184,4 +184,19 @@ class DispatchDockerService @Autowired constructor(
             throw RuntimeException("OP dispatcheDocker create dockerhost loadConfig error.")
         }
     }
+
+    fun updateDockerDriftThreshold(userId: String, threshold: Int): Boolean {
+        logger.info("$userId updateDockerDriftThreshold $threshold")
+        if (threshold < 0 || threshold > 100) {
+            throw RuntimeException("Parameter threshold must in (0-100).")
+        }
+
+        try {
+            dockerHostUtils.updateDockerDriftThreshold(threshold)
+            return true
+        } catch (e: Exception) {
+            logger.error("OP dispatcheDocker update Docker DriftThreshold error.", e)
+            throw RuntimeException("OP dispatcheDocker update Docker DriftThreshold error.")
+        }
+    }
 }
