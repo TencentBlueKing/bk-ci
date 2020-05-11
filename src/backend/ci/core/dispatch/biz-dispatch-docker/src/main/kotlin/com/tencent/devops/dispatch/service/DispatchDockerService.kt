@@ -1,9 +1,11 @@
 package com.tencent.devops.dispatch.service
 
+import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.dispatch.dao.PipelineDockerIPInfoDao
 import com.tencent.devops.dispatch.pojo.DockerHostLoadConfig
 import com.tencent.devops.dispatch.pojo.DockerIpInfoVO
 import com.tencent.devops.dispatch.pojo.DockerIpListPage
+import com.tencent.devops.dispatch.pojo.DockerIpUpdateVO
 import com.tencent.devops.dispatch.utils.CommonUtils
 import com.tencent.devops.dispatch.utils.DockerHostUtils
 import org.jooq.DSLContext
@@ -15,6 +17,7 @@ import java.time.format.DateTimeFormatter
 @Service
 class DispatchDockerService @Autowired constructor(
     private val dslContext: DSLContext,
+    private val gray: Gray,
     private val pipelineDockerIPInfoDao: PipelineDockerIPInfoDao,
     private val dockerHostUtils: DockerHostUtils
 ) {
@@ -82,8 +85,8 @@ class DispatchDockerService @Autowired constructor(
                     diskLoad = it.averageDiskLoad,
                     diskIOLoad = it.averageDiskIOLoad,
                     enable = it.enable,
-                    grayEnv = it.grayEnv,
-                    specialOn = it.specialOn
+                    grayEnv = it.grayEnv ?: false,
+                    specialOn = it.specialOn ?: false
                 )
             }
 
@@ -94,21 +97,16 @@ class DispatchDockerService @Autowired constructor(
         }
     }
 
-    fun update(userId: String, dockerIpInfoId: Long, dockerIpInfoVO: DockerIpInfoVO): Boolean {
-        logger.info("$userId update Docker IP id: $dockerIpInfoId dockerIpInfoVO: $dockerIpInfoVO")
+    fun update(userId: String, dockerIp: String, dockerIpUpdateVO: DockerIpUpdateVO): Boolean {
+        logger.info("$userId update Docker IP: $dockerIp dockerIpUpdateVO: $dockerIpUpdateVO")
         try {
             pipelineDockerIPInfoDao.update(
                 dslContext = dslContext,
-                dockerIp = dockerIpInfoVO.dockerIp,
-                dockerHostPort = dockerIpInfoVO.dockerHostPort,
-                used = dockerIpInfoVO.usedNum,
-                cpuLoad = dockerIpInfoVO.averageCpuLoad,
-                memLoad = dockerIpInfoVO.averageMemLoad,
-                diskLoad = dockerIpInfoVO.averageDiskLoad,
-                diskIOLoad = dockerIpInfoVO.averageDiskIOLoad,
-                enable = dockerIpInfoVO.enable,
-                grayEnv = dockerIpInfoVO.grayEnv,
-                specialOn = dockerIpInfoVO.specialOn
+                dockerIp = dockerIp,
+                dockerHostPort = dockerIpUpdateVO.dockerHostPort,
+                enable = dockerIpUpdateVO.enable,
+                grayEnv = dockerIpUpdateVO.grayEnv,
+                specialOn = dockerIpUpdateVO.specialOn
             )
             return true
         } catch (e: Exception) {
@@ -117,10 +115,40 @@ class DispatchDockerService @Autowired constructor(
         }
     }
 
-    fun updateDockerIpEnable(userId: String, dockerIp: String, dockerHostPort: String): Boolean {
-        logger.info("$userId update Docker IP status enable: $dockerIp, dockerHostPort: $dockerHostPort")
+    fun updateAllDispatchDockerEnable(userId: String): Boolean {
+        logger.info("$userId update all docker enable.")
         try {
-            pipelineDockerIPInfoDao.updateDockerHostPort(dslContext, dockerIp, true, dockerHostPort.toInt())
+            val dockerUnavailableList = pipelineDockerIPInfoDao.getDockerIpList(
+                dslContext = dslContext,
+                enable = false,
+                grayEnv = gray.isGray()
+            )
+
+            dockerUnavailableList.forEach {
+                pipelineDockerIPInfoDao.updateDockerIpStatus(dslContext, it.dockerIp, true)
+            }
+
+            return true
+        } catch (e: Exception) {
+            logger.error("OP updateAllDispatchDockerEnable error.", e)
+            throw RuntimeException("OP updateAllDispatchDockerEnable error.")
+        }
+    }
+
+    fun updateDockerIpLoad(userId: String, dockerIp: String, dockerIpInfoVO: DockerIpInfoVO): Boolean {
+        // logger.info("$userId update Docker IP status enable: $dockerIp, dockerIpInfoVO: $dockerIpInfoVO")
+        try {
+            pipelineDockerIPInfoDao.updateDockerIpLoad(
+                dslContext = dslContext,
+                dockerIp = dockerIp,
+                dockerHostPort = dockerIpInfoVO.dockerHostPort,
+                used = dockerIpInfoVO.usedNum,
+                cpuLoad = dockerIpInfoVO.averageCpuLoad,
+                memLoad = dockerIpInfoVO.averageMemLoad,
+                diskLoad = dockerIpInfoVO.averageDiskLoad,
+                diskIOLoad = dockerIpInfoVO.averageDiskIOLoad,
+                enable = dockerIpInfoVO.enable
+            )
             return true
         } catch (e: Exception) {
             logger.error("OP dispatchDocker updateDockerIpEnable error.", e)
@@ -128,10 +156,10 @@ class DispatchDockerService @Autowired constructor(
         }
     }
 
-    fun delete(userId: String, dockerIpInfoId: Long): Boolean {
-        logger.info("$userId delete $dockerIpInfoId")
+    fun delete(userId: String, dockerIp: String): Boolean {
+        logger.info("$userId delete Docker IP: $dockerIp")
         try {
-            pipelineDockerIPInfoDao.delete(dslContext, dockerIpInfoId)
+            pipelineDockerIPInfoDao.delete(dslContext, dockerIp)
             return true
         } catch (e: Exception) {
             logger.error("OP dispatchDocker delete error.", e)
@@ -154,6 +182,21 @@ class DispatchDockerService @Autowired constructor(
         } catch (e: Exception) {
             logger.error("OP dispatcheDocker create dockerhost loadConfig error.", e)
             throw RuntimeException("OP dispatcheDocker create dockerhost loadConfig error.")
+        }
+    }
+
+    fun updateDockerDriftThreshold(userId: String, threshold: Int): Boolean {
+        logger.info("$userId updateDockerDriftThreshold $threshold")
+        if (threshold < 0 || threshold > 100) {
+            throw RuntimeException("Parameter threshold must in (0-100).")
+        }
+
+        try {
+            dockerHostUtils.updateDockerDriftThreshold(threshold)
+            return true
+        } catch (e: Exception) {
+            logger.error("OP dispatcheDocker update Docker DriftThreshold error.", e)
+            throw RuntimeException("OP dispatcheDocker update Docker DriftThreshold error.")
         }
     }
 }

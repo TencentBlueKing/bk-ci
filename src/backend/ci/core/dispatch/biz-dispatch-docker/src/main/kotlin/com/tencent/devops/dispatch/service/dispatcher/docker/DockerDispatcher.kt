@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.dispatch.client.DockerHostClient
 import com.tencent.devops.dispatch.common.Constants
 import com.tencent.devops.dispatch.dao.PipelineDockerBuildDao
@@ -55,6 +56,7 @@ import org.springframework.stereotype.Component
 @Component
 class DockerDispatcher @Autowired constructor(
     private val client: Client,
+    private val gray: Gray,
     private val rabbitTemplate: RabbitTemplate,
     private val redisOperation: RedisOperation,
     private val dockerHostBuildService: DockerHostBuildService,
@@ -97,21 +99,22 @@ class DockerDispatcher @Autowired constructor(
                 vmSeq = pipelineAgentStartupEvent.vmSeqId
             )
 
+            var driftIpInfo = ""
             val dockerPair: Pair<String, Int>
             poolNo = dockerHostUtils.getIdlePoolNo(pipelineAgentStartupEvent.pipelineId, pipelineAgentStartupEvent.vmSeqId)
             if (taskHistory != null) {
                 val dockerIpInfo = pipelineDockerIpInfoDao.getDockerIpInfo(dslContext, taskHistory.dockerIp)
                     ?: throw DockerServiceException("Docker IP: ${taskHistory.dockerIp} is not available.")
-                var ipInfo = JsonUtil.toJson(dockerIpInfo.intoMap())
+                driftIpInfo = JsonUtil.toJson(dockerIpInfo.intoMap())
 
                 dockerPair = if (specialIpSet.isNotEmpty() && specialIpSet.toString() != "[]") {
                     // 该项目工程配置了专机
-                    if (specialIpSet.contains(taskHistory.dockerIp) && dockerIpInfo.enable) {
+                    if (specialIpSet.contains(taskHistory.dockerIp) && dockerIpInfo.enable && (dockerIpInfo.grayEnv == gray.isGray())) {
                         // 上一次构建IP在专机列表中，直接重用
                         Pair(taskHistory.dockerIp, dockerIpInfo.dockerHostPort)
                     } else {
                         // 不在专机列表中，重新依据专机列表去选择负载最小的
-                        ipInfo = "专机漂移"
+                        driftIpInfo = "专机漂移"
 
                         dockerHostUtils.getAvailableDockerIpWithSpecialIps(
                             pipelineAgentStartupEvent.projectId,
@@ -124,20 +127,9 @@ class DockerDispatcher @Autowired constructor(
                     // 没有配置专机，根据当前IP负载选择IP
                     val triple = dockerHostUtils.checkAndSetIP(pipelineAgentStartupEvent, specialIpSet, dockerIpInfo, poolNo)
                     if (triple.third.isNotEmpty()) {
-                        ipInfo = triple.third
+                        driftIpInfo = triple.third
                     }
                     Pair(triple.first, triple.second)
-                }
-
-                // IP变动，更新数据表并记录漂移日志
-                if (taskHistory.dockerIp != dockerPair.first) {
-                    dockerHostUtils.updateTaskSimpleAndRecordDriftLog(
-                        pipelineAgentStartupEvent = pipelineAgentStartupEvent,
-                        specialIpSet = specialIpSet,
-                        oldIp = taskHistory.dockerIp,
-                        newIp = dockerPair.first,
-                        ipInfo = ipInfo
-                    )
                 }
             } else {
                 // 第一次构建，根据负载条件选择可用IP
@@ -156,9 +148,15 @@ class DockerDispatcher @Autowired constructor(
             }
 
             // 选择IP后，增加缓存计数，限流用
-            redisOperation.increment("${Constants.DOCKER_IP_KEY_PREFIX}${dockerPair.first}", 1)
+            redisOperation.increment("${Constants.DOCKER_IP_COUNT_KEY_PREFIX}${dockerPair.first}", 1)
 
-            dockerHostClient.startBuild(pipelineAgentStartupEvent, dockerPair.first, dockerPair.second, poolNo)
+            dockerHostClient.startBuild(
+                event = pipelineAgentStartupEvent,
+                dockerIp = dockerPair.first,
+                dockerHostPort = dockerPair.second,
+                poolNo = poolNo,
+                driftIpInfo = driftIpInfo
+            )
         } catch (e: Exception) {
             val errMsg = if (e is DockerServiceException) {
                 logger.warn("[${pipelineAgentStartupEvent.projectId}|${pipelineAgentStartupEvent.pipelineId}|${pipelineAgentStartupEvent.buildId}] Start build Docker VM failed. ${e.message}")

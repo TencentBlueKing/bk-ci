@@ -24,49 +24,38 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.resources.atom
+package com.tencent.devops.store.resources.common
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.store.api.atom.ServiceMarketAtomArchiveResource
-import com.tencent.devops.store.pojo.atom.AtomPkgInfoUpdateRequest
-import com.tencent.devops.store.pojo.atom.GetAtomConfigResult
-import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
-import com.tencent.devops.store.service.atom.MarketAtomArchiveService
+import com.tencent.devops.store.api.common.OpBusinessConfigResource
+import com.tencent.devops.store.pojo.common.BusinessConfigRequest
+import com.tencent.devops.store.pojo.common.BusinessConfigResponse
+import com.tencent.devops.store.service.common.BusinessConfigService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class ServiceMarketAtomArchiveResourceImpl @Autowired constructor(private val marketAtomArchiveService: MarketAtomArchiveService) :
-    ServiceMarketAtomArchiveResource {
+class OpBusinessConfigResourceImpl @Autowired constructor(
+    private val businessConfigService: BusinessConfigService
+) : OpBusinessConfigResource {
 
-    override fun verifyAtomPackageByUserId(
-        userId: String,
-        projectCode: String,
-        atomCode: String,
-        version: String,
-        releaseType: ReleaseTypeEnum?,
-        os: String?
-    ): Result<Boolean> {
-        return marketAtomArchiveService.verifyAtomPackageByUserId(
-            userId = userId,
-            projectCode = projectCode,
-            atomCode = atomCode,
-            version = version,
-            releaseType = releaseType,
-            os = os
-        )
+    override fun add(businessConfigRequest: BusinessConfigRequest): Result<Boolean> {
+        return Result(businessConfigService.add(businessConfigRequest))
     }
 
-    override fun verifyAtomTaskJson(
-        userId: String,
-        projectCode: String,
-        atomCode: String,
-        version: String
-    ): Result<GetAtomConfigResult?> {
-        return marketAtomArchiveService.verifyAtomTaskJson(userId, projectCode, atomCode, version)
+    override fun update(id: Int, businessConfigRequest: BusinessConfigRequest): Result<Int> {
+        return Result(0, null, businessConfigService.update(id, businessConfigRequest))
     }
 
-    override fun updateAtomPkgInfo(userId: String, atomId: String, atomPkgInfoUpdateRequest: AtomPkgInfoUpdateRequest): Result<Boolean> {
-        return marketAtomArchiveService.updateAtomPkgInfo(userId, atomId, atomPkgInfoUpdateRequest)
+    override fun listAllBusinessConfigs(): Result<List<BusinessConfigResponse>?> {
+        return Result(businessConfigService.listAllBusinessConfigs())
+    }
+
+    override fun getBusinessConfigById(id: Int): Result<BusinessConfigResponse?> {
+        return Result(businessConfigService.getBusinessConfigById(id))
+    }
+
+    override fun deleteBusinessConfigById(id: Int): Result<Int> {
+        return Result(0, null, businessConfigService.deleteBusinessConfigById(id))
     }
 }
