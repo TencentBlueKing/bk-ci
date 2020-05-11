@@ -80,15 +80,19 @@ class UserBuildResourceImpl @Autowired constructor(private val buildService: Pip
         buildNo: Int?
     ): Result<BuildId> {
         checkParam(userId, projectId, pipelineId)
-        return Result(BuildId(buildService.buildManualStartup(
-            userId = userId,
-            startType = StartType.MANUAL,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            values = values,
-            channelCode = ChannelCode.BS,
-            buildNo = buildNo
-        )))
+        return Result(
+            BuildId(
+                buildService.buildManualStartup(
+                    userId = userId,
+                    startType = StartType.MANUAL,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    values = values,
+                    channelCode = ChannelCode.BS,
+                    buildNo = buildNo
+                )
+            )
+        )
     }
 
     override fun retry(
@@ -355,12 +359,37 @@ class UserBuildResourceImpl @Autowired constructor(private val buildService: Pip
         alias: List<String>?
     ): Result<List<String>> {
         checkParam(userId, projectId, pipelineId)
-        return Result(buildService.getHistoryConditionBranch(
-            userId = userId,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            alias = alias
-        ))
+        return Result(
+            buildService.getHistoryConditionBranch(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                alias = alias
+            )
+        )
+    }
+
+    override fun executionPauseAtom(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        taskId: String,
+        values: Map<String, Any>,
+        isContinue: Boolean
+    ): Result<Boolean> {
+        checkParam(userId, projectId, pipelineId)
+        return Result(
+            buildService.executePauseAtom(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                isContinue = isContinue,
+                taskId = taskId,
+                inputParams = values
+            )
+        )
     }
 
     private fun checkParam(userId: String, projectId: String, pipelineId: String) {

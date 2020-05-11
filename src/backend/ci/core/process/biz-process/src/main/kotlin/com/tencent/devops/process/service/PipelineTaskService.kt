@@ -31,11 +31,16 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.Model
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.log.utils.BuildLogPrinter
+import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
+import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.process.dao.PipelineTaskDao
 import com.tencent.devops.process.engine.control.ControlUtils
+import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.dao.PipelineModelTaskDao
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.pojo.PipelineModelTask
@@ -46,6 +51,7 @@ import com.tencent.devops.process.utils.BK_CI_BUILD_FAIL_TASKNAMES
 import com.tencent.devops.process.utils.BK_CI_BUILD_FAIL_TASKS
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
+import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.util.concurrent.TimeUnit
@@ -60,6 +66,9 @@ class PipelineTaskService @Autowired constructor(
     private val buildLogPrinter: BuildLogPrinter,
     private val pipelineVariableService: BuildVariableService,
     private val pipelineBuildDetailService: PipelineBuildDetailService,
+    val pipelineInfoDao: PipelineInfoDao,
+    val client: Client,
+    private val rabbitTemplate: RabbitTemplate,
     private val pipelineRuntimeService: PipelineRuntimeService
 ) {
 
@@ -153,6 +162,40 @@ class PipelineTaskService @Autowired constructor(
             )
         }
         return isRry
+    }
+
+    fun isPause(taskId: String, buildId: String, seqId: String): Boolean {
+        val taskRecord = pipelineRuntimeService.getBuildTask(buildId, taskId)
+        val isPause = ControlUtils.pauseBeforeExec(taskRecord!!.additionalOptions)
+        if (isPause) {
+            logger.info("pause atom, buildId[$buildId], taskId[$taskId] , seqId[$seqId], additionalOptions[${taskRecord!!.additionalOptions}]")
+            buildLogPrinter.addYellowLine(
+                buildId = buildId,
+                message = "当前插件${taskRecord.taskName}暂停中，等待手动点击继续",
+                tag = taskRecord.taskId,
+                jobId = taskRecord.containerId,
+                executeCount = 1
+            )
+
+            // 修改当前任务状态为"暂停"状态
+            pipelineRuntimeService.updateTaskStatus(
+                buildId = buildId,
+                taskId = taskId,
+                userId = "",
+                buildStatus = BuildStatus.PAUSE
+            )
+
+            // 发送消息给相关关注人
+            val sendUser = taskRecord.additionalOptions!!.subscriptionPauseUser
+            if(sendUser != null ) {
+                sendPauseNotify(buildId, taskRecord.taskName, taskId, sendUser)
+            } else {
+                val pipelineInfo = pipelineInfoDao.getPipelineInfo(dslContext, taskRecord.pipelineId)
+                val lastUpdateUser = pipelineInfo?.lastModifyUser
+                sendPauseNotify(buildId, taskRecord.taskName, taskId, setOf(lastUpdateUser) as Set<String>)
+            }
+        }
+        return isPause
     }
 
     fun removeRetryCache(buildId: String, taskId: String) {
@@ -269,6 +312,19 @@ class PipelineTaskService @Autowired constructor(
 
     private fun getRedisKey(buildId: String, taskId: String): String {
         return "$retryCountRedisKey$buildId:$taskId"
+    }
+
+    private fun sendPauseNotify(buildId: String, taskName: String, taskId: String, receivers: Set<String>) {
+        // TODO: 配置推送模版
+        val msg = SendNotifyMessageTemplateRequest(
+            templateCode = "",
+            sender = "DevOps",
+            titleParams = mutableMapOf(),
+            bodyParams = mutableMapOf(),
+            receivers = receivers as MutableSet<String>
+        )
+        client.get(ServiceNotifyMessageTemplateResource::class)
+            .sendNotifyMessageByTemplate(msg)
     }
 
     companion object {

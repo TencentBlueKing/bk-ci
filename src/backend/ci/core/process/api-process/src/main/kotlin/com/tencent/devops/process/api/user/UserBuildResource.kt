@@ -470,4 +470,29 @@ interface UserBuildResource {
         @QueryParam("cancel")
         cancel: Boolean?
     ): Result<Boolean>
+
+    @ApiOperation("操作暂停插件")
+    @POST
+    @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/taskIds/{taskId}/execution/pause")
+    fun executionPauseAtom(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @ApiParam("构建ID", required = true)
+        @PathParam("buildId")
+        buildId: String,
+        @ApiParam("任务ID", required = true)
+        @PathParam("taskId")
+        taskId: String,
+        @ApiParam("插件执行参数", required = true)
+        values: Map<String, Any>,
+        @ApiParam("执行类型", required = true)
+        isContinue: Boolean
+    ): Result<Boolean>
 }

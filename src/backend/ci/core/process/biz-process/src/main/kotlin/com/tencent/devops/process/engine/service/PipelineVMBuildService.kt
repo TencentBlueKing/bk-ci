@@ -65,6 +65,7 @@ import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.PipelineTaskService
 import com.tencent.devops.process.service.measure.AtomMonitorEventDispatcher
 import com.tencent.devops.process.utils.PIPELINE_ELEMENT_ID
+import com.tencent.devops.process.utils.PIPELINE_TURBO_TASK_ID
 import com.tencent.devops.process.utils.PIPELINE_VMSEQ_ID
 import com.tencent.devops.process.utils.PipelineVarUtil
 import com.tencent.devops.project.api.service.ServiceProjectResource
@@ -74,6 +75,7 @@ import com.tencent.devops.store.pojo.app.BuildEnv
 import com.tencent.devops.store.pojo.common.KEY_VERSION
 import org.apache.lucene.util.RamUsageEstimator
 import org.slf4j.LoggerFactory
+import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
@@ -305,6 +307,67 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
         return buildClaim(buildId, vmSeqId, vmName)
     }
 
+    private fun addHeartBeat(buildId: String, vmSeqId: String, time: Long, retry: Int = 10) {
+        try {
+            redisOperation.set(
+                HeartBeatUtils.genHeartBeatKey(buildId, vmSeqId),
+                time.toString(), TimeUnit.MINUTES.toSeconds(30)
+            )
+        } catch (t: Throwable) {
+            if (retry > 0) {
+                logger.warn("Fail to set heart beat variable($vmSeqId -> $time) of $buildId")
+                addHeartBeat(buildId, vmSeqId, time, retry - 1)
+            } else {
+                throw t
+            }
+        }
+    }
+
+    private fun checkCustomVariableSkip(
+        buildId: String,
+        additionalOptions: ElementAdditionalOptions?,
+        variables: Map<String, String>
+    ): Boolean {
+        // 自定义变量全部满足时不运行
+        if (skipWhenCustomVarMatch(additionalOptions)) {
+            for (names in additionalOptions?.customVariables!!) {
+                val key = names.key
+                val value = names.value
+                val existValue = variables[key]
+                if (value != existValue) {
+                    logger.info("buildId=[$buildId]|CUSTOM_VARIABLE_MATCH_NOT_RUN|exists=$existValue|expect=$value")
+                    return false
+                }
+            }
+            // 所有自定义条件都满足，则跳过
+            return true
+        }
+
+        // 自定义变量全部满足时运行
+        if (notSkipWhenCustomVarMatch(additionalOptions)) {
+            for (names in additionalOptions?.customVariables!!) {
+                val key = names.key
+                val value = names.value
+                val existValue = variables[key]
+                if (value != existValue) {
+                    logger.info("buildId=[$buildId]|CUSTOM_VARIABLE_MATCH|exists=$existValue|expect=$value")
+                    return true
+                }
+            }
+            // 所有自定义条件都满足，则不能跳过
+            return false
+        }
+        return false
+    }
+
+    private fun notSkipWhenCustomVarMatch(additionalOptions: ElementAdditionalOptions?) =
+        additionalOptions != null && additionalOptions.runCondition == RunCondition.CUSTOM_VARIABLE_MATCH &&
+            additionalOptions.customVariables != null && additionalOptions.customVariables!!.isNotEmpty()
+
+    private fun skipWhenCustomVarMatch(additionalOptions: ElementAdditionalOptions?) =
+        additionalOptions != null && additionalOptions.runCondition == RunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN &&
+            additionalOptions.customVariables != null && additionalOptions.customVariables!!.isNotEmpty()
+
     private fun buildClaim(buildId: String, vmSeqId: String, vmName: String): BuildTask {
         val buildInfo = pipelineRuntimeService.getBuildInfo(buildId)
             ?: run {
@@ -402,6 +465,15 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
                 ) ?: return@nextQueueTask
             }
         } else {
+            val nextTask = queueTasks[0]
+            if (pipelineTaskService.isPause(
+                    taskId = nextTask.taskId,
+                    buildId = nextTask.buildId,
+                    seqId = vmSeqId
+                )
+            ) {
+                return BuildTask(buildId, vmSeqId, BuildTaskStatus.END)
+            }
             val buildTask = claim(
                 task = queueTasks[0],
                 buildId = buildId,
@@ -440,6 +512,17 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
 
         // 构造扩展变量
         val extMap = buildExtService.buildExt(task)
+        // 如果插件配置了前置暂停, 暂停期间关闭当前构建机，节约资源。
+        if (pipelineTaskService.isPause(
+                taskId = task.taskId,
+                buildId = task.buildId,
+                seqId = vmSeqId
+            )
+        ) {
+            return BuildTask(buildId, vmSeqId, BuildTaskStatus.END)
+        }
+
+        val turboTaskId = getTurboTask(task.pipelineId, task.taskId)
 
         // 认领任务
         pipelineRuntimeService.claimBuildTask(buildId, task, userId)

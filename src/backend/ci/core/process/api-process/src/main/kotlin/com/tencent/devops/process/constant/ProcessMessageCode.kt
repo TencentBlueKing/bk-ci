@@ -127,6 +127,7 @@ object ProcessMessageCode {
     const val ERROR_NO_PARAM_IN_JOB_CONDITION = "2101902" //  请设置Job运行的自定义变量
     const val ERROR_TIMEOUT_IN_RUNNING = "2101903" //  {0}运行达到({1})分钟，超时结束运行!
     const val ERROR_TIMEOUT_IN_BUILD_QUEUE = "2101904" //  排队超时，取消运行! [{0}]
+    const val ERROR_PARUS_PIEPLINE_IS_RUNNINT = "2101905" // 暂停的流水线已开始运行
 
     const val ERROR_NO_BUILD_EXISTS_BY_ID = "2101100" // 流水线构建[{0}]不存在
     const val ERROR_NO_PIPELINE_EXISTS_BY_ID = "2101101" // 流水线[{0}]不存在
