@@ -98,4 +98,15 @@ interface OPDispatchDockerResource {
         @ApiParam("创建IDC构建机所需信息", required = true)
         dockerHostLoadConfigMap: Map<String, DockerHostLoadConfig>
     ): Result<Boolean>
+
+    @POST
+    @Path("/docker/threshold/update")
+    @ApiOperation("更新docker漂移负载阈值")
+    fun updateDockerDriftThreshold(
+        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @ApiParam("阈值", required = true)
+        threshold: Int
+    ): Result<Boolean>
 }

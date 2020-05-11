@@ -69,6 +69,7 @@ class DockerHostUtils @Autowired constructor(
 ) {
     companion object {
         private const val LOAD_CONFIG_KEY = "dockerhost-load-config"
+        private const val DOCKER_DRIFT_THRESHOLD_KEY = "docker-drift-threshold-spKyQ86qdYhAkDDR"
         private const val DOCKER_IP_COUNT_MAX = 8
         private const val BUILD_POOL_SIZE = 100 // 单个流水线可同时执行的任务数量
 
@@ -178,9 +179,9 @@ class DockerHostUtils @Autowired constructor(
         pipelineId: String,
         vmSeq: String
     ): Int {
-        val lock = RedisLock(redisOperation, "DISPATCH_DEVCLOUD_LOCK_CONTAINER_${pipelineId}_$vmSeq", 30)
+        val lock = RedisLock(redisOperation, "DISPATCH_DOCKER_LOCK_CONTAINER_${pipelineId}_$vmSeq", 30)
         try {
-            lock.tryLock()
+            lock.lock()
             for (i in 1..BUILD_POOL_SIZE) {
                 logger.info("poolNo is $i")
                 val poolNo = pipelineDockerPoolDao.getPoolNoStatus(dslContext, pipelineId, vmSeq, i)
@@ -265,7 +266,8 @@ class DockerHostUtils @Autowired constructor(
         }
 
         // 查看当前IP负载情况，当前IP不可用或者负载超额或者设置为专机独享或者是否灰度已被切换，重新选择构建机
-        if (!dockerIpInfo.enable || dockerIpInfo.diskLoad > 90 || dockerIpInfo.memLoad > 95 || dockerIpInfo.specialOn || (dockerIpInfo.grayEnv != gray.isGray())) {
+        val threshold = getDockerDriftThreshold()
+        if (!dockerIpInfo.enable || dockerIpInfo.diskLoad > threshold || dockerIpInfo.memLoad > threshold || dockerIpInfo.specialOn || (dockerIpInfo.grayEnv != gray.isGray())) {
             val pair = getAvailableDockerIpWithSpecialIps(
                 event.projectId,
                 event.pipelineId,
@@ -340,6 +342,19 @@ class DockerHostUtils @Autowired constructor(
             second = DockerHostLoadConfig(90, 80, 80, 90),
             third = DockerHostLoadConfig(100, 80, 100, 100)
         )
+    }
+
+    fun updateDockerDriftThreshold(threshold: Int) {
+        redisOperation.set(DOCKER_DRIFT_THRESHOLD_KEY, threshold.toString())
+    }
+
+    fun getDockerDriftThreshold(): Int {
+        val thresholdStr = redisOperation.get(DOCKER_DRIFT_THRESHOLD_KEY)
+        return if (thresholdStr != null && thresholdStr.isNotEmpty()) {
+            thresholdStr.toInt()
+        } else {
+            90
+        }
     }
 
     private fun selectAvailableDockerIp(
