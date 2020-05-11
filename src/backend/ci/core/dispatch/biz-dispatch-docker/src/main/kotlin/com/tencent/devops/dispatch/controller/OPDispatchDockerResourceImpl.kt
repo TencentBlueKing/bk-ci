@@ -6,6 +6,7 @@ import com.tencent.devops.dispatch.api.op.OPDispatchDockerResource
 import com.tencent.devops.dispatch.pojo.DockerHostLoadConfig
 import com.tencent.devops.dispatch.pojo.DockerIpInfoVO
 import com.tencent.devops.dispatch.pojo.DockerIpListPage
+import com.tencent.devops.dispatch.pojo.DockerIpUpdateVO
 import com.tencent.devops.dispatch.service.DispatchDockerService
 
 @RestResource
@@ -25,12 +26,16 @@ class OPDispatchDockerResourceImpl constructor(
         return Result(dispatchDockerService.create(userId, dockerIpInfoVOs))
     }
 
-    override fun updateDispatchDocker(userId: String, dockerIpInfoId: Long, dockerIpInfoVO: DockerIpInfoVO): Result<Boolean> {
-        return Result(dispatchDockerService.update(userId, dockerIpInfoId, dockerIpInfoVO))
+    override fun updateDispatchDocker(userId: String, dockerIp: String, dockerIpUpdateVO: DockerIpUpdateVO): Result<Boolean> {
+        return Result(dispatchDockerService.update(userId, dockerIp, dockerIpUpdateVO))
     }
 
-    override fun deleteDispatchDocker(userId: String, dockerIpInfoId: Long): Result<Boolean> {
-        return Result(dispatchDockerService.delete(userId, dockerIpInfoId))
+    override fun updateAllDispatchDockerEnable(userId: String): Result<Boolean> {
+        return Result(dispatchDockerService.updateAllDispatchDockerEnable(userId))
+    }
+
+    override fun deleteDispatchDocker(userId: String, dockerIp: String): Result<Boolean> {
+        return Result(dispatchDockerService.delete(userId, dockerIp))
     }
 
     override fun createDockerHostLoadConfig(
