@@ -18,7 +18,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 ]]
 
 config = {
-  evn = "__BKCI_ENV__",
+  env = "__BKCI_ENV__",
   static_dir = "__INSTALL_PATH__/__MODULE__/frontend",
   static_dir_gray = "__INSTALL_PATH__/__MODULE__/frontend-gray",
   docs_dir = "__INSTALL_PATH__/__MODULE__/docs",
@@ -45,7 +45,29 @@ config = {
   },
   ns_gray = {
     ip = {
+      "__BKCI_CONSUL_GRAY_IP__"
+    },
+    port = __BKCI_CONSUL_DNS_PORT__,
+    http_port = __BKCI_CONSUL_PORT__,
+    domain = "__BKCI_CONSUL_DOMAIN__",
+    tag = "__BKCI_CONSUL_TAG__",
+    suffix = "-__BKCI_CONSUL_TAG__",
+    nodes_url = "/v1/catalog/nodes"
+  },
+  ns_devnet = {
+    ip = {
       "127.0.0.1"
+    },
+    port = __BKCI_CONSUL_DNS_PORT__,
+    http_port = __BKCI_CONSUL_PORT__,
+    domain = "__BKCI_CONSUL_DOMAIN__",
+    tag = "__BKCI_CONSUL_TAG__",
+    suffix = "-__BKCI_CONSUL_TAG__",
+    nodes_url = "/v1/catalog/nodes"
+  },
+  ns_devnet_gray = {
+    ip = {
+      "__BKCI_CONSUL_DEVNET_GRAY_IP__"
     },
     port = __BKCI_CONSUL_DNS_PORT__,
     http_port = __BKCI_CONSUL_PORT__,
