@@ -26,6 +26,8 @@
 
 package com.tencent.devops.worker.common.heartbeat
 
+import com.tencent.devops.common.api.exception.RemoteServiceException
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.worker.common.service.ProcessService
 import org.slf4j.LoggerFactory
 import java.util.concurrent.Executors
@@ -54,6 +56,9 @@ object Heartbeat {
                     failCnt = 0
                 } catch (e: Exception) {
                     logger.warn("Fail to do the heartbeat", e)
+                    if (e is RemoteServiceException) {
+                        handleRemoteServiceException(e)
+                    }
                     failCnt++
                     if (failCnt >= EXIT_AFTER_FAILURE) {
                         logger.error("Heartbeat has been failed for $failCnt times, worker exit")
@@ -62,6 +67,27 @@ object Heartbeat {
                 }
             }
         }, 10, 10, TimeUnit.SECONDS)
+    }
+
+    private fun handleRemoteServiceException(e: RemoteServiceException) {
+        if (e.httpStatus == 500) {
+            val responseContent = e.responseContent
+            if (responseContent != null) {
+                if (responseContent.startsWith("{") && responseContent.endsWith("}")) {
+                    try {
+                        val responseMap = JsonUtil.toMap(responseContent)
+                        val errorCode = responseMap["errorCode"]
+                        // 流水线构建结束则正常结束进程，不再重试
+                        if (errorCode == "2101182") {
+                            logger.error("build end, worker exit")
+                            exitProcess(0)
+                        }
+                    } catch (t: Throwable) {
+                        logger.warn("responseContent covert map fail", e)
+                    }
+                }
+            }
+        }
     }
 
     @Synchronized
