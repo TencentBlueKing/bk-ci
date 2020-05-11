@@ -36,7 +36,7 @@ import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.dao.atom.MarketAtomDao
 import com.tencent.devops.store.dao.atom.MarketAtomEnvInfoDao
 import com.tencent.devops.store.dao.common.StoreMemberDao
-import com.tencent.devops.store.pojo.atom.AtomEnvRequest
+import com.tencent.devops.store.pojo.atom.AtomPkgInfoUpdateRequest
 import com.tencent.devops.store.pojo.atom.GetAtomConfigResult
 import com.tencent.devops.store.pojo.common.TASK_JSON_NAME
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
@@ -44,6 +44,7 @@ import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.atom.MarketAtomArchiveService
 import com.tencent.devops.store.service.atom.MarketAtomCommonService
 import org.jooq.DSLContext
+import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -147,9 +148,19 @@ class MarketAtomArchiveServiceImpl : MarketAtomArchiveService {
         }
     }
 
-    override fun updateAtomEnv(userId: String, atomId: String, atomEnvRequest: AtomEnvRequest): Result<Boolean> {
-        logger.info("updateAtomEnv userId is :$userId,atomId is :$atomId,atomEnvRequest is :$atomEnvRequest")
-        marketAtomEnvInfoDao.updateMarketAtomEnvInfo(dslContext, atomId, atomEnvRequest)
+    override fun updateAtomPkgInfo(userId: String, atomId: String, atomPkgInfoUpdateRequest: AtomPkgInfoUpdateRequest): Result<Boolean> {
+        logger.info("updateAtomEnv userId is :$userId,atomId is :$atomId,atomPkgInfoUpdateRequest is :$atomPkgInfoUpdateRequest")
+        val taskDataMap = atomPkgInfoUpdateRequest.taskDataMap
+        val propsMap = mutableMapOf<String, Any?>()
+        propsMap["inputGroups"] = taskDataMap["inputGroups"]
+        propsMap["input"] = taskDataMap["input"]
+        propsMap["output"] = taskDataMap["output"]
+        dslContext.transaction { t ->
+            val context = DSL.using(t)
+            val props = JsonUtil.toJson(propsMap)
+            marketAtomDao.updateMarketAtomProps(context, atomId, props, userId)
+            marketAtomEnvInfoDao.updateMarketAtomEnvInfo(dslContext, atomId, atomPkgInfoUpdateRequest.atomEnvRequest)
+        }
         return Result(true)
     }
 }

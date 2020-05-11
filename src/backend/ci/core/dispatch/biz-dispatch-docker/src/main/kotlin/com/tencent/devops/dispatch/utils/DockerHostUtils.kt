@@ -31,7 +31,9 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.dispatch.common.Constants
+import com.tencent.devops.dispatch.dao.PipelineDockerBuildDao
 import com.tencent.devops.dispatch.dao.PipelineDockerHostDao
 import com.tencent.devops.dispatch.dao.PipelineDockerIPInfoDao
 import com.tencent.devops.dispatch.dao.PipelineDockerPoolDao
@@ -56,15 +58,18 @@ class DockerHostUtils @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val objectMapper: ObjectMapper,
     private val redisUtils: RedisUtils,
+    private val gray: Gray,
     private val pipelineDockerIpInfoDao: PipelineDockerIPInfoDao,
     private val pipelineDockerHostDao: PipelineDockerHostDao,
     private val pipelineDockerPoolDao: PipelineDockerPoolDao,
     private val pipelineDockerTaskDriftDao: PipelineDockerTaskDriftDao,
     private val pipelineDockerTaskSimpleDao: PipelineDockerTaskSimpleDao,
+    private val pipelineDockerBuildDao: PipelineDockerBuildDao,
     private val dslContext: DSLContext
 ) {
     companion object {
         private const val LOAD_CONFIG_KEY = "dockerhost-load-config"
+        private const val DOCKER_DRIFT_THRESHOLD_KEY = "docker-drift-threshold-spKyQ86qdYhAkDDR"
         private const val DOCKER_IP_COUNT_MAX = 8
         private const val BUILD_POOL_SIZE = 100 // 单个流水线可同时执行的任务数量
 
@@ -75,11 +80,7 @@ class DockerHostUtils @Autowired constructor(
     val idcProxy: String? = null
 
     fun getAvailableDockerIpWithSpecialIps(projectId: String, pipelineId: String, vmSeqId: String, specialIpSet: Set<String>, unAvailableIpList: Set<String> = setOf()): Pair<String, Int> {
-        var grayEnv = false
-        val gray = System.getProperty("gray.project", "none")
-        if (gray == "grayproject") {
-            grayEnv = true
-        }
+        val grayEnv = gray.isGray()
 
         var dockerPair = Pair("", 0)
         // 获取负载配置
@@ -122,7 +123,6 @@ class DockerHostUtils @Autowired constructor(
                 specialIpSet = specialIpSet
             )
         if (firstDockerIpList.isNotEmpty) {
-            logger.info("$projectId|$pipelineId|$vmSeqId first docker[0] ====> ${firstDockerIpList[0]}")
             dockerPair = selectAvailableDockerIp(firstDockerIpList, unAvailableIpList)
         } else {
             // 没有满足1的，优先选择磁盘空间，内存使用率均低于80%的
@@ -138,7 +138,6 @@ class DockerHostUtils @Autowired constructor(
                     specialIpSet = specialIpSet
                 )
             if (secondDockerIpList.isNotEmpty) {
-                logger.info("$projectId|$pipelineId|$vmSeqId second docker[0] ====> ${secondDockerIpList[0]}")
                 dockerPair = selectAvailableDockerIp(secondDockerIpList, unAvailableIpList)
             } else {
                 // 通过2依旧没有找到满足的构建机，选择内存使用率小于80%的
@@ -154,7 +153,6 @@ class DockerHostUtils @Autowired constructor(
                         specialIpSet = specialIpSet
                     )
                 if (thirdDockerIpList.isNotEmpty) {
-                    logger.info("$projectId|$pipelineId|$vmSeqId third docker[0] ====> ${thirdDockerIpList[0]}")
                     dockerPair = selectAvailableDockerIp(thirdDockerIpList, unAvailableIpList)
                 }
             }
@@ -181,9 +179,9 @@ class DockerHostUtils @Autowired constructor(
         pipelineId: String,
         vmSeq: String
     ): Int {
-        val lock = RedisLock(redisOperation, "DISPATCH_DEVCLOUD_LOCK_CONTAINER_${pipelineId}_$vmSeq", 30)
+        val lock = RedisLock(redisOperation, "DISPATCH_DOCKER_LOCK_CONTAINER_${pipelineId}_$vmSeq", 30)
         try {
-            lock.tryLock()
+            lock.lock()
             for (i in 1..BUILD_POOL_SIZE) {
                 logger.info("poolNo is $i")
                 val poolNo = pipelineDockerPoolDao.getPoolNoStatus(dslContext, pipelineId, vmSeq, i)
@@ -216,11 +214,29 @@ class DockerHostUtils @Autowired constructor(
 
     fun updateTaskSimpleAndRecordDriftLog(
         pipelineAgentStartupEvent: PipelineAgentStartupEvent,
-        specialIpSet: Set<String>,
-        oldIp: String,
+        containerId: String,
         newIp: String,
-        ipInfo: String
+        driftIpInfo: String
     ) {
+        val taskHistory = pipelineDockerTaskSimpleDao.getByPipelineIdAndVMSeq(
+            dslContext = dslContext,
+            pipelineId = pipelineAgentStartupEvent.pipelineId,
+            vmSeq = pipelineAgentStartupEvent.vmSeqId
+        )
+
+        if (taskHistory != null && taskHistory.dockerIp != newIp) {
+            // 记录漂移日志
+            pipelineDockerTaskDriftDao.create(
+                dslContext,
+                pipelineAgentStartupEvent.pipelineId,
+                pipelineAgentStartupEvent.buildId,
+                pipelineAgentStartupEvent.vmSeqId,
+                taskHistory.dockerIp,
+                newIp,
+                driftIpInfo
+            )
+        }
+
         pipelineDockerTaskSimpleDao.updateDockerIp(
             dslContext,
             pipelineAgentStartupEvent.pipelineId,
@@ -228,15 +244,11 @@ class DockerHostUtils @Autowired constructor(
             newIp
         )
 
-        // 记录漂移日志
-        pipelineDockerTaskDriftDao.create(
-            dslContext,
-            pipelineAgentStartupEvent.pipelineId,
-            pipelineAgentStartupEvent.buildId,
-            pipelineAgentStartupEvent.vmSeqId,
-            oldIp,
-            newIp,
-            ipInfo
+        pipelineDockerBuildDao.updateContainerId(
+            dslContext = dslContext,
+            buildId = pipelineAgentStartupEvent.buildId,
+            vmSeqId = Integer.valueOf(pipelineAgentStartupEvent.vmSeqId),
+            containerId = containerId
         )
     }
 
@@ -249,12 +261,13 @@ class DockerHostUtils @Autowired constructor(
         val dockerIp = dockerIpInfo.dockerIp
 
         // 同一条流水线并发构建时，当并发数超过5，无视负载，直接下发同一个IP（避免同一条流水线并发量太大，影响其他流水线构建）
-        if (poolNo > 5 && dockerIpInfo.enable) {
+        if (poolNo > 5 && dockerIpInfo.enable && (dockerIpInfo.grayEnv == gray.isGray())) {
             return Triple(dockerIp, dockerIpInfo.dockerHostPort, "")
         }
 
-        // 查看当前IP负载情况，当前IP不可用或者负载超额或者设置为专机独享，重新选择构建机
-        if (!dockerIpInfo.enable || dockerIpInfo.diskLoad > 90 || dockerIpInfo.memLoad > 95 || dockerIpInfo.specialOn) {
+        // 查看当前IP负载情况，当前IP不可用或者负载超额或者设置为专机独享或者是否灰度已被切换，重新选择构建机
+        val threshold = getDockerDriftThreshold()
+        if (!dockerIpInfo.enable || dockerIpInfo.diskLoad > threshold || dockerIpInfo.memLoad > threshold || dockerIpInfo.specialOn || (dockerIpInfo.grayEnv != gray.isGray())) {
             val pair = getAvailableDockerIpWithSpecialIps(
                 event.projectId,
                 event.pipelineId,
@@ -265,7 +278,7 @@ class DockerHostUtils @Autowired constructor(
         }
 
         // IP当前可用，还要检测当前IP限流是否已达上限
-        val dockerIpCount = redisOperation.get("${Constants.DOCKER_IP_KEY_PREFIX}$dockerIp")
+        val dockerIpCount = redisOperation.get("${Constants.DOCKER_IP_COUNT_KEY_PREFIX}$dockerIp")
         logger.info("${event.projectId}|${event.pipelineId}|${event.vmSeqId} $dockerIp dockerIpCount: $dockerIpCount")
         return if (dockerIpCount != null && dockerIpCount.toInt() > DOCKER_IP_COUNT_MAX) {
             val pair = getAvailableDockerIpWithSpecialIps(event.projectId, event.pipelineId, event.vmSeqId, specialIpSet, setOf(dockerIp))
@@ -331,6 +344,19 @@ class DockerHostUtils @Autowired constructor(
         )
     }
 
+    fun updateDockerDriftThreshold(threshold: Int) {
+        redisOperation.set(DOCKER_DRIFT_THRESHOLD_KEY, threshold.toString())
+    }
+
+    fun getDockerDriftThreshold(): Int {
+        val thresholdStr = redisOperation.get(DOCKER_DRIFT_THRESHOLD_KEY)
+        return if (thresholdStr != null && thresholdStr.isNotEmpty()) {
+            thresholdStr.toInt()
+        } else {
+            90
+        }
+    }
+
     private fun selectAvailableDockerIp(
         dockerIpList: List<TDispatchPipelineDockerIpInfoRecord>,
         unAvailableIpList: Set<String> = setOf()
@@ -365,7 +391,7 @@ class DockerHostUtils @Autowired constructor(
 
     private fun exceedIpLimiting(dockerIp: String): Boolean {
         // 查看当前IP是否已达限流
-        val dockerIpCount = redisOperation.get("${Constants.DOCKER_IP_KEY_PREFIX}$dockerIp")
+        val dockerIpCount = redisOperation.get("${Constants.DOCKER_IP_COUNT_KEY_PREFIX}$dockerIp")
         logger.info("$dockerIp dockerIpCount: $dockerIpCount")
         if (dockerIpCount != null && dockerIpCount.toInt() > DOCKER_IP_COUNT_MAX) {
             return true

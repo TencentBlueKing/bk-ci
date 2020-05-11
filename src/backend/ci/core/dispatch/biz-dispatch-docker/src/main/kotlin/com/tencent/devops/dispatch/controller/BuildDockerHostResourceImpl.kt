@@ -34,6 +34,7 @@ import com.tencent.devops.dispatch.api.builds.BuildDockerHostResource
 import com.tencent.devops.dispatch.pojo.ContainerInfo
 import com.tencent.devops.dispatch.pojo.DockerHostBuildInfo
 import com.tencent.devops.dispatch.pojo.DockerHostInfo
+import com.tencent.devops.dispatch.pojo.DockerIpInfoVO
 import com.tencent.devops.dispatch.service.DispatchDockerService
 import com.tencent.devops.dispatch.service.DockerHostBuildService
 import com.tencent.devops.dispatch.service.DockerHostDebugService
@@ -102,7 +103,7 @@ class BuildDockerHostResourceImpl @Autowired constructor(
         return dockerHostBuildService.getPublicImage()
     }
 
-    override fun refresh(dockerIp: String, dockerHostPort: String): Result<Boolean> {
-        return Result(dispatchDockerService.updateDockerIpEnable("dockerhost", dockerIp, dockerHostPort))
+    override fun refresh(dockerIp: String, dockerIpInfoVO: DockerIpInfoVO): Result<Boolean> {
+        return Result(dispatchDockerService.updateDockerIpLoad("dockerhost", dockerIp, dockerIpInfoVO))
     }
 }
