@@ -104,7 +104,7 @@ else
   end
 end 
 
-local query_subdomain = config.ns.tag .. "." .. service_name .. config.ns.suffix .. ".service." .. ns_config.domain
+local query_subdomain = ns_config.tag .. "." .. service_name .. ns_config.suffix .. ".service." .. ns_config.domain
 
 
 
