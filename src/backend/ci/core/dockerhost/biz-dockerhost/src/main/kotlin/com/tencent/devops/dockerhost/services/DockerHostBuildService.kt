@@ -742,9 +742,6 @@ class DockerHostBuildService(
             val sdf = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'")
             sdf.timeZone = TimeZone.getTimeZone("UTC")
 
-            val sdf2 = SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
-            sdf2.timeZone = TimeZone.getTimeZone("GMT+8")
-
             val date = sdf.parse(utcTimeLocal)
             val finishTimestamp = date.time
             val nowTimestamp = System.currentTimeMillis()
