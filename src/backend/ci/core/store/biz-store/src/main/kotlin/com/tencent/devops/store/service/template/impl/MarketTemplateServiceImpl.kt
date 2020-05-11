@@ -145,7 +145,7 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
         }
     }
 
-    private fun doList(
+    private fun getMarketTemplateList(
         userId: String,
         userDeptList: List<Int>,
         name: String?,
@@ -258,7 +258,7 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
         val labelInfoList = mutableListOf<MarketMainItemLabel>()
         labelInfoList.add(MarketMainItemLabel(LATEST, MessageCodeUtil.getCodeLanMessage(LATEST)))
         futureList.add(
-            doList(
+            getMarketTemplateList(
                 userId = userId, userDeptList = userDeptList, name = null, classifyCode = null, category = null,
                 labelCode = null, score = null, rdType = null, sortType = MarketTemplateSortTypeEnum.UPDATE_TIME,
                 desc = true, page = page, pageSize = pageSize
@@ -266,7 +266,7 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
         )
         labelInfoList.add(MarketMainItemLabel(HOTTEST, MessageCodeUtil.getCodeLanMessage(HOTTEST)))
         futureList.add(
-            doList(
+            getMarketTemplateList(
                 userId = userId, userDeptList = userDeptList, name = null, classifyCode = null, category = null,
                 labelCode = null, score = null, rdType = null, sortType = MarketTemplateSortTypeEnum.DOWNLOAD_COUNT,
                 desc = true, page = page, pageSize = pageSize
@@ -281,7 +281,7 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
             )
             labelInfoList.add(MarketMainItemLabel(classifyCode, classifyLanName))
             futureList.add(
-                doList(
+                getMarketTemplateList(
                     userId = userId,
                     userDeptList = userDeptList,
                     name = null,
@@ -329,7 +329,7 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
         // 获取用户组织架构
         val userDeptList = getUserDeptList(userId)
         logger.info("list userDeptList is:$userDeptList")
-        return doList(
+        return getMarketTemplateList(
             userId = userId,
             userDeptList = userDeptList,
             name = name,
