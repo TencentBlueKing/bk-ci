@@ -24,96 +24,34 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.artifactory.mq
+package com.tencent.devops.artifactory.service
 
 import com.tencent.devops.artifactory.Constants
 import com.tencent.devops.artifactory.pojo.FileInfo
 import com.tencent.devops.artifactory.pojo.Property
-import com.tencent.devops.artifactory.service.ArtifactoryInfoService
 import com.tencent.devops.artifactory.service.artifactory.ArtifactorySearchService
 import com.tencent.devops.artifactory.service.bkrepo.BkRepoSearchService
-import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
-import com.tencent.devops.common.event.listener.pipeline.BaseListener
-import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.RepoGray
-import com.tencent.devops.process.api.service.ServicePipelineRuntimeResource
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Component
+import org.springframework.context.annotation.Primary
+import org.springframework.stereotype.Service
 
-@Component
-class PipelineBuildExtListener @Autowired constructor(
-    pipelineEventDispatcher: PipelineEventDispatcher,
+@Service
+@Primary
+class TencentPipelineBuildExtService constructor(
     private val artifactoryInfoService: ArtifactoryInfoService,
     private val artifactorySearchService: ArtifactorySearchService,
     private val bkRepoSearchService: BkRepoSearchService,
     private val repoGray: RepoGray,
-    private val redisOperation: RedisOperation,
-    private val client: Client
-) : BaseListener<PipelineBuildFinishBroadCastEvent>(pipelineEventDispatcher) {
+    private val redisOperation: RedisOperation
+) : PipelineBuildExtService {
 
     companion object {
         private val logger = LoggerFactory.getLogger(this::class.java)!!
     }
 
-    override fun run(event: PipelineBuildFinishBroadCastEvent) {
-
-        val projectId = event.projectId
-        val buildId = event.buildId
-        val pipelineId = event.pipelineId
-
-        val startTime = System.currentTimeMillis()
-        val artifactList: List<FileInfo> = try {
-            getArtifactList(projectId, pipelineId, buildId)
-        } catch (e: Throwable) {
-            logger.error("[$pipelineId]|getArtifactList-$buildId exception:", e)
-            emptyList()
-        }
-        logCostCall(startTime, buildId)
-        logger.info("[$pipelineId]|getArtifactList-$buildId artifact: ${JsonUtil.toJson(artifactList)}")
-
-        try {
-            if (artifactList.isEmpty()) {
-                return
-            }
-
-            val result = client.get(ServicePipelineRuntimeResource::class).updateArtifactList(
-                userId = event.userId,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                buildId = buildId,
-                artifactoryFileList = artifactList
-            )
-
-            logger.info("[$buildId]|update artifact result: ${result.status} ${result.message}")
-
-            if (result.isOk() && result.data != null) {
-                synArtifactoryInfo(
-                    userId = event.userId,
-                    artifactList = artifactList as List<FileInfo>,
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    buildId = buildId,
-                    buildNum = result.data!!.buildNum ?: 0
-                )
-            }
-        } catch (e: Exception) {
-            logger.error("[$buildId| update artifact list fail: ${e.localizedMessage}", e)
-            // rollback
-            client.get(ServicePipelineRuntimeResource::class).updateArtifactList(
-                userId = event.userId,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                buildId = buildId,
-                artifactoryFileList = emptyList()
-            )
-        }
-    }
-
-    fun getArtifactList(projectId: String, pipelineId: String, buildId: String): List<FileInfo> {
+    override fun getArtifactList(projectId: String, pipelineId: String, buildId: String): List<FileInfo> {
         val fileInfoList = mutableListOf<FileInfo>()
         fileInfoList.addAll(
             if (repoGray.isGray(projectId, redisOperation)) {
@@ -138,8 +76,7 @@ class PipelineBuildExtListener @Autowired constructor(
         return fileInfoList.sorted()
     }
 
-    // 备份apk，ipa信息
-    fun synArtifactoryInfo(
+    override fun synArtifactoryInfo(
         userId: String,
         artifactList: List<FileInfo>,
         projectId: String,
@@ -161,15 +98,6 @@ class PipelineBuildExtListener @Autowired constructor(
             }
         } catch (ex: Exception) {
             logger.warn("[$pipelineId]|[$buildId]|syn artifactory fail", ex)
-        }
-    }
-
-    fun logCostCall(startTime: Long, buildId: String) {
-        val cost = System.currentTimeMillis() - startTime
-        if (cost > 2000) {
-            logger.warn("$buildId - getArtifactList cost:$cost")
-        } else if (cost > 5000) {
-            logger.error("$buildId - getArtifactList cost:$cost")
         }
     }
 }
