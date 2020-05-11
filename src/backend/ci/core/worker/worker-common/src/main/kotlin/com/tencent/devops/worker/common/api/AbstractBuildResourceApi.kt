@@ -107,11 +107,12 @@ abstract class AbstractBuildResourceApi : WorkerRestApiSDK {
             writeTimeoutInSec = writeTimeoutInSec
         ).use { response ->
             if (!response.isSuccessful) {
+                val responseContent = response.body()?.string()
                 logger.warn(
                     "Fail to request($request) with code ${response.code()} ," +
-                        " message ${response.message()} and response (${response.body()?.string()})"
+                        " message ${response.message()} and response ($responseContent)"
                 )
-                throw RemoteServiceException(errorMessage)
+                throw RemoteServiceException(errorMessage, response.code(), responseContent)
             }
             return response.body()!!.string()
         }
