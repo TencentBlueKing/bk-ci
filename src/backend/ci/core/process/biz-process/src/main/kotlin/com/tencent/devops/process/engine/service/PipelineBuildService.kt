@@ -1892,7 +1892,7 @@ class PipelineBuildService(
         stageId: String,
         containerId: String
     ) {
-        PipelineTaskService.logger.info("executePauseBuild pipelineId[$pipelineId], buildId[$buildId] stageId[$stageId] containerId[$containerId] taskId[$taskId]")
+        logger.info("executePauseBuild pipelineId[$pipelineId], buildId[$buildId] stageId[$stageId] containerId[$containerId] taskId[$taskId]")
         // 修改任务状态位运行
         pipelineRuntimeService.updateTaskStatus(
             buildId = buildId,
