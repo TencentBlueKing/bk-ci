@@ -25,38 +25,17 @@
  */
 
 dependencies {
-    compile project(":core:process:plugin-load")
     compile project(":core:common:common-service")
     compile project(":core:common:common-web")
     compile project(":core:common:common-client")
-    compile project(":core:common:common-redis")
-    compile project(":core:common:common-archive")
-    compile project(":core:common:common-log")
-    compile project(":core:common:common-auth:common-auth-api")
     compile project(":core:common:common-db")
-    compile project(":core:common:common-websocket")
+    compile project(":core:common:common-auth:common-auth-api")
+    compile project(":core:common:common-scm")
 
-    compile project(":core:log:api-log")
-    compile project(":core:store:api-store")
-    compile project(":core:store:api-store-image")
-    compile project(":core:dispatch:api-dispatch")
-    compile project(":core:project:api-project")
-    compile project(":core:repository:api-repository")
-    compile project(":core:artifactory:api-artifactory")
-    compile project(":core:process:api-process")
-    compile project(":core:quality:api-quality")
-    compile project(":core:plugin:api-plugin")
-    compile project(":core:plugin:codecc-plugin:common-codecc")
-    compile project(":core:notify:api-notify")
-    compile project(":core:process:model-process")
-    compile project(":core:process:plugin-trigger")
     compile project(":core:audit:api-audit")
+    compile project(":core:audit:model-audit")
 
-    compile "com.zaxxer:HikariCP"
-    compile "mysql:mysql-connector-java"
-    compile "org.springframework.boot:spring-boot-starter-websocket"
-    compile group: 'javax.websocket', name: 'javax.websocket-api', version: '1.1'
-    compile "io.undertow:undertow-servlet"
-    compile "io.undertow:undertow-websockets-jsr"
-    testCompile project(":core:common:common-test")
+    compile "org.eclipse.jgit:org.eclipse.jgit:5.0.2.201807311906-r"
 }
+
+apply from: "$rootDir/task_deploy_to_maven.gradle"

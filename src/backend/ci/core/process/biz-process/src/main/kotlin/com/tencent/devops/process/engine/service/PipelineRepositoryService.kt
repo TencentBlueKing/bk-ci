@@ -49,14 +49,18 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeSVNWebHookTri
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.dao.PipelineSettingDao
+import com.tencent.devops.process.dao.PipelineSettingVersionDao
 import com.tencent.devops.process.engine.cfg.ModelContainerIdGenerator
 import com.tencent.devops.process.engine.cfg.ModelTaskIdGenerator
 import com.tencent.devops.process.engine.cfg.PipelineIdGenerator
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
+import com.tencent.devops.process.engine.dao.PipelineInfoVersionDao
 import com.tencent.devops.process.engine.dao.PipelineModelTaskDao
+import com.tencent.devops.process.engine.dao.PipelineModelTaskVersionDao
 import com.tencent.devops.process.engine.dao.PipelineResDao
+import com.tencent.devops.process.engine.dao.PipelineResVersionDao
 import com.tencent.devops.process.engine.dao.template.TemplatePipelineDao
 import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.engine.pojo.PipelineModelTask
@@ -89,9 +93,13 @@ class PipelineRepositoryService constructor(
     private val objectMapper: ObjectMapper,
     private val dslContext: DSLContext,
     private val pipelineInfoDao: PipelineInfoDao,
+    private val pipelineInfoVersionDao: PipelineInfoVersionDao,
     private val pipelineResDao: PipelineResDao,
+    private val pipelineResVersionDao: PipelineResVersionDao,
     private val pipelineModelTaskDao: PipelineModelTaskDao,
+    private val pipelineModelTaskVersionDao: PipelineModelTaskVersionDao,
     private val pipelineSettingDao: PipelineSettingDao,
+    private val pipelineSettingVersionDao: PipelineSettingVersionDao,
     private val pipelineBuildSummaryDao: PipelineBuildSummaryDao,
     private val pipelineJobMutexGroupService: PipelineJobMutexGroupService,
     private val modelCheckPlugin: ModelCheckPlugin,
@@ -409,7 +417,26 @@ class PipelineRepositoryService constructor(
                 canElementSkip = canElementSkip,
                 taskCount = taskCount
             )
+            pipelineInfoVersionDao.create(
+                dslContext = transactionContext,
+                pipelineId = pipelineId,
+                projectId = projectId,
+                version = version,
+                pipelineName = model.name,
+                userId = userId,
+                channelCode = channelCode,
+                manualStartup = canManualStartup,
+                canElementSkip = canElementSkip,
+                taskCount = taskCount
+            )
             pipelineResDao.create(
+                dslContext = transactionContext,
+                pipelineId = pipelineId,
+                creator = userId,
+                version = version,
+                model = model
+            )
+            pipelineResVersionDao.create(
                 dslContext = transactionContext,
                 pipelineId = pipelineId,
                 creator = userId,
@@ -441,10 +468,18 @@ class PipelineRepositoryService constructor(
                         desc = model.desc ?: ""
                     )
                 }
+                pipelineSettingVersionDao.insertNewSetting(
+                    dslContext = transactionContext,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    pipelineName = model.name,
+                    version = version
+                )
             }
             // 初始化流水线构建统计表
             pipelineBuildSummaryDao.create(dslContext, projectId, pipelineId, buildNo)
             pipelineModelTaskDao.batchSave(transactionContext, modelTasks)
+            pipelineModelTaskVersionDao.batchSave(transactionContext, modelTasks, version)
         }
 
         pipelineEventDispatcher.dispatch(
@@ -493,7 +528,26 @@ class PipelineRepositoryService constructor(
                 buildNo = buildNo,
                 taskCount = taskCount
             )
+            pipelineInfoVersionDao.create(
+                transactionContext,
+                pipelineId,
+                projectId,
+                version,
+                model.name,
+                userId,
+                channelCode,
+                canManualStartup,
+                canElementSkip,
+                taskCount
+            )
             pipelineResDao.create(
+                dslContext = transactionContext,
+                pipelineId = pipelineId,
+                creator = userId,
+                version = version,
+                model = model
+            )
+            pipelineResVersionDao.create(
                 dslContext = transactionContext,
                 pipelineId = pipelineId,
                 creator = userId,
@@ -506,6 +560,7 @@ class PipelineRepositoryService constructor(
                 pipelineId = pipelineId
             )
             pipelineModelTaskDao.batchSave(transactionContext, modelTasks)
+            pipelineModelTaskVersionDao.batchSave(transactionContext, modelTasks, version)
         }
 
         pipelineEventDispatcher.dispatch(
@@ -526,6 +581,15 @@ class PipelineRepositoryService constructor(
             )
         )
         return pipelineId
+    }
+
+    fun getPipelineInfoVersion(projectId: String?, pipelineId: String, version: Int, channelCode: ChannelCode? = null): PipelineInfo? {
+        val template = templatePipelineDao.get(dslContext, pipelineId)
+        val templateId = template?.templateId
+        return pipelineInfoVersionDao.convert(
+                pipelineInfoVersionDao.getPipelineInfo(dslContext, projectId, pipelineId, version, channelCode),
+                templateId
+        )
     }
 
     fun getPipelineInfo(projectId: String?, pipelineId: String, channelCode: ChannelCode? = null): PipelineInfo? {
