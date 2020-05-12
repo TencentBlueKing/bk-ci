@@ -26,6 +26,7 @@
 
 package com.tencent.devops.worker.common.heartbeat
 
+import com.tencent.devops.common.api.constant.HTTP_500
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.worker.common.service.ProcessService
@@ -70,7 +71,7 @@ object Heartbeat {
     }
 
     private fun handleRemoteServiceException(e: RemoteServiceException) {
-        if (e.httpStatus == 500) {
+        if (e.httpStatus == HTTP_500) {
             val responseContent = e.responseContent
             if (responseContent != null) {
                 if (responseContent.startsWith("{") && responseContent.endsWith("}")) {
