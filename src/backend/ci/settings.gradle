@@ -185,6 +185,11 @@ include ":core:websocket:biz-websocket"
 include ":core:websocket:biz-websocket-blueking"
 include ":core:websocket:boot-websocket"
 
+include ":core:openapi"
+include ":core:openapi:api-openapi"
+include ":core:openapi:biz-openapi"
+include ":core:openapi:boot-openapi"
+include ":core:openapi:model-openapi"
 
 //  ==================== tencent ============================================================
 include ":ext"
