@@ -42,33 +42,23 @@ class PipelineDockerTaskSimpleDao @Autowired constructor() {
         dockerIp: String
     ) {
         with(TDispatchPipelineDockerTaskSimple.T_DISPATCH_PIPELINE_DOCKER_TASK_SIMPLE) {
-            val preRecord = dslContext.selectFrom(this)
-                .where(PIPELINE_ID.eq(pipelineId))
-                .and(VM_SEQ.eq(vmSeq))
-                .fetchAny()
-            if (preRecord != null) {
-                dslContext.update(this)
-                    .set(DOCKER_IP, dockerIp)
-                    .set(GMT_MODIFIED, LocalDateTime.now())
-                    .where(PIPELINE_ID.eq(pipelineId))
-                    .and(VM_SEQ.eq(vmSeq))
-                    .execute()
-            } else {
-                dslContext.insertInto(
-                    this,
-                    PIPELINE_ID,
-                    VM_SEQ,
-                    DOCKER_IP,
-                    GMT_CREATE,
-                    GMT_MODIFIED
-                ).values(
-                    pipelineId,
-                    vmSeq,
-                    dockerIp,
-                    LocalDateTime.now(),
-                    LocalDateTime.now()
-                ).execute()
-            }
+            dslContext.insertInto(
+                this,
+                PIPELINE_ID,
+                VM_SEQ,
+                DOCKER_IP,
+                GMT_CREATE,
+                GMT_MODIFIED
+            ).values(
+                pipelineId,
+                vmSeq,
+                dockerIp,
+                LocalDateTime.now(),
+                LocalDateTime.now()
+            ).onDuplicateKeyUpdate()
+                .set(DOCKER_IP, dockerIp)
+                .set(GMT_MODIFIED, LocalDateTime.now())
+                .execute()
         }
     }
 
