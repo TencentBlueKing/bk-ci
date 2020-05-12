@@ -28,11 +28,9 @@ package com.tencent.devops.process.util
 
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.notify.enums.EnumEmailFormat
+import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
 import com.tencent.devops.notify.api.service.ServiceNotifyResource
-import com.tencent.devops.notify.pojo.EmailNotifyMessage
-import com.tencent.devops.notify.pojo.RtxNotifyMessage
-import com.tencent.devops.notify.pojo.SmsNotifyMessage
-import com.tencent.devops.notify.pojo.WechatNotifyMessage
+import com.tencent.devops.notify.pojo.*
 import com.tencent.devops.support.api.service.ServiceWechatWorkResource
 import com.tencent.devops.support.model.wechatwork.base.Receiver
 import com.tencent.devops.support.model.wechatwork.base.Text
@@ -126,6 +124,27 @@ object NotifyUtils {
         if (result.isNotOk() || result.data == null) {
             logger.warn("Fail to send the rtx message($message) because of ${result.message}")
         }
+    }
+
+    fun sendTemplateNotify(
+        client: Client,
+        users: MutableSet<String>,
+        templateCode: String,
+        notifyTypes: MutableSet<String>,
+        pipelineId: String,
+        mapData: Map<String, String>
+    ) {
+        val sendNotifyMessageTemplateRequest = SendNotifyMessageTemplateRequest(
+            templateCode = templateCode,
+            sender = "DevOps",
+            receivers = users,
+            notifyType = notifyTypes,
+            titleParams = mapData,
+            bodyParams = mapData
+        )
+        val sendNotifyResult = client.get(ServiceNotifyMessageTemplateResource::class)
+            .sendNotifyMessageByTemplate(sendNotifyMessageTemplateRequest)
+        logger.info("[$pipelineId]|sendTemplateNotify|sendNotifyMessageTemplateRequest=$sendNotifyMessageTemplateRequest|result=$sendNotifyResult")
     }
 
     fun sendWechatWorkGroup(
