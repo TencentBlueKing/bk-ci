@@ -26,12 +26,10 @@
 package com.tencent.devops.notify.api.service
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.notify.enums.NotifyTypeEnum
 import com.tencent.devops.notify.pojo.NotifyContext
 import com.tencent.devops.notify.pojo.NotifyMessageContextRequest
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import io.swagger.annotations.Api
-import io.swagger.annotations.ApiModelProperty
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
