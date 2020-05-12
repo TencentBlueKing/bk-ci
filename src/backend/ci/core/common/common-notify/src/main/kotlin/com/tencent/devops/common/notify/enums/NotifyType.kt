@@ -26,7 +26,7 @@
 
 package com.tencent.devops.common.notify.enums
 
-enum class NotifyTypeEnum {
+enum class NotifyType {
     RTX,
     EMAIL,
     WECHAT,

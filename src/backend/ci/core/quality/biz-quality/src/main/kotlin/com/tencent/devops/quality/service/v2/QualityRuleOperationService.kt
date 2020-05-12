@@ -26,7 +26,7 @@
 
 package com.tencent.devops.quality.service.v2
 
-import com.tencent.devops.common.web.mq.alert.NotifyType
+import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.model.quality.tables.records.TQualityRuleOperationRecord
 import com.tencent.devops.quality.dao.v2.QualityRuleOperationDao
 import org.jooq.DSLContext

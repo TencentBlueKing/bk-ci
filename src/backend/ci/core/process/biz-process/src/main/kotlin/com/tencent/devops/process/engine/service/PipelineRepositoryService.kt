@@ -32,7 +32,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.pojo.pipeline.PipelineModelAnalysisEvent
-import com.tencent.devops.common.notify.enums.NotifyTypeEnum
+import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.Stage
@@ -420,7 +420,7 @@ class PipelineRepositoryService constructor(
                 !model.instanceFromTemplate!!
             ) {
                 if (null == pipelineSettingDao.getSetting(transactionContext, pipelineId)) {
-                    var notifyTypes = "${NotifyTypeEnum.EMAIL.name},${NotifyTypeEnum.RTX.name}"
+                    var notifyTypes = "${NotifyType.EMAIL.name},${NotifyType.RTX.name}"
                     if (channelCode == ChannelCode.AM) {
                         // 研发商店创建的内置流水线默认不发送通知消息
                         notifyTypes = ""
