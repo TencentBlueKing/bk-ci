@@ -376,7 +376,9 @@ class UserBuildResourceImpl @Autowired constructor(private val buildService: Pip
         buildId: String,
         taskId: String,
         values: Map<String, Any>,
-        isContinue: Boolean
+        isContinue: Boolean,
+        stageId: String,
+        containerId: String
     ): Result<Boolean> {
         checkParam(userId, projectId, pipelineId)
         return Result(
@@ -387,7 +389,9 @@ class UserBuildResourceImpl @Autowired constructor(private val buildService: Pip
                 buildId = buildId,
                 isContinue = isContinue,
                 taskId = taskId,
-                inputParams = values
+                inputParams = values,
+                stageId = stageId,
+                containerId = containerId
             )
         )
     }

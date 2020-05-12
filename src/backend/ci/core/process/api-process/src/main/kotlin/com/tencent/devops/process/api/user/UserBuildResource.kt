@@ -493,6 +493,10 @@ interface UserBuildResource {
         @ApiParam("插件执行参数", required = true)
         values: Map<String, Any>,
         @ApiParam("执行类型", required = true)
-        isContinue: Boolean
+        isContinue: Boolean,
+        @ApiParam("stageId", required = true)
+        stageId: String,
+        @ApiParam("containerId", required = true)
+        containerId: String
     ): Result<Boolean>
 }
