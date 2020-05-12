@@ -166,7 +166,7 @@ object Runner {
                             } finally {
                                 LoggerService.finishTask()
                                 LoggerService.elementId = ""
-                            }
+                            }add
                         }
                         BuildTaskStatus.WAIT -> {
                             Thread.sleep(5000)

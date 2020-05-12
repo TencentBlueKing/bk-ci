@@ -30,8 +30,13 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.notify.enums.NotifyTypeEnum
 import com.tencent.devops.common.service.utils.HomeHostUtil
-import com.tencent.devops.notify.api.service.ServiceNotifyResource
+import com.tencent.devops.common.web.mq.alert.NotifyType
+import com.tencent.devops.notify.PIPELINE_QUALITY_END_NOTIFY_TEMPLATE
+import com.tencent.devops.notify.PIPELINE_QUALITY_AUDIT_NOTIFY_TEMPLATE
+import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
+import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.plugin.api.ServiceCodeccElementResource
 import com.tencent.devops.plugin.codecc.CodeccUtils
 import com.tencent.devops.process.api.service.ServicePipelineResource
@@ -47,14 +52,10 @@ import com.tencent.devops.quality.api.v2.pojo.response.QualityRuleMatchTask
 import com.tencent.devops.quality.constant.codeccToolUrlPathMap
 import com.tencent.devops.quality.pojo.RuleCheckResult
 import com.tencent.devops.quality.pojo.RuleCheckSingleResult
-import com.tencent.devops.quality.pojo.enum.NotifyType
 import com.tencent.devops.quality.pojo.enum.RuleInterceptResult
 import com.tencent.devops.quality.pojo.enum.RuleOperation
 import com.tencent.devops.quality.service.GroupService
-import com.tencent.devops.quality.util.EmailUtil
-import com.tencent.devops.quality.util.RtxUtil
 import com.tencent.devops.quality.util.ThresholdOperationUtil
-import com.tencent.devops.quality.util.WechatUtil
 import org.apache.commons.lang3.math.NumberUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -433,18 +434,50 @@ class QualityRuleCheckService @Autowired constructor(
         val time = createTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd hh:mm:ss"))
 
         // 获取通知用户集合
-        val notifyUserSet = auditNotifyUserList.toSet()
+        val notifyUserSet = auditNotifyUserList.toMutableSet()
 
         // 获取拦截列表
         // val interceptList = getInterceptList(interceptRecordList)
 
+        val messageResult = StringBuilder()
+        val emailResult = StringBuilder()
+        resultList.forEach { r ->
+            messageResult.append("拦截规则：${r.ruleName}\n")
+            messageResult.append("拦截指标：\n")
+            emailResult.append("拦截规则：${r.ruleName}<br>")
+            emailResult.append("拦截指标：<br>")
+            r.messagePairs.forEach {
+                messageResult.append(it.first + "\n")
+                emailResult.append(it.first + "<br>")
+            }
+            emailResult.append("<br>")
+        }
+
         // 推送消息
-        val rtxMessage = RtxUtil.makeAuditMessage(projectName, pipelineName, buildNo, time, resultList, url, notifyUserSet)
-        client.get(ServiceNotifyResource::class).sendRtxNotify(rtxMessage)
-        val wechatMessage = WechatUtil.makeAuditMessage(projectName, pipelineName, buildNo, time, resultList, url, notifyUserSet)
-        client.get(ServiceNotifyResource::class).sendWechatNotify(wechatMessage)
-        val emailMessage = EmailUtil.makeAuditMessage(projectName, pipelineName, buildNo, time, resultList, url, notifyUserSet)
-        client.get(ServiceNotifyResource::class).sendEmailNotify(emailMessage)
+        val sendNotifyMessageTemplateRequest = SendNotifyMessageTemplateRequest(
+            templateCode = PIPELINE_QUALITY_AUDIT_NOTIFY_TEMPLATE,
+            sender = "DevOps",
+            receivers = notifyUserSet,
+            cc = notifyUserSet,
+            titleParams = mapOf(
+                "projectName" to projectName,
+                "pipelineName" to pipelineName,
+                "buildNo" to buildNo
+            ),
+            bodyParams = mapOf(
+                "title" to "【质量红线拦截通知】你有一个流水线被拦截",
+                "projectName" to projectName,
+                "pipelineName" to pipelineName,
+                "buildNo" to buildNo,
+                "time" to time,
+                "result" to messageResult.toString(),
+                "emailResult" to emailResult.toString(),
+                "url" to url
+            )
+        )
+        val sendNotifyResult = client.get(ServiceNotifyMessageTemplateResource::class)
+            .sendNotifyMessageByTemplate(sendNotifyMessageTemplateRequest)
+        logger.info("[$buildNo]|sendAuditNotification|QualityRuleCheckService|result=$sendNotifyResult")
     }
 
     /**
@@ -478,16 +511,67 @@ class QualityRuleCheckService @Autowired constructor(
         endNotifyTypeList.forEach {
             when (it) {
                 NotifyType.RTX -> {
-                    val message = RtxUtil.makeEndMessage(projectName, pipelineName, buildNo, time, interceptList, url, notifyUserSet)
-                    client.get(ServiceNotifyResource::class).sendRtxNotify(message)
+                    val sendNotifyMessageTemplateRequest = SendNotifyMessageTemplateRequest(
+                        templateCode = PIPELINE_QUALITY_END_NOTIFY_TEMPLATE,
+                        sender = "DevOps",
+                        receivers = notifyUserSet,
+                        notifyTypeEnum = NotifyTypeEnum.RTX,
+                        titleParams = mapOf(),
+                        bodyParams = mapOf(
+                            "title" to "【质量红线拦截通知】你有一个流水线被拦截",
+                            "projectName" to projectName,
+                            "pipelineName" to pipelineName,
+                            "buildNo" to buildNo,
+                            "time" to time,
+                            "thresholdListString" to interceptList.joinToString("；"),
+                            "url" to url
+                        )
+                    )
+                    val sendNotifyResult = client.get(ServiceNotifyMessageTemplateResource::class)
+                        .sendNotifyMessageByTemplate(sendNotifyMessageTemplateRequest)
+                    logger.info("[$buildNo]|sendAuditNotification|QualityRuleCheckService|RTX|result=$sendNotifyResult")
                 }
                 NotifyType.WECHAT -> {
-                    val message = WechatUtil.makeEndMessage(projectName, pipelineName, buildNo, time, interceptList, url, notifyUserSet)
-                    client.get(ServiceNotifyResource::class).sendWechatNotify(message)
+                    val sendNotifyMessageTemplateRequest = SendNotifyMessageTemplateRequest(
+                        templateCode = PIPELINE_QUALITY_END_NOTIFY_TEMPLATE,
+                        sender = "DevOps",
+                        receivers = notifyUserSet,
+                        notifyTypeEnum = NotifyTypeEnum.WECHAT,
+                        titleParams = mapOf(),
+                        bodyParams = mapOf(
+                            "title" to "【质量红线拦截通知】你有一个流水线被拦截",
+                            "projectName" to projectName,
+                            "pipelineName" to pipelineName,
+                            "buildNo" to buildNo,
+                            "time" to time,
+                            "thresholdListString" to interceptList.joinToString("；"),
+                            "url" to url
+                        )
+                    )
+                    val sendNotifyResult = client.get(ServiceNotifyMessageTemplateResource::class)
+                        .sendNotifyMessageByTemplate(sendNotifyMessageTemplateRequest)
+                    logger.info("[$buildNo]|sendAuditNotification|QualityRuleCheckService|WECHAT|result=$sendNotifyResult")
                 }
                 NotifyType.EMAIL -> {
-                    val message = EmailUtil.makeEndMessage(projectName, pipelineName, buildNo, time, interceptList, url, notifyUserSet)
-                    client.get(ServiceNotifyResource::class).sendEmailNotify(message)
+                    val sendNotifyMessageTemplateRequest = SendNotifyMessageTemplateRequest(
+                        templateCode = PIPELINE_QUALITY_END_NOTIFY_TEMPLATE,
+                        sender = "DevOps",
+                        receivers = notifyUserSet,
+                        notifyTypeEnum = NotifyTypeEnum.EMAIL,
+                        titleParams = mapOf(),
+                        bodyParams = mapOf(
+                            "title" to "【质量红线拦截通知】你有一个流水线被拦截",
+                            "projectName" to projectName,
+                            "pipelineName" to pipelineName,
+                            "buildNo" to buildNo,
+                            "time" to time,
+                            "thresholdListString" to interceptList.joinToString("；"),
+                            "url" to url
+                        )
+                    )
+                    val sendNotifyResult = client.get(ServiceNotifyMessageTemplateResource::class)
+                        .sendNotifyMessageByTemplate(sendNotifyMessageTemplateRequest)
+                    logger.info("[$buildNo]|sendAuditNotification|QualityRuleCheckService|EMAIL|result=$sendNotifyResult")
                 }
             }
         }
