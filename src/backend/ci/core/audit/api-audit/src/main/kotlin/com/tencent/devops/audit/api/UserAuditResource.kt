@@ -24,74 +24,61 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.api.user
+package com.tencent.devops.audit.api
 
-import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
-import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.audit.api.pojo.AuditInfo
+import com.tencent.devops.audit.api.pojo.AuditPage
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.process.pojo.setting.PipelineSetting
-import com.tencent.devops.process.pojo.setting.PipelineSettingVersion
+
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
-import javax.ws.rs.HeaderParam
-import javax.ws.rs.POST
 import javax.ws.rs.Path
+import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["USER_PIPELINE_SETTING"], description = "用户-流水线设置")
-@Path("/user/setting")
+@Api(tags = ["USER_AUDIT"], description = "用户-审计")
+@Path("/user/audit")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface UserPipelineSettingResource {
+interface UserAuditResource {
 
-    @ApiOperation("保存流水线设置")
-    @POST
-    // @Path("/")
-    @Path("/save")
-    fun saveSetting(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam(value = "流水线设置", required = true)
-        setting: PipelineSetting
-    ): Result<String>
-
-    @ApiOperation("获取流水线设置")
+    @ApiOperation("审计列表")
     @GET
-    // @Path("/")
-    @Path("/get")
-    fun getSetting(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
+    @Path("/{projectId}/{resourceType}/")
+    fun list(
+        @ApiParam(value = "用户ID", required = false)
+        @QueryParam("userId")
+        userId: String?,
         @ApiParam("项目ID", required = true)
-        @QueryParam("projectId")
+        @PathParam("projectId")
         projectId: String,
-        @ApiParam("流水线id")
-        @QueryParam("pipelineId")
-        pipelineId: String
-    ): Result<PipelineSetting>
+        @ApiParam("资源类型", required = true)
+        @PathParam("resourceType")
+        resourceType: String,
+        @ApiParam("状态", required = false)
+        @QueryParam("status")
+        status: String?,
+        @ApiParam("按流水线名称过滤", required = false)
+        @QueryParam("resourceName")
+        resourceName: String?,
+        @ApiParam("开始时间", required = false)
+        @QueryParam("startTime")
+        startTime: String?,
+        @ApiParam("结束时间", required = false)
+        @QueryParam("endTime")
+        endTime: String?,
+        @ApiParam("第几页", required = false, defaultValue = "1")
+        @QueryParam("page")
+        page: Int?,
+        @ApiParam("每页多少条", required = false, defaultValue = "20")
+        @QueryParam("pageSize")
+        pageSize: Int?
+    ): Result<AuditPage<AuditInfo>>
 
-    @ApiOperation("获取流水线版本设置")
-    @GET
-    @Path("/get/version")
-    fun getSettingVersion(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam("项目ID", required = true)
-        @QueryParam("projectId")
-        projectId: String,
-        @ApiParam("流水线id")
-        @QueryParam("pipelineId")
-        pipelineId: String,
-        @ApiParam("流水线编排版本", required = true)
-        @QueryParam("version")
-        version: Int
-    ): Result<PipelineSettingVersion>
+
 }

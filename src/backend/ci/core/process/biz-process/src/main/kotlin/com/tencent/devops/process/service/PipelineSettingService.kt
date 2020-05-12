@@ -34,16 +34,21 @@ import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatch
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.event.PipelineSettingChangeEvent
 import com.tencent.devops.model.process.tables.TPipelineSetting
+import com.tencent.devops.model.process.tables.TPipelineSettingVersion
 import com.tencent.devops.model.process.tables.records.TPipelineSettingRecord
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.dao.PipelineSettingDao
+import com.tencent.devops.process.dao.PipelineSettingVersionDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
+import com.tencent.devops.process.engine.dao.PipelineInfoVersionDao
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.pipeline.PipelineSubscriptionType
 import com.tencent.devops.process.pojo.setting.PipelineRunLockType
 import com.tencent.devops.process.pojo.setting.PipelineSetting
+import com.tencent.devops.process.pojo.setting.PipelineSettingVersion
 import com.tencent.devops.process.pojo.setting.Subscription
 import com.tencent.devops.process.service.label.PipelineGroupService
+import com.tencent.devops.process.service.label.PipelineGroupVersionService
 import com.tencent.devops.process.util.DateTimeUtils
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
@@ -54,9 +59,12 @@ class PipelineSettingService @Autowired constructor(
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val dslContext: DSLContext,
     private val pipelineSettingDao: PipelineSettingDao,
+    private val pipelineSettingVersionDao: PipelineSettingVersionDao,
     private val pipelinePermissionService: PipelinePermissionService,
     private val pipelineGroupService: PipelineGroupService,
+    private val pipelineGroupVersionService: PipelineGroupVersionService,
     private val pipelineInfoDao: PipelineInfoDao,
+    private val pipelineInfoVersionDao: PipelineInfoVersionDao,
     private val client: Client
 ) {
     fun saveSetting(userId: String, setting: PipelineSetting, checkPermission: Boolean = true): String {
@@ -71,8 +79,10 @@ class PipelineSettingService @Autowired constructor(
         val isExist = isPipelineExist(setting.projectId, setting.pipelineId, setting.pipelineName)
         if (isExist) throw PipelineAlreadyExistException("流水线(${setting.pipelineName})已经存在")
         pipelineGroupService.updatePipelineLabel(userId, setting.pipelineId, setting.labels)
-        pipelineInfoDao.update(dslContext, setting.pipelineId, userId, false, setting.pipelineName, setting.desc)
+        val version = pipelineInfoDao.update(dslContext, setting.pipelineId, userId, false, setting.pipelineName, setting.desc)
+        pipelineInfoVersionDao.update(dslContext, setting.pipelineId, userId, false, setting.pipelineName, setting.desc)
         val id = pipelineSettingDao.saveSetting(dslContext, setting).toString()
+        pipelineSettingVersionDao.saveSetting(dslContext, setting, version).toString()
         if (checkPermission) {
             pipelinePermissionService.modifyResource(setting.projectId, setting.pipelineId, setting.pipelineName)
         }
@@ -153,6 +163,76 @@ class PipelineSettingService @Autowired constructor(
                 Subscription(),
                 Subscription(),
                 labels
+            )
+        }
+    }
+
+    fun userGetSettingVersion(
+            userId: String,
+            projectId: String,
+            pipelineId: String,
+            version: Int,
+            channelCode: ChannelCode = ChannelCode.BS
+    ): PipelineSettingVersion {
+        val setting = pipelineSettingVersionDao.getSetting(dslContext, pipelineId, version)
+        val groups = pipelineGroupVersionService.getGroups(userId, projectId, pipelineId)
+        val labels = ArrayList<String>()
+        groups.forEach {
+            labels.addAll(it.labels)
+        }
+        return if (setting != null) {
+            setting.map {
+                with(TPipelineSettingVersion.T_PIPELINE_SETTING_VERSION) {
+                    val successType = it.get(SUCCESS_TYPE).split(",").filter { i -> i.isNotBlank() }
+                            .map { type -> PipelineSubscriptionType.valueOf(type) }.toSet()
+                    val failType = it.get(FAIL_TYPE).split(",").filter { i -> i.isNotBlank() }
+                            .map { type -> PipelineSubscriptionType.valueOf(type) }.toSet()
+                    PipelineSettingVersion(
+                            projectId,
+                            pipelineId,
+                            it.get(NAME),
+                            it.get(DESC),
+                            PipelineRunLockType.valueOf(it.get(RUN_LOCK_TYPE)),
+                            Subscription(
+                                    successType,
+                                    it.get(SUCCESS_GROUP).split(",").toSet(),
+                                    it.get(SUCCESS_RECEIVER),
+                                    it.get(SUCCESS_WECHAT_GROUP_FLAG),
+                                    it.get(SUCCESS_WECHAT_GROUP),
+                                    it.get(SUCCESS_WECHAT_GROUP_MARKDOWN_FLAG),
+                                    it.get(SUCCESS_DETAIL_FLAG),
+                                    it.get(SUCCESS_CONTENT) ?: ""
+                            ),
+                            Subscription(
+                                    failType,
+                                    it.get(FAIL_GROUP).split(",").toSet(),
+                                    it.get(FAIL_RECEIVER),
+                                    it.get(FAIL_WECHAT_GROUP_FLAG),
+                                    it.get(FAIL_WECHAT_GROUP),
+                                    it.get(FAIL_WECHAT_GROUP_MARKDOWN_FLAG),
+                                    it.get(FAIL_DETAIL_FLAG),
+                                    it.get(FAIL_CONTENT) ?: ""
+                            ),
+                            labels,
+                            DateTimeUtils.secondToMinute(it.get(WAIT_QUEUE_TIME_SECOND)),
+                            it.get(MAX_QUEUE_SIZE),
+                            it.get(VERSION)
+                    )
+                }
+            }
+        } else {
+            val model = client.get(ServicePipelineResource::class).get(userId, projectId, pipelineId, channelCode).data
+            val name = model?.name ?: "unknown pipeline name"
+            val desc = model?.desc ?: ""
+            PipelineSettingVersion(
+                    projectId,
+                    pipelineId,
+                    name,
+                    desc,
+                    PipelineRunLockType.MULTIPLE,
+                    Subscription(),
+                    Subscription(),
+                    labels
             )
         }
     }

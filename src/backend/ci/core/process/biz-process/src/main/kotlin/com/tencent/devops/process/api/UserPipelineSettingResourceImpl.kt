@@ -32,6 +32,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.user.UserPipelineSettingResource
 import com.tencent.devops.process.pojo.setting.PipelineRunLockType
 import com.tencent.devops.process.pojo.setting.PipelineSetting
+import com.tencent.devops.process.pojo.setting.PipelineSettingVersion
 import com.tencent.devops.process.service.PipelineSettingService
 import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_QUEUE_SIZE_MAX
 import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_QUEUE_SIZE_MIN
@@ -50,6 +51,10 @@ class UserPipelineSettingResourceImpl @Autowired constructor(
 
     override fun getSetting(userId: String, projectId: String, pipelineId: String): Result<PipelineSetting> {
         return Result(pipelineSettingService.userGetSetting(userId, projectId, pipelineId))
+    }
+
+    override fun getSettingVersion(userId: String, projectId: String, pipelineId: String, version: Int): Result<PipelineSettingVersion> {
+        return Result(pipelineSettingService.userGetSettingVersion(userId, projectId, pipelineId, version))
     }
 
     private fun checkParam(setting: PipelineSetting) {
