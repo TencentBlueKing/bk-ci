@@ -70,7 +70,7 @@ class DockerHostUtils @Autowired constructor(
     companion object {
         private const val LOAD_CONFIG_KEY = "dockerhost-load-config"
         private const val DOCKER_DRIFT_THRESHOLD_KEY = "docker-drift-threshold-spKyQ86qdYhAkDDR"
-        private const val DOCKER_IP_COUNT_MAX = 8
+        private const val DOCKER_IP_COUNT_MAX = 1000
         private const val BUILD_POOL_SIZE = 100 // 单个流水线可同时执行的任务数量
 
         private val logger = LoggerFactory.getLogger(DockerHostUtils::class.java)
@@ -261,9 +261,9 @@ class DockerHostUtils @Autowired constructor(
         val dockerIp = dockerIpInfo.dockerIp
 
         // 同一条流水线并发构建时，当并发数超过5，无视负载，直接下发同一个IP（避免同一条流水线并发量太大，影响其他流水线构建）
-        if (poolNo > 5 && dockerIpInfo.enable && (dockerIpInfo.grayEnv == gray.isGray())) {
+/*        if (poolNo > 5 && dockerIpInfo.enable && (dockerIpInfo.grayEnv == gray.isGray())) {
             return Triple(dockerIp, dockerIpInfo.dockerHostPort, "")
-        }
+        }*/
 
         // 查看当前IP负载情况，当前IP不可用或者负载超额或者设置为专机独享或者是否灰度已被切换，重新选择构建机
         val threshold = getDockerDriftThreshold()
