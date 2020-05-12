@@ -25,7 +25,7 @@
  */
 package com.tencent.devops.notify.pojo
 
-import com.tencent.devops.common.notify.enums.NotifyTypeEnum
+import com.tencent.devops.common.notify.enums.NotifyType
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -34,7 +34,7 @@ data class NotifyMessageContextRequest(
     @ApiModelProperty("通知模板代码", required = true)
     val templateCode: String,
     @ApiModelProperty("通知类型", required = true)
-    val notifyTypeEnum: NotifyTypeEnum,
+    val notifyType: NotifyType,
     @ApiModelProperty("标题动态参数", required = false)
     val titleParams: Map<String, String>? = null,
     @ApiModelProperty("内容动态参数", required = false)
