@@ -50,6 +50,8 @@ import com.tencent.devops.common.wechatwork.model.sendmessage.richtext.RichtextT
 import com.tencent.devops.common.wechatwork.model.sendmessage.richtext.RichtextTextText
 import com.tencent.devops.common.wechatwork.model.sendmessage.richtext.RichtextView
 import com.tencent.devops.common.wechatwork.model.sendmessage.richtext.RichtextViewLink
+import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
+import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.process.dao.PipelineSubscriptionDao
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildAtomTaskEvent
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
@@ -59,8 +61,6 @@ import com.tencent.devops.process.pojo.SubscriptionType
 import com.tencent.devops.process.pojo.pipeline.PipelineSubscription
 import com.tencent.devops.process.pojo.pipeline.PipelineSubscriptionType
 import com.tencent.devops.process.util.NotifyTemplateUtils
-import com.tencent.devops.process.util.NotifyUtils
-import com.tencent.devops.process.util.NotifyUtils.parseMessageTemplate
 import com.tencent.devops.process.util.ServiceHomeUrlUtils.server
 import com.tencent.devops.process.utils.*
 import org.jooq.DSLContext
@@ -264,10 +264,10 @@ class PipelineSubscriptionService @Autowired(required = false) constructor(
                 projectGroup.filter { it.roleName in successGroup }
                     .forEach { successUsers.addAll(it.userIdList) }
                 successUsers.addAll(setting.successReceiver.split(","))
-                val typeList = setting.successType.split(",")
-                sendNotify(
+                val nofiTypeList = setting.successType.split(",").toMutableSet()
+                sendTemplateNotify(
                     users = successUsers,
-                    typeList = typeList,
+                    notifyTypes = nofiTypeList,
                     pipelineId = pipelineId,
                     type = shutdownType,
                     mapData = mapData,
@@ -306,10 +306,10 @@ class PipelineSubscriptionService @Autowired(required = false) constructor(
                 projectGroup.filter { it.roleName in failGroup }
                     .forEach { failUsers.addAll(it.userIdList) }
                 failUsers.addAll(setting.failReceiver.split(","))
-                val typeList = setting.failType.split(",")
-                sendNotify(
+                val notifyTypeList = setting.failType.split(",").toMutableSet()
+                sendTemplateNotify(
                     users = failUsers,
-                    typeList = typeList,
+                    notifyTypes = notifyTypeList,
                     pipelineId = pipelineId,
                     type = shutdownType,
                     mapData = mapData,
@@ -457,22 +457,25 @@ class PipelineSubscriptionService @Autowired(required = false) constructor(
         )
     }
 
-    private fun sendNotify(
+    private fun sendTemplateNotify(
         users: MutableSet<String>,
-        typeList: List<String>,
+        notifyTypes: MutableSet<String>,
         pipelineId: String,
         type: Int,
         mapData: Map<String, String>,
         detailFlag: Boolean
     ) {
-        NotifyUtils.sendTemplateNotify(
-            client = client,
-            users = users,
-            pipelineId = pipelineId,
-            notifyTypes = typeList.toMutableSet(),
+        val sendNotifyMessageTemplateRequest = SendNotifyMessageTemplateRequest(
             templateCode = getNotifyTemplateCode(type, detailFlag),
-            mapData = mapData
+            sender = "DevOps",
+            receivers = users,
+            notifyType = notifyTypes,
+            titleParams = mapData,
+            bodyParams = mapData
         )
+        val sendNotifyResult = client.get(ServiceNotifyMessageTemplateResource::class)
+            .sendNotifyMessageByTemplate(sendNotifyMessageTemplateRequest)
+        logger.info("[$pipelineId]|sendTemplateNotify|sendNotifyMessageTemplateRequest=$sendNotifyMessageTemplateRequest|result=$sendNotifyResult")
     }
 
     private fun detailUrl(projectId: String, pipelineId: String, processInstanceId: String) =
