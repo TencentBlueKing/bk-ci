@@ -35,27 +35,40 @@ import java.time.LocalDateTime
 
 @Repository
 class PipelineDockerTaskSimpleDao @Autowired constructor() {
-    fun create(
+    fun createOrUpdate(
         dslContext: DSLContext,
         pipelineId: String,
         vmSeq: String,
-        idcIp: String
+        dockerIp: String
     ) {
         with(TDispatchPipelineDockerTaskSimple.T_DISPATCH_PIPELINE_DOCKER_TASK_SIMPLE) {
-            dslContext.insertInto(
-                this,
-                PIPELINE_ID,
-                VM_SEQ,
-                DOCKER_IP,
-                GMT_CREATE,
-                GMT_MODIFIED
-            ).values(
-                pipelineId,
-                vmSeq,
-                idcIp,
-                LocalDateTime.now(),
-                LocalDateTime.now()
-            ).execute()
+            val preRecord = dslContext.selectFrom(this)
+                .where(PIPELINE_ID.eq(pipelineId))
+                .and(VM_SEQ.eq(vmSeq))
+                .fetchAny()
+            if (preRecord != null) {
+                dslContext.update(this)
+                    .set(DOCKER_IP, dockerIp)
+                    .set(GMT_MODIFIED, LocalDateTime.now())
+                    .where(PIPELINE_ID.eq(pipelineId))
+                    .and(VM_SEQ.eq(vmSeq))
+                    .execute()
+            } else {
+                dslContext.insertInto(
+                    this,
+                    PIPELINE_ID,
+                    VM_SEQ,
+                    DOCKER_IP,
+                    GMT_CREATE,
+                    GMT_MODIFIED
+                ).values(
+                    pipelineId,
+                    vmSeq,
+                    dockerIp,
+                    LocalDateTime.now(),
+                    LocalDateTime.now()
+                ).execute()
+            }
         }
     }
 
@@ -72,6 +85,15 @@ class PipelineDockerTaskSimpleDao @Autowired constructor() {
                 .where(PIPELINE_ID.eq(pipelineId))
                 .and(VM_SEQ.eq(vmSeq))
                 .execute()
+        }
+    }
+
+    fun deleteByDockerIp(
+        dslContext: DSLContext,
+        dockerIp: String
+    ) {
+        with(TDispatchPipelineDockerTaskSimple.T_DISPATCH_PIPELINE_DOCKER_TASK_SIMPLE) {
+            dslContext.deleteFrom(this).where(DOCKER_IP.eq(dockerIp))
         }
     }
 
