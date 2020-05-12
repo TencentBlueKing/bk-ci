@@ -58,10 +58,12 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.dao.BuildDetailDao
 import com.tencent.devops.process.engine.compatibility.BuildParametersCompatibilityTransformer
 import com.tencent.devops.process.engine.compatibility.BuildPropertyCompatibilityTools
 import com.tencent.devops.process.engine.control.lock.BuildIdLock
 import com.tencent.devops.process.engine.control.lock.PipelineBuildRunLock
+import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.interceptor.InterceptData
 import com.tencent.devops.process.engine.interceptor.PipelineInterceptorChain
 import com.tencent.devops.process.engine.pojo.PipelineInfo
@@ -98,6 +100,7 @@ import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import com.tencent.devops.process.utils.PIPELINE_START_USER_NAME
 import com.tencent.devops.process.utils.PIPELINE_START_WEBHOOK_USER_ID
 import com.tencent.devops.process.utils.PIPELINE_VERSION
+import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.stereotype.Service
@@ -126,6 +129,9 @@ class PipelineBuildService(
     private val pipelineBuildQualityService: PipelineBuildQualityService,
     private val rabbitTemplate: RabbitTemplate,
     private val buildLogPrinter: BuildLogPrinter,
+    private val dslContext: DSLContext,
+    private val pipelineBuildDao: PipelineBuildDao,
+    private val buildDetailDao: BuildDetailDao,
     private val buildParamCompatibilityTransformer: BuildParametersCompatibilityTransformer
 ) {
     companion object {
@@ -1833,7 +1839,6 @@ class PipelineBuildService(
 
             // 不再继续则直接关闭流水线
             if (!isContinue) {
-                // TODO: 此处需调整为用户取消
                 buildManualShutdown(
                     userId = userId,
                     pipelineId = pipelineId,
@@ -1925,14 +1930,14 @@ class PipelineBuildService(
         )
 
         // 修改构建记录为暂停
-        pipeline.updateStatus(
+        pipelineBuildDao.updateStatus(
             dslContext = dslContext,
             buildId = buildId,
             oldBuildStatus = BuildStatus.PAUSE,
             newBuildStatus = BuildStatus.QUEUE
         )
 
-        buildDetailService.updateStatus(
+        buildDetailDao.updateStatus(
             dslContext = dslContext,
             buildId = buildId,
             buildStatus = BuildStatus.QUEUE,

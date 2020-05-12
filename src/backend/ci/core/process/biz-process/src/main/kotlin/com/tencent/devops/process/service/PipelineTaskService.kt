@@ -43,6 +43,7 @@ import com.tencent.devops.process.dao.PipelineTaskDao
 import com.tencent.devops.process.engine.control.ControlUtils
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
+import com.tencent.devops.process.engine.dao.PipelineBuildTaskDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.dao.PipelineModelTaskDao
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
@@ -76,6 +77,7 @@ class PipelineTaskService @Autowired constructor(
     private val pipelineBuildDetailService: PipelineBuildDetailService,
     val pipelineBuildSummaryDao: PipelineBuildSummaryDao,
     val pipelineInfoDao: PipelineInfoDao,
+    val pipelineBuildTaskDao: PipelineBuildTaskDao,
     val client: Client,
     private val rabbitTemplate: RabbitTemplate,
     private val pipelineRuntimeService: PipelineRuntimeService
@@ -192,6 +194,14 @@ class PipelineTaskService @Autowired constructor(
                 taskId = taskRecord.taskId,
                 containerId = taskRecord.containerId
             )
+
+            // 暂停只可触发一次，后续将不再触发
+            val additionalOptions = taskRecord.additionalOptions
+            if(additionalOptions != null ){
+                additionalOptions.pauseBeforeExec = false
+                pipelineBuildTaskDao.updateTaskAdditional(dslContext, buildId, taskId, additionalOptions.toString())
+            }
+
 
             // 发送消息给相关关注人
             val sendUser = taskRecord.additionalOptions!!.subscriptionPauseUser

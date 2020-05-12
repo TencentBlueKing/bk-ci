@@ -351,6 +351,15 @@ class PipelineBuildTaskDao @Autowired constructor(private val objectMapper: Obje
         }
     }
 
+    fun updateTaskAdditional(dslContext: DSLContext, buildId: String, taskId: String, additionalOptions: String): Int {
+        with(T_PIPELINE_BUILD_TASK) {
+            return dslContext.update(this)
+                .set(ADDITIONAL_OPTIONS, additionalOptions)
+                .where(BUILD_ID.eq(buildId))
+                .and(TASK_ID.eq(taskId)).execute()
+        }
+    }
+
     fun list(dslContext: DSLContext, buildId: String): Result<TPipelineBuildTaskRecord> {
         with(TPipelineBuildTask.T_PIPELINE_BUILD_TASK) {
             return dslContext.selectFrom(this)
