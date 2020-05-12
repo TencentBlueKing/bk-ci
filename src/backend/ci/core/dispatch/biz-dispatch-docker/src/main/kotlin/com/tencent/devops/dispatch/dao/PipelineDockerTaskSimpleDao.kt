@@ -93,7 +93,7 @@ class PipelineDockerTaskSimpleDao @Autowired constructor() {
         dockerIp: String
     ) {
         with(TDispatchPipelineDockerTaskSimple.T_DISPATCH_PIPELINE_DOCKER_TASK_SIMPLE) {
-            dslContext.deleteFrom(this).where(DOCKER_IP.eq(dockerIp))
+            dslContext.deleteFrom(this).where(DOCKER_IP.eq(dockerIp)).execute()
         }
     }
 
