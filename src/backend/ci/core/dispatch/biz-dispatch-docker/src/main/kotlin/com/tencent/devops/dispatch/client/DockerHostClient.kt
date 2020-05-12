@@ -11,9 +11,12 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.DockerVersion
 import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
 import com.tencent.devops.common.pipeline.type.docker.ImageType
+import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.dispatch.common.Constants
 import com.tencent.devops.dispatch.config.DefaultImageConfig
 import com.tencent.devops.dispatch.dao.PipelineDockerBuildDao
 import com.tencent.devops.dispatch.dao.PipelineDockerIPInfoDao
+import com.tencent.devops.dispatch.dao.PipelineDockerTaskSimpleDao
 import com.tencent.devops.dispatch.exception.DockerServiceException
 import com.tencent.devops.dispatch.pojo.DockerHostBuildInfo
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
@@ -36,8 +39,10 @@ import org.springframework.stereotype.Component
 class DockerHostClient @Autowired constructor(
     private val pipelineDockerBuildDao: PipelineDockerBuildDao,
     private val pipelineDockerIPInfoDao: PipelineDockerIPInfoDao,
+    private val pipelineDockerTaskSimpleDao: PipelineDockerTaskSimpleDao,
     private val dockerHostUtils: DockerHostUtils,
     private val redisUtils: RedisUtils,
+    private val redisOperation: RedisOperation,
     private val client: Client,
     private val dslContext: DSLContext,
     private val defaultImageConfig: DefaultImageConfig
@@ -150,6 +155,16 @@ class DockerHostClient @Autowired constructor(
             },
             containerHashId = event.containerHashId
         )
+
+        pipelineDockerTaskSimpleDao.createOrUpdate(
+            dslContext = dslContext,
+            pipelineId = event.pipelineId,
+            vmSeq = event.vmSeqId,
+            dockerIp = dockerIp
+        )
+
+        // 准备开始构建，增加缓存计数，限流用
+        redisOperation.increment("${Constants.DOCKER_IP_COUNT_KEY_PREFIX}$dockerIp", 1)
 
         dockerBuildStart(dockerIp, dockerHostPort, requestBody, event, driftIpInfo)
     }
