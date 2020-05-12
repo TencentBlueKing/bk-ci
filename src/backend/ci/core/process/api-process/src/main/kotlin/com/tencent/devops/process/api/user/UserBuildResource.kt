@@ -492,11 +492,14 @@ interface UserBuildResource {
         taskId: String,
         @ApiParam("插件执行参数", required = true)
         values: Map<String, Any>,
-        @ApiParam("执行类型", required = true)
+        @ApiParam("执行类型, true 继续, false 停止", required = true)
+        @QueryParam("isContinue")
         isContinue: Boolean,
         @ApiParam("stageId", required = true)
+        @QueryParam("stageId")
         stageId: String,
         @ApiParam("containerId", required = true)
+        @QueryParam("containerId")
         containerId: String
     ): Result<Boolean>
 }
