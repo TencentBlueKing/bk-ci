@@ -28,6 +28,8 @@ package com.tencent.devops.process.engine.service
 
 import com.fasterxml.jackson.core.JsonParseException
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.tencent.devops.audit.api.ServiceAuditResource
+import com.tencent.devops.audit.api.pojo.Audit
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.PipelineAlreadyExistException
@@ -80,6 +82,7 @@ import com.tencent.devops.process.pojo.setting.PipelineSetting
 import com.tencent.devops.process.pojo.template.TemplateType
 import com.tencent.devops.process.service.PipelineSettingService
 import com.tencent.devops.process.service.PipelineUserService
+import com.tencent.devops.process.service.PipelineUserVersionService
 import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.service.view.PipelineViewService
 import com.tencent.devops.process.utils.PIPELINE_VIEW_ALL_PIPELINES
@@ -97,6 +100,7 @@ import org.springframework.util.StopWatch
 import java.time.LocalDateTime
 import java.util.Collections
 import javax.ws.rs.core.Response
+import javax.ws.rs.NotFoundException
 
 @Service
 class PipelineService @Autowired constructor(
@@ -106,6 +110,7 @@ class PipelineService @Autowired constructor(
     private val pipelineGroupService: PipelineGroupService,
     private val pipelineViewService: PipelineViewService,
     private val pipelineUserService: PipelineUserService,
+    private val pipelineUserVersionService: PipelineUserVersionService,
     private val pipelineSettingService: PipelineSettingService,
     private val pipelineStageService: PipelineStageService,
     private val pipelineBean: PipelineBean,
@@ -231,6 +236,7 @@ class PipelineService @Autowired constructor(
                 }
                 pipelineGroupService.addPipelineLabel(userId = userId, pipelineId = pipelineId, labelIds = model.labels)
                 pipelineUserService.create(pipelineId, userId)
+                pipelineUserVersionService.create(pipelineId, userId)
                 logger.info("instanceType: $instanceType")
                 if (model.templateId != null) {
                     val templateId = model.templateId as String
@@ -520,10 +526,22 @@ class PipelineService @Autowired constructor(
             modelCheckPlugin.beforeDeleteElementInExistsModel(userId, existModel, model, pipelineId)
 
             pipelineRepositoryService.deployPipeline(model, projectId, pipelineId, userId, channelCode, false)
+
+            //添加编辑流水线审计日志
+            logger.info("start create pipeline audit save")
+            val updatePipeline = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)
+                    ?: throw NotFoundException("指定编辑的流水线不存在")
+            logger.info("the updateVersion is ${updatePipeline.version}")
+            val audit = Audit(AuthResourceType.PIPELINE_DEFAULT.value,pipelineId,pipeline.pipelineName,userId,"edit","编辑流水线从V${pipeline.version}->V${updatePipeline.version}", projectId)
+            client.get(ServiceAuditResource::class).create(audit)
+            logger.info("start create pipeline audit save")
+            //添加编辑流水线审计日志
+
             if (checkPermission) {
                 pipelinePermissionService.modifyResource(projectId, pipelineId, model.name)
             }
             pipelineUserService.update(pipelineId, userId)
+            pipelineUserVersionService.update(pipelineId, userId)
             success = true
         } finally {
             pipelineBean.edit(success)
