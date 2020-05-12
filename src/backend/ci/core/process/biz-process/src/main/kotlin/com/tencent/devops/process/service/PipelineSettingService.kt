@@ -26,6 +26,8 @@
 
 package com.tencent.devops.process.service
 
+import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.exception.PipelineAlreadyExistException
 import com.tencent.devops.common.auth.api.AuthPermission
@@ -67,6 +69,9 @@ class PipelineSettingService @Autowired constructor(
 
     fun saveSetting(userId: String, setting: PipelineSetting, checkPermission: Boolean = true): String {
         with(setting) {
+            if (maxPipelineResNum < 1) {
+                throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_INVALID_PARAM_, params = arrayOf("maxPipelineResNum"))
+            }
             checkEditPermission(
                 userId,
                 projectId,
