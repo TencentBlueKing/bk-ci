@@ -32,11 +32,7 @@ import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.model.process.tables.records.TPipelineFavorRecord
 import com.tencent.devops.model.process.tables.records.TPipelineLabelRecord
 import com.tencent.devops.process.dao.PipelineFavorDao
-import com.tencent.devops.process.dao.label.PipelineGroupDao
-import com.tencent.devops.process.dao.label.PipelineLabelDao
-import com.tencent.devops.process.dao.label.PipelineLabelPipelineDao
-import com.tencent.devops.process.dao.label.PipelineLabelPipelineVersionDao
-import com.tencent.devops.process.dao.label.PipelineViewLabelDao
+import com.tencent.devops.process.dao.label.*
 import com.tencent.devops.process.pojo.classify.PipelineGroup
 import com.tencent.devops.process.pojo.classify.PipelineGroupCreate
 import com.tencent.devops.process.pojo.classify.PipelineGroupUpdate
@@ -53,7 +49,7 @@ import org.springframework.dao.DuplicateKeyException
 import org.springframework.stereotype.Service
 
 @Service
-class PipelineGroupService @Autowired constructor(
+class PipelineGroupVersionService @Autowired constructor(
     private val dslContext: DSLContext,
     private val pipelineGroupDao: PipelineGroupDao,
     private val pipelineLabelDao: PipelineLabelDao,
@@ -110,7 +106,7 @@ class PipelineGroupService @Autowired constructor(
     }
 
     fun getGroups(userId: String, projectId: String, pipelineId: String): List<PipelineGroupWithLabels> {
-        val labelRecords = pipelineLabelPipelineDao.listLabels(dslContext, pipelineId)
+        val labelRecords = pipelineLabelPipelineVersionDao.listLabels(dslContext, pipelineId)
         val labelIds = labelRecords.map { it.labelId }.toSet()
         val groups = getLabelsGroupByGroup(projectId, labelIds)
         return groups.map {
@@ -195,8 +191,12 @@ class PipelineGroupService @Autowired constructor(
             return
         }
         try {
-            pipelineLabelPipelineDao.batchCreate(dslContext, pipelineId, labelIds.map { decode(it) }.toSet(), userId)
-            pipelineLabelPipelineVersionDao.batchCreate(dslContext, pipelineId, labelIds.map { decode(it) }.toSet(), userId)
+            dslContext.transaction { configuration ->
+                val context = DSL.using(configuration)
+                pipelineLabelPipelineDao.batchCreate(context, pipelineId, labelIds.map { decode(it) }.toSet(), userId)
+                pipelineLabelPipelineVersionDao.batchCreate(context, pipelineId, labelIds.map { decode(it) }.toSet(), userId)
+            }
+            //pipelineLabelPipelineDao.batchCreate(dslContext, pipelineId, labelIds.map { decode(it) }.toSet(), userId)
         } catch (t: DuplicateKeyException) {
             logger.warn("Fail to add the pipeline $pipelineId label $labelIds by userId $userId")
             throw OperationException("The label is already exist")
@@ -211,40 +211,14 @@ class PipelineGroupService @Autowired constructor(
                 val context = DSL.using(configuration)
                 pipelineLabelPipelineDao.deleteByPipeline(context, pipelineId, userId)
                 pipelineLabelPipelineDao.batchCreate(dslContext, pipelineId, ids, userId)
+                pipelineLabelPipelineVersionDao.deleteByPipeline(context, pipelineId, userId)
+                pipelineLabelPipelineVersionDao.batchCreate(context, pipelineId, ids, userId)
             }
         } catch (t: DuplicateKeyException) {
             logger.warn("Fail to update the pipeline $pipelineId label $labelIds by userId $userId")
             throw OperationException("The label is already exist")
         }
     }
-
-    /*
-    fun getViewPipelines(labels: String): List<String>? {
-        val labelIds = labels.split(",").filter { it.isNotBlank() }.map { decode(it) }.toSet()
-        if (labelIds.isEmpty()) {
-            return null
-        }
-        val pipeline =  pipelineLabelPipelineDao.listPipelines(dslContext, labelIds)
-
-        val groups = HashMap<String/*pipelineId*/, MutableList<Long>/*LabelIds*/>()
-        pipeline.forEach {
-            if (groups.containsKey(it.pipelineId)) {
-                groups[it.pipelineId]!!.add(it.labelId)
-            } else {
-                groups[it.pipelineId] = mutableListOf(it.labelId)
-            }
-        }
-
-        val result = mutableListOf<String>()
-        groups.forEach { pipelineId, pipelineLabels ->
-            if (pipelineLabels.size != labelIds.size) {
-                return@forEach
-            }
-            result.add(pipelineId)
-        }
-        return result
-    }
-    */
 
     fun getViewLabelToPipelinesMap(labels: List<String>): Map<String, List<String>> {
         val labelIds = labels.map { decode(it) }.toSet()
@@ -305,7 +279,6 @@ class PipelineGroupService @Autowired constructor(
     private fun getLabelsGroupByGroup(projectId: String, labelIds: Set<Long>): List<PipelineGroup> {
         val labels = pipelineLabelDao.getByIds(dslContext, labelIds)
         val groups = HashMap<Long, MutableList<TPipelineLabelRecord>>()
-
         labels.forEach {
             val l = if (groups.containsKey(it.groupId)) {
                 groups[it.groupId]!!
@@ -363,7 +336,7 @@ class PipelineGroupService @Autowired constructor(
         HashUtil.decodeIdToLong(id)
 
     companion object {
-        private val logger = LoggerFactory.getLogger(PipelineGroupService::class.java)
+        private val logger = LoggerFactory.getLogger(PipelineGroupVersionService::class.java)
     }
 
     fun getFavorPipelinesPage(userId: String, page: Int? = null, pageSize: Int? = null): Result<TPipelineFavorRecord>? {
