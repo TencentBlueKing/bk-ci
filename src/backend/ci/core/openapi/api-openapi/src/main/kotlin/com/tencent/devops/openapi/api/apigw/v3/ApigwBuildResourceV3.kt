@@ -57,7 +57,7 @@ interface ApigwBuildResourceV3 {
 
     @ApiOperation("启动构建")
     @POST
-    @Path("/projects/{projectId}/pipelinese/{pipelineId}/builds/start")
+    @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/start")
     fun start(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -80,7 +80,7 @@ interface ApigwBuildResourceV3 {
 
     @ApiOperation("停止构建")
     @POST
-    @Path("/projects/{projectId}/pipelinese/{pipelineId}/builds/{buildId}/stop")
+    @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/stop")
     fun stop(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -104,7 +104,7 @@ interface ApigwBuildResourceV3 {
 
     @ApiOperation("查看构建状态信息")
     @GET
-    @Path("/projects/{projectId}/pipelinese/{pipelineId}/builds/{buildId}/status")
+    @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/status")
     fun getStatus(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -128,7 +128,7 @@ interface ApigwBuildResourceV3 {
 
     @ApiOperation("获取流水线构建历史")
     @GET
-    @Path("/projects/{projectId}/pipelinese/{pipelineId}/builds")
+    @Path("/projects/{projectId}/pipelines/{pipelineId}/builds")
     fun getHistoryBuild(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -155,7 +155,7 @@ interface ApigwBuildResourceV3 {
 
     @ApiOperation("获取流水线手动启动参数")
     @GET
-    @Path("/projects/{projectId}/pipelinese/{pipelineId}/builds/manualStartupInfo")
+    @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/manualStartupInfo")
     fun manualStartupInfo(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
