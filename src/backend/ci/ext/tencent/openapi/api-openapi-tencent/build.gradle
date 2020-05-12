@@ -33,10 +33,13 @@ dependencies {
     compile project(":core:common:common-auth:common-auth-api")
     //compile project(":ext:tencent:openapi:api-openapi")
     compile project(":core:store:api-store")
+    compile project(":core:store:api-store")
     compile project(":ext:tencent:store:api-store-tencent")
     compile project(":core:process:api-process")
     compile project(":ext:tencent:process:api-process-tencent")
     compile project(":core:project:api-project")
     compile project(":ext:tencent:project:api-project-tencent")
+    compile project(":core:artifactory:api-artifactory-push")
+
 }
 

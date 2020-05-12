@@ -163,6 +163,7 @@ class OpAtomServiceImpl @Autowired constructor(
 
     @Suppress("UNCHECKED_CAST")
     private fun convert(atomRecord: TAtomRecord, atomClassifyRecord: TClassifyRecord?): Atom {
+        val atomFeature = atomFeatureDao.getAtomFeature(dslContext, atomRecord.atomCode)
         return Atom(
             id = atomRecord.id,
             name = atomRecord.name,
@@ -194,7 +195,8 @@ class OpAtomServiceImpl @Autowired constructor(
             weight = atomRecord.weight,
             props = atomDao.convertString(atomRecord.props),
             data = atomDao.convertString(atomRecord.data),
-            recommendFlag = atomFeatureDao.getAtomFeature(dslContext, atomRecord.atomCode)?.recommendFlag
+            recommendFlag = atomFeature?.recommendFlag,
+            yamlFlag = atomFeature?.yamlFlag
         )
     }
 

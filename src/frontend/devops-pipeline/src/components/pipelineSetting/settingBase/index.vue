@@ -56,41 +56,6 @@
                     </div>
                 </div>
             </div>
-            <form-field :label="$t('settings.notice')" style="margin-bottom: 0px">
-                <bk-tab :active="curNavTab.name" type="unborder-card" @tab-change="changeCurTab">
-                    <bk-tab-panel
-                        v-for="(entry, index) in subscriptionList"
-                        :key="index"
-                        v-bind="entry"
-                    >
-                        <div class="notice-tab">
-                            <div class="bk-form-item item-notice">
-                                <label class="bk-label">{{ $t('settings.noticeType') }}：</label>
-                                <div class="bk-form-content notice-group">
-                                    <bk-checkbox-group :value="pipelineSubscription.types" @change="handleCheckNoticeType">
-                                        <bk-checkbox v-for="item in noticeList" :key="item.value" :value="item.value" class="atom-checkbox-list-item">
-                                            {{ item.name }}
-                                        </bk-checkbox>
-                                    </bk-checkbox-group>
-                                </div>
-                            </div>
-                            <div class="bk-form-item item-notice">
-                                <label class="bk-label">{{ $t('settings.noticeGroup') }}：</label>
-                                <div class="bk-form-content notice-group">
-                                    <bk-checkbox-group :value="pipelineSubscription.groups" @change="handleSwitch">
-                                        <bk-checkbox v-for="item in projectGroupAndUsers" :key="item.value" :value="item.groupId" class="atom-checkbox-list-item">
-                                            {{ item.groupName }}
-                                            <bk-popover placement="top">
-                                                <span class="info-notice-length">({{item.users.length}})</span>
-                                                <div class="notice-user-content" slot="content">{{item.users.length ? item.users.join(';') : $t('settings.emptyNoticeGroup')}}</div>
-                                            </bk-popover>
-                                        </bk-checkbox>
-                                    </bk-checkbox-group>
-                                </div>
-                            </div>
-                            <form-field :label="$t('settings.additionUser')">
-                                <staff-input :handle-change="(name,value) => pipelineSubscription.users = value.join(&quot;,&quot;)" name="users" :value="pipelineSettingUser"></staff-input>
-                            </form-field>
 
             <div class="handle-btn" style="margin-left: 146px; margin-top: 20px">
                 <bk-button @click="savePipelineSetting()" theme="primary" :disabled="isDisabled || noPermission">{{ $t('save') }}</bk-button>
@@ -103,15 +68,9 @@
 <script>
     import { mapActions, mapState, mapGetters } from 'vuex'
     import FormField from '@/components/AtomPropertyPanel/FormField.vue'
-    import StaffInput from '@/components/atomFormField/StaffInput/index.vue'
-    import GroupIdSelector from '@/components/atomFormField/groupIdSelector'
-    import AtomCheckbox from '@/components/atomFormField/AtomCheckbox'
     export default {
         components: {
-            FormField,
-            StaffInput,
-            GroupIdSelector,
-            AtomCheckbox
+            FormField
         },
         props: {
             isDisabled: {

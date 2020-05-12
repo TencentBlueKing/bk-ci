@@ -20,22 +20,6 @@ function errorHandler (error: object) {
     return Promise.reject(Error('网络出现问题，请检查你的网络是否正常'))
 }
 
-request.interceptors.request.use(config => {
-    if (/(\/?ms\/backend|\/?backend)/.test(config.url)) {
-        return config   
-    }
-    const routePid = getCurrentPid()
-    return {
-        ...config,
-        headers: routePid ? {
-            ...(config.headers || {}),
-            'X-DEVOPS-PROJECT-ID': routePid
-        } : config.headers
-    };
-  }, function (error) {
-    return Promise.reject(error);
-  });
-
 request.interceptors.response.use(response => {
     const { data: { code, data, message, status }, status: httpStatus } = response
     if (httpStatus === 401) {
@@ -61,26 +45,6 @@ request.interceptors.response.use(response => {
 
     return data
 }, errorHandler)
-
-const injectCSRFTokenToHeaders = () => {
-    const CSRFToken = cookie.get('backend_csrftoken')
-    if (CSRFToken !== undefined) {
-        request.defaults.headers.common['X-CSRFToken'] = CSRFToken
-    } else {
-        console.warn('Can not find backend_csrftoken in document.cookie')
-    }
-}
-
-
-const getCurrentPid = () => {
-    try {
-        // @ts-ignore
-        const cookiePid = cookie.get(X_DEVOPS_PROJECT_ID)
-        return window.GLOBAL_PID || cookiePid
-    } catch (e) {
-        return undefined
-    }
-}
 
 Vue.prototype.$ajax = request
 

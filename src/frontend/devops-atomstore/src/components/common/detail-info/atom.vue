@@ -1,16 +1,11 @@
 <template>
     <section class="detail-title">
-        <img class="detail-pic atom-logo" :src="detail.logoUrl || defaultUrl">
+        <img class="detail-pic atom-logo" :src="detail.logoUrl">
         <hgroup class="detail-info-group">
             <h3 class="title-with-img">
                 <span :class="{ 'not-recommend': detail.recommendFlag === false }" :title="detail.recommendFlag === false ? $t('store.该插件不推荐使用') : ''">{{detail.name}}</span>
-                <h5 :title="isPublicTitle" @click="goToCode" :class="{ 'not-public': !isPublic }" v-if="!isEnterprise">
-                    <icon v-if="isPublic" class="detail-img" name="color-git-code" size="16" />
-                    <icon v-else class="detail-img" name="gray-git-code" size="16" style="fill:#9E9E9E" />
-                    <span class="approve-msg">{{ $t('store.工蜂') }}</span>
-                </h5>
-                <template v-if="!isEnterprise && userInfo.type !== 'ADMIN' && detail.htmlTemplateVersion !== '1.0'">
-                    <h5 :title="approveMsg" :class="[{ 'not-public': approveMsg !== $t('store.协作') }]" @click="cooperation">
+                <template v-if="userInfo.type !== 'ADMIN' && detail.htmlTemplateVersion !== '1.0'">
+                    <h5 :title="approveTip" :class="[{ 'not-public': approveMsg !== $t('store.协作') }]" @click="cooperation">
                         <icon class="detail-img" name="cooperation" size="16" />
                         <span class="approve-msg">{{approveMsg}}</span>
                     </h5>
@@ -113,7 +108,6 @@
 
         data () {
             return {
-                defaultUrl: 'http://radosgw.open.oa.com/paas_backend/ieod/dev/file/png/random_15647373141529070794466428255950.png?v=1564737314',
                 showCooperDialog: false,
                 user: window.userInfo.username,
                 cooperData: {
@@ -136,15 +130,6 @@
                 const fixWidth = 17 * integer
                 const rateWidth = 14 * (this.detail.score - integer)
                 return `${fixWidth + rateWidth}px`
-            },
-
-            isPublic () {
-                return this.detail.visibilityLevel === 'LOGIN_PUBLIC'
-            },
-
-            isPublicTitle () {
-                if (this.isPublic) return '查看源码'
-                else return '未开源'
             },
 
             approveMsg () {
@@ -171,10 +156,6 @@
                 if (this.detail.defaultFlag) info.des = `${this.$t('store.通用流水线插件，所有项目默认可用，无需安装')}`
                 if (!this.detail.flag) info.des = `${this.$t('store.你没有该流水线插件的安装权限，请联系流水线插件发布者')}`
                 return info
-            },
-
-            isEnterprise () {
-                return VERSION_TYPE === 'ee'
             }
         },
 
@@ -250,10 +231,6 @@
                     }
                 })
                 return jobList
-            },
-
-            goToCode () {
-                if (this.isPublic) window.open(this.detail.codeSrc, '_blank')
             },
 
             goToInstall () {

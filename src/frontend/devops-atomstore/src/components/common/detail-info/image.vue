@@ -39,12 +39,12 @@
         </hgroup>
         <template v-if="detail.needInstallToProject === 'NEED_INSTALL_TO_PROJECT_TRUE'">
             <bk-popover placement="top" v-if="buttonInfo.disable">
-                <button class="bk-button bk-primary" type="button" disabled> {{ $t('安装') }} </button>
+                <button class="bk-button bk-primary" type="button" disabled> {{ $t('store.安装') }} </button>
                 <template slot="content">
                     <p>{{buttonInfo.des}}</p>
                 </template>
             </bk-popover>
-            <button class="detail-install" @click="goToInstall" v-else> {{ $t('安装') }} </button>
+            <button class="detail-install" @click="goToInstall" v-else> {{ $t('store.安装') }} </button>
         </template>
     </section>
 </template>
@@ -236,7 +236,7 @@
             }
         }
         .detail-info.detail-label {
-            width: 829px;
+            width: 994px;
             padding-left: 90px;
             display: inline-block;
             position: relative;
