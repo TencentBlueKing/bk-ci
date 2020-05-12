@@ -43,7 +43,12 @@ import com.tencent.devops.notify.dao.CommonNotifyMessageTemplateDao
 import com.tencent.devops.notify.dao.NotifyMessageTemplateDao
 import com.tencent.devops.notify.model.NotifyMessageCommonTemplate
 import com.tencent.devops.notify.model.NotifyTemplateMessageRequest
-import com.tencent.devops.notify.pojo.*
+import com.tencent.devops.notify.pojo.EmailNotifyMessage
+import com.tencent.devops.notify.pojo.RtxNotifyMessage
+import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
+import com.tencent.devops.notify.pojo.SubNotifyMessageTemplate
+import com.tencent.devops.notify.pojo.WechatNotifyMessage
+import com.tencent.devops.notify.pojo.NotifyContext
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
