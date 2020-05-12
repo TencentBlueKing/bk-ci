@@ -199,6 +199,7 @@ class PipelineTaskService @Autowired constructor(
             val additionalOptions = taskRecord.additionalOptions
             if(additionalOptions != null ){
                 additionalOptions.pauseBeforeExec = false
+                additionalOptions.isPause = true
                 pipelineBuildTaskDao.updateTaskAdditional(dslContext, buildId, taskId, additionalOptions.toString())
             }
 
@@ -206,7 +207,10 @@ class PipelineTaskService @Autowired constructor(
             // 发送消息给相关关注人
             val sendUser = taskRecord.additionalOptions!!.subscriptionPauseUser
             if (sendUser != null) {
-                sendPauseNotify(buildId, taskRecord.taskName, taskId, taskRecord.pipelineId, sendUser)
+                val sendUsers = sendUser.split(",")
+                val subscriptionPauseUser = mutableSetOf<String>()
+                subscriptionPauseUser.add(sendUsers.forEach { it }.toString())
+                sendPauseNotify(buildId, taskRecord.taskName, taskId, taskRecord.pipelineId, subscriptionPauseUser)
             } else {
                 val pipelineInfo = pipelineInfoDao.getPipelineInfo(dslContext, taskRecord.pipelineId)
                 val lastUpdateUser = pipelineInfo?.lastModifyUser

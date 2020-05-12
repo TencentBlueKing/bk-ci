@@ -34,6 +34,7 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
+import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.user.UserBuildResource
 import com.tencent.devops.process.engine.service.PipelineBuildService
@@ -375,7 +376,7 @@ class UserBuildResourceImpl @Autowired constructor(private val buildService: Pip
         pipelineId: String,
         buildId: String,
         taskId: String,
-        values: Map<String, Any>,
+        element: String,
         isContinue: Boolean,
         stageId: String,
         containerId: String
@@ -389,7 +390,7 @@ class UserBuildResourceImpl @Autowired constructor(private val buildService: Pip
                 buildId = buildId,
                 isContinue = isContinue,
                 taskId = taskId,
-                inputParams = values,
+                element = element,
                 stageId = stageId,
                 containerId = containerId
             )

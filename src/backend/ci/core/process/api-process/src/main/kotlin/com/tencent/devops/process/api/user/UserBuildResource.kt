@@ -34,6 +34,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
+import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.process.pojo.BuildHistoryRemark
 import com.tencent.devops.process.pojo.BuildId
@@ -490,8 +491,8 @@ interface UserBuildResource {
         @ApiParam("任务ID", required = true)
         @PathParam("taskId")
         taskId: String,
-        @ApiParam("插件执行参数", required = true)
-        values: Map<String, Any>,
+        @ApiParam("待执行插件元素", required = true)
+        element: String,
         @ApiParam("执行类型, true 继续, false 停止", required = true)
         @QueryParam("isContinue")
         isContinue: Boolean,

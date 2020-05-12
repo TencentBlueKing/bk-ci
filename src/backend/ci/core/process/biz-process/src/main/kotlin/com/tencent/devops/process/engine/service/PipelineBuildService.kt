@@ -64,6 +64,7 @@ import com.tencent.devops.process.engine.compatibility.BuildPropertyCompatibilit
 import com.tencent.devops.process.engine.control.lock.BuildIdLock
 import com.tencent.devops.process.engine.control.lock.PipelineBuildRunLock
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
+import com.tencent.devops.process.engine.dao.PipelineBuildTaskDao
 import com.tencent.devops.process.engine.interceptor.InterceptData
 import com.tencent.devops.process.engine.interceptor.PipelineInterceptorChain
 import com.tencent.devops.process.engine.pojo.PipelineInfo
@@ -132,6 +133,7 @@ class PipelineBuildService(
     private val dslContext: DSLContext,
     private val pipelineBuildDao: PipelineBuildDao,
     private val buildDetailDao: BuildDetailDao,
+    private val pipelineBuildTaskDao: PipelineBuildTaskDao,
     private val buildParamCompatibilityTransformer: BuildParametersCompatibilityTransformer
 ) {
     companion object {
@@ -1804,7 +1806,7 @@ class PipelineBuildService(
         stageId: String,
         containerId: String,
         isContinue: Boolean,
-        inputParams: Map<String, Any>,
+        element: String,
         checkPermission: Boolean? = true
     ): Boolean {
         if (checkPermission!!) {
@@ -1858,11 +1860,9 @@ class PipelineBuildService(
                 containerId = containerId
             )
             val params = mutableMapOf<String, Any>()
-            val originVars = buildVariableService.getAllVariable(buildId)
-            params.putAll(originVars)
-            params.putAll(inputParams)
             buildVariableService.batchSetVariable(projectId, pipelineId, buildId, params)
-            // 替换detail内的model和 task内的taskParams
+            // 修改插件运行设置
+            pipelineBuildTaskDao.updateTaskParam(dslContext, buildId, taskId, element)
 
             // 触发引擎container事件，继续后续流程
             pipelineEventDispatcher.dispatch(

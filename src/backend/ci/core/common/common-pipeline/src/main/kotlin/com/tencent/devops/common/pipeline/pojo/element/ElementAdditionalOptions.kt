@@ -36,7 +36,8 @@ data class ElementAdditionalOptions(
     val timeout: Long?,
     val runCondition: RunCondition?,
     var pauseBeforeExec: Boolean?,
-    val subscriptionPauseUser: Set<String>?,
+    val subscriptionPauseUser: String?,
+    var isPause: Boolean?= false,
     val atomTimeout: Long?,
 
     val otherTask: String?,
