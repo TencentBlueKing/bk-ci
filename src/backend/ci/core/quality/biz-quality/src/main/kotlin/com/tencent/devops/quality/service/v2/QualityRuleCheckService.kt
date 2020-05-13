@@ -526,7 +526,6 @@ class QualityRuleCheckService @Autowired constructor(
         val sendNotifyResult = client.get(ServiceNotifyMessageTemplateResource::class)
             .sendNotifyMessageByTemplate(sendNotifyMessageTemplateRequest)
         logger.info("[$buildNo]|sendAuditNotification|sendNotifyMessageTemplateRequest=$sendNotifyMessageTemplateRequest|result=$sendNotifyResult")
-
     }
 
     private fun getInterceptList(interceptRecordList: List<QualityRuleInterceptRecord>): List<String> {
