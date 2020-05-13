@@ -53,8 +53,8 @@ class CommitService @Autowired constructor(
     fun getCommit(buildId: String): List<CommitResponse> {
         val commits = commitDao.getBuildCommit(dslContext, buildId) ?: return listOf()
 
-        val repoIds = commits.filter{ it.repoName.isNullOrBlank() }.map { it.repoId }
-        val repoNames = commits.filter{ !it.repoName.isNullOrBlank() }.map { it.repoName }
+        val repoIds = commits.filter { it.repoName.isNullOrBlank() }.map { it.repoId }
+        val repoNames = commits.filter { !it.repoName.isNullOrBlank() }.map { it.repoName }
 
         val idRepos = repositoryDao.getRepoByIds(dslContext, repoIds)?.map { it.repositoryId.toString() to it }?.toMap() ?: mapOf()
         val nameRepos = repositoryDao.getRepoByNames(dslContext, repoNames)?.map { it.repositoryId.toString() to it }?.toMap() ?: mapOf()
