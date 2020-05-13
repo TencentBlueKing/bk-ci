@@ -705,14 +705,30 @@ class PipelineBuildWebhookService @Autowired constructor(
             startParams[BK_REPO_GIT_WEBHOOK_PUSH_ADD_FILE_COUNT] = gitCommit.added?.size ?: 0
             startParams[BK_REPO_GIT_WEBHOOK_PUSH_MODIFY_FILE_COUNT] = gitCommit.modified?.size ?: 0
             startParams[BK_REPO_GIT_WEBHOOK_PUSH_DELETE_FILE_COUNT] = gitCommit.removed?.size ?: 0
-            gitCommit.added?.forEachIndexed { innerIndex, file ->
-                startParams[BK_REPO_GIT_WEBHOOK_PUSH_ADD_FILE_PREFIX + curIndex + "_" + (innerIndex + 1)] = file
+
+            var count = 0
+            run {
+                gitCommit.added?.forEachIndexed { innerIndex, file ->
+                    startParams[BK_REPO_GIT_WEBHOOK_PUSH_ADD_FILE_PREFIX + curIndex + "_" + (innerIndex + 1)] = file
+                    count++
+                    if (count > 32) return@run
+                }
             }
-            gitCommit.modified?.forEachIndexed { innerIndex, file ->
-                startParams[BK_REPO_GIT_WEBHOOK_PUSH_MODIFY_FILE_PREFIX + curIndex + "_" + (innerIndex + 1)] = file
+
+            run {
+                gitCommit.modified?.forEachIndexed { innerIndex, file ->
+                    startParams[BK_REPO_GIT_WEBHOOK_PUSH_MODIFY_FILE_PREFIX + curIndex + "_" + (innerIndex + 1)] = file
+                    count++
+                    if (count > 32) return@run
+                }
             }
-            gitCommit.removed?.forEachIndexed { innerIndex, file ->
-                startParams[BK_REPO_GIT_WEBHOOK_PUSH_DELETE_FILE_PREFIX + curIndex + "_" + (innerIndex + 1)] = file
+
+            run {
+                gitCommit.removed?.forEachIndexed { innerIndex, file ->
+                    startParams[BK_REPO_GIT_WEBHOOK_PUSH_DELETE_FILE_PREFIX + curIndex + "_" + (innerIndex + 1)] = file
+                    count++
+                    if (count > 32) return@run
+                }
             }
         }
     }
