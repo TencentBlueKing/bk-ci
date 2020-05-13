@@ -92,5 +92,7 @@ data class Atom(
     @ApiModelProperty("预留字段（设置规则等信息的json串）", required = false)
     val data: Map<String, Any>?,
     @ApiModelProperty("是否推荐标识 true：推荐，false：不推荐", required = false)
-    val recommendFlag: Boolean?
+    val recommendFlag: Boolean?,
+    @ApiModelProperty("yaml可用标识 true：是，false：否")
+    val yamlFlag: Boolean?
 )
