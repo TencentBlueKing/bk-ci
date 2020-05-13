@@ -70,7 +70,7 @@ class DockerHostUtils @Autowired constructor(
     companion object {
         private const val LOAD_CONFIG_KEY = "dockerhost-load-config"
         private const val DOCKER_DRIFT_THRESHOLD_KEY = "docker-drift-threshold-spKyQ86qdYhAkDDR"
-        private const val DOCKER_IP_COUNT_MAX = 1000
+        private const val DOCKER_IP_COUNT_MAX = 100
         private const val BUILD_POOL_SIZE = 100 // 单个流水线可同时执行的任务数量
 
         private val logger = LoggerFactory.getLogger(DockerHostUtils::class.java)
@@ -110,7 +110,7 @@ class DockerHostUtils @Autowired constructor(
             }
         }
 
-        // 先取容量负载比较小的，同时满足磁盘空间使用率小于60%并且内存CPU使用率均低于80%(负载阈值具体由OP平台配置)，从满足的节点中选择磁盘空间使用率最小的
+        // 先取容量负载比较小的，同时满足负载条件的（负载阈值具体由OP平台配置)，从满足的节点中随机选择一个
         val firstLoadConfig = dockerHostLoadConfigTriple.first
         val firstDockerIpList =
             pipelineDockerIpInfoDao.getAvailableDockerIpList(
@@ -315,13 +315,13 @@ class DockerHostUtils @Autowired constructor(
                 return Triple(
                     dockerHostLoadConfig["first"] ?: DockerHostLoadConfig(
                         cpuLoadThreshold = 80,
-                        memLoadThreshold = 80,
+                        memLoadThreshold = 50,
                         diskLoadThreshold = 60,
                         diskIOLoadThreshold = 80
                     ),
                     dockerHostLoadConfig["second"] ?: DockerHostLoadConfig(
                         cpuLoadThreshold = 90,
-                        memLoadThreshold = 80,
+                        memLoadThreshold = 70,
                         diskLoadThreshold = 80,
                         diskIOLoadThreshold = 90
                     ),
@@ -338,8 +338,8 @@ class DockerHostUtils @Autowired constructor(
         }
 
         return Triple(
-            first = DockerHostLoadConfig(80, 80, 80, 80),
-            second = DockerHostLoadConfig(90, 80, 80, 90),
+            first = DockerHostLoadConfig(80, 50, 60, 80),
+            second = DockerHostLoadConfig(90, 70, 80, 90),
             third = DockerHostLoadConfig(100, 80, 100, 100)
         )
     }
