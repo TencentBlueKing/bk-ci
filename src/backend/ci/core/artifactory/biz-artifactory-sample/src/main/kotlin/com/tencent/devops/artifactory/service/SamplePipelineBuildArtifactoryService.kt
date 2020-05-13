@@ -37,10 +37,10 @@ import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 
 @Service
-class SamplePipelineBuildExtService @Autowired constructor(
+class SamplePipelineBuildArtifactoryService @Autowired constructor(
     private val dslContext: DSLContext,
     private val fileDao: FileDao
-) : PipelineBuildExtService {
+) : PipelineBuildArtifactoryService {
     override fun getArtifactList(projectId: String, pipelineId: String, buildId: String): List<FileInfo> {
         val props = mapOf(
             "pipelineId" to pipelineId,

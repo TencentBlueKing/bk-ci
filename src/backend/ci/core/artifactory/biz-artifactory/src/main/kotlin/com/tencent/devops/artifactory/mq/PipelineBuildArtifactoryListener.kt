@@ -27,7 +27,7 @@
 package com.tencent.devops.artifactory.mq
 
 import com.tencent.devops.artifactory.pojo.FileInfo
-import com.tencent.devops.artifactory.service.PipelineBuildExtService
+import com.tencent.devops.artifactory.service.PipelineBuildArtifactoryService
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
@@ -39,9 +39,9 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
 @Component
-class PipelineBuildExtListener @Autowired constructor(
+class PipelineBuildArtifactoryListener @Autowired constructor(
     pipelineEventDispatcher: PipelineEventDispatcher,
-    private val pipelineBuildExtService: PipelineBuildExtService,
+    private val pipelineBuildArtifactoryService: PipelineBuildArtifactoryService,
     private val client: Client
 ) : BaseListener<PipelineBuildFinishBroadCastEvent>(pipelineEventDispatcher) {
 
@@ -57,7 +57,7 @@ class PipelineBuildExtListener @Autowired constructor(
 
         val startTime = System.currentTimeMillis()
         val artifactList: List<FileInfo> = try {
-            pipelineBuildExtService.getArtifactList(projectId, pipelineId, buildId)
+            pipelineBuildArtifactoryService.getArtifactList(projectId, pipelineId, buildId)
         } catch (e: Throwable) {
             logger.error("[$pipelineId]|getArtifactList-$buildId exception:", e)
             emptyList()
@@ -81,7 +81,7 @@ class PipelineBuildExtListener @Autowired constructor(
             logger.info("[$buildId]|update artifact result: ${result.status} ${result.message}")
 
             if (result.isOk() && result.data != null) {
-                pipelineBuildExtService.synArtifactoryInfo(
+                pipelineBuildArtifactoryService.synArtifactoryInfo(
                     userId = event.userId,
                     artifactList = artifactList,
                     projectId = projectId,
