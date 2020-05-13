@@ -43,7 +43,7 @@ abstract class AbstractEnvironmentPermissionService constructor(
 ) : EnvironmentPermissionService {
 
     private val envResourceType = AuthResourceType.ENVIRONMENT_ENVIRONMENT
-    private val nodeResourceType = AuthResourceType.ENVIRONMENT_ENVIRONMENT
+    private val nodeResourceType = AuthResourceType.ENVIRONMENT_ENV_NODE
 
     abstract fun supplierForEnvFakePermission(projectId: String): () -> MutableList<String>
 

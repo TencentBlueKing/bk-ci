@@ -191,7 +191,7 @@
 
             backConsole () {
                 this.$router.push({
-                    name: 'atomList',
+                    name: 'workList',
                     params: {
                         type: this.type
                     }

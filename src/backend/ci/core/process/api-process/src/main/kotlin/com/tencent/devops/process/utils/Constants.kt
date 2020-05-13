@@ -275,7 +275,8 @@ object PipelineVarUtil {
 
     private fun turning(mapping: Map<String, String>, vars: MutableMap<String, String>, replace: Boolean = false) {
         mapping.forEach {
-            if (vars[it.key] != null) {
+            // 如果新旧key同时存在，则保留原value
+            if (vars[it.key] != null && vars[it.value] == null) {
                 vars[it.value] = vars[it.key]!!
                 if (replace) {
                     vars.remove(it.key)
