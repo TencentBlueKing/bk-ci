@@ -27,7 +27,6 @@ package com.tencent.devops.notify.pojo
 
 import com.tencent.devops.common.notify.enums.EnumEmailFormat
 import com.tencent.devops.common.notify.enums.EnumEmailType
-import com.tencent.devops.common.notify.enums.NotifyType
 import io.swagger.annotations.ApiModelProperty
 
 data class NotifyTemplateMessage(
