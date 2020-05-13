@@ -52,6 +52,7 @@ function _M:getAllWhitelistIp()
       -- ngx.log(ngx.ERR, "ns_devnet_gray")
     end
   end 
+  
   --- 初始化HTTP连接
   local httpc = http.new()
   --- 开始连接
