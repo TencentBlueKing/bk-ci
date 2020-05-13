@@ -23,7 +23,7 @@ import javax.ws.rs.core.MediaType
 interface ApigwLogResourceV3 {
     @ApiOperation("根据构建ID获取初始化所有日志")
     @GET
-    @Path("/projectIds/{projectId}/pipelineIds/{pipelineId}/buildIds/{buildId}/logs")
+    @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/logs")
     fun getInitLogs(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
