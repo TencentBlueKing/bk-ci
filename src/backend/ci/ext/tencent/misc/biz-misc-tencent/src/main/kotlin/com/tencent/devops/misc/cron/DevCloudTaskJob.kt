@@ -84,7 +84,7 @@ class DevCloudTaskJob @Autowired constructor(
         private const val delay = 10L
     }
 
-    @Value("\${notify.templateCode:#{null}}")
+    @Value("\${notify.templateCode.devcloud:#{null}}")
     private lateinit var templateCode: String
 
     private val executor = Executors.newFixedThreadPool(10)
