@@ -39,13 +39,13 @@ import org.springframework.stereotype.Service
 
 @Service
 @Primary
-class TencentPipelineBuildExtService constructor(
+class TencentPipelineBuildArtifactoryService constructor(
     private val artifactoryInfoService: ArtifactoryInfoService,
     private val artifactorySearchService: ArtifactorySearchService,
     private val bkRepoSearchService: BkRepoSearchService,
     private val repoGray: RepoGray,
     private val redisOperation: RedisOperation
-) : PipelineBuildExtService {
+) : PipelineBuildArtifactoryService {
 
     companion object {
         private val logger = LoggerFactory.getLogger(this::class.java)!!
