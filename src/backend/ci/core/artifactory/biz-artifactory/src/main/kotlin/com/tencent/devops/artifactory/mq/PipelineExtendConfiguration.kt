@@ -89,7 +89,7 @@ class PipelineExtendConfiguration {
         @Autowired connectionFactory: ConnectionFactory,
         @Autowired buildFinishExtQueue: Queue,
         @Autowired rabbitAdmin: RabbitAdmin,
-        @Autowired listener: PipelineBuildExtListener,
+        @Autowired listener: PipelineBuildArtifactoryListener,
         @Autowired messageConverter: Jackson2JsonMessageConverter
     ): SimpleMessageListenerContainer {
         return Tools.createSimpleMessageListenerContainer(
