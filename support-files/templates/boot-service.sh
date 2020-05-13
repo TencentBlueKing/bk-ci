@@ -57,9 +57,9 @@ export CLASSPATH=${APP_PRIVATE_CONF_DIR}:.
 
 
 function getPID(){
-    javaps=`${JAVA_HOME}/bin/jps -l | grep "${JAR_FILE}"`
+    javaps=`ps -ef | grep "${JAR_FILE}"|grep -v grep`
     if [[ -n "$javaps" ]]; then
-        PID=`echo ${javaps} | awk '{print $1}'`
+        PID=`echo ${javaps} | awk '{print $2}'`
     else
         PID=0
     fi
