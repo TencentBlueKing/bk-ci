@@ -166,7 +166,7 @@ export function getAtomPreviousVal (preAtomVal = {}, preAtomProps = {}, atomProp
     return Object.keys(atomProps).reduce((formProps, key) => {
         const atomProp = atomProps[key] || {}
         const preAtomProp = preAtomProps[key] || {}
-        const isSameMultiple = atomProp.optionsConf ? atomProp.optionsConf.multiple === (preAtomProp.optionsConf || {}).multiple : true
+        const isSameMultiple = (atomProp.optionsConf || {}).multiple === (preAtomProp.optionsConf || {}).multiple
         if (atomProp.component === preAtomProp.component && atomProp.type === preAtomProp.type && isSameMultiple) {
             formProps[key] = preAtomVal[key]
         }
