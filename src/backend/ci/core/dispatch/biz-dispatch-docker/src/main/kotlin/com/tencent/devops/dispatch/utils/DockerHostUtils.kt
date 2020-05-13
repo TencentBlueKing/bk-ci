@@ -321,7 +321,7 @@ class DockerHostUtils @Autowired constructor(
         )
     }
 
-    private fun dockerLoadCheck(dockerHostLoadConfig: DockerHostLoadConfig, grayEnv: Boolean, specialIpSet: Set<String>, unAvailableIpList: Set<String>): Pair<String, Int>{
+    private fun dockerLoadCheck(dockerHostLoadConfig: DockerHostLoadConfig, grayEnv: Boolean, specialIpSet: Set<String>, unAvailableIpList: Set<String>): Pair<String, Int> {
         val dockerIpList =
             pipelineDockerIpInfoDao.getAvailableDockerIpList(
                 dslContext = dslContext,
