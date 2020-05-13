@@ -574,7 +574,6 @@ class DevCloudTaskJob @Autowired constructor(
             val sendNotifyResult = client.get(ServiceNotifyMessageTemplateResource::class)
                 .sendNotifyMessageByTemplate(sendNotifyMessageTemplateRequest)
             logger.info("[$projectId]|DevCloudTaskJob|sendNotifyMessageTemplateRequest=$sendNotifyMessageTemplateRequest|result=$sendNotifyResult")
-
         } catch (e: Throwable) {
             logger.error("Send email exception: ", e)
         }
