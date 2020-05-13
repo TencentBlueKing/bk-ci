@@ -45,7 +45,7 @@
             "optionsConf": {          # type=selector/select-input组件配置
                 "searchable": false,  # 是否可搜索
                 "multiple": false,    # 是否为多选
-                "url": "",            # 蓝盾服务链接，或者接入蓝鲸网关的API链接
+                "url": "",            # bkci服务链接，或者接入蓝鲸网关的API链接
                 "paramId": "",        # url返回规范中，用于下拉列表选项key的字段名，配合url使用
                 "paramName": ""       # url返回规范中，用于下拉列表选项label的字段名，配合url使用
             },
@@ -99,7 +99,7 @@
 }
 ```
 
-- 若以上配置不满足需求，请联系蓝盾人工客服
+- 若以上配置不满足需求，请联系bkci人工客服
 
 ## 输入组件配置示例
 
@@ -188,7 +188,7 @@
         - 配置规范：
             - 由optionsConf的url、paramId、paramName来指定
             - url支持两类：
-                - 蓝盾内置的服务
+                - bkci内置的服务
                 - 允许访问的第三方API
             - url返回规范：
                 - 返回json格式数据
