@@ -22,13 +22,21 @@
         <transition name="slide-right">
             <i v-if="status === 'SUCCEED'" class="devops-icon success icon-check-circle-shape" />
         </transition>
+        <transition name="slide-right">
+            <Logo name="pause" size="14" v-if="status === 'PAUSE'"></Logo>
+        </transition>
         <slot v-if="!status || status === 'SKIP' || status === 'QUALITY_CHECK_FAIL'"></slot>
     </span>
 </template>
 
 <script>
+    import Logo from '@/components/Logo'
+
     export default {
         name: 'stage-status',
+        components: {
+            Logo
+        },
         props: {
             status: String,
             type: String,

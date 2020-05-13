@@ -88,6 +88,10 @@
                     </div>
                 </div>
             </div>
+            <section class="atom-form-footer" v-if="showPanelType === 'PAUSE'">
+                <bk-button @click="changePluginPause(true, 'isExeContinue')" theme="primary" :loading="isExeContinue" :disabled="isExeStop">{{ $t('resume') }}</bk-button>
+                <bk-button @click="changePluginPause(false, 'isExeStop')" :loading="isExeStop" :disabled="isExeContinue">{{ $t('pause') }}</bk-button>
+            </section>
         </div>
     </section>
 </template>
@@ -165,7 +169,9 @@
                 isSetted: false,
                 isSupportVersion: true,
                 curVersionRelativeRules: [],
-                ruleDetailMessage: {}
+                ruleDetailMessage: {},
+                isExeStop: false,
+                isExeContinue: false
             }
         },
         computed: {
@@ -195,7 +201,8 @@
                 'atomModalMap',
                 'fetchingAtmoModal',
                 'atomVersionList',
-                'isPropertyPanelVisible'
+                'isPropertyPanelVisible',
+                'showPanelType'
             ]),
             visible: {
                 get () {
@@ -392,11 +399,36 @@
                 'fetchAtoms',
                 'fetchAtomModal',
                 'fetchAtomVersionList',
-                'togglePropertyPanel'
+                'togglePropertyPanel',
+                'pausePlugin'
             ]),
+
             ...mapActions('soda', [
                 'updateRefreshQualityLoading'
             ]),
+
+            changePluginPause (isContinue, loadingKey) {
+                const postData = {
+                    projectId: this.projectId,
+                    pipelineId: this.pipelineId,
+                    buildId: this.$route.params.buildNo,
+                    taskId: this.element.id,
+                    isContinue,
+                    stageId: this.stage.id,
+                    containerId: this.container.id,
+                    element: this.element
+                }
+                this[loadingKey] = true
+                this.pausePlugin(postData).catch((err) => {
+                    this.$showTips({
+                        message: err.message || err,
+                        theme: 'error'
+                    })
+                }).finally(() => {
+                    this[loadingKey] = false
+                })
+            },
+
             toggleEditName (show) {
                 this.nameEditing = show
             },
@@ -551,6 +583,12 @@
             color: $fontColor;
         }
     }
+    .atom-form-footer {
+        margin-top: 10px;
+        button {
+            margin-right: 6px;
+        }
+    }
     .no-atom-tips {
         display: flex;
         align-items: center;
@@ -632,9 +670,6 @@
                 color: $primaryColor;
             }
         }
-    }
-    .atom-option {
-        margin-bottom: 50px;
     }
     .property-panel-header {
         font-size: 14px;

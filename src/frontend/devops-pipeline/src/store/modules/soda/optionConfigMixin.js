@@ -44,6 +44,17 @@ const optionConfigMixin = {
                     text: this.$t('storeMap.retryWhenFailed'),
                     default: false
                 },
+                pauseBeforeExec: {
+                    rule: {},
+                    type: 'boolean',
+                    desc: this.$t('storeMap.runManual'),
+                    component: 'atom-checkbox',
+                    text: this.$t('storeMap.pauseAtom'),
+                    default: false,
+                    isHidden: (element) => {
+                        return !(element.data && element.data.config && (element.data.config.canPauseBeforeRun === true))
+                    }
+                },
                 retryCount: {
                     rule: { 'numeric': true, 'max_value': 5, 'min_value': 1 },
                     component: 'vuex-input',
@@ -52,6 +63,16 @@ const optionConfigMixin = {
                     default: '1',
                     isHidden: (element) => {
                         return !(element.additionalOptions && (element.additionalOptions.retryWhenFailed === true))
+                    }
+                },
+                subscriptionPauseUser: {
+                    rule: {},
+                    component: 'vuex-input',
+                    label: this.$t('storeMap.pauseNotify'),
+                    desc: this.$t('storeMap.pauseNotifyTip'),
+                    default: window.userInfo.username,
+                    isHidden: (element) => {
+                        return !(element.additionalOptions && (element.additionalOptions.pauseBeforeExec === true))
                     }
                 },
                 timeout: {
