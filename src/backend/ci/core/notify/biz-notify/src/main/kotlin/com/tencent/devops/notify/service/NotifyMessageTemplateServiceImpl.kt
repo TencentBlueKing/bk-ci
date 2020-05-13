@@ -41,7 +41,7 @@ import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.model.notify.tables.records.TCommonNotifyMessageTemplateRecord
 import com.tencent.devops.notify.dao.CommonNotifyMessageTemplateDao
 import com.tencent.devops.notify.dao.NotifyMessageTemplateDao
-import com.tencent.devops.notify.model.NotifyMessageCommonTemplate
+import com.tencent.devops.notify.pojo.NotifyMessageCommonTemplate
 import com.tencent.devops.notify.pojo.NotifyTemplateMessageRequest
 import com.tencent.devops.notify.pojo.EmailNotifyMessage
 import com.tencent.devops.notify.pojo.RtxNotifyMessage
