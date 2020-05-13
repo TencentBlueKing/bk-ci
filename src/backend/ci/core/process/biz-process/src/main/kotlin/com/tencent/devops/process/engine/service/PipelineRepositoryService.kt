@@ -277,7 +277,7 @@ class PipelineRepositoryService constructor(
             )
         }
 
-        addWebhook(c, projectId, pipelineId, userId, model.name)
+        addWebhook(container = c, projectId = projectId, pipelineId = pipelineId, userId = userId, pipelineName = model.name)
     }
 
     private fun addWebhook(container: TriggerContainer, projectId: String, pipelineId: String, userId: String, pipelineName: String) {
