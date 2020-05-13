@@ -621,6 +621,7 @@ class PipelineBuildDetailService @Autowired constructor(
             }
 
             override fun onFindElement(e: Element, c: Container): Traverse {
+                logger.info("pauseTask onFindElement e[${e.id}] taskId[$taskId] c[${c.id}] containerId[$containerId]")
                 if(c.containerId == containerId) {
                     logger.info("[$buildId]|update container[$containerId] status ${buildStatus.name}")
                     if(e.id == taskId) {
