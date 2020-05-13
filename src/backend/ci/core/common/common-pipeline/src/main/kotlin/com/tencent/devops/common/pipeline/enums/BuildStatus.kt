@@ -118,6 +118,11 @@ enum class BuildStatus(val statusName: String, val visiable: Boolean) {
         fun isRetry(status: BuildStatus) = status == RETRY
 
         /**
+         * 是否处于暂停中
+         */
+        fun isPause(status: BuildStatus) = status == PAUSE
+
+        /**
          * 能否重试执行
          */
 //        fun isCanRetry(status: BuildStatus) = !isCancel(status) && (isFailure(status) || isReadyToRun(status))

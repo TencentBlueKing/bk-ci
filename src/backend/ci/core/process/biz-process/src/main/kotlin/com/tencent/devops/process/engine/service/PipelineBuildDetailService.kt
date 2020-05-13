@@ -613,6 +613,7 @@ class PipelineBuildDetailService @Autowired constructor(
 
             override fun onFindStage(stage: Stage, model: Model): Traverse {
                 if(stage.id == stageId) {
+                    logger.info("[$buildId]|update stage[$stageId] status ${buildStatus.name}")
                     update = true
                     stage.status = buildStatus.name
                 }
@@ -621,7 +622,9 @@ class PipelineBuildDetailService @Autowired constructor(
 
             override fun onFindElement(e: Element, c: Container): Traverse {
                 if(c.containerId == containerId) {
+                    logger.info("[$buildId]|update container[$containerId] status ${buildStatus.name}")
                     if(e.id == taskId) {
+                        logger.info("[$buildId]|update task[$taskId] status ${buildStatus.name}")
                         update = true
                         c.status = buildStatus.name
                         e.status = buildStatus.name
