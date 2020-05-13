@@ -171,6 +171,10 @@ class PipelineBuildWebhookService @Autowired constructor(
 
     private val logger = LoggerFactory.getLogger(PipelineBuildWebhookService::class.java)
 
+    companion object {
+        private const val MAX_VARITABLE_COUNT = 32
+    }
+
     fun externalCodeSvnBuild(e: String): Boolean {
         logger.info("Trigger code svn build - $e")
 
@@ -711,7 +715,7 @@ class PipelineBuildWebhookService @Autowired constructor(
                 gitCommit.added?.forEachIndexed { innerIndex, file ->
                     startParams[BK_REPO_GIT_WEBHOOK_PUSH_ADD_FILE_PREFIX + curIndex + "_" + (innerIndex + 1)] = file
                     count++
-                    if (count > 32) return@run
+                    if (count > MAX_VARITABLE_COUNT) return@run
                 }
             }
 
@@ -719,7 +723,7 @@ class PipelineBuildWebhookService @Autowired constructor(
                 gitCommit.modified?.forEachIndexed { innerIndex, file ->
                     startParams[BK_REPO_GIT_WEBHOOK_PUSH_MODIFY_FILE_PREFIX + curIndex + "_" + (innerIndex + 1)] = file
                     count++
-                    if (count > 32) return@run
+                    if (count > MAX_VARITABLE_COUNT) return@run
                 }
             }
 
@@ -727,7 +731,7 @@ class PipelineBuildWebhookService @Autowired constructor(
                 gitCommit.removed?.forEachIndexed { innerIndex, file ->
                     startParams[BK_REPO_GIT_WEBHOOK_PUSH_DELETE_FILE_PREFIX + curIndex + "_" + (innerIndex + 1)] = file
                     count++
-                    if (count > 32) return@run
+                    if (count > MAX_VARITABLE_COUNT) return@run
                 }
             }
         }
