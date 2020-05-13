@@ -27,6 +27,7 @@ package com.tencent.devops.notify.model
 
 import com.tencent.devops.common.notify.enums.EnumNotifyPriority
 import com.tencent.devops.common.notify.enums.EnumNotifySource
+import com.tencent.devops.notify.pojo.NotifyTemplateMessage
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
