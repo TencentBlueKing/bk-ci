@@ -246,7 +246,9 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 dslContext = context,
                 userId = userId,
                 atomFeatureRequest = AtomFeatureRequest(
-                    atomCode = atomCode
+                    atomCode = atomCode,
+                    recommendFlag = true,
+                    yamlFlag = false
                 )
             )
         }
