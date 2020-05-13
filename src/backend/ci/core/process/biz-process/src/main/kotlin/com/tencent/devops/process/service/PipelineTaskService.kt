@@ -201,7 +201,7 @@ class PipelineTaskService @Autowired constructor(
             if(additionalOptions != null ){
                 additionalOptions.pauseBeforeExec = false
                 additionalOptions.isPause = true
-                pipelineBuildTaskDao.updateTaskAdditional(dslContext, buildId, taskId, additionalOptions.toString())
+                pipelineBuildTaskDao.updateTaskAdditional(dslContext, buildId, taskId, objectMapper.writeValueAsString(additionalOptions))
             }
 
 
@@ -352,7 +352,7 @@ class PipelineTaskService @Autowired constructor(
             userId = "",
             buildStatus = BuildStatus.PAUSE
         )
-        logger.info("pauseBuild update task status success")
+        logger.info("pauseBuild $buildId update task status success")
         // 修改容器状态位暂停
         pipelineRuntimeService.updateContainerStatus(
             buildId = buildId,
@@ -362,7 +362,7 @@ class PipelineTaskService @Autowired constructor(
             endTime = null,
             buildStatus = BuildStatus.PAUSE
         )
-        logger.info("pauseBuild update container status success")
+        logger.info("pauseBuild $buildId update container status success")
 
         // 修改stage状位位
         pipelineStageService.updateStageStatus(
@@ -370,7 +370,7 @@ class PipelineTaskService @Autowired constructor(
             stageId = stageId,
             buildStatus = BuildStatus.PAUSE
         )
-        logger.info("pauseBuild update stage status success")
+        logger.info("pauseBuild $buildId update stage status success")
 
         // 修改构建记录为暂停
         pipelineBuildDao.updateStatus(
@@ -379,7 +379,7 @@ class PipelineTaskService @Autowired constructor(
             oldBuildStatus = BuildStatus.RUNNING,
             newBuildStatus = BuildStatus.PAUSE
         )
-        logger.info("pauseBuild update history status success")
+        logger.info("pauseBuild $buildId update history status success")
 
 //        buildDetailDao.updateStatus(
 //            dslContext = dslContext,
@@ -395,7 +395,7 @@ class PipelineTaskService @Autowired constructor(
             taskId = taskId,
             buildStatus = BuildStatus.PAUSE
         )
-        logger.info("pauseBuild update history status success")
+        logger.info("pauseBuild $buildId update detail status success")
 
 
         pipelineBuildSummaryDao.finishLatestRunningBuild(
@@ -408,7 +408,7 @@ class PipelineTaskService @Autowired constructor(
                 userId = ""
             )
         )
-        logger.info("pauseBuild update summary status success")
+        logger.info("pauseBuild $buildId update summary status success")
     }
 
     private fun sendPauseNotify(
