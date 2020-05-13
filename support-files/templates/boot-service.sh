@@ -71,14 +71,14 @@ HTTP_PORT_STATUS=0
 function startup() {
     WEB_BASEDIR=${SERVICE_HOME}/rundata
     #	说明：以下最小内存和最大内存 当配置时最好配置成一样的,32GB机器上配置16GB内存，64GB机器配置32GB内存
-    JAVA_OPTS="$JAVA_OPTS -Xms256m -Xmx256m"
+    JAVA_OPTS="$JAVA_OPTS -Xms2g -Xmx2g"
 #    JAVA_OPTS="-Dserver.address=__LAN_IP__"
 #    JAVA_OPTS="$JAVA_OPTS -XX:ParallelGCThreads=8 -XX:+UseConcMarkSweepGC -XX:MaxGCPauseMillis=800"
 #    JAVA_OPTS="$JAVA_OPTS -XX:+PrintGCDetails -XX:+PrintGCDateStamps -XX:+PrintGCTimeStamps -Xloggc:$LOGS_HOME/gc_${SERVICE_NAME}.log "
     JAVA_OPTS="$JAVA_OPTS -server -Dcertificate.file=${CERT_PATH}/bkci_platform.cert -Dfile.encoding=UTF-8 -Djava.security.egd=file:/dev/./urandom"
     JAVA_OPTS="$JAVA_OPTS -Dspring.config.location=file:${CONF_HOME}/common.yml,file:${CONF_HOME}/application-${SERVICE_NAME}.yml"
     JAVA_OPTS="$JAVA_OPTS -Dservice.log.dir=${LOGS_HOME}"
-    JAVA_OPTS="$JAVA_OPTS -Ddevops_gateway=__HTTP_SCHEMA__://__BKCI_FQDN__"
+    JAVA_OPTS="$JAVA_OPTS -Ddevops_gateway=http://__BKCI_HOST__"
 
     export JAVA_OPTS
 
