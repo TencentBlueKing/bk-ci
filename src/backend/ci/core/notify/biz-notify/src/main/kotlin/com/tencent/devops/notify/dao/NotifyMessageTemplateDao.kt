@@ -35,7 +35,7 @@ import com.tencent.devops.model.notify.tables.records.TEmailsNotifyMessageTempla
 import com.tencent.devops.model.notify.tables.records.TRtxNotifyMessageTemplateRecord
 import com.tencent.devops.model.notify.tables.records.TWechatNotifyMessageTemplateRecord
 import com.tencent.devops.notify.pojo.NotifyTemplateMessage
-import com.tencent.devops.notify.model.NotifyTemplateMessageRequest
+import com.tencent.devops.notify.pojo.NotifyTemplateMessageRequest
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record1
