@@ -44,4 +44,8 @@ class OPDispatchDockerResourceImpl constructor(
     ): Result<Boolean> {
         return Result(dispatchDockerService.createDockerHostLoadConfig(userId, dockerHostLoadConfigMap))
     }
+
+    override fun updateDockerDriftThreshold(userId: String, threshold: Int): Result<Boolean> {
+        return Result(dispatchDockerService.updateDockerDriftThreshold(userId, threshold))
+    }
 }
