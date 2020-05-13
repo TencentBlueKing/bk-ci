@@ -29,7 +29,6 @@ import com.tencent.devops.common.notify.enums.EnumEmailFormat
 import com.tencent.devops.common.notify.enums.EnumEmailType
 import com.tencent.devops.common.notify.enums.EnumNotifyPriority
 import com.tencent.devops.common.notify.enums.EnumNotifySource
-import com.tencent.devops.common.notify.enums.NotifyType
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
