@@ -24,10 +24,25 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.api.exception
+package com.tencent.devops.environment.resources
 
-/**
- *
- * Powered By Tencent
- */
-class RemoteServiceException(val errorMessage: String, val httpStatus: Int = 500, val responseContent: String? = null) : RuntimeException(errorMessage)
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.environment.api.BuildNodeResource
+import com.tencent.devops.environment.pojo.NodeBaseInfo
+import com.tencent.devops.environment.service.NodeService
+import org.springframework.beans.factory.annotation.Autowired
+
+@RestResource
+class BuildNodeResourceImpl @Autowired constructor(
+    private val nodeService: NodeService
+) : BuildNodeResource {
+
+    override fun get(
+        userId: String,
+        projectId: String,
+        displayName: String
+    ): Result<List<NodeBaseInfo>> {
+        return Result(nodeService.getByDisplayName(userId, projectId, displayName))
+    }
+}
