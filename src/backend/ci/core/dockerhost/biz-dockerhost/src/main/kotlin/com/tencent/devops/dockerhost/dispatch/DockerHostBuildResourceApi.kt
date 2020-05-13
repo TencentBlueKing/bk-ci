@@ -31,9 +31,13 @@ import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.dispatch.pojo.DockerHostBuildInfo
 import com.tencent.devops.dispatch.pojo.DockerHostInfo
+import com.tencent.devops.dispatch.pojo.DockerIpInfoVO
+import com.tencent.devops.dockerhost.utils.CommonUtils
+import com.tencent.devops.dockerhost.utils.SigarUtil
 import com.tencent.devops.store.pojo.image.response.ImageRepoInfo
 import okhttp3.MediaType
 import okhttp3.RequestBody
@@ -133,6 +137,43 @@ class DockerHostBuildResourceApi constructor(
     fun postLog(buildId: String, red: Boolean, message: String, tag: String? = "", jobId: String? = ""): Result<Boolean>? {
         val path = "/$urlPrefix/api/dockerhost/postlog?buildId=$buildId&red=$red&tag=$tag&jobId=$jobId"
         val request = buildPost(path, RequestBody.create(MediaType.parse("application/json; charset=utf-8"), message))
+
+        OkhttpUtils.doHttp(request).use { response ->
+            val responseContent = response.body()!!.string()
+            if (!response.isSuccessful) {
+                logger.error("DockerHostBuildResourceApi $path fail. $responseContent")
+                throw TaskExecuteException(
+                    errorCode = ErrorCode.SYSTEM_WORKER_INITIALIZATION_ERROR,
+                    errorType = ErrorType.SYSTEM,
+                    errorMsg = "DockerHostBuildResourceApi $path fail")
+            }
+            return objectMapper.readValue(responseContent)
+        }
+    }
+
+    fun refreshDockerIpStatus(port: String, containerNum: Int): Result<Boolean>? {
+        val dockerIp = CommonUtils.getInnerIP()
+        val path = "/$urlPrefix/api/dockerhost/dockerIp/$dockerIp/refresh"
+        val dockerIpInfoVO = DockerIpInfoVO(
+            id = 0L,
+            dockerIp = dockerIp,
+            dockerHostPort = port.toInt(),
+            capacity = 100,
+            usedNum = containerNum,
+            averageCpuLoad = SigarUtil.getAverageCpuLoad(),
+            averageMemLoad = SigarUtil.getAverageMemLoad(),
+            averageDiskLoad = SigarUtil.getAverageDiskLoad(),
+            averageDiskIOLoad = SigarUtil.getAverageDiskIOLoad(),
+            enable = true,
+            grayEnv = null,
+            specialOn = null,
+            createTime = null
+        )
+
+        val request = buildPost(
+            path,
+            RequestBody.create(MediaType.parse("application/json; charset=utf-8"), JsonUtil.toJson(dockerIpInfoVO))
+        )
 
         OkhttpUtils.doHttp(request).use { response ->
             val responseContent = response.body()!!.string()
