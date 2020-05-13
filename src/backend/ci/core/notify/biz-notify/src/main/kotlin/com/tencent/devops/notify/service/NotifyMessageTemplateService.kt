@@ -27,7 +27,7 @@ package com.tencent.devops.notify.service
 
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.notify.model.NotifyMessageCommonTemplate
+import com.tencent.devops.notify.pojo.NotifyMessageCommonTemplate
 import com.tencent.devops.notify.pojo.NotifyTemplateMessageRequest
 import com.tencent.devops.notify.pojo.NotifyContext
 import com.tencent.devops.notify.pojo.NotifyMessageContextRequest
