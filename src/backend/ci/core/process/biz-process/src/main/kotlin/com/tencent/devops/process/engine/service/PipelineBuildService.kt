@@ -59,6 +59,7 @@ import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.dao.BuildDetailDao
+import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.compatibility.BuildParametersCompatibilityTransformer
 import com.tencent.devops.process.engine.compatibility.BuildPropertyCompatibilityTools
 import com.tencent.devops.process.engine.control.lock.BuildIdLock
@@ -67,6 +68,7 @@ import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.dao.PipelineBuildTaskDao
 import com.tencent.devops.process.engine.interceptor.InterceptData
 import com.tencent.devops.process.engine.interceptor.PipelineInterceptorChain
+import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.jmx.api.ProcessJmxApi
 import com.tencent.devops.process.permission.PipelinePermissionService
@@ -1917,7 +1919,18 @@ class PipelineBuildService(
         )
         // 将启动和结束任务置为排队。用于启动构建机
         val taskRecords = pipelineRuntimeService.getAllBuildTask(buildId)
-        val startAndEndTask= taskRecords.filter { it.containerId == containerId; it.stageId == stageId}
+        val startAndEndTask = mutableListOf<PipelineBuildTask>()
+        taskRecords.forEach { task ->
+            if(task.containerId == containerId && task.stageId == stageId) {
+                if(task.taskId == taskId) {
+                    startAndEndTask.add(task)
+                } else if(task.taskName.startsWith(VMUtils.getCleanVmLable()) && task.taskId.startsWith(VMUtils.getStopVmLabel())) {
+                    startAndEndTask.add(task)
+                } else if(task.taskName.startsWith(VMUtils.getPrepareVmLable()) && task.taskId.startsWith(VMUtils.getStartVmLabel())) {
+                    startAndEndTask.add(task)
+                }
+            }
+        }
         startAndEndTask.forEach {
             pipelineRuntimeService.updateTaskStatus(
                 buildId = buildId,
@@ -1949,7 +1962,7 @@ class PipelineBuildService(
             dslContext = dslContext,
             buildId = buildId,
             oldBuildStatus = BuildStatus.PAUSE,
-            newBuildStatus = BuildStatus.QUEUE
+            newBuildStatus = BuildStatus.RUNNING
         )
 
         buildDetailDao.updateStatus(

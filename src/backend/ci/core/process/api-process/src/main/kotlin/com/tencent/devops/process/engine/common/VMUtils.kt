@@ -45,4 +45,8 @@ object VMUtils {
     fun getStopVmLabel() = "stopVM-"
 
     fun getCleanVmLable() = "Clean_Job#"
+
+    fun getStartVmLabel() = "startVM"
+
+    fun getPrepareVmLable() = "Prepare_Job#"
 }
