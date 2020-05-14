@@ -70,7 +70,7 @@ class DockerHostUtils @Autowired constructor(
     companion object {
         private const val LOAD_CONFIG_KEY = "dockerhost-load-config"
         private const val DOCKER_DRIFT_THRESHOLD_KEY = "docker-drift-threshold-spKyQ86qdYhAkDDR"
-        private const val DOCKER_IP_COUNT_MAX = 1000
+        private const val DOCKER_IP_COUNT_MAX = 100
         private const val BUILD_POOL_SIZE = 100 // 单个流水线可同时执行的任务数量
 
         private val logger = LoggerFactory.getLogger(DockerHostUtils::class.java)
@@ -82,7 +82,6 @@ class DockerHostUtils @Autowired constructor(
     fun getAvailableDockerIpWithSpecialIps(projectId: String, pipelineId: String, vmSeqId: String, specialIpSet: Set<String>, unAvailableIpList: Set<String> = setOf()): Pair<String, Int> {
         val grayEnv = gray.isGray()
 
-        var dockerPair = Pair("", 0)
         // 获取负载配置
         val dockerHostLoadConfigTriple = getLoadConfig()
         logger.info("Docker host load config: ${JsonUtil.toJson(dockerHostLoadConfigTriple)}")
@@ -110,52 +109,17 @@ class DockerHostUtils @Autowired constructor(
             }
         }
 
-        // 先取容量负载比较小的，同时满足磁盘空间使用率小于60%并且内存CPU使用率均低于80%(负载阈值具体由OP平台配置)，从满足的节点中选择磁盘空间使用率最小的
-        val firstLoadConfig = dockerHostLoadConfigTriple.first
-        val firstDockerIpList =
-            pipelineDockerIpInfoDao.getAvailableDockerIpList(
-                dslContext = dslContext,
-                grayEnv = grayEnv,
-                cpuLoad = firstLoadConfig.cpuLoadThreshold,
-                memLoad = firstLoadConfig.memLoadThreshold,
-                diskLoad = firstLoadConfig.diskLoadThreshold,
-                diskIOLoad = firstLoadConfig.diskIOLoadThreshold,
-                specialIpSet = specialIpSet
-            )
-        if (firstDockerIpList.isNotEmpty) {
-            dockerPair = selectAvailableDockerIp(firstDockerIpList, unAvailableIpList)
-        } else {
-            // 没有满足1的，优先选择磁盘空间，内存使用率均低于80%的
-            val secondLoadConfig = dockerHostLoadConfigTriple.second
-            val secondDockerIpList =
-                pipelineDockerIpInfoDao.getAvailableDockerIpList(
-                    dslContext = dslContext,
-                    grayEnv = grayEnv,
-                    cpuLoad = secondLoadConfig.cpuLoadThreshold,
-                    memLoad = secondLoadConfig.memLoadThreshold,
-                    diskLoad = secondLoadConfig.diskLoadThreshold,
-                    diskIOLoad = secondLoadConfig.diskIOLoadThreshold,
-                    specialIpSet = specialIpSet
-                )
-            if (secondDockerIpList.isNotEmpty) {
-                dockerPair = selectAvailableDockerIp(secondDockerIpList, unAvailableIpList)
+        // 先取容量负载比较小的，同时满足负载条件的（负载阈值具体由OP平台配置)，从满足的节点中随机选择一个
+        val firstPair = dockerLoadCheck(dockerHostLoadConfigTriple.first, grayEnv, specialIpSet, unAvailableIpList)
+        val dockerPair = if (firstPair.first.isEmpty()) {
+            val secondPair = dockerLoadCheck(dockerHostLoadConfigTriple.second, grayEnv, specialIpSet, unAvailableIpList)
+            if (secondPair.first.isEmpty()) {
+                return dockerLoadCheck(dockerHostLoadConfigTriple.third, grayEnv, specialIpSet, unAvailableIpList)
             } else {
-                // 通过2依旧没有找到满足的构建机，选择内存使用率小于80%的
-                val thirdLoadConfig = dockerHostLoadConfigTriple.third
-                val thirdDockerIpList =
-                    pipelineDockerIpInfoDao.getAvailableDockerIpList(
-                        dslContext = dslContext,
-                        grayEnv = grayEnv,
-                        cpuLoad = thirdLoadConfig.cpuLoadThreshold,
-                        memLoad = thirdLoadConfig.memLoadThreshold,
-                        diskLoad = thirdLoadConfig.diskLoadThreshold,
-                        diskIOLoad = thirdLoadConfig.diskIOLoadThreshold,
-                        specialIpSet = specialIpSet
-                    )
-                if (thirdDockerIpList.isNotEmpty) {
-                    dockerPair = selectAvailableDockerIp(thirdDockerIpList, unAvailableIpList)
-                }
+                secondPair
             }
+        } else {
+            firstPair
         }
 
         if (dockerPair.first.isEmpty()) {
@@ -260,14 +224,14 @@ class DockerHostUtils @Autowired constructor(
     ): Triple<String, Int, String> {
         val dockerIp = dockerIpInfo.dockerIp
 
-        // 同一条流水线并发构建时，当并发数超过5，无视负载，直接下发同一个IP（避免同一条流水线并发量太大，影响其他流水线构建）
-/*        if (poolNo > 5 && dockerIpInfo.enable && (dockerIpInfo.grayEnv == gray.isGray())) {
-            return Triple(dockerIp, dockerIpInfo.dockerHostPort, "")
-        }*/
-
         // 查看当前IP负载情况，当前IP不可用或者负载超额或者设置为专机独享或者是否灰度已被切换，重新选择构建机
         val threshold = getDockerDriftThreshold()
-        if (!dockerIpInfo.enable || dockerIpInfo.diskLoad > threshold || dockerIpInfo.memLoad > threshold || dockerIpInfo.specialOn || (dockerIpInfo.grayEnv != gray.isGray())) {
+        if (!dockerIpInfo.enable ||
+            dockerIpInfo.diskLoad > 90 ||
+            dockerIpInfo.memLoad > threshold ||
+            dockerIpInfo.specialOn ||
+            (dockerIpInfo.grayEnv != gray.isGray()) ||
+            (dockerIpInfo.usedNum > 40 && dockerIpInfo.memLoad > 60)) {
             val pair = getAvailableDockerIpWithSpecialIps(
                 event.projectId,
                 event.pipelineId,
@@ -303,6 +267,19 @@ class DockerHostUtils @Autowired constructor(
         return "$idcProxy/proxy-devnet?url=${urlEncode(url)}"
     }
 
+    fun updateDockerDriftThreshold(threshold: Int) {
+        redisOperation.set(DOCKER_DRIFT_THRESHOLD_KEY, threshold.toString())
+    }
+
+    fun getDockerDriftThreshold(): Int {
+        val thresholdStr = redisOperation.get(DOCKER_DRIFT_THRESHOLD_KEY)
+        return if (thresholdStr != null && thresholdStr.isNotEmpty()) {
+            thresholdStr.toInt()
+        } else {
+            90
+        }
+    }
+
     fun createLoadConfig(loadConfigMap: Map<String, DockerHostLoadConfig>) {
         redisOperation.set(LOAD_CONFIG_KEY, JsonUtil.toJson(loadConfigMap))
     }
@@ -315,13 +292,13 @@ class DockerHostUtils @Autowired constructor(
                 return Triple(
                     dockerHostLoadConfig["first"] ?: DockerHostLoadConfig(
                         cpuLoadThreshold = 80,
-                        memLoadThreshold = 80,
+                        memLoadThreshold = 50,
                         diskLoadThreshold = 60,
                         diskIOLoadThreshold = 80
                     ),
                     dockerHostLoadConfig["second"] ?: DockerHostLoadConfig(
                         cpuLoadThreshold = 90,
-                        memLoadThreshold = 80,
+                        memLoadThreshold = 70,
                         diskLoadThreshold = 80,
                         diskIOLoadThreshold = 90
                     ),
@@ -338,51 +315,46 @@ class DockerHostUtils @Autowired constructor(
         }
 
         return Triple(
-            first = DockerHostLoadConfig(80, 80, 80, 80),
-            second = DockerHostLoadConfig(90, 80, 80, 90),
+            first = DockerHostLoadConfig(80, 50, 60, 80),
+            second = DockerHostLoadConfig(90, 70, 80, 90),
             third = DockerHostLoadConfig(100, 80, 100, 100)
         )
     }
 
-    fun updateDockerDriftThreshold(threshold: Int) {
-        redisOperation.set(DOCKER_DRIFT_THRESHOLD_KEY, threshold.toString())
-    }
+    private fun dockerLoadCheck(dockerHostLoadConfig: DockerHostLoadConfig, grayEnv: Boolean, specialIpSet: Set<String>, unAvailableIpList: Set<String>): Pair<String, Int> {
+        val dockerIpList =
+            pipelineDockerIpInfoDao.getAvailableDockerIpList(
+                dslContext = dslContext,
+                grayEnv = grayEnv,
+                cpuLoad = dockerHostLoadConfig.cpuLoadThreshold,
+                memLoad = dockerHostLoadConfig.memLoadThreshold,
+                diskLoad = dockerHostLoadConfig.diskLoadThreshold,
+                diskIOLoad = dockerHostLoadConfig.diskIOLoadThreshold,
+                specialIpSet = specialIpSet
+            )
 
-    fun getDockerDriftThreshold(): Int {
-        val thresholdStr = redisOperation.get(DOCKER_DRIFT_THRESHOLD_KEY)
-        return if (thresholdStr != null && thresholdStr.isNotEmpty()) {
-            thresholdStr.toInt()
+        return if (dockerIpList.isNotEmpty) {
+            selectAvailableDockerIp(dockerIpList, unAvailableIpList)
         } else {
-            90
+            Pair("", 0)
         }
     }
 
     private fun selectAvailableDockerIp(
-        dockerIpList: List<TDispatchPipelineDockerIpInfoRecord>,
+        dockerIpList: MutableList<TDispatchPipelineDockerIpInfoRecord>,
         unAvailableIpList: Set<String> = setOf()
     ): Pair<String, Int> {
-/*        if (unAvailableIpList.isEmpty() && !checkIpLimiting(dockerIpList[0].dockerIp)) {
-            return Pair(dockerIpList[0].dockerIp, dockerIpList[0].dockerHostPort)
-        } else {
-            dockerIpList.forEach {
-                if (unAvailableIpList.contains(it.dockerIp)) {
-                    return@forEach
-                } else {
-                    // 查看当前IP是否已达限流
-                    if (checkIpLimiting(it.dockerIp)) {
-                        return@forEach
-                    }
-
-                    return Pair(it.dockerIp, it.dockerHostPort)
-                }
-            }
-        }*/
-
         val random = Random()
-        for (i in 1..200) {
-            val dockerInfo = dockerIpList[random.nextInt(dockerIpList.size)]
-            if (!unAvailableIpList.contains(dockerInfo.dockerIp) && !exceedIpLimiting(dockerInfo.dockerIp)) {
-                return Pair(dockerInfo.dockerIp, dockerInfo.dockerHostPort)
+        // 随机size + 1次，保证能随机整个列表
+        for (i in 1..(dockerIpList.size + 1)) {
+            if (dockerIpList.size > 0) {
+                val index = random.nextInt(dockerIpList.size)
+                val dockerInfo = dockerIpList[index]
+                if (!unAvailableIpList.contains(dockerInfo.dockerIp) && !exceedIpLimiting(dockerInfo.dockerIp)) {
+                    return Pair(dockerInfo.dockerIp, dockerInfo.dockerHostPort)
+                } else {
+                    dockerIpList.removeAt(index)
+                }
             }
         }
 
