@@ -162,19 +162,10 @@ object ShellUtil {
                     return@forEach
                 }
                 // command.append("export $name=$path")
-                var hasTurbo = false
                 path = if (path.isEmpty()) {
                     envFile.absolutePath
                 } else {
-                    if (envFile.absolutePath.startsWith("/data/bkdevops/apps/turbo/1.0")) {
-                        hasTurbo = true
-                        path
-                    } else {
-                        "${envFile.absolutePath}:$path"
-                    }
-                }
-                if (hasTurbo) {
-                    path = "$path:/data/bkdevops/apps/turbo/1.0"
+                    "$path:${envFile.absolutePath}"
                 }
                 if (buildEnv.env.isNotEmpty()) {
                     buildEnv.env.forEach { (name, path) ->
