@@ -1846,7 +1846,9 @@ class PipelineBuildService(
                     params = arrayOf(buildId)
                 )
 
-            if (buildInfo.status != BuildStatus.PAUSE) {
+            val taskRecord = pipelineRuntimeService.getBuildTask(buildId, taskId)
+
+            if (taskRecord?.status != BuildStatus.PAUSE) {
                 throw ErrorCodeException(
                     errorCode = ProcessMessageCode.ERROR_PARUS_PIEPLINE_IS_RUNNINT,
                     defaultMessage = "暂停流水线已恢复执行"
@@ -1879,17 +1881,6 @@ class PipelineBuildService(
                 taskId = taskId,
                 stageId = stageId,
                 containerId = containerId
-            )
-
-
-            pipelineRuntimeService.startLatestRunningBuild(
-                latestRunningBuild = LatestRunningBuild(
-                    pipelineId = pipelineId,
-                    buildId = buildId,
-                    userId = userId,
-                    buildNum = buildInfo.buildNum
-                ),
-                retry = false
             )
 
             val params = mutableMapOf<String, Any>()
@@ -1977,29 +1968,29 @@ class PipelineBuildService(
             endTime = null,
             buildStatus = BuildStatus.QUEUE
         )
-
-        // 修改stage状位位
-        pipelineStageService.updateStageStatus(
-            buildId = buildId,
-            stageId = stageId,
-            buildStatus = BuildStatus.QUEUE
-        )
-
-        // 修改构建记录为暂停
-        pipelineBuildDao.updateStatus(
-            dslContext = dslContext,
-            buildId = buildId,
-            oldBuildStatus = BuildStatus.PAUSE,
-            newBuildStatus = BuildStatus.RUNNING
-        )
-
-        buildDetailDao.updateStatus(
-            dslContext = dslContext,
-            buildId = buildId,
-            buildStatus = BuildStatus.QUEUE,
-            startTime = null,
-            endTime = null
-        )
+//
+//        // 修改stage状位位
+//        pipelineStageService.updateStageStatus(
+//            buildId = buildId,
+//            stageId = stageId,
+//            buildStatus = BuildStatus.QUEUE
+//        )
+//
+//        // 修改构建记录为暂停
+//        pipelineBuildDao.updateStatus(
+//            dslContext = dslContext,
+//            buildId = buildId,
+//            oldBuildStatus = BuildStatus.PAUSE,
+//            newBuildStatus = BuildStatus.RUNNING
+//        )
+//
+//        buildDetailDao.updateStatus(
+//            dslContext = dslContext,
+//            buildId = buildId,
+//            buildStatus = BuildStatus.QUEUE,
+//            startTime = null,
+//            endTime = null
+//        )
     }
 
     fun getBuildDetailStatus(
