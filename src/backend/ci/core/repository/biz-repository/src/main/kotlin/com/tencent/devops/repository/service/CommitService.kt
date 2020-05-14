@@ -62,17 +62,17 @@ class CommitService @Autowired constructor(
         return commits.map {
             val repoUrl = idRepos[it.repoId.toString()]?.url ?: nameRepos[it.repoName]?.url
             CommitData(
-                it.type,
-                it.pipelineId,
-                it.buildId,
-                it.commit,
-                it.committer,
-                it.commitTime.timestampmilli(),
-                it.comment,
-                it.repoId?.toString(),
-                it.repoName,
-                it.elementId,
-                if (it.type.toInt() == 2 && repoUrl != null) {
+                type = it.type,
+                pipelineId = it.pipelineId,
+                buildId = it.buildId,
+                commit = it.commit,
+                committer = it.committer,
+                commitTime = it.commitTime.timestampmilli(),
+                comment = it.comment,
+                repoId = it.repoId?.toString(),
+                repoName = it.repoName,
+                elementId = it.elementId,
+                url = if (it.type.toInt() == 2 && repoUrl != null) {
                     val urlAndRepo = GitUtils.getDomainAndRepoName(repoUrl)
                     "https://${urlAndRepo.first}/${urlAndRepo.second}/commit/${it.commit}"
                 } else null
@@ -82,9 +82,9 @@ class CommitService @Autowired constructor(
             val repoId = it.value[0].repoId
             val repoName = it.value[0].repoName
             CommitResponse(
-                (idRepos[repoId]?.aliasName ?: nameRepos[repoName]?.aliasName ?: "unknown repo"),
-                elementId,
-                it.value.filter { it.commit.isNotBlank() })
+                name = (idRepos[repoId]?.aliasName ?: nameRepos[repoName]?.aliasName ?: "unknown repo"),
+                elementId = elementId,
+                records = it.value.filter { it.commit.isNotBlank() })
         } ?: listOf()
     }
 
@@ -104,23 +104,35 @@ class CommitService @Autowired constructor(
     ): List<CommitData> {
         val commitList = if (repositoryType == null || repositoryType == RepositoryType.ID) {
             val repoId = HashUtil.decodeOtherIdToLong(repositoryId)
-            commitDao.getLatestCommitById(dslContext, pipelineId, elementId, repoId, page, pageSize) ?: return listOf()
+            commitDao.getLatestCommitById(
+                dslContext = dslContext,
+                pipelineId = pipelineId,
+                elementId = elementId,
+                repoId = repoId,
+                page = page,
+                pageSize = pageSize) ?: return listOf()
         } else {
             val repoName = repositoryDao.getByName(dslContext, projectId, repositoryId).aliasName
-            commitDao.getLatestCommitByName(dslContext, pipelineId, elementId, repoName, page, pageSize) ?: return listOf()
+            commitDao.getLatestCommitByName(
+                dslContext = dslContext,
+                pipelineId = pipelineId,
+                elementId = elementId,
+                repoName = repoName,
+                page = page,
+                pageSize = pageSize) ?: return listOf()
         }
         return commitList.map { data ->
             CommitData(
-                data.type,
-                pipelineId,
-                data.buildId,
-                data.commit,
-                data.committer,
-                data.commitTime.timestampmilli(),
-                data.comment,
-                data.repoId.toString(),
-                null,
-                data.elementId
+                type = data.type,
+                pipelineId = pipelineId,
+                buildId = data.buildId,
+                commit = data.commit,
+                committer = data.committer,
+                commitTime = data.commitTime.timestampmilli(),
+                comment = data.comment,
+                repoId = data.repoId.toString(),
+                repoName = null,
+                elementId = data.elementId
             )
         }
     }
