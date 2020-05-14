@@ -86,10 +86,10 @@ class DockerHostBuildService(
     private val logger = LoggerFactory.getLogger(DockerHostBuildService::class.java)
 
     private val dockerHostBuildApi: DockerHostBuildResourceApi =
-        DockerHostBuildResourceApi(if ("codecc_build" == dockerHostConfig.runMode) "ms/dispatch-codecc" else "ms/dispatch")
+        DockerHostBuildResourceApi(if ("codecc_build" == dockerHostConfig.dockerhostMode) "ms/dispatch-codecc" else "ms/dispatch")
 
     private val alertApi: AlertApi =
-        AlertApi(if ("codecc_build" == dockerHostConfig.runMode) "ms/dispatch-codecc" else "ms/dispatch")
+        AlertApi(if ("codecc_build" == dockerHostConfig.dockerhostMode) "ms/dispatch-codecc" else "ms/dispatch")
 
     private val config = DefaultDockerClientConfig.createDefaultConfigBuilder()
         .withDockerConfig(dockerHostConfig.dockerConfig)
