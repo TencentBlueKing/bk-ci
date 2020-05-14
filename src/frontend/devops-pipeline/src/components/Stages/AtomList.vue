@@ -36,8 +36,11 @@
                         </template>
                     </bk-popover>
                     <template v-if="atom.status === 'PAUSE'">
-                        <span @click.stop="continueExecute(index)" class="pause-button">{{ $t('resume') }}</span>
-                        <span @click.stop="stopExecute(index)" class="pause-button">{{ $t('pause') }}</span>
+                        <span @click.stop="continueExecute(index)" :class="[{ 'disabled': isExecStop }, 'pause-button']">{{ $t('resume') }}</span>
+                        <span @click.stop="stopExecute(index)" class="pause-button">
+                            <i class="devops-icon icon-circle-2-1 executing-job" v-if="isExecStop" />
+                            <span v-else>{{ $t('pause') }}</span>
+                        </span>
                     </template>
                     <a href="javascript: void(0);" class="atom-single-retry" v-else-if="atom.status !== 'SKIP' && atom.canRetry" @click.stop="singleRetry(atom.id)">{{ $t('retry') }}</a>
                     <bk-popover placement="top" v-else-if="atom.status !== 'SKIP'" :disabled="!atom.elapsed">
@@ -119,6 +122,7 @@
             return {
                 reviewLoading: false,
                 isShowCheckDialog: false,
+                isExecStop: false,
                 currentAtom: {}
             }
         },
@@ -203,6 +207,7 @@
             ]),
 
             continueExecute (elementIndex) {
+                if (this.isExecStop) return
                 const { stageIndex, containerIndex } = this
                 this.togglePropertyPanel({
                     isShow: true,
@@ -216,6 +221,7 @@
             },
 
             stopExecute (elementIndex) {
+                if (this.isExecStop) return
                 const stages = this.execDetail.model.stages || []
                 const stage = stages[this.stageIndex] || {}
                 const elements = this.container.elements || []
@@ -230,11 +236,16 @@
                     containerId: this.container.id,
                     element
                 }
-                this.pausePlugin(postData).catch((err) => {
+                this.isExecStop = true
+                this.pausePlugin(postData).then(() => {
+                    return this.requestPipelineExecDetail(this.routerParams)
+                }).catch((err) => {
                     this.$showTips({
                         message: err.message || err,
                         theme: 'error'
                     })
+                }).finally(() => {
+                    this.isExecStop = false
                 })
             },
 
@@ -539,6 +550,18 @@
                 max-width: 188px;
                 span:hover {
                     color: $primaryColor;
+                }
+            }
+            .disabled {
+                cursor: not-allowed;
+                color: #c4cdd6;
+            }
+
+            .executing-job {
+                cursor: default;
+                &:before {
+                    display: inline-block;
+                    animation: rotating infinite .6s ease-in-out;
                 }
             }
 
