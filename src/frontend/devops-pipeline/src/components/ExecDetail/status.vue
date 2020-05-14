@@ -16,6 +16,9 @@
         <svg aria-hidden="true" v-if="status === 'SUCCEED'">
             <use xlink:href="#icon-build-sucess"></use>
         </svg>
+        <svg aria-hidden="true" v-if="status === 'PAUSE'">
+            <use xlink:href="#icon-build-pause"></use>
+        </svg>
     </span>
 </template>
 
