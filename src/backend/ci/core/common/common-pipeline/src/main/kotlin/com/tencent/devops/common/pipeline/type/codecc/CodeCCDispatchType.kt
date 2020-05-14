@@ -26,16 +26,14 @@
 
 package com.tencent.devops.common.pipeline.type.codecc
 
-import com.fasterxml.jackson.annotation.JsonProperty
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.common.pipeline.type.DispatchRouteKeySuffix
 import com.tencent.devops.common.pipeline.type.DispatchType
 
 data class CodeCCDispatchType(
-    @JsonProperty("value") var codeccTaskInfo: String,
     val codeccTaskId: Long?
-) : DispatchType(codeccTaskInfo, DispatchRouteKeySuffix.CODECC) {
+) : DispatchType("", DispatchRouteKeySuffix.CODECC) {
     override fun cleanDataBeforeSave() {
     }
 
