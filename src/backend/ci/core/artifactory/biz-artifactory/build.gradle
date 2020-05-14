@@ -33,6 +33,7 @@ dependencies {
     compile project(":core:common:common-auth:common-auth-api")
     compile project(":core:artifactory:api-artifactory")
     compile project(":core:artifactory:model-artifactory")
+    compile project(":core:process:api-process")
     compile("com.amazonaws:aws-java-sdk-s3")
     compile "net.coobird:thumbnailator:0.4.8"
 }

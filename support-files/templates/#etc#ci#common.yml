@@ -38,17 +38,17 @@ server:
 
 # gateway for system
 devopsGateway:
-  build: __HTTP_SCHEMA__://__BKCI_FQDN__:__BKCI_HTTPS_PORT__        # for build agent like dev.devops.blueking.com:80
-  host: __HTTP_SCHEMA__://__BKCI_FQDN__:__BKCI_HTTPS_PORT__         # for web many be same to buildGateWay
-  api: __HTTP_SCHEMA__://__BKCI_FQDN__:__BKCI_HTTPS_PORT__          # for api many be same to host
-  idc: __HTTP_SCHEMA__://__BKCI_FQDN__:__BKCI_HTTPS_PORT__          # for idc many be same to host
-  idcProxy: __HTTP_SCHEMA__://__BKCI_FQDN__:__BKCI_HTTPS_PORT__     # for idc proxy many be same to host
-  devnetProxy: __HTTP_SCHEMA__://__BKCI_FQDN__:__BKCI_HTTPS_PORT__  # for devnet proxy many be same to host
-  devnet: __HTTP_SCHEMA__://__BKCI_FQDN__:__BKCI_HTTPS_PORT__       # for devnet many be same to host
-  oss: __HTTP_SCHEMA__://__BKCI_FQDN__:__BKCI_HTTPS_PORT__          # for oss many be same to host
-  ossProxy: __HTTP_SCHEMA__://__BKCI_FQDN__:__BKCI_HTTPS_PORT__     # for oss proxy many be same to host
-  outer: __HTTP_SCHEMA__://__BKCI_FQDN__:__BKCI_HTTPS_PORT__        # for internet domain
-  outerApi: __HTTP_SCHEMA__://__BKCI_FQDN__:__BKCI_HTTPS_PORT__     # for internet domain api
+  build: __HTTP_SCHEMA__://__BKCI_FQDN__        # for build agent like dev.devops.blueking.com:80
+  host: __HTTP_SCHEMA__://__BKCI_FQDN__         # for web many be same to buildGateWay
+  api: __HTTP_SCHEMA__://__BKCI_FQDN__          # for api many be same to host
+  idc: __HTTP_SCHEMA__://__BKCI_FQDN__          # for idc many be same to host
+  idcProxy: __HTTP_SCHEMA__://__BKCI_FQDN__     # for idc proxy many be same to host
+  devnetProxy: __HTTP_SCHEMA__://__BKCI_FQDN__  # for devnet proxy many be same to host
+  devnet: __HTTP_SCHEMA__://__BKCI_FQDN__       # for devnet many be same to host
+  oss: __HTTP_SCHEMA__://__BKCI_FQDN__          # for oss many be same to host
+  ossProxy: __HTTP_SCHEMA__://__BKCI_FQDN__     # for oss proxy many be same to host
+  outer: __HTTP_SCHEMA__://__BKCI_FQDN__        # for internet domain
+  outerApi: __HTTP_SCHEMA__://__BKCI_FQDN__     # for internet domain api
   
 # certificate server 配置
 certificate:

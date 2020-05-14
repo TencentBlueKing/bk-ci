@@ -131,6 +131,7 @@ jobs:
         run: |
           cp -rf support-files/ bkci/
           cp -rf support-files/agent-package bkci/
+          rm -vf scripts/generate_boot.sh
           cp -rf scripts/ bkci/
           rm -rf bkci/support-files/agent-package
           cp -f bkci/frontend/console/frontend#console#index.html bkci/support-files/templates/frontend#console#index.html

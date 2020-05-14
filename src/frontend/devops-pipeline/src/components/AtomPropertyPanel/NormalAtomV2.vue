@@ -172,12 +172,14 @@
                 try {
                     const atomDefaultValue = getAtomDefaultValue(this.atomPropsModel.input)
                     // 新增字段，已添加插件读取默认值
-                    Object.keys(atomDefaultValue).filter(key => !this.element.data.input.hasOwnProperty(key)).map(key => {
-                        this.handleUpdateAtomInput(key, atomDefaultValue[key])
-                    })
-                    return {
-                        ...this.element.data.input
-                    }
+                    const atomValue = Object.keys(this.element.data.input).reduce((res, key) => {
+                        if (atomDefaultValue.hasOwnProperty(key)) {
+                            res[key] = this.element.data.input[key]
+                        }
+                        return res
+                    }, atomDefaultValue)
+                    this.handleUpdateWholeAtomInput(atomValue)
+                    return atomValue
                 } catch (e) {
                     console.warn('getAtomInput error', e)
                     return {}
