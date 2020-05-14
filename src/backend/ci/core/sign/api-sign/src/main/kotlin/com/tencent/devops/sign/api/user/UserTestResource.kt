@@ -45,4 +45,5 @@ interface UserTestResource {
     @GET
     @Path("")
     fun test(): Result<Boolean>
+
 }
