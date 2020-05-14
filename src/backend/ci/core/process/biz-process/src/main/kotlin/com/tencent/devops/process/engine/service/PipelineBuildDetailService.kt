@@ -889,8 +889,9 @@ class PipelineBuildDetailService @Autowired constructor(
                         c.elements.forEach { e->
                             if(e.id.equals(element.id)) {
                                 newElement.add(element)
+                            } else {
+                                newElement.add(e)
                             }
-                            newElement.add(e)
                         }
                         c.elements = newElement
                     }
