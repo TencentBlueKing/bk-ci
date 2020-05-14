@@ -335,7 +335,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
                 "version" to version,
                 "script" to script,
                 "repositoryHashId" to atomRecord.repositoryHashId,
-                "repositoryPath" to buildInfo.value2()
+                "repositoryPath" to (buildInfo.value2() ?: "")
             )
             // 将流水线模型中的变量替换成具体的值
             paramMap.forEach { (key, value) ->
