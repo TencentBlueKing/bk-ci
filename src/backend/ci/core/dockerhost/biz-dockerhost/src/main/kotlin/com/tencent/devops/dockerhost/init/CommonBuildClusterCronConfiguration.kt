@@ -56,7 +56,7 @@ class CommonBuildClusterCronConfiguration @Autowired constructor(
     override fun configureTasks(scheduledTaskRegistrar: ScheduledTaskRegistrar) {
         scheduledTaskRegistrar.setScheduler(Executors.newScheduledThreadPool(10))
 
-        if (dockerHostConfig.runMode != null && (dockerHostConfig.runMode.equals("docker_build") || dockerHostConfig.runMode.equals(
+        if (dockerHostConfig.dockerhostMode != null && (dockerHostConfig.dockerhostMode.equals("docker_build") || dockerHostConfig.dockerhostMode.equals(
                 "codecc_build"
             ))
         ) {
