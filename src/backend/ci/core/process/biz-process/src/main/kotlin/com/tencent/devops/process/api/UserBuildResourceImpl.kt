@@ -376,7 +376,7 @@ class UserBuildResourceImpl @Autowired constructor(private val buildService: Pip
         pipelineId: String,
         buildId: String,
         taskId: String,
-        element: String,
+        element: Element,
         isContinue: Boolean,
         stageId: String,
         containerId: String

@@ -646,6 +646,9 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
             errorMsg = result.message
         )
 
+        // 重置前置暂停插件暂停状态位
+        pipelineTaskService.pauseTaskFinishExecute(buildId, result.taskId)
+
         logger.info("Complete the task(${result.taskId}) of build($buildId) and seqId($vmSeqId)")
         pipelineRuntimeService.completeClaimBuildTask(
             buildId = buildId,

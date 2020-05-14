@@ -492,7 +492,7 @@ interface UserBuildResource {
         @PathParam("taskId")
         taskId: String,
         @ApiParam("待执行插件元素", required = true)
-        element: String,
+        element: Element,
         @ApiParam("执行类型, true 继续, false 停止", required = true)
         @QueryParam("isContinue")
         isContinue: Boolean,

@@ -196,11 +196,10 @@ class PipelineTaskService @Autowired constructor(
                 containerId = taskRecord.containerId
             )
 
-            // 暂停只可触发一次，后续将不再触发
+            // 设置已暂停状态
             val additionalOptions = taskRecord.additionalOptions
             if(additionalOptions != null ){
-                additionalOptions.pauseBeforeExec = false
-                additionalOptions.isPause = true
+                additionalOptions.isExecPause = true
                 pipelineBuildTaskDao.updateTaskAdditional(dslContext, buildId, taskId, objectMapper.writeValueAsString(additionalOptions))
             }
 
@@ -337,6 +336,18 @@ class PipelineTaskService @Autowired constructor(
 
     private fun failTaskNameRedisKey(buildId: String, taskId: String): String {
         return "devops:failTaskName:redis:key:$buildId:$taskId"
+    }
+
+    // 重置暂停任务暂停状态位
+    fun pauseTaskFinishExecute(buildId: String, taskId: String) {
+        val taskRecord = pipelineRuntimeService.getBuildTask(buildId, taskId)
+        if(taskRecord?.additionalOptions != null) {
+            val additionalOptions = taskRecord.additionalOptions
+            if(additionalOptions!!.pauseBeforeExec == true && additionalOptions!!.isExecPause == true) {
+                additionalOptions.isExecPause = false
+                pipelineBuildTaskDao.updateTaskAdditional(dslContext, buildId, taskId, objectMapper.writeValueAsString(additionalOptions))
+            }
+        }
     }
 
     private fun getRedisKey(buildId: String, taskId: String): String {
