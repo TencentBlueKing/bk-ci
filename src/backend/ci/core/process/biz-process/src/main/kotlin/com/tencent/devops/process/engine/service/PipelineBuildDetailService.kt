@@ -613,15 +613,6 @@ class PipelineBuildDetailService @Autowired constructor(
         update(buildId, object : ModelInterface{
             var update = false
 
-            override fun onFindStage(stage: Stage, model: Model): Traverse {
-                if(stage.id == stageId) {
-                    logger.info("[$buildId]|update stage[$stageId] status ${buildStatus.name}")
-                    update = true
-                    stage.status = buildStatus.name
-                }
-                return Traverse.CONTINUE
-            }
-
             override fun onFindElement(e: Element, c: Container): Traverse {
                 logger.info("[$buildId]pauseTask onFindElement e[${e}] taskId[$taskId] c[${c}] containerId[$containerId]")
                 if(c.id.equals(containerId)) {
@@ -629,7 +620,6 @@ class PipelineBuildDetailService @Autowired constructor(
                     if(e.id.equals(taskId)) {
                         logger.info("[$buildId]|update task[$taskId] status ${buildStatus.name}")
                         update = true
-                        c.status = buildStatus.name
                         e.status = buildStatus.name
                         return Traverse.BREAK
                     }
@@ -640,7 +630,27 @@ class PipelineBuildDetailService @Autowired constructor(
             override fun needUpdate(): Boolean {
                 return update
             }
-        }, BuildStatus.PAUSE)
+        }, BuildStatus.RUNNING)
+    }
+
+    fun pauseContainer(buildId: String, stageId: String, containerId: String, buildStatus: BuildStatus) {
+        logger.info("[$buildId]|pauseTask|stageId=$stageId|containerId=$containerId|status=$buildStatus")
+        update(buildId, object : ModelInterface{
+            var update = false
+
+            override fun onFindContainer(id: Int, container: Container, stage: Stage): Traverse {
+                logger.info("[$buildId]pauseTask onFindElement  container[${container}] containerId[$containerId]")
+                if(container.id.equals(containerId)) {
+                    logger.info("[$buildId]|update container[$containerId] status ${buildStatus.name}")
+                    container.status = buildStatus.name
+                }
+                return Traverse.CONTINUE
+            }
+
+            override fun needUpdate(): Boolean {
+                return update
+            }
+        }, BuildStatus.RUNNING)
     }
 
     fun updateStageStatus(buildId: String, stageId: String, buildStatus: BuildStatus) {

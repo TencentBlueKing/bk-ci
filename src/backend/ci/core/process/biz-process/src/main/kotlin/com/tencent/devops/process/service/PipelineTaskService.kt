@@ -38,11 +38,9 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
-import com.tencent.devops.process.dao.BuildDetailDao
 import com.tencent.devops.process.dao.PipelineTaskDao
+import com.tencent.devops.process.engine.common.BS_PAUSE_TASK
 import com.tencent.devops.process.engine.control.ControlUtils
-import com.tencent.devops.process.engine.dao.PipelineBuildDao
-import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
 import com.tencent.devops.process.engine.dao.PipelineBuildTaskDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.dao.PipelineModelTaskDao
@@ -51,7 +49,6 @@ import com.tencent.devops.process.engine.pojo.LatestRunningBuild
 import com.tencent.devops.process.engine.pojo.PipelineModelTask
 import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
-import com.tencent.devops.process.engine.service.PipelineStageService
 import com.tencent.devops.process.pojo.PipelineProjectRel
 import com.tencent.devops.process.utils.BK_CI_BUILD_FAIL_TASKNAMES
 import com.tencent.devops.process.utils.BK_CI_BUILD_FAIL_TASKS
@@ -68,9 +65,6 @@ class PipelineTaskService @Autowired constructor(
     val redisOperation: RedisOperation,
     val objectMapper: ObjectMapper,
     val pipelineTaskDao: PipelineTaskDao,
-    val pipelineBuildDao: PipelineBuildDao,
-    val buildDetailDao: BuildDetailDao,
-    val pipelineStageService: PipelineStageService,
     val pipelineBuildDetailService: PipelineBuildDetailService,
     val pipelineModelTaskDao: PipelineModelTaskDao,
     private val buildLogPrinter: BuildLogPrinter,
@@ -176,12 +170,16 @@ class PipelineTaskService @Autowired constructor(
         return isRry
     }
 
-    fun isPause(taskId: String, buildId: String, seqId: String): Boolean {
+    fun isPause(taskId: String, buildId: String): Boolean {
         val taskRecord = pipelineRuntimeService.getBuildTask(buildId, taskId)
-        val isPause = ControlUtils.pauseBeforeExec(taskRecord!!.additionalOptions)
+        val pauseFlag = redisOperation.get("$BS_PAUSE_TASK-$buildId")
+        val isPause = ControlUtils.pauseBeforeExec(taskRecord!!.additionalOptions, pauseFlag)
         if (isPause) {
             logger.info("pause atom, buildId[$buildId], taskId[$taskId] , seqId[$seqId], additionalOptions[${taskRecord!!.additionalOptions}]")
             buildLogPrinter.addYellowLine(
+            logger.info("pause atom, buildId[$buildId], taskId[$taskId] , additionalOptions[${taskRecord!!.additionalOptions}]")
+            LogUtils.addYellowLine(
+                rabbitTemplate = rabbitTemplate,
                 buildId = buildId,
                 message = "当前插件${taskRecord.taskName}暂停中，等待手动点击继续",
                 tag = taskRecord.taskId,
@@ -195,14 +193,6 @@ class PipelineTaskService @Autowired constructor(
                 taskId = taskRecord.taskId,
                 containerId = taskRecord.containerId
             )
-
-            // 设置已暂停状态
-            val additionalOptions = taskRecord.additionalOptions
-            if(additionalOptions != null ){
-                additionalOptions.isExecPause = true
-                pipelineBuildTaskDao.updateTaskAdditional(dslContext, buildId, taskId, objectMapper.writeValueAsString(additionalOptions))
-            }
-
 
             // 发送消息给相关关注人
             val sendUser = taskRecord.additionalOptions!!.subscriptionPauseUser
@@ -339,15 +329,8 @@ class PipelineTaskService @Autowired constructor(
     }
 
     // 重置暂停任务暂停状态位
-    fun pauseTaskFinishExecute(buildId: String, taskId: String) {
-        val taskRecord = pipelineRuntimeService.getBuildTask(buildId, taskId)
-        if(taskRecord?.additionalOptions != null) {
-            val additionalOptions = taskRecord.additionalOptions
-            if(additionalOptions!!.pauseBeforeExec == true && additionalOptions!!.isExecPause == true) {
-                additionalOptions.isExecPause = false
-                pipelineBuildTaskDao.updateTaskAdditional(dslContext, buildId, taskId, objectMapper.writeValueAsString(additionalOptions))
-            }
-        }
+    fun pauseTaskFinishExecute(buildId: String, taskId: String?) {
+        redisOperation.delete("$BS_PAUSE_TASK-$buildId")
     }
 
     private fun getRedisKey(buildId: String, taskId: String): String {
@@ -363,34 +346,35 @@ class PipelineTaskService @Autowired constructor(
             userId = "",
             buildStatus = BuildStatus.PAUSE
         )
+
         logger.info("pauseBuild $buildId update task status success")
-        // 修改容器状态位暂停
-        pipelineRuntimeService.updateContainerStatus(
-            buildId = buildId,
-            stageId = stageId,
-            containerId = containerId,
-            startTime = null,
-            endTime = null,
-            buildStatus = BuildStatus.PAUSE
-        )
-        logger.info("pauseBuild $buildId update container status success")
+//        // 修改容器状态位暂停
+//        pipelineRuntimeService.updateContainerStatus(
+//            buildId = buildId,
+//            stageId = stageId,
+//            containerId = containerId,
+//            startTime = null,
+//            endTime = null,
+//            buildStatus = BuildStatus.PAUSE
+//        )
+//        logger.info("pauseBuild $buildId update container status success")
 
-        // 修改stage状位位
-        pipelineStageService.updateStageStatus(
-            buildId = buildId,
-            stageId = stageId,
-            buildStatus = BuildStatus.PAUSE
-        )
-        logger.info("pauseBuild $buildId update stage status success")
+//        // 修改stage状位位
+//        pipelineStageService.updateStageStatus(
+//            buildId = buildId,
+//            stageId = stageId,
+//            buildStatus = BuildStatus.PAUSE
+//        )
+//        logger.info("pauseBuild $buildId update stage status success")
 
-        // 修改构建记录为暂停
-        pipelineBuildDao.updateStatus(
-            dslContext = dslContext,
-            buildId = buildId,
-            oldBuildStatus = BuildStatus.RUNNING,
-            newBuildStatus = BuildStatus.PAUSE
-        )
-        logger.info("pauseBuild $buildId update history status success")
+//        // 修改构建记录为暂停
+//        pipelineBuildDao.updateStatus(
+//            dslContext = dslContext,
+//            buildId = buildId,
+//            oldBuildStatus = BuildStatus.RUNNING,
+//            newBuildStatus = BuildStatus.PAUSE
+//        )
+//        logger.info("pauseBuild $buildId update history status success")
 
 //        buildDetailDao.updateStatus(
 //            dslContext = dslContext,
@@ -408,17 +392,19 @@ class PipelineTaskService @Autowired constructor(
         )
         logger.info("pauseBuild $buildId update detail status success")
 
+        redisOperation.set("$BS_PAUSE_TASK-$buildId", "true")
+        logger.info("pauseTask set redis flag success")
 
-        pipelineBuildSummaryDao.finishLatestRunningBuild(
-            dslContext = dslContext,
-            latestRunningBuild = LatestRunningBuild(
-                pipelineId = pipelineId,
-                buildId = buildId,
-                status = BuildStatus.PAUSE,
-                buildNum = 0,
-                userId = ""
-            )
-        )
+//        pipelineBuildSummaryDao.finishLatestRunningBuild(
+//            dslContext = dslContext,
+//            latestRunningBuild = LatestRunningBuild(
+//                pipelineId = pipelineId,
+//                buildId = buildId,
+//                status = BuildStatus.PAUSE,
+//                buildNum = 0,
+//                userId = ""
+//            )
+//        )
         logger.info("pauseBuild $buildId update summary status success")
     }
 

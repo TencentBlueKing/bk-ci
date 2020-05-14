@@ -468,8 +468,7 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
             val nextTask = queueTasks[0]
             if (pipelineTaskService.isPause(
                     taskId = nextTask.taskId,
-                    buildId = nextTask.buildId,
-                    seqId = vmSeqId
+                    buildId = nextTask.buildId
                 )
             ) {
                 return BuildTask(buildId, vmSeqId, BuildTaskStatus.END)
@@ -515,8 +514,7 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
         // 如果插件配置了前置暂停, 暂停期间关闭当前构建机，节约资源。
         if (pipelineTaskService.isPause(
                 taskId = task.taskId,
-                buildId = task.buildId,
-                seqId = vmSeqId
+                buildId = task.buildId
             )
         ) {
             return BuildTask(buildId, vmSeqId, BuildTaskStatus.END)
