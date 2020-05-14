@@ -103,7 +103,7 @@
                     return
                 }
 
-                if (this.comment.length >= 500) {
+                if (this.comment.length > 500) {
                     this.$bkMessage({ message: this.$t('store.字数不能超过500字，请修改后再评价'), theme: 'warning' })
                     return
                 }

@@ -59,6 +59,9 @@ class WebsocketService @Autowired constructor(
     @Value("\${session.timeout:5}")
     private val sessionTimeOut: Long? = null
 
+    @Value("\${session.maxCount:50}")
+    private val cacheMaxSession: Int? = null
+
     private val cacheSessionList = mutableListOf<String>()
 
     private val longSessionList = mutableSetOf<String>()
@@ -139,17 +142,18 @@ class WebsocketService @Autowired constructor(
         try {
             redisLock.lock()
             logger.info("WebsocketService-loginOut:user:$userId,sessionId:$sessionId")
-            val page = RedisUtlis.getPageFromSessionPageBySession(redisOperation, sessionId)
-            if (!oldPage.isNullOrEmpty() && page != oldPage) {
-                logger.warn("loginOut error: oldPage:$oldPage, redisPage:$page, userId:$userId, sessionId:$sessionId")
+            val redisPage = RedisUtlis.getPageFromSessionPageBySession(redisOperation, sessionId)
+            var clearPage = oldPage
+            if (!oldPage.isNullOrEmpty() && redisPage != oldPage) {
+                logger.warn("loginOut error: oldPage:$oldPage, redisPage:$redisPage, userId:$userId, sessionId:$sessionId")
+                clearPage = PageUtils.buildNormalPage(oldPage!!)
             }
-//            RedisUtlis.cleanUserSessionBySessionId(redisOperation, userId, sessionId)
+
             RedisUtlis.cleanSessionPageBySessionId(redisOperation, sessionId)
-//            RedisUtlis.cleanSessionTimeOutBySession(redisOperation, sessionId)
-            if (oldPage != null) {
-                RedisUtlis.cleanPageSessionBySessionId(redisOperation, oldPage, sessionId)
-            } else if (page != null) {
-                RedisUtlis.cleanPageSessionBySessionId(redisOperation, page, sessionId)
+            if (clearPage != null) {
+                RedisUtlis.cleanPageSessionBySessionId(redisOperation, clearPage, sessionId)
+            } else if (redisPage != null) {
+                RedisUtlis.cleanPageSessionBySessionId(redisOperation, redisPage, sessionId)
             }
             if (needTransfer && transferData!!.isNotEmpty()) {
                 transferDispatch.dispatch(
@@ -203,7 +207,7 @@ class WebsocketService @Autowired constructor(
 
     fun isCacheSession(sessionId: String): Boolean {
         if (cacheSessionList.contains(sessionId)) {
-            logger.info("sessionId[$sessionId] is in this host")
+            logger.debug("sessionId[$sessionId] is in this host")
             return true
         }
         return false
@@ -236,6 +240,10 @@ class WebsocketService @Autowired constructor(
             timeoutData = "$timeoutData,$redisData"
             redisOperation.set(redisHashKey, timeoutData, null, true)
         }
+    }
+
+    fun getMaxSession(): Int? {
+        return cacheMaxSession
     }
 
     private fun checkParams(userId: String, sessionId: String): Boolean {

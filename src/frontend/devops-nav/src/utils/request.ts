@@ -26,7 +26,7 @@ request.interceptors.response.use(response => {
         eventBus.$emit('toggle-login-dialog', true)
         return Promise.reject(response.data)
     } else if (httpStatus === 503) {
-        return Promise.reject({
+        return Promise.reject({ // eslint-disable-line
             status: httpStatus,
             message: '服务维护中，请稍候...'
         })
