@@ -68,6 +68,7 @@ import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.dao.PipelineBuildTaskDao
 import com.tencent.devops.process.engine.interceptor.InterceptData
 import com.tencent.devops.process.engine.interceptor.PipelineInterceptorChain
+import com.tencent.devops.process.engine.pojo.LatestRunningBuild
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.jmx.api.ProcessJmxApi
@@ -1867,6 +1868,17 @@ class PipelineBuildService(
                 taskId = taskId,
                 stageId = stageId,
                 containerId = containerId
+            )
+
+
+            pipelineRuntimeService.startLatestRunningBuild(
+                latestRunningBuild = LatestRunningBuild(
+                    pipelineId = pipelineId,
+                    buildId = buildId,
+                    userId = userId,
+                    buildNum = buildInfo.buildNum
+                ),
+                retry = false
             )
 
             val params = mutableMapOf<String, Any>()
