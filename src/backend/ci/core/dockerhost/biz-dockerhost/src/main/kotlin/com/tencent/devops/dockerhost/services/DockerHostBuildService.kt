@@ -312,7 +312,7 @@ class DockerHostBuildService(
             // docker stop
             val containerInfo = dockerCli.inspectContainerCmd(dockerBuildInfo.containerId).exec()
             if ("exited" != containerInfo.state.status) {
-                dockerCli.stopContainerCmd(dockerBuildInfo.containerId).withTimeout(30).exec()
+                dockerCli.stopContainerCmd(dockerBuildInfo.containerId).withTimeout(5).exec()
             }
         } catch (e: Throwable) {
             logger.error("Stop the container failed, containerId: ${dockerBuildInfo.containerId}, error msg: $e")
@@ -561,7 +561,7 @@ class DockerHostBuildService(
             // docker stop
             val containerInfo = dockerCli.inspectContainerCmd(containerId).exec()
             if ("exited" != containerInfo.state.status) {
-                dockerCli.stopContainerCmd(containerId).withTimeout(30).exec()
+                dockerCli.stopContainerCmd(containerId).withTimeout(5).exec()
             }
         } catch (e: Throwable) {
             logger.error("Stop the container failed, containerId: $containerId, error msg: $e")
