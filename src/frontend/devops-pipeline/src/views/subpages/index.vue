@@ -27,7 +27,7 @@
                 </bk-button>
             </template>
             <template v-else slot="right">
-                <bk-button v-if="$route.name === 'pipelinesEdit'" @click="save" :disabled="saveBtnDisabled" :icon="saveStatus ? 'loading' : ''" theme="primary">
+                <bk-button v-if="isEditPage" @click="save" :disabled="saveBtnDisabled" :icon="saveStatus ? 'loading' : ''" theme="primary">
                     {{ $t('save') }}
                 </bk-button>
                 <router-link v-else :to="{ name: 'pipelinesEdit' }"><bk-button>{{ $t('edit') }}</bk-button></router-link>
@@ -36,11 +36,11 @@
                     :pipeline-id="pipelineId"
                     :status="pipelineStatus"
                     :can-manual-startup="canManualStartup"
-                    :before-exec="isEditing && !saveBtnDisabled ? save : undefined"
+                    :before-exec="isSaveAndRun ? save : undefined"
                     @exec="toExecute">
                     <section slot="exec-bar" slot-scope="triggerProps">
                         <bk-button v-if="pipelineStatus !== 'running'" theme="primary" :disabled="btnDisabled || !canManualStartup || triggerProps.isDisable" :icon="executeStatus || triggerProps.isDisable ? 'loading' : ''" :title="canManualStartup ? '' : '不支持手动启动流水线'">
-                            {{ isEditing && !saveBtnDisabled ? $t('subpage.saveAndExec') : $t('exec') }}
+                            {{ isSaveAndRun ? $t('subpage.saveAndExec') : $t('exec') }}
                         </bk-button>
                     </section>
                 </triggers>
@@ -138,6 +138,12 @@
                 'isEditing': 'atom/isEditing',
                 'getAllElements': 'atom/getAllElements'
             }),
+            isEditPage () {
+                return this.$route.name === 'pipelinesEdit'
+            },
+            isSaveAndRun () {
+                return this.isEditing && this.isEditPage && !this.saveBtnDisabled
+            },
             projectId () {
                 return this.$route.params.projectId
             },
