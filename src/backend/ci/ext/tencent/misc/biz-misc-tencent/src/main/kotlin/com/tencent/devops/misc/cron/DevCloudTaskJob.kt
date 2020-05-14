@@ -28,7 +28,6 @@ package com.tencent.devops.misc.cron
 
 import com.tencent.devops.artifactory.api.service.ServiceArtifactoryResource
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.notify.enums.EnumEmailFormat
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.Gray
@@ -44,15 +43,15 @@ import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.image.api.ServiceImageResource
 import com.tencent.devops.common.environment.agent.client.DevCloudClient
 import com.tencent.devops.common.environment.agent.pojo.devcloud.Registry
+import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.misc.dao.EnvNodeDao
 import com.tencent.devops.misc.dao.NodeDao
 import com.tencent.devops.misc.dao.devcloud.DevCloudTaskDao
 import com.tencent.devops.misc.utils.NodeAuthUtils
-import com.tencent.devops.misc.utils.NotifyUtils
 import com.tencent.devops.model.environment.tables.records.TDevCloudTaskRecord
 import com.tencent.devops.model.environment.tables.records.TNodeRecord
-import com.tencent.devops.notify.api.service.ServiceNotifyResource
-import com.tencent.devops.notify.pojo.EmailNotifyMessage
+import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
+import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -85,11 +84,8 @@ class DevCloudTaskJob @Autowired constructor(
         private const val delay = 10L
     }
 
-    @Value("\${email.url.logo:#{null}}")
-    private lateinit var logoUrl: String
-
-    @Value("\${email.url.title:#{null}}")
-    private lateinit var titleUrl: String
+    @Value("\${notify.templateCode.devcloud:#{null}}")
+    private lateinit var templateCode: String
 
     private val executor = Executors.newFixedThreadPool(10)
 
@@ -564,18 +560,20 @@ class DevCloudTaskJob @Autowired constructor(
             val templateParams = mapOf(
                 "templateTitle" to titleStr,
                 "templateContent" to content,
-                "projectName" to (bkAuthProject.projectName),
-                "logoUrl" to logoUrl,
-                "titleUrl" to titleUrl
+                "projectName" to (bkAuthProject.projectName)
             )
-            val message = EmailNotifyMessage().apply {
-                format = EnumEmailFormat.HTML
-                body = NotifyUtils.parseMessageTemplate(NotifyUtils.EMAIL_BODY, templateParams)
-                this.title = titleStr
-            }
-            message.addAllReceivers(setOf(userId))
-            client.get(ServiceNotifyResource::class).sendEmailNotify(message)
-            logger.info("Send email finished")
+
+            val sendNotifyMessageTemplateRequest = SendNotifyMessageTemplateRequest(
+                templateCode = templateCode,
+                sender = "DevOps",
+                receivers = mutableSetOf(userId),
+                notifyType = mutableSetOf(NotifyType.EMAIL.name),
+                titleParams = mapOf(),
+                bodyParams = templateParams
+            )
+            val sendNotifyResult = client.get(ServiceNotifyMessageTemplateResource::class)
+                .sendNotifyMessageByTemplate(sendNotifyMessageTemplateRequest)
+            logger.info("[$projectId]|DevCloudTaskJob|sendNotifyMessageTemplateRequest=$sendNotifyMessageTemplateRequest|result=$sendNotifyResult")
         } catch (e: Throwable) {
             logger.error("Send email exception: ", e)
         }
