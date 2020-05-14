@@ -216,8 +216,8 @@
             },
 
             stopExecute (elementIndex) {
-                const stages = this.execDetail.stages || []
-                const stage = stages[this.stageIndex]
+                const stages = this.execDetail.model.stages || []
+                const stage = stages[this.stageIndex] || {}
                 const elements = this.container.elements || []
                 const element = elements[elementIndex] || {}
                 const postData = {

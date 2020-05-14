@@ -23,7 +23,7 @@
             <i v-if="status === 'SUCCEED'" class="devops-icon success icon-check-circle-shape" />
         </transition>
         <transition name="slide-right">
-            <Logo name="pause" size="14" v-if="status === 'PAUSE'"></Logo>
+            <Logo name="pause" size="14" v-if="status === 'PAUSE'" class="status-logo"></Logo>
         </transition>
         <slot v-if="!status || status === 'SKIP' || status === 'QUALITY_CHECK_FAIL'"></slot>
     </span>
@@ -59,6 +59,12 @@
     height: $serialSize;
     line-height: $serialSize;
     box-sizing: border-box;
+
+    .status-logo {
+        position: absolute;
+        left: 14px;
+        top: 14px;
+    }
 
     > span,
     > i {

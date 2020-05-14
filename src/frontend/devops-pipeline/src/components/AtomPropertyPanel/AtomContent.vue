@@ -426,6 +426,10 @@
                     })
                 }).finally(() => {
                     this[loadingKey] = false
+                    this.togglePropertyPanel({
+                        isShow: false,
+                        showPanelType: ''
+                    })
                 })
             },
 
