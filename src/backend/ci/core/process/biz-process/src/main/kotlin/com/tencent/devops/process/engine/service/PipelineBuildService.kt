@@ -1815,6 +1815,7 @@ class PipelineBuildService(
         element: Element,
         checkPermission: Boolean? = true
     ): Boolean {
+        logger.info("executePauseAtom| $userId| $pipelineId|$buildId| $stageId| $containerId| $taskId| $isContinue| $element")
         if (checkPermission!!) {
             pipelinePermissionService.validPipelinePermission(
                 userId = userId,
@@ -1888,9 +1889,11 @@ class PipelineBuildService(
             buildVariableService.batchSetVariable(projectId, pipelineId, buildId, params)
             // 修改插件运行设置
             pipelineBuildTaskDao.updateTaskParam(dslContext, buildId, taskId, objectMapper.writeValueAsString(element))
+            logger.info("update task param success | $buildId| $taskId | $element")
 
             //修改详情model
             buildDetailService.updateElementWhenPauseContinue(buildId, stageId, containerId, taskId, element)
+            logger.info("update detail element success | $buildId| $taskId | $element")
 
             // 触发引擎container事件，继续后续流程
             pipelineEventDispatcher.dispatch(
