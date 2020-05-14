@@ -48,7 +48,7 @@ class BuildVariableServiceTest {
     private val pipelineBuildVarDao: PipelineBuildVarDao = mock()
 
     private val buildVariableService = BuildVariableService(
-        dslContext = dslContext,
+        commonDslContext = dslContext,
         pipelineBuildVarDao = pipelineBuildVarDao
     )
 

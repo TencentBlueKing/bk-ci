@@ -85,7 +85,7 @@
             },
             sideMenuNav () {
                 return {
-                    backUrl: 'atomList',
+                    backUrl: 'workList',
                     backType: 'atom',
                     icon: 'atom-story',
                     title: this.currentAtom.name,
@@ -101,7 +101,7 @@
         methods: {
             goBack () {
                 this.$router.push({
-                    name: 'atomList',
+                    name: 'workList',
                     params: {
                         type: 'atom'
                     }

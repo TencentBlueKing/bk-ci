@@ -6,6 +6,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.dispatch.pojo.DockerHostLoadConfig
 import com.tencent.devops.dispatch.pojo.DockerIpInfoVO
 import com.tencent.devops.dispatch.pojo.DockerIpListPage
+import com.tencent.devops.dispatch.pojo.DockerIpUpdateVO
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -53,29 +54,38 @@ interface OPDispatchDockerResource {
     ): Result<Boolean>
 
     @PUT
-    @Path("/update/{dockerIpInfoId}")
+    @Path("/update/{dockerIp}")
     @ApiOperation("更新Docker构建机状态")
     fun updateDispatchDocker(
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
         @ApiParam("IDC构建机ID", required = true)
-        @PathParam("dockerIpInfoId")
-        dockerIpInfoId: Long,
+        @PathParam("dockerIp")
+        dockerIp: String,
         @ApiParam("IDC构建机信息", required = true)
-        dockerIpInfoVO: DockerIpInfoVO
+        dockerIpUpdateVO: DockerIpUpdateVO
+    ): Result<Boolean>
+
+    @PUT
+    @Path("/update/all/enable")
+    @ApiOperation("重置所有Docker构建机状态可用")
+    fun updateAllDispatchDockerEnable(
+        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String
     ): Result<Boolean>
 
     @DELETE
-    @Path("/delete/{dockerIpInfoId}")
+    @Path("/delete/{dockerIp}")
     @ApiOperation("删除Docker构建机")
     fun deleteDispatchDocker(
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
         @ApiParam("服务ID", required = true)
-        @PathParam("dockerIpInfoId")
-        dockerIpInfoId: Long
+        @PathParam("dockerIp")
+        dockerIp: String
     ): Result<Boolean>
 
     @POST
@@ -87,5 +97,16 @@ interface OPDispatchDockerResource {
         userId: String,
         @ApiParam("创建IDC构建机所需信息", required = true)
         dockerHostLoadConfigMap: Map<String, DockerHostLoadConfig>
+    ): Result<Boolean>
+
+    @POST
+    @Path("/docker/threshold/update")
+    @ApiOperation("更新docker漂移负载阈值")
+    fun updateDockerDriftThreshold(
+        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @ApiParam("阈值", required = true)
+        threshold: Int
     ): Result<Boolean>
 }

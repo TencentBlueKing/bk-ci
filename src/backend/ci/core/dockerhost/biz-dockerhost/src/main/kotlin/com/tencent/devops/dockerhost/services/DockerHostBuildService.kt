@@ -67,16 +67,20 @@ import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.store.pojo.image.enums.ImageRDTypeEnum
 import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
+import org.springframework.core.env.Environment
 import org.springframework.stereotype.Component
 import java.io.File
 import java.io.IOException
 import java.nio.file.Paths
+import java.text.SimpleDateFormat
 import java.util.Date
+import java.util.TimeZone
 import javax.annotation.PostConstruct
 
 @Component
 class DockerHostBuildService(
-    private val dockerHostConfig: DockerHostConfig
+    private val dockerHostConfig: DockerHostConfig,
+    private val environment: Environment
 ) {
 
     private val logger = LoggerFactory.getLogger(DockerHostBuildService::class.java)
@@ -373,7 +377,7 @@ class DockerHostBuildService(
                 authConfigurations.addConfig(baseConfig)
             }
 
-            val workspace = getWorkspace(pipelineId, vmSeqId.toInt())
+            val workspace = getWorkspace(pipelineId, vmSeqId.toInt(), dockerBuildParam.poolNo ?: "0")
             val buildDir = Paths.get(workspace + dockerBuildParam.buildDir).normalize().toString()
             val dockerfilePath = Paths.get(workspace + dockerBuildParam.dockerFile).normalize().toString()
             val baseDirectory = File(buildDir)
@@ -427,7 +431,7 @@ class DockerHostBuildService(
         } catch (e: Throwable) {
             logger.error("Docker build and push failed, exception: ", e)
             val cause = if (e.cause != null && e.cause!!.message != null) {
-                e.cause!!.message!!.removePrefix(getWorkspace(pipelineId, vmSeqId.toInt()))
+                e.cause!!.message!!.removePrefix(getWorkspace(pipelineId, vmSeqId.toInt(), dockerBuildParam.poolNo ?: "0"))
             } else {
                 ""
             }
@@ -499,7 +503,7 @@ class DockerHostBuildService(
                 imageName = imageName,
                 containerId = "",
                 wsInHost = true,
-                poolNo = 0,
+                poolNo = if (dockerRunParam.poolNo == null) 0 else dockerRunParam.poolNo!!.toInt(),
                 registryUser = dockerRunParam.registryUser,
                 registryPwd = dockerRunParam.registryPwd,
                 imageType = ImageType.THIRD.type,
@@ -599,8 +603,16 @@ class DockerHostBuildService(
     fun clearContainers() {
         val containerInfo = dockerCli.listContainersCmd().withStatusFilter(setOf("exited")).exec()
         for (container in containerInfo) {
-            logger.info("Clear container, containerId: ${container.id}")
-            dockerCli.removeContainerCmd(container.id).exec()
+            try {
+                val finishTime = dockerCli.inspectContainerCmd(container.id).exec().state.finishedAt
+                // 是否已退出30分钟
+                if (checkFinishTime(finishTime)) {
+                    logger.info("Clear container, containerId: ${container.id}")
+                    dockerCli.removeContainerCmd(container.id).exec()
+                }
+            } catch (e: Exception) {
+                logger.error("Clear container failed, containerId: ${container.id}", e)
+            }
         }
     }
 
@@ -683,6 +695,11 @@ class DockerHostBuildService(
         }
     }
 
+    fun refreshDockerIpStatus(): Boolean? {
+        val port = environment.getProperty("local.server.port")
+        return dockerHostBuildApi.refreshDockerIpStatus(port, getContainerNum())!!.data
+    }
+
     private fun getPublicImages(): List<String> {
         val result = mutableListOf<String>()
         val publicImages = dockerHostBuildApi.getPublicImages().data!!
@@ -706,8 +723,32 @@ class DockerHostBuildService(
         }
     }
 
-    private fun getWorkspace(pipelineId: String, vmSeqId: Int): String {
-        return "${dockerHostConfig.hostPathWorkspace}/$pipelineId/$vmSeqId/"
+    private fun getWorkspace(pipelineId: String, vmSeqId: Int, poolNo: String): String {
+        return "${dockerHostConfig.hostPathWorkspace}/$pipelineId/${getTailPath(vmSeqId, poolNo.toInt())}/"
+    }
+
+    private fun getTailPath(vmSeqId: Int, poolNo: Int): String {
+        return if (poolNo > 1) {
+            "$vmSeqId" + "_$poolNo"
+        } else {
+            vmSeqId.toString()
+        }
+    }
+
+    private fun checkFinishTime(utcTime: String?): Boolean {
+        if (utcTime != null && utcTime.isNotEmpty()) {
+            val array = utcTime.split(".")
+            val utcTimeLocal = array[0] + "Z"
+            val sdf = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'")
+            sdf.timeZone = TimeZone.getTimeZone("UTC")
+
+            val date = sdf.parse(utcTimeLocal)
+            val finishTimestamp = date.time
+            val nowTimestamp = System.currentTimeMillis()
+            return (nowTimestamp - finishTimestamp) > (30 * 60 * 1000)
+        }
+
+        return true
     }
 
     inner class MyBuildImageResultCallback internal constructor(
