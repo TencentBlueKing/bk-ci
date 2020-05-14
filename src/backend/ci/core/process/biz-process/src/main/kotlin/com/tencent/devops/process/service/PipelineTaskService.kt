@@ -72,7 +72,6 @@ class PipelineTaskService @Autowired constructor(
     private val pipelineBuildDetailService: PipelineBuildDetailService,
     val pipelineBuildSummaryDao: PipelineBuildSummaryDao,
     val pipelineInfoDao: PipelineInfoDao,
-    val pipelineBuildTaskDao: PipelineBuildTaskDao,
     val client: Client,
     private val rabbitTemplate: RabbitTemplate,
     private val pipelineRuntimeService: PipelineRuntimeService
@@ -188,7 +187,6 @@ class PipelineTaskService @Autowired constructor(
             )
             pauseBuild(
                 buildId = buildId,
-                pipelineId = taskRecord.pipelineId,
                 stageId = taskRecord.stageId,
                 taskId = taskRecord.taskId,
                 containerId = taskRecord.containerId
@@ -337,8 +335,8 @@ class PipelineTaskService @Autowired constructor(
         return "$retryCountRedisKey$buildId:$taskId"
     }
 
-    private fun pauseBuild(pipelineId: String, buildId: String, taskId: String, stageId: String, containerId: String) {
-        logger.info("pauseBuild pipelineId[$pipelineId], buildId[$buildId] stageId[$stageId] containerId[$containerId] taskId[$taskId]")
+    fun pauseBuild(buildId: String, taskId: String, stageId: String, containerId: String) {
+        logger.info("pauseBuild buildId[$buildId] stageId[$stageId] containerId[$containerId] taskId[$taskId]")
         // 修改任务状态位暂停
         pipelineRuntimeService.updateTaskStatus(
             buildId = buildId,

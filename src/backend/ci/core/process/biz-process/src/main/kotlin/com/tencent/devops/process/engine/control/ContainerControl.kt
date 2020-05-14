@@ -555,6 +555,12 @@ class ContainerControl @Autowired constructor(
                         waitToDoTask = pipelineBuildTask
                         containerFinalStatus = BuildStatus.PAUSE
                         logger.info("containerControl find next task| buildId[$buildId], next task: stopVM")
+                        pipelineTaskService.pauseBuild(
+                            buildId = buildId,
+                            taskId = task.taskId,
+                            stageId = stageId,
+                            containerId = containerId
+                        )
                         Triple(waitToDoTask, containerFinalStatus, startVMFail)
                     }
                 }
