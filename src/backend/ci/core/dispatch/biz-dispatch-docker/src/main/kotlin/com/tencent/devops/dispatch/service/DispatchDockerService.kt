@@ -2,6 +2,7 @@ package com.tencent.devops.dispatch.service
 
 import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.dispatch.dao.PipelineDockerIPInfoDao
+import com.tencent.devops.dispatch.dao.PipelineDockerTaskSimpleDao
 import com.tencent.devops.dispatch.pojo.DockerHostLoadConfig
 import com.tencent.devops.dispatch.pojo.DockerIpInfoVO
 import com.tencent.devops.dispatch.pojo.DockerIpListPage
@@ -19,6 +20,7 @@ class DispatchDockerService @Autowired constructor(
     private val dslContext: DSLContext,
     private val gray: Gray,
     private val pipelineDockerIPInfoDao: PipelineDockerIPInfoDao,
+    private val pipelineDockerTaskSimpleDao: PipelineDockerTaskSimpleDao,
     private val dockerHostUtils: DockerHostUtils
 ) {
 
@@ -158,8 +160,14 @@ class DispatchDockerService @Autowired constructor(
 
     fun delete(userId: String, dockerIp: String): Boolean {
         logger.info("$userId delete Docker IP: $dockerIp")
+        if (dockerIp.isEmpty()) {
+            throw RuntimeException("Docker IP is null or ''")
+        }
+
         try {
             pipelineDockerIPInfoDao.delete(dslContext, dockerIp)
+            // 清空与之关联构建分配
+            pipelineDockerTaskSimpleDao.deleteByDockerIp(dslContext, dockerIp)
             return true
         } catch (e: Exception) {
             logger.error("OP dispatchDocker delete error.", e)
@@ -182,6 +190,21 @@ class DispatchDockerService @Autowired constructor(
         } catch (e: Exception) {
             logger.error("OP dispatcheDocker create dockerhost loadConfig error.", e)
             throw RuntimeException("OP dispatcheDocker create dockerhost loadConfig error.")
+        }
+    }
+
+    fun updateDockerDriftThreshold(userId: String, threshold: Int): Boolean {
+        logger.info("$userId updateDockerDriftThreshold $threshold")
+        if (threshold < 0 || threshold > 100) {
+            throw RuntimeException("Parameter threshold must in (0-100).")
+        }
+
+        try {
+            dockerHostUtils.updateDockerDriftThreshold(threshold)
+            return true
+        } catch (e: Exception) {
+            logger.error("OP dispatcheDocker update Docker DriftThreshold error.", e)
+            throw RuntimeException("OP dispatcheDocker update Docker DriftThreshold error.")
         }
     }
 }
