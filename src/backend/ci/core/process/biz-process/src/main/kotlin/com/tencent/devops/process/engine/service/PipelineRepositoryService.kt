@@ -27,6 +27,8 @@
 package com.tencent.devops.process.engine.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.tencent.devops.common.api.enums.RepositoryConfig
+import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.UUIDUtil
@@ -41,12 +43,14 @@ import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.extend.ModelCheckPlugin
 import com.tencent.devops.common.pipeline.pojo.BuildNo
+import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.SubPipelineCallElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitlabWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeSVNWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.dao.PipelineSettingDao
 import com.tencent.devops.process.engine.cfg.ModelContainerIdGenerator
@@ -239,35 +243,10 @@ class PipelineRepositoryService constructor(
             c.containerId = modelContainerIdGenerator.getNextId()
         }
 
-        val variables = c.params.map {
-            it.id to it.defaultValue.toString()
-        }.toMap()
-
         var taskSeq = 0
         c.elements.forEach { e ->
             if (e.id.isNullOrBlank()) {
                 e.id = modelTaskIdGenerator.getNextId()
-            }
-
-            if (e is CodeGitWebHookTriggerElement ||
-                e is CodeGitlabWebHookTriggerElement ||
-                e is CodeSVNWebHookTriggerElement ||
-                e is CodeGithubWebHookTriggerElement
-            ) {
-                logger.info("[$pipelineId]-initTriggerContainer,element is WebHook, add WebHook by mq")
-                pipelineEventDispatcher.dispatch(
-                    PipelineCreateEvent(
-                        source = "createWebhook",
-                        projectId = projectId,
-                        pipelineId = pipelineId,
-                        userId = userId,
-                        buildNo = null,
-                        pipelineName = model.name,
-                        element = e,
-                        version = null,
-                        variables = variables
-                    )
-                )
             }
 
             ElementBizRegistrar.getPlugin(e)?.afterCreate(
@@ -296,6 +275,79 @@ class PipelineRepositoryService constructor(
                     additionalOptions = e.additionalOptions
                 )
             )
+        }
+
+        addWebhook(container = c, projectId = projectId, pipelineId = pipelineId, userId = userId, pipelineName = model.name)
+    }
+
+    private fun addWebhook(container: TriggerContainer, projectId: String, pipelineId: String, userId: String, pipelineName: String) {
+        val gitRepoEventTypeMap = mutableMapOf<String/* repo */, MutableMap<String/* eventType */, Element>>()
+        val svnRepoEventTypeMap = mutableMapOf<String/* repo */, Element>()
+        container.elements.forEach { e ->
+            // svn去重处理
+            if (e is CodeSVNWebHookTriggerElement) {
+                val repositoryConfig = RepositoryConfig(e.repositoryHashId, e.repositoryName, e.repositoryType ?: RepositoryType.ID)
+                svnRepoEventTypeMap[repositoryConfig.getRepositoryId()] = e
+                return@forEach
+            }
+
+            // git去重处理
+            // git同个代码库、同个事件只需发一次
+            val pair = when (e) {
+                is CodeGitWebHookTriggerElement -> {
+                    // CodeEventType.MERGE_REQUEST_ACCEPT 和 CodeEventType.MERGE_REQUEST等价处理
+                    val eventType = if (e.eventType == CodeEventType.MERGE_REQUEST_ACCEPT) CodeEventType.MERGE_REQUEST else e.eventType
+                    Pair(RepositoryConfig(e.repositoryHashId, e.repositoryName, e.repositoryType ?: RepositoryType.ID), eventType)
+                }
+                is CodeGitlabWebHookTriggerElement -> {
+                    Pair(RepositoryConfig(e.repositoryHashId, e.repositoryName, e.repositoryType ?: RepositoryType.ID), CodeEventType.PUSH) }
+                is CodeGithubWebHookTriggerElement -> {
+                    Pair(RepositoryConfig(e.repositoryHashId, e.repositoryName, e.repositoryType ?: RepositoryType.ID), e.eventType) }
+                else -> return@forEach
+            }
+            val repositoryConfig = pair.first
+            val eventType = pair.second ?: CodeEventType.PUSH
+
+            val repoMap = gitRepoEventTypeMap[repositoryConfig.getRepositoryId()] ?: mutableMapOf()
+            repoMap[eventType.name] = e
+            gitRepoEventTypeMap[repositoryConfig.getRepositoryId()] = repoMap
+        }
+
+        // 统一发事件
+        val variables = container.params.map { it.id to it.defaultValue.toString() }.toMap()
+        svnRepoEventTypeMap.values.forEach { e ->
+            logger.info("[$pipelineId]-initTriggerContainer,element is WebHook, add WebHook by mq")
+            pipelineEventDispatcher.dispatch(
+                PipelineCreateEvent(
+                    source = "createWebhook",
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    userId = userId,
+                    buildNo = null,
+                    pipelineName = pipelineName,
+                    element = e,
+                    version = null,
+                    variables = variables
+                )
+            )
+        }
+        gitRepoEventTypeMap.values.forEach { map ->
+            map.values.forEach { e ->
+                logger.info("[$pipelineId]-initTriggerContainer,element is WebHook, add WebHook by mq")
+                pipelineEventDispatcher.dispatch(
+                    PipelineCreateEvent(
+                        source = "createWebhook",
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        userId = userId,
+                        buildNo = null,
+                        pipelineName = pipelineName,
+                        element = e,
+                        version = null,
+                        variables = variables
+                    )
+                )
+            }
         }
     }
 
