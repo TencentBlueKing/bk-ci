@@ -603,7 +603,7 @@ class PipelineBuildDetailService @Autowired constructor(
             override fun needUpdate(): Boolean {
                 return update
             }
-        }, BuildStatus.RUNNING)
+        }, buildStatus)
     }
 
     fun pauseTask(buildId: String, stageId: String, containerId: String, taskId: String, buildStatus: BuildStatus) {
@@ -621,10 +621,10 @@ class PipelineBuildDetailService @Autowired constructor(
             }
 
             override fun onFindElement(e: Element, c: Container): Traverse {
-                logger.info("pauseTask onFindElement e[${e.id}] taskId[$taskId] c[${c.id}] containerId[$containerId]")
-                if(c.id == containerId) {
+                logger.info("[$buildId]pauseTask onFindElement e[${e}] taskId[$taskId] c[${c}] containerId[$containerId]")
+                if(c.id.equals(containerId)) {
                     logger.info("[$buildId]|update container[$containerId] status ${buildStatus.name}")
-                    if(e.id == taskId) {
+                    if(e.id.equals(taskId)) {
                         logger.info("[$buildId]|update task[$taskId] status ${buildStatus.name}")
                         update = true
                         c.status = buildStatus.name
@@ -688,7 +688,7 @@ class PipelineBuildDetailService @Autowired constructor(
             override fun needUpdate(): Boolean {
                 return update
             }
-        }, BuildStatus.RUNNING)
+        }, BuildStatus.SKIP)
     }
 
     fun stagePause(
