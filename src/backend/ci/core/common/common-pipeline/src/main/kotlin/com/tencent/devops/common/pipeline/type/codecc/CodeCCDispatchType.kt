@@ -32,7 +32,7 @@ import com.tencent.devops.common.pipeline.type.DispatchRouteKeySuffix
 import com.tencent.devops.common.pipeline.type.DispatchType
 
 data class CodeCCDispatchType(
-    val codeccTaskId: Long?
+    val codeccTaskId: Long
 ) : DispatchType("", DispatchRouteKeySuffix.CODECC) {
     override fun cleanDataBeforeSave() {
     }
