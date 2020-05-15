@@ -185,6 +185,19 @@ include ":core:websocket:biz-websocket"
 include ":core:websocket:biz-websocket-blueking"
 include ":core:websocket:boot-websocket"
 
+include ":core:openapi"
+include ":core:openapi:api-openapi"
+include ":core:openapi:biz-openapi"
+include ":core:openapi:boot-openapi"
+include ":core:openapi:model-openapi"
+
+include ":core:sign"
+include ":core:sign:api-sign"
+include ":core:sign:biz-sign"
+include ":core:sign:biz-sign-sample"
+include ":core:sign:boot-sign"
+include ":core:sign:model-sign"
+
 
 //  ==================== tencent ============================================================
 include ":ext"
@@ -376,6 +389,12 @@ include ":ext:tencent:openapi:model-openapi"
 
 include ":ext:tencent:config-server"
 include ":ext:tencent:log:api-log-tencent"
+
+include ":ext:tencent:sign"
+include ":ext:tencent:sign:api-sign-tencent"
+include ":ext:tencent:sign:biz-sign-tencent"
+include ":ext:tencent:sign:boot-sign-tencent"
+include ":ext:tencent:sign:model-sign"
 
 //  ==================== blueking ============================================================
 //include ":ext:blueking"
