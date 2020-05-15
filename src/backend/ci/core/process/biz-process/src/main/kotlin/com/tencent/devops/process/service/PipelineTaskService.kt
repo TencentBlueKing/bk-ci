@@ -49,6 +49,7 @@ import com.tencent.devops.process.engine.pojo.LatestRunningBuild
 import com.tencent.devops.process.engine.pojo.PipelineModelTask
 import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
+import com.tencent.devops.process.engine.service.PipelineVMBuildService
 import com.tencent.devops.process.pojo.PipelineProjectRel
 import com.tencent.devops.process.utils.BK_CI_BUILD_FAIL_TASKNAMES
 import com.tencent.devops.process.utils.BK_CI_BUILD_FAIL_TASKS
@@ -210,6 +211,7 @@ class PipelineTaskService @Autowired constructor(
                     receivers = setOf(lastUpdateUser) as Set<String>
                 )
             }
+            logger.info("|$buildId| next task |$taskId| need pause, send End status to Vm agent")
         }
         return isPause
     }
