@@ -46,7 +46,7 @@ import java.util.concurrent.Executors
  */
 
 @Configuration
-@ConditionalOnProperty(prefix = "run", name = ["mode"], havingValue = "docker_build")
+@ConditionalOnProperty(prefix = "dockerhost", name = ["mode"], havingValue = "docker_build")
 @EnableScheduling
 class TXBuildClusterCronConfiguration : SchedulingConfigurer {
 
