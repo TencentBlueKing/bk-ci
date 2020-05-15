@@ -52,7 +52,7 @@ interface ServiceMtpResource {
     @Path("/{projectId}/{artifactoryType}/download")
     @GET
     fun mtpDownload(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @ApiParam("用户ID", required = false, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String?,
         @ApiParam("项目ID", required = true)
