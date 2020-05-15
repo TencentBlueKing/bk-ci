@@ -87,8 +87,7 @@ data class TimerTriggerElement(
             val expressions = mutableSetOf<String>()
             if (newExpression != null && newExpression.isNotEmpty()) {
                 newExpression.forEach { expression ->
-                    val newExpression = checkAndSetSecond(expression)
-                    expressions.add(convertExpression(newExpression))
+                    expressions.add(convertExpression(checkAndSetSecond(expression)))
                 }
             }
             if (advanceExpression != null && advanceExpression.isNotEmpty()) {
@@ -116,7 +115,7 @@ data class TimerTriggerElement(
     private fun checkLength(expression: String) {
         val newExpression = expression.trim()
         val expressionParts = newExpression.split(" ")
-        //minutes hours dayOfMonth month dayOfWeek
+        // minutes hours dayOfMonth month dayOfWeek
         if (expressionParts.size != 5) {
             throw InvalidParamException(
                 message = "Cron expression contains ${expressionParts.size} parts but we expect one of 5(minutes hours dayOfMonth month dayOfWeek)",
