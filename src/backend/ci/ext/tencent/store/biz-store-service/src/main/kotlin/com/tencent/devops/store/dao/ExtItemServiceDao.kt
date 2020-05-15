@@ -37,7 +37,7 @@ import com.tencent.devops.store.pojo.enums.ExtServiceStatusEnum
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
-import org.jooq.Record9
+import org.jooq.Record10
 import org.jooq.Result
 import org.jooq.SelectOnConditionStep
 import org.springframework.stereotype.Repository
@@ -269,7 +269,7 @@ class ExtItemServiceDao {
         tes: TExtensionService,
         tesir: TExtensionServiceItemRel,
         tesf: TExtensionServiceFeature
-    ): SelectOnConditionStep<Record9<String, String, String, String, String, String, String, String, Int>> {
+    ): SelectOnConditionStep<Record10<String, String, String, String, String, String?, String, String?, Int, Boolean?>> {
         return dslContext.select(
             tes.ID.`as`("serviceId"),
             tes.SERVICE_CODE.`as`("serviceCode"),
@@ -279,7 +279,8 @@ class ExtItemServiceDao {
             tes.SUMMARY.`as`("summary"),
             tes.PUBLISHER.`as`("publisher"),
             tesir.PROPS.`as`("props"),
-            tesf.WEIGHT.`as`("weight")
+            tesf.WEIGHT.`as`("weight"),
+            tesf.KILL_GRAY_APP_FLAG.`as`("killGrayAppFlag")
         )
             .from(tes)
             .join(tesir)
