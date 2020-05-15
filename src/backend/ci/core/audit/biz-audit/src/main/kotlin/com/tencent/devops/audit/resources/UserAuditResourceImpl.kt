@@ -65,14 +65,24 @@ class UserAuditResourceImpl @Autowired constructor(
         val pageNotNull = page ?: 0
         val pageSizeNotNull = pageSize ?: PageSize
         val limit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
-        val result = auditService.userList(userId, projectId, resourceType,status, resourceName,startTime,endTime,limit.offset, limit.limit)
+        val result = auditService.userList(
+                userId = userId,
+                projectId = projectId,
+                reourceType = resourceType,
+                status = status,
+                resourceName = resourceName,
+                startTime = startTime,
+                endTime = endTime,
+                offset = limit.offset,
+                limit = limit.limit
+        )
         return Result(
                 AuditPage(
-                pageNotNull,
-                pageSizeNotNull,
-                result.first.count,
-                result.first.records,
-                result.second
+                page = pageNotNull,
+                pageSize = pageSizeNotNull,
+                count = result.first.count,
+                records = result.first.records,
+                hasCreatePermission = result.second
             )
         )
     }
