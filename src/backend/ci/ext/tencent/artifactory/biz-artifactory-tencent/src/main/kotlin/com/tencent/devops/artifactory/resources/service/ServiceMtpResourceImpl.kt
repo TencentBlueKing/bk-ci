@@ -44,15 +44,15 @@ class ServiceMtpResourceImpl @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val repoGray: RepoGray
 ) : ServiceMtpResource {
-    override fun mtpDownload(projectId: String, artifactoryType: ArtifactoryType, fullPath: String): Result<MtpDownloadInfo> {
+    override fun mtpDownload(projectId: String, artifactoryType: ArtifactoryType, path: String): Result<MtpDownloadInfo> {
         val gatewayUrl = HomeHostUtil.getHost(commonConfig.devopsHostGateway!!)
         val mtpDownloadInfo = if (repoGray.isGray(projectId, redisOperation)) {
-            MtpDownloadInfo(1, "$gatewayUrl/bkrepo/api/service/generic/$projectId/${RepoUtils.getRepoByType(artifactoryType)}/${fullPath.removePrefix("/")}")
+            MtpDownloadInfo(1, "$gatewayUrl/bkrepo/api/service/generic/$projectId/${RepoUtils.getRepoByType(artifactoryType)}/${path.removePrefix("/")}")
         } else {
             if (artifactoryType == ArtifactoryType.PIPELINE) {
-                MtpDownloadInfo(0, "$gatewayUrl/jfrog/storage/service/archive/$projectId/${fullPath.removePrefix("/")}")
+                MtpDownloadInfo(0, "$gatewayUrl/jfrog/storage/service/archive/$projectId/${path.removePrefix("/")}")
             } else {
-                MtpDownloadInfo(0, "$gatewayUrl/jfrog/storage/service/custom/$projectId/${fullPath.removePrefix("/")}")
+                MtpDownloadInfo(0, "$gatewayUrl/jfrog/storage/service/custom/$projectId/${path.removePrefix("/")}")
             }
         }
         return Result(mtpDownloadInfo)

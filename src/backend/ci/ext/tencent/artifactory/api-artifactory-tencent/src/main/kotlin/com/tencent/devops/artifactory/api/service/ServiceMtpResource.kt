@@ -40,12 +40,12 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["SERVICE_IPT"], description = "版本仓库-ipt-仓库资源")
+@Api(tags = ["SERVICE_MTP"], description = "版本仓库-MTP")
 @Path("/service/mtp")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceMtpResource {
-    @ApiOperation("获取安全加固下载链接")
+    @ApiOperation("获取安全加固下载信息")
     @Path("/{projectId}/{artifactoryType}/download")
     @GET
     fun mtpDownload(
