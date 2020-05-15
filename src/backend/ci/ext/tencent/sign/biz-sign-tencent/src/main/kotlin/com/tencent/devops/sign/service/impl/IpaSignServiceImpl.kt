@@ -7,13 +7,18 @@ import com.tencent.devops.sign.pojo.IpaCustomizedSignRequest
 import com.tencent.devops.sign.service.IpaSignService
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import java.io.File
 import java.io.InputStream
 import java.nio.charset.Charset
 import java.nio.file.Files
 
 @Service
 class IpaSignServiceImpl : IpaSignService {
+
+    @Value("\${sign.workspace:#{null}}")
+    val workspace: String = ""
 
     override fun resignIpaPackage(
         userId: String,
@@ -36,6 +41,11 @@ class IpaSignServiceImpl : IpaSignService {
         file.outputStream().use {
             inputStream.copyTo(it)
         }
+
+        file.copyTo(
+            target = File(workspace + File.separator + fileName),
+            overwrite = true
+        )
 
         return Result(fileName)
     }
@@ -62,6 +72,11 @@ class IpaSignServiceImpl : IpaSignService {
         file.outputStream().use {
             inputStream.copyTo(it)
         }
+
+        file.copyTo(
+            target = File(workspace + File.separator + fileName),
+            overwrite = true
+        )
 
         return Result(fileName)
     }
