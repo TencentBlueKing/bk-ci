@@ -72,7 +72,9 @@ import org.springframework.stereotype.Component
 import java.io.File
 import java.io.IOException
 import java.nio.file.Paths
+import java.text.SimpleDateFormat
 import java.util.Date
+import java.util.TimeZone
 import javax.annotation.PostConstruct
 
 @Component
@@ -84,10 +86,10 @@ class DockerHostBuildService(
     private val logger = LoggerFactory.getLogger(DockerHostBuildService::class.java)
 
     private val dockerHostBuildApi: DockerHostBuildResourceApi =
-        DockerHostBuildResourceApi(if ("codecc_build" == dockerHostConfig.runMode) "ms/dispatch-codecc" else "ms/dispatch")
+        DockerHostBuildResourceApi(if ("codecc_build" == dockerHostConfig.dockerhostMode) "ms/dispatch-codecc" else "ms/dispatch")
 
     private val alertApi: AlertApi =
-        AlertApi(if ("codecc_build" == dockerHostConfig.runMode) "ms/dispatch-codecc" else "ms/dispatch")
+        AlertApi(if ("codecc_build" == dockerHostConfig.dockerhostMode) "ms/dispatch-codecc" else "ms/dispatch")
 
     private val config = DefaultDockerClientConfig.createDefaultConfigBuilder()
         .withDockerConfig(dockerHostConfig.dockerConfig)
@@ -310,7 +312,7 @@ class DockerHostBuildService(
             // docker stop
             val containerInfo = dockerCli.inspectContainerCmd(dockerBuildInfo.containerId).exec()
             if ("exited" != containerInfo.state.status) {
-                dockerCli.stopContainerCmd(dockerBuildInfo.containerId).withTimeout(30).exec()
+                dockerCli.stopContainerCmd(dockerBuildInfo.containerId).withTimeout(15).exec()
             }
         } catch (e: Throwable) {
             logger.error("Stop the container failed, containerId: ${dockerBuildInfo.containerId}, error msg: $e")
@@ -559,7 +561,7 @@ class DockerHostBuildService(
             // docker stop
             val containerInfo = dockerCli.inspectContainerCmd(containerId).exec()
             if ("exited" != containerInfo.state.status) {
-                dockerCli.stopContainerCmd(containerId).withTimeout(30).exec()
+                dockerCli.stopContainerCmd(containerId).withTimeout(15).exec()
             }
         } catch (e: Throwable) {
             logger.error("Stop the container failed, containerId: $containerId, error msg: $e")
@@ -601,8 +603,16 @@ class DockerHostBuildService(
     fun clearContainers() {
         val containerInfo = dockerCli.listContainersCmd().withStatusFilter(setOf("exited")).exec()
         for (container in containerInfo) {
-            logger.info("Clear container, containerId: ${container.id}")
-            dockerCli.removeContainerCmd(container.id).exec()
+            try {
+                val finishTime = dockerCli.inspectContainerCmd(container.id).exec().state.finishedAt
+                // 是否已退出30分钟
+                if (checkFinishTime(finishTime)) {
+                    logger.info("Clear container, containerId: ${container.id}")
+                    dockerCli.removeContainerCmd(container.id).exec()
+                }
+            } catch (e: Exception) {
+                logger.error("Clear container failed, containerId: ${container.id}", e)
+            }
         }
     }
 
@@ -723,6 +733,22 @@ class DockerHostBuildService(
         } else {
             vmSeqId.toString()
         }
+    }
+
+    private fun checkFinishTime(utcTime: String?): Boolean {
+        if (utcTime != null && utcTime.isNotEmpty()) {
+            val array = utcTime.split(".")
+            val utcTimeLocal = array[0] + "Z"
+            val sdf = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'")
+            sdf.timeZone = TimeZone.getTimeZone("UTC")
+
+            val date = sdf.parse(utcTimeLocal)
+            val finishTimestamp = date.time
+            val nowTimestamp = System.currentTimeMillis()
+            return (nowTimestamp - finishTimestamp) > (30 * 60 * 1000)
+        }
+
+        return true
     }
 
     inner class MyBuildImageResultCallback internal constructor(

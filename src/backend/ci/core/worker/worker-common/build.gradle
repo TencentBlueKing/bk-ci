@@ -45,6 +45,7 @@ dependencies {
     compile group: 'org.xerial', name: 'sqlite-jdbc', version: '3.23.1'
     compile "ch.qos.logback:logback-core"
     compile "ch.qos.logback:logback-classic"
+    compile fileTree(dir: 'lib/KillProcessTree.jar', includes: ['*.jar'])
 }
 
 configurations {
