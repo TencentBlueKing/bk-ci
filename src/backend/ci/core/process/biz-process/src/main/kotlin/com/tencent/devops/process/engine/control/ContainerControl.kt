@@ -51,7 +51,6 @@ import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.process.engine.common.BS_CONTAINER_END_SOURCE_PREIX
-import com.tencent.devops.process.engine.common.BS_PAUSE_TASK
 import com.tencent.devops.process.pojo.mq.PipelineBuildContainerEvent
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
@@ -538,9 +537,8 @@ class ContainerControl @Autowired constructor(
                 return@nextOne
             }
 
-            val pauseFlag = redisOperation.get("$BS_PAUSE_TASK-$buildId")
             // 若为暂停，则要确保拿到的任务为 关机或者空任务发送next stage任务
-            if(ControlUtils.pauseBeforeExec(task.additionalOptions, pauseFlag)) {
+            if(BuildStatus.isPause(task.status)) {
                 val pipelineBuildTasks = containerTaskList.filter {
                     it.taskName.startsWith(VMUtils.getCleanVmLable()); it.taskId.startsWith(VMUtils.getStopVmLabel())
                 }

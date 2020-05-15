@@ -95,7 +95,7 @@ object ControlUtils {
             return false
         }
 
-        if(additionalOptions.pauseBeforeExec == true) {
+        if(additionalOptions.pauseBeforeExec == true && pauseFlag.isNullOrEmpty()) {
             return true
         }
 

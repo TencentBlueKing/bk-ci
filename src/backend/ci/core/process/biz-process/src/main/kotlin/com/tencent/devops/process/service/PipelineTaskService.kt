@@ -346,41 +346,7 @@ class PipelineTaskService @Autowired constructor(
         )
 
         logger.info("pauseBuild $buildId update task status success")
-//        // 修改容器状态位暂停
-//        pipelineRuntimeService.updateContainerStatus(
-//            buildId = buildId,
-//            stageId = stageId,
-//            containerId = containerId,
-//            startTime = null,
-//            endTime = null,
-//            buildStatus = BuildStatus.PAUSE
-//        )
-//        logger.info("pauseBuild $buildId update container status success")
 
-//        // 修改stage状位位
-//        pipelineStageService.updateStageStatus(
-//            buildId = buildId,
-//            stageId = stageId,
-//            buildStatus = BuildStatus.PAUSE
-//        )
-//        logger.info("pauseBuild $buildId update stage status success")
-
-//        // 修改构建记录为暂停
-//        pipelineBuildDao.updateStatus(
-//            dslContext = dslContext,
-//            buildId = buildId,
-//            oldBuildStatus = BuildStatus.RUNNING,
-//            newBuildStatus = BuildStatus.PAUSE
-//        )
-//        logger.info("pauseBuild $buildId update history status success")
-
-//        buildDetailDao.updateStatus(
-//            dslContext = dslContext,
-//            buildId = buildId,
-//            buildStatus = BuildStatus.PAUSE,
-//            startTime = null,
-//            endTime = null
-//        )
         pipelineBuildDetailService.pauseTask(
             buildId = buildId,
             stageId = stageId,
@@ -392,18 +358,6 @@ class PipelineTaskService @Autowired constructor(
 
         redisOperation.set("$BS_PAUSE_TASK-$buildId", "true")
         logger.info("pauseTask set redis flag success")
-
-//        pipelineBuildSummaryDao.finishLatestRunningBuild(
-//            dslContext = dslContext,
-//            latestRunningBuild = LatestRunningBuild(
-//                pipelineId = pipelineId,
-//                buildId = buildId,
-//                status = BuildStatus.PAUSE,
-//                buildNum = 0,
-//                userId = ""
-//            )
-//        )
-        logger.info("pauseBuild $buildId update summary status success")
     }
 
     private fun sendPauseNotify(
