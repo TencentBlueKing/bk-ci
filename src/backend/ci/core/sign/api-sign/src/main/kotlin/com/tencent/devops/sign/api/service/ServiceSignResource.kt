@@ -24,26 +24,55 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.sign.api
+package com.tencent.devops.sign.api.service
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition
+import org.glassfish.jersey.media.multipart.FormDataParam
+import java.io.InputStream
+import javax.servlet.http.HttpServletResponse
 import javax.ws.rs.Consumes
+import javax.ws.rs.POST
 import javax.ws.rs.GET
 import javax.ws.rs.Path
 import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
+import javax.ws.rs.HeaderParam
 import javax.ws.rs.core.MediaType
+import javax.ws.rs.core.Context
 
-@Api(tags = ["USER_TEST"], description = "用户接口-测试")
-@Path("/user/test")
+@Api(tags = ["SERVICE_SIGN"], description = "服务接口-应用签名")
+@Path("/user/sign")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface UserTestResource {
+interface ServiceSignResource {
 
-    @ApiOperation("测试")
+    @ApiOperation("ipa包签名-通配符")
+    @POST
+    @Path("/ipa/wildcard")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    fun ipaSign(
+        userId: String,
+        @ApiParam("ipa包文件", required = true)
+        @FormDataParam("ipaFile")
+        ipaInputStream: InputStream,
+        @FormDataParam("ipaFile")
+        ipaDisposition: FormDataContentDisposition
+    ): Result<String?>
+
+    @ApiOperation("下载文件")
     @GET
-    @Path("")
-    fun test(): Result<Boolean>
-
+    @Path("/file/download")
+    fun downloadIpa(
+        userId: String,
+        @ApiParam("文件路径", required = true)
+        @QueryParam("filePath")
+        filePath: String,
+        @Context
+        response: HttpServletResponse
+    )
 }
