@@ -36,6 +36,7 @@ import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.gray.RepoGray
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.web.RestResource
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -44,7 +45,8 @@ class ServiceMtpResourceImpl @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val repoGray: RepoGray
 ) : ServiceMtpResource {
-    override fun mtpDownload(projectId: String, artifactoryType: ArtifactoryType, path: String): Result<MtpDownloadInfo> {
+    override fun mtpDownload(userId: String?, projectId: String, artifactoryType: ArtifactoryType, path: String): Result<MtpDownloadInfo> {
+        logger.info("mtpDownload, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType, path: $path")
         val gatewayUrl = HomeHostUtil.getHost(commonConfig.devopsHostGateway!!)
         val mtpDownloadInfo = if (repoGray.isGray(projectId, redisOperation)) {
             MtpDownloadInfo(1, "$gatewayUrl/bkrepo/api/service/generic/$projectId/${RepoUtils.getRepoByType(artifactoryType)}/${path.removePrefix("/")}")
@@ -56,5 +58,9 @@ class ServiceMtpResourceImpl @Autowired constructor(
             }
         }
         return Result(mtpDownloadInfo)
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(this::class.java)
     }
 }
