@@ -107,6 +107,30 @@ BEGIN
             ADD COLUMN `POOL_NO` INT(11) DEFAULT 0 COMMENT '构建容器池序号';
     END IF;
 
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.statistics
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_DISPATCH_THIRDPARTY_AGENT_BUILD'
+                    AND INDEX_NAME = 'idx_pipeline_id') THEN
+        ALTER TABLE T_DISPATCH_THIRDPARTY_AGENT_BUILD ADD INDEX idx_pipeline_id (PIPELINE_ID);
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.statistics
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_DISPATCH_THIRDPARTY_AGENT_BUILD'
+                    AND INDEX_NAME = 'idx_status') THEN
+        ALTER TABLE T_DISPATCH_THIRDPARTY_AGENT_BUILD ADD INDEX idx_status (STATUS);
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.statistics
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_DISPATCH_THIRDPARTY_AGENT_BUILD'
+                    AND INDEX_NAME = 'IDX_PROJECT_PIPELINE_SEQ_STATUS_TIME') THEN
+        ALTER TABLE T_DISPATCH_THIRDPARTY_AGENT_BUILD ADD INDEX IDX_PROJECT_PIPELINE_SEQ_STATUS_TIME (`PROJECT_ID`, `PIPELINE_ID`, `VM_SEQ_ID`, `STATUS`, `CREATED_TIME`);
+    END IF;
+
     COMMIT;
 
 END <CI_UBF>
