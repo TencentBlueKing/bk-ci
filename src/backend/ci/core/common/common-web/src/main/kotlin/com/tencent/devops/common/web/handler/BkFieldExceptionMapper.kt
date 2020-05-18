@@ -27,10 +27,13 @@
 package com.tencent.devops.common.web.handler
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.constant.MESSAGE
+import com.tencent.devops.common.api.constant.PATTERN_STYLE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.web.constant.BkStyleEnum
 import org.slf4j.LoggerFactory
+import java.text.MessageFormat
 import javax.validation.ConstraintViolationException
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
@@ -51,18 +54,25 @@ class BkFieldExceptionMapper : ExceptionMapper<ConstraintViolationException> {
             constraintViolations.forEach { constraintViolation ->
                 val constraintDescriptor = constraintViolation.constraintDescriptor
                 val attributes = constraintDescriptor.attributes
-                val patternStyle = attributes["patternStyle"] as BkStyleEnum // 获取字段校验的正则表达式
-                val defaultMessage = attributes["message"] as String // 获取字段校验的默认错误描述
-                // 获取字段正则表达式对应的错误描述信息
+                val patternStyle = attributes[PATTERN_STYLE] as BkStyleEnum // 获取接口参数校验的正则表达式
+                val defaultMessage = attributes[MESSAGE] as String // 获取接口参数校验的默认错误描述
+                // 获取接口参数正则表达式对应的错误描述信息
                 val patternStyleMessage = MessageCodeUtil.getCodeLanMessage(patternStyle.name, defaultMessage)
+                // 获取接口参数在接口资源路径对应方法中path路径
                 val propertyPath = constraintViolation.propertyPath.toString()
+                val propertyShowPath = propertyPath.substring(propertyPath.split(".").first().length + 1)
+                // 获取path路径对应的描述信息，如果没有配置则给前端展示去掉方法名的path
+                val parameterName = MessageCodeUtil.getCodeLanMessage(propertyPath, propertyShowPath)
                 // 生成错误信息
                 errorResult = MessageCodeUtil.generateResponseDataObject(
                     messageCode = CommonMessageCode.PARAMETER_VALIDATE_ERROR,
-                    params = arrayOf(propertyPath.split(".").last(), patternStyleMessage)
+                    params = arrayOf(parameterName),
+                    data = null,
+                    defaultMessage = MessageFormat(patternStyleMessage).format(arrayOf(parameterName))
                 )
                 logger.info("field:$propertyPath errorResult is；$errorResult")
-                return@forEach
+                return Response.status(Response.Status.BAD_REQUEST).type(MediaType.APPLICATION_JSON_TYPE)
+                    .entity(errorResult).build()
             }
         }
         return Response.status(Response.Status.BAD_REQUEST).type(MediaType.APPLICATION_JSON_TYPE)
