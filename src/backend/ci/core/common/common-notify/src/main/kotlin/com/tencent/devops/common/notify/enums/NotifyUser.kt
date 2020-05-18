@@ -24,7 +24,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.web.mq.alert
+package com.tencent.devops.common.notify.enums
 
 data class NotifyUser(
     val userId: String,
