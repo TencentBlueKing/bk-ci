@@ -26,6 +26,8 @@
 
 package com.tencent.devops.common.web.validation
 
+import com.tencent.devops.common.api.constant.PATTERN_STYLE
+import com.tencent.devops.common.api.constant.REQUIRED
 import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.common.web.constant.BkStyleEnum
 import org.hibernate.validator.internal.engine.constraintvalidation.ConstraintValidatorContextImpl
@@ -43,12 +45,12 @@ class BkFieldValidator : ConstraintValidator<BkField?, Any?> {
     ): Boolean {
         val constraintDescriptor = (constraintValidatorContext as ConstraintValidatorContextImpl).constraintDescriptor
         val attributes = constraintDescriptor.attributes
-        val require = attributes["required"] as Boolean
+        val require = attributes[REQUIRED] as Boolean
         // 判断参数是否可以为空
         if (require && paramValue == null) {
             return false
         }
-        val patternStyle = attributes["patternStyle"] as BkStyleEnum
+        val patternStyle = attributes[PATTERN_STYLE] as BkStyleEnum
         // 判断参数值是否满足配置的正则表达式规范
         if (paramValue != null) {
             if (!Pattern.matches(patternStyle.style, paramValue.toString())) {
