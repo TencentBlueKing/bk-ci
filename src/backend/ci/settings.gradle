@@ -178,4 +178,5 @@ include ":core:notify:boot-notify"
 
 include ":core:websocket"
 include ":core:websocket:biz-websocket"
+include ":core:websocket:api-websocket"
 include ":core:websocket:boot-websocket"
