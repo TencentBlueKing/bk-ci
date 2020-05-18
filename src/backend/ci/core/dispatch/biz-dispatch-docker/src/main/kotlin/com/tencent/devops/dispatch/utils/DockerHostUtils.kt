@@ -114,7 +114,7 @@ class DockerHostUtils @Autowired constructor(
         val dockerPair = if (firstPair.first.isEmpty()) {
             val secondPair = dockerLoadCheck(dockerHostLoadConfigTriple.second, grayEnv, specialIpSet, unAvailableIpList)
             if (secondPair.first.isEmpty()) {
-                return dockerLoadCheck(dockerHostLoadConfigTriple.third, grayEnv, specialIpSet, unAvailableIpList)
+                dockerLoadCheck(dockerHostLoadConfigTriple.third, grayEnv, specialIpSet, unAvailableIpList)
             } else {
                 secondPair
             }
@@ -122,7 +122,6 @@ class DockerHostUtils @Autowired constructor(
             firstPair
         }
 
-        logger.info("===========> dockerPair: ${JsonUtil.toJson(dockerPair)}")
         if (dockerPair.first.isEmpty()) {
             if (specialIpSet.isNotEmpty()) {
                 throw DockerServiceException("Start build Docker VM failed, no available Docker VM in $specialIpSet")
