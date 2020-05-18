@@ -515,7 +515,7 @@ class DockerHostBuildService(
             // docker run
             val env = mutableListOf<String>()
             env.addAll(DockerEnvLoader.loadEnv(dockerBuildInfo))
-            env.add( "bk_devops_start_source=dockerRun")
+            env.add( "bk_devops_start_source=dockerRun") // dockerRun启动标识
             dockerRunParam.env?.forEach {
                 env.add("${it.key}=${it.value ?: ""}")
             }
@@ -624,7 +624,6 @@ class DockerHostBuildService(
             try {
                 val startTime = dockerCli.inspectContainerCmd(container.id).exec().state.startedAt
                 val envs = dockerCli.inspectContainerCmd(container.id).exec().config.env
-                logger.info("clearDockerRunTimeoutContainers envs: ${JsonUtil.toJson(envs.toString())}")
                 // 是否是dockerRun启动的并且已运行超过8小时
                 if (envs != null && envs.contains("bk_devops_start_source=dockerRun") && checkStartTime(startTime)) {
                     logger.info("Clear dockerRun timeout container, containerId: ${container.id}")
@@ -781,7 +780,7 @@ class DockerHostBuildService(
             val date = sdf.parse(utcTimeLocal)
             val startTimestamp = date.time
             val nowTimestamp = System.currentTimeMillis()
-            return (nowTimestamp - startTimestamp) > (60 * 1000)
+            return (nowTimestamp - startTimestamp) > (8 * 3600 * 1000)
         }
 
         return false
