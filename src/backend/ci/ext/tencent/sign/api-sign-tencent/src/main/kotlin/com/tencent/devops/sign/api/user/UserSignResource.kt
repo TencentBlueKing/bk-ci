@@ -29,9 +29,8 @@ package com.tencent.devops.sign.api.user
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.sign.pojo.IosProfiles
+import com.tencent.devops.sign.pojo.IosProfile
 import com.tencent.devops.sign.pojo.IpaCustomizedSignRequest
-import com.tencent.devops.sign.pojo.IpaSignRequest
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -77,7 +76,7 @@ interface UserSignResource {
         @ApiParam("项目ID", required = true)
         @PathParam("appId")
         appId: String
-    ): Result<List<IosProfiles>>
+    ): Result<List<IosProfile>>
 
     @ApiOperation("下载ipa文件")
     @GET

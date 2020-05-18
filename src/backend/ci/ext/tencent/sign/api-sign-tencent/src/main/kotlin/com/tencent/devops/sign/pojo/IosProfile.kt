@@ -4,7 +4,7 @@ import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("企业内测环境的证书和描述文件列表")
-data class IosProfiles(
+data class IosProfile(
     @ApiModelProperty("证书ID", required = true)
     val id: String,
     @ApiModelProperty("证书对应的Bundle ID", required = true)

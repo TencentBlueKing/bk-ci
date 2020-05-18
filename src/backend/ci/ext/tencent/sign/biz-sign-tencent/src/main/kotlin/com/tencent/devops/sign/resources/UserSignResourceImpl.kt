@@ -29,7 +29,7 @@ package com.tencent.devops.sign.resources
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.sign.api.user.UserSignResource
-import com.tencent.devops.sign.pojo.IosProfiles
+import com.tencent.devops.sign.pojo.IosProfile
 import com.tencent.devops.sign.pojo.IpaCustomizedSignRequest
 import com.tencent.devops.sign.service.impl.IpaSignServiceImpl
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
@@ -56,7 +56,7 @@ class UserSignResourceImpl @Autowired constructor(
         )
     }
 
-    override fun getKeystoreCerts(userId: String, appId: String): Result<List<IosProfiles>> {
+    override fun getKeystoreCerts(userId: String, appId: String): Result<List<IosProfile>> {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
