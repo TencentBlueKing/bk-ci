@@ -1,21 +1,16 @@
 # Primary rules
 rules:
 # Types
-- valueFor: '**Question, Bug, or Feature?**'
+- valueFor: '*Type*'
   contains: Feature
   addLabels: ['enhancement']
-- valueFor: '**Question, Bug, or Feature?**'
+- valueFor: '*Type*'
   contains: Bug
   addLabels: ['bug']
-- valueFor: '**Question, Bug, or Feature?**'
+- valueFor: '*Type*'
   contains: Question
   addLabels: ['question']
 
-nomatches:
-- contains: 'this should get assigned to damccorm' # Checks the entire issue for a substring match. If one is found, adds labels "damccorms problem now" and "maybe?", and assigns to "@damccorm"
-  addLabels: ['damccorms problem now', 'maybe?']
-  assign: ['damccorm']
-
 tags:
-- noneIn: ['bug', 'enhancement', 'question'] # If no bug, enhancement, or question labels are added, label with 'triage'
+- noneIn: ['bug', 'enhancement', 'question']
   addLabels: ['needs triage']
