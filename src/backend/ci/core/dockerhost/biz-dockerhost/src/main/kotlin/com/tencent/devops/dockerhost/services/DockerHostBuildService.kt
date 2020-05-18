@@ -45,6 +45,7 @@ import com.github.dockerjava.core.command.PushImageResultCallback
 import com.github.dockerjava.core.command.WaitContainerResultCallback
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.common.web.mq.alert.AlertLevel
 import com.tencent.devops.dispatch.pojo.DockerHostBuildInfo
@@ -623,7 +624,7 @@ class DockerHostBuildService(
             try {
                 val startTime = dockerCli.inspectContainerCmd(container.id).exec().state.startedAt
                 val envs = dockerCli.inspectContainerCmd(container.id).exec().config.env
-                logger.info("clearDockerRunTimeoutContainers envs: $envs")
+                logger.info("clearDockerRunTimeoutContainers envs: ${JsonUtil.toJson(envs.toString())}")
                 // 是否是dockerRun启动的并且已运行超过8小时
                 if (envs != null && envs.contains("bk_devops_start_source=dockerRun") && checkStartTime(startTime)) {
                     logger.info("Clear dockerRun timeout container, containerId: ${container.id}")
