@@ -508,18 +508,18 @@ class PipelineSubscriptionService @Autowired(required = false) constructor(
     private fun getNotifyTemplateCode(type: Int, detailFlag: Boolean) =
         if (detailFlag) {
             when (type) {
-                TYPE_STARTUP -> PIPELINE_STARTUP_NOTIFY_TEMPLATE
-                TYPE_SHUTDOWN_SUCCESS -> PIPELINE_SHUTDOWN_SUCCESS_NOTIFY_TEMPLATE
-                TYPE_SHUTDOWN_FAILURE -> PIPELINE_SHUTDOWN_FAILURE_NOTIFY_TEMPLATE
-                TYPE_SHUTDOWN_CANCEL -> PIPELINE_SHUTDOWN_CANCEL_NOTIFY_TEMPLATE
-                else -> throw RuntimeException("Unknown type($type) of Notify")
-            }
-        } else {
-            when (type) {
                 TYPE_STARTUP -> PIPELINE_STARTUP_NOTIFY_TEMPLATE_DETAIL
                 TYPE_SHUTDOWN_SUCCESS -> PIPELINE_SHUTDOWN_SUCCESS_NOTIFY_TEMPLATE_DETAIL
                 TYPE_SHUTDOWN_FAILURE -> PIPELINE_SHUTDOWN_FAILURE_NOTIFY_TEMPLATE_DETAIL
                 TYPE_SHUTDOWN_CANCEL -> PIPELINE_SHUTDOWN_CANCEL_NOTIFY_TEMPLATE_DETAIL
+                else -> throw RuntimeException("Unknown type($type) of Notify")
+            }
+        } else {
+            when (type) {
+                TYPE_STARTUP -> PIPELINE_STARTUP_NOTIFY_TEMPLATE
+                TYPE_SHUTDOWN_SUCCESS -> PIPELINE_SHUTDOWN_SUCCESS_NOTIFY_TEMPLATE
+                TYPE_SHUTDOWN_FAILURE -> PIPELINE_SHUTDOWN_FAILURE_NOTIFY_TEMPLATE
+                TYPE_SHUTDOWN_CANCEL -> PIPELINE_SHUTDOWN_CANCEL_NOTIFY_TEMPLATE
                 else -> throw RuntimeException("Unknown type($type) of Notify")
             }
         }
