@@ -144,7 +144,6 @@ class CallBackControl @Autowired constructor(
     private fun <T> sendToCallBack(callBackData: CallBackData<T>, list: List<ProjectPipelineCallBack>) {
 
         val requestBody = ObjectMapper().writeValueAsString(callBackData)
-        logger.info("call back requestBody:$requestBody")
         executors.submit {
             list.forEach {
                 if (it.callBackUrl.isBlank()) {
