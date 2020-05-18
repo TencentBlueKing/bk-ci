@@ -24,9 +24,9 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.ci.yaml
+package com.tencent.devops.common.ci.image
 
-data class Pool(
-    val container: String?,
-    val credential: Credential?
+data class Credential(
+    val user: String,
+    val password: String
 )

@@ -58,16 +58,18 @@ import com.tencent.devops.common.ci.task.DockerRunDevCloudTask
 import com.tencent.devops.common.ci.task.GitCiCodeRepoInput
 import com.tencent.devops.common.ci.task.GitCiCodeRepoTask
 import com.tencent.devops.common.ci.yaml.CIBuildYaml
-import com.tencent.devops.common.ci.yaml.Credential
-import com.tencent.devops.common.ci.yaml.Pool
+import com.tencent.devops.common.ci.image.Credential
+import com.tencent.devops.common.ci.image.Pool
 import com.tencent.devops.common.ci.CiBuildConfig
 import com.tencent.devops.common.ci.NORMAL_JOB
 import com.tencent.devops.common.ci.VM_JOB
+import com.tencent.devops.common.ci.image.MacOS
 import com.tencent.devops.common.ci.task.ServiceJobDevCloudTask
 import com.tencent.devops.common.ci.yaml.Job
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.enums.CodePullStrategy
 import com.tencent.devops.common.pipeline.enums.GitPullModeType
+import com.tencent.devops.common.pipeline.type.macos.MacOSDispatchType
 import com.tencent.devops.gitci.client.ScmClient
 import com.tencent.devops.gitci.utils.GitCIParameterUtils
 import com.tencent.devops.process.api.service.ServiceBuildResource
@@ -220,9 +222,19 @@ class GitCIBuildService @Autowired constructor(
     private fun addVmBuildContainer(job: Job, elementList: List<Element>, containerList: MutableList<Container>, jobIndex: Int) {
         val containerPool =
             if (job.job.pool?.container == null) {
-                Pool(buildConfig.registryImage, Credential("", ""))
+                Pool(buildConfig.registryImage, Credential("", ""), null)
             } else {
-                Pool(job.job.pool!!.container, Credential(job.job.pool!!.credential?.user ?: "", job.job.pool!!.credential?.password ?: ""))
+                Pool(
+                    container = job.job.pool!!.container,
+                    credential = Credential(
+                        user = job.job.pool!!.credential?.user ?: "",
+                        password = job.job.pool!!.credential?.password ?: ""
+                    ),
+                    macOS = MacOS(
+                        systemVersion = job.job.pool!!.macOS?.systemVersion ?: "",
+                        xcodeVersion = job.job.pool!!.macOS?.xcodeVersion ?: ""
+                    )
+                )
             }
 
         val vmContainer = VMBuildContainer(
@@ -244,7 +256,11 @@ class GitCIBuildService @Autowired constructor(
             thirdPartyWorkspace = null,
             dockerBuildVersion = null,
             tstackAgentId = null,
-            dispatchType = GitCIDispatchType(objectMapper.writeValueAsString(containerPool))
+            dispatchType = if (containerPool.macOS != null) {
+                MacOSDispatchType(containerPool.macOS!!.systemVersion!!, containerPool.macOS!!.xcodeVersion!!)
+            } else {
+                GitCIDispatchType(objectMapper.writeValueAsString(containerPool))
+            }
         )
         containerList.add(vmContainer)
     }

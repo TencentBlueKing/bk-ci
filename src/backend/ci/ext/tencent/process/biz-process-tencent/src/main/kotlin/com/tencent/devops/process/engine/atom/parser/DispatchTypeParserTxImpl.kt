@@ -1,6 +1,8 @@
-package com.tencent.devops.process.engine.atom.vm.parser
+package com.tencent.devops.process.engine.atom.parser
 
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.ci.image.Credential
+import com.tencent.devops.common.ci.image.Pool
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.DockerVersion
 import com.tencent.devops.common.pipeline.type.DispatchType

@@ -43,7 +43,7 @@ import com.tencent.devops.common.ci.yaml.Trigger
 import com.tencent.devops.common.ci.yaml.MatchRule
 import com.tencent.devops.common.ci.yaml.MergeRequest
 import com.tencent.devops.common.ci.yaml.JobDetail
-import com.tencent.devops.common.ci.yaml.Pool
+import com.tencent.devops.common.ci.image.Pool
 import com.tencent.devops.common.ci.yaml.Stage
 import com.tencent.devops.common.ci.yaml.Job
 import org.slf4j.LoggerFactory
