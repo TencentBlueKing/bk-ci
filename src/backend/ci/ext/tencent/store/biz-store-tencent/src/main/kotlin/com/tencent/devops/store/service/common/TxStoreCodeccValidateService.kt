@@ -24,21 +24,11 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":ext:tencent:common:common-digest-tencent")
-    compile project(":ext:tencent:common:common-auth:common-auth-tencent")
-    compile project(":core:notify:api-notify")
-    compile project(":ext:tencent:store:api-store-tencent")
-    compile project(":ext:tencent:repository:api-repository-tencent")
-    compile project(":ext:tencent:project:api-project-tencent")
-    compile project(":ext:tencent:support:api-support-tencent")
-    compile project(":core:store:biz-store")
-    compile project(":ext:tencent:environment:api-environment-tencent")
-    compile project(":core:image:api-image")
-    compile project(":ext:tencent:image:api-image-tencent")
-    compile project(":ext:tencent:common:common-pipeline-tencent")
-    compile project(":core:common:common-archive")
-    compile project(":core:plugin:codecc-plugin:api-codecc")
-}
+package com.tencent.devops.store.service.common
 
-apply from: "$rootDir/task_deploy_to_maven.gradle"
+import com.tencent.devops.common.api.pojo.Result
+
+interface TxStoreCodeccValidateService {
+
+    fun validateCodeccResult(userId: String, buildId: String, language: String): Result<Boolean>
+}

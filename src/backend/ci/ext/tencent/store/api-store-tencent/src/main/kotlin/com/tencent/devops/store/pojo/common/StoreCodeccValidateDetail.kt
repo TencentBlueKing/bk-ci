@@ -24,21 +24,17 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":ext:tencent:common:common-digest-tencent")
-    compile project(":ext:tencent:common:common-auth:common-auth-tencent")
-    compile project(":core:notify:api-notify")
-    compile project(":ext:tencent:store:api-store-tencent")
-    compile project(":ext:tencent:repository:api-repository-tencent")
-    compile project(":ext:tencent:project:api-project-tencent")
-    compile project(":ext:tencent:support:api-support-tencent")
-    compile project(":core:store:biz-store")
-    compile project(":ext:tencent:environment:api-environment-tencent")
-    compile project(":core:image:api-image")
-    compile project(":ext:tencent:image:api-image-tencent")
-    compile project(":ext:tencent:common:common-pipeline-tencent")
-    compile project(":core:common:common-archive")
-    compile project(":core:plugin:codecc-plugin:api-codecc")
-}
+package com.tencent.devops.store.pojo.common
 
-apply from: "$rootDir/task_deploy_to_maven.gradle"
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+
+@ApiModel("代码扫描结果校验详情")
+data class StoreCodeccValidateDetail(
+    @ApiModelProperty("校验的key", required = true)
+    val validateKey: String,
+    @ApiModelProperty("实际值", required = true)
+    val actValue: String,
+    @ApiModelProperty("期望值", required = true)
+    val expectedValue: String
+)
