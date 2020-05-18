@@ -158,6 +158,6 @@ class DockerHostConfig {
     @Value("\${dockerCli.localImageCacheDays}")
     var localImageCacheDays: Int = 7
 
-    @Value("\${run.mode:#{null}}")
-    var runMode: String? = null
+    @Value("\${dockerhost.mode:#{null}}")
+    var dockerhostMode: String? = null
 }
