@@ -581,7 +581,7 @@ class DockerHostDebugService @Autowired constructor(
                     try {
                         deleteDebug(timeoutDebugTask[i].pipelineId, timeoutDebugTask[i].vmSeqId)
                     } catch (e: Exception) {
-                        logger.error("Delete timeout debug task failed, ${e.message}")
+                        logger.warn("Delete timeout debug task failed, ${e.message}")
                     }
                 }
                 stopWatch.stop()

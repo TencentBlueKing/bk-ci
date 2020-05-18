@@ -23,12 +23,20 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.notify.pojo
 
-package com.tencent.devops.common.notify.enums
+import com.tencent.devops.common.notify.enums.NotifyType
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-enum class NotifyTypeEnum {
-    RTX,
-    EMAIL,
-    WECHAT,
-    SMS
-}
+@ApiModel("使用模板获取消息内容请求")
+data class NotifyMessageContextRequest(
+    @ApiModelProperty("通知模板代码", required = true)
+    val templateCode: String,
+    @ApiModelProperty("通知类型", required = true)
+    val notifyType: NotifyType,
+    @ApiModelProperty("标题动态参数", required = false)
+    val titleParams: Map<String, String>? = null,
+    @ApiModelProperty("内容动态参数", required = false)
+    val bodyParams: Map<String, String>? = null
+)
