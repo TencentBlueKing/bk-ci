@@ -18,4 +18,4 @@ nomatches:
 
 tags:
 - noneIn: ['bug', 'enhancement', 'question'] # If no bug, enhancement, or question labels are added, label with 'triage'
-  addLabels: ['triage']
+  addLabels: ['needs triage']
