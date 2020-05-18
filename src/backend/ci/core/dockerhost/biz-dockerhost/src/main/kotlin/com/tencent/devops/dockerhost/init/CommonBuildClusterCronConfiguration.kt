@@ -78,7 +78,7 @@ class CommonBuildClusterCronConfiguration @Autowired constructor(
 
             scheduledTaskRegistrar.addFixedRateTask(
                 IntervalTask(
-                    Runnable { runner.clearDockerRunTimeoutContainers() }, 30 * 1000, 1000
+                    Runnable { runner.clearDockerRunTimeoutContainers() }, 1800 * 1000, 1000
                 )
             )
         }

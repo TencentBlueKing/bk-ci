@@ -41,7 +41,6 @@ object DockerEnvLoader {
     fun loadEnv(dockerHostBuildInfo: DockerHostBuildInfo): List<String> {
 
         val envList = mutableListOf<String>()
-        envList.add("bk_devops_start_source=dockerRun")
         try {
             val generators: List<DockerEnvGenerator> =
                 SpringContextUtil.getBeansWithAnnotation(EnvGenerator::class.java) as List<DockerEnvGenerator>
