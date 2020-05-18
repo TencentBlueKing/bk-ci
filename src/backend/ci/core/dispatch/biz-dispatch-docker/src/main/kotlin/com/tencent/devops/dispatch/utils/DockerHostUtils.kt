@@ -122,6 +122,7 @@ class DockerHostUtils @Autowired constructor(
             firstPair
         }
 
+        logger.info("===========> dockerPair: ${JsonUtil.toJson(dockerPair)}")
         if (dockerPair.first.isEmpty()) {
             if (specialIpSet.isNotEmpty()) {
                 throw DockerServiceException("Start build Docker VM failed, no available Docker VM in $specialIpSet")
