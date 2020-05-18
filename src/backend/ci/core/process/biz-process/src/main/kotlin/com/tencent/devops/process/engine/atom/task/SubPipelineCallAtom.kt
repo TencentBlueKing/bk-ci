@@ -98,9 +98,13 @@ class SubPipelineCallAtom constructor(
                     errorCode = ErrorCode.USER_RESOURCE_NOT_FOUND,
                     errorMsg = "找不到对应子流水线的构建记录"
                 )
-            } else {
+            } else { // 此处逻辑与 研发商店上架的BuildSubPipelineResourceImpl.getSubPipelineStatus 不同，
+                // 原因是后者在插件实现上检测这种情况并判断，本处为内置的子流水线插件，需在此增加判断处理
                 val status: BuildStatus = when {
-                    subBuildInfo.isSuccess() && subBuildInfo.status == BuildStatus.STAGE_SUCCESS -> BuildStatus.SUCCEED
+                    subBuildInfo.isSuccess() && subBuildInfo.isStageSuccess() -> BuildStatus.SUCCEED
+                    subBuildInfo.isFinish() -> subBuildInfo.status
+                    subBuildInfo.isReadyToRun() -> BuildStatus.RUNNING // QUEUE状态
+                    subBuildInfo.isStageSuccess() -> BuildStatus.RUNNING // stage 特性， 未结束，只是卡在Stage审核中
                     else -> subBuildInfo.status
                 }
 
@@ -114,7 +118,7 @@ class SubPipelineCallAtom constructor(
                 )
 
                 AtomResponse(
-                    buildStatus = if (BuildStatus.isReadyToRun(status)) BuildStatus.RUNNING else status,
+                    buildStatus = status,
                     errorType = subBuildInfo.errorType,
                     errorCode = subBuildInfo.errorCode,
                     errorMsg = subBuildInfo.errorMsg
