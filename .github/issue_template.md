@@ -8,4 +8,4 @@ Entering this information will route you directly to the right team and expedite
 *Type*: here
 
 ## Issue Description
-[Include task name(s), screenshots and any other relevant details]
+[Include description, screenshots and any other relevant details]
