@@ -26,6 +26,7 @@
 
 package com.tencent.devops.websocket.servcie
 
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
@@ -189,7 +190,7 @@ class WebsocketService @Autowired constructor(
         }
     }
 
-    fun clearSession(userId: String, sessionId: String): Boolean {
+    fun clearSession(userId: String, sessionId: String): Result<Boolean> {
         logger.info("clearSession| $userId| $sessionId")
         val page = RedisUtlis.getPageFromSessionPageBySession(redisOperation, sessionId)
         if (page != null) {
@@ -197,7 +198,7 @@ class WebsocketService @Autowired constructor(
             clearUserSession(userId, sessionId, null)
             loginOut(userId, sessionId, page)
         }
-        return true
+        return Result(true)
     }
 
     fun addCacheSession(sessionId: String) {
