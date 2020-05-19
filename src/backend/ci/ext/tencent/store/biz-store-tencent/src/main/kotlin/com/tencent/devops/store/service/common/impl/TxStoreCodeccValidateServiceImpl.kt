@@ -29,6 +29,7 @@ package com.tencent.devops.store.service.common.impl
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
@@ -62,14 +63,7 @@ class TxStoreCodeccValidateServiceImpl @Autowired constructor(
         val validateModelList = JsonUtil.to(validateModel, object : TypeReference<List<Map<String, Any>>>() {})
         logger.info("validateModelList is:$validateModelList")
         // 获取codecc扫描结果数据
-        val codeccTaskResult = client.get(ServiceCodeccResource::class).getCodeccTaskResult(setOf(buildId))
-        logger.info("codeccTaskResult is:$codeccTaskResult")
-        val codeccTaskMap = codeccTaskResult.data
-        if (codeccTaskResult.isNotOk() || codeccTaskMap == null) {
-            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
-        }
-        val codeccTask = codeccTaskMap[buildId]
-        val toolSnapshotList = codeccTask!!.toolSnapshotList
+        val toolSnapshotList = getToolSnapshotList(buildId)
         val validateMap = mutableMapOf<String, List<StoreCodeccValidateDetail>>()
         validateModelList.forEach validateItemEach@{ validateItemMap ->
             val validateToolNameEn = validateItemMap[toolNameEn]
@@ -95,5 +89,16 @@ class TxStoreCodeccValidateServiceImpl @Autowired constructor(
         }
         logger.info("buildId[$buildId] validateMap is:$validateMap")
         return Result(true)
+    }
+
+    private fun getToolSnapshotList(buildId: String): List<Map<String, Any>> {
+        val codeccTaskResult = client.get(ServiceCodeccResource::class).getCodeccTaskResult(setOf(buildId))
+        logger.info("codeccTaskResult is:$codeccTaskResult")
+        val codeccTaskMap = codeccTaskResult.data
+        if (codeccTaskResult.isNotOk() || codeccTaskMap == null) {
+            throw ErrorCodeException(errorCode = CommonMessageCode.SYSTEM_ERROR)
+        }
+        val codeccTask = codeccTaskMap[buildId]
+        return codeccTask!!.toolSnapshotList
     }
 }
