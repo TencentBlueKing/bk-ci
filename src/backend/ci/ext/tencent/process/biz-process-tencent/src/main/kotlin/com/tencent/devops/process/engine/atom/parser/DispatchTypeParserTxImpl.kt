@@ -115,7 +115,7 @@ class DispatchTypeParserTxImpl @Autowired constructor(
             password = ticketsMap["v2"] as String
         }
         val credential = Credential(user, password)
-        val pool = Pool(dispatchType.value, credential)
+        val pool = Pool(dispatchType.value, credential, null)
         dispatchType.image = JsonUtil.toJson(pool)
     }
 }
