@@ -45,7 +45,6 @@ import com.github.dockerjava.core.command.PushImageResultCallback
 import com.github.dockerjava.core.command.WaitContainerResultCallback
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.common.web.mq.alert.AlertLevel
 import com.tencent.devops.dispatch.pojo.DockerHostBuildInfo
@@ -515,7 +514,7 @@ class DockerHostBuildService(
             // docker run
             val env = mutableListOf<String>()
             env.addAll(DockerEnvLoader.loadEnv(dockerBuildInfo))
-            env.add( "bk_devops_start_source=dockerRun") // dockerRun启动标识
+            env.add("bk_devops_start_source=dockerRun") // dockerRun启动标识
             dockerRunParam.env?.forEach {
                 env.add("${it.key}=${it.value ?: ""}")
             }
