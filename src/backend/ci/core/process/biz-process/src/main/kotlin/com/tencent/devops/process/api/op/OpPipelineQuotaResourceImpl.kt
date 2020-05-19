@@ -9,8 +9,13 @@ import org.springframework.beans.factory.annotation.Autowired
 class OpPipelineQuotaResourceImpl @Autowired constructor(
     private val pipelineQuotaService: PipelineQuotaService
 ): OpPipelineQuotaResource {
-    override fun update(userId: String, projectId: String, quota: Long): Result<Boolean> {
+    override fun updateQuota(userId: String, projectId: String, quota: Long): Result<Boolean> {
         pipelineQuotaService.setQuotaByProject(projectId, quota)
+        return Result(true)
+    }
+
+    override fun updateUsedQuota(userId: String, projectId: String, usedQuota: Long): Result<Boolean> {
+        pipelineQuotaService.setQuotaUsedByProject(projectId, usedQuota)
         return Result(true)
     }
 }

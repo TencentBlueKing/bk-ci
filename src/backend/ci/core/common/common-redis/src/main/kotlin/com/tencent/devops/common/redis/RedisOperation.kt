@@ -26,10 +26,9 @@
 
 package com.tencent.devops.common.redis
 
-import org.springframework.data.redis.core.Cursor
 import org.springframework.data.redis.core.RedisCallback
 import org.springframework.data.redis.core.RedisTemplate
-import org.springframework.data.redis.core.ScanOptions
+import java.util.Date
 import java.util.concurrent.TimeUnit
 
 class RedisOperation(private val redisTemplate: RedisTemplate<String, String>) {
@@ -118,24 +117,8 @@ class RedisOperation(private val redisTemplate: RedisTemplate<String, String>) {
         return redisTemplate.opsForHash<String, String>().values(key)
     }
 
-    fun spop(key: String): String {
-        return redisTemplate.opsForSet().pop(key)
-    }
-
-    fun sadd(key: String, values: String): Long {
-        return redisTemplate.opsForSet().add(key, values)
-    }
-
-    fun ssize(key: String): Long {
-        return redisTemplate.opsForSet().size(key)
-    }
-
-    fun sscan(key: String): Cursor<String> {
-        return redisTemplate.opsForSet().scan(key, ScanOptions.NONE)
-    }
-
-    fun expire(key: String, timeOut: Long, timeUnit: TimeUnit): Boolean {
-        return redisTemplate.expire(key, timeOut, timeUnit)
+    fun expireAt(key: String, date: Date): Boolean {
+        return redisTemplate.expireAt(key, date)
     }
 
     fun <T> execute(action: RedisCallback<T>): T {
