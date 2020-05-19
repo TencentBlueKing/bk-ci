@@ -32,7 +32,6 @@ import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.websocket.dispatch.TransferDispatch
 import com.tencent.devops.common.websocket.utils.RedisUtlis
-import com.tencent.devops.websocket.controller.UserWebsocketResourceImpl
 import com.tencent.devops.websocket.event.ChangePageTransferEvent
 import com.tencent.devops.websocket.event.ClearUserSessionTransferEvent
 import com.tencent.devops.websocket.event.LoginOutTransferEvent
@@ -195,7 +194,7 @@ class WebsocketService @Autowired constructor(
         logger.info("clearSession| $userId| $sessionId")
         val page = RedisUtlis.getPageFromSessionPageBySession(redisOperation, sessionId)
         if (page != null) {
-            UserWebsocketResourceImpl.logger.info("$sessionId| ws loginOut fail, page[$page], refresh by interface")
+            logger.info("$sessionId| ws loginOut fail, page[$page], refresh by interface")
             clearUserSession(userId, sessionId, null)
             loginOut(userId, sessionId, page)
         }
