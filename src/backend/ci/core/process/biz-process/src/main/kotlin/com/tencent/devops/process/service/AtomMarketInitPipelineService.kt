@@ -70,6 +70,7 @@ class AtomMarketInitPipelineService @Autowired constructor(
         val atomBaseInfo = atomMarketInitPipelineReq.atomBaseInfo
         startParams["atomCode"] = atomBaseInfo.atomCode
         startParams["version"] = atomBaseInfo.version
+        startParams["language"] = atomBaseInfo.language
         startParams["script"] = atomMarketInitPipelineReq.script
         var atomBuildStatus = AtomStatusEnum.BUILDING
         var buildId: String? = null
