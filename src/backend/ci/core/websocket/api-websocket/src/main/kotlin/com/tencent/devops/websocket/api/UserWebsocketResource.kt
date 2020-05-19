@@ -9,14 +9,13 @@ import javax.ws.rs.core.MediaType
 
 @Api(tags = ["USER_WEBSOCKET"], description = "websocket-用户调用")
 @Path("/user/websocket/sessions")
-@Produces(MediaType.APPLICATION_JSON)
+@Produces(MediaType.TEXT_PLAIN)
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserWebsocketResource {
 
     @POST
     @Path("/{sessionId}/userIds/{userId}/clear")
     @ApiOperation("页面退出清理session")
-    @Consumes(MediaType.MULTIPART_FORM_DATA)
     fun clearSession(
         @ApiParam("用户ID", required = true)
         @PathParam("userId")
