@@ -193,9 +193,9 @@ class WebsocketService @Autowired constructor(
     fun clearSession(userId: String, sessionId: String): Result<Boolean> {
         logger.info("clearSession| $userId| $sessionId")
         val page = RedisUtlis.getPageFromSessionPageBySession(redisOperation, sessionId)
+        clearUserSession(userId, sessionId, null)
         if (page != null) {
-            logger.info("$sessionId| ws loginOut fail, page[$page], refresh by interface")
-            clearUserSession(userId, sessionId, null)
+            logger.info("$userId| $sessionId| ws loginOut fail, page[$page], refresh by interface")
             loginOut(userId, sessionId, page)
         }
         return Result(true)
