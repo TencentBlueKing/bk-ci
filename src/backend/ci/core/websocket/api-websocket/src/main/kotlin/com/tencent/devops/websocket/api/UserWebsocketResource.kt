@@ -5,10 +5,11 @@ import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.*
-
+import javax.ws.rs.core.MediaType
 
 @Api(tags = ["USER_WEBSOCKET"], description = "websocket-用户调用")
 @Path("/user/websocket/sessions")
+@Consumes(MediaType.APPLICATION_JSON)
 interface UserWebsocketResource {
 
     @POST
