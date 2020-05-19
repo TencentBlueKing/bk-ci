@@ -58,6 +58,9 @@ class WebsocketConfiguration {
     @Value("\${activeTrigger.pipelineWebSocket:10}")
     private val webSocketActiveTrigger: Int? = null
 
+    @Value("\${maxConsumer.pipelineWebSocket:50}")
+    private val websocketMaxConsumerCount: Int? = null
+
     @Value("\${devopsGateway.idc:#{null}}")
     private val devopsGateway: String? = null
 
@@ -109,7 +112,7 @@ class WebsocketConfiguration {
         val container = SimpleMessageListenerContainer(connectionFactory)
         container.setQueueNames(pipelineWebSocketQueue.name)
         container.setConcurrentConsumers(webSocketQueueConcurrency!!)
-        container.setMaxConcurrentConsumers(10)
+        container.setMaxConcurrentConsumers(websocketMaxConsumerCount!!)
         container.setRabbitAdmin(rabbitAdmin)
         container.setStartConsumerMinInterval(5000)
         container.setConsecutiveActiveTrigger(webSocketActiveTrigger!!)
