@@ -23,12 +23,21 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.worker.common.api.store
 
-package com.tencent.devops.store.service.common
-
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
 
-interface TxStoreCodeccValidateService {
+class StoreCodeccResourceApi : AbstractBuildResourceApi() {
 
-    fun validateCodeccResult(buildId: String, language: String): Result<Boolean>
+    fun validate(
+        buildId: String,
+        language: String
+    ): Result<Boolean> {
+        val path = "/ms/store/api/build/store/codecc/validate?buildId=$buildId&language=$language"
+        val request = buildGet(path)
+        val responseContent = request(request, "codecc validate fail")
+        return objectMapper.readValue(responseContent)
+    }
 }

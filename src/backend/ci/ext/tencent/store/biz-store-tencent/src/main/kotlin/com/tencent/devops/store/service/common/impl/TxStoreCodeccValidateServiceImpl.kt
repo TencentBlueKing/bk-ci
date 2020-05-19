@@ -52,8 +52,10 @@ class TxStoreCodeccValidateServiceImpl @Autowired constructor(
 
     private val logger = LoggerFactory.getLogger(TxStoreCodeccValidateServiceImpl::class.java)
 
-    override fun validateCodeccResult(userId: String, buildId: String, language: String): Result<Boolean> {
-        logger.info("validateCodeccResult userId:$userId,buildId:$buildId,language:$language")
+    private final val toolNameEn = "tool_name_en"
+
+    override fun validateCodeccResult(buildId: String, language: String): Result<Boolean> {
+        logger.info("validateCodeccResult buildId:$buildId,language:$language")
         // 获取代码扫描校验模型
         val businessConfig = businessConfigDao.get(dslContext, StoreTypeEnum.ATOM.name, "${language}Codecc", "VALIDATE_MODEL")
         val validateModel = businessConfig!!.configValue
@@ -68,10 +70,10 @@ class TxStoreCodeccValidateServiceImpl @Autowired constructor(
         val toolSnapshotList = codeccTask!!.toolSnapshotList
         val validateMap = mutableMapOf<String, List<StoreCodeccValidateDetail>>()
         validateModelList.forEach validateItemEach@{ validateItemMap ->
-            val validateToolNameEn = validateItemMap["tool_name_en"]
+            val validateToolNameEn = validateItemMap[toolNameEn]
             val validateItemList = mutableListOf<StoreCodeccValidateDetail>()
             toolSnapshotList.forEach { codeccItemMap ->
-                val codeccToolNameEn = codeccItemMap["tool_name_en"]
+                val codeccToolNameEn = codeccItemMap[toolNameEn]
                 if (validateToolNameEn == codeccToolNameEn) {
                     validateItemMap.forEach { (key, value) ->
                         if (key != validateToolNameEn) {
@@ -89,6 +91,7 @@ class TxStoreCodeccValidateServiceImpl @Autowired constructor(
                 }
             }
         }
+        logger.info("buildId[$buildId] validateMap is:$validateMap")
         return Result(true)
     }
 }

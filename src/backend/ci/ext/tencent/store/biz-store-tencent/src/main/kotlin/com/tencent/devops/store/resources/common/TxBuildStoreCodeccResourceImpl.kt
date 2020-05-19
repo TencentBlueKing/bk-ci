@@ -24,11 +24,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.service.common
+package com.tencent.devops.store.resources.common
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.store.api.common.TxBuildStoreCodeccResource
+import com.tencent.devops.store.service.common.TxStoreCodeccValidateService
+import org.springframework.beans.factory.annotation.Autowired
 
-interface TxStoreCodeccValidateService {
+@RestResource
+class TxBuildStoreCodeccResourceImpl @Autowired constructor(
+    private val txStoreCodeccValidateService: TxStoreCodeccValidateService
+) : TxBuildStoreCodeccResource {
 
-    fun validateCodeccResult(buildId: String, language: String): Result<Boolean>
+    override fun validate(buildId: String, language: String): Result<Boolean> {
+        return txStoreCodeccValidateService.validateCodeccResult(buildId, language)
+    }
 }

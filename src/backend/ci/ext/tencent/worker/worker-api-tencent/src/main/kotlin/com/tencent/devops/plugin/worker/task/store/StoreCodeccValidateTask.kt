@@ -35,8 +35,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.element.store.StoreCodeccValidateElement
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
-import com.tencent.devops.worker.common.api.ApiFactory
-import com.tencent.devops.worker.common.api.archive.ArchiveSDKApi
+import com.tencent.devops.worker.common.api.store.StoreCodeccResourceApi
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.task.ITask
 import com.tencent.devops.worker.common.task.TaskClassType
@@ -46,12 +45,10 @@ import java.io.File
 @TaskClassType(classTypes = [StoreCodeccValidateElement.classType])
 class StoreCodeccValidateTask : ITask() {
 
-    private val archiveApi = ApiFactory.create(ArchiveSDKApi::class)
-
     private val logger = LoggerFactory.getLogger(StoreCodeccValidateTask::class.java)
 
     override fun execute(buildTask: BuildTask, buildVariables: BuildVariables, workspace: File) {
-        logger.info("ExtServiceBuildDeployTask buildTask: $buildTask,buildVariables: $buildVariables")
+        logger.info("StoreCodeccValidateTask buildTask: $buildTask,buildVariables: $buildVariables")
         val buildId = buildTask.buildId
         LoggerService.addNormalLine("buildId:$buildId begin archive extService package")
         val buildVariableMap = buildTask.buildVariable!!
@@ -60,13 +57,21 @@ class StoreCodeccValidateTask : ITask() {
             errorType = ErrorType.SYSTEM,
             errorCode = ErrorCode.SYSTEM_SERVICE_ERROR
         )
-        val validateModel = buildVariableMap["validateModel"] ?: throw TaskExecuteException(
-            errorMsg = "param [validateModel] is empty",
-            errorType = ErrorType.SYSTEM,
-            errorCode = ErrorCode.SYSTEM_SERVICE_ERROR
-        )
-        val validateModelMap = JsonUtil.toMap(validateModel)
         // 根据校验标准模型去校验codecc代码扫描的指标是否满足需求
-
+        LoggerService.addNormalLine("codecc start")
+        val storeCodeccResourceApi = StoreCodeccResourceApi()
+        val codeccValidateResult = storeCodeccResourceApi.validate(
+            buildId = buildId,
+            language = language
+        )
+        logger.info("StoreCodeccValidateTask codeccValidateResult: $codeccValidateResult")
+        if (codeccValidateResult.isNotOk()) {
+            LoggerService.addRedLine(JsonUtil.toJson(codeccValidateResult))
+            throw TaskExecuteException(
+                errorMsg = "validate fail: ${codeccValidateResult.message}",
+                errorType = ErrorType.SYSTEM,
+                errorCode = ErrorCode.SYSTEM_SERVICE_ERROR
+            )
+        }
     }
 }

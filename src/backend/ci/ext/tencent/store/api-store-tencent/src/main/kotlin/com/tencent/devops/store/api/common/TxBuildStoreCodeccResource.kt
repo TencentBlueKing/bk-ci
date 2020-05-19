@@ -24,11 +24,34 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.service.common
+package com.tencent.devops.store.api.common
 
 import com.tencent.devops.common.api.pojo.Result
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.GET
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
+import javax.ws.rs.core.MediaType
 
-interface TxStoreCodeccValidateService {
+@Api(tags = ["BUILD_STORE_CODECC"], description = "store组件代码扫描")
+@Path("/build/store/codecc")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface TxBuildStoreCodeccResource {
 
-    fun validateCodeccResult(buildId: String, language: String): Result<Boolean>
+    @ApiOperation("codecc代码扫描结果校验")
+    @GET
+    @Path("/validate")
+    fun validate(
+        @ApiParam(value = "构建ID", required = true)
+        @QueryParam("buildId")
+        buildId: String,
+        @ApiParam(value = "开发语言", required = true)
+        @QueryParam("language")
+        language: String
+    ): Result<Boolean>
 }
