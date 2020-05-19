@@ -213,7 +213,7 @@
                 var xhr = new XMLHttpRequest()
                 xhr.onreadystatechange = function () {
                     if (this.readyState == 4 && this.status == 200) {
-                        const res = JSON.parse(xhr.responseText)
+                        var res = JSON.parse(xhr.responseText)
                         resolve(res && res.data ? res.data : res )
                     }  else if (this.status == 401) {
                         // 无登录，这里处理跳转逻辑
@@ -267,8 +267,8 @@
                     var serviceTitle = children[j].name.replace(/\(\S+?\)/, '')
                     var assetMod = assetsJSON[mod]
                     if (children[j].inject_type === 'amd') {
-                        const jsUrl = assetMod ? joinUrl([ mod, assetMod.js ]) : children[j].js_url
-                        const cssUrl = assetMod ? joinUrl([ mod, assetMod.css ]) : children[j].css_url
+                        var jsUrl = assetMod ? joinUrl([ mod, assetMod.js ]) : children[j].js_url
+                        var cssUrl = assetMod ? joinUrl([ mod, assetMod.css ]) : children[j].css_url
                         children[j].js_url = joinUrl([ WEBSITE_URL, jsUrl ])
                         children[j].css_url = joinUrl([ WEBSITE_URL, mod, cssUrl ])
                     } else {
