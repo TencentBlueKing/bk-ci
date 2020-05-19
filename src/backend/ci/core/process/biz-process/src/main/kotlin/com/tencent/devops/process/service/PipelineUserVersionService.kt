@@ -54,5 +54,4 @@ class PipelineUserVersionService @Autowired constructor(
     fun list(pipelineIds: Set<String>): Result<TPipelineUserVersionRecord> {
         return pipelineUserVersionDao.list(dslContext, pipelineIds)
     }
-
 }

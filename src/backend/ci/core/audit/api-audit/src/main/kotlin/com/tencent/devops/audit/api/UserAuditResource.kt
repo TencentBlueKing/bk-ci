@@ -79,6 +79,4 @@ interface UserAuditResource {
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<AuditPage<AuditInfo>>
-
-
 }

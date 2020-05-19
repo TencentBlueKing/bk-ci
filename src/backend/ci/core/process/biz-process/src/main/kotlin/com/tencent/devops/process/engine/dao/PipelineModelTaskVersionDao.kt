@@ -28,13 +28,10 @@ package com.tencent.devops.process.engine.dao
 
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.model.process.Tables.T_PIPELINE_MODEL_TASK_VERSION
-import com.tencent.devops.model.process.tables.TPipelineModelTaskVersion
 import com.tencent.devops.model.process.tables.records.TPipelineModelTaskVersionRecord
 import com.tencent.devops.process.engine.pojo.PipelineModelTask
 import org.jooq.DSLContext
 import org.jooq.InsertOnDuplicateSetMoreStep
-import org.jooq.Record2
-import org.jooq.Result
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
 
@@ -80,15 +77,6 @@ class PipelineModelTaskVersionDao {
                 }
             }
             logger.info("batchSave_model_tasks|total=${count.size}|success_count=$success")
-        }
-    }
-
-    fun deletePipelineTasks(dslContext: DSLContext, projectId: String, pipelineId: String) {
-        with(T_PIPELINE_MODEL_TASK_VERSION) {
-            dslContext.delete(this)
-                .where(PROJECT_ID.eq(projectId))
-                .and(PIPELINE_ID.eq(pipelineId))
-                .execute()
         }
     }
 

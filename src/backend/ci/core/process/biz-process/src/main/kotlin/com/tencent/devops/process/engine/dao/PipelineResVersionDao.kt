@@ -29,7 +29,6 @@ package com.tencent.devops.process.engine.dao
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.model.process.Tables.T_PIPELINE_RESOURCE_VERSION
-import com.tencent.devops.model.process.tables.records.TPipelineResourceVersionRecord
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired

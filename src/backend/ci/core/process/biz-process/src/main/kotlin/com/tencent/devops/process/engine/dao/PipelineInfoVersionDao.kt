@@ -43,16 +43,16 @@ import java.time.LocalDateTime
 class PipelineInfoVersionDao {
 
     fun create(
-            dslContext: DSLContext,
-            pipelineId: String,
-            projectId: String,
-            version: Int,
-            pipelineName: String,
-            userId: String,
-            channelCode: ChannelCode,
-            manualStartup: Boolean,
-            canElementSkip: Boolean,
-            taskCount: Int
+        dslContext: DSLContext,
+        pipelineId: String,
+        projectId: String,
+        version: Int,
+        pipelineName: String,
+        userId: String,
+        channelCode: ChannelCode,
+        manualStartup: Boolean,
+        canElementSkip: Boolean,
+        taskCount: Int
     ): Int {
         val count = with(T_PIPELINE_INFO_VERSION) {
             dslContext.insertInto(
@@ -90,16 +90,16 @@ class PipelineInfoVersionDao {
     }
 
     fun create(
-            dslContext: DSLContext,
-            pipelineId: String,
-            projectId: String,
-            version: Int,
-            pipelineName: String,
-            userId: String,
-            channelCode: String?,
-            manualStartup: Int?,
-            canElementSkip: Int?,
-            taskCount: Int?
+        dslContext: DSLContext,
+        pipelineId: String,
+        projectId: String,
+        version: Int,
+        pipelineName: String,
+        userId: String,
+        channelCode: String?,
+        manualStartup: Int?,
+        canElementSkip: Int?,
+        taskCount: Int?
     ): Int {
         val count = with(T_PIPELINE_INFO_VERSION) {
             dslContext.insertInto(
@@ -201,28 +201,6 @@ class PipelineInfoVersionDao {
         }
     }
 
-    fun isNameExist(
-        dslContext: DSLContext,
-        projectId: String,
-        pipelineName: String,
-        channelCode: ChannelCode,
-        excludePipelineId: String?
-    ): Boolean {
-        return with(T_PIPELINE_INFO_VERSION) {
-            val where = dslContext.select(PIPELINE_ID)
-                .from(this)
-                .where(PROJECT_ID.eq(projectId))
-
-            if (excludePipelineId != null) {
-                where.and(PIPELINE_ID.notEqual(excludePipelineId))
-            }
-
-            where.and(CHANNEL.eq(channelCode.name))
-                .and(PIPELINE_NAME.eq(pipelineName))
-                .and(DELETE.eq(false)).fetch().isNotEmpty
-        }
-    }
-
     fun getPipelineInfo(
         dslContext: DSLContext,
         pipelineId: String,
@@ -240,11 +218,11 @@ class PipelineInfoVersionDao {
     }
 
     fun getPipelineInfo(
-            dslContext: DSLContext,
-            projectId: String?,
-            pipelineId: String,
-            version: Int,
-            channelCode: ChannelCode? = null
+        dslContext: DSLContext,
+        projectId: String?,
+        pipelineId: String,
+        version: Int,
+        channelCode: ChannelCode? = null
     ): TPipelineInfoVersionRecord? {
         return with(T_PIPELINE_INFO_VERSION) {
             val query = if (!projectId.isNullOrBlank()) {
@@ -284,12 +262,12 @@ class PipelineInfoVersionDao {
     }
 
     fun getPipelineInfo(
-            dslContext: DSLContext,
-            projectId: String?,
-            pipelineId: String,
-            version: Int,
-            channelCode: ChannelCode? = null,
-            delete: Boolean = false
+        dslContext: DSLContext,
+        projectId: String?,
+        pipelineId: String,
+        version: Int,
+        channelCode: ChannelCode? = null,
+        delete: Boolean = false
     ): TPipelineInfoVersionRecord? {
         return with(T_PIPELINE_INFO_VERSION) {
             val query = if (!projectId.isNullOrBlank()) {
@@ -303,28 +281,6 @@ class PipelineInfoVersionDao {
                 query.and(CHANNEL.eq(channelCode.name))
             }
             query.and(DELETE.eq(delete)).fetchAny()
-        }
-    }
-
-    fun softDelete(
-        dslContext: DSLContext,
-        projectId: String,
-        pipelineId: String,
-        changePipelineName: String,
-        userId: String,
-        channelCode: ChannelCode?
-    ): Int {
-        return with(T_PIPELINE_INFO_VERSION) {
-            val update = dslContext.update(this).set(DELETE, true)
-                .set(UPDATE_TIME, LocalDateTime.now())
-                .set(LAST_MODIFY_USER, userId)
-                .set(PIPELINE_NAME, changePipelineName)
-                .where(PROJECT_ID.eq(projectId))
-                .and(PIPELINE_ID.eq(pipelineId))
-            if (channelCode != null) {
-                update.and(CHANNEL.eq(channelCode.name))
-            }
-            update.execute()
         }
     }
 

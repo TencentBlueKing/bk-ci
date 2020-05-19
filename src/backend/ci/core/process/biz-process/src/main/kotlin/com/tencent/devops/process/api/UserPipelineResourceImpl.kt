@@ -139,12 +139,12 @@ class UserPipelineResourceImpl @Autowired constructor(
         checkParam(userId, projectId)
         val pipelineId = PipelineId(pipelineService.createPipeline(userId, projectId, pipeline, ChannelCode.BS))
 
-        //添加新增流水线审计日志
+        // 添加新增流水线审计日志
         logger.info("start create pipeline audit")
-        val audit = Audit(AuthResourceType.PIPELINE_DEFAULT.value,pipelineId.id,pipeline.name,userId,"create","新增流水线", projectId)
+        val audit = Audit(AuthResourceType.PIPELINE_DEFAULT.value, pipelineId.id, pipeline.name, userId, "create", "新增流水线", projectId)
         client.get(ServiceAuditResource::class).create(audit)
         logger.info("end create pipeline audit ")
-        //添加新增流水线审计日志
+        // 添加新增流水线审计日志
 
         return Result(pipelineId)
     }
@@ -280,16 +280,16 @@ class UserPipelineResourceImpl @Autowired constructor(
         checkParam(userId, projectId)
         checkPipelineId(pipelineId)
 
-        val pipeline = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId,ChannelCode.BS)
+        val pipeline = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId, ChannelCode.BS)
                 ?: throw NotFoundException("指定的流水线不存在")
         pipelineService.deletePipeline(userId, projectId, pipelineId, ChannelCode.BS)
 
-        //添加删除流水线审计日志
+        // 添加删除流水线审计日志
         logger.info("start create pipeline audit delete")
-        val audit = Audit(AuthResourceType.PIPELINE_DEFAULT.value, pipelineId, pipeline.pipelineName, userId,"delete","删除流水线", projectId)
+        val audit = Audit(AuthResourceType.PIPELINE_DEFAULT.value, pipelineId, pipeline.pipelineName, userId, "delete", "删除流水线", projectId)
         client.get(ServiceAuditResource::class).create(audit)
         logger.info("end create pipeline audit delete")
-        //添加删除流水线审计日志
+        // 添加删除流水线审计日志
 
         return Result(true)
     }
@@ -460,12 +460,12 @@ class UserPipelineResourceImpl @Autowired constructor(
     }
 
     override fun versionList(
-            userId: String,
-            projectId: String,
-            pipelineId: String,
-            page: Int?,
-            pageSize: Int?,
-            sortType: PipelineSortType?
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        page: Int?,
+        pageSize: Int?,
+        sortType: PipelineSortType?
     ): Result<PipelineViewPipelinePage<PipelineInfo>> {
         checkParam(userId, projectId)
         return Result(

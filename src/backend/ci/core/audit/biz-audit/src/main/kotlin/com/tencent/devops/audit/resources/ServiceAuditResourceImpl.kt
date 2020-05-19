@@ -36,12 +36,10 @@ import com.tencent.devops.common.web.RestResource
 
 @RestResource
 class ServiceAuditResourceImpl @Autowired constructor(
-        private val auditService: AuditService
+    private val auditService: AuditService
 ) : ServiceAuditResource {
 
-     override fun create(audit: Audit): Result<Long> {
+    override fun create(audit: Audit): Result<Long> {
         return Result((auditService.createAudit(audit)))
     }
-
-
 }

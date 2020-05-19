@@ -38,14 +38,12 @@ import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class UserAuditResourceImpl @Autowired constructor(
-        private val auditService: AuditService
+    private val auditService: AuditService
 ) : UserAuditResource {
 
     companion object {
         private const val PageSize = 20
     }
-
-
 
     override fun list(
         userId: String?,
@@ -58,7 +56,7 @@ class UserAuditResourceImpl @Autowired constructor(
         page: Int?,
         pageSize: Int?
     ): Result<AuditPage<AuditInfo>> {
-        if (userId!=null && userId.isBlank()) {
+        if (userId != null && userId.isBlank()) {
             throw ParamBlankException("Invalid userId")
         }
 
@@ -86,6 +84,4 @@ class UserAuditResourceImpl @Autowired constructor(
             )
         )
     }
-
-
 }

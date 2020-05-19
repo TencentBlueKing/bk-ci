@@ -26,7 +26,6 @@
 
 package com.tencent.devops.audit.dao
 
-
 import com.tencent.devops.model.audit.tables.TAuditResource
 import com.tencent.devops.model.audit.tables.records.TAuditResourceRecord
 import org.jooq.DSLContext
@@ -51,7 +50,7 @@ class AuditDao {
         val now = LocalDateTime.now()
         with(TAuditResource.T_AUDIT_RESOURCE) {
             val record = dslContext.insertInto(
-                this,
+                    this,
                     RESOURCE_TYPE,
                     RESOURCE_ID,
                     RESOURCE_NAME,
@@ -72,48 +71,47 @@ class AuditDao {
                     actionContent,
                     now,
                     now,
-             false,
-            "1",
+                    false,
+                    "1",
                     projectId
             )
-                .returning(ID)
-                .fetchOne()
+                    .returning(ID)
+                    .fetchOne()
             return record.id
         }
     }
 
-
     fun listByResourceTye(
-            dslContext: DSLContext,
-            reourceType: String,
-            userId:String?,
-            projectId: String,
-            resourceName: String?,
-            status: String?,
-            startTime: String?,
-            endTime: String?,
-            offset: Int,
-            limit: Int
+        dslContext: DSLContext,
+        reourceType: String,
+        userId: String?,
+        projectId: String,
+        resourceName: String?,
+        status: String?,
+        startTime: String?,
+        endTime: String?,
+        offset: Int,
+        limit: Int
     ): Result<TAuditResourceRecord> {
         return with(TAuditResource.T_AUDIT_RESOURCE) {
             val query = dslContext.selectFrom(this)
                     .where(RESOURCE_TYPE.eq(reourceType))
                     .and(PROJECT_ID.eq(projectId))
                     .and(IS_DELETED.eq(false))
-            if(userId !=null && userId!!.isNotBlank()){
+            if (userId != null && userId!!.isNotBlank()) {
                 query.and(USER_ID.like("%$userId%"))
             }
-            if(status !=null && status!!.isNotBlank()){
+            if (status != null && status!!.isNotBlank()) {
                 query.and(STATUS.eq(status))
             }
-            if(resourceName != null && resourceName!!.isNotBlank()){
+            if (resourceName != null && resourceName!!.isNotBlank()) {
                 query.and(RESOURCE_NAME.like("%$resourceName%"))
             }
-            if(startTime!=null && endTime!=null && startTime!!.isNotBlank() and endTime !!.isNotBlank()){
+            if (startTime != null && endTime != null && startTime!!.isNotBlank() and endTime!!.isNotBlank()) {
                 val df = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
-                val startTimeDateTime = LocalDateTime.parse(startTime,df)
-                val endTimeDateTime = LocalDateTime.parse(endTime,df)
-                query.and(CREATED_TIME.between(startTimeDateTime,endTimeDateTime))
+                val startTimeDateTime = LocalDateTime.parse(startTime, df)
+                val endTimeDateTime = LocalDateTime.parse(endTime, df)
+                query.and(CREATED_TIME.between(startTimeDateTime, endTimeDateTime))
             }
             query.orderBy(ID.desc())
                     .offset(offset)
@@ -122,16 +120,15 @@ class AuditDao {
         }
     }
 
-
     fun countByResourceTye(
-            dslContext: DSLContext,
-            userId: String?,
-            projectId: String,
-            reourceType: String,
-            resourceName: String?,
-            status: String?,
-            startTime: String?,
-            endTime: String?
+        dslContext: DSLContext,
+        userId: String?,
+        projectId: String,
+        reourceType: String,
+        resourceName: String?,
+        status: String?,
+        startTime: String?,
+        endTime: String?
     ): Long {
         return with(TAuditResource.T_AUDIT_RESOURCE) {
             val query = dslContext.selectCount()
@@ -139,24 +136,22 @@ class AuditDao {
                     .where(RESOURCE_TYPE.eq(reourceType))
                     .and(PROJECT_ID.eq(projectId))
                     .and(IS_DELETED.eq(false))
-            if(userId !=null && userId!!.isNotBlank()){
+            if (userId != null && userId!!.isNotBlank()) {
                 query.and(USER_ID.like("%$userId%"))
             }
-            if(status !=null && status!!.isNotBlank()){
+            if (status != null && status!!.isNotBlank()) {
                 query.and(STATUS.eq(status))
             }
-            if(resourceName != null && resourceName!!.isNotBlank()){
+            if (resourceName != null && resourceName!!.isNotBlank()) {
                 query.and(RESOURCE_NAME.like("%$resourceName%"))
             }
-            if(startTime!=null && endTime!=null && startTime!!.isNotBlank() and endTime !!.isNotBlank()){
+            if (startTime != null && endTime != null && startTime!!.isNotBlank() and endTime!!.isNotBlank()) {
                 val df = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
-                val startTimeDateTime = LocalDateTime.parse(startTime,df)
-                val endTimeDateTime = LocalDateTime.parse(endTime,df)
-                query.and(CREATED_TIME.between(startTimeDateTime,endTimeDateTime))
+                val startTimeDateTime = LocalDateTime.parse(startTime, df)
+                val endTimeDateTime = LocalDateTime.parse(endTime, df)
+                query.and(CREATED_TIME.between(startTimeDateTime, endTimeDateTime))
             }
             query.fetchOne(0, kotlin.Long::class.java)
         }
     }
-
-
 }

@@ -26,7 +26,6 @@
 
 package com.tencent.devops.audit.api
 
-
 import com.tencent.devops.audit.api.pojo.Audit
 import com.tencent.devops.common.api.pojo.Result
 import io.swagger.annotations.Api
@@ -46,5 +45,4 @@ interface ServiceAuditResource {
     @POST
     @Path("/")
     fun create(audit: Audit): Result<Long>
-
 }

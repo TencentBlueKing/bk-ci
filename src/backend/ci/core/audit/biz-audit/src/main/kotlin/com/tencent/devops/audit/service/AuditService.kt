@@ -26,10 +26,9 @@
 
 package com.tencent.devops.audit.service
 
-
 import com.tencent.devops.audit.api.pojo.Audit
 import com.tencent.devops.audit.api.pojo.AuditInfo
-import com.tencent.devops.audit.dao.*
+import com.tencent.devops.audit.dao.AuditDao
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.util.timestamp
@@ -40,11 +39,11 @@ import org.springframework.stereotype.Service
 
 @Service
 class AuditService @Autowired constructor(
-        private val auditDao: AuditDao,
-        private val dslContext: DSLContext
+    private val auditDao: AuditDao,
+    private val dslContext: DSLContext
 ) {
 
-     fun createAudit(audit: Audit): Long {
+    fun createAudit(audit: Audit): Long {
         checkParam(audit)
         val auditId = auditDao.create(
                 dslContext = dslContext,
@@ -60,17 +59,17 @@ class AuditService @Autowired constructor(
     }
 
     fun userList(
-            userId: String?,
-            projectId: String,
-            reourceType: String,
-            status: String?,
-            resourceName: String?,
-            startTime: String?,
-            endTime: String?,
-            offset: Int,
-            limit: Int
+        userId: String?,
+        projectId: String,
+        reourceType: String,
+        status: String?,
+        resourceName: String?,
+        startTime: String?,
+        endTime: String?,
+        offset: Int,
+        limit: Int
     ): Pair<SQLPage<AuditInfo>, Boolean> {
-        val count = auditDao.countByResourceTye(dslContext, userId, projectId, reourceType, resourceName,status,startTime,endTime)
+        val count = auditDao.countByResourceTye(dslContext, userId, projectId, reourceType, resourceName, status, startTime, endTime)
         val auditRecordList = auditDao.listByResourceTye(
                 dslContext = dslContext,
                 reourceType = reourceType,
@@ -86,9 +85,9 @@ class AuditService @Autowired constructor(
         val auditRecordMap = auditRecordList.toSet()
         val auditList = auditRecordMap.map {
             var statusStr = ""
-            if(it.status.equals("1")){
-                statusStr="成功"
-            }else{
+            if (it.status.equals("1")) {
+                statusStr = "成功"
+            } else {
                 statusStr = "失败"
             }
             AuditInfo(
@@ -104,8 +103,6 @@ class AuditService @Autowired constructor(
         }
         return Pair(SQLPage(count, auditList), true)
     }
-
-
 
     private fun checkParam(audit: Audit) {
         if (audit.resourceType.isBlank()) {

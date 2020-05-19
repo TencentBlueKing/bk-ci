@@ -168,11 +168,11 @@ class PipelineSettingService @Autowired constructor(
     }
 
     fun userGetSettingVersion(
-            userId: String,
-            projectId: String,
-            pipelineId: String,
-            version: Int,
-            channelCode: ChannelCode = ChannelCode.BS
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        version: Int,
+        channelCode: ChannelCode = ChannelCode.BS
     ): PipelineSettingVersion {
         val setting = pipelineSettingVersionDao.getSetting(dslContext, pipelineId, version)
         val groups = pipelineGroupVersionService.getGroups(userId, projectId, pipelineId)

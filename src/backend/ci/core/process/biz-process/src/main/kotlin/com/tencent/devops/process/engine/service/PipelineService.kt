@@ -527,15 +527,15 @@ class PipelineService @Autowired constructor(
 
             pipelineRepositoryService.deployPipeline(model, projectId, pipelineId, userId, channelCode, false)
 
-            //添加编辑流水线审计日志
+            // 添加编辑流水线审计日志
             logger.info("start create pipeline audit save")
             val updatePipeline = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)
                     ?: throw NotFoundException("指定编辑的流水线不存在")
             logger.info("the updateVersion is ${updatePipeline.version}")
-            val audit = Audit(AuthResourceType.PIPELINE_DEFAULT.value,pipelineId,pipeline.pipelineName,userId,"edit","编辑流水线从V${pipeline.version}->V${updatePipeline.version}", projectId)
+            val audit = Audit(AuthResourceType.PIPELINE_DEFAULT.value, pipelineId, pipeline.pipelineName, userId, "edit", "编辑流水线从V${pipeline.version}->V${updatePipeline.version}", projectId)
             client.get(ServiceAuditResource::class).create(audit)
             logger.info("start create pipeline audit save")
-            //添加编辑流水线审计日志
+            // 添加编辑流水线审计日志
 
             if (checkPermission) {
                 pipelinePermissionService.modifyResource(projectId, pipelineId, model.name)

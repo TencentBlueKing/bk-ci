@@ -26,7 +26,6 @@
 
 package com.tencent.devops.audit.api.pojo
 
-
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -48,10 +47,8 @@ data class AuditInfo(
      val action: String,
     @ApiModelProperty("操作内容", required = true)
      val actionContent: String
-){
+) {
     companion object {
         const val classType = "audit"
     }
-
-
 }
