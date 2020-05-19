@@ -20,7 +20,7 @@ interface UserWebsocketResource {
     @ApiOperation("页面退出清理session")
     fun clearSession(
         @ApiParam("用户ID", required = true)
-        @PathParam(AUTH_HEADER_USER_ID)
+        @PathParam("userId")
         userId: String,
         @ApiParam("SessionID", required = true)
         @PathParam("sessionId")
