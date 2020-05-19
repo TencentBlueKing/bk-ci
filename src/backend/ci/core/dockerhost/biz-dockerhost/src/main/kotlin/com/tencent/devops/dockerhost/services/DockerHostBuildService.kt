@@ -514,6 +514,7 @@ class DockerHostBuildService(
             // docker run
             val env = mutableListOf<String>()
             env.addAll(DockerEnvLoader.loadEnv(dockerBuildInfo))
+            env.add("bk_devops_start_source=dockerRun") // dockerRun启动标识
             dockerRunParam.env?.forEach {
                 env.add("${it.key}=${it.value ?: ""}")
             }
@@ -612,6 +613,23 @@ class DockerHostBuildService(
                 }
             } catch (e: Exception) {
                 logger.error("Clear container failed, containerId: ${container.id}", e)
+            }
+        }
+    }
+
+    fun clearDockerRunTimeoutContainers() {
+        val containerInfo = dockerCli.listContainersCmd().withStatusFilter(setOf("running")).exec()
+        for (container in containerInfo) {
+            try {
+                val startTime = dockerCli.inspectContainerCmd(container.id).exec().state.startedAt
+                val envs = dockerCli.inspectContainerCmd(container.id).exec().config.env
+                // 是否是dockerRun启动的并且已运行超过8小时
+                if (envs != null && envs.contains("bk_devops_start_source=dockerRun") && checkStartTime(startTime)) {
+                    logger.info("Clear dockerRun timeout container, containerId: ${container.id}")
+                    dockerCli.stopContainerCmd(container.id).withTimeout(15).exec()
+                }
+            } catch (e: Exception) {
+                logger.error("Clear dockerRun timeout container failed, containerId: ${container.id}", e)
             }
         }
     }
@@ -749,6 +767,22 @@ class DockerHostBuildService(
         }
 
         return true
+    }
+
+    private fun checkStartTime(utcTime: String?): Boolean {
+        if (utcTime != null && utcTime.isNotEmpty()) {
+            val array = utcTime.split(".")
+            val utcTimeLocal = array[0] + "Z"
+            val sdf = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'")
+            sdf.timeZone = TimeZone.getTimeZone("UTC")
+
+            val date = sdf.parse(utcTimeLocal)
+            val startTimestamp = date.time
+            val nowTimestamp = System.currentTimeMillis()
+            return (nowTimestamp - startTimestamp) > (8 * 3600 * 1000)
+        }
+
+        return false
     }
 
     inner class MyBuildImageResultCallback internal constructor(
