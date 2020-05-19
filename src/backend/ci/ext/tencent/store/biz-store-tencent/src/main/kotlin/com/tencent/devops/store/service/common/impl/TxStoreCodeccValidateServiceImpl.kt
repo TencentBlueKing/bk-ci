@@ -60,8 +60,10 @@ class TxStoreCodeccValidateServiceImpl @Autowired constructor(
         val businessConfig = businessConfigDao.get(dslContext, StoreTypeEnum.ATOM.name, "${language}Codecc", "VALIDATE_MODEL")
         val validateModel = businessConfig!!.configValue
         val validateModelList = JsonUtil.to(validateModel, object : TypeReference<List<Map<String, Any>>>() {})
+        logger.info("validateModelList is:$validateModelList")
         // 获取codecc扫描结果数据
         val codeccTaskResult = client.get(ServiceCodeccResource::class).getCodeccTaskResult(setOf(buildId))
+        logger.info("codeccTaskResult is:$codeccTaskResult")
         val codeccTaskMap = codeccTaskResult.data
         if (codeccTaskResult.isNotOk() || codeccTaskMap == null) {
             return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
