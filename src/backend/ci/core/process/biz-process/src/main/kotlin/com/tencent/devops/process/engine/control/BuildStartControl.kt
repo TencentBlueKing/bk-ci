@@ -93,7 +93,6 @@ class BuildStartControl @Autowired constructor(
     private val buildVariableService: BuildVariableService,
     private val pipelineUserService: PipelineUserService,
     private val scmProxyService: ScmProxyService,
-    private val pipelineQuotaService: PipelineQuotaService,
     private val rabbitTemplate: RabbitTemplate
 ) {
     private val logger = LoggerFactory.getLogger(javaClass)!!
@@ -193,29 +192,6 @@ class BuildStartControl @Autowired constructor(
             return
         }
 
-        // job配额为0
-        if (pipelineQuotaService.getQuotaByProject(projectId) <= 0) {
-            LogUtils.addLine(
-                rabbitTemplate = rabbitTemplate,
-                buildId = buildId,
-                message = "Project has no quota to run the job...",
-                tag = tag,
-                jobId = "",
-                executeCount = 1
-            )
-            pipelineEventDispatcher.dispatch(
-                PipelineBuildFinishEvent(
-                    source = tag,
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    userId = userId,
-                    buildId = buildId,
-                    status = BuildStatus.QUOTA_FAILED
-                )
-            )
-            return
-        }
-
         pipelineEventDispatcher.dispatch(
             PipelineBuildStageEvent(
                 source = tag,
@@ -236,17 +212,6 @@ class BuildStartControl @Autowired constructor(
             jobId = "",
             executeCount = 1
         )
-
-        // 开始构建，构建次数+1
-        LogUtils.addLine(
-            rabbitTemplate = rabbitTemplate,
-            buildId = buildId,
-            message = "BuildStartControl inc project used quota",
-            tag = tag,
-            jobId = "",
-            executeCount = 1
-        )
-        pipelineQuotaService.incQuotaByProject(projectId)
     }
 
     private fun PipelineBuildStartEvent.pickUpReadyBuild(): BuildInfo? {
