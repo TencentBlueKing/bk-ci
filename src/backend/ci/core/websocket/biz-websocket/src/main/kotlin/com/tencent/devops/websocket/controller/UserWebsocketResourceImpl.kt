@@ -14,7 +14,7 @@ class UserWebsocketResourceImpl @Autowired constructor(
     val websocketService: WebsocketService
 
 ) : UserWebsocketResource {
-    override fun clearSession(userId: String, sessionId: String): Result<Boolean> {
+    override fun clearSession(userId: String, sessionId: String): Boolean {
         return websocketService.clearSession(userId, sessionId)
     }
 }
