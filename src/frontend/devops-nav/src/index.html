@@ -249,6 +249,13 @@
             return asyncGet(GW_URL_PREFIX + '/project/api/user/users')
         }
 
+        function joinUrl (urlArr) {
+            if (Array.isArray(urlArr)) {
+                return urlArr.join('/').replace(/([^:]\/)\/+/g, '$1')
+            }
+            return ''
+        }
+
 
         function getServiceObject (serviceList, assetsJSON) {
             var serviceMap = {}
@@ -260,12 +267,13 @@
                     var serviceTitle = children[j].name.replace(/\(\S+?\)/, '')
                     var assetMod = assetsJSON[mod]
                     if (children[j].inject_type === 'amd') {
-                        children[j].js_url = [WEBSITE_URL, mod, assetMod ? assetMod.js : children[j].js_url].join('/').replace(/([^:]\/)\/+/g, '$1')
-                        children[j].css_url = [WEBSITE_URL, mod, assetMod ? assetMod.css : children[j].css_url].join('/').replace(/([^:]\/)\/+/g, '$1')
+                        const jsUrl = assetMod ? joinUrl([ mod, assetMod.js ]) : children[j].js_url
+                        const cssUrl = assetMod ? joinUrl([ mod, assetMod.css ]) : children[j].css_url
+                        children[j].js_url = joinUrl([ WEBSITE_URL, jsUrl ])
+                        children[j].css_url = joinUrl([ WEBSITE_URL, mod, cssUrl ])
                     } else {
-                        children[j].iframe_url = [WEBSITE_URL, children[j].iframe_url].join('/').replace(/([^:]\/)\/+/g, '$1')
+                        children[j].iframe_url = joinUrl([ WEBSITE_URL, children[j].iframe_url ])
                     }
-                    console.log(children[j])
                     serviceMap[mod] = children[j]
                     if (children[j].inject_type === 'iframe') {
                         iframeRoutes.push({
