@@ -237,16 +237,16 @@ class BuildStartControl @Autowired constructor(
             executeCount = 1
         )
 
-        // 成功构建，配额减一
+        // 开始构建，构建次数+1
         LogUtils.addLine(
             rabbitTemplate = rabbitTemplate,
             buildId = buildId,
-            message = "Dec the project quota...",
+            message = "BuildStartControl inc project used quota",
             tag = tag,
             jobId = "",
             executeCount = 1
         )
-        pipelineQuotaService.decQuotaByProject(projectId, buildId)
+        pipelineQuotaService.incQuotaByProject(projectId)
     }
 
     private fun PipelineBuildStartEvent.pickUpReadyBuild(): BuildInfo? {
