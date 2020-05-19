@@ -9,8 +9,8 @@ import javax.ws.rs.core.MediaType
 
 @Api(tags = ["USER_WEBSOCKET"], description = "websocket-用户调用")
 @Path("/user/websocket/sessions")
-@Produces(MediaType.TEXT_PLAIN)
-@Consumes(MediaType.APPLICATION_JSON)
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.TEXT_PLAIN)
 interface UserWebsocketResource {
 
     @POST
