@@ -153,10 +153,6 @@ class BuildEndControl @Autowired constructor(
                 actionType = ActionType.END
             )
         )
-
-        // 结束构建，增加配额
-        logger.info("[$pipelineId]|BUILD_FINISH| finish the build[$buildId] and inc project quota")
-        pipelineQuotaService.incQuotaByProject(projectId, buildId)
     }
 
     private fun PipelineBuildFinishEvent.fixTask(buildInfo: BuildInfo, buildStatus: BuildStatus) {

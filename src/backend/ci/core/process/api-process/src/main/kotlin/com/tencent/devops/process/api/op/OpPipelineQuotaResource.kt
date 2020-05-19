@@ -34,7 +34,7 @@ import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
 import javax.ws.rs.HeaderParam
-import javax.ws.rs.POST
+import javax.ws.rs.PUT
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
@@ -48,17 +48,32 @@ import javax.ws.rs.core.MediaType
 interface OpPipelineQuotaResource {
 
     @ApiOperation("更新")
-    @POST
+    @PUT
     @Path("/projects/{projectId}/update")
-    fun update(
+    fun updateQuota(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @ApiParam("projectId")
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("更新内容")
+        @ApiParam("配额")
         @QueryParam("quota")
         quota: Long
+    ): Result<Boolean>
+
+    @ApiOperation("更新已用配额")
+    @PUT
+    @Path("/projects/{projectId}/update")
+    fun updateUsedQuota(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("projectId")
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("配额")
+        @QueryParam("usedQuota")
+        usedQuota: Long
     ): Result<Boolean>
 }
