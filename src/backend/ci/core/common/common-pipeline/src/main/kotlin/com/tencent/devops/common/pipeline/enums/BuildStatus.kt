@@ -55,7 +55,8 @@ enum class BuildStatus(val statusName: String, val visiable: Boolean) {
     QUEUE_CACHE("队列待处理", true), // 19 队列待处理，瞬间状态。只有在启动和取消过程中存在的中间状态
     RETRY("重试", true), // 20 重试
     PAUSE("暂停执行", true), // 21 暂停执行，等待事件
-    STAGE_SUCCESS("阶段性完成", true), // 22 流水线阶段性完成
+    STAGE_SUCCESS("阶段性完成", true), // 22 流水线阶段性完成,
+    QUOTA_FAILED("配额不够失败", true), // 23 失败
     UNKNOWN("未知状态", false); // 99
 
     companion object {
@@ -68,7 +69,7 @@ enum class BuildStatus(val statusName: String, val visiable: Boolean) {
             }
         }
 
-        fun isFailure(status: BuildStatus) = status == FAILED || isCancel(status) || isTimeout(status)
+        fun isFailure(status: BuildStatus) = status == FAILED || isCancel(status) || isTimeout(status) || status == QUOTA_FAILED
 
         fun isFinish(status: BuildStatus) = isFailure(status) || isSuccess(status)
 
