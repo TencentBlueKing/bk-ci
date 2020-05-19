@@ -26,11 +26,13 @@
 
 package com.tencent.devops.websocket.servcie
 
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.websocket.dispatch.TransferDispatch
 import com.tencent.devops.common.websocket.utils.RedisUtlis
+import com.tencent.devops.websocket.controller.UserWebsocketResourceImpl
 import com.tencent.devops.websocket.event.ChangePageTransferEvent
 import com.tencent.devops.websocket.event.ClearUserSessionTransferEvent
 import com.tencent.devops.websocket.event.LoginOutTransferEvent
@@ -187,6 +189,17 @@ class WebsocketService @Autowired constructor(
         } finally {
             redisLock.unlock()
         }
+    }
+
+    fun clearSession(userId: String, sessionId: String): Result<Boolean> {
+        logger.info("clearSession| $userId| $sessionId")
+        val page = RedisUtlis.getPageFromSessionPageBySession(redisOperation, sessionId)
+        if (page != null) {
+            UserWebsocketResourceImpl.logger.info("$sessionId| ws loginOut fail, page[$page], refresh by interface")
+            clearUserSession(userId, sessionId, null)
+            loginOut(userId, sessionId, page)
+        }
+        return Result(true)
     }
 
     fun addCacheSession(sessionId: String) {
