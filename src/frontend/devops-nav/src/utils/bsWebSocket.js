@@ -1,6 +1,5 @@
 import SockJS from 'sockjs-client'
 import * as cookie from 'js-cookie'
-import ajax from './request'
 const Stomp = require('stompjs/lib/stomp.js').Stomp
 
 function uuid () {
@@ -29,7 +28,7 @@ class BlueShieldWebSocket {
     }
 
     connect () {
-        const socket = new SockJS(`${WS_URL_PREFIX}/websocket/ws/user?sessionId=${this.uuid}`)
+        const socket = new SockJS(`${WS_URL_PREFIX}websocket/ws/user?sessionId=${this.uuid}`)
         this.stompClient = Stomp.over(socket)
         this.stompClient.debug = null
         this.isConnecting = true
@@ -136,7 +135,7 @@ class BlueShieldWebSocket {
 
     closePageDisConnect () {
         window.addEventListener('beforeunload', () => {
-            ajax.put(`/user/websocket/sessions/${this.uuid}/userIds/${this.userName}/clear`)
+            navigator.sendBeacon(`${WS_URL_PREFIX}websocket/api/user/websocket/sessions/${this.uuid}/userIds/${this.userName}/clear`)
             this.stompClient.disconnect()
             this.hasConnect = false
         })
