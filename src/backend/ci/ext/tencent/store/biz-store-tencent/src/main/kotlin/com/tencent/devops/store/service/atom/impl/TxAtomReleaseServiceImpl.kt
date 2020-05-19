@@ -323,10 +323,16 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
         val buildInfo = marketAtomBuildInfoDao.getAtomBuildInfo(context, atomId)
         logger.info("the buildInfo is:$buildInfo")
         val script = buildInfo.value1()
+        val language = buildInfo.value3()
         if (null == atomPipelineRelRecord) {
             // 为用户初始化构建流水线并触发执行
             val version = atomRecord.version
-            val atomBaseInfo = AtomBaseInfo(atomId, atomCode, atomRecord.version)
+            val atomBaseInfo = AtomBaseInfo(
+                atomId = atomId,
+                atomCode = atomCode,
+                version = atomRecord.version,
+                language = language
+            )
             val businessConfig = businessConfigDao.get(context, StoreTypeEnum.ATOM.name, "initBuildPipeline", "PIPELINE_MODEL")
             var pipelineModel = businessConfig!!.configValue
             val pipelineName = "am-$projectCode-$atomCode-${System.currentTimeMillis()}"
@@ -334,6 +340,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
                 "pipelineName" to pipelineName,
                 "atomCode" to atomCode,
                 "version" to version,
+                "language" to language,
                 "script" to StringEscapeUtils.escapeJava(script),
                 "repositoryHashId" to atomRecord.repositoryHashId,
                 "repositoryPath" to (buildInfo.value2() ?: "")
@@ -371,6 +378,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
             val startParams = mutableMapOf<String, String>() // 启动参数
             startParams["atomCode"] = atomCode
             startParams["version"] = atomRecord.version
+            startParams["language"] = language
             startParams["script"] = script
             val buildIdObj = client.get(ServiceBuildResource::class).manualStartup(
                 userId, projectCode!!, atomPipelineRelRecord.pipelineId, startParams,
