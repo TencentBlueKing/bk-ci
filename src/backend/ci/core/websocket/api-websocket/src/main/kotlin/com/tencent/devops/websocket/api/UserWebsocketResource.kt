@@ -1,18 +1,14 @@
 package com.tencent.devops.websocket.api
 
-import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.*
-import javax.ws.rs.core.MediaType
 
 
 @Api(tags = ["USER_WEBSOCKET"], description = "websocket-用户调用")
 @Path("/user/websocket/sessions")
-@Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
 interface UserWebsocketResource {
 
     @POST
