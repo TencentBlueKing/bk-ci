@@ -27,7 +27,7 @@
  *
  */
 
-package com.tencent.devops.plugin.worker.task.archive
+package com.tencent.devops.plugin.worker.task.store
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
@@ -38,7 +38,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.ShaUtils
-import com.tencent.devops.common.pipeline.element.market.ExtServiceBuildDeployElement
+import com.tencent.devops.common.pipeline.element.store.ExtServiceBuildDeployElement
 import com.tencent.devops.common.pipeline.utils.ParameterUtils
 import com.tencent.devops.dispatch.pojo.DeployApp
 import com.tencent.devops.dockerhost.pojo.DockerBuildParam

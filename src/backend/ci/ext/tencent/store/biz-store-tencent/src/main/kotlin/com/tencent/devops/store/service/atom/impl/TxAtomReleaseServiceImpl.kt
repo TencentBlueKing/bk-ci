@@ -56,8 +56,8 @@ import com.tencent.devops.repository.pojo.RepositoryInfo
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
 import com.tencent.devops.store.constant.StoreMessageCode
-import com.tencent.devops.store.dao.atom.MarketAtomBuildAppRelDao
 import com.tencent.devops.store.dao.atom.MarketAtomBuildInfoDao
+import com.tencent.devops.store.dao.common.BusinessConfigDao
 import com.tencent.devops.store.dao.common.StoreBuildInfoDao
 import com.tencent.devops.store.dao.common.StorePipelineBuildRelDao
 import com.tencent.devops.store.dao.common.StorePipelineRelDao
@@ -67,6 +67,7 @@ import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.common.ReleaseProcessItem
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.atom.TxAtomReleaseService
+import org.apache.commons.lang.StringEscapeUtils
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -86,13 +87,13 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
     lateinit var storePipelineRelDao: StorePipelineRelDao
 
     @Autowired
-    lateinit var marketAtomBuildAppRelDao: MarketAtomBuildAppRelDao
-
-    @Autowired
     lateinit var storeBuildInfoDao: StoreBuildInfoDao
 
     @Autowired
     lateinit var storePipelineBuildRelDao: StorePipelineBuildRelDao
+
+    @Autowired
+    lateinit var businessConfigDao: BusinessConfigDao
 
     @Value("\${git.plugin.nameSpaceId}")
     private lateinit var pluginNameSpaceId: String
@@ -322,20 +323,36 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
         val buildInfo = marketAtomBuildInfoDao.getAtomBuildInfo(context, atomId)
         logger.info("the buildInfo is:$buildInfo")
         val script = buildInfo.value1()
+        val language = buildInfo.value3()
         if (null == atomPipelineRelRecord) {
             // 为用户初始化构建流水线并触发执行
-            val atomBaseInfo = AtomBaseInfo(atomId, atomCode, atomRecord.version)
-            val atomBuildAppInfoRecords = marketAtomBuildAppRelDao.getMarketAtomBuildAppInfo(context, atomId)
-            val buildEnv = mutableMapOf<String, String>()
-            atomBuildAppInfoRecords?.forEach {
-                buildEnv[it["appName"] as String] = it["appVersion"] as String
+            val version = atomRecord.version
+            val atomBaseInfo = AtomBaseInfo(
+                atomId = atomId,
+                atomCode = atomCode,
+                version = atomRecord.version,
+                language = language
+            )
+            val businessConfig = businessConfigDao.get(context, StoreTypeEnum.ATOM.name, "initBuildPipeline", "PIPELINE_MODEL")
+            var pipelineModel = businessConfig!!.configValue
+            val pipelineName = "am-$projectCode-$atomCode-${System.currentTimeMillis()}"
+            val paramMap = mapOf(
+                "pipelineName" to pipelineName,
+                "atomCode" to atomCode,
+                "version" to version,
+                "language" to language,
+                "script" to StringEscapeUtils.escapeJava(script),
+                "repositoryHashId" to atomRecord.repositoryHashId,
+                "repositoryPath" to (buildInfo.value2() ?: "")
+            )
+            // 将流水线模型中的变量替换成具体的值
+            paramMap.forEach { (key, value) ->
+                pipelineModel = pipelineModel.replace("#{$key}", value)
             }
             val atomMarketInitPipelineReq = AtomMarketInitPipelineReq(
-                atomRecord.repositoryHashId,
-                buildInfo.value2(),
-                script,
-                atomBaseInfo,
-                buildEnv
+                pipelineModel = pipelineModel,
+                script = script,
+                atomBaseInfo = atomBaseInfo
             )
             val atomMarketInitPipelineResp = client.get(ServicePipelineInitResource::class)
                 .initAtomMarketPipeline(userId, projectCode!!, atomMarketInitPipelineReq).data
@@ -343,11 +360,11 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
             if (null != atomMarketInitPipelineResp) {
                 storePipelineRelDao.add(context, atomCode, StoreTypeEnum.ATOM, atomMarketInitPipelineResp.pipelineId)
                 marketAtomDao.setAtomStatusById(
-                    context,
-                    atomId,
-                    atomMarketInitPipelineResp.atomBuildStatus.status.toByte(),
-                    userId,
-                    null
+                    dslContext = context,
+                    atomId = atomId,
+                    atomStatus = atomMarketInitPipelineResp.atomBuildStatus.status.toByte(),
+                    userId = userId,
+                    msg = null
                 )
                 val buildId = atomMarketInitPipelineResp.buildId
                 if (null != buildId) {
@@ -361,6 +378,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
             val startParams = mutableMapOf<String, String>() // 启动参数
             startParams["atomCode"] = atomCode
             startParams["version"] = atomRecord.version
+            startParams["language"] = language
             startParams["script"] = script
             val buildIdObj = client.get(ServiceBuildResource::class).manualStartup(
                 userId, projectCode!!, atomPipelineRelRecord.pipelineId, startParams,

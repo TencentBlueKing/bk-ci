@@ -23,18 +23,21 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.worker.common.api.store
 
-package com.tencent.devops.common.pipeline.pojo
+import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+class StoreCodeccResourceApi : AbstractBuildResourceApi() {
 
-@ApiModel("插件市场初始化流水线请求报文体")
-data class AtomMarketInitPipelineReq(
-    @ApiModelProperty("流水线模型", required = true)
-    val pipelineModel: String,
-    @ApiModelProperty("脚本任务插件Shell执行脚本", required = true)
-    val script: String,
-    @ApiModelProperty("插件基本信息", required = true)
-    val atomBaseInfo: AtomBaseInfo
-)
+    fun validate(
+        buildId: String,
+        language: String
+    ): Result<Boolean> {
+        val path = "/ms/store/api/build/store/codecc/validate?buildId=$buildId&language=$language"
+        val request = buildGet(path)
+        val responseContent = request(request, "codecc validate fail")
+        return objectMapper.readValue(responseContent)
+    }
+}

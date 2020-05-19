@@ -24,17 +24,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.pipeline.pojo
+package com.tencent.devops.store.resources.common
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.store.api.common.TxBuildStoreCodeccResource
+import com.tencent.devops.store.service.common.TxStoreCodeccValidateService
+import org.springframework.beans.factory.annotation.Autowired
 
-@ApiModel("插件市场初始化流水线请求报文体")
-data class AtomMarketInitPipelineReq(
-    @ApiModelProperty("流水线模型", required = true)
-    val pipelineModel: String,
-    @ApiModelProperty("脚本任务插件Shell执行脚本", required = true)
-    val script: String,
-    @ApiModelProperty("插件基本信息", required = true)
-    val atomBaseInfo: AtomBaseInfo
-)
+@RestResource
+class TxBuildStoreCodeccResourceImpl @Autowired constructor(
+    private val txStoreCodeccValidateService: TxStoreCodeccValidateService
+) : TxBuildStoreCodeccResource {
+
+    override fun validate(buildId: String, language: String): Result<Boolean> {
+        return txStoreCodeccValidateService.validateCodeccResult(buildId, language)
+    }
+}

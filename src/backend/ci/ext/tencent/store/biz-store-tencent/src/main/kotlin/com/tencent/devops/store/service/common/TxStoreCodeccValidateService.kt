@@ -24,17 +24,11 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.pipeline.pojo
+package com.tencent.devops.store.service.common
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.common.api.pojo.Result
 
-@ApiModel("插件市场初始化流水线请求报文体")
-data class AtomMarketInitPipelineReq(
-    @ApiModelProperty("流水线模型", required = true)
-    val pipelineModel: String,
-    @ApiModelProperty("脚本任务插件Shell执行脚本", required = true)
-    val script: String,
-    @ApiModelProperty("插件基本信息", required = true)
-    val atomBaseInfo: AtomBaseInfo
-)
+interface TxStoreCodeccValidateService {
+
+    fun validateCodeccResult(buildId: String, language: String): Result<Boolean>
+}
