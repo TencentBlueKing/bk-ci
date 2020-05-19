@@ -11,22 +11,10 @@ import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class UserWebsocketResourceImpl @Autowired constructor(
-    val websocketService: WebsocketService,
-    val redisOperation: RedisOperation
+    val websocketService: WebsocketService
 
 ) : UserWebsocketResource {
     override fun clearSession(userId: String, sessionId: String): Result<Boolean> {
-        logger.info("clearSession| $userId| $sessionId")
-        val page = RedisUtlis.getPageFromSessionPageBySession(redisOperation, sessionId)
-        if (page != null) {
-            logger.info("$sessionId| ws loginOut fail, page[$page], refresh by interface")
-            websocketService.clearUserSession(userId, sessionId, null)
-            websocketService.loginOut(userId, sessionId, page)
-        }
-        return Result(true)
-    }
-
-    companion object {
-        val logger = LoggerFactory.getLogger(this::class.java)
+        return websocketService.clearSession(userId, sessionId)
     }
 }
