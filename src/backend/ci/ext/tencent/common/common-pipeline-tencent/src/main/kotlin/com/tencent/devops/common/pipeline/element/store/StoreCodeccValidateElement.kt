@@ -41,15 +41,12 @@ data class StoreCodeccValidateElement(
     @ApiModelProperty("状态", required = false)
     override var status: String? = null,
     @ApiModelProperty("开发语言", required = true)
-    val language: String = "\${language}",
-    @ApiModelProperty("校验模型", required = true)
-    val validateModel: String
+    val language: String = "\${language}"
 ) : Element(name, id, status) {
 
     companion object {
         const val classType = "storeCodeccValidate"
     }
 
-    override fun getClassType() =
-        classType
+    override fun getClassType() = classType
 }
