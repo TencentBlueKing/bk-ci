@@ -58,6 +58,7 @@ import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineStageService
 import com.tencent.devops.process.service.BuildVariableService
+import com.tencent.devops.process.service.PipelineQuotaService
 import com.tencent.devops.process.service.PipelineUserService
 import com.tencent.devops.process.service.ProjectOauthTokenService
 import com.tencent.devops.process.service.scm.ScmProxyService
@@ -92,6 +93,7 @@ class BuildStartControl @Autowired constructor(
     private val buildVariableService: BuildVariableService,
     private val pipelineUserService: PipelineUserService,
     private val scmProxyService: ScmProxyService,
+    private val pipelineQuotaService: PipelineQuotaService,
     private val rabbitTemplate: RabbitTemplate
 ) {
     private val logger = LoggerFactory.getLogger(javaClass)!!
@@ -191,6 +193,29 @@ class BuildStartControl @Autowired constructor(
             return
         }
 
+        // job配额为0
+        if (pipelineQuotaService.getQuotaByProject(projectId) <= 0) {
+            LogUtils.addLine(
+                rabbitTemplate = rabbitTemplate,
+                buildId = buildId,
+                message = "Project has no quota to run the job...",
+                tag = tag,
+                jobId = "",
+                executeCount = 1
+            )
+            pipelineEventDispatcher.dispatch(
+                PipelineBuildFinishEvent(
+                    source = tag,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    userId = userId,
+                    buildId = buildId,
+                    status = BuildStatus.QUOTA_FAILED
+                )
+            )
+            return
+        }
+
         pipelineEventDispatcher.dispatch(
             PipelineBuildStageEvent(
                 source = tag,
@@ -211,6 +236,17 @@ class BuildStartControl @Autowired constructor(
             jobId = "",
             executeCount = 1
         )
+
+        // 成功构建，配额减一
+        LogUtils.addLine(
+            rabbitTemplate = rabbitTemplate,
+            buildId = buildId,
+            message = "Dec the project quota...",
+            tag = tag,
+            jobId = "",
+            executeCount = 1
+        )
+        pipelineQuotaService.decQuotaByProject(projectId, buildId)
     }
 
     private fun PipelineBuildStartEvent.pickUpReadyBuild(): BuildInfo? {

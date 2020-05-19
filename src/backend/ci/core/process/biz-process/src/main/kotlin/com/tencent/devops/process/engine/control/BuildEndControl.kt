@@ -46,6 +46,7 @@ import com.tencent.devops.process.engine.service.PipelineBuildService
 import com.tencent.devops.process.engine.service.PipelineRuntimeExtService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.process.service.PipelineQuotaService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -61,7 +62,8 @@ class BuildEndControl @Autowired constructor(
     private val pipelineBuildService: PipelineBuildService,
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val pipelineBuildDetailService: PipelineBuildDetailService,
-    private val pipelineRuntimeExtService: PipelineRuntimeExtService
+    private val pipelineRuntimeExtService: PipelineRuntimeExtService,
+    private val pipelineQuotaService: PipelineQuotaService
 ) {
 
     private val logger = LoggerFactory.getLogger(javaClass)!!
@@ -151,6 +153,10 @@ class BuildEndControl @Autowired constructor(
                 actionType = ActionType.END
             )
         )
+
+        // 结束构建，增加配额
+        logger.info("[$pipelineId]|BUILD_FINISH| finish the build[$buildId] and inc project quota")
+        pipelineQuotaService.incQuotaByProject(projectId, buildId)
     }
 
     private fun PipelineBuildFinishEvent.fixTask(buildInfo: BuildInfo, buildStatus: BuildStatus) {
