@@ -221,20 +221,35 @@ class GitCIBuildService @Autowired constructor(
 
     private fun addVmBuildContainer(job: Job, elementList: List<Element>, containerList: MutableList<Container>, jobIndex: Int) {
         val containerPool =
-            if (job.job.pool?.container == null) {
-                Pool(buildConfig.registryImage, Credential("", ""), null)
-            } else {
-                Pool(
-                    container = job.job.pool!!.container,
-                    credential = Credential(
-                        user = job.job.pool!!.credential?.user ?: "",
-                        password = job.job.pool!!.credential?.password ?: ""
-                    ),
-                    macOS = MacOS(
-                        systemVersion = job.job.pool!!.macOS?.systemVersion ?: "",
-                        xcodeVersion = job.job.pool!!.macOS?.xcodeVersion ?: ""
+            when {
+                // 有container配置时优先使用
+                job.job.pool?.container != null -> {
+                    Pool(
+                        container = job.job.pool!!.container,
+                        credential = Credential(
+                            user = job.job.pool!!.credential?.user ?: "",
+                            password = job.job.pool!!.credential?.password ?: ""
+                        ),
+                        macOS = null
                     )
-                )
+                }
+
+                // 没有container配置时，优先使用macOS配置
+                job.job.pool?.macOS != null -> {
+                    Pool(
+                        container = null,
+                        credential = null,
+                        macOS = MacOS(
+                            systemVersion = job.job.pool!!.macOS?.systemVersion ?: "",
+                            xcodeVersion = job.job.pool!!.macOS?.xcodeVersion ?: ""
+                        )
+                    )
+                }
+
+                // 假设都没有配置，使用默认镜像
+                else -> {
+                    Pool(buildConfig.registryImage, Credential("", ""), null)
+                }
             }
 
         val vmContainer = VMBuildContainer(
