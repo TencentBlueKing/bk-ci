@@ -15,7 +15,7 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserWebsocketResource {
 
-    @PUT
+    @POST
     @Path("/{sessionId}/userIds/{userId}/clear")
     @ApiOperation("页面退出清理session")
     fun clearSession(
