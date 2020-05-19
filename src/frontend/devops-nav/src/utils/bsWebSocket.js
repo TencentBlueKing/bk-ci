@@ -147,7 +147,9 @@ class BlueShieldWebSocket {
     }
 
     onlineConnect () {
-        window.addEventListener('online', () => this.connect())
+        window.addEventListener('online', () => {
+            if (!this.isConnecting) this.connect()
+        })
     }
 }
 
