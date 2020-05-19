@@ -272,7 +272,11 @@ class GitCIBuildService @Autowired constructor(
             dockerBuildVersion = null,
             tstackAgentId = null,
             dispatchType = if (containerPool.macOS != null) {
-                MacOSDispatchType(containerPool.macOS!!.systemVersion!!, containerPool.macOS!!.xcodeVersion!!)
+                MacOSDispatchType(
+                    macOSEvn = objectMapper.writeValueAsString(containerPool),
+                    systemVersion = containerPool.macOS!!.systemVersion!!,
+                    xcodeVersion = containerPool.macOS!!.xcodeVersion!!
+                )
             } else {
                 GitCIDispatchType(objectMapper.writeValueAsString(containerPool))
             }
