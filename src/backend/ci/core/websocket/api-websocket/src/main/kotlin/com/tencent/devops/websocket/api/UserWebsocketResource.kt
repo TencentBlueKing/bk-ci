@@ -1,6 +1,5 @@
 package com.tencent.devops.websocket.api
 
-import com.tencent.devops.common.api.pojo.Result
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -9,7 +8,6 @@ import javax.ws.rs.core.MediaType
 
 @Api(tags = ["USER_WEBSOCKET"], description = "websocket-用户调用")
 @Path("/user/websocket/sessions")
-@Consumes(MediaType.APPLICATION_JSON)
 interface UserWebsocketResource {
 
     @POST
@@ -22,5 +20,5 @@ interface UserWebsocketResource {
         @ApiParam("SessionID", required = true)
         @PathParam("sessionId")
         sessionId: String
-    ): Result<Boolean>
+    ): Boolean
 }
