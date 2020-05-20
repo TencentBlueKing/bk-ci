@@ -95,6 +95,15 @@ class ContainerControl @Autowired constructor(
 
         // 当build的状态是结束的时候，直接返回
         if (BuildStatus.isFinish(container.status)) {
+            LogUtils.addLine(
+                rabbitTemplate = rabbitTemplate,
+                buildId = buildId,
+                message = "Container finish and dec the quota for project: $projectId",
+                tag = "",
+                jobId = containerId,
+                executeCount = 1
+            )
+            pipelineQuotaService.decQuotaByProject(projectId, buildId, containerId)
             return
         }
 
@@ -131,7 +140,7 @@ class ContainerControl @Autowired constructor(
             // 检查配额
             // job配额为0
             if (pipelineQuotaService.getQuotaByProject(projectId) <= 0) {
-                LogUtils.addLine(
+                LogUtils.addRedLine(
                     rabbitTemplate = rabbitTemplate,
                     buildId = buildId,
                     message = "Project has no quota to run the job...",
@@ -158,7 +167,7 @@ class ContainerControl @Autowired constructor(
                 jobId = containerId,
                 executeCount = 1
             )
-            pipelineQuotaService.incQuotaByProject(projectId)
+            pipelineQuotaService.incQuotaByProject(projectId, buildId, containerId)
         }
 
         // 终止或者结束事件，跳过是假货和不启动job配置，都不做互斥判断
