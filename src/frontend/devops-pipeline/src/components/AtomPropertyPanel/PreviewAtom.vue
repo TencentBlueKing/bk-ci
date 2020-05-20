@@ -64,6 +64,7 @@
     import TimePicker from '@/components/AtomFormComponent/TimePicker'
     import Parameter from '@/components/AtomFormComponent/Parameter'
     import Tips from '@/components/AtomFormComponent/Tips'
+    import DynamicParameter from '@/components/AtomFormComponent/DynamicParameter'
 
     export default {
         name: 'preview-atom',
@@ -75,7 +76,8 @@
             SelectInput,
             TimePicker,
             Parameter,
-            Tips
+            Tips,
+            DynamicParameter
         },
         mixins: [atomMixin],
         props: {
