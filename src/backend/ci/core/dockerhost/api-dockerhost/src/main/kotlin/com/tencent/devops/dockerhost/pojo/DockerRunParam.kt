@@ -40,5 +40,7 @@ data class DockerRunParam(
     @ApiModelProperty("命令行", required = false)
     val command: List<String>,
     @ApiModelProperty("环境变量", required = false)
-    val env: Map<String, String?>?
+    val env: Map<String, String?>?,
+    @ApiModelProperty("并发构建池序号", required = false)
+    val poolNo: String? = "0"
 )

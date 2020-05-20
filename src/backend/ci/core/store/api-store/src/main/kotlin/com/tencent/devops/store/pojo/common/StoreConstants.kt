@@ -33,6 +33,8 @@ const val HOTTEST = "hottest"
 const val UN_RELEASE = "unRelease"
 const val TASK_JSON_NAME = "task.json"
 const val QUALITY_JSON_NAME = "quality.json"
+const val EXTENSION_JSON_NAME = "extension.json"
+const val README = "README.md"
 const val STORE_ATOM_STATUS = "STORE_ATOM_STATUS" // 插件状态
 const val STORE_IMAGE_STATUS = "STORE_IMAGE_STATUS" // 镜像状态
 const val STORE_MEMBER_ADD_NOTIFY_TEMPLATE = "STORE_MEMBER_ADD" // store组件成员被添加的消息通知模板
@@ -49,6 +51,11 @@ const val STORE_COMMENT_NOTIFY_TEMPLATE = "STORE_COMMENT_NOTIFY_TEMPLATE" // sto
 const val STORE_COMMENT_REPLY_NOTIFY_TEMPLATE = "STORE_COMMENT_REPLY_NOTIFY_TEMPLATE" // store评论回复消息通知模板
 const val OPEN = "open" // 开关打开
 const val CLOSE = "close" // 开关关闭
+
+const val SERVICE_COLLABORATOR_APPLY_MOA_TEMPLATE = "SERIVCE_COLLABORATOR_APPLY_MOA_TEMPLATE" //  扩展服务协作开发申请MOA审批消息通知模板
+const val SERVICE_COLLABORATOR_APPLY_REFUSE_TEMPLATE = "SERIVCE_COLLABORATOR_APPLY_REFUSE" // 扩展服务协作开发申请被拒的消息通知模板
+const val EXTENSION_RELEASE_AUDIT_PASS_TEMPLATE = "EXTENSION_RELEASE_AUDIT_PASS_TEMPLATE" // 扩展服务发布审核通过消息通知模板
+const val EXTENSION_RELEASE_AUDIT_REFUSE_TEMPLATE = "EXTENSION_RELEASE_AUDIT_REFUSE_TEMPLATE" // 扩展服务发布审核被拒消息通知模板
 
 const val KEY_ID = "id"
 const val KEY_PUB_TIME = "pubTime"

@@ -18,12 +18,14 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 ]]
 
 config = {
-  evn = "__BKCI_ENV__",
+  env = "__BKCI_ENV__",
   static_dir = "__INSTALL_PATH__/__MODULE__/frontend",
   static_dir_gray = "__INSTALL_PATH__/__MODULE__/frontend-gray",
   docs_dir = "__INSTALL_PATH__/__MODULE__/docs",
   static_dir_codecc = "__INSTALL_PATH__/codecc/frontend",
   http_schema = "__HTTP_SCHEMA__", -- 蓝鲸PaaS平台访问协议 http or https, 如果有对接才配置修改，开源默认没对接
+  paas_host = "__PAAS_FQDN__", -- 蓝鲸PaaS平台域名, 如果有对接才配置修改，开源默认没对接
+  paas_http_port = "__PAAS_HTTPS_PORT__", -- 蓝鲸PaaS平台域名的端口, 如果有对接才配置修改，开源默认没对接
   login_url = "__PAAS_LOGIN_URL__",   -- 蓝鲸PaaS平台域名, 如果有对接才配置修改，开源默认没对接
   service_name = "",  -- 指定后台微服务名称，如果对接后端是boot-assembly的单体微服务，则该配置项为bk-ci, 否则请置空会自动路由相应微服务
   allow_hosts = {
@@ -43,7 +45,29 @@ config = {
   },
   ns_gray = {
     ip = {
+      "__BKCI_CONSUL_GRAY_IP__"
+    },
+    port = __BKCI_CONSUL_DNS_PORT__,
+    http_port = __BKCI_CONSUL_PORT__,
+    domain = "__BKCI_CONSUL_DOMAIN__",
+    tag = "__BKCI_CONSUL_TAG__",
+    suffix = "-__BKCI_CONSUL_TAG__",
+    nodes_url = "/v1/catalog/nodes"
+  },
+  ns_devnet = {
+    ip = {
       "127.0.0.1"
+    },
+    port = __BKCI_CONSUL_DNS_PORT__,
+    http_port = __BKCI_CONSUL_PORT__,
+    domain = "__BKCI_CONSUL_DOMAIN__",
+    tag = "__BKCI_CONSUL_TAG__",
+    suffix = "-__BKCI_CONSUL_TAG__",
+    nodes_url = "/v1/catalog/nodes"
+  },
+  ns_devnet_gray = {
+    ip = {
+      "__BKCI_CONSUL_DEVNET_GRAY_IP__"
     },
     port = __BKCI_CONSUL_DNS_PORT__,
     http_port = __BKCI_CONSUL_PORT__,
@@ -57,7 +81,7 @@ config = {
     domain = "__BKCI_JOB_FQDN__"
   },
   redis = {
-    host = "__REDIS_IP0__",
+    host = "__REDIS_IP__",
     port = __REDIS_PORT__,
     pass = "__REDIS_PASS__",  -- redis 密码，没有密码的话，把这行注释掉
     database = __REDIS_DB__,         -- 默认选择db0
