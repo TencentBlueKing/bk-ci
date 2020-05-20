@@ -46,6 +46,7 @@ import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.common.pipeline.container.MutexGroup
 import com.tencent.devops.process.engine.common.BS_CONTAINER_END_SOURCE_PREIX
 import com.tencent.devops.process.pojo.mq.PipelineBuildContainerEvent
 import com.tencent.devops.process.service.BuildVariableService
@@ -87,84 +88,134 @@ class ContainerControl @Autowired constructor(
     }
 
     private fun PipelineBuildContainerEvent.execute() {
-        // job配额为0
-        if (pipelineQuotaService.getQuotaByProject(projectId) <= 0) {
+        val container = pipelineRuntimeService.getContainer(buildId, stageId, containerId) ?: run {
+            logger.warn("[$buildId]|bad container|stage=$stageId|container=$containerId")
+            return
+        }
+
+        // 当build的状态是结束的时候，直接返回
+        if (BuildStatus.isFinish(container.status)) {
+            return
+        }
+
+        // Container互斥组的判断
+        // 并初始化互斥组的值
+        val variables = buildVariableService.getAllVariable(buildId)
+        val mutexGroup = mutexControl.initMutexGroup(
+            mutexGroup = container.controlOption?.mutexGroup,
+            variables = variables
+        )
+        val containerTaskList = pipelineRuntimeService.listContainerBuildTasks(buildId, containerId)
+
+        // 仅在初次进入Container时进行跳过判断
+        if (BuildStatus.isReadyToRun(container.status)) {
+            if (checkIfAllSkip(
+                    buildId = buildId,
+                    stageId = stageId,
+                    container = container,
+                    containerTaskList = containerTaskList,
+                    variables = variables
+                )
+            ) {
+                skipContainer(
+                    event = this,
+                    containerTaskList = containerTaskList,
+                    container = container,
+                    mutexGroup = mutexGroup,
+                    status = BuildStatus.SKIP
+                )
+                logger.info("[$buildId]|CONTAINER_SKIP|stage=$stageId|container=$containerId|action=$actionType")
+                return sendBackStage("container_skip")
+            }
+
+            // 检查配额
+            // job配额为0
+            if (pipelineQuotaService.getQuotaByProject(projectId) <= 0) {
+                LogUtils.addLine(
+                    rabbitTemplate = rabbitTemplate,
+                    buildId = buildId,
+                    message = "Project has no quota to run the job...",
+                    tag = "",
+                    jobId = containerId,
+                    executeCount = 1
+                )
+                skipContainer(
+                    event = this,
+                    containerTaskList = containerTaskList,
+                    container = container,
+                    mutexGroup = mutexGroup,
+                    status = BuildStatus.QUOTA_FAILED
+                )
+                return sendBackStage("not enough quota to run...")
+            }
+
+            // 开始构建，构建次数+1
             LogUtils.addLine(
                 rabbitTemplate = rabbitTemplate,
                 buildId = buildId,
-                message = "Project has no quota to run the job...",
+                message = "Container control inc project used quota",
                 tag = "",
                 jobId = containerId,
                 executeCount = 1
             )
-            return
+            pipelineQuotaService.incQuotaByProject(projectId)
         }
 
-        doEventExecute(this)
-
-        // 开始构建，构建次数+1
-        LogUtils.addLine(
-            rabbitTemplate = rabbitTemplate,
-            buildId = buildId,
-            message = "Container control inc project used quota",
-            tag = "",
-            jobId = containerId,
-            executeCount = 1
-        )
-        pipelineQuotaService.incQuotaByProject(projectId)
-    }
-
-    private fun doEventExecute(event: PipelineBuildContainerEvent) {
-        with(event) {
-            val container = pipelineRuntimeService.getContainer(buildId, stageId, containerId) ?: run {
-                logger.warn("[$buildId]|bad container|stage=$stageId|container=$containerId")
-                return
-            }
-
-            // 当build的状态是结束的时候，直接返回
-            if (BuildStatus.isFinish(container.status)) {
-                return
-            }
-
-            // Container互斥组的判断
-            // 并初始化互斥组的值
-            val variables = buildVariableService.getAllVariable(buildId)
-            val mutexGroup = mutexControl.initMutexGroup(
-                mutexGroup = container.controlOption?.mutexGroup,
-                variables = variables
-            )
-            val containerTaskList = pipelineRuntimeService.listContainerBuildTasks(buildId, containerId)
-
-            // 仅在初次进入Container时进行跳过判断
-            if (BuildStatus.isReadyToRun(container.status)) {
-                if (checkIfAllSkip(
-                        buildId = buildId,
-                        stageId = stageId,
-                        container = container,
-                        containerTaskList = containerTaskList,
-                        variables = variables
-                    )
-                ) {
+        // 终止或者结束事件，跳过是假货和不启动job配置，都不做互斥判断
+        if (!ActionType.isEnd(actionType) && container.controlOption?.jobControlOption?.enable != false) {
+            val mutexResult =
+                mutexControl.checkContainerMutex(
+                    projectId = projectId,
+                    buildId = buildId,
+                    stageId = stageId,
+                    containerId = containerId,
+                    mutexGroup = mutexGroup,
+                    container = container
+                )
+            logger.info("[$buildId]|MUTEX_START|stage=$stageId|container=$containerId|action=$actionType|projectId=$projectId")
+            when (mutexResult) {
+                ContainerMutexStatus.CANCELED -> {
+                    logger.info("[$buildId]|MUTEX_CANCEL|stage=$stageId|container=$containerId|action=$actionType|projectId=$projectId")
+                    // job互斥失败的时候，设置container状态为失败
                     pipelineRuntimeService.updateContainerStatus(
                         buildId = buildId,
                         stageId = stageId,
                         containerId = containerId,
-                        buildStatus = BuildStatus.SKIP,
+                        buildStatus = BuildStatus.FAILED,
                         startTime = LocalDateTime.now(),
                         endTime = LocalDateTime.now()
                     )
+                    // job互斥失败的时候，设置详情页面为失败。
+                    pipelineBuildDetailService.updateContainerStatus(buildId, containerId, BuildStatus.FAILED)
+                    return sendBackStage("container_mutex_cancel")
+                }
+                ContainerMutexStatus.WAITING -> {
+                    logger.info("[$buildId]|MUTEX_DELAY|stage=$stageId|container=$containerId|action=$actionType|projectId=$projectId")
+                    return sendSelfDelay()
+                }
+                else -> {
+                    logger.info("[$buildId]|MUTEX_RUNNING|stage=$stageId|container=$containerId|action=$actionType|projectId=$projectId")
+                    // 正常运行
+                }
+            }
+        }
 
-                    containerTaskList.forEach {
-                        pipelineRuntimeService.updateTaskStatus(
-                            buildId = buildId,
-                            taskId = it.taskId,
-                            userId = it.starter,
-                            buildStatus = BuildStatus.SKIP
-                        )
-                    }
-
-                    logger.info("[$buildId]|CONTAINER_SKIP|stage=$stageId|container=$containerId|action=$actionType")
-                    pipelineBuildDetailService.normalContainerSkip(buildId, container.containerId)
+        //   待执行任务， job状态， 是否启动构建机任务而失败
+        val (waitToDoTask, containerFinalStatus, startVMFail) =
+            when {
+                // 要求启动执行的请求
+                ActionType.isStart(actionType) || ActionType.REFRESH == actionType -> checkStartAction(containerTaskList)
+                    ?: return
+                // 要求强制终止
+                ActionType.isTerminate(actionType) -> {
+                    checkTerminateAction(containerTaskList, reason)
+                }
+                // 要求停止执行的请求
+                ActionType.isEnd(actionType) -> {
+                    checkEndAction(containerTaskList)
+                }
+                else -> { // 未规定的类型，打回上一级处理
+                    logger.warn("[$buildId]|CONTAINER_UNKNOWN_ACTION|stage=$stageId|container=$containerId|actionType=$actionType")
                     // 返回stage的时候，需要解锁
                     mutexControl.releaseContainerMutex(
                         projectId = projectId,
@@ -173,160 +224,124 @@ class ContainerControl @Autowired constructor(
                         containerId = containerId,
                         mutexGroup = mutexGroup
                     )
-                    return sendBackStage("container_skip")
+                    return sendBackStage("CONTAINER_UNKNOWN_ACTION")
                 }
             }
 
-            // 终止或者结束事件，跳过是假货和不启动job配置，都不做互斥判断
-            if (!ActionType.isEnd(actionType) && container.controlOption?.jobControlOption?.enable != false) {
-                val mutexResult =
-                    mutexControl.checkContainerMutex(
-                        projectId = projectId,
-                        buildId = buildId,
-                        stageId = stageId,
-                        containerId = containerId,
-                        mutexGroup = mutexGroup,
-                        container = container
-                    )
-                logger.info("[$buildId]|MUTEX_START|stage=$stageId|container=$containerId|action=$actionType|projectId=$projectId")
-                when (mutexResult) {
-                    ContainerMutexStatus.CANCELED -> {
-                        logger.info("[$buildId]|MUTEX_CANCEL|stage=$stageId|container=$containerId|action=$actionType|projectId=$projectId")
-                        // job互斥失败的时候，设置container状态为失败
-                        pipelineRuntimeService.updateContainerStatus(
-                            buildId = buildId,
-                            stageId = stageId,
-                            containerId = containerId,
-                            buildStatus = BuildStatus.FAILED,
-                            startTime = LocalDateTime.now(),
-                            endTime = LocalDateTime.now()
-                        )
-                        // job互斥失败的时候，设置详情页面为失败。
-                        pipelineBuildDetailService.updateContainerStatus(buildId, containerId, BuildStatus.FAILED)
-                        return sendBackStage("container_mutex_cancel")
-                    }
-                    ContainerMutexStatus.WAITING -> {
-                        logger.info("[$buildId]|MUTEX_DELAY|stage=$stageId|container=$containerId|action=$actionType|projectId=$projectId")
-                        return sendSelfDelay()
-                    }
-                    else -> {
-                        logger.info("[$buildId]|MUTEX_RUNNING|stage=$stageId|container=$containerId|action=$actionType|projectId=$projectId")
-                        // 正常运行
+        // 容器构建失败
+        if (waitToDoTask == null && BuildStatus.isFailure(containerFinalStatus)) {
+            if (!startVMFail) { // 非构建机启动失败的 做下收尾动作
+                containerTaskList.forEach {
+                    if (taskNeedRunWhenOtherTaskFail(it)) {
+                        logger.info("[$buildId]|CONTAINER_$actionType|stage=$stageId|container=$containerId|taskId=${it.taskId}|Continue when failed")
+                        return sendTask(it, ActionType.START)
                     }
                 }
             }
+            pipelineBuildDetailService.updateStartVMStatus(buildId, containerId, containerFinalStatus)
+            val finallyTasks = containerTaskList.filter { task ->
+                if (task.taskId == VMUtils.genEndPointTaskId(task.taskSeq) || // end-xxx 结束拦截点
+                    task.taskId == VMUtils.genStopVMTaskId(task.taskSeq) // 停止构建机
+                ) {
+                    true
+                } else {
+                    if (BuildStatus.isReadyToRun(task.status)) {
+                        // 将排队中的任务全部置为未执行状态
+                        pipelineRuntimeService.updateTaskStatus(buildId, task.taskId, userId, BuildStatus.UNEXEC)
+                        // logCoverUnExecTask(task, "Job失败！未执行的插件[${task.taskName}]")
+                    }
+                    false
+                }
+            }
 
-            //   待执行任务， job状态， 是否启动构建机任务而失败
-            val (waitToDoTask, containerFinalStatus, startVMFail) =
+            // 确认最后一步是清理构建环境的并且还未执行完成的，则选择为要下发执行
+            if (finallyTasks.size == 2) {
                 when {
-                    // 要求启动执行的请求
-                    ActionType.isStart(actionType) || ActionType.REFRESH == actionType -> checkStartAction(containerTaskList)
-                        ?: return
-                    // 要求强制终止
-                    ActionType.isTerminate(actionType) -> {
-                        checkTerminateAction(containerTaskList, reason)
-                    }
-                    // 要求停止执行的请求
-                    ActionType.isEnd(actionType) -> {
-                        checkEndAction(containerTaskList)
-                    }
-                    else -> { // 未规定的类型，打回上一级处理
-                        logger.warn("[$buildId]|CONTAINER_UNKNOWN_ACTION|stage=$stageId|container=$containerId|actionType=$actionType")
-                        // 返回stage的时候，需要解锁
-                        mutexControl.releaseContainerMutex(
-                            projectId = projectId,
+                    // 如果是非构建机启动失败或者关闭操作的，先拿结束点Hold住让构建机来认领结束，否则都是直接关闭构建机
+                    !startVMFail && !ActionType.isEnd(actionType) && BuildStatus.isReadyToRun(finallyTasks[0].status) ->
+                        return sendTask(finallyTasks[0], ActionType.START) // 先拿结束点
+                    BuildStatus.isReadyToRun(finallyTasks[1].status) -> {
+                        // 先将Hold点移出待执行状态，置为未执行。
+                        pipelineRuntimeService.updateTaskStatus(
                             buildId = buildId,
-                            stageId = stageId,
-                            containerId = containerId,
-                            mutexGroup = mutexGroup
+                            taskId = finallyTasks[0].taskId,
+                            userId = userId,
+                            buildStatus = BuildStatus.UNEXEC
                         )
-                        return sendBackStage("CONTAINER_UNKNOWN_ACTION")
-                    }
-                }
-
-            // 容器构建失败
-            if (waitToDoTask == null && BuildStatus.isFailure(containerFinalStatus)) {
-                if (!startVMFail) { // 非构建机启动失败的 做下收尾动作
-                    containerTaskList.forEach {
-                        if (taskNeedRunWhenOtherTaskFail(it)) {
-                            logger.info("[$buildId]|CONTAINER_$actionType|stage=$stageId|container=$containerId|taskId=${it.taskId}|Continue when failed")
-                            return sendTask(it, ActionType.START)
-                        }
-                    }
-                }
-                pipelineBuildDetailService.updateStartVMStatus(buildId, containerId, containerFinalStatus)
-                val finallyTasks = containerTaskList.filter { task ->
-                    if (task.taskId == VMUtils.genEndPointTaskId(task.taskSeq) || // end-xxx 结束拦截点
-                        task.taskId == VMUtils.genStopVMTaskId(task.taskSeq) // 停止构建机
-                    ) {
-                        true
-                    } else {
-                        if (BuildStatus.isReadyToRun(task.status)) {
-                            // 将排队中的任务全部置为未执行状态
-                            pipelineRuntimeService.updateTaskStatus(buildId, task.taskId, userId, BuildStatus.UNEXEC)
-                            // logCoverUnExecTask(task, "Job失败！未执行的插件[${task.taskName}]")
-                        }
-                        false
-                    }
-                }
-
-                // 确认最后一步是清理构建环境的并且还未执行完成的，则选择为要下发执行
-                if (finallyTasks.size == 2) {
-                    when {
-                        // 如果是非构建机启动失败或者关闭操作的，先拿结束点Hold住让构建机来认领结束，否则都是直接关闭构建机
-                        !startVMFail && !ActionType.isEnd(actionType) && BuildStatus.isReadyToRun(finallyTasks[0].status) ->
-                            return sendTask(finallyTasks[0], ActionType.START) // 先拿结束点
-                        BuildStatus.isReadyToRun(finallyTasks[1].status) -> {
-                            // 先将Hold点移出待执行状态，置为未执行。
-                            pipelineRuntimeService.updateTaskStatus(
-                                buildId = buildId,
-                                taskId = finallyTasks[0].taskId,
-                                userId = userId,
-                                buildStatus = BuildStatus.UNEXEC
-                            )
-                            return sendTask(finallyTasks[1], ActionType.START) // 再拿停止构建机
-                        }
+                        return sendTask(finallyTasks[1], ActionType.START) // 再拿停止构建机
                     }
                 }
             }
+        }
 
-            // Job在运行中需要更新状态， 或者没有任务的情况下要结束了，才更新Job的状态。
-            if (!BuildStatus.isFinish(containerFinalStatus) || waitToDoTask == null) {
-                val startTime = if (BuildStatus.isReadyToRun(container.status)) {
-                    LocalDateTime.now()
-                } else null
-                val endTime = if (BuildStatus.isFinish(containerFinalStatus)) {
-                    LocalDateTime.now()
-                } else null
+        // Job在运行中需要更新状态， 或者没有任务的情况下要结束了，才更新Job的状态。
+        if (!BuildStatus.isFinish(containerFinalStatus) || waitToDoTask == null) {
+            val startTime = if (BuildStatus.isReadyToRun(container.status)) {
+                LocalDateTime.now()
+            } else null
+            val endTime = if (BuildStatus.isFinish(containerFinalStatus)) {
+                LocalDateTime.now()
+            } else null
 
-                pipelineRuntimeService.updateContainerStatus(
+            pipelineRuntimeService.updateContainerStatus(
+                buildId = buildId,
+                stageId = stageId,
+                containerId = containerId,
+                startTime = startTime,
+                endTime = endTime,
+                buildStatus = containerFinalStatus
+            )
+        }
+
+        logger.info("[$buildId]|startVMFail=$startVMFail|task=${waitToDoTask?.taskName}|status=$containerFinalStatus")
+        // 当前能处理的任务为空
+        if (waitToDoTask == null) {
+            // 旧的实现方式，整个Model的修改，暂时保留
+            pipelineBuildDetailService.updateContainerStatus(buildId, containerId, containerFinalStatus)
+            logger.info("[$buildId]|CONTAINER_END|stage=$stageId|container=$containerId|action=$actionType|status=$containerFinalStatus")
+            // 返回stage的时候，需要解锁
+            mutexControl.releaseContainerMutex(
+                projectId = projectId,
+                buildId = buildId,
+                stageId = stageId,
+                containerId = containerId,
+                mutexGroup = mutexGroup
+            )
+            sendBackStage("$BS_CONTAINER_END_SOURCE_PREIX$containerFinalStatus")
+        } else {
+            sendTask(waitToDoTask, actionType)
+        }
+    }
+
+    private fun skipContainer(event: PipelineBuildContainerEvent, containerTaskList: List<PipelineBuildTask>, container: PipelineBuildContainer, mutexGroup: MutexGroup?, status: BuildStatus) {
+        with(event) {
+            pipelineRuntimeService.updateContainerStatus(
+                buildId = buildId,
+                stageId = stageId,
+                containerId = containerId,
+                buildStatus = status,
+                startTime = LocalDateTime.now(),
+                endTime = LocalDateTime.now()
+            )
+
+            containerTaskList.forEach {
+                pipelineRuntimeService.updateTaskStatus(
                     buildId = buildId,
-                    stageId = stageId,
-                    containerId = containerId,
-                    startTime = startTime,
-                    endTime = endTime,
-                    buildStatus = containerFinalStatus
+                    taskId = it.taskId,
+                    userId = it.starter,
+                    buildStatus = status
                 )
             }
 
-            logger.info("[$buildId]|startVMFail=$startVMFail|task=${waitToDoTask?.taskName}|status=$containerFinalStatus")
-            // 当前能处理的任务为空
-            if (waitToDoTask == null) {
-                // 旧的实现方式，整个Model的修改，暂时保留
-                pipelineBuildDetailService.updateContainerStatus(buildId, containerId, containerFinalStatus)
-                logger.info("[$buildId]|CONTAINER_END|stage=$stageId|container=$containerId|action=$actionType|status=$containerFinalStatus")
-                // 返回stage的时候，需要解锁
-                mutexControl.releaseContainerMutex(
-                    projectId = projectId,
-                    buildId = buildId,
-                    stageId = stageId,
-                    containerId = containerId,
-                    mutexGroup = mutexGroup
-                )
-                sendBackStage("$BS_CONTAINER_END_SOURCE_PREIX$containerFinalStatus")
-            } else {
-                sendTask(waitToDoTask, actionType)
-            }
+            pipelineBuildDetailService.normalContainerSkip(buildId, container.containerId)
+            // 返回stage的时候，需要解锁
+            mutexControl.releaseContainerMutex(
+                projectId = projectId,
+                buildId = buildId,
+                stageId = stageId,
+                containerId = containerId,
+                mutexGroup = mutexGroup
+            )
         }
     }
 
