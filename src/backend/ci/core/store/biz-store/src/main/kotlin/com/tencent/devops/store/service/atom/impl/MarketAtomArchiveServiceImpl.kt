@@ -155,6 +155,7 @@ class MarketAtomArchiveServiceImpl : MarketAtomArchiveService {
         propsMap["inputGroups"] = taskDataMap["inputGroups"]
         propsMap["input"] = taskDataMap["input"]
         propsMap["output"] = taskDataMap["output"]
+        propsMap["config"] = taskDataMap?.get("config")?: null
         dslContext.transaction { t ->
             val context = DSL.using(t)
             val props = JsonUtil.toJson(propsMap)
