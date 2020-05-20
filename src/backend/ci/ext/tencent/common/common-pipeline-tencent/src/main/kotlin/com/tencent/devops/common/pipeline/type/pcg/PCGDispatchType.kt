@@ -54,7 +54,7 @@ import com.tencent.devops.common.pipeline.type.DispatchType
  */
 data class PCGDispatchType(
     @JsonProperty("value") var image: String,
-    var useRoot: Boolean ?= true
+    var useRoot: Boolean? = true
 ) : DispatchType(
     image,
     DispatchRouteKeySuffix.PCG
