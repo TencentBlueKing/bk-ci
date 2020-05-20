@@ -79,6 +79,7 @@ import com.tencent.devops.process.pojo.mq.PipelineBuildContainerEvent
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import com.tencent.devops.process.pojo.pipeline.PipelineLatestBuild
 import com.tencent.devops.process.service.BuildStartupParamService
+import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.ParamService
 import com.tencent.devops.process.utils.PIPELINE_NAME
 import com.tencent.devops.process.utils.PIPELINE_RETRY_BUILD_ID
@@ -112,6 +113,7 @@ class PipelineBuildService(
     private val pipelineInterceptorChain: PipelineInterceptorChain,
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val pipelineRuntimeService: PipelineRuntimeService,
+    private val buildVariableService: BuildVariableService,
     private val pipelineStageService: PipelineStageService,
     private val redisOperation: RedisOperation,
     private val buildDetailService: PipelineBuildDetailService,
@@ -320,9 +322,10 @@ class PipelineBuildService(
                     errorCode = ProcessMessageCode.DENY_START_BY_MANUAL)
             }
             val params = mutableMapOf<String, Any>()
+            val originVars = buildVariableService.getAllVariable(buildId)
             if (!taskId.isNullOrBlank()) {
                 // job/task级重试，获取buildVariable构建参数，恢复环境变量
-                params.putAll(pipelineRuntimeService.getAllVariable(buildId))
+                params.putAll(originVars)
                 // job/task级重试
                 run {
                     model.stages.forEach { s ->
@@ -342,7 +345,7 @@ class PipelineBuildService(
                     }
                 }
             } else {
-                // 完整构建重试，去掉启动参数中的重试插件ID保证不冲突
+                // 完整构建重试，去掉启动参数中的重试插件ID保证不冲突，同时保留重试次数
                 try {
                     val startupParam = buildStartupParamService.getParam(buildId)
                     if (startupParam != null && startupParam.isNotEmpty()) {
@@ -354,14 +357,16 @@ class PipelineBuildService(
             }
             logger.info("[$pipelineId]|RETRY_PIPELINE_ORIGIN|taskId=$taskId|buildId=$buildId|originRetryCount=${params[PIPELINE_RETRY_COUNT]}|startParams=$params")
 
-            params[PIPELINE_RETRY_COUNT] = if (params[PIPELINE_RETRY_COUNT] != null) {
-                params[PIPELINE_RETRY_COUNT].toString().toInt() + 1
+            // rebuild重试计数
+            params[PIPELINE_RETRY_COUNT] = if (originVars[PIPELINE_RETRY_COUNT] != null) {
+                originVars[PIPELINE_RETRY_COUNT].toString().toInt() + 1
             } else {
                 1
             }
 
             params[PIPELINE_START_USER_ID] = userId
             params[PIPELINE_RETRY_BUILD_ID] = buildId
+            params[PIPELINE_START_TYPE] = originVars[PIPELINE_START_TYPE] ?: ""
 
             val readyToBuildPipelineInfo =
                 pipelineRepositoryService.getPipelineInfo(projectId, pipelineId, channelCode)
@@ -705,7 +710,7 @@ class PipelineBuildService(
             errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS,
             defaultMessage = "流水线编排不存在")
 
-        val runtimeVars = pipelineRuntimeService.getAllVariable(buildId)
+        val runtimeVars = buildVariableService.getAllVariable(buildId)
         model.stages.forEachIndexed { index, s ->
             if (index == 0) {
                 return@forEachIndexed
@@ -828,7 +833,7 @@ class PipelineBuildService(
             errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS,
             defaultMessage = "流水线编排不存在")
 
-        val runtimeVars = pipelineRuntimeService.getAllVariable(buildId)
+        val runtimeVars = buildVariableService.getAllVariable(buildId)
         model.stages.forEachIndexed { index, s ->
             if (index == 0) {
                 return@forEachIndexed
@@ -1036,7 +1041,7 @@ class PipelineBuildService(
                 params = arrayOf(buildId))
         }
         val buildHistory = buildHistories[0]
-        val variables = pipelineRuntimeService.getAllVariable(buildId)
+        val variables = buildVariableService.getAllVariable(buildId)
         return BuildHistoryWithVars(
             id = buildHistory.id,
             userId = buildHistory.userId,
@@ -1092,7 +1097,7 @@ class PipelineBuildService(
                 arrayOf(buildId)
             )
 
-        val allVariable = pipelineRuntimeService.getAllVariable(buildId)
+        val allVariable = buildVariableService.getAllVariable(buildId)
 
         return Result(
             BuildHistoryVariables(
@@ -1612,6 +1617,8 @@ class PipelineBuildService(
                 .plus(BuildParameters(PIPELINE_START_USER_NAME, userName ?: userId))
 
             val buildId = pipelineRuntimeService.startBuild(readyToBuildPipelineInfo, fullModel, paramsWithType)
+
+            // 重写启动参数，若为插件重试此处将写入启动参数的最新数值
             if (startParams.isNotEmpty()) {
                 val realStartParamKeys = (model.stages[0].containers[0] as TriggerContainer).params.map { it.id }
                 buildStartupParamService.addParam(

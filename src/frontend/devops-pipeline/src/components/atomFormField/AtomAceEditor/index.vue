@@ -1,5 +1,5 @@
 <template>
-    <section style="pointer-events: all; position: relative">
+    <section style="pointer-events: all; position: relative" v-bkloading="{ isLoading }">
         <div :class="['ace-fullscreen', { 'active': isFullScreen }]" :alt="$t('editPage.isFullScreen')" :title="$t('editPage.isFullScreen')"
             @click="setFullScreen">
             <i class="devops-icon" :class="isFullScreen ? &quot;icon-un-full-screen&quot; : &quot;icon-full-screen&quot;"></i>
@@ -33,11 +33,17 @@
             lang: {
                 type: String,
                 default: 'sh'
+            },
+            default: String,
+            bashConf: {
+                type: Object,
+                default: () => ({})
             }
         },
         data () {
             return {
                 height: 360,
+                isLoading: false,
                 isFullScreen: false
             }
         },
@@ -56,6 +62,7 @@
             const top = getActualTop(this.$el)
             const { clientHeight } = document.body
             this.height = Math.max(clientHeight - top - 180, 360)
+            this.getInitValue()
         },
         methods: {
             handleScriptInput (content) {
@@ -63,6 +70,59 @@
             },
             setFullScreen () {
                 this.isFullScreen = !this.isFullScreen
+            },
+            urlParse (originUrl, query) {
+                /* eslint-disable */
+                return new Function('ctx', `return '${originUrl.replace(/\{(.*?)\}/g, '\'\+ ctx.$1 \+\'')}'`)(query)
+                /* eslint-enable */
+            },
+            getResponseData (response, dataPath = 'data.records') {
+                try {
+                    switch (true) {
+                        case typeof response.data === 'string':
+                            return response.data
+                        case response.data && response.data.record && typeof response.data.record === 'string':
+                            return response.data.record
+                        default:
+                            const path = dataPath.split('.')
+                            let result = response
+                            let pos = 0
+                            while (path[pos] && result) {
+                                const key = path[pos]
+                                result = result[key]
+                                pos++
+                            }
+                            if (pos === path.length && typeof result === 'string') {
+                                return result
+                            } else {
+                                throw Error(this.$t('editPage.failToGetData'))
+                            }
+                    }
+                } catch (e) {
+                    console.error(e)
+                    return ''
+                }
+            },
+            async getInitValue () {
+                if (!this.bashConf) return
+                const { bashConf: { url, dataPath }, default: defalutValue, element, value } = this
+                if (url && typeof url === 'string' && defalutValue === value) {
+                    const query = this.$route.params
+                    const changeUrl = this.urlParse(url, {
+                        ...query,
+                        ...element
+                    })
+                    try {
+                        this.isLoading = true
+                        const res = await this.$ajax.get(changeUrl)
+                        const content = this.getResponseData(res, dataPath)
+                        this.handleChange(this.name, content)
+                    } catch (e) {
+                        console.error(e)
+                    } finally {
+                        this.isLoading = false
+                    }
+                }
             }
         }
     }
