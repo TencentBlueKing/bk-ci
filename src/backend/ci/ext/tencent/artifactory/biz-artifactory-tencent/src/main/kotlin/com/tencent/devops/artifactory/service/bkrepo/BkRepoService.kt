@@ -65,8 +65,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.io.File
-import java.nio.file.FileSystems
-import java.nio.file.Paths
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.regex.Pattern
@@ -439,35 +437,30 @@ class BkRepoService @Autowired constructor(
 
     override fun listCustomFiles(projectId: String, condition: CustomFileSearchCondition): List<String> {
         logger.info("listCustomFiles, projectId: $projectId, condition: $condition")
-        val allFiles = bkRepoClient.queryByNameAndMetadata(
-            "",
-            projectId,
-            listOf(RepoUtils.CUSTOM_REPO),
-            listOf(),
-            condition.properties,
-            0,
-            30000
-        )
-
-        if (condition.glob.isNullOrEmpty()) {
-            return allFiles.map { it.path }
-        }
-        val globs = condition.glob!!.split(",").map {
-            it.trim().removePrefix("/").removePrefix("./")
-        }.filter { it.isNotEmpty() }
-        val matchers = globs.map {
-            FileSystems.getDefault().getPathMatcher("glob:$it")
-        }
-        val matchedFiles = mutableListOf<QueryNodeInfo>()
-        matchers.forEach { matcher ->
-            allFiles.forEach {
-                if (matcher.matches(Paths.get(it.path.removePrefix("/")))) {
-                    matchedFiles.add(it)
+        var pathNamePairs = mutableListOf<Pair<String, String>>()
+        if (!condition.glob.isNullOrEmpty()) {
+            condition.glob!!.split(",").map { globItem ->
+                val absPath = "/${JFrogUtil.normalize(globItem).removePrefix("/")}"
+                if (absPath.endsWith("/")) {
+                    pathNamePairs.add(Pair(absPath, "*"))
+                } else {
+                    val fileName = absPath.split("/").last()
+                    val filePath = absPath.removeSuffix(fileName)
+                    pathNamePairs.add(Pair(filePath, fileName))
                 }
             }
         }
+        val fileList = bkRepoClient.queryByPathNamePairOrMetadataEqAnd(
+            userId = "",
+            projectId = projectId,
+            repoNames = listOf(RepoUtils.CUSTOM_REPO),
+            pathNamePairs = pathNamePairs,
+            metadata = condition.properties,
+            page = 0,
+            pageSize = 10000
+        )
 
-        return matchedFiles.toSet().toList().sortedByDescending { it.lastModifiedDate }.map { it.fullPath }
+        return fileList.sortedByDescending { it.lastModifiedDate }.map { it.fullPath }
     }
 
     override fun copyToCustom(userId: String, projectId: String, pipelineId: String, buildId: String, copyToCustomReq: CopyToCustomReq) {
