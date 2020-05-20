@@ -28,7 +28,6 @@ package com.tencent.devops.process.engine.init
 
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.Tools
-import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.process.engine.listener.run.callback.PipelineBuildCallBackListener
 import org.springframework.amqp.core.Binding
 import org.springframework.amqp.core.BindingBuilder
@@ -41,7 +40,6 @@ import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import java.util.UUID
 
 /**
  * 流水线构建扩展配置
@@ -71,12 +69,7 @@ class PipelineExtendConfiguration {
 
     @Bean
     fun pipelineBuildStatusChangeQueue(): Queue {
-        return Queue(
-            MQ.QUEUE_PIPELINE_BUILD_STATUS_CHANGE + ".${CommonUtils.getInnerIP()}.${UUID.randomUUID()}",
-            false,
-            true,
-            true
-        )
+        return Queue(MQ.QUEUE_PIPELINE_BUILD_STATUS_CHANGE)
     }
 
     @Bean
