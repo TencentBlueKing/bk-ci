@@ -45,17 +45,15 @@ class BkFieldValidator : ConstraintValidator<BkField?, Any?> {
     ): Boolean {
         val constraintDescriptor = (constraintValidatorContext as ConstraintValidatorContextImpl).constraintDescriptor
         val attributes = constraintDescriptor.attributes
-        val require = attributes[REQUIRED] as Boolean
+        val required = attributes[REQUIRED] as Boolean
         // 判断参数是否可以为空
-        if (require && paramValue == null) {
+        if (required && paramValue == null) {
             return false
         }
         val patternStyle = attributes[PATTERN_STYLE] as BkStyleEnum
         // 判断参数值是否满足配置的正则表达式规范
-        if (paramValue != null) {
-            if (!Pattern.matches(patternStyle.style, paramValue.toString())) {
-                return false
-            }
+        if (paramValue != null && !Pattern.matches(patternStyle.style, paramValue.toString())) {
+            return false
         }
         return true
     }
