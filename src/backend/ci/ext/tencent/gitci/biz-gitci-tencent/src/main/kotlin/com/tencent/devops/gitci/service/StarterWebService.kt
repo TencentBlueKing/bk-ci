@@ -26,24 +26,13 @@
 
 package com.tencent.devops.gitci.service
 
-import com.tencent.devops.common.api.exception.CustomException
-import com.tencent.devops.common.api.pojo.BuildHistoryPage
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.pipeline.enums.ChannelCode
-import com.tencent.devops.gitci.dao.GitCISettingDao
-import com.tencent.devops.gitci.dao.GitRequestEventBuildDao
-import com.tencent.devops.gitci.dao.GitRequestEventDao
 import com.tencent.devops.gitci.dao.GitStarterWebYamlDao
-import com.tencent.devops.gitci.pojo.GitCIBuildHistory
 import com.tencent.devops.gitci.pojo.GitYamlProperty
-import com.tencent.devops.process.api.service.ServiceBuildResource
-import com.tencent.devops.process.pojo.BuildHistory
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.info.GitProperties
 import org.springframework.stereotype.Service
-import javax.ws.rs.core.Response
 
 @Service
 class StarterWebService @Autowired constructor(

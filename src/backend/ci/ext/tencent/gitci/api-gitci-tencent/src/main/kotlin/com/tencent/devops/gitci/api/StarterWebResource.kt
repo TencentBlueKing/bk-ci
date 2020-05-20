@@ -42,7 +42,7 @@ import javax.ws.rs.HeaderParam
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["SERVICE_GIT_CI_STARTER"], description = "History页面")
+@Api(tags = ["SERVICE_GIT_CI_STARTER"], description = "起始页面模板信息")
 @Path("/service/starter")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)

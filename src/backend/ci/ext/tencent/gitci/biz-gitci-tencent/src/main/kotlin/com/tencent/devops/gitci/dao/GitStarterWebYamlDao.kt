@@ -26,16 +26,12 @@
 
 package com.tencent.devops.gitci.dao
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
-import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.gitci.pojo.GitYamlProperty
 import com.tencent.devops.model.gitci.tables.TGitWebStarterYaml.T_GIT_WEB_STARTER_YAML
 import com.tencent.devops.model.gitci.tables.records.TGitWebStarterYamlRecord
 import org.jooq.DSLContext
 import org.jooq.InsertSetMoreStep
-import org.jooq.Result
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
