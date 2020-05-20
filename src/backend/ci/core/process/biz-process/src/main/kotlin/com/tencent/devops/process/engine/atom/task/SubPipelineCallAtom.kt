@@ -71,7 +71,7 @@ class SubPipelineCallAtom constructor(
         runVariables: Map<String, String>,
         force: Boolean
     ): AtomResponse {
-        logger.info("[${task.buildId}]|ATOM_SUB_PIPELINE_FINISH|status=${task.status}")
+        logger.info("[${task.buildId}]|[${task.taskId}]|ATOM_SUB_PIPELINE_TRY_FINISH|status=${task.status}")
 
         return if (task.subBuildId.isNullOrBlank()) {
             AtomResponse(
@@ -87,7 +87,7 @@ class SubPipelineCallAtom constructor(
                 LogUtils.addRedLine(
                     rabbitTemplate = rabbitTemplate,
                     buildId = task.buildId,
-                    message = "Can not found sub pipeline build (${task.subBuildId})",
+                    message = "Can not found sub pipeline build record(${task.subBuildId})",
                     tag = task.taskId,
                     jobId = task.containerHashId,
                     executeCount = task.executeCount ?: 1
@@ -96,11 +96,15 @@ class SubPipelineCallAtom constructor(
                     buildStatus = BuildStatus.FAILED,
                     errorType = ErrorType.USER,
                     errorCode = ErrorCode.USER_RESOURCE_NOT_FOUND,
-                    errorMsg = "找不到对应子流水线"
+                    errorMsg = "找不到对应子流水线的构建记录"
                 )
-            } else {
+            } else { // 此处逻辑与 研发商店上架的BuildSubPipelineResourceImpl.getSubPipelineStatus 不同，
+                // 原因是后者在插件实现上检测这种情况并判断，本处为内置的子流水线插件，需在此增加判断处理
                 val status: BuildStatus = when {
-                    subBuildInfo.isSuccess() && subBuildInfo.status == BuildStatus.STAGE_SUCCESS -> BuildStatus.SUCCEED
+                    subBuildInfo.isSuccess() && subBuildInfo.isStageSuccess() -> BuildStatus.SUCCEED
+                    subBuildInfo.isFinish() -> subBuildInfo.status
+                    subBuildInfo.isReadyToRun() -> BuildStatus.RUNNING // QUEUE状态
+                    subBuildInfo.isStageSuccess() -> BuildStatus.RUNNING // stage 特性， 未结束，只是卡在Stage审核中
                     else -> subBuildInfo.status
                 }
 

@@ -297,7 +297,7 @@
         "scope_type": "project",
         "resource_types": [
           {
-            "resource_type": "node",
+            "resource_type": "env_node",
             "resource_type_name": "环境节点",
             "parent_resource_type": "",
             "actions": [

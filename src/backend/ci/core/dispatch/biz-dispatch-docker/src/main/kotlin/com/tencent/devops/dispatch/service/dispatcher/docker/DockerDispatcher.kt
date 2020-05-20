@@ -30,11 +30,11 @@ import com.tencent.devops.common.api.pojo.Zone
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
+import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.dispatch.client.DockerHostClient
 import com.tencent.devops.dispatch.dao.PipelineDockerBuildDao
 import com.tencent.devops.dispatch.dao.PipelineDockerHostDao
 import com.tencent.devops.dispatch.dao.PipelineDockerIPInfoDao
-import com.tencent.devops.dispatch.dao.PipelineDockerTaskDriftDao
 import com.tencent.devops.dispatch.dao.PipelineDockerTaskSimpleDao
 import com.tencent.devops.dispatch.exception.DockerServiceException
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
@@ -54,12 +54,12 @@ import org.springframework.stereotype.Component
 @Component
 class DockerDispatcher @Autowired constructor(
     private val client: Client,
+    private val gray: Gray,
     private val rabbitTemplate: RabbitTemplate,
     private val dockerHostBuildService: DockerHostBuildService,
     private val dockerHostClient: DockerHostClient,
     private val dockerHostUtils: DockerHostUtils,
     private val pipelineDockerTaskSimpleDao: PipelineDockerTaskSimpleDao,
-    private val pipelineDockerTaskDriftDao: PipelineDockerTaskDriftDao,
     private val pipelineDockerIpInfoDao: PipelineDockerIPInfoDao,
     private val pipelineDockerHostDao: PipelineDockerHostDao,
     private val pipelineDockerBuildDao: PipelineDockerBuildDao,
@@ -96,22 +96,46 @@ class DockerDispatcher @Autowired constructor(
                 vmSeq = pipelineAgentStartupEvent.vmSeqId
             )
 
+            var driftIpInfo = ""
             val dockerPair: Pair<String, Int>
             poolNo = dockerHostUtils.getIdlePoolNo(pipelineAgentStartupEvent.pipelineId, pipelineAgentStartupEvent.vmSeqId)
             if (taskHistory != null) {
-                dockerPair = if (specialIpSet.isNotEmpty() && specialIpSet.toString() != "[]") {
-                    // 该项目工程配置了专机
-                    if (specialIpSet.contains(taskHistory.dockerIp)) {
-                        // 上一次构建IP在专机列表中，直接重用
-                        val dockerIpInfo = pipelineDockerIpInfoDao.getDockerIpInfo(dslContext, taskHistory.dockerIp) ?: throw DockerServiceException("Docker IP: ${taskHistory.dockerIp} is not available.")
-                        Pair(taskHistory.dockerIp, dockerIpInfo.dockerHostPort)
-                    } else {
-                        // 不在专机列表中，重新依据专机列表去选择负载最小的
-                        resetDockerIp(pipelineAgentStartupEvent, specialIpSet, taskHistory.dockerIp, "专机漂移")
-                    }
+                val dockerIpInfo = pipelineDockerIpInfoDao.getDockerIpInfo(dslContext, taskHistory.dockerIp)
+                if (dockerIpInfo == null) {
+                    // 此前IP下架，重新选择，根据负载条件选择可用IP
+                    dockerPair = dockerHostUtils.getAvailableDockerIpWithSpecialIps(
+                        projectId = pipelineAgentStartupEvent.projectId,
+                        pipelineId = pipelineAgentStartupEvent.pipelineId,
+                        vmSeqId = pipelineAgentStartupEvent.vmSeqId,
+                        specialIpSet = specialIpSet
+                    )
                 } else {
-                    // 没有配置专机，根据当前IP负载选择IP
-                    checkAndSetIP(pipelineAgentStartupEvent, specialIpSet, taskHistory.dockerIp, poolNo)
+                    driftIpInfo = JsonUtil.toJson(dockerIpInfo.intoMap())
+
+                    dockerPair = if (specialIpSet.isNotEmpty() && specialIpSet.toString() != "[]") {
+                        // 该项目工程配置了专机
+                        if (specialIpSet.contains(taskHistory.dockerIp) && dockerIpInfo.enable && (dockerIpInfo.grayEnv == gray.isGray())) {
+                            // 上一次构建IP在专机列表中，直接重用
+                            Pair(taskHistory.dockerIp, dockerIpInfo.dockerHostPort)
+                        } else {
+                            // 不在专机列表中，重新依据专机列表去选择负载最小的
+                            driftIpInfo = "专机漂移"
+
+                            dockerHostUtils.getAvailableDockerIpWithSpecialIps(
+                                pipelineAgentStartupEvent.projectId,
+                                pipelineAgentStartupEvent.pipelineId,
+                                pipelineAgentStartupEvent.vmSeqId,
+                                specialIpSet
+                            )
+                        }
+                    } else {
+                        // 没有配置专机，根据当前IP负载选择IP
+                        val triple = dockerHostUtils.checkAndSetIP(pipelineAgentStartupEvent, specialIpSet, dockerIpInfo, poolNo)
+                        if (triple.third.isNotEmpty()) {
+                            driftIpInfo = triple.third
+                        }
+                        Pair(triple.first, triple.second)
+                    }
                 }
             } else {
                 // 第一次构建，根据负载条件选择可用IP
@@ -121,15 +145,15 @@ class DockerDispatcher @Autowired constructor(
                     vmSeqId = pipelineAgentStartupEvent.vmSeqId,
                     specialIpSet = specialIpSet
                 )
-                pipelineDockerTaskSimpleDao.create(
-                    dslContext = dslContext,
-                    pipelineId = pipelineAgentStartupEvent.pipelineId,
-                    vmSeq = pipelineAgentStartupEvent.vmSeqId,
-                    idcIp = dockerPair.first
-                )
             }
 
-            dockerHostClient.startBuild(pipelineAgentStartupEvent, dockerPair.first, dockerPair.second, poolNo)
+            dockerHostClient.startBuild(
+                event = pipelineAgentStartupEvent,
+                dockerIp = dockerPair.first,
+                dockerHostPort = dockerPair.second,
+                poolNo = poolNo,
+                driftIpInfo = driftIpInfo
+            )
         } catch (e: Exception) {
             val errMsg = if (e is DockerServiceException) {
                 logger.warn("[${pipelineAgentStartupEvent.projectId}|${pipelineAgentStartupEvent.pipelineId}|${pipelineAgentStartupEvent.buildId}] Start build Docker VM failed. ${e.message}")
@@ -176,54 +200,5 @@ class DockerDispatcher @Autowired constructor(
     override fun shutdown(pipelineAgentShutdownEvent: PipelineAgentShutdownEvent) {
         logger.info("On shutdown - ($pipelineAgentShutdownEvent|$)")
         dockerHostBuildService.finishDockerBuild(pipelineAgentShutdownEvent)
-    }
-
-    private fun checkAndSetIP(
-        pipelineAgentStartupEvent: PipelineAgentStartupEvent,
-        specialIpSet: Set<String>,
-        oldDockerIp: String,
-        poolNo: Int
-    ): Pair<String, Int> {
-        val ipInfo = pipelineDockerIpInfoDao.getDockerIpInfo(dslContext, oldDockerIp)
-
-        // 同一条流水线并发构建时，无视负载，直接下发同一个IP（避免同一条流水线并发量太大，影响其他流水线构建）
-        if (poolNo > 1) {
-            return Pair(oldDockerIp, ipInfo!!.dockerHostPort)
-        }
-
-        // 查看当前IP负载情况，当前IP可用，且负载未超额（内存低于90%且硬盘低于90%），可直接下发，当负载超额或者设置为专机独享，重新选择构建机
-        if (ipInfo == null || !ipInfo.enable || ipInfo.diskLoad > 90 || ipInfo.memLoad > 90 || ipInfo.specialOn) {
-            return resetDockerIp(pipelineAgentStartupEvent, specialIpSet, oldDockerIp, if (ipInfo != null) JsonUtil.toJson(ipInfo.intoMap()) else "")
-        }
-
-        return Pair(oldDockerIp, ipInfo.dockerHostPort)
-    }
-
-    private fun resetDockerIp(pipelineAgentStartupEvent: PipelineAgentStartupEvent, specialIpSet: Set<String>, sourceIp: String, ipInfo: String): Pair<String, Int> {
-        val dockerPair = dockerHostUtils.getAvailableDockerIpWithSpecialIps(
-            pipelineAgentStartupEvent.projectId,
-            pipelineAgentStartupEvent.pipelineId,
-            pipelineAgentStartupEvent.vmSeqId,
-            specialIpSet
-        )
-        pipelineDockerTaskSimpleDao.updateDockerIp(
-            dslContext,
-            pipelineAgentStartupEvent.pipelineId,
-            pipelineAgentStartupEvent.vmSeqId,
-            dockerPair.first
-        )
-
-        // 记录漂移日志
-        pipelineDockerTaskDriftDao.create(
-            dslContext,
-            pipelineAgentStartupEvent.pipelineId,
-            pipelineAgentStartupEvent.buildId,
-            pipelineAgentStartupEvent.vmSeqId,
-            sourceIp,
-            dockerPair.first,
-            ipInfo
-        )
-
-        return dockerPair
     }
 }
