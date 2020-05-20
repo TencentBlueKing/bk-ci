@@ -42,7 +42,7 @@
             },
             list: {
                 type: Array,
-                default: () => []
+                default: () => ([])
             },
             url: {
                 type: String
@@ -74,7 +74,8 @@
                 handler (value, oldValue) {
                     const index = this.queryKey.findIndex((key) => value[key] !== oldValue[key])
                     if (index > -1) {
-                        this.$emit('updateValue', [])
+                        const defaultValue = this.isMultiple ? [] : ''
+                        this.$emit('updateValue', defaultValue)
                         this.initList()
                     }
                 },
@@ -126,7 +127,7 @@
 
             initList () {
                 if (this.listType === 'list') {
-                    this.paramList = this.list
+                    this.paramList = JSON.parse(JSON.stringify(this.list))
                     return
                 }
 
@@ -144,7 +145,8 @@
                     if (isErrorParam) return
                     this.loading = true
                     this.$ajax.get(url).then((res) => {
-                        this.paramList = res.data || []
+                        const data = res.data || []
+                        this.paramList.splice(0, this.paramList.length, ...data)
                     }).catch(e => this.$showTips({ message: e.message, theme: 'error' })).finally(() => (this.loading = false))
                 }
             }
@@ -180,7 +182,7 @@
             line-height: 32px;
             background: #fff;
             color: #63656e;
-            overflow: hidden;
+            overflow: auto;
             max-height: 216px;
             z-index: 2;
             li {

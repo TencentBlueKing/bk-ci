@@ -1,6 +1,6 @@
 <template>
     <ul class="param-main" v-bkloading="{ isLoading }">
-        <li class="param-input" v-for="(parameter, paramIndex) in parameters" :key="parameter.id">
+        <li class="param-input" v-for="(parameter, paramIndex) in parameters" :key="paramIndex">
             <parameter-input v-for="(model, index) in parameter.paramModels"
                 :key="model.id"
                 :class="[{ 'last-child': index === parameter.paramModels.length - 1 }, 'input-com']"
