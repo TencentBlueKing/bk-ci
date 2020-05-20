@@ -1,8 +1,8 @@
 <template>
     <div class="select-input" v-bk-clickoutside="handleBlur">
-        <input class="bk-form-input" v-bind="restProps" v-model="displayName" :disabled="disabled || loading" ref="inputArea" :title="value" autocomplete="off" @input="handleInput" @focus="handleFocus" @keypress.enter.prevent="handleEnterOption" @keydown.up.prevent="handleKeyup" @keydown.down.prevent="handleKeydown" @keydown.tab.prevent="handleBlur" />
-        <i v-if="loading" class="devops-icon icon-circle-2-1 option-fetching-icon spin-icon" />
-        <i v-else-if="!disabled && value" class="devops-icon icon-close-circle-shape option-fetching-icon" @click.stop="clearValue" />
+        <input class="bk-form-input" v-bind="restProps" v-model="displayName" :disabled="disabled || loading" ref="inputArea" :title="value" autocomplete="off" @focus="handleFocus" @keypress.enter.prevent="handleEnterOption" @keydown.up.prevent="handleKeyup" @keydown.down.prevent="handleKeydown" @keydown.tab.prevent="handleBlur" />
+        <i v-if="loading" class="bk-icon icon-circle-2-1 option-fetching-icon spin-icon" />
+        <i v-else-if="!disabled && value" class="bk-icon icon-close-circle-shape option-fetching-icon" @click.stop="clearValue" />
         <div class="dropbox-container" v-show="hasOption && optionListVisible && !loading" ref="dropMenu">
             <ul>
                 <template v-if="hasGroup">
@@ -26,14 +26,6 @@
                         {{ item.name }}
                     </li>
                 </template>
-                <template v-if="mergedOptionsConf.hasAddItem">
-                    <div class="bk-select-extension">
-                        <a :href="webUrl + mergedOptionsConf.itemTargetUrl" target="_blank">
-                            <i class="bk-icon icon-plus-circle" />
-                            {{ mergedOptionsConf.itemText }}
-                        </a>
-                    </div>
-                </template>
             </ul>
         </div>
     </div>
@@ -41,11 +33,11 @@
 
 <script>
     import mixins from '../mixins'
-    import scrollMixins from './scrollMixins'
+    import scrollMixins from '../SelectInput/scrollMixins'
     import { debounce, isObject } from '@/utils/util'
 
     export default {
-        name: 'select-input',
+        name: 'devops-select',
         mixins: [mixins, scrollMixins],
         props: {
             isLoading: Boolean,
@@ -54,10 +46,6 @@
                 default: []
             },
             optionsConf: {
-                type: Object,
-                default: () => ({})
-            },
-            preFilter: {
                 type: Object,
                 default: () => ({})
             }
@@ -70,8 +58,7 @@
                 loading: this.isLoading,
                 selectedPointer: 0,
                 selectedGroupPointer: 0,
-                displayName: '',
-                webUrl: WEB_URL_PIRFIX
+                displayName: ''
             }
         },
         computed: {
@@ -112,42 +99,9 @@
                 })
             },
             filteredList () {
-                const { displayName, value, optionList } = this
-                const strVal = this.hasGroup ? displayName + '' : value + ''
-
-                if (this.hasGroup) {
-                    let target = []
-                    optionList.map(option => {
-                        if (option.children.length && option.children.some(child => child.name.toLowerCase().indexOf(strVal.toLowerCase()) > -1)) {
-                            const temp = {
-                                ...option,
-                                children: option.children.filter(child => {
-                                    if (isObject(this.preFilter) && this.preFilter.key) {
-                                        if (Array.isArray(this.preFilter.value) && Array.isArray(child[this.preFilter.key])) {
-                                            const intersection = this.preFilter.value.filter(val => child[this.preFilter.key].indexOf(val) > -1)
-                                            return child.name.toLowerCase().indexOf(strVal.toLowerCase()) > -1 && intersection.length
-                                        } else {
-                                            return child.name.toLowerCase().indexOf(strVal.toLowerCase()) > -1 && child[this.preFilter.key] === this.preFilter.value
-                                        }
-                                    } else {
-                                        return child.name.toLowerCase().indexOf(strVal.toLowerCase()) > -1
-                                    }
-                                })
-                            }
-                            target.push(temp)
-                        }
-                        return false
-                    })
-                    target = target.filter(tag => tag.children.length)
-                    return target
-                } else {
-                    return optionList.filter(option => {
-                        if (typeof option.name === 'string' && option.name.toLowerCase().indexOf(strVal.toLowerCase()) > -1) {
-                            return option
-                        }
-                        return false
-                    })
-                }
+                const { displayName, optionList } = this
+                const strVal = String(displayName).toLowerCase()
+                return this.formatList(optionList, strVal)
             },
             hasOption () {
                 return Array.isArray(this.filteredList) && this.filteredList.length > 0
@@ -158,6 +112,7 @@
                 if (this.urlParamKeys.some(key => newQueryParams[key] !== oldQueryParams[key])) {
                     this.debounceGetOptionList()
                     this.handleChange(this.name, '')
+                    this.displayName = ''
                 }
             },
             options (newOptions) {
@@ -168,18 +123,6 @@
             },
             isLoading (isLoading) {
                 this.loading = isLoading
-            },
-            value (newVal) {
-                if (newVal) {
-                    if (this.hasGroup) {
-                        this.optionList.forEach(option => {
-                            const matchVal = option.children.find(child => child.id === newVal)
-                            if (matchVal) this.displayName = matchVal.name
-                        })
-                    } else {
-                        this.displayName = newVal
-                    }
-                } else this.displayName = ''
             }
         },
         created () {
@@ -187,8 +130,11 @@
                 this.getOptionList()
                 this.debounceGetOptionList = debounce(this.getOptionList)
             } else {
-                this.displayName = this.value
+                this.displayName = this.getDisplayName(this.value)
             }
+        },
+        beforeDestroy () {
+            this.handleBlur()
         },
         methods: {
             urlParse (originUrl, query) {
@@ -197,19 +143,66 @@
                 /* eslint-enable */
             },
             handleInput (e) {
-                const { name, value } = e.target
+                // const { name, value } = e.target
                 this.optionListVisible = true
-                if (!this.hasGroup) this.handleChange(name, value.trim())
+                // if (!this.hasGroup ) this.handleChange(name, value.trim())
+            },
+            formatList (list = [], keyword = '', paramId = 'id', paramName = 'name') {
+                let noSensiveKeyword = ''
+                if (keyword && typeof keyword === 'string') {
+                    noSensiveKeyword = keyword.toLowerCase()
+                }
+                if (this.hasGroup) {
+                    return list.reduce((result, item) => {
+                        if (isObject(item) && Array.isArray(item.children) && item.children.length > 0) {
+                            const children = item.children.map(child => {
+                                return {
+                                    ...child,
+                                    id: child[paramId],
+                                    name: child[paramName]
+                                }
+                            })
+                            result.push({
+                                ...item,
+                                children: noSensiveKeyword ? children.filter(child => child.name.toLowerCase().indexOf(noSensiveKeyword) > -1) : children
+                            })
+                        }
+                        return result
+                    }, [])
+                }
+                const resultList = list.map(item => {
+                    if (isObject(item)) {
+                        return {
+                            ...item,
+                            id: item[paramId],
+                            name: item[paramName]
+                        }
+                    }
+
+                    return {
+                        id: item,
+                        name: item
+                    }
+                })
+
+                return noSensiveKeyword ? resultList.filter(item => item.name.toLowerCase().indexOf(noSensiveKeyword) > -1) : resultList
             },
             selectOption ({ id, name, disabled = false }) {
                 if (disabled) return
-                this.handleBlur()
                 this.handleChange(this.name, id)
+                this.$nextTick(() => {
+                    this.handleBlur()
+                })
             },
 
             clearValue () {
                 this.handleChange(this.name, '')
+                this.displayName = ''
                 this.$refs.inputArea.focus()
+            },
+
+            isEnvVar (str) {
+                return /^\$(\{\w+\}|\w+)$/.test(str)
             },
 
             handleBlur () {
@@ -219,11 +212,12 @@
                 this.isFocused = false
                 this.$refs.inputArea && this.$refs.inputArea.blur()
                 this.$emit('blur', null)
-                if (this.hasGroup && !this.filteredList.length) {
-                    this.handleChange(this.name, '')
-                    this.displayName = ''
-                } else if (!this.hasGroup) {
+                if (this.isEnvVar(this.displayName)) {
+                    this.handleChange(this.name, this.displayName.trim())
+                } else if (this.isEnvVar(this.value)) {
                     this.displayName = this.value
+                } else {
+                    this.displayName = this.getDisplayName(this.value)
                 }
             },
 
@@ -245,10 +239,30 @@
                 this.selectedPointer = childIndex
                 this.adjustViewPort()
             },
-
+            getDisplayName (val) {
+                if (this.isEnvVar(val)) {
+                    return val
+                }
+                if (this.hasGroup) {
+                    for (let i = 0; i < this.optionList.length; i++) {
+                        const option = this.optionList[i]
+                        const matchVal = option.children.find(child => child.id === val)
+                        console.log(matchVal)
+                        if (matchVal) {
+                            return matchVal.name
+                        }
+                    }
+                } else {
+                    const option = this.optionList.find(option => option.id === val)
+                    if (option) {
+                        return option.name
+                    }
+                }
+                return ''
+            },
             async getOptionList () {
                 if (this.isLackParam) { // 缺少参数时，选择列表置空
-                    if (this.value !== '') this.displayName = this.value
+                    if (this.value !== '') this.displayName = this.getDisplayName(this.value)
                     this.optionList = []
                     return
                 }
@@ -257,54 +271,14 @@
                     const { mergedOptionsConf: { url, paramId, paramName, dataPath }, queryParams, urlParse, getResponseData } = this
                     const reqUrl = urlParse(url, queryParams)
                     const res = await this.$ajax.get(reqUrl)
-                    let options = getResponseData(res, dataPath)
+                    const options = getResponseData(res, dataPath)
 
-                    if (this.hasGroup) {
-                        options = options.filter(item => item.children.length)
-                        this.optionList = options.map(item => {
-                            if (isObject(item)) {
-                                return {
-                                    ...item,
-                                    children: item.children.map(child => {
-                                        return {
-                                            ...child,
-                                            id: child[paramId],
-                                            name: child[paramName]
-                                        }
-                                    })
-                                }
-                            }
-                        })
-                    } else {
-                        this.optionList = options.map(item => {
-                            if (isObject(item)) {
-                                return {
-                                    ...item,
-                                    id: item[paramId],
-                                    name: item[paramName]
-                                }
-                            }
-
-                            return {
-                                id: item,
-                                name: item
-                            }
-                        })
-                    }
-
+                    this.optionList = this.formatList(options, '', paramId, paramName)
                     if (this.value) {
-                        if (this.hasGroup) {
-                            this.optionList.forEach(option => {
-                                const matchVal = option.children.find(child => child.id === this.value)
-                                if (matchVal) this.displayName = matchVal.name
-                            })
-                        } else {
-                            this.displayName = this.value
-                        }
+                        this.displayName = this.getDisplayName(this.value)
                     }
                 } catch (e) {
                     console.error(e)
-                    this.displayName = this.value
                 } finally {
                     this.loading = false
                 }
@@ -362,13 +336,19 @@
                 //         color: $fontLigtherColor;
                 //     }
                 // }
+                li:first-child {
+                    .option-group-name {
+                        border-top: 0
+                    }
+                }
                 .option-group-name {
                     padding: 0 12px;
                     line-height: 36px;
-                    font-size: 14px;
-                    font-weight: bold;
+                    font-size: 12px;
                     border-bottom: 1px solid #dcdee5;
-                    color: #979ba5;
+                    border-top: 1px solid #dcdee5;
+                    color: #999;
+
                 }
                 .option-item,
                 .option-group-item {
@@ -387,9 +367,6 @@
                     &[disabled] {
                         color: $fontLigtherColor;
                     }
-                }
-                .bk-select-extension a {
-                    color: #63656e;
                 }
             }
         }
