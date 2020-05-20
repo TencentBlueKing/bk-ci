@@ -30,5 +30,3 @@ dependencies {
     compile project(":ext:tencent:artifactory:biz-artifactory-tencent")
     compile project(":ext:tencent:artifactory:biz-artifactory-push-tencent")
 }
-
-apply from: "$rootDir/task_spring_boot_package.gradle"

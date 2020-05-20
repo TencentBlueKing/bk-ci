@@ -32,5 +32,3 @@ dependencies {
     compile project(":ext:tencent:store:api-store-service")
     compile project(":ext:tencent:common:common-auth:common-auth-tencent")
 }
-
-apply from: "$rootDir/task_deploy_to_maven.gradle"

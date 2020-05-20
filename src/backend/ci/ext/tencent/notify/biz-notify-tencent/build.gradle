@@ -35,5 +35,3 @@ dependencies {
     //compile project(":notify:model-notify-tencent")
     compile project(":core:notify:biz-notify")
 }
-
-apply from: "$rootDir/task_deploy_to_maven.gradle"

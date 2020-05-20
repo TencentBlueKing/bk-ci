@@ -60,5 +60,3 @@ dependencies {
     compile group: 'org.apache.ant', name: 'ant', version: '1.10.5'
     testCompile project(":core:common:common-test")
 }
-
-apply from: "$rootDir/task_deploy_to_maven.gradle"
