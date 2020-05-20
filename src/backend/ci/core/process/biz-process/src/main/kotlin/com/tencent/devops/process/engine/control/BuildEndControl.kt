@@ -47,9 +47,9 @@ import com.tencent.devops.process.engine.service.PipelineRuntimeExtService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.pipeline.Model
-import com.tencent.devops.process.engine.dao.PipelineBuildVarDao
 import com.tencent.devops.process.engine.service.PipelineBuildTaskService
 import com.tencent.devops.process.pojo.task.PipelineBuildTaskInfo
+import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.utils.BK_CI_BUILD_FAIL_TASKNAMES
 import com.tencent.devops.process.utils.BK_CI_BUILD_FAIL_TASKS
 import org.jooq.DSLContext
@@ -70,7 +70,7 @@ class BuildEndControl @Autowired constructor(
     private val pipelineBuildDetailService: PipelineBuildDetailService,
     private val pipelineBuildTaskService: PipelineBuildTaskService,
     private val pipelineRuntimeExtService: PipelineRuntimeExtService,
-    private val pipelineBuildVarDao: PipelineBuildVarDao,
+    private val buildVariableService: BuildVariableService,
     private val dslContext: DSLContext
 ) {
 
@@ -264,21 +264,14 @@ class BuildEndControl @Autowired constructor(
             }
         }
         logger.info("pipeline build fail, add $BK_CI_BUILD_FAIL_TASKS, value[$errorElements]")
-        pipelineBuildVarDao.save(
-            dslContext = dslContext,
+        val valueMap = mutableMapOf<String, Any>()
+        valueMap[BK_CI_BUILD_FAIL_TASKS] = errorElements ?: ""
+        valueMap[BK_CI_BUILD_FAIL_TASKNAMES] = errorElementsName.substringBeforeLast(",") ?: ""
+        buildVariableService.batchSetVariable(
+            buildId = buildId,
             projectId = projectId,
             pipelineId = pipelineId,
-            buildId = buildId,
-            name = BK_CI_BUILD_FAIL_TASKS,
-            value = errorElements ?: ""
-        )
-        pipelineBuildVarDao.save(
-            dslContext = dslContext,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            buildId = buildId,
-            name = BK_CI_BUILD_FAIL_TASKNAMES,
-            value = errorElementsName.substringBeforeLast(",") ?: ""
+            variables = valueMap
         )
     }
 
