@@ -156,7 +156,7 @@ class CodeService @Autowired constructor(
             val result = client.get(ServiceCredentialResource::class).get(projectId, credentialId, encoder.encodeToString(pair.publicKey))
 
             if (result.isNotOk() || result.data == null) {
-                logger.error("Fail to get the credential($credentialId) because of ${result.message}")
+                logger.warn("Fail to get the credential($credentialId) because of ${result.message}")
                 throw ClientException(result.message!!)
             }
 
