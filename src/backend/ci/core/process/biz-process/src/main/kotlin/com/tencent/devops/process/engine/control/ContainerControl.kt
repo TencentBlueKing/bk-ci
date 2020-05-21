@@ -95,15 +95,6 @@ class ContainerControl @Autowired constructor(
 
         // 当build的状态是结束的时候，直接返回
         if (BuildStatus.isFinish(container.status)) {
-            LogUtils.addLine(
-                rabbitTemplate = rabbitTemplate,
-                buildId = buildId,
-                message = "Container finish and dec the quota for project: $projectId",
-                tag = "",
-                jobId = containerId,
-                executeCount = 1
-            )
-            pipelineQuotaService.decQuotaByProject(projectId, buildId, containerId)
             return
         }
 
@@ -316,6 +307,18 @@ class ContainerControl @Autowired constructor(
                 containerId = containerId,
                 mutexGroup = mutexGroup
             )
+
+            // 配额使用-1
+            LogUtils.addLine(
+                rabbitTemplate = rabbitTemplate,
+                buildId = buildId,
+                message = "Container finish and dec the quota for project: $projectId",
+                tag = "",
+                jobId = containerId,
+                executeCount = 1
+            )
+            pipelineQuotaService.decQuotaByProject(projectId, buildId, containerId)
+
             sendBackStage("$BS_CONTAINER_END_SOURCE_PREIX$containerFinalStatus")
         } else {
             sendTask(waitToDoTask, actionType)
