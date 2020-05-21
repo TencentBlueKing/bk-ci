@@ -63,7 +63,7 @@ class StarterWebService @Autowired constructor(
     fun getStarterWebList(): GitStarterContent {
         val tkexList = mutableListOf<GitYamlProperty>()
         val othersList = mutableListOf<GitYamlProperty>()
-        gitStarterWebYamlDao.getList(dslContext).forEach {
+        gitStarterWebYamlDao.getList(dslContext, yamlUrl, iconUrl).forEach {
 
             if (it.categories?.contains("TKEX") == true) tkexList.add(it)
             else othersList.add(it)
