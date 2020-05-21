@@ -61,19 +61,4 @@ interface OpPipelineQuotaResource {
         @QueryParam("quota")
         quota: Long
     ): Result<Boolean>
-
-    @ApiOperation("更新已用配额")
-    @PUT
-    @Path("/projects/{projectId}/updateUsed")
-    fun updateUsedQuota(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam("projectId")
-        @PathParam("projectId")
-        projectId: String,
-        @ApiParam("配额")
-        @QueryParam("usedQuota")
-        usedQuota: Long
-    ): Result<Boolean>
 }
