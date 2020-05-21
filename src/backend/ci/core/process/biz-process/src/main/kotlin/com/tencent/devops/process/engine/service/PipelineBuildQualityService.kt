@@ -122,7 +122,6 @@ class PipelineBuildQualityService(
         }
 
         if (!find) {
-            logger.error("[$buildId]| The quality Task($elementId) of pipeline($pipelineId) is not exist")
             throw ErrorCodeException(
                 statusCode = Response.Status.FORBIDDEN.statusCode,
                 errorCode = ProcessMessageCode.ERROR_QUALITY_TASK_NOT_FOUND,
