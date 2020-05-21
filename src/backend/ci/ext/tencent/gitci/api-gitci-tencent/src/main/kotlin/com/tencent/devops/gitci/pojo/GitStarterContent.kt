@@ -24,40 +24,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.gitci.resources
+package com.tencent.devops.gitci.pojo
 
-import com.tencent.devops.common.api.exception.ParamBlankException
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.gitci.api.StarterWebResource
-import com.tencent.devops.gitci.pojo.GitStarterContent
-import com.tencent.devops.gitci.pojo.GitYamlProperty
-import com.tencent.devops.gitci.service.StarterWebService
-import org.springframework.beans.factory.annotation.Autowired
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-@RestResource
-class StarterWebResourceImpl @Autowired constructor(
-    private val starterWebService: StarterWebService
-) : StarterWebResource {
-
-    override fun getList(userId: String, category: String?): Result<List<GitYamlProperty>> {
-        checkParam(userId)
-        return Result(starterWebService.getStarterYamlList(category))
-    }
-
-    override fun getWebList(userId: String): Result<GitStarterContent> {
-        checkParam(userId)
-        return Result(starterWebService.getStarterWebList())
-    }
-
-    override fun refresh(userId: String, properties: List<GitYamlProperty>): Result<Int> {
-        checkParam(userId)
-        return Result(starterWebService.refreshStarterYamls(properties))
-    }
-
-    private fun checkParam(userId: String) {
-        if (userId.isBlank()) {
-            throw ParamBlankException("Invalid userId")
-        }
-    }
-}
+@ApiModel("工蜂CI起始页内容")
+data class GitStarterContent(
+    @ApiModelProperty("TKEX分类")
+    val tkex: List<GitYamlProperty>,
+    @ApiModelProperty("其他分类")
+    val others: List<GitYamlProperty>
+)

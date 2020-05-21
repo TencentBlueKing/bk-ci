@@ -29,6 +29,7 @@ package com.tencent.devops.gitci.api
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.gitci.pojo.GitStarterContent
 import com.tencent.devops.gitci.pojo.GitYamlProperty
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -59,6 +60,15 @@ interface StarterWebResource {
         @QueryParam("类别名")
         category: String?
     ): Result<List<GitYamlProperty>>
+
+    @ApiOperation("获取所有模板信息")
+    @GET
+    @Path("/web/list")
+    fun getWebList(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String
+    ): Result<GitStarterContent>
 
     @ApiOperation("刷新模板信息")
     @POST

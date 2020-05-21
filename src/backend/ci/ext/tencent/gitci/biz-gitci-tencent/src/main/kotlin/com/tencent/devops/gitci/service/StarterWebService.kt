@@ -26,8 +26,8 @@
 
 package com.tencent.devops.gitci.service
 
-import com.tencent.devops.common.client.Client
 import com.tencent.devops.gitci.dao.GitStarterWebYamlDao
+import com.tencent.devops.gitci.pojo.GitStarterContent
 import com.tencent.devops.gitci.pojo.GitYamlProperty
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -36,14 +36,29 @@ import org.springframework.stereotype.Service
 
 @Service
 class StarterWebService @Autowired constructor(
-    private val client: Client,
     private val dslContext: DSLContext,
     private val gitStarterWebYamlDao: GitStarterWebYamlDao
 ) {
 
     fun getStarterYamlList(category: String? = null): List<GitYamlProperty> {
         logger.info("getStarterYamlList with category: $category")
-        return gitStarterWebYamlDao.getList(dslContext, category)
+        return if (category.isNullOrEmpty()) {
+            gitStarterWebYamlDao.getList(dslContext)
+        } else {
+            gitStarterWebYamlDao.getList(dslContext).filter {
+                it.categories?.contains(category) == true
+            }
+        }
+    }
+
+    fun getStarterWebList(): GitStarterContent {
+        val tkexList = mutableListOf<GitYamlProperty>()
+        val othersList = mutableListOf<GitYamlProperty>()
+        gitStarterWebYamlDao.getList(dslContext).forEach {
+            if (it.categories?.contains("TKEX") == true) tkexList.add(it)
+            else othersList.add(it)
+        }
+        return GitStarterContent(tkexList, othersList)
     }
 
     fun refreshStarterYamls(properties: List<GitYamlProperty>): Int {

@@ -38,10 +38,7 @@ import java.time.LocalDateTime
 @Repository
 class GitStarterWebYamlDao {
 
-    fun getList(
-        dslContext: DSLContext,
-        category: String?
-    ): List<GitYamlProperty> {
+    fun getList(dslContext: DSLContext): List<GitYamlProperty> {
         with(T_GIT_WEB_STARTER_YAML) {
             val result = dslContext.selectFrom(this).fetch()
             val list = mutableListOf<GitYamlProperty>()
