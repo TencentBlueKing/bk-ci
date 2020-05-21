@@ -31,6 +31,7 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.websocket.dispatch.TransferDispatch
 import com.tencent.devops.common.websocket.dispatch.WebSocketDispatcher
 import com.tencent.devops.websocket.handler.ConnectChannelInterceptor
+import com.tencent.devops.websocket.listener.CacheSessionListener
 import com.tencent.devops.websocket.listener.WebSocketListener
 import com.tencent.devops.websocket.utils.HostUtils
 import org.slf4j.LoggerFactory
@@ -141,7 +142,7 @@ class WebsocketConfiguration {
         @Autowired rabbitAdmin: RabbitAdmin,
         @Autowired messageConverter: Jackson2JsonMessageConverter,
         @Autowired cacheClearWebSocketQueue: Queue,
-        @Autowired buildListener: WebSocketListener
+        @Autowired buildListener: CacheSessionListener
     ): SimpleMessageListenerContainer {
         val container = SimpleMessageListenerContainer(connectionFactory)
         container.setQueueNames(cacheClearWebSocketQueue.name)
