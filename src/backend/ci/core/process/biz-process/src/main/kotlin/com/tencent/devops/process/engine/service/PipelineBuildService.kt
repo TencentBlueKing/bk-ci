@@ -801,7 +801,7 @@ class PipelineBuildService(
 
             if (interceptResult.isNotOk()) {
                 // 发送排队失败的事件
-                logger.error("[$pipelineId]|START_PIPELINE_MANUAL|流水线启动失败:[${interceptResult.message}]")
+                logger.warn("[$pipelineId]|START_PIPELINE_MANUAL|流水线启动失败:[${interceptResult.message}]")
                 throw ErrorCodeException(
                     statusCode = Response.Status.NOT_FOUND.statusCode,
                     errorCode = interceptResult.status.toString(),
@@ -1584,7 +1584,7 @@ class PipelineBuildService(
 
             if (interceptResult.isNotOk()) {
                 // 发送排队失败的事件
-                logger.error("[$pipelineId]|START_PIPELINE_$startType|流水线启动失败:[${interceptResult.message}]")
+                logger.warn("[$pipelineId]|START_PIPELINE_$startType|流水线启动失败:[${interceptResult.message}]")
                 throw ErrorCodeException(
                     statusCode = Response.Status.NOT_FOUND.statusCode,
                     errorCode = interceptResult.status.toString(),
