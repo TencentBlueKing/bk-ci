@@ -220,6 +220,7 @@ class GitCIBuildService @Autowired constructor(
     }
 
     private fun addVmBuildContainer(job: Job, elementList: List<Element>, containerList: MutableList<Container>, jobIndex: Int) {
+        var osType = VMBaseOS.LINUX
         val containerPool =
             when {
                 // 有container配置时优先使用
@@ -236,6 +237,7 @@ class GitCIBuildService @Autowired constructor(
 
                 // 没有container配置时，优先使用macOS配置
                 job.job.pool?.macOS != null -> {
+                    osType = VMBaseOS.MACOS
                     Pool(
                         container = null,
                         credential = null,
@@ -252,6 +254,7 @@ class GitCIBuildService @Autowired constructor(
                 }
             }
 
+
         val vmContainer = VMBuildContainer(
             id = null,
             name = "Job_${jobIndex + 1} " + (job.job.name ?: ""),
@@ -260,7 +263,7 @@ class GitCIBuildService @Autowired constructor(
             startEpoch = null,
             systemElapsed = null,
             elementElapsed = null,
-            baseOS = VMBaseOS.LINUX,
+            baseOS = osType,
             vmNames = setOf(),
             maxQueueMinutes = 60,
             maxRunningMinutes = 900,

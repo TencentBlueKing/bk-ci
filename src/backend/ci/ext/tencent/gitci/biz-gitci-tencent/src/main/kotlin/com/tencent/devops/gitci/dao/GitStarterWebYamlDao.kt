@@ -38,7 +38,11 @@ import java.time.LocalDateTime
 @Repository
 class GitStarterWebYamlDao {
 
-    fun getList(dslContext: DSLContext): List<GitYamlProperty> {
+    fun getList(
+        dslContext: DSLContext,
+        yamlUrl: String? = "",
+        iconUrl: String? = ""
+    ): List<GitYamlProperty> {
         with(T_GIT_WEB_STARTER_YAML) {
             val result = dslContext.selectFrom(this).fetch()
             val list = mutableListOf<GitYamlProperty>()
@@ -49,7 +53,9 @@ class GitStarterWebYamlDao {
                             name = it.name,
                             description = it.description,
                             iconName = it.iconName,
-                            categories = JsonUtil.getObjectMapper().readValue(it.categories, List::class.java) as List<String>
+                            categories = JsonUtil.getObjectMapper().readValue(it.categories, List::class.java) as List<String>,
+                            yamlUrl = "$yamlUrl/${it.name}.yml",
+                            iconUrl = "$iconUrl/${it.iconName}"
                         )
                     )
                 } else {
@@ -58,7 +64,9 @@ class GitStarterWebYamlDao {
                             name = it.name,
                             description = it.description,
                             iconName = it.iconName,
-                            categories = null
+                            categories = null,
+                            yamlUrl = "$yamlUrl/${it.name}.yml",
+                            iconUrl = "$iconUrl/${it.iconName}"
                         )
                     )
                 }

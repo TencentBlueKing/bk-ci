@@ -32,6 +32,7 @@ import com.tencent.devops.gitci.pojo.GitYamlProperty
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 @Service
@@ -40,12 +41,18 @@ class StarterWebService @Autowired constructor(
     private val gitStarterWebYamlDao: GitStarterWebYamlDao
 ) {
 
+    @Value("\${git.starter.yamlUrl:#{null}}")
+    private val yamlUrl: String? = null
+
+    @Value("\${email.url.logo:#{null}}")
+    private val iconUrl: String? = null
+
     fun getStarterYamlList(category: String? = null): List<GitYamlProperty> {
         logger.info("getStarterYamlList with category: $category")
         return if (category.isNullOrEmpty()) {
-            gitStarterWebYamlDao.getList(dslContext)
+            gitStarterWebYamlDao.getList(dslContext, yamlUrl, iconUrl)
         } else {
-            gitStarterWebYamlDao.getList(dslContext).filter {
+            gitStarterWebYamlDao.getList(dslContext, yamlUrl, iconUrl).filter {
                 it.categories?.contains(category) == true
             }
         }
@@ -55,6 +62,7 @@ class StarterWebService @Autowired constructor(
         val tkexList = mutableListOf<GitYamlProperty>()
         val othersList = mutableListOf<GitYamlProperty>()
         gitStarterWebYamlDao.getList(dslContext).forEach {
+
             if (it.categories?.contains("TKEX") == true) tkexList.add(it)
             else othersList.add(it)
         }

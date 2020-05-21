@@ -38,5 +38,9 @@ data class GitYamlProperty(
     @ApiModelProperty("显示的icon图标名")
     val iconName: String,
     @ApiModelProperty("分类标识")
-    val categories: List<String>?
+    val categories: List<String>?,
+    @ApiModelProperty("Yaml的文件名")
+    var yamlUrl: String? = "",
+    @ApiModelProperty("显示的icon路径")
+    var iconUrl: String? = ""
 )
