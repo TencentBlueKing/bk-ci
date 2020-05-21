@@ -5,7 +5,9 @@ import com.tencent.devops.websocket.event.ClearSessionEvent
 import com.tencent.devops.websocket.servcie.WebsocketService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Component
 
+@Component
 class CacheSessionListener @Autowired constructor(
     private val websocketService: WebsocketService
 ) : Listener<ClearSessionEvent> {
