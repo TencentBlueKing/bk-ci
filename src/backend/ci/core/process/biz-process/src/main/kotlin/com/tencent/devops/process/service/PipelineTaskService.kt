@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
 import com.tencent.devops.common.redis.RedisOperation
@@ -191,26 +192,17 @@ class PipelineTaskService @Autowired constructor(
 
             // 发送消息给相关关注人
             val sendUser = taskRecord.additionalOptions!!.subscriptionPauseUser
+            val subscriptionPauseUser = mutableSetOf<String>()
             if (sendUser != null) {
                 val sendUsers = sendUser.split(",")
-                val subscriptionPauseUser = mutableSetOf<String>()
                 subscriptionPauseUser.add(sendUsers.forEach { it }.toString())
-                sendPauseNotify(
-                    buildId = buildId,
-                    taskName = taskRecord.taskName,
-                    pipelineId = taskRecord.pipelineId,
-                    receivers = subscriptionPauseUser
-                )
-            } else {
-                val pipelineInfo = pipelineInfoDao.getPipelineInfo(dslContext, taskRecord.pipelineId)
-                val lastUpdateUser = pipelineInfo?.lastModifyUser
-                sendPauseNotify(
-                    buildId = buildId,
-                    taskName = taskRecord.taskName,
-                    pipelineId = taskRecord.pipelineId,
-                    receivers = setOf(lastUpdateUser) as Set<String>
-                )
             }
+            sendPauseNotify(
+                buildId = buildId,
+                taskName = taskRecord.taskName,
+                pipelineId = taskRecord.pipelineId,
+                receivers = subscriptionPauseUser
+            )
             logger.info("|$buildId| next task |$taskId| need pause, send End status to Vm agent")
         }
         return isPause
@@ -366,17 +358,32 @@ class PipelineTaskService @Autowired constructor(
         buildId: String,
         taskName: String,
         pipelineId: String,
-        receivers: Set<String>
+        receivers: Set<String>?
     ) {
         val pipelineRecord = pipelineInfoDao.getPipelineInfo(dslContext, pipelineId)
-        if(pipelineRecord == null) {
+        if (pipelineRecord == null) {
             logger.warn("sendPauseNotify pipeline[$pipelineId] is empty record")
             return
         }
+
         val buildRecord = pipelineRuntimeService.getBuildInfo(buildId)
         val pipelineName = (pipelineRecord?.pipelineName ?: "")
         val buildNum = buildRecord?.buildNum.toString()
         val projectName = client.get(ServiceProjectResource::class).get(pipelineRecord!!.projectId).data!!.projectName
+
+        // 指定通过rtx发送
+        val notifyType = mutableSetOf<String>()
+        notifyType.add(NotifyType.RTX.name)
+
+        // 若没有配置订阅人，则将暂停消息发送给发起人
+        val receiver = mutableSetOf<String>()
+        if (receivers == null || receivers.isEmpty()) {
+            receiver.add(buildRecord!!.startUser)
+            receiver.add(pipelineRecord.lastModifyUser)
+        } else {
+            receiver.addAll(receivers)
+        }
+
         val msg = SendNotifyMessageTemplateRequest(
             templateCode = PIPELINE_TASK_PAUSE_NOTIFY,
             sender = "DevOps",
@@ -384,14 +391,15 @@ class PipelineTaskService @Autowired constructor(
                 "BK_CI_PIPLEINE_NAME" to pipelineName,
                 "BK_CI_BUILD_NUM" to buildNum
             ),
+            notifyType = notifyType,
             bodyParams = mapOf(
                 "BK_CI_PROJECT_NAME_CN" to projectName,
                 "BK_CI_PIPELINE_NAME" to pipelineName,
                 "BK_CI_BUILD_NUM" to buildNum,
                 "taskName" to taskName,
-                "BK_CI_START_USER_ID" to (buildRecord?.startUser ?:"")
+                "BK_CI_START_USER_ID" to (buildRecord?.startUser ?: "")
             ),
-            receivers = receivers as MutableSet<String>
+            receivers = receiver
         )
         logger.info("sendPauseNotify|$buildId| $pipelineId| $msg")
         client.get(ServiceNotifyMessageTemplateResource::class)
