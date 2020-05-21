@@ -115,6 +115,14 @@ class WebsocketConfiguration {
     }
 
     @Bean
+    fun clearSessionQueueBinding(
+        @Autowired cacheClearWebSocketQueue: Queue,
+        @Autowired cacheClearFanoutExchange: FanoutExchange
+    ): Binding {
+        return BindingBuilder.bind(cacheClearWebSocketQueue).to(cacheClearFanoutExchange)
+    }
+
+    @Bean
     fun webSocketListenerContainer(
         @Autowired connectionFactory: ConnectionFactory,
         @Autowired rabbitAdmin: RabbitAdmin,
