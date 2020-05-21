@@ -76,6 +76,14 @@ class WebsocketConfiguration {
         return FanoutExchange(MQ.EXCHANGE_WEBSOCKET_TMP_FANOUT, true, false)
     }
 
+    /**
+     * 构建广播交换机
+     */
+    @Bean
+    fun cacheClearFanoutExchange(): FanoutExchange {
+        return FanoutExchange(MQ.EXCHANGE_WEBSOCKET_SESSION_CLEAR_FANOUT, true, false)
+    }
+
     @Bean
     fun rabbitAdmin(
         @Autowired connectionFactory: ConnectionFactory
@@ -88,6 +96,13 @@ class WebsocketConfiguration {
         val hostIp = HostUtils.getHostIp(devopsGateway)
         logger.info("WebSocket|Get the host ip: $hostIp")
         return Queue(MQ.QUEUE_WEBSOCKET_TMP_EVENT + "." + hostIp, true, false, true)
+    }
+
+    @Bean
+    fun cacheClearWebSocketQueue(): Queue {
+        val hostIp = HostUtils.getHostIp(devopsGateway)
+        logger.info("WebSocket|Get the host ip: $hostIp")
+        return Queue(MQ.QUEUE_WEBSOCKET_SESSION_CLEAR_EVENT + "." + hostIp, true, false, true)
     }
 
     @Bean
@@ -108,6 +123,28 @@ class WebsocketConfiguration {
     ): SimpleMessageListenerContainer {
         val container = SimpleMessageListenerContainer(connectionFactory)
         container.setQueueNames(pipelineWebSocketQueue.name)
+        container.setConcurrentConsumers(webSocketQueueConcurrency!!)
+        container.setMaxConcurrentConsumers(10)
+        container.setRabbitAdmin(rabbitAdmin)
+        container.setStartConsumerMinInterval(5000)
+        container.setConsecutiveActiveTrigger(webSocketActiveTrigger!!)
+        container.setMismatchedQueuesFatal(true)
+        val adapter = MessageListenerAdapter(buildListener, buildListener::execute.name)
+        adapter.setMessageConverter(messageConverter)
+        container.messageListener = adapter
+        return container
+    }
+
+    @Bean
+    fun clearSessionListenerContainer(
+        @Autowired connectionFactory: ConnectionFactory,
+        @Autowired rabbitAdmin: RabbitAdmin,
+        @Autowired messageConverter: Jackson2JsonMessageConverter,
+        @Autowired cacheClearWebSocketQueue: Queue,
+        @Autowired buildListener: WebSocketListener
+    ): SimpleMessageListenerContainer {
+        val container = SimpleMessageListenerContainer(connectionFactory)
+        container.setQueueNames(cacheClearWebSocketQueue.name)
         container.setConcurrentConsumers(webSocketQueueConcurrency!!)
         container.setMaxConcurrentConsumers(10)
         container.setRabbitAdmin(rabbitAdmin)

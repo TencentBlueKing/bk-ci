@@ -33,6 +33,7 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.websocket.dispatch.TransferDispatch
 import com.tencent.devops.common.websocket.utils.RedisUtlis
 import com.tencent.devops.websocket.event.ChangePageTransferEvent
+import com.tencent.devops.websocket.event.ClearSessionEvent
 import com.tencent.devops.websocket.event.ClearUserSessionTransferEvent
 import com.tencent.devops.websocket.event.LoginOutTransferEvent
 import com.tencent.devops.websocket.keys.WebsocketKeys
@@ -197,6 +198,16 @@ class WebsocketService @Autowired constructor(
         if (page != null) {
             logger.info("$userId| $sessionId| ws loginOut fail, page[$page], refresh by interface")
             loginOut(userId, sessionId, page)
+        }
+        if(!isCacheSession(sessionId)) {
+            transferDispatch.dispatch(
+                ClearSessionEvent(
+                    userId = userId,
+                    sessionId = sessionId,
+                    page = null,
+                    transferData = mutableMapOf()
+                )
+            )
         }
         return Result(true)
     }
