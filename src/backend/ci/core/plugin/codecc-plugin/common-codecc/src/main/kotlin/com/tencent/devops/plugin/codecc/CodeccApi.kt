@@ -298,9 +298,10 @@ open class CodeccApi constructor(
         return objectMapper.readValue(result)
     }
 
-    fun installCheckerSet(projectId: String, type: String, checkerSetName: String): Result<Boolean> {
+    fun installCheckerSet(projectId: String, userId: String, type: String, checkerSetId: String): Result<Boolean> {
         val headers = mapOf(
-            AUTH_HEADER_DEVOPS_PROJECT_ID to projectId
+            AUTH_HEADER_DEVOPS_PROJECT_ID to projectId,
+            AUTH_HEADER_DEVOPS_USER_ID to userId
         )
         val body = mapOf(
             "type" to type,
@@ -308,7 +309,7 @@ open class CodeccApi constructor(
         )
         val result = taskExecution(
             body = body,
-            path = "/ms/defect/api/build/checkerSet/$checkerSetName/relationships",
+            path = "/ms/defect/api/build/checkerSet/$checkerSetId/relationships",
             headers = headers,
             method = "POST"
         )

@@ -78,7 +78,7 @@ class ServiceCodeccResourceImpl @Autowired constructor(
         return Result(codeccService.getCodeccTaskResultByBuildIds(buildIds))
     }
 
-    override fun installCheckerSet(projectId: String, type: String, checkerSetCode: String): Result<Boolean> {
-        return codeccApi.installCheckerSet(projectId, type, checkerSetCode)
+    override fun installCheckerSet(projectId: String, userId: String, type: String, checkerSetId: String): Result<Boolean> {
+        return codeccApi.installCheckerSet(projectId, userId, type, checkerSetId)
     }
 }

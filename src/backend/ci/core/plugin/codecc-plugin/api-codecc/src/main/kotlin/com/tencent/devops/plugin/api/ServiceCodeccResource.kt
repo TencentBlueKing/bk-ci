@@ -109,9 +109,11 @@ interface ServiceCodeccResource {
     fun installCheckerSet(
         @QueryParam("项目代码")
         projectId: String,
+        @QueryParam("用户ID")
+        userId: String,
         @QueryParam("安装类型")
         type: String,
-        @QueryParam("规则集代码")
-        checkerSetCode: String
+        @QueryParam("规则集ID")
+        checkerSetId: String
     ): Result<Boolean>
 }
