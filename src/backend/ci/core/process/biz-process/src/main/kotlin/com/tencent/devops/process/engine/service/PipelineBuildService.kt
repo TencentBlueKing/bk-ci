@@ -137,9 +137,7 @@ class PipelineBuildService(
     private val rabbitTemplate: RabbitTemplate,
     private val buildLogPrinter: BuildLogPrinter,
     private val dslContext: DSLContext,
-    private val pipelineBuildDao: PipelineBuildDao,
     private val pipelineTaskService: PipelineTaskService,
-    private val buildDetailDao: BuildDetailDao,
     private val pipelineBuildTaskDao: PipelineBuildTaskDao,
     private val objectMapper: ObjectMapper,
     private val buildParamCompatibilityTransformer: BuildParametersCompatibilityTransformer
@@ -1969,6 +1967,15 @@ class PipelineBuildService(
             containerId = containerId,
             startTime = null,
             endTime = null,
+            buildStatus = BuildStatus.QUEUE
+        )
+
+        // detail状态置为排队
+        buildDetailService.continuePauseTask(
+            buildId = buildId,
+            containerId = containerId,
+            stageId = stageId,
+            taskId = taskId,
             buildStatus = BuildStatus.QUEUE
         )
         logger.info("update|$buildId|$taskId| container status  to ${BuildStatus.QUEUE}")

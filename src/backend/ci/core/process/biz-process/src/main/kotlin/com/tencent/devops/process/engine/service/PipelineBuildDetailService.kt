@@ -633,6 +633,31 @@ class PipelineBuildDetailService @Autowired constructor(
         }, BuildStatus.RUNNING)
     }
 
+    fun continuePauseTask(buildId: String, stageId: String, containerId: String, taskId: String, buildStatus: BuildStatus) {
+        logger.info("[$buildId]|continuePauseTask|stageId=$stageId|containerId=$containerId|taskId=$taskId|status=$buildStatus")
+        update(buildId, object : ModelInterface{
+            var update = false
+
+            override fun onFindElement(e: Element, c: Container): Traverse {
+                logger.info("[$buildId]continuePauseTask onFindElement e[${e}] taskId[$taskId] c[${c}] containerId[$containerId]")
+                if(c.id.equals(containerId)) {
+                    logger.info("[$buildId]|update container[$containerId] status ${buildStatus.name}")
+                    if(e.id.equals(taskId)) {
+                        logger.info("[$buildId]|update task[$taskId] status ${buildStatus.name}")
+                        update = true
+                        e.status = buildStatus.name
+                        return Traverse.BREAK
+                    }
+                }
+                return Traverse.CONTINUE
+            }
+
+            override fun needUpdate(): Boolean {
+                return update
+            }
+        }, BuildStatus.RUNNING)
+    }
+
     fun pauseContainer(buildId: String, stageId: String, containerId: String, buildStatus: BuildStatus) {
         logger.info("[$buildId]|pauseTask|stageId=$stageId|containerId=$containerId|status=$buildStatus")
         update(buildId, object : ModelInterface{
