@@ -44,7 +44,7 @@ class StarterWebService @Autowired constructor(
     @Value("\${git.starter.yamlUrl:#{null}}")
     private val yamlUrl: String? = null
 
-    @Value("\${email.url.logo:#{null}}")
+    @Value("\${git.starter.iconUrl:#{null}}")
     private val iconUrl: String? = null
 
     fun getStarterYamlList(category: String? = null): List<GitYamlProperty> {
