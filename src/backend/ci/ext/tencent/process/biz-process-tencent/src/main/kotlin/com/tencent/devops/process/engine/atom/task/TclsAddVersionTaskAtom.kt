@@ -79,7 +79,7 @@ class TclsAddVersionTaskAtom @Autowired constructor(
 
         if (isMtclsApp) {
             if (param.serviceId.isNullOrBlank()) {
-                logger.error("TCLS serviceId is not init of build($buildId)")
+                logger.warn("TCLS serviceId is not init of build($buildId)")
                 LogUtils.addRedLine(rabbitTemplate, buildId, "TCLS serviceId is not init", elementId, task.containerHashId, task.executeCount ?: 1)
                 return AtomResponse(
                     buildStatus = BuildStatus.FAILED,
@@ -90,7 +90,7 @@ class TclsAddVersionTaskAtom @Autowired constructor(
             }
         } else {
             if (param.tclsAppId.isNullOrBlank()) {
-                logger.error("TCLS appId is not init of build($buildId)")
+                logger.warn("TCLS appId is not init of build($buildId)")
                 LogUtils.addRedLine(rabbitTemplate, buildId, "TCLS appId is not init", elementId, task.containerHashId, task.executeCount ?: 1)
                 return AtomResponse(
                     buildStatus = BuildStatus.FAILED,
@@ -102,7 +102,7 @@ class TclsAddVersionTaskAtom @Autowired constructor(
         }
 
         if (param.ticketId.isBlank()) {
-            logger.error("ticketId is not init of build($buildId)")
+            logger.warn("ticketId is not init of build($buildId)")
             LogUtils.addRedLine(rabbitTemplate, buildId, "ticketId is not init", elementId, task.containerHashId, task.executeCount ?: 1)
             return AtomResponse(
                 buildStatus = BuildStatus.FAILED,

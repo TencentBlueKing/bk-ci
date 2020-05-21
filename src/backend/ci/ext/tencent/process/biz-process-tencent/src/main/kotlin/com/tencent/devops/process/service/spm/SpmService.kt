@@ -50,7 +50,7 @@ class SpmService {
     fun getFileInfo(projectId: String, globalDownloadUrl: String, downloadUrl: String, cmdbAppId: Int): Result<List<SpmFileInfo>> {
 
         if (!downloadUrl.startsWith(globalDownloadUrl)) {
-            logger.error("升级包在CDN的完整下载地址必须是以全局下载地址开头")
+            logger.warn("升级包在CDN的完整下载地址必须是以全局下载地址开头")
             throw RuntimeException("升级包在CDN的完整下载地址必须是以全局下载地址开头")
         }
 
