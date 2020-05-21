@@ -25,7 +25,7 @@
  */
 
 subprojects {
-    group "com.tencent.bk.devops.ci.artifactory"
+    group "com.tencent.bk.devops.ci.log"
     dependencies {
         compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
         compile "org.jetbrains.kotlin:kotlin-reflect"

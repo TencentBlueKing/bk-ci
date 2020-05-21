@@ -24,12 +24,10 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-subprojects {
-    group "com.tencent.bk.devops.ci.artifactory"
-    dependencies {
-        compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
-        compile "org.jetbrains.kotlin:kotlin-reflect"
-        testCompile "junit:junit"
-        testCompile "org.springframework.boot:spring-boot-starter-test"
-    }
+dependencies {
+    compile project(":core:notify:api-notify")
+    compile project(":core:notify:biz-notify")
+    compile project(":core:notify:model-notify")
+    compile project(":core:common:common-db")
+    compile project(":core:common:common-notify")
 }
