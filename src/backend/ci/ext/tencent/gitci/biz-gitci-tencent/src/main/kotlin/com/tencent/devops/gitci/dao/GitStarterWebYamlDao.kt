@@ -40,8 +40,8 @@ class GitStarterWebYamlDao {
 
     fun getList(
         dslContext: DSLContext,
-        yamlUrl: String? = "",
-        iconUrl: String? = ""
+        yamlUrl: String?,
+        iconUrl: String?
     ): List<GitYamlProperty> {
         with(T_GIT_WEB_STARTER_YAML) {
             val result = dslContext.selectFrom(this).fetch()

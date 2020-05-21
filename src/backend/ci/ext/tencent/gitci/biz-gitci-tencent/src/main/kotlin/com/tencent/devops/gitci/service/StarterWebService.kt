@@ -33,19 +33,21 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.cloud.context.config.annotation.RefreshScope
 import org.springframework.stereotype.Service
 
 @Service
+@RefreshScope
 class StarterWebService @Autowired constructor(
     private val dslContext: DSLContext,
     private val gitStarterWebYamlDao: GitStarterWebYamlDao
 ) {
 
     @Value("\${git.starter.yamlUrl:#{null}}")
-    private val yamlUrl: String? = "https://git.code.oa.com/tencent_ci/starter-yaml/raw/master/ci"
+    private val yamlUrl: String? = ""
 
     @Value("\${git.starter.iconUrl:#{null}}")
-    private val iconUrl: String? = "https://git.code.oa.com/tencent_ci/starter-yaml/raw/master/icons"
+    private val iconUrl: String? = ""
 
     fun getStarterYamlList(category: String? = null): List<GitYamlProperty> {
         logger.info("getStarterYamlList with category: $category")
