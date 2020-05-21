@@ -61,7 +61,7 @@ interface StarterWebResource {
         category: String?
     ): Result<List<GitYamlProperty>>
 
-    @ApiOperation("获取所有模板信息")
+    @ApiOperation("获取工蜂CI起始页分类模板信息")
     @GET
     @Path("/web/list")
     fun getWebList(
