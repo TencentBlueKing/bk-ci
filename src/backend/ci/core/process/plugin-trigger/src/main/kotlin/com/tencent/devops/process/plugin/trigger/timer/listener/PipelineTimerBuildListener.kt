@@ -69,7 +69,7 @@ class PipelineTimerBuildListener @Autowired constructor(
             } catch (t: OperationException) {
                 logger.info("[$pipelineId]|TimerTrigger no start| msg=${t.message}")
             } catch (ignored: Throwable) {
-                logger.error("[$pipelineId]|TimerTrigger fail event=$event| error=${ignored.message}", ignored)
+                logger.warn("[$pipelineId]|TimerTrigger fail event=$event| error=${ignored.message}", ignored)
             }
         }
     }
