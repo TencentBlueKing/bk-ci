@@ -59,20 +59,19 @@ import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.websocket.dispatch.WebSocketDispatcher
 import com.tencent.devops.process.constant.ProcessMessageCode
-import com.tencent.devops.process.dao.BuildDetailDao
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.compatibility.BuildParametersCompatibilityTransformer
 import com.tencent.devops.process.engine.compatibility.BuildPropertyCompatibilityTools
 import com.tencent.devops.process.engine.control.lock.BuildIdLock
 import com.tencent.devops.process.engine.control.lock.PipelineBuildRunLock
-import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.dao.PipelineBuildTaskDao
 import com.tencent.devops.process.engine.interceptor.InterceptData
 import com.tencent.devops.process.engine.interceptor.PipelineInterceptorChain
-import com.tencent.devops.process.engine.pojo.LatestRunningBuild
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.pojo.PipelineInfo
+import com.tencent.devops.process.engine.utils.PauseRedisUtils
 import com.tencent.devops.process.jmx.api.ProcessJmxApi
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.BuildBasicInfo
@@ -90,7 +89,6 @@ import com.tencent.devops.process.service.BuildStartupParamService
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.ParamService
 import com.tencent.devops.process.utils.BUILD_NO
-import com.tencent.devops.process.service.PipelineTaskService
 import com.tencent.devops.process.service.PipelineTaskService
 import com.tencent.devops.process.utils.PIPELINE_NAME
 import com.tencent.devops.process.utils.PIPELINE_RETRY_BUILD_ID
@@ -140,6 +138,8 @@ class PipelineBuildService(
     private val pipelineTaskService: PipelineTaskService,
     private val pipelineBuildTaskDao: PipelineBuildTaskDao,
     private val objectMapper: ObjectMapper,
+    private val webSocketDispatcher: WebSocketDispatcher,
+    private val websocketService: PipelineWebsocketService,
     private val buildParamCompatibilityTransformer: BuildParametersCompatibilityTransformer
 ) {
     companion object {
@@ -390,6 +390,9 @@ class PipelineBuildService(
                     if (startupParam != null && startupParam.isNotEmpty()) {
                         params.putAll(JsonUtil.toMap(startupParam).filter { it.key != PIPELINE_RETRY_START_TASK_ID })
                     }
+
+                    // 刷新因暂停而变化的element
+                    buildDetailService.updateElementWhenPauseRetry(buildId, model)
                 } catch (e: Exception) {
                     logger.warn("Fail to get the startup param for the build($buildId)", e)
                 }
@@ -1830,55 +1833,60 @@ class PipelineBuildService(
                 message = "用户（$userId) 无权限执行暂停流水线($pipelineId)"
             )
         }
+        val buildInfo = pipelineRuntimeService.getBuildInfo(buildId)
+            ?: throw ErrorCodeException(
+                statusCode = Response.Status.NOT_FOUND.statusCode,
+                errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
+                defaultMessage = "构建任务${buildId}不存在",
+                params = arrayOf(buildId)
+            )
+
+        val taskRecord = pipelineRuntimeService.getBuildTask(buildId, taskId)
+
+        if (taskRecord?.status != BuildStatus.PAUSE) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_PARUS_PIEPLINE_IS_RUNNINT,
+                defaultMessage = "暂停流水线已恢复执行"
+            )
+        }
+
+        // 不再继续则直接关闭流水线
+        if (!isContinue) {
+            buildLogPrinter.addYellowLine(
+                buildId = buildId,
+                message = "暂停插件由$userId 停止，流水线终止",
+                tag = taskId,
+                jobId = containerId,
+                executeCount = 1
+            )
+            buildManualShutdown(
+                userId = userId,
+                pipelineId = pipelineId,
+                projectId = projectId,
+                buildId = buildId,
+                channelCode = ChannelCode.BS
+            )
+            return true
+        }
 
         val redisLock = BuildIdLock(redisOperation = redisOperation, buildId = buildId)
         try {
-
             redisLock.lock()
-
-            val buildInfo = pipelineRuntimeService.getBuildInfo(buildId)
-                ?: throw ErrorCodeException(
-                    statusCode = Response.Status.NOT_FOUND.statusCode,
-                    errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
-                    defaultMessage = "构建任务${buildId}不存在",
-                    params = arrayOf(buildId)
-                )
-
-            val taskRecord = pipelineRuntimeService.getBuildTask(buildId, taskId)
-
-            if (taskRecord?.status != BuildStatus.PAUSE) {
-                throw ErrorCodeException(
-                    errorCode = ProcessMessageCode.ERROR_PARUS_PIEPLINE_IS_RUNNINT,
-                    defaultMessage = "暂停流水线已恢复执行"
-                )
-            }
-
-            // 不再继续则直接关闭流水线
-            if (!isContinue) {
-                LogUtils.addYellowLine(
-                    rabbitTemplate = rabbitTemplate,
-                    buildId = buildId,
-                    message = "暂停插件由$userId 停止，流水线终止",
-                    tag = taskId,
-                    jobId = containerId,
-                    executeCount = 1
-                )
-                buildManualShutdown(
-                    userId = userId,
-                    pipelineId = pipelineId,
-                    projectId = projectId,
-                    buildId = buildId,
-                    channelCode = ChannelCode.BS
-                )
-                return true
-            }
-
             executePauseBuild(
                 pipelineId = pipelineId,
                 buildId = buildId,
                 taskId = taskId,
                 stageId = stageId,
                 containerId = containerId
+            )
+
+            webSocketDispatcher.dispatch(
+                websocketService.buildDetailMessage(
+                    buildId = buildId,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    userId = userId
+                )
             )
 
             val params = mutableMapOf<String, Any>()
@@ -1905,8 +1913,7 @@ class PipelineBuildService(
                     containerType = ""
                 )
             )
-            LogUtils.addYellowLine(
-                rabbitTemplate = rabbitTemplate,
+            buildLogPrinter.addYellowLine(
                 buildId = buildId,
                 message = "暂停插件由$userId 继续，流水线继续运行",
                 tag = taskId,
@@ -2015,4 +2022,5 @@ class PipelineBuildService(
         )
         return newModel.status
     }
+
 }

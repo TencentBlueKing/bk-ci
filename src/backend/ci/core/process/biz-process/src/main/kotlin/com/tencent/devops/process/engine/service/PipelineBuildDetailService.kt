@@ -55,6 +55,7 @@ import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateInElem
 import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateOutElement
 import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
 import com.tencent.devops.process.engine.pojo.PipelineBuildStageControlOption
+import com.tencent.devops.process.engine.utils.PauseRedisUtils
 import com.tencent.devops.process.service.BuildVariableService
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -924,6 +925,8 @@ class PipelineBuildDetailService @Autowired constructor(
                         c.elements.forEach { e->
                             if(e.id.equals(element.id)) {
                                 newElement.add(element)
+                                // 存储原element参数到redis，用于rebuild时快速恢复model
+                                redisOperation.set(PauseRedisUtils.getPauseElementRedisKey(buildId, e.id!!), objectMapper.writeValueAsString(e))
                             } else {
                                 newElement.add(e)
                             }
@@ -934,6 +937,32 @@ class PipelineBuildDetailService @Autowired constructor(
             }
         }
         buildDetailDao.updateModel(dslContext, buildId, objectMapper.writeValueAsString(model))
+    }
+
+    fun updateElementWhenPauseRetry(buildId: String, model: Model) {
+        logger.info("[$buildId| updateElementWhenPauseRetry")
+        var needUpdate = false
+        model.stages.forEach { stage->
+            stage.containers.forEach {container->
+                val newElements = mutableListOf<Element>()
+                container.elements.forEach { element->
+                    val defaultElement = redisOperation.get(PauseRedisUtils.getPauseElementRedisKey(buildId, element.id!!))
+                    if(defaultElement != null) {
+                        logger.info("Refresh element| $buildId|${element.id}| $model")
+                        // 恢复detail表model内的对应element为默认值
+                        newElements.add(objectMapper.readValue(defaultElement, Element::class.java))
+                        needUpdate = true
+                    } else {
+                        newElements.add(element)
+                    }
+                }
+            }
+        }
+
+        if(needUpdate) {
+            buildDetailDao.updateModel(dslContext, buildId, objectMapper.writeValueAsString(model))
+            logger.info("[$buildId| updateElementWhenPauseRetry success")
+        }
     }
 
     private fun updateHistoryStage(buildId: String, model: Model) {
