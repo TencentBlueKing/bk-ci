@@ -42,10 +42,10 @@ class StarterWebService @Autowired constructor(
 ) {
 
     @Value("\${git.starter.yamlUrl:#{null}}")
-    private val yamlUrl: String? = null
+    private val yamlUrl: String? = "https://git.code.oa.com/tencent_ci/starter-yaml/raw/master/ci"
 
     @Value("\${git.starter.iconUrl:#{null}}")
-    private val iconUrl: String? = null
+    private val iconUrl: String? = "https://git.code.oa.com/tencent_ci/starter-yaml/raw/master/icons"
 
     fun getStarterYamlList(category: String? = null): List<GitYamlProperty> {
         logger.info("getStarterYamlList with category: $category")
