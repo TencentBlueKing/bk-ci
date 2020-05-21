@@ -23,12 +23,13 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.notify.blueking.sdk.pojo
 
-class ApiResp(
-    val message: String? = "",
-    val code: Int? = -1,
-    val result: Boolean? = false,
-    val request_id: String? = "",
-    val data: Any? = null
-)
+subprojects {
+    group "com.tencent.bk.devops.ci.log"
+    dependencies {
+        compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
+        compile "org.jetbrains.kotlin:kotlin-reflect"
+        testCompile "junit:junit"
+        testCompile "org.springframework.boot:spring-boot-starter-test"
+    }
+}

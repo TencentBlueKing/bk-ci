@@ -35,5 +35,3 @@ dependencies {
     compile project(":core:common:common-client")
     compile project(":core:common:common-scm")
 }
-
-apply from: "$rootDir/task_deploy_to_maven.gradle"

@@ -28,5 +28,3 @@ dependencies {
     compile project(":ext:tencent:common:common-digest-tencent")
     compile project(":ext:tencent:scm:biz-scm")
 }
-
-apply from: "$rootDir/task_deploy_to_maven.gradle"

@@ -28,5 +28,3 @@ dependencies {
     compile project(":core:dispatch:biz-dispatch")
     compile project(":ext:tencent:dispatch:api-dispatch-bcs")
 }
-
-apply from: "$rootDir/task_deploy_to_maven.gradle"

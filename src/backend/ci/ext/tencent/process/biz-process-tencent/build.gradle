@@ -53,5 +53,3 @@ dependencies {
     compile "org.apache.poi:poi"
     compile "org.apache.poi:poi-ooxml"
 }
-
-apply from: "$rootDir/task_deploy_to_maven.gradle"
