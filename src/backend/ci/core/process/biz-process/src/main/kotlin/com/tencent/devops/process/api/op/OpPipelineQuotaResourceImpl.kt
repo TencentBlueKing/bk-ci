@@ -13,9 +13,4 @@ class OpPipelineQuotaResourceImpl @Autowired constructor(
         pipelineQuotaService.setQuotaByProject(projectId, quota)
         return Result(true)
     }
-
-    override fun updateUsedQuota(userId: String, projectId: String, usedQuota: Long): Result<Boolean> {
-        pipelineQuotaService.setQuotaUsedByProject(projectId, usedQuota)
-        return Result(true)
-    }
 }

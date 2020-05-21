@@ -12,7 +12,7 @@ class PipelineQuotaService @Autowired constructor(
 ) {
     companion object {
         private const val QUOTA_KEY_PREFIX = "project_quota_key_"
-        private const val QUOTA_USED_KEY_PREFIX = "project_quota_used_key_" // 每个项目一个，方便区分统计
+        private const val QUOTA_KEY_LIMIT_PREFIX = "project_quota_limit_key_"
         private const val QUOTA_BAD_PROJECT_ALL_KEY = "project_quota_all_key" // 所有异常项目集合
         private const val SEVEN_DAY_MILL_SECONDS = 3600 * 24 * 7 * 1000L
     }
@@ -22,7 +22,7 @@ class PipelineQuotaService @Autowired constructor(
     // 配额就是带projectId集合元素个数的汇总
     fun getQuotaByProject(projectId: String): Long {
         try {
-            val quota = redisOperation.get(getProjectKey(projectId))?.toLong() ?: Long.MAX_VALUE
+            val quota = redisOperation.get(getProjectLimitKey(projectId))?.toLong() ?: Long.MAX_VALUE
             val usedQuota = getUsedQuota(projectId)
             return quota - usedQuota
         } catch (e: Exception) {
@@ -60,11 +60,7 @@ class PipelineQuotaService @Autowired constructor(
     }
 
     fun setQuotaByProject(projectId: String, quota: Long) {
-        redisOperation.set(getProjectKey(projectId), quota.toString())
-    }
-
-    fun setQuotaUsedByProject(projectId: String, usedQuota: Long) {
-        redisOperation.set(getProjectUsedKey(projectId), usedQuota.toString())
+        redisOperation.set(getProjectLimitKey(projectId), quota.toString())
     }
 
     @Scheduled(cron = "0 0 0 * * ?")
@@ -72,6 +68,8 @@ class PipelineQuotaService @Autowired constructor(
         val min = 0.0
         val max = (System.currentTimeMillis() - SEVEN_DAY_MILL_SECONDS).toDouble()
         val removeKey = mutableSetOf<String>()
+
+        logger.info("start to clear zset")
 
         // 清理之前没释放的配额
         redisOperation.sscan(QUOTA_BAD_PROJECT_ALL_KEY, "*")?.use { cursor ->
@@ -88,12 +86,10 @@ class PipelineQuotaService @Autowired constructor(
         removeKey.forEach { redisOperation.sremove(QUOTA_BAD_PROJECT_ALL_KEY, it) }
     }
 
-    // 当前项目已用配额
-    private fun getProjectUsedKey(projectId: String): String {
-        return "$QUOTA_USED_KEY_PREFIX${projectId}"
+    private fun getProjectLimitKey(projectId: String): String {
+        return "$QUOTA_KEY_LIMIT_PREFIX${projectId}"
     }
 
-    // 记录当前项目配额
     private fun getProjectKey(projectId: String): String {
         return "$QUOTA_KEY_PREFIX${projectId}"
     }
