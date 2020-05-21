@@ -29,6 +29,7 @@ package com.tencent.devops.plugin.codecc.resources
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.plugin.api.ServiceCodeccResource
+import com.tencent.devops.plugin.codecc.CodeccApi
 import com.tencent.devops.plugin.codecc.pojo.BlueShieldResponse
 import com.tencent.devops.plugin.codecc.pojo.CodeccBuildInfo
 import com.tencent.devops.plugin.codecc.pojo.CodeccCallback
@@ -37,7 +38,8 @@ import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ServiceCodeccResourceImpl @Autowired constructor(
-    private val codeccService: CodeccService
+    private val codeccService: CodeccService,
+    private val codeccApi: CodeccApi
 ) : ServiceCodeccResource {
 
     override fun callback(callback: CodeccCallback): Result<String> {
@@ -74,5 +76,9 @@ class ServiceCodeccResourceImpl @Autowired constructor(
 
     override fun getCodeccTaskResult(buildIds: Set<String>): Result<Map<String, CodeccCallback>> {
         return Result(codeccService.getCodeccTaskResultByBuildIds(buildIds))
+    }
+
+    override fun installCheckerSet(projectId: String, type: String, checkerSetCode: String): Result<Boolean> {
+        return codeccApi.installCheckerSet(projectId, type, checkerSetCode)
     }
 }

@@ -298,6 +298,23 @@ open class CodeccApi constructor(
         return objectMapper.readValue(result)
     }
 
+    fun installCheckerSet(projectId: String, type: String, checkerSetName: String): Result<Boolean> {
+        val headers = mapOf(
+            AUTH_HEADER_DEVOPS_PROJECT_ID to projectId
+        )
+        val body = mapOf(
+            "type" to type,
+            "projectId" to projectId
+        )
+        val result = taskExecution(
+            body = body,
+            path = "/ms/defect/api/build/checkerSet/$checkerSetName/relationships",
+            headers = headers,
+            method = "POST"
+        )
+        return objectMapper.readValue(result)
+    }
+
     private fun genToolChecker(element: LinuxCodeCCScriptElement): List<ToolChecker> {
         return genToolRuleSet(element).map {
             ToolChecker(it.key, it.value)
