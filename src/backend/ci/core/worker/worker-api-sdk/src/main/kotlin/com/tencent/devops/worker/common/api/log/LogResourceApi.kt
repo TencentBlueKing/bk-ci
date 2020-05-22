@@ -51,4 +51,12 @@ class LogResourceApi : AbstractBuildResourceApi(), LogSDKApi {
             objectMapper.readValue(responseContent)
         }
     }
+
+    override fun finishLog(tag: String?, jobId: String?, executeCount: Int?): Result<Boolean> {
+        val path = "/log/api/build/logs/status?finished=true&tag=$tag&jobId=$jobId&executeCount=$executeCount"
+        val requestBody = RequestBody.create(MediaType.parse("application/json; charset=utf-8"), "")
+        val request = buildPut(path, requestBody)
+        val responseContent = request(request, "上报结束状态失败")
+        return objectMapper.readValue(responseContent)
+    }
 }

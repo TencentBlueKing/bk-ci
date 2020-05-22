@@ -30,8 +30,12 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.common.service.utils.HomeHostUtil
-import com.tencent.devops.notify.api.service.ServiceNotifyResource
+import com.tencent.devops.notify.PIPELINE_QUALITY_END_NOTIFY_TEMPLATE
+import com.tencent.devops.notify.PIPELINE_QUALITY_AUDIT_NOTIFY_TEMPLATE
+import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
+import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.plugin.api.ServiceCodeccElementResource
 import com.tencent.devops.plugin.codecc.CodeccUtils
 import com.tencent.devops.process.api.service.ServicePipelineResource
@@ -47,14 +51,10 @@ import com.tencent.devops.quality.api.v2.pojo.response.QualityRuleMatchTask
 import com.tencent.devops.quality.constant.codeccToolUrlPathMap
 import com.tencent.devops.quality.pojo.RuleCheckResult
 import com.tencent.devops.quality.pojo.RuleCheckSingleResult
-import com.tencent.devops.quality.pojo.enum.NotifyType
 import com.tencent.devops.quality.pojo.enum.RuleInterceptResult
 import com.tencent.devops.quality.pojo.enum.RuleOperation
 import com.tencent.devops.quality.service.GroupService
-import com.tencent.devops.quality.util.EmailUtil
-import com.tencent.devops.quality.util.RtxUtil
 import com.tencent.devops.quality.util.ThresholdOperationUtil
-import com.tencent.devops.quality.util.WechatUtil
 import org.apache.commons.lang3.math.NumberUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -188,6 +188,7 @@ class QualityRuleCheckService @Autowired constructor(
                 val interceptResult = result.first
                 val params = mapOf("projectId" to buildCheckParams.projectId,
                     "pipelineId" to buildCheckParams.pipelineId,
+                    "buildId" to buildId,
                     CodeccUtils.BK_CI_CODECC_TASK_ID to (buildCheckParams.runtimeVariable?.get(CodeccUtils.BK_CI_CODECC_TASK_ID) ?: "")
                 )
 
@@ -338,7 +339,7 @@ class QualityRuleCheckService @Autowired constructor(
                     }
 
                     // 全为null，不通过
-                    if (!ThresholdOperationUtil.valid(result?.toString() ?: "", indicator.threshold, indicator.operation)) {
+                    if (!ThresholdOperationUtil.validBoolean(result?.toString() ?: "", indicator.threshold, indicator.operation)) {
                         checkResult = false
                         allCheckResult = false
                     }
@@ -383,6 +384,7 @@ class QualityRuleCheckService @Autowired constructor(
         return if (CodeccUtils.isCodeccAtom(record.indicatorType)) {
             val projectId = params["projectId"] ?: ""
             val pipelineId = params["pipelineId"] ?: ""
+            val buildId = params["buildId"] ?: ""
             val paramTaskId = params[CodeccUtils.BK_CI_CODECC_TASK_ID]
             val taskId = if (paramTaskId.isNullOrBlank()) client.get(ServiceCodeccElementResource::class).get(projectId, pipelineId).data?.taskId
             else paramTaskId
@@ -394,7 +396,8 @@ class QualityRuleCheckService @Autowired constructor(
                 "<a target='_blank' href='${HomeHostUtil.innerServerHost()}/console/codecc/$projectId/task/$taskId/detail'>查看详情</a>"
             } else {
                 val detail = codeccToolUrlPathMap[record.detail!!] ?: "defect/lint"
-                "<a target='_blank' href='${HomeHostUtil.innerServerHost()}/console/codecc/$projectId/task/$taskId/$detail/${record.detail}/list'>查看详情</a>"
+                "<a target='_blank' href='${HomeHostUtil.innerServerHost()}/console/codecc/$projectId/task/$taskId/$detail/${record.detail}/list" +
+                    "?buildId=$buildId&status=7&sortField=createBuildNumber'>查看详情</a>"
             }
         } else {
             record.logPrompt ?: ""
@@ -430,18 +433,50 @@ class QualityRuleCheckService @Autowired constructor(
         val time = createTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd hh:mm:ss"))
 
         // 获取通知用户集合
-        val notifyUserSet = auditNotifyUserList.toSet()
+        val notifyUserSet = auditNotifyUserList.toMutableSet()
 
         // 获取拦截列表
         // val interceptList = getInterceptList(interceptRecordList)
 
+        val messageResult = StringBuilder()
+        val emailResult = StringBuilder()
+        resultList.forEach { r ->
+            messageResult.append("拦截规则：${r.ruleName}\n")
+            messageResult.append("拦截指标：\n")
+            emailResult.append("拦截规则：${r.ruleName}<br>")
+            emailResult.append("拦截指标：<br>")
+            r.messagePairs.forEach {
+                messageResult.append(it.first + "\n")
+                emailResult.append(it.first + "<br>")
+            }
+            emailResult.append("<br>")
+        }
+
         // 推送消息
-        val rtxMessage = RtxUtil.makeAuditMessage(projectName, pipelineName, buildNo, time, resultList, url, notifyUserSet)
-        client.get(ServiceNotifyResource::class).sendRtxNotify(rtxMessage)
-        val wechatMessage = WechatUtil.makeAuditMessage(projectName, pipelineName, buildNo, time, resultList, url, notifyUserSet)
-        client.get(ServiceNotifyResource::class).sendWechatNotify(wechatMessage)
-        val emailMessage = EmailUtil.makeAuditMessage(projectName, pipelineName, buildNo, time, resultList, url, notifyUserSet)
-        client.get(ServiceNotifyResource::class).sendEmailNotify(emailMessage)
+        val sendNotifyMessageTemplateRequest = SendNotifyMessageTemplateRequest(
+            templateCode = PIPELINE_QUALITY_AUDIT_NOTIFY_TEMPLATE,
+            sender = "DevOps",
+            receivers = notifyUserSet,
+            cc = notifyUserSet,
+            titleParams = mapOf(
+                "projectName" to projectName,
+                "pipelineName" to pipelineName,
+                "buildNo" to buildNo
+            ),
+            bodyParams = mapOf(
+                "title" to "【质量红线拦截通知】你有一个流水线被拦截",
+                "projectName" to projectName,
+                "pipelineName" to pipelineName,
+                "buildNo" to buildNo,
+                "time" to time,
+                "result" to messageResult.toString(),
+                "emailResult" to emailResult.toString(),
+                "url" to url
+            )
+        )
+        val sendNotifyResult = client.get(ServiceNotifyMessageTemplateResource::class)
+            .sendNotifyMessageByTemplate(sendNotifyMessageTemplateRequest)
+        logger.info("[$buildNo]|sendAuditNotification|QualityRuleCheckService|result=$sendNotifyResult")
     }
 
     /**
@@ -472,22 +507,25 @@ class QualityRuleCheckService @Autowired constructor(
         // 获取拦截列表
         val interceptList = getInterceptList(interceptRecordList)
 
-        endNotifyTypeList.forEach {
-            when (it) {
-                NotifyType.RTX -> {
-                    val message = RtxUtil.makeEndMessage(projectName, pipelineName, buildNo, time, interceptList, url, notifyUserSet)
-                    client.get(ServiceNotifyResource::class).sendRtxNotify(message)
-                }
-                NotifyType.WECHAT -> {
-                    val message = WechatUtil.makeEndMessage(projectName, pipelineName, buildNo, time, interceptList, url, notifyUserSet)
-                    client.get(ServiceNotifyResource::class).sendWechatNotify(message)
-                }
-                NotifyType.EMAIL -> {
-                    val message = EmailUtil.makeEndMessage(projectName, pipelineName, buildNo, time, interceptList, url, notifyUserSet)
-                    client.get(ServiceNotifyResource::class).sendEmailNotify(message)
-                }
-            }
-        }
+        val sendNotifyMessageTemplateRequest = SendNotifyMessageTemplateRequest(
+            templateCode = PIPELINE_QUALITY_END_NOTIFY_TEMPLATE,
+            sender = "DevOps",
+            receivers = notifyUserSet,
+            notifyType = endNotifyTypeList.map { it.name }.toMutableSet(),
+            titleParams = mapOf(),
+            bodyParams = mapOf(
+                "title" to "【质量红线拦截通知】你有一个流水线被拦截",
+                "projectName" to projectName,
+                "pipelineName" to pipelineName,
+                "buildNo" to buildNo,
+                "time" to time,
+                "thresholdListString" to interceptList.joinToString("；"),
+                "url" to url
+            )
+        )
+        val sendNotifyResult = client.get(ServiceNotifyMessageTemplateResource::class)
+            .sendNotifyMessageByTemplate(sendNotifyMessageTemplateRequest)
+        logger.info("[$buildNo]|sendAuditNotification|sendNotifyMessageTemplateRequest=$sendNotifyMessageTemplateRequest|result=$sendNotifyResult")
     }
 
     private fun getInterceptList(interceptRecordList: List<QualityRuleInterceptRecord>): List<String> {
