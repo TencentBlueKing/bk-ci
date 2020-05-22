@@ -102,4 +102,18 @@ interface ServiceCodeccResource {
     fun getCodeccTaskResult(
         buildIds: Set<String>
     ): Result<Map<String, CodeccCallback>>
+
+    @ApiOperation("安装规则集")
+    @POST
+    @Path("/checkerSet/install")
+    fun installCheckerSet(
+        @QueryParam("项目代码")
+        projectId: String,
+        @QueryParam("用户ID")
+        userId: String,
+        @QueryParam("安装类型")
+        type: String,
+        @QueryParam("规则集ID")
+        checkerSetId: String
+    ): Result<Boolean>
 }
