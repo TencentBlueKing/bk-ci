@@ -15,6 +15,7 @@ class PipelineQuotaService @Autowired constructor(
         private const val QUOTA_KEY_LIMIT_PREFIX = "project_quota_limit_key_"
         private const val QUOTA_BAD_PROJECT_ALL_KEY = "project_quota_all_key" // 所有异常项目集合
         private const val SEVEN_DAY_MILL_SECONDS = 3600 * 24 * 7 * 1000L
+        private const val DEFAULT_PROJECT_QUOTA = 1000L
     }
 
     private val logger = LoggerFactory.getLogger(PipelineQuotaService::class.java)
@@ -22,7 +23,7 @@ class PipelineQuotaService @Autowired constructor(
     // 配额就是带projectId集合元素个数的汇总
     fun getQuotaByProject(projectId: String): Long {
         try {
-            val quota = redisOperation.get(getProjectLimitKey(projectId))?.toLong() ?: Long.MAX_VALUE
+            val quota = redisOperation.get(getProjectLimitKey(projectId))?.toLong() ?: DEFAULT_PROJECT_QUOTA
             val usedQuota = getUsedQuota(projectId)
             return quota - usedQuota
         } catch (e: Exception) {
@@ -87,14 +88,14 @@ class PipelineQuotaService @Autowired constructor(
     }
 
     private fun getProjectLimitKey(projectId: String): String {
-        return "$QUOTA_KEY_LIMIT_PREFIX${projectId}"
+        return "$QUOTA_KEY_LIMIT_PREFIX$projectId"
     }
 
     private fun getProjectKey(projectId: String): String {
-        return "$QUOTA_KEY_PREFIX${projectId}"
+        return "$QUOTA_KEY_PREFIX$projectId"
     }
 
     private fun getProjectJobKey(projectId: String, buildId: String, jobId: String): String {
-        return "${projectId}_${buildId}_${jobId}"
+        return "${projectId}_${buildId}_$jobId"
     }
 }
