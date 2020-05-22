@@ -58,7 +58,6 @@ import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineStageService
 import com.tencent.devops.process.service.BuildVariableService
-import com.tencent.devops.process.service.PipelineQuotaService
 import com.tencent.devops.process.service.PipelineUserService
 import com.tencent.devops.process.service.ProjectOauthTokenService
 import com.tencent.devops.process.service.scm.ScmProxyService
