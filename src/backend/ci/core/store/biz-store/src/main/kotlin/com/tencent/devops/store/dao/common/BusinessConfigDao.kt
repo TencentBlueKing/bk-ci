@@ -115,6 +115,15 @@ class BusinessConfigDao {
         }
     }
 
+    fun getConfigsByFeature(dslContext: DSLContext, business: String, feature: String): Result<TBusinessConfigRecord>? {
+        with(TBusinessConfig.T_BUSINESS_CONFIG) {
+            return dslContext.selectFrom(this)
+                .where(BUSINESS.eq(business))
+                .and(FEATURE.eq(feature))
+                .fetch()
+        }
+    }
+
     fun listFeatureConfig(dslContext: DSLContext, business: String, businessValue: String): Result<TBusinessConfigRecord>? {
         with(TBusinessConfig.T_BUSINESS_CONFIG) {
             return dslContext.selectFrom(this)
