@@ -43,11 +43,15 @@ data class MarketAtomCreateRequest(
     @field:BkField(patternStyle = BkStyleEnum.STORE_NAME_STYLE)
     var name: String,
     @ApiModelProperty("开发语言", required = true)
+    @field:BkField(patternStyle = BkStyleEnum.LANGUAGE_STYLE)
     var language: String,
     @ApiModelProperty("认证方式", required = false)
+    @field:BkField(patternStyle = BkStyleEnum.AUTH_STYLE, required = false)
     val authType: String? = null,
     @ApiModelProperty(value = "项目可视范围", required = false)
+    @field:BkField(patternStyle = BkStyleEnum.VISIBILITY_LEVEL_STYLE, required = false)
     val visibilityLevel: VisibilityLevelEnum? = VisibilityLevelEnum.LOGIN_PUBLIC,
     @ApiModelProperty(value = "插件代码库不开源原因", required = false)
+    @field:BkField(patternStyle = BkStyleEnum.PRIVATE_REASON_STYLE, required = false)
     val privateReason: String? = null
 )
