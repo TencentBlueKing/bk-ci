@@ -43,14 +43,19 @@ module.exports = {
         'vue'
     ],
     globals: {
-        'LOGOUT_SERVICE_URL': true,
-        'X_DEVOPS_PROJECT_ID': true
+        'LOGOUT_SERVICE_URL': false,
+        'DEVOPS_LS_VERSION': false
     },
     overrides: [
         {
             files: ['*.vue'],
             rules: {
                 indent: 'off'
+            },
+            files: ['*.ts'],
+            rules: {
+                "no-unused-vars": "off",
+                "@typescript-eslint/no-unused-vars": "error"
             }
         }
     ]

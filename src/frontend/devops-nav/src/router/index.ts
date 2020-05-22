@@ -5,7 +5,6 @@ import { updateRecentVisitServiceList, urlJoin, getServiceAliasByPath, importScr
 import compilePath from '../utils/pathExp'
 import * as cookie from 'js-cookie'
 
-
 // 404
 // const None = () => import('../views/None.vue')
 // const App = () => import('../views/App.vue')
@@ -124,17 +123,16 @@ const createRouter = (store: any, dynamicLoadModule: any, i18n: any) => {
                 setTimeout(() => {
                     store.dispatch('toggleModuleLoading', false)
                 }, 100)
-                goNext(to, store, next)
+                goNext(to, next)
             })
-            goNext(to, store, next)
+            goNext(to, next)
         } else if (isAmdModule(currentPage) && loadedModule[serviceAlias]) {
             dynamicLoadModule(serviceAlias, i18n.locale).then(() => {
-                goNext(to, store, next)    
+                goNext(to, next)
             })
         } else {
-            goNext(to, store, next)
+            goNext(to, next)
         }
-            
     })
 
     router.afterEach(route => {
@@ -152,38 +150,20 @@ function updateHeaderConfig ({ showProjectList, showNav }) {
     }
 }
 
-function parseOS (): string {
-    const { userAgent } = window.navigator
-    switch (true) {
-        case userAgent.indexOf('Linux') > -1:
-            return /android/i.test(userAgent) ? 'ANDROID' : 'LINUX'
-        case userAgent.indexOf('iPhone') > -1:
-            return 'IOS'
-        case userAgent.indexOf('iPad') > -1:
-            return 'iPad'
-        case userAgent.indexOf('Mac') > -1:
-            return 'MACOS'
-        case userAgent.indexOf('Win') > -1:
-            return 'WINDOWS'
-    }
-    return 'WINDOWS'
-}
-
-function getProjectId (store, params): string {
+function getProjectId (params): string {
     try {
         const cookiePid = cookie.get(X_DEVOPS_PROJECT_ID)
-        const projectId = window.GLOBAL_PID || cookiePid || localStorage.getItem('projectId') || store.getters.enableProjectList[0].projectCode
+        const projectId = window.GLOBAL_PID || cookiePid
         return String(params.projectId) !== '0' && params.projectId ? params.projectId : projectId
     } catch (e) {
         return ''
     }
-    
 }
 
-function initProjectId (to, store): string {
+function initProjectId (to): string {
     try {
         const { matched, params } = to
-        const projectId: string = getProjectId(store, params)
+        const projectId: string = getProjectId(params)
         const lastMatched = matched[matched.length - 1]
         
         const options = projectId ? {
@@ -197,11 +177,11 @@ function initProjectId (to, store): string {
     }
 }
 
-function goNext(to, store, next) {
-    const newPath = initProjectId(to, store)
+function goNext (to, next) {
+    const newPath = initProjectId(to)
 
     // @ts-ignore
-    window.setProjectIdCookie(getProjectId(store, to.params))
+    window.setProjectIdCookie(getProjectId(to.params))
     if (to.path !== newPath) {
         next({
             path: newPath,

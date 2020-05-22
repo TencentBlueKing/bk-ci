@@ -8,8 +8,8 @@
             </div>
             <section :class="[{ 'control-active': isInputFocus }, 'g-input-search', 'list-input']">
                 <input class="g-input-border" type="text" :placeholder="$t('store.请输入关键字搜索')" v-model="searchName" @focus="isInputFocus = true" @blur="isInputFocus = false" @keyup.enter="search" />
-                <i class="bk-icon icon-search" v-if="!searchName"></i>
-                <i class="bk-icon icon-close-circle-shape clear-icon" v-else @click="clearSearch"></i>
+                <i class="devops-icon icon-search" v-if="!searchName"></i>
+                <i class="devops-icon icon-close-circle-shape clear-icon" v-else @click="clearSearch"></i>
             </section>
         </div>
         <bk-table style="margin-top: 15px;" :empty-text="$t('store.暂时没有模板')"
@@ -41,7 +41,7 @@
                     <span class="atom-status-icon success" v-if="props.row.templateStatus === 'RELEASED'"></span>
                     <span class="atom-status-icon fail" v-if="props.row.templateStatus === 'GROUNDING_SUSPENSION'"></span>
                     <span class="atom-status-icon obtained" v-if="props.row.templateStatus === 'AUDIT_REJECT' || props.row.templateStatus === 'UNDERCARRIAGED'"></span>
-                    <span class="atom-status-icon bk-icon icon-initialize" v-if="props.row.templateStatus === 'INIT'"></span>
+                    <span class="atom-status-icon devops-icon icon-initialize" v-if="props.row.templateStatus === 'INIT'"></span>
                     <span>{{ $t(templateStatusMap[props.row.templateStatus]) }}</span>
                 </template>
             </bk-table-column>
@@ -96,7 +96,7 @@
                                     <big-select v-model="relateTemplateForm.projectCode" :searchable="true" @toggle="toggleProjectList" :options="projectList" setting-key="projectCode" display-key="projectName" :placeholder="$t('store.请选择项目')">
                                         <div slot="extension" style="cursor: pointer;">
                                             <a :href="itemUrl" target="_blank">
-                                                <i class="bk-icon icon-plus-circle" />
+                                                <i class="devops-icon icon-plus-circle" />
                                                 {{ itemText }}
                                             </a>
                                         </div>
@@ -104,7 +104,7 @@
                                     <div v-if="templateErrors.projectError" class="error-tips"> {{ $t('store.项目不能为空') }} </div>
                                 </div>
                                 <bk-popover placement="right">
-                                    <i class="bk-icon icon-info-circle"></i>
+                                    <i class="devops-icon icon-info-circle"></i>
                                     <template slot="content">
                                         <p> {{ $t('store.源模版所属项目') }} </p>
                                     </template>
@@ -492,7 +492,7 @@
                     query: {
                         code,
                         type: 'template',
-                        from: 'atomList'
+                        from: 'workList'
                     }
                 })
             },

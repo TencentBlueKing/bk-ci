@@ -84,4 +84,9 @@ abstract class DispatchType(
      * 用来替换每种类型的自定义字符串
      */
     protected abstract fun replaceField(variables: Map<String, String>)
+
+    /**
+     * 保存至流水线模型前对字符串类型的值进行trim等清理操作
+     */
+    abstract fun cleanDataBeforeSave()
 }

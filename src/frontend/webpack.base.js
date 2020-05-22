@@ -9,7 +9,6 @@ const BundleWebpackPlugin = require('./webpackPlugin/bundle-webpack-plugin')
 
 module.exports = ({ entry, publicPath, dist, port = 8080, argv, env }) => {
     const isDev = argv.mode === 'development'
-    const isMaster = process.env.NODE_ENV === 'master'
     const envDist = env && env.dist ? env.dist : 'frontend'
     const buildDist = path.join(__dirname, envDist, dist)
     return {
@@ -18,7 +17,7 @@ module.exports = ({ entry, publicPath, dist, port = 8080, argv, env }) => {
         output: {
             publicPath,
             chunkFilename: '[name].[chunkhash].js',
-            filename: isMaster ? '[name].[contentHash].min.js' : '[name].js',
+            filename: '[name].[contentHash].min.js',
             path: buildDist
         },
         module: {
@@ -43,7 +42,7 @@ module.exports = ({ entry, publicPath, dist, port = 8080, argv, env }) => {
                 },
                 {
                     test: /\.scss$/,
-                    use: [isDev ? 'style-loader' : MiniCssExtractPlugin.loader , 'css-loader', 'sass-loader']
+                    use: [MiniCssExtractPlugin.loader, 'css-loader', 'sass-loader']
                 },
                 {
                     test: /\.(png|jpe?g|gif|svg|webp|cur)(\?.*)?$/,
@@ -57,7 +56,7 @@ module.exports = ({ entry, publicPath, dist, port = 8080, argv, env }) => {
                     test: /\.(js|vue)$/,
                     loader: 'eslint-loader',
                     enforce: 'pre',
-                    include: [path.resolve('src')],
+                    include: [path.resolve('src'), path.resolve(__dirname, 'devops-log')],
                     exclude: /node_modules/,
                     options: {
                         fix: true,
@@ -85,14 +84,14 @@ module.exports = ({ entry, publicPath, dist, port = 8080, argv, env }) => {
             }),
             new webpack.HashedModuleIdsPlugin(),
             new MiniCssExtractPlugin({
-                filename: isMaster ? '[name].[chunkHash].css' : '[name].css',
+                filename: '[name].[chunkHash].css',
                 chunkName: '[id].css'
             }),
             new CopyWebpackPlugin([{ from: path.join(__dirname, 'locale', dist), to: buildDist }])
         ],
         optimization: {
             namedChunks: true,
-            minimize: true
+            minimize: !isDev
         },
         resolve: {
             extensions: ['.js', '.vue', '.json', '.ts', '.scss', '.css'],

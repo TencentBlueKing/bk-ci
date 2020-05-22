@@ -13,7 +13,7 @@
                 <div class="rule-main-container">
                     <div class="rule-main-header">
                         <button class="bk-button bk-primary" @click="toCreateRule">
-                            <i class="bk-icon icon-plus"></i>
+                            <i class="devops-icon icon-plus"></i>
                             <span style="margin-left: 0;">创建规则</span>
                         </button>
                     </div>
@@ -332,9 +332,6 @@
         computed: {
             projectId () {
                 return this.$route.params.projectId
-            },
-            isExtendTx () {
-                return VERSION_TYPE === 'tencent'
             }
         },
         watch: {
@@ -520,7 +517,7 @@
                         noPermissionList: [
                             { resource: '质量红线', option: '删除规则' }
                         ],
-                        applyPermissionUrl: this.isExtendTx ? `/backend/api/perm/apply/subsystem/?client_id=code&project_code=${this.projectId}&service_code=quality_gate&role_manager=rule:${row.ruleHashId}` : PERM_URL_PREFIX
+                        applyPermissionUrl: PERM_URL_PREFIX
                     }
                     this.$showAskPermissionDialog(params)
                 }
@@ -651,7 +648,7 @@
                         noPermissionList: [
                             { resource: '质量红线', option: '编辑规则' }
                         ],
-                        applyPermissionUrl: this.isExtendTx ? `/backend/api/perm/apply/subsystem/?client_id=code&project_code=${this.projectId}&service_code=quality_gate&role_manager=rule:${row.ruleHashId}` : PERM_URL_PREFIX
+                        applyPermissionUrl: PERM_URL_PREFIX
                     }
                     this.$showAskPermissionDialog(params)
                 }
@@ -678,7 +675,7 @@
                         noPermissionList: [
                             { resource: '质量红线', option: '启用和停用规则' }
                         ],
-                        applyPermissionUrl: this.isExtendTx ? `/backend/api/perm/apply/subsystem/?client_id=code&project_code=${this.projectId}&service_code=quality_gate&role_manager=rule:${row.ruleHashId}` : PERM_URL_PREFIX
+                        applyPermissionUrl: PERM_URL_PREFIX
                     }
                     this.$showAskPermissionDialog(params)
                 }
@@ -771,7 +768,7 @@
             .bk-button {
                 padding: 0 10px 0 8px;
                 width: 106px;
-                .bk-icon {
+                .devops-icon {
                     font-size: 12px;
                 }
             }

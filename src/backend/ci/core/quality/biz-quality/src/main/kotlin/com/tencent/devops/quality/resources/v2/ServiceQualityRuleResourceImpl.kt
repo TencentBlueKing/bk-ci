@@ -29,10 +29,12 @@ package com.tencent.devops.quality.resources.v2
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.quality.api.v2.ServiceQualityRuleResource
+import com.tencent.devops.quality.api.v2.pojo.QualityHisMetadata
 import com.tencent.devops.quality.api.v2.pojo.request.BuildCheckParams
 import com.tencent.devops.quality.api.v2.pojo.request.CopyRuleRequest
 import com.tencent.devops.quality.api.v2.pojo.response.QualityRuleMatchTask
 import com.tencent.devops.quality.pojo.RuleCheckResult
+import com.tencent.devops.quality.service.v2.QualityHisMetadataService
 import com.tencent.devops.quality.service.v2.QualityRuleCheckService
 import com.tencent.devops.quality.service.v2.QualityRuleService
 import org.springframework.beans.factory.annotation.Autowired
@@ -40,7 +42,8 @@ import org.springframework.beans.factory.annotation.Autowired
 @RestResource
 class ServiceQualityRuleResourceImpl @Autowired constructor(
     private val ruleCheckService: QualityRuleCheckService,
-    private val ruleService: QualityRuleService
+    private val ruleService: QualityRuleService,
+    private val qualityHisMetadataService: QualityHisMetadataService
 ) : ServiceQualityRuleResource {
 
     override fun matchRuleList(
@@ -70,5 +73,9 @@ class ServiceQualityRuleResourceImpl @Autowired constructor(
 
     override fun copyRule(request: CopyRuleRequest): Result<List<String>> {
         return Result(ruleService.copyRule(request))
+    }
+
+    override fun getHisMetadata(buildId: String): Result<List<QualityHisMetadata>> {
+        return Result(qualityHisMetadataService.serviceGetHisMetadata(buildId))
     }
 }

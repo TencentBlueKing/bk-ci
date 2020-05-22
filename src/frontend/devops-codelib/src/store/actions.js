@@ -84,7 +84,7 @@ const actions = {
     }) {
         try {
             if (!credentialTypes) return
-            const response = await vue.$ajax.get(`${TICKET_API_URL_PREFIX}/user/credentials/${projectId}/hasPermissionList?permission=${permission}&credentialTypes=${credentialTypes}`)
+            const response = await vue.$ajax.get(`${TICKET_API_URL_PREFIX}/user/credentials/${projectId}/hasPermissionList?permission=${permission}&credentialTypes=${credentialTypes}&page=1&pageSize=1000`)
             commit(SET_TICKETS_MUTATION, {
                 tickets: response.records
             })
