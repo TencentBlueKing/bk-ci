@@ -19,7 +19,7 @@
 
 import Vue from 'vue'
 import { SET_STAGE_TAG_LIST, SET_PIPELINE_STAGE, SET_PIPELINE_CONTAINER, SET_TEMPLATE, SET_ATOMS, SET_ATOM_MODAL_FETCHING, SET_ATOM_MODAL, SET_CONTAINER_FETCHING, UPDATE_ATOM_TYPE, SET_CONTAINER_DETAIL, ADD_CONTAINER, PROPERTY_PANEL_VISIBLE, INSERT_ATOM, DELETE_ATOM, DELETE_CONTAINER, UPDATE_CONTAINER, DELETE_STAGE, UPDATE_STAGE, ADD_STAGE, CONTAINER_TYPE_SELECTION_VISIBLE, SET_INSERT_STAGE_INDEX, UPDATE_ATOM, SET_PIPELINE_EDITING, SET_PIPELINE, SET_BUILD_PARAM, DELETE_ATOM_PROP, SET_PIPELINE_EXEC_DETAIL, SET_REMOTE_TRIGGER_TOKEN, SET_GLOBAL_ENVS, TOGGLE_ATOM_SELECTOR_POPUP, UPDATE_ATOM_INPUT, UPDATE_WHOLE_ATOM_INPUT, UPDATE_ATOM_OUTPUT, UPDATE_ATOM_OUTPUT_NAMESPACE, FETCHING_ATOM_LIST, SET_STORE_DATA, SET_STORE_LOADING, SET_STORE_SEARCH, FETCHING_ATOM_VERSION, SET_ATOM_VERSION_LIST, SET_EXECUTE_STATUS, SET_SAVE_STATUS, SET_DEFAULT_STAGE_TAG, TOGGLE_REVIEW_DIALOG } from './constants'
-import { getAtomModalKey, getAtomDefaultValue, getAtomOutputObj, isNewAtomTemplate } from './atomUtil'
+import { getAtomModalKey, getAtomDefaultValue, getAtomOutputObj, getAtomPreviousVal, isNewAtomTemplate } from './atomUtil'
 
 export default {
     [TOGGLE_REVIEW_DIALOG]: (state, { isShow: showReviewDialog, reviewInfo }) => {
@@ -131,6 +131,9 @@ export default {
     [UPDATE_ATOM_TYPE]: (state, { container, atomCode, version, atomIndex }) => {
         const key = getAtomModalKey(atomCode, version)
         const atomModal = state.atomModalMap[key]
+        const preVerEle = container.elements[atomIndex]
+        const preVerkey = getAtomModalKey(preVerEle.atomCode, preVerEle.version)
+        const preVerAtomModal = state.atomModalMap[preVerkey] || { props: {} }
         let atom = null
         if (isNewAtomTemplate(atomModal.htmlTemplateVersion)) {
             atom = {
@@ -140,11 +143,13 @@ export default {
                 version,
                 data: {
                     input: {
-                        ...getAtomDefaultValue(atomModal.props.input)
+                        ...getAtomDefaultValue(atomModal.props.input),
+                        ...getAtomPreviousVal(preVerEle.data.input, preVerAtomModal.props.input, atomModal.props.input)
                     },
                     output: {
                         ...getAtomOutputObj(atomModal.props.output)
-                    }
+                    },
+                    namespace: preVerEle.data.namespace || ''
                 }
             }
         } else {
@@ -153,7 +158,8 @@ export default {
                 atomCode,
                 version,
                 name: atomModal.name,
-                ...getAtomDefaultValue(atomModal.props)
+                ...getAtomDefaultValue(atomModal.props),
+                ...getAtomPreviousVal(preVerEle, preVerAtomModal.props, atomModal.props)
             }
         }
         container.elements.splice(atomIndex, 1, atom)

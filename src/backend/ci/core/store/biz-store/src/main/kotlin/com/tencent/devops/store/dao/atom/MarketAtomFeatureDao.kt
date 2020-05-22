@@ -46,6 +46,7 @@ class MarketAtomFeatureDao {
                 ID,
                 ATOM_CODE,
                 RECOMMEND_FLAG,
+                YAML_FLAG,
                 CREATOR,
                 MODIFIER
             )
@@ -53,6 +54,7 @@ class MarketAtomFeatureDao {
                     UUIDUtil.generate(),
                     atomFeatureRequest.atomCode,
                     atomFeatureRequest.recommendFlag,
+                    atomFeatureRequest.yamlFlag,
                     userId,
                     userId
                 ).execute()

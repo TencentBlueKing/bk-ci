@@ -55,7 +55,6 @@ app.use(history({
     rewrites: [
         {
             // connect-history-api-fallback 默认会对 url 中有 . 的 url 当成静态资源处理而不是当成页面地址来处理
-            // 兼容 /cs/28aa9eda67644a6eb254d694d944307e/cluster/BCS-MESOS-10001/node/10.10.10.10 这样以 IP 结尾的 url
             // from: /\d+\.\d+\.\d+\.\d+$/,
             from: /(\d+\.)*\d+$/,
             to: '/'

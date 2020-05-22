@@ -43,6 +43,14 @@ class Runner @Autowired constructor(private val dockerHostBuildService: DockerHo
         }
     }
 
+    fun clearDockerRunTimeoutContainers() {
+        try {
+            dockerHostBuildService.clearDockerRunTimeoutContainers()
+        } catch (e: Exception) {
+            logger.error("clear dockerRun timeout containers unknown exception", e)
+        }
+    }
+
     fun clearLocalImages() {
         try {
             dockerHostBuildService.clearLocalImages()
