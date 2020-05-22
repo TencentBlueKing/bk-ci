@@ -27,8 +27,6 @@
     <link rel='preload' as='script' href="<%=htmlWebpackPlugin.options.urlPrefix %>/console/static/vue.min.js" />
     <link rel='preload' as='script' href="<%=htmlWebpackPlugin.options.urlPrefix %>/console/static/vuex.min.js" />
     <link rel='preload' as='script' href="<%=htmlWebpackPlugin.options.urlPrefix %>/console/static/vue-router.min.js" />
-    <link rel="preload" href="http://imgcache.qq.com/ptlogin/ac/v9/js/ptloginout.js" as="script" />
-    <link rel="preload" as='script' href="//pingjs.qq.com/h5/stats.js?v2.0.4">
     
     <!-- devops:preload -->
     <% for (key in htmlWebpackPlugin.files.js) { %>
@@ -54,7 +52,7 @@
                 div.innerHTML = ajax.responseText
                 document.body.insertBefore(div, document.body.childNodes[0]);
             }
-        </script>
+    </script>
     <div id="devops-root">
         <div class="bk-loading" style="position: absolute;">
             <div class="bk-loading-wrapper">
@@ -80,6 +78,7 @@
         var WS_URL_PREFIX = '__HTTP_SCHEMA__://__BKCI_FQDN__/'
         var PERM_URL_PREFIX = '__HTTP_SCHEMA__://__PAAS_FQDN__:__PAAS_HTTPS_PORT__/o/bk_iam_app' // EE PERM URL PREFIX
         var DOCS_URL_PREFIX = '__HTTP_SCHEMA__://__BKCI_IWIKI_FQDN__'  // 文档中心域名
+        var LOGIN_SERVICE_URL = '__LOGIN_SERVICE_URL__'
         var DEVOPS_LS_VERSION = '<%- htmlWebpackPlugin.options.DEVOPS_LS_VERSION%>'
         var ENTERPRISE_VERSION = false
     </script>
@@ -197,15 +196,28 @@
     </script>
     <script>
         
+        window.getLoginUrl = function () {
+            var c_url = location.origin + location.pathname + encodeURIComponent(location.search)
+            if (/=%s/.test(LOGIN_SERVICE_URL)) { 
+                return LOGIN_SERVICE_URL.replace(/%s/, c_url)
+            } else if (/\?/.test(LOGIN_SERVICE_URL)) { 
+                LOGIN_SERVICE_URL =  LOGIN_SERVICE_URL + '&c_url=' + c_url
+            } else {
+                return LOGIN_SERVICE_URL =  LOGIN_SERVICE_URL + '?c_url=' + c_url
+            }
+            return LOGIN_SERVICE_URL
+        }
+
         function asyncGet (url, pid) {
             return new Promise(function (resolve, reject) {
                 var xhr = new XMLHttpRequest()
                 xhr.onreadystatechange = function () {
                     if (this.readyState == 4 && this.status == 200) {
-                        resolve(JSON.parse(xhr.responseText).data)
+                        var res = JSON.parse(xhr.responseText)
+                        resolve(res && res.data ? res.data : res )
                     }  else if (this.status == 401) {
                         // 无登录，这里处理跳转逻辑
-                        
+                        window.location.href = window.getLoginUrl()
                     } else if (this.readyState == 4 && this.status > 400) {
                         reject({
                             status: this.status,
@@ -225,6 +237,10 @@
             return asyncGet(GW_URL_PREFIX + '/project/api/user/services/', pathPid)
         }
 
+        function fetchAssetsJSON () {
+            return asyncGet('/assets_bundle.json?t=' + Math.random())
+        }
+
         function fetchAllProjects () {
             return asyncGet(GW_URL_PREFIX + '/project/api/user/projects/')
         }
@@ -233,8 +249,15 @@
             return asyncGet(GW_URL_PREFIX + '/project/api/user/users')
         }
 
+        function joinUrl (urlArr) {
+            if (Array.isArray(urlArr)) {
+                return urlArr.join('/').replace(/([^:]\/)\/+/g, '$1')
+            }
+            return ''
+        }
 
-        function getServiceObject (serviceList) {
+
+        function getServiceObject (serviceList, assetsJSON) {
             var serviceMap = {}
             var iframeRoutes = []
             for (var i = 0; i < serviceList.length; i++) {
@@ -242,13 +265,15 @@
                 for (var j = 0; j < children.length; j++) {
                     var mod = children[j].link_new.replace(/^\/?(\w+)\S*/, '$1')
                     var serviceTitle = children[j].name.replace(/\(\S+?\)/, '')
+                    var assetMod = assetsJSON[mod]
                     if (children[j].inject_type === 'amd') {
-                        children[j].js_url = WEBSITE_URL + '/' + children[j].js_url
-                        children[j].css_url = WEBSITE_URL + '/' + children[j].css_url
+                        var jsUrl = assetMod ? joinUrl([ mod, assetMod.js ]) : children[j].js_url
+                        var cssUrl = assetMod ? joinUrl([ mod, assetMod.css ]) : children[j].css_url
+                        children[j].js_url = joinUrl([ WEBSITE_URL, jsUrl ])
+                        children[j].css_url = joinUrl([ WEBSITE_URL, mod, cssUrl ])
                     } else {
-                        children[j].iframe_url = WEBSITE_URL + '/' + children[j].iframe_url
+                        children[j].iframe_url = joinUrl([ WEBSITE_URL, children[j].iframe_url ])
                     }
-                    
                     serviceMap[mod] = children[j]
                     if (children[j].inject_type === 'iframe') {
                         iframeRoutes.push({
@@ -273,19 +298,36 @@
             }
         }
 
-        function init (projectList, allServices, userInfo) {
+        function getDefaultPid (projectList) {
+            if (Array.isArray(projectList) && projectList.length > 0) {
+                var firstProj = projectList[0]
+                var firstPid = firstProj && firstProj.projectCode ? firstProj.projectCode : undefined
+                for(var i = 0; i < projectList.length; i++) { 
+                    var proj = projectList[i]
+                    if (proj && !proj.gray) {
+                        return proj.projectCode
+                    }
+                }
+                if (firstPid) {  // 如果cookie为空，而项目列表中找不到非灰度的项目时，将cookie值设置为首个项目id, 同时自动刷新页面
+                    window.setProjectIdCookie(firstPid)
+                    location.reload()
+                }
+            }
+
+        }
+
+        function init (projectList, allServices, userInfo, assetsJSON) {
             var path = location.pathname.replace('/console', '')
             var headTag = document.head || document.getElementsByTagName('head')[0]
             var pathReg = /^\/(\w+)\/?/
-            var serviceObject = getServiceObject(allServices)
+            var serviceObject = getServiceObject(allServices, assetsJSON)
             var serviceMap = serviceObject.serviceMap
             var serviceMatchResult = path.match(pathReg)
             var subServiceId = serviceMatchResult ? serviceMatchResult[1] : null
             var page = serviceMap[subServiceId] || null
-
-            var defaultPid = projectList[0] && projectList[0].projectCode
             var isPidOk = isValidPid(projectList, pathPid)
-            if (!isPidOk && defaultPid) {
+            if (!isPidOk && !pathPid) {
+                var defaultPid = getDefaultPid(projectList)
                 window.setProjectIdCookie(defaultPid)
             }
 
@@ -341,8 +383,10 @@
             return Promise.all([
                 fetchAllProjects(),
                 fetchAllServices(),
-                requestUser()
+                requestUser(),
+                fetchAssetsJSON()
             ]).then(response => {
+                console.log(response)
                 var cahceArray = [ 'projectList', 'allServices', 'userInfo' ]
                 var actionArray = [ 'setProjectList', 'setServices', 'setUserInfo' ]
                 for(var i = 0; i < cahceArray.length; i++) {

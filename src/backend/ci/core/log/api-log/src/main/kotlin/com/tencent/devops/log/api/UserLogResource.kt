@@ -217,6 +217,9 @@ interface UserLogResource {
         jobId: String?,
         @ApiParam("执行次数", required = false)
         @QueryParam("executeCount")
-        executeCount: Int?
+        executeCount: Int?,
+        @ApiParam("文件名", required = false)
+        @QueryParam("fileName")
+        fileName: String?
     ): Response
 }

@@ -13,29 +13,28 @@
                 return {
                     icon: 'ticket',
                     title: this.$t('ticket.credentialManage'),
-                    url: `${DOCS_URL_PREFIX}/${this.$t('allService')}/${this.$t('ticket.credentialManage')}/summary.html`,
                     menu: [
                         {
                             id: 'credentialList',
                             name: this.$t('ticket.myCredential'),
-                            icon: 'icon-id'
+                            icon: 'devops-icon icon-id'
                         },
                         {
                             id: 'createCredential',
                             name: this.$t('ticket.createCredential'),
-                            icon: 'icon-id',
+                            icon: 'devops-icon icon-id',
                             showChildren: false,
                             group: true,
                             children: [
                                 {
                                     id: 'editCredential',
                                     name: this.$t('ticket.editCredential'),
-                                    icon: 'icon-id'
+                                    icon: 'devops-icon icon-id'
                                 },
                                 {
                                     id: 'createCredentialWithType',
                                     name: this.$t('ticket.createCredential'),
-                                    icon: 'icon-id'
+                                    icon: 'devops-icon icon-id'
                                 }
                             ]
                         }

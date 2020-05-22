@@ -13,7 +13,7 @@
                         <div class="group-list-title">
                             <span class="title-text">{{group.name}}</span>
                             <bk-popover placement="bottom" class="group-list-edit" theme="light">
-                                <span class="bk-icon icon-more"></span>
+                                <span class="devops-icon icon-more"></span>
                                 <div class="group-operate-container" slot="content">
                                     <p class="entry-link" @click="showDialog($event, groupIndex)">{{ $t('rename') }}</p>
                                     <p class="entry-link" @click="deleteGroup(groupIndex)">{{ $t('delete') }}</p>
@@ -35,9 +35,9 @@
                                     :placeholder="$t('group.labelLimitTips')">
                             </div>
                             <div class="group-card-tools">
-                                <i class="bk-icon icon-edit2 group-card-icon" @click="tagEdit($event, groupIndex, tagIndex)"></i>
+                                <i class="devops-icon icon-edit2 group-card-icon" @click="tagEdit($event, groupIndex, tagIndex)"></i>
                                 <bk-popover ref="toolsConfigRef" placement="top" trigger="click">
-                                    <span class="tools-ele group-card-icon bk-icon icon-close" @click="toggleTools(groupIndex, tagIndex)">
+                                    <span class="tools-ele group-card-icon devops-icon icon-close" @click="toggleTools(groupIndex, tagIndex)">
                                     </span>
                                     <div slot="content" class="tools-config-tooltip">
                                         <a class="confirm" @click.stop="tagRemove(groupIndex, tagIndex)">{{ $t('confirm') }}</a>
@@ -50,7 +50,7 @@
 
                         <bk-button
                             size="normal"
-                            icon="bk-icon icon-plus"
+                            icon="devops-icon icon-plus"
                             class="group-card-add"
                             v-if="group.labels.length < 10"
                             @click="tagAdd($event, groupIndex)"
@@ -65,7 +65,7 @@
 
                     <div class="group-list-cards" v-if="isShowGroupBtn()">
                         <h3 class="group-list-title"></h3>
-                        <bk-button size="large" icon="bk-icon icon-plus" class="group-list-creat"
+                        <bk-button size="large" icon="devops-icon icon-plus" class="group-list-creat"
                             :disabled="btnIsdisable"
                             @click="showDialog"
                         >
@@ -557,7 +557,7 @@
                 right:16px;
                 line-height: 18px;
                 font-size: 0;
-                .bk-icon {
+                .devops-icon {
                     font-size: 10px;
                     color: $fontLigtherColor;
                 }
@@ -573,7 +573,7 @@
                         }
                     }
                 }
-                .bk-icon:hover {
+                .devops-icon:hover {
                     color: $iconPrimaryColor;
                     cursor: pointer;
                 }

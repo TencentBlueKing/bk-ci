@@ -114,7 +114,7 @@
         margin: 8px 0;
         .reply-content {
             resize: none;
-            width: 1050px;
+            width: calc(100% - 77px);
             height: 56px;
             padding: 5px 5px;
             margin-left: 59px;
@@ -127,7 +127,7 @@
             border: none;
             background: none;
             padding-right: 0;
-            width: 1050px;
+            width: calc(100% - 77px);
             margin-left: 59px;
             button {
                 margin: 10px 5px;

@@ -1,24 +1,24 @@
 <template>
-    <span :class="{ 'stage-status': true, [type]: type, 'readonly': !editable || (jobOption && jobOption.enable === false) }">
+    <span :class="{ 'stage-status': true, [type]: type, 'readonly': !editable || containerDisabled }">
         <transition name="slide-top">
             <i v-if="status === 'RUNNING' || status === 'PREPARE_ENV' || status === 'QUEUE' || status === 'LOOP_WAITING' || status === 'CALL_WAITING'"
-                class="bk-icon icon-circle-2-1 executing-job" />
+                class="devops-icon icon-circle-2-1 executing-job" />
         </transition>
         <transition name="slide-top">
-            <i v-if="status === 'WAITING'" class="bk-icon icon-clock" />
+            <i v-if="status === 'WAITING'" class="devops-icon icon-clock" />
         </transition>
         <transition name="slide-down">
-            <i v-if="status === 'CANCELED'" class="bk-icon warning icon-exclamation-circle-shape" />
+            <i v-if="status === 'CANCELED' || status === 'TERMINATE'" class="devops-icon warning icon-exclamation-circle-shape" />
         </transition>
         <transition name="slide-down">
-            <i v-if="status === 'REVIEWING' || status === 'REVIEW_ABORT'" class="bk-icon warning icon-exclamation-triangle-shape" />
+            <i v-if="status === 'REVIEWING' || status === 'REVIEW_ABORT'" class="devops-icon warning icon-exclamation-triangle-shape" />
         </transition>
         <transition name="slide-left">
             <i v-if="status === 'FAILED' || status === 'HEARTBEAT_TIMEOUT' || status === 'QUEUE_TIMEOUT' || status === 'EXEC_TIMEOUT'"
-                class="bk-icon danger icon-close-circle-shape" />
+                class="devops-icon danger icon-close-circle-shape" />
         </transition>
         <transition name="slide-right">
-            <i v-if="status === 'SUCCEED'" class="bk-icon success icon-check-circle-shape" />
+            <i v-if="status === 'SUCCEED'" class="devops-icon success icon-check-circle-shape" />
         </transition>
         <slot v-if="!status || status === 'SKIP' || status === 'QUALITY_CHECK_FAIL'"></slot>
     </span>
@@ -32,7 +32,7 @@
             type: String,
             editable: Boolean,
             serialNum: String,
-            jobOption: Object
+            containerDisabled: Boolean
         }
     }
 </script>

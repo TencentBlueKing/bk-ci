@@ -1,4 +1,5 @@
 import SockJS from 'sockjs-client'
+import * as cookie from 'js-cookie'
 const Stomp = require('stompjs/lib/stomp.js').Stomp
 
 function uuid () {
@@ -13,33 +14,42 @@ function uuid () {
 class BlueShieldWebSocket {
     constructor () {
         this.connectErrTime = 1
-        this.sendErrTime = 1
+        this.connectCallBack = []
+        this.isConnecting = false
         this.hasConnect = false
-        this.userName = /bk_uid=([^;]+);/.exec(document.cookie)[1]
+        this.userName = window.userInfo && window.userInfo.username ? window.userInfo.username : 'bkDevops'
         this.uuid = uuid()
         this.stompClient = {}
-
+        
         this.connect()
-        this.readyDisConnect()
+        this.closePageDisConnect()
+        this.onlineConnect()
+        this.offlineDisconnect()
     }
 
-    connect (callBack) {
-        const socket = new SockJS(`${WS_URL_PREFIX}/websocket/ws/user?sessionId=${this.uuid}`)
+    connect () {
+        const socket = new SockJS(`${WS_URL_PREFIX}websocket/ws/user?sessionId=${this.uuid}`)
         this.stompClient = Stomp.over(socket)
         this.stompClient.debug = null
+        this.isConnecting = true
         this.stompClient.connect({}, () => {
+            this.isConnecting = false
             this.stompClient.subscribe(`/topic/bk/notify/${this.uuid}`, (res) => {
-                this.connectErrTime = 1
                 this.handleMessage(res)
-                if (callBack) callBack()
             })
+            this.connectErrTime = 1
+            if (this.connectCallBack.length) {
+                this.connectCallBack.forEach(callBack => callBack())
+                this.connectCallBack = []
+            }
         }, (err) => {
             if (this.connectErrTime <= 8) {
                 this.connectErrTime++
                 const time = Math.random() * 10000
                 setTimeout(() => this.connect(), time)
             } else {
-                window.devops.$bkMessage({ message: err.message || 'websocket异常，请稍后重试', theme: 'error' })
+                this.isConnecting = false
+                window.devops.$bkMessage({ message: err.message || 'websocket connection failed, please try again later', theme: 'error' })
             }
         })
     }
@@ -91,45 +101,53 @@ class BlueShieldWebSocket {
         const hasWebSocket = pathRegs.some((reg) => reg && new RegExp(reg).test(path))
         const currentPage = window.currentPage || {}
         const showProjectList = currentPage.show_project_list || false
-        const projectId = localStorage.getItem('projectId')
+        const projectId = cookie.get(X_DEVOPS_PROJECT_ID)
         const data = JSON.stringify({ sessionId: this.uuid, userId: this.userName, page: router.path, showProjectList, projectId })
 
-        if (hasWebSocket) setTimeout(() => { this.loopSendChangePage(data) }, 5)
+        if (hasWebSocket) setTimeout(() => {
+            this.ensureSendMessage(() => {
+                this.stompClient.send('/app/changePage', {}, data)
+                this.hasConnect = true
+            })
+        }, 5)
     }
 
     loginOut (from) {
         const data = { sessionId: this.uuid, userId: this.userName, page: from.path }
-        if (this.hasConnect) { this.stompClient.send('/app/loginOut', {}, JSON.stringify(data)); this.hasConnect = false }
-    }
-
-    loopSendChangePage (data) {
-        if ((this.stompClient || {}).connected) {
-            this.sendErrTime = 1
-            this.stompClient.send('/app/changePage', {}, data)
-            this.hasConnect = true
-        } else {
-            this.sendErrTime++
-            if (this.sendErrTime <= 15) {
-                setTimeout(() => this.loopSendChangePage(data), 1000)
-            } else {
-                this.connect(() => {
-                    this.sendErrTime = 1
-                    this.stompClient.send('/app/changePage', {}, data)
-                    this.hasConnect = true
-                })
-            }
+        if (this.hasConnect) {
+            this.ensureSendMessage(() => {
+                this.stompClient.send('/app/loginOut', {}, JSON.stringify(data))
+                this.hasConnect = false
+            })
         }
     }
 
-    readyDisConnect () {
-        window.addEventListener('beforeunload', () => {
-            const data = JSON.stringify({ sessionId: this.uuid, userId: this.userName })
-            if (this.hasConnect && this.stompClient.connected) { this.stompClient.send('/app/loginOut', {}, data); this.hasConnect = false }
+    ensureSendMessage (callBack) {
+        if ((this.stompClient || {}).connected) {
+            callBack()
+        } else if (this.isConnecting) {
+            this.connectCallBack.push(callBack)
+        } else {
+            this.connectCallBack.push(callBack)
+            this.connect()
+        }
+    }
 
-            if (this.stompClient.connected) {
-                this.stompClient.send('/app/clearUserSession', {}, data)
-                this.stompClient.disconnect()
-            }
+    closePageDisConnect () {
+        window.addEventListener('beforeunload', () => {
+            navigator.sendBeacon(`${WS_URL_PREFIX}websocket/api/user/websocket/sessions/${this.uuid}/userIds/${this.userName}/clear`)
+            this.stompClient.disconnect()
+            this.hasConnect = false
+        })
+    }
+
+    offlineDisconnect () {
+        window.addEventListener('offline', () => this.stompClient.disconnect())
+    }
+
+    onlineConnect () {
+        window.addEventListener('online', () => {
+            if (!this.isConnecting) this.connect()
         })
     }
 }

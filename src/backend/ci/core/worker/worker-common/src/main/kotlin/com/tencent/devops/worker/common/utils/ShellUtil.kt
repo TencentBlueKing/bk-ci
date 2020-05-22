@@ -165,7 +165,7 @@ object ShellUtil {
                 path = if (path.isEmpty()) {
                     envFile.absolutePath
                 } else {
-                    "${envFile.absolutePath}:$path"
+                    "$path:${envFile.absolutePath}"
                 }
                 if (buildEnv.env.isNotEmpty()) {
                     buildEnv.env.forEach { (name, path) ->

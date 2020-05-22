@@ -1,0 +1,54 @@
+<template>
+    <bk-sideslider class="bkci-property-panel" width="640" :is-show.sync="visible" :quick-close="true">
+        <header class="stage-panel-header" slot="header">
+            {{ stageTitle }}
+        </header>
+        <stage-content v-bind="$props" slot="content"></stage-content>
+    </bk-sideslider>
+</template>
+
+<script>
+    import { mapActions, mapState } from 'vuex'
+    import StageContent from './StageContent'
+    export default {
+        name: 'container-property-panel',
+        components: {
+            StageContent
+        },
+        props: {
+            stageIndex: Number,
+            stage: Object,
+            editable: Boolean
+        },
+        computed: {
+            ...mapState('atom', [
+                'isPropertyPanelVisible'
+            ]),
+            stageTitle () {
+                return typeof this.stage !== 'undefined' ? this.stage.name : 'stage'
+            },
+            visible: {
+                get () {
+                    return this.isPropertyPanelVisible
+                },
+                set (value) {
+                    this.togglePropertyPanel({
+                        isShow: value
+                    })
+                }
+            }
+        },
+        methods: {
+            ...mapActions('atom', [
+                'togglePropertyPanel'
+            ])
+        }
+    }
+</script>
+
+<style lang="scss">
+    @import '../AtomPropertyPanel/propertyPanel';
+    .bkci-property-panel {
+        font-size: 14px;
+    }
+</style>
