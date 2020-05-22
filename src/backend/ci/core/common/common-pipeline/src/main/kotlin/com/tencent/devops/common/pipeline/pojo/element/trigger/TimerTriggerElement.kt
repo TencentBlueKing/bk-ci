@@ -30,6 +30,7 @@ import com.cronutils.mapper.CronMapper
 import com.cronutils.model.CronType
 import com.cronutils.model.definition.CronDefinitionBuilder
 import com.cronutils.parser.CronParser
+import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
@@ -86,15 +87,40 @@ data class TimerTriggerElement(
             val expressions = mutableSetOf<String>()
             if (newExpression != null && newExpression.isNotEmpty()) {
                 newExpression.forEach { expression ->
-                    expressions.add(convertExpression(expression))
+                    expressions.add(convertExpression(checkAndSetSecond(expression)))
                 }
             }
             if (advanceExpression != null && advanceExpression.isNotEmpty()) {
                 advanceExpression.forEach { expression ->
+                    checkLength(expression)
                     expressions.add(convertExpression(expression))
                 }
             }
             expressions
+        }
+    }
+
+    private fun checkAndSetSecond(expression: String): String {
+        val newExpression = expression.trim()
+        val expressionParts = newExpression.split(" ")
+        return if (expressionParts[0] != "0") {
+            val newExpressionParts = expressionParts.toMutableList()
+            newExpressionParts[0] = "0"
+            newExpressionParts.joinToString(separator = " ")
+        } else {
+            newExpression
+        }
+    }
+
+    private fun checkLength(expression: String) {
+        val newExpression = expression.trim()
+        val expressionParts = newExpression.split(" ")
+        // minutes hours dayOfMonth month dayOfWeek
+        if (expressionParts.size != 5) {
+            throw InvalidParamException(
+                message = "Cron expression contains ${expressionParts.size} parts but we expect one of 5(minutes hours dayOfMonth month dayOfWeek)",
+                params = arrayOf(expression)
+            )
         }
     }
 }

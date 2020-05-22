@@ -97,6 +97,12 @@ interface UserMarketAtomResource {
         @ApiParam("研发来源", required = false)
         @QueryParam("rdType")
         rdType: AtomTypeEnum?,
+        @ApiParam("yaml是否可用", required = false)
+        @QueryParam("yamlFlag")
+        yamlFlag: Boolean?,
+        @ApiParam("是否推荐标识 true：推荐，false：不推荐", required = false)
+        @QueryParam("recommendFlag")
+        recommendFlag: Boolean?,
         @ApiParam("排序", required = false)
         @QueryParam("sortType")
         sortType: MarketAtomSortTypeEnum? = MarketAtomSortTypeEnum.CREATE_TIME,

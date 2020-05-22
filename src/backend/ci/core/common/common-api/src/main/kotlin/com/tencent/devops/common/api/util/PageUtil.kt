@@ -53,7 +53,7 @@ object PageUtil {
      */
     fun calTotalPage(pageSize: Int?, totalSize: Long): Int {
         var totalPages = 1L
-        if (null != pageSize) {
+        if (null != pageSize && -1 != pageSize) {
             val flag = totalSize % pageSize
             totalPages = if (flag == 0L) {
                 totalSize / pageSize

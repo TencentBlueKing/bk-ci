@@ -191,12 +191,12 @@
                 this.requestImageClassifys().then((res) => {
                     res.data.push({
                         classifyCode: 'store',
-                        classifyName: this.$t('editPage.store'),
+                        classifyName: this.$i18n && this.$t('editPage.store'),
                         id: 'store'
                     })
                     res.data.unshift({
                         classifyCode: 'all',
-                        classifyName: this.$t('editPage.all'),
+                        classifyName: this.$i18n && this.$t('editPage.all'),
                         id: ''
                     })
                     this.tabList = (res.data || []).map((item) => {
